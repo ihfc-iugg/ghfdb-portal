@@ -1,0 +1,103 @@
+{% extends "main/map_at_top.html" %}
+{% load static %}
+{% load custom_tags %}
+{% load render_table from django_tables2 %}
+
+{% block head %}
+  <title>{{ reference.primary_author.last_name }} - {{ reference.year }} | Heatflow.org</title>
+{% endblock %}
+
+{% block under-map %}
+  <div class='container-fluid text-center'>
+    <h1>
+    {{ reference.primary_author.last_name }}
+    {% if reference.co_authors.count == 1 %}
+      {% for co_author in reference.co_authors.all %}
+        &amp; {{ co_author.last_name }}
+      {% endfor %}
+    {% endif %}
+    ({{ reference.year }})
+    </h1>
+
+    <div class='row'>  
+      <table id='details-table' class="table-bordered table-sm">
+        <tbody>
+          <tr>
+            <td>Title</td><td>{{ reference.title|default:'N/A' }}</td>
+          </tr>
+          <tr>
+            <td>DOI</td>
+            <td>
+            {% if reference.doi %}
+             <a href="https://doi.org/{{ reference.doi }}">{{ reference.doi }}</a>
+            {% else %}
+              N/A
+            {% endif %}        
+          </td>
+          </tr>
+          <tr>
+            <td>Total Sites</td><td>{{ reference.site_set.count }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <br>
+
+    {% comment %} {% render_table table %} {% endcomment %}
+
+
+
+
+
+
+
+    <div class='row'>  
+      <table id='site-table' class="table table-hover">
+        <thead class="thead-dark">
+          <tr>
+            <th>Site name</th>
+            <th>Latitude</th>
+            <th>Longitude</th>
+            <th>Elevation [m]</th>
+            <th>Dip [&deg]</th>
+            <th>Sediment Thickness [m]</th>
+            <th>Average<br>Heat Flow<br>[mW/m<sup>2</sup>]</th>
+            <th>Average<br>Thermal Conductivity [W/mK]</th>
+            <th>Average<br>Heat Generation [&micro;W/m<sup>3</sup>]</th>
+            <th>Depth Intervals</th>
+          </tr>
+        </thead>   
+        <tbody>
+        {% for site in all_sites %}
+          <tr>
+            <td>{% if site.site_name %}<a href="{% url 'database:site' site.id site.site_name|slugify %}">{{ site.site_name }}</a>{% endif %} </td>
+            <td>{{ site.latitude }}</td>
+            <td>{{ site.longitude }}</td>
+            <td>{{ site.elevation|default_if_none:'' }}</td>
+            <td>{{ site.dip|default_if_none:'' }}</td>
+            <td>{{ site.sediment_thickness|default_if_none:''  }}</td>
+            {% comment %} <td> {{ heatflow.conductivity_set.all|get_mean:'value' }}</td> {% endcomment %}
+
+            <td>{{ site.heatflow_set.all|get_mean:'corrected_heatflow,uncorrected_heatflow'|default_if_none:''|floatformat:2  }}</td>
+            <td>{{ site.conductivity_set.all|get_mean:'value'|default_if_none:''|floatformat:2  }}</td>
+            <td>{{ site.heatgeneration_set.all|get_mean:'value'|default_if_none:''|floatformat:2  }}</td>
+            <td>{{ site.heatflow_set.count }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock under-map %}
+
+
+{% block javascript %}
+{% endblock javascript %}
+
+
+
+
+
+
+

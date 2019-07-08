@@ -1,0 +1,2 @@
+create Site adminInline
+create Reference adminInline
