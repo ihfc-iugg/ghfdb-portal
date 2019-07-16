@@ -13,8 +13,6 @@ class CustomUser(AbstractUser):
     country = CountryField(null=True, blank=True)
     image = models.ImageField(upload_to='profile_image', blank=True)
 
-
-
     def save(self,*args, **kwargs):
         if self.first_name and self.last_name:
             self.username = '{}{}'.format(str(self.first_name).capitalize(),str(self.last_name).capitalize()[0])

@@ -17,7 +17,7 @@ import json
 from django.db.models import Count, F, Value
 from django.db.models import Max, Min
 from django.db.models import Q
-from copy import deepcopy
+from reference.models import FileStorage
 
 
 def form_setup(form=None,menu_title=None):
@@ -131,7 +131,10 @@ class UploadView(TemplateView):
         if form.is_valid():
             result = self.dry_run(request)
 
-            # result.diff_headers.pop
+            # print(result.errors)
+
+            if not result.has_errors():
+                form.save()
 
             return render(request, 'main/confirm_upload.html', {'result':result,})
 
@@ -142,7 +145,7 @@ class UploadView(TemplateView):
     def dry_run(self,request):
         resource = HeatFlowResource()
 
-        data_file = request.FILES['file_upload']
+        data_file = request.FILES['data']
         dataset = Dataset().load(data_file.read().decode('utf-8'))
 
         # headers = dataset.headers.copy()

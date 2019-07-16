@@ -1,6 +1,6 @@
 from django import forms
 from main.widgets import RangeField, RangeWidget
-
+from reference.models import FileStorage
 
 class DownloadForm(forms.Form):
 
@@ -18,9 +18,8 @@ class DownloadForm(forms.Form):
     heatflow_from = forms.FloatField(required=False, min_value=0)
     heatflow_to = forms.FloatField(required=False, min_value=0)
 
-class UploadForm(forms.Form):
-    first_name = forms.CharField(required=True)
-    last_name = forms.CharField(required=True)
+class UploadForm(forms.ModelForm):
 
-    file_description = forms.CharField(required=False,widget=forms.Textarea())
-    file_upload = forms.FileField(required=True)
+    class Meta:
+        model = FileStorage
+        fields = ['first_name','last_name','description','data',]

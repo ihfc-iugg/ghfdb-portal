@@ -1,5 +1,6 @@
 from django.db import models
 from main.models import TimeStampAbstract
+import os
 
 # Create your models here.
 class Author(models.Model):
@@ -52,3 +53,27 @@ class Reference(TimeStampAbstract):
     @staticmethod
     def autocomplete_search_fields():
         return ("first_author__last_name__icontains", "year__exact")
+
+
+class FileStorage(models.Model):
+    data = models.FileField(upload_to='data/%Y/%m/')
+    description = models.TextField(blank=True, null=True)
+
+    first_name = models.CharField(max_length=150)
+    last_name = models.CharField(max_length=150)
+
+    date_uploaded = models.DateTimeField(auto_now_add=True)
+
+    added = models.BooleanField(default=False)
+    added_by = models.OneToOneField("users.CustomUser",blank=True, null=True, on_delete=models.SET_NULL)
+    date_added = models.DateTimeField(blank=True, null=True)
+
+
+    def __str__(self):
+        return self.data.name
+
+
+def content_file_name(instance, filename):
+    ext = filename.split('.')[-1]
+    filename = "%s_%s.%s" % (instance.user.id, instance.questid.id, ext)
+    return os.path.join('uploads', filename)

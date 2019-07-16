@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Author, Reference
+from .models import Author, Reference, FileStorage
 from django.db.models import Count
 
 
@@ -62,3 +62,11 @@ class ReferenceAdmin(admin.ModelAdmin):
         #     _site_count = Count("site",distinct=True),
         #     )
         return queryset
+
+@admin.register(FileStorage)
+class FileStorageAdmin(admin.ModelAdmin):
+    list_display = ['first_name', 'last_name', 'date_uploaded', 'added', 'date_added', 'added_by', 'data']    
+
+    list_filter = ('added',)
+
+
