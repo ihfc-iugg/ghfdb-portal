@@ -1,10 +1,15 @@
 {% extends "main/list_view.html" %}
 {% load widget_tweaks %}
+{% load static %}
 
-{% block head %}<title>References | Heatflow.org</title>{% endblock head%}
+{% block head %}
+  <script type="text/javascript" src="{% static '/main/js/jquery.tablesorter.js' %}"></script>
+{% endblock head %}
+
+{% block title %}<title>References | Heatflow.org</title>{% endblock title%}
 {% block list_header %}
   <h1 align="center">References</h1>
-  Heatflow.org currently contains {{ count }} individual references spanning {{ num_years }} years of heat flow measurements around the globe! Search here to find a particular reference and access the related data. If you can't find what you're looking for but know it exists, why not <a href={% url 'database:upload' %}>upload</a> the data and help keep the largest heat flow database in the world up to date! 
+  Heatflow.org currently contains {{ count }} individual references spanning {{ num_years }} years of heat flow measurements around the globe! Search here to find a particular reference and access the related data. If you can't find what you're looking for but know it exists, why not <a href={% url 'main:upload' %}>upload</a> the data and help keep the largest heat flow database in the world up to date! 
 {% endblock list_header%}
 
 {% block filter %}
@@ -16,17 +21,11 @@
         <table>
           <tbody>
             <tr>
-              {% comment %} <th>
-                <label for="id_last_name">Last name:</label>
-              </th> {% endcomment %}
               <td>
                 {% render_field filter.form.last_name class='form-control' placeholder='Last name' %}
               </td>
             </tr>
             <tr>
-              {% comment %} <th>
-                <label for="id_year_min">Year:</label>
-              </th> {% endcomment %}
               <td>
                 <div class='input-group'>
                   {% render_field filter.form.year_min class='form-control' placeholder='Year from' %}
@@ -39,104 +38,52 @@
             </tr>
           </tbody>
         </table>  
-        
-
       </form>
-
     </div>
   </div>
+  <br>
 {% endblock filter %}
 
-{% block sort_by_links %}
-  <p id='links'>
-    Sort by: 
-    <a href="">Year</a>
-    <a href="">Last name</a>
-  </p>
-{% endblock sort_by_links %}
-
-
-
 {% block list %}
-  <div class='row'>
-    {% for ref in filter.qs %}
-      <a href='reference/{{ref.id}}/' class="linked-card">  
-      <a href={% url 'reference:reference_details' ref.id ref.reference %} class="linked-card">  
-        <div class="card card-spacing listCards"> 
-          <div class="card-header">
-            <div class="container">
-              <div class="row">
-                <div class="col-sm">
-                  {% if ref.title %}
-                    <b>{{ ref.primary_author.last_name }} {{ref.year}}</b> - {{ ref.title }}
-                  {% else %}
-                    <b>{{ ref.primary_author.last_name}} {{ref.year}}</b> - N/A
-                  {% endif %}
-                </div>
-                <div class="col-sm text-muted text-right">
-                  <p class='small'>{{ref.date_added}}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="card-body">
-            <table class="table table-borderless text-center equal-width">
-              <tbody>
-                <tr>
-                  <td>Sites: {{ref.site_set.count}}</td>
-                  <td>Heatflow: {{ref.heatflow_set.count}}</td>
-                  <td>Thermal conductivity: {{ref.conductivity_set.count}}</td>
-                  <td>Heat Generation: {{ref.heatgeneration_set.count}}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </a>
-    {% empty %}
-      <p>Could not find any references!</p>
-    {% endfor %}
+  <div class='table-responsive'>
+    <table id='detailsTable' class="table table-hover table-striped text-center">
+      <thead class="thead-dark">
+        <tr>
+          <th class='align-items-center'>Reference <i class="fas fa-sort fa-sm"></i></th>
+          <th>Year</th> 
+          <th>Sites</th>
+          <th>Heat Flow</th>
+          <th>Thermal Conductivity</th>
+          <th>Heat Generation</th>
+          <th>Date Added</th>
+        </tr>
+      </thead>   
+      <tbody>
+        {% for ref in result %}
+          <tr>
+            <td>
+              <a href="{% url 'reference:reference_details' reference_id=ref.id reference_slug=ref.reference|slugify %}">{{ ref.first_author.last_name }}{{ ref.year|default_if_none:'' }}</a>
+            </td>
+            <td>{{ ref.year|default_if_none:'Unknown' }}</td>
+            <td>{{ ref.site_set.count }}</td>
+            <td>{{ ref.depthinterval_set.count }}</td>
+            <td>{{ ref.conductivity_set.count }}</td>
+            <td>{{ ref.heatgeneration_set.count }}</td>
+            <td><p class='small'>{{ref.date_added}}</p></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 {% endblock list%}
 
-{% block scripts %}
+{% block more-scripts %}
 
   <script>
-
-
-  {% comment %} $( document ).ready(function() {
-      console.log( "ready!" );
-
-      $(".form-control").change( function () {
-
-        var lastName = $('#last_name').val();
-        console.log(lastName)
-        var minYear = $('#min_year').val();
-        console.log(minYear)
-        var maxYear = $('#max_year').val();
-        console.log(maxYear)
-
-        $.ajax({
-          url: "{% url 'reference:filter_data' %}",
-          data: {
-            'last_name': lastName,
-            'year_min': minYear,
-            'year_max': maxYear,
-          },
-          dataType: 'json',
-          success: function (data) {
-            console.log(data)
-          }
-
-        })}).keyup( function () {
-          // fire the above change event after every letter
-          $(this).change();
-        });
-
-  }); {% endcomment %}
-  
-
+  $(document).ready(function(){
+    $(function() {
+      $("#detailsTable").tablesorter();
+    });
+  });
   </script>
-
-{% endblock scripts %}
+{% endblock more-scripts %}

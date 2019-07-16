@@ -1,0 +1,4 @@
+{% for widget in widget.subwidgets %}
+{% include widget.template_name %}
+{% comment %} {% if forloop.first %}{% endif %} {% endcomment %}
+{% endfor %}

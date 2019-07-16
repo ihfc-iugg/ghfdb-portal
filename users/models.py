@@ -11,6 +11,9 @@ class CustomUser(AbstractUser):
     state = models.CharField(max_length=100, blank=True, null=True)
     postcode = models.IntegerField(null=True, blank=True)
     country = CountryField(null=True, blank=True)
+    image = models.ImageField(upload_to='profile_image', blank=True)
+
+
 
     def save(self,*args, **kwargs):
         if self.first_name and self.last_name:

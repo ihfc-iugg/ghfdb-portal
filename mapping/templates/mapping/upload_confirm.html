@@ -1,0 +1,93 @@
+{% extends "main/base.html" %}
+{% load static %}
+{% load materializecss %}
+
+{% block head %}
+  <title>Confirm upload | Heatflow.org</title>
+  <script src="{% static 'database/js/dropdown.js' %}" type="text/javascript"></script>
+{% endblock %}
+
+{% block content %}
+
+  {% if result %}
+    {% comment %} {% if result.has_errors %}
+      <center><h4>Error</h4></center>
+      <p class="flow-text">
+        An unknown error has occured while trying to validate your file. Please <a href='mailto:info@heatflow.org'>email us</a> and attach the relevant file and we will do our best to work out the problem and get your data uploaded. Thank you.
+      </p> {% endcomment %}
+
+    {% if result.has_validation_errors %}
+      <center><h4>Warning: Incorrect data types found during the import!</h4></center>
+      <br>
+      <p>Please correct the following errors and <a href='/upload'>try again.</a></p>
+      <table class="striped">
+        <thead>
+          <tr>
+            <th>Row</th>
+            <th>Errors</th>
+            {% for field in result.diff_headers %}
+              <th>{{ field }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+        {% for row in result.invalid_rows %}
+          <tr>
+            <td>{{ row.number }} </td>
+            <td class="errors">
+              <!-- Dropdown Trigger -->
+             <a class='dropdown-trigger btn red' href='#' data-target='dropdown1'><b>{{ row.error_count }}</b></a>
+
+             <!-- Dropdown Structure -->
+             <ul id='dropdown1' class='dropdown-content'>
+               {% for field_name, error_list in row.field_specific_errors.items %}
+                  {% for error in error_list %}
+                  <li><b><em>{{ field_name }}: </em></b>{{ error }}</li>
+
+                  {% endfor %}
+                {% endfor %}
+             </ul>
+            </td>
+            {% for field in row.values %}
+              <td>{{ field }}</td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+
+    {% else %}
+      <center><h4>Preview</h4></center>
+      <table class="striped">
+        <thead>
+          <tr>
+            <th></th>
+            {% for field in result.diff_headers %}
+              <th>{{ field }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        {% for row in result.valid_rows %}
+          <tr>
+            <td class="import-type">
+              {% if row.import_type == 'new' %}
+                New
+              {% elif row.import_type == 'skip' %}
+                Skipped
+              {% elif row.import_type == 'delete' %}
+                Delete
+              {% elif row.import_type == 'update' %}
+                Update
+              {% endif %}
+            </td>
+            {% for field in row.diff %}
+              <td>{{ field }}</td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      </table>
+
+    {% endif %}
+  {% endif %}
+
+{% endblock %}

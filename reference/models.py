@@ -36,7 +36,10 @@ class Reference(TimeStampAbstract):
 
     @property
     def reference(self):
-        return '{}{}'.format(self.first_author.last_name,self.year)
+        if self.year:
+            return '{}{}'.format(self.first_author.last_name,self.year)
+        else:
+            return '{}'.format(self.first_author.last_name)
 
     @property
     def co_authors_display(self):

@@ -8,6 +8,72 @@ from import_export import resources
 from main import widgets
 import sys
 
+class AbstractResource(resources.ModelResource):
+
+    def before_import(self, dataset, using_transactions, dry_run, **kwargs):
+        """ Start import timer and initialize count for progress bar"""
+        self.now = time.time()  
+        self.number_of_rows = len(dataset)
+        self.row_number = 0
+        print('')
+
+    def after_import_row(self, row, row_result, **kwargs):
+        """ Updates the progress bar"""
+        self.row_number +=1
+        self.progress_bar(self.row_number,self.number_of_rows)
+
+    def after_import(self, dataset,result,using_transactions, dry_run,**kwargs):
+        """Cleans up the result preview and stops timer"""
+        # find the columns that do not contain any data and store the index
+        remove_these = []
+        for i, header in enumerate(result.diff_headers.copy()):
+            has_data = False
+            if header == 'year':
+                remove_these.append(i)
+                result.diff_headers.remove(header)
+                break
+            for row in result.rows: 
+                if row.diff[i]:
+                    has_data = True
+                    break
+            if not has_data:
+                remove_these.append(i)
+                result.diff_headers.remove(header)
+        
+        
+        for row in result.rows:
+            # remove stored indices from each row of the result
+            for i in sorted(remove_these,reverse=True):
+                del row.diff[i]
+        
+        result.diff_headers[result.diff_headers.index('authors')] = 'reference'
+        result.diff_headers = [h.replace('_',' ').capitalize() for h in result.diff_headers]
+
+
+        print('\n\nTIME ELAPSED: {}m'.format((time.time()-self.now)/60)) 
+        print('Failed row count: {}\n'.format(len(dataset)-self.row_number)) 
+
+    def progress_bar(self, i, total, message='', decimals=0, bar_length=25):
+        """Creates a terminal progress bar
+
+        :param i: i number
+        :type controlfile: int/float
+
+        :param message: message to be displayed on the right of the progress bar
+        :type message: str
+        """
+
+        str_format = "{0:." + str(decimals) + "f}"
+        percentage = str_format.format(100 * (i / float(total)))
+        filled_length = int(round(bar_length * i / float(total)))
+        bar = '#' * filled_length + '-' * (bar_length - filled_length)
+
+        sys.stdout.write('\rPopulating database |{}| {}% {}             '.format(bar, percentage,'- '+message))
+
+        if i == total:
+            sys.stdout.write('')
+        sys.stdout.flush()
+
 # This data needs to be included in all import_export resources
 class SiteResourceMixin(resources.ModelResource):
 
@@ -50,7 +116,7 @@ class SiteResourceMixin(resources.ModelResource):
     authors = Field(attribute='reference', widget=widgets.ReferenceWidget(Reference, field='reference',))
     year = Field(attribute='reference__year', readonly=True)
 
-class HeatFlowResource(SiteResourceMixin):
+class HeatFlowResource(SiteResourceMixin, AbstractResource):
 
     # Heatflow data associated with interval
     heatflow__corrected = Field(attribute='heatflow',widget=widgets.SitePropertyWidget(HeatFlow,
@@ -133,20 +199,15 @@ class HeatFlowResource(SiteResourceMixin):
 
         export_order = fields.copy()
 
-    def before_import(self, dataset, using_transactions, dry_run, **kwargs):
-        self.now = time.time()  
-        self.number_of_rows = len(dataset)
-        self.row_number = 0
-        print('')
-
     def before_import_row(self,row=None,**kwargs):
 
         for field,value in row.items():
             if isinstance(value,str):
                 row[field] = value.strip(' ')
 
-        user = kwargs['user']._wrapped
-        row['added_by'] = '{},{}'.format(user.last_name,user.first_name[0])
+        if kwargs.get('user'):
+            user = kwargs['user']._wrapped
+            row['added_by'] = '{},{}'.format(user.last_name,user.first_name[0])
 
 
         row['reference'] = widgets.get_reference(Reference, row, id_fields = ['first_author','year'])
@@ -155,10 +216,6 @@ class HeatFlowResource(SiteResourceMixin):
                                         id_fields=['site_name','latitude','longitude'],
                                         exclude=['bottom_hole_temp','top_hole_temp'],
                                         recursive=True)          
-
-    def after_import_row(self, row, row_result, **kwargs):
-        self.row_number +=1
-        progress_bar(self.row_number,self.number_of_rows)
 
     def after_save_instance(self,instance, using_transactions, dry_run):
         # reverse OneToOne relationship need to be saved AFTER the parent model. This is quite possibly going to make this very slow but I don't see another way
@@ -169,27 +226,5 @@ class HeatFlowResource(SiteResourceMixin):
             if getattr(instance,i,False):
                 getattr(instance,i).save()
 
-    def after_import(self, dataset,result,using_transactions, dry_run,**kwargs):
-        print('\n\nTIME ELAPSED: {}m'.format((time.time()-self.now)/60)) 
-        print('Failed row count: {}\n'.format(len(dataset)-self.row_number)) 
 
-def progress_bar(i, total, message='', decimals=0, bar_length=25):
-    """Creates a terminal progress bar
 
-    :param i: i number
-    :type controlfile: int/float
-
-    :param message: message to be displayed on the right of the progress bar
-    :type message: str
-    """
-
-    str_format = "{0:." + str(decimals) + "f}"
-    percentage = str_format.format(100 * (i / float(total)))
-    filled_length = int(round(bar_length * i / float(total)))
-    bar = '#' * filled_length + '-' * (bar_length - filled_length)
-
-    sys.stdout.write('\rPopulating database |{}| {}% {}             '.format(bar, percentage,'- '+message))
-
-    if i == total:
-        sys.stdout.write('')
-    sys.stdout.flush()

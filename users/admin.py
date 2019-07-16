@@ -20,6 +20,7 @@ class UserAdmin(BaseUserAdmin):
         (None,              {'fields': ('last_name','first_name', 'password')}),
         ('Contact info',    {'fields': ('email',)}),
         ('Address',         {'fields': ('university','address1','address2','city','state','country',)}),
+        ('Image', {'fields': ('image',)}),
         ('Permissions',     {'fields': ('is_active','is_staff','groups','user_permissions')}),
     )
 

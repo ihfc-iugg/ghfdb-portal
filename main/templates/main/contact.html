@@ -1,0 +1,28 @@
+{% extends "main/base.html" %}
+<!-- {% load static %} -->
+
+<head>
+  {% block head %}
+  <title>About | Heatflow.org</title>
+  {% endblock %}
+</head>
+
+{% block content %}
+<header class='center'>
+  <h3>About Heatflow.org</h3>
+</header>
+
+<body>
+  <img class="center" src="{% static 'main/images/heatflow.gif' %}" alt="heatflow" style = "display:block; margin-left:auto; margin-right:auto;"﻿>
+
+  <p class="flow-text">
+  HeatFlow.org serves as a home to data and models relevant to thermal studies of the Earth including the global heat flow database. Here you will find estimates of heat flow, thermal conductivity, and heat generation as well as quality indicators and additional data relevant to interpreting the thermal data.
+  <br/><br/>
+  Heat flow is a measure of heat loss across the surface of the Earth and is useful for modeling recent tectonic activity, transport of heat by groundwater, variations in concentrations of the radiogenic elements U, Th and K, glacial dynamics, and recent changes in climate.
+  <br/><br/>
+  This revised version of the Global Heat Flow Database is by Dr Derrick Hasterok from the University of Adelaide, Australia. This website is designed to collect, share and query heat flow data from all around the world and <a href="/upload">contributions to the database</a> are always appreciated. For more information or questions regarding the study of Earth's heat flow or this database, you can email info@heatflow.org or visit the <a href="/contact">contacts</a> page.
+  <br/><br/>
+  To cite this database: Hasterok, D., (in prep.) An analysis of the revised global heat flow database.
+  </p>
+  {% endblock %}
+</body>

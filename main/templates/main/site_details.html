@@ -1,0 +1,62 @@
+{% extends "main/map_at_top.html" %}
+{% load static %}
+{% load custom_tags %}
+
+{% block title %}
+  <title>Site: {{ site.site_name }} | Heatflow.org</title>
+{% endblock title%}
+
+{% block under-map %}
+
+  <div class='container-fluid text-center'>
+
+    <h1>{{ site.site_name }}
+      <button  type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter">
+        <i class="fas fa-file-download fa-sm"></i>
+      </button>
+    </h1>
+
+    <em>({{ site.latitude }}, {{ site.longitude }})</em>
+    <br>
+    <br>Elevation: {{ site.elevation }}
+    <br>Dip: {{ site.dip }}
+    <br>Sediment Thickness: {{ site.sediment_thickness }}
+
+    <div class='row'>  
+      <table id='site-table' class="table table-striped">
+        <thead class="thead-dark">
+          <tr>
+            <th>Depth [m]</th>       
+            <th>Heatflow [mW/m<sup>2</sup>]</th>
+            <th>Heatflow Uncertainty</th>
+            <th>Temperature Gradient [&#8451] </th>
+            <th>Thermal Conductivity [W/mK]</th>
+            <th>Heat Generation [&micro;W/m<sup>3</sup>]</th>
+          </tr>
+        </thead>   
+        <tbody>
+        {% comment %} {% for heatflow in site.heatflow_set.all %} {% endcomment %}
+        {% for interval in depth_intervals %}
+          <tr class='site-table-row'>
+            <td>{{ interval.depth_min|default_if_none:'' }}-{{ interval.depth_max|default_if_none:'' }}</td>
+            <td>{% firstof interval.heatflow.corrected interval.heatflow.uncorrected %}</td>
+            <td>{% firstof interval.heatflow.corrected_uncertainty interval.heatflow.uncorrected_uncertainty %}</td>
+            <td>{% firstof interval.temperaturegradient.corrected interval.temperaturegradient.uncorrected %}</td>
+            <td> {{ interval.conductivity.value|default_if_none:'' }}</td>
+            <td> {{ interval.heatgeneration.value|default_if_none:'' }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% include 'main/download_modal.html' %}
+
+{% endblock under-map %}
+
+
+
+
+
+

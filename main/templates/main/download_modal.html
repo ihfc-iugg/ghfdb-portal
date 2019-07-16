@@ -1,0 +1,73 @@
+{% load widget_tweaks %}
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+  <div class="modal-content">
+    <div class="modal-header">
+    <h5 class="modal-title" id="exampleModalLongTitle">Site - Select data</h5>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    </div>
+
+    <div class="modal-body">
+    <div id="accordion">
+      <div class="card">
+      <div class="card-header" id="site-filter">
+          <h5 class="mb-0">
+          <button class="btn btn-link" data-toggle="collapse" data-target="#site-collapsible" aria-expanded="true" aria-controls="site-collapsible">
+              Site
+          </button>
+          </h5>
+      </div>
+      <div id="site-collapsible" class="collapse show" aria-labelledby="site-filter" data-parent="#accordion">
+      <div class="card-body">
+        {% comment %} {{ form.as_p}} {% endcomment %}
+        {% for field in form %}
+          <div class="form-check form-check-inline">
+            {% render_field field class='form-check-input' %}
+            <label class="form-check-label" for="inlineCheckbox1">{{ field.label }}</label>
+          </div>
+        {% endfor %}
+      </div>
+
+      </div>      
+
+      <div class="card">
+      <div class="card-header" id="headingTwo">
+          <h5 class="mb-0">
+          <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+              Thermal Conductivity
+          </button>
+          </h5>
+      </div>
+      <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+          <div class="card-body">
+          Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
+          </div>
+      </div>
+      </div>
+      <div class="card">
+      <div class="card-header" id="headingThree">
+          <h5 class="mb-0">
+          <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+              Heat Generation
+          </button>
+          </h5>
+      </div>
+      <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
+          <div class="card-body">
+          Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
+          </div>
+      </div>
+      </div>
+    </div>
+    </div>
+    <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+    <button type="button" class="btn btn-primary">Download</button>
+    </div>
+  </div>
+  </div>
+</div>

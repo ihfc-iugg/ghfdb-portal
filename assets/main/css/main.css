@@ -1,0 +1,184 @@
+/* @media screen and (max-width: 768px) {
+    #reference-container.container {
+        margin: auto;
+    }
+
+} */
+
+
+
+
+div.top-map {
+    /* position: relative;
+    top: 1; left: 0; */
+    height: 50vh;
+    width: 100%;
+    /* z-index: -1; */
+    }
+
+#details-table {
+    width: 30%;
+    margin: auto;
+}
+
+#site-table {
+    width: 75%;
+    margin: auto;
+}
+
+#reference-info-card {
+
+    margin: 1rem;
+
+}
+
+#reference-info-card .card {
+
+    border: 5px;
+
+}
+
+#reference-info-card .card-header:hover {
+
+    background-color: rgb(233, 233, 233);
+
+}
+
+
+#reference-info-card a {
+    text-decoration: none;  
+    color: black;
+  }
+
+/* #reference-info-card a {
+    z-index:5;
+} */
+
+#detailsTable th:hover {
+
+    background-color: #1d2124;
+    
+}
+
+#download-button {
+
+    z-index:100;
+}
+
+
+
+#headingOne.card-header {
+
+    border:0px;
+}
+
+#headingOne h3 {
+
+    margin:0px;
+
+}
+
+.navbar {
+    z-index: 900;
+}
+
+
+
+/* #reference-table {
+    width: 75%;
+    margin: auto;
+} */
+
+p.small {
+
+    margin-bottom:.1rem;
+}
+
+.card-spacing {
+    margin:10px;
+    margin-top:0px;
+  }
+
+.equal-width {
+    table-layout:fixed;
+}
+
+a.linked-card {
+    color: inherit;
+    /* background-color: gray; */
+    text-decoration: inherit;
+}
+
+.listCards:hover {
+    /* background-color: gray; */
+    box-shadow: 3px 3px 3px 3px rgb(194, 194, 194);
+    transform: scale(1.005);
+}
+
+.container#list-container {
+
+    background-color: rgb(243, 243, 243);
+    box-shadow: 1px 2px 5px 4px rgb(230, 230, 230);
+    bottom:0;
+    height:100%;
+}
+
+.row.paginator-row ul {
+
+    margin-bottom: 3px;
+
+}
+
+.carouselContainer {
+
+    padding:10px
+
+}
+
+.carouselImage {
+    /* padding-top: 10px; */
+    margin: auto;
+    width: auto;
+    height: 225px;
+    max-height: 225px;
+}
+
+.filter-card {
+    margin: auto;
+}
+
+.filter-card th, td {
+
+    padding: 5px 5px 5px 0px;
+    /* padding-bottom: 5px; */
+    /* padding */
+}
+
+/* .cards-list {
+
+    background-color: aqua;
+} */
+
+#top-of-list {
+    margin-top:2px;
+}
+
+#sort-by-links {
+
+    position:relative;
+
+}
+
+#links {
+
+    position: absolute;
+    bottom:0;
+    margin-bottom: 0px;
+
+}
+
+#popup-data {
+
+    padding:1px
+
+}

@@ -1,10 +1,22 @@
+from copy import deepcopy
+
+class A():
+    def __init__(self):
+        self.Meta = deepcopy(A.Meta)
+
+    class Meta:
+        x = 8
 
 
-# row = [4,'',3,6,2,None,4,6]
+
+if __name__ == '__main__':
+
+    a = A()
+    b = deepcopy(a)
+
+    b.Meta.x = 4
+
+    print(a.Meta.x)
+    print(b.Meta.x)
 
 
-row = {'x':8,'y':3,'z':''}
-
-t = dict(filter(lambda item: item[1], row.items()))
-
-print(t)

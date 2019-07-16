@@ -3,6 +3,9 @@ from .models import HeatFlow,Temperature, TemperatureGradient
 from django.utils.encoding import smart_text, force_text
 from django.core.exceptions import ValidationError
 from reference.models import Author
+from django import forms
+from django.utils.translation import ugettext as _
+
 
 def get_non_relational_fields(model,row,exclude=[]):
     return [f for f in model._meta.concrete_fields if row.get(f.name) and f.name not in exclude]
@@ -134,7 +137,7 @@ def update_or_create_object(model=None, row=None, id_fields='', exclude='',recur
     try:
         return model.objects.update_or_create(**id_fields,defaults=fields)[0]
     except model.MultipleObjectsReturned:
-        raise ValueError('Found more than one {} object with the given information.'.format(model._meta.object_name))
+        raise ValidationError('Found more than one {} object with the given information.'.format(model._meta.object_name))
 
 class SiteWidget(ForeignKeyWidget):
     def __init__(self, model, field=None, render_field=None, *args, **kwargs):
@@ -291,4 +294,82 @@ class M2MWidget(ManyToManyWidget):
     def render(self, value, obj=None):
         ids = [smart_text(getattr(obj, self.field)) for obj in value.all()]
         return self.separator.join(ids)
+
+
+# -------- FILTER WIDGETS ----------
+class RangeWidget(forms.MultiWidget):
+    """
+    A MultiWidget that allows users to provide custom suffixes instead of indexes.
+
+    - Suffixes must be unique.
+    - There must be the same number of suffixes as fields.
+    """
+    # template_name = 'widgets/rangewidget.html'
+    suffixes = ['_gte', '_lte']
     
+
+    def __init__(self, suffixes=None, *args, **kwargs):
+        if suffixes is not None:
+            self.suffixes = suffixes
+        widgets = (forms.NumberInput(attrs={'placeholder':'Min'}), forms.NumberInput(attrs={'placeholder':'Max'}))
+
+
+        super().__init__(widgets=widgets,*args, **kwargs)
+
+        assert len(self.widgets) == len(self.suffixes)
+        assert len(self.suffixes) == len(set(self.suffixes))
+
+    def suffixed(self, name, suffix):
+        return '_'.join([name, suffix]) if suffix else name
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        for subcontext, suffix in zip(context['widget']['subwidgets'], self.suffixes):
+            subcontext['name'] = self.suffixed(name, suffix)
+
+        return context
+
+    def value_from_datadict(self, data, files, name):
+        return [
+            widget.value_from_datadict(data, files, self.suffixed(name, suffix))
+            for widget, suffix in zip(self.widgets, self.suffixes)
+        ]
+
+    def value_omitted_from_data(self, data, files, name):
+        return all(
+            widget.value_omitted_from_data(data, files, self.suffixed(name, suffix))
+            for widget, suffix in zip(self.widgets, self.suffixes)
+        )
+
+    def replace_name(self, output, index):
+        result = search(r'name="(?P<name>.*)_%d"' % index, output)
+        name = result.group('name')
+        name = self.suffixed(name, self.suffixes[index])
+        name = 'name="%s"' % name
+
+        return sub(r'name=".*_%d"' % index, name, output)
+
+    def decompress(self, value):
+        if value:
+            return [value.start, value.stop]
+        return [None, None]
+
+class RangeField(forms.MultiValueField):
+    widget = RangeWidget
+
+    def __init__(self, template='widgets/rangewidget.html',field=None, *args, **kwargs):
+        self.template = template
+
+        if field is None:
+            fields = (
+                forms.DecimalField(),
+                forms.DecimalField())
+        else:
+            fields = (field,field)
+ 
+        super().__init__(fields, *args, **kwargs)
+
+    def compress(self, data_list):
+        if data_list:
+            return slice(*data_list)
+        return None

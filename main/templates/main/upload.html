@@ -1,0 +1,68 @@
+{% extends "main/base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}<title>Upload | Heatflow.org</title>{% endblock title%}
+
+{% block head %}
+
+  <script src="https://cdn.jsdelivr.net/npm/bs-custom-file-input/dist/bs-custom-file-input.min.js"></script>
+
+{% endblock head %}
+
+
+{% block content %}
+ <div class="container h-100" id='list-container'>
+ <br>
+  <div class='container-fluid'>
+    <h1 class='text-center'>Upload</h1>
+      <p class='text-center'>
+      Thanks for choosing to contribute to ThermoGlobe! To ensure a hassle free upload, please copy and paste your data into the <a href="/">excel template</a> provided and upload using the form below. For a list of column names, descriptions and acceptable values, please see <a href=''>here</a>. If you believe you have additional data that could benefit this database, but can't find an appropriate column in the template, please <a href='contact'>contact us</a> here.
+      </p>
+
+      <div id='file-upload' class='shadow-sm bg-white rounded'>
+
+        <form id='upload-form' method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text" id="basic-addon1">Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </div>
+            {% render_field form.first_name class='form-control' placeholder='First name' %}
+            {% render_field form.last_name class='form-control' placeholder='Last name' %}
+          </div>
+
+          <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text">File <br> Description</span>
+            </div>
+            {% render_field form.file_description class='form-control' placeholder='Please provide a short description of the file contents...'%}
+          </div>
+
+
+          <div class="input-group mb-3">
+            <div class="custom-file">
+              {% render_field form.file_upload class='custom-file-input' placeholder='Select a file' %}
+              
+              <label class="custom-file-label" for={{ form.file_upload.id_for_label }}>Choose file</label>
+            </div>
+          </div>
+          <div class='text-center'>
+            <button class="btn btn-lg btn-primary" type="submit" name="action">Upload</button>
+          </div> 
+        </form>
+      </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    $(document).ready(function () {
+      bsCustomFileInput.init()
+    })
+  </script>
+
+{% endblock scripts %}

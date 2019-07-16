@@ -1,0 +1,54 @@
+{% extends "main/base.html" %}
+{% load static %}
+
+{% block title %}
+{% endblock title %}
+
+{% block head %}
+
+  <!-- FOR LEAFLET MAP -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"
+   integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+   crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
+   integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og=="
+   crossorigin=""></script>
+
+  <!-- FOR CLUSTERING OF MAP MARKERS -->
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"/>
+  <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+
+  <script type="text/javascript" src="{% static '/main/js/jquery.tablesorter.js' %}"></script>
+
+{% endblock head %}
+
+
+{% block content %}
+  <div class='top-map' id='map'></div>
+
+  {% block under-map %}
+  {% endblock under-map %}    
+
+{% endblock content %}
+
+{% block scripts %}
+
+  <script src="{% static 'main/js/map.js' %}"></script>
+
+  <script>
+
+    var siteMarkers = L.geoJSON({{ point|safe }},{
+        onEachFeature: onEachFeature
+    });
+
+    //builds the map
+    var map = buildMap([-90,-360],[90,360],false)
+
+  </script>
+
+  {% block more-scripts %}
+  {% endblock more-scripts %}
+
+{% endblock scripts %}
