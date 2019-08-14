@@ -4,7 +4,7 @@
 {% block title %}<title>Home | Heatflow.org</title>{% endblock title%}
 
 {% block content %}
- <div class="container" id='list-container'>
+ {% comment %} <div class="container" id='list-container'> {% endcomment %}
   <div class='container-fluid'>
     <h1 class='text-center'>Heatflow.org: a global heatflow database</h1>
 
@@ -57,6 +57,6 @@
 
     </p>
   </div>
-</div>
+{% comment %} </div> {% endcomment %}
 
 {% endblock %}

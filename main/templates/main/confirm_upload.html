@@ -11,7 +11,7 @@
 
 
 {% block content %}
-<div class="container h-100" id='list-container'>
+{% comment %} <div id='list-container' class='container'> {% endcomment %}
  <br>
   {% if result %}
     {% if result.has_errors %}
@@ -82,17 +82,6 @@
         </thead>
         {% for row in result.valid_rows %}
           <tr>
-            {% comment %} <td class="import-type">
-              {% if row.import_type == 'new' %}
-                New
-              {% elif row.import_type == 'skip' %}
-                Skipped
-              {% elif row.import_type == 'delete' %}
-                Delete
-              {% elif row.import_type == 'update' %}
-                Update
-              {% endif %}
-            </td> {% endcomment %}
             {% for field in row.diff %}
               <td>{{ field }}</td>
             {% endfor %}
@@ -102,5 +91,5 @@
 
     {% endif %}
   {% endif %}
-</div>
+{% comment %} </div> {% endcomment %}
 {% endblock %}

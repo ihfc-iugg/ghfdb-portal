@@ -1,6 +1,8 @@
 from django import forms
 from main.widgets import RangeField, RangeWidget
 from reference.models import FileStorage
+from captcha.fields import ReCaptchaField
+from captcha.widgets import ReCaptchaV3
 
 class DownloadForm(forms.Form):
 
@@ -19,7 +21,7 @@ class DownloadForm(forms.Form):
     heatflow_to = forms.FloatField(required=False, min_value=0)
 
 class UploadForm(forms.ModelForm):
-
+    captcha = ReCaptchaField(widget=ReCaptchaV3)
     class Meta:
         model = FileStorage
         fields = ['first_name','last_name','description','data',]

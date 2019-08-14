@@ -24,17 +24,17 @@
 
 {% endblock head %}
 
+{% block fullwidth %}
+  <div class='top-map' id='map'></div>
+{% endblock fullwidth %}
 
 {% block content %}
-  <div class='top-map' id='map'></div>
-
-  {% block under-map %}
-  {% endblock under-map %}    
-
 {% endblock content %}
 
 {% block scripts %}
 
+  <script src="{% static 'main/js/spin.js' %}"></script>
+  <script src="{% static 'main/js/leaflet-spin.js' %}"></script>
   <script src="{% static 'main/js/map.js' %}"></script>
 
   <script>
@@ -44,7 +44,9 @@
     });
 
     //builds the map
-    var map = buildMap([-90,-360],[90,360],false)
+    var map = initMap([-90,-360],[90,360],false).fitBounds(siteMarkers.getBounds())
+
+    var clusters = false
 
   </script>
 

@@ -26,7 +26,7 @@
 
 {% endblock head %}
  
-{% block content %}
+{% block fullwidth %}
 
 <div class='full-screen'>
 
@@ -74,31 +74,31 @@
     </form>
   </div>
 
-  <div id='map' class='db-map'>
+    <div id='map' class='db-map'>
 
-    <div class="info-bar text-center">
+      <div class="info-bar text-center">
 
-      <div class="collapse" id="navbarToggleExternalContent">
-        <div class="p-4">
-          <h4 class="text-white">Collapsed content</h4>
-          <span class="text-muted">Toggleable via the navbar brand.</span>
+        <div class="collapse" id="navbarToggleExternalContent">
+          <div class="p-4">
+            <h4 class="text-white">Collapsed content</h4>
+            <span class="text-muted">Toggleable via the navbar brand.</span>
+          </div>
         </div>
-      </div>
-      <div>
-        <button id='close-btn' class='btn btn-secondary rounded-circle'><i class="fas fa-info-circle fa-2x"></i></button>
+        <div>
+          <button id='close-btn' class='btn btn-secondary rounded-circle'><i class="fas fa-info-circle fa-2x"></i></button>
 
-        {% comment %} <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent" aria-expanded="false" aria-label="Toggle navigation">
-        <i class="fas fa-caret-square-up"></i></span>
-        </button> {% endcomment %}
-      </div>
+          {% comment %} <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent" aria-expanded="false" aria-label="Toggle navigation">
+          <i class="fas fa-caret-square-up"></i></span>
+          </button> {% endcomment %}
+        </div>
 
+    </div>
   </div>
   
-  
-  </div>
+
 
 </div>
-{% endblock content %}
+{% endblock fullwidth %}
 
 {% block scripts %}
   <script>
@@ -127,11 +127,12 @@
     
   <script>
  
-  var callbackURL = "{% url 'main:filter_data' %}"
+    var callbackURL = "{% url 'main:filter_data' %}"
 
-  //creates all of the markers from the given geojson
-  var siteMarkers = createMarkers({{ points|safe }})  
+    //creates all of the markers from the given geojson
+    var siteMarkers = createMarkers({{ points|safe }})  
 
+    var map = initMap([-100,-360],[100,360],true).fitWorld()
   </script>
 
   <script>

@@ -1,14 +1,3 @@
-
-//builds the map
-var map = initMap([-100,-360],[100,360],true).fitWorld()
-
-
-// $(document).ready(function(){
-
-// })
-
-
-
 $(document).ready(function(){
    
   //build the marker clusters
@@ -64,11 +53,6 @@ $(document).ready(function(){
       }
     })
   });
-
-
-
-
-
   });
 
 function initMap(lat,lon, cluster)  {

@@ -9,6 +9,9 @@
   transition:0.5s;
 }
 
+
+
+
 .info-bar {
   /* background-color: green; */
   width:100%;
@@ -23,16 +26,19 @@
   top: -1;
 }
 
+
+
 div.db-map {
 
   position: absolute;
   top: 0;
-  /* right: 0; */
-  width:100%;
+  right: 0;
+  /* width:100%; */
   left: 400px;
   height: 100%;
   z-index:-1;
   transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
+
  
 }
 

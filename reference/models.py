@@ -1,6 +1,7 @@
 from django.db import models
 from main.models import TimeStampAbstract
 import os
+import time
 
 # Create your models here.
 class Author(models.Model):
@@ -55,8 +56,14 @@ class Reference(TimeStampAbstract):
         return ("first_author__last_name__icontains", "year__exact")
 
 
+
+def file_storage_path(instance, filename):
+    path = 'data/{}'.format(time.strftime("%Y/%m/"))
+    name = '{}_{}.{}'.format(instance.last_name,instance.first_name,filename.split('.')[1])
+    return os.path.join(path, name)
+
 class FileStorage(models.Model):
-    data = models.FileField(upload_to='data/%Y/%m/')
+    data = models.FileField(upload_to=file_storage_path)
     description = models.TextField(blank=True, null=True)
 
     first_name = models.CharField(max_length=150)
@@ -73,7 +80,4 @@ class FileStorage(models.Model):
         return self.data.name
 
 
-def content_file_name(instance, filename):
-    ext = filename.split('.')[-1]
-    filename = "%s_%s.%s" % (instance.user.id, instance.questid.id, ext)
-    return os.path.join('uploads', filename)
+

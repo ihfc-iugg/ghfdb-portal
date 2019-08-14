@@ -37,7 +37,7 @@ SECRET_KEY = '#y&sp64))zo$6fbxjgf-b!*-*w@f!x=gjoi9&kjc*)0@usw)@j'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost']
+ALLOWED_HOSTS = ['localhost','127.0.0.1']
 
 # Application definition
 INSTALLED_APPS = [
@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'import_export',
+    'captcha',
     # 'multiselectfield',
     'django_extensions',
     # 'django_filters',
@@ -169,3 +170,6 @@ MAPBOX_ACCESS_TOKEN = "pk.eyJ1Ijoic3NqZW5ueTkwIiwiYSI6ImNqd2J2d2poeDAzOGk0OXBsZn
 # INTERNAL_IPS = ('127.0.0.1',)
 
 GRAPPELLI_ADMIN_TITLE = 'Heatflow.org - Admin Site'
+
+RECAPTCHA_PUBLIC_KEY = '6Ldo5K0UAAAAABE41reWBnmCbMKY-IzCeYJ1rpK5'
+RECAPTCHA_PRIVATE_KEY = '6Ldo5K0UAAAAAAN-c94zVpWvaEwQ1c1p7KV8nSvA'

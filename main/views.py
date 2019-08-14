@@ -48,7 +48,6 @@ class AboutView(TemplateView):
 class ContactView(TemplateView):
     template_name= 'main/contact.html'
 
-
 def download_success(request):
     return render(request,'main/download_success.html')
 
@@ -131,10 +130,9 @@ class UploadView(TemplateView):
         if form.is_valid():
             result = self.dry_run(request)
 
-            # print(result.errors)
-
-            if not result.has_errors():
-                form.save()
+            """UNCOMMENT TO SAVE FILES TO SERVER"""
+            # if not result.has_errors():
+            #     form.save()
 
             return render(request, 'main/confirm_upload.html', {'result':result,})
 

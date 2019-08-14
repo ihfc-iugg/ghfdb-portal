@@ -4,3 +4,4 @@ django_widget_tweaks
 django_filters
 django_countries
 Pillow
+django-recaptcha

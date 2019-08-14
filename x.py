@@ -11,12 +11,7 @@ class A():
 
 if __name__ == '__main__':
 
-    a = A()
-    b = deepcopy(a)
-
-    b.Meta.x = 4
-
-    print(a.Meta.x)
-    print(b.Meta.x)
+    x = 'asdasd.asdasd'
+    print(x.split('.'))
 
 
