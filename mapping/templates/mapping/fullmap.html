@@ -12,17 +12,14 @@
   <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
    integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og=="
    crossorigin=""></script>
-
  
   <!-- FOR MARKER CLUSTERING -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css"/>
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"/>
   <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 
-  <link rel="stylesheet" href="{% static "main/css/map.css" %}">
+  <link rel="stylesheet" href="{% static "mapping/css/map.css" %}">
   <link rel="stylesheet" href="{% static "main/css/spin.css" %}">
-
-
 
 {% endblock head %}
  
@@ -30,130 +27,51 @@
 
 <div class='full-screen'>
 
-  <button id='open-btn' class='btn btn-secondary'><i class="fas fa-filter"></i></button>
-
-  <div id="mySidenav" class="sidenav bg-dark text-center">
-    <li id='sidebar-title' class="list-group-item sidebar-separator-title menu-collapsed text-right">
-      <button id='close-btn' class='btn btn-secondary'><i class="fas fa-filter"></i></button>
-    </li>
-    <form id='myform' action="" method='GET'>
-      {% for form in forms %}
-        <!-- SIDEBAR MENU NAME -->
-        <a href="#{{ form.menu_title|slugify }}" data-toggle="collapse" aria-expanded="false" class="bg-dark  list-group-item flex-column align-items-start">
-            <div class="justify-content-start">
-              <span class="menu-collapsed">{{ form.menu_title|title }}</span>
-            </div>
-        </a>
-        <!-- SIDEBAR SUBMENU -->
-        <div id="{{ form.menu_title|slugify }}" class="collapse sidebar-submenu">
-          <!-- SUBMENU FILTERS -->
-          <div class='list-group-item submenu bg-dark'>
-            {% for field in form.form %}
-              {% if field.field.widget.input_type == 'checkbox' %}
-                <div class='form-check-inline sub-menu-item text-center'>
-                  <div class="form-check form-check-inline">
-                    {% render_field field id=form.menu_title|slugify class='form-check-input' data-toggle="toggle" %}
-                    <label class="form-check-label" for="inlineCheckbox1">{{ field.label }}</label>
-                  </div>
-              {% else %}
-                <div class='input-group sub-menu-item'>
-                  <div class='input-group-prepend' data-toggle="tooltip" data-placement="top" title="{{ field.help_text }}" >
-                    <span class="input-group-text" id="">{{ field.label|title }}</span>
-                  </div> 
-                  {% render_field field|add_class:form.menu_title class="form-control"  %}
-              {% endif %}                      
-                </div>
-            {% endfor %}
-          </div>
-        </div>
+  {% comment %} Sidebar Navigation {% endcomment %}
+  <nav id="sideBar" class="sidenav navbar-light bg-light shadow-lg text-center">
+    <ul class="navbar-nav">
+      {% for panel in panels %}
+        {% include "mapping/side_panel_item.html" with target=panel %}
       {% endfor %}
+    </ul>
+  </nav>
 
-      <div class="sidebar-submenu">
-        <button id='submit-button' type='submit' class='btn btn-primary'>Apply Filters</button>  
-      </div>
-    </form>
-  </div>
+  {% comment %} Leaflet Map {% endcomment %}
+  <div id='map' class='db-map shadow-inset'></div>
 
-    <div id='map' class='db-map'>
-
-      <div class="info-bar text-center">
-
-        <div class="collapse" id="navbarToggleExternalContent">
-          <div class="p-4">
-            <h4 class="text-white">Collapsed content</h4>
-            <span class="text-muted">Toggleable via the navbar brand.</span>
-          </div>
-        </div>
-        <div>
-          <button id='close-btn' class='btn btn-secondary rounded-circle'><i class="fas fa-info-circle fa-2x"></i></button>
-
-          {% comment %} <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent" aria-expanded="false" aria-label="Toggle navigation">
-          <i class="fas fa-caret-square-up"></i></span>
-          </button> {% endcomment %}
-        </div>
-
-    </div>
-  </div>
-  
-
+  {% comment %} ----------------PANELS--------------- {% endcomment %}
+  {% for panel in panels %}
+    {% include "mapping/"|add:panel|add:"_panel.html" %}
+  {% endfor %}
 
 </div>
+
 {% endblock fullwidth %}
 
 {% block scripts %}
-  <script>
-
-    $('#close-btn').click(function() {
-
-      $('.sidenav').css('width', '0');
-      $('.db-map').css('left', 0);
-
-    });
-
-
-    $('#open-btn').click(function() {
-
-      $('.sidenav').css('width', '400px');
-      $('.db-map').css('left', '400px');
-
-    });
-
-
-  </script>
 
   <script src="{% static 'main/js/spin.js' %}"></script>
-  <script src="{% static 'main/js/leaflet-spin.js' %}"></script>
-  <script src="{% static 'main/js/map.js' %}"></script>
-    
+  <script src="{% static 'mapping/js/leaflet-spin.js' %}"></script>
+  <script src="{% static 'mapping/js/map.js' %}"></script>
+  <script src="{% static 'mapping/js/leaflet-providers.js' %}"></script>
+
   <script>
  
-    var callbackURL = "{% url 'main:filter_data' %}"
-
-    //creates all of the markers from the given geojson
-    var siteMarkers = createMarkers({{ points|safe }})  
-
     var map = initMap([-100,-360],[100,360],true).fitWorld()
-  </script>
+    var filterURL = "{% url 'mapping:filter_data' %}"
+    var siteMarkers = createMarkers({{ points|safe }})
 
-  <script>
-  
-    {% comment %} $(function () {
-      $('[data-toggle="tooltip"]').tooltip()
-    }) {% endcomment %}
+    update_info_table({{ info.count|safe }},'#info-counts-table')
+    update_info_table({{ info.average|safe }},'#info-average-table')
 
-    {% comment %} $("p").css("background-color", "yellow"); {% endcomment %}
-  
-
-    $(function() {
-        enable_cb();
-        $("#group1").click(enable_cb);
-    });
-
-    function enable_cb() {
-        $("input.group1").prop("disabled", !this.checked);
-    }
 
   </script>
+
+
+
+
+
+
 
 {% endblock scripts %}
 
