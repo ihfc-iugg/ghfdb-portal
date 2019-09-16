@@ -13,9 +13,8 @@
 
 #file-upload {
 
-
     padding: 1.5rem 3rem 1.5rem 3rem;
-    margin: 0 3rem 1.5rem 3rem;
+    /* margin: 0 3rem 1.5rem 3rem; */
     /* margin-bottom: 1.5rem; */
 
 }
@@ -95,13 +94,6 @@ div.top-map {
     z-index: 900;
 }
 
-
-
-/* #reference-table {
-    width: 75%;
-    margin: auto;
-} */
-
 p.small {
 
     margin-bottom:.1rem;
@@ -129,24 +121,40 @@ a.linked-card {
 }
 
 #main-container {
-    /* position: fixed; */
     background-color: rgb(243, 243, 243);
-    box-shadow: 1px 2px 5px 4px rgb(230, 230, 230);
-    /* top:56px; */
     bottom:0;
-    /* margin: auto; */
-    /* height:100%; */
+    padding-bottom: auto;
 }
+
+.earth {
+    width: 150px;
+    height: 150px;
+    border-radius:50%;
+    background-size:cover;
+    box-shadow: -20px -20px 50px 2px #000 inset, 0 0 20px 2px #000;
+    background-position: 10% center;
+}
+
+.earth-animation {
+    width: 150px;
+    height: 150px;
+    border-radius:50%;
+    background-size:cover;
+    box-shadow: -20px -20px 50px 2px #000 inset, 0 0 20px 2px #000;
+    animation-name: spin;
+    animation-timing-function: linear;
+    animation-direction: reverse;
+    animation-iteration-count: infinite;
+    animation-duration: 30s;
+  }
+
+  @keyframes spin {
+    100%{background-position:100%;}
+  }
 
 .row.paginator-row ul {
 
     margin-bottom: 3px;
-
-}
-
-.carouselContainer {
-
-    padding:10px
 
 }
 
@@ -157,6 +165,42 @@ a.linked-card {
     height: 225px;
     max-height: 225px;
 }
+
+
+.image-label {
+
+    position:absolute;
+    opacity: 0.7;
+    bottom: 0;
+    right:15px;
+    left:15px;
+
+}
+
+#navigationLinks > div {
+    position: relative;
+}
+
+
+#navigationLinks a:hover {
+
+    background-color: black;
+    opacity: 0.7;
+
+
+}
+
+#navigationLinks img, #navigationLinks i {
+    max-height: 275px;
+    object-fit:cover;
+    width: 100%;
+}
+
+/* #navigationLinks i {
+
+    position: absolute;
+    margin:auto;
+} */
 
 .filter-card {
     margin: auto;
@@ -197,3 +241,31 @@ a.linked-card {
     padding:1px
 
 }
+
+
+@media (max-width: 575.98px) {
+    /* //Manage Display Headers for Mobile Devices */
+    .display-1 {
+    font-size: 3rem;
+    font-weight: 300;
+    line-height: 1.0;
+    }
+    
+    .display-2 {
+        font-size: 2.75rem;
+        font-weight: 300;
+        line-height: 1.0;
+    }
+
+    .display-3 {
+        font-size: 2.25rem;
+        font-weight: 300;
+        line-height: 1.0;
+    }
+
+    .display-4 {
+        font-size: 1.75rem;
+        font-weight: 300;
+        line-height: 1.0;
+    }
+    }
