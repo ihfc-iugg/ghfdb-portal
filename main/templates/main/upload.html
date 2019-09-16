@@ -7,53 +7,63 @@
 {% block head %}
 
   <script src="https://cdn.jsdelivr.net/npm/bs-custom-file-input/dist/bs-custom-file-input.min.js"></script>
+  <script src='https://cdn.rawgit.com/larsgw/citation.js/archive/citation.js/citation-0.4.0-9.js'></script>
 
 {% endblock head %}
 
 {% block content %}
 {% comment %} <div id='list-container' class='container h-100'> {% endcomment %}
   <br>
-  <div class='container-fluid'>
+  <div class='container'>
     <h1 class='text-center'>Upload</h1>
-      <p class='text-center'>
+    <p class='text-center'>
       Thanks for choosing to contribute to ThermoGlobe! To ensure a hassle free upload, please copy and paste your data into the <a href="/media/templates/upload_template.csv">excel template</a> provided and upload using the form below. For a list of column names, descriptions and acceptable values, please see <a href=''>here</a>. If you believe you have additional data that could benefit this database, but can't find an appropriate column in the template, please <a href='contact'>contact us</a> here.
       </p>
 
-      <div id='file-upload' class='shadow-sm bg-white rounded'>
-
-        <form id='upload-form' method="post" enctype="multipart/form-data">
-          {% csrf_token %}
-          <div class="input-group mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text" id="basic-addon1">Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-            </div>
-            {% render_field form.first_name class='form-control' placeholder='First name' %}
-            {% render_field form.last_name class='form-control' placeholder='Last name' %}
+    <div id='file-upload' class='shadow-sm bg-white rounded mx-5'>
+      <form id='upload-form' method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text" id="basic-addon1">Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
           </div>
+          {% render_field form.first_name class='form-control' placeholder='First name' %}
+          {% render_field form.last_name class='form-control' placeholder='Last name' %}
+        </div>
 
-          <div class="input-group mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">File <br> Description</span>
-            </div>
-            {% render_field form.description class='form-control' placeholder='Please provide a short description of the file contents...'%}
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text">File<br>Description</span>
           </div>
+          {% render_field form.description class='form-control' placeholder='Please provide a short description of the file contents...'%}
+        </div>
 
+        <div id='bibx-out' class='m-3'></div>
 
-          <div class="input-group mb-3">
-            <div class="custom-file">
-              {% render_field form.data class='custom-file-input' placeholder='Select a file' %}
-              
-              <label class="custom-file-label" for={{ form.data.id_for_label }}>Choose file</label>
-            </div>
+        <div id='bib-input' class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text">Bibtex</span>
           </div>
+          <textarea id='bibx-in' type="text" name="first_name" placeholder="Bibtex" class="form-control in bibtex" required=""></textarea>
+        </div>
 
 
-          <div class='text-center'>
-            {{ form.captcha }}
-            <button class="btn btn-lg btn-primary" type="submit" name="action">Upload</button>
+
+        <div class="input-group mb-3">
+          <div class="custom-file">
+            {% render_field form.data class='custom-file-input' placeholder='Select a file' %}
+            
+            <label class="custom-file-label" for={{ form.data.id_for_label }}>Choose file</label>
           </div>
-        </form>
-      </div>
+        </div>
+
+
+        <div class='text-center'>
+          {{ form.captcha }}
+          <button class="btn btn-lg btn-primary" type="submit" name="action">Upload</button>
+        </div>
+      </form>
+    </div>
 
   </div>
 {% comment %} </div> {% endcomment %}
@@ -64,6 +74,61 @@
     $(document).ready(function () {
       bsCustomFileInput.init()
     })
+  </script>
+
+
+  <script>
+  
+    var Cite = require('citation-js')
+
+    // Set variables
+    var cite = new Cite()
+
+    var opt = {
+      format: 'string',
+      style:'citation-apa',
+      type: 'html',
+      lang: 'en-US',
+
+    }
+
+     // Make shorter ref to function
+    var parseAsync = Cite.parse.input.async.chain
+
+    // Make a factory for callback
+    var callbackFactory = function (out) {
+      return function (data) {
+        out.html(cite.set(data).get(opt))
+      }
+    }
+  
+    $(function(){
+    // jQuery elements
+    var $bibx_in = $('#bibx-in')
+
+
+
+    // Callbacks
+    var jsonCb = callbackFactory($('#json-out')),
+        bibxCb = callbackFactory($('#bibx-out')),
+        wikiCb = callbackFactory($('#wiki-out')),
+        bibjCb = callbackFactory($('#bibj-out'))
+
+    // Declare function to update the output
+    function update() {
+      // Set data (explicit parsing only recommended for async) and set html element to get output
+      $('#bib-input').hide()
+      parseAsync($bibx_in.val()).then(bibxCb)
+    }
+
+    // Make output update when input is defocussed...
+    $bibx_in.on('input', update)
+
+
+    // Trigger update
+    {% comment %} update() {% endcomment %}
+  })
+  
   </script>
 
 {% endblock scripts %}
