@@ -1,7 +1,12 @@
 from django.urls import path
-from .views import DatabaseView, UploadView, ConfirmUploadView, SiteView, filter_data
-app_name = 'database'
+from . import views
+app_name = 'mapping'
 
 urlpatterns = [
+
+    path('thermoglobe/',views.FullMapView.as_view(),name='thermoglobe'),
+    path('thermoglobe/filter', views.filter_data,name='filter_data'),
+
+
 
 ]
