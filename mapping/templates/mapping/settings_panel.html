@@ -1,0 +1,15 @@
+<div id="settingsPanel" class="map-panel shadow navbar-light text-center">
+  <div class='container'>
+    {% include "mapping/panel_title.html" with title='Settings' icon="cog" %}
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5>Map Settings</h5>
+        <div class="dropdown-divider"></div>
+        <div class="custom-control custom-switch">
+          <input type="checkbox" enabled class="custom-control-input" id="marker-clustering-switch">
+          <label class="custom-control-label" for="marker-clustering-switch">Marker Clustering</label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

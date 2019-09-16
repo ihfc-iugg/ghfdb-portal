@@ -1,4 +1,4 @@
-{% extends "main/map_at_top.html" %}
+{% extends "mapping/map_at_top.html" %}
 {% load static %}
 {% load custom_tags %}
 
@@ -6,6 +6,12 @@
 {% block title %}
   <title>{{ reference.first_author.last_name }}{{ reference.year }} | Heatflow.org</title>
 {% endblock title %}
+
+{% block extended_head %}
+
+  <script src='https://cdn.rawgit.com/larsgw/citation.js/archive/citation.js/citation-VERSION.js'></script>
+
+{% endblock extended_head %}
 
 {% block content %}
   <div id='reference-container' class='container text-center'>
@@ -78,8 +84,13 @@
         <tbody>
         {% for site in all_sites %}
           <tr>
-            <td>{% if site.site_name %}
-              <a href="{% url 'main:site' site.id site.site_name|slugify %}">{{ site.site_name|default_if_none:'-' }}</a>
+            <td>
+              {% if site.site_name %}
+                <a href="{% url 'main:site' site.id site.site_name|slugify %}">
+                  {{ site.site_name }}</a>
+              {% else %}
+                <a href="{% url 'main:site' site.id 'Unnamed Site'|slugify %}">
+                  NA</a>
               {% endif %} </td>
             <td>{{ site.latitude }}</td>
             <td>{{ site.longitude }}</td>

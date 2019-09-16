@@ -1,0 +1,30 @@
+{% load static %}
+{% load widget_tweaks %}
+ 
+<div id="infoPanel" class="map-panel shadow navbar-light text-center">
+  <div class='container'>
+    {% include "mapping/panel_title.html" with title='Info' icon="info" %}
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class='table-responsive'>
+          <table id='info-counts-table' class="table table-hover table-striped text-center">
+            <thead class="thead-dark">
+              <tr><th class='text-center' colspan='2'>Counts</th></tr>
+            </thead>   
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+        <div class='table-responsive'>
+          <table id='info-average-table' class="table table-hover table-striped text-center">
+            <thead class="thead-dark">
+              <tr><th class='text-center' colspan='2'>Averages</th></tr>
+            </thead>   
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
