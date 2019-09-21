@@ -6,7 +6,6 @@ from django.utils.translation import gettext as _
 from site_property.models import SiteProperty, IntervalProperty
 from mapping.models import SiteAbstract
 from geomodels.models import GeoModelSample
-# from users.models import CustomUser
 
 # Abstract models
 class TimeStampAbstract(models.Model):
