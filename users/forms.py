@@ -7,11 +7,12 @@ class UserAdminCreationForm(UserCreationForm):
 
     class Meta(UserCreationForm):
         model = CustomUser
-        fields = ('email','password','university')
+        fields = ('email','password',)
 
 class UserAdminChangeForm(UserChangeForm):
 
     class Meta:
         model = CustomUser
         # fields = '__all__'
-        fields = ('email','password','university')
+        fields = ('email','password',)
+    
