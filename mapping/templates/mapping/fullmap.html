@@ -1,8 +1,8 @@
-{% extends "main/base.html" %}
+{% extends "main/empty.html" %}
 {% load static %}
 {% load widget_tweaks %}
 
-{% block title %}<title>ThermoGlobe | Heatflow.org</title>{% endblock title %}
+{% block title %}ThermoGlobe{% endblock title %}
 
 {% block head %}
   <!-- FOR LEAFLET MAP -->
@@ -23,15 +23,15 @@
 
 {% endblock head %}
  
-{% block fullwidth %}
+{% block content %}
 
 <div class='full-screen'>
 
   {% comment %} Sidebar Navigation {% endcomment %}
   <nav id="sideBar" class="sidenav navbar-light bg-light shadow-lg text-center">
     <ul class="navbar-nav">
-      {% for panel in panels %}
-        {% include "mapping/side_panel_item.html" with target=panel %}
+      {% for panel in panel_order %}
+        {% include "mapping/components/side_panel_item.html" with target=panel %}
       {% endfor %}
     </ul>
   </nav>
@@ -40,13 +40,13 @@
   <div id='map' class='db-map shadow-inset'></div>
 
   {% comment %} ----------------PANELS--------------- {% endcomment %}
-  {% for panel in panels %}
-    {% include "mapping/"|add:panel|add:"_panel.html" %}
+  {% for panel in panel_order %}
+    {% include "mapping/panels/"|add:panel|add:"_panel.html" %}
   {% endfor %}
 
 </div>
 
-{% endblock fullwidth %}
+{% endblock content %}
 
 {% block scripts %}
 

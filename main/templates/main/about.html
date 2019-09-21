@@ -1,19 +1,13 @@
 {% extends "main/base.html" %}
-{% comment %} {% load static %} {% endcomment %}
+{% load static %}
 
-<head>
-  {% block head %}
-  <title>About | Heatflow.org</title>
-  {% endblock %}
-</head>
+{% block title %}About{% endblock title%}
+{% block heading %}About Heatflow.org{% endblock heading %}
+
 
 {% block content %}
-<header class='center'>
-  <h3>About Heatflow.org</h3>
-</header>
 
-<body>
-  <img class="center" src="{% static 'main/images/heatflow.gif' %}" alt="heatflow" style = "display:block; margin-left:auto; margin-right:auto;">
+  {% comment %} <img class="center" src="{% static 'main/images/heatflow.gif' %}" alt="heatflow" style = "display:block; margin-left:auto; margin-right:auto;"> {% endcomment %}
 
   <p class="flow-text">
   HeatFlow.org serves as a home to data and models relevant to thermal studies of the Earth including the global heat flow database. Here you will find estimates of heat flow, thermal conductivity, and heat generation as well as quality indicators and additional data relevant to interpreting the thermal data.
@@ -24,5 +18,5 @@
   <br/><br/>
   To cite this database: Hasterok, D., (in prep.) An analysis of the revised global heat flow database.
   </p>
-  {% endblock %}
-</body>
+{% endblock content %}
+
