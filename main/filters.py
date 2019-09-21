@@ -5,8 +5,8 @@ from django import forms
 from main.widgets import RangeField, RangeWidget
 
 
-
 class SiteFilter(forms.Form):
+
     site_name = forms.CharField(label='Site Name', max_length=100, strip=True,required=False, help_text='Search for an individual site by name.')
 
     latitude = RangeField(  
@@ -24,13 +24,29 @@ class SiteFilter(forms.Form):
                 help_text='Elevation in metres above sea level',
                 field=forms.FloatField(),
                 )
+    # depth = RangeField(  
+    #             required=False,
+    #             help_text='Maximum depth in metres',
+    #             field=forms.FloatField(),
+    #             )
+
+    # well_depth = RangeField(  
+    #             required=False,
+    #             help_text='Well depth in metres',
+    #             field=forms.FloatField(),
+    #             )
 
     sediment_thickness = forms.FloatField(label='Sed. Thickness', required=False, help_text='Thickness of overlying sediments.')
+
+    class Meta:
+        title = 'location'
+
+
 
 class HeatflowFilter(forms.Form):
     hf_corrected = forms.BooleanField(label='Corrected', required=False,initial=True)
     hf_uncorrected = forms.BooleanField(label='Uncorrected',required=False,initial=True)
-    # # hf_reliability = forms.MultipleChoiceField(required=False)
+    # hf_reliability = forms.MultipleChoiceField(required=False)
 
     heatflow = RangeField(
                 label='Heat Flow',  
@@ -44,6 +60,8 @@ class HeatflowFilter(forms.Form):
                 help_text='Specify a range of temperature gradient values.',
                 field=forms.FloatField(min_value=0),
                 )
+    class Meta:
+        title = 'heat flow'
 
 class ConductivityFilter(forms.Form):
     conductivity__value = RangeField(
@@ -58,10 +76,13 @@ class ConductivityFilter(forms.Form):
                 help_text='Specify a range of thermal conductivity uncertainties',
                 field=forms.FloatField(min_value=0),
                 )
+    class Meta:
+        title = 'thermal conductivity'
 
 class HeatGenFilter(forms.Form):
+
     heatgeneration__value = RangeField(
-                label='Heat Generation',  
+                label='Heat Gen.',  
                 required=False,
                 help_text='Specify a range of heat generation values',
                 field=forms.FloatField(min_value=0),
@@ -73,13 +94,35 @@ class HeatGenFilter(forms.Form):
                 field=forms.FloatField(min_value=0),
                 )
 
+    class Meta:
+        title = 'heat generation'
+
+
 class TemperatureFilter(forms.Form):
-    temperature__value = RangeField(
-                label='Heat Generation',  
+
+    # temperature__value = RangeField(
+    #             label='Temperature',  
+    #             required=False,
+    #             help_text='Search all temperature values',
+    #             field=forms.FloatField(min_value=0),
+    #             )
+
+    bottom_hole_temp__value = RangeField(
+                label='Bottom Hole',  
                 required=False,
-                help_text='Specify a range of heat generation values',
+                help_text='Search temperatures at bottom of only',
                 field=forms.FloatField(min_value=0),
                 )
+
+    top_hole_temp__value = RangeField(
+                label='Top Hole',  
+                required=False,
+                help_text='Search temperatures at top of hole only',
+                field=forms.FloatField(min_value=0),
+                )
+
+    class Meta:
+        title = 'temperature'
 
 class ReferenceFilter(forms.Form):
     
@@ -89,3 +132,10 @@ class ReferenceFilter(forms.Form):
                 required=False,
                 help_text='Year of publication',
                 field=forms.IntegerField())
+
+    class Meta:
+        title = 'reference'
+
+
+map_filter_forms = [SiteFilter,HeatflowFilter,ConductivityFilter,HeatGenFilter,TemperatureFilter,ReferenceFilter]
+
