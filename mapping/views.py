@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.views.generic import TemplateView
-from main.filters import SiteFilter, HeatflowFilter, ConductivityFilter, HeatGenFilter, ReferenceFilter
+# from main.filters import SiteFilter, HeatflowFilter, ConductivityFilter, HeatGenFilter, ReferenceFilter
+from main.filters import map_filter_forms
 import csv
 from main.utils import get_db_summary
 from main.models import Site, DepthInterval
@@ -9,51 +10,49 @@ from datetime import datetime
 
 DOWNLOAD_FIELDS =[  
 
-('site__site_name', 'site_name'),
-('site__latitude',  'latitude'),
-('site__longitude', 'longitude'),
-('site__elevation', 'elevation'),
-('site__dip',       'dip'),
-('site__well_depth','well_depth'),
-('site__sediment_thickness','sediment_thickness'),
-('site__basin','basin'),
-('site__sub_basin','sub_basin'),
-('site__domain','domain'),
-('site__province','province'),
-('site__tectonic_environment','tectonic_environment'),
-('site__bottom_hole_temp','bottom_hole_temp'),
-('site__top_hole_temp','top_hole_temp'),
-('depth_min','depth_min'),
-('depth_max','depth_max'),
-('age_min','age_min'),
-('age_max','age_max'),
-('age_method','age_method'),
-('heatflow__reliability', 'heatflow_reliability'),
-('heatflow__corrected','heatflow_corrected'),
-('heatflow__corrected_uncertainty','heatflow_corrected_uncertainty'),
-('heatflow__uncorrected','heatflow_uncorrected'),
-('heatflow__uncorrected_uncertainty','heatflow_uncorrected_uncertainty'),
-('temperaturegradient__corrected','gradient_corrected'),
-('temperaturegradient__corrected_uncertainty','gradient_corrected_uncertainty'),
-('temperaturegradient__uncorrected','gradient_uncorrected'),
-('temperaturegradient__uncorrected_uncertainty','gradient_uncorrected_uncertainty'),
-('conductivity__value','thermal_conductivity'),
-('conductivity__uncertainty','conductivity_uncertainty'),
-('conductivity__number_of_measurements','conductivity__number_of_measurementsy'),
-('conductivity__method','conductivity__method'),
-('heatgeneration__value','heatgeneration__value'),
-('heatgeneration__uncertainty','heatgeneration__uncertainty'),
-('heatgeneration__number_of_measurements','heatgeneration__number_of_measurements'),
-('heatgeneration__method','heatgeneration__method'),
-('reference__first_author__last_name','author'),
-('reference__doi','doi'),
-('site__operator','operator'),
-('site__cruise','cruise'),
-('comment','comment'),
-]
-
-def form_setup(form=None,menu_title=None):
-    return {'form':form,'menu_title':menu_title}
+    ('site__site_name', 'site_name'),
+    ('site__latitude',  'latitude'),
+    ('site__longitude', 'longitude'),
+    ('site__elevation', 'elevation'),
+    ('site__dip',       'dip'),
+    ('site__well_depth','well_depth'),
+    ('site__sediment_thickness','sediment_thickness'),
+    ('site__basin','basin'),
+    ('site__sub_basin','sub_basin'),
+    ('site__domain','domain'),
+    ('site__province','province'),
+    ('site__tectonic_environment','tectonic_environment'),
+    ('site__bottom_hole_temp__value','bottom_hole_temp'),
+    ('site__top_hole_temp__value','top_hole_temp'),
+    # ('temperature__value', 'temperature'),
+    ('depth_min','depth_min'),
+    ('depth_max','depth_max'),
+    ('age_min','age_min'),
+    ('age_max','age_max'),
+    ('age_method','age_method'),
+    ('heatflow__reliability', 'heatflow_reliability'),
+    ('heatflow__corrected','heatflow_corrected'),
+    ('heatflow__corrected_uncertainty','heatflow_corrected_uncertainty'),
+    ('heatflow__uncorrected','heatflow_uncorrected'),
+    ('heatflow__uncorrected_uncertainty','heatflow_uncorrected_uncertainty'),
+    ('temperaturegradient__corrected','gradient_corrected'),
+    ('temperaturegradient__corrected_uncertainty','gradient_corrected_uncertainty'),
+    ('temperaturegradient__uncorrected','gradient_uncorrected'),
+    ('temperaturegradient__uncorrected_uncertainty','gradient_uncorrected_uncertainty'),
+    ('conductivity__value','thermal_conductivity'),
+    ('conductivity__uncertainty','conductivity_uncertainty'),
+    ('conductivity__number_of_measurements','conductivity__number_of_measurementsy'),
+    ('conductivity__method','conductivity__method'),
+    ('heatgeneration__value','heatgeneration__value'),
+    ('heatgeneration__uncertainty','heatgeneration__uncertainty'),
+    ('heatgeneration__number_of_measurements','heatgeneration__number_of_measurements'),
+    ('heatgeneration__method','heatgeneration__method'),
+    ('reference__first_author__last_name','author'),
+    ('reference__doi','doi'),
+    ('site__operator','operator'),
+    ('site__cruise','cruise'),
+    ('comment','comment'),
+    ]
 
 def geojson_serializer(qs):
     qs = qs.values('latitude','longitude','site_name','reference__first_author__last_name','reference__year')
@@ -119,24 +118,21 @@ def filter_request(query_dict, model):
 
     return qs.filter(**query_dict).distinct()
 
-
 # Create your views here.
 class FullMapView(TemplateView):
     template_name = 'mapping/fullmap.html'
-    forms = [   form_setup(SiteFilter, 'site'),
-                form_setup(HeatflowFilter, 'heat flow'),
-                form_setup(ConductivityFilter, 'thermal conductivity'),
-                form_setup(HeatGenFilter, 'heat generation'),
-                form_setup(ReferenceFilter,'reference'),]
+    filterset = map_filter_forms
     panel_order = ['filter','info','download','settings']
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        qs = self.get_queryset()
-        context.update({'forms': self.forms,
+        qs = self.get_queryset()[:100]
+        context.update({'filterset': self.filterset,
                         'points': geojson_serializer(qs),
                         'info': get_db_summary(qs),
-                        'panels': self.panel_order})
+                        'panel_order': self.panel_order
+                        })
+                        
         return context
 
     def get_queryset(self):
@@ -145,10 +141,9 @@ class FullMapView(TemplateView):
     def post(self, request):
         """This method controls the download of the csv file"""
         qs = filter_request(request.POST, DepthInterval)
-        fields = [field[0] for field in DOWNLOAD_FIELDS]
 
         # converts queryset into a list of tuples containing the fields above. NOTE this is MUCH, MUCH faster than using django import-export's export feature: compare 198s to 0.003 seconds! This method does however limit the export to non-ManyToMany relations only (ie can't collect heat flow corrections or lithology!)
-        my_csv = qs.values_list(*fields)
+        my_csv = qs.values_list(*[field[0] for field in DOWNLOAD_FIELDS])
 
         # prepare the response for csv file
         date = datetime.now().strftime('_%d_%m_%y')
