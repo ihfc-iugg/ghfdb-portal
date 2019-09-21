@@ -6,17 +6,38 @@
   <script type="text/javascript" src="{% static '/main/js/jquery.tablesorter.js' %}"></script>
 {% endblock head %}
 
-{% block title %}<title>References | Heatflow.org</title>{% endblock title%}
-{% block list_header %}
-  <h1 align="center">References</h1>
-  Heatflow.org currently contains {{ count }} individual references spanning {{ num_years }} years of heat flow measurements around the globe! Search here to find a particular reference and access the related data. If you can't find what you're looking for but know it exists, why not <a href={% url 'main:upload' %}>upload</a> the data and help keep the largest heat flow database in the world up to date! 
-{% endblock list_header%}
+{% block title %}References{% endblock title%}
+{% block heading %}References{% endblock heading %}
 
-{% block filter %}
+{% block test %}
+  {% comment %} <div class='text-center'> {% endcomment %}
+    <p class='text-center'>
+    Heatflow.org currently contains {{ count }} individual references spanning {{ num_years }} years of heat flow measurements around the globe! Search here to find a particular reference and access the related data. If you can't find what you're looking for but know it exists, why not <a href={% url 'main:upload' %}>upload</a> the data and help keep the largest heat flow database in the world up to date! 
+    </p>
+  {% comment %} </div> {% endcomment %}
+<div class="d-flex justify-content-between align-bottom">
 
-  <div class="card card-spacing filter-card">
+  <div>
+      <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+        <i class="fas fa-filter"></i>
+      </a> 
+    {% comment %} <button class='btn-light'>
+    </button>   {% endcomment %}
+  </div>
+  <div>
+    {% include "main/paginator.html" %}    
+  </div>
+
+</div>
+
+{% endblock test %}
+
+
+
+{% comment %} {% block filter %} {% endcomment %}
+  {% comment %} <div class="card card-spacing filter-card">
     <div class="card-body">
-      <h5 class="card-title">Filter</h5>
+      <h5 class="card-title text-center">Filter</h5>
       <form action="" method='GET'>
         <table>
           <tbody>
@@ -41,11 +62,11 @@
       </form>
     </div>
   </div>
-  <br>
-{% endblock filter %}
+  <br> {% endcomment %}
+{% comment %} {% endblock filter %} {% endcomment %}
 
 {% block list %}
-  <div class='table-responsive'>
+  {% comment %} <div class='table-responsive'>
     <table id='detailsTable' class="table table-hover table-striped text-center">
       <thead class="thead-dark">
         <tr>
@@ -74,7 +95,7 @@
         {% endfor %}
       </tbody>
     </table>
-  </div>
+  </div> {% endcomment %}
 {% endblock list%}
 
 {% block more-scripts %}

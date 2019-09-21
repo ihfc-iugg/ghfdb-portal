@@ -1,27 +1,47 @@
 {% extends "main/base.html" %}
 {% load static %}
+{% load humanize %}
 
-{% block title %}<title>Home | Heatflow.org</title>{% endblock title%}
+{% block title %}Home{% endblock title%}
+{% block heading %}Heatflow.org{% endblock heading %}
+{% block sub_heading %}
+<h5 class='hide-on-mobile px-5 pb-2'>
+  A repository for data and models relevant to thermal studies of the Earth
+</h5>
+{% endblock sub_heading %}
+
+{% block left-side-content %}
+<div class='side-pics'>
+  <img src="{% static 'main/images/uofa.png' %}" class="d-block carouselImage" alt="...">
+  <img src="{% static 'main/images/heatflow.gif' %}" class="d-block carouselImage" alt="...">
+  {% comment %} <img src="{% static 'main/images/logo.png' %}" class="d-block carouselImage" alt="..."> {% endcomment %}
+  {% comment %} <img src="{% static 'main/images/TETherD.png' %}" class="d-block carouselImage" alt="...">
+  {% endcomment %}
+</div>
+{% endblock left-side-content %}
 
 {% block content %}
-  <div class="container pb-5 bg-white shadow">
-  <br>
+
+<div class='text-center'>
+  <p> Heatflow.org includes <em>ThermoGlobe</em>, the latest revision of the global heat flow database. Here you will
+    find estimates of heat flow, thermal conductivity and heat generation as well as quality indicators and additional
+    data relevant to interpreting thermal data.</p>
+</div>
+
+<div class='card py-3 px-1'>
   <div class='text-center'>
-    <div style="background-image: url('{% static 'main/images/heat_flow.svg' %}')" class='earth d-inline-block align-middle'></div>
-    <h1 class='display-1 d-inline-block align-middle'>Heatflow.org</h1>
-
-    <div class='container px-5 pt-2'>
-      <h5>A repository for data and models relevant to thermal studies of the Earth. including <em>ThermoGlobe</em>, the latest revision of the global heat flow database. Here you will find estimates of heat flow, thermal conductivity and heat generation as well as quality indicators and additional data relevant to interpreting thermal data.</h5>
-    </div>
-
+    <div style="background-image: url('{% static 'main/images/heat_flow.svg' %}')"
+      class='earth d-inline-block align-middle'></div>
+    <div class='display-4 d-inline-block align-middle border-bottom'>ThermoGlobe</div>
+    <p class='hide-on-mobile m-0 px-5 py-3'>This revised version of the Global Heat Flow Database by Dr Derrick Hasterok
+      and Sam Jennings contains {{ db.heatflow__count|intcomma }} individual heat flow estimates as well as
+      {{ db.conductivity__count|intcomma }} thermal conductivity, {{ db.heatgeneration__count|intcomma }} heat
+      generation and {{ db.temperature__count|intcomma }} temperature data. Data are compiled from
+      {{ db.reference__count|intcomma }} publications over {{ db.years }} years of heat flow research as well as many
+      more unpublished sources.</p>
   </div>
 
-  <div class='container'>
-    <p>ThermoGlobe is a revised version of the Global Heat Flow Database by Dr Derrick Hasterok and Sam Jennings from the University of Adelaide, Australia. It contains {{ db.heatflow__count }} individual heat flow estimates as well as {{ db.conductivity__count }} thermal conductivity, {{ db.heatgeneration__count }} heat generation and {{ db.temperature__count }} temperature data. Data are sourced from {{ db.reference__count }} individual references spanning over 100 years of heat flow research from {{ db.reference__year__min }} to {{db.reference__year__max}}.</p>
-  </div>
-
-  <div class='display-4 text-center'>ThermoGlobe</div>
-  <div id='navigationLinks' class='row'>
+  <div id='navigation-images' class='row'>
     <div id='worldMap' class='col-sm-12 col-md-6 pt-3'>
       <a href="{% url "mapping:thermoglobe" %}">
         <img src="{% static 'main/images/MapView.PNG' %}" class="shadow" alt="Browse by world map">
@@ -29,7 +49,7 @@
           <h3 class="px-2 text-white">Search by world map</h3>
         </div>
       </a>
-      </div>
+    </div>
     <div id='publication' class='col-sm-12 col-md-6 pt-3'>
       <a href={% url "reference:reference_list" %}>
         <img src="{% static 'main/images/references.PNG' %}" class="shadow" alt="Browse by publication">
@@ -37,17 +57,17 @@
           <h3 class="px-2 text-white">Search by publication</h3>
         </div>
       </a>
-      </div>
+    </div>
     <div id='upload' class='col-sm-12 col-md-4 pt-3'>
       <a href="{% url "main:upload" %}">
         <div class="bg-secondary text-white text-center h-100">
-          <i class=" fas fa-upload fa-9x" ></i>
+          <i class=" fas fa-upload fa-9x"></i>
           <div class="bg-dark image-label">
             <h3 class="px-2 text-left text-white">Upload</h3>
-            </div>
+          </div>
         </div>
       </a>
-      </div>
+    </div>
     <div id='resources' class='col-sm-12 col-md-4 pt-3'>
       <a href={% url "reference:reference_list" %}>
         <img src="{% static 'main/images/references.PNG' %}" class="shadow" alt="Search by reference">
@@ -55,7 +75,7 @@
           <h3 class="px-2 text-white">Resources</h3>
         </div>
       </a>
-      </div>
+    </div>
     <div id='cite' class='col-sm-12 col-md-4 pt-3'>
       <a href={% url "reference:reference_list" %}>
         <img src="{% static 'main/images/references.PNG' %}" class="shadow" alt="Cite this database">
@@ -63,10 +83,13 @@
           <h3 class="px-2 text-white">Cite this database</h3>
         </div>
       </a>
-      </div>
+    </div>
   </div>
 
-
-
+</div>
 
 {% endblock content %}
+
+{% block right-side-content %}
+<div class='card'>Recently added</div>
+{% endblock right-side-content %}

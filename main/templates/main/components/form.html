@@ -1,0 +1,13 @@
+{% if form.is_multipart %}
+<form enctype="multipart/form-data" method="post">
+{% else %}
+<form method="post">
+{% endif %}
+    {% csrf_token %}
+    {% for field in form %}
+        {% include "main/components/form_field.html" %}
+    {% endfor %}
+    <div class='text-center mb-3'>
+        <button class="btn btn-primary" type="submit">Send</button>
+    </div>
+</form>

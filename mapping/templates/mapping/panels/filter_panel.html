@@ -1,0 +1,16 @@
+
+<div id="filterPanel" class="map-panel shadow navbar-light text-center">
+    <div class='container'>
+        {% include "mapping/components/panel_title.html" with title='Filter' icon="filter" %}
+    </div>
+    <form id='filter-form' action="" method='POST'>
+        {% csrf_token %}
+        {% for filter in filterset %}
+            {% include "mapping/components/filter_menu.html" %}
+        {% endfor %}
+        <div class="sidebar-submenu">
+        <button id='filter-clear-button' type='reset' class='btn btn-secondary m-3'>Reset Filters</button>  
+        <button id='filter-submit-button' type='button' class='btn btn-primary m-3'>Apply</button>  
+        </div>
+    </form>
+</div>

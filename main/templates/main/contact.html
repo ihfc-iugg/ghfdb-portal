@@ -1,28 +1,52 @@
 {% extends "main/base.html" %}
-<!-- {% load static %} -->
+{% load static %}
+{% load widget_tweaks %}
 
-<head>
-  {% block head %}
-  <title>About | Heatflow.org</title>
-  {% endblock %}
-</head>
+
+{% block title %}Contact{% endblock title%}
+{% block heading %}Contact Us{% endblock heading %}
 
 {% block content %}
-<header class='center'>
-  <h3>About Heatflow.org</h3>
-</header>
-
-<body>
-  <img class="center" src="{% static 'main/images/heatflow.gif' %}" alt="heatflow" style = "display:block; margin-left:auto; margin-right:auto;"﻿>
-
-  <p class="flow-text">
-  HeatFlow.org serves as a home to data and models relevant to thermal studies of the Earth including the global heat flow database. Here you will find estimates of heat flow, thermal conductivity, and heat generation as well as quality indicators and additional data relevant to interpreting the thermal data.
-  <br/><br/>
-  Heat flow is a measure of heat loss across the surface of the Earth and is useful for modeling recent tectonic activity, transport of heat by groundwater, variations in concentrations of the radiogenic elements U, Th and K, glacial dynamics, and recent changes in climate.
-  <br/><br/>
-  This revised version of the Global Heat Flow Database is by Dr Derrick Hasterok from the University of Adelaide, Australia. This website is designed to collect, share and query heat flow data from all around the world and <a href="/upload">contributions to the database</a> are always appreciated. For more information or questions regarding the study of Earth's heat flow or this database, you can email info@heatflow.org or visit the <a href="/contact">contacts</a> page.
-  <br/><br/>
-  To cite this database: Hasterok, D., (in prep.) An analysis of the revised global heat flow database.
+  <p class='text-center px-4'>
+  Please use this form for feedback and suggestions regarding Heatflow.org or the ThermoGlobe database. We will endeavour to respond within a reasonable timeframe.
   </p>
-  {% endblock %}
-</body>
+<div class='row justify-content-center'>
+  <div class='col-sm-10 col-md-8 col-lg-6 card shadow pt-4' >
+    {% include "main/components/form.html" with form=form %}
+  </div>
+</div>
+
+
+<br>
+
+<div class="contact-page row justify-content-center">
+  {% for contact in contacts %}
+    {% include "main/contact-card.html" with contact=contact %}
+  {% endfor %}
+</div>
+
+{% endblock content %}
+
+<script>
+  // Example starter JavaScript for disabling form submissions if there are invalid fields
+  (function() {
+    'use strict';
+    window.addEventListener('load', function() {
+      // Fetch all the forms we want to apply custom Bootstrap validation styles to
+      var forms = document.getElementsByClassName('needs-validation');
+      // Loop over them and prevent submission
+      var validation = Array.prototype.filter.call(forms, function(form) {
+        form.addEventListener('submit', function(event) {
+          if (form.checkValidity() === false) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          form.classList.add('was-validated');
+        }, false);
+      });
+    }, false);
+  })();
+</script>
+
+{% block scripts %}
+{% endblock scripts %}

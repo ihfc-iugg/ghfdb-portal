@@ -4,8 +4,9 @@
 {% endblock head %}
 
 {% block content %}
-  <br>
-  <div class='row text-center'>
+{% block test %}
+{% endblock test %}
+  {% comment %} <div class='row text-center'>
     <div class='col'>
     {% block list_header %}{% endblock list_header %}
     </div>    
@@ -22,7 +23,7 @@
       {% endif %}
     </div>
 
-  </div>
+  </div> {% endcomment %}
 
 {% block list %}
 {% endblock list%}
