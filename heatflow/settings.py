@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     'import_export',
     'captcha',
     # 'multiselectfield',
@@ -162,6 +163,15 @@ MEDIA_URL = '/media/'
 
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
+
+
+
+
+
+
+
 
 AUTH_USER_MODEL = 'users.CustomUser' # new
 
