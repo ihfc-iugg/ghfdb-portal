@@ -55,19 +55,20 @@ class Reference(TimeStampAbstract):
     def autocomplete_search_fields():
         return ("first_author__last_name__icontains", "year__exact")
 
-
-
 def file_storage_path(instance, filename):
     path = 'data/{}'.format(time.strftime("%Y/%m/"))
     name = '{}_{}.{}'.format(instance.last_name,instance.first_name,filename.split('.')[1])
     return os.path.join(path, name)
 
 class FileStorage(models.Model):
-    data = models.FileField(upload_to=file_storage_path)
-    description = models.TextField(blank=True, null=True)
+
 
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
+    email = models.EmailField(blank=True)
+
+    data = models.FileField(upload_to=file_storage_path)
+    description = models.TextField(blank=True, null=True)
 
     date_uploaded = models.DateTimeField(auto_now_add=True)
 
