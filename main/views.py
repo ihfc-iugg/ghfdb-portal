@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView
-from .forms import DownloadForm, UploadForm
+from .forms import DownloadForm, UploadForm, ContactForm
 from .resources import HeatFlowResource
 from tablib import Dataset
 from django.http import HttpResponse, JsonResponse
@@ -13,9 +13,11 @@ from django.core.serializers import serialize, deserialize
 from django.contrib.gis.db.models.functions import AsGeoJSON
 from urllib.parse import parse_qs
 import json
-from django.db.models import Avg, Max, Min, Count, F, Value, Q
+from django.db.models import Avg, Max, Min, Count, F, Value, Q, FloatField
 from reference.models import FileStorage
 from .utils import get_db_summary
+from users.models import CustomUser
+from django.core.mail import send_mail
 
 # Create your views here.
 class HomeView(TemplateView):
@@ -26,40 +28,33 @@ class HomeView(TemplateView):
         context = super().get_context_data(**kwargs)
         sites = Site.objects.all()
 
+        num_years = (Max('reference__year', ouput_field=FloatField()) - 
+            Min('reference__year', ouput_field=FloatField()))
+
+
         context['db'] = sites.aggregate(
-            Max('reference__year'),
-            Min('reference__year'),
             Count('heatflow',distinct=True),
             Count('conductivity',distinct=True),
             Count('heatgeneration',distinct=True),
             Count('temperature',distinct=True),
-            Count('reference', distinct=True))
+            Count('reference', distinct=True),
+            years=num_years,
+            )
         return context
-
-class AboutView(TemplateView):
-    template_name= 'main/about.html'
-
-class ContactView(TemplateView):
-    template_name= 'main/contact.html'
-
-def download_success(request):
-    return render(request,'main/download_success.html')
-
-def resources(request):
-      form = UserCreationForm
-      return render(request,
-                    'main/resources.html',
-                    context={'form':form})
 
 class UploadView(TemplateView):
     template_name = 'main/upload.html'
+    form = UploadForm
+    resource = HeatFlowResource
 
-    def get(self, request):
-        form = UploadForm()
-        return render(request,self.template_name,{'form':form,})
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = self.form  
+        # print(context['form'].__dict__.items())
+        return context
 
     def post(self, request):
-        form = UploadForm(request.POST, request.FILES)
+        form = self.form(request.POST, request.FILES)
         if form.is_valid():
             result = self.dry_run(request)
 
@@ -74,7 +69,7 @@ class UploadView(TemplateView):
 
     @method_decorator(require_POST)
     def dry_run(self,request):
-        resource = HeatFlowResource()
+        # resource = HeatFlowResource()
 
         data_file = request.FILES['data']
         dataset = Dataset().load(data_file.read().decode('utf-8'))
@@ -101,6 +96,43 @@ class UploadView(TemplateView):
 
 
         return resource.import_data(dataset=dataset, dry_run=True)
+
+class ContactView(TemplateView):
+    template_name= 'main/contact.html'
+    model = CustomUser
+    form = ContactForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["contacts"] = self.get_superusers() 
+        context['form'] = self.form  
+        return context
+    
+    def get_superusers(self):
+        return self.model.objects.filter(is_staff=True)
+
+    def post(self,request):
+        form = self.form(request.POST)
+        if form.is_valid():
+            sender_name = form.cleaned_data['name']
+            sender_email = form.cleaned_data['email']
+
+            message = "{0} has sent you a new message:\n\n{1}".format(sender_name, form.cleaned_data['message'])
+            send_mail('New Enquiry', message, sender_email, ['info@heatflow.org'])
+            return HttpResponse('Thanks for contacting us!')
+
+        return HttpResponse('Failed')
+
+class AboutView(TemplateView):
+    template_name= 'main/about.html'
+
+def resources(request):
+      form = UserCreationForm
+      return render(request,
+                    'main/resources.html',
+                    context={'form':form})
+
+
 
 class ConfirmUploadView(TemplateView):
     template_name = 'main/confirm_upload.html'
