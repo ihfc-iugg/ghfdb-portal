@@ -32,3 +32,6 @@ def get_mean(qs, field_names):
 def de_underscore(str_input,replace_with_this):
     return str_input.replace('_',replace_with_this)
 
+@register.filter(name='field_type')
+def field_type(field):
+    return field.field.widget.__class__.__name__
