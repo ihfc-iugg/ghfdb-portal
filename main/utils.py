@@ -1,9 +1,6 @@
 
 from django.db.models import Avg, Count, Func, FloatField
 
-
-
-
 class Round(Func):
     function = 'ROUND'
     template="%(function)s(%(expressions)s::numeric, 2)"
