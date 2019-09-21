@@ -17,6 +17,7 @@ Django = "*"
 psycopg2 = "*"
 django-filter = "*"
 pillow = "*"
+exiftags = "*"
 
 [requires]
 python_version = "3.7"
