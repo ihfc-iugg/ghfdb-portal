@@ -6,7 +6,7 @@ from django.utils.translation import gettext as _
 from site_property.models import SiteProperty, IntervalProperty
 from mapping.models import SiteAbstract
 from geomodels.models import GeoModelSample
-
+from django.db.models import F
 # Abstract models
 class TimeStampAbstract(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -54,6 +54,7 @@ class Site(SiteAbstract,TimeStampAbstract):
     class Meta:
         unique_together = ('site_name','latitude','longitude','reference')
         db_table = 'site'
+        ordering = [F('site_name').desc(nulls_last=True)]
 
     def __str__(self):
         return self.site_name
@@ -79,6 +80,8 @@ class DepthInterval(TimeStampAbstract,AgeAbstract):
 
     class Meta:
         db_table = 'depth_interval'
+        ordering = [F('depth_min').desc(nulls_last=True)]
+
 
     def __str__(self):
         return '{}-{}'.format(self.depth_min,self.depth_max)
