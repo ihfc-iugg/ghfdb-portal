@@ -114,7 +114,7 @@ if DEBUG:
 else:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'ENGINE': 'django.contrib.gis.db.backends.postgis',
             'NAME': 'thermoglobe',
             'USER': 'sam',
             'PASSWORD': 'palmtree666',
