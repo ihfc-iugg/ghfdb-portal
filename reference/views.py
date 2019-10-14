@@ -20,7 +20,6 @@ from mapping.views import DOWNLOAD_FIELDS
 import csv
 import bibtexparser as bib
 
-
 class AllReferencesView(ListView):
     template_name = "reference/reference_list.html"
     model = Reference
@@ -37,7 +36,11 @@ class AllReferencesView(ListView):
 
         context['count'] = qs.count()
         min_max = self.get_queryset().aggregate(Max('year'), Min('year'))
-        context['num_years'] = min_max['year__max'] - min_max['year__min']
+        if min_max:
+            context['num_years'] = min_max['year__max'] - min_max['year__min']
+
+        else:
+            context['num_years'] = 'Unknown'
 
         # context['filter'] = ReferenceFilter(self.request.GET, queryset=qs.order_by(F('year').desc(nulls_last=True)))
 
