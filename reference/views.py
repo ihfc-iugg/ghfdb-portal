@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from django.views.generic import TemplateView, ListView
+from django.views.generic import TemplateView, ListView, DetailView
 from .models import Reference
 from django.core.paginator import Paginator
 from django.conf import settings
@@ -15,67 +15,119 @@ from django.db.models import Max, Min
 from main.forms import DownloadForm
 from django.db.models import Count, F, Value, Func, Sum, Avg
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from main.models import DepthInterval
+from mapping.views import DOWNLOAD_FIELDS
+import csv
+import bibtexparser as bib
+
 
 class AllReferencesView(ListView):
     template_name = "reference/reference_list.html"
     model = Reference
-    paginate_by = 100
+    context_object_name = 'users'  # Default: object_list
+    paginate_by = 10
+    pag_neighbours = 4
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['now'] = timezone.now()
 
-        # qs = self.get_queryset()
-
         qs = self.get_queryset()
-
-        print('here')
 
         context['count'] = qs.count()
         min_max = self.get_queryset().aggregate(Max('year'), Min('year'))
         context['num_years'] = min_max['year__max'] - min_max['year__min']
 
+        # context['filter'] = ReferenceFilter(self.request.GET, queryset=qs.order_by(F('year').desc(nulls_last=True)))
 
-        context['filter'] = ReferenceFilter(self.request.GET, queryset=qs.order_by(F('year').desc(nulls_last=True)))
+        # qs = context['filter'].qs
 
-        qs = context['filter'].qs
+        paginator = Paginator(qs,per_page=25,orphans=5)
 
-        paginator = Paginator(qs,50)
-        page = self.request.GET.get('page',1)
+        page = self.request.GET.get('page') 
 
         try:
             filtered_qs = paginator.page(page)
+            context['range'] = self.paginator_fix(paginator,int(page))
         except PageNotAnInteger:
             filtered_qs = paginator.page(1)
+            context['range'] = self.paginator_fix(paginator,1)
         except EmptyPage:
             filtered_qs = paginator.page(paginator.num_pages)
-
 
         context['paginator'] = paginator
         context['result'] = filtered_qs
 
-        print('down here')
-
         return context
+
+    def paginator_fix(self,paginator,page):
+        if paginator.num_pages > 2*self.pag_neighbours:
+            start_index = max(1, page-self.pag_neighbours)
+            end_index = min(paginator.num_pages, page + self.pag_neighbours)
+            if end_index < start_index + 2*self.pag_neighbours:
+                end_index = start_index + 2*self.pag_neighbours
+            elif start_index > end_index - 2*self.pag_neighbours:
+                start_index = end_index - 2*self.pag_neighbours
+            if start_index < 1:
+                end_index -= start_index
+                start_index = 1
+            elif end_index > paginator.num_pages:
+                start_index -= (end_index-paginator.num_pages)
+                end_index = paginator.num_pages
+            page_list = [f for f in range(start_index, end_index+1)]
+            return page_list[:(2*self.pag_neighbours + 1)]
+
 
     def filter_data(self):
 
         return self.get_queryset().filter(primary_author__last_name__istartswith=self.request.GET.get('last_name'),)
 
-class ReferenceView(TemplateView):
+class ReferenceView(DetailView):
     template_name = "reference/reference_details.html"
-    download_form = DownloadForm
+    model = Reference
 
-    def get(self, request, reference_id=None, reference_slug=None):
-        reference = get_object_or_404(Reference, pk=reference_id)
-        sites = reference.site_set.all().order_by('site_name').annotate(
-                        avg_heatflow = Avg('heatflow__corrected'),
-                        avg_conductivity = Avg('conductivity__value'),
-                        avg_heatgen = Avg('heatgeneration__value'))
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
 
-        points = serialize('geojson',sites,
+        context['all_sites'] = context['object'].site_set.all().order_by('site_name').annotate(
+                    avg_heatflow = Avg('heatflow__corrected'),
+                    avg_conductivity = Avg('conductivity__value'),
+                    avg_heatgen = Avg('heatgeneration__value'))
+
+        context['points'] = serialize('geojson',context['all_sites'],
                     geometry_field='geom',)
-        return render(request,self.template_name,{'reference':reference,'point':points,'all_sites':sites,'form': self.download_form})
+
+        # context['reference'] = bib.loads(context['object'].bibtex).entries[0]
+        context['reference'] = self.get_bibtex_details(context['object'])
+
+        return context
+
+    def post(self, request, pk):
+
+        my_csv = DepthInterval.objects.filter(reference=pk).values_list(*[field[0] for field in DOWNLOAD_FIELDS])
+        filename = '{}.csv'.format(self.model.objects.get(id=pk))
+        
+         # prepare the response for csv file
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
+        writer = csv.writer(response)
+
+        # write the header row; remove "site__" prefix for some fields for clarity
+        writer.writerow([field[1] for field in DOWNLOAD_FIELDS])
+
+        # write the rows to the csv file
+        for i in my_csv:
+            writer.writerow(i)
+
+        return response
+
+    def get_bibtex_details(self,reference):
+        if reference.bibtex:
+            fields = ['author','title','year','journal','doi','abstract']
+            reference = bib.loads(reference.bibtex).entries[0]
+            
+            return {key:reference[key] for key in fields if reference.get(key,False) }
 
 from django.contrib.auth.models import User
 from django.http import JsonResponse

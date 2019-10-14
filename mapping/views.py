@@ -48,6 +48,7 @@ DOWNLOAD_FIELDS =[
     ('heatgeneration__number_of_measurements','heatgeneration__number_of_measurements'),
     ('heatgeneration__method','heatgeneration__method'),
     ('reference__first_author__last_name','author'),
+    ('reference__year','year'),
     ('reference__doi','doi'),
     ('site__operator','operator'),
     ('site__cruise','cruise'),
@@ -126,7 +127,7 @@ class FullMapView(TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        qs = self.get_queryset()[:100]
+        qs = self.get_queryset()
         context.update({'filterset': self.filterset,
                         'points': geojson_serializer(qs),
                         'info': get_db_summary(qs),
@@ -161,26 +162,3 @@ class FullMapView(TemplateView):
             writer.writerow(i)
 
         return response
-
-
-        # fields = [  # Site fields
-        #             'site__site_name','site__latitude','site__longitude','site__elevation','site__dip', 'site__well_depth',
-        #             # Site geology
-        #             'site__sediment_thickness','site__basin','site__sub_basin','site__domain','site__province','site__tectonic_environment',
-        #             # temp
-        #             'site__bottom_hole_temp', 'site__top_hole_temp',
-        #             # depth interval fields
-        #             'depth_min','depth_max','age_min','age_max', 'age_method',
-        #             # heat flow fields
-        #             'heatflow__reliability','heatflow__corrected','heatflow__corrected_uncertainty','heatflow__uncorrected','heatflow__uncorrected_uncertainty',
-        #             # 'correction_type','correction_value',
-        #             # temperature gradient fields
-        #             'temperaturegradient__corrected','temperaturegradient__corrected_uncertainty','temperaturegradient__uncorrected','temperaturegradient__uncorrected_uncertainty',
-        #             # conductivity fields
-        #             'conductivity__value','conductivity__uncertainty','conductivity__number_of_measurements','conductivity__method',
-        #             # heat generation measurements
-        #             'heatgeneration__value','heatgeneration__uncertainty','heatgeneration__number_of_measurements','heatgeneration__method',
-        #             # lithology
-        #             # 'lithology',
-        #             # reference fields
-        #             'reference__first_author__last_name','reference__doi','site__operator','site__cruise', 'comment']

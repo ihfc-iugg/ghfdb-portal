@@ -1,0 +1,35 @@
+{% load static %}
+
+{% comment %} <footer class='footer container-fluid bg-light shadow-lg'>
+    <div class='row text-center'>
+        <div >
+            <img class='col-sm-6 col-md-3' src="{% static 'main/images/mawson_geocenter.svg' %}" alt="">
+        </div>
+        <div class='col-sm-6 col-md-3'>
+            <img class='col-sm-6 col-md-3' src="{% static 'main/images/UofA.png' %}" alt="">
+        </div>
+        <div class='col-sm-6 col-md-3'>
+            <img class='col-sm-6 col-md-3' src="{% static 'main/images/IHFCLogo.gif' %}" alt="">
+        </div>
+        <div class='col-sm-6 col-md-3'>
+            <div style="background-image: url('{% static 'main/images/heat_flow.svg' %}')" class='earth d-inline-block align-middle'></div>
+        </div>
+    </div>
+    <div class="footer-copyright text-center mt-2 pt-1">©2019 Copyright: S. Jennings &amp; D. Hasterok
+    </div>
+</footer> {% endcomment %}
+
+
+
+
+
+<footer class='footer container-fluid bg-light shadow-lg'>
+    <div class='container d-flex flex-wrap justify-content-between text-center'>
+        <img src="{% static 'main/images/mawson_geocenter.svg' %}" alt="">
+        <img src="{% static 'main/images/UofA.png' %}" alt="">
+        <img src="{% static 'main/images/IHFCLogo.gif' %}" alt="">
+        <div style="background-image: url('{% static 'main/images/heat_flow.svg' %}')" class='earth d-inline-block align-middle'></div>
+    </div>
+    <div class="footer-copyright text-center mt-2 pt-1">©2019 Copyright: S. Jennings &amp; D. Hasterok
+    </div>
+</footer>

@@ -2,9 +2,7 @@
 {% load static %}
 {% load custom_tags %}
 
-{% block title %}
-  <title>Site: {{ site.site_name }} | Heatflow.org</title>
-{% endblock title%}
+{% block title %}{{ site.site_name }}{% endblock title%}
 
 {% block content %}
 
@@ -50,8 +48,6 @@
       </table>
     </div>
   </div>
-
-  {% include 'main/download_modal.html' %}
 
 {% endblock content %}
 

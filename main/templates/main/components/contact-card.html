@@ -1,20 +1,34 @@
 
 
 
-<div class="card shadow col-sm-12 col-md-3 col-lg-2 mx-2" >
+{% comment %} <div class="card shadow col-sm-12 col-md-3 col-lg-2 mx-2" >
     <img class="card-img-top" src="{{ contact.image.url }}" alt="Card image cap">
     <div class="card-body p-0">
     <b class="card-title">
-        {% if contact.title == 'DR' %}
+        {% if contact.title %}
             {{ contact.get_title_display }}
         {% endif %}
         {{ contact.first_name }} {{ contact.last_name }}
     </b>
     <small>{{ contact.address2 }}</small>
     </div>
+</div> {% endcomment %}
+
+<div class="card">
+  <img src="{{ contact.image.url }}" class="card-img-top" alt="...">
+  <div class="card-body">
+    <h5 class="card-title">
+      {% if contact.title %}
+          {{ contact.get_title_display }}
+      {% endif %}
+      {{ contact.first_name }} {{ contact.last_name }}
+    </h5>
+    <small>{{ contact.address2 }}</small>
+
+    {% comment %} <p class="card-text">This is a longer card with supporting text below as a natural lead-in to additional content. This content is a little bit longer.</p>
+    <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p> {% endcomment %}
+  </div>
 </div>
-
-
 
 
 {% comment %} <div class="card shadow flex-item mx-2" >

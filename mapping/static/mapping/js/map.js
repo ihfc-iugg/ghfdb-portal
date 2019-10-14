@@ -4,9 +4,7 @@ $(document).ready(function(){
   var clusters = createClusters(siteMarkers);
   map.addLayer(clusters);
 
-
   function refreshMap(data) {
-
 
     // console.log(clusters)
     clusters.clearLayers()
@@ -52,15 +50,17 @@ function initMap(lat,lon, cluster)  {
     subdomains: ['a','b','c']
   });
 
-
   var Esri_OceanBasemap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer/tile/{z}/{y}/{x}', {
     attribution: 'Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri',
     maxZoom: 13
   });
 
+  var Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+	attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+});
 
   var map = L.map('map', {
-    layers: [Esri_OceanBasemap],
+    layers: [Esri_WorldImagery],
     maxBounds: L.latLngBounds(lat, lon),
     minZoom: 2,
     // maxZoom: 12,
@@ -68,6 +68,16 @@ function initMap(lat,lon, cluster)  {
     });
 
   L.control.scale().addTo(map);
+
+  var baseLayers = {
+
+    "Satellite": Esri_WorldImagery,
+    "Ocean Basemap": Esri_OceanBasemap,
+    "Street": openMaps,
+
+  };
+
+  L.control.layers(baseLayers).addTo(map);
 
   return map;
   }
@@ -143,8 +153,6 @@ function update_info_table(data, table_id) {
 
 }
 
-
-
 var mapPanelOpen = false;
 
 $('.close-btn').click(function() {
@@ -158,10 +166,6 @@ $('.close-btn').click(function() {
 $('#sideBar a').click(function(event) {
 
   var parent =  $(this).parent()
-
-  console.log(parent.attr('class'))
-
-
   var target = $(this).attr('data-target');
 
   if (!mapPanelOpen) {
