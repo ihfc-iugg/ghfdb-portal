@@ -35,7 +35,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '#y&sp64))zo$6fbxjgf-b!*-*w@f!x=gjoi9&kjc*)0@usw)@j'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['localhost','157.245.82.241']
 
@@ -101,25 +101,24 @@ WSGI_APPLICATION = 'heatflow.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
-# if DEBUG:
-
-#     DATABASES = {
-#         'default': {
-#             'ENGINE': 'django.contrib.gis.db.backends.postgis',
-#             'NAME': 'ThermoGlobe',
-#             'USER': 'postgres',
-#             'PASSWORD': 'HFdatabase123',
-#         },
-#     } 
-# else:
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'thermoglobe',
-        'USER': 'sam',
-        'PASSWORD': 'palmtree666',
-    },
-} 
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.contrib.gis.db.backends.postgis',
+            'NAME': 'ThermoGlobe',
+            'USER': 'postgres',
+            'PASSWORD': 'HFdatabase123',
+        },
+    } 
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.contrib.gis.db.backends.postgis',
+            'NAME': 'thermoglobe',
+            'USER': 'sam',
+            'PASSWORD': 'palmtree666',
+        },
+    } 
 
 
 
@@ -159,31 +158,19 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
+STATIC_URL = '/assets/'
+MEDIA_URL = '/media/'
 
-# STATIC_DIR = os.path.join(BASE_DIR,'static')
 STATIC_ROOT = os.path.join(BASE_DIR, 'assets')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR,'main/static')
 ]
 
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-MEDIA_URL = '/media/'
-
-
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-
-
-
-
-
-
-
 
 
 AUTH_USER_MODEL = 'users.CustomUser' # new
