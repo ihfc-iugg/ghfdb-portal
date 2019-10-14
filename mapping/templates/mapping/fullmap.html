@@ -5,27 +5,12 @@
 {% block title %}ThermoGlobe{% endblock title %}
 
 {% block head %}
-  <!-- FOR LEAFLET MAP -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"
-   integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
-   crossorigin=""/>
-  <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
-   integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og=="
-   crossorigin=""></script>
- 
-  <!-- FOR MARKER CLUSTERING -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css"/>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"/>
-  <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-
-  <link rel="stylesheet" href="{% static "mapping/css/map.css" %}">
-  <link rel="stylesheet" href="{% static "main/css/spin.css" %}">
-
+  {% include 'mapping/components/head.html' %}
 {% endblock head %}
  
 {% block content %}
 
-<div class='full-screen'>
+<div class='full-screen-map'>
 
   {% comment %} Sidebar Navigation {% endcomment %}
   <nav id="sideBar" class="sidenav navbar-light bg-light shadow-lg text-center">
@@ -37,7 +22,7 @@
   </nav>
 
   {% comment %} Leaflet Map {% endcomment %}
-  <div id='map' class='db-map shadow-inset'></div>
+  <div id='map' class='shadow-inset'></div>
 
   {% comment %} ----------------PANELS--------------- {% endcomment %}
   {% for panel in panel_order %}
@@ -50,10 +35,7 @@
 
 {% block scripts %}
 
-  <script src="{% static 'main/js/spin.js' %}"></script>
-  <script src="{% static 'mapping/js/leaflet-spin.js' %}"></script>
-  <script src="{% static 'mapping/js/map.js' %}"></script>
-  <script src="{% static 'mapping/js/leaflet-providers.js' %}"></script>
+  {% include 'mapping/components/map_scripts.html' %}
 
   <script>
  

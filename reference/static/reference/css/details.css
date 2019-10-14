@@ -1,0 +1,13 @@
+#reference_details .card {
+  margin: -1rem 1rem 1rem 1rem;
+}
+
+#reference_details .card-header:hover {
+  background-color: #e9e9e9;
+}
+
+#reference_details .card-header a {
+  text-decoration: none;
+  color: black;
+}
+/*# sourceMappingURL=details.css.map */
