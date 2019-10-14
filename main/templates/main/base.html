@@ -16,22 +16,25 @@
 
 </head>
 
-<body>
+<body class='bg-light'>
 
   <header>
     {% include "main/navbar.html" %}
   </header>
+  {% block fullwidth %}{% endblock fullwidth %}
+
   <div class='row justify-content-center'>
 
     {% comment %} <div id='site-left' class='col-2'>
       {% block left-side-content %}{% endblock left-side-content %}
     </div> {% endcomment %}
 
-    <div id='site-center' class='col-sm-12 col-md-10 col-lg-8'>
-      <div class='container-fluid shadow'>
-        <div class="container pb-5 bg-white shadow">
+    <div id='site-center' class='col-sm-12 col-lg-10 col-xl-8'>
+      {% comment %} <div class='container-fluid bg-light'> {% endcomment %}
+        <div class="container pb-5 bg-white">
           <div class='text-center page-heading'>
             <h1 class='display-3 d-inline-block align-middle'>
+            {% comment %} <div class='d-inline-block'> {% endcomment %}
               {% block heading %}{% endblock heading %}
               <div class='dropdown-divider'></div>
             </h1>
@@ -39,13 +42,16 @@
           </div>
           {% block content %}{% endblock content %}
         </div>
-      </div>
+      {% comment %} </div> {% endcomment %}
     </div>
 
-  <div id='site-right' class='col-2'>
     {% block right-side-content %}{% endblock right-side-content %}
+  
   </div>
-  </div>
+
+  {% block footer %}
+    {% include "main/components/footer.html" %} 
+  {% endblock footer %}
 
 
 
