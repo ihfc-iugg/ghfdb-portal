@@ -101,25 +101,25 @@ WSGI_APPLICATION = 'heatflow.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
-if DEBUG:
+# if DEBUG:
 
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.contrib.gis.db.backends.postgis',
-            'NAME': 'ThermoGlobe',
-            'USER': 'postgres',
-            'PASSWORD': 'HFdatabase123',
-        },
-    } 
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.contrib.gis.db.backends.postgis',
-            'NAME': 'thermoglobe',
-            'USER': 'sam',
-            'PASSWORD': 'palmtree666',
-        },
-    } 
+#     DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.contrib.gis.db.backends.postgis',
+#             'NAME': 'ThermoGlobe',
+#             'USER': 'postgres',
+#             'PASSWORD': 'HFdatabase123',
+#         },
+#     } 
+# else:
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'NAME': 'thermoglobe',
+        'USER': 'sam',
+        'PASSWORD': 'palmtree666',
+    },
+} 
 
 
 
