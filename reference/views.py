@@ -37,7 +37,7 @@ class AllReferencesView(ListView):
         context['count'] = qs.count()
         min_max = self.get_queryset().aggregate(Max('year'), Min('year'))
 
-        if not min_max['year__max'] and not min_max['year_min']:
+        if not min_max['year__max'] and not min_max['year__min']:
             context['num_years'] = 'Unknown'
         else:
             context['num_years'] = min_max['year__max'] - min_max['year__min']
