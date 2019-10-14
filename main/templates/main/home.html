@@ -2,21 +2,24 @@
 {% load static %}
 {% load humanize %}
 
+{% block head %}
+  <link rel="stylesheet" href="{% static "main/css/home.css" %}">
+{% endblock head %}
+
+
 {% block title %}Home{% endblock title%}
 {% block heading %}Heatflow.org{% endblock heading %}
 {% block sub_heading %}
-<h5 class='hide-on-mobile px-5 pb-2'>
-  A repository for data and models relevant to thermal studies of the Earth
-</h5>
+  <h5 class='hide-on-mobile lead'>
+    A repository for data and models relevant to thermal studies of the Earth
+  </h5>
 {% endblock sub_heading %}
 
 {% block left-side-content %}
 <div class='side-pics'>
   <img src="{% static 'main/images/uofa.png' %}" class="d-block carouselImage" alt="...">
   <img src="{% static 'main/images/heatflow.gif' %}" class="d-block carouselImage" alt="...">
-  {% comment %} <img src="{% static 'main/images/logo.png' %}" class="d-block carouselImage" alt="..."> {% endcomment %}
-  {% comment %} <img src="{% static 'main/images/TETherD.png' %}" class="d-block carouselImage" alt="...">
-  {% endcomment %}
+
 </div>
 {% endblock left-side-content %}
 
@@ -28,68 +31,64 @@
     data relevant to interpreting thermal data.</p>
 </div>
 
-<div class='card py-3 px-1'>
-  <div class='text-center'>
-    <div style="background-image: url('{% static 'main/images/heat_flow.svg' %}')"
-      class='earth d-inline-block align-middle'></div>
-    <div class='display-4 d-inline-block align-middle border-bottom'>ThermoGlobe</div>
-    <p class='hide-on-mobile m-0 px-5 py-3'>This revised version of the Global Heat Flow Database by Dr Derrick Hasterok
-      and Sam Jennings contains {{ db.heatflow__count|intcomma }} individual heat flow estimates as well as
-      {{ db.conductivity__count|intcomma }} thermal conductivity, {{ db.heatgeneration__count|intcomma }} heat
-      generation and {{ db.temperature__count|intcomma }} temperature data. Data are compiled from
-      {{ db.reference__count|intcomma }} publications over {{ db.years }} years of heat flow research as well as many
-      more unpublished sources.</p>
-  </div>
-
-  <div id='navigation-images' class='row'>
-    <div id='worldMap' class='col-sm-12 col-md-6 pt-3'>
-      <a href="{% url "mapping:thermoglobe" %}">
-        <img src="{% static 'main/images/MapView.PNG' %}" class="shadow" alt="Browse by world map">
-        <div class="bg-dark image-label">
-          <h3 class="px-2 text-white">Search by world map</h3>
+<a href="{% url "mapping:thermoglobe" %}">
+  <div class="card text-center">
+    <img class="card-img" src="{% static 'main/images/world_map.jpg' %}" alt="ThermoGlobe">
+    <div class="card-img-overlay">
+      <div class="container-fluid">
+        <div class='thermoglobe-logo'>
+          {% include 'main/components/thermoglobe_logo.html' with updated=True %}
         </div>
-      </a>
-    </div>
-    <div id='publication' class='col-sm-12 col-md-6 pt-3'>
-      <a href={% url "reference:reference_list" %}>
-        <img src="{% static 'main/images/references.PNG' %}" class="shadow" alt="Browse by publication">
-        <div class="bg-dark image-label">
-          <h3 class="px-2 text-white">Search by publication</h3>
-        </div>
-      </a>
-    </div>
-    <div id='upload' class='col-sm-12 col-md-4 pt-3'>
-      <a href="{% url "main:upload" %}">
-        <div class="bg-secondary text-white text-center h-100">
-          <i class=" fas fa-upload fa-9x"></i>
-          <div class="bg-dark image-label">
-            <h3 class="px-2 text-left text-white">Upload</h3>
-          </div>
-        </div>
-      </a>
-    </div>
-    <div id='resources' class='col-sm-12 col-md-4 pt-3'>
-      <a href={% url "reference:reference_list" %}>
-        <img src="{% static 'main/images/references.PNG' %}" class="shadow" alt="Search by reference">
-        <div class="bg-dark image-label">
-          <h3 class="px-2 text-white">Resources</h3>
-        </div>
-      </a>
-    </div>
-    <div id='cite' class='col-sm-12 col-md-4 pt-3'>
-      <a href={% url "reference:reference_list" %}>
-        <img src="{% static 'main/images/references.PNG' %}" class="shadow" alt="Cite this database">
-        <div class="bg-dark image-label">
-          <h3 class="px-2 text-white">Cite this database</h3>
-        </div>
-      </a>
+        <p class="card-text d-none d-lg-block">This revised version of the Global Heat Flow Database by Dr Derrick Hasterok and Sam Jennings contains {{ db.heatflow__count|intcomma }} individual heat flow estimates as well as {{ db.conductivity__count|intcomma }} thermal conductivity, {{ db.heatgeneration__count|intcomma }} heat generation and {{ db.temperature__count|intcomma }} temperature data. Data are compiled from {{ db.reference__count|intcomma }} publications over {{ db.years }} years of heat flow research as well as many more unpublished sources.</p>
+      </div>
     </div>
   </div>
+</a>
 
+<div id='navigation-images' class='row'>
+  {% for image in nav_images %}
+    <div class='col-sm-12 col-md-6'>
+        <div class="card">
+          <img class="card-img" src="{% static 'main/images/'|add:image.0|add:'.jpg' %}" alt="Card image">
+          <a href={% url image.2 %}>
+            <div class="card-img-overlay">
+                <div class="container-fluid pb-1">
+                  <h5 class="card-title">{{image.0|title}}</h5>
+                </div>
+            </div>
+          </a>
+        </div>
+      </div>
+  {% endfor %}   
 </div>
+
 
 {% endblock content %}
 
-{% block right-side-content %}
-<div class='card'>Recently added</div>
-{% endblock right-side-content %}
+{% comment %} {% block right-side-content %}
+  <div id='site-right' class='col-3'>
+
+    <div class='shadow p-3'>
+      
+      <div class='fixed-in-container'>
+
+      <h3 class='text-center'>Recently Added</h3>  
+
+      {% for reference in recently_added %}
+      <a href="{% url 'reference:reference_details' pk=reference.id %}">
+        <div class="card recent-refs">
+          <div class="card-header">
+            <div class="card-title">{{reference.first_author.last_name}} ({{reference.year}}) - <small>{{reference.date_added|date:"M j, Y"}}</small></div>
+          </div>
+        </div>
+      </a>  
+      {% endfor %}
+    
+    
+    </div>
+
+
+  </div>  
+  </div>
+{% endblock right-side-content %} {% endcomment %}
+
