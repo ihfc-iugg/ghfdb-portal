@@ -1,0 +1,166 @@
+.full-screen {
+  position: fixed;
+  top: 56px;
+  bottom: 0;
+  width: 100%;
+  overflow-y: hidden;
+  padding: 20px;
+  -webkit-transition: 0.5s;
+  transition: 0.5s;
+}
+
+div.db-map {
+  position: absolute;
+  /* padding-top:56px; */
+  top: 0;
+  right: 0;
+  /* width:100%; */
+  left: 56px;
+  height: 100%;
+  z-index: -1;
+  -webkit-transition: 0.5s;
+  transition: 0.5s;
+  /* 0.5 second transition effect to slide in the sidenav */
+}
+
+.map-panel {
+  height: 100%;
+  /* 100% Full-height */
+  width: 400px;
+  /* 0 width - change this with JavaScript */
+  position: absolute;
+  /* Stay in place */
+  z-index: 5;
+  top: 0;
+  left: -400px;
+  overflow-x: hidden;
+  /* Disable horizontal scroll */
+  padding-top: 0px;
+  /* Place content 60px from the top */
+  -webkit-transition: 0.5s;
+  transition: 0.5s;
+  /* 0.5 second transition effect to slide in the sidenav */
+}
+
+/* Panel menu links */
+.map-panel a {
+  text-decoration: none;
+  /* color:rgb(121, 77, 77); */
+  color: #808080;
+  font-size: 25px;
+  display: block;
+  -webkit-transition: 0.3s;
+  transition: 0.3s;
+  border-left: 0;
+}
+
+/* When you mouse over the navigation links, change their color */
+.map-panel a:hover {
+  -webkit-box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) inset !important;
+          box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) inset !important;
+}
+
+div.top-map {
+  height: calc(50vh - 28px);
+  width: 100%;
+}
+
+.map-panel-title-bar {
+  color: #fff !important;
+  text-align: center !important;
+  background-color: #343a40 !important;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+  margin-right: -15px;
+  margin-left: -15px;
+  -webkit-box-align: center !important;
+      -ms-flex-align: center !important;
+          align-items: center !important;
+}
+
+/* The side navigation menu */
+.sidenav {
+  height: 100%;
+  /* 100% Full-height */
+  width: 56px;
+  position: absolute;
+  z-index: 10;
+  top: 0;
+  left: 0;
+  overflow-x: hidden;
+  /* Disable horizontal scroll */
+  /* padding-top: 56px; */
+  -webkit-transition: 0.5s;
+  transition: 0.5s;
+  /* 0.5 second transition effect to slide in the sidenav */
+}
+
+.sidenav a:hover {
+  -webkit-box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) inset !important;
+          box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) inset !important;
+}
+
+/* #filterPanelTitle {
+    border-left:0;
+  } */
+/* .sidenav.sub-menu-item {
+  
+    padding:0;
+  
+  } */
+.map-panel div.card {
+  background-color: white;
+  margin-top: 15px;
+}
+
+.submenu {
+  /* color: whitesmoke; */
+  font-size: 1rem;
+  border-left: 0;
+}
+
+.shadow-inset {
+  -webkit-box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) inset !important;
+          box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) inset !important;
+}
+
+.shadow-inset-sm {
+  -webkit-box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) inset !important;
+          box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) inset !important;
+}
+
+/* .sub-menu-item {
+    margin: auto;
+    padding-top: .25rem;
+    padding-bottom: .25rem;
+  } */
+#site-menu {
+  font-size: 2rem;
+}
+
+#submit-button {
+  width: 80%;
+  height: 80%;
+}
+
+.input-group > .input-group-prepend {
+  -webkit-box-flex: 0;
+      -ms-flex: 0 0 35%;
+          flex: 0 0 35%;
+}
+
+.input-group .input-group-text {
+  width: 100%;
+}
+
+/* .sidebar-submenu {
+  
+    box-shadow:2px 2px 5px 1px inset;
+  
+  } */
+/* ---------- For map panel toggle switch --------- */
+/* Next */
+/*# sourceMappingURL=map.css.map */

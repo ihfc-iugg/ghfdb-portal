@@ -1,5 +1,24 @@
+.top {
+  z-index: 9999;
+}
+
+.footer {
+  padding: 0 5rem;
+  position: relative;
+  z-index: 1000;
+}
+
+.footer img {
+  -o-object-fit: contain;
+     object-fit: contain;
+  max-height: 150px;
+  padding: 1rem 0;
+}
+
 #navigation-images > div {
   position: relative;
+  padding-top: 10px !important;
+  text-align: center;
 }
 
 #navigation-images a:hover {
@@ -8,10 +27,33 @@
 }
 
 #navigation-images img, #navigation-images i {
-  max-height: 275px;
+  height: 300px;
   -o-object-fit: cover;
      object-fit: cover;
   width: 100%;
+}
+
+#site-right {
+  margin-top: 2rem;
+  position: relative;
+}
+
+#site-right > div {
+  position: fixed;
+}
+
+#site-right .card {
+  margin-bottom: .5rem;
+  text-decoration: none;
+  color: black;
+}
+
+#site-right .card-header {
+  padding: .5rem .75rem;
+}
+
+#site-right .card h5 {
+  margin-bottom: 0;
 }
 
 #site-left {
@@ -25,42 +67,8 @@
   padding-bottom: 2rem;
 }
 
-.earth {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  background-size: cover;
-  -webkit-box-shadow: -10px -15px 35px 2px #000 inset, 1px 2px 10px 1px #000;
-          box-shadow: -10px -15px 35px 2px #000 inset, 1px 2px 10px 1px #000;
-  background-position: 10% center;
-}
-
-.earth .animated {
-  -webkit-animation-name: spin;
-          animation-name: spin;
-  -webkit-animation-timing-function: linear;
-          animation-timing-function: linear;
-  animation-direction: reverse;
-  -webkit-animation-iteration-count: infinite;
-          animation-iteration-count: infinite;
-  -webkit-animation-duration: 30s;
-          animation-duration: 30s;
-}
-
-@-webkit-keyframes spin {
-  100% {
-    background-position: 100%;
-  }
-}
-
-@keyframes spin {
-  100% {
-    background-position: 100%;
-  }
-}
-
 .captcha {
-  width: 150px;
+  width: 100px;
 }
 
 .contact-page .card {
@@ -77,13 +85,10 @@
   overflow-y: hidden;
 }
 
-#details-table {
-  width: 30%;
-  margin: auto;
-}
-
-#details-table th:hover {
-  background-color: #1d2124;
+#detailsTable th {
+  padding: 0.1rem .75rem;
+  border: 0;
+  white-space: nowrap;
 }
 
 #download-button {
@@ -98,36 +103,22 @@
   margin: 0px;
 }
 
-#reference-info-card {
-  margin: 1rem;
+.display {
+  font-weight: 300;
+  line-height: 1.2;
 }
 
-#reference-info-card .card {
-  border: 5px;
+.display-5 {
+  font-size: 3rem;
 }
 
-#reference-info-card .card-header:hover {
-  background-color: #e9e9e9;
+.display-6 {
+  font-size: 2.5rem;
 }
 
-#reference-info-card a {
-  text-decoration: none;
-  color: black;
-}
-
-body > .container {
-  background-color: #f3f3f3;
-  bottom: 0;
-  padding-bottom: auto;
-}
-
-#file-upload {
-  padding: 1.5rem 3rem 1.5rem 3rem;
-}
-
-div.top-map {
-  height: calc(50% - 56px);
-  width: 100%;
+body > .row {
+  margin-left: 0px;
+  margin-right: 0px;
 }
 
 #site-table {
@@ -144,49 +135,11 @@ p.small {
   margin-top: 0px;
 }
 
-.equal-width {
-  table-layout: fixed;
-}
-
-a.linked-card {
-  color: inherit;
-  /* background-color: gray; */
-  text-decoration: inherit;
-}
-
-.listCards:hover {
-  /* background-color: gray; */
-  -webkit-box-shadow: 3px 3px 3px 3px #c2c2c2;
-          box-shadow: 3px 3px 3px 3px #c2c2c2;
-  -webkit-transform: scale(1.005);
-          transform: scale(1.005);
-}
-
-.row.paginator-row ul {
-  margin-bottom: 3px;
-}
-
-.carouselImage {
-  /* padding-top: 10px; */
-  margin: auto;
-  width: auto;
-  height: 225px;
-  max-height: 225px;
-}
-
-.image-label {
-  position: absolute;
-  opacity: 0.7;
-  bottom: 0;
-  right: 15px;
-  left: 15px;
-}
-
 .filter-card {
   margin: auto;
 }
 
-.filter-card th, td {
+.filter-card th, .filter-card td {
   padding: 5px 5px 5px 0px;
 }
 
