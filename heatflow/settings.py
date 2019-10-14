@@ -101,14 +101,26 @@ WSGI_APPLICATION = 'heatflow.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-         'NAME': 'ThermoGlobe',
-         'USER': 'postgres',
-         'PASSWORD': 'HFdatabase123',
-    },
-} 
+if DEBUG:
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.contrib.gis.db.backends.postgis',
+            'NAME': 'ThermoGlobe',
+            'USER': 'postgres',
+            'PASSWORD': 'HFdatabase123',
+        },
+    } 
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.contrib.gis.db.backends.postgresql_psycopg2',
+            'NAME': 'thermoglobe',
+            'USER': 'sam',
+            'PASSWORD': 'palmtree666',
+        },
+    } 
+
 
 
 # Password validation
@@ -152,6 +164,7 @@ USE_TZ = True
 STATIC_ROOT = os.path.join(BASE_DIR, 'assets')
 
 STATIC_URL = '/static/'
+
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR,'main/static')
 ]
