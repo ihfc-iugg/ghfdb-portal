@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, DetailView
 from .forms import DownloadForm, UploadForm, ContactForm
 from .resources import HeatFlowResource
 from tablib import Dataset
@@ -18,6 +18,7 @@ from reference.models import FileStorage
 from .utils import get_db_summary
 from users.models import CustomUser
 from django.core.mail import send_mail
+from reference.models import Reference
 
 # Create your views here.
 class HomeView(TemplateView):
@@ -31,15 +32,21 @@ class HomeView(TemplateView):
         num_years = (Max('reference__year', ouput_field=FloatField()) - 
             Min('reference__year', ouput_field=FloatField()))
 
-
         context['db'] = sites.aggregate(
             Count('heatflow',distinct=True),
             Count('conductivity',distinct=True),
             Count('heatgeneration',distinct=True),
             Count('temperature',distinct=True),
             Count('reference', distinct=True),
-            years=num_years,
-            )
+            years=num_years,)
+        
+        context['recently_added'] = Reference.objects.all().order_by('-date_added')[:5]
+
+        context['nav_images'] = [   ('publications','.jpg','reference:reference_list'),
+                                    ('upload','.jpg','main:upload'),
+                                    ('resources','.jpg','main:resources'),
+                                    ('cite','.jpg','main:upload'),]
+
         return context
 
 class UploadView(TemplateView):
@@ -126,33 +133,29 @@ class ContactView(TemplateView):
 class AboutView(TemplateView):
     template_name= 'main/about.html'
 
-def resources(request):
-      form = UserCreationForm
-      return render(request,
-                    'main/resources.html',
-                    context={'form':form})
+class ResourcesView(TemplateView):
+    template_name = 'main/resources.html'
 
-
-
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # context[""] = 
+        return context
+    
 class ConfirmUploadView(TemplateView):
     template_name = 'main/confirm_upload.html'
 
     def get(self, request):
         return render(request,self.template_name)
 
-class SiteView(TemplateView):
+class SiteView(DetailView):
     template_name = "main/site_details.html"
-
-    def get(self, request, site_id=None,  site_name=None):
-        site = get_object_or_404(Site, pk=site_id)
-        depth_intervals = site.depthinterval_set.order_by('depth_min','depth_max')
-
-        point = serialize('geojson',[site],
-                    geometry_field='geom',)
-
-        return render(request,self.template_name,{'site':site,'mapbox_access_token':settings.MAPBOX_ACCESS_TOKEN,'point':point,'depth_intervals':depth_intervals})
-
-
+    model = Site
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['depth_intervals'] = context['object'].depthinterval_set.order_by('depth_min','depth_max')
+        context['points'] = serialize('geojson',[context['object']],geometry_field='geom',)
+        context['mapbox_access_token'] = settings.MAPBOX_ACCESS_TOKEN
+        return context
 
 
 
