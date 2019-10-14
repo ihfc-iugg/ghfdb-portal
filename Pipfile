@@ -14,11 +14,12 @@ django-countries = "*"
 django-recaptcha = "*"
 django-import-export = "*"
 Django = "*"
-psycopg2 = "*"
 django-filter = "*"
 pillow = "*"
 exiftags = "*"
 bibtexparser = "*"
+gunicorn = "*"
+psycopg2-binary = "*"
 
 [requires]
 python_version = "3.7"
