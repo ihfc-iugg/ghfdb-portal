@@ -7,22 +7,14 @@
 {% block heading %}Contact Us{% endblock heading %}
 
 {% block content %}
-  <p class='text-center px-4'>
-  Please use this form for feedback and suggestions regarding Heatflow.org or the ThermoGlobe database. We will endeavour to respond within a reasonable timeframe.
-  </p>
-<div class='row justify-content-center'>
-  <div class='col-sm-10 col-md-8 col-lg-6 card shadow pt-4' >
-    {% include "main/components/form.html" with form=form %}
+  <div class='card-deck'>
+    {% for contact in contacts %}
+      {% include "main/components/contact-card.html" %}
+    {% endfor %}
   </div>
-</div>
 
-
-<br>
-
-<div class="contact-page row justify-content-center">
-  {% for contact in contacts %}
-    {% include "main/contact-card.html" with contact=contact %}
-  {% endfor %}
+<div class='row justify-content-center'>
+  {% include "main/components/form.html" %}
 </div>
 
 {% endblock content %}
