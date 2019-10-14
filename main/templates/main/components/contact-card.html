@@ -15,7 +15,9 @@
 </div> {% endcomment %}
 
 <div class="card">
+    {% if contact.image.url %}
   <img src="{{ contact.image.url }}" class="card-img-top" alt="...">
+  {% endif %}
   <div class="card-body">
     <h5 class="card-title">
       {% if contact.title %}
