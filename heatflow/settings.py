@@ -35,9 +35,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '#y&sp64))zo$6fbxjgf-b!*-*w@f!x=gjoi9&kjc*)0@usw)@j'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['localhost','157.245.82.241']
+ALLOWED_HOSTS = ['localhost','157.245.82.241','heatflow.org','www.heatflow.org']
 
 # Application definition
 INSTALLED_APPS = [
