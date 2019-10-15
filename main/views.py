@@ -154,7 +154,6 @@ class SiteView(DetailView):
         context = super().get_context_data(**kwargs)
         context['depth_intervals'] = context['object'].depthinterval_set.order_by('depth_min','depth_max')
         context['points'] = serialize('geojson',[context['object']],geometry_field='geom',)
-        context['mapbox_access_token'] = settings.MAPBOX_ACCESS_TOKEN
         return context
 
 
