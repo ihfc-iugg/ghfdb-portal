@@ -6,19 +6,21 @@
 {% block title %}Contact{% endblock title%}
 {% block heading %}Contact Us{% endblock heading %}
 
+{% block head %}
+<link rel="stylesheet" href="{% static "main/css/contact.css" %}">
+{% endblock head %}
+
 {% block content %}
-{% if contacts %}
-  <div class='card-deck'>
-    {% for contact in contacts %}
+<div id='contact-page' class='container-fluid'>
+<div class='container mb-3 d-none d-lg-block '>
+  {% if contacts %}
       {% include "main/components/contact-card.html" %}
-    {% endfor %}
+  {% endif %}
   </div>
-{% endif %}
-
-<div class='row justify-content-center'>
-  {% include "main/components/form.html" %}
+  <div class='row justify-content-center'>
+    {% include "main/components/form.html" %}
+  </div>
 </div>
-
 {% endblock content %}
 
 <script>
