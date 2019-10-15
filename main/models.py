@@ -1,32 +1,10 @@
 from django.db import models
 from django_extensions.db.fields import AutoSlugField
-import uuid
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext as _
-from site_property.models import SiteProperty, IntervalProperty
+# from django.core.exceptions import ValidationError
 from mapping.models import SiteAbstract
 from geomodels.models import GeoModelSample
 from django.db.models import F
-# Abstract models
-class TimeStampAbstract(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    uploaded_by = models.CharField(max_length=150,blank=True,null=True)
-    date_added = models.DateTimeField(auto_now_add=True)
-    added_by = models.CharField(max_length=150,blank=True,null=True)
-    date_edited = models.DateTimeField(auto_now=True)
-    edited_by = models.OneToOneField("users.CustomUser",blank=True, null=True, on_delete=models.SET_NULL)
-
-    class Meta:
-        abstract = True
-
-class AgeAbstract(models.Model):
-
-    age_min = models.FloatField(blank=True,null=True)
-    age_max = models.FloatField(blank=True,null=True)
-    age_method = models.CharField(max_length=200,blank=True)
-
-    class Meta:
-        abstract=True
+from .abstract import TimeStampAbstract, AgeAbstract, IntervalProperty, SiteProperty
 
 # Create your models here.
 class Site(SiteAbstract,TimeStampAbstract):
@@ -101,7 +79,6 @@ class HeatFlowCorrection(models.Model):
 class HeatFlow(IntervalProperty, TimeStampAbstract):
 
     site = models.ForeignKey("Site", blank=True, null=True, on_delete=models.CASCADE)
-
 
     RELIABILITY_CHOICES = tuple((val,val) for val in ['A','B','C','D','E','R','Z'])
     reliability = models.CharField(max_length=1, choices=RELIABILITY_CHOICES, blank=True, null=True)
