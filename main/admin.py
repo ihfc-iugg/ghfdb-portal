@@ -4,7 +4,7 @@ from .mixins import BaseAdmin, DataCountsMixin
 from django.db.models import Count
 # from database.admin_inlines import CorrectionsInline, TemperatureInline, HeatFlowInline, HeatGenerationInline, ConductivityInline
 from import_export.admin import ImportExportActionModelAdmin, ImportForm
-from site_property.mixins import SitePropertyAdminMixin
+from .mixins import SitePropertyAdminMixin
 from .resources import HeatFlowResource
 from main.models import HeatFlow, TemperatureGradient, Conductivity, HeatGeneration
 
@@ -92,7 +92,6 @@ class GradientAdmin(DataCountsMixin):
             {'fields': [
                 ('corrected','corrected_uncertainty'),
                 ('uncorrected','uncorrected_uncertainty'),]})]
-
 
 @admin.register(HeatFlow)
 class HeatFlowAdmin(DataCountsMixin):
