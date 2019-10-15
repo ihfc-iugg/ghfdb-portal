@@ -5,7 +5,7 @@
     <img src="{{ contact.image.url }}" class="card-img-top" alt="...">
     <div class="card-footer">
       <h5 class="card-title">
-        {% if contact.title %}
+        {% if contact.title == 'DR' %}
             {{ contact.get_title_display }}
         {% endif %}
         {{ contact.first_name }} {{ contact.last_name }}
