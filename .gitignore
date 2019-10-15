@@ -21,6 +21,8 @@
 *.zip
 *.scss
 *.css.map
+/heatflow/local_settings.py
+
 
 # Logs and databases #
 ######################
@@ -52,3 +54,5 @@ index.html
 backup.json
 
 .vscode/
+/assets
+thermoglobe.json
