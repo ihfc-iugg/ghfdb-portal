@@ -73,7 +73,6 @@ class Reference(TimeStampAbstract):
         else:
             return '{}'.format(self.first_author.last_name)
 
-
     @property
     def _co_authors(self):
         return ', '.join([author.last_name for author in self.co_authors.all()])
@@ -88,64 +87,12 @@ class Reference(TimeStampAbstract):
 
 
 
-
-
-
-
-# class Reference(TimeStampAbstract):
-#     first_author = models.ForeignKey(Author, related_name='first_author', blank=True, null=True, on_delete=models.PROTECT)
-#     co_authors = models.ManyToManyField(Author,related_name='co_authors',blank=True)
-#     title = models.CharField(max_length=200,blank=True)
-#     year = models.IntegerField(null=True,blank=True)
-#     doi = models.CharField(blank=True, max_length=200)
-#     source = models.CharField(blank=True, max_length=200)
-
-#     class Meta:
-#         db_table = 'references'
-#         ordering = [F('year').desc(nulls_last=True)]
-
-#     def __str__(self):
-#         return '{}'.format(self.reference)
-
-#     @property
-#     def reference(self):
-#         if self.year:
-#             return '{}{}'.format(self.first_author.last_name,self.year)
-#         else:
-#             return '{}'.format(self.first_author.last_name)
-
-#     @property
-#     def co_authors_display(self):
-#         return ', '.join([author.last_name for author in self.co_authors.all()])
-
-#     @property
-#     def site_count(self):
-#         return Count("site",distinct=True)
-
-#     @staticmethod
-#     def autocomplete_search_fields():
-#         return ("first_author__last_name__icontains", "year__exact")
-
-
-
-
-
-
-
-
-
 def file_storage_path(instance, filename):
     path = 'data/{}'.format(time.strftime("%Y/%m/"))
     name = '{}_{}.{}'.format(instance.last_name,instance.first_name,filename.split('.')[1])
     return os.path.join(path, name)
 
-
-
-
-
-
 class FileStorage(models.Model):
-
 
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)

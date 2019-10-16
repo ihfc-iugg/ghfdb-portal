@@ -19,8 +19,7 @@ from thermoglobe.models import DepthInterval
 from mapping.views import DOWNLOAD_FIELDS
 import csv
 import bibtexparser as bib
-from main.models import Page
-
+from main.utils import get_page_or_none
 
 class AllReferencesView(ListView):
     template_name = "reference/reference_list.html"
@@ -33,7 +32,8 @@ class AllReferencesView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['now'] = timezone.now()
-        context['page'] = Page.objects.get(name='Publications')
+        context['page'] = get_page_or_none('Publications')
+
 
         qs = self.get_queryset()
 
