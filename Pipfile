@@ -19,6 +19,7 @@ pillow = "*"
 bibtexparser = "*"
 gunicorn = "*"
 psycopg2-binary = "*"
+django-tinymce = "*"
 
 [requires]
 python_version = "3.6.8"
