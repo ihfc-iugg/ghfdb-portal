@@ -21,6 +21,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',include('main.urls')),
+    path('',include('thermoglobe.urls')),
     path('',include('reference.urls')),
     path('',include('mapping.urls')),
     path('grappelli/', include('grappelli.urls')), # grappelli URLS
