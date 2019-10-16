@@ -25,7 +25,6 @@ urlpatterns = [
     path('',include('reference.urls')),
     path('',include('mapping.urls')),
     path('grappelli/', include('grappelli.urls')), # grappelli URLS
-    path('tinymce/', include('tinymce.urls')),
     # path('captcha/', include('captcha.urls')),
 ]
 
