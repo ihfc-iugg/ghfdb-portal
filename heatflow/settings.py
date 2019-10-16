@@ -17,6 +17,7 @@ INSTALLED_APPS = [
     'geomodels.apps.GeomodelsConfig',
     'reference.apps.ReferenceConfig',
     'users.apps.UsersConfig',
+    'thermoglobe.apps.ThermoglobeConfig',
     'django.contrib.gis',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -32,7 +33,6 @@ INSTALLED_APPS = [
     # 'django_filters',
     'widget_tweaks',
     'django_countries',
-    'tinymce',
     # 'debug_toolbar'
 ]
 
