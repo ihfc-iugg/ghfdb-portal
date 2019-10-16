@@ -21,6 +21,7 @@
 *.zip
 *.scss
 *.css.map
+*.json
 /heatflow/local_settings.py
 
 
