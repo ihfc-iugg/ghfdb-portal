@@ -8,6 +8,7 @@ from .mixins import SitePropertyAdminMixin
 from .resources import HeatFlowResource
 from main.models import HeatFlow, TemperatureGradient, Conductivity, HeatGeneration
 
+
 class HeatFlowInline(admin.TabularInline):
     model = HeatFlow
     fields = ['corrected','corrected_uncertainty','uncorrected','uncorrected_uncertainty','reliability']
@@ -80,10 +81,12 @@ class DepthIntervalAdmin(SitePropertyAdminMixin,ImportExportActionModelAdmin):
                     ('age_min','age_max'),
                     ]})]
     inlines = [HeatFlowInline, GradientInline, ConductivityInline, HeatGenerationInline]
+    autocomplete_fields = ['site']
+
 
 @admin.register(TemperatureGradient)
 class GradientAdmin(DataCountsMixin):
-    list_display = ['depth_interval','corrected','corrected_uncertainty','uncorrected','uncorrected_uncertainty','date_added','added_by','date_edited','edited_by']
+    # list_display = ['depth_interval','corrected','corrected_uncertainty','uncorrected','uncorrected_uncertainty','date_added','added_by','date_edited','edited_by']
     fieldsets = [
         ('Depth Interval', 
             {'fields': [
@@ -96,7 +99,7 @@ class GradientAdmin(DataCountsMixin):
 @admin.register(HeatFlow)
 class HeatFlowAdmin(DataCountsMixin):
     # resource_class = HeatFlowResource
-    list_display = ['depth_interval','corrected','corrected_uncertainty','uncorrected','uncorrected_uncertainty','reliability','date_added','added_by','date_edited','edited_by']
+    # list_display = ['depth_interval','corrected','corrected_uncertainty','uncorrected','uncorrected_uncertainty','reliability','date_added','added_by','date_edited','edited_by']
     list_filter = ['reliability',]
     fieldsets = [
         ('Depth Interval', 
@@ -108,8 +111,6 @@ class HeatFlowAdmin(DataCountsMixin):
                 ('corrected','corrected_uncertainty'),
                 ('uncorrected','uncorrected_uncertainty'),]})]
 
-    # autocomplete_fields = ['site','reference','lithology']
-
     def save_model(self, request, obj, form, change):
         # #save the following fields to all of the related conductivity, temperature and heatgen objects
         # model_fields = ['site','depth','lithology','additional_lithology','age','age_method','reference']
@@ -118,9 +119,15 @@ class HeatFlowAdmin(DataCountsMixin):
         #     getattr(obj,model+'_set').all().update(**fields)
         super().save_model(request, obj, form, change)
 
-    # def _corrections(self,obj):
-    #     return ", ".join([
-    #         correction.correction_type for correction in obj.corrections.all()])
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.annotate(
+            _conductivity=Count('depth_interval__conductivity'),
+            _heat_generation=Count('depth_interval__heatgeneration'),
+        )
+        return queryset
+
+
 
     def _corrected_heat_flow(self,obj):
         if obj.corrected:
@@ -152,5 +159,6 @@ class HeatGenAdmin(SitePropertyAdminMixin):
 
 @admin.register(Temperature)
 class TemperatureAdmin(SitePropertyAdminMixin):
-    pass
+    autocomplete_fields = ['site']
+
 
