@@ -117,10 +117,10 @@
           <tr>
             <td>
               {% if site.site_name %}
-                <a href="{% url 'main:site' site.id %}">
+                <a href="{% url 'thermoglobe:site' site.id %}">
                   {{ site.site_name }}</a>
               {% else %}
-                <a href="{% url 'main:site' site.id %}">
+                <a href="{% url 'thermoglobe:site' site.id %}">
                   -</a>
               {% endif %} </td>
             <td>{{ site.latitude|floatformat:5 }}</td>
