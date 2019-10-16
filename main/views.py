@@ -19,7 +19,7 @@ from thermoglobe.utils import get_db_summary
 from users.models import CustomUser
 from django.core.mail import send_mail
 from reference.models import Reference
-from .models import Page
+from .utils import get_page_or_none
 
 # Create your views here.
 class HomeView(TemplateView):
@@ -42,8 +42,7 @@ class HomeView(TemplateView):
             years=num_years,)
         
         context['recently_added'] = Reference.objects.all().order_by('-date_added')[:5]
-
-        context['page'] = Page.objects.get(name='Home')
+        context['page'] = get_page_or_none('Home')
 
         context['nav_images'] = [   ('publications','.jpg','reference:reference_list'),
                                     ('upload','.jpg','thermoglobe:upload'),
@@ -59,11 +58,12 @@ class ContactView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["contacts"] = self.get_superusers() 
+        context['contacts'] = self.get_staff() 
         context['form'] = self.form  
+        context['page'] = get_page_or_none('About')
         return context
     
-    def get_superusers(self):
+    def get_staff(self):
         return self.model.objects.filter(is_staff=True)
 
     def post(self,request):
@@ -81,12 +81,17 @@ class ContactView(TemplateView):
 class AboutView(TemplateView):
     template_name= 'main/about.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page'] = get_page_or_none('About')
+        return context
+
 class ResourcesView(TemplateView):
     template_name = 'main/resources.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # context[""] = 
+        context['page'] = get_page_or_none('Resources')
         return context
     
 
