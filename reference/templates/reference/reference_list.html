@@ -1,4 +1,4 @@
-{% extends "main/list_view.html" %}
+{% extends "main/base.html" %}
 {% load widget_tweaks %}
 {% load static %}
 {% load humanize %}
@@ -8,27 +8,25 @@
 
 {% endblock head %}
 
-{% block title %}References{% endblock title%}
-{% block heading %}References{% endblock heading %}
+{% block title %}Publications{% endblock title%}
+{% block heading %}Publications{% endblock heading %}
 
-{% block test %}
-<p class='text-center'>
-Heatflow.org currently contains data from {{ count|intcomma }} publications spanning {{ num_years }} years of heat flow measurements around the globe! Search here to find a particular reference and access the related data. If you can't find what you're looking for but know it exists, why not <a href={% url 'main:upload' %}>upload</a> the data and help keep the largest heat flow database in the world up to date! 
-</p>
-
-<div class="d-flex align-bottom justify-content-center">
-
-  {% comment %} <div>
-      <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-        <i class="fas fa-filter"></i>
-      </a> 
-  </div> {% endcomment %}
-  {% include "main/paginator.html" %}  
-</div>
-
-{% endblock test %}
+{% block content %}
+  {% comment %} <p class='text-center'>
+  Heatflow.org currently contains data from {{ count|intcomma }} publications spanning {{ num_years }} years of heat flow measurements around the globe! Search here to find a particular reference and access the related data. If you can't find what you're looking for but know it exists, why not <a href={% url 'thermoglobe:upload' %}>upload</a> the data and help keep the largest heat flow database in the world up to date! 
+  </p> {% endcomment %}
+  {% include "main/components/page-content.html" %}
 
 
+  <div class="d-flex align-bottom justify-content-center">
+
+    {% comment %} <div>
+        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+          <i class="fas fa-filter"></i>
+        </a> 
+    </div> {% endcomment %}
+    {% include "main/components/paginator.html" %}  
+  </div>
 
 {% comment %} {% block filter %} {% endcomment %}
   {% comment %} <div class="card card-spacing filter-card">
@@ -61,19 +59,10 @@ Heatflow.org currently contains data from {{ count|intcomma }} publications span
   <br> {% endcomment %}
 {% comment %} {% endblock filter %} {% endcomment %}
 
-{% block list %}
+
   <div class='table-responsive'>
     <table id='detailsTable' class="table table-hover table-striped text-center">
       <thead class="thead-dark">
-        {% comment %} <tr>
-          <th class='text-left'></th>
-          <th></th> 
-          <th></th>
-          <th>Heat Flow<br>Count</th>
-          <th>Thermal<br>Conductivity<br>Count</th>
-          <th>Heat<br>Generation<br>Count</th>
-          <th>Temperature<br>Count</th>
-        </tr> {% endcomment %}
         <tr>
           <th class='text-left'>Author[s]</th>
           <th>Year</th> 
@@ -116,11 +105,9 @@ Heatflow.org currently contains data from {{ count|intcomma }} publications span
   </div>
 
 <div class="d-flex align-bottom justify-content-center">
-  {% include "main/paginator.html" %}  
+  {% include "main/components/paginator.html" %}  
 </div>
- 
-
-{% endblock list%}
+{% endblock content%}
 
 
 
