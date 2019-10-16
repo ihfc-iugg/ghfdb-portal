@@ -5,15 +5,12 @@ from django.utils.html import format_html
 from django.db.models import Count
 from django.contrib import admin
 from django.db.models import F
-from tinymce.widgets import TinyMCE
+
 from django.db import models
 
 
 class BaseAdmin(admin.ModelAdmin):
     exclude = ['edited_by','added_by','date_added','date_edited']
-    formfield_overrides = {
-        models.TextField: {'widget': TinyMCE()},
-        }
 
     def save_model(self, request, obj, form, change):
         if change:
