@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     # 'django_filters',
     'widget_tweaks',
     'django_countries',
+    'tinymce',
     # 'debug_toolbar'
 ]
 
@@ -121,3 +122,32 @@ GRAPPELLI_ADMIN_TITLE = 'Heatflow.org - Admin Site'
 
 RECAPTCHA_PUBLIC_KEY = '6Ldo5K0UAAAAABE41reWBnmCbMKY-IzCeYJ1rpK5'
 RECAPTCHA_PRIVATE_KEY = '6Ldo5K0UAAAAAAN-c94zVpWvaEwQ1c1p7KV8nSvA'
+
+TINYMCE_DEFAULT_CONFIG = {
+    'height': 360,
+    'width': 1120,
+    'cleanup_on_startup': True,
+    'custom_undo_redo_levels': 20,
+    'selector': 'textarea',
+    'theme': 'modern',
+    'plugins': '''
+            textcolor save link image media preview codesample contextmenu
+            table code lists fullscreen  insertdatetime  nonbreaking
+            contextmenu directionality searchreplace wordcount visualblocks
+            visualchars code fullscreen autolink lists  charmap print  hr
+            anchor pagebreak
+            ''',
+    'toolbar1': '''
+            fullscreen preview bold italic underline | fontselect,
+            fontsizeselect  | forecolor backcolor | alignleft alignright |
+            aligncenter alignjustify | indent outdent | bullist numlist table |
+            | link image media | codesample |
+            ''',
+    'toolbar2': '''
+            visualblocks visualchars |
+            charmap hr pagebreak nonbreaking anchor |  code |
+            ''',
+    'contextmenu': 'formats | link image',
+    'menubar': True,
+    'statusbar': True,
+    }
