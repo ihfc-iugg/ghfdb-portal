@@ -1,5 +1,5 @@
 from django.db import models
-from main.models import TimeStampAbstract
+from thermoglobe.models import TimeStampAbstract
 import os
 import time
 from django.db.models import F

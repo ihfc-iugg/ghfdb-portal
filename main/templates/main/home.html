@@ -9,27 +9,22 @@
 
 {% block title %}Home{% endblock title%}
 {% block heading %}Heatflow.org{% endblock heading %}
-{% block sub_heading %}
+{% comment %} {% block sub_heading %}
   <h5 class='hide-on-mobile lead'>
     A repository for data and models relevant to thermal studies of the Earth
   </h5>
-{% endblock sub_heading %}
+{% endblock sub_heading %} {% endcomment %}
 
 {% block left-side-content %}
 <div class='side-pics'>
   <img src="{% static 'main/images/uofa.png' %}" class="d-block carouselImage" alt="...">
   <img src="{% static 'main/images/heatflow.gif' %}" class="d-block carouselImage" alt="...">
-
 </div>
 {% endblock left-side-content %}
 
 {% block content %}
 
-<div class='text-center'>
-  <p> Heatflow.org includes <em>ThermoGlobe</em>, the latest revision of the global heat flow database. Here you will
-    find estimates of heat flow, thermal conductivity and heat generation as well as quality indicators and additional
-    data relevant to interpreting thermal data.</p>
-</div>
+{% include 'main/components/page-content.html' %}
 
 <a href="{% url "mapping:thermoglobe" %}">
   <div class="card text-center">

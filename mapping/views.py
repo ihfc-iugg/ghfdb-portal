@@ -1,10 +1,10 @@
 from django.shortcuts import render
 from django.views.generic import TemplateView
-# from main.filters import SiteFilter, HeatflowFilter, ConductivityFilter, HeatGenFilter, ReferenceFilter
-from main.filters import map_filter_forms
+# from thermoglobe.filters import SiteFilter, HeatflowFilter, ConductivityFilter, HeatGenFilter, ReferenceFilter
+from thermoglobe.filters import map_filter_forms
 import csv
-from main.utils import get_db_summary
-from main.models import Site, DepthInterval
+from thermoglobe.utils import get_db_summary
+from thermoglobe.models import Site, DepthInterval
 from django.http import HttpResponse, JsonResponse
 from datetime import datetime
 

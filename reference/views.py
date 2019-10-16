@@ -12,13 +12,15 @@ from django.utils import timezone
 from django_filters.views import FilterView
 from .filters import ReferenceFilter
 from django.db.models import Max, Min
-from main.forms import DownloadForm
+from thermoglobe.forms import DownloadForm
 from django.db.models import Count, F, Value, Func, Sum, Avg
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from main.models import DepthInterval
+from thermoglobe.models import DepthInterval
 from mapping.views import DOWNLOAD_FIELDS
 import csv
 import bibtexparser as bib
+from main.models import Page
+
 
 class AllReferencesView(ListView):
     template_name = "reference/reference_list.html"
@@ -31,6 +33,7 @@ class AllReferencesView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['now'] = timezone.now()
+        context['page'] = Page.objects.get(name='Publications')
 
         qs = self.get_queryset()
 
