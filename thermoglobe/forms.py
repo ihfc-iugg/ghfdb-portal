@@ -1,5 +1,5 @@
 from django import forms
-from thermoglobe.widgets import RangeField, RangeWidget
+from .widgets import RangeField, RangeWidget
 from reference.models import FileStorage
 from captcha.fields import ReCaptchaField
 from captcha.widgets import ReCaptchaV3
@@ -35,3 +35,4 @@ class ContactForm(forms.Form):
     email = forms.EmailField()
     message = forms.CharField(widget=forms.Textarea)
     captcha = ReCaptchaField(widget=ReCaptchaV3)
+
