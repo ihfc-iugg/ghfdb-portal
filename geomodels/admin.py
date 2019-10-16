@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Province, Basin, Formation, Domain, TectonicEnvironment
+from .models import Province, Basin, Formation, Domain, TectonicEnvironment, Lithology
 # Register your models here.
 
 @admin.register(Province)
@@ -21,3 +21,7 @@ class DomainAdmin(admin.ModelAdmin):
 @admin.register(TectonicEnvironment)
 class TectonicEnvironmentAdmin(admin.ModelAdmin):
     pass
+
+@admin.register(Lithology)
+class LithologyAdmin(admin.ModelAdmin):
+    search_fields = ('lithology',)
