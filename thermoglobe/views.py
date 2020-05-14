@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView, DetailView
-from .forms import DownloadForm, UploadForm, ContactForm, SiteForm
+from .forms import UploadForm, SiteForm
 from . import resources
 from tablib import Dataset
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect

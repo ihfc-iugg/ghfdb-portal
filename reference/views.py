@@ -8,7 +8,6 @@ from django.utils import timezone
 from django_filters.views import FilterView
 from .filters import ReferenceFilter
 from django.db.models import Max, Min
-from thermoglobe.forms import DownloadForm
 from django.db.models import Count, F, Value, Func, Sum, Avg,FloatField,Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from mapping.views import HEATFLOW_FIELDS
