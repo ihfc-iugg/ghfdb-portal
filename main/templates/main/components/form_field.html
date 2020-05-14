@@ -8,7 +8,6 @@
             <label class="custom-file-label" for={{ field.id_for_label }}>Choose file</label>
         {% else %}
             {% render_field field id=field.id class='form-control' placeholder=field.label required='required'%}
-
         {% endif %}
         <div class="invalid-feedback">
             This field is required!

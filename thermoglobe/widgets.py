@@ -1,107 +1,36 @@
-from import_export.widgets import Widget, ForeignKeyWidget, ManyToManyWidget
-from .models import HeatFlow,Temperature, TemperatureGradient
+from import_export.widgets import Widget, ForeignKeyWidget, ManyToManyWidget, FloatWidget
+from .models import HeatFlow, Temperature, ThermalGradient, Conductivity, Correction
 from django.utils.encoding import smart_text, force_text
 from django.core.exceptions import ValidationError
-from reference.models import Author
+from reference.models import Author, Reference
 from django import forms
 from django.utils.translation import ugettext as _
-
+import bibtexparser as bib
+import bibtexparser.customization as custom
+import re
+from reference.widgets import get_author_objects
+from bibtexparser.bibdatabase import BibDatabase
+from geomodels.utils import age_range
 
 def get_non_relational_fields(model,row,exclude=[]):
-    return [f for f in model._meta.concrete_fields if row.get(f.name) and f.name not in exclude]
+    return [f for f in model._meta.concrete_fields if row.get(f.name) and f.name not in exclude and not f.is_relation]
 
 def create_fields_dictionary(row, model_fields):
     return {key: val for key,val in row.items() if key in [field.name for field in model_fields] and val != ''}
 
-def get_reference(model,row,id_fields=None):
+def get_keywords_list(entry_dict,sep):
+    """
+    Split keyword field into a list.
 
-    if row.get('authors'):
-        first_author, co_authors = get_authors(row.get('authors'),Author)
-    else:
-        return 
+    :param entry_dict: the record.
+    :param sep: pattern used for the splitting regexp.
+    :type sep: string, optional
+    :returns: dict -- the modified record.
 
-    #get all fields within model that are not a relational field
-    model_fields = get_non_relational_fields(model, row)
-
-    #create a dictionary of all non relational fields that are not ''
-    fields = create_fields_dictionary(row, model_fields)
-
-    fields.update({'first_author':first_author})
-
-    if id_fields is not None:
-        id_fields = {key: val for key,val in fields.items() if key in id_fields}
-    else:
-        id_fields = fields
-    
-    #have to chain co_author queries until we find a match
-    query = model.objects.filter(**id_fields)
-    for author in co_authors:
-        query = query.filter(co_authors=author)
-
-    if query.count() == 1:
-        if query[0].co_authors.all().count() == len(co_authors):
-            obj = model.objects.update_or_create(id=query[0].pk,defaults=fields)[0]
-        else:
-            obj = model.objects.create(**fields)
-    elif query.count() > 1:
-        for q in query:
-            if q.co_authors.all().count() == len(co_authors):
-                obj = model.objects.update_or_create(id=q.id,defaults=fields)[0]
-                break
-        # obj = model.objects.create(**fields)
-    else:
-        obj = model.objects.create(**fields)
-    
-    #add the co_author ids. must be done after save() is called.
-    for author in co_authors:
-        obj.co_authors.add(author)
-
-    # obj.save()
-    return obj
-
-def get_authors(authors, model):
-    #split string into authors by ','
-    authors = authors.split(',')
-    author_list = []
-    for author in authors:
-        author = {k:v for k,v in zip(['last_name','first_name'],author.split('.')) if v != ''}
-
-        #if a first name is not specified
-        if 'first_name' not in author.keys():
-            try:
-                author_list.append(model.objects.update_or_create(last_name=author['last_name'],defaults=author)[0])
-            except model.MultipleObjectsReturned:
-                raise ValueError('Found more than one author in the database with the last name "{last_name}". Please specify a first name or first initial and try again. (Eg {last_name}.J or {last_name}.John)'.format(last_name=author['last_name']))
-        #if a first name IS specified
-        else:
-            #First: try search by FULL first name
-            try:
-                author_list.append(model.objects.get(last_name=author['last_name'],
-                                                    first_name=author['first_name']))
-            except model.DoesNotExist:
-                #If the given full name does not exist in the database, check if an abbreviated name exists
-                try: 
-                    obj = model.objects.get(last_name=author['last_name'],
-                                            first_name__startswith=author['first_name'][0])
-                    
-                    #if it does, update the db entry with the given full name
-                    if len(author['first_name']) > len(obj.first_name):
-                        obj.first_name = author['first_name']
-                        obj.save()
-                    author_list.append(obj)
-                except model.DoesNotExist:
-                    #if the abbreviated name does not exist in the database, check if a last name exists. If so, update the database entry with the full name
-                    author_list.append(model.objects.update_or_create(last_name=author['last_name'],
-                                                        defaults=author)[0])
-                except model.MultipleObjectsReturned:
-                    #if more than one db entry exists for the given last name, inform user that more information is required.
-                    query_set = model.objects.filter(last_name=author['last_name'],
-                                            first_name__startswith=author['first_name'][0])
-                    first_names = [f.first_name for f in query_set]
-                    raise ValueError('Found more than one author with the last name "{}" and first initial "{}". Found {} and {}. Please specify a full first name and try again.'.format(author['last_name'],author['first_name'][0],', '.join(first_names[:-1]),first_names[-1]))
-
-    return author_list[0],author_list[1:]
-
+    """
+    if "keywords" in entry_dict:
+        return [i.strip() for i in re.split(sep, entry_dict["keywords"].strip())]
+   
 def update_or_create_object(model=None, row=None, id_fields='', exclude='',recursive=False, is_recursion=False):
 
     exclude = list(exclude)
@@ -139,19 +68,55 @@ def update_or_create_object(model=None, row=None, id_fields='', exclude='',recur
     except model.MultipleObjectsReturned:
         raise ValidationError('Found more than one {} object with the given information.'.format(model._meta.object_name))
 
+def site_property(model,row,varmap,exclude,id_fields,required_fields):
+    if varmap:
+        row = {varmap[k] if k in varmap.keys() else k:v for k,v in row.items()}
+
+    #get all fields within model that are not a relational field
+    model_fields = get_non_relational_fields(model,row,exclude)
+
+    # The temperature model contains additional relationships that we don't want to include
+    if model != Temperature:
+        model_fields += [f for f in model._meta.related_objects if row.get(f.name) and f not in model_fields]
+
+    #create a dictionary of all non relational fields that are not ''
+    fields = {key: val for key,val in row.items() if key in [field.name for field in model_fields] and val != ''}
+
+    # return if required fields are not found
+    if not [i for i in required_fields if i in fields.keys()]:
+        return '',''
+
+    if id_fields is not None:
+        id_fields = {k:v for k,v in row.items() if k in id_fields and v != ''}
+    else:
+        id_fields = fields
+
+    if 'surface_temp' in varmap.keys() or 'heatgeneration' in varmap.keys():
+        id_fields['depth'] = 0
+
+    return id_fields, fields
+
+class NoRenderWidget(Widget):
+
+    def render(self, value, obj=None):
+        return ''
+
 class SiteWidget(ForeignKeyWidget):
-    def __init__(self, model, field=None, render_field=None, *args, **kwargs):
+    def __init__(self, model, field=None, render_field=None,id_fields=[], *args, **kwargs):
         self.render_field = render_field
+        self.id_fields = list(id_fields)
         super().__init__(model, field=field, *args, **kwargs)
 
     def clean(self,value,row=None):
+        params = {k:row[k] for k in self.id_fields}
+        if not params['latitude'] or not params['longitude']:
+            return None
+        if 'site_name' in params.keys():
+            row['site'] = self.model.objects.get_or_create(**params)[0]
+        else:
+            row['site'] = self.model.objects.update_or_create(**params,defaults={'site_name':row['site_name']})[0]
 
-        value = row[self.field]
-        if not isinstance(value,self.model):
-            raise ValidationError(value)
-
-        if value:
-            return self.model.objects.get_or_create(**{'pk': value.id})[0]
+        return row['site']
 
     def render(self, value, obj=None):
 
@@ -162,29 +127,56 @@ class SiteWidget(ForeignKeyWidget):
         return value 
 
 class ReferenceWidget(ForeignKeyWidget):
-    def __init__(self, model, field=None, render_field=None, *args, **kwargs):
-        self.render_field = render_field
+    def __init__(self, model, field=None, reference_dict=None, *args, **kwargs):
         super().__init__(model, field=field, *args, **kwargs)
+        self.ref_dict = reference_dict
 
-    def clean(self,value,row=None):
-
-        value = row[self.field]
-
+    def clean(self,value,row=None, bib_db=None):
         if value:
-            return self.model.objects.get_or_create(**{'pk': value.id})[0]
+
+            if isinstance(value,Reference):
+                return value
+
+
+            # If an actual bibtex string is provided
+            try:
+                entry = bib.loads(value).entries[0]
+            except IndexError:
+                pass
+            else:
+                bib_id = entry.get('ID','')
+                ref, created = self.model.objects.get_or_create(bib_id=bib_id)
+                if created:
+                    # save new bibtex entry to bibtex file on server
+                    pass
+                else:
+                    # save the existing reference entry with the new bibtex file
+                    ref.bibtex = value
+                    ref.save()
+                row['reference'] = ref
+                return row['reference']
+
+            # If a bib ID is supplied, check if an entry already exists and retrieve it
+            try:
+                row['reference'] = self.model.objects.get(bib_id=value)
+            except self.model.DoesNotExist:
+                db = BibDatabase()
+                try:
+                    db.entries = [self.ref_dict[value]]
+                except KeyError:
+                    row['reference'] = self.model.objects.create(bib_id=value)
+                else:
+                    row['reference'] = self.model.objects.create(bibtex=bib.dumps(db))
+
+            finally:
+                return row['reference']
 
     def render(self, value, obj=None):
-
-        if self.render_field:
-            value = getattr(value,self.render_field)
-            if value is None:
-                return ''
-        return value 
+        return getattr(value,'bib_id') 
 
 class SitePropertyWidget(ForeignKeyWidget):
     
     def __init__(self, model, field, id_fields=None, required_fields='', varmap=None, exclude='', *args, **kwargs):
-        # super().__init__(model, field, *args, **kwargs)
 
         self.model = model
         self.field = field
@@ -202,41 +194,26 @@ class SitePropertyWidget(ForeignKeyWidget):
             self.exclude = exclude
 
     def clean(self, value, row=None):
-        if self.varmap:
-            row = {self.varmap[k] if k in self.varmap.keys() else k:v for k,v in row.items()}
 
-        if self.model == HeatFlow and row['site_name'] == 'AD-1X':
-            y=8
+        if not row.get('save_temp'):
+            return None
 
-        #get all fields within model that are not a relational field
-        model_fields = get_non_relational_fields(self.model,row,self.exclude)
+        id_fields, fields = site_property(self.model,row,self.varmap,self.exclude,self.id_fields,self.required_fields)
 
-        # The temperature model contains additional relationships that we don't want to include
-        if self.model != Temperature:
-            model_fields += [f for f in self.model._meta.related_objects if row.get(f.name) and f not in model_fields]
-        else:
-            y=8
-        #create a dictionary of all non relational fields that are not ''
-        fields = {key: val for key,val in row.items() if key in [field.name for field in model_fields] and val != ''}
-
-        # return if required fields are not found
-        if not [i for i in self.required_fields if i in fields.keys()]:
-            if self.model == HeatFlow:
-                raise ValidationError('The current row does not contain a heat flow value!')
-            else:
-                return
-
-        if self.id_fields is not None:
-            id_fields = {k:v for k,v in row.items() if k in self.id_fields}
-        else:
-            id_fields = fields
-
+        if not id_fields and not fields:
+            return
 
         #try to find object based on id_fields
         try:
             return self.model.objects.update_or_create(**id_fields,defaults=fields)[0]
+            # row[self.model._meta.model_name] = self.model.objects.update_or_create(**id_fields,defaults=fields)[0]
+
         except self.model.MultipleObjectsReturned:
+            # row[self.model._meta.model_name] = self.model.objects.update_or_create(**id_fields,defaults=fields)[0]
+
             raise ValidationError('Found more than one {} object with the given information.'.format(self.model._meta.object_name))
+        # finally:
+        #     return row[self.model._meta.model_name]
 
     def render(self, value, obj=None):
 
@@ -246,29 +223,51 @@ class SitePropertyWidget(ForeignKeyWidget):
                 return ''
         return value
 
-class CorrectionsWidget(ManyToManyWidget):
+class CorrectionsWidget(ForeignKeyWidget):
 
-    def __init__(self, model, separator=',', field='pk', *args, **kwargs):
-        super().__init__(model,separator,field,*args, **kwargs)
+    def __init__(self, field=None, *args, **kwargs):
 
-    def clean(self, value, row=None, *args, **kwargs):
-        if not row.get('correction_type'):
-            return self.model.objects.none() 
+        self.model = Correction
+        self.field = field
 
-        types = row.get('correction_type').split(',')
-        values = row.get('correction_value').split(',')
+    def clean(self, value, row=None):
 
-        correction_ids = []
-        for x, val in zip(types,values):
-            vals = {key: (value if value.strip() is not '' else None) for key,value in zip(['correction','value'],[x,val])}
-            if vals:
-                correction_ids.append(self.model.objects.get_or_create(**vals)[0].id)
+        # gets all columns that correlate to the corrections field and stores them in a new dict
+        params = {k.replace('correction__',''):v for k,v in row.items() if k.replace('correction__','') in [f.name for f in self.model._meta.concrete_fields]}
 
-        return correction_ids
+        # remove empty values from dict
+        params = {k:v for k,v in params.items() if v}
+
+        #try to find object based on id_fields
+        if params:
+            row['correction'] = self.model.objects.create(**params)
+            return row['correction']
 
     def render(self, value, obj=None):
-        vals = [smart_text(getattr(instance,self.field)) for instance in value.all()]
-        return self.separator.join(vals)
+
+        if self.field:
+            value = getattr(value,self.field)
+            if value is None:
+                return ''
+        return value
+
+class ChoiceWidget(Widget):
+    """
+    Widget for converting text fields.
+    """
+    def __init__(self, choices, *args, **kwargs):
+        self.choices = choices
+
+    def clean(self, value, row=None, *args, **kwargs):
+        for choice in self.choices:
+            if value == choice[1]:
+                return choice[0]
+        if value:
+            raise ValueError('That is not a valid option for this field. Available options are: {}'.format(', '.join([choice[1] for choice in self.choices])))
+
+
+    def render(self, value, obj=None):
+        return force_text(value)
 
 class M2MWidget(ManyToManyWidget):
 
@@ -294,6 +293,17 @@ class M2MWidget(ManyToManyWidget):
     def render(self, value, obj=None):
         ids = [smart_text(getattr(obj, self.field)) for obj in value.all()]
         return self.separator.join(ids)
+
+class CustomFK(ForeignKeyWidget):
+    
+    def __init__(self, model, field='name', *args, **kwargs):
+        super().__init__(model, field, *args, **kwargs)
+        self.field = field
+
+    def clean(self, value, row=None):
+        dont_include_these = ['unknown','undefined','',None]
+        if not value in dont_include_these:
+            return self.model.objects.get_or_create(**{self.field: value})[0]
 
 
 # -------- FILTER WIDGETS ----------

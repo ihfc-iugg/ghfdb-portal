@@ -12,7 +12,7 @@ def get_db_summary(qs):
     heat_flow_corrected = Count('heatflow__corrected', ouput_field=FloatField())
     thermal_conductivity=Count('conductivity',distinct=True)
     heat_generation=Count('heatgeneration',distinct=True)
-    thermal_gradient=Count('temperaturegradient',distinct=True)
+    thermal_gradient=Count('thermalgradient',distinct=True)
     temperature=Count('temperature',distinct=True)
 
     # Calculates information on the current Site query
@@ -42,7 +42,7 @@ def get_db_summary(qs):
 
     for i in [  qs.aggregate(thermal_conductivity=Round(Avg('conductivity__value'))),
                 qs.aggregate(heat_generation=Round(Avg('heatgeneration__value'))),
-                qs.aggregate(thermal_gradient=Round(Avg('temperaturegradient__uncorrected'))),
+                qs.aggregate(thermal_gradient=Round(Avg('thermalgradient__uncorrected'))),
                 qs.aggregate(temperature=Round(Avg('temperature__value'))),]:
         ave.update(i)
 

@@ -1,5 +1,5 @@
 from django import template
-
+from django.core.exceptions import FieldDoesNotExist
 register = template.Library()
 
 @register.filter(name='get_mean')
@@ -29,9 +29,37 @@ def get_mean(qs, field_names):
         return tmp/len(qs)
 
 @register.filter(name='de_underscore')
-def de_underscore(str_input,replace_with_this):
-    return str_input.replace('_',replace_with_this)
+def de_underscore(str_input):
+    return str_input.replace('_',' ')
 
 @register.filter(name='field_type')
 def field_type(field):
     return field.field.widget.__class__.__name__
+
+@register.simple_tag
+def field_name(value, field, model=None):
+    '''
+    Django template filter which returns the verbose name of an object's,
+    model's or related manager's field.
+    '''
+    if model:
+        try:
+            value = model._meta.get_field(field).verbose_name.title()
+            return value
+        except FieldDoesNotExist:
+            pass
+           
+    elif hasattr(value, 'model'):
+        value = value.model
+        return value._meta.get_field(field).verbose_name.title()
+
+    return field.replace('_',' ').title()
+
+@register.filter
+def get_obj_attr(obj):
+    try:
+        value = obj.field.queryset.get(pk=obj.initial)
+    except AttributeError:
+        value = obj.initial
+
+    return '<tr><td class="w-50">{}:</td><td>{}</td></tr>'.format(obj.name.replace('_',' ').title(),value)

@@ -24,7 +24,6 @@
 *.json
 /heatflow/local_settings.py
 
-
 # Logs and databases #
 ######################
 *.log
@@ -45,9 +44,7 @@ Thumbs.db
 *.csv
 __pycache__
 *.log
-
 *.pot
-
 *.pyc
 
 
@@ -56,4 +53,6 @@ backup.json
 
 .vscode/
 /assets
+/node_modules
+/mapping/data
 thermoglobe.json

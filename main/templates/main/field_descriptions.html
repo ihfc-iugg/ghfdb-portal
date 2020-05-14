@@ -1,0 +1,24 @@
+{% extends "main/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class='container'>
+    <ul class="list-group list-group-flush">
+        {% for field in object_list %}
+            <div class="list-group-item flex-column ">
+                <div class="d-flex w-100 ">
+                    <h5 class="mb-1">
+                        {{ field.field_name }}
+                        {% if field.units %}
+                            [{{ field.units}}]
+                        {% endif %}
+                    </h5>
+                </div>
+                <p class="mb-1 text-left">{{ field.description }}</p>
+            </div>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock content %}
+
+

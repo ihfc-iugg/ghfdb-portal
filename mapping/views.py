@@ -1,114 +1,130 @@
 from django.shortcuts import render
 from django.views.generic import TemplateView
-# from thermoglobe.filters import SiteFilter, HeatflowFilter, ConductivityFilter, HeatGenFilter, ReferenceFilter
+from thermoglobe.filters import SiteFilter, HeatflowFilter, ConductivityFilter, HeatGenFilter, ReferenceFilter
 from thermoglobe.filters import map_filter_forms
 import csv
 from thermoglobe.utils import get_db_summary
-from thermoglobe.models import Site, DepthInterval
+from thermoglobe.models import Site, HeatFlow, Conductivity, HeatGeneration, Temperature
 from django.http import HttpResponse, JsonResponse
 from datetime import datetime
+import time 
+from django.db.models import Q, Count, Avg
+from thermoglobe import choices
 
-DOWNLOAD_FIELDS =[  
-
-    ('site__site_name', 'site_name'),
-    ('site__latitude',  'latitude'),
-    ('site__longitude', 'longitude'),
-    ('site__elevation', 'elevation'),
-    ('site__dip',       'dip'),
-    ('site__well_depth','well_depth'),
-    ('site__sediment_thickness','sediment_thickness'),
-    ('site__basin','basin'),
-    ('site__sub_basin','sub_basin'),
-    ('site__domain','domain'),
-    ('site__province','province'),
-    ('site__tectonic_environment','tectonic_environment'),
-    ('site__bottom_hole_temp__value','bottom_hole_temp'),
-    ('site__top_hole_temp__value','top_hole_temp'),
-    # ('temperature__value', 'temperature'),
-    ('depth_min','depth_min'),
-    ('depth_max','depth_max'),
-    ('age_min','age_min'),
-    ('age_max','age_max'),
-    ('age_method','age_method'),
-    ('heatflow__reliability', 'heatflow_reliability'),
-    ('heatflow__corrected','heatflow_corrected'),
-    ('heatflow__corrected_uncertainty','heatflow_corrected_uncertainty'),
-    ('heatflow__uncorrected','heatflow_uncorrected'),
-    ('heatflow__uncorrected_uncertainty','heatflow_uncorrected_uncertainty'),
-    ('temperaturegradient__corrected','gradient_corrected'),
-    ('temperaturegradient__corrected_uncertainty','gradient_corrected_uncertainty'),
-    ('temperaturegradient__uncorrected','gradient_uncorrected'),
-    ('temperaturegradient__uncorrected_uncertainty','gradient_uncorrected_uncertainty'),
-    ('conductivity__value','thermal_conductivity'),
-    ('conductivity__uncertainty','conductivity_uncertainty'),
-    ('conductivity__number_of_measurements','conductivity__number_of_measurementsy'),
-    ('conductivity__method','conductivity__method'),
-    ('heatgeneration__value','heatgeneration__value'),
-    ('heatgeneration__uncertainty','heatgeneration__uncertainty'),
-    ('heatgeneration__number_of_measurements','heatgeneration__number_of_measurements'),
-    ('heatgeneration__method','heatgeneration__method'),
-    ('reference__first_author__last_name','author'),
-    ('reference__year','year'),
+REFERENCE_FIELDS = [
+    ('reference__bib_id','bib_id'),
     ('reference__doi','doi'),
-    ('site__operator','operator'),
-    ('site__cruise','cruise'),
-    ('comment','comment'),
+]
+
+HEATFLOW_FIELDS = [  
+
+    ('reliability', 'heatflow_reliability'),
+    ('corrected','heatflow_corrected'),
+    ('corrected_uncertainty','heatflow_corrected_uncertainty'),
+    ('uncorrected','heatflow_uncorrected'),
+    ('uncorrected_uncertainty','heatflow_uncorrected_uncertainty'),
+    ('thermalgradient__corrected','gradient_corrected'),
+    ('thermalgradient__corrected_uncertainty','gradient_corrected_uncertainty'),
+    ('thermalgradient__uncorrected','gradient_uncorrected'),
+    ('thermalgradient__uncorrected_uncertainty','gradient_uncorrected_uncertainty'),
+    ('conductivity','thermal_conductivity'),
+    'conductivity_uncertainty',
+    'number_of_conductivities',
+    'conductivity_method',
+    # ('heat_generation','heat_generation
+    # ('heat_generation_uncertainty','heatgeneration__uncertainty'),
+    # ('heat_generation_number_of_measurements','heatgeneration__number_of_measurements'),
+    # ('heat_generation_method','heatgeneration__method'),
+    'comment',
     ]
 
-def geojson_serializer(qs):
-    qs = qs.values('latitude','longitude','site_name','reference__first_author__last_name','reference__year')
-    # qs = qs.values('site__latitude','site__longitude')
+CONDUCTIVITY_FIELDS = [
+    'sample_name',
+    ('value','thermal_conductivity'),
+    'uncertainty',
+    'method',
+    'depth',
+    'rock_group',
+    'rock_origin',
+    'rock_type',
+    ('geo_unit__name','geo_unit'),
+    'age',
+    'age_min',
+    'age_max',
+    'age_method',
+    'comment',
+
+ ]
+
+def geojson_serializer(qs,fields):
+    qs = qs.values(*fields)
     return {
         'type': 'FeatureCollection',
+        'crs': {
+            'type': "name",
+            'properties': {
+            'name': "EPSG:4326"
+        }},
         'features': [{
             "type":"Feature",
             "geometry":{"type": "Point",
-                        "coordinates":[q['longitude'], q['latitude']]},
-            # "properties": {'site_name':form['site_name'],
-            #             #    'author':form['reference__first_author__last_name'],
-            #                'year':form['reference__year']
-            # }
+                        "coordinates":[float(q['longitude']), float(q['latitude'],                      
+                         )]},
+            "properties": {f:q[f] for f in fields}
         } for q in qs]
     }
 
-def filter_data(request):
+def data(request):
     """Handles the filter request from map view"""
+    t = time.time()
     qs = filter_request(request.GET, Site)
-    # print(request.GET)
-    return JsonResponse({'points': geojson_serializer(qs),'info': get_db_summary(qs)})
+
+    data_type = request.GET.get('dataType','heatflow')
+
+    if data_type == 'heatflow':
+        annotation = {
+            'corrected_heat_flow':Avg('heatflow__corrected'),
+            '_heat_flow':Avg('heatflow__uncorrected'),}
+    elif data_type == 'conductivity':
+        annotation = {'_conductivity':Avg('conductivity__value'),}
+    elif data_type == 'heatgeneration':
+        annotation = {'_heat_generation':Avg('heatgeneration__value'),}
+    elif data_type == 'temperature':
+        annotation = {'_temperature':Avg('temperature__value'),}
+
+    r = JsonResponse(geojson_serializer(
+        qs=qs.annotate(
+                **annotation,
+                )[0:1000],
+        fields=['site_name','country__name','latitude','longitude','elevation','slug']+ list(annotation.keys()) + ['reference__bib_id']),
+        )
+    print(time.time()-t)
+    return r
 
 def filter_request(query_dict, model):
     """Filters data based on either the Site model (for ajax filtering) or the DepthInterval model (for download)"""
     query_dict = {k:v for k,v in query_dict.items() if v}
+
+    # convert 'on'/'off' to True or False
     query_dict = {k:v if v != 'on' else True for k,v in query_dict.items()}       
     
-    # need to prepend site fields with site__ to work with the depthinterval model
-    if model == DepthInterval:
-        query_dict = {'site__'+k if k.split('__')[0] in [field.name for field in Site._meta.concrete_fields] else k:v for k,v in query_dict.items()}
-        
-    qs = model.objects.all()
+    qs = model.objects.filter(**{'{}__isnull'.format(query_dict.get('dataType','heatflow')):False})
 
-    if not query_dict.get('hf_uncorrected'):
-        # if uncorrected values are not selected
-        qs = qs.filter(heatflow__uncorrected__isnull=True).distinct()
-
-    if not query_dict.get('hf_corrected'):
-        # if corrected values are not selected
-        qs = qs.filter(heatflow__corrected__isnull=True).distinct()
-
-    if query_dict.get('heatflow__gte'):
-        qs = qs.filter( Q(heatflow__corrected__gte=query_dict['heatflow__gte']) |
-                        Q(heatflow__uncorrected__gte=query_dict['heatflow__gte'])
+    if query_dict.get('value__gte') or query_dict.get('value__lte'):
+        value_range = (query_dict.get('value__gte',0),query_dict.get('value__lte',10**6))
+        if query_dict['dataType'] == 'heatflow':
+            qs = qs.filter( 
+                Q(heatflow__corrected__range=value_range)|
+                Q(heatflow__uncorrected__range=value_range)
                         ).distinct()
-
-    if query_dict.get('heatflow__lte'):
-        qs = qs.filter( Q(heatflow__corrected__lte=query_dict['heatflow__lte']) |
-                        Q(heatflow__uncorrected__lte=query_dict['heatflow__lte'])
-                        ).distinct()
+        else:
+            qs = qs.filter( 
+                Q(**{'{}__value__range'.format(query_dict['dataType']):value_range})
+            )
 
     # delete logical query_dict field because they cannot be used in filter
-    for k in ['heatflow__gte','heatflow__lte','hf_uncorrected','hf_corrected','csrfmiddlewaretoken']:
-        if query_dict.get(k):
+    for k in ['heatflow__gte','heatflow__lte','hf_uncorrected','hf_corrected','csrfmiddlewaretoken','dataType','value__gte','value__lte']:
+        if k in query_dict.keys():
             del query_dict[k]
 
     # FOR DEBUGGING
@@ -122,18 +138,20 @@ def filter_request(query_dict, model):
 # Create your views here.
 class FullMapView(TemplateView):
     template_name = 'mapping/fullmap.html'
-    filterset = map_filter_forms
-    panel_order = ['filter','info','download','settings']
-    
+    filters = [SiteFilter]
+    table_options = dict(
+            order = [[7,'desc'],],
+            pageLength = 25,
+            # dom ='<"top d-flex justify-content-between align-content-center"fi>t<"bottom"><"clear">',
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        qs = self.get_queryset()
-        context.update({'filterset': self.filterset,
-                        'points': geojson_serializer(qs),
-                        'info': get_db_summary(qs),
-                        'panel_order': self.panel_order
-                        })
-                        
+        context.update(dict(
+            filters = self.filters,
+            table_options = self.table_options,           
+        ))     
+    
         return context
 
     def get_queryset(self):
@@ -141,24 +159,79 @@ class FullMapView(TemplateView):
     
     def post(self, request):
         """This method controls the download of the csv file"""
-        qs = filter_request(request.POST, DepthInterval)
+        sites = filter_request(request.POST,Site)
+
+        data_type = request.POST.get('dataType')
+
+
+        site_fields = get_site_fields()
+
+
+
+        if data_type == 'heatflow':
+            model = HeatFlow
+            fields = site_fields + HEATFLOW_FIELDS + REFERENCE_FIELDS
+        elif data_type == 'conductivity':
+            model = Conductivity
+            fields = site_fields + CONDUCTIVITY_FIELDS + REFERENCE_FIELDS
+        elif data_type == 'heatgeneration':
+            model = HeatGeneration
+        elif data_type == 'temperature':
+            model = Temperature
+
+        qs = model.objects.filter(site__in=sites)
 
         # converts queryset into a list of tuples containing the fields above. NOTE this is MUCH, MUCH faster than using django import-export's export feature: compare 198s to 0.003 seconds! This method does however limit the export to non-ManyToMany relations only (ie can't collect heat flow corrections or lithology!)
-        my_csv = qs.values_list(*[field[0] for field in DOWNLOAD_FIELDS])
+
+
+
+        my_csv = qs.values_list(*[field[0] if len(field) == 2 else field for field in fields])
 
         # prepare the response for csv file
-        date = datetime.now().strftime('_%d_%m_%y')
-        filename = 'ThermoGlobe'+date+'.csv'
+        filename = 'ThermoGlobe_{}.csv'.format(datetime.now().strftime('%d_%b_%Y'))
 
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
         writer = csv.writer(response)
 
         # write the header row; remove "site__" prefix for some fields for clarity
-        writer.writerow([field[1] for field in DOWNLOAD_FIELDS])
+        writer.writerow([field[1] if len(field) == 2 else field for field in fields])
 
         # write the rows to the csv file
         for i in my_csv:
             writer.writerow(i)
 
         return response
+
+def get_site_fields():
+    exclude = ['slug','id','uploaded_by','date_added','added_by','date_edited','edited_by','geom']
+    foreign_keys = {f[0]:'__'.join(f) for f in
+                    [
+                    ('continent','name'),
+                    ('country','name'),
+                    ('sea','name'),
+                    ('CGG_basin','name'),
+                    ('operator','name'),
+                    ('surface_temp','value'),
+                    ('bottom_hole_temp','value'),
+                    ('basin','name'),
+                    ('sub_basin','name'),
+                    ('tectonic_environment','name'),
+                    ('geological_province','name'),
+                    ]
+        }
+
+    site_fields = [field.name for field in Site._meta.fields if field.name not in exclude]
+
+    new_site_fields = []
+    for field in site_fields:
+        if field in foreign_keys.keys():
+            new_site_fields.append(foreign_keys[field])
+        else:
+            new_site_fields.append(field)
+
+    return [('site__'+field,field.split('__')[0]) for field in new_site_fields]
+
+    # return new_site_fields
+    # for field in foreign_keys:
+    #     if field[0] in site_fields:

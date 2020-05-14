@@ -1,5 +1,4 @@
-<div>
-
+<div class='flex-item'>
   <ul class="pagination justify-content-end">           
   {% if page_obj.has_previous %}
     <li class="page-item">
@@ -25,7 +24,14 @@
       {% if i == page_obj.number %}
         <li class="page-item active"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
       {% else %}
-        <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+        {% comment %} {{ page_obj.number|add:-2 }} {% endcomment %}
+
+        {% if i > page_obj.number|add:2 or i < page_obj.number|add:-2 %}
+           {% comment %} {{i}} {{ page_obj.number|add:2 }} {% endcomment %}
+          <li class="page-item d-none d-md-flex"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+        {% else %}
+          <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+        {% endif %}
       {% endif %}     
     {% endfor %}
 

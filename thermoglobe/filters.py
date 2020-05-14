@@ -1,67 +1,71 @@
-from .models import Site, Conductivity
+from .models import Site, Conductivity, HeatFlow
 import django_filters
 from django_filters import widgets
 from django import forms
 from thermoglobe.widgets import RangeField, RangeWidget
+from django.contrib import admin
+from django.utils.translation import gettext as _
+from django.db.models import Q
 
 
-class SiteFilter(forms.Form):
-
-    site_name = forms.CharField(label='Site Name', max_length=100, strip=True,required=False, help_text='Search for an individual site by name.')
-
-    latitude = RangeField(  
+class SiteFilter(forms.ModelForm):
+    value = RangeField(
+                label='Value',  
                 required=False,
-                field=forms.FloatField(min_value=-90,max_value= 90,),
+                help_text='Specify a range of values.',
+                field=forms.FloatField(min_value=0),
                 )
 
     longitude = RangeField(  
                 required=False,
                 field=forms.FloatField(min_value=-180, max_value= 180),
                 )
-
+    latitude = RangeField(  
+                required=False,
+                field=forms.FloatField(min_value=-90,max_value= 90,),
+                )
     elevation = RangeField(  
                 required=False,
-                help_text='Elevation in metres above sea level',
-                field=forms.FloatField(),
+                field=forms.FloatField(min_value=-12000,max_value=9000),
                 )
-    # depth = RangeField(  
-    #             required=False,
-    #             help_text='Maximum depth in metres',
-    #             field=forms.FloatField(),
-    #             )
-
-    # well_depth = RangeField(  
-    #             required=False,
-    #             help_text='Well depth in metres',
-    #             field=forms.FloatField(),
-    #             )
-
-    sediment_thickness = forms.FloatField(label='Sed. Thickness', required=False, help_text='Thickness of overlying sediments.')
-
     class Meta:
-        title = 'location'
+        model = Site
+        fields = ['value','latitude','longitude','elevation','country','continent','sea']
 
 
+class HeatflowFilter(forms.ModelForm):
+    # hf_corrected = forms.BooleanField(label='Corrected', required=False,initial=True)
+    # hf_uncorrected = forms.BooleanField(label='Uncorrected',required=False,initial=True)
 
-class HeatflowFilter(forms.Form):
-    hf_corrected = forms.BooleanField(label='Corrected', required=False,initial=True)
-    hf_uncorrected = forms.BooleanField(label='Uncorrected',required=False,initial=True)
-    # hf_reliability = forms.MultipleChoiceField(required=False)
-
-    heatflow = RangeField(
+    value = RangeField(
                 label='Heat Flow',  
                 required=False,
                 help_text='Specify a range of heat flow values.',
                 field=forms.FloatField(min_value=0),
                 )
-    gradient = RangeField(
-                label='Gradient',  
-                required=False,
-                help_text='Specify a range of temperature gradient values.',
-                field=forms.FloatField(min_value=0),
-                )
     class Meta:
-        title = 'heat flow'
+        model = HeatFlow
+        fields = ['value']
+
+
+# class HeatflowFilter(forms.Form):
+#     hf_corrected = forms.BooleanField(label='Corrected', required=False,initial=True)
+#     hf_uncorrected = forms.BooleanField(label='Uncorrected',required=False,initial=True)
+
+#     heatflow = RangeField(
+#                 label='Heat Flow',  
+#                 required=False,
+#                 help_text='Specify a range of heat flow values.',
+#                 field=forms.FloatField(min_value=0),
+#                 )
+#     gradient = RangeField(
+#                 label='Gradient',  
+#                 required=False,
+#                 help_text='Specify a range of temperature gradient values.',
+#                 field=forms.FloatField(min_value=0),
+#                 )
+#     class Meta:
+#         title = 'heat flow'
 
 class ConductivityFilter(forms.Form):
     conductivity__value = RangeField(
@@ -139,3 +143,23 @@ class ReferenceFilter(forms.Form):
 
 map_filter_forms = [SiteFilter,HeatflowFilter,ConductivityFilter,HeatGenFilter,TemperatureFilter,ReferenceFilter]
 
+class IsCorrectedFilter(admin.SimpleListFilter):
+
+    title = _('has correction')
+
+    parameter_name = 'has_correction'
+
+    def lookups(self, request, model_admin):
+
+        return (
+            ('yes', _('Yes')),
+            ('no',  _('No')),
+        )
+
+    def queryset(self, request, queryset):
+
+        if self.value() == 'yes':
+            return queryset.filter(correction__isnull=False)
+
+        if self.value() == 'no':
+            return queryset.filter(Q(correction__isnull=True))

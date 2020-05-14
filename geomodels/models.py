@@ -1,5 +1,5 @@
 from django.db import models
-# from .choices import ROCK_GROUPS, ROCK_ORIGIN
+from django.utils.translation import gettext as _
 
 #------------ SAMPLE GEOLOGY -----------#
 class Description(models.Model):
@@ -15,90 +15,65 @@ class Description(models.Model):
     def __str__(self):
         return '{}'.format(self.dominant_mineral_phase)
 
-class Lithology(models.Model):
-    lithology = models.CharField(max_length=150,unique=True)
-
-    class Meta:
-        db_table = 'lithology'
-
-    def __str__(self):
-        return self.lithology
-
-class GeoModelSample(models.Model):
-    ROCK_GROUPS = ( ('metamorphic','Metamorphic'),
-                    ('igneous','Igneous'),
-                    ('sedimentary','Sedimentary'),
-                    ('metaigneous','Meta-Igneous'),
-                    ('metasedimentary','Meta-Sedimentary'),)
-    ROCK_ORIGIN = ( ('plutonic','Plutonic'),
-                    ('volcanic','Volcanic'),)
-    
-    lithology = models.ForeignKey(Lithology,blank=True, null=True, on_delete=models.SET_NULL)
-    rock_group = models.CharField(max_length=15,choices=ROCK_GROUPS, blank=True)
-    rock_origin = models.CharField(max_length=8,choices=ROCK_ORIGIN, blank=True)
-    description = models.ForeignKey(Description,blank=True,null=True,on_delete=models.SET_NULL)
-
-    class Meta:
-        abstract = True
 #------------ SITE GEOLOGY -----------#
 
-class Basin(models.Model):
-    basin = models.CharField(max_length=100,unique=True)
+# Create your models here.
+class AbstractCharRelation(models.Model):
+    name = models.CharField(max_length=150,unique=True)
+    
+    def __str__(self):
+        return '{}'.format(self.name)
 
     class Meta:
-        db_table = 'geological_basin'
+        abstract=True
 
-    def __str__(self):
-        return '{}'.format(self.basin)
-
-class Formation(models.Model):
-    formation = models.CharField(max_length=100,unique=True)
-
+class Basin(AbstractCharRelation):
     class Meta:
-        db_table = 'geological_formation'
+        db_table = 'basin'
 
-    def __str__(self):
-        return '{}'.format(self.formation)
+class Formation(AbstractCharRelation):
+    class Meta:
+        db_table = 'formation'
 
-class TectonicEnvironment(models.Model):
-    tectonic_environment = models.CharField(max_length=100,unique=True)
+class TectonicEnvironment(AbstractCharRelation):
 
     class Meta:
         db_table = 'tectonic_environment'
 
-    def __str__(self):
-        return '{}'.format(self.tectonic_environment)
-
-class Province(models.Model):
-    province = models.CharField(max_length=100,unique=True)
+class GeologicalProvince(AbstractCharRelation):
 
     class Meta:
         db_table = 'geological_province'
 
-    def __str__(self):
-        return '{}'.format(self.province)
-
-class Domain(models.Model):
-    domain = models.CharField(max_length=100,unique=True)
+class GeologicalUnit(AbstractCharRelation):
 
     class Meta:
-        db_table = 'geological_domain'
+        db_table = 'geological_unit'
+
+class AbstractFloatRelation(models.Model):
+    site = models.ForeignKey('thermoglobe.Site',verbose_name=_("site"),on_delete=models.CASCADE)
+    value = models.FloatField(_("value"))
+    reference = models.OneToOneField("reference.Reference",
+            verbose_name=_("reference"),
+            on_delete=models.CASCADE)
 
     def __str__(self):
-        return '{}'.format(self.domain)
+        return '{}'.format(self.value)
 
+    class Meta:
+        abstract=True
 
+class SedimentThickness(AbstractFloatRelation):
 
-# class SuperEon(models.Model):
-#     SUPEREON = (('precambrian','Precambrian'))
-#     name = models.CharField(max_length=11,choices=SUPEREON)
+    class Meta:
+        db_table = 'sediment_thickness'
 
-# class Eon(models.Model):
-#     EON = (('precambrian','Precambrian'))
-#     name = models.CharField(max_length=11,choices=EON)
+class CrustalThickness(AbstractFloatRelation):
 
+    class Meta:
+        db_table = 'crustal_thickness'
 
+class OutcropDistance(AbstractFloatRelation):
 
-# class Geochronology(models.Model):
-#     supereon
-#     eon
+    class Meta:
+        db_table = 'outcrop_distance'
