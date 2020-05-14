@@ -7,7 +7,6 @@ verify_ssl = true
 
 [packages]
 requests = "*"
-django-grappelli = "*"
 django-extensions = "*"
 django-widget-tweaks = "*"
 django-countries = "*"
@@ -21,9 +20,9 @@ model-bakery = "*"
 django-captcha = "*"
 Django = "*"
 Pillow = "*"
-django-betterforms = "*"
 django-ckeditor = "*"
 tqdm = "*"
+django-betterforms-jpic = "*"
 
 [requires]
 python_version = "3.8"
