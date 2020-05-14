@@ -2,7 +2,9 @@
   {% for contact in contacts %}
 
   <div class="card">
-    <img src="{{ contact.image.url }}" class="card-img-top" alt="...">
+    {% if contact.image %}
+      <img src="{{ contact.image.url }}" class="card-img-top" alt="...">
+    {% endif %}
     <div class="card-footer">
       <h5 class="card-title">
         {% if contact.title == 'DR' %}

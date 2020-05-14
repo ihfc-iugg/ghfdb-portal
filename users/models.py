@@ -14,7 +14,7 @@ class CustomUser(AbstractUser):
     ('MS', 'Ms'),
     ('MRS', 'Mrs'),
     ('DR', 'Dr'),
-]
+    ]
     title = models.CharField(
         max_length=3,
         choices=TITLES_CHOICES,

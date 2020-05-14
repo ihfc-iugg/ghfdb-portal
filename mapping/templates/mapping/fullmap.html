@@ -1,59 +1,53 @@
-{% extends "main/empty.html" %}
+{% extends "mapping/basemap.html" %}
 {% load static %}
 {% load widget_tweaks %}
 
-{% block title %}ThermoGlobe{% endblock title %}
 
 {% block head %}
-  {% include 'mapping/components/head.html' %}
+  {{ block.super }}
 {% endblock head %}
- 
-{% block content %}
 
-<div class='full-screen-map'>
 
-  {% comment %} Sidebar Navigation {% endcomment %}
-  <nav id="sideBar" class="sidenav navbar-light bg-light shadow-lg text-center">
-    <ul class="navbar-nav">
-      {% for panel in panel_order %}
-        {% include "mapping/components/side_panel_item.html" with target=panel %}
-      {% endfor %}
-    </ul>
-  </nav>
 
-  {% comment %} Leaflet Map {% endcomment %}
-  <div id='map' class='shadow-inset'></div>
+{% block title %}ThermoGlobe
+{% endblock title %}
 
-  {% comment %} ----------------PANELS--------------- {% endcomment %}
-  {% for panel in panel_order %}
-    {% include "mapping/panels/"|add:panel|add:"_panel.html" %}
-  {% endfor %}
+{% block left-content %}
+    <div class='card border-0'>
+      <div class='card-head container display-4'>Filters<hr></div>
+      <div class='card-body'>
+        {% include "mapping/components/map_filter.html" %}
+      </div>
+      <div class='card-body'>
+        <button type="button" id='download-button' form='filter-form' type='submit' class="btn btn-success btn-block btn-lg">DOWNLOAD</button>
+      </div>
+    </div>
+{% endblock left-content %}
 
-</div>
-
-{% endblock content %}
+{% block under-map-content %}
+<table id="geoTable" class="table table-hover table-striped w-100" >
+  <thead class="thead-dark">
+  </thead>
+</table>
+{% endblock under-map-content %}
 
 {% block scripts %}
+{{ block.super }}
+<script>
+  var data_url = "{% url 'mapping:data' %}";
+  var link_url = '/thermoglobe/sites/';
+  var table_options = {{ table_options|safe }}
 
-  {% include 'mapping/components/map_scripts.html' %}
+  // In your Javascript (external .js resource or <script> tag)
+  $(document).ready(function() {
+      $('.select2').select2();
 
-  <script>
- 
-    var map = initMap([-100,-360],[100,360],true).fitWorld()
-    var filterURL = "{% url 'mapping:filter_data' %}"
-    var siteMarkers = createMarkers({{ points|safe }})
+    $('.select2').on('select2:select', function (e) {
+      $('.select2').not(this).each(function(){
+          $(this).val(null).trigger('change');
+      });
+    });
+  });
 
-    update_info_table({{ info.count|safe }},'#info-counts-table')
-    update_info_table({{ info.average|safe }},'#info-average-table')
-
-
-  </script>
-
-
-
-
-
-
-
+</script>
 {% endblock scripts %}
-

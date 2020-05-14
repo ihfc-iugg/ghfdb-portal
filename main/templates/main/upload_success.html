@@ -1,0 +1,30 @@
+{% extends "main/base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block head %}
+  <script src="https://cdn.jsdelivr.net/npm/bs-custom-file-input/dist/bs-custom-file-input.min.js"></script>
+  <script src='https://cdn.rawgit.com/larsgw/citation.js/archive/citation.js/citation-0.4.0-9.js'></script>
+{% endblock head %}
+
+{% block content %}
+<table id="dataTable" class="table table-hover table-striped w-100" >
+  <thead class="thead-dark">
+  </thead>
+</table>
+
+{% endblock content %}
+
+{% block scripts %}
+
+  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js"></script>
+  <script src="{% static 'main/js/table.js' %}"></script>
+
+  <script>
+  $(document).ready(function () {
+    table_from_list({{ table|safe}},{{ table_options|safe }})
+  })
+  </script>
+
+{% endblock scripts %}

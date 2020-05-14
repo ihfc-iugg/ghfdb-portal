@@ -1,0 +1,37 @@
+
+<div>
+{% for key, count in result.totals.items %}
+    {% if count %}
+        <h3 class=' display-5 text-center'>
+            Showing {{count}} {{key}} data measurements
+        </h3>
+    {% endif %}
+{% endfor %}
+</div>
+
+<div class='container table-responsive'>  
+    <table class="table table-hover table-striped text-center">
+    <thead class='thead-dark'>
+        <tr>
+            <th class='th-sm'></th>
+        {% for field in result.diff_headers %}
+            <th>{{ field }}</th>
+        {% endfor %}
+        </tr>
+    </thead>
+    {% for row in result.valid_rows %}
+        <tr>
+        <td class='th-sm'>
+            {% if row.import_type == 'new' %}
+                <span class="badge badge-success">{{row.import_type}}</span>
+            {% elif row.import_type == 'update'  %}
+                <span class="badge badge-info">{{row.import_type}}</span>
+            {% endif %}
+        </td>
+        {% for field in row.diff %}
+            <td>{{ field }}</td>
+        {% endfor %}
+        </tr>
+    {% endfor %}
+    </table>
+</div>

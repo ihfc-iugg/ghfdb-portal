@@ -1,0 +1,57 @@
+{% extends "main/base.html" %}
+{% load static %}
+
+{% block head %}
+    <script src="https://code.jquery.com/jquery-3.4.1.js" integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="{% static 'main/js/custom_charts.js' %}"></script>
+{% endblock head %}
+
+
+{% block content %}
+<div class='container d-flex flex-row flex-wrap justify-content-between'>
+        {% include "main/components/figure.html" with figure=ContributionsPerYear fig_num=1 %}
+        {% include "main/components/figure.html" with figure=HeatFlowHist fig_num=2 %}
+        {% comment %} {% include "main/components/figure.html" with id="HeatFlowPie" %} {% endcomment %}
+        {% comment %} {% include "main/components/figure.html" with id="GradientPie" %} {% endcomment %}
+        {% comment %} {% include "main/components/figure.html" with id="HFSeaPie" %}  {% endcomment %}
+</div>
+{% endblock content %}
+
+
+{% block scripts %}
+    <script>
+
+        {% comment %} publications_per_year({{reference_per_year|safe }})
+        heat_flow_per_year({{heat_flow_per_year|safe }}) {% endcomment %}
+        {% comment %} historical_heat_flow({{reference_per_year|safe }},{{heat_flow_per_year|safe }}) {% endcomment %}
+        historical_heat_flow(
+            {{ContributionsPerYear.ID|safe}},
+            {{ContributionsPerYear.data|safe}})
+
+        heat_flow_hist(
+            {{HeatFlowHist.ID|safe }},
+            {{HeatFlowHist.data|safe }})
+        {% comment %} entries_pie_chart({{heat_flow_pie|safe }},'HeatFlowPie') {% endcomment %}
+        {% comment %} entries_pie_chart({{gradient_pie|safe }},'GradientPie') {% endcomment %}
+        {% comment %} entries_pie_chart({{heat_flow_sea_pie|safe }},'HFSeaPie') {% endcomment %}
+
+
+
+    </script>
+
+
+
+
+{% comment %} <script src="{% static 'main/js/Chart.min.js' %}"></script> {% endcomment %}
+{% comment %} <script src="https://unpkg.com/chartjs-plugin-colorschemes"></script> {% endcomment %}
+{% comment %} <script src="{% static 'main/js/custom_charts.js' %}"></script> {% endcomment %}
+
+{% comment %} <script>
+    data_counts({{ data_counts|safe }},{{ data_labels|safe }})
+    sites_by_country({{ country_data|safe }},{{ country_labels|safe }})
+    publications_per_year({{ reference|safe }}.reverse())
+</script> {% endcomment %}
+
+
+{% endblock scripts %}

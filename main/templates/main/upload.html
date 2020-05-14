@@ -2,90 +2,70 @@
 {% load static %}
 {% load widget_tweaks %}
 
-{% block title %}Upload{% endblock title%}
-{% block heading %}Upload{% endblock heading %}
-
-
 {% block head %}
-
   <script src="https://cdn.jsdelivr.net/npm/bs-custom-file-input/dist/bs-custom-file-input.min.js"></script>
   <script src='https://cdn.rawgit.com/larsgw/citation.js/archive/citation.js/citation-0.4.0-9.js'></script>
-
 {% endblock head %}
 
 {% block content %}
-  <p class='text-center'>
-  Thanks for choosing to contribute to ThermoGlobe! To ensure a hassle free upload, please copy and paste your data into the <a href="/media/templates/upload_template.csv">excel template</a> provided and upload using the form below. For a list of column names, descriptions and acceptable values, please see <a href=''>here</a>. If you believe you have additional data that could benefit this database, but can't find an appropriate column in the template, please <a href='contact'>contact us</a> here.
-  </p>
   <div class='row justify-content-center'>
-    <div class='col-sm-10 col-md-9 col-lg-8 card shadow pt-2' >
-      {% include "main/components/form.html" with form=form %}
+    <div class='col-sm-10 col-md-9 col-lg-8 card border-0 pt-2' >
+      {% if form.is_multipart %}
+      <form enctype="multipart/form-data" method="post">
+      {% else %}
+      <form method="post">
+      {% endif %}
+          {% csrf_token %}
+          {% for field in form %}
+              {% include "main/components/form_field.html" %}
+          {% endfor %}
+          <div class='text-center mb-3'>
+              <button class="btn btn-primary btn-lg" type="submit" data-toggle="modal" data-target="#earthSpinModal">Submit</button>
+          </div>
+      </form>
     </div>
   </div>
+
+<!-- Modal -->
+<div class="modal fade" data-backdrop="static" id="earthSpinModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered bg-transparent" role="document">
+    <div class="modal-content d-block text-center justify-content-center">
+      <div style="background-image: url('{% static 'main/images/heat_flow.svg' %}')" class='earth d-inline-block align-middle spin'></div>
+      <h5 class="display-5 text-white">Uploading data</h5>
+    </div>
+  </div>
+</div>
+
+<table id="dataTable" class="table table-hover table-striped w-100" >
+  <thead class="thead-dark">
+  </thead>
+</table>
+
+
+
 
 
 {% endblock content %}
 
 {% block scripts %}
+
   <script>
+  var dataSet = {{ table|safe}}
+  console.log(dataSet)
+  console.log('Hi')
+  var table_options = {{ table_options|safe }}
+
     $(document).ready(function () {
-      bsCustomFileInput.init()
+      table_from_list(dataSet)
+
+      $('.custom-file-input').on('change',function(){
+        var fileName = $(this).val();
+        var cleanFileName = fileName.replace('C:\\fakepath\\', "");
+        $(this).next('.custom-file-label').html(cleanFileName);
+      })
+
     })
   </script>
-
-
-  <script>
-  
-    var Cite = require('citation-js')
-
-    // Set variables
-    var cite = new Cite()
-
-    var opt = {
-      format: 'string',
-      style:'citation-apa',
-      type: 'html',
-      lang: 'en-US',
-
-    }
-
-     // Make shorter ref to function
-    var parseAsync = Cite.parse.input.async.chain
-
-    // Make a factory for callback
-    var callbackFactory = function (out) {
-      return function (data) {
-        out.html(cite.set(data).get(opt))
-      }
-    }
-  
-    $(function(){
-    // jQuery elements
-    var $bibx_in = $('#bibx-in')
-
-
-
-    // Callbacks
-    var jsonCb = callbackFactory($('#json-out')),
-        bibxCb = callbackFactory($('#bibx-out')),
-        wikiCb = callbackFactory($('#wiki-out')),
-        bibjCb = callbackFactory($('#bibj-out'))
-
-    // Declare function to update the output
-    function update() {
-      // Set data (explicit parsing only recommended for async) and set html element to get output
-      $('#bib-input').hide()
-      parseAsync($bibx_in.val()).then(bibxCb)
-    }
-
-    // Make output update when input is defocussed...
-    $bibx_in.on('input', update)
-
-
-    // Trigger update
-    {% comment %} update() {% endcomment %}
-  })
-  
-  </script>
+  <script src="{% static 'main/js/table.js' %}"></script>
 
 {% endblock scripts %}

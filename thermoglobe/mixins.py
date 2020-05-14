@@ -5,60 +5,20 @@ from django.utils.html import format_html
 from django.db.models import Count
 from django.contrib import admin
 from django.db.models import F
-
 from django.db import models
+from django.utils.translation import gettext as _
+from django.contrib.gis import admin as gisadmin
 
 
-class BaseAdmin(admin.ModelAdmin):
+
+class BaseAdmin(gisadmin.ModelAdmin):
     exclude = ['edited_by','added_by','date_added','date_edited']
+    # list_display
 
     def save_model(self, request, obj, form, change):
         if change:
             obj.edited_by = request.user._wrapped #add the current user to edited_by
         super().save_model(request, obj, form, change)
-
-class SitePropertyAdminMixin(BaseAdmin):
-
-    list_display = ['site_name','latitude','longitude','_depth','sample_name','value','uncertainty','method','number_of_measurements','reference','date_added','added_by','date_edited','edited_by']
-    search_fields = ['depthinterval__reference__primary_author__last_name']
-    fieldsets = [('Site', {'fields':[
-                            ('site','depth_interval')]}),
-                ('Sample', {'fields': [
-                            ('value','uncertainty'),
-                            'depth',
-                            'sample_name',
-                            'method',
-                            'number_of_measurements',]}),
-                ('Age', {'fields': [
-                            ('age_min','age_max','age_method',),
-                            ]}),
-                ('Geology', {'fields': [
-                            ('lithology','rock_group','rock_origin')]}),
-                            ]
-    autocomplete_fields = ['site','depth_interval','lithology']
-
-    def save_model(self, request, obj, form, change):
-        user = request.user._wrapped
-        
-        if obj._state.adding is True:
-            obj.added_by = user.username
-            obj.edited_by = user 
-        if change:
-            obj.edited_by = request.user._wrapped 
-        super().save_model(request, obj, form, change)
-
-    def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-        queryset = queryset.select_related('site','depth_interval').annotate(
-            _site_name=F('site__site_name'),
-            _latitude=F('site__latitude'),
-            _longitude=F('site__longitude'),
-            _depth_min=F('depth_interval__depth_min'),
-            _depth_max=F('depth_interval__depth_max'),
-            
-            )
-
-        return queryset
 
     def site_name(self,obj):
         return obj._site_name
@@ -71,63 +31,88 @@ class SitePropertyAdminMixin(BaseAdmin):
     def longitude(self,obj):
         return obj._longitude
     longitude.admin_order_field = '_longitude'
+   
+    def site_operator(self,obj):
+        return obj._operator
+    site_operator.admin_order_field = '_operator'
 
-    def _depth(self,obj):
-        if obj.depth:
-            return obj.depth
-        elif obj._depth_min and obj._depth_max:
-            return '{}-{}'.format(obj._depth_min,obj._depth_max)
-        else:
-            ''
+    def reference(self,obj):
+        return obj._reference
+    reference.admin_order_field = '_reference'
 
-    # def reference(self,obj):
-    #     return obj._reference
-    # reference.admin_order_field = '_reference'
+    def conductivity_count(self,obj):
+        return obj._conductivity_count
+    conductivity_count.admin_order_field = '_conductivity_count'
 
+    def gradient_count(self,obj):
+        return obj._gradient_count
+    gradient_count.admin_order_field = '_gradient_count'
 
-    # def _reference(self,obj):
-    #     return obj.reference
+    def heat_gen_count(self,obj):
+        return obj._heat_gen_count
+    heat_gen_count.admin_order_field = '_heat_gen_count'
 
-class DataCountsMixin(SitePropertyAdminMixin):
-    autocomplete_fields = ['site','depth_interval']
+    def temperature_count(self,obj):
+        return obj._temperature_count
+    temperature_count.admin_order_field = '_temperature_count'
 
-    list_display = ['site_name','latitude','longitude','depth_min','depth_max','corrected','corrected_uncertainty','uncorrected','uncorrected_uncertainty','conductivity_count','heat_gen_count']
+    def heat_flow_count(self,obj):
+        return obj._heat_flow_count
+    heat_flow_count.admin_order_field = '_heat_flow_count'
 
+    def _conductivity(self,obj):
+        return obj._conductivity
+    _conductivity.admin_order_field = '_conductivity'
+
+    def _heat_generation(self,obj):
+        return obj._heat_generation
+    _heat_generation.admin_order_field = '_heat_generation'
+    
+    def sites(self,obj):
+        return obj._site_count
+    sites.admin_order_field = '_site_count'
+
+    def edit(self,obj):
+        return _("edit")
+    
+class SitePropertyAdminMixin(BaseAdmin):
+    list_display = ['edit','site_name','latitude','longitude','depth','sample_name','value','uncertainty','method','reference','age','age_min','age_max']
+    # search_fields = ['depthinterval__reference__primary_author__last_name']
+    fieldsets = [('Site', {'fields':[
+                            'site']}),
+                ('Sample', {'fields': [
+                            'sample_name',
+                            ('value','uncertainty'),
+                            'method',
+                            'depth',
+                            ]}),
+                ('Age', {'fields': [
+                            ('age_min','age_max','age_method',),
+                            ]}),
+                ('Geology', {'fields': [
+                            ('rock_type','rock_group','rock_origin')]}),
+                            ]
+    autocomplete_fields = ['site']
+    list_filter = ['method']
+    
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        queryset = queryset.select_related('site','depth_interval').annotate(
+        queryset = queryset.select_related('site').annotate(
+            _site_name=F('site__site_name'),
+            _latitude=F('site__latitude'),
+            _longitude=F('site__longitude'),)
+
+        return queryset
+
+class DepthIntervalMixin(BaseAdmin):
+    autocomplete_fields = ['site']
+    list_display = ['site_name','latitude','longitude','depth_min','depth_max','corrected','corrected_uncertainty','uncorrected','uncorrected_uncertainty','reference']
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.select_related('site').annotate(
             _site_name=F('site__site_name'),
             _latitude=F('site__latitude'),
             _longitude=F('site__longitude'),
-            _depth_min=F('depth_interval__depth_min'),
-            _depth_max=F('depth_interval__depth_max'),
             )
         return queryset
     
-    def depth_min(self,obj):
-        return obj._depth_min
-    depth_min.admin_order_field = '_depth_min'
-
-    def depth_max(self,obj):
-        return obj._depth_max
-    depth_max.admin_order_field = '_depth_max'
-
-    def conductivity_count(self,obj):
-        return obj._conductivity
-    conductivity_count.admin_order_field = '_conductivity'
-
-    def heat_gen_count(self,obj):
-        return obj._heat_generation
-    heat_gen_count.admin_order_field = '_heat_generation'
-
-    # def temp(self,obj):
-    #     return obj._temperature_count
-    # temp.admin_order_field = '_temperature_count'
-
-    # def heat_flow(self,obj):
-    #     return obj._heat_flow_count
-    # heat_flow.admin_order_field = '_heat_flow_count'
-
-    # def sites(self,obj):
-    #     return obj._site_count
-    # sites.admin_order_field = '_site_count'

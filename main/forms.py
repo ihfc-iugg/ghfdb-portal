@@ -1,6 +1,6 @@
 from django import forms
 from thermoglobe.widgets import RangeField, RangeWidget
-from reference.models import FileStorage
+from reference.models import Upload
 from captcha.fields import ReCaptchaField
 from captcha.widgets import ReCaptchaV3
 

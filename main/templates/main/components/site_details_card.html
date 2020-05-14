@@ -1,0 +1,33 @@
+{% load custom_tags %}
+{% load static %}
+
+<div id='refDetailsCard' class="card border-0 text-left">
+  <div class="card-header bg-white">
+    <div class='d-flex justify-content-end align-items-center'>
+      <div class="referenceCardTitle h5 text-muted flex-grow-1 bd-highlight">
+        {{ site.site_name }}
+      </div>
+      <div class='flex-item px-2'>
+        <button type="button" class="export_bibtex btn btn-success" title='Download'>
+          Download
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+      {% for fieldset in form.fieldsets %}
+      <h5 class='text-left'>{{ fieldset.name|title }}</h5>
+      <table class='table table-sm table-striped border text-left'>
+        <tbody> 
+          {% for field in fieldset %}
+            {% if field.value %}
+              {{field|get_obj_attr|safe}}
+            {% endif %}
+          {% endfor %}
+        </tbody>         
+      </table>
+    {% endfor %}
+    {% comment %} {% include "main/components/figure.html" with figure=DataCounts fig_num=1 %} {% endcomment %}
+    {% comment %} {% include "main/components/figure.html" with figure=HeatFlowHist fig_num=2 %} {% endcomment %}
+  </div>
+</div>
