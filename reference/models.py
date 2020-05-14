@@ -10,10 +10,6 @@ from django.db.models.signals import post_save
 from django.utils.translation import gettext as _
 from django_extensions.db.fields import AutoSlugField
 
-# class Round(Func):
-#     function = 'ROUND'
-#     template='%(function)s(%(expressions)s, 2)'
-
 # Create your models here.
 class Author(models.Model):
     last_name = models.CharField(max_length=100)
