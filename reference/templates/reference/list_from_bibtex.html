@@ -1,0 +1,16 @@
+{% extends "reference/generic_list.html" %}
+{% load static %}
+
+{% block scripts %}
+{{block.super}}
+<script>
+  $(document).ready(function(){
+    var table = table_from_bibtex({{dataset|safe}},{{bibtex_headers|safe}})
+    if (complex_headers) {
+      add_complex_header(complex_headers)
+    }
+  });
+</script>
+<script src="{% static 'main/js/table.js' %}"></script>
+
+{% endblock scripts %}

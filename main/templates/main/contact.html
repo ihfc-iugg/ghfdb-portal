@@ -12,15 +12,82 @@
 
 {% block content %}
 
-<div id='contact-page' class='container-fluid'>
-<div class='container mb-3 d-none d-lg-block '>
-  {% if contacts %}
-      {% include "main/components/contact-card.html" %}
-  {% endif %}
+<div class='container'>
+  <h1 class="mt-4 mb-3">Contact</h1>
+
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a href="/">Home</a>
+    </li>
+    <li class="breadcrumb-item active">Contact</li>
+  </ol>
+
+  <div class="row">
+      <div class="col-lg-8 mb-4">
+      <h3>Send us a Message</h3>
+      <form name="sentMessage" id="contactForm" novalidate>
+          {% csrf_token %}
+          <div class="control-group form-group">
+          <div class="controls">
+              <label>Full Name:</label>
+              <input type="text" class="form-control" id="name" required data-validation-required-message="Please enter your name.">
+              <p class="help-block"></p>
+          </div>
+          </div>
+          <div class="control-group form-group">
+          <div class="controls">
+              <label>Phone Number:</label>
+              <input type="tel" class="form-control" id="phone" required data-validation-required-message="Please enter your phone number.">
+          </div>
+          </div>
+          <div class="control-group form-group">
+          <div class="controls">
+              <label>Email Address:</label>
+              <input type="email" class="form-control" id="email" required data-validation-required-message="Please enter your email address.">
+          </div>
+          </div>
+          <div class="control-group form-group">
+          <div class="controls">
+              <label>Message:</label>
+              <textarea rows="10" cols="100" class="form-control" id="message" required data-validation-required-message="Please enter your message" maxlength="999" style="resize:none"></textarea>
+          </div>
+          </div>
+          <div id="success"></div>
+          <!-- For success/fail messages -->
+          <button type="submit" class="btn btn-primary" id="sendMessageButton">Send Message</button>
+      </form>
+      </div>
   </div>
-  <div class='row justify-content-center'>
-    {% include "main/components/form.html" %}
-  </div>
+
+
+    <!-- Team Members -->
+    <h2>Contacts</h2>
+    <div class="row">
+      <div class="col-lg-4 mb-4">
+      {% for contact in contacts %}
+        <div class="card h-100 text-center">
+          {% if contact.image %}
+            <img src="{{ contact.image.url }}" class="card-img-top" style='max-height:300px;' alt="...">
+          {% else %}
+            <img class="card-img-top" src="http://placehold.it/750x450" alt="">
+          {% endif %}
+          <div class="card-body">
+            <h4 class="card-title">{{contact.full_name}}</h4>
+            <h6 class="card-subtitle mb-2 text-muted">{{contact.position}}</h6>
+            <p class="card-text">{{contact.bio}}</p>
+          </div>
+          <div class="card-footer">
+            <a href="#">{{contact.email}}</a>
+          </div>
+        </div>
+      {% endfor %}
+      </div>
+    </div>
+
+
+  {% comment %} {% if contacts %}
+    {% include "main/components/contact-card.html" %}
+  {% endif %} {% endcomment %}
 </div>
 {% endblock content %}
 

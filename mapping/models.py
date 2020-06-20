@@ -52,15 +52,15 @@ class SiteAbstract(models.Model):
         super().save(*args, **kwargs)
 
 class Country(models.Model):
-    region_choices = (
+    region_choices = [
         (2,'Africa'),
         (19,'Americas'),
         (142,'Asia'),
         (150,'Europe'),
         (9,'Oceania'),
-    )
+    ]
 
-    subregion_choices = (
+    subregion_choices = [
         (14,'Eastern Africa'),
         (17,'Middle Africa'),
         (15,'Northern Africa'),
@@ -83,7 +83,7 @@ class Country(models.Model):
         (54,'Melanesia'),
         (57,'Micronesia'),
         (61,'Polynesia'),
-    )
+    ]
 
     fips = models.CharField(max_length=2)
     iso2 = models.CharField(max_length=2)
@@ -104,7 +104,7 @@ class Country(models.Model):
     class Meta:
         db_table = 'country'
         verbose_name_plural = _('countries')
-        ordering = ['name',]
+        # ordering = ['name',]
 
 class Continent(models.Model):
     objectid = models.BigIntegerField()
@@ -117,7 +117,6 @@ class Continent(models.Model):
 
     class Meta:
         ordering = ['name',]
-
 
     def __str__(self):
         return '{}'.format(self.name)
@@ -137,7 +136,7 @@ class Sea(models.Model):
 
     class Meta:
         db_table = 'sea'
-        ordering = ['name',]
+        # ordering = ['name',]
 
     def __str__(self):
         return '{}'.format(self.name)

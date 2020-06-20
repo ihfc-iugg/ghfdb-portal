@@ -45,6 +45,8 @@ class CustomUser(AbstractUser):
 
     image_tag.short_description = 'Image'
 
+    def full_name(self):
+        return '{} {}'.format(self.first_name,self.last_name)
 
 
 # def rotate_image(filepath):

@@ -75,7 +75,6 @@ class Author(models.Model):
             heat_generation=Sum('_heat_generation'),
         )
 
-
 class Reference(TimeStampAbstract):
     entry_type = models.CharField(max_length=100,blank=True)
     year = models.IntegerField(null=True,blank=True)

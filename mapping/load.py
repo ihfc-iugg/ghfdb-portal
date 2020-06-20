@@ -81,6 +81,9 @@ def margins(verbose=True):
     lm = LayerMapping(Margin, margin_dir, margin_mapping, transform=False)
     lm.save(strict=True, verbose=verbose)
 
+
+
+
 basin_dir = os.path.join(DATA_DIR,'basins','CGG_Basin.shp')
 basin_mapping = {
     'name': 'BASIN_NAME',
