@@ -33,29 +33,26 @@ class HomeView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         sites = models.Site.objects.all()
+        context['counts'] = {
+            'individual sites': sites.count(),
+            'heat flow estimates': models.HeatFlow.objects.all().count(),
+            'temperature measurements': models.Temperature.objects.all().count(),
+            'thermal conductivities': models.Conductivity.objects.all().count(),
+            'heat generation': models.HeatGeneration.objects.all().count(),
+            'references': Reference.objects.all().count(),
+        }
 
-
-
-        context['counts'] = {}
-        context['counts']['sites'] = sites.count()
-        context['counts']['heat_flow'] = models.HeatFlow.objects.all().count()
-        context['counts']['conductivity'] = models.Conductivity.objects.all().count()
-        context['counts']['heat_generation'] = models.HeatGeneration.objects.all().count()
-        context['counts']['temperature'] = models.Temperature.objects.all().count()
-        context['counts']['reference'] = Reference.objects.all().count()
         
         years = Reference.objects.aggregate(years = Max('year', ouput_field=FloatField()) - Min('year', ouput_field=FloatField()))
 
-
-        context['counts']['years'] = years['years']
-        
-        context['recently_added'] = Reference.objects.all().order_by('-date_added')[:5]
-        context['page'] = utils.get_page_or_none(self.page_id)
-
-        context['nav_images'] = [   ('publications','.jpg','reference:publication_list'),
-                                    ('upload','.jpg','thermoglobe:upload'),
-                                    ('resources','.jpg','main:resources'),
-                                    ('cite','.jpg','thermoglobe:upload'),]
+        context.update({
+            'recently_added': Reference.objects.all().order_by('-date_added')[:5],
+            'page': utils.get_page_or_none(self.page_id),
+            'cards': [  ('publications','reference:publication_list'),
+                        ('upload','thermoglobe:upload'),
+                        ('resources','main:resources'),],
+                        # ('cite','thermoglobe:upload'),],
+        })
 
         return context
 
@@ -95,7 +92,11 @@ class AboutView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['page'] = utils.get_page_or_none(self.page_id)
+        # context['contacts'] = self.get_staff() 
         return context
+
+    # def get_staff(self):
+    #     return self.model.objects.filter(is_staff=True)
 
 class ResourcesView(TemplateView):
     template_name = 'main/resources.html'
