@@ -1,6 +1,13 @@
 {% load static %}
 {% load widget_tweaks %}
-
+{% comment %} <div class="form-check form-check-inline">
+  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="cluster">
+  <label class="form-check-label" for="inlineRadio1">Cluster</label>
+</div>
+<div class="form-check form-check-inline">
+  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value="grid">
+  <label class="form-check-label" for="inlineRadio2">Grid</label>
+</div> {% endcomment %}
 <form id='filter-form' action="" method='POST'>
     {% csrf_token %}
     <div class="form-group row">
@@ -27,6 +34,8 @@
             <div class="col-sm-10 input-group text-left">
             {% if field|field_type == 'modelchoicefield' %}
                 {% render_field field class="form-control select2" %}
+            {% elif field|field_type == 'geomodelchoicefield' %}
+                {% render_field field class="form-control select2" %}
             {% else %}
                 {% render_field field class="form-control" %}
             {% endif %}
@@ -38,7 +47,10 @@
     {% endfor %}
     <div class="sidebar-submenu">
         <button id='filter-clear-button' type='reset' class='btn btn-secondary m-3'>Reset Filters</button>  
-        <button id='filter-submit-button' type='button' class='btn btn-primary m-3'>Apply</button>  
+        <button id='filter-submit-button' type='button' onclick="retrieveData()" class='btn btn-primary m-3'>Apply</button>  
+    </div>
+    <div class='card-body'>
+        <button type='submit' class="btn btn-success btn-block btn-lg">DOWNLOAD</button>
     </div>
 </form>
 

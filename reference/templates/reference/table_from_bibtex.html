@@ -9,19 +9,28 @@
 {% endblock head %}
 
 {% block content %}
-
-  {% comment %} {% for field in table_fields %}
-  
-    {% field_name '' field model=view.model %}
-  
-  {% endfor %} {% endcomment %}
-
-  <div class='container-fluid table-responsive pt-2' style="height: 50%;">
+  {% if page %}
+  <div class="jumbotron rounded-0">
+    <div class='container rounded'>
+      <h1 class="display-4">{{ page.heading}}</h1>
+      {% if page.sub_heading %}
+      <p class="lead">{{ page.sub_heading}}</p>
+      {% endif %}
+      <hr class="my-4">
+      {% if page.content %}
+          {{ page.content|safe }}
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+<div class='container-fluid'>
+  <div class='table-responsive pt-2' style="height: 50%;">
     <table id="dataTable" class="table table-hover table-striped linked-table w-100" >
       <thead class="thead-dark">
       </thead>
     </table>
   </div>
+</div>
 {% endblock content%}
 
 {% block scripts %}
@@ -33,16 +42,17 @@
   var link_url = "{% url object_url %}"
   var table_options = {{ table_options|safe }}
   var complex_headers = {{complex_headers|safe}}
+</script>
 
+<script>
   $(document).ready(function(){
     var table = table_from_bibtex({{dataset|safe}},{{bibtex_headers|safe}})
     if (complex_headers) {
       add_complex_header(complex_headers)
     }
   });
-
 </script>
-
 <script src="{% static 'main/js/table.js' %}"></script>
+
 
 {% endblock scripts %}

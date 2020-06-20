@@ -9,37 +9,99 @@
 {% endblock head %}
 
 {% block fullwidth %}
+
+{% endblock fullwidth %}
+
+
+
+
+{% block content %}
 <div class="jumbotron jumbotron-fluid">
   <div class="container">
     <div class='thermoglobe-logo'>
         {% include 'main/components/thermoglobe_logo.html' with updated=False %}
     </div>
-    <p class="lead d-none d-lg-block">Last updated {{recently_added.0.date_added|naturaltime}}</p>
     <hr class="my-4">
-    <p class="card-text d-none d-lg-block">This revised version of the Global Heat Flow Database by Dr Derrick Hasterok and Sam Jennings contains {{ counts.heat_flow|intcomma }} individual heat flow estimates as well as {{ counts.conductivity|intcomma }} thermal conductivity, {{ counts.heat_generation|intcomma }} heat generation and {{ counts.temperature|intcomma }} temperature data. Data are compiled from {{ counts.reference|intcomma }} publications over {{ counts.years }} years of heat flow research as well as many more unpublished sources.</p>
+    <p class="card-text d-none d-lg-block">{{page.content}}</p>
   </div>
 </div>
-{% endblock fullwidth %}
-{% block content %}
-<div class='container d-flex flex-row flex-wrap justify-content-between'>
-        {% include "main/components/figure.html" with figure=ContributionsPerYear fig_num=1 %}
-        {% include "main/components/figure.html" with figure=HeatFlowHist fig_num=2 %}
+
+<div class='container'>
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+        <a href="/">Home</a>
+        </li>
+        <li class="breadcrumb-item active">ThermoGlobe</li>
+    </ol>
+</div>
+
+
+<div class="row pb-5">
+    <div class='container'>
+        <div class="row">
+            <div class="col-lg-12">
+                {% include "main/components/figure.html" with figure=figures.historical_heat_flow fig_num=1 %}
+            </div>
+            <div class="col-lg-12">
+                <h2>Publications</h2>
+                <p>ThermoGlobe is a global database containing thermally related properties</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row py-5 bg-secondary">
+    <div class='container'>
+    <div class="row">
+        <div class="col-lg-6">
+            {% include "main/components/figure.html" with figure=figures.heat_flow_hist fig_num=2 class='bg-secondary' %}
+        </div>
+        <div class="col-lg-6">
+            <h2>Global Heat Flow</h2>
+            <p>ThermoGlobe is a global database containing thermally related properties</p>
+        </div>
+    </div>
+    </div>
+</div>
+
+<div class="row py-5 ">
+    <div class='container'>
+    <div class="row">
+        <div class="col-lg-6">
+            <h2>Thermal Conductivity</h2>
+            <p>Thermal conductivity is a parameter crucial to estimating heat flow within the Earth</p>
+        </div>
+        <div class="col-lg-6">
+            {% include "main/components/figure.html" with figure=figures.conductivity fig_num=3 %}
+        </div>
+    </div>
+    </div>
+</div>
+
+
+        {% comment %} {% include "main/components/figure.html" with figure=ContributionsPerYear fig_num=1 %} {% endcomment %}
         {% comment %} {% include "main/components/figure.html" with id="HeatFlowPie" %} {% endcomment %}
         {% comment %} {% include "main/components/figure.html" with id="GradientPie" %} {% endcomment %}
         {% comment %} {% include "main/components/figure.html" with id="HFSeaPie" %}  {% endcomment %}
-</div>
+{% comment %} </div> {% endcomment %}
 {% endblock content %}
 
 
 {% block scripts %}
+
     <script>
+      $(document).ready(function(){
         historical_heat_flow(
-            {{ContributionsPerYear.ID|safe}},
-            {{ContributionsPerYear.data|safe}})
+            "{{figures.historical_heat_flow.id}}",
+            {{figures.historical_heat_flow.data|safe }})
 
         heat_flow_hist(
-            {{HeatFlowHist.ID|safe }},
-            {{HeatFlowHist.data|safe }})
+            "{{figures.heat_flow_hist.id}}",
+            {{figures.heat_flow_hist.data|safe }})
+
+        });
+
+
         {% comment %} entries_pie_chart({{heat_flow_pie|safe }},'HeatFlowPie') {% endcomment %}
         {% comment %} entries_pie_chart({{gradient_pie|safe }},'GradientPie') {% endcomment %}
         {% comment %} entries_pie_chart({{heat_flow_sea_pie|safe }},'HFSeaPie') {% endcomment %}

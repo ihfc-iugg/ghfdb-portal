@@ -1,14 +1,40 @@
+.marker-cluster {
+	background-clip: padding-box;
+	border-radius: 20px;
+	}
+.marker-cluster div {
+	width: 40px;
+	height: 40px;
+	margin-left: 5px;
+	margin-top: 5px;
+
+	text-align: center;
+	border-radius: 20px;
+	font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
+	}
+.marker-cluster span {
+	line-height: 40px;
+	}
+
+
 body {
   font-family: 'Roboto Slab', serif;
+  padding-top: 56px;
+
 }
 
 .bg-main {
   background-color: #F5EFF3;
 }
 
+.bg-secondary {
+  background-color: whitesmoke!important;
+}
+
 .jumbotron {
   background-color: whitesmoke;
 }
+
 
 #earthSpinModal .modal-content {
   background-color: transparent;

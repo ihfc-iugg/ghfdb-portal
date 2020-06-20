@@ -1,4 +1,5 @@
 from .models import Site, Conductivity, HeatFlow
+from mapping.models import Sea, Country, Continent
 import django_filters
 from django_filters import widgets
 from django import forms
@@ -6,6 +7,23 @@ from thermoglobe.widgets import RangeField, RangeWidget
 from django.contrib import admin
 from django.utils.translation import gettext as _
 from django.db.models import Q
+
+class GeoModelChoiceField(forms.ChoiceField):
+
+    def __init__(self, model, display_field, *, empty_label="---------", **kwargs):
+        choices = list(model.objects.exclude(id__in=model.objects.filter(sites__isnull=True)).order_by(display_field).values_list('pk',display_field))
+        choices.insert(0,('',empty_label))
+        super().__init__(choices=choices, **kwargs)
+
+class GeoModelChoiceField2(forms.ChoiceField):
+
+    def __init__(self, model, display_field, *, id='pk', empty_label="---------", **kwargs):
+        # choices = list(model.objects.exclude(id__in=model.objects.filter(sites__isnull=True)).order_by(display_field).values_list(id,display_field))
+        
+        choices = model.region_choices
+        choices.insert(0,('',empty_label))
+        # print(choices)
+        super().__init__(choices=choices, **kwargs)
 
 
 class SiteFilter(forms.ModelForm):
@@ -28,6 +46,14 @@ class SiteFilter(forms.ModelForm):
                 required=False,
                 field=forms.FloatField(min_value=-12000,max_value=9000),
                 )
+
+    continent = GeoModelChoiceField(Continent, 'name', required=False)
+    country = GeoModelChoiceField(Country, 'name', required=False)
+    # country = forms.ModelMultipleChoiceField(queryset=Country.objects.all())
+    # region = GeoModelChoiceField2(Country, 'region', id='region')
+    sea = GeoModelChoiceField(Sea, 'name', required=False)
+    # sea = forms.ModelChoiceField(queryset=)
+
     class Meta:
         model = Site
         fields = ['value','latitude','longitude','elevation','country','continent','sea']
@@ -139,7 +165,6 @@ class ReferenceFilter(forms.Form):
 
     class Meta:
         title = 'reference'
-
 
 map_filter_forms = [SiteFilter,HeatflowFilter,ConductivityFilter,HeatGenFilter,TemperatureFilter,ReferenceFilter]
 

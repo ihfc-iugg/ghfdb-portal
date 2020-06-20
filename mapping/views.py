@@ -8,8 +8,9 @@ from thermoglobe.models import Site, HeatFlow, Conductivity, HeatGeneration, Tem
 from django.http import HttpResponse, JsonResponse
 from datetime import datetime
 import time 
-from django.db.models import Q, Count, Avg
+from django.db.models import Q, Count, Avg, FloatField
 from thermoglobe import choices
+from django.db.models.functions import Cast, Coalesce
 
 REFERENCE_FIELDS = [
     ('reference__bib_id','bib_id'),
@@ -74,17 +75,25 @@ def geojson_serializer(qs,fields):
         } for q in qs]
     }
 
+def json_serializer(qs,fields):
+    qs = qs.values(*fields)
+    return [
+            {
+            "coordinates":[float(q['longitude']), float(q['latitude'])],
+            "properties": {f:q[f] for f in fields}
+        } for q in qs]
+
 def data(request):
     """Handles the filter request from map view"""
     t = time.time()
     qs = filter_request(request.GET, Site)
-
     data_type = request.GET.get('dataType','heatflow')
 
     if data_type == 'heatflow':
+        # Average of either corrected or uncorrected heat flow values at a particular site. 
         annotation = {
-            'corrected_heat_flow':Avg('heatflow__corrected'),
-            '_heat_flow':Avg('heatflow__uncorrected'),}
+            'heat_flow': Avg(Coalesce('heatflow__corrected', 'heatflow__uncorrected'))
+            }
     elif data_type == 'conductivity':
         annotation = {'_conductivity':Avg('conductivity__value'),}
     elif data_type == 'heatgeneration':
@@ -92,13 +101,24 @@ def data(request):
     elif data_type == 'temperature':
         annotation = {'_temperature':Avg('temperature__value'),}
 
-    r = JsonResponse(geojson_serializer(
-        qs=qs.annotate(
-                **annotation,
-                )[0:1000],
-        fields=['site_name','country__name','latitude','longitude','elevation','slug']+ list(annotation.keys()) + ['reference__bib_id']),
-        )
-    print(time.time()-t)
+    fields = ['site_name','latitude','longitude','elevation'] + list(annotation.keys()) + ['reference__bib_id']
+
+    # fields = ['site_name','latitude','longitude'] + list(annotation.keys())
+
+
+    # qs = qs.annotate(**annotation)[:10000]
+    qs = qs.annotate(**annotation)
+
+    t2 = time.time()
+
+    r = JsonResponse({
+        'headers': fields,
+        'data': list(qs.values_list(*fields))
+    })
+
+    print('Response prepared in: ',time.time() - t2,'s')
+
+    print('Size: ',len(r.content)/10**6,'MB')
     return r
 
 def filter_request(query_dict, model):
@@ -128,10 +148,11 @@ def filter_request(query_dict, model):
             del query_dict[k]
 
     # FOR DEBUGGING
-    print('Current query:')
-    for k,v in query_dict.items():
-        print(k,': ',v)
-    print(' ')
+    if query_dict:
+        print('Current query:')
+        for k,v in query_dict.items():
+            print(k,': ',v)
+        print(' ')
 
     return qs.filter(**query_dict).distinct()
 

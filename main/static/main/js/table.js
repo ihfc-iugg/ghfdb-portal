@@ -1,13 +1,11 @@
 None = ''
 
 function tabulate_geojson(features) {
-
   var dataSet = [];
 
-  for (let index = 0; index < features.length; index++) {
-    const element = features[index];
+  features.forEach(element => {
     dataSet.push(element.properties)
-  };
+  });
 
   return dataSet
 }

@@ -1,45 +1,43 @@
-<nav class="navbar navbar-expand-lg navbar-light shadow-sm bg-main top">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+  <div class="container">
     <a class="navbar-brand" href="{% url "main:home" %}">Heatflow.org</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
+    <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
     </button>
+    <div class="collapse navbar-collapse" id="navbarResponsive">
+      <ul class="navbar-nav ml-auto">
+          {% comment %} <li class="nav-item active">
+              <a class="nav-link" href="{% url "main:home" %}">Home<span class="sr-only">(current)</span></a>
+          </li> {% endcomment %}
+          <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  ThermoGlobe
+              </a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <a class="dropdown-item" href="{% url "thermoglobe:about" %}">About</a>
+                  <a class="dropdown-item" href="{% url "mapping:thermoglobe" %}">World Map</a>
+                  <a class="dropdown-item" href={% url "reference:publication_list" %}>Publication</a>
+                  <a class="dropdown-item" href={% url "reference:author_list" %}>Author</a>
+                  <div class="dropdown-divider"></div>
+                  <a class="dropdown-item" href="{% url "thermoglobe:upload" %}">Upload</a>
+              </div>
+          </li>
 
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-    <ul class="navbar-nav mr-auto">
-        <li class="nav-item active">
-            <a class="nav-link" href="{% url "main:home" %}">Home<span class="sr-only">(current)</span></a>
-        </li>
-        <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                ThermoGlobe
-            </a>
-            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <a class="dropdown-item" href="{% url "thermoglobe:about_thermoglobe" %}">About</a>
-                <a class="dropdown-item" href="{% url "mapping:thermoglobe" %}">World Map</a>
-                <a class="dropdown-item" href={% url "reference:publication_list" %}>Publication</a>
-                <a class="dropdown-item" href={% url "reference:author_list" %}>Author</a>
-                <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="{% url "thermoglobe:upload" %}">Upload</a>
-            </div>
-        </li>
-
-        <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Resources</a>
-            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                {% comment %} <a class="dropdown-item" href="{% url "thermoglobe:charts" %}">Charts</a> {% endcomment %}
-                <a class="dropdown-item" href="{% url "main:field_descriptions" %}">Field Descriptions</a>
-            </div>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{% url "main:contact" %}">Contact</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{% url "main:about" %}">About</a>
-        </li>
-    </ul>
-    {% comment %} <form class="form-inline my-2 my-lg-0">
-        <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-    </form> {% endcomment %}
+          <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Resources</a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  {% comment %} <a class="dropdown-item" href="{% url "thermoglobe:charts" %}">Charts</a> {% endcomment %}
+                  <a class="dropdown-item" href="{% url "main:field_descriptions" %}">Field Descriptions</a>
+              </div>
+          </li>
+          <li class="nav-item">
+              <a class="nav-link" href="{% url "main:contact" %}">Contact</a>
+          </li>
+          <li class="nav-item">
+              <a class="nav-link" href="{% url "main:about" %}">About</a>
+          </li>
+      </ul>
     </div>
+  </div>
 </nav>
+

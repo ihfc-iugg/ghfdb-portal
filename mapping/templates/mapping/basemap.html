@@ -15,8 +15,10 @@
   {% block left-content %}{% endblock left-content %}
   </div> 
   <div id='right' class='container-fluid pl-0 flex-grow-1'>
-    <div id='map' style="height: 50vh"></div>
-    {% comment %} <div class='container-fluid table-responsive pt-2' style="height: 50%;"> {% endcomment %}
+    <div id='map' style="height: 50vh">
+    <canvas id='cbar' class='float-right'></canvas>
+    
+    </div>
     <div class='container-fluid table-responsive pt-2'>
     {% block under-map-content %}{% endblock under-map-content %}
     </div>
@@ -29,6 +31,7 @@
 
 {% block scripts %}
 {% include 'mapping/components/map_scripts.html' %}
+{% comment %} <script type="text/javascript" charset="utf8" src="https://cdn.jsdelivr.net/npm/leaflet-regular-grid-cluster@0.3.4/dist/leaflet-regulargridcluster.min.js"></script> {% endcomment %}
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js"></script>
 

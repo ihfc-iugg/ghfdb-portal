@@ -1,0 +1,124 @@
+{% extends "main/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block head %}
+  <link rel="stylesheet" href="{% static "main/css/home.css" %}">
+{% endblock head %}
+
+{% block content %}
+
+<div class='container'>
+  <h1 class="my-4">Welcome to Heatflow.org</h1>
+
+    <div class="row">
+      <div class="col-lg-6">
+        <h2>Explore ThermoGlobe</h2>
+        <p class="card-text">Last updated {{recently_added.0.date_added|naturaltime}}</p>
+        <p>Featuring:</p>
+        <ul>
+          {% for key, count in counts.items %}
+          <li>
+            {{ count|intcomma }} {{key}}
+          </li>
+          {% endfor %}
+        </ul>
+        <p>ThermoGlobe is a global database containing thermally related properties</p>
+      </div>
+      <div class="col-lg-6">
+        <img class="img-fluid rounded" src="{% static 'main/images/world_map.jpg' %}" style='max-height:450px;' alt="">
+      </div>
+    </div>
+    {% comment %} http://placehold.it/700x450 {% endcomment %}
+
+
+    <div class="row">
+      {% for image in nav_images %}
+        <div class="col-lg-4 mb-4">
+          <div class="card h-100">
+            <h4 class="card-header">{{image.0|title}}</h4>
+            <div class="card-body">
+              <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Sapiente esse necessitatibus neque.</p>
+            </div>
+            <div class="card-footer">
+              <a href="{% url image.2 %}" class="btn btn-primary">Learn More</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+
+  {% comment %} <div id='navigation-images' class='row'>
+    {% for image in nav_images %}
+      <div class='col-sm-12 col-md-6'>
+          <div class="card bg-dark text-white " style='height:300px;'>
+            <img class="card-img" src="{% static 'main/images/'|add:image.0|add:'.jpg' %}" alt="Card image">
+              <h5 class="display-1">{{image.0|title}}</h5>
+            <a href={% url image.2 %} class='stretched-link'></a>
+          </div>
+        </div>
+    {% endfor %}   
+  </div>
+</div> {% endcomment %}
+
+{% comment %} <div class="jumbotron h-50 rounded-0" style="background-image: url('{% static 'main/images/world_map.jpg' %}'); position: relative;">
+  <div class='container rounded'>
+    <div class='thermoglobe-logo'>
+      {% include 'main/components/thermoglobe_logo.html' with updated=True %}
+    </div>
+    <hr class="my-4">
+    <p class="card-text d-none d-lg-block">This revised version of the Global Heat Flow Database by Dr Derrick Hasterok and Sam Jennings contains {{ counts.heat_flow|intcomma }} individual heat flow estimates as well as {{ counts.conductivity|intcomma }} thermal conductivity, {{ counts.heat_generation|intcomma }} heat generation and {{ counts.temperature|intcomma }} temperature data. Data are compiled from {{ counts.reference|intcomma }} publications over {{ counts.years }} years of heat flow research as well as many more unpublished sources.</p>
+    <a href="{% url "mapping:thermoglobe" %}" class='stretched-link'></a>
+  </div>
+</div> {% endcomment %}
+
+
+
+
+{% comment %} <div class='container'>
+  <div id='navigation-images' class='row'>
+    {% for image in nav_images %}
+      <div class='col-sm-12 col-md-6'>
+          <div class="card">
+            <img class="card-img" src="{% static 'main/images/'|add:image.0|add:'.jpg' %}" alt="Card image">
+              <div class="card-img-overlay">
+                  <div class="container-fluid pb-1">
+                    <h5 class="card-title">{{image.0|title}}</h5>
+                  </div>
+              </div>
+            <a href={% url image.2 %} class='stretched-link'></a>
+          </div>
+        </div>
+    {% endfor %}   
+  </div>
+</div> {% endcomment %}
+{% endblock content %}
+
+{% comment %} {% block right-side-content %}
+  <div id='site-right' class='col-3'>
+
+    <div class='shadow p-3'>
+      
+      <div class='fixed-in-container'>
+
+      <h3 class='text-center'>Recently Added</h3>  
+
+      {% for reference in recently_added %}
+      <a href="{% url 'thermoglobe:reference_details' pk=reference.id %}">
+        <div class="card recent-refs">
+          <div class="card-header">
+            <div class="card-title">{{reference.first_author.last_name}} ({{reference.year}}) - <small>{{reference.date_added|date:"M j, Y"}}</small></div>
+          </div>
+        </div>
+      </a>  
+      {% endfor %}
+    
+    
+    </div>
+
+
+  </div>  
+  </div>
+{% endblock right-side-content %} {% endcomment %}
+

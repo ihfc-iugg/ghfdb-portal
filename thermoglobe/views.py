@@ -114,12 +114,33 @@ class About(TemplateView):
         context = super().get_context_data(**kwargs)
         context['page'] = get_page_or_none(self.page_id)
 
-        context['data_counts'] = list(plots.data_counts().values())
+        # context['data_counts'] = list(plots.data_counts().values())
         context['data_labels'] = ['Heat Flow','Thermal Gradient','Temperature','Thermal Conductivity','Heat Generation']
 
-        context['ContributionsPerYear'] = plots.contributions_per_year()
-        context['HeatFlowHist'] = plots.heat_flow_histogram()
+        # context['ContributionsPerYear'] = plots.contributions_per_year()
+        # context['HeatFlowHist'] = plots.heat_flow_histogram()
 
+        # context['test'] = plots.contributions_per_year()
+
+
+        context.update(dict(
+            figures = {
+                'historical_heat_flow': 
+                    {'id':'historical_heat_flow',
+                    'data': plots.contributions_per_year(),
+                    },
+                'heat_flow_hist': 
+                    {'id':'HeatFlowHist',
+                    'data': plots.heat_flow_histogram(),
+                    },
+
+
+
+
+                    
+            },
+            )
+        )
         # context['gradient_pie'] = ['Thermal Gradient by Country',
         #     plots.entries_by(
         #         model=ThermalGradient,
@@ -141,7 +162,6 @@ class About(TemplateView):
         #         model_values='site__sea__name'),
         #     ]
 
-    # context['heat_flow_histogram'] = plots.heat_flow_histogram()
 
         return context
 

@@ -3,7 +3,12 @@ from reference.models import Reference
 from django.db.models import Avg, Max, Min, Count, F, Value, Q, FloatField
 from collections import Counter
 # from mapping.models import Country
+import plotly.graph_objects as go
+from plotly.offline import plot
 
+def heat_flow_per_year(filters={}):
+    hf = Counter(HeatFlow.objects.filter(reference__year__isnull=False,**filters).exclude(reference__bib_id='Blackwell2004').values_list('reference__year',flat=True).order_by('reference__year'))
+    return counter_2_xy(hf) 
 
 # CHART UTILS
 def counter_2_xy(counter, fill=True):
@@ -18,16 +23,13 @@ def publications_per_year(qs=Reference.objects.all(),filters={}):
     refs = Counter(qs.filter(year__isnull=False,**filters).values_list('year',flat=True).order_by('year'))
     return counter_2_xy(refs) 
 
-def heat_flow_per_year(filters={}):
+def heat_flow_per_year_x(filters={}):
     heatflow = Counter(HeatFlow.objects.filter(reference__year__isnull=False,**filters).exclude(reference__bib_id='Blackwell2004').values_list('reference__year',flat=True).order_by('reference__year'))
     return counter_2_xy(heatflow)
 
 def contributions_per_year(filters={}):
-    return {
-        'ID':'ContributionsPerYear',
-        'data': [publications_per_year(filters),heat_flow_per_year(filters)],
-        'caption': 'Historical contributions to ThermoGlobe expressed in terms of number of publications and quantity of heat flow estimates added per year.',
-    }
+    return [publications_per_year(filters=filters),heat_flow_per_year(filters)]
+
 
 def heat_flow_histogram(model_filters={}):
     continental = list(HeatFlow.objects.filter(corrected__lte=200,corrected__gt=0,site__elevation__gte=-300,**model_filters).values_list('corrected',flat=True))

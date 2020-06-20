@@ -1,5 +1,61 @@
 {% extends "main/base.html" %}
 {% load static %}
+{% block content %}
+  <!-- Page Content -->
+  <div class="container">
+
+    <!-- Page Heading/Breadcrumbs -->
+    <h1 class="mt-4 mb-3">About
+      <small>HeatFlow.org</small>
+    </h1>
+
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="/">Home</a>
+      </li>
+      <li class="breadcrumb-item active">About</li>
+    </ol>
+
+    <!-- Intro Content -->
+    <div class="row">
+      <div class="col-lg-6">
+        <img class="img-fluid rounded mb-4" src="{% static 'main/images/lucazeau_2019.svg' %}" alt="">
+        <small>Image reproduced from <a href="https://doi.org/10.1029/2019GC008389">Lucazeau (2019)</a> with permission.</small>
+      </div>
+      <div class="col-lg-6">
+        <h2>HeatFlow.org</h2>
+        {{page.content|safe}}
+      </div>
+    </div>
+
+    {% comment %} <!-- Team Members -->
+    <h2>Contacts</h2>
+
+    <div class="row">
+      <div class="col-lg-4 mb-4">
+      {% for contact in contacts %}
+        <div class="card h-100 text-center">
+          {% if contact.image %}
+            <img src="{{ contact.image.url }}" class="card-img-top" alt="...">
+          {% else %}
+            <img class="card-img-top" src="http://placehold.it/750x450" alt="">
+          {% endif %}
+          <div class="card-body">
+            <h4 class="card-title">Team Member</h4>
+            <h6 class="card-subtitle mb-2 text-muted">Position</h6>
+            <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Possimus aut mollitia eum ipsum fugiat odio officiis odit.</p>
+          </div>
+          <div class="card-footer">
+            <a href="#">name@example.com</a>
+          </div>
+        </div>
+      {% endfor %}
+      </div>
+    </div>
+    <!-- /.row --> {% endcomment %}
 
 
+  </div>
+  <!-- /.container -->
 
+{% endblock content %}

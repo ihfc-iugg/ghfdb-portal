@@ -18,14 +18,18 @@ function historical_heat_flow(id,data) {
     var data = [trace1, trace2];
     
     var layout = {
-      title: 'Historical heat flow contributions',
-      yaxis: {title: 'Number of publications'},
+      // title: 'Historical heat flow contributions',
+      yaxis: {
+        showgrid: false,
+        title: 'Number of publications'},
       yaxis2: {
+        showgrid: false,
         title: 'Number of heat flow estimates',
         overlaying: 'y',
         side: 'right'
       },
       xaxis: {
+        showgrid: false,
         title: {
           text: "Year",
         },
@@ -35,7 +39,9 @@ function historical_heat_flow(id,data) {
         xanchor: 'left',
         y: 1,
         yanchor:'top',
-      }
+      },
+      // paper_bgcolor:'rgba(0,0,0,0)',
+      // plot_bgcolor:'rgba(0,0,0,0)'
     };
     
     var config = {responsive: true}
@@ -69,13 +75,13 @@ function heat_flow_hist(fig_id,data) {
   var data = [trace1,trace2]
 
   var layout = {
-    title:{
-      text: "Heat Flow",
-      y:0.9,
-      x:0.5,
-      xanchor: 'center',
-      yanchor: 'top'
-    },
+    // title:{
+    //   text: "Heat Flow",
+    //   y:0.9,
+    //   x:0.5,
+    //   xanchor: 'center',
+    //   yanchor: 'top'
+    // },
     legend: {
       x: 1,
       xanchor: 'right',
@@ -88,10 +94,13 @@ function heat_flow_hist(fig_id,data) {
     },
     barmode:'overlay',
     margin:{
-      l:20,
-      r:10,
-      pad:0
+      l:50,
+      r:50,
+      pad:10
     },
+    paper_bgcolor:'transparent',
+    plot_bgcolor: 'transparent',
+
   }
 
   var config = {responsive: true}

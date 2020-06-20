@@ -43,7 +43,7 @@ class TableListView(ListView):
 class PublicationListView(TableListView):
     model = Reference
     details_url = 'reference:publication_list'
-    template_name = "reference/generic_list.html"
+    template_name = "reference/table_from_bibtex.html"
     page_id = 2
     table_fields = ['slug','bibtex','_heat_flow','_thermal_gradient','_temperature','_thermal_conductivity','_heat_generation',]
     table_options = json.dumps({
@@ -117,7 +117,7 @@ class PublicationDetailsView(DetailView):
 class AuthorListView(TableListView):
     model = Author
     page_id = 8
-    template_name = "reference/generic_list.html"
+    template_name = "reference/table_from_list.html"
     details_url = 'reference:author_list'
     table_fields = ['last_name','first_name','first_authorship','co_author','total','slug']
     table_options = json.dumps(dict(
