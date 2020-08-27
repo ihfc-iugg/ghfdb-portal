@@ -1,11 +1,65 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+  <style>
+.object-fit_fill { object-fit: fill }
+.object-fit_contain { object-fit: contain }
+.object-fit_cover { object-fit: cover }
+.object-fit_none { object-fit: none }
+.object-fit_scale-down { object-fit: scale-down }
+
+
+img { height: 450px; }
+
+img[class] { 
+  width: 100%;
+}
+
+
+/* .image {
+  float: left;
+  width: 40%;
+  margin: 0 30px 20px 0;
+} */
+
+
+</style>
+  
 </head>
 <body>   
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.js"></script>          
-{% comment %} <script type="text/javascript" src="node_modules/colormap/index.js"></script>           {% endcomment %}
-<script type="text/javascript" src="node_modules/colormap/example.js"></script>          
-{% comment %} <script type="text/javascript" src="test.js"></script>           {% endcomment %}
+
+<div class="original-image">
+<p>original image</p>
+<img src="main\static\main\images\thermoglobe_no_cluster.png"> 
+</div>
+
+
+
+<div class='row '> 
+
+  <div class='col-6 d-flex justify-content-end'>
+    <div class='card border-0 ml-5 mt-5 w-75'>
+      <h2>Explore ThermoGlobe</h2>
+      <p class="card-text">Last updated </p>
+      <hr>
+      <p>Featuring:</p>
+      <ul>
+  
+      </ul>
+      <p>ThermoGlobe is a global database containing thermally related properties</p>
+      <a href="#">Learn more</a>
+    </div>
+  </div>
+  <div class='col-6'>
+    <img class="object-fit_cover" src="main\static\main\images\thermoglobe_no_cluster.png">
+  </div>
+
+</div>
+
+
+
 </body>
 </html>

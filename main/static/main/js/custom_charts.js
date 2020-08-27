@@ -44,7 +44,17 @@ function historical_heat_flow(id,data) {
       // plot_bgcolor:'rgba(0,0,0,0)'
     };
     
-    var config = {responsive: true}
+    var config = {
+        responsive: true,
+        modeBarButtonsToRemove: ['toImage', 'sendDataToCloud'],
+        modeBarButtonsToAdd: [{
+          name: 'saveFig',
+          icon: Plotly.Icons.camera,
+          click: function(gd) {
+            Plotly.downloadImage(gd, {format: 'svg'})
+          }
+        }]
+    }
 
     Plotly.newPlot(id, data, layout, config);
 
@@ -75,13 +85,6 @@ function heat_flow_hist(fig_id,data) {
   var data = [trace1,trace2]
 
   var layout = {
-    // title:{
-    //   text: "Heat Flow",
-    //   y:0.9,
-    //   x:0.5,
-    //   xanchor: 'center',
-    //   yanchor: 'top'
-    // },
     legend: {
       x: 1,
       xanchor: 'right',
@@ -100,10 +103,19 @@ function heat_flow_hist(fig_id,data) {
     },
     paper_bgcolor:'transparent',
     plot_bgcolor: 'transparent',
-
+   
   }
 
-  var config = {responsive: true}
+  var config = {
+      responsive: true,
+      modeBarButtonsToRemove: ['toImage', 'sendDataToCloud'],
+      modeBarButtonsToAdd: [{
+        name: 'saveFig',
+        icon: Plotly.Icons.camera,
+        click: function(gd) {
+          Plotly.downloadImage(gd, {format: 'svg'})
+        }
+      }]}
 
   Plotly.newPlot(fig_id, data, layout, config);
 

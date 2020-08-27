@@ -1,26 +1,20 @@
 {% extends "main/base.html" %}
-{% load static %}
-{% load widget_tweaks %}
-{% block title %}ThermoGlobe{% endblock title %}
-
-{% block head %}
-  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/dataTables.bootstrap4.min.css">
-  {% include 'mapping/components/head.html' %}
-{% endblock head %}
+{% load static sekizai_tags %}
 
 {% block content %}
-
 <div class='layout d-flex flex-row'>
-  <div id='left' class='flex-column border-right text-center mt-2 overflow-auto'>
-  {% block left-content %}{% endblock left-content %}
+  <div id='left' class='flex-column border-right text-center mt-2 overflow-auto d-none d-lg-block'>
+    {% block left-content %}{% endblock left-content %}
   </div> 
-  <div id='right' class='container-fluid pl-0 flex-grow-1'>
-    <div id='map' style="height: 50vh">
-    <canvas id='cbar' class='float-right'></canvas>
-    
-    </div>
-    <div class='container-fluid table-responsive pt-2'>
-    {% block under-map-content %}{% endblock under-map-content %}
+  <div id='right' class='pl-0 flex-grow-1'>
+
+    {% if map.display %}
+        {% include "mapping/components/map.html" %}
+    {% else %}
+    {% endif %}
+    <div class='container-fluid pt-2'>
+        <h3 class='text-center mt-3'>{{object.title}}</h3>
+        {% block under-map-content %}{% endblock under-map-content %}
     </div>
   </div>
 </div>
@@ -29,18 +23,15 @@
 
 {% block footer %}{% endblock footer %}
 
-{% block scripts %}
-{% include 'mapping/components/map_scripts.html' %}
-{% comment %} <script type="text/javascript" charset="utf8" src="https://cdn.jsdelivr.net/npm/leaflet-regular-grid-cluster@0.3.4/dist/leaflet-regulargridcluster.min.js"></script> {% endcomment %}
-<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
-<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js"></script>
-
-<script>
-  var link_url = "{{ object_url }}"
-</script>
 
 
-<script src="{% static 'main/js/table.js' %}"></script>
-<script src="{% static 'mapping/js/map.js' %}"></script>
-{% endblock scripts %}
+
+
+
+
+
+
+
+
+
 

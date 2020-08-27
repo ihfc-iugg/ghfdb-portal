@@ -23,20 +23,18 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('',include('main.urls')),
     path('',include('thermoglobe.urls')),
-    path('',include('reference.urls')),
-    path('',include('mapping.urls')),
-    # path('captcha/', include('captcha.urls')),
-]
+    path('',include('publications.urls')),
+    ]
 
 
 if settings.DEBUG:
-    import debug_toolbar
-    urlpatterns = [
+    # import debug_toolbar
+    # urlpatterns = [
 
-        path('__debug__/', include(debug_toolbar.urls)),
+    #     path('__debug__/', include(debug_toolbar.urls)),
 
 
-    ] + urlpatterns
+    # ] + urlpatterns
 
 
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

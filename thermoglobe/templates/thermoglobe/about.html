@@ -1,43 +1,26 @@
 {% extends "main/base.html" %}
-{% load static %}
-{% load humanize %}
-
-{% block head %}
-    <script src="https://code.jquery.com/jquery-3.4.1.js" integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <script src="{% static 'main/js/custom_charts.js' %}"></script>
-{% endblock head %}
-
-{% block fullwidth %}
-
-{% endblock fullwidth %}
-
-
-
+{% load static humanize %}
 
 {% block content %}
-<div class="jumbotron jumbotron-fluid">
+<div class="jumbotron jumbotron-fluid bg-white">
   <div class="container">
-    <div class='thermoglobe-logo'>
-        {% include 'main/components/thermoglobe_logo.html' with updated=False %}
+    <div class='display-5'>
+        {% comment %} {% include 'main/components/thermoglobe_logo.html' with updated=False %} {% endcomment %}
+        Explore ThermoGlobe
     </div>
     <hr class="my-4">
     <p class="card-text d-none d-lg-block">{{page.content}}</p>
-  </div>
-</div>
-
-<div class='container'>
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
         <a href="/">Home</a>
         </li>
         <li class="breadcrumb-item active">ThermoGlobe</li>
     </ol>
+  </div>
 </div>
 
-
-<div class="row pb-5">
-    <div class='container'>
+{% comment %} <div class="row pb-5 shadow">
+    <div class='container '>
         <div class="row">
             <div class="col-lg-12">
                 {% include "main/components/figure.html" with figure=figures.historical_heat_flow fig_num=1 %}
@@ -48,19 +31,17 @@
             </div>
         </div>
     </div>
-</div>
+</div> {% endcomment %}
 
-<div class="row py-5 bg-secondary">
-    <div class='container'>
-    <div class="row">
-        <div class="col-lg-6">
-            {% include "main/components/figure.html" with figure=figures.heat_flow_hist fig_num=2 class='bg-secondary' %}
-        </div>
-        <div class="col-lg-6">
+<div class="row bg-secondary">
+    <div class="col-lg-6">
+        {{ tables.heatflow.plot_hist }}
+    </div>
+    <div class="col-lg-6 bg-white">
+        <div class='container p-5'>
             <h2>Global Heat Flow</h2>
             <p>ThermoGlobe is a global database containing thermally related properties</p>
         </div>
-    </div>
     </div>
 </div>
 

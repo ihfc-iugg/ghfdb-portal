@@ -1,10 +1,19 @@
 from .models import Site, HeatFlow
-from reference.models import Reference
+from publications.models import Publication
 from django.db.models import Avg, Max, Min, Count, F, Value, Q, FloatField
 from collections import Counter
 # from mapping.models import Country
 import plotly.graph_objects as go
 from plotly.offline import plot
+
+
+class Figure:
+
+    def __init__(self, plot_type, model, filters):
+        self.id = plot_type
+        self.models = model
+        self.filters = filters
+        self.data = plot_type(self.model, filters)
 
 def heat_flow_per_year(filters={}):
     hf = Counter(HeatFlow.objects.filter(reference__year__isnull=False,**filters).exclude(reference__bib_id='Blackwell2004').values_list('reference__year',flat=True).order_by('reference__year'))
@@ -19,7 +28,7 @@ def counter_2_xy(counter, fill=True):
     return {'x':list(counter.keys()),'y':list(counter.values())}
 
 # CHART DATA METHODS
-def publications_per_year(qs=Reference.objects.all(),filters={}):
+def publications_per_year(qs=Publication.objects.all(),filters={}):
     refs = Counter(qs.filter(year__isnull=False,**filters).values_list('year',flat=True).order_by('year'))
     return counter_2_xy(refs) 
 
@@ -54,7 +63,6 @@ def entries_by(model,model_filters,model_values):
 
 def data_counts(model,model_filters={}):
     return model.objects.filter(**model_filters).aggregate(
-                                        # Sites=Count('sites',distinct=True),
                                         Heat_Flow=Count('heatflow',distinct=True),
                                         Gradient=Count('thermalgradient',distinct=True),
                                         Temperature=Count('temperature',distinct=True),
@@ -64,7 +72,7 @@ def data_counts(model,model_filters={}):
 
 
 def get_year_counts():
-    refs = Counter(Reference.objects.filter(year__isnull=False).values_list('year',flat=True))
+    refs = Counter(Publication.objects.filter(year__isnull=False).values_list('year',flat=True))
     return [{'x':x,'y':y} for x,y in refs.items()]
 
 

@@ -30,13 +30,14 @@
 
 <script>
   var slug = "{{ object.slug }}"
-  var data_url = "{% url 'reference:publication_list' %}" + slug + '/data.json' ;
+  var data_url = "{% url 'publications:publication_list' %}" + slug + '/data.json' ;
 </script>
 
 <script>  
   var dataSet = {{ tables|safe}}
   $(document).ready(function(){
-    table_from_list(dataSet[$('#tableNav>button:enabled')[0].id],{{ table_options|safe }})
+    table_from_values_list(dataSet[$('#tableNav>button:enabled')[0].id],{{ table_options|safe }})
+
     $('#dataTable th:contains("Value")').html(titleize($('#tableNav>button:enabled')[0].id))
 
     var marker = L.marker([{{ site.latitude }}, {{ site.longitude }}]).addTo(map);

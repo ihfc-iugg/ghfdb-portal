@@ -1,16 +1,22 @@
 {% load widget_tweaks %}
 {% load custom_tags %}
 
-<div class="form-row">
-    <div class="col mb-2 mx-5">
-        {% if field|field_type == 'ClearableFileInput' %}
-            {% render_field field id=field.id class="custom-file-input" placeholder=field.label required='required'%}
-            <label class="custom-file-label" for={{ field.id_for_label }}>Choose file</label>
-        {% else %}
-            {% render_field field id=field.id class='form-control' placeholder=field.label required='required'%}
-        {% endif %}
-        <div class="invalid-feedback">
-            This field is required!
-        </div>
+{% if field|field_type == 'ClearableFileInput' %}
+<div class='custom-file'>
+    {% render_field field id=field.id class="form-control custom-file-input" placeholder=field.label required='required'%}
+    <label class="custom-file-label" for={{ field.id_for_label }}>Choose file</label>
+</div>
+{% else %}
+<div class="control-group form-group">
+    <div class="controls">
+    {% if field.field.required %}
+        {% render_field field id=field.id class='form-control' placeholder=field.label required='required' %}
+    {% else %}
+        {% render_field field id=field.id class='form-control' placeholder=field.label%}
+    {% endif %}
+    </div>
+    <div class="invalid-feedback">
+        This field is required!
     </div>
 </div>
+{% endif %}

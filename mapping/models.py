@@ -7,50 +7,6 @@ from django.utils.translation import gettext as _
 from django.core.validators import MaxValueValidator, MinValueValidator
 import os
 
-class SiteAbstract(models.Model):
-
-    site_name = models.CharField(max_length=200)
-    latitude = models.DecimalField(
-        max_digits=7, 
-        decimal_places=5,
-        validators=[MaxValueValidator(90),
-                    MinValueValidator(-90)],)
-    longitude = models.DecimalField(
-        max_digits=8, 
-        decimal_places=5,
-        validators=[MaxValueValidator(180),
-            MinValueValidator(-180)],)
-    geom = models.PointField(blank=True)
-    elevation = models.FloatField(blank=True, null=True)
-    continent = models.ForeignKey("mapping.Continent", 
-            verbose_name=_("continent"),
-            related_name='sites', 
-            blank=True, null=True, 
-            on_delete=models.SET_NULL)
-    country = models.ForeignKey("mapping.Country", 
-            verbose_name=_("country"),
-            related_name='sites', 
-            blank=True, null=True,
-            on_delete=models.SET_NULL)
-    sea = models.ForeignKey("mapping.Sea",
-            verbose_name=_("sea name"),
-            related_name='sites', 
-            blank=True, null=True, 
-            on_delete=models.SET_NULL)
-    CGG_basin = models.ForeignKey("mapping.Basin",
-            verbose_name=_("CGG Robertson Basin"),
-            related_name='sites', 
-            blank=True, null=True, 
-            on_delete=models.SET_NULL)
-    slug = AutoSlugField(populate_from=['site_name','latitude','longitude'])
-
-    class Meta:
-        abstract=True
-
-    def save(self, *args, **kwargs):
-        self.geom = Point(float(self.longitude),float(self.latitude))
-        super().save(*args, **kwargs)
-
 class Country(models.Model):
     region_choices = [
         (2,'Africa'),
@@ -85,7 +41,7 @@ class Country(models.Model):
         (61,'Polynesia'),
     ]
 
-    fips = models.CharField(max_length=2)
+    fips = models.CharField(max_length=2, null=True)
     iso2 = models.CharField(max_length=2)
     iso3 = models.CharField(max_length=3)
     un = models.IntegerField()
@@ -122,6 +78,7 @@ class Continent(models.Model):
         return '{}'.format(self.name)
 
 class Sea(models.Model):
+    
     id = models.CharField(max_length=16, primary_key=True)
     name = models.CharField(max_length=100)
     longitude = models.FloatField()
@@ -136,7 +93,10 @@ class Sea(models.Model):
 
     class Meta:
         db_table = 'sea'
-        # ordering = ['name',]
+        ordering = ['name',]
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return '{}'.format(self.name)
@@ -149,19 +109,37 @@ class Margin(models.Model):
     poly = models.MultiPolygonField(srid=4326)
 
 class Basin(models.Model):
+    id = models.BigIntegerField(primary_key=True)
     name = models.CharField(max_length=50)
     region = models.CharField(max_length=100)
-    province = models.CharField(max_length=100)
-    sed_thickness = models.FloatField()
+    province = models.CharField(max_length=100, null=True)
+    max_fill = models.FloatField()
     exploration_status = models.CharField(max_length=25)
     location = models.CharField(max_length=50)
-    sub_regime_group = models.CharField(max_length=100)
-    sub_regime = models.CharField(max_length=100)
-    system_status = models.CharField(max_length=50)
-    poly = models.MultiPolygonField(srid=4326)
+    sub_regime_group = models.CharField(max_length=100, null=True)
+    sub_regime = models.CharField(max_length=100, null=True)
+    petsys_status = models.CharField(max_length=50, null=True)
+    poly = models.MultiPolygonField(srid=3857)
 
     class Meta:
         db_table = 'CGG_basin'
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return '{}'.format(self.name)
+
+class Political(models.Model):
+    name = models.CharField(max_length=254)
+
+    territory = models.CharField(max_length=254)
+    iso_territory = models.CharField(max_length=254, null=True, blank=True)
+    un_territory = models.BigIntegerField(null=True, blank=True)
+
+    sovereign = models.CharField(max_length=254)
+    iso_sovereign = models.CharField(max_length=254,null=True, blank=True)
+    un_sovereign = models.BigIntegerField(null=True, blank=True)
+
+    area_km2 = models.BigIntegerField(null=True, blank=True)
+    poly = models.MultiPolygonField(srid=4326)

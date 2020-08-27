@@ -1,24 +1,24 @@
 from django.contrib import admin
-from .models import Site, HeatFlow, Conductivity, HeatGeneration, Temperature, ThermalGradient, Correction
+from .models import Site, HeatFlow, Conductivity, HeatGeneration, Temperature, Correction
 from .mixins import BaseAdmin
-# from database.admin_inlines import CorrectionsInline, TemperatureInline, HeatFlowInline, HeatGenerationInline, ConductivityInline
 from import_export.admin import ImportExportActionModelAdmin, ImportForm
 from .mixins import SitePropertyAdminMixin, DepthIntervalMixin
 from .resources import ConductivityResource, HeatGenResource, HeatFlowResource, TempResource
-from .models import HeatFlow, ThermalGradient, Conductivity, HeatGeneration
-from django.db.models import F, Count
+from .models import HeatFlow, Conductivity, HeatGeneration
+from django.db.models import F, Count, Exists
 from .filters import IsCorrectedFilter
-from main import inlines
+from . import inlines
+
 
 @admin.register(Site)
 class SiteAdmin(BaseAdmin, ImportExportActionModelAdmin):
     resource_class = HeatFlowResource
-    list_display = ['site_name', 'latitude', 'longitude','elevation', 'heat_flow_count','conductivity_count','heat_gen_count','temperature_count', 'operator','edited_by','date_edited']
+    list_display = ['site_name', 'latitude', 'longitude','elevation','country','continent','CGG_basin', 'heat_flow_count','conductivity_count','heat_gen_count','temperature_count', 'operator',]
 
-    readonly_fields = ["seamount_distance", "outcrop_distance", "ruggedness",'sediment_thickness','crustal_thickness']
+    readonly_fields = ["seamount_distance", "outcrop_distance", 'sediment_thickness','crustal_thickness']
 
     # inlines = [inlines.HeatFlow,inlines.SedimentThickness]
-
+    filter_horizontal = ['reference']
     fieldsets = [
         ("Site Information", 
             {'fields': [
@@ -32,21 +32,17 @@ class SiteAdmin(BaseAdmin, ImportExportActionModelAdmin):
             {'fields': [ 
                 'seamount_distance',
                 'outcrop_distance',
-                'ruggedness',
                 'sediment_thickness',
                 'crustal_thickness']}),
         ('Reported Fields',
             {'fields': [
-                ('surface_temp','bottom_hole_temp'),
-                ('well_depth','dip',),
+                ('surface_temp','bottom_hole_temp', 'bottom_water_temp'),
+                ('well_depth',),
                 ]}),        
-        ('Geology',
-            {'fields': [ 
-                ('basin','sub_basin'),
-                'tectonic_environment',
-                # 'geo_province',
-                'lithology']}),
-        ('Reference',
+        # ('Geology',
+        #     {'fields': [ 
+        #         'lithology']}),
+        ('Publication',
             {'fields': [ 
                 'reference',]}),                
                 ]
@@ -57,30 +53,28 @@ class SiteAdmin(BaseAdmin, ImportExportActionModelAdmin):
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         queryset = queryset.annotate(
-            _heat_flow_count=Count('heatflow'),
+            _heat_flow_count=Count('heat_flow'),
+            _gradient_count=Count('gradients'),
             _conductivity_count=Count('conductivity'),
             _heat_gen_count=Count('heatgeneration'),
             _temperature_count=Count('temperature'),)
         return queryset
 
-@admin.register(ThermalGradient)
-class GradientAdmin(DepthIntervalMixin):
-    fieldsets = [
-        ('Temperature Gradient',
-            {'fields': [
-                ('corrected','corrected_uncertainty'),
-                ('uncorrected','uncorrected_uncertainty'),]})]
+# @admin.register(ThermalGradient)
+# class GradientAdmin(DepthIntervalMixin):
+#     fieldsets = [
+#         ('Temperature Gradient',
+#             {'fields': [
+#                 ('corrected','corrected_uncertainty'),
+#                 ('uncorrected','uncorrected_uncertainty'),]})]
 
-    inlines = [inlines.Corrections,]
+#     inlines = [inlines.Corrections,]
 
 @admin.register(HeatFlow)
 class HeatFlowAdmin(DepthIntervalMixin,ImportExportActionModelAdmin):
     resource_class = HeatFlowResource
-
     search_fields = ['site__site_name','reference__bib_id']
-
-    list_display = ['site_name','latitude','longitude','reference','depth_min','depth_max','reliability','corrected','corrected_uncertainty','uncorrected','uncorrected_uncertainty','conductivity','conductivity_uncertainty']
-
+    list_display = ['site_name','reference','depth_min','depth_max','reliability','heat_flow_corrected','heat_flow_corrected_unc','heat_flow_uncorrected','heat_flow_uncorrected_unc','conductivity','conductivity_uncertainty']
     inlines = [inlines.Corrections]
 
     list_filter = ['reliability',IsCorrectedFilter,'site__site_type']
@@ -102,20 +96,34 @@ class HeatFlowAdmin(DepthIntervalMixin,ImportExportActionModelAdmin):
             'classes': ('collapse',),
             }
         ),
-        ('Reference',
+        ('Publication',
             {'fields': ['reference',
                 ]
             }
         ),                  
                 
                 ]
-    
+    actions = ["mark_verified"] + ImportExportActionModelAdmin.actions
+
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         return queryset
+
+    # def has_corrections(self,obj):
+    #     try:
+    #         if obj.corrections:
+    #             return True
+    #     except Exception:
+    #         return False
+    # has_corrections.boolean = True
+
+        # return obj.corrected.isnull()
+
+    def mark_verified(self, request, queryset):
+        queryset.update(is_immortal=True)
 
 @admin.register(Conductivity)
 class ConductivityAdmin(SitePropertyAdminMixin,ImportExportActionModelAdmin):
@@ -126,7 +134,6 @@ class ConductivityAdmin(SitePropertyAdminMixin,ImportExportActionModelAdmin):
 class HeatGenAdmin(SitePropertyAdminMixin,ImportExportActionModelAdmin):
     resource_class = HeatGenResource
     search_fields = ['site__site_name','site__latitude','site__longitude','reference__bib_id']
-
 
 @admin.register(Temperature)
 class TemperatureAdmin(BaseAdmin,ImportExportActionModelAdmin):
@@ -143,7 +150,7 @@ class TemperatureAdmin(BaseAdmin,ImportExportActionModelAdmin):
                         'lag_time',
                         'is_bottom_of_hole',
                             ]}),
-                ('Reference',{'fields':['reference']})
+                ('Publication',{'fields':['reference']})
                             ]
 
     def get_queryset(self, request):

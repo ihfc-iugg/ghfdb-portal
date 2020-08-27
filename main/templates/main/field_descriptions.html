@@ -1,24 +1,149 @@
 {% extends "main/base.html" %}
-{% load static %}
+{% load static custom_tags %}
 
 {% block content %}
-<div class='container'>
+<div class='container my-3'>
+  <div class='card'>
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" role="tablist">
+        {% for header in forms.keys %}
+            <li class="nav-item">
+            {% if forloop.first %}
+              <a class="nav-link active" id="{{header}}-tab" data-toggle="tab" href="#{{header}}" role="tab" aria-controls="{{header}}" aria-selected="true">{{header|title|de_underscore}}</a>
+            {% else %}
+              <a class="nav-link" id="{{header}}-tab" data-toggle="tab" href="#{{header}}" role="tab" aria-controls="{{header}}" aria-selected="false">{{header|title|de_underscore}}</a> 
+            {% endif %}
+            </li>
+        {% endfor %}
+        </ul>
+    </div>
+    <div id="tabbedContent" class="tab-content">
+    {% for header, form in forms.items %}     
+      <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="{{header}}" role="tabpanel" aria-labelledby="{{header}}-tab">
+        <ul class="list-group list-group-flush">
+            {% for field in form %}
+                <div class="list-group-item flex-column ">
+                    <div class="d-flex w-100 ">
+                        {% with field.name as name %}
+                            <h5 class="mb-1">
+                                {{ name }}
+                                {% with name|units as units %}
+                                {% if units %}
+                                    [{{ units }}]
+                                {% endif %}
+                                {% endwith %}
+                            </h5>
+                        {% endwith %}
+                    </div>
+                    <p class="mb-1 text-left">{{ field.help_text|safe }}</p>
+                    {% if field.field.choices and not field.field.to_field_name%}
+                    <p>Options:</p>
+                    <ul>
+                        {% for _, choice in field.field.choices %}
+                            {% if not forloop.first %}
+                                <li>{{choice|title}}</li>            
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </ul>
+      </div>
+    {% endfor %}
+    </div>
+  </div>
+</div>
+
+
+
+{% comment %} ACCORDION EXAMPLE {% endcomment %}
+{% comment %} <div class='container shadow'>
+    <div class="accordion py-3" id="glossary">
+    {% for heading, form in forms.items %}
+    <div class='card border-0 {% if not forloop.last %}border-bottom{% endif %}'>
+        <div id="{{heading}}-header" class='card-header'>
+            <h1 class='display-5'>{{heading|title|de_underscore}}</h1>
+            <a class='stretched-link' data-toggle="collapse" data-target="#{{heading}}-body" aria-expanded="true" aria-controls="collapseOne"></a> 
+        </div>
+        <div id="{{heading}}-body" class="collapse show" aria-labelledby="headingOne" data-parent="#accordionExample">
+            <ul class="list-group list-group-flush">
+                {% for field in form %}
+                    <div class="list-group-item flex-column ">
+                        <div class="d-flex w-100 ">
+                            {% with field.name as name %}
+                                <h5 class="mb-1">
+                                    {{ name }}
+                                    {% with name|units as units %}
+                                    {% if units %}
+                                        [{{ units }}]
+                                    {% endif %}
+                                    {% endwith %}
+                                </h5>
+                            {% endwith %}
+                        </div>
+                        <p class="mb-1 text-left">{{ field.help_text|safe }}</p>
+                        {% if field.field.choices and not field.field.to_field_name%}
+                        <p>Options:</p>
+                        <ul>
+                            {% for _, choice in field.field.choices %}
+                                {% if not forloop.first %}
+                                    <li>{{choice|title}}</li>            
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endfor %}
+    </div>
+</div> {% endcomment %}
+
+{% comment %} FLAT EXAMPLE {% endcomment %}
+{% comment %} <div class='container'>
+{% for heading, form in forms.items %}
+    <div class='d-flex justify-content-start align-items-end mt-5 mb-2'>
+        <h1 class='display-5'>{{heading|title|de_underscore}}  </h1>
+        {% if not forloop.first %}
+            <a class='small mb-3' href='#top'>back to top</a>
+        {% endif %}
+    </div>
     <ul class="list-group list-group-flush">
-        {% for field in object_list %}
+        {% for field in form %}
             <div class="list-group-item flex-column ">
                 <div class="d-flex w-100 ">
-                    <h5 class="mb-1">
-                        {{ field.field_name }}
-                        {% if field.units %}
-                            [{{ field.units}}]
-                        {% endif %}
-                    </h5>
+                    {% with field.name as name %}
+                        <h5 class="mb-1">
+                            {{ name }}
+                            {% with name|units as units %}
+                            {% if units %}
+                                [{{ units }}]
+                            {% endif %}
+                            {% endwith %}
+                        </h5>
+                    {% endwith %}
                 </div>
-                <p class="mb-1 text-left">{{ field.description }}</p>
+                <p class="mb-1 text-left">{{ field.help_text|safe }}</p>
+                {% if field.field.choices and not field.field.to_field_name%}
+                <p>Options:</p>
+                <ul>
+                    {% for _, choice in field.field.choices %}
+                        {% if not forloop.first %}
+                            <li>{{choice|title}}</li>            
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+                {% endif %}
             </div>
         {% endfor %}
     </ul>
-</div>
+{% endfor %}
+</div> {% endcomment %}
+
+
 {% endblock content %}
 
 

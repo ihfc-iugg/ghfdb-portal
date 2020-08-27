@@ -14,13 +14,8 @@
 
 <div class='container'>
   <h1 class="mt-4 mb-3">Contact</h1>
+    {% include 'main/components/breadcrumb.html' with active="Contact" %}
 
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item">
-      <a href="/">Home</a>
-    </li>
-    <li class="breadcrumb-item active">Contact</li>
-  </ol>
 
   <div class="row">
       <div class="col-lg-8 mb-4">
@@ -57,37 +52,12 @@
           <button type="submit" class="btn btn-primary" id="sendMessageButton">Send Message</button>
       </form>
       </div>
-  </div>
-
-
-    <!-- Team Members -->
-    <h2>Contacts</h2>
-    <div class="row">
-      <div class="col-lg-4 mb-4">
+      <div class='col-lg-4 d-flex flex-column'> 
       {% for contact in contacts %}
-        <div class="card h-100 text-center">
-          {% if contact.image %}
-            <img src="{{ contact.image.url }}" class="card-img-top" style='max-height:300px;' alt="...">
-          {% else %}
-            <img class="card-img-top" src="http://placehold.it/750x450" alt="">
-          {% endif %}
-          <div class="card-body">
-            <h4 class="card-title">{{contact.full_name}}</h4>
-            <h6 class="card-subtitle mb-2 text-muted">{{contact.position}}</h6>
-            <p class="card-text">{{contact.bio}}</p>
-          </div>
-          <div class="card-footer">
-            <a href="#">{{contact.email}}</a>
-          </div>
-        </div>
-      {% endfor %}
+        {% include "main/components/contact-card.html" %}
+      {% endfor %}   
       </div>
-    </div>
-
-
-  {% comment %} {% if contacts %}
-    {% include "main/components/contact-card.html" %}
-  {% endif %} {% endcomment %}
+  </div>
 </div>
 {% endblock content %}
 

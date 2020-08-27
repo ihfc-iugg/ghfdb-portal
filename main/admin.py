@@ -26,6 +26,10 @@ class PageAdmin(MainMixin,ImportExportActionModelAdmin):
     list_display = ['id','title','heading','sub_heading','content']
     exclude=['edited_by']
 
+    # fieldsets = [
+    #     'heading'
+    # ]
+
 @admin.register(Field)
 class FieldAdmin(MainMixin,ImportExportActionModelAdmin):
     resource_class = FieldResource

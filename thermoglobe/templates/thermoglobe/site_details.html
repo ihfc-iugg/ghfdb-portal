@@ -1,0 +1,29 @@
+{% extends "mapping/basemap.html" %}
+{% load static custom_tags sekizai_tags%}
+
+
+{% block left-content %}
+  {% include "main/components/site_details_card.html" %}
+{% endblock left-content %}
+
+
+
+{% block under-map-content %}
+{% include "tables/multi_table.html" %}
+
+
+
+
+{% addtoblock "js" %}
+    
+
+{% endaddtoblock %}
+{% endblock under-map-content %}
+
+
+
+
+
+
+
+

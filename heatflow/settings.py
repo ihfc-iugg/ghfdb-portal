@@ -8,15 +8,8 @@ except ImportError:
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Application definition
 INSTALLED_APPS = [
-    'main.apps.MainConfig',
-    'mapping.apps.MappingConfig',
-    'geomodels.apps.GeomodelsConfig',
-    'reference.apps.ReferenceConfig',
-    'users.apps.UsersConfig',
-    'thermoglobe.apps.ThermoglobeConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -25,22 +18,29 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.gis',
     'django.contrib.humanize',
+    'main',
+    'mapping',
+    'publications',
+    'users',
+    'thermoglobe',
+    'tables',
     'import_export',
-    'debug_toolbar',
-    # 'template_timings_panel',
+    # 'debug_toolbar',
+    'simple_history',
     'captcha',
     'betterforms',
+    'sekizai',
     # 'multiselectfield',
     'django_extensions',
     # 'django_filters',
     'widget_tweaks',
-    'django_countries',
+    # 'django_countries',
     'ckeditor',
-    # 'debug_toolbar'
+    'meta',
 ]
 
 MIDDLEWARE = [
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    # 'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -48,6 +48,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'simple_history.middleware.HistoryRequestMiddleware',
 ]
 
 INTERNAL_IPS = [
@@ -65,6 +66,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'sekizai.context_processors.sekizai',
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
@@ -115,20 +117,21 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'assets')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR,'main/static'),
-    os.path.join(BASE_DIR,'mapping/static'),
-    os.path.join(BASE_DIR,'reference/static'),
-]
+STATICFILES_DIRS = []
 
+META_SITE_PROTOCOL = 'http'
+META_SITE_DOMAIN = 'localhost'
+META_INCLUDE_KEYWORDS = ['heat flow','thermoglobe','heat','flow','temperature','thermal','earth','science','research']
+META_DEFAULT_KEYWORDS = ['heat flow','thermoglobe','heat','flow','temperature','thermal','earth','science','research']
+META_USE_TITLE_TAG = True
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 
 AUTH_USER_MODEL = 'users.CustomUser' # new
 
-RECAPTCHA_PUBLIC_KEY = '6Ldo5K0UAAAAABE41reWBnmCbMKY-IzCeYJ1rpK5'
-RECAPTCHA_PRIVATE_KEY = '6Ldo5K0UAAAAAAN-c94zVpWvaEwQ1c1p7KV8nSvA'
+RECAPTCHA_PUBLIC_KEY = os.environ['RECAPTCHA_PUBLIC_KEY']
+RECAPTCHA_PRIVATE_KEY = os.environ['RECAPTCHA_PRIVATE_KEY']
 
 # DEBUG_TOOLBAR_PANELS = [
 #     'debug_toolbar.panels.versions.VersionsPanel',

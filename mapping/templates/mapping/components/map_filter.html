@@ -1,13 +1,5 @@
-{% load static %}
-{% load widget_tweaks %}
-{% comment %} <div class="form-check form-check-inline">
-  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="cluster">
-  <label class="form-check-label" for="inlineRadio1">Cluster</label>
-</div>
-<div class="form-check form-check-inline">
-  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value="grid">
-  <label class="form-check-label" for="inlineRadio2">Grid</label>
-</div> {% endcomment %}
+{% load static widget_tweaks sekizai_tags%}
+
 <form id='filter-form' action="" method='POST'>
     {% csrf_token %}
     <div class="form-group row">
@@ -54,7 +46,28 @@
     </div>
 </form>
 
+{% addtoblock "css" %}{% endaddtoblock %}
 
+{% addtoblock "js" %}
+<script>
+    $(document).ready(function() {
+        $('.select2').select2();
+        $('.select2').on('select2:select', function (e) {
+        $('.select2').not(this).each(function(){
+            $(this).val(null).trigger('change');
+            });
+        });
+
+    });
+
+    $(document).keypress(function(e){
+        if (e.which == 13){
+        $("#filter-submit-button").click();
+        }
+    });
+</script>
+
+{% endaddtoblock %}
 
 
 
