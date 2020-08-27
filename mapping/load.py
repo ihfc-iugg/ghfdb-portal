@@ -1,6 +1,6 @@
 import os
 from django.contrib.gis.utils import LayerMapping
-from .models import Country, Continent, Sea, Margin, Basin
+from .models import Country, Continent, Sea, Margin, Basin, Political
 
 
 DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
@@ -26,8 +26,6 @@ world_dir = os.path.join(DATA_DIR,'TM_WORLD_BORDERS-0.3','TM_WORLD_BORDERS-0.3.s
 def world_borders(verbose=True):
     lm = LayerMapping(Country, world_dir, world_mapping, transform=False)
     lm.save(strict=True, verbose=verbose)
-
-
 
 
 continents_dir = os.path.join(DATA_DIR,'continents','World_Continents.shp')
@@ -84,19 +82,41 @@ def margins(verbose=True):
 
 
 
-basin_dir = os.path.join(DATA_DIR,'basins','CGG_Basin.shp')
+basin_dir = os.path.join(DATA_DIR,'basins','basins.shp')
 basin_mapping = {
+    'id': 'OBJECTID',
     'name': 'BASIN_NAME',
     'region': 'BASINS_AND',
     'province': 'PROVINCE_N',
-    'sed_thickness': 'MAX_FILL_K',
+    'max_fill': 'MAX_FILL_K',
     'exploration_status': 'EXP_STATUS',
     'location': 'LOCATION',
     'sub_regime_group': 'SUB_REGIME',
     'sub_regime': 'SUB_REGI_1',
-    'system_status': 'PET_SYS_ST',
+    'petsys_status': 'PET_SYS_ST',
     'poly': 'MULTIPOLYGON',
 }
 def basins(verbose=True):
     lm = LayerMapping(Basin, basin_dir, basin_mapping, transform=False)
+    lm.save(strict=True, verbose=verbose)
+
+
+political_dir = os.path.join(DATA_DIR,'political','EEZ_Land_v3_202030.shp')
+political_mapping = {
+    'name': 'UNION',
+
+    'territory': 'TERRITORY1',
+    'iso_territory': 'ISO_TER1',
+    'un_territory': 'UN_TER1',
+
+    'sovereign': 'SOVEREIGN1',
+    'iso_sovereign': 'ISO_SOV1',
+    'un_sovereign': 'UN_SOV1',
+
+    'area_km2': 'AREA_KM2',
+    'geom': 'MULTIPOLYGON',
+}
+
+def political(verbose=True):
+    lm = LayerMapping(Political, political_dir, political_mapping, transform=False)
     lm.save(strict=True, verbose=verbose)

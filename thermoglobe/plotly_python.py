@@ -1,5 +1,5 @@
 from .models import Site, HeatFlow
-from reference.models import Reference
+from publications.models import Publication
 from django.db.models import Avg, Max, Min, Count, F, Value, Q, FloatField
 from collections import Counter
 # from mapping.models import Country
@@ -18,7 +18,7 @@ def counter_2_xy(counter, fill=True):
     return {'x':list(counter.keys()),'y':list(counter.values())}
 
 # CHART DATA METHODS
-def publications_per_year(qs=Reference.objects.all(),filters={}):
+def publications_per_year(qs=Publication.objects.all(),filters={}):
     return Counter(qs.filter(year__isnull=False,**filters).values_list('year',flat=True).order_by('year'))
     # return counter_2_xy(refs) 
 
@@ -127,7 +127,7 @@ def data_counts(model,model_filters={}):
 
 
 def get_year_counts():
-    refs = Counter(Reference.objects.filter(year__isnull=False).values_list('year',flat=True))
+    refs = Counter(Publication.objects.filter(year__isnull=False).values_list('year',flat=True))
     return [{'x':x,'y':y} for x,y in refs.items()]
 
 

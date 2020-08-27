@@ -6,11 +6,17 @@ var clusters = createClusters(markers)
 map.addLayer(clusters)
 var marker = L.marker()
 
+
 $(document).ready(function(){
-  retrieveData('')
+    if ($('#map').attr('ajax') == "True") {
+        retrieveData()
+    } else {
+        console.log('Adding from not ajax source')
+        map.spin(false);
+    } 
 });
 
-function createMap(lat,lon, cluster)  {
+function createMap(lat, lon, cluster)  {
 
   var openMaps = new L.tileLayer( 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -29,11 +35,18 @@ function createMap(lat,lon, cluster)  {
   var map = L.map('map', {
     layers: [Esri_WorldImagery],
     minZoom: 2,
-    // maxZoom: 12,
     worldCopyJump: true,
+    fullscreenControl: true,
+ 
     });
 
   L.control.scale().addTo(map);
+//   L.easyPrint({
+// 	title: 'My awesome print button',
+// 	position: 'bottomright',
+// 	sizeModes: ['A4Portrait', 'A4Landscape']
+//     }).addTo(map);
+//   map.addControl(new L.Control.Fullscreen());
 
   var baseLayers = {
     "Satellite": Esri_WorldImagery,
@@ -53,19 +66,29 @@ function retrieveData(){
     dataType: 'json',
     data: $("#filter-form").serializeArray(),
     success: function (data) {
-      try {
-        if (data.length == 0) {
-          throw 'No data found'
-        }
-        refreshMap(data)
-        refreshDataTable(data);
+      if (data.length == 0) {
+        throw 'No data found'
       }
-      catch(err) {
-        map.spin(false);
-      }
+
+      refreshMap(data)
+      refreshDataTable(data);
+
+    //   try {
+    //     refreshMap(data)
+    //   } catch(err) {
+    //     // console.log(err)
+    //   }
+    //   try {
+    //     refreshDataTable(data);
+    //   } catch(err) {
+    //     // console.log(err)
+    //   }
+
       map.spin(false);
+
     },
     error: function (jqXHR, textStatus, errorThrown) {
+      console.log
       map.spin(false);
     }
   })
@@ -74,38 +97,30 @@ function retrieveData(){
 
 function refreshMap(data) {
 
-  fields = data.fields;
-  new_data = data.data;
-
-
-  new_data.forEach(el => {
-    
-  });
-
-  t = performance.now();
-
   clusters.clearLayers(markers)
   markers = createMarkers(data);
-  clusters.addLayers(markers)
-  console.log(performance.now()-t);
+
+  if ($('#map').attr('cluster') == "True") {
+    clusters.addLayers(markers)
+  } else {
+    markers.addTo(map)
+  }
 
   map.flyToBounds(markers.getBounds());
   map.spin(false);
-  console.log(performance.now()-t);
   
 }; 
 
-function refreshDataTable(data) {
+function refreshDataTable(table) {
+  table.id='worldmap';
   if ( $.fn.dataTable.isDataTable( '#dataTable' ) ) {
     table = $('#dataTable').DataTable();
     table.destroy();
     $('#dataTable>thead').empty();
     $('#dataTable>tbody').remove();
-    table_from_list(data)
   }
-  else {
-    table_from_list(data)
-  }
+    table_from_values_list(table)
+
   
 }
 
@@ -124,23 +139,31 @@ function create_multiple_layers(data,map) {
 
 }
 
-function createMarkers (data_object) {
-  const data = [];
-  data_object.forEach(el => {
-    var color = query_cbar(el.heat_flow,.9)
+function createMarkers (data) {
 
-    var m = L.circleMarker([el.latitude,el.longitude], {
+  var lat = data.columns.indexOf('Latitude')
+  var lon = data.columns.indexOf('Longitude')
+  var hf = data.columns.indexOf('Heat Flow')
+
+  const new_data = [];
+  data.data.forEach(el => {
+    if (hf > 0) {
+      var color = query_cbar(el[hf],.9)    
+    } else {
+      var color = 'rgb(255,0,0,1)';
+    }
+    var m = L.circleMarker([el[lat], el[lon]], {
           radius: 5, 
           fill:true,
           fillOpacity:1,
           fillColor: color,
           stroke:false
       });
-    m.properties = el;
-    data.push(m);
+    m.value = el[hf];
+    new_data.push(m);
   });
 
-  return L.featureGroup(data)
+  return L.featureGroup(new_data)
 }
 
 function customClusterIcon(cluster) {
@@ -151,7 +174,7 @@ function customClusterIcon(cluster) {
   var value_sum = 0;
 
   markers.forEach(element => {
-    value_sum += element.properties.heat_flow;
+    value_sum += element.value;
   });
 
   var average = Math.round(value_sum / markers.length);
@@ -159,8 +182,8 @@ function customClusterIcon(cluster) {
   color = query_cbar(average,.6)
 
   html = '<div style="background-color:' +color+'">'+
-          // '<span>' + childCount + '</span>' +
-          '<span>' + average + '</span>' +
+            '<span>' + average + '</span>'
+            // '<br><span>n=' + childCount + '</span>' +
         '</div>'
 
   return new L.DivIcon({ html: html, className: 'marker-cluster', iconSize: new L.Point(40, 40) });
@@ -185,8 +208,6 @@ function onEachFeature(feature, layer) {
   layer.bindPopup(tableContent);
     
   };
-
-
 
 function createClusters(markers) {
   //defines the clusters variable required for decluttering map

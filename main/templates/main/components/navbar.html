@@ -15,9 +15,9 @@
               </a>
               <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                   <a class="dropdown-item" href="{% url "thermoglobe:about" %}">About</a>
-                  <a class="dropdown-item" href="{% url "mapping:thermoglobe" %}">World Map</a>
-                  <a class="dropdown-item" href={% url "reference:publication_list" %}>Publication</a>
-                  <a class="dropdown-item" href={% url "reference:author_list" %}>Author</a>
+                  <a class="dropdown-item" href="{% url "thermoglobe:world_map" %}">World Map</a>
+                  <a class="dropdown-item" href={% url "publications:publication_list" %}>Publications</a>
+                  <a class="dropdown-item" href={% url "publications:author_list" %}>Authors</a>
                   <div class="dropdown-divider"></div>
                   <a class="dropdown-item" href="{% url "thermoglobe:upload" %}">Upload</a>
               </div>

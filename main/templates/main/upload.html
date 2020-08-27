@@ -1,6 +1,5 @@
 {% extends "main/base.html" %}
-{% load static %}
-{% load widget_tweaks %}
+{% load static widget_tweaks%}
 
 {% block head %}
   <script src="https://cdn.jsdelivr.net/npm/bs-custom-file-input/dist/bs-custom-file-input.min.js"></script>
@@ -8,23 +7,33 @@
 {% endblock head %}
 
 {% block content %}
-  <div class='row justify-content-center'>
-    <div class='col-sm-10 col-md-9 col-lg-8 card border-0 pt-2' >
-      {% if form.is_multipart %}
-      <form enctype="multipart/form-data" method="post">
-      {% else %}
-      <form method="post">
-      {% endif %}
-          {% csrf_token %}
-          {% for field in form %}
-              {% include "main/components/form_field.html" %}
-          {% endfor %}
-          <div class='text-center mb-3'>
-              <button class="btn btn-primary btn-lg" type="submit" data-toggle="modal" data-target="#earthSpinModal">Submit</button>
-          </div>
+<div class='container'>
+  <h1 class="mt-4 mb-3">Upload</h1>
+  {% include 'main/components/breadcrumb.html' with active="Upload" %}
+  <div class='row '>
+    <div class='col-lg-8 mb-4' >
+      <h3>Thanks for contributing!</h3>
+      <p>Be sure to download the appropriate template on the right and copy your data into it before uploading. These template provided the correct field name and encoding to ensure your upload is hassle free.</p>
+      <form name='upload' {% if form.is_multipart %}enctype="multipart/form-data"{% endif %} method="post">     
+        {% csrf_token %}
+        {% for field in form %}
+            {% include "main/components/form_field.html" %}
+        {% endfor %}
+        <div class='text-center mb-3'>
+            <button class="btn btn-primary btn-lg" type="submit" data-toggle="modal" data-target="#earthSpinModal">Submit</button>
+        </div>
       </form>
     </div>
+    <div class='col-lg-4 mb-4' >
+      <h5>Choose your template</h5>
+        <div><a href="{% static 'thermoglobe/heat_flow_template.csv' %}">Heat Flow.csv</a></div>
+        <div><a href="{% static 'thermoglobe/thermal_gradient_template.csv' %}">Thermal Gradient.csv</a></div>
+        <div><a href="{% static 'thermoglobe/temperature_template.csv' %}">Temperature.csv</a></div>
+        <div><a href="{% static 'thermoglobe/conductivity_template.csv' %}">Thermal Conductivity.csv</a></div>
+        <div><a href="{% static 'thermoglobe/heat_production_template.csv' %}">Heat Production.csv</a></div>
+    </div>
   </div>
+</div>
 
 <!-- Modal -->
 <div class="modal fade" data-backdrop="static" id="earthSpinModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
@@ -43,20 +52,12 @@
 
 
 
-
-
 {% endblock content %}
 
 {% block scripts %}
 
   <script>
-  var dataSet = {{ table|safe}}
-  console.log(dataSet)
-  console.log('Hi')
-  var table_options = {{ table_options|safe }}
-
-    $(document).ready(function () {
-      table_from_list(dataSet)
+     $(document).ready(function () {
 
       $('.custom-file-input').on('change',function(){
         var fileName = $(this).val();
@@ -64,8 +65,14 @@
         $(this).next('.custom-file-label').html(cleanFileName);
       })
 
+    {% if table %}
+      var dataSet = {{ table|safe}}
+      var table_options = {{ table_options|safe }}
+      table_from_values_list(dataSet)
+    {% endif %}
+
     })
   </script>
-  <script src="{% static 'main/js/table.js' %}"></script>
+  {% comment %} <script src="{% static 'main/js/table.js' %}"></script> {% endcomment %}
 
 {% endblock scripts %}

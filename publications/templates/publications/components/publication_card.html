@@ -1,0 +1,67 @@
+{% load static custom_tags sekizai_tags %}
+
+<div id='refDetailsCard' class="card border-0 text-left">
+  <div class="card-header bg-white">
+    <div class='d-flex justify-content-end align-items-center'>
+      <div class="referenceCardTitle h5 text-muted flex-grow-1 bd-highlight">
+      </div>
+      <div class='flex-item px-2'>
+        <div class="dropdown">
+        <button class="btn btn-info dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="fas fa-cog"></i>
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <a class="dropdown-item" href="#">Download Citation (.bib)</a>
+            <a class="dropdown-item text-danger text-right" href="#" ><small>Report page</small></a>
+            {% comment %} <a class="dropdown-item" href="#">Something else here</a> {% endcomment %}
+        </div>
+        </div>
+
+
+        {% comment %} <button type="button" class="export_bibtex btn btn-warning" title='Report this page'>
+          <i class="fas fa-exclamation"></i>
+        </button>
+        <button type="button" class="export_bibtex btn btn-secondary" title='Export citation'>
+          Cite
+        </button>
+        <button type="button" class="export_bibtex btn btn-success" title='Download'>
+          Download
+        </button> {% endcomment %}
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+  <div class='bg-warning d-none card-header border border-dark rounded'>
+    This reference requires improvement. Contact us here to submit an update.
+  </div>
+    <table class='table table-borderless table-sm'>
+      <tbody class='referenceDetails'>
+        <tr>
+          <td>Author/s:</td>
+          <td>
+            {% if object.authors %}
+                {% for author in object.authors.all %}
+                    <div><a href="{% url 'publications:author_details' author.slug %}">{{author}}</a></div>
+                {% endfor %}
+            {% else %}
+              Unknown
+            {% endif %}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    {% comment %} {% for figure in figures %}
+      {% include "main/components/figure.html" with number=forloop.counter %}
+    {% endfor %} {% endcomment %}
+  </div>
+</div>
+
+
+
+{% addtoblock "js" %}
+    <script src='https://cdn.rawgit.com/larsgw/citation.js/archive/citation.js/citation-0.4.0-9.js'></script>
+    <script src="{% static 'publications/js/custom_citation.js' %}" type="text/javascript"></script>
+    <script>
+        var bibtex = {{ bibtex|safe }}
+    </script>
+{% endaddtoblock %}

@@ -1,0 +1,14 @@
+{% load static sekizai_tags %}
+<div class="card border-0 {{class}}" >
+    <div id="{{figure.id}}" class="card-img-top"></div>
+    {% if figure.caption %}
+        <div class="card-body pt-0 ">
+            <p class="card-text">Figure {{number}}) {{figure.caption}}</p>
+        </div>
+    {% endif %}
+</div>
+
+{% addtoblock "js" %}
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="{% static 'main/js/custom_charts.js' %}" type="text/javascript"></script>
+{% endaddtoblock %}

@@ -8,12 +8,14 @@ from django.contrib import admin
 from django.utils.translation import gettext as _
 from django.db.models import Q
 
-class GeoModelChoiceField(forms.ChoiceField):
+# class GeoModelChoiceField(forms.ChoiceField):
 
-    def __init__(self, model, display_field, *, empty_label="---------", **kwargs):
-        choices = list(model.objects.exclude(id__in=model.objects.filter(sites__isnull=True)).order_by(display_field).values_list('pk',display_field))
-        choices.insert(0,('',empty_label))
-        super().__init__(choices=choices, **kwargs)
+#     def __init__(self, model, display_field, *, empty_label="---------", **kwargs):
+#         choices = model.objects.exclude(id__in=model.objects.filter(sites__isnull=True)).order_by(display_field).values_list('pk',display_field)
+#         if choices.exists():
+#             choices = list(choices)
+#             choices.insert(0,('',empty_label))
+#         super().__init__(choices=choices, **kwargs)
 
 class GeoModelChoiceField2(forms.ChoiceField):
 
@@ -47,11 +49,11 @@ class SiteFilter(forms.ModelForm):
                 field=forms.FloatField(min_value=-12000,max_value=9000),
                 )
 
-    continent = GeoModelChoiceField(Continent, 'name', required=False)
-    country = GeoModelChoiceField(Country, 'name', required=False)
-    # country = forms.ModelMultipleChoiceField(queryset=Country.objects.all())
-    # region = GeoModelChoiceField2(Country, 'region', id='region')
-    sea = GeoModelChoiceField(Sea, 'name', required=False)
+    # continent = GeoModelChoiceField(Continent, 'name', required=False)
+    # country = GeoModelChoiceField(Country, 'name', required=False)
+    # # country = forms.ModelMultipleChoiceField(queryset=Country.objects.all())
+    # # region = GeoModelChoiceField2(Country, 'region', id='region')
+    # sea = GeoModelChoiceField(Sea, 'name', required=False)
     # sea = forms.ModelChoiceField(queryset=)
 
     class Meta:
@@ -154,7 +156,7 @@ class TemperatureFilter(forms.Form):
     class Meta:
         title = 'temperature'
 
-class ReferenceFilter(forms.Form):
+class PublicationFilter(forms.Form):
     
     reference__first_author__last_name__iexact = forms.CharField(label='Author', max_length=50, strip=True, required=False, help_text='Search by last name of author')
     reference__year = RangeField(
@@ -166,7 +168,7 @@ class ReferenceFilter(forms.Form):
     class Meta:
         title = 'reference'
 
-map_filter_forms = [SiteFilter,HeatflowFilter,ConductivityFilter,HeatGenFilter,TemperatureFilter,ReferenceFilter]
+map_filter_forms = [SiteFilter,HeatflowFilter,ConductivityFilter,HeatGenFilter,TemperatureFilter,PublicationFilter]
 
 class IsCorrectedFilter(admin.SimpleListFilter):
 
@@ -184,7 +186,7 @@ class IsCorrectedFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
 
         if self.value() == 'yes':
-            return queryset.filter(correction__isnull=False)
+            return queryset.filter(corrections__isnull=False)
 
         if self.value() == 'no':
-            return queryset.filter(Q(correction__isnull=True))
+            return queryset.filter(Q(corrections__isnull=True))

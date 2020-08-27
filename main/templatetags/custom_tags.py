@@ -1,6 +1,20 @@
 from django import template
 from django.core.exceptions import FieldDoesNotExist
 register = template.Library()
+from thermoglobe.choices import UNITS
+from django.utils.html import mark_safe
+
+@register.filter(name='units')
+def units(field_name):
+    units = UNITS.get(field_name,None)
+    if units is not None:
+        return mark_safe(units)
+
+@register.filter(name='choices')
+def choices(obj):
+    x=8
+    return
+
 
 @register.filter(name='get_mean')
 def get_mean(qs, field_names):

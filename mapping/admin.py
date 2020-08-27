@@ -1,5 +1,5 @@
 from django.contrib.gis import admin
-from .models import Country, Continent, Sea, Margin, Basin
+from .models import Country, Continent, Sea, Margin, Basin, Political
 from django.db.models import Count
 
 class MappingAbstract(admin.GeoModelAdmin):
@@ -48,18 +48,27 @@ class SeaAdmin(MappingAbstract):
         ('min_y','max_y'),
     ]
 
-
 @admin.register(Basin)
 class BasinAdmin(admin.GeoModelAdmin):
-    list_display = ['name','region','province','exploration_status','sub_regime','sub_regime_group']
+    list_display = ['name','region','province','max_fill','exploration_status','location','sub_regime','sub_regime_group','petsys_status']
     search_fields = ['name','region','province',]
-    list_filter = ['exploration_status']
+    list_filter = ['exploration_status','petsys_status']
 
     fields = [
         'name',
         'poly',
         'region',
         'province'
+    ]
+
+@admin.register(Political)
+class PoliticalAdmin(admin.GeoModelAdmin):
+    list_display = ['name','territory','sovereign','area_km2',]
+    search_fields = ['name','territory','sovereign',]
+
+    fields = [
+        'name',
+        'poly',
     ]
 
 @admin.register(Margin)

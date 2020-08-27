@@ -1,0 +1,30 @@
+{% extends "mapping/basemap.html" %}
+{% load static widget_tweaks sekizai_tags%}
+
+
+{% block left-content %}
+  <div class='card border-0'>
+    <div class='card-head container display-4'>Filters<hr></div>
+    <div class='card-body'>
+      {% include "mapping/components/map_filter.html" %}
+    </div>
+  </div>
+{% endblock left-content %}
+
+{% block under-map-content %}
+
+{% include "tables/table.html" %}
+
+{% addtoblock "js" %}
+    <script>
+    var data_url = "{% url 'thermoglobe:data' %}";
+    var link_url = '/thermoglobe/sites/';
+    {% comment %} var table_options = {{ table.options|safe }} {% endcomment %}
+    </script>
+{% endaddtoblock %}
+
+
+{% endblock under-map-content %}
+
+
+

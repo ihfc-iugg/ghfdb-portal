@@ -1,0 +1,29 @@
+{% extends "mapping/basemap.html" %}
+{% load static sekizai_tags%}
+{% block left-content %}
+  {% include "publications/components/publication_card.html" %}
+{% endblock left-content %}
+
+{% block under-map-content %}
+{% comment %} {{ tables.temperature.plot_profile }} {% endcomment %}
+
+{% include "tables/multi_table.html" %}
+
+{% addtoblock "js" %}
+
+<script>
+  var data_url = "{% url 'publications:publication_list' %}" + "{{object.slug}}" + '/data.json';
+  {% comment %} data_counts("{{figures.0.id}}",{{figures.0.data|safe}},'pie') {% endcomment %}
+  {% comment %} heat_flow_hist("{{figures.1.id}}",{{figures.1.data|safe}}) {% endcomment %}
+</script>
+{% endaddtoblock %}
+
+
+{% endblock under-map-content %}
+
+
+
+
+
+
+

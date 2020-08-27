@@ -4,10 +4,7 @@ from ckeditor.fields import RichTextField
 
 # Create your models here.
 class Page(models.Model):
-    title = models.CharField(_("title"),
-            help_text=_('Appears in the browser tab before "| HeatFlow.org". If blank, heading will be used instead.'),
-            max_length=50,
-            blank=True, null=True)
+
     heading = models.CharField(_("heading"),
             help_text=_("The heading on the page."),
             max_length=150)
@@ -18,6 +15,17 @@ class Page(models.Model):
     content = RichTextField(_("content"),
             help_text=_("Page content that appears underneath the headings."),
             blank=True,null=True)
+    title = models.CharField(_("title"),
+            help_text=_('Appears in the browser tab before "| HeatFlow.org". If blank, heading will be used instead.'),
+            max_length=50,
+            blank=True, null=True)
+    keywords = models.CharField(_("keywords"),
+            help_text=_("Keywords to include in the page <head> tags"),
+            max_length=250)
+    description = RichTextField(_("decsription"),
+            help_text=_("Description to include in the page <head> tags"),
+            blank=True,null=True)
+
     date_edited = models.DateTimeField(auto_now=True)
     edited_by = models.ForeignKey("users.CustomUser",blank=True, null=True, on_delete=models.SET_NULL)
 

@@ -1,16 +1,15 @@
 from import_export.widgets import Widget, ForeignKeyWidget, ManyToManyWidget, FloatWidget
-from .models import HeatFlow, Temperature, ThermalGradient, Conductivity, Correction
+from .models import HeatFlow, Temperature, Conductivity, Correction
 from django.utils.encoding import smart_text, force_text
 from django.core.exceptions import ValidationError
-from reference.models import Author, Reference
+from publications.models import Author, Publication
 from django import forms
 from django.utils.translation import ugettext as _
 import bibtexparser as bib
 import bibtexparser.customization as custom
 import re
-from reference.widgets import get_author_objects
+from publications.widgets import get_author_objects
 from bibtexparser.bibdatabase import BibDatabase
-from geomodels.utils import age_range
 
 def get_non_relational_fields(model,row,exclude=[]):
     return [f for f in model._meta.concrete_fields if row.get(f.name) and f.name not in exclude and not f.is_relation]
@@ -108,13 +107,21 @@ class SiteWidget(ForeignKeyWidget):
         super().__init__(model, field=field, *args, **kwargs)
 
     def clean(self,value,row=None):
-        params = {k:row[k] for k in self.id_fields}
-        if not params['latitude'] or not params['longitude']:
+        if not row.get('latitude') or not row.get('longitude'):
             return None
-        if 'site_name' in params.keys():
-            row['site'] = self.model.objects.get_or_create(**params)[0]
-        else:
-            row['site'] = self.model.objects.update_or_create(**params,defaults={'site_name':row['site_name']})[0]
+        params = {k:row[k] for k in self.id_fields}
+
+        defaults = {f.name: row.get(f.name) for f in get_non_relational_fields(self.model, row)}
+
+        row['site'] = self.model.objects.update_or_create(**params,defaults=defaults)[0]
+
+        # if 'site_name' in params.keys():
+        #     row['site'] = self.model.objects.get_or_create(**params)[0]
+        # else:
+        #     row['site'] = self.model.objects.update_or_create(**params,defaults={'site_name':row['site_name']})[0]
+
+        # if isinstance(row['reference'],Publication):
+        #     row['site'].reference.add(row['reference'])
 
         return row['site']
 
@@ -126,18 +133,15 @@ class SiteWidget(ForeignKeyWidget):
                 return ''
         return value 
 
-class ReferenceWidget(ForeignKeyWidget):
+class PublicationWidget(ForeignKeyWidget):
     def __init__(self, model, field=None, reference_dict=None, *args, **kwargs):
         super().__init__(model, field=field, *args, **kwargs)
         self.ref_dict = reference_dict
 
     def clean(self,value,row=None, bib_db=None):
         if value:
-
-            if isinstance(value,Reference):
+            if isinstance(value,Publication):
                 return value
-
-
             # If an actual bibtex string is provided
             try:
                 entry = bib.loads(value).entries[0]
@@ -157,19 +161,21 @@ class ReferenceWidget(ForeignKeyWidget):
                 return row['reference']
 
             # If a bib ID is supplied, check if an entry already exists and retrieve it
-            try:
-                row['reference'] = self.model.objects.get(bib_id=value)
-            except self.model.DoesNotExist:
-                db = BibDatabase()
-                try:
-                    db.entries = [self.ref_dict[value]]
-                except KeyError:
-                    row['reference'] = self.model.objects.create(bib_id=value)
-                else:
-                    row['reference'] = self.model.objects.create(bibtex=bib.dumps(db))
+            # try:
+            #     row['reference'] = self.model.objects.get(bib_id=value)
+            # except self.model.DoesNotExist:
+            #     db = BibDatabase()
+            #     try:
+            #         db.entries = [self.ref_dict[value]]
+            #     except KeyError:
+            #         row['reference'] = self.model.objects.create(bib_id=value)
+            #     else:
+            #         row['reference'] = self.model.objects.create(bibtex=bib.dumps(db))
 
-            finally:
-                return row['reference']
+            # finally:
+            #     return row['reference']
+        row['reference'] = self.model.objects.get_or_create(bib_id=value)[0]
+        return row['reference']
 
     def render(self, value, obj=None):
         return getattr(value,'bib_id') 
@@ -233,15 +239,23 @@ class CorrectionsWidget(ForeignKeyWidget):
     def clean(self, value, row=None):
 
         # gets all columns that correlate to the corrections field and stores them in a new dict
-        params = {k.replace('correction__',''):v for k,v in row.items() if k.replace('correction__','') in [f.name for f in self.model._meta.concrete_fields]}
+        params = {k.replace('_correction',''):v for k,v in row.items() if k.replace('_correction','') in [f.name for f in self.model._meta.concrete_fields]}
 
         # remove empty values from dict
         params = {k:v for k,v in params.items() if v}
 
         #try to find object based on id_fields
         if params:
-            row['correction'] = self.model.objects.create(**params)
-            return row['correction']
+            try:
+                obj = self.model.objects.get(heatflow__pk=row.get('hf_id'))
+                for key, value in params.items():
+                    setattr(obj, key, value)
+            except self.model.DoesNotExist:
+                obj = self.model(**params)
+            row['corrections'] = obj
+
+            # row['corrections'] = self.model.objects.update_or_create(heatflow__pk=row.get('hf_id'), defaults=params)[0]
+            return row['corrections']
 
     def render(self, value, obj=None):
 
@@ -256,18 +270,21 @@ class ChoiceWidget(Widget):
     Widget for converting text fields.
     """
     def __init__(self, choices, *args, **kwargs):
-        self.choices = choices
+        self.choices = {v: k for k, v in choices}
+        self.choices_reverse = {k:v for k, v in choices}
 
     def clean(self, value, row=None, *args, **kwargs):
-        for choice in self.choices:
-            if value == choice[1]:
-                return choice[0]
-        if value:
+
+        value = self.choices.get(value.lower())
+
+        if value is None:
             raise ValueError('That is not a valid option for this field. Available options are: {}'.format(', '.join([choice[1] for choice in self.choices])))
 
+        return value
 
     def render(self, value, obj=None):
-        return force_text(value)
+        # return force_text(value)
+        return force_text(self.choices_reverse.get(value),'')
 
 class M2MWidget(ManyToManyWidget):
 

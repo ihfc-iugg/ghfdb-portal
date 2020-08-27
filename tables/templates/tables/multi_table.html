@@ -1,0 +1,40 @@
+{% load static sekizai_tags custom_tags %}
+
+<div class="card text-center">
+  <div class="card-header">
+    <ul class="nav nav-tabs card-header-tabs" role="tablist">
+      {% for name, table in tables.items %}
+        <li class="nav-item">
+            <a id="#{{table.id}}-tab" data-toggle="tab" href="#{{table.id}}-container" aria-controls="{{table.id}}-tab" 
+          {% if table.active %}
+            class="nav-link active"  
+            aria-selected="true">
+          {% elif table.has_data %}
+            class="nav-link"  
+            aria-selected="false">
+          {% else %}
+            class="nav-link disabled"  
+            aria-selected="disabled">
+          {% endif %}
+          {{ table.name }}</a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div id="tabbedContent" class="tab-content container-fluid pt-3">
+    {% for table in tables.values %}
+      <div class="tab-pane fade {% if table.active %}show active{% endif %}" id="{{table.id}}-container" role="tabpanel" aria-labelledby="{{table.id}}-tab">
+          {% if table.active or table.has_data %}
+            {% include "tables/table.html" %}
+          {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+
+{% addtoblock "css" %}
+{% endaddtoblock %}
+
+{% addtoblock "js" %}
+{% endaddtoblock %}
