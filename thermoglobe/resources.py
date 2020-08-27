@@ -1,21 +1,19 @@
-from .models import Site, Conductivity, HeatFlow,ThermalGradient, HeatGeneration, Temperature, Correction
-from reference.models import Reference, Operator
-from geomodels.models import Basin, TectonicEnvironment, GeologicalUnit, GeologicalProvince
+from .models import Site, Conductivity, HeatFlow, HeatGeneration, Temperature, Correction
+from publications.models import Publication, Operator
 from import_export.fields import Field
-from import_export.widgets import FloatWidget, CharWidget, IntegerWidget, BooleanWidget, ForeignKeyWidget
+from import_export.widgets import FloatWidget, CharWidget, IntegerWidget, BooleanWidget, ForeignKeyWidget, DecimalWidget
 import time
 from import_export import resources
 from . import widgets, choices
 import sys
 import bibtexparser as bib
-from geomodels.utils import age_range
+from thermoglobe.utils import age_range
 from import_export.instance_loaders import BaseInstanceLoader
 from django.db import IntegrityError
 from django import VERSION
 from import_export.instance_loaders import ModelInstanceLoader
 from django.utils.html import mark_safe
 from tqdm import tqdm
-
 
 class CustomInstanceLoader(ModelInstanceLoader):
     """
@@ -40,16 +38,11 @@ class CustomInstanceLoader(ModelInstanceLoader):
             return None
 
 def get_references():
-    with open('reference/ThermoGlobe.bib',encoding='utf8') as bibfile:
+    with open('publications/ThermoGlobe.bib',encoding='utf8') as bibfile:
         # required to handle certain common strings
         parser = bib.bparser.BibTexParser(common_strings=True)
         refs = bib.load(bibfile,parser=parser)
     return refs
-
-def add_reference(entry):
-    entry = bib.loads(entry)
-    with open('reference/ThermoGlobe.bib',encoding='utf8',mode='a+') as bibfile:
-        bibfile.write(entry)
 
 def fix_age(row):
     # handles the case where a geochronological or stratigraphic age is given
@@ -90,10 +83,23 @@ def fix_depth(row):
     return row
 
 def format_coordinates(row):
+    """The point of this function is to convert coordinates to a string formatted number no longer than 5 decimals places. 
+    This combats rounding errors when converting from degrees:minute:seconds to decimal degrees. Also maintains precision of coordinates with less than 5 decimal places
+
+    """
     if row.get('latitude'):
-        row['latitude'] = format(float(row['latitude']),'.5f')
+        # 2 degrees plus decimal plus 5 decimal places
+        if len(str(row['latitude'])) > 8:
+            row['latitude'] = format(float(row['latitude']),'.5f')
+        else:
+            row['latitude'] = str(row['latitude'])
     if row.get('longitude'):
-        row['longitude'] = format(float(row['longitude']),'.5f')
+        # 3 degrees plus decimal plus 5 decimal places
+        if len(str(row['longitude'])) > 9:
+            row['longitude'] = format(float(row['longitude']),'.5f')
+        else:
+            row['longitude'] = str(row['longitude'])
+
     return row
 
 class ResourceMixin(resources.ModelResource):
@@ -112,6 +118,12 @@ class ResourceMixin(resources.ModelResource):
         row = fix_age(row) # convert any geo or stratigraphic ages to float values
         row = fix_depth(row) #fix depths reported as min = 0 and max = 0
         row['save_temp'] = True
+
+    def before_save_instance(self, instance, using_transactions, dry_run):
+        """
+        Override to add additional logic. Does nothing by default.
+        """
+        pass
 
     def save_instance(self, instance, using_transactions=True, dry_run=False):
         """
@@ -135,6 +147,7 @@ class ResourceMixin(resources.ModelResource):
                 # If theres a reference, add it to the site__reference field
                 instance.site.reference.add(reference)   
             instance.site.save() #required to save relational fields to site obj
+        # pass
 
     def after_import_row(self, row, row_result, **kwargs):
         """ Updates the progress bar"""
@@ -205,48 +218,39 @@ class ResourceMixin(resources.ModelResource):
 class SiteMixin(ResourceMixin):
     global_saves_null=True
 
+    # needs to be before the site property fields below so that a reference is saved
+    reference = Field(attribute='reference',
+            column_name='reference', 
+            widget=widgets.PublicationWidget(Publication, field='reference', reference_dict=ResourceMixin.ref_dict))
+
     site_name = Field(attribute='site',column_name='site_name',
         widget=widgets.SiteWidget(Site,
             field='site_name',
             render_field='site_name',
             id_fields=['latitude','longitude','site_name'],
             ))
- 
 
-    latitude = Field(attribute='site__latitude',widget=FloatWidget(),readonly=True)
-    longitude = Field(attribute='site__longitude',widget=FloatWidget(),readonly=True)
-    elevation = Field(attribute='site__elevation',widget=FloatWidget())
-    dip = Field(attribute='site__dip', widget=FloatWidget())
+    latitude = Field(attribute='site__latitude',widget=DecimalWidget(),readonly=True)
+    longitude = Field(attribute='site__longitude',widget=DecimalWidget(),readonly=True)
+    elevation = Field(attribute='site__elevation',widget=FloatWidget(),readonly=True)
+    tilt = Field(attribute='site__tilt', widget=FloatWidget(),readonly=True)
     # operator = Field(attribute='site__operator')
-    operator = Field(attribute='site__operator', saves_null_values=global_saves_null, widget=widgets.CustomFK(Operator))
-    site_type = Field(attribute='site__site_type',saves_null_values=global_saves_null)
-    site_status = Field(attribute='site__site_status',saves_null_values=global_saves_null)
+    operator = Field(attribute='site__operator',readonly=True, saves_null_values=global_saves_null, widget=widgets.CustomFK(Operator))
+    site_type = Field(attribute='site__site_type',saves_null_values=global_saves_null,readonly=True)
+    site_status = Field(attribute='site__site_status',saves_null_values=global_saves_null,readonly=True)
 
     cruise = Field(attribute='site__cruise')
     well_depth = Field(attribute='site__well_depth',widget=FloatWidget())
     #geology information
     sediment_thickness = Field(attribute='site__sediment_thickness',saves_null_values=global_saves_null,widget=FloatWidget())
-    crustal_thickness = Field(attribute='site__crustal_thickness',saves_null_values=global_saves_null,widget=FloatWidget())
-    basin = Field(attribute='site__basin', saves_null_values=global_saves_null, widget=widgets.CustomFK(Basin))
-    sub_basin = Field(attribute='site__sub_basin', saves_null_values=global_saves_null, widget=widgets.CustomFK(Basin))
-    tectonic_environment = Field(attribute='site__tectonic_environment', saves_null_values=global_saves_null, widget=widgets.CustomFK(TectonicEnvironment))
-    geological_province = Field(attribute='site__geological_province', 
-            saves_null_values=global_saves_null, 
-            widget=widgets.CustomFK(GeologicalProvince))
-    EOH_geo_unit = Field(attribute='site__EOH_geo_unit', 
-            saves_null_values=global_saves_null, 
-            widget=widgets.CustomFK(GeologicalUnit))
-    EOH_rock_type = Field(attribute='site__EOH_rock_type', 
-            saves_null_values=global_saves_null)
+    sediment_thickness_type = Field(attribute='site__sediment_thickness_type')
 
+    crustal_thickness = Field(attribute='site__crustal_thickness',saves_null_values=global_saves_null,widget=FloatWidget())
 
     seamount_distance = Field(attribute='site__seamount_distance',widget=FloatWidget(),saves_null_values=global_saves_null)
-    # outcrop_distance = Field(attribute='site__',saves_null_values=global_saves_null,widget=FloatWidget())
-    ruggedness = Field(attribute='site__ruggedness', saves_null_values=global_saves_null,widget=IntegerWidget())  
-
-    USGS_code = Field(attribute='site__USGS_code',widget=CharWidget(),saves_null_values=global_saves_null)
 
     bottom_hole_temp = Field(attribute='site__bottom_hole_temp', 
+                            readonly=True,
                             widget=widgets.SitePropertyWidget(Temperature,
                             field='value',
                             exclude='lithology',
@@ -257,7 +261,16 @@ class SiteMixin(ResourceMixin):
                                     'well_depth':'depth',
                                     'temperature_method':'method',
                                     'reference':'reference'}))
-
+    bottom_water_temp = Field(attribute='site__bottom_water_temp', 
+                            widget=widgets.SitePropertyWidget(Temperature,
+                            field='value',
+                            exclude='lithology',
+                            id_fields = ['site','value','reference'],
+                            required_fields=['value'],
+                            # specify the column to be mapped to each model field
+                            varmap={'bottom_water_temp':'value',
+                                    'temperature_method':'method',
+                                    'reference':'reference'}))
     surface_temp = Field(attribute='site__surface_temp', 
                             widget=widgets.SitePropertyWidget(Temperature,
                                 field='value',
@@ -280,67 +293,107 @@ class SiteMixin(ResourceMixin):
         self.bibtex = bibtex
 
 class CorrectionsMixin(resources.ModelResource):
-    BooleanWidget.FALSE_VALUE = ''
-    has_climatic = Field(attribute='correction__has_climatic',widget=BooleanWidget(),readonly=True)
-    has_topographic = Field(attribute='correction__has_topographic',widget=BooleanWidget(),readonly=True)
-    has_refraction = Field(attribute='correction__has_refraction',widget=BooleanWidget(),readonly=True)
-    has_sedimentation = Field(attribute='correction__has_sedimentation',widget=BooleanWidget(),readonly=True)
-    has_fluid = Field(attribute='correction__has_fluid',widget=BooleanWidget(),readonly=True)
-    has_bottom_water_variation = Field(attribute='correction__has_bottom_water_variation',widget=BooleanWidget(),readonly=True)
-    has_compaction = Field(attribute='correction__has_compaction',widget=BooleanWidget(),readonly=True)
-    has_other = Field(attribute='correction__has_other',widget=BooleanWidget(),readonly=True)
+    """Slightly annoying having to type these all out but it needs to be done to make sure the column names are output as expected. Ordering is done via the HEAT_FLOW_FIELDS variable in thermoglobe.choices.
+    """
+
+    # corrections are actually imported on this field
+    climate_correction = Field(attribute='corrections',widget=widgets.CorrectionsWidget(field="climate"))
+
+    # the following fields are for output puposes only
+    climate_flag = Field(attribute='corrections__climate_flag',widget=BooleanWidget(),readonly=True)
+
+    topographic_correction = Field(attribute='corrections__topographic',widget=FloatWidget(),readonly=True)
+    topographic_flag = Field(attribute='corrections__topographic_flag',widget=BooleanWidget(),readonly=True)
+
+    refraction_correction = Field(attribute='corrections__refraction',widget=FloatWidget(),readonly=True)
+    refraction_flag = Field(attribute='corrections__refraction_flag',widget=BooleanWidget(),readonly=True)
+    
+    sed_erosion_correction = Field(attribute='corrections__sed_erosion',widget=FloatWidget(),readonly=True)
+    sed_erosion_flag = Field(attribute='corrections__sed_erosion_flag',widget=BooleanWidget(),readonly=True)
+    
+    fluid_correction = Field(attribute='corrections__fluid',widget=FloatWidget(),readonly=True)
+    fluid_flag = Field(attribute='corrections__fluid_flag',widget=BooleanWidget(),readonly=True)
+    
+    bottom_water_variation_correction = Field(attribute='corrections__bottom_water_variation',widget=FloatWidget(),readonly=True)
+    bottom_water_variation_flag = Field(attribute='corrections__bottom_water_variation_flag',widget=BooleanWidget(),readonly=True)
+        
+    compaction_correction = Field(attribute='corrections__compaction',widget=FloatWidget(),readonly=True)
+    compaction_flag = Field(attribute='corrections__compaction_flag',widget=BooleanWidget(),readonly=True)
+        
+    other_correction = Field(attribute='corrections__other',widget=FloatWidget(),readonly=True)
+    other_flag = Field(attribute='corrections__other_flag',widget=BooleanWidget(),readonly=True)
+    other_type = Field(attribute='corrections__other_type',readonly=True)
 
 class HeatFlowResource(CorrectionsMixin,SiteMixin):
     global_saves_null=True
 
     reliability = Field(attribute='reliability',
             saves_null_values=global_saves_null)
-    heatflow_corrected = Field(attribute='corrected',
+    heat_flow_corrected = Field(attribute='corrected',
             widget=FloatWidget(),
             saves_null_values=global_saves_null)
-    heatflow_corrected_uncertainty = Field(attribute='corrected_uncertainty',
+    heat_flow_corrected_uncertainty = Field(attribute='corrected_uncertainty',
             widget=FloatWidget(),
             saves_null_values=global_saves_null)
-    heatflow_uncorrected = Field(attribute='uncorrected',
+    heat_flow_uncorrected = Field(attribute='uncorrected',
             widget=FloatWidget(),
             saves_null_values=global_saves_null)
-    heatflow_uncorrected_uncertainty = Field(attribute='uncorrected_uncertainty',
+    heat_flow_uncorrected_uncertainty = Field(attribute='uncorrected_uncertainty',
             widget=FloatWidget(),
             saves_null_values=global_saves_null)
+    
     thermal_conductivity = Field(attribute='conductivity',
             widget=FloatWidget(),
             saves_null_values=global_saves_null)
 
-    correction__climatic = Field(attribute='correction',widget=widgets.CorrectionsWidget(field="climatic"))
-
-    # needs to be before the site property fields below so that a reference is saved
-    reference = Field(attribute='reference',
-            column_name='bibtex', 
-            widget=widgets.ReferenceWidget(Reference, field='bibtex', reference_dict=ResourceMixin.ref_dict))
-
     # Temperature gradient data associated with interval
-    thermal_gradient_corrected = Field(attribute='thermalgradient',
-                                widget=widgets.SitePropertyWidget(ThermalGradient,
-                                field='corrected',
-                                id_fields = ['site','depth_min','depth_max','reference'],
-                                required_fields=['corrected','uncorrected'],
-                                varmap={
-                                    'thermal_gradient_corrected':'corrected',
-                                    'gradient_corrected_uncertainty':'corrected_uncertainty',
-                                    'gradient_uncorrected':'uncorrected',
-                                    'gradient_uncorrected_uncertainty':'uncorrected_uncertainty',
-                                    'reference':'reference'}))
-    gradient_corrected_uncertainty = Field(attribute='thermalgradient__corrected_uncertainty',readonly=True)
-    gradient_uncorrected = Field(attribute='thermalgradient__uncorrected',readonly=True)
-    gradient_uncorrected_uncertainty = Field(attribute='thermalgradient__uncorrected_uncertainty',readonly=True)
+    # gradient_corrected = Field(attribute='gradient',
+    #                             widget=widgets.SitePropertyWidget(ThermalGradient,
+    #                             field='corrected',
+    #                             id_fields = ['site','depth_min','depth_max','reference'],
+    #                             required_fields=['corrected','uncorrected'],
+    #                             varmap={
+    #                                 'gradient_corrected':'corrected',
+    #                                 'gradient_corrected_uncertainty':'corrected_uncertainty',
+    #                                 'gradient_uncorrected':'uncorrected',
+    #                                 'gradient_uncorrected_uncertainty':'uncorrected_uncertainty',
+    #                                 # 'reference':'reference'}))
+    #                                 }))
+    gradient_corrected = Field(attribute='gradient_corrected')
+    gradient_corrected_uncertainty = Field(attribute='gradient_corrected_unc')
+    gradient_uncorrected = Field(attribute='gradient_uncorrected')
+    gradient_uncorrected_uncertainty = Field(attribute='gradient_uncorrected_unc')
 
     class Meta:
         model = HeatFlow
-        import_id_fields = ['site','depth_min','depth_max','reference','thermal_conductivity']
+        import_id_fields = ['site_name','depth_min','depth_max','reference','heat_flow_corrected']
         skip_unchanged = True
         # report_skipped=False
-        fields = choices.HEAT_FLOW_EXPORT_ORDER
+
+        fields = ['reference'] + choices.HEAT_FLOW_EXPORT
+
         export_order = fields.copy()
+        instance_loader_class = CustomInstanceLoader
+
+    def import_obj(self, obj, data, dry_run):
+        """
+        Traverses every field in this Resource and calls
+        :meth:`~import_export.resources.Resource.import_field`. If
+        ``import_field()`` results in a ``ValueError`` being raised for
+        one of more fields, those errors are captured and reraised as a single,
+        multi-field ValidationError."""
+        data['hf_id'] = obj.pk
+        errors = {}
+        for field in self.get_import_fields():
+            if isinstance(field.widget, widgets.ManyToManyWidget):
+                continue
+            try:
+                self.import_field(field, obj, data)
+            except ValueError as e:
+                errors[field.attribute] = ValidationError(
+                    force_str(e), code="invalid")
+        if errors:
+            raise ValidationError(errors)
 
     def after_import_row(self,row,row_result,**kwargs):
         super().after_import_row(row,row_result,**kwargs)
@@ -351,28 +404,18 @@ class HeatFlowResource(CorrectionsMixin,SiteMixin):
                 exclude=[],
                 id_fields = ['site','value','reference','depth'],
                 required_fields=['value'],
-                varmap={'heat_generation':'value',
-                        'heatgeneration__uncertainty': 'uncertainty',
-                        'heatgeneration__number_of_measurements': 'number_of_measurements',
-                        'heatgeneration__method':'method',}
+                varmap={'heat_gen':'value',
+                        'heat_gen_unc': 'uncertainty',
+                        'number_of_heat_gen': 'number_of_measurements',
+                        'heat_gen_method':'method',}
                         )
         if hg_id:
             HeatGeneration.objects.update_or_create(**hg_id,defaults=hg_fields)
-        
+
     def after_save_instance(self,instance, using_transactions, dry_run):   
         super().after_save_instance(instance,using_transactions,dry_run)
-        # There's an issue where the new corrections (if they have changed (i think)) do not       
-            # overwrite the old ones but instead create a new instance. Because its a 121     
-            # relationship it must be unique andtherefore an error is thrown. This solution deletes 
-            # the old relationship if it exists and then saves the new one. It is not elegant but it 
-            # works.
-        # if getattr(instance,'correction',False):
-        #     try:
-        #         Correction.objects.get(heatflow=instance.id).delete()
-        #     except Correction.DoesNotExist:
-        #         pass
-        #     finally:
-        #         instance.correction.save()
+        if getattr(instance,'corrections',False):
+            instance.corrections.save()
 
 def init_site_instance(row,id_fields):
     params = {k:row[k] for k in id_fields}
@@ -389,7 +432,7 @@ def init_reference_instance(row, bibtex):
             pass
         else:
             bib_id = entry.get('ID','')
-            ref, created = Reference.objects.get_or_create(bib_id=bib_id)
+            ref, created = Publication.objects.get_or_create(bib_id=bib_id)
             if created:
                 # save new bibtex entry to bibtex file on server
                 pass
@@ -403,62 +446,64 @@ def init_reference_instance(row, bibtex):
     else:
         # If a bib ID is supplied, check if an entry already exists and retrieve it
         try:
-            ref = Reference.objects.get(bib_id=row['reference'])
-        except Reference.DoesNotExist:
+            ref = Publication.objects.get(bib_id=row['reference'])
+        except Publication.DoesNotExist:
             db = BibDatabase()
             try:
                 db.entries = [self.ref_dict[row['reference']]]
             except KeyError:
-                ref = Reference.objects.create(bib_id=row['bibtex'])
+                ref = Publication.objects.create(bib_id=row['bibtex'])
             else:
-                ref = Reference.objects.create(bibtex=bib.dumps(db))
+                ref = Publication.objects.create(bibtex=bib.dumps(db))
         finally:
             return ref
 
 class SitePropertyMixin(SiteMixin):
     global_saves_null = False
-
     site = Field(attribute='site',column_name='site_name',
         widget=widgets.SiteWidget(Site,
             field='site_name',
             render_field='site_name',
             id_fields=['latitude','longitude'],
             ))
-    reference = Field(attribute='reference',
-            column_name='reference', 
-            widget=widgets.ReferenceWidget(Reference, field='bibtex', reference_dict=ResourceMixin.ref_dict))
 
     def before_import_row(self,row=None,**kwargs):
         super().before_import_row(row,**kwargs)
         row['site'] = None
-        row['reference'] = init_reference_instance(row,self.bibtex)
+        row['reference'] = init_reference_instance(row, self.bibtex)
         row['save_temp'] = False
 
 class ConductivityResource(SitePropertyMixin):
     global_saves_null = False
 
-    rock_group = Field(widget=widgets.ChoiceWidget(choices=choices.ROCK_GROUPS))
-    rock_origin = Field(widget=widgets.ChoiceWidget(choices=choices.ROCK_ORIGIN))
-    geo_unit = Field(attribute='geo_unit',column_name='geological_unit', saves_null_values=global_saves_null, widget=widgets.CustomFK(GeologicalUnit))
+    rock_group = Field('rock_group',widget=widgets.ChoiceWidget(choices=choices.ROCK_GROUPS))
+    rock_origin = Field('rock_origin',widget=widgets.ChoiceWidget(choices=choices.ROCK_ORIGIN))
 
     class Meta:
         model = Conductivity
-        fields = choices.PROPERTY_EXPORT_ORDER
+        fields = choices.CONDUCTIVITY_EXPORT
         export_order = fields.copy()
         import_id_fields = ['site','sample_name','depth','reference']
         instance_loader_class = CustomInstanceLoader
         raise_errors = True
+
+    def import_field(self, field, obj, data, is_m2m=False):
+        """
+        Calls :meth:`import_export.fields.Field.save` if ``Field.attribute``
+        and ``Field.column_name`` are found in ``data``.
+        """
+        if field.attribute and field.column_name in data:
+            field.save(obj, data, is_m2m)
 
 class HeatGenResource(SitePropertyMixin):
     global_saves_null = False
 
     rock_group = Field(widget=widgets.ChoiceWidget(choices=choices.ROCK_GROUPS))
     rock_origin = Field(widget=widgets.ChoiceWidget(choices=choices.ROCK_ORIGIN))
-    geo_unit = Field(attribute='geo_unit',column_name='geological_unit', saves_null_values=global_saves_null, widget=widgets.CustomFK(GeologicalUnit))
 
     class Meta:
         model = HeatGeneration
-        fields = choices.PROPERTY_EXPORT_ORDER
+        fields = choices.HEAT_GEN_EXPORT
         export_order = fields.copy()
         import_id_fields = ['site','sample_name','depth','reference']
 
@@ -467,11 +512,11 @@ class TempResource(SitePropertyMixin):
     # geo_unit = Field(column_name='geological_unit')
     reference = Field(attribute='reference',
             column_name='reference', 
-            widget=widgets.ReferenceWidget(Reference, field='bibtex', reference_dict=ResourceMixin.ref_dict))
+            widget=widgets.PublicationWidget(Publication, field='bibtex', reference_dict=ResourceMixin.ref_dict))
 
     class Meta:
         model = Temperature
-        fields = choices.TEMPERATURE_EXPORT_ORDER
+        fields = choices.TEMPERATURE_EXPORT
         export_order = fields.copy()
         import_id_fields = ['site','depth','reference','operator']
 
