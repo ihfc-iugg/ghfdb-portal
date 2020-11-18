@@ -1,30 +1,20 @@
 {% extends "mapping/basemap.html" %}
 {% load static widget_tweaks sekizai_tags%}
 
-
-{% block left-content %}
-  <div class='card border-0'>
-    <div class='card-head container display-4'>Filters<hr></div>
-    <div class='card-body'>
-      {% include "mapping/components/map_filter.html" %}
+{% block content %}
+    {{ block.super }}
+    <div class='inner'>
+      <section class='pt-5'>
+        {% include "tables/table.html" %}
+      </section>       
     </div>
-  </div>
-{% endblock left-content %}
-
-{% block under-map-content %}
-
-{% include "tables/table.html" %}
-
+    
 {% addtoblock "js" %}
-    <script>
-    var data_url = "{% url 'thermoglobe:data' %}";
-    var link_url = '/thermoglobe/sites/';
-    {% comment %} var table_options = {{ table.options|safe }} {% endcomment %}
-    </script>
+  <script>$(document).ready(function(){updateData()});</script>
 {% endaddtoblock %}
+{% endblock content %}
 
-
-{% endblock under-map-content %}
-
-
+{% block sidebar %}
+  {% include "mapping/components/map_filter.html" %}
+{% endblock sidebar %}
 

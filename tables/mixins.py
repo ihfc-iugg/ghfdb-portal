@@ -21,8 +21,7 @@ class MultiTableMixin:
 class TableMixin():
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
+        return super().get_context_data(**kwargs)
 
     def table(self, headers, qs=None, ID='dataTable', options=None, link='',data=None):
         if qs is not None:
@@ -36,9 +35,9 @@ class TableMixin():
             data = data
 
         return dict(
-        columns = headers,
-        id = ID,
-        options = options if options is not None else getattr(self,'table_options'),
-        link = link,
-        data = data,
-        )
+            columns = headers,
+            id = ID,
+            options = options if options is not None else getattr(self,'table_options'),
+            link = link,
+            data = data,
+            )

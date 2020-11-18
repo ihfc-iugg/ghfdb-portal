@@ -1,7 +1,6 @@
 # from betterforms.forms import BaseForm
 from betterforms.forms import BetterModelForm
-from thermoglobe.models import Site
-from .models import Publication
+from thermoglobe.models import Site, Publication
 from django import forms
 
 class PublicationForm(forms.ModelForm):

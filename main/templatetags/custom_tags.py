@@ -76,4 +76,9 @@ def get_obj_attr(obj):
     except AttributeError:
         value = obj.initial
 
+    if getattr(obj.field,'choices',False):
+        for choice in obj.field.choices:
+            if value == choice[0]:
+                value = choice[1]
+
     return '<tr><td class="w-50">{}:</td><td>{}</td></tr>'.format(obj.name.replace('_',' ').title(),value)

@@ -1,6 +1,6 @@
 import os
 from django.contrib.gis.utils import LayerMapping
-from .models import Country, Continent, Sea, Margin, Basin, Political
+from .models import Country, Continent, Sea, Margin, Basin, Political, Province
 
 
 DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
@@ -114,9 +114,35 @@ political_mapping = {
     'un_sovereign': 'UN_SOV1',
 
     'area_km2': 'AREA_KM2',
-    'geom': 'MULTIPOLYGON',
+    'poly': 'MULTIPOLYGON',
 }
 
 def political(verbose=True):
     lm = LayerMapping(Political, political_dir, political_mapping, transform=False)
+    lm.save(strict=True, verbose=verbose)
+
+province_dir = os.path.join(DATA_DIR,'province','geological_province.shp')
+province_mapping = {
+    'source_id': 'id',
+    'name': 'prov_name',
+    'type': 'prov_type',
+    'reference': 'prov_ref',
+    'group': 'prov_group',
+    'juvenile_age_min': 'juviagemin',
+    'juvenile_age_max': 'juviagemax',
+    'tectonic_age_min': 'tectagemin',
+    'tectonic_age_max': 'tectagemax',
+    'last_orogen': 'lastorogen',
+    'continent': 'continent',
+    'plate': 'plate',
+    'juvenile_age_ref': 'juviageref',
+    'tectonic_age_ref': 'tectageref',
+    'area_km2': 'area_km2',
+    'conjugate_province': 'conjugate',
+    'comments': 'comments',
+    'poly': 'MULTIPOLYGON',
+}
+
+def province(verbose=True):
+    lm = LayerMapping(Province, province_dir, province_mapping, transform=False)
     lm.save(strict=True, verbose=verbose)

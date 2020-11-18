@@ -1,0 +1,11 @@
+{% load static %}
+<section class='plot-banner' data-appear-top-offset="{{offset}}">
+  {% if content %}<div>{{content|safe}}</div>{% endif %}
+  {% comment %} <div><span class='plot' data={{data}} type={{type}}></span></div> {% endcomment %}
+  <div class='plot d-flex justify-content-center align-items-center' data={{data}} type={{type}} >
+      <span id="earthSpinModal" class='text-center'>
+        <div style="background-image: url('{% static 'main/images/heat_flow.svg' %}')" class='earth spin'></div>
+        <h3>Generating plot...</h3>
+      </span>
+  </div>
+</section>

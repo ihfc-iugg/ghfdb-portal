@@ -1,23 +1,18 @@
 from thermoglobe import models
-from publications.models import Publication
 from django.contrib import admin
 
-class Publication(admin.StackedInline):
-    model = Publication
-    # readonly_fields = ['bib_id','type','year',('first_author','co_authors'),'title','journal','doi','bibtex']
+class Publication(admin.TabularInline):
+    model = models.Publication.authors.through
+    extra = 0
 
-    fields = ['bib_id','type','year',('first_author','co_authors'),'title','journal','doi','bibtex']
+# class Publication(admin.TabularInline):
+    # model = models.Publication
+    # fields = ['bib_id','type','year',('first_author','co_authors'),'title','journal','doi','bibtex']
 
-    # classes = ['collapse']
-
-class HeatFlow(admin.TabularInline):
-    model = models.HeatFlow
-    fields = ['corrected','corrected_uncertainty','uncorrected','uncorrected_uncertainty','reliability']
+class Interval(admin.TabularInline):
+    model = models.Interval
+    fields = ['heat_flow_corrected','heat_flow_corrected_uncertainty','heat_flow_uncorrected','heat_flow_uncorrected_uncertainty','reliability']
     extra=0
-
-# class Gradient(admin.TabularInline):
-#     model = models.ThermalGradient
-#     fields = ['corrected','corrected_uncertainty','uncorrected','uncorrected_uncertainty']
 
 class Conductivity(admin.TabularInline):
     model = models.Conductivity

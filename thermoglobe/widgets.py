@@ -1,9 +1,9 @@
 from import_export.widgets import Widget, ForeignKeyWidget, ManyToManyWidget, FloatWidget
-from .models import HeatFlow, Temperature, Conductivity, Correction
+from .models import Interval, Temperature, Conductivity, Correction, Author, Publication
 from django.utils.encoding import smart_text, force_text
 from django.core.exceptions import ValidationError
-from publications.models import Author, Publication
 from django import forms
+from django.forms.widgets import Input
 from django.utils.translation import ugettext as _
 import bibtexparser as bib
 import bibtexparser.customization as custom
@@ -107,6 +107,7 @@ class SiteWidget(ForeignKeyWidget):
         super().__init__(model, field=field, *args, **kwargs)
 
     def clean(self,value,row=None):
+
         if not row.get('latitude') or not row.get('longitude'):
             return None
         params = {k:row[k] for k in self.id_fields}
@@ -115,10 +116,14 @@ class SiteWidget(ForeignKeyWidget):
 
         row['site'] = self.model.objects.update_or_create(**params,defaults=defaults)[0]
 
+
         # if 'site_name' in params.keys():
         #     row['site'] = self.model.objects.get_or_create(**params)[0]
         # else:
         #     row['site'] = self.model.objects.update_or_create(**params,defaults={'site_name':row['site_name']})[0]
+
+        if row.get('other_references'):
+            row['site'].reference.add(*row['other_references'])
 
         # if isinstance(row['reference'],Publication):
         #     row['site'].reference.add(row['reference'])
@@ -160,25 +165,26 @@ class PublicationWidget(ForeignKeyWidget):
                 row['reference'] = ref
                 return row['reference']
 
-            # If a bib ID is supplied, check if an entry already exists and retrieve it
-            # try:
-            #     row['reference'] = self.model.objects.get(bib_id=value)
-            # except self.model.DoesNotExist:
-            #     db = BibDatabase()
-            #     try:
-            #         db.entries = [self.ref_dict[value]]
-            #     except KeyError:
-            #         row['reference'] = self.model.objects.create(bib_id=value)
-            #     else:
-            #         row['reference'] = self.model.objects.create(bibtex=bib.dumps(db))
+            # just in case multiple refs are supplied
+            refs = value.split(';')
+            refs.sort(key=self.get_year)
+            row['reference'] = self.model.objects.get_or_create(bib_id=refs.pop().strip())[0]
+            if refs:
+                row['other_references'] = [self.model.objects.get_or_create(bib_id=ref.strip())[0] for ref in refs]
 
-            # finally:
-            #     return row['reference']
-        row['reference'] = self.model.objects.get_or_create(bib_id=value)[0]
-        return row['reference']
+
+            # row['reference'] = self.model.objects.get_or_create(pk=value)[0]
+            return row['reference']
 
     def render(self, value, obj=None):
         return getattr(value,'bib_id') 
+
+    def get_year(self,ref):
+        year = re.findall(r'\d+', ref)
+        if year:
+            return int(year[0])
+        else:
+            return 0
 
 class SitePropertyWidget(ForeignKeyWidget):
     
@@ -323,6 +329,12 @@ class CustomFK(ForeignKeyWidget):
             return self.model.objects.get_or_create(**{self.field: value})[0]
 
 
+class RangeInput(Input):
+    input_type = 'number'
+    template_name = 'thermoglobe/forms/input.html'
+
+
+
 # -------- FILTER WIDGETS ----------
 class RangeWidget(forms.MultiWidget):
     """
@@ -338,9 +350,7 @@ class RangeWidget(forms.MultiWidget):
     def __init__(self, suffixes=None, *args, **kwargs):
         if suffixes is not None:
             self.suffixes = suffixes
-        widgets = (forms.NumberInput(attrs={'placeholder':'Min'}), forms.NumberInput(attrs={'placeholder':'Max'}))
-
-
+        widgets = (RangeInput(attrs={'placeholder':'Min'}), RangeInput(attrs={'placeholder':'Max'}))
         super().__init__(widgets=widgets,*args, **kwargs)
 
         assert len(self.widgets) == len(self.suffixes)

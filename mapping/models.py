@@ -5,7 +5,8 @@ from django_countries.fields import CountryField
 from django_extensions.db.fields import AutoSlugField
 from django.utils.translation import gettext as _
 from django.core.validators import MaxValueValidator, MinValueValidator
-import os
+import time, os, uuid
+
 
 class Country(models.Model):
     region_choices = [
@@ -122,7 +123,7 @@ class Basin(models.Model):
     poly = models.MultiPolygonField(srid=3857)
 
     class Meta:
-        db_table = 'CGG_basin'
+        db_table = 'basin'
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -143,3 +144,33 @@ class Political(models.Model):
 
     area_km2 = models.BigIntegerField(null=True, blank=True)
     poly = models.MultiPolygonField(srid=4326)
+
+    def __str__(self):
+        return '{}'.format(self.name)
+
+class Province(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    source_id = models.BigIntegerField(blank=True, null=True)
+    name = models.CharField(max_length=254)
+    type = models.CharField(max_length=80,blank=True, null=True)
+    reference = models.CharField(max_length=80,blank=True, null=True)
+    group = models.CharField(max_length=80,blank=True, null=True)
+    juvenile_age_min = models.FloatField(blank=True, null=True)
+    juvenile_age_max = models.FloatField(blank=True, null=True)
+    tectonic_age_min = models.FloatField(blank=True, null=True)
+    tectonic_age_max = models.FloatField(blank=True, null=True)
+    last_orogen = models.CharField(max_length=80,blank=True, null=True)
+    continent = models.CharField(max_length=80,blank=True, null=True)
+    plate = models.CharField(max_length=80,blank=True, null=True)
+    juvenile_age_ref = models.CharField(max_length=128,blank=True, null=True)
+    tectonic_age_ref = models.CharField(max_length=128,blank=True, null=True)
+    area_km2 = models.BigIntegerField(blank=True, null=True)
+    conjugate_province = models.CharField(max_length=128,blank=True, null=True)
+    comments = models.CharField(max_length=254,blank=True, null=True)
+    poly = models.MultiPolygonField(srid=4326)
+
+    class Meta:
+        db_table = 'geological_province'
+
+    def __str__(self):
+        return '{}'.format(self.name)

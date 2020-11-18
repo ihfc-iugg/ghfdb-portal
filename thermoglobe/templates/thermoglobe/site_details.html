@@ -1,24 +1,32 @@
 {% extends "mapping/basemap.html" %}
-{% load static custom_tags sekizai_tags%}
+{% load static custom_tags sekizai_tags geojson_tags %}
+
+{% block sidebar %}
+    {% include "main/components/site_info.html" %}
+{% endblock sidebar %}
+
+{% block content %}
+  {{ block.super }}
 
 
-{% block left-content %}
-  {% include "main/components/site_details_card.html" %}
-{% endblock left-content %}
-
-
-
-{% block under-map-content %}
-{% include "tables/multi_table.html" %}
-
-
-
-
+  <div class='inner'>
+    <section class='pt-0'>
+      {% include "tables/multi_table.html" %}
+    </section>       
+  </div>
 {% addtoblock "js" %}
-    
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <script>
+      $(document).ready(function(){
+        add_and_zoom({{object|geojsonfeature|safe}})
+      });
+    </script>
 
 {% endaddtoblock %}
-{% endblock under-map-content %}
+{% endblock content %}
+
+
 
 
 

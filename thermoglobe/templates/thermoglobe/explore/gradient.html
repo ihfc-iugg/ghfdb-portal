@@ -1,0 +1,88 @@
+{% extends "main/base.html" %}
+{% load static humanize sekizai_tags %}
+
+{% block content %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<div class='inner'>
+  <section class="special p-0">
+      <div class='d-flex justify-content-center'>
+        <span id='choropleth'>{{data.choropleth}}</span>
+      </div>
+      {{content.0|safe}}
+  </section>
+
+
+  <section class='plot-banner' data-appear-top-offset="600">
+        {{content.2|safe}}
+        <div class="row">
+            <div class="col-md-4 col-12">
+                <h5>By continent</h5>
+                <span class='plot' data='gradient' type='plot_pie_continent'></span>
+            </div>
+            <div class="col-md-4 col-12">
+                <h5>By political region</h5>
+                <span class='plot' data='gradient' type='plot_pie_country'></span>
+            </div>
+            <div class="col-md-4 col-12">
+                <h5>By sea</h5>
+                <span class='plot' data='gradient' type='plot_pie_seas'></span>
+            </div>
+        </div>
+  </section>
+
+
+  {% include "thermoglobe/sections/standard.html" with content=content.1 data='gradient' type='plot_hist' offset=300 %}
+
+  {% include "thermoglobe/sections/wide.html" with content=content.1 data='gradient' type='scatter' offset=300 %}
+
+
+  <section class='plot-banner d-flex' data-appear-top-offset="300">
+        <div class="col-md-6 col-12">
+          <div>{{content.1|safe}}</div>
+          <span class='plot' data='gradient' type='plot_environment_box'></span>
+        </div>
+        <div class="col-md-6 col-12">
+            <div>{{content.1|safe}}</div>
+            <span class='plot' data='gradient' type='plot_seas_box'></span>
+        </div>
+  </section>
+</div>
+
+
+
+{% addtoblock "js" %}
+  <script>
+    var plot_url = "{% url 'thermoglobe:plots' %}";
+  </script> 
+
+
+  <script src="{% static "main/js/appear.js" %}"></script>
+  <script src="{% static "main/js/plots.js" %}"></script>
+
+{% endaddtoblock %}
+
+{% endblock content %}
+
+
+{% comment %} sadasfawsdg {% endcomment %}
+
+<section class="wrapper special style2">
+    <div class="inner">
+        {{content.2|safe}}
+    </div>
+    <div class="features">
+        <div class="feature border-0">
+            <h5>By continent</h5>
+            {{data.plot_pie_continent}}
+        </div>
+        <div class="feature border-0">
+            <h5>By country (plus marine regions)</h5>
+            {{data.plot_pie_country}}
+        </div>
+        <div class="feature border-0">
+            <h5>By sea</h5>
+            {{data.plot_pie_seas}}
+        </div>
+    </div>
+</section>

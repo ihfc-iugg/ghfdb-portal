@@ -1,160 +1,87 @@
-from .models import Site, Conductivity, HeatFlow
-from mapping.models import Sea, Country, Continent
+from .models import Site, Conductivity, Interval, Author
+from mapping.models import Sea, Country, Continent, Province
 import django_filters
-from django_filters import widgets
+from django_filters import widgets, MultipleChoiceFilter, ChoiceFilter, ModelMultipleChoiceFilter,ModelChoiceFilter, RangeFilter
 from django import forms
 from thermoglobe.widgets import RangeField, RangeWidget
 from django.contrib import admin
 from django.utils.translation import gettext as _
-from django.db.models import Q
-
-# class GeoModelChoiceField(forms.ChoiceField):
-
-#     def __init__(self, model, display_field, *, empty_label="---------", **kwargs):
-#         choices = model.objects.exclude(id__in=model.objects.filter(sites__isnull=True)).order_by(display_field).values_list('pk',display_field)
-#         if choices.exists():
-#             choices = list(choices)
-#             choices.insert(0,('',empty_label))
-#         super().__init__(choices=choices, **kwargs)
-
-class GeoModelChoiceField2(forms.ChoiceField):
-
-    def __init__(self, model, display_field, *, id='pk', empty_label="---------", **kwargs):
-        # choices = list(model.objects.exclude(id__in=model.objects.filter(sites__isnull=True)).order_by(display_field).values_list(id,display_field))
-        
-        choices = model.region_choices
-        choices.insert(0,('',empty_label))
-        # print(choices)
-        super().__init__(choices=choices, **kwargs)
+from django.db.models import Q, Count
+from django.db.models.functions import Length
+from django.db import models
 
 
-class SiteFilter(forms.ModelForm):
-    value = RangeField(
-                label='Value',  
-                required=False,
-                help_text='Specify a range of values.',
-                field=forms.FloatField(min_value=0),
-                )
+class Filter(django_filters.FilterSet):
 
-    longitude = RangeField(  
-                required=False,
-                field=forms.FloatField(min_value=-180, max_value= 180),
-                )
-    latitude = RangeField(  
-                required=False,
-                field=forms.FloatField(min_value=-90,max_value= 90,),
-                )
-    elevation = RangeField(  
-                required=False,
-                field=forms.FloatField(min_value=-12000,max_value=9000),
-                )
+    def filter_queryset(self, queryset):
+        """
+        Filter the queryset with the underlying form's `cleaned_data`. You must
+        call `is_valid()` or `errors` before calling this method.
 
-    # continent = GeoModelChoiceField(Continent, 'name', required=False)
-    # country = GeoModelChoiceField(Country, 'name', required=False)
-    # # country = forms.ModelMultipleChoiceField(queryset=Country.objects.all())
-    # # region = GeoModelChoiceField2(Country, 'region', id='region')
-    # sea = GeoModelChoiceField(Sea, 'name', required=False)
-    # sea = forms.ModelChoiceField(queryset=)
+        This method should be overridden if additional filtering needs to be
+        applied to the queryset before it is cached.
+        """
+        data = self.form.cleaned_data
+        del data['data_type']
+        for name, value in data.items():
+            queryset = self.filters[name].filter(queryset, value)
+            assert isinstance(queryset, models.QuerySet), \
+                "Expected '%s.%s' to return a QuerySet, but got a %s instead." \
+                % (type(self).__name__, name, type(queryset).__name__)
+        return queryset
+
+class WorldMapFilter(Filter):
+    
+    data_type = ChoiceFilter(
+        choices = [
+                ('heat_flow','Heat Flow'),
+                ('gradient','Thermal Gradient'),
+                ('temperature','Temperature'),
+                ('conductivity','Thermal Conductivity'),
+                ('heat_generation','Heat Generation'),],
+        )
+
+    # value = RangeFilter(
+    #             label='Value',  
+    #             help_text='Specify a range of values.',
+    #             # field=forms.FloatField(min_value=0),
+    #             )
+
+    longitude = RangeFilter()
+    latitude = RangeFilter()
+    elevation = RangeFilter()
+
+    continent = ModelMultipleChoiceFilter(
+            queryset=Continent.objects.exclude(sites__isnull=True).order_by('name'),
+            lookup_expr='exact',
+        )
+
+    country = ModelMultipleChoiceFilter(
+            queryset=Country.objects.exclude(sites__isnull=True).order_by('name'),
+            lookup_expr='exact',
+        )
+
+    sea = ModelMultipleChoiceFilter(
+            queryset=Sea.objects.exclude(sites__isnull=True).order_by('name'),
+            lookup_expr='exact',
+        )
+
+    province = ModelMultipleChoiceFilter(
+            queryset=Province.objects.exclude(sites__isnull=True).order_by('name'),
+            lookup_expr='exact',
+        )
+
+    tectonic_environment = MultipleChoiceFilter(
+            choices = list(Province.objects.exclude(sites__isnull=True).values_list('type','type').distinct()),
+            field_name='province__type',
+            lookup_expr='exact',
+            label='Tectonic Environment'
+        )
 
     class Meta:
         model = Site
-        fields = ['value','latitude','longitude','elevation','country','continent','sea']
-
-
-class HeatflowFilter(forms.ModelForm):
-    # hf_corrected = forms.BooleanField(label='Corrected', required=False,initial=True)
-    # hf_uncorrected = forms.BooleanField(label='Uncorrected',required=False,initial=True)
-
-    value = RangeField(
-                label='Heat Flow',  
-                required=False,
-                help_text='Specify a range of heat flow values.',
-                field=forms.FloatField(min_value=0),
-                )
-    class Meta:
-        model = HeatFlow
-        fields = ['value']
-
-
-# class HeatflowFilter(forms.Form):
-#     hf_corrected = forms.BooleanField(label='Corrected', required=False,initial=True)
-#     hf_uncorrected = forms.BooleanField(label='Uncorrected',required=False,initial=True)
-
-#     heatflow = RangeField(
-#                 label='Heat Flow',  
-#                 required=False,
-#                 help_text='Specify a range of heat flow values.',
-#                 field=forms.FloatField(min_value=0),
-#                 )
-#     gradient = RangeField(
-#                 label='Gradient',  
-#                 required=False,
-#                 help_text='Specify a range of temperature gradient values.',
-#                 field=forms.FloatField(min_value=0),
-#                 )
-#     class Meta:
-#         title = 'heat flow'
-
-class ConductivityFilter(forms.Form):
-    conductivity__value = RangeField(
-                label='Conductivity',  
-                required=False,
-                help_text='Specify a range of thermal conductivity values',
-                field=forms.FloatField(min_value=0),
-                )
-    conductivity__uncertainty = RangeField(
-                label='Uncertainty',  
-                required=False,
-                help_text='Specify a range of thermal conductivity uncertainties',
-                field=forms.FloatField(min_value=0),
-                )
-    class Meta:
-        title = 'thermal conductivity'
-
-class HeatGenFilter(forms.Form):
-
-    heatgeneration__value = RangeField(
-                label='Heat Gen.',  
-                required=False,
-                help_text='Specify a range of heat generation values',
-                field=forms.FloatField(min_value=0),
-                )
-    heatgeneration__uncertainty = RangeField(
-                label='Uncertainty',  
-                required=False,
-                help_text='Specify a range of heat generation uncertainties',
-                field=forms.FloatField(min_value=0),
-                )
-
-    class Meta:
-        title = 'heat generation'
-
-
-class TemperatureFilter(forms.Form):
-
-    # temperature__value = RangeField(
-    #             label='Temperature',  
-    #             required=False,
-    #             help_text='Search all temperature values',
-    #             field=forms.FloatField(min_value=0),
-    #             )
-
-    bottom_hole_temp__value = RangeField(
-                label='Bottom Hole',  
-                required=False,
-                help_text='Search temperatures at bottom of only',
-                field=forms.FloatField(min_value=0),
-                )
-
-    top_hole_temp__value = RangeField(
-                label='Top Hole',  
-                required=False,
-                help_text='Search temperatures at top of hole only',
-                field=forms.FloatField(min_value=0),
-                )
-
-    class Meta:
-        title = 'temperature'
+        fields = ['latitude','longitude','elevation','country','continent','sea','province']
+        # fields = ['value','latitude','longitude','elevation','country','continent','sea','province']
 
 class PublicationFilter(forms.Form):
     
@@ -168,7 +95,142 @@ class PublicationFilter(forms.Form):
     class Meta:
         title = 'reference'
 
-map_filter_forms = [SiteFilter,HeatflowFilter,ConductivityFilter,HeatGenFilter,TemperatureFilter,PublicationFilter]
+class VerifiedFilter(admin.SimpleListFilter):
+
+    title = _('is verified')
+
+    parameter_name = 'is_verified'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', _('Yes')),
+            ('no',  _('No')),
+        )
+
+    def queryset(self, request, queryset):
+
+        if self.value() == 'yes':
+            return queryset.filter(is_verified=False)
+
+        if self.value() == 'no':
+            return queryset.filter(is_verified=True)
+
+class PubStatusFilter(admin.SimpleListFilter):
+    """Show or hide if a publication has a complete reference or not
+    """
+    title = _('completion status')
+
+    parameter_name = 'completion_status'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('done', _('Done')),
+            ('has_id',  _('Has ID, no bibtex')),
+            ('has_bibtex',  _('Has bibtex, bad ID')),
+            ('no_id',  _('No ID, no bibtex')),
+        )
+
+    def queryset(self, request, qs):
+
+        if self.value() == 'done':
+            return qs.exclude(Q(bibtex='') & Q(title=''))
+
+        if self.value() == 'has_id':
+            return qs.annotate(bib_length=Length('bib_id')).exclude(Q(bib_length__lte=4)).filter(Q(bibtex=''))
+
+        if self.value() == 'has_bibtex':
+            return qs.annotate(bib_length=Length('bib_id')).filter(Q(bib_length__lte=4)).exclude(Q(bibtex=''))
+
+        if self.value() == 'no_id':
+            return qs.annotate(bib_length=Length('bib_id')).filter(Q(bib_length__lte=4) & Q(bibtex=''))
+
+
+class LastNameLengthFilter(admin.SimpleListFilter):
+    """Show or hide if a publication has a complete reference or not
+    """
+    title = _('last_name_length')
+
+    parameter_name = 'last_name_length'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('<2', _('< 2')),
+        )
+
+    def queryset(self, request, qs):
+
+        if self.value() == '<2':
+            return qs.annotate(last_name_length=Length('last_name')).filter(last_name_length__lte=2)
+
+class DuplicateFilter(admin.SimpleListFilter):
+    """Show or hide if a publication has a complete reference or not
+    """
+    title = _('Duplicates?')
+
+    parameter_name = 'duplicates'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', _('Maybe')),
+        )
+
+    def queryset(self, request, qs):
+        
+        if self.value() == 'yes':
+            dups = (
+                    Author.objects.values('last_name')
+                    .annotate(count=Count('id'))
+                    .values('last_name')
+                    .order_by()
+                    .filter(count__gt=1)
+                )
+            out = Author.objects.filter(last_name__in=dups)
+            return out
+
+class IntervalType(admin.SimpleListFilter):
+    """Show or hide if a publication has a complete reference or not
+    """
+    title = _('interval type')
+
+    parameter_name = 'interval_type'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('hf', _('Heat flow')),
+            ('tg', _('Gradient')),
+        )
+
+    def queryset(self, request, qs):
+        
+        if self.value() == 'hf':
+            return qs.filter(Q(heat_flow_corrected__isnull=False) | Q(heat_flow_uncorrected__isnull=False))
+        if self.value() == 'tg':
+            return qs.filter(Q(gradient_corrected__isnull=False) | Q(gradient_uncorrected__isnull=False))
+
+# class ActiveFilter(admin.SimpleListFilter):
+
+#     title = _('is active')
+
+#     parameter_name = 'is_active'
+
+#     def lookups(self, request, model_admin):
+#         return (
+#             ('yes', _('Yes')),
+#             ('no',  _('No')),
+#         )
+
+#     def queryset(self, request, queryset):
+#         queryset = queryset.annotate(
+#             is_active=Q(heatflow__isnull=True) & Q(conductivity__isnull=True)
+        
+#         )
+#         queryset[0].is_active
+#         if self.value() == 'yes':
+#             return queryset.filter(is_active=False)
+
+#         if self.value() == 'no':
+#             return queryset.filter(is_active=True)
+
 
 class IsCorrectedFilter(admin.SimpleListFilter):
 

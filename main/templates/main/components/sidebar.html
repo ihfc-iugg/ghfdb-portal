@@ -1,0 +1,48 @@
+{% load static %}
+<div id="sidebar">
+    <div class="inner">
+        <section id="search" class="alt">
+        <form method="post" action="#">
+            <input type="text" name="query" id="query" placeholder="Search" />
+        </form>
+        </section>
+        <nav id="menu">
+            <header class="major">
+                <a href="{% url "main:home" %}"><h2 class='m-0'>HeatFlow.org</h2></a>
+                {% comment %} <h2>HeatFlow.org</h2> {% endcomment %}
+                {% comment %} <h2>HeatFlow.org</h2> {% endcomment %}
+            </header>
+            <ul>
+                {% comment %} <li><a href="{% url "main:home" %}">Home Page</a></li> {% endcomment %}
+                <li><a href="{% url "thermoglobe:world_map" %}">World Map</a></li>
+                <li>
+                    <span class="opener">Explore</span>
+                    <ul>
+                        <li><a href="{% url "thermoglobe:heat_flow" %}">Heat Flow</a></li>
+                        <li><a href="{% url "thermoglobe:gradient" %}">Thermal Gradient</a></li>
+                        <li><a href="{% url "thermoglobe:temperature" %}">Temperature</a></li>
+                        <li><a href="{% url "thermoglobe:conductivity" %}">Thermal Conductivity</a></li>
+                        <li><a href="{% url "thermoglobe:heat_gen" %}">Heat Generation</a></li>
+                    </ul>
+                </li>      
+                <li><a href={% url "publications:publication_list" %}>Publications</a></li>
+                <li><a href="{% url "main:field_descriptions" %}">Field Descriptions</a></li>
+                <li><a href={% url "main:news" %}>News</a></li>
+                <li><a href="{% url "main:faqs" %}">FAQ's</a></li>
+                <li><a href="{% url "main:citation" %}">How to cite</a></li>
+                <li><a href="{% url "main:license" %}">License</a></li>                      
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url "thermoglobe:upload" %}">Upload</a>
+                </li>
+            </ul>
+        </nav>
+        <section>
+            <div class="mini-posts">
+                <article><a href="http://ihfc-iugg.org/" class="image"><img src="{% static 'main/images/IHFC_logo.svg' %}" alt=""></a></article>
+                <article><a href="https://www.adelaide.edu.au/mawson-geo/" class="image"><img src="{% static 'main/images/mawson_geocenter.svg' %}" alt="Mawson Geocenter"></a></article>
+                <article><a href="#" class="image"><img src="{% static 'main/images/UoA_logo.webp' %}" alt=""></a></article>
+            </div>
+        </section>
+        {% block footer %}{% include "main/components/footer.html" %}{% endblock footer %}
+    </div>
+</div>

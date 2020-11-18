@@ -97,6 +97,7 @@ def get_author_list(entry_dict):
             del entry_dict["author"]
             return []
 
+
 def get_author_objects(entry_dict, model):
 
     authors = get_author_list(entry_dict)

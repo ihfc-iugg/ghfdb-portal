@@ -1,169 +1,209 @@
-var map = createMap([-100,-360],[100,360],true).fitWorld()
-map.spin(true);
-var data = ''
-var markers = L.geoJSON()
-var clusters = createClusters(markers)
+
+var map = createMap().fitWorld();
+var clusters = createClusters()
 map.addLayer(clusters)
-var marker = L.marker()
+// var clusters = createClusters()
+// clusters.addTo(map)
 
+// map
 
-$(document).ready(function(){
-    if ($('#map').attr('ajax') == "True") {
-        retrieveData()
-    } else {
-        console.log('Adding from not ajax source')
-        map.spin(false);
-    } 
-});
+// map.spin(true);
+// var data = ''
+// var markers = L.geoJSON()
 
-function createMap(lat, lon, cluster)  {
+// var marker = L.marker()
 
-  var openMaps = new L.tileLayer( 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    subdomains: ['a','b','c']
-  });
+// $(document).ready(function(){
+//     if ($('#map').attr('ajax') == "True") {
+//         updateData()
+//     } else {
+//         console.log('Adding from not ajax source')
+//         map.spin(false);
+//     }   
+// });
 
-  var Esri_OceanBasemap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri',
-    maxZoom: 13
-  });
+function createMap()  {
 
-  var Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-	attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-});
+  var baseLayers = {
+    "Dark Gray": L.esri.basemapLayer('DarkGray',{detectRetina: true}),
+    "Imagery": L.esri.basemapLayer('Imagery',{detectRetina: true}),
+    "Oceans": L.esri.basemapLayer('Oceans',{detectRetina: true}),
+    "Topographic": L.esri.basemapLayer('Topographic',{detectRetina: true}),
+    "Nat Geo": L.esri.basemapLayer('NationalGeographic',{detectRetina: true}),
+  };
 
   var map = L.map('map', {
-    layers: [Esri_WorldImagery],
+    layers: [baseLayers['Imagery']],
     minZoom: 2,
     worldCopyJump: true,
     fullscreenControl: true,
- 
-    });
+     });
 
   L.control.scale().addTo(map);
-//   L.easyPrint({
-// 	title: 'My awesome print button',
-// 	position: 'bottomright',
-// 	sizeModes: ['A4Portrait', 'A4Landscape']
-//     }).addTo(map);
-//   map.addControl(new L.Control.Fullscreen());
-
-  var baseLayers = {
-    "Satellite": Esri_WorldImagery,
-    "Ocean Basemap": Esri_OceanBasemap,
-    "Street": openMaps,
-  };
-
   L.control.layers(baseLayers).addTo(map);
 
   return map;
-  }
-
-function retrieveData(){
-  map.spin(true);
-  $.ajax({
-    url: data_url,
-    dataType: 'json',
-    data: $("#filter-form").serializeArray(),
-    success: function (data) {
-      if (data.length == 0) {
-        throw 'No data found'
-      }
-
-      refreshMap(data)
-      refreshDataTable(data);
-
-    //   try {
-    //     refreshMap(data)
-    //   } catch(err) {
-    //     // console.log(err)
-    //   }
-    //   try {
-    //     refreshDataTable(data);
-    //   } catch(err) {
-    //     // console.log(err)
-    //   }
-
-      map.spin(false);
-
-    },
-    error: function (jqXHR, textStatus, errorThrown) {
-      console.log
-      map.spin(false);
-    }
-  })
-  
 };
 
-function refreshMap(data) {
+function get_color() {
+  return '#' + Math.floor(Math.random()*16777215).toString(16);
+}
 
-  clusters.clearLayers(markers)
-  markers = createMarkers(data);
+function add_to_map(geojson) {
+  let color = get_color();
+  var geoJsonLayer  = L.geoJson(geojson,{
+    // pointToLayer: function (feature, latlng) {
+    //   return L.circleMarker(latlng, {
+    //     radius: 5, 
+    //     fill:true,
+    //     fillOpacity:1,
+    //     fillColor: color,
+    //     // fillColor: get_color(),
+    //     stroke:false
+    //   });
+    // },
+      // onEachFeature: function (feature, layer) {
+      //   layer.bindPopup(feature.properties.address);
+      // }
+    });
 
-  if ($('#map').attr('cluster') == "True") {
-    clusters.addLayers(markers)
+  if (geojson.features.length > 250 ) {
+    var clusters = L.markerClusterGroup({
+      disableClusteringAtZoom: 8,
+      spiderfyOnMaxZoom: false,
+    });
+    clusters.addLayer(geoJsonLayer)
+    clusters.addTo(map)
   } else {
-    markers.addTo(map)
+    geoJsonLayer.addTo(map)
   }
+  // geoJsonLayer.addTo(map)
+  map.flyToBounds(geoJsonLayer.getBounds(),{maxZoom: 8})
 
-  map.flyToBounds(markers.getBounds());
-  map.spin(false);
-  
-}; 
-
-function refreshDataTable(table) {
-  table.id='worldmap';
-  if ( $.fn.dataTable.isDataTable( '#dataTable' ) ) {
-    table = $('#dataTable').DataTable();
-    table.destroy();
-    $('#dataTable>thead').empty();
-    $('#dataTable>tbody').remove();
-  }
-    table_from_values_list(table)
-
-  
+  return geoJsonLayer 
 }
 
-function create_multiple_layers(data,map) {
-    
-  data = Object.entries(data)
-  map.spin(true);
-  
-  for (let index = 0; index < data.length; index++) {
-    const element = data[index];  
-    layer = createMarkers(element[1])
-    map.addLayer(layer)
-  }
-  
-  map.spin(false);
-
+function add_and_zoom(geojson) {
+    layer = add_to_map(geojson)
+    map.flyToBounds(layer.getBounds(),{maxZoom: 8})
 }
 
-function createMarkers (data) {
+function createMarkers(data,type) {
 
   var lat = data.columns.indexOf('Latitude')
   var lon = data.columns.indexOf('Longitude')
-  var hf = data.columns.indexOf('Heat Flow')
+  var val = data.columns.indexOf(type)
 
   const new_data = [];
   data.data.forEach(el => {
-    if (hf > 0) {
-      var color = query_cbar(el[hf],.9)    
-    } else {
-      var color = 'rgb(255,0,0,1)';
-    }
+    // if (hf > 0) {
+    //   // var color = query_cbar(el[hf],.9)    
+    //   var color = 'rgb(255,0,0,1)';
+    // } else {
+    //   var color = 'rgb(255,0,0,1)';
+    // }
     var m = L.circleMarker([el[lat], el[lon]], {
-          radius: 5, 
+          radius: 3, 
           fill:true,
-          fillOpacity:1,
-          fillColor: color,
+          fillOpacity:0.75,
+          // fillColor: color,
+          fillColor: 'rgb(255,0,0,1)',
           stroke:false
       });
-    m.value = el[hf];
+    m.value = el[val];
     new_data.push(m);
   });
 
   return L.featureGroup(new_data)
+};
+
+function createClusters() {
+  //defines the clusters variable required for decluttering map
+  var clusters = L.markerClusterGroup({
+    chunkedLoading: true,
+    // chunkInterval:100,
+    disableClusteringAtZoom: 8,
+    spiderfyOnMaxZoom: false,
+    // iconCreateFunction: customClusterIcon,
+  });
+  return clusters;
+};
+
+function updateData(){
+  map.spin(true);
+  $.post({
+    url:  $(location).attr('href'),
+    data: $("#filter-form").serializeArray(),
+    success: updatePage,
+    complete: map.spin(false),
+    // error: function(err){console.log(err)},
+    error: map.spin(false),
+  })
+};
+
+async function updatePage(data) {
+  await new updateTable(data);
+  await new updateMap(data);
+};
+    
+function updateMap(data) {
+    map.spin(true)
+
+    if (data.type == 'heat_flow') {
+        crange = [0,200]        
+    } else if (data.type == 'gradient') {
+        crange = [0,200]
+    } else if (data.type == 'temperature') {
+        crange = [0,30]
+    } else if (data.type == 'conductivity') {
+        crange = [2,5]
+    } else if (data.type == 'heat_generation') {
+        crange = [0,100]
+    }
+
+  data.columns.push(data.type)
+
+  clusters.clearLayers()
+  markers = createMarkers(data,data.type);
+  clusters.addLayers(markers, {
+      chunkedLoading: true,
+  })
+
+  if (data.data.length > 0) {
+    map.flyToBounds(markers.getBounds())
+  } else {
+    map.fitWorld()
+  }
+  map.spin(false)
+  
+}; 
+
+function updateTable(data) {
+
+  var col_headers = {
+    heat_flow: 'Heat Flow [mW m<sup>-2</sup>]',
+    temperature: 'Temp. Count',
+    // temperature: 'Temperature [&degC]',
+    conductivity: 'Avg. Cond. [W m<sup>-1</sup> K<sup>-1</sup>]',
+    gradient: 'Gradient [&degC/Km]',
+    heat_generation: 'Avg Heat Gen. [&#181W m<sup>-3</sup>',
+  }
+  var ind = data.columns.indexOf(data.type);
+
+  data.id='#dataTable';
+  if ( $.fn.dataTable.isDataTable(data.id) ) {
+    table = $(data.id).DataTable();
+    table.clear();
+  } else {
+    table = table_from_values(data) 
+  }
+
+  table.rows.add(data.data)
+  $(table.column(ind).header()).html(col_headers[data.type])
+  table.draw()
+
+
+
 }
 
 function customClusterIcon(cluster) {
@@ -177,18 +217,17 @@ function customClusterIcon(cluster) {
     value_sum += element.value;
   });
 
-  var average = Math.round(value_sum / markers.length);
+  var average = Math.round((value_sum / markers.length + Number.EPSILON) * 10) / 10;
 
   color = query_cbar(average,.6)
 
   html = '<div style="background-color:' +color+'">'+
             '<span>' + average + '</span>'
-            // '<br><span>n=' + childCount + '</span>' +
         '</div>'
 
   return new L.DivIcon({ html: html, className: 'marker-cluster', iconSize: new L.Point(40, 40) });
 
-}
+};
 
 function onEachFeature(feature, layer) {
   var properties = Object.entries(feature.properties)
@@ -207,19 +246,6 @@ function onEachFeature(feature, layer) {
   tableContent += '</tbody></table>'
   layer.bindPopup(tableContent);
     
-  };
-
-function createClusters(markers) {
-  //defines the clusters variable required for decluttering map
-  var clusters = L.markerClusterGroup({
-    chunkedLoading: true,
-    chunkInterval:100,
-    disableClusteringAtZoom: 6,
-    spiderfyOnMaxZoom: false,
-    iconCreateFunction: customClusterIcon,
-  });
-  // clusters.addLayers(markers);
-  return clusters;
 };
 
 function enforceBounds(x) {
@@ -230,10 +256,10 @@ function enforceBounds(x) {
   } else {
       return x;
   }
-}
+};
 
 function query_cbar(x, alpha) {
-  x = enforceBounds(x / crange[1]-crange[0]);
+  x = enforceBounds(x / (crange[1]-crange[0]));
 
   // Split values into four lists
   var x_values = [];
@@ -267,35 +293,7 @@ function query_cbar(x, alpha) {
 
   return 'rgb('+r+','+g+','+b+','+enforceBounds(alpha)+')';
 
-  }
-
-  // L.Control.Cbar = L.Control.extend({
-  //   onAdd: function(map) {
-  //       var canvas = L.DomUtil.create('canvas');
-  
-  //       var ctx = canvas.getContext("2d");
-  
-  //       for (i = 0; i <= 1024; i++) {
-  //           // var color = query_cbar(i/1024, 1);
-  //           // r = Math.round(255*color[0]);
-  //           // g = Math.round(255*color[1]);
-  //           // b = Math.round(255*color[2]);
-  //           ctx.fillStyle = query_cbar(i, 1);
-  //           ctx.fillRect(0, 100-i, 15, 1);
-  //       }
-  
-  //       return canvas;
-  //   },
-  
-  //   onRemove: function(map) {
-  //       // Nothing to do here
-  //   }
-  // });
-  
-  // L.control.cbar = function(opts) {
-  //   return new L.Control.Cbar(opts);
-  // }
-
+};
 
 var crange = [0,150];
 

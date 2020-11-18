@@ -13,19 +13,21 @@ from django.utils.decorators import method_decorator
 from django.utils.html import mark_safe
 from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, ListView, TemplateView
+from django.apps import apps
 from meta.views import Meta, MetadataMixin
-from publications.models import Publication
+from thermoglobe.models import Publication
 from tablib import Dataset
 
-from thermoglobe import models, forms, choices
+from thermoglobe import models, forms, choices, tables
 from thermoglobe.resources import HeatFlowResource
 from thermoglobe.utils import get_db_summary
 from users.models import CustomUser
 
 from . import utils
 from .forms import ContactForm
-from .models import Field, Page
-
+from .models import Field, Page, News, FAQ
+from django.views.generic import ListView
+from bs4 import BeautifulSoup
 
 class PageMixin():
 
@@ -37,7 +39,7 @@ class PageMixin():
 
     def get_page(self):
         try:
-            return Page.objects.filter(title__iexact=self.title)
+            return Page.objects.filter(id=self.page_id)
         except Page.DoesNotExist:
             pass
 
@@ -46,7 +48,7 @@ class PageMetaMixin(PageMixin, MetadataMixin):
 
     def get_meta_title(self, context):
         if self.get_page().exists():
-            return self.get_page()[0].title + ' | Heatflow.org'
+            return self.get_page()[0].heading + ' | Heatflow.org'
         else:
             return 'Heatflow.org'
 
@@ -63,91 +65,97 @@ class PageMetaMixin(PageMixin, MetadataMixin):
 class HomeView(PageMetaMixin, TemplateView):
     template_name = 'main/home.html'
     model = models.Site
-    title = 'Home'
+    page_id = 13
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        sites = models.Site.objects.all()
-        context['counts'] = {
-            'individual sites': sites.count(),
-            'heat flow estimates': models.HeatFlow.objects.all().count(),
-            'temperature measurements': models.Temperature.objects.all().count(),
-            'thermal conductivities': models.Conductivity.objects.all().count(),
-            'heat generation': models.HeatGeneration.objects.all().count(),
-            'references': Publication.objects.all().count(),
-        }
-
-        years = Publication.objects.aggregate(years=Max(
-            'year', ouput_field=FloatField()) - Min('year', ouput_field=FloatField()))
+        
+        soup = BeautifulSoup(context['page'].content,features="html.parser")
 
         context.update(
             recently_added=Publication.objects.all().order_by(
-                '-date_added')[:5],
-            # 'page': utils.get_page_or_none(self.page_id),
-            cards=[('publications', 'publications:publication_list'),
-                    ('upload', 'thermoglobe:upload'),
-                    ('resources', 'main:resources'), ],
-            # ('cite','thermoglobe:upload'),],
+                '-added')[:5],
+            cards={
+                'heat flow': {
+                    'icon': 'HF',
+                    'content': 'Heres some test heat flow content. This will come from the heat flow page eventually.',
+                    'counts': self.heat_flow_counts(),
+                    'link': 'thermoglobe:heat_flow',
+                },
+                'thermal gradient': {
+                    'icon': 'TG',
+                    'content': 'Heres some test gradient content. This will come from the heat flow page eventually.',
+                    'counts': self.gradient_counts(),
+                    'link': 'thermoglobe:gradient',
+                },
+                'temperature': {
+                    'icon': 'T',
+                    'content': 'Heres some test temperature content. This will come from the heat flow page eventually.',
+                    'counts': self.temp_counts(),
+                    'link': 'thermoglobe:temperature',
+                },
+                'thermal conductivity': {
+                    'icon': 'TC',
+                    'content': 'Heres some test conductivity content. This will come from the heat flow page eventually.',
+                    'counts': self.conductivity_counts(),
+                    'link': 'thermoglobe:conductivity',
+                },
+                'heat generation': {
+                    'icon': 'HG',
+                    'content': 'Heres some test heat generation content. This will come from the heat flow page eventually.',
+                    'counts': self.heat_gen_counts(),
+                    'link': 'thermoglobe:heat_gen',
+                },
+            },
+            content=[x.prettify() for x in soup.find_all('div')]
         )
 
         return context
 
+    def temp_counts(self):
+        sites = models.Site.objects.all()
+        return {
+            'sites': models.Site.objects.temperature().count(),
+            'measurements': models.Temperature.objects.count(),
+            'temperature logs': models.Site.objects.annotate(temp_count=Count('temperature')).filter(temp_count__gte=3).distinct().count(),
+        }
 
-class ContactView(TemplateView):
-    title = 'Contact Us'
-    template_name = 'main/contact.html'
-    model = CustomUser
-    form = ContactForm
+    def heat_flow_counts(self):
+        return models.Interval.heat_flow.aggregate(**{
+            'sites':Count('site',distinct=True),
+            'corrected estimates':Count('heat_flow_corrected'),
+            'uncorrected estimates':Count('heat_flow_uncorrected'),
+        })
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['contacts'] = self.get_staff()
-        context['form'] = self.form
-        return context
+    def gradient_counts(self):
+        return models.Interval.gradient.aggregate(**{
+            'sites':Count('site',distinct=True),
+            'corrected gradient':Count('gradient_corrected'),
+            'uncorrected gradient':Count('gradient_uncorrected'),
+        })
 
-    def get_staff(self):
-        return self.model.objects.filter(is_staff=True)
+    def conductivity_counts(self):
+        return {
+                'sites': apps.get_model('thermoglobe','Site').objects.conductivity().count(),
+                'measurements': models.Conductivity.objects.count(),
+                'conductivity logs': models.Site.objects.annotate(cond_count=Count('conductivity')).filter(cond_count__gte=3).distinct().count(),
+            }
 
-    def post(self, request):
-        form = self.form(request.POST)
-        if form.is_valid():
-            sender_name = form.cleaned_data['name']
-            sender_email = form.cleaned_data['email']
+    def heat_gen_counts(self):
+        return {
+                'sites': apps.get_model('thermoglobe','Site').objects.heat_generation().distinct().count(),
+                'measurements': models.HeatGeneration.objects.count(),
+                'heat generation logs': models.Site.objects.annotate(heat_gen_count=Count('heat_generation')).filter(heat_gen_count__gte=3).distinct().count(),
 
-            message = "{0} has sent you a new message:\n\n{1}".format(
-                sender_name, form.cleaned_data['message'])
-            send_mail('New Enquiry', message,
-                      sender_email, ['info@heatflow.org'])
-            return HttpResponse('Thanks for contacting us!')
-
-        return HttpResponse('Failed')
-
-
-class AboutView(TemplateView):
-    template_name = 'main/about.html'
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
-
-
-class ResourcesView(PageMetaMixin, TemplateView):
-    template_name = 'main/resources.html'
-    page_id = None
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['page'] = utils.get_page_or_none(self.page_id)
-
-        return context
+        }
 
 
 class FieldDescriptionsView(PageMetaMixin, TemplateView):
     template_name = 'main/field_descriptions.html'
-    title = 'Field Descriptions'
+    page_id = 11
     forms = {
         'site': forms.SiteForm,
         'heat_flow': forms.HeatFlowForm,
-        # 'thermal_gradient': forms.GradientForm,
         'corrections': forms.CorrectionForm,
         'thermal_conductivity': forms.ConductivityForm,
         'heat_generation': forms.HeatGenForm,
@@ -158,3 +166,57 @@ class FieldDescriptionsView(PageMetaMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         context['forms'] = self.forms
         return context
+
+
+class PaginatorMixin(ListView):
+    pag_neighbours = 4
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['range'] = self.paginator_fix(context['paginator'],context['page_obj'].number)
+        return context
+
+    def paginator_fix(self,paginator,page):
+        if paginator.num_pages > 2*self.pag_neighbours:
+            start_index = max(1, page-self.pag_neighbours)
+            end_index = min(paginator.num_pages, page + self.pag_neighbours)
+            if end_index < start_index + 2*self.pag_neighbours:
+                end_index = start_index + 2*self.pag_neighbours
+            elif start_index > end_index - 2*self.pag_neighbours:
+                start_index = end_index - 2*self.pag_neighbours
+            if start_index < 1:
+                end_index -= start_index
+                start_index = 1
+            elif end_index > paginator.num_pages:
+                start_index -= (end_index-paginator.num_pages)
+                end_index = paginator.num_pages
+            page_list = [f for f in range(start_index, end_index+1)]
+            return page_list[:(2*self.pag_neighbours + 1)]
+        else:
+            return list(range(1,paginator.num_pages+1))
+
+
+class NewsView(PageMetaMixin, PaginatorMixin):
+    template_name = 'main/news.html'
+    model = News
+    page_id = 2
+
+class FAQView(PageMetaMixin, PaginatorMixin):
+    template_name = 'main/faqs.html'
+    model = FAQ
+    page_id = 4
+
+class CitationView(PageMetaMixin,TemplateView):
+    template_name = 'main/citation.html'
+    page_id = 3
+
+class LicenseView(PageMetaMixin,TemplateView):
+    template_name = 'main/license.html'
+    page_id = 1
+
+
+
+
+
+

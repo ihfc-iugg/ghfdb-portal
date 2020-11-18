@@ -1,0 +1,36 @@
+{% extends "main/base.html" %}
+{% load static sekizai_tags %}
+
+{% block content %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<div class='inner'>
+
+  <section class="special p-0">
+      <div class='d-flex justify-content-center'>
+        <span id='choropleth'>{{data.choropleth}}</span>
+      </div>
+      {{content.0|safe}}
+  </section>
+
+  {% comment %} {% include "thermoglobe/sections/standard.html" with content=content.2 data='temperature' type='choropleth' offset=300 %} {% endcomment %}
+
+  {% include "thermoglobe/sections/standard.html" with content=content.1 data='temperature' type='plot_circ_time' offset=300 %}
+
+  {% include "thermoglobe/sections/standard.html" with content=content.2 data='temperature' type='plot_profile_box' offset=300 %}
+
+
+
+
+</div>
+
+
+{% addtoblock "js" %}
+  <script>var plot_url = "{% url 'thermoglobe:plots' %}";</script> 
+  <script src="{% static "main/js/appear.js" %}"></script>
+  <script src="{% static "main/js/plots.js" %}"></script>
+{% endaddtoblock %}
+
+{% endblock content %}
+
+

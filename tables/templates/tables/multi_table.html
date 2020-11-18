@@ -1,40 +1,81 @@
 {% load static sekizai_tags custom_tags %}
 
-<div class="card text-center">
-  <div class="card-header">
-    <ul class="nav nav-tabs card-header-tabs" role="tablist">
+<header>
+  <div class='d-flex justify-content-center py-2'>
+    <ul class="nav nav-pills justify-content-center" role="tablist">
       {% for name, table in tables.items %}
-        <li class="nav-item">
-            <a id="#{{table.id}}-tab" data-toggle="tab" href="#{{table.id}}-container" aria-controls="{{table.id}}-tab" 
-          {% if table.active %}
-            class="nav-link active"  
-            aria-selected="true">
-          {% elif table.has_data %}
-            class="nav-link"  
-            aria-selected="false">
-          {% else %}
-            class="nav-link disabled"  
-            aria-selected="disabled">
+        <li>
+          <a id="#{{table.id}}-tab" data-toggle="tab" href="#{{table.id}}-container" aria-controls="{{table.id}}-tab" 
+          {% if table.active %}class="button primary small" aria-selected="true">
+          {% elif table.data != '[]'%}class="button small" aria-selected="false">
+          {% else %} class="button small disabled" aria-selected="disabled">
           {% endif %}
-          {{ table.name }}</a>
+          {{ name }}</a>
         </li>
       {% endfor %}
     </ul>
   </div>
-  <div id="tabbedContent" class="tab-content container-fluid pt-3">
-    {% for table in tables.values %}
-      <div class="tab-pane fade {% if table.active %}show active{% endif %}" id="{{table.id}}-container" role="tabpanel" aria-labelledby="{{table.id}}-tab">
-          {% if table.active or table.has_data %}
+</header>
+
+
+<div id="tabbedContent" class="tab-content container-fluid pt-3">
+  {% for table in tables.values %}
+    <div class="tab-pane fade {% if table.active %}show active{% endif %}" id="{{table.id}}-container" role="tabpanel" aria-labelledby="{{table.id}}-tab">
+      {% comment %} <div class='row'>
+        <div class='col-3'>
+          <div id='{{table.id}}-plot'></div>
+        </div>
+        <div class='col-9'> {% endcomment %}
+          {% if table.active or table.data %}
             {% include "tables/table.html" %}
           {% endif %}
-      </div>
-    {% endfor %}
-  </div>
+        {% comment %} </div>
+      </div> {% endcomment %}
+    </div>
+  {% endfor %}
 </div>
 
-
-{% addtoblock "css" %}
-{% endaddtoblock %}
-
 {% addtoblock "js" %}
+  <script>
+    $(document).ready(function(){
+      
+      $('.nav-pills a').click(function(){
+        $('.nav-pills a').each(function(){
+          $( this ).removeClass('primary')
+        })
+        $( this ).addClass('primary')
+      })
+
+      {% comment %} temp = $(temperature).DataTable()
+      temp.on( 'search.dt', function () {
+        var trace1 = {
+          x: temp.column(2).data().toArray(),
+          y: temp.column(1).data().toArray(),
+          mode: 'markers',
+          type: 'scatter'
+        };
+
+        var data = [trace1];
+        var layout = {
+          height: 1200,
+          margin: {
+              r:0,  b:0},
+          yaxis: {
+            autorange: 'reversed',
+            title: 'Depth [m]'
+            },
+            xaxis: {
+              side: 'top',
+              title: 'Temperature'
+            },  
+          };
+        Plotly.newPlot("temperature-plot", data, layout);
+      } ); {% endcomment %}
+
+
+
+
+
+    });  
+  </script>
 {% endaddtoblock %}

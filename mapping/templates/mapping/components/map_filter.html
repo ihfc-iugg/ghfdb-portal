@@ -1,71 +1,100 @@
 {% load static widget_tweaks sekizai_tags%}
+<div id="sidebar">
+    <div class="inner">
+        {% include "main/components/quick-nav.html" %}
+        <header class="major my-2 pb-4">
+            <h2 class='py-1'>Filters</h2>
+        </header>
+        <form id='filter-form' class='grid-form text-left' action="" method='POST'>
+            {% csrf_token %}
+            <div id='map-filter' class="row gtr-uniform tight">
+            {% with filter.form as form %}
 
-<form id='filter-form' action="" method='POST'>
-    {% csrf_token %}
-    <div class="form-group row">
-        <label for='dataType' class="col-sm-2 col-form-label text-nowrap">Data Type</label>
-        <div class="col-sm-10 input-group">
-            <select id='dataType' name='dataType' class="custom-select" form='filter-form'>
-                <option selected value="heatflow">Heat Flow</option>
-                <option value="temperature">Temperature</option>
-                <option value="conductivity">Thermal Conductivity</option>
-                <option value="heatgeneration">Heat Generation</option>
-            </select>
-        </div>
-    </div>
-    {% for filter in filters %}
-        {% for field in filter %}
-        {% if field|field_type == 'checkbox' %}
-        <div class="form-check form-check-inline">
-            {% render_field field class='form-check-input ' data-toggle="toggle" %}
-            <label class="form-check-label" for="inlineCheckbox1">{{ field.label }}</label>
-        </div>
-        {% else %}
-        <div class="form-group row">
-            <label class="col-sm-2 col-form-label text-nowrap">{{ field.label|title }}</label>
-            <div class="col-sm-10 input-group text-left">
-            {% if field|field_type == 'modelchoicefield' %}
-                {% render_field field class="form-control select2" %}
-            {% elif field|field_type == 'geomodelchoicefield' %}
-                {% render_field field class="form-control select2" %}
-            {% else %}
-                {% render_field field class="form-control" %}
-            {% endif %}
-            </div>
-        {% endif %}                      
-            </div>
-        {% endfor %}
-    
-    {% endfor %}
-    <div class="sidebar-submenu">
-        <button id='filter-clear-button' type='reset' class='btn btn-secondary m-3'>Reset Filters</button>  
-        <button id='filter-submit-button' type='button' onclick="retrieveData()" class='btn btn-primary m-3'>Apply</button>  
-    </div>
-    <div class='card-body'>
-        <button type='submit' class="btn btn-success btn-block btn-lg">DOWNLOAD</button>
-    </div>
-</form>
+              <div class="col-12 pb-3">
+                {% render_field form.data_type %}
+              </div>
 
-{% addtoblock "css" %}{% endaddtoblock %}
+              {% comment %} <div class='col-12'><label>{{ form.value.label|title }}</label></div> {% endcomment %}
+              {% comment %} {% render_field form.value %} {% endcomment %}
+
+              <div class='col-12'><label>{{ form.longitude.label|title }}</label></div>
+              {% render_field form.longitude %}
+
+              <div class='col-12'><label>{{ form.latitude.label|title }}</label></div>
+              {% render_field form.latitude class="fit" %}
+
+              <div class='col-12'>
+                <label>{{ form.continent.label }}</label>
+                {% render_field form.continent class="select2" %}
+              </div>
+
+              <div class='col-12'>
+                <label>{{ form.country.label }}</label>
+                {% render_field form.country class="select2" %}
+              </div>
+
+              <div class='col-12'>
+                <label>{{ form.sea.label }}</label>
+                {% render_field form.sea class="select2" %}
+              </div>
+              <div class='col-12'>
+                <label>{{ form.province.label }}</label>
+                {% render_field form.province class="select2" %}
+              </div>
+              <div class='col-12'>
+                <label>{{ form.tectonic_environment.label }}</label>
+                {% render_field form.tectonic_environment class="select2" %}
+              </div>
+
+            {% endwith %}
+              {% include "mapping/components/download_modal.html" %}
+              <div class="col-12 sidebar-submenu">
+                <ul class='actions fit pt-4'>
+                  <li><button id='filter-clear-button' type='reset' class='fit'>Reset</button></li> 
+                  <li><button id='filter-submit-button' type='button' class='fit' onclick="updateData()">Apply</button></li>               
+                </ul>
+              </div>
+              <div class='col-12'>
+                <button name='submit-button' value='False' type='button' class='button primary fit' data-toggle="modal" data-target="#downloadOptions">DOWNLOAD</button>
+              </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+{% include "mapping/components/download_modal.html" %}
+
+
 
 {% addtoblock "js" %}
-<script>
-    $(document).ready(function() {
-        $('.select2').select2();
-        $('.select2').on('select2:select', function (e) {
-        $('.select2').not(this).each(function(){
-            $(this).val(null).trigger('change');
-            });
-        });
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.js"></script>
+  <script>
+      $(document).ready(function() {
+          $('.select2').select2({
+            multiple: true,
+          });
 
-    });
 
-    $(document).keypress(function(e){
-        if (e.which == 13){
-        $("#filter-submit-button").click();
-        }
-    });
-</script>
+        {% comment %} $('.select2').each(function () {
+          $(this).select2({
+            multiple: true,
+            ajax: {
+              url: /thermoglobe/ajax/{{}}
+              dataType: 'json',
+            }
+          })
+        }) {% endcomment %}
+
+
+      });
+
+      $(document).keypress(function(e){
+          if (e.which == 13){
+          $("#filter-submit-button").click();
+          }
+      });
+  </script>
 
 {% endaddtoblock %}
 
