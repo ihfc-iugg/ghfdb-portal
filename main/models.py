@@ -49,3 +49,29 @@ class Field(models.Model):
 
     class Meta:
         ordering = ['field_name',]
+
+class FAQ(models.Model):
+    question = models.CharField(_("question"),
+            max_length=100,
+            help_text='Input the question here.')
+    answer = RichTextField(_("answer"),
+            help_text='The answer to the question.')
+    last_updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'FAQ'
+        ordering = ['question',]
+
+class News(models.Model):
+    headline = models.CharField(_("headline"),
+            max_length=150,
+            help_text='The headline display for this news.')
+    content = RichTextField(_("content"),
+            help_text='A description of the field')
+    published = models.DateTimeField(auto_now=True)
+    published_by = models.ForeignKey("users.CustomUser",blank=True, null=True, on_delete=models.SET_NULL)
+
+    class Meta:
+        db_table = 'news'
+        ordering = ['-published',]
+        verbose_name_plural = 'news'

@@ -1,5 +1,8 @@
 import csv
 import json
+import zipfile
+from io import StringIO
+from datetime import datetime
 
 import bibtexparser as bib
 from django.conf import settings
@@ -7,26 +10,28 @@ from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.core.serializers import serialize
 from django.db.models import (Avg, Count, F, FloatField, Func, Max, Min, Q,
                               Sum, Value)
+from django.apps import apps
+from django.db.models.functions import Coalesce
 from django.urls import reverse
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404, render
-from django.utils import timezone
+from django.shortcuts import get_object_or_404, render, redirect
+from django.utils import timezone, text
 from django.views.generic import DetailView, ListView, TemplateView
 from django_filters.views import FilterView
-from meta.views import Meta
+from meta.views import Meta, MetadataMixin
 import numpy as np
 from django.utils.html import mark_safe
 
 from main.utils import get_page_or_none
 from main.views import PageMixin, PageMetaMixin
 from thermoglobe.views import HEATFLOW_FIELDS 
-from thermoglobe import plots, tables, utils
-from thermoglobe.models import HeatFlow, Site
-
+from thermoglobe import plots, tables, utils, choices
+from thermoglobe.models import Interval, Site, Temperature, Conductivity, HeatGeneration, Author, Publication
+from thermoglobe.mixins import DownloadMixin 
 from .filters import PublicationFilter
 from .forms import PublicationForm
 from .mixins import CustomListView
-from .models import Author, Operator, Publication
+from djgeojson.views import GeoJSONSerializer, GeoJSONResponseMixin
 from tables.mixins import TableMixin, MultiTableMixin
 
 class TableMetaMixin(TableMixin, PageMetaMixin):
@@ -36,160 +41,226 @@ class TableMetaMixin(TableMixin, PageMetaMixin):
 
 
 class PublicationListView(TableMetaMixin, ListView):
-    title = 'Publications'
+    page_id = 10
     model = Publication
-    template_name = "publications/table.html"
-    table_headers = ['slug', 'bibtex','doi', 'type','author', 'title', 'year', 'journal','publisher']
-    counts = ['sites','heatflow','thermalgradient','temperature','conductivity','heatgeneration']
+    template_name = "publications/publication_list.html"
+    column_headers = ['slug', 'doi', 'type','author', 'title', 'year', 'journal','publisher']
 
-
-    def get_queryset(self):
-        return super().get_queryset().exclude(bibtex__exact='').prefetch_related('authors').values('slug','bibtex')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data()
-
-        context['bibtex_headers'] = ['doi', 'author', 'title', 'year', 'journal']
-        x = 1 if 'slug' in self.table_headers else 0
-        context['complex_headers'] = [[len(context['bibtex_headers']) + x, ''], [5, 'Data Counts']]
-
-        context['table'] = self.table(
-                headers = self.table_headers,
-                options = {
-                    'dom': '<"top d-flex justify-content-around align-items-center"lpf>t<"bottom"ip><"clear">',
-                    'order': [[4, 'desc'], [1, 'asc']],
-                    'pageLength': 50,
-                    'link_url': '/thermoglobe/publications/',
-                    },
-                link = '/thermoglobe/publications/',
-                ID= 'publicationTable',
-                )
-
-        return context
-
-    def combine_counts(self):
-        result = [
-            self.get_queryset().annotate(Count(c)).values_list(c+'__count') for c in self.counts
-        ]
-        result = np.concatenate([self.get_queryset(),np.array(result).transpose()[0]],axis=1).tolist()
-        return [{a:b for a,b in zip(self.table_headers,x)} for x in result]
-
-
-class PublicationDetailsView(MultiTableMixin, DetailView):
-    template_name = "publications/publication_details.html"
-    model = Publication
-    tables = [  tables.Site,
-                tables.HeatFlow,
-                # tables.ThermalGradient,
-                tables.Temperature,
-                tables.Conductivity,
-                tables.HeatGeneration,
-                ]
-    filter_object_on = 'reference'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['figures'] = {
-            'temp_profile': context['tables'].get('temperature').plot_profile()
-
-        }
-        for i, fig in enumerate(context['figures'].values()):
-            fig.number = i+1
-
-        context['bibtex'] = json.dumps(self.get_object().bibtex)
-        context['meta'] = self.get_object().as_meta(self.request)
-        context['sites'] = self.get_object().sites.count()
-        context['map'] = dict(
-            display=True,
-            cluster=True,
-            color=True,
-        )
-        return context
-
-    def post(self, request, pk):
-        my_csv = HeatFlow.objects.filter(reference=pk).values_list(
-            *[field[0] for field in HEATFLOW_FIELDS])
-        filename = '{}.csv'.format(self.model.objects.get(id=pk))
-
-        # prepare the response for csv file
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="{}"'.format(
-            filename)
-        writer = csv.writer(response)
-
-        # write the header row; remove "site__" prefix for some fields for clarity
-        writer.writerow([field[1] for field in HEATFLOW_FIELDS])
-
-        # write the rows to the csv file
-        for i in my_csv:
-            writer.writerow(i)
-        return response
-
-
-class AuthorListView(TableMetaMixin, ListView):
-    model = Author
-    title = 'Authors'
-    template_name = "publications/table.html"
-    table_link_url = 'reference:author_list'
-    table_fields = ['last_name', 'first_name', 'total_publications', 'slug']
-    table_options = dict(
-        order=[[4, 'desc']],
+    # table options to pass to dataTables.js Table constructor
+    options = dict(
+        autoWidth=False,
+        dom='<"top d-flex justify-content-around align-items-baseline"lpf>t<"bottom"ip><"clear">',
+        order_by='year',
         pageLength=50,
-        columnDefs=[dict(
-            targets=2,
-            visible=False,
-            searchable=False
-        ), ]
+        deferRender=True,
+        responsive=True,
     )
 
     def get_queryset(self):
-        return super().get_queryset().annotate(
-            total_publications=Count('publications')
-        ).values_list(*self.table_fields)
-
-
-class AuthorDetailsView(DetailView):
-    details_url = 'reference:publication_list'
-    template_name = "publications/author_details.html"
-    model = Author
-    site_lookup = 'reference__first_author'
-    details_url = 'reference:publication_list'
-    table_fields = ['slug', 'bibtex', '_heat_flow', '_thermal_gradient',
-                    '_temperature', '_thermal_conductivity', '_heat_generation', ]
-    table_options = json.dumps(dict(
-        order=[[4, 'desc'], ],
-        pageLength=100,
-        dom='<"top d-flex justify-content-between align-content-center"fi>t<"bottom"><"clear">',
-    ))
+        return super().get_queryset().exclude(bibtex__exact='').values('slug','bibtex')
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        x = 1 if 'slug' in self.table_fields else 0
-        context.update(dict(
-            object_url=self.details_url,
-            table_options=self.table_options,
-            table_fields=self.table_fields,
-            dataset=list(context['object'].get_publications().values(
-                *self.table_fields)),
-            bibtex_headers=['doi', 'author', 'title', 'year', 'journal'],
-            figures={
-                'contributions':    {
-                    'id': 'ContributionsPerYear',
-                    'data': [plots.publications_per_year(context['object'].get_publications())],
-                },
-                'counts': {
-                    'id': 'data_counts',
-                    'data': context['object'].data_counts(),
-                }
-            }
-        ))
-        context['complex_headers'] = [
-            [len(context['bibtex_headers']) + x, ''], [5, 'Data Counts']]
+        context = super().get_context_data()
+        context['table'] = dict(id='publicationTable',
+            # data = list(self.get_queryset()),
+            columns = self.column_headers,
+            )
+        context['options'] = mark_safe(json.dumps(self.options))
 
         return context
 
+    def get(self,request,*args, **kwargs):
+        if request.is_ajax():
+            return JsonResponse({'data':list(self.get_queryset())})
+        return super().get(request,*args, **kwargs)
+
+
+class PublicationDetailsView(DownloadMixin, MetadataMixin, DetailView):
+    template_name = "publications/publication_details.html"
+    model = Publication
+
+    # table options to pass to dataTables.js Table constructor
+    options = dict(
+        autoWidth=False,
+        dom='<"top d-flex justify-content-around align-items-baseline"lpf>t<"bottom"ip><"clear">',
+        order_by='year',
+        pageLength=50,
+        deferRender=True,
+        responsive=True,
+    )
+    tables = dict(
+        heat_flow=['depth_min','depth_max','heat_flow'],
+        gradient=['depth_min','depth_max','gradient'],
+        conductivity=['count','depth_min','depth_max','min_conductivity','max_conductivity'],
+        temperature=['count','depth_min','depth_max','min_temperature','max_temperature'],
+        heat_generation=['count','depth_min','depth_max','min_heat_generation','max_heat_generation'],
+    )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['bibtex'] = json.dumps(self.get_object().bibtex)
+        context['meta'] = self.get_object().as_meta(self.request)
+        context['options'] = json.dumps(self.options)
+        context['tables'] = {}
+
+        for table, fields in self.tables.items():
+            context['tables'][table.replace('_',' ')] = self.get_table(table, fields)
+
+        for table in context['tables'].values():
+            if table['data']:
+                table['active'] = True
+                break
+
+
+        return context
+
+
+    def post(self, request,  *args, **kwargs):
+        # prepare the response for csv file
+        response = HttpResponse(content_type='application/zip')
+        response['Content-Disposition'] = 'attachment; filename="{}.zip"'.format(self.get_object().pk)
+        zf = zipfile.ZipFile(response,'w')
+
+        for key, qs in self.get_object().get_data().items():
+            if qs.exists():
+                export_fields = getattr(choices, key).get('detailed') + ['reference__bib_id']
+                site_fields = [f.name for f in Site._meta.fields]
+                query_fields = ['site__'+field if field in site_fields else field for field in export_fields ]
+                # if key in ['temperature','conductivity','heat_generation']:
+                #     query_fields[query_fields.index(key)] = 'value'
+
+                # create a csv file an save it to the zip object
+                zf.writestr('{}.csv'.format(key),self.csv_to_bytes(qs.values_list(*query_fields), export_fields))
+
+        # add bibtex file to zip object
+        zf.writestr('{}.bib'.format(self.get_object().bib_id),self.bibtex_to_bytes([self.get_object().bibtex]))
+
+        return response
+
+    def get_table(self,data_type, fields):
+        fields = ['slug','site_name','latitude','longitude'] + fields
+        qs = (apps.get_model('thermoglobe','Site')
+                .objects.filter(reference=self.get_object())
+                .table(data_type)
+                .values_list(*fields)
+        )
+        return dict(
+            id=text.slugify(data_type),
+            data=json.dumps(list(qs)),
+            columns=[field.replace('_',' ') for field in fields],
+            )
+
+
+# class PublicationDetailsView(DownloadMixin, MultiTableMixin, MetadataMixin, DetailView):
+#     template_name = "publications/publication_details.html"
+#     model = Publication
+
+#     # table options to pass to dataTables.js Table constructor
+#     options = dict(
+#         autoWidth=False,
+#         dom='<"top d-flex justify-content-around align-items-baseline"lpf>t<"bottom"ip><"clear">',
+#         order_by='year',
+#         pageLength=50,
+#         deferRender=True,
+#         responsive=True,
+#     )
+
+#     # tables = [  tables.Site,
+#     #             tables.Interval,
+#     #             tables.Temperature,
+#     #             tables.Conductivity,
+#     #             tables.HeatGeneration,
+#     #             ]
+
+#     tables = ['heat_flow','gradient','conductivity','temperature','heat_generation']
+
+#     filter_object_on = 'reference'
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context['bibtex'] = json.dumps(self.get_object().bibtex)
+#         context['meta'] = self.get_object().as_meta(self.request)
+#         return context
+
+
+#     def post(self, request,  *args, **kwargs):
+#         # prepare the response for csv file
+#         response = HttpResponse(content_type='application/zip')
+#         response['Content-Disposition'] = 'attachment; filename="{}.zip"'.format(self.get_object().pk)
+#         zf = zipfile.ZipFile(response,'w')
+
+#         for key, qs in self.get_object().get_data().items():
+#             if qs.exists():
+#                 export_fields = getattr(choices, key).get('detailed') + ['reference__bib_id']
+#                 site_fields = [f.name for f in Site._meta.fields]
+#                 query_fields = ['site__'+field if field in site_fields else field for field in export_fields ]
+#                 if key in ['temperature','conductivity','heat_generation']:
+#                     query_fields[query_fields.index(key)] = 'value'
+
+#                 # create a csv file an save it to the zip object
+#                 zf.writestr('{}.csv'.format(key),self.csv_to_bytes(qs.values_list(*query_fields), export_fields))
+
+#         # add bibtex file to zip object
+#         zf.writestr('{}.bib'.format(self.get_object().bib_id),self.bibtex_to_bytes([self.get_object().bibtex]))
+
+#         return response
+
+class AuthorDetailsView(DownloadMixin, TableMixin, MetadataMixin, DetailView):
+    template_name = "publications/author_details.html"
+    model = Author
+    column_headers = ['slug', 'doi', 'year', 'reference']
+    options = dict(
+        autoWidth=False,
+        dom='<"top d-flex justify-content-end align-items-baseline"f>t<"bottom"i><"clear">',
+        order_by='year',
+        pageLength=100,
+        deferRender=True,
+        responsive=True,
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['table'] = dict(id='publicationTable',
+            columns = self.column_headers,
+            )
+        context['options'] = mark_safe(json.dumps(self.options))
+        context['meta'] = self.get_object().as_meta(self.request)
+        return context
+    
     def get_sites(self, context):
-        return Site.objects.filter(**{self.site_lookup: context['author']})
+        return Site.objects.filter(reference__first_author=context['author'])
+
+    def get(self,request,*args, **kwargs):
+        if request.is_ajax():
+            return JsonResponse({'data':list(self.get_publications())})
+        return super().get(request,*args, **kwargs)
+
+    def post(self, request,  *args, **kwargs):
+        # prepare the response for csv file
+        response = HttpResponse(content_type='application/zip')
+        response['Content-Disposition'] = 'attachment; filename="{}.zip"'.format(self.get_object().slug)
+        zf = zipfile.ZipFile(response,'w')
+
+        for key, qs in self.get_object().get_data().items():
+            if qs.exists():
+                export_fields = getattr(choices, key).get('detailed') + ['reference__bib_id']
+                site_fields = [f.name for f in Site._meta.fields]
+                query_fields = ['site__'+field if field in site_fields else field for field in export_fields ]
+                if key in ['temperature','conductivity','heat_generation']:
+                    query_fields[query_fields.index(key)] = 'value'
+
+                # create a csv file an save it to the zip object
+                zf.writestr('{}.csv'.format(key),self.csv_to_bytes(qs.values_list(*query_fields), export_fields))
+
+        # add bibtex file to zip object
+        zf.writestr('{}.bib'.format(self.get_object().slug),self.bibtex_to_bytes(
+            self.get_publications().values_list('bibtex',flat=True)
+            ))
+
+        return response
+
+    def get_publications(self):
+        return self.get_object().get_publications().exclude(bibtex__exact='').values('slug','bibtex')
 
 
 def annotate_data_average(qs):

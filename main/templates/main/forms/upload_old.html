@@ -1,0 +1,30 @@
+{% load widget_tweaks custom_tags%}
+
+<form name='upload' class="grid-form" method="post"  enctype="multipart/form-data" action="#">
+{% csrf_token %}
+<div class="form-control">
+    {% render_field form.data_type placeholder=form.data_type.label required='required' %}
+</div>
+<div class="form-control narrow">
+    {% render_field form.first_name placeholder=form.first_name.label required='required' %}
+</div>
+<div class="form-control narrow">
+    {% render_field form.last_name placeholder=form.last_name.label required='required' %}
+</div>
+<div class="form-control">
+    {% render_field form.email placeholder=form.email.label required='required' %}
+</div>
+<div class="form-control custom-file">
+    {% render_field form.data id=form.data.id class="custom-file-input" placeholder=form.data.label required='required' accept=".csv"%}
+    <label class="custom-file-label" for={{ form.data.id_for_label }}>Choose file</label>
+</div>
+<div class="form-control">
+    {% render_field form.bibtex placeholder="Copy and paste a bibtex file to go with your data. Leaving this blank will autogenerate an unpublished bibtex reference that will contain your name and the time of upload." %}
+</div>
+<ul class="actions text-center">
+  <li>       
+    <button class="button special" type="submit" data-toggle="modal">Submit</button>
+    {% comment %} <button class="button special" type="submit" data-toggle="modal" data-target="#earthSpinModal">Submit</button> {% endcomment %}
+  </li>
+</ul>
+</form>

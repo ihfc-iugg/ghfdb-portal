@@ -1,8 +1,4 @@
 
-SITE_TYPE = (   ('W','well'),
-                ('O','outcrop'),
-                ('S','sea floor'),
-                ('L','lake bottom'),)          
 ROCK_GROUPS = ( ('M','metamorphic'),
                 ('I','igneous'),
                 ('S','sedimentary'),
@@ -11,50 +7,66 @@ ROCK_GROUPS = ( ('M','metamorphic'),
 ROCK_ORIGIN = ( ('P','plutonic'),
                 ('V','volcanic'),)
 
-# ========== FIELD SETS ==============
+SITE_TYPE = (   ('C','continental'),
+                ('O','oceanic'),)
 
-SITE_FIELDS = [
-                'site_name',
-                'latitude',
-                'longitude',
-                'elevation',
+# ========== EXPORT SETS ==============
+SITE_BASIC = [
+            'id',
+            'site_name',
+            'site__country__name',
+            'site__sea__name',
+            'latitude',
+            'longitude',
+            'elevation',
+            ] 
+
+SITE_STANDARD = SITE_BASIC + [
                 'well_depth',
-                'site_type',
-                # 'country',
-                # 'region',
-                # 'sub_region',
-                # 'geological_province',
-                # 'sea', 
                 'seamount_distance',
                 'sediment_thickness',
                 'sediment_thickness_type',
                 'crustal_thickness',
                 'surface_temp',
                 'bottom_water_temp',
-                'bottom_hole_temp',
-                'age_min',
-                'age_max',
-                'age_method',
-                'tectonothermal_min',
-                'tectonothermal_max',
-                'juvenile_age_min',
-                'juvenile_age_max',
-                'operator',
                 'cruise',
                 ]   
 
-SITE_FIELDS_BASIC = [
-                'site_name',
-                'latitude',
-                'longitude',
-                'elevation',
-                ] 
+SITE_DETAILED = SITE_STANDARD + [
+            'site__country__name',
+            'site__country__region',
+            'site__country__subregion',
+            'site__continent__name',
+            'site__political__name',
+            # 'site__political__territory',
+            # 'site__political__sovereign',
+            'site__province__name',
+            'site__province__group',
+            'site__province__juvenile_age_min',
+            'site__province__juvenile_age_max',
+            'site__province__tectonic_age_min',
+            'site__province__tectonic_age_max',
+            'site__province__plate',
+            'site__province__last_orogen',
 
-HEAT_FLOW_FIELDS = [
+                ]
+
+HEAT_FLOW_BASIC = [
             'depth_min',
             'depth_max',
-            'tilt',
+            'heat_flow',
+            'gradient',
+            'average_conductivity',
+            'heat_generation',
+            ]
+
+HEAT_FLOW_STANDARD = [
+            'depth_min',
+            'depth_max',
             'reliability',
+            'number_of_temperatures',
+            'temp_method',
+
             'heat_flow_corrected',
             'heat_flow_corrected_uncertainty',
             'heat_flow_uncorrected',
@@ -65,94 +77,163 @@ HEAT_FLOW_FIELDS = [
             'gradient_uncorrected',
             'gradient_uncorrected_uncertainty',
 
-            'thermal_conductivity',
+            'average_conductivity',
+            'conductivity_uncertainty',
+
+            'heat_generation',
+            'heat_generation_uncertainty',
+
+            ]
+
+HEAT_FLOW_DETAILED = [
+            'depth_min',
+            'depth_max',
+            'tilt',
+            'reliability',
+            'number_of_temperatures',
+            'temp_method',
+
+            'heat_flow_corrected',
+            'heat_flow_corrected_uncertainty',
+            'heat_flow_uncorrected',
+            'heat_flow_uncorrected_uncertainty',
+
+            'gradient_corrected',
+            'gradient_corrected_uncertainty',
+            'gradient_uncorrected',
+            'gradient_uncorrected_uncertainty',
+
+            'average_conductivity',
             'conductivity_uncertainty',
             'number_of_conductivities',
             'conductivity_method',
 
-            'climate_flag',
-            'climate_correction',
-            'topographic_flag',
-            'topographic_correction',
-            'refraction_flag',
-            'refraction_correction',
-            'sed_erosion_flag',
-            'sed_erosion_correction',
-            'fluid_flag',
-            'fluid_correction',
-            'bottom_water_variation_flag',
-            'bottom_water_variation_correction',
-            'compaction_flag',
-            'compaction_correction',
-            'other_flag',
-            'other_type',
-            'other_correction',
+            'heat_generation',
+            'heat_generation_uncertainty',
+            'number_of_heat_gen',
+            'heat_generation_method',
+            
+            'corrections__climate_flag',
+            'corrections__climate',
+            'corrections__topographic_flag',
+            'corrections__topographic',
+            'corrections__refraction_flag',
+            'corrections__refraction',
+            'corrections__sed_erosion_flag',
+            'corrections__sed_erosion',
+            'corrections__fluid_flag',
+            'corrections__fluid',
+            'corrections__bottom_water_variation_flag',
+            'corrections__bottom_water_variation',
+            'corrections__compaction_flag',
+            'corrections__compaction',
+            'corrections__other_flag',
+            'corrections__other_type',
+            'corrections__other',
 
-            # 'reference',
+            'global_flag',
             'comment',
-            ]
+        ]
 
-HEAT_FLOW_FIELDS_BASIC = [
-            'depth_min',
-            'depth_max',
-            'reliability',
-            'heatflow_corrected',
-            'heatflow_uncorrected',
-            'gradient_corrected',
-            'gradient_uncorrected',
-            'thermal_conductivity',
-            'reference',
-            'comment',
-            ]
-
-CONDUCTIVITY_FIELDS = [
+CONDUCTIVITY_BASIC = [
+            'depth',
             'sample_name',
-            'value',
+            'conductivity',
             'uncertainty',
             'orientation',
             'method',
+            ]
+
+CONDUCTIVITY_STANDARD = CONDUCTIVITY_BASIC + [
+            'sample_thickness',
+            'sample_length',
+            'sample_width',
+            'sample_diameter',
+            'formation',
             'rock_group',
             'rock_origin',
             'rock_type',
-            # 'geo_unit',
-            'depth',
             'age',
-            'age_min',
-            'age_max',
-            'age_method',
+            'age_type',
+            'year_logged',
+            'operator',
             'reference',
-            'comment'           
+            'comment',
+            'source',
+            'source_id',    
+            'log_id',
+        ]
+
+HEAT_GEN_BASIC = [
+            'depth',
+            'sample_name',
+            'heat_generation',
+            'uncertainty',
+            'method',
             ]
 
-HEAT_GEN_FIELDS = CONDUCTIVITY_FIELDS.copy()
-HEAT_GEN_FIELDS.remove('orientation')
+HEAT_GEN_STANDARD = HEAT_GEN_BASIC + [
+            'formation',
+            'rock_group',
+            'rock_origin',
+            'rock_type',
+            'age',
+            'age_type',
+            'year_logged',
+            'operator',
+            'reference',
+            'comment',
+            'source',
+            'source_id',    
+            'log_id',
+        ]
 
-TEMPERATURE_FIELDS = [
-            'value',
+TEMPERATURE_BASIC = [
+            'temperature',
+            'uncertainty',
             'depth',
             'method',
-            'lag_time',
-            'is_bottom_of_hole',
-            'reference',
-            'comment',           
+            'source',
             ]
 
-# ========== EXPORT SETS ==============
+TEMPERATURE_STANDARD = TEMPERATURE_BASIC + [
+            'log_id',
+            'year_logged',
+            'circ_time',
+            'lag_time',
+            'correction',
+            'formation',
+            'operator',
+            'comment',  
+            'source',
+            'source_id', 
+            ]
 
-HEAT_FLOW_EXPORT = SITE_FIELDS + HEAT_FLOW_FIELDS
-HEAT_FLOW_EXPORT_BASIC = SITE_FIELDS_BASIC + HEAT_FLOW_FIELDS_BASIC
-   
+heat_flow = dict(
+    basic = SITE_BASIC + HEAT_FLOW_BASIC,
+    standard = SITE_STANDARD + HEAT_FLOW_STANDARD,
+    detailed = SITE_DETAILED + HEAT_FLOW_DETAILED,
+    )
 
-CONDUCTIVITY_EXPORT = SITE_FIELDS + CONDUCTIVITY_FIELDS
-CONDUCTIVITY_EXPORT_BASIC = SITE_FIELDS_BASIC + CONDUCTIVITY_FIELDS
+gradient = interval = heat_flow
 
+temperature = dict(
+    basic = SITE_BASIC + TEMPERATURE_BASIC,
+    standard = SITE_STANDARD + TEMPERATURE_STANDARD,
+    detailed = SITE_DETAILED + TEMPERATURE_STANDARD,
+    )
 
-HEAT_GEN_EXPORT = SITE_FIELDS + HEAT_GEN_FIELDS
-HEAT_GEN_EXPORT_BASIC = SITE_FIELDS_BASIC + HEAT_GEN_FIELDS
+conductivity = dict(
+    basic = SITE_BASIC + CONDUCTIVITY_BASIC,
+    standard = SITE_STANDARD + CONDUCTIVITY_STANDARD,
+    detailed = SITE_DETAILED + CONDUCTIVITY_STANDARD,
+    )
 
-
-TEMPERATURE_EXPORT = SITE_FIELDS + TEMPERATURE_FIELDS
-TEMPERATURE_EXPORT_BASIC = SITE_FIELDS_BASIC + TEMPERATURE_FIELDS
+heat_generation = dict(
+    basic = SITE_BASIC + HEAT_GEN_BASIC,
+    standard = SITE_STANDARD + HEAT_GEN_STANDARD,
+    detailed = SITE_DETAILED + HEAT_GEN_STANDARD,
+    )
 
 # Can write these in html
 UNITS = dict(
@@ -170,10 +251,4 @@ UNITS = dict(
     surface_temp='&deg;C',
     bottom_hole_temp='&deg;C',
     well_depth='m',
-
-
-
-
-
-
 )

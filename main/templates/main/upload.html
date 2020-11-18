@@ -1,5 +1,5 @@
 {% extends "main/base.html" %}
-{% load static widget_tweaks%}
+{% load static widget_tweaks sekizai_tags%}
 
 {% block head %}
   <script src="https://cdn.jsdelivr.net/npm/bs-custom-file-input/dist/bs-custom-file-input.min.js"></script>
@@ -7,32 +7,27 @@
 {% endblock head %}
 
 {% block content %}
-<div class='container'>
-  <h1 class="mt-4 mb-3">Upload</h1>
-  {% include 'main/components/breadcrumb.html' with active="Upload" %}
-  <div class='row '>
-    <div class='col-lg-8 mb-4' >
-      <h3>Thanks for contributing!</h3>
-      <p>Be sure to download the appropriate template on the right and copy your data into it before uploading. These template provided the correct field name and encoding to ensure your upload is hassle free.</p>
-      <form name='upload' {% if form.is_multipart %}enctype="multipart/form-data"{% endif %} method="post">     
-        {% csrf_token %}
-        {% for field in form %}
-            {% include "main/components/form_field.html" %}
-        {% endfor %}
-        <div class='text-center mb-3'>
-            <button class="btn btn-primary btn-lg" type="submit" data-toggle="modal" data-target="#earthSpinModal">Submit</button>
+<div class='inner'>
+  <section>
+    {% if page.content %}{{page.content|safe}}{% endif %}
+
+    <div class='container w-75'>
+      <div class="d-flex flex-row-reverse justify-content-around">
+        <div class='ml-4'>
+          <h5>Select a template</h5>
+          {% for template in templates %}
+            <div><a href="{% url 'thermoglobe:template' template %}" class='border-0'>{{template}}.csv</a></div>
+          {% endfor %}
         </div>
-      </form>
+        <div>
+          <div class='container'>
+            {% include 'main/forms/upload.html' %}
+          </div>
+        </div>
+      </div>
     </div>
-    <div class='col-lg-4 mb-4' >
-      <h5>Choose your template</h5>
-        <div><a href="{% static 'thermoglobe/heat_flow_template.csv' %}">Heat Flow.csv</a></div>
-        <div><a href="{% static 'thermoglobe/thermal_gradient_template.csv' %}">Thermal Gradient.csv</a></div>
-        <div><a href="{% static 'thermoglobe/temperature_template.csv' %}">Temperature.csv</a></div>
-        <div><a href="{% static 'thermoglobe/conductivity_template.csv' %}">Thermal Conductivity.csv</a></div>
-        <div><a href="{% static 'thermoglobe/heat_production_template.csv' %}">Heat Production.csv</a></div>
-    </div>
-  </div>
+
+  </section>
 </div>
 
 <!-- Modal -->
@@ -45,34 +40,31 @@
   </div>
 </div>
 
-<table id="dataTable" class="table table-hover table-striped w-100" >
+{% comment %} <table id="dataTable" class="table table-hover table-striped w-100" >
   <thead class="thead-dark">
   </thead>
-</table>
-
-
+</table> {% endcomment %}
 
 {% endblock content %}
 
-{% block scripts %}
 
-  <script>
-     $(document).ready(function () {
+{% addtoblock "js" %}
 
-      $('.custom-file-input').on('change',function(){
-        var fileName = $(this).val();
-        var cleanFileName = fileName.replace('C:\\fakepath\\', "");
-        $(this).next('.custom-file-label').html(cleanFileName);
-      })
+<script>
+  $(document).ready(function () {
 
-    {% if table %}
-      var dataSet = {{ table|safe}}
-      var table_options = {{ table_options|safe }}
-      table_from_values_list(dataSet)
-    {% endif %}
-
+    $('.custom-file-input').on('change',function(){
+      var fileName = $(this).val();
+      var cleanFileName = fileName.replace('C:\\fakepath\\', "");
+      $(this).next('.custom-file-label').html(cleanFileName);
     })
-  </script>
-  {% comment %} <script src="{% static 'main/js/table.js' %}"></script> {% endcomment %}
 
-{% endblock scripts %}
+  {% comment %} {% if table %}
+    var dataSet = {{ table|safe}}
+    var table_options = {{ table_options|safe }}
+    table_from_values_list(dataSet)
+  {% endif %} {% endcomment %}
+
+  })
+</script>
+{% endaddtoblock %}

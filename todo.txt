@@ -1,5 +1,0 @@
-Conductivity
-    Uncertainty upload not working
-    Method upload not working
-
-    

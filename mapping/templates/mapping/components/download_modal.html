@@ -1,0 +1,66 @@
+{% comment %} {% extends "main/test.html" %} {% endcomment %}
+{% load sekizai_tags static %}
+
+{% block content %}
+<div id="downloadOptions" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="downloadModal" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered bg-transparent" role="document">
+    <div class="modal-content">
+      <section class='banner d-flex'>
+          <div class="content p-5">
+              <header class="major">
+                  <h2>Download Options</h2>
+              </header>
+                {{form.options}}
+                <div class='pt-3'>
+                  <p id='info' class='description'>Three different download types are available; basic, standard and detailed. Select an option to see whats included and determine which is right for you. When you're happy, press the download button and we'll prepare your data for you.</p>
+                  <p id='basic' class='description d-none'>You're just looking for a location, some quick data, a reference and little else. Good for quick and simple use cases but probably not the best for detailed analyses. A good starting point for testing ideas!</p>
+                  <p id='standard' class='description d-none'>Most likely the best option for your research project. This download includes location, corrected and uncorrected data (where applicable), reported uncertainties, some additional relevant information and basic geographic information.</p>
+                  <p id='detailed' class='description d-none'>We're going to hit you with everything we've got! Includes corrected and uncorrected data and uncertainties as well as specific correction types and values reported by the original author (if available). Detailed geographic data is included for in depth geospatial analyses.</p>
+                </div>
+                <div class="col-12">
+                  <ul class="actions fit">
+                    <li>
+                      <button id='submit-download' form="filter-form" type='submit' class="button fit primary icon solid fa-download large" disabled>Download</button>
+                    </li>
+                  </ul>
+                </div>
+          </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+{% addtoblock "js" %}
+  <script>
+      $(document).ready(function() {
+          {% comment %} $('#downloadOptions').modal() {% endcomment %}
+
+
+          $('#id_options').change(function() {
+              var option = $(this).val()
+              var content = $('.description')
+
+              content.each(function() {
+                console.log(this.id)
+                if (this.id == option) {
+                  $(this).removeClass('d-none')
+                } else {
+                  $(this).addClass('d-none')
+                }
+              })
+
+              {% comment %} info.addClass('d-flex') {% endcomment %}
+
+
+
+              if (option != 'info') {
+                $('#submit-download').removeAttr("disabled")
+              } else {
+                $('#submit-download').attr("disabled", true)
+              }
+          });
+
+      });
+  </script>
+{% endaddtoblock %}
+{% endblock content %}

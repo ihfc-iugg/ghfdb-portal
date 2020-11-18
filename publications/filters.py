@@ -1,4 +1,4 @@
-from publications.models import Publication
+from thermoglobe.models import Publication
 import django_filters
 from django_filters import widgets
 

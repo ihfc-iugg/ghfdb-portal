@@ -1,17 +1,16 @@
+from io import StringIO
+import csv
+
 from import_export.admin import ImportExportActionModelAdmin
-from django.shortcuts import resolve_url
-from django.contrib.admin.templatetags.admin_urls import admin_urlname
-from django.utils.html import format_html
-from django.db.models import Count
+from django.db.models import Count, F
 from django.contrib import admin
-from django.db.models import F
-from django.db import models
 from django.utils.translation import gettext as _
 from django.contrib.gis import admin as gisadmin
 
 
 
-class BaseAdmin(gisadmin.ModelAdmin):
+# class BaseAdmin(gisadmin.ModelAdmin):
+class BaseAdmin(gisadmin.OSMGeoAdmin):
     exclude = ['edited_by','added_by','date_added','date_edited']
     # list_display
 
@@ -75,23 +74,9 @@ class BaseAdmin(gisadmin.ModelAdmin):
     def edit(self,obj):
         return _("edit")
     
+
 class SitePropertyAdminMixin(BaseAdmin):
-    list_display = ['edit','site_name','latitude','longitude','depth','sample_name','value','uncertainty','method','reference','age','age_min','age_max']
-    # search_fields = ['depthinterval__reference__primary_author__last_name']
-    fieldsets = [('Site', {'fields':[
-                            'site']}),
-                ('Sample', {'fields': [
-                            'sample_name',
-                            ('value','uncertainty'),
-                            'method',
-                            'depth',
-                            ]}),
-                ('Age', {'fields': [
-                            ('age_min','age_max','age_method',),
-                            ]}),
-                ('Geology', {'fields': [
-                            ('rock_type','rock_group','rock_origin')]}),
-                            ]
+    search_fields = ['site__site_name','site__latitude','site__longitude','reference__bib_id']
     autocomplete_fields = ['site']
     list_filter = ['method']
     
@@ -104,15 +89,48 @@ class SitePropertyAdminMixin(BaseAdmin):
 
         return queryset
 
-class DepthIntervalMixin(BaseAdmin):
-    autocomplete_fields = ['site']
-    list_display = ['site_name','latitude','longitude','depth_min','depth_max','corrected','corrected_uncertainty','uncorrected','uncorrected_uncertainty','reference']
-    def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-        queryset = queryset.select_related('site').annotate(
-            _site_name=F('site__site_name'),
-            _latitude=F('site__latitude'),
-            _longitude=F('site__longitude'),
-            )
-        return queryset
-    
+
+class DownloadMixin:
+
+    def post(self, request,  *args, **kwargs):
+        # prepare the response for csv file
+        response = HttpResponse(content_type='application/zip')
+        response['Content-Disposition'] = 'attachment; filename="{}.zip"'.format(self.get_object().pk)
+        zf = zipfile.ZipFile(response,'w')
+
+        for key, qs in self.get_object().get_data().items():
+            if qs.exists():
+                export_fields = getattr(choices, key).get('detailed') + ['reference__bib_id']
+                site_fields = [f.name for f in Site._meta.fields]
+                query_fields = ['site__'+field if field in site_fields else field for field in export_fields ]
+                # if key in ['temperature','conductivity','heat_generation']:
+                #     query_fields[query_fields.index(key)] = 'value'
+
+                # create a csv file an save it to the zip object
+                zf.writestr('{}.csv'.format(key),self.csv_to_bytes(qs.values_list(*query_fields), export_fields))
+
+        # add bibtex file to zip object
+        zf.writestr('{}.bib'.format(self.get_object().bib_id),self.bibtex_to_bytes([self.get_object().bibtex]))
+
+        return response
+
+    def bibtex_to_bytes(self, bibtex_list):
+        bib_buffer = StringIO()
+
+        for bib_entry in bibtex_list:
+            bib_buffer.write(bib_entry)
+
+        return bib_buffer.getvalue()
+
+    def csv_to_bytes(self, data, headers):
+        csv_buffer = StringIO()
+        writer = csv.writer(csv_buffer)
+
+        # write the header row;
+        writer.writerow(headers)
+
+        # write the rows to the csv file
+        for i in data:
+            writer.writerow(i)
+
+        return csv_buffer.getvalue()

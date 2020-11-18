@@ -1,15 +1,29 @@
 import os
+import platform
 
-try:
-    from heatflow.local_settings import *
-except ImportError:
-    pass
+OSGEO4W = r"C:\OSGeo4W"
+# if '64' in platform.architecture()[0]:
+    # OSGEO4W += "64"
+assert os.path.isdir(OSGEO4W), "Directory does not exist: " + OSGEO4W
+os.environ['OSGEO4W_ROOT'] = OSGEO4W
+os.environ['GDAL_DATA'] = OSGEO4W + r"\share\gdal"
+os.environ['PROJ_LIB'] = OSGEO4W + r"\share\proj"
+os.environ['PATH'] = OSGEO4W + r"\bin;" + os.environ['PATH']
 
+ALLOWED_HOSTS = ['*']
+
+
+DEBUG = True
+
+SECRET_KEY = os.environ['SECRET_KEY']
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+FILTERS_EMPTY_CHOICE_LABEL = None
+
 # Application definition
 INSTALLED_APPS = [
+    # 'django.forms',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -18,6 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.gis',
     'django.contrib.humanize',
+    'django.contrib.admindocs',
     'main',
     'mapping',
     'publications',
@@ -25,7 +40,8 @@ INSTALLED_APPS = [
     'thermoglobe',
     'tables',
     'import_export',
-    # 'debug_toolbar',
+    'sortedm2m',
+    'debug_toolbar',
     'simple_history',
     'captcha',
     'betterforms',
@@ -33,15 +49,17 @@ INSTALLED_APPS = [
     # 'multiselectfield',
     'django_extensions',
     # 'django_filters',
+    'djgeojson',
     'widget_tweaks',
-    # 'django_countries',
     'ckeditor',
     'meta',
+    'django_cleanup.apps.CleanupConfig',
 ]
 
 MIDDLEWARE = [
-    # 'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -57,7 +75,19 @@ INTERNAL_IPS = [
     # ...
 ]
 
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        # 'NAME': 'ThermoGlobe',
+        'NAME': 'new',
+        'USER': os.environ['DB_USERNAME'],
+        'PASSWORD': os.environ['DB_PASSWORD'],
+    },
+} 
+
 ROOT_URLCONF = 'heatflow.urls'
+
+# FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
 
 TEMPLATES = [
     {
@@ -109,6 +139,10 @@ USE_L10N = True
 USE_TZ = True
 
 
+SERIALIZATION_MODULES = {
+    "geojson": "django.contrib.gis.serializers.geojson", 
+ }
+
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/assets/'
 MEDIA_URL = '/media/'
@@ -116,11 +150,11 @@ MEDIA_URL = '/media/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'assets')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-
+# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 STATICFILES_DIRS = []
 
-META_SITE_PROTOCOL = 'http'
-META_SITE_DOMAIN = 'localhost'
+META_SITE_PROTOCOL = 'https'
+META_SITE_DOMAIN = 'heatflow.org'
 META_INCLUDE_KEYWORDS = ['heat flow','thermoglobe','heat','flow','temperature','thermal','earth','science','research']
 META_DEFAULT_KEYWORDS = ['heat flow','thermoglobe','heat','flow','temperature','thermal','earth','science','research']
 META_USE_TITLE_TAG = True

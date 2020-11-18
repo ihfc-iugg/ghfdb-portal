@@ -1,4 +1,4 @@
-from .models import Site, HeatFlow
+from .models import Site, Interval
 from publications.models import Publication
 from django.db.models import Avg, Max, Min, Count, F, Value, Q, FloatField
 from collections import Counter
@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 from plotly.offline import plot
 
 def heat_flow_per_year(filters={}):
-    return Counter(HeatFlow.objects.filter(reference__year__isnull=False,**filters).exclude(reference__bib_id='Blackwell2004').values_list('reference__year',flat=True).order_by('reference__year'))
+    return Counter(Interval.objects.filter(reference__year__isnull=False,**filters).exclude(reference__bib_id='Blackwell2004').values_list('reference__year',flat=True).order_by('reference__year'))
 
 # CHART UTILS
 def counter_2_xy(counter, fill=True):
@@ -23,7 +23,7 @@ def publications_per_year(qs=Publication.objects.all(),filters={}):
     # return counter_2_xy(refs) 
 
 def heat_flow_per_year_x(filters={}):
-    heatflow = Counter(HeatFlow.objects.filter(reference__year__isnull=False,**filters).exclude(reference__bib_id='Blackwell2004').values_list('reference__year',flat=True).order_by('reference__year'))
+    heatflow = Counter(Interval.objects.filter(reference__year__isnull=False,**filters).exclude(reference__bib_id='Blackwell2004').values_list('reference__year',flat=True).order_by('reference__year'))
     return counter_2_xy(heatflow)
 
 def contributions_per_year(filters={}):
@@ -95,8 +95,8 @@ def contributions_per_year(filters={}):
     # }
 
 def heat_flow_histogram(model_filters={}):
-    continental = list(HeatFlow.objects.filter(corrected__lte=200,corrected__gt=0,site__elevation__gte=-300,**model_filters).values_list('corrected',flat=True))
-    oceanic = list(HeatFlow.objects.filter(corrected__lte=200,corrected__gt=0,site__elevation__lt=-300,**model_filters).values_list('corrected',flat=True))
+    continental = list(Interval.objects.filter(corrected__lte=200,corrected__gt=0,site__elevation__gte=-300,**model_filters).values_list('corrected',flat=True))
+    oceanic = list(Interval.objects.filter(corrected__lte=200,corrected__gt=0,site__elevation__lt=-300,**model_filters).values_list('corrected',flat=True))
     
     return [continental,oceanic]
 

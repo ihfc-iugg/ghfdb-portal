@@ -1,10 +1,10 @@
-from .models import Site, Conductivity, HeatFlow, HeatGeneration, Temperature, Correction
-from publications.models import Publication, Operator
+from .models import Site, Conductivity, Interval, HeatGeneration, Temperature, Correction, Publication
+# from publications.models import Operator
 from import_export.fields import Field
 from import_export.widgets import FloatWidget, CharWidget, IntegerWidget, BooleanWidget, ForeignKeyWidget, DecimalWidget
 import time
 from import_export import resources
-from . import widgets, choices
+from . import widgets, import_choices as choices
 import sys
 import bibtexparser as bib
 from thermoglobe.utils import age_range
@@ -36,13 +36,6 @@ class CustomInstanceLoader(ModelInstanceLoader):
                 return None
         except self.resource._meta.model.DoesNotExist:
             return None
-
-def get_references():
-    with open('publications/ThermoGlobe.bib',encoding='utf8') as bibfile:
-        # required to handle certain common strings
-        parser = bib.bparser.BibTexParser(common_strings=True)
-        refs = bib.load(bibfile,parser=parser)
-    return refs
 
 def fix_age(row):
     # handles the case where a geochronological or stratigraphic age is given
@@ -84,26 +77,18 @@ def fix_depth(row):
 
 def format_coordinates(row):
     """The point of this function is to convert coordinates to a string formatted number no longer than 5 decimals places. 
-    This combats rounding errors when converting from degrees:minute:seconds to decimal degrees. Also maintains precision of coordinates with less than 5 decimal places
-
+    This combats rounding errors when converting from degrees:minute:seconds to decimal degrees. 
     """
-    if row.get('latitude'):
-        # 2 degrees plus decimal plus 5 decimal places
-        if len(str(row['latitude'])) > 8:
-            row['latitude'] = format(float(row['latitude']),'.5f')
-        else:
-            row['latitude'] = str(row['latitude'])
-    if row.get('longitude'):
-        # 3 degrees plus decimal plus 5 decimal places
-        if len(str(row['longitude'])) > 9:
-            row['longitude'] = format(float(row['longitude']),'.5f')
-        else:
-            row['longitude'] = str(row['longitude'])
+    for i in ['latitude','longitude']:
+        val = row.get(i).split('.')[-1]
+        if len(val) > 5:
+            formatted = format(float(row[i]),'.5f')
+            row[i] = formatted
 
     return row
 
 class ResourceMixin(resources.ModelResource):
-    ref_dict = get_references().entries_dict
+    # ref_dict = get_references().entries_dict
 
     def before_import(self, dataset, using_transactions, dry_run, **kwargs):
         """ Start import timer and initialize count for progress bar"""
@@ -115,7 +100,7 @@ class ResourceMixin(resources.ModelResource):
             row['added_by'] = kwargs['user']._wrapped.username
 
         row = format_coordinates(row) # converts lat and lon to 5 decimal place string
-        row = fix_age(row) # convert any geo or stratigraphic ages to float values
+        # row = fix_age(row) # convert any geo or stratigraphic ages to float values
         row = fix_depth(row) #fix depths reported as min = 0 and max = 0
         row['save_temp'] = True
 
@@ -221,7 +206,9 @@ class SiteMixin(ResourceMixin):
     # needs to be before the site property fields below so that a reference is saved
     reference = Field(attribute='reference',
             column_name='reference', 
-            widget=widgets.PublicationWidget(Publication, field='reference', reference_dict=ResourceMixin.ref_dict))
+            widget=widgets.PublicationWidget(Publication, field='reference',
+            # reference_dict=ResourceMixin.ref_dict
+            ))
 
     site_name = Field(attribute='site',column_name='site_name',
         widget=widgets.SiteWidget(Site,
@@ -234,10 +221,6 @@ class SiteMixin(ResourceMixin):
     longitude = Field(attribute='site__longitude',widget=DecimalWidget(),readonly=True)
     elevation = Field(attribute='site__elevation',widget=FloatWidget(),readonly=True)
     tilt = Field(attribute='site__tilt', widget=FloatWidget(),readonly=True)
-    # operator = Field(attribute='site__operator')
-    operator = Field(attribute='site__operator',readonly=True, saves_null_values=global_saves_null, widget=widgets.CustomFK(Operator))
-    site_type = Field(attribute='site__site_type',saves_null_values=global_saves_null,readonly=True)
-    site_status = Field(attribute='site__site_status',saves_null_values=global_saves_null,readonly=True)
 
     cruise = Field(attribute='site__cruise')
     well_depth = Field(attribute='site__well_depth',widget=FloatWidget())
@@ -249,18 +232,6 @@ class SiteMixin(ResourceMixin):
 
     seamount_distance = Field(attribute='site__seamount_distance',widget=FloatWidget(),saves_null_values=global_saves_null)
 
-    bottom_hole_temp = Field(attribute='site__bottom_hole_temp', 
-                            readonly=True,
-                            widget=widgets.SitePropertyWidget(Temperature,
-                            field='value',
-                            exclude='lithology',
-                            id_fields = ['site','value','reference'],
-                            required_fields=['value'],
-                            # specify the column to be mapped to each model field
-                            varmap={'bottom_hole_temp':'value',
-                                    'well_depth':'depth',
-                                    'temperature_method':'method',
-                                    'reference':'reference'}))
     bottom_water_temp = Field(attribute='site__bottom_water_temp', 
                             widget=widgets.SitePropertyWidget(Temperature,
                             field='value',
@@ -281,9 +252,6 @@ class SiteMixin(ResourceMixin):
                                         'temperature_method':'method',
                                         'reference':'reference'}))
 
-    age_min = Field(attribute='site__age_min',widget=FloatWidget(),saves_null_values=global_saves_null)
-    age_max = Field(attribute='site__age_max',widget=FloatWidget(),saves_null_values=global_saves_null)
-    age_method = Field(attribute='site__age_method',saves_null_values=global_saves_null)
     tectonothermal_min = Field(attribute='site__tectonothermal_min',widget=FloatWidget(),saves_null_values=global_saves_null)
     tectonothermal_max = Field(attribute='site__tectonothermal_max',widget=FloatWidget(),saves_null_values=global_saves_null)
     juvenile_age_min = Field(attribute='site__juvenile_age_min',widget=FloatWidget(),saves_null_values=global_saves_null)
@@ -327,53 +295,17 @@ class CorrectionsMixin(resources.ModelResource):
 class HeatFlowResource(CorrectionsMixin,SiteMixin):
     global_saves_null=True
 
-    reliability = Field(attribute='reliability',
-            saves_null_values=global_saves_null)
-    heat_flow_corrected = Field(attribute='corrected',
-            widget=FloatWidget(),
-            saves_null_values=global_saves_null)
-    heat_flow_corrected_uncertainty = Field(attribute='corrected_uncertainty',
-            widget=FloatWidget(),
-            saves_null_values=global_saves_null)
-    heat_flow_uncorrected = Field(attribute='uncorrected',
-            widget=FloatWidget(),
-            saves_null_values=global_saves_null)
-    heat_flow_uncorrected_uncertainty = Field(attribute='uncorrected_uncertainty',
-            widget=FloatWidget(),
-            saves_null_values=global_saves_null)
-    
-    thermal_conductivity = Field(attribute='conductivity',
-            widget=FloatWidget(),
-            saves_null_values=global_saves_null)
-
-    # Temperature gradient data associated with interval
-    # gradient_corrected = Field(attribute='gradient',
-    #                             widget=widgets.SitePropertyWidget(ThermalGradient,
-    #                             field='corrected',
-    #                             id_fields = ['site','depth_min','depth_max','reference'],
-    #                             required_fields=['corrected','uncorrected'],
-    #                             varmap={
-    #                                 'gradient_corrected':'corrected',
-    #                                 'gradient_corrected_uncertainty':'corrected_uncertainty',
-    #                                 'gradient_uncorrected':'uncorrected',
-    #                                 'gradient_uncorrected_uncertainty':'uncorrected_uncertainty',
-    #                                 # 'reference':'reference'}))
-    #                                 }))
-    gradient_corrected = Field(attribute='gradient_corrected')
-    gradient_corrected_uncertainty = Field(attribute='gradient_corrected_unc')
-    gradient_uncorrected = Field(attribute='gradient_uncorrected')
-    gradient_uncorrected_uncertainty = Field(attribute='gradient_uncorrected_unc')
-
     class Meta:
-        model = HeatFlow
-        import_id_fields = ['site_name','depth_min','depth_max','reference','heat_flow_corrected']
+        model = Interval
+        import_id_fields = ['site_name','depth_min','depth_max','reference','heat_flow_corrected','heat_flow_uncorrected']
         skip_unchanged = True
-        # report_skipped=False
 
         fields = ['reference'] + choices.HEAT_FLOW_EXPORT
 
         export_order = fields.copy()
         instance_loader_class = CustomInstanceLoader
+        # use_bulk = True
+        # skip_diff = True
 
     def import_obj(self, obj, data, dry_run):
         """
@@ -382,7 +314,6 @@ class HeatFlowResource(CorrectionsMixin,SiteMixin):
         ``import_field()`` results in a ``ValueError`` being raised for
         one of more fields, those errors are captured and reraised as a single,
         multi-field ValidationError."""
-        data['hf_id'] = obj.pk
         errors = {}
         for field in self.get_import_fields():
             if isinstance(field.widget, widgets.ManyToManyWidget):
@@ -398,19 +329,19 @@ class HeatFlowResource(CorrectionsMixin,SiteMixin):
     def after_import_row(self,row,row_result,**kwargs):
         super().after_import_row(row,row_result,**kwargs)
         # decided not to associate heat generation with heat flow. However many uploads will contain a HG value. This will throw and error if listed as a field so need to put it here to save it to the site.
-        hg_id, hg_fields = widgets.site_property(
-                model=HeatGeneration,
-                row=row,
-                exclude=[],
-                id_fields = ['site','value','reference','depth'],
-                required_fields=['value'],
-                varmap={'heat_gen':'value',
-                        'heat_gen_unc': 'uncertainty',
-                        'number_of_heat_gen': 'number_of_measurements',
-                        'heat_gen_method':'method',}
-                        )
-        if hg_id:
-            HeatGeneration.objects.update_or_create(**hg_id,defaults=hg_fields)
+        # hg_id, hg_fields = widgets.site_property(
+        #         model=HeatGeneration,
+        #         row=row,
+        #         exclude=[],
+        #         id_fields = ['site','value','reference','depth'],
+        #         required_fields=['value'],
+        #         varmap={'heat_gen':'value',
+        #                 'heat_gen_unc': 'uncertainty',
+        #                 'number_of_heat_gen': 'number_of_measurements',
+        #                 'heat_gen_method':'method',}
+        #                 )
+        # if hg_id:
+        #     HeatGeneration.objects.update_or_create(**hg_id,defaults=hg_fields)
 
     def after_save_instance(self,instance, using_transactions, dry_run):   
         super().after_save_instance(instance,using_transactions,dry_run)
@@ -444,38 +375,26 @@ def init_reference_instance(row, bibtex):
 
             return ref
     else:
-        # If a bib ID is supplied, check if an entry already exists and retrieve it
-        try:
-            ref = Publication.objects.get(bib_id=row['reference'])
-        except Publication.DoesNotExist:
-            db = BibDatabase()
-            try:
-                db.entries = [self.ref_dict[row['reference']]]
-            except KeyError:
-                ref = Publication.objects.create(bib_id=row['bibtex'])
-            else:
-                ref = Publication.objects.create(bibtex=bib.dumps(db))
-        finally:
-            return ref
+        # # If a bib ID is supplied, check if an entry already exists and retrieve it
+        # try:
+        #     ref = Publication.objects.get(bib_id=row['reference'])
+        # except Publication.DoesNotExist:
+        #     db = BibDatabase()
+        #     try:
+        #         db.entries = [self.ref_dict[row['reference']]]
+        #     except KeyError:
+        #         ref = Publication.objects.create(bib_id=row['bibtex'])
+        #     else:
+        #         ref = Publication.objects.create(bibtex=bib.dumps(db))
+        # finally:
+        #     return ref
+        pass
 
-class SitePropertyMixin(SiteMixin):
+class ConductivityResource(SiteMixin):
     global_saves_null = False
-    site = Field(attribute='site',column_name='site_name',
-        widget=widgets.SiteWidget(Site,
-            field='site_name',
-            render_field='site_name',
-            id_fields=['latitude','longitude'],
-            ))
-
-    def before_import_row(self,row=None,**kwargs):
-        super().before_import_row(row,**kwargs)
-        row['site'] = None
-        row['reference'] = init_reference_instance(row, self.bibtex)
-        row['save_temp'] = False
-
-class ConductivityResource(SitePropertyMixin):
-    global_saves_null = False
-
+    conductivity = Field(attribute='value',
+            column_name='conductivity',
+            widget=FloatWidget())
     rock_group = Field('rock_group',widget=widgets.ChoiceWidget(choices=choices.ROCK_GROUPS))
     rock_origin = Field('rock_origin',widget=widgets.ChoiceWidget(choices=choices.ROCK_ORIGIN))
 
@@ -483,9 +402,7 @@ class ConductivityResource(SitePropertyMixin):
         model = Conductivity
         fields = choices.CONDUCTIVITY_EXPORT
         export_order = fields.copy()
-        import_id_fields = ['site','sample_name','depth','reference']
-        instance_loader_class = CustomInstanceLoader
-        raise_errors = True
+        import_id_fields = ['site_name','depth','conductivity','log_id','reference']
 
     def import_field(self, field, obj, data, is_m2m=False):
         """
@@ -495,9 +412,11 @@ class ConductivityResource(SitePropertyMixin):
         if field.attribute and field.column_name in data:
             field.save(obj, data, is_m2m)
 
-class HeatGenResource(SitePropertyMixin):
+class HeatGenResource(SiteMixin):
     global_saves_null = False
-
+    heat_generation = Field(attribute='value',
+            column_name='heat_generation',
+            widget=FloatWidget())
     rock_group = Field(widget=widgets.ChoiceWidget(choices=choices.ROCK_GROUPS))
     rock_origin = Field(widget=widgets.ChoiceWidget(choices=choices.ROCK_ORIGIN))
 
@@ -505,26 +424,18 @@ class HeatGenResource(SitePropertyMixin):
         model = HeatGeneration
         fields = choices.HEAT_GEN_EXPORT
         export_order = fields.copy()
-        import_id_fields = ['site','sample_name','depth','reference']
+        import_id_fields = ['site_name','sample_name','depth','reference']
 
-class TempResource(SitePropertyMixin):
-
-    # geo_unit = Field(column_name='geological_unit')
-    reference = Field(attribute='reference',
-            column_name='reference', 
-            widget=widgets.PublicationWidget(Publication, field='bibtex', reference_dict=ResourceMixin.ref_dict))
+class TempResource(SiteMixin):
+    temperature = Field(attribute='temperature',
+            column_name='temperature',
+            widget=FloatWidget())
 
     class Meta:
         model = Temperature
         fields = choices.TEMPERATURE_EXPORT
         export_order = fields.copy()
-        import_id_fields = ['site','depth','reference','operator']
+        import_id_fields = ['site_name','depth','temperature','log_id','reference']
 
-    def before_import_row(self, row, **kwargs):
-        super().before_import_row(row, **kwargs)
-        row['reference'] = init_reference_instance(row,self.bibtex)
-        depth = row.get('depth')
-        well_depth = row.get('well_depth')
-        if depth and well_depth:
-            if float(depth) > float(well_depth) - 1/100*float(well_depth):
-                row['is_bottom_of_hole'] = True
+
+

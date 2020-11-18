@@ -1,0 +1,22 @@
+{% load static sekizai_tags %}
+<section class='plot-banner d-flex' data-appear-top-offset='{{offset}}'>
+  <div class='row w-100'>
+    <div class='col-6'>{{content|safe}}</div>
+    <div class='col-6 d-flex justify-content-center plot-container'>
+      <div class='plot d-flex align-items-center' data={{data}} type={{type}} >
+          <span id="earthSpinModal" class='text-center'>
+            <div style="background-image: url('{% static 'main/images/heat_flow.svg' %}')" class='earth spin'></div>
+            <h3>Generating plot...</h3>
+          </span>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+{% comment %} 
+{% addtoblock "js" %}
+  <script>
+
+  </script>
+{% endaddtoblock %} {% endcomment %}

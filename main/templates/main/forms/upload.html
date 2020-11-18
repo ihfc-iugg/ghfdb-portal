@@ -1,0 +1,39 @@
+{% load widget_tweaks custom_tags%}
+
+<form name='upload' class="grid-form" method="post"  enctype="multipart/form-data" action="#">
+  {% csrf_token %}
+    <div class="row gtr-uniform">
+      <div class="col-12">
+        {% render_field form.data_type placeholder=form.data_type.label required='required' %}
+      </div>
+      {% comment %} <div class="col-3">
+        <a class="button primary fit" id='template-download' value='Get Template'>Get Template <i class="fas fa-file-download fa-2x"></i></a>
+        
+      </div> {% endcomment %}
+      <div class="col-6 col-12-xsmall">
+        {% render_field form.first_name placeholder=form.first_name.label required='required' %}
+      </div>
+      <div class="col-6 col-12-xsmall">
+        {% render_field form.last_name placeholder=form.last_name.label required='required' %}
+      </div>
+      <div class="col-12">
+        {% render_field form.email placeholder=form.email.label required='required' %}
+      </div>
+      <div class="col-12">
+          {% render_field form.data id=form.data.id class="custom-file-input" placeholder=form.data.label required='required' accept=".csv"%}
+          <label class="custom-file-label" for={{ form.data.id_for_label }}>Choose file</label>
+      </div>
+
+      <!-- Bibtex input -->
+      <div class="col-12">
+        {% render_field form.bibtex placeholder="Copy and paste a bibtex file to go with your data. Leaving this blank will autogenerate an unpublished bibtex reference that will contain your name and the time of upload." %}
+      </div>
+
+      <!-- Submit buttons -->
+      <div class="col-12">
+        <ul class="actions fit">
+          <li><input class="primary" type="submit" data-toggle="modal" value='Submit'></li>
+        </ul>
+      </div>
+    </div>
+  </form>
