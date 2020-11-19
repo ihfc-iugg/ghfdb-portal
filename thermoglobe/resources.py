@@ -392,7 +392,7 @@ def init_reference_instance(row, bibtex):
 
 class ConductivityResource(SiteMixin):
     global_saves_null = False
-    conductivity = Field(attribute='value',
+    conductivity = Field(attribute='conductivity',
             column_name='conductivity',
             widget=FloatWidget())
     rock_group = Field('rock_group',widget=widgets.ChoiceWidget(choices=choices.ROCK_GROUPS))
@@ -414,7 +414,7 @@ class ConductivityResource(SiteMixin):
 
 class HeatGenResource(SiteMixin):
     global_saves_null = False
-    heat_generation = Field(attribute='value',
+    heat_generation = Field(attribute='heat_generation',
             column_name='heat_generation',
             widget=FloatWidget())
     rock_group = Field(widget=widgets.ChoiceWidget(choices=choices.ROCK_GROUPS))

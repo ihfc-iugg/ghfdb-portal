@@ -436,6 +436,9 @@ class Conductivity(SiteProperty,SharedProperties):
         db_table = 'thermal_conductivity'
         unique_together = ['conductivity','depth','site','log_id','reference']
 
+    def __str__(self):
+        return '{}'.format(self.conductivity)
+
 class HeatGeneration(SiteProperty,SharedProperties):
     UNITS = '[{}]'.format(units.HTML.get('heat_generation'))
 
@@ -461,6 +464,9 @@ class HeatGeneration(SiteProperty,SharedProperties):
         verbose_name_plural = 'heat generation'
         db_table = 'heat_generation'
         unique_together = ['heat_generation','depth','site','reference']
+
+    def __str__(self):
+        return '{}'.format(self.heat_generation)
 
 class Temperature(SharedProperties):
     UNITS = '[{}]'.format(units.HTML.get('temperature'))
