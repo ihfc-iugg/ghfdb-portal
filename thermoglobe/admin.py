@@ -57,13 +57,16 @@ class SiteAdmin(BaseAdmin, ImportExportActionModelAdmin):
     modifiable=False
 
     def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-        return queryset.prefetch_related('reference').annotate(
-            _heat_flow_count=Count('intervals',distinct=True),
-            _conductivity_count=Count('conductivity',distinct=True),
-            _heat_gen_count=Count('heat_generation',distinct=True),
-            _temperature_count=Count('temperature',distinct=True),
-            )
+        return (super().get_queryset(request)
+            # .prefetch_related('reference','intervals')
+            # .select_related()
+            # .annotate(
+            #     _heat_flow_count=Count('intervals',distinct=True),
+            #     _conductivity_count=Count('conductivity',distinct=True),
+            #     _heat_gen_count=Count('heat_generation',distinct=True),
+            #     _temperature_count=Count('temperature',distinct=True),
+            #     )
+                )
 
     def _reference(self,obj):
         return obj.reference.first()
