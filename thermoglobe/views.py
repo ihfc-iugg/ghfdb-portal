@@ -1,16 +1,12 @@
-import json
+import json, csv, time, zipfile, re
 from urllib.parse import parse_qs
-import csv
-from datetime import datetime
-import time
-import zipfile
+from datetime import datetime as dt
 from io import StringIO
-
+from itertools import zip_longest
 from django import forms
 from django.contrib import messages
 from django.contrib.gis.db.models.functions import AsGeoJSON
 from django.core import serializers
-from django.core.mail import send_mail
 from django.core.serializers import deserialize, serialize
 from django.db.models import Avg, Count, F, FloatField, Max, Min, Q, Value
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
@@ -19,7 +15,7 @@ from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_POST
-from django.views.generic import DetailView, TemplateView, View
+from django.views.generic import DetailView, TemplateView, View, ListView
 from django.db.models.functions import Cast, Coalesce
 from django.utils.html import mark_safe
 from django.apps import apps
@@ -27,127 +23,42 @@ from django.utils.text import slugify
 from thermoglobe.mixins import DownloadMixin 
 from thermoglobe.models import Publication
 from tablib import Dataset
+from meta.views import MetadataMixin
 
 from main.utils import get_page_or_none
-from main.views import PageMixin, PageMetaMixin
+from main.views import PageMetaMixin
 from main.models import Page
 from users.models import CustomUser
 
-from . import plots, resources, tables, choices
-from .forms import BetterSiteForm, UploadForm, ConfirmUploadForm, SiteMultiForm, DownloadForm
-from .models import Conductivity, Interval, HeatGeneration, Site, Temperature
-from .utils import get_db_summary, Hyperlink
+from . import resources, tables, choices, import_choices
+from .forms import UploadForm, SiteMultiForm, DownloadForm, ConfirmUploadForm
+from .models import Conductivity, Interval, HeatGeneration, Site, Temperature, Author, Publication
+from .utils import Hyperlink, ACCEPTED_PLOT_TYPES
 from .filters import WorldMapFilter
-from tables.mixins import MultiTableMixin
-import re
 from tempfile import NamedTemporaryFile
 from bs4 import BeautifulSoup
+from import_export.forms import ConfirmImportForm
+from thermoglobe.mixins import TableMixin
+from meta.views import Meta
+from thermoglobe import plots
 
-REFERENCE_FIELDS = [
-    ('reference__bib_id','bib_id'),
-    ('reference__doi','doi'),
-    ]
-
-HEATFLOW_FIELDS = [  
-
-    ('reliability', 'heatflow_reliability'),
-    ('corrected','heatflow_corrected'),
-    ('corrected_uncertainty','heatflow_corrected_uncertainty'),
-    ('uncorrected','heatflow_uncorrected'),
-    ('uncorrected_uncertainty','heatflow_uncorrected_uncertainty'),
-    ('thermalgradient__corrected','gradient_corrected'),
-    ('thermalgradient__corrected_uncertainty','gradient_corrected_uncertainty'),
-    ('thermalgradient__uncorrected','gradient_uncorrected'),
-    ('thermalgradient__uncorrected_uncertainty','gradient_uncorrected_uncertainty'),
-    ('conductivity','thermal_conductivity'),
-    'conductivity_uncertainty',
-    'number_of_conductivities',
-    'conductivity_method',
-    # ('heat_generation','heat_generation
-    # ('heat_generation_uncertainty','heatgeneration__uncertainty'),
-    # ('heat_generation_number_of_measurements','heatgeneration__number_of_measurements'),
-    # ('heat_generation_method','heatgeneration__method'),
-    'comment',
-    ]
-
-CONDUCTIVITY_FIELDS = [
-    'sample_name',
-    ('value','thermal_conductivity'),
-    'uncertainty',
-    'method',
-    'depth',
-    'rock_group',
-    'rock_origin',
-    'rock_type',
-    ('geo_unit__name','geo_unit'),
-    'age',
-    'age_min',
-    'age_max',
-    'age_method',
-    'comment',
- ]
-
-def data(request):
-    """Handles the filter request from map view"""
-    t = time.time()
-    query = dict(request.GET)
-    data_type = query.pop('data_type')[0]
-    model = apps.get_model('thermoglobe', data_type)
-    sites = getattr(Site.objects,data_type)()
-    result = WorldMapFilter(request.GET,queryset=sites)
-    fields = ['site_slug','site_name','latitude','longitude','elevation','value','reference__bib_id']
-    filtered_qs = result.qs.annotate(site_slug=F('slug'))
-
-    t2 = time.time()
-    print('Database queried in: ',t2 - t,'s')
-
-
-    if request.GET.get('filter') == 'false':
-        return download_queryset(request, model, filtered_qs)
-    else:
-        r = JsonResponse({
-            'type': data_type,
-            'columns': ['site_slug','Site Name','Latitude','Longitude','Elevation [m]','value','Reference'],
-            'data': list(filtered_qs.values_list(*fields)[:100])
-            })
-        print('Response prepared in: ',time.time() - t2,'s')
-        print('Size: ',len(r.content)/10**6,'MB')
-        return r
-
-
-# def get_download_fields(data_type):
-#     if data_type == 'heat_flow':
-#         return Interval, heat_flow_sites()
-#     elif data_type == 'gradient':
-#         return Interval, gradient_sites()
-#     elif data_type == 'conductivity':
-#         return Conductivity, conductivity_sites()
-#     elif data_type == 'heat_generation':
-#         return HeatGeneration, heat_generation_sites()
-#     elif data_type == 'temperature':
-#         return Temperature, temperature_sites()
+# for handling temporary file uploads before confirmation
+from django.core.cache import caches
+cache = caches['file_cache']
 
 def get_upload_template(request,template_name):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="{}_upload_template.csv"'.format(template_name)
     writer = csv.writer(response)
-    fields = getattr(choices, data_type)
+    fields = getattr(import_choices, template_name)
     writer.writerow([field[1] if len(field) == 2 else field for field in fields])
     return response
 
-
-class WorldMap(TemplateView):
-    template_name = 'thermoglobe/world_map.html'
+class WorldMap(DownloadMixin, TableMixin, TemplateView):
+    template_name = 'world_map.html'
     filter = WorldMapFilter
-    options = dict(
-        autoWidth=False,
-        dom='<"top d-flex justify-content-around align-items-baseline"lpf>t<"bottom"ip><"clear">',
-        pageLength=100,
-        deferRender=True,
-        responsive=True,
-        )
-    form = DownloadForm
-    table_fields = ['site_slug','site_name','latitude','longitude','country','sea','province__source_id',]
+    download_form = DownloadForm
+    table_fields = ['site_slug','site_name','latitude','longitude','country','sea','province__id',]
     field_aliases = ['site_slug','Site Name','Latitude','Longitude','Country','Sea','province']
 
     def get_context_data(self, **kwargs):
@@ -156,7 +67,7 @@ class WorldMap(TemplateView):
             filter = self.filter(),
             table = dict(
                 id='dataTable',
-                options=self.options,
+                options=self.table_options(),
                 columns=self.table_fields + [mark_safe('Heat Flow<br>[mW m<sup>3</sup>]')],
             ),
             map = dict(
@@ -165,179 +76,163 @@ class WorldMap(TemplateView):
                 cluster=True,
                 color=True,
             ),
-            form=self.form()
-            )     
-        context['options'] = mark_safe(json.dumps(self.options))
+            )
+        context['meta'] = Meta(
+            title='World Map | HeatFlow.org',
+            description='Interactive search and download of all data within the ThermoGlobe database. The fastest wasy to find published and unpublished thermal data related to studies of the Earth.',
+            keywords=['heat flow',' thermal gradient', 'thermal conductivity','temperature','heat generation','download','ThermoGlobe','data','access']
+        )
         return context
    
+    @property
+    def data_type(self):    
+        """Convenience method"""
+        return self.request.POST.get('data_type','heat_flow')
+
     def post(self, request):
         """This function controls the download of the csv file"""
         data_type = request.POST.get('data_type')
 
-        if data_type in ['heat_flow','gradient']:
-            model = apps.get_model('thermoglobe', 'interval')
-        else:
-            model = apps.get_model('thermoglobe', data_type.replace('_',''))
-
-        sites = getattr(Site.objects,data_type)
-        result = WorldMapFilter(request.POST,queryset=sites)
-
-        if request.is_ajax():
-            if data_type in ['heat_generation','conductivity']:
-                value = f'avg_{data_type}'
-            elif data_type == 'temperature':
+        if request.is_ajax() and self.get_filtered_queryset().is_valid():
+            if data_type in ['heat_generation','conductivity','temperature']:
                 value = 'count'
             else:
                 value = data_type
 
             return JsonResponse({
                 'type': data_type,
-                'options': self.options,
+                'options': self.table_options(),
                 'columns': self.field_aliases  + [value],
-                'data': list(result.qs
+                'data': list(self.get_filtered_queryset().qs
                     .annotate(site_slug=F('slug'))
                     .values_list(*self.table_fields + [value])
                     )
             })
         else:
-            return self.download(data_type, model, result.qs)
+            return self.download()
 
+    def get_filtered_queryset(self):
+        return self.filter(self.request.POST, queryset=self.get_sites())
 
-    def download(self, data_type, model, filtered_qs):
-        export_fields = getattr(choices, data_type).get(self.request.POST.get('options')) + ['reference__bib_id']
-        site_fields = [f.name for f in Site._meta.fields]
+    def get_sites(self):
+        # m = apps.get_model('thermoglobe',key)
+        return getattr(Site.objects,self.data_type)()
+
+    def download(self):
         
-        query_fields = ['site__'+field if field in site_fields else field for field in export_fields ]
+        options = self.download_form(self.request.POST)
+        if options.is_valid():
+            download_type = options.cleaned_data['download_type']
+            data_select = options.cleaned_data['data_select']
 
-        data = model.objects.filter(site__in=filtered_qs).values_list(*query_fields)
+            # prepare the response for csv file
+            response = HttpResponse(content_type='application/zip')
+            dt_format = '%d_%b_%Y'
+            response['Content-Disposition'] = f'attachment; filename="Thermoglobe_{dt.now().strftime(dt_format)}.zip"'
 
-        # get all references in the current dataset
-        all_refs = data.values_list('reference__bib_id',flat=True)
+            zf = zipfile.ZipFile(response,'w')
 
-        # get a list of bibtex data from unique references in the current dataset
-        bibtex_list = Publication.objects.filter(bib_id__in=all_refs).values_list('bibtex',flat=True)
+            publications = apps.get_model('thermoglobe','publication').objects
+            reference_list = set()
 
-        return self.prepare_zipped_response(data, export_fields, bibtex_list)
-        # return self.prepare_response(data,export_fields)
+            for key in data_select:
+                #get the download fields
+                csv_headers = self.get_csv_headers(key, download_type)
 
+                # make site fields are appropriate for query
+                formatted_fields = self.format_query_fields(key, download_type)
 
-    def prepare_response(self, data, headers):
-        # prepare the response for csv file
-        filename = 'ThermoGlobe_{}.csv'.format(datetime.now().strftime('%d_%b_%Y'))
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
-        writer = csv.writer(response)
+                if key == 'interval':
+                    qs = apps.get_model('thermoglobe',key).heat_flow.filter(site__in=self.get_filtered_queryset().qs)
+                else:
+                    qs = apps.get_model('thermoglobe',key).objects.filter(site__in=self.get_filtered_queryset().qs)
 
-        # write the header row;
-        writer.writerow(headers)
+                
 
-        # write the rows to the csv file
-        for i in data:
-            writer.writerow(i)
+                zf.writestr(f'{key}.csv',self.csv_to_bytes(
+                            data=qs.values_list(*formatted_fields), 
+                            headers=csv_headers))
 
-        return response
-
-    def prepare_zipped_response(self, data, headers, bibtex_list):
-        # prepare the response for csv file
-        filename = 'ThermoGlobe_{}'.format(datetime.now().strftime('%d_%b_%Y'))
-        response = HttpResponse(content_type='application/zip')
-        response['Content-Disposition'] = 'attachment; filename="{}.zip"'.format(filename)
-        zf = zipfile.ZipFile(response,'w')
-
-        # put csv data in zipfile object
-        headers = [header.split('__')[-1] for header in headers]
-        zf.writestr('{}.csv'.format(self.request.POST.get('data_type')),self.csv_to_bytes(data, headers))
-
-        # put bibtext list into a zipfile object
-        zf.writestr('bibliography.bib',self.bibtex_to_bytes(bibtex_list))
+                reference_list.update(list(qs.exclude(reference__bibtex__isnull=True).values_list('reference__bibtex',flat=True).distinct()))
 
 
-        return response
+            if reference_list:
+                zf.writestr(f'Thermoglobe_{dt.now().strftime(dt_format)}.bib', self.bibtex_to_bytes(reference_list))
+                return response
+            else:
+                context = self.get_context_data(*args, **kwargs)
+                context['download_form'] = options
+                return render(request, template_name=self.template_name, context=context)
 
-    def bibtex_to_bytes(self, bibtex_list):
-        bib_buffer = StringIO()
-
-        for bib_entry in bibtex_list:
-            bib_buffer.write(bib_entry)
-
-        return bib_buffer.getvalue()
-
-    def csv_to_bytes(self, data, headers):
-        csv_buffer = StringIO()
-        writer = csv.writer(csv_buffer)
-
-        # write the header row;
-        writer.writerow(headers)
-
-        # write the rows to the csv file
-        for i in data:
-            writer.writerow(i)
-
-        return csv_buffer.getvalue()
-
-class UploadView(PageMetaMixin,TemplateView):
-    template_name = 'main/upload.html'
+class UploadView(TableMixin, PageMetaMixin,TemplateView):
+    template_name = 'upload.html'
+    confirm_template_name = 'upload_confirm.html'
     page_id = 12
-    upload_form = UploadForm
-    confirm_form = ConfirmUploadForm
-    success_template = 'main/upload_success.html'
-    has_errors_template = ''
-    has_validation_errors_template = ''
-    options = dict(
-        autoWidth=False,
-        dom='<"top d-flex justify-content-around align-items-baseline"lpf>t<"bottom"ip><"clear">',
-        order_by='year',
-        pageLength=100,
-        deferRender=True,
-        responsive=True,
-    )
+    form = UploadForm
+    # options = dict(autoWidth=True)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['form'] = self.upload_form
+        context['form'] = self.form
         context['templates'] = ['heat_flow','gradient','temperature','conductivity','heat_generation']
+        context['upload_success'] = self.request.session.pop('upload_success',False)
         return context
 
-    def post(self, request):
-        form = self.upload_form(request.POST, request.FILES)
-        if form.is_valid():
-            if not form.cleaned_data['bibtex']:
-                form.cleaned_data['bibtex'] = get_unpublished_bibtex(form.cleaned_data)
-            response = self.process_data(request, form)
-            return response
-        args = {'form': form, 'response': "Something wen't wrong!"}
-        return render(request, self.template_name, args)
-
     @method_decorator(require_POST)
-    def process_data(self, request, form):
-        resource = self.get_resource_class(form)
-        data = self.read_import_file(form)
-        if isinstance(data, HttpResponse):
-            # reading the file encountered an error
-            return data
+    def post(self, request, *args, **kwargs):
+        context = super().get_context_data(**kwargs)
 
-        dataset = Dataset().load(data, format='csv')
+        form = self.form(request.POST, request.FILES)
+        if form.is_valid():
+            # submitted form is valid so temporarily save data to cache for later use
+            import_file = form.cleaned_data.pop('data')
 
-        # result = resource.import_data(dataset=dataset, dry_run=True,raise_errors=True)
-        result = resource.import_data(dataset=dataset, dry_run=True)
-        context = {'table': self.prepare_output_table(result)}
+            # read in the dataset
+            dataset = self.get_dataset(import_file)
+            # A HTTPResponse will be returned if an error is enounctered reading the file
+            if isinstance(dataset, HttpResponse):
+                return dataset 
 
-        if result.has_errors():  # Something wen't wrong on our side         
-            return self.get_template_response(request, context, 'errors')
-        elif result.has_validation_errors():  # Something wen't wrong on the users side
-            return self.get_template_response(request, context, 'validation_error')
-        else:  # Import was succesful
-            # with NamedTemporaryFile(mode='w+b') as temp:
-            #     # Encode your text in order to write bytes
-            #     temp.write('abcdefg'.encode())
-            #     # put file buffer to offset=0
-            #     temp.seek(0)
+            # get the relevant resource
+            resource = self.get_resource_class(form)
 
-            #     # use the temp file
-            #     cmd = "cat "+ str(temp.name)
-            #     print(os.system(cmd))
-            form.save()
-            return self.get_template_response(request, context, 'success')
+            #import the data
+            result = resource.import_data(dataset, dry_run=True, user=request.user)
+
+            # Something wen't wrong on our side      
+            if result.has_errors():     
+                context.update(
+                    table= self.prepare_output_table(result, errors='error'),
+                    page= self.get_page(15),
+                    errors = result.rows,
+                )
+            # User did something wrong
+            elif result.has_validation_errors():  
+                context.update(
+                    table= self.prepare_output_table(result, errors='validation'),
+                    page = self.get_page(15),
+                    validation_errors = result.invalid_rows,
+                )
+            else:
+                # save to cache so we can redirect and load in another view
+                cache.set(request.session.get('session_key'), import_file)
+                context.update(
+                    confirm_form = self.form(initial=form.cleaned_data,hidden=True),
+                    table = self.prepare_output_table(result),
+                    page = self.get_page(14),
+                    sidebar='inactive',
+                )
+            return render(request, self.confirm_template_name,context=context)
+
+        else:
+            context['form'] = form
+            return render(request, self.template_name,context=context)
+
+
+    def get_bibtex_data(form):
+        if not form.cleaned_data['bibtex']:
+            form.cleaned_data['bibtex'] = get_unpublished_bibtex(form.cleaned_data)
+        return form
 
     def get_template_response(self, request, context, status):
         context.update(page=self.get_page_context(status))
@@ -345,14 +240,6 @@ class UploadView(PageMetaMixin,TemplateView):
             self.get_template(status), 
             context=context,
             )
-
-    def get_template(self, template):
-        templates = {
-            'success': self.success_template,
-            'errors': self.has_errors_template,
-            'validation_error': self.has_validation_errors_template,
-        }
-        return templates.get(template)
 
     def get_page_context(self, page):
         try:
@@ -362,76 +249,73 @@ class UploadView(PageMetaMixin,TemplateView):
 
     def get_resource_class(self, form):
         resource_switch = {
-            '0': resources.HeatFlowResource(),
-            '1': resources.HeatFlowResource(),
+            '0': resources.IntervalResource(),
+            '1': resources.IntervalResource(),
             '2': resources.TempResource(),
             '3': resources.ConductivityResource(form.cleaned_data['bibtex']),
             '4': resources.HeatGenResource(),
         }
         return resource_switch[str(form.cleaned_data['data_type'])]
 
-    def read_import_file(self, form):
-        data_file = form.cleaned_data['data']
+    def get_dataset(self, data_file):
         try:
-            return data_file.read().decode('utf-8')
+            data = data_file.read().decode('utf-8')
         except UnicodeDecodeError as e:
-            return HttpResponse(_(u"<h1>Imported file has a wrong encoding: %s</h1>" % e))
+            return HttpResponse(_(u"<h1>Imported file has a wrong encoding: {}</h1>".format(e)))
         except Exception as e:
-            return HttpResponse(_(u"<h1>%s encountered while trying to read file: %s</h1>" % (type(e).__name__, import_file.name)))
+            return HttpResponse(_(u"<h1>{} encountered while trying to read file: {}</h1>".format(type(e).__name__, import_file.name)))
 
-    def get_html_tag(self, import_type):
+        return Dataset().load(data, format='csv')
+
+    def get_html_tag(self, import_type, id=None):
         tags = {
-            'new': '<span class="badge badge-success">{}</span>',
-            'update': '<span class="badge badge-info">{}</span>',
-            'error': '<span class="badge badge-danger">{}</span>', 
-            'skip': '<span class="badge badge-warning">{}</span>', 
+            'new': '<i class="fas fa-check-circle text-success"></i>',
+            'update': '<i class="fas fa-pen-square text-info"></i>',
+            # 'error': '<i class="fas fa-times-circle text-danger"></i>',
+            'skip': '<i class="fas fa-forward text-info"></i>',
+            'error': f'<i class="fas fa-exclamation-triangle text-warning" data-toggle="modal" data-target="#{id}"></i>',
+            # 'new': '<span class="badge badge-success">{}</span>',
+            # 'update': '<span class="badge badge-info">{}</span>',
+            # 'error': '<span class="badge badge-danger">{}</span>', 
+            # 'invalid': '<span class="badge badge-warning">{}</span>', 
+            # 'skip': '<span class="badge badge-skip">{}</span>', 
             }
         return tags[import_type].format(import_type)
 
-    def prepare_output_table(self, result):
+    def prepare_output_table(self, result, errors=False):
         # adds html icon to display import_type
-        table = [[self.get_html_tag(row.import_type)] +
-                 row.diff for row in result.rows]
+        if errors == 'validation':
+            table = [[self.get_html_tag('error',f"row-{id_num}")] + [str(r) for r in row.values] for id_num, row in enumerate(result.invalid_rows)]
+        elif errors == 'error':
+            table = [[self.get_html_tag('error',f"row-{id_num}")] + self.get_values_from_row(row) for id_num, row in enumerate(result.rows) if row.errors]
+        else:
+            table = [[self.get_html_tag(row.import_type)] + row.diff for row in result.rows]
 
         headers = result.diff_headers.copy()
         headers.insert(0, '_')
 
-        # return [{key: val for key, val in zip(headers, row)} for row in table]
-        return {
-            'id': 'importResult',
-            'data': mark_safe(json.dumps(dict(
-                id = 'importResult',
-                columns = headers,
-                data = table,
-            )))
-        }
+        return dict(
+            id='importResult',
+            data=json.dumps(table),
+            columns=[field.replace('_',' ') for field in headers],
+            )
 
+    def get_values_from_row(self, row):
+        # what a cunt of a thing this is!
+        return [str(val) for val in row.errors[0].row.values()]
 
-
-        # return dict(
-        #         id='importResult',
-        #         data=mark_safe(dict(
-        #             columns=headers,
-        #             data=table)),                
-        #         )
-
-class SiteView(DownloadMixin, DetailView):
-    template_name = "thermoglobe/site_details.html"
+class SiteView(TableMixin, DownloadMixin, DetailView):
+    template_name = "site_details.html"
     model = Site
     form = SiteMultiForm
     tables = dict(
-        intervals=['depth_min','depth_max','heat_flow','gradient','average_conductivity','heat_generation'],
+        intervals=['depth_min','depth_max','heat_flow_corrected','heat_flow_uncorrected','gradient_corrected','gradient_uncorrected'],
         conductivity=['log_id','depth','conductivity','uncertainty','method'],
         temperature=['log_id','depth','temperature','uncertainty','method','circ_time'],
         heat_generation=['log_id','depth','heat_generation','uncertainty','method'],
     )
     options = dict(
-        autoWidth=False,
-        dom='<"top d-flex justify-content-around align-items-baseline"lpf>t<"bottom"ip><"clear">',
-        order_by='year',
         pageLength=50,
-        deferRender=True,
-        responsive=True,
     )
 
     def get_context_data(self, **kwargs):
@@ -443,15 +327,14 @@ class SiteView(DownloadMixin, DetailView):
             'Geological Province': self.get_object().province,
             'CGG Basins and Plays': self.get_object().basin,
             })
-        context['options'] = json.dumps(self.options)
-        
-        context['tables'] = {}
+        context['meta'] = self.get_object().as_meta(self.request)
 
+        context['tables'] = {}
         for table, fields in self.tables.items():
             context['tables'][table.replace('_',' ')] = self.get_table(table, fields)
 
         for table in context['tables'].values():
-            if table['data']:
+            if not table['data'] == '[]':   #cant check for truth because data is a json string
                 table['active'] = True
                 break
 
@@ -465,92 +348,179 @@ class SiteView(DownloadMixin, DetailView):
             columns=[field.replace('_',' ').capitalize() for field in fields],
             )
 
-
-    def post(self, request,  *args, **kwargs):
-        SITE = self.get_object()
-
-        # prepare the response for csv file
-        response = HttpResponse(content_type='application/zip')
-        response['Content-Disposition'] = 'attachment; filename="{}.zip"'.format(SITE.pk)
-        zf = zipfile.ZipFile(response,'w')
-
-        for key, qs in SITE.get_data().items():
-            if qs.exists():
-                export_fields = getattr(choices, key).get('detailed') + ['reference__bib_id']
-                site_fields = [f.name for f in Site._meta.fields]
-                query_fields = ['site__'+field if field in site_fields else field for field in export_fields ]
-                # if key in ['temperature','conductivity','heat_generation']:
-                #     query_fields[query_fields.index(key)] = 'value'
-
-                # create a csv file an save it to the zip object
-                zf.writestr('{}.csv'.format(key),self.csv_to_bytes(qs.values_list(*query_fields), export_fields))
-
-        # add bibtex file to zip object
-        zf.writestr('{}.bib'.format(SITE.pk), self.bibtex_to_bytes(SITE.reference.values_list('bibtex',flat=True)))
-
-        return response
-
-class Explore(PageMetaMixin, TemplateView):
-    table = None
+class Explore(PageMetaMixin, ListView):
+    model = None
+    template_name = 'explore.html'
+    accepted_plot_types = ACCEPTED_PLOT_TYPES
+    field_mapping = plots.field_mapping
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         soup = BeautifulSoup(context['page'].content,features="html.parser")
-        context["content"] = [x.prettify() for x in soup.find_all('div')]
-        if self.table is not None:
-            context['data'] = self.table()
-
+        context['lead_paragraph'] = self.get_soup_until(soup.find_all('p')[0],'header')
+        context['content'] = self.parse_content(soup)
+        context['content'] = zip_longest(context['content'],self.plots)
         return context  
 
+    def parse_content(self,soup):
+        headers = soup.find_all('header')
+        content = []
+        for h in headers:
+            content.append(self.get_soup_until(h, 'header'))
+        return content
+
+    def get_soup_until(self, element, stop_on):
+        html = element.prettify()
+        el = element.find_next_sibling()
+        while el is not None and el.name != stop_on:
+            html += el.prettify()
+            el = el.find_next_sibling()
+        return html
+
+    def get(self,request,*args, **kwargs):
+        if request.is_ajax():
+            """plots are generated here through ajax requests"""
+            field = request.GET.get('field',None)
+            data_type = request.GET['type']
+            if not data_type in self.accepted_plot_types:
+                return JsonResponse({
+                    "status_code" : 404,
+                    "error" : "The resource was not found",
+                })
+            plot = getattr(self.get_queryset(), data_type)
+            if field:
+                plot = plot(self.field_mapping.get(field))
+            else:
+                plot = plot()
+            return JsonResponse({'result': plot})
+
+        return super().get(request,*args, **kwargs)
+
 class ExploreHeatFlow(Explore):
-    table = tables.HeatFlow
-    template_name = 'thermoglobe/explore/heat_flow.html'
     page_id = 5
+    model = Interval
+    plots = plots.heat_flow
+
+    def get_queryset(self, *args, **kwargs):
+        return self.model.heat_flow.all()
 
 class ExploreGradient(Explore):
-    table = tables.Gradient
-    template_name = 'thermoglobe/explore/gradient.html'
     page_id = 6
+    model = Interval
+    plots = plots.gradient
 
-class ExploreTemperature(Explore):
-    table = tables.Temperature
-    template_name = 'thermoglobe/explore/temperature.html'
-    page_id = 7
+    def get_queryset(self, *args, **kwargs):
+        return self.model.gradient.all()
 
-class ExploreConductivity(Explore):
-    table = tables.Conductivity
-    template_name = 'thermoglobe/explore/conductivity.html'
-    page_id = 8
+class PublicationListView(TableMixin, PageMetaMixin, ListView):
+    page_id = 10
+    model = Publication
+    template_name = "publication_list.html"
+    column_headers = ['slug', 'doi', 'type','author', 'title', 'year', 'journal','publisher']
+    options = {'pageLength':50}
+    mark_safe = True
 
-class ExploreHeatGen(Explore):
-    table = tables.HeatGeneration
-    template_name = 'thermoglobe/explore/heat_gen.html'
-    page_id = 9
+    def get_queryset(self):
+        return super().get_queryset().exclude(bibtex__exact='').values('slug','bibtex')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+        context['table'] = dict(
+            id='publicationTable',
+            columns = self.column_headers,
+            )
+        return context
+
+    def get(self,request,*args, **kwargs):
+        if request.is_ajax():
+            return JsonResponse({'data':list(self.get_queryset())})
+        return super().get(request,*args, **kwargs)
+
+class PublicationDetailsView(TableMixin, DownloadMixin, MetadataMixin, DetailView):
+    template_name = "publication_details.html"
+    download_form = DownloadForm
+    model = Publication
+    options = {'pageLength':50}
+    tables = dict(
+        intervals=['depth_min','depth_max','heat_flow','gradient'],
+        conductivity=['count','depth_min','depth_max','min_conductivity','max_conductivity'],
+        temperature=['count','depth_min','depth_max','min_temperature','max_temperature'],
+        heat_generation=['count','depth_min','depth_max','min_heat_generation','max_heat_generation'],
+        )
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['bibtex'] = json.dumps(self.get_object().bibtex)
+        context['meta'] = self.get_object().as_meta(self.request)
+        context['sidebar'] = 'active'
+        context['tables'] = {}
+
+        for table, fields in self.tables.items():
+            context['tables'][table.replace('_',' ')] = self.get_table(table, fields)
+
+        for table in context['tables'].values():
+            if table['data']:
+                table['active'] = True
+                break
+
+        return context
+
+    def get_table(self,data_type, fields):
+        fields = ['slug','site_name','latitude','longitude'] + fields
+        qs = (apps.get_model('thermoglobe','Site')
+                .objects.filter(reference=self.get_object())
+                .table(data_type)
+                .values_list(*fields)
+        )
+        return dict(
+            id=slugify(data_type),
+            data=json.dumps(list(qs)),
+            columns=[field.replace('_',' ') for field in fields],
+            )
+
+class AuthorDetailsView(TableMixin, DownloadMixin, MetadataMixin, DetailView):
+    template_name = "author_details.html"
+    model = Author
+    column_headers = ['slug', 'doi', 'year', 'publication']
+    options = dict(dom='')
+    mark_safe=True
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['table'] = dict(
+            id='publicationTable',
+            columns=self.column_headers,
+            )
+        context['meta'] = self.get_object().as_meta(self.request)
+        return context
+    
+    def get_sites(self, context):
+        return Site.objects.filter(reference__first_author=context['author'])
+
+    def get(self,request,*args, **kwargs):
+        if request.is_ajax():
+            return JsonResponse({'data':list(self.get_publications())})
+        return super().get(request,*args, **kwargs)
+
+    def get_publications(self):
+        return self.get_object().get_publications().exclude(bibtex__exact='').values('slug','bibtex')
 
 
-def plots(request):
-    table_map = {
-        'heat_flow': tables.HeatFlow,
-        'gradient': tables.Gradient,
-        'temperature':tables.Temperature,
-    }
+@require_POST
+def upload_confirm(request):
+    data = cache.get(request.session.get('session_key'))
+    if request.POST.get('bibtex') == '':
+        updated = request.POST.copy()
+        updated.update(bibtex=get_unpublished_bibtex(request.POST))
+        form = ConfirmUploadForm(updated, {'data':data})
+    else:
+        form = ConfirmUploadForm(request.POST, {'data':data})
+        
+    if form.is_valid():
+        form.save()
+        request.session['upload_success'] = True
+    return redirect(reverse("thermoglobe:upload"))
 
-    table = table_map[request.GET['data']]()
-    plot_method = getattr(table,request.GET['type'])
-
-    return JsonResponse({'result': plot_method()})
-
-# def plots(request):
-#     models = {
-#         'heat_flow': tables.HeatFlow,
-#         'gradient': tables.Gradient,
-#         'temperature':tables.Temperature,
-#     }
-
-#     table = table_map[request.GET['data']]()
-#     plot_method = getattr(table,request.GET['type'])
-
-#     return JsonResponse({'result': plot_method()})
 
 def get_site_fields():
     exclude = ['slug','id','uploaded_by','date_added','added_by','date_edited','edited_by','geom']
@@ -579,7 +549,7 @@ def get_site_fields():
 
 
 def get_unpublished_bibtex(form):
-    timestamp = datetime.now()
+    timestamp = dt.now()
     return "@Unpublished{{{last_name}{year},\
         author    = {{{last_name}, {first_name}}},\
         title     = {{Unpublished data upload to Heatflow.org - {date}}},\

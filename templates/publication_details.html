@@ -1,0 +1,39 @@
+{% extends "basemap.html" %}
+{% load static sekizai_tags geojson_tags %}
+
+{% block sidebar %}
+    {% include "sidebar/publication.html" %}
+{% endblock sidebar %}
+
+{% block content %}
+  {{ block.super }}
+  <div class='inner'>
+    <div class='text-center my-2'>
+      <em><h3 id='refTitle'></h3></em>
+    </div>
+    <section class='pt-0'>
+      {% include "components/multi_table.html" %}
+    </section>       
+  </div>
+
+  {% addtoblock "js" %}
+    <script src='https://cdn.rawgit.com/larsgw/citation.js/archive/citation.js/citation-0.4.0-9.js'></script>
+    <script src="{% static 'thermoglobe/js/citation.js' %}"></script>
+
+    <script>
+      add_and_zoom({{object.sites.all|geojsonfeature|safe}})
+      var citation = new Cite({{ bibtex|safe }})
+
+    </script>
+
+  {% endaddtoblock %}
+{% endblock content %}
+
+
+
+
+
+
+
+
+

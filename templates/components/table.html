@@ -1,0 +1,42 @@
+{% load static sekizai_tags %}
+
+<div class='table-responsive'>
+  <table id="{{table.id}}" class="table table-hover" >
+    <thead>
+        <tr>
+          {% for column in table.columns %}
+            {% if 'slug' in column %}
+              <th><i class="fas fa-binoculars fa-lg "></i></th>
+            {% elif column == 'doi' %}
+              <th><i class="fas fa-globe fa-lg "></i></th>
+            {% elif column != 'bibtex' %}
+              <th>{{column}}</th>             
+            {% endif %}
+          {% endfor %}
+        </tr>
+    </thead>
+  </table>
+</div>
+
+{% addtoblock "css" %}
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.21/r-2.2.5/datatables.min.css"/>
+{% endaddtoblock %}
+
+{% addtoblock "js" %}
+  <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.10.21/r-2.2.5/datatables.min.js"></script>
+  <script src="{% static 'thermoglobe/js/table.js' %}"></script>
+
+  <script>
+    {% if table.data %}
+
+    $(function(){
+      var customColumns = {
+          slug: {
+                  render: $.fn.dataTable.render.iconize_href("fas fa-lg fa-binoculars","/thermoglobe/sites/"),
+                  defaultContent:''},}
+      var {{table.id}} = table_from_objects("{{table.id}}", {{table.columns|safe}}, {{table.data|safe}}, {{options|safe}}, customColumns)
+    });  
+    {% endif %}
+
+  </script>
+{% endaddtoblock %}

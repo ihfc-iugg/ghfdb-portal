@@ -1,9 +1,9 @@
 from thermoglobe import models
 from django.contrib import admin
 
-class Publication(admin.TabularInline):
-    model = models.Publication.authors.through
-    extra = 0
+# class Publication(admin.TabularInline):
+#     model = models.Publication.authors.through
+#     extra = 0
 
 # class Publication(admin.TabularInline):
     # model = models.Publication
@@ -28,12 +28,12 @@ class Corrections(admin.StackedInline):
         ('climate_flag','climate'),
         ('topographic_flag','topographic'),
         ('sed_erosion_flag','sed_erosion'),
-        ('bottom_water_variation_flag','bottom_water_variation'),
+        ('bwv_flag','bwv'),
         ('refraction_flag','refraction'),
         ('fluid_flag','fluid'),
         ('compaction_flag','compaction'),
         ('other_flag','other_type','other'),       
         ]
     # radio_fields = {'climate_flag': admin.HORIZONTAL}
-    # classes = ['collapse']
+    classes = ['collapse']
 

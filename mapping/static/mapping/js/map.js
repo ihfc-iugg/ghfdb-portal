@@ -88,6 +88,11 @@ function add_and_zoom(geojson) {
     map.flyToBounds(layer.getBounds(),{maxZoom: 8})
 }
 
+function add_shape(geojson) {
+  layer = L.geoJson(geojson).addTo(map)
+  // map.flyToBounds(layer.getBounds(),{maxZoom: 8})
+}
+
 function createMarkers(data,type) {
 
   var lat = data.columns.indexOf('Latitude')
@@ -184,9 +189,11 @@ function updateTable(data) {
     heat_flow: 'Heat Flow [mW m<sup>-2</sup>]',
     temperature: 'Temp. Count',
     // temperature: 'Temperature [&degC]',
-    conductivity: 'Avg. Cond. [W m<sup>-1</sup> K<sup>-1</sup>]',
+    // conductivity: 'Avg. Cond. [W m<sup>-1</sup> K<sup>-1</sup>]',
+    conductivity: 'Cond. Count',
     gradient: 'Gradient [&degC/Km]',
-    heat_generation: 'Avg Heat Gen. [&#181W m<sup>-3</sup>',
+    heat_generation: 'Heat Gen. Count',
+    // heat_generation: 'Avg Heat Gen. [&#181W m<sup>-3</sup>',
   }
   var ind = data.columns.indexOf(data.type);
 

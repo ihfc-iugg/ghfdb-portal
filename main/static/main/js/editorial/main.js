@@ -78,9 +78,9 @@
 				$sidebar.addClass('inactive');
 			});
 
-			breakpoints.on('>large', function() {
-				$sidebar.removeClass('inactive');
-			});
+			// breakpoints.on('>large', function() {
+			// 	$sidebar.removeClass('inactive');
+			// });
 
 		// Hack: Workaround for Chrome/Android scrollbar position bug.
 			if (browser.os == 'android'
@@ -97,8 +97,11 @@
 						event.preventDefault();
 						event.stopPropagation();
 
-					// Toggle.
-						$sidebar.toggleClass('inactive');
+          // Toggle.
+          // var width = $('.inner section').css('width')
+          // $('.table-responsive').css('width','calc('+width+' - 26em)')
+
+            $sidebar.toggleClass('inactive');
 
 				});
 

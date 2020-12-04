@@ -9,20 +9,40 @@ from mapping import forms as map_forms
 from collections import OrderedDict
 
 class DownloadForm(forms.Form):
-    options = forms.ChoiceField(
+    download_type = forms.ChoiceField(
+        label="Download Type",
+        help_text='The level of detail required in the downloaded files. Higher levels will result in larger download sizes.',
+        required=True,
         choices=[
-            ('info', '... choose an option'),
             ('basic','Basic'),
             ('standard','Standard'),
             ('detailed','Detailed'),
         ]
     )
+    # your_name = forms.CharField(label='Your name', max_length=100)
+    data_select = forms.MultipleChoiceField(
+        label='Data Select',
+        help_text='Select one or more of the data types below. Download will contain a csv file for each selected data type.',
+        required=True,
+        choices=[
+            ('interval','Heat Flow/Gradient'),
+            # ('gradient','Thermal Gradient'),
+            ('temperature','Temperature'),
+            ('conductivity','Thermal Conductivity'),
+            ('heatgeneration','Heat Generation'),
+        ],
+        # widget=forms.CheckboxSelectMultiple,
+        widget=forms.SelectMultiple(attrs=dict(
+            style="height: 100%",
+         ))
+    )
+    class Meta:
+        fields = ['download_type','data_select']
 
 class SiteForm(BetterModelForm):
 
     class Meta:
         model = models.Site
-        # fields = ['site_name','latitude','longitude']
         fields = choices.SITE_FIELDS
 
 class HeatFlowForm(BetterModelForm):
@@ -54,7 +74,7 @@ class CorrectionForm(BetterModelForm):
             'topographic',
             'refraction',
             'fluid',
-            'bottom_water_variation',
+            'bwv',
             'compaction',
             'other',
             'other_type',
@@ -81,37 +101,26 @@ class TemperatureForm(BetterModelForm):
         model = models.Temperature
         fields = choices.TEMPERATURE_FIELDS
 
-class BetterSiteForm(BetterModelForm):
-    class Meta:
-        model = models.Site
-        exclude = ['geom',]
-        fieldsets = (
-            # Fieldset('Database ID', (
-            #     'id',
-            #     )),
-            Fieldset('reported fields', (
-                'site_name',
-                'latitude', 
-                'longitude',
-                'elevation',
-                'well_depth',
-                'surface_temp',
-                'bottom_hole_temp',    
-                )),
-            # Fieldset('calculated fields', (
-            #     'country',
-            #     'continent',
-            #     'political',
-            #     'sea',
-            #     'basin',
-            #     'seamount_distance',
-            #     'outcrop_distance',
-            #     'sediment_thickness',
-            #     'crustal_thickness'           
-            #     )),
-        )
-
 class UploadForm(forms.ModelForm):
+
+    bibtex = forms.CharField(required=False, widget=forms.Textarea)
+    captcha = ReCaptchaField(widget=ReCaptchaV3)
+
+    class Meta:
+        model = models.Upload
+        exclude = ['imported','imported_by','date_imported','date_uploaded','description']
+
+    def __init__(self, *args, **kwargs):
+        from django.forms.widgets import HiddenInput
+        hidden = kwargs.pop('hidden',None)
+        super().__init__(*args, **kwargs)
+        if hidden:
+            for key, field in self.fields.items():
+                field.widget = HiddenInput()
+            # self.fields['fieldname'].widget
+            # self.fields['fieldname'].widget = HiddenInput()
+
+class ConfirmUploadForm(forms.ModelForm):
 
     bibtex = forms.CharField(required=False, widget=forms.Textarea)
 
@@ -119,16 +128,12 @@ class UploadForm(forms.ModelForm):
         model = models.Upload
         exclude = ['imported','imported_by','date_imported','date_uploaded','description']
 
-class ConfirmUploadForm(forms.ModelForm):
-    class Meta:
-        model = models.Upload
-        exclude = ['imported','imported_by','date_imported','date_uploaded','description']
 
 class SiteMultiForm(MultiModelForm):
-    form_classes = OrderedDict(
-        Site=SiteForm,
-        Country=map_forms.CountryForm,
-        Sea=map_forms.SeaForm,
-    )
-    form_classes['Geological Province'] = map_forms.ProvinceForm
-    form_classes['CGG Basins and Plays'] = map_forms.BasinForm
+    form_classes = {
+        'Site': SiteForm,
+        'Country': map_forms.CountryForm,
+        'Sea': map_forms.SeaForm,
+        'Geological Province': map_forms.ProvinceForm,
+        'CGG Basins and Plays': map_forms.BasinForm,
+    }

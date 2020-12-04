@@ -1,0 +1,34 @@
+{% extends "basemap.html" %}
+{% load static custom_tags sekizai_tags geojson_tags %}
+
+{% block sidebar %}
+    {% include "sidebar/site.html" %}
+{% endblock sidebar %}
+
+{% block content %}
+  {{ block.super }}
+  <div class='inner'>
+    <section class='pt-0'>
+      {% include "components/multi_table.html" %}
+    </section>       
+  </div>
+{% addtoblock "js" %}
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script>
+      $(document).ready(function(){
+        add_and_zoom({{object|geojsonfeature|safe}})
+      });
+    </script>
+
+{% endaddtoblock %}
+{% endblock content %}
+
+
+
+
+
+
+
+
+
+

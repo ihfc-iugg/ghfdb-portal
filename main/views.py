@@ -13,14 +13,14 @@ from django.utils.decorators import method_decorator
 from django.utils.html import mark_safe
 from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, ListView, TemplateView
+from django.urls import reverse
 from django.apps import apps
 from meta.views import Meta, MetadataMixin
 from thermoglobe.models import Publication
 from tablib import Dataset
 
 from thermoglobe import models, forms, choices, tables
-from thermoglobe.resources import HeatFlowResource
-from thermoglobe.utils import get_db_summary
+from thermoglobe.resources import IntervalResource
 from users.models import CustomUser
 
 from . import utils
@@ -29,41 +29,45 @@ from .models import Field, Page, News, FAQ
 from django.views.generic import ListView
 from bs4 import BeautifulSoup
 
-class PageMixin():
+
+class PageMetaMixin(MetadataMixin):
+    page_id = None
+    image = 'assets/main/images/equi_300.webp'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if self.get_page().exists():
-            context.update(page=self.get_page()[0])
+        if self.get_page():
+            context.update(page=self.get_page())
         return context
 
-    def get_page(self):
+    def get_page(self, page_id=None):
+        if page_id is None:
+            page_id = self.page_id
         try:
-            return Page.objects.filter(id=self.page_id)
+            return Page.objects.get(id=page_id)
         except Page.DoesNotExist:
-            pass
-
-
-class PageMetaMixin(PageMixin, MetadataMixin):
+            return
 
     def get_meta_title(self, context):
-        if self.get_page().exists():
-            return self.get_page()[0].heading + ' | Heatflow.org'
+        if self.get_page():
+            if self.get_page().title:
+                return self.get_page().title  + ' | Heatflow.org'
+            else:
+                return self.get_page().heading + ' | Heatflow.org'
         else:
             return 'Heatflow.org'
 
     def get_meta_keywords(self, context):
-        if self.get_page().exists():
-            return self.get_page()[0].keywords.split(',')
-
+        if self.get_page():
+            return self.get_page().keywords.split(',')
 
     def get_meta_description(self, context):
-        if self.get_page().exists():
-            return mark_safe(self.get_page()[0].description)
+        if self.get_page():
+            return mark_safe(self.get_page().description)
 
 
 class HomeView(PageMetaMixin, TemplateView):
-    template_name = 'main/home.html'
+    template_name = 'home.html'
     model = models.Site
     page_id = 13
 
@@ -80,34 +84,35 @@ class HomeView(PageMetaMixin, TemplateView):
                     'icon': 'HF',
                     'content': 'Heres some test heat flow content. This will come from the heat flow page eventually.',
                     'counts': self.heat_flow_counts(),
-                    'link': 'thermoglobe:heat_flow',
+                    'link': reverse('thermoglobe:heat_flow'),
                 },
                 'thermal gradient': {
                     'icon': 'TG',
                     'content': 'Heres some test gradient content. This will come from the heat flow page eventually.',
                     'counts': self.gradient_counts(),
-                    'link': 'thermoglobe:gradient',
+                    'link': reverse('thermoglobe:gradient'),
                 },
                 'temperature': {
                     'icon': 'T',
                     'content': 'Heres some test temperature content. This will come from the heat flow page eventually.',
                     'counts': self.temp_counts(),
-                    'link': 'thermoglobe:temperature',
+                    # 'link': reverse('thermoglobe:temperature'),
                 },
                 'thermal conductivity': {
                     'icon': 'TC',
                     'content': 'Heres some test conductivity content. This will come from the heat flow page eventually.',
                     'counts': self.conductivity_counts(),
-                    'link': 'thermoglobe:conductivity',
+                    # 'link': reverse('thermoglobe:conductivity'),
                 },
                 'heat generation': {
                     'icon': 'HG',
                     'content': 'Heres some test heat generation content. This will come from the heat flow page eventually.',
                     'counts': self.heat_gen_counts(),
-                    'link': 'thermoglobe:heat_gen',
+                    # 'link': reverse('thermoglobe:heat_gen'),
                 },
             },
-            content=[x.prettify() for x in soup.find_all('div')]
+            content=[x.prettify() for x in soup.find_all('div')],
+            publications = Publication.objects.all(),
         )
 
         return context
@@ -150,21 +155,14 @@ class HomeView(PageMetaMixin, TemplateView):
         }
 
 
-class FieldDescriptionsView(PageMetaMixin, TemplateView):
-    template_name = 'main/field_descriptions.html'
+class FieldDescriptionsView(PageMetaMixin, ListView):
+    template_name = 'field_descriptions.html'
+    model = Field
     page_id = 11
-    forms = {
-        'site': forms.SiteForm,
-        'heat_flow': forms.HeatFlowForm,
-        'corrections': forms.CorrectionForm,
-        'thermal_conductivity': forms.ConductivityForm,
-        'heat_generation': forms.HeatGenForm,
-        'temperature': forms.TemperatureForm,
-    }
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['forms'] = self.forms
+        context['data_types'] = {choice[1]:Field.objects.filter(table=choice[0]) for choice in self.model.table_choices}
         return context
 
 
@@ -198,25 +196,22 @@ class PaginatorMixin(ListView):
 
 
 class NewsView(PageMetaMixin, PaginatorMixin):
-    template_name = 'main/news.html'
+    template_name = 'news.html'
     model = News
     page_id = 2
 
+
 class FAQView(PageMetaMixin, PaginatorMixin):
-    template_name = 'main/faqs.html'
+    template_name = 'faqs.html'
     model = FAQ
     page_id = 4
 
-class CitationView(PageMetaMixin,TemplateView):
-    template_name = 'main/citation.html'
-    page_id = 3
 
-class LicenseView(PageMetaMixin,TemplateView):
-    template_name = 'main/license.html'
-    page_id = 1
-
-
-
-
-
+class LandingPage(PageMetaMixin,TemplateView):
+    template_name = 'landing_page.html'
+    page_id = 16
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar'] = 'inactive'
+        return context
 

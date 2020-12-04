@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% load static humanize sekizai_tags%}
+
+{% block content %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<div class='inner'>
+
+  <section class='banner d-flex'>
+    <div class="content">
+        {{content.0|safe}}
+        <ul class="actions">
+            <li><a class='button large' href="{% url "thermoglobe:world_map" %}">World Map</a></li>
+        </ul>
+    </div>
+    <span class="image object">
+        <img src="{% static 'main/images/thermoglobe_map.webp' %}" alt="" style='height:500px;'>
+    </span>
+  </section>
+  
+  <section>
+      <div class='top-link w-100'><a href="#top" class='float-right'><i class="far fa-2x fa-arrow-alt-circle-up"></i></a></div>
+      {{content.1|safe}}
+      <div class='container'>
+        <div class="features justify-content-center py-5">
+            {% for title, content in cards.items %}
+              {% include 'components/feature.html' with title=title content=content %}
+            {% endfor %}
+        </div>
+      </div>
+  </section>
+
+  <section>
+    <div class='top-link w-100'><a href="#top" class='float-right'><i class="far fa-2x fa-arrow-alt-circle-up"></i></a></div>
+    <div class='row'>
+      <div class='col-md bg-primary text-light box mr-3'>
+        <article>
+        <h4 class='text-light'><i class="fas fa-search pr-2"></i>Findable</h4>
+        <p>Metadata and data should be easy to find for both humans and computers</p>
+        </article>
+        <article>
+        <h4 class='text-light'><i class="fas fa-handshake pr-2"></i>Accessible</h4>
+        <p>Once the data is found the user needs to know how they can be accessed.</p>
+        </article>
+        <article>
+        <h4 class='text-light'><i class="fas fa-cogs pr-2"></i>Interoperable</h4>
+        <p>Data need to be integrated with other data and interoperate with applications or workflows for analysis, storage, and processing.</p>
+        </article>
+        <article>
+        <h4 class='text-light'><i class="fas fa-search pr-2"></i>Reusable</h4>
+        <p>Metadata and data should be well-described by accurate and relevant attributes.</p>
+        </article>
+      </div> 
+      <div class='col-md'>
+        {{content.2|safe}}
+      </div>
+
+    </div>
+  </section>
+
+  <section id='how-to-cite' class='plot-banner d-flex' data-appear-top-offset='{{offset}}'>
+    <div class='top-link w-100'><a href="#top" class='float-right'><i class="far fa-2x fa-arrow-alt-circle-up"></i></a></div>
+
+    <div class='row w-100'>
+      <div class='col-6'>{{content.3|safe}}</div>
+      <div class='col-6'>
+        <h5>Heat flow and related publications by year published</h5>
+        <div class='plot d-flex align-items-center'>
+          {{ publications.histogram }}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id='license'>
+    <div class='top-link w-100'><a href="#top" class='float-right'><i class="far fa-2x fa-arrow-alt-circle-up"></i></a></div>
+    {{content.4|safe}}
+    <div class='row pt-5'>
+      <div class='col-md'>
+        <div id="deed-rights" >
+            <h3 resource="http://creativecommons.org/ns#Reproduction" rel="cc:permits">You are free to:</h3>
+            <ul class="license-properties">
+              <li class="license share" rel="cc:permits" resource="http://creativecommons.org/ns#Distribution">
+                <strong>Share</strong> — copy and redistribute the material in any medium or format
+              </li>
+              <li class="license remix" rel="cc:permits" resource="http://creativecommons.org/ns#DerivativeWorks">
+              <strong>Adapt</strong> — remix, transform, and build upon the material
+              </li>
+            </ul>
+            <p>for any purpose, even commercially.</p>
+        </div>
+      </div>
+      <div class='col-md border-left pl-5'>
+        <div id="deed-conditions" class="row">
+          <h3 style="text-align: center">Under the following terms:</h3>
+          <ul class="license-properties">
+            <li class="license by">
+              <p><strong>Attribution</strong> — You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.</p>
+            </li>
+            <li class="license sa" rel="cc:requires" resource="http://creativecommons.org/ns#ShareAlike">
+              <p><strong>ShareAlike</strong> — If you remix, transform, or build upon the material, you must distribute your contributions under the same license as the original.</p>
+            </li>
+          </ul>
+        </div>
+      </div> 
+    </div> 
+  </section>
+
+</div>
+
+{% addtoblock "js" %}
+  <script src="{% static "main/js/appear.js" %}"></script>
+{% endaddtoblock %}
+
+
+{% endblock content %}

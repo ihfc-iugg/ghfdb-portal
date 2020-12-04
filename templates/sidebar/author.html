@@ -1,0 +1,51 @@
+{% extends "sidebar/base.html" %}
+{% load static sekizai_tags %}
+{% addtoblock "css" %}
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+{% endaddtoblock %}
+
+{% block top %}
+  {% include 'components/quick-nav.html' %}
+{% endblock top %}
+
+{% block content %}
+
+<header class='sidebar-title'>
+  <div class='w-100 d-flex align-items-center py-0 my-0'>
+    <div class='flex-grow-1'><h2 class='py-1 my-0'>{{author.first_name}} {{author.last_name}}</h2></div>
+  </div>
+</header>
+
+<section id='publicationInfo'>
+  <dl>
+    <dt>Years active:</dt>
+    <dd class='d-flex flex-column flex-wrap'>
+      {% with author.years_active as years  %}
+        {{years.start}} - {{years.finish}} ({{years.total}} years)
+      {% endwith %}
+    </dd>
+    <dt>Publications:</dt>
+    <dd class='d-flex flex-column flex-wrap'>
+      First author: {{author.as_first_author}} <br>
+      Co-author: {{author.as_co_author}}
+    </dd>
+    <dt>Sites:</dt>
+      {{author.sites.pie|safe}}   
+
+
+    <dt>Related Authors:</dt>
+    <dd class='d-flex flex-column flex-wrap'>
+      {% for related_author, count in author.related_authors %}
+          <div><a href="{% url 'thermoglobe:author_details' related_author.slug %}">{{related_author}}</a></div>
+      {% endfor %}
+    </dd>
+  </dl> 
+</section>
+
+{% addtoblock "css" %}
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+{% endaddtoblock %}
+{% endblock content %}
+
+
+

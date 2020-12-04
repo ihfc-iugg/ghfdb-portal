@@ -7,7 +7,7 @@ def countries(force=False):
     Args:
         force (bool, optional): if True will update all entries, false will update only entries without an existing country entry. Defaults to False.
     """
-    # qs = Country.objects.all()
+    # qs = Country.objects.all()if
     for country in Country.objects.all():
         sites = Site.objects.filter(geom__within=country.poly)
         sites.update(country=country)

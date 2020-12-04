@@ -17,58 +17,27 @@
 	}
 
 
-#earthSpinModal .modal-content {
-  background-color: transparent;
-  border-width: 0em;
-}
-
-#earthSpinModal .earth {
-  width: 35vh;
-  height: 35vh;
-  border-radius: 50%;
-  background-size: cover;
-  -webkit-box-shadow: -10px -10px 35px 2px #000 inset, 1px 2px 10px 1px #000;
-          box-shadow: -10px -10px 35px 2px #000 inset, 1px 2px 10px 1px #000;
-  background-position: 10% center;
-  margin: .5rem 0;
-}
-
-.spin {
-    -webkit-animation-name: spin_full;
-    animation-name: spin_full;
-    -webkit-animation-timing-function: linear;
-        animation-timing-function: linear;
-    animation-direction: reverse;
-    -webkit-animation-iteration-count: infinite;
-        animation-iteration-count: infinite;
-    -webkit-animation-duration: 20s;
-        animation-duration: 20s;
-    -webkit-animation-fill-mode: forwards;
-        animation-fill-mode: forwards;
-}
-
-
 @-webkit-keyframes spin_full {
   0% {
-    background-position: 0%;
+    background-position: 50%;
   }
   100% {
-    background-position: 100%;
+    background-position: 250%;
   }
 }
 
 @keyframes spin_full {
   0% {
-    background-position: 0%;
+    background-position: 50%;
   }
   100% {
-    background-position: 100%;
+    background-position: 250%;
   }
 }
 
-@-webkit-keyframes spin {
+/* @-webkit-keyframes spin {
   0% {
-    background-position: 18%;
+    background-position: 0%;
   }
   100% {
     background-position: 10%;
@@ -77,12 +46,12 @@
 
 @keyframes spin {
   0% {
-    background-position: 18%;
+    background-position: 0%;
   }
   100% {
     background-position: 10%;
   }
-}
+} */
 
 @media (max-width: 576px) {
   .earth {

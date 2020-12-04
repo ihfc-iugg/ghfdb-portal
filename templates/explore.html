@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load static humanize sekizai_tags %}
+
+{% addtoblock "css" %}
+{% endaddtoblock %}
+
+{% block content %}
+{% addtoblock "css" %}
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+{% endaddtoblock  %}
+
+<div class='inner'>
+  <section>
+    {{lead_paragraph|safe}}
+  </section>
+  {% for section, plot in content %}
+    <section id='test-id'>
+      {% if plot.template %}
+        {% with "sections/"|add:plot.template|add:".html" as template %}
+          {% include template with content=section plot=plot %}
+        {% endwith %}
+      {% else %}
+      <div class='container'>
+        {{section|safe}}
+      </div>
+      {% endif %}
+    </section> 
+  {% endfor %}
+</div>
+
+{% addtoblock "js" %}
+  <script src="{% static "main/js/appear.js" %}"></script>
+
+{% endaddtoblock %}
+
+
+
+{% endblock content %}

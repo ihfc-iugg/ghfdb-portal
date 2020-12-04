@@ -51,9 +51,14 @@ __pycache__
 
 index.html
 backup.json
+plotly_test.html
+test.py
+ThermoGlobe_4Dec2020
 
 .vscode/
 /assets
 /node_modules
 /mapping/data
 thermoglobe.json
+/cache
+/media

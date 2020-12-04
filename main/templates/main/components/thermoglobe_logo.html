@@ -1,9 +1,0 @@
-{% load static %}
-{% load humanize %}
-<div style="background-image: url('{% static 'main/images/heat_flow.svg' %}')" class='earth d-inline-block align-middle'></div>
-<div class="d-inline-block align-middle">
-    <div class='display-4'>ThermoGlobe</div>
-    {% if updated %}
-        <p class="card-text lead d-none d-lg-block">Last updated {{recently_added.0.date_added|naturaltime}}</p>
-    {% endif %}
-</div>
