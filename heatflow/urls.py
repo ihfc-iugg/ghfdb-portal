@@ -18,19 +18,20 @@ from django.contrib.gis import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-# from django.contrib import admin
+from django.conf.urls.i18n import i18n_patterns
 
 admin.site.site_header = 'HeatFlow.org admin'
 admin.site.site_title = 'HeatFlow.org'
-
 
 urlpatterns = [
     path('admin/doc/', include('django.contrib.admindocs.urls')),
     path('admin/', admin.site.urls),
     path('',include('main.urls')),
     path('',include('thermoglobe.urls')),
-    path('',include('publications.urls')),
-    ]
+    path('',include('mapping.urls')),
+]
+# )  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 
 
 if settings.DEBUG:

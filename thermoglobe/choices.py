@@ -1,12 +1,3 @@
-
-ROCK_GROUPS = ( ('M','metamorphic'),
-                ('I','igneous'),
-                ('S','sedimentary'),
-                ('MI','meta-igneous'),
-                ('MS','meta-sedimentary'),)
-ROCK_ORIGIN = ( ('P','plutonic'),
-                ('V','volcanic'),)
-
 SITE_TYPE = (   ('C','continental'),
                 ('O','oceanic'),)
 
@@ -14,14 +5,19 @@ SITE_TYPE = (   ('C','continental'),
 SITE_BASIC = [
             'id',
             'site_name',
-            'site__country__name',
-            'site__sea__name',
             'latitude',
             'longitude',
             'elevation',
+            'site__country__name',
+            'site__sea__name',
             ] 
 
-SITE_STANDARD = SITE_BASIC + [
+SITE_STANDARD = [
+                'id',
+                'site_name',
+                'latitude',
+                'longitude',
+                'elevation',
                 'well_depth',
                 'seamount_distance',
                 'sediment_thickness',
@@ -30,25 +26,37 @@ SITE_STANDARD = SITE_BASIC + [
                 'surface_temp',
                 'bottom_water_temp',
                 'cruise',
+                'site__country__name',
+                'site__sea__name',
                 ]   
 
-SITE_DETAILED = SITE_STANDARD + [
+SITE_DETAILED = [
+            'id',
+            'site_name',
+            'latitude',
+            'longitude',
+            'elevation',
+            'well_depth',
+            'seamount_distance',
+            'sediment_thickness',
+            'sediment_thickness_type',
+            'crustal_thickness',
+            'surface_temp',
+            'bottom_water_temp',
+            'cruise',
+            'site__country__name',
+            'site__sea__name',
             'site__country__name',
             'site__country__region',
             'site__country__subregion',
             'site__continent__name',
             'site__political__name',
-            # 'site__political__territory',
-            # 'site__political__sovereign',
             'site__province__name',
-            'site__province__group',
             'site__province__juvenile_age_min',
             'site__province__juvenile_age_max',
-            'site__province__tectonic_age_min',
-            'site__province__tectonic_age_max',
-            'site__province__plate',
+            'site__province__thermotectonic_age_min',
+            'site__province__thermotectonic_age_max',
             'site__province__last_orogen',
-
                 ]
 
 HEAT_FLOW_BASIC = [
@@ -123,8 +131,8 @@ HEAT_FLOW_DETAILED = [
             'corrections__sed_erosion',
             'corrections__fluid_flag',
             'corrections__fluid',
-            'corrections__bottom_water_variation_flag',
-            'corrections__bottom_water_variation',
+            'corrections__bwv_flag',
+            'corrections__bwv',
             'corrections__compaction_flag',
             'corrections__compaction',
             'corrections__other_flag',
@@ -150,11 +158,7 @@ CONDUCTIVITY_STANDARD = CONDUCTIVITY_BASIC + [
             'sample_width',
             'sample_diameter',
             'formation',
-            'rock_group',
-            'rock_origin',
             'rock_type',
-            'age',
-            'age_type',
             'year_logged',
             'operator',
             'reference',
@@ -166,7 +170,6 @@ CONDUCTIVITY_STANDARD = CONDUCTIVITY_BASIC + [
 
 HEAT_GEN_BASIC = [
             'depth',
-            'sample_name',
             'heat_generation',
             'uncertainty',
             'method',
@@ -174,11 +177,7 @@ HEAT_GEN_BASIC = [
 
 HEAT_GEN_STANDARD = HEAT_GEN_BASIC + [
             'formation',
-            'rock_group',
-            'rock_origin',
             'rock_type',
-            'age',
-            'age_type',
             'year_logged',
             'operator',
             'reference',
@@ -229,26 +228,8 @@ conductivity = dict(
     detailed = SITE_DETAILED + CONDUCTIVITY_STANDARD,
     )
 
-heat_generation = dict(
+heatgeneration = dict(
     basic = SITE_BASIC + HEAT_GEN_BASIC,
     standard = SITE_STANDARD + HEAT_GEN_STANDARD,
     detailed = SITE_DETAILED + HEAT_GEN_STANDARD,
     )
-
-# Can write these in html
-UNITS = dict(
-    elevation='m',
-    age_min='Ma',
-    age_max='Ma',
-    tectonothermal_min='Ma',
-    tectonothermal_max='Ma',
-    juvenile_age_min='Ma',
-    juvenile_age_max='Ma',
-    seamount_distance='km',
-    outcrop_distance='km',
-    sediment_thickness='km',
-    crustal_thickness='km',
-    surface_temp='&deg;C',
-    bottom_hole_temp='&deg;C',
-    well_depth='m',
-)

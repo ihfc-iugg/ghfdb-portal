@@ -1,0 +1,78 @@
+{% extends "upload.html" %}
+{% load static %}
+
+{% block inner %}
+{% if confirm_form %}
+{% comment %} THIS WILL APPEAR ONLY WHEN THE UPLOAD IS SUCCESFUL {% endcomment %}
+<div class='d-flex justify-content-center'>
+  <form action="confirm" method="POST">
+    {% csrf_token %}
+    {{ confirm_form.as_p }}
+    <div class="submit-row">
+      <input type="submit" class="default" name="confirm" value="Confirm import">
+    </div>
+  </form>
+</div>
+{% endif %}
+
+{% include "components/table.html" %}
+
+
+{% if validation_errors %}
+  {% for row in errors %}
+      <div class="modal fade" id="row-{{forloop.counter0}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header bg-warning">
+              <h5 class="modal-title" id="exampleModalLabel">
+                <i class="fas fa-exclamation-triangle"> Errors</i>
+              </h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <ul>
+                {% for error in row.error.messages %}
+                  <li>{{error}}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+  {% endfor %}
+{% endif %}
+
+
+{% if errors %}
+  {% for row in errors %}
+    {% if row.errors %}
+      <div class="modal fade" id="row-{{forloop.counter0}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header bg-warning">
+              <h5 class="modal-title" id="exampleModalLabel">
+                <i class="fas fa-exclamation-triangle"> Errors</i>
+              </h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <ul>
+                {% for error in row.errors %}
+                  <li>{{error.error.args.0}}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% endblock inner %}
+
+

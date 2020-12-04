@@ -8,8 +8,9 @@ from django.utils.translation import ugettext as _
 import bibtexparser as bib
 import bibtexparser.customization as custom
 import re
-from publications.widgets import get_author_objects
 from bibtexparser.bibdatabase import BibDatabase
+import re
+from django.apps import apps
 
 def get_non_relational_fields(model,row,exclude=[]):
     return [f for f in model._meta.concrete_fields if row.get(f.name) and f.name not in exclude and not f.is_relation]
@@ -94,6 +95,8 @@ def site_property(model,row,varmap,exclude,id_fields,required_fields):
         id_fields['depth'] = 0
 
     return id_fields, fields
+
+
 
 class NoRenderWidget(Widget):
 
@@ -331,7 +334,7 @@ class CustomFK(ForeignKeyWidget):
 
 class RangeInput(Input):
     input_type = 'number'
-    template_name = 'thermoglobe/forms/input.html'
+    template_name = 'forms/input.html'
 
 
 

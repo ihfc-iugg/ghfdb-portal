@@ -9,7 +9,8 @@ from django.utils.translation import gettext as _
 from django.db.models import Q, Count
 from django.db.models.functions import Length
 from django.db import models
-
+from thermoglobe.forms import DownloadForm
+from django.db.models.functions import Coalesce
 
 class Filter(django_filters.FilterSet):
 
@@ -51,23 +52,29 @@ class WorldMapFilter(Filter):
     latitude = RangeFilter()
     elevation = RangeFilter()
 
-    continent = ModelMultipleChoiceFilter(
-            queryset=Continent.objects.exclude(sites__isnull=True).order_by('name'),
+    continent = MultipleChoiceFilter(
+            choices=list(Continent.objects.exclude(sites__isnull=True).values_list('id','name').order_by('name')),
             lookup_expr='exact',
         )
 
-    country = ModelMultipleChoiceFilter(
-            queryset=Country.objects.exclude(sites__isnull=True).order_by('name'),
+    # country = ModelMultipleChoiceFilter(
+    country = MultipleChoiceFilter(
+            choices=list(Country.objects.exclude(sites__isnull=True).values_list('id','name').order_by('name')),
             lookup_expr='exact',
         )
 
-    sea = ModelMultipleChoiceFilter(
-            queryset=Sea.objects.exclude(sites__isnull=True).order_by('name'),
+    sea = MultipleChoiceFilter(
             lookup_expr='exact',
+            choices = list(Sea.objects.exclude(sites__isnull=True).values_list('id','name').order_by('name')),
         )
 
-    province = ModelMultipleChoiceFilter(
-            queryset=Province.objects.exclude(sites__isnull=True).order_by('name'),
+    # sea = ModelMultipleChoiceFilter(
+    #         queryset=Sea.objects.exclude(sites__isnull=True).values('id','name').order_by('name'),
+    #         lookup_expr='exact',
+    #     )
+
+    province = MultipleChoiceFilter(
+            choices=list(Province.objects.exclude(sites__isnull=True).values_list('id','name').order_by('name')),
             lookup_expr='exact',
         )
 
@@ -77,6 +84,9 @@ class WorldMapFilter(Filter):
             lookup_expr='exact',
             label='Tectonic Environment'
         )
+
+    # This is so i can include the download form as part of the map filter
+    download_form = DownloadForm()
 
     class Meta:
         model = Site
@@ -145,6 +155,56 @@ class PubStatusFilter(admin.SimpleListFilter):
             return qs.annotate(bib_length=Length('bib_id')).filter(Q(bib_length__lte=4) & Q(bibtex=''))
 
 
+class EmptySites(admin.SimpleListFilter):
+
+    title = _('is empty')
+    parameter_name = 'is_empty'
+
+    def lookups(self, request, model_admin):
+
+        return (
+            (True, _('Empty')),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(
+                intervals__isnull=True, 
+                temperature__isnull=True,
+                conductivity__isnull=True,
+                heat_generation__isnull=True,
+                )
+
+class EmptyPublications(admin.SimpleListFilter):
+
+    title = _('data type')
+    parameter_name = 'data_type'
+
+    def lookups(self, request, model_admin):
+
+        return (
+            ("has_heat_flow", _('Has heat flow')),
+            ("has_gradient", _('Has gradient')),
+            ("has_temperature", _('Has temperature')),
+            ("has_conductivity", _('Has conductivity')),
+            ("has_heat_generation", _('Has heat gen')),
+            ("no_data", _('No data')),
+            ("no_sites", _('No sites or data')),
+        )
+
+    def queryset(self, request, qs):
+        options = dict(
+            has_heat_flow = qs.annotate(heat_flow=Coalesce('intervals__heat_flow_corrected', 'intervals__heat_flow_uncorrected')).exclude(heat_flow__isnull=True),
+            has_gradient = qs.annotate(gradient=Coalesce('intervals__gradient_corrected', 'intervals__gradient_uncorrected')).exclude(gradient__isnull=True),
+            has_temperature = qs.exclude(temperature__isnull=True),
+            has_conductivity = qs.exclude(conductivity__isnull=True),
+            has_heat_generation = qs.exclude(heat_generation__isnull=True),
+            no_data=qs.filter(intervals__isnull=True, temperature__isnull=True,conductivity__isnull=True,heat_generation__isnull=True),
+            no_sites=qs.filter(intervals__isnull=True, temperature__isnull=True,conductivity__isnull=True,heat_generation__isnull=True,sites__isnull=True),
+        )
+        return options.get(self.value())
+
+
 class LastNameLengthFilter(admin.SimpleListFilter):
     """Show or hide if a publication has a complete reference or not
     """
@@ -206,31 +266,6 @@ class IntervalType(admin.SimpleListFilter):
             return qs.filter(Q(heat_flow_corrected__isnull=False) | Q(heat_flow_uncorrected__isnull=False))
         if self.value() == 'tg':
             return qs.filter(Q(gradient_corrected__isnull=False) | Q(gradient_uncorrected__isnull=False))
-
-# class ActiveFilter(admin.SimpleListFilter):
-
-#     title = _('is active')
-
-#     parameter_name = 'is_active'
-
-#     def lookups(self, request, model_admin):
-#         return (
-#             ('yes', _('Yes')),
-#             ('no',  _('No')),
-#         )
-
-#     def queryset(self, request, queryset):
-#         queryset = queryset.annotate(
-#             is_active=Q(heatflow__isnull=True) & Q(conductivity__isnull=True)
-        
-#         )
-#         queryset[0].is_active
-#         if self.value() == 'yes':
-#             return queryset.filter(is_active=False)
-
-#         if self.value() == 'no':
-#             return queryset.filter(is_active=True)
-
 
 class IsCorrectedFilter(admin.SimpleListFilter):
 

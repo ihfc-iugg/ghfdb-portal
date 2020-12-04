@@ -14,15 +14,14 @@ SITE_FIELDS = [
                 'longitude',
                 'elevation',
                 'well_depth',
-                # 'site_type',
-
+                'year_drilled',
+                
                 'seamount_distance',
                 'sediment_thickness',
                 'sediment_thickness_type',
                 'crustal_thickness',
                 'surface_temp',
                 'bottom_water_temp',
-                # 'operator',
                 'cruise',
                 ]   
 
@@ -71,8 +70,8 @@ HEAT_FLOW_FIELDS = [
             'sed_erosion_correction',
             'fluid_flag',
             'fluid_correction',
-            'bottom_water_variation_flag',
-            'bottom_water_variation_correction',
+            'bwv_flag',
+            'bwv_correction',
             'compaction_flag',
             'compaction_correction',
             'other_flag',
@@ -107,12 +106,8 @@ CONDUCTIVITY_FIELDS = [
             'sample_diameter',
             'method',
             'formation',
-            'rock_group',
-            'rock_origin',
             'rock_type',
             'depth',
-            'age',
-            'age_type',
             'year_logged',
             'operator',
             'reference',
@@ -123,17 +118,15 @@ CONDUCTIVITY_FIELDS = [
             ]
 
 HEAT_GEN_FIELDS = [
-            'sample_name',
             'heat_generation',
             'uncertainty',
+            'k_pc',
+            'th_ppm',
+            'u_ppm',
             'method',
             'formation',
-            'rock_group',
-            'rock_origin',
             'rock_type',
             'depth',
-            'age',
-            'age_type',
             'year_logged',
             'operator',
             'reference',
@@ -162,22 +155,13 @@ TEMPERATURE_FIELDS = [
             'source_id',         
             ]
 
-# ========== EXPORT SETS ==============
+# ========== IMPORT SETS ==============
 
-HEAT_FLOW_EXPORT = SITE_FIELDS + HEAT_FLOW_FIELDS
-HEAT_FLOW_EXPORT_BASIC = SITE_FIELDS_BASIC + HEAT_FLOW_FIELDS_BASIC
-   
+heat_flow = gradient = SITE_FIELDS + HEAT_FLOW_FIELDS
+conductivity = SITE_FIELDS + CONDUCTIVITY_FIELDS
+heat_generation = SITE_FIELDS + HEAT_GEN_FIELDS
+temperature = SITE_FIELDS + TEMPERATURE_FIELDS
 
-CONDUCTIVITY_EXPORT = SITE_FIELDS + CONDUCTIVITY_FIELDS
-CONDUCTIVITY_EXPORT_BASIC = SITE_FIELDS_BASIC + CONDUCTIVITY_FIELDS
-
-
-HEAT_GEN_EXPORT = SITE_FIELDS + HEAT_GEN_FIELDS
-HEAT_GEN_EXPORT_BASIC = SITE_FIELDS_BASIC + HEAT_GEN_FIELDS
-
-
-TEMPERATURE_EXPORT = SITE_FIELDS + TEMPERATURE_FIELDS
-TEMPERATURE_EXPORT_BASIC = SITE_FIELDS_BASIC + TEMPERATURE_FIELDS
 
 # Can write these in html
 UNITS = dict(

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load static sekizai_tags %}
+
+{% block content %}
+
+<div class='inner'>
+  <section class='pt-5 pb-4'>
+    <div class='text-center'>
+      <p>{{description}}</p>
+    </div>
+    <form action="#">
+      <div class='container d-flex justify-content-center align-items-end'>
+        <div class="flex-grow-1 px-2">
+          <label for="id_data_type">Data Type</label>
+          <select name="data_type" id="id_data_type">
+            {% for value, display in data_types %}
+              <option value="{{value}}" {% if value == view.data_type %}selected{% endif %}>{{display|title}}</option>      
+            {% endfor %}
+          </select>
+        </div>
+        <div class="flex-grow-1 px-2">
+          <label for="id_group_by">Group By</label>
+          <select name="group_by" id="id_group_by">
+            {% for value, display in groupby_options %}
+              <option value="{{value}}" {% if value == view.group_by %}selected{% endif %}>{{display|title}}</option>      
+            {% endfor %}
+          </select>
+        </div>
+        <div class="flex-shrink-1 px-2">
+          <button type='submit' class='button'>Calculate</button>
+        </div>
+      </div>
+    </form>
+  </section>       
+
+  <section class='pt-4'>
+    <div class='text-center'><h3>{{table_title}}</h3></div>
+    {% include "components/table.html" %}
+    <p class='footnote mt-3'>The table above describes the data currently within ThermoGlobe with no attempt to remove known geothermal or hydrothermally affected areas. For this reason it is likely more accurate to use the median, as opposed to the mean values from this table.</p>
+  </section>       
+</div>
+
+{% addtoblock "css" %}
+{% endaddtoblock %}
+
+{% addtoblock "js" %}
+{% endaddtoblock %}
+{% endblock content %}
+
+
+
+
+

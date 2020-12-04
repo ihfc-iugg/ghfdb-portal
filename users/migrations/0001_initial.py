@@ -4,7 +4,6 @@ import django.contrib.auth.models
 import django.contrib.auth.validators
 from django.db import migrations, models
 import django.utils.timezone
-import django_countries.fields
 
 
 class Migration(migrations.Migration):
@@ -37,7 +36,6 @@ class Migration(migrations.Migration):
                 ('city', models.CharField(blank=True, max_length=100, null=True)),
                 ('state', models.CharField(blank=True, max_length=100, null=True)),
                 ('postcode', models.IntegerField(blank=True, null=True)),
-                ('country', django_countries.fields.CountryField(blank=True, max_length=2, null=True)),
                 ('image', models.ImageField(blank=True, upload_to='profile_image')),
                 ('bio', models.TextField(blank=True, null=True)),
                 ('groups', models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.Group', verbose_name='groups')),

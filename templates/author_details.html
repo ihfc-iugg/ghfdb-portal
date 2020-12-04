@@ -1,0 +1,35 @@
+{% extends "basemap.html" %}
+{% load static sekizai_tags geojson_tags %}
+
+{% block sidebar%}
+  {% include "sidebar/author.html" %}
+{% endblock sidebar %}
+
+{% block content %}
+  {{ block.super }}
+  <div class='inner'>
+    <section class='pt-2'>
+      <header>
+        <div class='d-flex justify-content-center py-2'>
+        <h3>Bibliography</h3>
+        </div>
+        <a id='table-download-button' data-toggle="modal" data-target="#downloadOptions"><i class="fas fa-2x fa-download"></i></a>
+      </header>
+      {% include "bib_table.html" %}
+    </section>       
+  </div>
+  {% include "components/download_modal.html" with form=download_form%}
+  {% addtoblock "js" %}
+    <script>
+      $(function() {
+        add_to_map({{author.sites|geojsonfeature|safe}})
+      })
+    </script>
+  {% endaddtoblock %}
+
+{% endblock content %}
+
+
+
+
+

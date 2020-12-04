@@ -87,7 +87,7 @@ class PoliticalAdmin(MappingAbstract):
 
 @admin.register(Province)
 class ProvinceAdmin(MappingAbstract):
-    list_display = ['name','type','group','juvenile_age_min','juvenile_age_max','tectonic_age_min','tectonic_age_max','last_orogen','continent','plate','number_of_sites','ave_heat_flow']
+    list_display = ['id','name','type','group','juvenile_age_min','juvenile_age_max','thermotectonic_age_min','thermotectonic_age_max','last_orogen','continent','plate','number_of_sites','ave_heat_flow']
     search_fields = ['name','type','group','continent']
     list_filter = ['continent','type','group','last_orogen','plate']
     fields = [

@@ -22,7 +22,7 @@ class Page(models.Model):
     keywords = models.CharField(_("keywords"),
             help_text=_("Keywords to include in the page <head> tags"),
             max_length=250)
-    description = RichTextField(_("decsription"),
+    description = models.TextField(_("decsription"),
             help_text=_("Description to include in the page <head> tags"),
             blank=True,null=True)
 
@@ -33,22 +33,50 @@ class Page(models.Model):
         ordering = ['id',]
 
 class Field(models.Model):
-    field_name = models.CharField(_("field name"),
-            max_length=100,
+
+    table_choices = [
+        ('S','Site'),
+        ('I','Interval'),
+        ('C','Corrections'),
+        ('T','Temperature'),
+        ('TC','Thermal Conductivity'),
+        ('HG','Heat Generation'),
+    ]
+
+    table = models.CharField(_('database table'),
+        max_length=2,
+        choices=table_choices,
+        help_text=_("The database table to which this measurement belongs"),
+        )
+    field_name = models.CharField(_("DB field name"),
+            max_length=128,
             help_text='This is how the field should appear in any download files.')
+    verbose_field_name = models.CharField(_("field"),
+            max_length=128,
+            help_text='A verbose version of the field name')
     description = RichTextField(_("field description"),
             help_text='A description of the field')
-
     units = models.CharField(_("units"),
-            max_length=15,
+            max_length=32,
             null=True, blank=True,
-            help_text='Default unit of measurement')
+            help_text='Standard unit of measurement. Can be written in LaTex format by surrounding units with \\\( latex here \\\).')
+    required = models.BooleanField(_('required field'),
+        help_text=_('Is the field required during upload of data into this table'),
+        default=False,
+    )
+    download_only = models.BooleanField(_('download only'),
+        help_text=_('This should be set to true if it is avaliable but users cannot supply data for it. Reserverd for fields calculated by the application.'),
+        default=False,
+    )
 
     date_edited = models.DateTimeField(auto_now=True)
     edited_by = models.ForeignKey("users.CustomUser",blank=True, null=True, on_delete=models.SET_NULL)
 
     class Meta:
-        ordering = ['field_name',]
+        ordering = ['-table','-required','download_only','field_name',]
+
+    def __str__(self):
+        return f"{self.table} - {self.field_name}"
 
 class FAQ(models.Model):
     question = models.CharField(_("question"),

@@ -1,0 +1,12 @@
+{% extends "basic_list.html" %}
+
+{% block listcontent %}
+    {% for question in object_list %}
+        <header><h3>{{question.question}}</h3></header>
+        <div>
+            {{question.answer|safe}}
+        </div>
+        <hr>
+    {% endfor %}
+{% endblock %}
+

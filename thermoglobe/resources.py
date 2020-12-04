@@ -1,10 +1,10 @@
 from .models import Site, Conductivity, Interval, HeatGeneration, Temperature, Correction, Publication
-# from publications.models import Operator
 from import_export.fields import Field
 from import_export.widgets import FloatWidget, CharWidget, IntegerWidget, BooleanWidget, ForeignKeyWidget, DecimalWidget
 import time
 from import_export import resources
 from . import widgets, import_choices as choices
+from .utils import ACCEPTED_PLOT_TYPES
 import sys
 import bibtexparser as bib
 from thermoglobe.utils import age_range
@@ -14,6 +14,9 @@ from django import VERSION
 from import_export.instance_loaders import ModelInstanceLoader
 from django.utils.html import mark_safe
 from tqdm import tqdm
+# from django.contrib.admin.models import LogEntry, ContentType
+from main.models import News
+from thermoglobe import plots
 
 class CustomInstanceLoader(ModelInstanceLoader):
     """
@@ -37,37 +40,6 @@ class CustomInstanceLoader(ModelInstanceLoader):
         except self.resource._meta.model.DoesNotExist:
             return None
 
-def fix_age(row):
-    # handles the case where a geochronological or stratigraphic age is given
-    age_values = ['age','age_min','age_max']
-
-    for age in age_values:
-        # if age is supplied as a string, check to see if it matches with known geological ages
-        if not row.get(age):
-            continue
-        try: 
-            row[age] = float(row[age])
-        except ValueError:
-            found_age_range = age_range(row[age])
-            if not found_age_range:
-                row[age] = ''
-                continue
-            if 'min' in age:
-                row[age] = found_age_range[0]
-            elif 'max' in age:
-                row[age] = found_age_range[1]
-            else:
-                row['age'] = ''
-                row['age_min'],row['age_max'] = found_age_range
-            if not row.get('age_method'):
-                row['age_method'] = 'Calculated from stratigraphic age'
-        except TypeError:
-            # Do nothing if none type
-            pass
-        # finally:
-
-    return row
-
 def fix_depth(row):
     if row.get('depth_min') and row.get('depth_max'):
         if float(row['depth_min']) == float(row['depth_max']) == 0:
@@ -75,32 +47,18 @@ def fix_depth(row):
             row['depth_max'] = None
     return row
 
-def format_coordinates(row):
-    """The point of this function is to convert coordinates to a string formatted number no longer than 5 decimals places. 
-    This combats rounding errors when converting from degrees:minute:seconds to decimal degrees. 
-    """
-    for i in ['latitude','longitude']:
-        val = row.get(i).split('.')[-1]
-        if len(val) > 5:
-            formatted = format(float(row[i]),'.5f')
-            row[i] = formatted
-
-    return row
-
 class ResourceMixin(resources.ModelResource):
     # ref_dict = get_references().entries_dict
+
+    def __init__(self,bibtex=None):
+        self.bibtex = bibtex
 
     def before_import(self, dataset, using_transactions, dry_run, **kwargs):
         """ Start import timer and initialize count for progress bar"""
         self.pbar = tqdm(total=len(dataset))
 
     def before_import_row(self,row=None,**kwargs):
-        # add the current user to the row
-        if kwargs.get('user'):
-            row['added_by'] = kwargs['user']._wrapped.username
-
-        row = format_coordinates(row) # converts lat and lon to 5 decimal place string
-        # row = fix_age(row) # convert any geo or stratigraphic ages to float values
+        row = self.format_coordinates(row) # converts lat and lon to 5 decimal place string
         row = fix_depth(row) #fix depths reported as min = 0 and max = 0
         row['save_temp'] = True
 
@@ -138,12 +96,41 @@ class ResourceMixin(resources.ModelResource):
         """ Updates the progress bar"""
         self.pbar.update(1)
 
-    def after_import(self, dataset,result,using_transactions, dry_run,**kwargs):
+    def after_import(self, dataset, result, using_transactions, dry_run,**kwargs):
         self.clean_result(result)
+
+        has_errors = result.has_validation_errors() or result.has_errors()
+        if not dry_run and not has_errors:  
+            #import was a success! spread the news!
+            self.create_news(result, kwargs['user'])
+
+            #update plot cache with new data
+            self.update_plot_cache()
+
         print('Import Summary:')
         for key, count in result.totals.items():
             if count:
                 print('\t',key,': ',count)
+
+    def update_plot_cache(self):
+        pass
+
+    def get_html_publications_list(self,result):
+        objects = [row.object_id for row in result.rows]
+        affected_pubs = Publication.objects.filter(intervals__in=objects).distinct()    
+
+        # construct an html list of linked publications
+        html_template = '<li><a href="{}">{}</a></li>'
+        return "".join([html_template.format(pub.get_absolute_url(),pub) for pub in affected_pubs])
+
+    def create_news(self,result, user):
+        totals = result.totals
+        html_pubs = self.get_html_publications_list(result)
+        News.objects.create(
+                headline = "New data added!",
+                content =  f"<p>This new upload features {totals['new']} new and {totals['update']} updated entries in the {self._meta.model._meta.verbose_name} table. Check out the new data below:</p><div><ul>{html_pubs}</ul></div>",
+                published_by = user,
+            )
 
     def clean_result(self,result):
         """Cleans up the result preview"""
@@ -178,7 +165,6 @@ class ResourceMixin(resources.ModelResource):
                     row.values.pop(i)
                     # row.values.pop()
 
-
         else:
             for i, header in enumerate(result.diff_headers.copy()):
                 has_data = False
@@ -199,6 +185,16 @@ class ResourceMixin(resources.ModelResource):
 
 
         result.diff_headers = [h.replace('_',' ').capitalize() for h in result.diff_headers]
+
+    def format_coordinates(self,row):
+        """Converts lat an lon to a string formatted number no longer than 5 decimals places. This combats rounding errors when converting from degrees:minute:seconds to decimal degrees and prevents incorrect precision by rounding to too many decimal places."""
+        for i in ['latitude','longitude']:
+            val = row.get(i).split('.')[-1]
+            if len(val) > 5:
+                formatted = format(float(row[i]),'.5f')
+                row[i] = formatted
+
+        return row
 
 class SiteMixin(ResourceMixin):
     global_saves_null=True
@@ -221,6 +217,7 @@ class SiteMixin(ResourceMixin):
     longitude = Field(attribute='site__longitude',widget=DecimalWidget(),readonly=True)
     elevation = Field(attribute='site__elevation',widget=FloatWidget(),readonly=True)
     tilt = Field(attribute='site__tilt', widget=FloatWidget(),readonly=True)
+    year_drilled = Field(attribute='site__year_drilled', widget=FloatWidget(),readonly=True)
 
     cruise = Field(attribute='site__cruise')
     well_depth = Field(attribute='site__well_depth',widget=FloatWidget())
@@ -257,9 +254,6 @@ class SiteMixin(ResourceMixin):
     juvenile_age_min = Field(attribute='site__juvenile_age_min',widget=FloatWidget(),saves_null_values=global_saves_null)
     juvenile_age_max = Field(attribute='site__juvenile_age_max',widget=FloatWidget(),saves_null_values=global_saves_null)
 
-    def __init__(self,bibtex=None):
-        self.bibtex = bibtex
-
 class CorrectionsMixin(resources.ModelResource):
     """Slightly annoying having to type these all out but it needs to be done to make sure the column names are output as expected. Ordering is done via the HEAT_FLOW_FIELDS variable in thermoglobe.choices.
     """
@@ -282,8 +276,8 @@ class CorrectionsMixin(resources.ModelResource):
     fluid_correction = Field(attribute='corrections__fluid',widget=FloatWidget(),readonly=True)
     fluid_flag = Field(attribute='corrections__fluid_flag',widget=BooleanWidget(),readonly=True)
     
-    bottom_water_variation_correction = Field(attribute='corrections__bottom_water_variation',widget=FloatWidget(),readonly=True)
-    bottom_water_variation_flag = Field(attribute='corrections__bottom_water_variation_flag',widget=BooleanWidget(),readonly=True)
+    bwv_correction = Field(attribute='corrections__bwv',widget=FloatWidget(),readonly=True)
+    bwv_flag = Field(attribute='corrections__bwv_flag',widget=BooleanWidget(),readonly=True)
         
     compaction_correction = Field(attribute='corrections__compaction',widget=FloatWidget(),readonly=True)
     compaction_flag = Field(attribute='corrections__compaction_flag',widget=BooleanWidget(),readonly=True)
@@ -292,20 +286,16 @@ class CorrectionsMixin(resources.ModelResource):
     other_flag = Field(attribute='corrections__other_flag',widget=BooleanWidget(),readonly=True)
     other_type = Field(attribute='corrections__other_type',readonly=True)
 
-class HeatFlowResource(CorrectionsMixin,SiteMixin):
+class IntervalResource(CorrectionsMixin,SiteMixin):
     global_saves_null=True
 
     class Meta:
         model = Interval
         import_id_fields = ['site_name','depth_min','depth_max','reference','heat_flow_corrected','heat_flow_uncorrected']
         skip_unchanged = True
-
-        fields = ['reference'] + choices.HEAT_FLOW_EXPORT
-
+        fields = ['reference'] + choices.heat_flow
         export_order = fields.copy()
         instance_loader_class = CustomInstanceLoader
-        # use_bulk = True
-        # skip_diff = True
 
     def import_obj(self, obj, data, dry_run):
         """
@@ -347,6 +337,27 @@ class HeatFlowResource(CorrectionsMixin,SiteMixin):
         super().after_save_instance(instance,using_transactions,dry_run)
         if getattr(instance,'corrections',False):
             instance.corrections.save()
+
+    def create_news(self,result, user):
+        totals = result.totals
+        html_pubs = self.get_html_publications_list(result)
+        News.objects.create(
+                headline = "New data added!",
+                content =  f"<p>This new upload features {totals['new']} new and {totals['update']} updated heat flow and/or thermal gradient entries in the {self._meta.model._meta.verbose_name} table. Check out the new data below:</p><div><ul>{html_pubs}</ul></div>",
+                published_by = user,
+            )
+
+    def update_plot_cache(self):
+        for data_type in ['heat_flow','gradient']:
+            qs = getattr(self.Meta.model,data_type)
+            for plot_specs in getattr(plots,data_type):
+                plot = getattr(qs,plot_specs['type'])
+                if plot_specs.get('fields'):
+                    for field in plot_specs['fields']:
+                        plot(plots.field_mapping.get(field),force_update=True)
+                else:
+                    plot(force_update=True)
+
 
 def init_site_instance(row,id_fields):
     params = {k:row[k] for k in id_fields}
@@ -395,12 +406,10 @@ class ConductivityResource(SiteMixin):
     conductivity = Field(attribute='conductivity',
             column_name='conductivity',
             widget=FloatWidget())
-    rock_group = Field('rock_group',widget=widgets.ChoiceWidget(choices=choices.ROCK_GROUPS))
-    rock_origin = Field('rock_origin',widget=widgets.ChoiceWidget(choices=choices.ROCK_ORIGIN))
 
     class Meta:
         model = Conductivity
-        fields = choices.CONDUCTIVITY_EXPORT
+        fields = choices.conductivity
         export_order = fields.copy()
         import_id_fields = ['site_name','depth','conductivity','log_id','reference']
 
@@ -417,12 +426,10 @@ class HeatGenResource(SiteMixin):
     heat_generation = Field(attribute='heat_generation',
             column_name='heat_generation',
             widget=FloatWidget())
-    rock_group = Field(widget=widgets.ChoiceWidget(choices=choices.ROCK_GROUPS))
-    rock_origin = Field(widget=widgets.ChoiceWidget(choices=choices.ROCK_ORIGIN))
 
     class Meta:
         model = HeatGeneration
-        fields = choices.HEAT_GEN_EXPORT
+        fields = choices.heat_generation
         export_order = fields.copy()
         import_id_fields = ['site_name','sample_name','depth','reference']
 
@@ -433,7 +440,7 @@ class TempResource(SiteMixin):
 
     class Meta:
         model = Temperature
-        fields = choices.TEMPERATURE_EXPORT
+        fields = choices.temperature
         export_order = fields.copy()
         import_id_fields = ['site_name','depth','temperature','log_id','reference']
 

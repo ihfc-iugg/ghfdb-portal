@@ -2,85 +2,43 @@
 from django.db.models import Avg, Count, Func, FloatField, F, Value, CharField, Q
 from django.db.models.functions import Concat, Coalesce
 from collections import OrderedDict
-# from thermoglobe.models import Site, Publication
+from _plotly_utils.basevalidators import ColorscaleValidator
+from functools import wraps
+from django.core.cache import caches
 
 
-# def heat_flow_sites():
-#     return Site.objects.annotate(value=F('heat_flow'))
+ACCEPTED_PLOT_TYPES = ['box','sunburst','continental_vs_oceanic','choropleth','age_plot']
 
-# def gradient_sites():
-#     return Site.objects.filter(value=F('gradient'))
+def plot_cache(cache_key):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            plots = caches['plots']
+            if len(args) > 1:
+                # an argument was supplied to the wrapped function, use it for greater specificity in cache versioning
+                version = f"{args[0].field}-{args[1]}"
+            else:
+                #no additional args were found so just use the field attribute on the queryset
+                version = args[0].field
+            force_update = kwargs.pop('force_update',None)
+            if plots.get(cache_key, version=version) is None or force_update:
+                plots.set(cache_key, func(*args, **kwargs), version=version)
+            if not force_update:
+                return plots.get(cache_key, version=version)
 
-# def temperature_sites():
-#     return (Site.objects.filter(temperature__isnull=False)
-#         .annotate(value=Avg('temperature__value'))
-#         )
+        return wrapper
+    return decorator
 
-# def conductivity_sites():
-#     return (Site.objects.filter(conductivity__isnull=False)
-#         .annotate(value=Avg('conductivity__value'))
-#         )
-
-# def heat_generation_sites():
-#     return (Site.objects.filter(heat_generation__isnull=False)
-#         .annotate(value=Avg('heat_generation__value'))
-#         )
-
-
-
+def plotly_cscale_nan(color,nan_color):
+    c_scale = ColorscaleValidator("colorscale", "make_figure").validate_coerce(color)
+    c_scale[0][0] += 0.000001
+    c_scale.insert(0,[0, nan_color])
+    return c_scale
 
 class Round(Func):
     function = 'ROUND'
     template="%(function)s(%(expressions)s::numeric, 2)"
 
-def get_db_summary(qs):
-
-    heat_flow_sites = Count('heatflow',distinct=True)
-    heat_flow_uncorrected = Count('heatflow__uncorrected', ouput_field=FloatField())
-    heat_flow_corrected = Count('heatflow__corrected', ouput_field=FloatField())
-    thermal_conductivity=Count('conductivity',distinct=True)
-    heat_generation=Count('heatgeneration',distinct=True)
-    thermal_gradient=Count('thermalgradient',distinct=True)
-    temperature=Count('temperature',distinct=True)
-
-    # Calculates information on the current Site query
-    counts = qs.aggregate(
-        heat_flow_sites=heat_flow_sites,
-        heat_flow_uncorrected=heat_flow_uncorrected,
-        heat_flow_corrected=heat_flow_corrected,
-    )
-    # the following counts do not play nicely with the ones above, must keep seperate and join later
-    counts2 = qs.aggregate(
-        thermal_conductivity=thermal_conductivity,
-        heat_generation=heat_generation,
-        thermal_gradient=thermal_gradient,
-        temperature=temperature,
-    )  
-    counts.update(counts2)
-
-
-    heatflow_ave = ((Avg('heatflow__uncorrected', ouput_field=FloatField()) * heat_flow_uncorrected) + (Avg('heatflow__corrected', ouput_field=FloatField()) * heat_flow_corrected)) / (heat_flow_uncorrected + heat_flow_corrected)
-
-
-    # calculating averages for separate table
-    ave = qs.aggregate(
-        heat_flow=Round(heatflow_ave, output_field=FloatField()),     
-
-    )
-
-    for i in [  qs.aggregate(thermal_conductivity=Round(Avg('conductivity__value'))),
-                qs.aggregate(heat_generation=Round(Avg('heatgeneration__value'))),
-                qs.aggregate(thermal_gradient=Round(Avg('thermalgradient__uncorrected'))),
-                qs.aggregate(temperature=Round(Avg('temperature__value'))),]:
-        ave.update(i)
-
-    return {'count': caps_dict_keys(counts),'average':caps_dict_keys(ave)}
-
-def caps_dict_keys(my_dict):
-    new_dict = {}
-    for key in my_dict.keys():
-        new_dict[key.replace('_',' ').title()] = my_dict[key]
-    return new_dict
 
 def Hyperlink(url, slug_field,field=None,icon=None):
     if field:
@@ -113,7 +71,8 @@ GEO_AGE = {
             'neoarchean':(2500,2800),
             'mesoarchean':(2800,3200),
             'paleoarchean':(3200,3600),
-            'eoarchean':(3600,400000),
+            'eoarchean':(3600,4000),
+            # '':(4000,4600),
             },
 
     'period': {
@@ -139,6 +98,7 @@ GEO_AGE = {
             'orosirian':(1800,2050),
             'rhyacian':(2050,2300),
             'siderian':(2300,2500),
+            # '':(2500,4600),
             },
 
     'epoch': {
@@ -176,6 +136,7 @@ GEO_AGE = {
             'miaolingian':(497,509),
             'series 2':(509,521),
             'terreneuvian':(521,541),
+            '':(541,4600),
             },
 
     'age': {
@@ -260,7 +221,7 @@ GEO_AGE = {
         'emsian':(393.3,407.6),
         'pragian':(407.6,410.8),
         'lochkovian':(410.8,419.2),
-        # '':(419.2,423),
+        '':(419.2,423),
         'ludfordian':(423,425.6),
         'gorstian':(425.6,427.4),
         'homerian':(427.4,430.5),
@@ -274,8 +235,8 @@ GEO_AGE = {
         'darriwilian':(458.4,467.3),
         'dapingian':(467.3,470),
         'floian':(470,477.7),
-        '(formerly arenig)':(477.7,),
-        'tremadocian':(0,485.4),
+        # '(formerly arenig)':(477.7,),
+        'tremadocian':(477.7,485.4),
         'stage 10':(485.4,489.5),
         'jiangshanian':(489.5,494),
         'paibian':(494,497),
@@ -286,6 +247,8 @@ GEO_AGE = {
         'stage 3':(514,521),
         'stage 2':(521,529),
         'fortunian':(529,541),
+        '':(541,4600),
+
         }
 
     }
@@ -1118,19 +1081,3 @@ def age_range(geo_age):
     
     return found
 
-
-# def clean_pubs():
-#     from django_super_deduper.merge import MergedModelInstance
-#     from django.db import IntegrityError
-#     qs = Publication.objects.filter(bib_id__startswith=' ')
-#     for pub in qs:
-#         x = Publication.objects.filter(bib_id__icontains=pub.bib_id.strip())
-#         if x.count() == 2:
-#             try:
-#                 merged = MergedModelInstance.create(x[0],[x[1]])
-#             except IntegrityError:
-#                 merged = MergedModelInstance.create(x[1],[x[0]])
-#             if x[0].interval_set.exists():
-#                 x[1].delete()
-#             else:
-#                 x[0].delete()
