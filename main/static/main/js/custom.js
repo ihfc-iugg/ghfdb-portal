@@ -18,8 +18,6 @@ $(function() {
   if ($('#map').length) {
     $('.toggle').addClass('alt')
   }
-
-
   var $plots = $('.plot').appear();
 
   var loaded = [];

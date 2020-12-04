@@ -2,7 +2,7 @@
 {% load static sekizai_tags %}
 
 {% block content %}
-<div id='map' style="height: 50vh" {% for k,v in map.items %}{{k}}="{{v}}"{% endfor %}></div>
+<div id='map' style="height: 50vh"></div>
 
 {% addtoblock "css" %}
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin=""/>
@@ -20,10 +20,13 @@
     <script src="https://unpkg.com/esri-leaflet@2.5.0/dist/esri-leaflet.js"
       integrity="sha512-ucw7Grpc+iEQZa711gcjgMBnmd9qju1CICsRaryvX7HJklK0pGl/prxKvtHwpgm5ZHdvAil7YPxI1oWPOWK3UQ=="
       crossorigin=""></script>
-    <script src="{% static 'mapping/js/spin.js' %}"></script>
-    <script src="{% static 'mapping/js/leaflet-spin.js' %}"></script>
     <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
-    <script src="{% static 'mapping/js/map.js' %}"></script>
+    <script src="{% static 'mapping/js/mapping.min.js' %}"></script>
+  
+    
+    {% comment %} <script src="{% static 'mapping/js/spin.js' %}"></script> {% endcomment %}
+    {% comment %} <script src="{% static 'mapping/js/leaflet-spin.js' %}"></script> {% endcomment %}
+    {% comment %} <script src="{% static 'mapping/js/map.js' %}"></script> {% endcomment %}
 {% endaddtoblock %}
 {% endblock content %}
 
