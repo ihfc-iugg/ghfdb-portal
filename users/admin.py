@@ -18,23 +18,18 @@ class UserAdmin(BaseUserAdmin):
     
     # fieldsets for modifying user
     fieldsets = (
-        (None,              {'fields': ('title','first_name','last_name', 'password')}),
-        ('Contact info',    {'fields': ('email',)}),
-        ('About', {'fields': ('bio','image','image_tag')}),
-        ('Address',         {'fields': ('address1','address2','address3','postcode','city','state','country',)}),
+        ('Contact info',{'fields': (('first_name','last_name',),'password','email',)}),
         ('Permissions',     {'fields': ('is_active','is_staff','groups','user_permissions')}),
     )
 
     # fieldsets for creating new user
     add_fieldsets = (
-        (None,    {'fields': (('image','image_tag'),'last_name','first_name','email', 'password1', 'password2')}),
-        # ('Address',         {'fields': ('university','address1','address2','city','state','country',)}),
+        (None,    {'fields': ('last_name','first_name','email', 'password1', 'password2')}),
     )
 
     search_fields = ('email',)
     ordering = ('last_name',)
     # filter_horizontal = ()
-    readonly_fields = ['image_tag',]
 
 
 @admin.register(LogEntry)

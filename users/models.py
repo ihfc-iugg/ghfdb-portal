@@ -8,25 +8,6 @@ import os
 
 # Create your models here.
 class CustomUser(AbstractUser):
-    TITLES_CHOICES = [
-    ('MR', 'Mr'),
-    ('MS', 'Ms'),
-    ('MRS', 'Mrs'),
-    ('DR', 'Dr'),
-    ]
-    title = models.CharField(
-        max_length=3,
-        choices=TITLES_CHOICES,
-        
-    )
-    address1 = models.CharField(max_length=100, blank=True, null=True)
-    address2 = models.CharField(max_length=100, blank=True, null=True)
-    address3 = models.CharField(max_length=200, blank=True, null=True)
-    city = models.CharField(max_length=100, blank=True, null=True)
-    state = models.CharField(max_length=100, blank=True, null=True)
-    postcode = models.IntegerField(null=True, blank=True)
-    image = models.ImageField(upload_to='profile_image', blank=True)
-    bio = models.TextField(blank=True,null=True)
 
     def save(self,*args, **kwargs):
         if self.first_name and self.last_name:
@@ -36,12 +17,6 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return str(self.username)
-
-    def image_tag(self):
-        from django.utils.html import escape
-        return mark_safe('<img src="{}" width="150" height="150" />'.format(self.image.url))
-
-    image_tag.short_description = 'Image'
 
     def full_name(self):
         return '{} {}'.format(self.first_name,self.last_name)
