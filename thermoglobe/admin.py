@@ -242,7 +242,7 @@ class AuthorAdmin(BaseAdmin):
 @admin.register(Publication)
 class PublicationAdmin(BaseAdmin):
 
-    list_display = ['edit','article','is_verified','year','_authors', 'title', 'journal']
+    list_display = ['edit','article','bib_id','is_verified','year','_authors', 'title', 'journal']
     exclude = ['source',]
     search_fields = ('pk', 'year', 'bib_id', 'bibtex')
     fields = ['is_verified', ('bib_id','pk', 'slug'), 'bibtex','authors']

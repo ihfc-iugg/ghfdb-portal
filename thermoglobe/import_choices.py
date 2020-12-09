@@ -20,17 +20,10 @@ SITE_FIELDS = [
                 'sediment_thickness',
                 'sediment_thickness_type',
                 'crustal_thickness',
-                'surface_temp',
-                'bottom_water_temp',
+                # 'surface_temp',
+                # 'bottom_water_temp',
                 'cruise',
                 ]   
-
-SITE_FIELDS_BASIC = [
-                'site_name',
-                'latitude',
-                'longitude',
-                'elevation',
-                ] 
 
 HEAT_FLOW_FIELDS = [
             'depth_min',
@@ -78,7 +71,7 @@ HEAT_FLOW_FIELDS = [
             'other_type',
             'other_correction',
 
-            'global_flag',
+            # 'global_flag',
             'comment',
             ]
 
