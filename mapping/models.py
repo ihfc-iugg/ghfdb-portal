@@ -17,7 +17,7 @@ class Base(models.Model):
     def get_data(self):
         query = {f'site__{self._meta.model_name}':self}
         return dict(
-            interval=apps.get_model('thermoglobe','interval').heat_flow.filter(**query),
+            intervals=apps.get_model('thermoglobe','interval').heat_flow.filter(**query),
             temperature=apps.get_model('thermoglobe','temperature').objects.filter(**query),
             conductivity=apps.get_model('thermoglobe','conductivity').objects.filter(**query),
             heat_generation=apps.get_model('thermoglobe','heatgeneration').objects.filter(**query),
