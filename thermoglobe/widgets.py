@@ -117,13 +117,40 @@ class SiteWidget(ForeignKeyWidget):
 
         defaults = {f.name: row.get(f.name) for f in get_non_relational_fields(self.model, row)}
 
-        row['site'] = self.model.objects.update_or_create(**params,defaults=defaults)[0]
+        errors_dict = {}
+        # Validate coordinates
+        if not -90 <= float(row['latitude']) <= 90:
+            errors_dict['latitude'] = ValidationError(_('latitude must be between -90 and 90 degrees'),code='invalid')
+        if not -180 <= float(row['longitude']) <= 180:
+            errors_dict['longitude'] = ValidationError(_('Longitude must be between -90 and 90 degrees'),code='invalid')
+        if 'well_depth' in defaults.keys() and float(row['well_depth']) > 12200:
+            errors_dict['well_depth'] = ValidationError(_('Well depth cannot be deeper than 12,200 m. Have you supplied the correct units?'),code='invalid')
+
+        # challenger deep to mt everest
+        if 'elevation' in defaults.keys() and not -11034 <= float(row['elevation']) <= 8848:
+            errors_dict['elevation'] = ValidationError(_('Your elevation value looks wrong. Have you supplied this data in the correct units?'),code='invalid')
+
+        if errors_dict:
+            raise ValidationError(errors_dict)
 
 
-        # if 'site_name' in params.keys():
-        #     row['site'] = self.model.objects.get_or_create(**params)[0]
-        # else:
-        #     row['site'] = self.model.objects.update_or_create(**params,defaults={'site_name':row['site_name']})[0]
+        try:
+            obj = self.model.objects.get(**params)
+            for key, value in defaults.items():
+                setattr(obj, key, value)
+            # obj.save()
+        except self.model.DoesNotExist:
+            # new_values = {'first_name': 'John', 'last_name': 'Lennon'}
+            params.update(defaults)
+            obj = self.model(**params)
+
+        row['site'] = obj
+
+        # try:
+        #     obj = self.model.objects.get(**params)
+        # except self.mode.DoesNotExist:
+        #     obj = self.model(**params,**defaults)
+        # row['site'] = self.model.objects.update_or_create(**params,defaults=defaults)[0]
 
         if row.get('other_references'):
             row['site'].reference.add(*row['other_references'])
@@ -141,6 +168,7 @@ class SiteWidget(ForeignKeyWidget):
                 return ''
         return value 
 
+# class PublicationWidget(ManyToManyWidget):
 class PublicationWidget(ForeignKeyWidget):
     def __init__(self, model, field=None, reference_dict=None, *args, **kwargs):
         super().__init__(model, field=field, *args, **kwargs)

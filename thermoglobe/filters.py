@@ -53,19 +53,19 @@ class WorldMapFilter(Filter):
     elevation = RangeFilter()
 
     continent = MultipleChoiceFilter(
-            choices=list(Continent.objects.exclude(sites__isnull=True).values_list('id','name').order_by('name')),
+            choices=Continent.objects.exclude(sites__isnull=True).values_list('id','name').order_by('name'),
             lookup_expr='exact',
         )
 
     # country = ModelMultipleChoiceFilter(
     country = MultipleChoiceFilter(
-            choices=list(Country.objects.exclude(sites__isnull=True).values_list('id','name').order_by('name')),
+            choices=Country.objects.exclude(sites__isnull=True).values_list('id','name').order_by('name'),
             lookup_expr='exact',
         )
 
     sea = MultipleChoiceFilter(
             lookup_expr='exact',
-            choices = list(Sea.objects.exclude(sites__isnull=True).values_list('id','name').order_by('name')),
+            choices = Sea.objects.exclude(sites__isnull=True).values_list('id','name').order_by('name'),
         )
 
     # sea = ModelMultipleChoiceFilter(
@@ -74,12 +74,12 @@ class WorldMapFilter(Filter):
     #     )
 
     province = MultipleChoiceFilter(
-            choices=list(Province.objects.exclude(sites__isnull=True).values_list('id','name').order_by('name')),
+            choices=Province.objects.exclude(sites__isnull=True).values_list('id','name').order_by('name'),
             lookup_expr='exact',
         )
 
     tectonic_environment = MultipleChoiceFilter(
-            choices = list(Province.objects.exclude(sites__isnull=True).values_list('type','type').distinct()),
+            choices = Province.objects.exclude(sites__isnull=True).values_list('type','type').distinct(),
             field_name='province__type',
             lookup_expr='exact',
             label='Tectonic Environment'

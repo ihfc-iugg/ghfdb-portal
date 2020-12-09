@@ -17,6 +17,9 @@ from tqdm import tqdm
 # from django.contrib.admin.models import LogEntry, ContentType
 from main.models import News
 from thermoglobe import plots
+from django.core.exceptions import ValidationError
+from django.utils.encoding import force_str
+from mapping import update
 
 class CustomInstanceLoader(ModelInstanceLoader):
     """
@@ -99,10 +102,14 @@ class ResourceMixin(resources.ModelResource):
     def after_import(self, dataset, result, using_transactions, dry_run,**kwargs):
         self.clean_result(result)
 
+
         has_errors = result.has_validation_errors() or result.has_errors()
         if not dry_run and not has_errors:  
             #import was a success! spread the news!
             self.create_news(result, kwargs['user'])
+
+            #update all gis categories
+            self.update_gis()
 
             #update plot cache with new data
             self.update_plot_cache()
@@ -111,6 +118,11 @@ class ResourceMixin(resources.ModelResource):
         for key, count in result.totals.items():
             if count:
                 print('\t',key,': ',count)
+
+
+    def update_gis(self):
+        for i in ['continents','countries','seas','basins','province','political']:
+            getattr(update,i)()
 
     def update_plot_cache(self):
         pass
@@ -221,7 +233,7 @@ class SiteMixin(ResourceMixin):
 
     cruise = Field(attribute='site__cruise')
     well_depth = Field(attribute='site__well_depth',widget=FloatWidget())
-    #geology information
+
     sediment_thickness = Field(attribute='site__sediment_thickness',saves_null_values=global_saves_null,widget=FloatWidget())
     sediment_thickness_type = Field(attribute='site__sediment_thickness_type')
 
@@ -229,30 +241,25 @@ class SiteMixin(ResourceMixin):
 
     seamount_distance = Field(attribute='site__seamount_distance',widget=FloatWidget(),saves_null_values=global_saves_null)
 
-    bottom_water_temp = Field(attribute='site__bottom_water_temp', 
-                            widget=widgets.SitePropertyWidget(Temperature,
-                            field='value',
-                            exclude='lithology',
-                            id_fields = ['site','value','reference'],
-                            required_fields=['value'],
-                            # specify the column to be mapped to each model field
-                            varmap={'bottom_water_temp':'value',
-                                    'temperature_method':'method',
-                                    'reference':'reference'}))
-    surface_temp = Field(attribute='site__surface_temp', 
-                            widget=widgets.SitePropertyWidget(Temperature,
-                                field='value',
-                                exclude='lithology',
-                                id_fields = ['site','value','reference'],
-                                required_fields=['value'],
-                                varmap={'surface_temp':'value',
-                                        'temperature_method':'method',
-                                        'reference':'reference'}))
-
-    tectonothermal_min = Field(attribute='site__tectonothermal_min',widget=FloatWidget(),saves_null_values=global_saves_null)
-    tectonothermal_max = Field(attribute='site__tectonothermal_max',widget=FloatWidget(),saves_null_values=global_saves_null)
-    juvenile_age_min = Field(attribute='site__juvenile_age_min',widget=FloatWidget(),saves_null_values=global_saves_null)
-    juvenile_age_max = Field(attribute='site__juvenile_age_max',widget=FloatWidget(),saves_null_values=global_saves_null)
+    # bottom_water_temp = Field(attribute='site__bottom_water_temp', 
+    #                         widget=widgets.SitePropertyWidget(Temperature,
+    #                         field='value',
+    #                         exclude='lithology',
+    #                         id_fields = ['site','value','reference'],
+    #                         required_fields=['value'],
+    #                         # specify the column to be mapped to each model field
+    #                         varmap={'bottom_water_temp':'value',
+    #                                 'temperature_method':'method',
+    #                                 'reference':'reference'}))
+    # surface_temp = Field(attribute='site__surface_temp', 
+    #                         widget=widgets.SitePropertyWidget(Temperature,
+    #                             field='value',
+    #                             exclude='lithology',
+    #                             id_fields = ['site','value','reference'],
+    #                             required_fields=['value'],
+    #                             varmap={'surface_temp':'value',
+    #                                     'temperature_method':'method',
+    #                                     'reference':'reference'}))
 
 class CorrectionsMixin(resources.ModelResource):
     """Slightly annoying having to type these all out but it needs to be done to make sure the column names are output as expected. Ordering is done via the HEAT_FLOW_FIELDS variable in thermoglobe.choices.
@@ -296,6 +303,7 @@ class IntervalResource(CorrectionsMixin,SiteMixin):
         fields = ['reference'] + choices.heat_flow
         export_order = fields.copy()
         instance_loader_class = CustomInstanceLoader
+        # clean_model_instances = True
 
     def import_obj(self, obj, data, dry_run):
         """
@@ -304,6 +312,7 @@ class IntervalResource(CorrectionsMixin,SiteMixin):
         ``import_field()`` results in a ``ValueError`` being raised for
         one of more fields, those errors are captured and reraised as a single,
         multi-field ValidationError."""
+        data['hf_id'] = obj.pk
         errors = {}
         for field in self.get_import_fields():
             if isinstance(field.widget, widgets.ManyToManyWidget):
@@ -316,27 +325,10 @@ class IntervalResource(CorrectionsMixin,SiteMixin):
         if errors:
             raise ValidationError(errors)
 
-    def after_import_row(self,row,row_result,**kwargs):
-        super().after_import_row(row,row_result,**kwargs)
-        # decided not to associate heat generation with heat flow. However many uploads will contain a HG value. This will throw and error if listed as a field so need to put it here to save it to the site.
-        # hg_id, hg_fields = widgets.site_property(
-        #         model=HeatGeneration,
-        #         row=row,
-        #         exclude=[],
-        #         id_fields = ['site','value','reference','depth'],
-        #         required_fields=['value'],
-        #         varmap={'heat_gen':'value',
-        #                 'heat_gen_unc': 'uncertainty',
-        #                 'number_of_heat_gen': 'number_of_measurements',
-        #                 'heat_gen_method':'method',}
-        #                 )
-        # if hg_id:
-        #     HeatGeneration.objects.update_or_create(**hg_id,defaults=hg_fields)
-
     def after_save_instance(self,instance, using_transactions, dry_run):   
         super().after_save_instance(instance,using_transactions,dry_run)
-        if getattr(instance,'corrections',False):
-            instance.corrections.save()
+        # if getattr(instance,'corrections',False):
+        #     instance.corrections.save()
 
     def create_news(self,result, user):
         totals = result.totals
@@ -348,6 +340,7 @@ class IntervalResource(CorrectionsMixin,SiteMixin):
             )
 
     def update_plot_cache(self):
+        # return
         for data_type in ['heat_flow','gradient']:
             qs = getattr(self.Meta.model,data_type)
             for plot_specs in getattr(plots,data_type):
@@ -357,6 +350,7 @@ class IntervalResource(CorrectionsMixin,SiteMixin):
                         plot(plots.field_mapping.get(field),force_update=True)
                 else:
                     plot(force_update=True)
+        # pass
 
 
 def init_site_instance(row,id_fields):
