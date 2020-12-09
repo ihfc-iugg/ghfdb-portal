@@ -2,21 +2,23 @@ import os
 import platform
 from django.utils.translation import ugettext_lazy as _
 
-OSGEO4W = r"C:\OSGeo4W"
-# if '64' in platform.architecture()[0]:
-    # OSGEO4W += "64"
-assert os.path.isdir(OSGEO4W), "Directory does not exist: " + OSGEO4W
-os.environ['OSGEO4W_ROOT'] = OSGEO4W
-os.environ['GDAL_DATA'] = OSGEO4W + r"\share\gdal"
-os.environ['PROJ_LIB'] = OSGEO4W + r"\share\proj"
-os.environ['PATH'] = OSGEO4W + r"\bin;" + os.environ['PATH']
+if os.name == 'nt':
+    import platform
+    OSGEO4W = r"C:\OSGeo4W"
+    if '64' in platform.architecture()[0]:
+        OSGEO4W += "64"
+    assert os.path.isdir(OSGEO4W), "Directory does not exist: " + OSGEO4W
+    os.environ['OSGEO4W_ROOT'] = OSGEO4W
+    os.environ['GDAL_DATA'] = OSGEO4W + r"\share\gdal"
+    os.environ['PROJ_LIB'] = OSGEO4W + r"\share\proj"
+    os.environ['PATH'] = OSGEO4W + r"\bin;" + os.environ['PATH']
 
-ALLOWED_HOSTS = ['*']
+
+ALLOWED_HOSTS = ['161.35.100.229','heatflow.org','www.heatflow.org','localhost']
 
 
 # CHANGE FOR PRODUCTION
-DEBUG = True
-WHITENOISE_AUTOREFRESH = True
+DEBUG = os.environ['DEBUG'],
 RECAPTCHA_PUBLIC_KEY = os.environ['RECAPTCHA_PUBLIC_KEY']
 RECAPTCHA_PRIVATE_KEY = os.environ['RECAPTCHA_PRIVATE_KEY']
 SECRET_KEY = os.environ['SECRET_KEY']
@@ -84,7 +86,7 @@ INTERNAL_IPS = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'ThermoGlobe',
+        'NAME': os.environ['DB_NAME'],
         'USER': os.environ['DB_USERNAME'],
         'PASSWORD': os.environ['DB_PASSWORD'],
     },
