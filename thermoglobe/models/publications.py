@@ -251,7 +251,7 @@ class Author(ModelMeta,models.Model):
 
     def get_data(self):
         return {
-            'interval' : apps.get_model('thermoglobe','interval').heat_flow.filter(reference__in=self.get_publications()),
+            'intervals' : apps.get_model('thermoglobe','interval').heat_flow.filter(reference__in=self.get_publications()),
             'temperature': apps.get_model('thermoglobe','temperature').objects.filter(reference__in=self.get_publications()),
             'conductivity': apps.get_model('thermoglobe','conductivity').objects.filter(reference__in=self.get_publications()),
             'heat_generation': apps.get_model('thermoglobe','heatgeneration').objects.filter(reference__in=self.get_publications()),
@@ -369,12 +369,13 @@ class Publication(ModelMeta,models.Model):
     def get_meta_title(self):
         return '{} | HeatFlow.org'.format(self.bib_id)
 
-    def get_data(self):
+    def get_data(self,data_type=None):
+        sites = self.sites.all()
         return dict(
-            interval=apps.get_model('thermoglobe','interval').heat_flow.filter(reference=self),
-            temperature= self.temperature.all(),
-            conductivity= self.conductivity.all(),
-            heat_generation= self.heat_generation.all(),
+            intervals=apps.get_model('thermoglobe','interval').heat_flow.filter(site__in=sites),
+            temperature= apps.get_model('thermoglobe','temperature').objects.filter(site__in=sites),
+            conductivity= apps.get_model('thermoglobe','conductivity').objects.filter(site__in=sites),
+            heat_generation= apps.get_model('thermoglobe','heatgeneration').objects.filter(site__in=sites),
         )
 
     def get_absolute_url(self):

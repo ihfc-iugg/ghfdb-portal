@@ -131,7 +131,7 @@ class Interval(models.Model):
 
     global_flag = models.BooleanField(_('global flag'),
         help_text=_('Measurement is suitable for use in global modelling.'),
-        null=True, default=None)
+        null=True, default=False)
     global_reason = models.CharField(_('reason'),
         max_length=200,
         help_text=_('reason for denoting this measurement as suitable for global modelling'),

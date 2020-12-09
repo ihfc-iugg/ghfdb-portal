@@ -133,8 +133,10 @@ class WorldMap(DownloadMixin, TableMixin, TemplateView):
             zf = zipfile.ZipFile(response,'w')
 
             publications = apps.get_model('thermoglobe','publication').objects
-            reference_list = set()
+            sites = apps.get_model('thermoglobe.Site').objects.all()
 
+            # reference_list = set()
+            reference_list = publications.none()
             for key in data_select:
                 #get the download fields
                 csv_headers = self.get_csv_headers(key, download_type)
@@ -142,19 +144,22 @@ class WorldMap(DownloadMixin, TableMixin, TemplateView):
                 # make site fields are appropriate for query
                 formatted_fields = self.format_query_fields(key, download_type)
 
-                if key == 'interval':
-                    qs = apps.get_model('thermoglobe',key).heat_flow.filter(site__in=self.get_filtered_queryset().qs)
+                if key == 'intervals':
+                    qs = apps.get_model('thermoglobe','interval').heat_flow.filter(site__in=self.get_filtered_queryset().qs)
                 else:
                     qs = apps.get_model('thermoglobe',key).objects.filter(site__in=self.get_filtered_queryset().qs)
-
-                
-
+              
                 zf.writestr(f'{key}.csv',self.csv_to_bytes(
                             data=qs.values_list(*formatted_fields), 
                             headers=csv_headers))
 
-                reference_list.update(list(qs.exclude(reference__bibtex__isnull=True).values_list('reference__bibtex',flat=True).distinct()))
 
+                sites = sites.filter(**{f"{key}__in":qs})
+                reference_list = reference_list | publications.filter(sites__in=sites).distinct()
+
+                # reference_list.update(list(qs.exclude(reference__bibtex__isnull=True).values_list('reference__bibtex',flat=True).distinct()))
+
+            reference_list = reference_list.distinct().exclude(bibtex__isnull=True).values_list('bibtex',flat=True)
 
             if reference_list:
                 zf.writestr(f'Thermoglobe_{dt.now().strftime(dt_format)}.bib', self.bibtex_to_bytes(reference_list))

@@ -213,8 +213,10 @@ class DownloadMixin:
             zf = zipfile.ZipFile(response,'w')
 
             publications = apps.get_model('thermoglobe','publication').objects
-            # reference_list = publications.none()
-            reference_list = set()
+            sites = apps.get_model('thermoglobe.Site').objects.all()
+
+            reference_list = publications.none()
+            # reference_list = set()
             for key, qs in self.get_object().get_data().items():
                 # if key in data_select and qs.exists():
                 if key in data_select and qs:
@@ -229,13 +231,13 @@ class DownloadMixin:
                             data=qs.values_list(*formatted_fields), 
                             headers=csv_headers))
                     
-                    # reference_list = reference_list | qs.exclude(reference__bibtex__isnull=True).values_list('reference__bibtex',flat=True).distinct()
-                    reference_list.update(list(qs.exclude(reference__bibtex__isnull=True).values_list('reference__bibtex',flat=True).distinct()))
-                    # reference_list = reference_list | publications.filter(
-                        # **{f"{key}__in":qs.exclude(reference__bibtex__isnull=True)}).distinct().values_list('bibtex',flat=True)
+                    # reference_list.update(list(qs.exclude(reference__bibtex__isnull=True).values_list('reference__bibtex',flat=True).distinct()))
+                    sites = sites.filter(**{f"{key}__in":qs})
+                    reference_list = reference_list | publications.filter(sites__in=sites).distinct()
 
             
             # add bibtex file to zip object
+            reference_list = reference_list.distinct().exclude(bibtex__isnull=True).values_list('bibtex',flat=True)
             if reference_list:
                 zf.writestr(f'{self.get_object()}.bib', self.bibtex_to_bytes(reference_list))
 
@@ -261,12 +263,9 @@ class DownloadMixin:
         return formatted
 
     def bibtex_to_bytes(self, bibtex_list):
-        bib_buffer = StringIO()
-
-        for bib_entry in bibtex_list:
-            bib_buffer.write(bib_entry)
-
-        return bib_buffer.getvalue()
+        buffer = StringIO()
+        buffer.write('\n\n'.join(bibtex_list))
+        return buffer.getvalue()
 
     def csv_to_bytes(self, data, headers):
         csv_buffer = StringIO()
