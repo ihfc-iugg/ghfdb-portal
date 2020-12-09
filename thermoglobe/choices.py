@@ -214,7 +214,7 @@ heat_flow = dict(
     detailed = SITE_DETAILED + HEAT_FLOW_DETAILED,
     )
 
-gradient = interval = heat_flow
+gradient = intervals = heat_flow
 
 temperature = dict(
     basic = SITE_BASIC + TEMPERATURE_BASIC,

@@ -25,7 +25,7 @@ class DownloadForm(forms.Form):
         help_text='Select one or more of the data types below. Download will contain a csv file for each selected data type.',
         required=True,
         choices=[
-            ('interval','Heat Flow/Gradient'),
+            ('intervals','Heat Flow/Gradient'),
             # ('gradient','Thermal Gradient'),
             ('temperature','Temperature'),
             ('conductivity','Thermal Conductivity'),

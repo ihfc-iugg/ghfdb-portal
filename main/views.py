@@ -29,7 +29,6 @@ from .models import Field, Page, News, FAQ
 from django.views.generic import ListView
 from bs4 import BeautifulSoup
 
-
 class PageMetaMixin(MetadataMixin):
     page_id = None
     image = 'assets/main/images/equi_300.webp'
