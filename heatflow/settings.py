@@ -17,16 +17,14 @@ ALLOWED_HOSTS = ['*']
 # CHANGE FOR PRODUCTION
 DEBUG = True
 WHITENOISE_AUTOREFRESH = True
-
-
-
-
+RECAPTCHA_PUBLIC_KEY = os.environ['RECAPTCHA_PUBLIC_KEY']
+RECAPTCHA_PRIVATE_KEY = os.environ['RECAPTCHA_PRIVATE_KEY']
 SECRET_KEY = os.environ['SECRET_KEY']
+
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 FILTERS_EMPTY_CHOICE_LABEL = None
-
 
 # Application definition
 INSTALLED_APPS = [
@@ -203,10 +201,6 @@ META_USE_TITLE_TAG = True
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 AUTH_USER_MODEL = 'users.CustomUser' # new
-
-RECAPTCHA_PUBLIC_KEY = os.environ['RECAPTCHA_PUBLIC_KEY']
-RECAPTCHA_PRIVATE_KEY = os.environ['RECAPTCHA_PRIVATE_KEY']
-
 
 IMPORT_EXPORT_SKIP_ADMIN_LOG = True
 
