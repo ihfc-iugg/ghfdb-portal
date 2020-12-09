@@ -17,6 +17,8 @@ import plotly.graph_objects as go
 from .querysets import PlotQueryset
 from django.apps import apps 
 from meta.models import ModelMeta
+from django.core.exceptions import ValidationError
+from django.utils.encoding import force_str
 
 class SiteQS(PlotQueryset):
     
@@ -245,7 +247,7 @@ class Site(ModelMeta,models.Model):
         #     models.Index(fields=['longitude']),
         # ]
     def __str__(self):
-        return self.site_name
+        return force_str(self.site_name if self.site_name else self.pk)
 
     def save(self, *args, **kwargs):
         self.geom = Point(float(self.longitude),float(self.latitude))
@@ -258,7 +260,7 @@ class Site(ModelMeta,models.Model):
     def get_data(self):
         return {
             # 'interval' : self.intervals.all(),
-            'interval' : apps.get_model('thermoglobe','interval').heat_flow.filter(site=self),
+            'intervals' : apps.get_model('thermoglobe','interval').heat_flow.filter(site=self),
             'temperature': self.temperature.all(),
             'conductivity': self.conductivity.all(),
             'heat_generation': self.heat_generation.all(),
@@ -266,3 +268,23 @@ class Site(ModelMeta,models.Model):
 
     def get_meta_title(self):
         return f"{self.site_name} | HeatFlow.org"
+
+    # def clean(self):
+    #     # save to this and reraise at the end if errors are encountered
+    #     errors_dict = {}
+
+    #     # Validate coordinates
+    #     if not -90 <= self.latitude <= 90:
+    #         errors_dict['latitude'] = ValidationError(_('latitude must be between -90 and 90 degrees'),code='invalid')
+    #     if not -180 <= self.longitude <= 180:
+    #         errors_dict['longitude'] = ValidationError(_('Longitude must be between -90 and 90 degrees'),code='invalid')
+
+    #     if self.well_depth >12200:
+    #         errors_dict['well_depth'] = ValidationError(_('Well depth cannot be deeper than 12,200 m. Have you supplied the correct units?'),code='invalid')
+
+    #     # challenger deep to mt everest
+    #     if not -11034 <= self.elevation > 8848:
+    #         errors_dict['elevation'] = ValidationError(_('Your elevation value looks wrong. Have you supplied this data in the correct units?'),code='invalid')
+
+    #     if errors_dict:
+    #         raise ValidationError(errors_dict)
