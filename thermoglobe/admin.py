@@ -46,7 +46,7 @@ class SiteAdmin(BaseAdmin, ImportExportActionModelAdmin):
                 ]
 
     # inlines = [HeatFlowInline, TemperatureInline, HeatGenerationInline, ]
-    search_fields = ['site_name','latitude','longitude','reference__bibtex','reference__id']
+    search_fields = ['id','site_name','latitude','longitude','reference__bibtex','reference__id']
     # default_zoom = 3
     point_zoom = 3
     map_width = 900
