@@ -208,21 +208,27 @@ class Site(ModelMeta,models.Model):
             blank=True, null=True, 
             on_delete=models.SET_NULL)
 
-    # MEASURED FIELDS
-    surface_temp = models.OneToOneField("Temperature", 
-                verbose_name=_("surface temperature"),
-                help_text=_('Temperature at the surface. Can be either a top of hole temperature or bottom of water temperature for oceanic measurements'),
-                related_name='surface_temp',
-                blank=True,
-                null=True,
-                on_delete=models.SET_NULL)
-    bottom_water_temp = models.OneToOneField("Temperature",
-        verbose_name=_("bottom water temperature"),
+    # # MEASURED FIELDS
+    # surface_temp = models.OneToOneField("Temperature", 
+    #             verbose_name=_("surface temperature"),
+    #             help_text=_('Temperature at the surface. Can be either a top of hole temperature or bottom of water temperature for oceanic measurements'),
+    #             related_name='surface_temp',
+    #             blank=True,
+    #             null=True,
+    #             on_delete=models.SET_NULL)
+    # bottom_water_temp = models.OneToOneField("Temperature",
+    #     verbose_name=_("bottom water temperature"),
+    #     help_text=_('Temperature at the bottom of the water column.'),
+    #     related_name='bottom_water_temp',
+    #     blank=True,
+    #     null=True,
+    #     on_delete=models.SET_NULL)
+
+    bwt = models.FloatField(_('bottom_water_temperature'),
         help_text=_('Temperature at the bottom of the water column.'),
-        related_name='bottom_water_temp',
-        blank=True,
-        null=True,
-        on_delete=models.SET_NULL)
+        null=True, blank=True,
+    )
+
     year_drilled = models.IntegerField(_('year drilled'),
         blank=True, null=True)
 
