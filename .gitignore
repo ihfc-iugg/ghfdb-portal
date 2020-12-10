@@ -55,6 +55,7 @@ plotly_test.html
 test.py
 ThermoGlobe_4Dec2020
 important_server_configuration_settings.txt
+bwt.pkl
 
 .vscode/
 /assets
