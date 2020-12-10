@@ -18,7 +18,8 @@ ALLOWED_HOSTS = ['161.35.100.229','heatflow.org','www.heatflow.org','localhost']
 
 
 # CHANGE FOR PRODUCTION
-DEBUG = os.environ['DEBUG'],
+DEBUG = False if os.environ['DEBUG'] == 'False' else True
+
 RECAPTCHA_PUBLIC_KEY = os.environ['RECAPTCHA_PUBLIC_KEY']
 RECAPTCHA_PRIVATE_KEY = os.environ['RECAPTCHA_PRIVATE_KEY']
 SECRET_KEY = os.environ['SECRET_KEY']
