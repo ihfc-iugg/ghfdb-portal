@@ -246,25 +246,7 @@ class SiteMixin(ResourceMixin):
 
     seamount_distance = Field(attribute='site__seamount_distance',widget=FloatWidget(),saves_null_values=global_saves_null)
 
-    # bottom_water_temp = Field(attribute='site__bottom_water_temp', 
-    #                         widget=widgets.SitePropertyWidget(Temperature,
-    #                         field='value',
-    #                         exclude='lithology',
-    #                         id_fields = ['site','value','reference'],
-    #                         required_fields=['value'],
-    #                         # specify the column to be mapped to each model field
-    #                         varmap={'bottom_water_temp':'value',
-    #                                 'temperature_method':'method',
-    #                                 'reference':'reference'}))
-    # surface_temp = Field(attribute='site__surface_temp', 
-    #                         widget=widgets.SitePropertyWidget(Temperature,
-    #                             field='value',
-    #                             exclude='lithology',
-    #                             id_fields = ['site','value','reference'],
-    #                             required_fields=['value'],
-    #                             varmap={'surface_temp':'value',
-    #                                     'temperature_method':'method',
-    #                                     'reference':'reference'}))
+    bottom_water_temp = Field(attribute='site__bottom_water_temp',widget=FloatWidget(),saves_null_values=global_saves_null)
 
 class CorrectionsMixin(resources.ModelResource):
     """Slightly annoying having to type these all out but it needs to be done to make sure the column names are output as expected. Ordering is done via the HEAT_FLOW_FIELDS variable in thermoglobe.choices.

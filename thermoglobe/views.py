@@ -536,7 +536,6 @@ def get_site_fields():
                     ('sea','name'),
                     ('basin','name'),
                     ('operator','name'),
-                    ('surface_temp','value'),
                     ('bottom_hole_temp','value'),
                     ]
         }
