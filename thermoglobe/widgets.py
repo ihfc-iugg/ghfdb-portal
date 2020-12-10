@@ -91,7 +91,7 @@ def site_property(model,row,varmap,exclude,id_fields,required_fields):
     else:
         id_fields = fields
 
-    if 'surface_temp' in varmap.keys() or 'heatgeneration' in varmap.keys():
+    if 'heatgeneration' in varmap.keys():
         id_fields['depth'] = 0
 
     return id_fields, fields

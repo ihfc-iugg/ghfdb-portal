@@ -21,7 +21,7 @@ SITE_FIELDS = [
                 'sediment_thickness_type',
                 'crustal_thickness',
                 # 'surface_temp',
-                # 'bottom_water_temp',
+                'bottom_water_temp',
                 'cruise',
                 ]   
 
@@ -169,7 +169,7 @@ UNITS = dict(
     outcrop_distance='km',
     sediment_thickness='km',
     crustal_thickness='km',
-    surface_temp='&deg;C',
+    # surface_temp='&deg;C',
     well_depth='m',
 
 
