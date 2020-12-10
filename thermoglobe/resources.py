@@ -20,6 +20,7 @@ from thermoglobe import plots
 from django.core.exceptions import ValidationError
 from django.utils.encoding import force_str
 from mapping import update
+from django.core.cache import caches
 
 class CustomInstanceLoader(ModelInstanceLoader):
     """
@@ -102,17 +103,18 @@ class ResourceMixin(resources.ModelResource):
     def after_import(self, dataset, result, using_transactions, dry_run,**kwargs):
         self.clean_result(result)
 
-
         has_errors = result.has_validation_errors() or result.has_errors()
         if not dry_run and not has_errors:  
             #import was a success! spread the news!
             self.create_news(result, kwargs['user'])
 
+            # These take too long for the production server
             #update all gis categories
-            self.update_gis()
+            #self.update_gis()
 
             #update plot cache with new data
-            self.update_plot_cache()
+            #self.update_plot_cache()
+            self.clear_cache()
 
         print('Import Summary:')
         for key, count in result.totals.items():
@@ -123,6 +125,9 @@ class ResourceMixin(resources.ModelResource):
     def update_gis(self):
         for i in ['continents','countries','seas','basins','province','political']:
             getattr(update,i)()
+
+    def clear_cache(self):
+        caches['plots'].clear()
 
     def update_plot_cache(self):
         pass
