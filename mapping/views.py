@@ -3,7 +3,7 @@ from django import forms
 from django.contrib import messages
 from django.core.serializers import deserialize, serialize
 from django.db.models import Avg, Count, F, FloatField, Max, Min, Q, Value
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.response import TemplateResponse
 from django.urls import reverse
@@ -78,7 +78,11 @@ class Describe(TableMixin, TemplateView):
 
     @property
     def model(self):
-        return apps.get_model('mapping',self.model_name)
+        try:
+            model = apps.get_model('mapping',self.model_name)
+        except LookupError:
+            raise Http404("We couldn't find the page you were looking for!")
+        return model
 
     @property
     def choices(self):
