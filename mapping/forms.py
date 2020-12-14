@@ -19,7 +19,7 @@ class SeaForm(BetterModelForm):
         fields = ['name']
 
 class BasinForm(BetterModelForm):
-    help_text = 'These fields are calculated using the Basins and Plays shapefile produced by CGG Robertson. The information may differ from similar fields calculated using other means. Please see the FAQ page for more info.'
+    help_text = 'These fields are calculated using the Sedimentary Basons of the World shapefile produced by CGG Robertson. The information may differ from similar fields calculated using other means. Please see the FAQ page for more info.'
     class Meta:
         model = models.Basin
         exclude = ['poly','id']
