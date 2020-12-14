@@ -114,14 +114,14 @@ class Sea(Base):
 
     id = models.CharField(max_length=16, primary_key=True)
     name = models.CharField(max_length=100)
-    longitude = models.FloatField()
-    latitude = models.FloatField()
-    min_x = models.FloatField()
-    min_y = models.FloatField()
-    max_x = models.FloatField()
-    max_y = models.FloatField()
-    area = models.BigIntegerField()
-    mrgid = models.BigIntegerField()
+    longitude = models.FloatField(null=True)
+    latitude = models.FloatField(null=True)
+    min_x = models.FloatField(null=True)
+    min_y = models.FloatField(null=True)
+    max_x = models.FloatField(null=True)
+    max_y = models.FloatField(null=True)
+    area = models.BigIntegerField(null=True)
+    mrgid = models.BigIntegerField(null=True)
     poly = models.MultiPolygonField(srid=4326)
 
     class Meta:
