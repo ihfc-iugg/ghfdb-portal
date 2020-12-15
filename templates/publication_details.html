@@ -21,7 +21,8 @@
     <script src="{% static 'thermoglobe/js/citation.js' %}"></script>
 
     <script>
-      add_and_zoom({{object.sites.all|geojsonfeature|safe}})
+      {% comment %} add_and_zoom({{object.sites.all|geojsonfeature:"site_name"|safe}}) {% endcomment %}
+      add_and_zoom({{geojson|safe}})
       var citation = new Cite({{ bibtex|safe }})
 
     </script>

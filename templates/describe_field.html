@@ -29,7 +29,7 @@
 </script>
 {% comment %} <script>add_and_zoom({{object.sites.all|geojsonfeature|safe}})</script> {% endcomment %}
 {% comment %} {% if sites %}<script>add_and_zoom({{sites}})</script>{% endif %} {% endcomment %}
-{% comment %} {% if shape %}<script>add_shape({{shape}})</script>{% endif %} {% endcomment %}
+{% if shape %}<script>add_shape({{shape}})</script>{% endif %}
 {% endaddtoblock %}
 {% endblock content %}
 
