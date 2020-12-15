@@ -1,6 +1,7 @@
 
 var map = createMap().fitWorld();
 var clusters = createClusters()
+var tmpMarker = L.marker()
 map.addLayer(clusters)
 
 function createMap()  {
@@ -33,6 +34,7 @@ function add_to_map(geojson) {
 
   let color = get_color();
   var geoJsonLayer  = L.geoJson(geojson,{
+    onEachFeature: onEachFeature
     });
 
   if (geojson.features.length > 250 ) {
@@ -177,16 +179,15 @@ function customClusterIcon(cluster) {
 };
 
 function onEachFeature(feature, layer) {
-  var properties = Object.entries(feature.properties)
-  
-  var first = properties.shift()
+  delete feature.properties.model;
 
-  var tableContent = "<div class='h5'>" + first[1] + "</div>"
-  tableContent += "<table class='table table-striped'><tbody>"
+  var properties = Object.entries(feature.properties)
+
+  tableContent = "<table><tbody>"
 
   properties.forEach(el=> {
     if (el[1] && el[0] != 'slug') {
-      tableContent += '<tr><td >' + titleize(el[0]) + ':  </td><td>' + el[1] + '</td></td>'
+      tableContent += '<tr><td >' + el[0] + ':  </td><td>' + el[1] + '</td></td>'
     }
   })
 
