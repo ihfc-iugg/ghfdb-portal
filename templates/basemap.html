@@ -21,12 +21,12 @@
       integrity="sha512-ucw7Grpc+iEQZa711gcjgMBnmd9qju1CICsRaryvX7HJklK0pGl/prxKvtHwpgm5ZHdvAil7YPxI1oWPOWK3UQ=="
       crossorigin=""></script>
     <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
-    <script src="{% static 'mapping/js/mapping.min.js' %}"></script>
+    {% comment %} <script src="{% static 'mapping/js/mapping.min.js' %}"></script> {% endcomment %}
   
     
-    {% comment %} <script src="{% static 'mapping/js/spin.js' %}"></script> {% endcomment %}
-    {% comment %} <script src="{% static 'mapping/js/leaflet-spin.js' %}"></script> {% endcomment %}
-    {% comment %} <script src="{% static 'mapping/js/map.js' %}"></script> {% endcomment %}
+    <script src="{% static 'mapping/js/spin.js' %}"></script>
+    <script src="{% static 'mapping/js/leaflet-spin.js' %}"></script>
+    <script src="{% static 'mapping/js/map.js' %}"></script>
 {% endaddtoblock %}
 {% endblock content %}
 
