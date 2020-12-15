@@ -528,7 +528,7 @@ def upload_confirm(request):
 
 
 def get_site_fields():
-    exclude = ['slug','id','uploaded_by','date_added','added_by','date_edited','edited_by','geom']
+    exclude = ['slug','id','date_added','added_by','date_edited','edited_by','geom']
     foreign_keys = {f[0]:'__'.join(f) for f in
                     [
                     ('continent','name'),
