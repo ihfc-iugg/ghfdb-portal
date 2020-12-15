@@ -220,6 +220,9 @@ class Site(ModelMeta,models.Model):
     description = models.TextField(_("site description"),
             null=True, blank=True)
     slug = AutoSlugField(populate_from=['site_name','latitude','longitude'])
+    date_added = models.DateTimeField(_('date added to ThermoGlobe'),
+            auto_now_add=True,
+        )
     history = HistoricalRecords()
 
     _metadata = {

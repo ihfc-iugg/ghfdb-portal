@@ -38,7 +38,10 @@ class SharedProperties(models.Model):
         validators=[MinValueValidator(1900),MaxValueValidator(2050)],
         blank=True, null=True,
         )
-    
+    date_added = models.DateTimeField(_('date added to ThermoGlobe'),
+            auto_now_add=True,
+        )
+        
     class Meta:
         abstract=True
 

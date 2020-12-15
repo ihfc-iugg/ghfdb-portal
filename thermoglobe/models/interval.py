@@ -141,6 +141,10 @@ class Interval(models.Model):
         blank=True, null=True, 
         on_delete=models.SET_NULL)
     
+    date_added = models.DateTimeField(_('date added to ThermoGlobe'),
+            auto_now_add=True,
+        )
+
     class Meta:
         db_table = 'interval'
 
