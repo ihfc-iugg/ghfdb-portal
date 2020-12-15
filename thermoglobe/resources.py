@@ -137,8 +137,7 @@ class ResourceMixin(resources.ModelResource):
         affected_pubs = Publication.objects.filter(intervals__in=objects).distinct()    
 
         # construct an html list of linked publications
-        html_template = '<li><a href="{}">{}</a></li>'
-        return "".join([html_template.format(pub.get_absolute_url(),pub) for pub in affected_pubs])
+        return "".join([f'<li><a href="{pub.get_absolute_url()}">{pub}</a></li>' for pub in affected_pubs])
 
     def create_news(self,result, user):
         totals = result.totals
