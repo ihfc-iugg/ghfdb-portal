@@ -1151,33 +1151,38 @@ function get_bibtex_from_ajax(data) {
 
 
 
-// $('tbody tr').hover(function () {
-//   var data = site.row( this ).data();
-//   console.log(data)
-//   var coordinates = new L.LatLng(data.latitude,data.longitude);
-//   marker.setLatLng(coordinates);
-//   marker.addTo(map)
-// });
+$('tbody tr').hover(function () {
+  var data = site.row( this ).data();
+  console.log(data)
+  var coordinates = new L.LatLng(data.latitude,data.longitude);
+  marker.setLatLng(coordinates);
+  marker.addTo(map)
+});
 
+$('#dataTable').on( 'mouseenter', 'tbody tr', function () {
+  var data = table.row( this ).data();
+  var coordinates = new L.LatLng(data[2],data[3]);
+  tmpMarker.setLatLng(coordinates);
+  tmpMarker.addTo(map)
+} );
 
-// $('#tableNav>button').click(function(e) {
-//   if ($(this).hasClass('disabled')) {
-//     return
-//   }
-//   var idClicked = e.target.id;
-//   var table = $('#dataTable').DataTable();
-//   table.destroy();
-//   $('#dataTable>thead').empty();
-//   $('#dataTable>tbody').remove();
-//   table_from_values_list(dataSet[idClicked])
-//   $('#dataTable th:contains("Value")').html(titleize(idClicked))
-//   }
-// )
+$('#dataTable').on( 'click', 'tbody tr', function () {
+  var data = table.cells( this, '' ).render( 'display' );
 
+  var lat, lon = none,none;
 
+  var popup = '<table>'
+  table.columns().header().each(function(column, index){
+    if (column.innerHTML.toLowerCase() === 'latitude') {
+      lat = data[index]
+    } else if (column.innerHTML.toLowerCase() === 'longitude')  {
+      lon = data[index]
+    }
+    popup += `<tr><td>${column.innerHTML}:</td><td>${data[index]}</td></tr>`
+  })
+  var coordinates = new L.LatLng(lat, lon);
+  new L.marker(coordinates).addTo(map).bindPopup(popup + '</table>');
 
-
-
-
+} );
 
 
