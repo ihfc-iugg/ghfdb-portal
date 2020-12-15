@@ -176,6 +176,8 @@ class DescribeField(TableMixin,  DownloadMixin, DetailView):
             description=self.description(),
         )
 
+        context['shape'] = mark_safe(to_geojson().serialize(self.get_queryset(),geometry_field='poly'))
+
 
         context['tables'] = {}
         for table, fields in self.tables.items():
@@ -198,11 +200,7 @@ class DescribeField(TableMixin,  DownloadMixin, DetailView):
         return super().get(request,*args, **kwargs)
 
     def get_queryset(self):
-        if self.data_type in ['heat_flow','gradient']:
-            qs = getattr(apps.get_model('thermoglobe','interval'),self.data_type)
-        else:
-            qs = apps.get_model('thermoglobe',self.data_type).objects
-        return qs.filter(**{f"site__{self.model_name}__isnull":False})
+        return self.model.objects.filter(slug=self.slug)
 
     def get_object(self):
         qs = self.model.objects.filter(slug=self.slug)
