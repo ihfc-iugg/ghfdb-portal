@@ -3,7 +3,7 @@ from .models import Site, Interval, Conductivity, HeatGeneration, Temperature, C
 from .mixins import BaseAdmin
 from import_export.admin import ImportExportActionModelAdmin, ImportForm
 from .mixins import SitePropertyAdminMixin
-from .resources import ConductivityResource, HeatGenResource, IntervalResource, TempResource
+from .resources import ConductivityResource, HeatGenResource, IntervalResource, TempResource, SiteResource
 from .models import Interval, Conductivity, HeatGeneration
 from django.db.models import F, Count, Exists
 from .filters import IsCorrectedFilter, VerifiedFilter,PubStatusFilter, LastNameLengthFilter,DuplicateFilter, IntervalType, EmptySites, EmptyPublications
@@ -14,13 +14,15 @@ from django.utils import timezone
 from thermoglobe.models.publications import get_author_objects
 from mapping import update
 from django.utils.translation import gettext as _
+import csv
+
 
 @admin.register(Site)
 class SiteAdmin(BaseAdmin, ImportExportActionModelAdmin):
-    resource_class = IntervalResource
+    resource_class = SiteResource
     list_display = ['site_name', 'latitude', 'longitude','elevation','_reference']
     readonly_fields = ['id','slug',"seamount_distance", "outcrop_distance", 'sediment_thickness','crustal_thickness']
-    actions = ["merge",'recalculate_geo_fields']
+    actions = ['export_sites',"merge",'recalculate_geo_fields']
     list_filter = [EmptySites,]
 
     filter_horizontal = ['reference']
@@ -65,6 +67,19 @@ class SiteAdmin(BaseAdmin, ImportExportActionModelAdmin):
         geos = ['countries','continents','seas','basins','political','province']
         for geo in geos:
             getattr(update,geo)()
+
+    def export_sites(self, request, qs):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="sites.csv"'
+
+        writer = csv.writer(response)
+        vals = ['id', 'latitude','longitude']
+        writer.writerow(vals)
+        data = qs.values_list(*vals)
+        for row in data:
+            writer.writerow(row)
+
+        return response
 
 
 @admin.register(Interval)
@@ -245,7 +260,7 @@ class PublicationAdmin(BaseAdmin):
     list_display = ['edit','article','bib_id','is_verified','year','_authors', 'title', 'journal']
     exclude = ['source',]
     search_fields = ('pk', 'year', 'bib_id', 'bibtex')
-    fields = ['is_verified', ('bib_id','pk', 'slug'), 'bibtex','authors']
+    fields = ['is_verified', ('bib_id','pk', 'slug'), 'file','bibtex','authors']
     readonly_fields = ['pk','slug','bib_id']
     list_filter = [EmptyPublications, VerifiedFilter, PubStatusFilter]
     # filter_horizontal = ['authors']
@@ -355,3 +370,12 @@ class UploadAdmin(admin.ModelAdmin):
             return HttpResponseRedirect(".")
 
         return super().response_change(request, obj)
+
+
+# @admin.register(Site)
+# class SiteAdmin(BaseAdmin, ImportExportActionModelAdmin):
+#     resource_class = IntervalResource
+#     list_display = ['id', 'geom',]
+
+
+
