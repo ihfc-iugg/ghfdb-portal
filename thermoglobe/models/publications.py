@@ -174,7 +174,9 @@ class Author(ModelMeta,models.Model):
         'description': 'get_meta_description',
         'author':'get_name',
         }
-
+    date_added = models.DateTimeField(_('date added to ThermoGlobe'),
+            auto_now_add=True,
+        )
     class Meta:
         ordering = ['last_name', 'first_name','middle_name']
         db_table = 'authors'
@@ -295,7 +297,9 @@ class Publication(ModelMeta,models.Model):
         null=True,
         blank=True,
     )
-
+    date_added = models.DateTimeField(_('date added to ThermoGlobe'),
+            auto_now_add=True,
+        )
 
     history = HistoricalRecords()
     _metadata = {
