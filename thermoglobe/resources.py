@@ -427,3 +427,9 @@ class TempResource(SiteMixin):
 
 
 
+class SiteResource(resources.ModelResource):
+
+    class Meta:
+        model = Site
+        import_id_fields = ['id']
+        fields = ['id','latitude','longitude']
