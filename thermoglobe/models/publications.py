@@ -143,6 +143,10 @@ def get_author_objects(entry_dict):
     return author_list
 
 
+def pdf_path(instance, filename):
+    # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
+    return f'publications/{instance.bib_id} - {instance.title}'
+
 class PublicationeQS(models.QuerySet):
 
     def histogram(self):
@@ -285,7 +289,13 @@ class Publication(ModelMeta,models.Model):
         blank=True, null=True, 
         on_delete=models.SET_NULL)
     date_verified = models.DateTimeField(blank=True, null=True)
-    uploaded_by = models.CharField(max_length=150,blank=True,null=True)
+
+    file = models.FileField(_("file"),
+        upload_to=pdf_path,
+        null=True,
+        blank=True,
+    )
+
 
     history = HistoricalRecords()
     _metadata = {
