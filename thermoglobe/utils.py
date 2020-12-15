@@ -41,12 +41,14 @@ class Round(Func):
 
 
 def Hyperlink(url, slug_field,field=None,icon=None):
+    # mark_safe(f"<a href='{reverse('mapping:describe_field', kwargs={'model':self.model_name,'slug':row['slug']})}'>{row[self.group_by]}</a>")
     if field:
         field = F(field)
     elif icon:
         field = Value(icon)
     else:
         raise ValueError('You must specify either a field or an icon.')
+
     slug = F(slug_field)
     url = Value('<a href="{}'.format(url))
     return Concat(url, slug, Value('">'), field, Value("</a>"), output_field=CharField())

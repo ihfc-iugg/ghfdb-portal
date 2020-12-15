@@ -5,7 +5,6 @@ from io import StringIO
 from itertools import zip_longest
 from django import forms
 from django.contrib import messages
-from django.contrib.gis.db.models.functions import AsGeoJSON
 from django.core import serializers
 from django.core.serializers import deserialize, serialize
 from django.db.models import Avg, Count, F, FloatField, Max, Min, Q, Value
@@ -41,6 +40,7 @@ from import_export.forms import ConfirmImportForm
 from thermoglobe.mixins import TableMixin
 from meta.views import Meta
 from thermoglobe import plots
+from djgeojson.serializers import Serializer as to_geojson
 
 # for handling temporary file uploads before confirmation
 from django.core.cache import caches
@@ -467,6 +467,17 @@ class PublicationDetailsView(TableMixin, DownloadMixin, MetadataMixin, DetailVie
             if table['data']:
                 table['active'] = True
                 break
+
+
+        popup_fields = ['id','site_name','latitude','longitude','elevation',]
+
+        context['geojson'] = to_geojson().serialize(
+                queryset= self.get_object().sites.annotate(
+                    link=Hyperlink('/thermoglobe/publications/','slug',icon='view')
+                    ), 
+                properties=','.join(popup_fields)
+        )  
+
 
         return context
 
