@@ -1,6 +1,6 @@
 import os
 from django.contrib.gis.utils import LayerMapping
-from .models import Country, Continent, Sea, Margin, Basin, Political, Province
+from .models import Country, Continent, Sea, Basin, Political, Province
 
 
 DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
@@ -64,22 +64,6 @@ seas_mapping = {
 def seas(verbose=True):
     lm = LayerMapping(Sea, world_seas_dir, seas_mapping, transform=False)
     lm.save(strict=True, verbose=verbose)
-
-margin_dir = os.path.join(DATA_DIR,'margins','ContinentalMargins.shp')
-
-margin_mapping = {
-    'id': 'Uniq_ID',
-    'area': 'Area',
-    'perimetre': 'PERIMETRE',
-    'superficie': 'SUPERFICIE',
-    'poly': 'MULTIPOLYGON',
-}
-
-def margins(verbose=True):
-    lm = LayerMapping(Margin, margin_dir, margin_mapping, transform=False)
-    lm.save(strict=True, verbose=verbose)
-
-
 
 
 basin_dir = os.path.join(DATA_DIR,'basins','basins.shp')
