@@ -260,22 +260,3 @@ class Site(ModelMeta,models.Model):
     def get_meta_title(self):
         return f"{self.site_name} | HeatFlow.org"
 
-    # def clean(self):
-    #     # save to this and reraise at the end if errors are encountered
-    #     errors_dict = {}
-
-    #     # Validate coordinates
-    #     if not -90 <= self.latitude <= 90:
-    #         errors_dict['latitude'] = ValidationError(_('latitude must be between -90 and 90 degrees'),code='invalid')
-    #     if not -180 <= self.longitude <= 180:
-    #         errors_dict['longitude'] = ValidationError(_('Longitude must be between -90 and 90 degrees'),code='invalid')
-
-    #     if self.well_depth >12200:
-    #         errors_dict['well_depth'] = ValidationError(_('Well depth cannot be deeper than 12,200 m. Have you supplied the correct units?'),code='invalid')
-
-    #     # challenger deep to mt everest
-    #     if not -11034 <= self.elevation > 8848:
-    #         errors_dict['elevation'] = ValidationError(_('Your elevation value looks wrong. Have you supplied this data in the correct units?'),code='invalid')
-
-    #     if errors_dict:
-    #         raise ValidationError(errors_dict)
