@@ -48,7 +48,6 @@ INSTALLED_APPS = [
     'main',
     'mapping',
     'thermoglobe',
-    # 'tables',
     'sortedm2m',
     'import_export',
     # 'debug_toolbar',
