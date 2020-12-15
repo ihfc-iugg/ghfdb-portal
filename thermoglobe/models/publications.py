@@ -145,7 +145,7 @@ def get_author_objects(entry_dict):
 
 def pdf_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
-    return f'publications/{instance.bib_id} - {instance.title}'
+    return f'publications/{instance.bib_id} - {instance.title}'[:100]
 
 class PublicationeQS(models.QuerySet):
 
