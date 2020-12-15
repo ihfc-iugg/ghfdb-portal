@@ -1,5 +1,5 @@
 from django.contrib.gis import admin
-from .models import Country, Continent, Sea, Margin, Basin, Political, Province
+from .models import Country, Continent, Sea, Basin, Political, Province
 from django.db.models import Count, Avg, Q
 from django.db.models.functions import Coalesce
 
@@ -94,26 +94,3 @@ class ProvinceAdmin(MappingAbstract):
         'name',
         'poly',
     ]
-
-@admin.register(Margin)
-class MarginAdmin(admin.GeoModelAdmin):
-    list_display = ['id','area','perimetre','superficie']
-    # fields = [
-    #     'name',
-    #     'poly',
-    #     ('longitude','latitude'),
-    #     ('min_x','max_x'),
-    #     ('min_y','max_y'),
-    # ]
-
-
-    # def get_queryset(self, request):
-    #     queryset = super().get_queryset(request)
-    #     queryset = queryset.annotate(
-    #         _number_of_sites=Count("sites"),
-    #         )
-    #     return queryset
-
-    # def number_of_sites(self,obj):
-    #     return obj._number_of_sites
-    # number_of_sites.admin_order_field = '_number_of_sites'

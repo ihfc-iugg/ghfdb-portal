@@ -114,14 +114,6 @@ class Sea(Base):
 
     id = models.CharField(max_length=16, primary_key=True)
     name = models.CharField(max_length=100)
-    longitude = models.FloatField(null=True)
-    latitude = models.FloatField(null=True)
-    min_x = models.FloatField(null=True)
-    min_y = models.FloatField(null=True)
-    max_x = models.FloatField(null=True)
-    max_y = models.FloatField(null=True)
-    area = models.BigIntegerField(null=True)
-    mrgid = models.BigIntegerField(null=True)
     poly = models.MultiPolygonField(srid=4326)
 
     class Meta:
@@ -135,13 +127,6 @@ class Sea(Base):
 
     def __str__(self):
         return '{}'.format(self.name)
-
-class Margin(Base):
-    id = models.IntegerField(primary_key=True)
-    area = models.FloatField()
-    perimetre = models.FloatField()
-    superficie = models.FloatField()
-    poly = models.MultiPolygonField(srid=4326)
 
 class Basin(Base):
     model_description = "<p>This layer is taken from the CGG Robertson New Ventures product suite. It is a carefully and regularly maintained layer from the Robertson Basins & Plays (formerly Tellus) product. The basin classification has been formulated over 20 years based on an understanding of hard rock outcrop, sediment thickness, structural elements, basin evolution and petroleum systems, with basin definitions refined to fit new information and data from both the public domain and from Robertson’s multi-client studies (Red Books).</p><p>...okay that excerpt was taken straight from the <a href='https://www.arcgis.com/home/item.html?id=528eb519d6114f4c82718870c284b722'>download page</a>. This is a very useful and freely available dataset by CGG Robertson</p>"
@@ -223,3 +208,4 @@ class Province(Base):
 
     def __str__(self):
         return '{}'.format(self.name)
+
