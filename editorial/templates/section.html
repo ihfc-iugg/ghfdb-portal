@@ -1,0 +1,6 @@
+{% load static cms_tags %}
+<section {% if instance.section_id %}id="{{instance.section_id}}"{% endif %} {% if instance.image_placement == 'left' %}class='flex-row-reverse' {% endif %} >
+    {% for plugin in instance.child_plugin_instances %}
+      {% render_plugin plugin %}
+    {% endfor %}
+</section>

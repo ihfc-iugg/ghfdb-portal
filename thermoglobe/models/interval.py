@@ -24,7 +24,6 @@ class Interval(models.Model):
     heat_flow_units = mark_safe('mW m<sup>2</sup>')
     gradient_units = mark_safe('&deg;C / Km')
 
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     RELIABILITY_CHOICES = tuple((val,val) for val in ['A','B','C','D','E','R','Z'])
 

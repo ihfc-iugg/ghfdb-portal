@@ -24,9 +24,7 @@ from thermoglobe.models import Publication
 from tablib import Dataset
 from meta.views import MetadataMixin
 
-from main.utils import get_page_or_none
-from main.views import PageMetaMixin
-from main.models import Page
+# from main.models import Page
 from users.models import CustomUser
 
 from . import resources, tables, choices, import_choices
@@ -169,7 +167,7 @@ class WorldMap(DownloadMixin, TableMixin, TemplateView):
                 context['download_form'] = options
                 return render(request, template_name=self.template_name, context=context)
 
-class UploadView(TableMixin, PageMetaMixin,TemplateView):
+class UploadView(TableMixin, TemplateView):
     template_name = 'upload.html'
     confirm_template_name = 'upload_confirm.html'
     page_id = 12
@@ -240,17 +238,10 @@ class UploadView(TableMixin, PageMetaMixin,TemplateView):
         return form
 
     def get_template_response(self, request, context, status):
-        context.update(page=self.get_page_context(status))
         return render(request, 
             self.get_template(status), 
             context=context,
             )
-
-    def get_page_context(self, page):
-        try:
-            return Page.objects.get(title__iexact=page)
-        except Page.DoesNotExist:
-            pass
 
     def get_resource_class(self, form):
         resource_switch = {
@@ -353,7 +344,7 @@ class SiteView(TableMixin, DownloadMixin, DetailView):
             columns=[field.replace('_',' ').capitalize() for field in fields],
             )
 
-class Explore(PageMetaMixin, ListView):
+class Explore(ListView):
     model = None
     template_name = 'explore.html'
     accepted_plot_types = ACCEPTED_PLOT_TYPES
@@ -417,7 +408,7 @@ class ExploreGradient(Explore):
     def get_queryset(self, *args, **kwargs):
         return self.model.gradient.all()
 
-class PublicationListView(TableMixin, PageMetaMixin, ListView):
+class PublicationListView(TableMixin,  ListView):
     page_id = 10
     model = Publication
     template_name = "publication_list.html"
