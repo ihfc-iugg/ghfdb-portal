@@ -14,8 +14,8 @@ if os.name == 'nt':
     os.environ['PATH'] = OSGEO4W + r"\bin;" + os.environ['PATH']
 
 
-ALLOWED_HOSTS = ['161.35.100.229','heatflow.org','www.heatflow.org','localhost']
-
+# ALLOWED_HOSTS = ['161.35.100.229','heatflow.org','www.heatflow.org','localhost']
+ALLOWED_HOSTS = []
 
 # CHANGE FOR PRODUCTION
 DEBUG = False if os.environ['DEBUG'] == 'False' else True
@@ -23,58 +23,100 @@ DEBUG = False if os.environ['DEBUG'] == 'False' else True
 RECAPTCHA_PUBLIC_KEY = os.environ['RECAPTCHA_PUBLIC_KEY']
 RECAPTCHA_PRIVATE_KEY = os.environ['RECAPTCHA_PRIVATE_KEY']
 SECRET_KEY = os.environ['SECRET_KEY']
+SITE_ID = 1
 
 
+gettext = lambda s: s
+DATA_DIR = os.path.dirname(os.path.dirname(__file__))
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 FILTERS_EMPTY_CHOICE_LABEL = None
 
 # Application definition
 INSTALLED_APPS = [
-    # 'django.forms',
+    'users',
     'djangocms_admin_style',  # for the admin skin.
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-    'django.contrib.messages',
-    #'whitenoise.runserver_nostatic',
+    'django.contrib.admin',
+    'django.contrib.sites',
+    'django.contrib.sitemaps',
     'django.contrib.staticfiles',
+    'django.contrib.messages',
     'django.contrib.gis',
     'django.contrib.humanize',
     'django.contrib.admindocs',
-    'users',
+    'cms',
+    'menus',
     'sekizai',
-    'main',
+    'treebeard',
+    'djangocms_text_ckeditor',
+    'filer',
+    'easy_thumbnails',
+    'djangocms_bootstrap4',
+    'djangocms_bootstrap4.contrib.bootstrap4_alerts',
+    'djangocms_bootstrap4.contrib.bootstrap4_badge',
+    'djangocms_bootstrap4.contrib.bootstrap4_card',
+    'djangocms_bootstrap4.contrib.bootstrap4_carousel',
+    'djangocms_bootstrap4.contrib.bootstrap4_collapse',
+    'djangocms_bootstrap4.contrib.bootstrap4_content',
+    'djangocms_bootstrap4.contrib.bootstrap4_grid',
+    'djangocms_bootstrap4.contrib.bootstrap4_jumbotron',
+    'djangocms_bootstrap4.contrib.bootstrap4_link',
+    'djangocms_bootstrap4.contrib.bootstrap4_listgroup',
+    'djangocms_bootstrap4.contrib.bootstrap4_media',
+    'djangocms_bootstrap4.contrib.bootstrap4_picture',
+    'djangocms_bootstrap4.contrib.bootstrap4_tabs',
+    'djangocms_bootstrap4.contrib.bootstrap4_utilities',
+    'djangocms_file',
+    'djangocms_icon',
+    'djangocms_link',
+    'djangocms_picture',
+    'djangocms_style',
+    'djangocms_googlemap',
+    'djangocms_video',
+    'djangocms_publications',
     'mapping',
+    'thermoglobe_integration',
     'thermoglobe',
     'sortedm2m',
     'import_export',
-    # 'debug_toolbar',
     'simple_history',
     'captcha',
     'betterforms',
     'django_extensions',
-    # 'django_filters',
     'djgeojson',
     'widget_tweaks',
     'ckeditor',
     'meta',
+    'djangocms_faq',
+    'aldryn_apphooks_config',
+    'parler',
+    'taggit',
+    'taggit_autosuggest',
+    'djangocms_blog',
+    # 'publications', 
+    'editorial',
     'django_cleanup.apps.CleanupConfig',
-]
+    ]
 
 MIDDLEWARE = [
-    # 'debug_toolbar.middleware.DebugToolbarMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    #'whitenoise.middleware.WhiteNoiseMiddleware',
+    'cms.middleware.utils.ApphookReloadMiddleware',
+    # 'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'cms.middleware.user.CurrentUserMiddleware',
+    'cms.middleware.page.CurrentPageMiddleware',
+    'cms.middleware.toolbar.ToolbarMiddleware',
+    'cms.middleware.language.LanguageCookieMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
+
 ]
 
 INTERNAL_IPS = [
@@ -95,29 +137,36 @@ DATABASES = {
 
 ROOT_URLCONF = 'heatflow.urls'
 
-# FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['templates'],
-        'APP_DIRS': True,
+        'DIRS': [
+            os.path.join(BASE_DIR, 'heatflow', 'templates'),
+            os.path.join(BASE_DIR, 'templates'),
+        ],
         'OPTIONS': {
             'context_processors': [
-                'sekizai.context_processors.sekizai',
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
-                "django.template.context_processors.i18n",
+                'django.template.context_processors.media',
+                'django.template.context_processors.csrf',
+                'django.template.context_processors.tz',
+                'sekizai.context_processors.sekizai',
+                'django.template.context_processors.static',
+                'cms.context_processors.cms_settings'
+            ],
+            'loaders': [
+                'django.template.loaders.filesystem.Loader',
+                'django.template.loaders.app_directories.Loader'
             ],
         },
     },
 ]
 
 WSGI_APPLICATION = 'heatflow.wsgi.application'
-
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -135,20 +184,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
-
-LANGUAGES = (
-    ('en', _('English')),
-    ('fr', _('French')),
-    ('pl', _('Polish')),
-)
-
 LANGUAGE_CODE = 'en'
-LOCALE_PATHS = (
-    os.path.join(BASE_DIR, 'locale/'),
-)
-
 
 TIME_ZONE = 'Australia/Adelaide'
 
@@ -157,6 +194,48 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+LANGUAGES = (
+    ('en', _('English')),
+    ('fr', _('French')),
+    ('de', _('German')),
+)
+
+CMS_LANGUAGES = {
+    ## Customize this
+    1: [
+        {
+            'code': 'en',
+            'name': _('en'),
+            'redirect_on_fallback': True,
+            'public': True,
+            'hide_untranslated': False,
+        },
+    ],
+    'default': {
+        'redirect_on_fallback': True,
+        'public': True,
+        'hide_untranslated': False,
+    },
+}
+
+CMS_TEMPLATES = (
+    ## Customize this
+    ('fullwidth.html', 'Fullwidth'),
+    # ('sidebar_left.html', 'Sidebar Left'),
+    # ('sidebar_right.html', 'Sidebar Right')
+)
+
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+CMS_PERMISSION = True
+
+CMS_PLACEHOLDER_CONF = {}
+
+
+LOCALE_PATHS = (
+    os.path.join(BASE_DIR, 'locale/'),
+)
 
 CACHES = {
     'default': {
@@ -186,14 +265,17 @@ SERIALIZATION_MODULES = {
  }
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = '/assets/'
+STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'assets')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-STATICFILES_DIRS = []
+# STATICFILES_DIRS = (
+#     os.path.join(BASE_DIR, 'static'),
+# )
+
 
 META_SITE_PROTOCOL = 'https'
 META_SITE_DOMAIN = 'heatflow.org'
@@ -207,72 +289,13 @@ AUTH_USER_MODEL = 'users.CustomUser' # new
 
 IMPORT_EXPORT_SKIP_ADMIN_LOG = True
 
-CKEDITOR_CONFIGS = {
-    'default': {
-        'skin': 'moono',
-        # 'skin': 'office2013',
-        'toolbar_Basic': [
-            ['Source', '-', 'Bold', 'Italic']
-        ],
-        'toolbar_YourCustomToolbarConfig': [
-            {'name': 'document', 'items': ['Source', '-', 'Maximize', 'Save', 'NewPage', 'Preview', 'Print', '-', 'Templates']},
-            {'name': 'clipboard', 'items': ['Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo']},
-            {'name': 'editing', 'items': ['Find', 'Replace',]},
-            {'name': 'links', 'items': ['CreateDiv','Link', 'Unlink', 'Anchor']},
-            {'name': 'insert',
-             'items': ['Image', 'Table', 'HorizontalRule', 'Smiley', 'SpecialChar',]},
-            '/',
 
-            {'name': 'basicstyles',
-             'items': ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript',]},
-            {'name': 'paragraph',
-             'items': ['NumberedList', 'BulletedList', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock',]},
-            {'name': 'styles', 'items': ['Styles', 'Format',]},
-            {'name': 'colors', 'items': ['TextColor', 'BGColor']},
+THUMBNAIL_PROCESSORS = (
+    'easy_thumbnails.processors.colorspace',
+    'easy_thumbnails.processors.autocrop',
+    'filer.thumbnail_processors.scale_and_crop_with_subject_location',
+    'easy_thumbnails.processors.filters'
+)
 
-        ],
-        'toolbar': 'YourCustomToolbarConfig',  # put selected toolbar config here
-        # 'toolbarGroups': [{ 'name': 'document', 'groups': [ 'mode', 'document', 'doctools' ] }],
-        'height': 900,
-        'width': '100%',
-        # 'toolbarCanCollapse': True,
-        'tabSpaces': 4,
-        'extraPlugins': ','.join([
-            'uploadimage', # the upload image feature
-            # your extra plugins here
-            'div',
-            'autolink',
-            'autoembed',
-            'embedsemantic',
-            'autogrow',
-            # 'devtools',
-            'widget',
-            'lineutils',
-            'clipboard',
-            'dialog',
-            'dialogui',
-            'elementspath'
-        ]),
-        'stylesSet': [
-            {
-                "name": 'Banner',
-                "element": 'section',
-                "attributes": {'class': 'banner'},
-            }, {
-                "name": 'Section',
-                "element": 'section',
-            }, {
-                "name": 'Header',
-                "element": 'header',
-                "attributes": {'class': 'major'},
-            }, {
-                "name": 'Code',
-                "element": 'code',
-            }, {
-                "name": 'Footnote',
-                "element": 'p',
-                "attributes": {'class': 'footnote'},
-            },            
-        ],
-    }
-}
+THUMBNAIL_HIGH_RESOLUTION = True
+

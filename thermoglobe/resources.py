@@ -15,7 +15,6 @@ from import_export.instance_loaders import ModelInstanceLoader
 from django.utils.html import mark_safe
 from tqdm import tqdm
 # from django.contrib.admin.models import LogEntry, ContentType
-from main.models import News
 from thermoglobe import plots
 from django.core.exceptions import ValidationError
 from django.utils.encoding import force_str
@@ -142,11 +141,11 @@ class ResourceMixin(resources.ModelResource):
     def create_news(self,result, user):
         totals = result.totals
         html_pubs = self.get_html_publications_list(result)
-        News.objects.create(
-                headline = "New data added!",
-                content =  f"<p>This new upload features {totals['new']} new and {totals['update']} updated entries in the {self._meta.model._meta.verbose_name} table. Check out the new data below:</p><div><ul>{html_pubs}</ul></div>",
-                published_by = user,
-            )
+        # News.objects.create(
+        #         headline = "New data added!",
+        #         content =  f"<p>This new upload features {totals['new']} new and {totals['update']} updated entries in the {self._meta.model._meta.verbose_name} table. Check out the new data below:</p><div><ul>{html_pubs}</ul></div>",
+        #         published_by = user,
+        #     )
 
     def clean_result(self,result):
         """Cleans up the result preview"""
@@ -319,11 +318,11 @@ class IntervalResource(CorrectionsMixin,SiteMixin):
     def create_news(self,result, user):
         totals = result.totals
         html_pubs = self.get_html_publications_list(result)
-        News.objects.create(
-                headline = "New data added!",
-                content =  f"<p>This new upload features {totals['new']} new and {totals['update']} updated heat flow and/or thermal gradient entries in the {self._meta.model._meta.verbose_name} table. Check out the new data below:</p><div><ul>{html_pubs}</ul></div>",
-                published_by = user,
-            )
+        # News.objects.create(
+        #         headline = "New data added!",
+        #         content =  f"<p>This new upload features {totals['new']} new and {totals['update']} updated heat flow and/or thermal gradient entries in the {self._meta.model._meta.verbose_name} table. Check out the new data below:</p><div><ul>{html_pubs}</ul></div>",
+        #         published_by = user,
+        #     )
 
     def update_plot_cache(self):
         # return

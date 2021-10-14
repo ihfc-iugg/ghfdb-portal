@@ -1,0 +1,81 @@
+{% load static meta cms_tags menu_tags sekizai_tags %}
+<!doctype html>
+<html lang="en">
+<head {% meta_namespaces %}>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-GRFJCSHMVT"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-GRFJCSHMVT');
+  </script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <link rel="icon" href="data:,">
+  <link rel="shortcut icon" type="image/png" href="{% static "thermoglobe/images/favicon.png" %}">
+  {% include 'meta/meta.html' %}  
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+  
+  {% comment %} FOR DEVELOPMENT {% endcomment %}
+  {% comment %} <link rel="stylesheet" href="{% static "thermoglobe/css/main.css" %}"> {% endcomment %}
+  <link rel="stylesheet" href="{% static "editorial/css/main.css" %}">
+  {% render_block "css"%}
+</head>
+
+<body class="is-preload">
+  {% cms_toolbar %}
+  <div id="wrapper">
+    <div id="main">
+        {% block content %}{% endblock content %}
+    </div>
+    <div id="sidebar" class="{{sidebar|default:'active'}}">
+        <div class="inner">
+          <section id="logo-banner" class='alt py-3'>
+            <header>
+              <a href="/">
+                <div class='d-flex flex-row align-items-center'>
+                    <div><img src="{% static "thermoglobe/images/logo_64.webp"%}" alt="logo"></div>
+                    <div><h2 class='pl-2 pb-0 mb-0'>HeatFlow.org</h2></div>
+                </div>
+              </a>
+            </header>
+          </section>
+            <nav id="menu">
+                <header class='major'>
+                  <h3>Menu</h3>
+                </header>
+                <ul>
+                  {% show_menu 0 100 100 100 %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+  </div>
+
+
+  <script src="{% static "thermoglobe/js/editorial/jquery.min.js" %}"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
+  <script src="https://kit.fontawesome.com/a08181010c.js"></script>
+  {% comment %} USE THIS FOR DEPLOYMENT {% endcomment %}
+  {% comment %} <script src="{% static "thermoglobe/js/main.min.js" %}"></script> {% endcomment %}
+
+  {% comment %} USE THESE FOR DEVELOPMENT {% endcomment %}
+  <script src="{% static "thermoglobe/js/editorial/browser.min.js" %}"></script>
+  <script src="{% static "thermoglobe/js/editorial/breakpoints.min.js" %}"></script>
+  <script src="{% static "thermoglobe/js/editorial/util.js" %}"></script>
+  <script src="{% static "thermoglobe/js/editorial/main.js" %}"></script>
+  <script src="{% static "thermoglobe/js/custom.js" %}"></script>
+
+
+  {% render_block "js"%}
+
+  {% block scripts %}
+  {% endblock scripts %}
+
+</body>
+
+</html>
+

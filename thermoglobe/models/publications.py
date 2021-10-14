@@ -390,7 +390,7 @@ class Publication(ModelMeta,models.Model):
             temperature= apps.get_model('thermoglobe','temperature').objects.filter(site__in=sites),
             conductivity= apps.get_model('thermoglobe','conductivity').objects.filter(site__in=sites),
             heat_generation= apps.get_model('thermoglobe','heatgeneration').objects.filter(site__in=sites),
-        )
+            )
 
     def get_absolute_url(self):
         return reverse("thermoglobe:publication_details", kwargs={"slug": self.slug})
