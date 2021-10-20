@@ -23,9 +23,9 @@ GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH')
 ALLOWED_HOSTS = ['localhost','thermoglobe.herokuapp.com','www.heatflow.org','heatflow.org']
 
 # CHANGE FOR PRODUCTION
-DEBUG = True if os.environ['DEBUG'] == 'TRUE' else False
+DEBUG = True if os.environ.get('DEBUG') == 'TRUE' else False
 
-SECRET_KEY = os.environ['SECRET_KEY']
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 SITE_ID = 1
 
@@ -128,9 +128,9 @@ if DEBUG:
     DATABASES['default'] = {
         'CONN_MAX_AGE': 0,
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': os.environ['DB_NAME'],
-        'USER': os.environ['DB_USERNAME'],
-        'PASSWORD': os.environ['DB_PASSWORD'],
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USERNAME'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
         'HOST': 'localhost',
     }
 else:
@@ -305,7 +305,7 @@ THUMBNAIL_PROCESSORS = (
 
 THUMBNAIL_HIGH_RESOLUTION = True
 
-RECAPTCHA_PUBLIC_KEY = os.environ['RECAPTCHA_PUBLIC_KEY']
-RECAPTCHA_PRIVATE_KEY = os.environ['RECAPTCHA_PRIVATE_KEY']
+RECAPTCHA_PUBLIC_KEY = os.environ.get('RECAPTCHA_PUBLIC_KEY')
+RECAPTCHA_PRIVATE_KEY = os.environ.get('RECAPTCHA_PRIVATE_KEY')
 
 django_heroku.settings(locals(), staticfiles=False)
