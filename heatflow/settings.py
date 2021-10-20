@@ -136,16 +136,22 @@ DATABASES = {}
 if DEBUG:
     DATABASES['default'] = {
         'CONN_MAX_AGE': 0,
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        # 'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': os.environ.get('DB_NAME'),
         'USER': os.environ.get('DB_USERNAME'),
         'PASSWORD': os.environ.get('DB_PASSWORD'),
         'HOST': 'localhost',
     }
 else:
-    DATABASES['default'] = dj_database_url.config(
-        engine='django.contrib.gis.db.backends.postgis',
-        )
+    DATABASES['default'] = dj_database_url.config(engine='django.contrib.gis.db.backends.postgis')
+
+
+
+DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
+
+
+print(DATABASES['default'])
+
 
 ROOT_URLCONF = 'heatflow.urls'
 
@@ -195,7 +201,6 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
 
 
 LANGUAGES = (
