@@ -93,7 +93,7 @@ INSTALLED_APPS = [
     'widget_tweaks',
     'ckeditor',
     'meta',
-    'djangocms_faq',
+    # 'djangocms_faq',
     'aldryn_apphooks_config',
     'parler',
     'taggit',
@@ -120,6 +120,9 @@ MIDDLEWARE = [
     'cms.middleware.language.LanguageCookieMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
 ]
+
+if not DEBUG:
+    MIDDLEWARE.insert(0,'whitenoise.middleware.WhiteNoiseMiddleware')
 
 INTERNAL_IPS = ['127.0.0.1']
 
@@ -272,7 +275,10 @@ MEDIA_URL = '/media/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+if not DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 # STATICFILES_DIRS = (
 #     os.path.join(BASE_DIR, 'static'),
 # )
@@ -290,11 +296,9 @@ META_USE_OG_PROPERTIES = True
 META_USE_TWITTER_PROPERTIES = True
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
 AUTH_USER_MODEL = 'users.CustomUser' # new
 
 IMPORT_EXPORT_SKIP_ADMIN_LOG = True
-
 
 THUMBNAIL_PROCESSORS = (
     'easy_thumbnails.processors.colorspace',
