@@ -23,7 +23,7 @@ GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH')
 ALLOWED_HOSTS = ['localhost','thermoglobe.herokuapp.com','www.heatflow.org','heatflow.org']
 
 # CHANGE FOR PRODUCTION
-DEBUG = False if os.environ['DEBUG'] == 'FALSE' else True
+DEBUG = True if os.environ['DEBUG'] == 'TRUE' else False
 
 SECRET_KEY = os.environ['SECRET_KEY']
 
