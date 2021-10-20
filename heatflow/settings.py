@@ -28,7 +28,6 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 
 SITE_ID = 1
 
-gettext = lambda s: s
 DATA_DIR = os.path.dirname(os.path.dirname(__file__))
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -134,9 +133,9 @@ if DEBUG:
         'HOST': 'localhost',
     }
 else:
-    DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
-    DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
-    
+    DATABASES['default'] = dj_database_url.config()
+    # DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
+
 ROOT_URLCONF = 'heatflow.urls'
 
 TEMPLATES = [
