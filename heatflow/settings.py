@@ -14,7 +14,6 @@ if os.name == 'nt':
     os.environ['PROJ_LIB'] = OSGEO4W + r"\share\proj"
     os.environ['PATH'] = OSGEO4W + r"\bin;" + os.environ['PATH']
 
-
 # for geodjango buildpack
 GEOS_LIBRARY_PATH = os.environ.get('GEOS_LIBRARY_PATH')
 GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH')
@@ -107,6 +106,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'cms.middleware.utils.ApphookReloadMiddleware',
     # 'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -120,9 +120,6 @@ MIDDLEWARE = [
     'cms.middleware.language.LanguageCookieMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
 ]
-
-if not DEBUG:
-    MIDDLEWARE.insert(0,'whitenoise.middleware.WhiteNoiseMiddleware')
 
 INTERNAL_IPS = ['127.0.0.1']
 
@@ -138,7 +135,8 @@ if DEBUG:
     }
 else:
     DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
-
+    DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
+    
 ROOT_URLCONF = 'heatflow.urls'
 
 TEMPLATES = [
@@ -276,8 +274,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
-if not DEBUG:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# if not DEBUG:
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # STATICFILES_DIRS = (
 #     os.path.join(BASE_DIR, 'static'),
