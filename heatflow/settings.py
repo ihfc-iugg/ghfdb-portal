@@ -45,7 +45,6 @@ FILTERS_EMPTY_CHOICE_LABEL = None
 
 # Application definition
 INSTALLED_APPS = [
-    'users',
     'djangocms_admin_style',  # for the admin skin.
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -58,6 +57,7 @@ INSTALLED_APPS = [
     'django.contrib.gis',
     'django.contrib.humanize',
     'django.contrib.admindocs',
+    'users',
     'cms',
     'menus',
     'sekizai',
