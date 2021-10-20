@@ -129,6 +129,7 @@ djangocms-faq = "*"
 djangocms-blog = "*"
 django-publications-bootstrap = "*"
 django-login = "*"
+django-heroku = "*"
 
 [requires]
 python_version = "3.8"

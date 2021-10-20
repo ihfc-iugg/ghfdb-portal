@@ -1,4 +1,5 @@
-import os
+
+import os, django_heroku, dj_database_url 
 import platform
 from django.utils.translation import ugettext_lazy as _
 
@@ -15,16 +16,14 @@ if os.name == 'nt':
 
 
 # ALLOWED_HOSTS = ['161.35.100.229','heatflow.org','www.heatflow.org','localhost']
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost','thermoglobe.herokuapp.com','www.heatflow.org','heatflow.org']
 
 # CHANGE FOR PRODUCTION
-DEBUG = False if os.environ['DEBUG'] == 'False' else True
+DEBUG = False if os.environ['DEBUG'] == 'FALSE' else True
 
-RECAPTCHA_PUBLIC_KEY = os.environ['RECAPTCHA_PUBLIC_KEY']
-RECAPTCHA_PRIVATE_KEY = os.environ['RECAPTCHA_PRIVATE_KEY']
 SECRET_KEY = os.environ['SECRET_KEY']
-SITE_ID = 1
 
+SITE_ID = 1
 
 gettext = lambda s: s
 DATA_DIR = os.path.dirname(os.path.dirname(__file__))
@@ -116,24 +115,22 @@ MIDDLEWARE = [
     'cms.middleware.toolbar.ToolbarMiddleware',
     'cms.middleware.language.LanguageCookieMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
-
 ]
 
-INTERNAL_IPS = [
-    # ...
-    '127.0.0.1',
-    # ...
-]
+INTERNAL_IPS = ['127.0.0.1']
 
-DATABASES = {
-    'default': {
+DATABASES = {}
+if DEBUG:
+    DATABASES['default'] = {
+        'CONN_MAX_AGE': 0,
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': os.environ['DB_NAME'],
         'USER': os.environ['DB_USERNAME'],
         'PASSWORD': os.environ['DB_PASSWORD'],
         'HOST': 'localhost',
-    },
-} 
+    }
+else:
+    DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
 
 ROOT_URLCONF = 'heatflow.urls'
 
@@ -279,9 +276,14 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 META_SITE_PROTOCOL = 'https'
 META_SITE_DOMAIN = 'heatflow.org'
+META_SITE_NAME = 'HeatFlow.org'
+
 META_INCLUDE_KEYWORDS = ['heat flow','thermoglobe','heat flow','temperature','thermal','earth','science','research']
 META_DEFAULT_KEYWORDS = ['heat flow','thermoglobe','heat flow','temperature','thermal','earth','science','research']
 META_USE_TITLE_TAG = True
+META_USE_SITES = True
+META_USE_OG_PROPERTIES = True
+META_USE_TWITTER_PROPERTIES = True
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
@@ -299,3 +301,7 @@ THUMBNAIL_PROCESSORS = (
 
 THUMBNAIL_HIGH_RESOLUTION = True
 
+RECAPTCHA_PUBLIC_KEY = os.environ['RECAPTCHA_PUBLIC_KEY']
+RECAPTCHA_PRIVATE_KEY = os.environ['RECAPTCHA_PRIVATE_KEY']
+
+django_heroku.settings(locals(), staticfiles=False)
