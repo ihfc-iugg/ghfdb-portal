@@ -7,7 +7,7 @@ verify_ssl = true
 
 [packages]
 amqp = "==5.0.2"
-asgiref = "==3.3.1"
+asgiref = "*"
 autopep8 = "==1.5.3"
 backcall = "==0.2.0"
 beautifulsoup4 = "==4.9.3"
@@ -105,7 +105,7 @@ whitenoise = "==5.2.0"
 xlrd = "==1.2.0"
 xlwt = "==1.3.0"
 Cycler = "==0.10.0"
-Django = "==3.1.3"
+Django = "*"
 ipython_genutils = "==0.2.0"
 MarkupPy = "==1.14"
 Pillow = ">=3.0"
