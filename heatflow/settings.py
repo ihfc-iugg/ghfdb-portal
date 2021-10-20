@@ -26,6 +26,16 @@ DEBUG = True if os.environ.get('DEBUG') == 'TRUE' else False
 
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
+LANGUAGE_CODE = 'en'
+
+TIME_ZONE = 'Australia/Adelaide'
+
+USE_I18N = False
+
+USE_L10N = True
+
+USE_TZ = True
+
 SITE_ID = 1
 
 DATA_DIR = os.path.dirname(os.path.dirname(__file__))
@@ -133,8 +143,9 @@ if DEBUG:
         'HOST': 'localhost',
     }
 else:
-    DATABASES['default'] = dj_database_url.config(engine='django.contrib.gis.db.backends.postgis')
-
+    DATABASES['default'] = dj_database_url.config(
+        engine='django.contrib.gis.db.backends.postgis',
+        )
 
 ROOT_URLCONF = 'heatflow.urls'
 
@@ -185,16 +196,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Internationalization
-LANGUAGE_CODE = 'en'
 
-TIME_ZONE = 'Australia/Adelaide'
-
-USE_I18N = True
-
-USE_L10N = True
-
-USE_TZ = True
 
 LANGUAGES = (
     ('en', _('English')),
