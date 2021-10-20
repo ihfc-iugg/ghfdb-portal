@@ -130,6 +130,7 @@ djangocms-blog = "*"
 django-publications-bootstrap = "*"
 django-login = "*"
 django-heroku = "*"
+psycopg2 = "==2.8.6"
 
 [requires]
 python_version = "3.8"
