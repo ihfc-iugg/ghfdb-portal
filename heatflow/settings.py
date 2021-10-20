@@ -79,7 +79,7 @@ INSTALLED_APPS = [
     'djangocms_style',
     'djangocms_googlemap',
     'djangocms_video',
-    'djangocms_publications',
+    # 'djangocms_publications',
     'mapping',
     'thermoglobe_integration',
     'thermoglobe',
