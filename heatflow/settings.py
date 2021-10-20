@@ -15,6 +15,10 @@ if os.name == 'nt':
     os.environ['PATH'] = OSGEO4W + r"\bin;" + os.environ['PATH']
 
 
+# for geodjango buildpack
+GEOS_LIBRARY_PATH = os.environ.get('GEOS_LIBRARY_PATH')
+GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH')
+
 # ALLOWED_HOSTS = ['161.35.100.229','heatflow.org','www.heatflow.org','localhost']
 ALLOWED_HOSTS = ['localhost','thermoglobe.herokuapp.com','www.heatflow.org','heatflow.org']
 
