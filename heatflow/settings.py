@@ -133,8 +133,8 @@ if DEBUG:
         'HOST': 'localhost',
     }
 else:
-    DATABASES['default'] = dj_database_url.config()
-    # DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
+    DATABASES['default'] = dj_database_url.config(engine='django.contrib.gis.db.backends.postgis')
+
 
 ROOT_URLCONF = 'heatflow.urls'
 
