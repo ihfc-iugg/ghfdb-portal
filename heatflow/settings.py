@@ -14,9 +14,9 @@ if os.name == 'nt':
     os.environ['PROJ_LIB'] = OSGEO4W + r"\share\proj"
     os.environ['PATH'] = OSGEO4W + r"\bin;" + os.environ['PATH']
 
-# for geodjango buildpack
-GEOS_LIBRARY_PATH = os.environ.get('GEOS_LIBRARY_PATH')
-GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH')
+# # for geodjango buildpack
+# GEOS_LIBRARY_PATH = os.environ.get('GEOS_LIBRARY_PATH')
+# GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH')
 
 # ALLOWED_HOSTS = ['161.35.100.229','heatflow.org','www.heatflow.org','localhost']
 ALLOWED_HOSTS = ['localhost','thermoglobe.herokuapp.com','www.heatflow.org','heatflow.org']
@@ -57,7 +57,6 @@ INSTALLED_APPS = [
     'django.contrib.gis',
     'django.contrib.humanize',
     'django.contrib.admindocs',
-    'users',
     'cms',
     'menus',
     'sekizai',
@@ -65,6 +64,7 @@ INSTALLED_APPS = [
     'djangocms_text_ckeditor',
     'filer',
     'easy_thumbnails',
+    # 'users',
     'djangocms_bootstrap4',
     'djangocms_bootstrap4.contrib.bootstrap4_alerts',
     'djangocms_bootstrap4.contrib.bootstrap4_badge',
@@ -89,11 +89,11 @@ INSTALLED_APPS = [
     'djangocms_video',
     # 'djangocms_publications',
     'mapping',
-    'thermoglobe_integration',
+    # 'thermoglobe_integration',
     'thermoglobe',
     'sortedm2m',
     'import_export',
-    'simple_history',
+    # 'simple_history',
     'captcha',
     'betterforms',
     'django_extensions',
@@ -136,18 +136,18 @@ DATABASES = {}
 if DEBUG:
     DATABASES['default'] = {
         'CONN_MAX_AGE': 0,
-        # 'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': os.environ.get('DB_NAME'),
         'USER': os.environ.get('DB_USERNAME'),
         'PASSWORD': os.environ.get('DB_PASSWORD'),
         'HOST': 'localhost',
+        'ENGINE':'django.contrib.gis.db.backends.postgis',
     }
 else:
-    DATABASES['default'] = dj_database_url.config(engine='django.contrib.gis.db.backends.postgis')
+    DATABASES['default'] = dj_database_url.config()
 
 
 
-DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
+# DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
 
 
 print(DATABASES['default'])
@@ -300,7 +300,7 @@ META_USE_OG_PROPERTIES = True
 META_USE_TWITTER_PROPERTIES = True
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-AUTH_USER_MODEL = 'users.CustomUser' # new
+# AUTH_USER_MODEL = 'users.CustomUser' # new
 
 IMPORT_EXPORT_SKIP_ADMIN_LOG = True
 
