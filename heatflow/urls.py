@@ -7,7 +7,8 @@ from django.conf.urls.i18n import i18n_patterns
 from django.contrib.sitemaps.views import sitemap
 from django.contrib.auth import views as auth_views
 
-
+# from django.contrib.sites.models import Site
+# print(Site.objects.all())
 urlpatterns = [
     path("sitemap.xml", sitemap, {"sitemaps": {"cmspages": CMSSitemap}}),
     path('taggit_autosuggest/', include('taggit_autosuggest.urls')),
