@@ -286,10 +286,10 @@ class Publication(ModelMeta,models.Model):
         default='User Upload',
         blank=True)
     is_verified = models.BooleanField(_('verified'),default=False)
-    # verified_by = models.ForeignKey("users.CustomUser",
-    #     related_name='verifications',
-    #     blank=True, null=True, 
-    #     on_delete=models.SET_NULL)
+    verified_by = models.ForeignKey("users.CustomUser",
+        related_name='verifications',
+        blank=True, null=True, 
+        on_delete=models.SET_NULL)
     date_verified = models.DateTimeField(blank=True, null=True)
 
     file = models.FileField(_("file"),
