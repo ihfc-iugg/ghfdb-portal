@@ -133,17 +133,19 @@ MIDDLEWARE = [
 INTERNAL_IPS = ['127.0.0.1']
 
 DATABASES = {}
-if DEBUG:
-    DATABASES['default'] = {
-        'CONN_MAX_AGE': 0,
-        'NAME': os.environ.get('DB_NAME'),
-        'USER': os.environ.get('DB_USERNAME'),
-        'PASSWORD': os.environ.get('DB_PASSWORD'),
-        'HOST': 'localhost',
-        # 'ENGINE':'django.contrib.gis.db.backends.postgis',
-    }
-else:
-    DATABASES['default'] = dj_database_url.config()
+
+# set to False to use debug in production
+# if DEBUG or False:
+#     DATABASES['default'] = {
+#         'CONN_MAX_AGE': 0,
+#         'NAME': os.environ.get('DB_NAME'),
+#         'USER': os.environ.get('DB_USERNAME'),
+#         'PASSWORD': os.environ.get('DB_PASSWORD'),
+#         'HOST': 'localhost',
+#         # 'ENGINE':'django.contrib.gis.db.backends.postgis',
+#     }
+# else:
+DATABASES['default'] = dj_database_url.config()
 
 
 ROOT_URLCONF = 'heatflow.urls'
@@ -272,8 +274,6 @@ MEDIA_URL = '/media/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-
-# if not DEBUG:
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # STATICFILES_DIRS = (
