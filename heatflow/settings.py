@@ -14,10 +14,6 @@ if os.name == 'nt':
     os.environ['PROJ_LIB'] = OSGEO4W + r"\share\proj"
     os.environ['PATH'] = OSGEO4W + r"\bin;" + os.environ['PATH']
 
-# # for geodjango buildpack
-# GEOS_LIBRARY_PATH = os.environ.get('GEOS_LIBRARY_PATH')
-# GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH')
-
 # ALLOWED_HOSTS = ['161.35.100.229','heatflow.org','www.heatflow.org','localhost']
 ALLOWED_HOSTS = ['localhost','thermoglobe.herokuapp.com','www.heatflow.org','heatflow.org']
 
@@ -89,7 +85,7 @@ INSTALLED_APPS = [
     'djangocms_video',
     # 'djangocms_publications',
     'mapping',
-    # 'thermoglobe_integration',
+    'thermoglobe_integration',
     'thermoglobe',
     'sortedm2m',
     'import_export',
@@ -135,17 +131,17 @@ INTERNAL_IPS = ['127.0.0.1']
 DATABASES = {}
 
 # set to False to use debug in production
-# if DEBUG or False:
-#     DATABASES['default'] = {
-#         'CONN_MAX_AGE': 0,
-#         'NAME': os.environ.get('DB_NAME'),
-#         'USER': os.environ.get('DB_USERNAME'),
-#         'PASSWORD': os.environ.get('DB_PASSWORD'),
-#         'HOST': 'localhost',
-#         # 'ENGINE':'django.contrib.gis.db.backends.postgis',
-#     }
-# else:
-DATABASES['default'] = dj_database_url.config()
+if DEBUG:
+    DATABASES['default'] = {
+        'CONN_MAX_AGE': 0,
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USERNAME'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': 'localhost',
+        # 'ENGINE':'django.contrib.gis.db.backends.postgis',
+    }
+else:
+    DATABASES['default'] = dj_database_url.config()
 
 
 ROOT_URLCONF = 'heatflow.urls'
