@@ -45,6 +45,7 @@ FILTERS_EMPTY_CHOICE_LABEL = None
 
 # Application definition
 INSTALLED_APPS = [
+    'users',
     'djangocms_admin_style',  # for the admin skin.
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -64,7 +65,6 @@ INSTALLED_APPS = [
     'djangocms_text_ckeditor',
     'filer',
     'easy_thumbnails',
-    # 'users',
     'djangocms_bootstrap4',
     'djangocms_bootstrap4.contrib.bootstrap4_alerts',
     'djangocms_bootstrap4.contrib.bootstrap4_badge',
@@ -140,17 +140,10 @@ if DEBUG:
         'USER': os.environ.get('DB_USERNAME'),
         'PASSWORD': os.environ.get('DB_PASSWORD'),
         'HOST': 'localhost',
-        'ENGINE':'django.contrib.gis.db.backends.postgis',
+        # 'ENGINE':'django.contrib.gis.db.backends.postgis',
     }
 else:
     DATABASES['default'] = dj_database_url.config()
-
-
-
-# DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
-
-
-print(DATABASES['default'])
 
 
 ROOT_URLCONF = 'heatflow.urls'
@@ -300,7 +293,7 @@ META_USE_OG_PROPERTIES = True
 META_USE_TWITTER_PROPERTIES = True
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-# AUTH_USER_MODEL = 'users.CustomUser' # new
+AUTH_USER_MODEL = 'users.CustomUser' # new
 
 IMPORT_EXPORT_SKIP_ADMIN_LOG = True
 
@@ -317,3 +310,4 @@ RECAPTCHA_PUBLIC_KEY = os.environ.get('RECAPTCHA_PUBLIC_KEY')
 RECAPTCHA_PRIVATE_KEY = os.environ.get('RECAPTCHA_PRIVATE_KEY')
 
 django_heroku.settings(locals(), staticfiles=False)
+DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
