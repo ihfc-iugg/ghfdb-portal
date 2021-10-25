@@ -105,6 +105,7 @@ INSTALLED_APPS = [
     # 'djangocms_blog',
     'publications', 
     'editorial',
+    'ordered_model', 
     'django_cleanup.apps.CleanupConfig',
     ]
 

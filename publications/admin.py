@@ -1,29 +1,25 @@
-__license__ = 'MIT License <http://www.opensource.org/licenses/mit-license.php>'
-__author__ = 'Lucas Theis <lucas@theis.io>'
-__docformat__ = 'epytext'
-
 from django.contrib import admin
-try:
-    from django.conf.urls import url
-except ImportError:
-    from django.conf.urls.defaults import url
+from django.conf.urls import url
 from publications.models import CustomLink, CustomFile
-
 import publications.admin_views
 from django.utils.html import mark_safe
+from ordered_model.admin import OrderedModelAdmin
+from .models import Type, List, Publication
+from django.urls import path
 
-class CustomLinkInline(admin.StackedInline):
+class CustomLinkInline(admin.TabularInline):
     model = CustomLink
     extra = 1
     max_num = 5
+    fields = ['url','description']
 
-
-class CustomFileInline(admin.StackedInline):
+class CustomFileInline(admin.TabularInline):
     model = CustomFile
     extra = 1
     max_num = 5
+    fields = ['file','description']
 
-
+@admin.register(Publication)
 class PublicationAdmin(admin.ModelAdmin):
     list_display = ('edit','article','_authors', 'year', 'title', 'type',  'journal_or_book_title')
     # list_display_links = ('title',)
@@ -48,8 +44,8 @@ class PublicationAdmin(admin.ModelAdmin):
 
     def get_urls(self):
         return [
-                url(r'^import_bibtex/$', publications.admin_views.import_bibtex,
-                    name='publications_publication_import_bibtex'),
+                path('import_bibtex/', publications.admin_views.ImportBibtex.as_view(), name='publications_publication_import_bibtex'),
+                    
             ] + super(PublicationAdmin, self).get_urls()
 
     def _authors(self, obj):
@@ -69,3 +65,12 @@ class PublicationAdmin(admin.ModelAdmin):
     
     def file(self,obj):
         return mark_safe('<i class="fas fa-edit"></i>')
+
+@admin.register(Type)
+class TypeAdmin(OrderedModelAdmin):
+	list_display = ('type', 'description', 'hidden', 'move_up_down_links')
+
+@admin.register(List)
+class ListAdmin(admin.ModelAdmin):
+	list_display = ('list', 'description')
+

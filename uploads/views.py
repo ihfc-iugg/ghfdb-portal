@@ -17,9 +17,7 @@ from . import resources, import_choices
 class UploadView(TableMixin, TemplateView):
     template_name = 'upload.html'
     confirm_template_name = 'upload_confirm.html'
-    page_id = 12
     form = UploadForm
-    # options = dict(autoWidth=True)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

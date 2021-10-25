@@ -2,18 +2,16 @@ import os, json
 import numpy as np
 import pandas as pd
 
-from django.db.models.query import QuerySet, ValuesListIterable
-from django.db import models
+from django.db.models.query import QuerySet
 from django.utils.html import mark_safe
 from django.db.models import F
 from django.conf import settings
 
 import plotly.graph_objects as go
-import plotly.figure_factory as ff
 from plotly.subplots import make_subplots 
 import plotly.express as px
+from thermoglobe.utils import plot_cache, plotly_cscale_nan
 
-from thermoglobe.utils import plot_cache, plotly_cscale_nan, GEO_AGE
 json_data = os.path.join(settings.STATIC_ROOT, 'mapping','geojson')
 
 def options(file_name):
@@ -133,7 +131,6 @@ class PlotQueryset(QuerySet):
         # data = data.rename(columns={'std':'sd'})
 
         return data
-
 
 class IntervalQS(PlotQueryset): 
 

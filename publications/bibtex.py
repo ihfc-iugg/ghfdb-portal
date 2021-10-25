@@ -7,7 +7,6 @@ __docformat__ = 'epytext'
 __version__ = '1.2.0'
 
 import re
-import publications.six as six
 
 # special character mapping
 special_chars = (
@@ -59,7 +58,7 @@ def parse(string):
 	bib = []
 
 	# make sure we are dealing with unicode strings
-	if not isinstance(string, six.text_type):
+	if not isinstance(string, str):
 		string = string.decode('utf-8')
 
 	# replace special characters

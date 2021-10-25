@@ -130,6 +130,8 @@ django-heroku = "*"
 psycopg2 = "==2.8.6"
 django-cms = "*"
 django-publications-bootstrap = "*"
+django-ordered-model = "*"
+geoage-calculator = {git = "https://github.com/SSJenny90/geoage-calculator.git"}
 
 [requires]
 python_version = "3.8"
