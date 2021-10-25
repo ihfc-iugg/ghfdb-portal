@@ -1,6 +1,5 @@
-from django import forms
 from . import models
-from betterforms.forms import BetterModelForm, Fieldset, BetterForm
+from betterforms.forms import BetterModelForm
 
 class CountryForm(BetterModelForm):
 

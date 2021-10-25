@@ -47,7 +47,7 @@ class Describe(TableMixin, TemplateView):
         context['table_title'] = ' '.join(self.data_type.split('_')).title()
         context['meta'] = Meta(
             title=f"{self.verbose_name.title()} | HeatFlow.org",
-            keywords=[self.verbose_name, 'heat flow', 'thermal gradient','heat generation','thermal conductivity','temperature'],
+            keywords=[self.verbose_name, 'heat flow', 'thermal gradient','heat production','thermal conductivity','temperature'],
             description=self.description(),
         )
         return context
@@ -61,7 +61,7 @@ class Describe(TableMixin, TemplateView):
             ['gradient', 'Thermal Gradient'],
             ['temperature', 'Temperature'],
             ['conductivity', 'Thermal Conductivity'],
-            ['heatgeneration', 'Heat Generation'],
+            ['heatproduction', 'heat production'],
         ]
 
     @property
@@ -153,7 +153,7 @@ class Describe(TableMixin, TemplateView):
             )
 
     def description(self):
-        return f'An interactive table of descriptive statistics covering all {self.verbose_name_plural} of the world. Compute statistics for heat flow, thermal gradient, temperature, thermal conductivity and heat generation.'
+        return f'An interactive table of descriptive statistics covering all {self.verbose_name_plural} of the world. Compute statistics for heat flow, thermal gradient, temperature, thermal conductivity and heat production.'
 
 class DescribeField(TableMixin,  DownloadMixin, DetailView):
     template_name = 'describe_field.html'
@@ -162,7 +162,7 @@ class DescribeField(TableMixin,  DownloadMixin, DetailView):
         intervals=['depth_min','depth_max','heat_flow','gradient'],
         conductivity=['count','depth_min','depth_max','min_conductivity','max_conductivity'],
         temperature=['count','depth_min','depth_max','min_temperature','max_temperature'],
-        heat_generation=['count','depth_min','depth_max','min_heat_generation','max_heat_generation'],
+        heat_production=['count','depth_min','depth_max','min_heat_production','max_heat_production'],
     )
     download_form = DownloadForm
 
@@ -172,7 +172,7 @@ class DescribeField(TableMixin,  DownloadMixin, DetailView):
 
         context['meta'] = Meta(
             title=f"{self.get_object().name} | HeatFlow.org",
-            keywords=[self.get_object().name, self.model._meta.verbose_name,'download','access','data','datsets','heat flow', 'thermal gradient','heat generation','thermal conductivity','temperature'],
+            keywords=[self.get_object().name, self.model._meta.verbose_name,'download','access','data','datsets','heat flow', 'thermal gradient','heat production','thermal conductivity','temperature'],
             description=self.description(),
         )
 

@@ -1,20 +1,12 @@
-from .models import Site, Conductivity, Interval, HeatGeneration, Temperature, Correction, Publication
+from .models import Site, Conductivity, Interval, HeatProduction, Temperature
 from import_export.fields import Field
-from import_export.widgets import FloatWidget, CharWidget, IntegerWidget, BooleanWidget, ForeignKeyWidget, DecimalWidget
-import time
+from import_export.widgets import FloatWidget, BooleanWidget, DecimalWidget
 from import_export import resources
 from . import widgets, import_choices as choices
-from .utils import ACCEPTED_PLOT_TYPES
-import sys
 import bibtexparser as bib
-from thermoglobe.utils import age_range
-from import_export.instance_loaders import BaseInstanceLoader
-from django.db import IntegrityError
-from django import VERSION
 from import_export.instance_loaders import ModelInstanceLoader
 from django.utils.html import mark_safe
 from tqdm import tqdm
-# from django.contrib.admin.models import LogEntry, ContentType
 from thermoglobe import plots
 from django.core.exceptions import ValidationError
 from django.utils.encoding import force_str
@@ -51,7 +43,6 @@ def fix_depth(row):
     return row
 
 class ResourceMixin(resources.ModelResource):
-    # ref_dict = get_references().entries_dict
 
     def __init__(self,bibtex=None):
         self.bibtex = bibtex
@@ -131,13 +122,6 @@ class ResourceMixin(resources.ModelResource):
     def update_plot_cache(self):
         pass
 
-    def get_html_publications_list(self,result):
-        objects = [row.object_id for row in result.rows]
-        affected_pubs = Publication.objects.filter(intervals__in=objects).distinct()    
-
-        # construct an html list of linked publications
-        return "".join([f'<li><a href="{pub.get_absolute_url()}">{pub}</a></li>' for pub in affected_pubs])
-
     def create_news(self,result, user):
         totals = result.totals
         html_pubs = self.get_html_publications_list(result)
@@ -213,13 +197,6 @@ class ResourceMixin(resources.ModelResource):
 
 class SiteMixin(ResourceMixin):
     global_saves_null=True
-
-    # needs to be before the site property fields below so that a reference is saved
-    reference = Field(attribute='reference',
-            column_name='reference', 
-            widget=widgets.PublicationWidget(Publication, field='reference',
-            # reference_dict=ResourceMixin.ref_dict
-            ))
 
     site_name = Field(attribute='site',column_name='site_name',
         widget=widgets.SiteWidget(Site,
@@ -335,50 +312,12 @@ class IntervalResource(CorrectionsMixin,SiteMixin):
                         plot(plots.field_mapping.get(field),force_update=True)
                 else:
                     plot(force_update=True)
-        # pass
-
 
 def init_site_instance(row,id_fields):
     params = {k:row[k] for k in id_fields}
     if not params['latitude'] or not params['longitude']:
         return None
     return Site.objects.get_or_create(**params)[0]
-
-def init_reference_instance(row, bibtex):
-    if bibtex:
-        # If an actual bibtex string is provided
-        try:
-            entry = bib.loads(bibtex).entries[0]
-        except IndexError:
-            pass
-        else:
-            bib_id = entry.get('ID','')
-            ref, created = Publication.objects.get_or_create(bib_id=bib_id)
-            if created:
-                # save new bibtex entry to bibtex file on server
-                pass
-            else:
-                # save the existing reference entry with the new bibtex file
-                ref.bibtex = bibtex
-                ref.save()
-                row['bibtex'] = ref.bib_id
-
-            return ref
-    else:
-        # # If a bib ID is supplied, check if an entry already exists and retrieve it
-        # try:
-        #     ref = Publication.objects.get(bib_id=row['reference'])
-        # except Publication.DoesNotExist:
-        #     db = BibDatabase()
-        #     try:
-        #         db.entries = [self.ref_dict[row['reference']]]
-        #     except KeyError:
-        #         ref = Publication.objects.create(bib_id=row['bibtex'])
-        #     else:
-        #         ref = Publication.objects.create(bibtex=bib.dumps(db))
-        # finally:
-        #     return ref
-        pass
 
 class ConductivityResource(SiteMixin):
     global_saves_null = False
@@ -402,13 +341,13 @@ class ConductivityResource(SiteMixin):
 
 class HeatGenResource(SiteMixin):
     global_saves_null = False
-    heat_generation = Field(attribute='heat_generation',
-            column_name='heat_generation',
+    heat_production = Field(attribute='heat_production',
+            column_name='heat_production',
             widget=FloatWidget())
 
     class Meta:
-        model = HeatGeneration
-        fields = choices.heat_generation
+        model = HeatProduction
+        fields = choices.heat_production
         export_order = fields.copy()
         import_id_fields = ['site_name','sample_name','depth','reference']
 

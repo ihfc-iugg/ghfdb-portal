@@ -11,13 +11,9 @@ from django.contrib.gis.geos import Point
 from django.utils.html import mark_safe
 from thermoglobe.utils import Round
 from simple_history.models import HistoricalRecords
-from collections import Counter
-from ckeditor.fields import RichTextField
-import plotly.graph_objects as go
 from .querysets import PlotQueryset
 from django.apps import apps 
 from meta.models import ModelMeta
-from django.core.exceptions import ValidationError
 from django.utils.encoding import force_str
 
 class SiteQS(PlotQueryset):
@@ -63,14 +59,14 @@ class SiteQS(PlotQueryset):
             depth_max=Max('conductivity__depth'),
             )
 
-    def heat_generation(self):
-        return self.exclude(heat_generation__isnull=True).annotate(
-            count=Count('heat_generation'),
-            avg_heat_generation=Round(Avg('heat_generation__heat_generation')),
-            min_heat_generation=Min('heat_generation__heat_generation'),
-            max_heat_generation=Max('heat_generation__heat_generation'),
-            depth_min=Min('heat_generation__depth'),
-            depth_max=Max('heat_generation__depth'),
+    def heat_production(self):
+        return self.exclude(heat_production__isnull=True).annotate(
+            count=Count('heat_production'),
+            avg_heat_production=Round(Avg('heat_production__heat_production')),
+            min_heat_production=Min('heat_production__heat_production'),
+            max_heat_production=Max('heat_production__heat_production'),
+            depth_min=Min('heat_production__depth'),
+            depth_max=Max('heat_production__depth'),
             )
 
     def table(self,data_type):
@@ -83,36 +79,6 @@ class SiteQS(PlotQueryset):
             'depth_min': Min('intervals__depth_min'),
             'depth_max': Max('intervals__depth_min'),
         })
-
-class SiteManager(models.Manager):
-
-    def get_queryset(self):
-        return SiteQS(self.model, using=self._db).annotate(**{           
-            'heat_flow': Round(Avg(Coalesce('intervals__heat_flow_corrected', 'intervals__heat_flow_uncorrected'))),
-            'gradient': Round(Avg(Coalesce('intervals__gradient_corrected', 'intervals__gradient_uncorrected'))),
-            'depth_min': Min('intervals__depth_min'),
-            'depth_max': Max('intervals__depth_min'),
-        })
-
-    @property
-    def heat_flow(self):
-        return self.get_queryset().heat_flow()
-
-    @property
-    def gradient(self):
-        return self.get_queryset().gradient()
-
-    @property
-    def temperature(self):
-        return self.get_queryset().temperature()
-
-    @property
-    def conductivity(self):
-        return self.get_queryset().conductivity()
-
-    @property
-    def heat_generation(self):
-        return self.get_queryset().heat_generation()
 
 class Site(ModelMeta,models.Model):
     objects = SiteQS().as_manager()
@@ -140,7 +106,7 @@ class Site(ModelMeta,models.Model):
             validators=[MaxValueValidator(12500),
                     MinValueValidator(0)],
             blank=True, null=True)
-    reference = models.ManyToManyField("thermoglobe.Publication",
+    reference = models.ManyToManyField("publications.Publication",
             verbose_name=_("references"),
             help_text=_('The reference or publication from which the data were sourced. Each site may have multiple references.'),
             related_name='sites',
@@ -208,7 +174,6 @@ class Site(ModelMeta,models.Model):
             blank=True, null=True, 
             on_delete=models.SET_NULL)
 
-
     bottom_water_temp = models.FloatField(_('bottom_water_temperature'),
         help_text=_('Temperature at the bottom of the water column.'),
         null=True, blank=True,
@@ -224,11 +189,9 @@ class Site(ModelMeta,models.Model):
             auto_now_add=True,
         )
     history = HistoricalRecords()
-
     _metadata = {
         'title': 'get_meta_title',
         'description': 'description',
-        'authors': 'year_drilled',
         'year': 'year',
         }
 
@@ -257,7 +220,7 @@ class Site(ModelMeta,models.Model):
             'intervals' : apps.get_model('thermoglobe','interval').heat_flow.filter(site=self),
             'temperature': self.temperature.all(),
             'conductivity': self.conductivity.all(),
-            'heat_generation': self.heat_generation.all(),
+            'heat_production': self.heat_production.all(),
         }
 
     def get_meta_title(self):

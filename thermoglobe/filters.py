@@ -1,13 +1,10 @@
-from .models import Site, Conductivity, Interval, Author
+from .models import Site
 from mapping.models import Sea, Country, Continent, Province
 import django_filters
-from django_filters import widgets, MultipleChoiceFilter, ChoiceFilter, ModelMultipleChoiceFilter,ModelChoiceFilter, RangeFilter
-from django import forms
-from thermoglobe.widgets import RangeField, RangeWidget
+from django_filters import MultipleChoiceFilter, ChoiceFilter, RangeFilter
 from django.contrib import admin
 from django.utils.translation import gettext as _
-from django.db.models import Q, Count
-from django.db.models.functions import Length
+from django.db.models import Q
 from django.db import models
 from thermoglobe.forms import DownloadForm
 from django.db.models.functions import Coalesce
@@ -39,7 +36,7 @@ class WorldMapFilter(Filter):
                 ('gradient','Thermal Gradient'),
                 ('temperature','Temperature'),
                 ('conductivity','Thermal Conductivity'),
-                ('heat_generation','Heat Generation'),],
+                ('heat_production','heat production'),],
         )
 
     # value = RangeFilter(
@@ -93,18 +90,6 @@ class WorldMapFilter(Filter):
         fields = ['latitude','longitude','elevation','country','continent','sea','province']
         # fields = ['value','latitude','longitude','elevation','country','continent','sea','province']
 
-class PublicationFilter(forms.Form):
-    
-    reference__first_author__last_name__iexact = forms.CharField(label='Author', max_length=50, strip=True, required=False, help_text='Search by last name of author')
-    reference__year = RangeField(
-                label='Year',
-                required=False,
-                help_text='Year of publication',
-                field=forms.IntegerField())
-
-    class Meta:
-        title = 'reference'
-
 class VerifiedFilter(admin.SimpleListFilter):
 
     title = _('is verified')
@@ -125,36 +110,6 @@ class VerifiedFilter(admin.SimpleListFilter):
         if self.value() == 'no':
             return queryset.filter(is_verified=True)
 
-class PubStatusFilter(admin.SimpleListFilter):
-    """Show or hide if a publication has a complete reference or not
-    """
-    title = _('completion status')
-
-    parameter_name = 'completion_status'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('done', _('Done')),
-            ('has_id',  _('Has ID, no bibtex')),
-            ('has_bibtex',  _('Has bibtex, bad ID')),
-            ('no_id',  _('No ID, no bibtex')),
-        )
-
-    def queryset(self, request, qs):
-
-        if self.value() == 'done':
-            return qs.exclude(Q(bibtex='') & Q(title=''))
-
-        if self.value() == 'has_id':
-            return qs.annotate(bib_length=Length('bib_id')).exclude(Q(bib_length__lte=4)).filter(Q(bibtex=''))
-
-        if self.value() == 'has_bibtex':
-            return qs.annotate(bib_length=Length('bib_id')).filter(Q(bib_length__lte=4)).exclude(Q(bibtex=''))
-
-        if self.value() == 'no_id':
-            return qs.annotate(bib_length=Length('bib_id')).filter(Q(bib_length__lte=4) & Q(bibtex=''))
-
-
 class EmptySites(admin.SimpleListFilter):
 
     title = _('is empty')
@@ -172,7 +127,7 @@ class EmptySites(admin.SimpleListFilter):
                 intervals__isnull=True, 
                 temperature__isnull=True,
                 conductivity__isnull=True,
-                heat_generation__isnull=True,
+                heat_production__isnull=True,
                 )
 
 class EmptyPublications(admin.SimpleListFilter):
@@ -187,7 +142,7 @@ class EmptyPublications(admin.SimpleListFilter):
             ("has_gradient", _('Has gradient')),
             ("has_temperature", _('Has temperature')),
             ("has_conductivity", _('Has conductivity')),
-            ("has_heat_generation", _('Has heat gen')),
+            ("has_heat_production", _('Has heat gen')),
             ("no_data", _('No data')),
             ("no_sites", _('No sites or data')),
         )
@@ -198,54 +153,11 @@ class EmptyPublications(admin.SimpleListFilter):
             has_gradient = qs.annotate(gradient=Coalesce('intervals__gradient_corrected', 'intervals__gradient_uncorrected')).exclude(gradient__isnull=True),
             has_temperature = qs.exclude(temperature__isnull=True),
             has_conductivity = qs.exclude(conductivity__isnull=True),
-            has_heat_generation = qs.exclude(heat_generation__isnull=True),
-            no_data=qs.filter(intervals__isnull=True, temperature__isnull=True,conductivity__isnull=True,heat_generation__isnull=True),
-            no_sites=qs.filter(intervals__isnull=True, temperature__isnull=True,conductivity__isnull=True,heat_generation__isnull=True,sites__isnull=True),
+            has_heat_production = qs.exclude(heat_production__isnull=True),
+            no_data=qs.filter(intervals__isnull=True, temperature__isnull=True,conductivity__isnull=True,heat_production__isnull=True),
+            no_sites=qs.filter(intervals__isnull=True, temperature__isnull=True,conductivity__isnull=True,heat_production__isnull=True,sites__isnull=True),
         )
         return options.get(self.value())
-
-
-class LastNameLengthFilter(admin.SimpleListFilter):
-    """Show or hide if a publication has a complete reference or not
-    """
-    title = _('last_name_length')
-
-    parameter_name = 'last_name_length'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('<2', _('< 2')),
-        )
-
-    def queryset(self, request, qs):
-
-        if self.value() == '<2':
-            return qs.annotate(last_name_length=Length('last_name')).filter(last_name_length__lte=2)
-
-class DuplicateFilter(admin.SimpleListFilter):
-    """Show or hide if a publication has a complete reference or not
-    """
-    title = _('Duplicates?')
-
-    parameter_name = 'duplicates'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('yes', _('Maybe')),
-        )
-
-    def queryset(self, request, qs):
-        
-        if self.value() == 'yes':
-            dups = (
-                    Author.objects.values('last_name')
-                    .annotate(count=Count('id'))
-                    .values('last_name')
-                    .order_by()
-                    .filter(count__gt=1)
-                )
-            out = Author.objects.filter(last_name__in=dups)
-            return out
 
 class IntervalType(admin.SimpleListFilter):
     """Show or hide if a publication has a complete reference or not

@@ -83,10 +83,10 @@ INSTALLED_APPS = [
     'djangocms_style',
     'djangocms_googlemap',
     'djangocms_video',
-    # 'djangocms_publications',
     'mapping',
-    'thermoglobe_integration',
+    'cms_integration',
     'thermoglobe',
+    'uploads',
     'sortedm2m',
     'import_export',
     # 'simple_history',
@@ -102,8 +102,8 @@ INSTALLED_APPS = [
     'parler',
     'taggit',
     'taggit_autosuggest',
-    'djangocms_blog',
-    # 'publications', 
+    # 'djangocms_blog',
+    'publications', 
     'editorial',
     'django_cleanup.apps.CleanupConfig',
     ]
@@ -231,6 +231,7 @@ CMS_PERMISSION = True
 
 CMS_PLACEHOLDER_CONF = {}
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale/'),
@@ -257,7 +258,6 @@ CACHES = {
         }
     }
 }
-
 
 SERIALIZATION_MODULES = {
     "geojson": "django.contrib.gis.serializers.geojson", 
