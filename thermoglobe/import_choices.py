@@ -48,10 +48,10 @@ HEAT_FLOW_FIELDS = [
             'number_of_conductivities',
             'conductivity_method',
 
-            'heat_generation',
-            'heat_generation_uncertainty',
+            'heat_production',
+            'heat_production_uncertainty',
             'number_of_heat_gen',
-            'heat_generation_method',
+            'heat_production_method',
 
             'climate_flag',
             'climate_correction',
@@ -84,7 +84,6 @@ HEAT_FLOW_FIELDS_BASIC = [
             'gradient_corrected',
             'gradient_uncorrected',
             'thermal_conductivity',
-            'reference',
             'comment',
             ]
 
@@ -103,7 +102,6 @@ CONDUCTIVITY_FIELDS = [
             'depth',
             'year_logged',
             'operator',
-            'reference',
             'comment',
             'source',
             'source_id',    
@@ -111,7 +109,7 @@ CONDUCTIVITY_FIELDS = [
             ]
 
 HEAT_GEN_FIELDS = [
-            'heat_generation',
+            'heat_production',
             'uncertainty',
             'k_pc',
             'th_ppm',
@@ -122,7 +120,6 @@ HEAT_GEN_FIELDS = [
             'depth',
             'year_logged',
             'operator',
-            'reference',
             'comment',
             'source',
             'source_id',    
@@ -152,7 +149,7 @@ TEMPERATURE_FIELDS = [
 
 heat_flow = gradient = SITE_FIELDS + HEAT_FLOW_FIELDS
 conductivity = SITE_FIELDS + CONDUCTIVITY_FIELDS
-heat_generation = SITE_FIELDS + HEAT_GEN_FIELDS
+heat_production = SITE_FIELDS + HEAT_GEN_FIELDS
 temperature = SITE_FIELDS + TEMPERATURE_FIELDS
 
 

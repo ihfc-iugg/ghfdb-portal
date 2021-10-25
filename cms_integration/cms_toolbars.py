@@ -32,8 +32,8 @@ class SiteToolbar(CMSToolbar):
             url=admin_reverse('thermoglobe_conductivity_changelist'),    # the URL it should open with
         )
         data_menu.add_sideframe_item(
-            name='Heat Generation',                              # name of the new menu item
-            url=admin_reverse('thermoglobe_heatgeneration_changelist'),    # the URL it should open with
+            name='heat production',                              # name of the new menu item
+            url=admin_reverse('thermoglobe_heatproduction_changelist'),    # the URL it should open with
         )
         # publications_menu = self.toolbar.get_or_create_menu(
         #     'publications_integration',  # a unique key for this menu

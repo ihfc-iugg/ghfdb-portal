@@ -1,13 +1,11 @@
 from io import StringIO
 import csv, json, zipfile
 
-from import_export.admin import ImportExportActionModelAdmin
-from django.db.models import Count, F
-from django.contrib import admin
+from django.db.models import F
 from django.utils.translation import gettext as _
 from django.contrib.gis import admin as gisadmin
 from django.utils.html import mark_safe
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import  render
 from django.http import HttpResponse
 from django.apps import apps
 from thermoglobe import choices
@@ -90,35 +88,6 @@ class BaseAdmin(gisadmin.OSMGeoAdmin):
         js = ("https://kit.fontawesome.com/a08181010c.js",)
         css = {'all': ['thermoglobe/css/admin/table.css']}
 
-    # def add_publication(self, request, qs):
-
-    #     # change_message = f"Merged {to_be_merged} into a single {qs.model._meta.verbose_name}"
-    #     pub1 = qs[0]
-    #     pub2 = qs[1]
-
-    #     for site in pub1.sites.all():
-    #         site.references.add(pub2)
-        
-    #     for site in pub2.sites.all():
-    #         site.references.add(pub1)
-
-        
-
-
-    #     # merged = MergedModelInstance.create(qs.first(),qs[1:],keep_old=False)
-    #     LogEntry.objects.log_action(
-    #         user_id=request.user.pk,
-    #         content_type_id=ContentType.objects.get_for_model(qs.model).pk,
-    #         object_id=qs.first().pk,
-    #         object_repr=str(qs.first()),
-    #         action_flag=2, #CHANGE
-    #         change_message=_(change_message),
-    #     )
-    #     self.message_user(request, change_message, messages.SUCCESS)
-
-    # merge.short_description = "Merge duplicate entries"
-
-
     def site_name(self,obj):
         return obj._site_name
     site_name.admin_order_field = '_site_name'
@@ -163,9 +132,9 @@ class BaseAdmin(gisadmin.OSMGeoAdmin):
         return obj._conductivity
     _conductivity.admin_order_field = '_conductivity'
 
-    def _heat_generation(self,obj):
-        return obj._heat_generation
-    _heat_generation.admin_order_field = '_heat_generation'
+    def _heat_production(self,obj):
+        return obj._heat_production
+    _heat_production.admin_order_field = '_heat_production'
     
     def sites(self,obj):
         return obj._site_count
@@ -174,7 +143,6 @@ class BaseAdmin(gisadmin.OSMGeoAdmin):
     def edit(self,obj):
         return _("edit")
     
-
 class SitePropertyAdminMixin(BaseAdmin):
     search_fields = ['site__site_name','site__latitude','site__longitude','reference__bib_id']
     autocomplete_fields = ['site']
@@ -188,7 +156,6 @@ class SitePropertyAdminMixin(BaseAdmin):
             _longitude=F('site__longitude'),)
 
         return queryset
-
 
 class DownloadMixin:
     download_form = DownloadForm

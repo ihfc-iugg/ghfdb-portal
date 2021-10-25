@@ -1,20 +1,10 @@
-import os, uuid, json
+import uuid
 from django.db import models
-from django.db.models import F, Q, Avg, Count, Max, Min
-from django.db.models.functions import Coalesce
 from django.utils.translation import gettext as _
-from django.urls import reverse
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.contrib.gis.db import models as geomodels
-from django_extensions.db.fields import AutoSlugField
-from django.contrib.gis.geos import Point
-from simple_history.models import HistoricalRecords
-from ckeditor.fields import RichTextField
 from django.utils.html import mark_safe
 from .querysets import HFQueryset, GradientQueryset
-from .managers import IntervalManager
-from django.apps import apps
-from thermoglobe.models import querysets, managers 
+from thermoglobe.models import managers 
 
 class Interval(models.Model):
     objects = models.Manager()
@@ -103,21 +93,21 @@ class Interval(models.Model):
             max_length=150,
             blank=True, null=True)
 
-    heat_generation = models.FloatField(_("average heat generation"),
-            help_text=_('Average heat generation to accompany the heat flow estimate.'),
+    heat_production = models.FloatField(_("average heat production"),
+            help_text=_('Average heat production to accompany the heat flow estimate.'),
             blank=True, null=True)
-    heat_generation_uncertainty = models.FloatField(_("heat generation uncertainty"),
-            help_text=_('Uncertainty of the reported heat generation.'),
+    heat_production_uncertainty = models.FloatField(_("heat production uncertainty"),
+            help_text=_('Uncertainty of the reported heat production.'),
             blank=True, null=True)
-    number_of_heat_gen = models.FloatField(_("number of heat generation measurements"),
-            help_text=_('Number of heat generation values from which the average heat generation was derived.'),
+    number_of_heat_gen = models.FloatField(_("number of heat production measurements"),
+            help_text=_('Number of heat production values from which the average heat production was derived.'),
             blank=True, null=True)
-    heat_generation_method = models.CharField(_("heat generation method"),
-            help_text=_('Method used to measure or derive heat generation.'),
+    heat_production_method = models.CharField(_("heat production method"),
+            help_text=_('Method used to measure or derive heat production.'),
             max_length=150,
             blank=True, null=True)
 
-    reference = models.ForeignKey("thermoglobe.Publication",
+    reference = models.ForeignKey("publications.Publication",
                 help_text=_('The publication or other reference from which the measurement was reported.'),
                 verbose_name=_("reference"),
                 related_name='intervals', 

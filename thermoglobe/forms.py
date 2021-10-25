@@ -1,12 +1,8 @@
 from django import forms
-from .widgets import RangeField, RangeWidget
-from captcha.fields import ReCaptchaField
-from captcha.widgets import ReCaptchaV3
 from . import models, import_choices as choices
-from betterforms.forms import BetterModelForm, Fieldset
-from betterforms.multiform import MultiForm, MultiModelForm
+from betterforms.forms import BetterModelForm
+from betterforms.multiform import  MultiModelForm
 from mapping import forms as map_forms
-from collections import OrderedDict
 
 class DownloadForm(forms.Form):
     download_type = forms.ChoiceField(
@@ -29,7 +25,7 @@ class DownloadForm(forms.Form):
             # ('gradient','Thermal Gradient'),
             ('temperature','Temperature'),
             ('conductivity','Thermal Conductivity'),
-            ('heatgeneration','Heat Generation'),
+            ('heatproduction','heat production'),
         ],
         # widget=forms.CheckboxSelectMultiple,
         widget=forms.SelectMultiple(attrs=dict(
@@ -88,10 +84,10 @@ class ConductivityForm(BetterModelForm):
         fields = choices.CONDUCTIVITY_FIELDS
 
 class HeatGenForm(BetterModelForm):
-    heat_generation = forms.FloatField(required=True,)
+    heat_production = forms.FloatField(required=True,)
 
     class Meta:
-        model = models.HeatGeneration
+        model = models.HeatProduction
         fields = choices.HEAT_GEN_FIELDS
 
 class TemperatureForm(BetterModelForm):
@@ -100,34 +96,6 @@ class TemperatureForm(BetterModelForm):
     class Meta:
         model = models.Temperature
         fields = choices.TEMPERATURE_FIELDS
-
-class UploadForm(forms.ModelForm):
-
-    bibtex = forms.CharField(required=False, widget=forms.Textarea)
-    captcha = ReCaptchaField(widget=ReCaptchaV3)
-
-    class Meta:
-        model = models.Upload
-        exclude = ['imported','imported_by','date_imported','date_uploaded','description']
-
-    def __init__(self, *args, **kwargs):
-        from django.forms.widgets import HiddenInput
-        hidden = kwargs.pop('hidden',None)
-        super().__init__(*args, **kwargs)
-        if hidden:
-            for key, field in self.fields.items():
-                field.widget = HiddenInput()
-            # self.fields['fieldname'].widget
-            # self.fields['fieldname'].widget = HiddenInput()
-
-class ConfirmUploadForm(forms.ModelForm):
-
-    bibtex = forms.CharField(required=False, widget=forms.Textarea)
-
-    class Meta:
-        model = models.Upload
-        exclude = ['imported','imported_by','date_imported','date_uploaded','description']
-
 
 class SiteMultiForm(MultiModelForm):
     form_classes = {

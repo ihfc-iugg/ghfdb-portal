@@ -2,9 +2,7 @@ import os
 from django.contrib.gis.utils import LayerMapping
 from .models import Country, Continent, Sea, Basin, Political, Province
 
-
 DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
-
 
 world_mapping = {
     'fips' : 'FIPS',
@@ -20,13 +18,11 @@ world_mapping = {
     'lat' : 'LAT',
     'poly' : 'MULTIPOLYGON',
 }
-
 world_dir = os.path.join(DATA_DIR,'TM_WORLD_BORDERS-0.3','TM_WORLD_BORDERS-0.3.shp')
 
 def world_borders(verbose=True):
     lm = LayerMapping(Country, world_dir, world_mapping, transform=False)
     lm.save(strict=True, verbose=verbose)
-
 
 continents_dir = os.path.join(DATA_DIR,'continents','World_Continents.shp')
 
@@ -43,7 +39,6 @@ continents_mapping = {
 def continents(verbose=True):
     lm = LayerMapping(Continent, continents_dir, continents_mapping, transform=False)
     lm.save(strict=True, verbose=verbose)
-
 
 world_seas_dir = os.path.join(DATA_DIR,'seas','World_Seas_IHO_v3.shp')
 

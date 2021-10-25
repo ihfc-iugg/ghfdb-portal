@@ -65,7 +65,7 @@ HEAT_FLOW_BASIC = [
             'heat_flow',
             'gradient',
             'average_conductivity',
-            'heat_generation',
+            'heat_production',
             ]
 
 HEAT_FLOW_STANDARD = [
@@ -88,8 +88,8 @@ HEAT_FLOW_STANDARD = [
             'average_conductivity',
             'conductivity_uncertainty',
 
-            'heat_generation',
-            'heat_generation_uncertainty',
+            'heat_production',
+            'heat_production_uncertainty',
 
             ]
 
@@ -116,10 +116,10 @@ HEAT_FLOW_DETAILED = [
             'number_of_conductivities',
             'conductivity_method',
 
-            'heat_generation',
-            'heat_generation_uncertainty',
+            'heat_production',
+            'heat_production_uncertainty',
             'number_of_heat_gen',
-            'heat_generation_method',
+            'heat_production_method',
             
             'corrections__climate_flag',
             'corrections__climate',
@@ -170,7 +170,7 @@ CONDUCTIVITY_STANDARD = CONDUCTIVITY_BASIC + [
 
 HEAT_GEN_BASIC = [
             'depth',
-            'heat_generation',
+            'heat_production',
             'uncertainty',
             'method',
             ]
@@ -228,7 +228,7 @@ conductivity = dict(
     detailed = SITE_DETAILED + CONDUCTIVITY_STANDARD,
     )
 
-heatgeneration = dict(
+heatproduction = dict(
     basic = SITE_BASIC + HEAT_GEN_BASIC,
     standard = SITE_STANDARD + HEAT_GEN_STANDARD,
     detailed = SITE_DETAILED + HEAT_GEN_STANDARD,

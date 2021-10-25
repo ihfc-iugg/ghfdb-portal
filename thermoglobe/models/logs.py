@@ -1,6 +1,5 @@
 import uuid
 from django.db import models
-# from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _
 from django.utils.html import mark_safe
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -56,9 +55,9 @@ class Conductivity(SharedProperties):
                 verbose_name=_("site"),
                 blank=True, null=True,
                 on_delete=models.CASCADE)
-    reference = models.ForeignKey("thermoglobe.Publication",
+    reference = models.ForeignKey("publications.Publication",
                 related_name='conductivity',
-                help_text=_('The publication or other reference from which the measurement was reported.'),
+                help_text=_('The publications or other reference from which the measurement was reported.'),
                 verbose_name=("reference"), 
                 blank=True,null=True, 
                 on_delete=models.CASCADE)
@@ -99,16 +98,16 @@ class Conductivity(SharedProperties):
     def __str__(self):
         return '{}'.format(self.conductivity)
 
-class HeatGeneration(SharedProperties):
+class HeatProduction(SharedProperties):
     units = mark_safe('&micro;W m<sup>3</sup>')
     site = models.ForeignKey("Site",
-                related_name='heat_generation',
+                related_name='heat_production',
                 verbose_name=_("site"),
                 blank=True, null=True,
                 on_delete=models.CASCADE)
-    reference = models.ForeignKey("thermoglobe.Publication",
-                help_text=_('The publication or other reference from which the measurement was reported.'),
-                related_name='heat_generation',
+    reference = models.ForeignKey("publications.Publication",
+                help_text=_('The publications or other reference from which the measurement was reported.'),
+                related_name='heat_production',
                 verbose_name=("reference"), 
                 blank=True,null=True, 
                 on_delete=models.CASCADE)
@@ -117,9 +116,8 @@ class HeatGeneration(SharedProperties):
             help_text=_('The reported rock type.'),
             max_length=100, 
             blank=True,null=True)
-    
-    
-    heat_generation = models.FloatField(_("heat generation"),
+
+    heat_production = models.FloatField(_("heat production"),
             help_text=_('The reported value of the sample.'),
         )
     uncertainty = models.FloatField(_("uncertainty"),
@@ -133,14 +131,14 @@ class HeatGeneration(SharedProperties):
         null=True, blank=True)
 
     class Meta:
-        default_related_name = 'heat_generation'
-        verbose_name_plural = _('heat generation')
-        verbose_name = _('heat generation')
-        db_table = 'heat_generation'
-        unique_together = ['log_id','heat_generation','k_pc','th_ppm','u_ppm','depth','site','reference']
+        default_related_name = 'heat_production'
+        verbose_name_plural = _('heat production')
+        verbose_name = _('heat production')
+        db_table = 'heat_production'
+        unique_together = ['log_id','heat_production','k_pc','th_ppm','u_ppm','depth','site','reference']
 
     def __str__(self):
-        return '{}'.format(self.heat_generation)
+        return '{}'.format(self.heat_production)
 
 class Temperature(SharedProperties):
     objects = TemperatureQS.as_manager()
@@ -151,9 +149,9 @@ class Temperature(SharedProperties):
         verbose_name=_("site"),
         blank=True, null=True,
         on_delete=models.CASCADE)
-    reference = models.ForeignKey("thermoglobe.Publication",
+    reference = models.ForeignKey("publications.Publication",
                 related_name='temperature',
-                help_text=_('The publication or other reference from which the measurement was reported.'),
+                help_text=_('The publications or other reference from which the measurement was reported.'),
                 verbose_name=("reference"), 
                 blank=True,null=True, 
                 on_delete=models.CASCADE)

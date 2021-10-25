@@ -20,7 +20,7 @@ class Base(models.Model):
             intervals=apps.get_model('thermoglobe','interval').heat_flow.filter(**query),
             temperature=apps.get_model('thermoglobe','temperature').objects.filter(**query),
             conductivity=apps.get_model('thermoglobe','conductivity').objects.filter(**query),
-            heat_generation=apps.get_model('thermoglobe','heatgeneration').objects.filter(**query),
+            heat_production=apps.get_model('thermoglobe','heatproduction').objects.filter(**query),
         )
 
     def get_bibtex(self):

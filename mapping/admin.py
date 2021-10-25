@@ -1,6 +1,6 @@
 from django.contrib.gis import admin
 from .models import Country, Continent, Sea, Basin, Political, Province
-from django.db.models import Count, Avg, Q
+from django.db.models import Count, Avg
 from django.db.models.functions import Coalesce
 
 class MappingAbstract(admin.GeoModelAdmin):

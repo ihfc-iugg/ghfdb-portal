@@ -1,13 +1,10 @@
 
-from django.db.models import Avg, Count, Func, FloatField, F, Value, CharField, Q
-from django.db.models.functions import Concat, Coalesce
+from django.db.models import Func, F, Value, CharField
+from django.db.models.functions import Concat
 from collections import OrderedDict
 from _plotly_utils.basevalidators import ColorscaleValidator
 from functools import wraps
 from django.core.cache import caches
-
-
-ACCEPTED_PLOT_TYPES = ['box','sunburst','continental_vs_oceanic','choropleth','age_plot']
 
 def plot_cache(cache_key):
     def decorator(func):
@@ -38,7 +35,6 @@ def plotly_cscale_nan(color,nan_color):
 class Round(Func):
     function = 'ROUND'
     template="%(function)s(%(expressions)s::numeric, 2)"
-
 
 def Hyperlink(url, slug_field,field=None,icon=None):
     # mark_safe(f"<a href='{reverse('mapping:describe_field', kwargs={'model':self.model_name,'slug':row['slug']})}'>{row[self.group_by]}</a>")

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "3fca38b6522a144f8b590bc030d2b7d6e7296904f8b2f47a81dc7827b23c4fb6"
+            "sha256": "5af4bf7080299ca50975efca39ae6193f622d9c45f8d340b764d6de854ad080b"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -266,11 +266,10 @@
         },
         "django-cms": {
             "hashes": [
-                "sha256:1d33325b630828e0246a0354c504f7137c5bb194a2c34ea7cfaeafe2bec71cc3",
-                "sha256:54c51bd1c4422f66712e931adfcfa6e62347e7e22e6e209aaa84290cc43a2bd7"
+                "sha256:6feaa6f3b7f225e08f221cf33d6135a1e268e9b781dae4bf916239c3f54e7b27"
             ],
             "index": "pypi",
-            "version": "==3.8.0"
+            "version": "==3.9.0"
         },
         "django-colorful": {
             "hashes": [
@@ -417,14 +416,6 @@
             ],
             "index": "pypi",
             "version": "==3.0.0"
-        },
-        "django-publications": {
-            "hashes": [
-                "sha256:9ee873b41bc77c731f52ca2b4d2a28fa5cb94d5fa7a35af78cad73deb8fe9a2f",
-                "sha256:e1f2985c50f6d73cddf53ca8baeddb298bf2e40beb9ef3ddd16c997537c2b1ed"
-            ],
-            "index": "pypi",
-            "version": "==1.0.0"
         },
         "django-publications-bootstrap": {
             "hashes": [
