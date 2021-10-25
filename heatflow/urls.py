@@ -14,7 +14,6 @@ urlpatterns = [
     path("admin/", admin.site.urls), 
     path('publications/', include('publications.urls')),
     path("", include("cms.urls")),
-    # url(r'^publications/', include('publications.urls')),
 ]
 
 if settings.DEBUG:

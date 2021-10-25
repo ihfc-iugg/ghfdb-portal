@@ -74,7 +74,6 @@ class SiteAdmin(BaseAdmin, ImportExportActionModelAdmin):
 
         return response
 
-
 @admin.register(Interval)
 class IntervalAdmin(BaseAdmin,ImportExportActionModelAdmin):
     resource_class = IntervalResource

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "5af4bf7080299ca50975efca39ae6193f622d9c45f8d340b764d6de854ad080b"
+            "sha256": "30bf6496e76aac00359e6e3b77e76e71890eb13b678ded1400891ab4c61c6831"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -392,6 +392,7 @@
                 "sha256:3a8a0259bfd73a0c0b124932bb1fe59a6d2f4cbea096b20634d2a2d1f5d585cc",
                 "sha256:5aa58277b81b4ca93fb18caf15069af604bac5c5146d2c29aae56da07a86ef1b"
             ],
+            "index": "pypi",
             "version": "==3.4.3"
         },
         "django-pandas": {
@@ -646,6 +647,10 @@
             ],
             "index": "pypi",
             "version": "==0.18.2"
+        },
+        "geoage-calculator": {
+            "git": "https://github.com/SSJenny90/geoage-calculator.git",
+            "ref": "856c63a1d8d07e9696f3da026593011893192bdb"
         },
         "gunicorn": {
             "hashes": [

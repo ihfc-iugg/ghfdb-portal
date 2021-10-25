@@ -8,7 +8,7 @@ from collections import defaultdict
 from django.shortcuts import render
 from string import capwords
 
-from publications.models import Type, Publication, CustomLink, CustomFile
+from publications.models import Type, Publication
 from publications.utils import populate
 
 

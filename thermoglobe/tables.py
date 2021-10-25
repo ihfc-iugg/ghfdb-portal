@@ -1,17 +1,6 @@
-from . import models
-# from tables.tables import Table
 import plotly.graph_objects as go
-import plotly.express as px
 from django.utils.html import mark_safe
-# import plotly.figure_factory as ff
-import numpy as np
-from thermoglobe.utils import Hyperlink
-from django.db.models.functions import Coalesce
-from django.db.models import Avg, Count, F, FloatField, Max, Min, Q, Value
-import plotly.io as pio
 import pandas as pd
-from plotly.subplots import make_subplots
-from thermoglobe.utils import GEO_AGE
 
 def plot_circ_time(self):
     fig = go.Figure()
