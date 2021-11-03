@@ -85,6 +85,7 @@ class Site(ModelMeta,models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     site_name = models.CharField(_('site name'),
+        null=True,
         help_text=_('The name given to the site.'),
         max_length=200)
     latitude = models.FloatField(_('latitude'),
@@ -208,7 +209,6 @@ class Site(ModelMeta,models.Model):
 
     def save(self, *args, **kwargs):
         self.geom = Point(float(self.longitude),float(self.latitude))
-        # self.type = 'C' if self.province else 'O'
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):

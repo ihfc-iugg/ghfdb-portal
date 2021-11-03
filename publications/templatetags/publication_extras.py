@@ -1,17 +1,11 @@
-__license__ = 'MIT License <http://www.opensource.org/licenses/mit-license.php>'
-__author__ = 'Lucas Theis <lucas@theis.io>'
-__docformat__ = 'epytext'
-
-import os
 import django
 
 from distutils.version import StrictVersion
-from django.template import Library, Node, Context, RequestContext
+from django.template import Library, RequestContext
 from django.template.loader import get_template
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
-from publications.models import Publication, List, Type
-from publications.utils import populate
+from publications.models import Publication
 from re import sub
 
 register = Library()
@@ -32,17 +26,10 @@ def get_publications(context, template='publications/publications.html'):
 	"""
 	Get all publications.
 	"""
-
-	types = Type.objects.filter(hidden=False)
 	publications = Publication.objects.select_related()
-	publications = publications.filter(type__in=types)
-	publications = publications.order_by('-year', '-month', '-id')
 
 	if not publications:
 		return ''
-
-	# load custom links and files
-	populate(publications)
 
 	return render_template(template, context['request'], {'publications': publications})
 
@@ -57,8 +44,6 @@ def get_publication(context, id):
 	if len(pbl) < 1:
 		return ''
 
-	pbl[0].links = pbl[0].customlink_set.all()
-	pbl[0].files = pbl[0].customfile_set.all()
 
 	return render_template(
 		'publications/publication.html', context['request'], {'publication': pbl[0]})
@@ -68,21 +53,10 @@ def get_publication_list(context, list, template='publications/publications.html
 	"""
 	Get a publication list.
 	"""
-
-	list = List.objects.filter(list__iexact=list)
-
-	if not list:
-		return ''
-
-	list = list[0]
 	publications = list.publication_set.all()
-	publications = publications.order_by('-year', '-month', '-id')
 
 	if not publications:
 		return ''
-
-	# load custom links and files
-	populate(publications)
 
 	return render_template(
 		template, context['request'], {'list': list, 'publications': publications})

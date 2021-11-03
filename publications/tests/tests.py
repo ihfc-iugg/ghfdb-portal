@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.db import transaction
 from django.template import Template, RequestContext
 from django.http import HttpRequest
-from publications.models import Publication, Type, CustomLink, List
+from publications.models import Publication
 from publications.templatetags.publication_extras import tex_parse
 
 class Tests(TestCase):
@@ -18,7 +18,6 @@ class Tests(TestCase):
 
 	def test_authors(self):
 		publication = Publication.objects.create(
-			type=Type.objects.get(pk=1),
 			authors=u'Jörn-Philipp Lies and Ralf M. Häfner and M. Bethge',
 			title=u'Slowness and sparseness have diverging effects on complex cell learning',
 			year=2014,
@@ -34,7 +33,6 @@ class Tests(TestCase):
 
 	def test_citekey(self):
 		publication = Publication.objects.create(
-			type=Type.objects.get(pk=1),
 			authors=u'A. Unique and B. Common',
 			title=u'Title 1',
 			year=2014,
@@ -46,7 +44,6 @@ class Tests(TestCase):
 		self.assertEqual(publication.citekey, 'Unique2014a')
 
 		publication = Publication.objects.create(
-			type=Type.objects.get(pk=1),
 			authors=u'A. Unique and C. Common',
 			title=u'Title 2',
 			year=2014,
@@ -58,7 +55,6 @@ class Tests(TestCase):
 		self.assertEqual(publication.citekey, 'Unique2014b')
 
 		publication = Publication.objects.create(
-			type=Type.objects.get(pk=1),
 			authors=u'A. Unique and D. Uncommon',
 			title=u'Title 3',
 			year=2013,
@@ -69,18 +65,8 @@ class Tests(TestCase):
 
 		self.assertEqual(publication.citekey, 'Unique2013a')
 
-
-	def test_custom_links(self):
-		link = CustomLink.objects.create(publication_id=1, description='Test', url='http://test.com')
-		link.save()
-
-		self.assertEqual(self.client.get('/publications/').status_code, 200)
-		self.assertEqual(self.client.get('/publications/1/').status_code, 200)
-
-
 	def test_publications(self):
 		publication = Publication.objects.create(
-			type=Type.objects.get(pk=1),
 			authors=u'Jörn-Philipp Lies and Ralf M. Häfner and M. Bethge',
 			title=u'Slowness and sparseness have diverging effects on complex cell learning',
 			year=2014,
@@ -115,7 +101,6 @@ class Tests(TestCase):
 		self.assertEqual(self.client.get('/publications/year/2011/?bibtex').status_code, 200)
 
 		publication = Publication.objects.create(
-			type=Type.objects.get(pk=1),
 			authors=u'A. Unique and B. Common',
 			title=u'Title 3',
 			year=2012,
@@ -125,7 +110,6 @@ class Tests(TestCase):
 		publication.save()
 
 		publication = Publication.objects.create(
-			type=Type.objects.get(pk=1),
 			authors=u'A. Unique and C. Common and D. Someone',
 			title=u'Title 4',
 			year=2011,
@@ -133,10 +117,6 @@ class Tests(TestCase):
 			)
 		publication.clean()
 		publication.save()
-
-		link = CustomLink.objects.create(
-			publication_id=publication.id, description='Test', url='http://test.com')
-		link.save()
 
 		response = self.client.get('/publications/c.+common/')
 
@@ -184,33 +164,6 @@ class Tests(TestCase):
 		self.assertEqual(self.client.get('/admin/publications/type/6/move-up/', follow=True).status_code, 200)
 		self.assertEqual(self.client.get('/admin/publications/type/6/move-down/', follow=True).status_code, 200)
 
-
-	def test_extras(self):
-		link = CustomLink.objects.create(publication_id=1, description='Test', url='http://test.com')
-		link.save()
-
-		publication = Publication.objects.get(pk=1)
-		lists = List.objects.filter(list__iexact='highlights')
-
-		self.assertEqual(len(lists), 1)
-
-		# add publication to list
-		publication.lists.add(lists[0])
-
-		# render list
-		tpl = Template("""
-			{% load publication_extras %}
-			{% get_publication 1 %}
-			{% get_publication_list 'highlights' 'publications/publications_with_thumbnails.html' %}
-			{% get_publication 10 %}
-			{% get_publications %}
-			""")
-
-		self.assertGreater(len(tpl.render(RequestContext(HttpRequest())).strip()), 0)
-
-		# tex_parse is used to replace simple LaTeX code in publication titles
-		self.assertEqual(tex_parse(u'$L_p$-spherical'), u'L<sub>p</sub>-spherical')
-		self.assertEqual(tex_parse(u'$L^2$-spherical'), u'L<sup>2</sup>-spherical')
 
 
 TEST_BIBLIOGRAPHY_COUNT = 9

@@ -1,9 +1,10 @@
 from django.contrib import admin
 from .models import Site, Interval, Conductivity, HeatProduction, Temperature
+from .models.interval import HeatFlow, Gradient
 from .mixins import BaseAdmin
 from import_export.admin import ImportExportActionModelAdmin
 from .mixins import SitePropertyAdminMixin
-from .resources import ConductivityResource, HeatGenResource, IntervalResource, TempResource, SiteResource
+from .resources import ConductivityResource, HeatProductionResource, IntervalResource, TempResource, SiteResource
 from .models import Interval, Conductivity, HeatProduction
 from django.db.models import F
 from .filters import IsCorrectedFilter,IntervalType, EmptySites
@@ -11,6 +12,7 @@ from django.http import HttpResponse
 from mapping import update
 from django.utils.translation import gettext as _
 import csv
+from django.db.models.functions import Coalesce
 
 @admin.register(Site)
 class SiteAdmin(BaseAdmin, ImportExportActionModelAdmin):
@@ -43,9 +45,9 @@ class SiteAdmin(BaseAdmin, ImportExportActionModelAdmin):
                 ]
 
     search_fields = ['id','site_name','latitude','longitude','reference__bibtex','reference__id']
-    point_zoom = 3
+    point_zoom = 8
     map_width = 900
-    modifiable=False
+    # modifiable=False
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
@@ -74,16 +76,15 @@ class SiteAdmin(BaseAdmin, ImportExportActionModelAdmin):
 
         return response
 
-@admin.register(Interval)
-class IntervalAdmin(BaseAdmin,ImportExportActionModelAdmin):
+@admin.register(HeatFlow)
+class HeatFlowAdmin(BaseAdmin,ImportExportActionModelAdmin):
     resource_class = IntervalResource
     autocomplete_fields = ['site']
-    # search_fields = ['site__site_name','site__latitude','site__longitude','reference__bibtex','reference__id']
     search_fields = ['site__site_name']
-    list_display = ['site_name','reference','depth_min','depth_max','reliability','heat_flow_corrected','heat_flow_uncorrected','gradient_corrected','gradient_uncorrected','average_conductivity','heat_production']
+    list_display = ['site_name','depth_min','depth_max','reliability','_corrected','heat_flow','average_conductivity','heat_production','reference']
 
-    list_filter = ['reliability',IsCorrectedFilter, IntervalType]
-    fieldsets = [
+    list_filter = ['reliability',IsCorrectedFilter]
+    fieldsets = [ 
         ('Site',{'fields':['site']}),
         ('Interval', 
             {'fields': [
@@ -138,19 +139,94 @@ class IntervalAdmin(BaseAdmin,ImportExportActionModelAdmin):
         super().save_model(request, obj, form, change)
 
     def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-        queryset = queryset.prefetch_related('reference').select_related('site').annotate(
-            _site_name=F('site__site_name'),
-            _latitude=F('site__latitude'),
-            _longitude=F('site__longitude'),
-            )
-        return queryset
+        return (super().get_queryset(request)
+                .annotate(heat_flow=Coalesce('heat_flow_corrected', 'heat_flow_uncorrected'))
+                .exclude(heat_flow__isnull=True)
+                .prefetch_related('reference')
+                .select_related('site')
+                .annotate(
+                    _site_name=F('site__site_name'),
+                    _latitude=F('site__latitude'),
+                    _longitude=F('site__longitude'),
+                    ))
 
     def mark_verified(self, request, queryset):
-        queryset.update(is_immortal=True)
+        queryset.update(is_verified=True)
 
-    def interval(self, obj):
-        return '{}-{}'.format(obj.depth_min, obj.depth_max)
+@admin.register(Gradient)
+class GradientAdmin(BaseAdmin,ImportExportActionModelAdmin):
+    resource_class = IntervalResource
+    autocomplete_fields = ['site']
+    search_fields = ['site__site_name']
+    list_display = ['site_name','depth_min','depth_max','_corrected','gradient','reference']
+
+    list_filter = [IsCorrectedFilter]
+    fieldsets = [ 
+        ('Site',{'fields':['site']}),
+        ('Interval', 
+            {'fields': [
+                'reference',
+                ('depth_min', 'depth_max'),
+                ('number_of_temperatures','temp_method'),
+                ('global_flag','global_reason','global_by'),
+                'comment',
+                ]
+            }
+        ),
+        ('Heat Flow',
+            {'fields': [
+                'reliability',
+                ('heat_flow_corrected','heat_flow_corrected_uncertainty'),
+                ('heat_flow_uncorrected','heat_flow_uncorrected_uncertainty'),
+                ]
+            }
+        ),
+        ('Temperature Gradient',
+            {'fields': [
+                ('gradient_corrected','gradient_corrected_uncertainty'),
+                ('gradient_uncorrected','gradient_uncorrected_uncertainty'),
+                ]
+            }
+        ),
+        ('Thermal Conductivity',
+            {'fields': [
+                ('average_conductivity', 'conductivity_uncertainty','number_of_conductivities'),
+                'conductivity_method',
+                ],
+            # 'classes': ('collapse',),
+            }
+        ),
+        ('heat production',
+            {'fields': [
+                ('heat_production', 'heat_production_uncertainty','number_of_heat_gen'),
+                'heat_production_method',
+                ],
+            # 'classes': ('collapse',),
+            }
+        ),                
+    ]
+    actions = ["mark_verified"] + ImportExportActionModelAdmin.actions
+
+
+    def save_model(self, request, obj, form, change):
+        if change:
+            if form.instance.global_flag != form.initial['global_flag']:
+                if form.instance.global_flag == True:
+                    form.instance.global_by = request.user._wrapped
+        super().save_model(request, obj, form, change)
+
+    def get_queryset(self, request):
+        return (super().get_queryset(request)
+                .annotate(gradient=Coalesce('gradient_corrected', 'gradient_uncorrected'))
+                .exclude(gradient__isnull=True)
+                .prefetch_related('reference')
+                .select_related('site')
+                .annotate(
+                    _site_name=F('site__site_name'),
+                    ))
+
+    def mark_verified(self, request, queryset):
+        queryset.update(is_verified=True)
 
 @admin.register(Conductivity)
 class ConductivityAdmin(SitePropertyAdminMixin,ImportExportActionModelAdmin):
@@ -169,8 +245,8 @@ class ConductivityAdmin(SitePropertyAdminMixin,ImportExportActionModelAdmin):
                         ]
 
 @admin.register(HeatProduction)
-class HeatGenAdmin(SitePropertyAdminMixin,ImportExportActionModelAdmin):
-    resource_class = HeatGenResource
+class HeatProductionAdmin(SitePropertyAdminMixin,ImportExportActionModelAdmin):
+    resource_class = HeatProductionResource
     list_display = ['edit','site_name','latitude','longitude','depth','heat_production','uncertainty','method','reference']
 
     fieldsets = [('Site', {'fields':[
@@ -211,62 +287,3 @@ class TemperatureAdmin(BaseAdmin,ImportExportActionModelAdmin):
             )
 
         return queryset
-
-# @admin.register(Publication)
-# class PublicationAdmin(BaseAdmin):
-
-#     list_display = ['edit','article','bib_id','is_verified','year', 'title', 'journal']
-#     exclude = ['source',]
-#     search_fields = ('pk', 'year', 'bib_id', 'bibtex')
-#     fields = ['is_verified', ('bib_id','pk', 'slug'), 'file','bibtex',]
-#     readonly_fields = ['pk','slug','bib_id']
-#     list_filter = [EmptyPublications, VerifiedFilter, PubStatusFilter]
-#     actions = ["export_bibtex","merge"]
-
-#     def article(self,obj):
-#         if obj.doi:
-#             return mark_safe('<a href="https://doi.org/{}"><i class="fas fa-globe fa-lg"></i></a>'.format(obj.doi))
-#         else:
-#             return ''
-
-#     def edit(self,obj):
-#         return mark_safe('<i class="fas fa-edit"></i>')
-
-#     def export_bibtex(self, request, qs):
-#         """
-#         Exports the selected rows using file_format.
-#         """
-#         bibtex_list = list(qs.values_list('bibtex',flat=True))
-#         response = HttpResponse(''.join(bibtex_list), content_type='application/text charset=utf-8')
-#         response['Content-Disposition'] = 'attachment; filename="ThermoGlobe.bib"'
-#         return response
-#     export_bibtex.short_description = _('Export bibtex')
-
-#     def response_change(self, request, obj):
-#         if "_upload" in request.POST:
-#             # print('Doing something now')
-#             # self.import_data(request,obj)
-#             # obj.save()
-#             # self.message_user(request, "The uploaded file was succesfully imported.")
-#             return HttpResponseRedirect(".")
-#         return super().response_change(request, obj)
-
-#     def get_queryset(self, request):
-#         return super().get_queryset(request).annotate(
-#             _site_count=Count("sites",distinct=True),
-#             )
-
-#     def save_model(self, request, obj, form, change):
-#         if change:
-#             if form.instance.is_verified != form.initial['is_verified']:
-#                 if form.instance.is_verified == True:
-#                     form.instance.verified_by = request.user._wrapped
-#                     form.instance.date_verified = timezone.now()
-#         else:
-#             form.instance.source = 'Admin Created'
-
-#         super().save_model(request, obj, form, change)
-#         bib = obj.get_bibtex_entry(form.instance.bibtex)
-#         form.instance.bib_entry = bib
-
-
