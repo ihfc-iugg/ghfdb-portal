@@ -10,39 +10,22 @@ class SiteToolbar(CMSToolbar):
             'thermoglobe_site_integration',  # a unique key for this menu
             'Sites',                        # the text that should appear in the menu
             )
-        site_menu.add_sideframe_item(
-            name='View sites',                              # name of the new menu item
-            url=admin_reverse('thermoglobe_site_changelist'),    # the URL it should open with
-            )
-        data_menu = self.toolbar.get_or_create_menu(
-            'thermoglobe_intervals_integration',  # a unique key for this menu
-            'Data',                        # the text that should appear in the menu
-            )
+        site_menu.add_sideframe_item(name='View sites',url=admin_reverse('thermoglobe_site_changelist'))
+        data_menu = self.toolbar.get_or_create_menu('thermoglobe_intervals_integration','Data')
 
-        data_menu.add_sideframe_item(
-            name='Intervals',                              # name of the new menu item
-            url=admin_reverse('thermoglobe_interval_changelist'),    # the URL it should open with
-        )
-        data_menu.add_sideframe_item(
-            name='Temperature',                              # name of the new menu item
-            url=admin_reverse('thermoglobe_temperature_changelist'),    # the URL it should open with
-        )
-        data_menu.add_sideframe_item(
-            name='Thermal Conductivity',                              # name of the new menu item
-            url=admin_reverse('thermoglobe_conductivity_changelist'),    # the URL it should open with
-        )
-        data_menu.add_sideframe_item(
-            name='heat production',                              # name of the new menu item
-            url=admin_reverse('thermoglobe_heatproduction_changelist'),    # the URL it should open with
-        )
+        data_menu.add_sideframe_item('Heat Flow',admin_reverse('thermoglobe_heatflow_changelist'))
+        data_menu.add_sideframe_item('Thermal Gradient',admin_reverse('thermoglobe_gradient_changelist'))
+        data_menu.add_sideframe_item('Temperature',admin_reverse('thermoglobe_temperature_changelist'))
+        data_menu.add_sideframe_item('Thermal Conductivity',admin_reverse('thermoglobe_conductivity_changelist'))
+        data_menu.add_sideframe_item('Heat Production',admin_reverse('thermoglobe_heatproduction_changelist'))
         # publications_menu = self.toolbar.get_or_create_menu(
         #     'publications_integration',  # a unique key for this menu
         #     'Publications',                        # the text that should appear in the menu
         #     )
 
         # publications_menu.add_sideframe_item(
-        #     name='Publications',                              # name of the new menu item
-        #     url=admin_reverse('publications_publication_changelist'),    # the URL it should open with
+        #     name='Publications',
+        #     url=admin_reverse('publications_publication_changelist'),
         # )
 
 
