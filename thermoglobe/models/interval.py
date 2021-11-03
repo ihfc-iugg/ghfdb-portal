@@ -17,7 +17,7 @@ class Interval(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     RELIABILITY_CHOICES = tuple((val,val) for val in ['A','B','C','D','E','R','Z'])
 
-    reliability = models.CharField(_("heat flow reliability"),
+    reliability = models.CharField(_("reliability"),
             help_text=_('Heat flow reliability code'),
             max_length=1, 
             choices=RELIABILITY_CHOICES, 
@@ -79,7 +79,7 @@ class Interval(models.Model):
             help_text=_('Uncertainty on the uncorrected value.'),
             blank=True, null=True)
 
-    average_conductivity = models.FloatField(_("thermal conductivity"),
+    average_conductivity = models.FloatField(_("therm. cond."),
             help_text=_('Reported thermal conductivity to accompany the heat flow estimate.'),
             blank=True, null=True)
     conductivity_uncertainty = models.FloatField(_("thermal conductivity uncertainty"),
@@ -88,12 +88,12 @@ class Interval(models.Model):
     number_of_conductivities = models.FloatField(_("number of conductivity measurements"),
             help_text=_('Number of thermal conductivities from which the reported thermal conductivity was derived.'),
             blank=True, null=True)
-    conductivity_method = models.CharField(_("thermal conductivity method"),
+    conductivity_method = models.CharField(_("cond. method"),
             help_text=_('Method used to measure or derive thermal conductivity.'),
             max_length=150,
             blank=True, null=True)
 
-    heat_production = models.FloatField(_("average heat production"),
+    heat_production = models.FloatField(_("heat prod."),
             help_text=_('Average heat production to accompany the heat flow estimate.'),
             blank=True, null=True)
     heat_production_uncertainty = models.FloatField(_("heat production uncertainty"),
@@ -137,9 +137,8 @@ class Interval(models.Model):
     class Meta:
         db_table = 'interval'
 
-    def is_corrected(self,obj):
-        return True if self.corrected else False
-    is_corrected.boolean = True
+    def interval(self, obj):
+        return '{}-{}'.format(obj.depth_min, obj.depth_max)
 
 class Correction(models.Model):
     heatflow = models.OneToOneField("Interval",
@@ -200,3 +199,27 @@ class Correction(models.Model):
                 setattr(self,correction+'_flag',True)
 
         super().save(*args, **kwargs)
+
+
+class HeatFlow(Interval):
+
+    class Meta:
+        proxy=True
+        verbose_name = _('heat flow')
+        verbose_name_plural = _('heat flow')
+
+    def _corrected(self):
+        return True if self.heat_flow_corrected else False
+    _corrected.boolean = True
+
+class Gradient(Interval):
+
+    class Meta:
+        proxy=True
+        verbose_name = _('thermal gradient')
+        verbose_name_plural = _('thermal gradients')
+
+
+    def _corrected(self):
+        return True if self.gradient_corrected else False
+    _corrected.boolean = True

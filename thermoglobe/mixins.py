@@ -4,6 +4,7 @@ import csv, json, zipfile
 from django.db.models import F
 from django.utils.translation import gettext as _
 from django.contrib.gis import admin as gisadmin
+from django.contrib import admin
 from django.utils.html import mark_safe
 from django.shortcuts import  render
 from django.http import HttpResponse
@@ -54,10 +55,10 @@ class TableMixin:
                 table['active'] = True
                 break
 
-# class BaseAdmin(gisadmin.ModelAdmin):
+
 class BaseAdmin(gisadmin.OSMGeoAdmin):
+# class BaseAdmin(admin.ModelAdmin):
     exclude = ['edited_by','added_by','date_added','date_edited']
-    formats = [CSV]
 
     def save_model(self, request, obj, form, change):
         if change:
@@ -140,8 +141,9 @@ class BaseAdmin(gisadmin.OSMGeoAdmin):
         return obj._site_count
     sites.admin_order_field = '_site_count'
 
-    def edit(self,obj):
-        return _("edit")
+    def edit(self, obj):
+        return mark_safe('<i class="fas fa-edit"></i>')
+    edit.short_description = ''
     
 class SitePropertyAdminMixin(BaseAdmin):
     search_fields = ['site__site_name','site__latitude','site__longitude','reference__bib_id']

@@ -142,7 +142,7 @@ class HeatProduction(SharedProperties):
 
 class Temperature(SharedProperties):
     objects = TemperatureQS.as_manager()
-
+    
     units = mark_safe('&deg;C')
     site = models.ForeignKey("Site",
         related_name='temperature',

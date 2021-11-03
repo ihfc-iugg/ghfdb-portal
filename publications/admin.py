@@ -1,54 +1,55 @@
 from django.contrib import admin
-from django.conf.urls import url
-from publications.models import CustomLink, CustomFile
 import publications.admin_views
 from django.utils.html import mark_safe
-from ordered_model.admin import OrderedModelAdmin
-from .models import Type, List, Publication
+from .models import Publication
 from django.urls import path
+from import_export.admin import ImportExportActionModelAdmin
+from .resources import PublicationResource
 
-class CustomLinkInline(admin.TabularInline):
-    model = CustomLink
-    extra = 1
-    max_num = 5
-    fields = ['url','description']
-
-class CustomFileInline(admin.TabularInline):
-    model = CustomFile
-    extra = 1
-    max_num = 5
-    fields = ['file','description']
 
 @admin.register(Publication)
-class PublicationAdmin(admin.ModelAdmin):
-    list_display = ('edit','article','_authors', 'year', 'title', 'type',  'journal_or_book_title')
-    # list_display_links = ('title',)
-    change_list_template = 'admin/publications/publication_change_list.html'
-    search_fields = ('id','title', 'booktitle', 'journal', 'authors', 'keywords', 'year')
-    fieldsets = (
-        (None, {'fields':
-            ('type', 'title', 'authors', ('month', 'year'))}),
-        (None, {'fields':
-            ('journal', 'book_title', 'publisher', 'institution', ('volume', 'number'), 'pages')}),
-        (None, {'fields':
-            ('citekey', 'keywords', 'url', 'code', 'pdf', 'doi', 'isbn', 'note',)}),
-        (None, {'fields':
-            ('abstract',)}),
-        (None, {'fields':
-            ('lists',)}),
+class PublicationAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
+    resource_class = PublicationResource
+    from_encoding = 'Latin-1'
+    list_display = ('edit', 'article', '_authors', 'year',
+                    'title', 'type',  'journal_or_book_title')
+    list_filter = ['ENTRYTYPE', ]
+    # change_list_template = 'admin/publications/publication_change_list.html'
+    search_fields = ('id', 'title', 'journal', 'author', 'keywords', 'year')
+    readonly_fields = ['citekey','ENTRYTYPE','title','author', 'year',
+                       'journal','keywords','url','doi','abstract',]
+
+    fields = (
+        'pdf',
+        'citekey',
+        'ENTRYTYPE',
+        'abstract',
+        'title',
+        'year',
+        'author',
+        'journal',
+        'url',
+        'doi',
+        'keywords',
+        'bibtex',
     )
-    inlines = [CustomLinkInline, CustomFileInline]
 
     class Media:
         js = ("https://kit.fontawesome.com/a08181010c.js",)
 
     def get_urls(self):
         return [
-                path('import_bibtex/', publications.admin_views.ImportBibtex.as_view(), name='publications_publication_import_bibtex'),
-                    
-            ] + super(PublicationAdmin, self).get_urls()
+            path('import_bibtex/', publications.admin_views.ImportBibtex.as_view(),
+                 name='publications_publication_import_bibtex'),
+
+        ] + super(PublicationAdmin, self).get_urls()
 
     def _authors(self, obj):
+        # authors = custom.getnames()
+        if obj.author:
+            return obj.author[:30]
+        else:
+            return None
         authors = [a[1] for a in obj.authors_list_split]
 
         if len(authors) == 1:
@@ -60,17 +61,14 @@ class PublicationAdmin(admin.ModelAdmin):
         else:
             return authors[0] + " et. al."
 
-    def edit(self,obj):
-        return mark_safe('<i class="fas fa-edit"></i>')
-    
-    def file(self,obj):
+    def edit(self, obj):
         return mark_safe('<i class="fas fa-edit"></i>')
 
-@admin.register(Type)
-class TypeAdmin(OrderedModelAdmin):
-	list_display = ('type', 'description', 'hidden', 'move_up_down_links')
+    def file(self, obj):
+        return mark_safe('<i class="fas fa-edit"></i>')
 
-@admin.register(List)
-class ListAdmin(admin.ModelAdmin):
-	list_display = ('list', 'description')
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related('keywords')
 
+    def _keywords(self, obj):
+        return u", ".join(o.name for o in obj.keywords.all())
