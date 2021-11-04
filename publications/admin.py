@@ -11,9 +11,10 @@ from .resources import PublicationResource
 class PublicationAdmin(ImportExportActionModelAdmin, admin.ModelAdmin):
     resource_class = PublicationResource
     from_encoding = 'Latin-1'
-    list_display = ('edit', 'article', '_authors', 'year',
+    list_display = ('edit', 'article', 'citekey', '_authors', 'year',
                     'title', 'type',  'journal_or_book_title')
     list_filter = ['ENTRYTYPE', ]
+    list_editable = ['citekey']
     # change_list_template = 'admin/publications/publication_change_list.html'
     search_fields = ('id', 'title', 'journal', 'author', 'keywords', 'year')
     readonly_fields = ['citekey','ENTRYTYPE','title','author', 'year',
