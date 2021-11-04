@@ -1,0 +1,7 @@
+<ul class="nav nav-pills" id='pills-tab' role="tablist">
+  <li class="nav-item"><a id="#details-tab" data-toggle="tab" href="#details-container" aria-controls="details-tab" class="nav-link button small active" aria-selected="true">Details</a></li>
+  {% include "thermoglobe/components/nav_item.html" with label='Heat Flow' list=object.intervals.all %}
+  {% include "thermoglobe/components/nav_item.html" with label='Temperature' list=object.temperature.all %}
+  {% include "thermoglobe/components/nav_item.html" with label='Thermal Conductivity' list=object.conductivity.all %}
+  {% include "thermoglobe/components/nav_item.html" with label='Heat Production' list=object.heat_production.all %}
+</ul>
