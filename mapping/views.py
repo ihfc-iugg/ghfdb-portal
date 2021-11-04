@@ -1,34 +1,22 @@
-import json, zipfile
-from django import forms
-from django.contrib import messages
-from django.core.serializers import deserialize, serialize
-from django.db.models import Avg, Count, F, FloatField, Max, Min, Q, Value
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, Http404
-from django.shortcuts import get_object_or_404, redirect, render
-from django.template.response import TemplateResponse
+import json
+from django.http import JsonResponse, Http404
 from django.urls import reverse
-from django.utils.decorators import method_decorator
-from django.views.decorators.http import require_POST
-from django.views.generic import DetailView, TemplateView, View, ListView
-from django.db.models.functions import Cast, Coalesce
+from django.views.generic import DetailView, TemplateView
 from django.utils.html import mark_safe
 from django.apps import apps
-from thermoglobe.mixins import TableMixin, DownloadMixin
+from thermoglobe.mixins import DownloadMixin
 import pandas as pd
-from django_pandas.io import read_frame
 from django.utils.text import slugify
 from thermoglobe.forms import DownloadForm
-from thermoglobe import choices
 from djgeojson.serializers import Serializer as to_geojson
-from meta.views import Meta, MetadataMixin
+from meta.views import Meta
 
-class Describe(TableMixin, TemplateView):
+class Describe(TemplateView):
     template_name = 'describe.html'
     groupby_options = dict(
         country=['name','region','subregion'],
         continent=['name'],
         sea=['name'],
-        basin=['name','region','province','location','sub_regime','sub_regime_group'],
         province=['name','type','group','last_orogen','continent','plate'],
         political=['name','territory','sovereign'],
         )
@@ -155,7 +143,7 @@ class Describe(TableMixin, TemplateView):
     def description(self):
         return f'An interactive table of descriptive statistics covering all {self.verbose_name_plural} of the world. Compute statistics for heat flow, thermal gradient, temperature, thermal conductivity and heat production.'
 
-class DescribeField(TableMixin,  DownloadMixin, DetailView):
+class DescribeField(DownloadMixin, DetailView):
     template_name = 'describe_field.html'
     # options = {'pageLength':50}
     tables = dict(

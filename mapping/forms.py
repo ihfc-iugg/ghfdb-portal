@@ -17,12 +17,6 @@ class SeaForm(BetterModelForm):
         model = models.Sea
         fields = ['name']
 
-class BasinForm(BetterModelForm):
-    help_text = 'These fields are calculated using the Sedimentary Basons of the World shapefile produced by CGG Robertson. The information may differ from similar fields calculated using other means. Please see the FAQ page for more info.'
-    class Meta:
-        model = models.Basin
-        exclude = ['poly','id']
-
 class ProvinceForm(BetterModelForm):
     help_text = 'These fields are calculated using the GIS shapefile produced by Hasterok (2020). The information may differ from similar fields calculated using other means. Please see the FAQ page for more info.'
     class Meta:

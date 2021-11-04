@@ -1,5 +1,5 @@
 from django.contrib.gis import admin
-from .models import Country, Continent, Sea, Basin, Political, Province
+from .models import Country, Continent, Sea, Political, Province
 from django.db.models import Count, Avg
 from django.db.models.functions import Coalesce
 
@@ -60,19 +60,6 @@ class SeaAdmin(MappingAbstract):
         ('longitude','latitude'),
         ('min_x','max_x'),
         ('min_y','max_y'),
-    ]
-
-@admin.register(Basin)
-class BasinAdmin(MappingAbstract):
-    list_display = ['name','region','province','max_fill','exploration_status','location','sub_regime','sub_regime_group','petsys_status']
-    search_fields = ['name','region','province',]
-    list_filter = ['exploration_status','petsys_status']
-
-    fields = [
-        'name',
-        'poly',
-        'region',
-        'province'
     ]
 
 @admin.register(Political)

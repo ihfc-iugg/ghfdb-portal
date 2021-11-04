@@ -1,4 +1,4 @@
-from .models import Country, Continent, Sea, Basin, Political, Province
+from .models import Country, Continent, Sea, Political, Province
 from thermoglobe.models import Site
 
 def countries(force=False):
@@ -21,11 +21,6 @@ def seas():
     for sea in Sea.objects.all():
         sites = Site.objects.filter(geom__within=sea.poly)
         sites.update(sea=sea)
-
-def basins():
-    for basin in Basin.objects.all():
-        sites = Site.objects.filter(geom__within=basin.poly)
-        sites.update(basin=basin)
 
 def political():
     for region in Political.objects.all():
