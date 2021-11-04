@@ -81,7 +81,7 @@ class SiteResource(ResourceMixin):
 
     class Meta:
         model = Site
-        exclude = ['geom','reference','seamount_distance','outcrop_distance','crustal_thickness','continent','country','political','province','sea','basin','slug']
+        exclude = ['geom','seamount_distance','outcrop_distance','crustal_thickness','continent','country','political','province','sea','slug']
         import_id_fields = ['id']
 
 

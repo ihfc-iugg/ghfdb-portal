@@ -7,14 +7,13 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_POST
 from .forms import UploadForm, ConfirmUploadForm
 from django.views.generic import TemplateView
-from thermoglobe.mixins import TableMixin
 
 from django.core.cache import caches
 cache = caches['file_cache']
 
 from . import resources, import_choices
 
-class UploadView(TableMixin, TemplateView):
+class UploadView(TemplateView):
     template_name = 'upload.html'
     confirm_template_name = 'upload_confirm.html'
     form = UploadForm

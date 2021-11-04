@@ -8,6 +8,7 @@ from taggit.managers import TaggableManager
 from taggit.utils import _parse_tags
 from taggit.models import GenericUUIDTaggedItemBase, TaggedItemBase
 from django.db.models import F, Avg
+from django.urls import reverse
 
 class UUIDTaggedItem(GenericUUIDTaggedItemBase, TaggedItemBase):
 
@@ -38,10 +39,7 @@ class PublicationBase(models.Model):
     abstract = models.TextField(blank=True)
     pdf = models.FileField(upload_to='publications/', verbose_name='PDF', blank=True, null=True)
     keywords = TaggableManager(through=UUIDTaggedItem, verbose_name=_('key words'), help_text=None)
-
     bibtex = models.TextField(blank=True,null=True)
-
-
 
     def __str__(self):
 
@@ -58,8 +56,10 @@ class PublicationBase(models.Model):
         else:
             return ''
 
+
     def save(self, *args, **kwargs):
         return super().save(*args, **kwargs)
+
 
     def _produce_author_lists(self):
         """
@@ -67,10 +67,10 @@ class PublicationBase(models.Model):
         """
 
         # post-process author names
-        self.author = self.author.replace(', and ', ', ')
-        self.author = self.author.replace(',and ', ', ')
-        self.author = self.author.replace(' and ', ', ')
-        self.author = self.author.replace(';', ',')
+        # self.author = self.author.replace(', and ', ', ')
+        # self.author = self.author.replace(',and ', ', ')
+        # self.author = self.author.replace(' and ', ', ')
+        # self.author = self.author.replace(';', ',')
 
         # list of authors
         self.authors_list = [author.strip() for author in self.author.split(',')]
@@ -162,8 +162,10 @@ class PublicationBase(models.Model):
         else:
             self.author = self.authors_list[0]
 
+
     def type(self):
         return self.ENTRYTYPE
+
 
     def keywords_escaped(self):
         return [(keyword.strip(), urlquote_plus(keyword.strip()))
@@ -171,29 +173,31 @@ class PublicationBase(models.Model):
 
 
     def authors_escaped(self):
-        return [(author, author.lower().replace(' ', '+'))
-            for author in self.authors_list]
+        return [(author, author.lower().replace(' ', '+')) for author in self.authors_list if author]
 
 
     def key(self):
         # this publication's first author
-        author_lastname = self.authors_list[0].split(' ')[-1]
+        if self.authors_list:
+            author_lastname = self.authors_list[0].split(' ')[-1]
 
-        publications = Publication.objects.filter(
-            year=self.year,
-            authors__icontains=author_lastname).order_by('month', 'id')
+            publications = Publication.objects.filter(
+                year=self.year,
+                author__icontains=author_lastname)
 
-        # character to append to BibTex key
-        char = ord('a')
+            # character to append to BibTex key
+            char = ord('a')
 
-        # augment character for every publication 'before' this publication
-        for publication in publications:
-            if publication == self:
-                break
-            if publication.authors_list[0].split(' ')[-1] == author_lastname:
-                char += 1
+            # augment character for every publication 'before' this publication
+            for publication in publications:
+                if publication == self:
+                    break
 
-        return self.authors_list[0].split(' ')[-1] + str(self.year) + chr(char)
+                if publication.authors_list[0].split(' ')[-1] == author_lastname:
+                    char += 1
+
+            return self.authors_list[0].split(' ')[-1] + str(self.year) + chr(char)
+        return ''
 
 
     def title_bibtex(self):
@@ -229,6 +233,7 @@ class PublicationBase(models.Model):
     def last_page(self):
         return self.pages.split('-')[-1]
 
+
     def clean(self):
         if not self.citekey:
             self._produce_author_lists()
@@ -237,10 +242,36 @@ class PublicationBase(models.Model):
         # remove unnecessary whitespace
         self.title = self.title.strip()
         self.journal = self.journal.strip()
-        self.book_title = self.book_title.strip()
-        self.publisher = self.publisher.strip()
-        self.institution = self.institution.strip()
+        self.booktitle = self.booktitle.strip()
 
+
+    def authors_display_long(self):
+        if len(self.authors_list) > 2:
+            start = ', '.join(self.authors_list[:-1])
+            last = self.authors_list[-1]
+            return f'{start} & {last}'
+        elif len(self.authors_list) == 1:
+            return self.authors_list[0]
+        else:
+            return ' & '.join(self.authors_list)
+
+
+
+    def authors_display(self):
+        if len(self.authors_list) > 2:
+            return '{} et. al.'.format(self.authors_list[0])
+        elif len(self.authors_list) == 1:
+            return self.authors_list[0]
+        else:
+            return ' & '.join(self.authors_list)
+
+
+    @property
+    def authors_list(self):
+        if self.author:
+            return self.author.split(' and ')
+        else:
+            return []
 
     @staticmethod
     def simplify_name(name):
@@ -295,7 +326,7 @@ class Publication(PublicationBase):
             )
 
     def get_absolute_url(self):
-        return reverse("thermoglobe:publication_details", kwargs={"slug": self.slug})
+        return reverse("publications:detail", kwargs={"pk": self.pk})
 
     def article(self):
         if self.doi:
