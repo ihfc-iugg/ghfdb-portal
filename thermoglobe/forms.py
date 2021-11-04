@@ -103,5 +103,4 @@ class SiteMultiForm(MultiModelForm):
         'Country': map_forms.CountryForm,
         'Sea': map_forms.SeaForm,
         'Geological Province': map_forms.ProvinceForm,
-        'Sedimentary Basin': map_forms.BasinForm,
     }

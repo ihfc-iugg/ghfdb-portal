@@ -3,24 +3,18 @@ from datetime import datetime as dt
 from django.db.models import F
 from django.http import HttpResponse,  JsonResponse
 from django.shortcuts import render
-from django.views.generic import DetailView, TemplateView,  ListView
+from django.views.generic import DetailView, TemplateView
 from django.utils.html import mark_safe
 from django.apps import apps
-from django.utils.text import slugify
 from thermoglobe.mixins import DownloadMixin 
-from meta.views import MetadataMixin
-from publications.models import Publication
 
 from .forms import SiteMultiForm, DownloadForm
 from .models import Site
-from .utils import Hyperlink
 from .filters import WorldMapFilter
-from thermoglobe.mixins import TableMixin
 from meta.views import Meta
-from djgeojson.serializers import Serializer as to_geojson
 
 # for handling temporary file uploads before confirmation
-class WorldMap(DownloadMixin, TableMixin, TemplateView):
+class WorldMap(DownloadMixin, TemplateView):
     template_name = 'world_map.html'
     filter = WorldMapFilter
     download_form = DownloadForm
@@ -135,19 +129,10 @@ class WorldMap(DownloadMixin, TableMixin, TemplateView):
                 context['download_form'] = options
                 return render(request, template_name=self.template_name, context=context)
 
-class SiteView(TableMixin, DownloadMixin, DetailView):
-    template_name = "site_details.html"
+class SiteView(DownloadMixin, DetailView):
+    template_name = "thermoglobe/site_details.html"
     model = Site
     form = SiteMultiForm
-    tables = dict(
-        intervals=['depth_min','depth_max','heat_flow_corrected','heat_flow_uncorrected','gradient_corrected','gradient_uncorrected'],
-        conductivity=['log_id','depth','conductivity','uncertainty','method'],
-        temperature=['log_id','depth','temperature','uncertainty','method','circ_time'],
-        heat_production=['log_id','depth','heat_production','uncertainty','method'],
-    )
-    options = dict(
-        pageLength=50,
-    )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -156,102 +141,9 @@ class SiteView(TableMixin, DownloadMixin, DetailView):
             'Country': self.get_object().country,
             'Sea': self.get_object().sea,
             'Geological Province': self.get_object().province,
-            'CGG Basins and Plays': self.get_object().basin,
             })
         context['meta'] = self.get_object().as_meta(self.request)
-
-        context['tables'] = {}
-        for table, fields in self.tables.items():
-            context['tables'][table.replace('_',' ')] = self.get_table(table, fields)
-
-        for table in context['tables'].values():
-            if not table['data'] == '[]':   #cant check for truth because data is a json string
-                table['active'] = True
-                break
-
         return context
 
-    def get_table(self, data_type, fields):
-        qs = getattr(self.get_object(),data_type).all().values_list(*fields)
-        return dict(
-            id=slugify(data_type),
-            data=json.dumps(list(qs)),
-            columns=[field.replace('_',' ').capitalize() for field in fields],
-            )
-
-class PublicationListView(TableMixin,  ListView):
-    page_id = 10
-    model = Publication
-    template_name = "publication_list.html"
-    column_headers = ['slug', 'doi', 'type', 'title', 'year', 'journal','publisher']
-    options = {'pageLength':50}
-    mark_safe = True
-
-    def get_queryset(self):
-        return super().get_queryset().exclude(bibtex__exact='').values('slug','bibtex')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data()
-        context['table'] = dict(
-            id='publicationTable',
-            columns = self.column_headers,
-            )
-        return context
-
-    def get(self,request,*args, **kwargs):
-        if request.is_ajax():
-            return JsonResponse({'data':list(self.get_queryset())})
-        return super().get(request,*args, **kwargs)
-
-class PublicationDetailsView(TableMixin, DownloadMixin, MetadataMixin, DetailView):
-    template_name = "publication_details.html"
-    download_form = DownloadForm
-    model = Publication
-    options = {'pageLength':50}
-    tables = dict(
-        intervals=['depth_min','depth_max','heat_flow','gradient'],
-        conductivity=['count','depth_min','depth_max','min_conductivity','max_conductivity'],
-        temperature=['count','depth_min','depth_max','min_temperature','max_temperature'],
-        heat_production=['count','depth_min','depth_max','min_heat_production','max_heat_production'],
-        )
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['bibtex'] = json.dumps(self.get_object().bibtex)
-        context['meta'] = self.get_object().as_meta(self.request)
-        context['sidebar'] = 'active'
-        context['tables'] = {}
-
-        for table, fields in self.tables.items():
-            context['tables'][table.replace('_',' ')] = self.get_table(table, fields)
-
-        for table in context['tables'].values():
-            if table['data']:
-                table['active'] = True
-                break
 
 
-        popup_fields = ['id','site_name','latitude','longitude','elevation',]
-
-        context['geojson'] = to_geojson().serialize(
-                queryset= self.get_object().sites.annotate(
-                    link=Hyperlink('/thermoglobe/publications/','slug',icon='view')
-                    ), 
-                properties=','.join(popup_fields)
-        )  
-
-
-        return context
-
-    def get_table(self,data_type, fields):
-        fields = ['slug','site_name','latitude','longitude'] + fields
-        qs = (apps.get_model('thermoglobe','Site')
-                .objects.filter(reference=self.get_object())
-                .table(data_type)
-                .values_list(*fields)
-        )
-        return dict(
-            id=slugify(data_type),
-            data=json.dumps(list(qs)),
-            columns=[field.replace('_',' ') for field in fields],
-            )

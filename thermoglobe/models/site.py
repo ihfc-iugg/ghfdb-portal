@@ -1,6 +1,6 @@
-import os, uuid
+import uuid
 from django.db import models
-from django.db.models import F, Q, Avg, Count, Max, Min, StdDev
+from django.db.models import Avg, Count, Max, Min, StdDev, Func
 from django.db.models.functions import Coalesce
 from django.utils.translation import gettext as _
 from django.urls import reverse
@@ -9,21 +9,20 @@ from django.contrib.gis.db import models as geomodels
 from django_extensions.db.fields import AutoSlugField
 from django.contrib.gis.geos import Point
 from django.utils.html import mark_safe
-from thermoglobe.utils import Round
 from simple_history.models import HistoricalRecords
 from .querysets import PlotQueryset
 from django.apps import apps 
 from meta.models import ModelMeta
 from django.utils.encoding import force_str
+from django.contrib.gis.geos import Point
+from django.contrib.gis.measure import Distance 
+
+class Round(Func):
+    function = 'ROUND'
+    template="%(function)s(%(expressions)s::numeric, 2)"
 
 class SiteQS(PlotQueryset):
     
-    def pie_country(self):
-        return self.pie('country')
-
-    def pie_sea(self):
-        return self.pie('sea')
-
     def heat_flow(self):
         return self.annotate(**{           
             'heat_flow': Round(Avg(Coalesce('intervals__heat_flow_corrected', 'intervals__heat_flow_uncorrected'))),
@@ -169,11 +168,6 @@ class Site(ModelMeta,models.Model):
             related_name='sites', 
             blank=True, null=True, 
             on_delete=models.SET_NULL)
-    basin = models.ForeignKey("mapping.Basin",
-            verbose_name=_("basin"),
-            related_name='sites', 
-            blank=True, null=True, 
-            on_delete=models.SET_NULL)
 
     bottom_water_temp = models.FloatField(_('bottom_water_temperature'),
         help_text=_('Temperature at the bottom of the water column.'),
@@ -211,6 +205,14 @@ class Site(ModelMeta,models.Model):
         self.geom = Point(float(self.longitude),float(self.latitude))
         super().save(*args, **kwargs)
 
+    def data_counts(self):
+        return {
+            # 'heat_flow' : self.intervals.heat_flow.count(),
+            'temperature': self.temperature.count(),
+            'conductivity': self.conductivity.count(),
+            'heat_production': self.heat_production.count(),
+        }
+
     def get_absolute_url(self):
         return reverse("thermoglobe:site", kwargs={"slug": self.slug})
 
@@ -225,4 +227,10 @@ class Site(ModelMeta,models.Model):
 
     def get_meta_title(self):
         return f"{self.site_name} | HeatFlow.org"
+
+
+    def nearby(self, radius=25):
+        """Gets nearby sites within x km radius"""
+        point = Point(self.longitude,self.latitude)
+        return Site.objects.filter(geom__distance_lt=(point, Distance(km=radius)))
 
