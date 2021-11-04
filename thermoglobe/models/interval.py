@@ -200,7 +200,6 @@ class Correction(models.Model):
 
         super().save(*args, **kwargs)
 
-
 class HeatFlow(Interval):
 
     class Meta:

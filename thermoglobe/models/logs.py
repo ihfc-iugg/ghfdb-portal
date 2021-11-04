@@ -94,6 +94,7 @@ class Conductivity(SharedProperties):
         verbose_name = _('thermal conductivity')
         db_table = 'thermal_conductivity'
         unique_together = ['conductivity','depth','site','log_id','reference']
+        ordering = ['site__site_name','log_id','depth']
 
     def __str__(self):
         return '{}'.format(self.conductivity)
@@ -136,6 +137,7 @@ class HeatProduction(SharedProperties):
         verbose_name = _('heat production')
         db_table = 'heat_production'
         unique_together = ['log_id','heat_production','k_pc','th_ppm','u_ppm','depth','site','reference']
+        ordering = ['log_id','depth']
 
     def __str__(self):
         return '{}'.format(self.heat_production)
@@ -179,6 +181,7 @@ class Temperature(SharedProperties):
         verbose_name = _('temperature')
         db_table = 'temperature'
         unique_together = ['temperature','depth','site','log_id','reference']
+        ordering = ['log_id','depth']
 
     def __str__(self):
         return '{}'.format(self.temperature)
