@@ -16,6 +16,19 @@ GREEK_LETTERS = \
 	'[Pp]hi|[Pp]si|[Cc]hi|[Oo]mega|[Rr]ho|[Xx]i|[Kk]appa'
 
 
+@register.filter
+def author_display(obj,num):
+	if len(obj.authors_list) > 2:
+		start = ', '.join(obj.authors_list[:num])
+		count = len(obj.authors_list[num:])
+		return f'{start} & {count} others'
+	elif len(obj.authors_list) == 1:
+		return obj.authors_list[0]
+	else:
+		return ' & '.join(obj.authors_list)
+
+
+
 def render_template(template, request, args):
 	if StrictVersion(django.get_version()) < StrictVersion('1.8.0'):
 		return get_template(template).render(RequestContext(request, args))
@@ -67,15 +80,16 @@ def tex_parse(string):
 	Renders some basic TeX math to HTML.
 	"""
 
-	string = string.replace('{', '').replace('}', '')
-	def tex_replace(match):
-		return \
-			sub(r'\^(\w)', r'<sup>\1</sup>',
-			sub(r'\^\{(.*?)\}', r'<sup>\1</sup>',
-			sub(r'\_(\w)', r'<sub>\1</sub>',
-			sub(r'\_\{(.*?)\}', r'<sub>\1</sub>',
-			sub(r'\\(' + GREEK_LETTERS + ')', r'&\1;', match.group(1))))))
-	return mark_safe(sub(r'\$([^\$]*)\$', tex_replace, escape(string)))
+	# string = string.replace('{', '').replace('}', '')
+	# def tex_replace(match):
+	# 	return \
+	# 		sub(r'\^(\w)', r'<sup>\1</sup>',
+	# 		sub(r'\^\{(.*?)\}', r'<sup>\1</sup>',
+	# 		sub(r'\_(\w)', r'<sub>\1</sub>',
+	# 		sub(r'\_\{(.*?)\}', r'<sub>\1</sub>',
+	# 		sub(r'\\(' + GREEK_LETTERS + ')', r'&\1;', match.group(1))))))
+	# return mark_safe(sub(r'\$([^\$]*)\$', tex_replace, escape(string)))
+	return mark_safe(string)
 
 
 register.simple_tag(get_publications, takes_context=True)
