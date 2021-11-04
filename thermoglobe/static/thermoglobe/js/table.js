@@ -2,14 +2,21 @@ $.fn.create_table = function(options) {
 
     var fields = [];
     $(options['fields']).each(function (ind, field) {
-      fields.push({"data": field})
+      if (typeof(field) == "object" ) {
+        fields.push(field)
+      } else {
+        fields.push({"data": field})       
+      }
     })
 
     this.DataTable( {
-        "responsive": true,
-        "processing": true,
-        "serverSide": true,
-        "ajax": {
+        dom: '<"top"il>rt<"bottom"p><"clear">',
+        ordering: false,
+        responsive: true,
+        processing: true,
+        serverSide: true,
+        columns: fields,
+        ajax: {
           type: "GET",
           url: options['url'],
           dataSrc: 'results',
@@ -17,21 +24,18 @@ $.fn.create_table = function(options) {
               var json = jQuery.parseJSON( data );
               json.recordsTotal = json.count;
               json.recordsFiltered = json.count;
-              return JSON.stringify( json ); // return JSON string
+              return JSON.stringify( json );
           },
-          complete: function(response) {
-            var data = JSON.parse(response.responseText).results;
-            if (!data) {
-              $('#'+this.attr('id')+'-tab').appendClass('disabled')
-            }
-          }
         },
-        "columns": fields,
     });
-
   return this;
 };
 
+$.fn.dataTable.render.href = function ( href ) {
+  return function ( data, type, row ) {
+      return '<a href='+href+row.site.id+'>'+data+'</a>'
+  }
+};
 
 $('tbody tr').hover(function () {
   var data = site.row( this ).data();
@@ -66,3 +70,5 @@ $('#dataTable').on( 'click', 'tbody tr', function () {
   new L.marker(coordinates).addTo(map).bindPopup(popup + '</table>');
 
 } );
+
+
