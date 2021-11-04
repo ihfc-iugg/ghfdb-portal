@@ -14,47 +14,6 @@ from thermoglobe.forms import DownloadForm
 from django.contrib import messages
 from django_super_deduper.merge import MergedModelInstance
 from django.contrib.admin.models import LogEntry, ContentType
-from import_export.formats.base_formats import CSV
-
-class TableMixin:
-    options = {}
-    mark_safe = False
-    table_headers = []
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['options'] = self.table_options(format='json')
-        # context['headers'] = self.tables_headers
-        return context
-    
-    def table_options(self,format=None):
-        options = dict(
-            autoWidth=False,
-            dom='<"top d-flex justify-content-around align-items-baseline"lpf>t<"bottom"ip><"clear">',
-            order_by='year',
-            pageLength=100,
-            deferRender=True,
-            responsive=True,
-            )
-        options.update(**self.options)
-        
-        if format == 'json':
-            options = json.dumps(options)
-        if self.mark_safe:
-            return mark_safe(options)
-        return options
-
-    def get_tables(self):
-        tables = {}
-
-        for table, fields in self.tables.items():
-            tables[table] = self.get_table(table, fields)
-
-        for table in context['tables'].values():
-            if table['data']:
-                table['active'] = True
-                break
-
 
 class BaseAdmin(gisadmin.OSMGeoAdmin):
 # class BaseAdmin(admin.ModelAdmin):
