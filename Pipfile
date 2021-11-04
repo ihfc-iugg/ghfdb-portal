@@ -131,6 +131,10 @@ psycopg2 = "==2.8.6"
 django-cms = "*"
 django-ordered-model = "*"
 fsspec = "*"
+djangorestframework = "*"
+httpie = "*"
+djangorestframework-gis = "*"
+uritemplate = "*"
 
 [requires]
 python_version = "3.8"
