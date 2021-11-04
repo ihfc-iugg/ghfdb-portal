@@ -1,35 +1,47 @@
-{% load static sekizai_tags custom_tags %}
+{% load static sekizai_tags %}
 
 <header>
-  <div class='d-flex justify-content-center py-2'>
-    <ul class="nav nav-pills justify-content-center" role="tablist">
+  <div class='d-flex py-2'>
+    <ul class="nav nav-pills" role="tablist">
+      <li><a id="#details-tab" data-toggle="tab" href="#details-container" aria-controls="details-tab" class="button primary small" aria-selected="true">
+          Details
+        </a></li>
       {% for name, table in tables.items %}
         <li>
           <a id="#{{table.id}}-tab" data-toggle="tab" href="#{{table.id}}-container" aria-controls="{{table.id}}-tab" 
-          {% if table.active %}class="button primary small" aria-selected="true">
-          {% elif table.data != '[]'%}class="button small" aria-selected="false">
+          {% comment %} {% if table.active %}class="button primary small" aria-selected="true"> {% endcomment %}
+          {% if table.data != '[]'%}class="button small" aria-selected="false">
           {% else %} class="button small disabled" aria-selected="disabled">
           {% endif %}
           {{ name }}</a>
         </li>
       {% endfor %}
     </ul>
+    <div class="btn-group dropleft ml-auto">
+      <a id='dropdownMenuLink' class='button icon solid small' href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-2x fa-cog"></i></a>
+      <div class="dropdown-menu">
+        <a class="dropdown-item" href="#">Action</a>
+        <a class="dropdown-item" href="#">Another action</a>
+        <a class="dropdown-item" href="#">Something else here</a>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item" href="#">Separated link</a>
+      </div>
+    </div>
   </div>
-  <a id='table-download-button' data-toggle="modal" data-target="#downloadOptions"><i class="fas fa-2x fa-download"></i></a>
 </header>
 
 <div id="tabbedContent" class="tab-content container-fluid pt-3">
+  <div class="tab-pane fade show active" id="{{table.id}}-container" role="tabpanel" aria-labelledby="{{table.id}}-tab">
+    {% include "publications/full_details.html" %}
+  </div>
+
   {% for table in tables.values %}
-    <div class="tab-pane fade {% if table.active %}show active{% endif %}" id="{{table.id}}-container" role="tabpanel" aria-labelledby="{{table.id}}-tab">
-          {% if table.active or table.data %}
-            {% include "components/table.html" %}
-          {% endif %}
+    <div class="tab-pane fade" id="{{table.id}}-container" role="tabpanel" aria-labelledby="{{table.id}}-tab">
+      {% if table.active or table.data %}
+        {% include "components/table.html" %}
+      {% endif %}
     </div>
   {% endfor %}
 </div>
 
-{% include "components/download_modal.html" with form=download_form%}
 
-
-{% addtoblock "js" %}
-{% endaddtoblock %}
