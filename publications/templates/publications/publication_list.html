@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class='inner'>
+	<header id="header">
+		<a href="#" class="logo"><strong>Publications</strong> in ThermoGlobe</a>
+		<ul class="icons">
+			<li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
+			<li><a href="#" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
+			<li><a href="#" class="icon brands fa-snapchat-ghost"><span class="label">Snapchat</span></a></li>
+			<li><a href="#" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
+			<li><a href="#" class="icon brands fa-medium-m"><span class="label">Medium</span></a></li>
+		</ul>
+	</header>
+
+	<section>
+
+	<div class='row'>
+		<div class='col-2'>
+			<header><h3 class='mb-1 mt-4'>Filter</h3></header>
+			{% include "publications/paginator.html" %}
+		</div>
+		<div class='col-10'>
+			<section class='main'>	
+				{% for year, publications in years %}
+				{% if not forloop.first %}<hr class="major" />{% endif %}
+				<div class='publication-group'>
+					<header><h2>{{ year }}</h2></header>
+					{% for publication in publications %}
+							{% include "publications/publication.html" %}
+					{% endfor %}
+				</div>
+				{% endfor %}
+			</section>
+		
+		</div>
+	</div>
+	</section>
+</div>
+{% endblock %}

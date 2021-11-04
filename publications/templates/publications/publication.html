@@ -1,50 +1,27 @@
 {% load publication_extras %}
 
-{% if publication.authors_escaped|length > 8 %}
-	{% for author, author_escaped in publication.authors_escaped|slice:":8" %}
-	<a href="{% url 'publications:author' author_escaped %}" class="author">{{ author }}</a>,
-	{% endfor %} <i>et al.</i><br />
-{% else %}
-	{% for author, author_escaped in publication.authors_escaped %}
-	<a href="{% url 'publications:author' author_escaped %}" class="author">{{ author }}</a>{% if not forloop.last %}{% if forloop.revcounter == 2 %}{% if not forloop.first %},{% endif %} and {% else %}, {% endif %}{% endif %}
-	{% endfor %}<br />
-{% endif %}
-<b><a href="{% url 'publications:id' publication.pk %}" class="title">{{ publication.title|tex_parse }}</a></b>
-{% if user.is_staff %}
-    <a href="{% url 'admin:publications_publication_change' publication.id %}">[EDIT]</a>
-{% endif %}
-<br/>
-{% if publication.journal %}
-	<i>{{ publication.journal }}{% if publication.note %} ({{ publication.note }}){% endif %},
-	{% if publication.volume %}<b>{{ publication.volume }}</b>{% if publication.number %}({{ publication.number }}){% endif %},{% endif %}
-	{% if publication.pages %}{{ publication.pages }},{% endif %}
-	{{ publication.year }}
-	</i><br />
-{% else %}
-	<i>{% if publication.book_title %}{{ publication.book_title }}{% if publication.note %} ({{ publication.note }}){% endif %},{% endif %}
-	{% if publication.publisher %}{{ publication.publisher }},{% endif %}
-	{% if publication.institution %}{{ publication.institution }},{% endif %}
-	{{ publication.year }}{% if publication.isbn %},
-	ISBN {{ publication.isbn }}{% endif %}</i><br />
-{% endif %}
-{% comment %} {% if publication.keywords %}
-	{% for keyword, keyword_escaped in publication.keywords_escaped %}
-	<a class="keyword" href="{% url 'publications:keyword' keyword_escaped %}">{{ keyword }}</a>
-	{% endfor %}
-	<br />
-{% endif %} {% endcomment %}
-{% if publication.code %}<a class="link" href="{{ publication.code }}">Code</a>,{% endif %}
-{% if publication.url %}<a class="link" rel="external" href="{{ publication.url }}">URL</a>,{% endif %}
-{% if publication.doi %}<a class="link" rel="external" href="http://dx.doi.org/{{ publication.doi }}">DOI</a>,{% endif %}
-{% if not publication.journal and publication.isbn %}<a class="link" rel="external" href="http://isbndb.com/search/all?query={{ publication.isbn }}">ISBN</a>,{% endif %}
-{% if publication.pdf %}<a class="link" href="{{ MEDIA_URL }}{{ publication.pdf }}">PDF</a>,{% endif %}
-{% for file in publication.files %}
-	<a class="link" href="{{ MEDIA_URL }}{{ file.file }}">{{ file.description }}</a>,
-{% endfor %}
-{% for link in publication.links %}
-	<a class="link" rel="external" href="{{ link.url }}">{{ link.description }}</a>,
-{% endfor %}
-<a href="{% url 'publications:id' publication.pk %}?ris">RIS</a>,
-<a href="{% url 'publications:id' publication.pk %}?bibtex">BibTex</a>
-<abbr class="unapi-id" title="{{ publication.id }}"></abbr>
-<span class="Z3988" title="{{ publication.z3988 }}"></span>
+<div class="card">
+  <h5 class='card-header d-flex'><i>{% if publication.journal or publication.book_title %}{% firstof publication.journal publication.book_title %},{% endif %}	{{ publication.year }}</i>
+		<div class="dropleft no-arrow ml-auto">
+			<a id='dropdownMenuLink' class='fas fa-ellipsis-h ' href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></a>
+			<div class="dropdown-menu">
+				<h6 class="dropdown-header">Citation</h6>
+				<a class="dropdown-item" href="?plain">Plain Text</a>
+				<a class="dropdown-item" href="?bibtex">Bibtex</a>
+				<a class="dropdown-item" href="?ris">RIS</a>
+			</div>
+		</div>
+	</h5>
+  <div class="card-body">
+    <h4 class="card-title">{{ publication.title }}</h4>
+		{% if publication.author %}<h5 class="card-subtitle mb-2 text-muted">{{publication|author_display:3}}</h5>{% endif %}
+
+		{% if publication.abstract %}
+    	<p class="card-text">{{ publication.abstract|truncatewords:75 }}</p>
+		{% endif %}
+		<ul class="actions">
+			<li><a href="{% url "publications:detail" pk=publication.pk %}" class="button primary icon solid fa-chart-bar">Data</a></li>
+			<li><a href="https://doi.org/{{publication.doi}}" class="button icon solid fa-globe">Article</a></li>
+		</ul>
+  </div>
+</div>
