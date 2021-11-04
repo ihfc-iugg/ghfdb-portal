@@ -1,0 +1,34 @@
+{% load static sekizai_tags geojson_tags %}
+
+<div id="{{label|slugify}}-container" class='tab-pane fade'>
+  <div class='table-responsive'>
+    <table id="{{label|slugify}}-table" class="table table-hover w-100" >
+      <thead>
+        <tr>
+          <th colspan='3' class='text-center border-0'></th>
+          <th colspan='4' class='text-center border-0'>Measurement</th>
+        </tr>
+        <tr>
+          <th>Site</th>
+          <th>Lat</th>
+          <th class='border-right'>Lon</th>
+          <th>Depth</th>
+          <th>Conductivity</th>
+          <th>Uncertainty</th>
+          <th>Method</th>
+        </tr>
+      </thead>
+    </table>
+  </div>
+</div>
+
+{% addtoblock "css" %}<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.21/r-2.2.5/datatables.min.css"/>{% endaddtoblock %}
+{% addtoblock "js" %}<script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.10.21/r-2.2.5/datatables.min.js"></script>{% endaddtoblock %}
+{% addtoblock "js" %}<script src="{% static 'thermoglobe/js/table.js' %}"></script>{% endaddtoblock %}
+
+{% addtoblock "js" %}<script>
+$('#{{label|slugify}}-table').create_table({
+  url: '/api/conductivity/?{{filter_by}}',
+  fields: [{'data':'site.site_name','render': $.fn.dataTable.render.href('/sites/',"site.id")},'site.latitude','site.longitude','depth','conductivity','uncertainty','method']
+  })
+</script>{% endaddtoblock %}
