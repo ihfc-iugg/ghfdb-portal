@@ -18,25 +18,19 @@
   </table>
 </div>
 
-{% addtoblock "css" %}
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.21/r-2.2.5/datatables.min.css"/>
-{% endaddtoblock %}
 
-{% addtoblock "js" %}
-  <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.10.21/r-2.2.5/datatables.min.js"></script>
-  <script src="{% static 'thermoglobe/js/table.js' %}"></script>
 
-  <script>
-    {% if table.data %}
+{% addtoblock "css" %}<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.21/r-2.2.5/datatables.min.css"/>{% endaddtoblock %}
+{% addtoblock "js" %}<script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.10.21/r-2.2.5/datatables.min.js"></script>{% endaddtoblock %}
+{% addtoblock "js" %}<script src="{% static 'thermoglobe/js/table.js' %}"></script>{% endaddtoblock %}
 
-    $(function(){
-      var customColumns = {
-          slug: {
-                  render: $.fn.dataTable.render.iconize_href("fas fa-lg fa-binoculars","/thermoglobe/sites/"),
-                  defaultContent:''},}
-      var {{table.id}} = table_from_objects("{{table.id}}", {{table.columns|safe}}, {{table.data|safe}}, {{options|safe}}, customColumns)
-    });  
-    {% endif %}
-
-  </script>
-{% endaddtoblock %}
+{% if table.data %}{% addtoblock "js" %}
+<script>$(function(){
+    var customColumns = {
+        slug: {
+                render: $.fn.dataTable.render.iconize_href("fas fa-lg fa-binoculars","/thermoglobe/sites/"),
+                defaultContent:''},}
+    var {{table.id}} = table_from_objects("{{table.id}}", {{table.columns|safe}}, {{table.data|safe}}, {{options|safe}}, customColumns)
+  });  
+</script>
+{% endaddtoblock %}{% endif %}
