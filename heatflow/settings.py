@@ -106,6 +106,9 @@ INSTALLED_APPS = [
     'publications', 
     'editorial',
     'ordered_model', 
+    'rest_framework',
+    'rest_framework_gis',
+    'django_filters',
     'django_cleanup.apps.CleanupConfig',
     ]
 
@@ -308,6 +311,18 @@ TAGGIT_CASE_INSENSITIVE = True
 
 RECAPTCHA_PUBLIC_KEY = os.environ.get('RECAPTCHA_PUBLIC_KEY')
 RECAPTCHA_PRIVATE_KEY = os.environ.get('RECAPTCHA_PRIVATE_KEY')
+
+
+# Rest Framework
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+    )
+    # 'DEFAULT_SCHEMA_CLASS': 'rest_framework_gis.schema.GeoFeatureAutoSchema',
+}
+
 
 django_heroku.settings(locals(), staticfiles=False)
 DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
