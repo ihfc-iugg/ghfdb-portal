@@ -128,32 +128,6 @@ class Sea(Base):
     def __str__(self):
         return '{}'.format(self.name)
 
-class Basin(Base):
-    model_description = "<p>This layer is taken from the CGG Robertson New Ventures product suite. It is a carefully and regularly maintained layer from the Robertson Basins & Plays (formerly Tellus) product. The basin classification has been formulated over 20 years based on an understanding of hard rock outcrop, sediment thickness, structural elements, basin evolution and petroleum systems, with basin definitions refined to fit new information and data from both the public domain and from Robertson’s multi-client studies (Red Books).</p><p>...okay that excerpt was taken straight from the <a href='https://www.arcgis.com/home/item.html?id=528eb519d6114f4c82718870c284b722'>download page</a>. This is a very useful and freely available dataset by CGG Robertson</p>"
-
-    id = models.BigIntegerField(primary_key=True)
-    name = models.CharField(max_length=50)
-    region = models.CharField(max_length=100)
-    province = models.CharField(max_length=100, null=True)
-    max_fill = models.FloatField()
-    exploration_status = models.CharField(max_length=25)
-    location = models.CharField(max_length=50)
-    sub_regime_group = models.CharField(max_length=100, null=True)
-    sub_regime = models.CharField(max_length=100, null=True)
-    petsys_status = models.CharField(max_length=50, null=True)
-    poly = models.MultiPolygonField(srid=3857)
-
-    class Meta:
-        db_table = 'basin'
-        verbose_name = _('Sedimentary Basin')
-        verbose_name_plural = _('Sedimentary Basins')
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return '{}'.format(self.name)
-
 class Political(Base):
 
     model_description = '<p>Political regions in ThermoGlobe are determined using the Marine and Land Zones shapefile which is freely available at <a href="https://www.marineregions.org/sources.php">marineregions.org</a>. It was created by the Flanders Marine Institute using the union of the ESRI world country database adn the EEZ V11 dataset.</p>'

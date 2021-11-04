@@ -41,7 +41,6 @@ def continents(verbose=True):
     lm.save(strict=True, verbose=verbose)
 
 world_seas_dir = os.path.join(DATA_DIR,'seas','World_Seas_IHO_v3.shp')
-
 seas_mapping = {
     'name': 'NAME',
     'id': 'ID',
@@ -60,38 +59,15 @@ def seas(verbose=True):
     lm = LayerMapping(Sea, world_seas_dir, seas_mapping, transform=False)
     lm.save(strict=True, verbose=verbose)
 
-
-basin_dir = os.path.join(DATA_DIR,'basins','basins.shp')
-basin_mapping = {
-    'id': 'OBJECTID',
-    'name': 'BASIN_NAME',
-    'region': 'BASINS_AND',
-    'province': 'PROVINCE_N',
-    'max_fill': 'MAX_FILL_K',
-    'exploration_status': 'EXP_STATUS',
-    'location': 'LOCATION',
-    'sub_regime_group': 'SUB_REGIME',
-    'sub_regime': 'SUB_REGI_1',
-    'petsys_status': 'PET_SYS_ST',
-    'poly': 'MULTIPOLYGON',
-}
-def basins(verbose=True):
-    lm = LayerMapping(Basin, basin_dir, basin_mapping, transform=False)
-    lm.save(strict=True, verbose=verbose)
-
-
 political_dir = os.path.join(DATA_DIR,'political','EEZ_Land_v3_202030.shp')
 political_mapping = {
     'name': 'UNION',
-
     'territory': 'TERRITORY1',
     'iso_territory': 'ISO_TER1',
     'un_territory': 'UN_TER1',
-
     'sovereign': 'SOVEREIGN1',
     'iso_sovereign': 'ISO_SOV1',
     'un_sovereign': 'UN_SOV1',
-
     'area_km2': 'AREA_KM2',
     'poly': 'MULTIPOLYGON',
 }
