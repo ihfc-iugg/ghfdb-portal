@@ -4,9 +4,6 @@ from django.urls import path
 
 app_name = 'publications'
 urlpatterns = [
-    path('', views.year, name='index'),
-    path('year/<year>', views.year, name='year'),
-    path('<publication_id>',views.id, name='id'),
-    path('tag/<keyword>', views.keyword, name='keyword'),
-    url(r'^(?P<name>.+)/$', views.author, name='author'),
+    path('',views.PublicationListView.as_view(),name='list'),
+    path('<pk>',views.PublicationDetailsView.as_view(),name='detail'),
 ]

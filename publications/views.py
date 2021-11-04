@@ -2,10 +2,23 @@ from django.shortcuts import render
 from publications.models import Publication
 from collections import defaultdict
 from string import capwords
+from djgeojson.serializers import Serializer as to_geojson
+import json
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.views.generic import DetailView, ListView
+from django.apps import apps
+from django.utils.text import slugify
+from thermoglobe.mixins import DownloadMixin 
+from meta.views import MetadataMixin
+from publications.models import Publication
+from thermoglobe.forms import DownloadForm
+from publications.paginator import NamePaginator
+from django.core.paginator import InvalidPage
 
 def year(request, year=None):
 	years = []
-	publications = Publication.objects.select_related()
+	publications = Publication.objects.exclude(year__isnull=True)
 	if year:
 		publications = publications.filter(year=year)
 
@@ -16,110 +29,107 @@ def year(request, year=None):
 			years.append((publication.year, []))
 		years[-1][1].append(publication)
 
-
 	return render(request, 'publications/years.html', {
 			'years': years
 		})
 
-def keyword(request, keyword):
-	keyword = keyword.lower().replace(' ', '+')
-	candidates = Publication.objects.filter(keywords__icontains=keyword.split('+')[0])
-	publications = []
+class PublicationListView(ListView):
+    model = Publication
+    template_name = 'publications/publication_list.html'
+    paginate_by = 50
 
-	for i, publication in enumerate(candidates):
-		if keyword in [k[1] for k in publication.keywords_escaped()]:
-			publications.append(publication)
+    def get_context_data(self, **kwargs):
+        # context = super().get_context_data(**kwargs)
+        context = {}
+        context['page'] = self.get_page(on='year')
+        
+        years = []
+        for publication in context['page'].object_list:
+            if not years or (years[-1][0] != publication.year):
+                years.append((publication.year, []))
+            years[-1][1].append(publication)
 
-	return render(request, 'publications/keyword.html', {
-			'publications': publications,
-			'keyword': keyword.replace('+', ' ')
-		})
+        context['years'] = years
 
-def id(request, publication_id):
-	publications = Publication.objects.filter(pk=publication_id)
+        return context
 
-	if 'plain' in request.GET:
-		return render(request, 'publications/publications.txt', {
-				'publications': publications
-			}, content_type='text/plain; charset=UTF-8')
+    def get_queryset(self):
+        return super().get_queryset().exclude(year__isnull=True).order_by('-year')
 
-	if 'bibtex' in request.GET:
-		return render(request, 'publications/publications.bib', {
-				'publications': publications
-			}, content_type='text/x-bibtex; charset=UTF-8')
 
-	if 'mods' in request.GET:
-		return render(request, 'publications/publications.mods', {
-				'publications': publications
-			}, content_type='application/xml; charset=UTF-8')
+    def get_page(self,on):
+        paginator = NamePaginator(self.get_queryset(), on=on, per_page=self.paginate_by)
 
-	if 'ris' in request.GET:
-		return render(request, 'publications/publications.ris', {
-				'publications': publications
-			}, content_type='application/x-research-info-systems; charset=UTF-8')
+        try:
+            page = int(self.request.GET.get('page', '1'))
+        except ValueError:
+            page = 1
 
-	for publication in publications:
-		publication.links = publication.customlink_set.all()
-		publication.files = publication.customfile_set.all()
+        try:
+            page = paginator.page(page)
+        except (InvalidPage):
+            page = paginator.page(paginator.num_pages)
 
-	return render(request, 'publications/id.html', {
-			'publications': publications
-		})
+        return page
 
-def author(request, name):
-    fullname = capwords(name.replace('+', ' '))
-    fullname = fullname.replace(' Von ', ' von ').replace(' Van ', ' van ')
-    fullname = fullname.replace(' Der ', ' der ')
+    def paginator_fix(self,paginator,page):
+        if paginator.num_pages > 2*self.pag_neighbours:
+            start_index = max(1, page-self.pag_neighbours)
+            end_index = min(paginator.num_pages, page + self.pag_neighbours)
+            if end_index < start_index + 2*self.pag_neighbours:
+                end_index = start_index + 2*self.pag_neighbours
+            elif start_index > end_index - 2*self.pag_neighbours:
+                start_index = end_index - 2*self.pag_neighbours
+            if start_index < 1:
+                end_index -= start_index
+                start_index = 1
+            elif end_index > paginator.num_pages:
+                start_index -= (end_index-paginator.num_pages)
+                end_index = paginator.num_pages
+            page_list = [f for f in range(start_index, end_index+1)]
+            return page_list[:(2*self.pag_neighbours + 1)]
+        else:
+            return list(range(1,paginator.num_pages+1))
 
-    # take care of dashes
-    off = fullname.find('-')
-    while off > 0:
-        off += 1
-        if off <= len(fullname):
-            fullname = fullname[:off] + fullname[off].upper() + fullname[off + 1:]
-        off = fullname.find('-', off)
+    def get_filter_parameters(self):
+        """Gets url parameters from the filter and returns as a string to be placed behind paginator links"""
+        request_copy = self.request.GET.copy()
+        request_copy.pop('page', True)
+        if request_copy:
+            return '&'+request_copy.urlencode()
+        else:
+            return ''
 
-    # split into forename, middlenames and surname
-    names = name.replace(' ', '+').split('+')
-    # handle empty values
-    names = [n for n in names if n] or ['']
+class PublicationDetailsView(DownloadMixin, MetadataMixin, DetailView):
+    template_name = "publications/details.html"
+    download_form = DownloadForm
+    model = Publication
+    options = {'pageLength':50}
+    tables = dict(
+        intervals=['depth_min','depth_max','heat_flow','gradient'],
+        conductivity=['count','depth_min','depth_max','min_conductivity','max_conductivity'],
+        temperature=['count','depth_min','depth_max','min_temperature','max_temperature'],
+        heat_production=['count','depth_min','depth_max','min_heat_production','max_heat_production'],
+        )
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['bibtex'] = json.dumps(self.get_object().bibtex)
+        # context['meta'] = self.get_object().as_meta(self.request)
+        context['sidebar'] = 'active'
 
-    # construct a liberal query
-    surname = names[-1]
-    surname = surname.replace(u'ä', u'%%')
-    surname = surname.replace(u'ae', u'%%')
-    surname = surname.replace(u'ö', u'%%')
-    surname = surname.replace(u'oe', u'%%')
-    surname = surname.replace(u'ü', u'%%')
-    surname = surname.replace(u'ue', u'%%')
-    surname = surname.replace(u'ß', u'%%')
-    surname = surname.replace(u'ss', u'%%')
 
-    query_str = u'SELECT * FROM {table} ' \
-                'WHERE lower({table}.authors) LIKE lower(%s) ' \
-                'ORDER BY {table}.year DESC, {table}.month DESC, {table}.id DESC'
-    query_str = query_str.format(table=Publication._meta.db_table)
-    query = Publication.objects.raw(query_str, ['%' + surname + '%'])
+        return context
 
-    # find publications of this author
-    publications = []
-    publications_by_type = defaultdict(lambda: [])
-
-    # further filter results
-    if len(names) > 1:
-        name_simple = Publication.simplify_name(names[0][0] + '. ' + names[-1])
-        for publication in query:
-            if name_simple in publication.authors_list_simple:
-                publications.append(publication)
-                publications_by_type[publication.type_id].append(publication)
-
-    elif len(names) > 0:
-        for publication in query:
-            if Publication.simplify_name(names[-1].lower()) in publication.authors_list_simple:
-                publications.append(publication)
-                publications_by_type[publication.type_id].append(publication)
-
-    return render(request, 'publications/author.html', {
-        'publications': publications,
-        'author': fullname
-    })
+    def get_table(self,data_type, fields):
+        fields = ['slug','site_name','latitude','longitude'] + fields
+        qs = (apps.get_model('thermoglobe','Site')
+                .objects.filter(reference=self.get_object())
+                .table(data_type)
+                .values_list(*fields)
+        )
+        return dict(
+            id=slugify(data_type),
+            data=json.dumps(list(qs)),
+            columns=[field.replace('_',' ') for field in fields],
+            )
