@@ -9,8 +9,22 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.generics import RetrieveAPIView, ListAPIView
 from rest_framework_gis.filters import DistanceToPointOrderingFilter, DistanceToPointFilter
 # from rest_framework_gis.schema import GeoFeatureAutoSchema
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from thermoglobe.filters import MapFilter
+from rest_framework_datatables_editor.viewsets import DatatablesEditorModelViewSet
 
-class SiteViewSet(viewsets.ReadOnlyModelViewSet):
+class GeoSiteViewSet(viewsets.ReadOnlyModelViewSet):
+    """API endpoint to request a set of ThermoGlobe sites."""
+    queryset = Site.objects.all()
+    pagination_class = None
+    serializer_class = serialize.GeoSite
+    # filter_backends = (DistanceToPointFilter,DistanceToPointOrderingFilter,DjangoFilterBackend)
+    filter_backends = (DistanceToPointFilter,DjangoFilterBackend,)
+    # filterset_fields = ['site_name',]
+    filterset_class = MapFilter
+
+
+class SiteViewSet(DatatablesEditorModelViewSet):
     """API endpoint to request a set of ThermoGlobe sites."""
     queryset = Site.objects.all()
     serializer_class = serialize.Site
@@ -24,42 +38,32 @@ class PublicationViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Publication.objects.all()
     serializer_class = serialize.Publication
 
-class HeatFlowViewSet(viewsets.ReadOnlyModelViewSet):
+class HeatFlowViewSet(DatatablesEditorModelViewSet):
     """API endpoint to request a set of heat flow intervals."""
     queryset = Interval.heat_flow.select_related('site','reference')
     serializer_class = serialize.Interval
-    permission_classes = [permissions.IsAuthenticated]
-    pagination_class = DataTablesPaginator
     filterset_fields = ['reference','site']
 
-class GradientViewSet(viewsets.ReadOnlyModelViewSet):
+class GradientViewSet(DatatablesEditorModelViewSet):
     """API endpoint to request a set of thermal gradient intervals."""
     queryset = Interval.gradient.all()
     serializer_class = serialize.Interval
-    permission_classes = [permissions.IsAuthenticated]
-    pagination_class = DataTablesPaginator
     filterset_fields = ['reference','site']
 
-class ConductivityViewSet(viewsets.ReadOnlyModelViewSet):
+class ConductivityViewSet(DatatablesEditorModelViewSet):
     """API endpoint to request a set of thermal conductivity measurements."""
     queryset = Conductivity.objects.select_related('reference','site')
     serializer_class = serialize.Conductivity
-    permission_classes = [permissions.IsAuthenticated]
-    pagination_class = DataTablesPaginator
     filterset_fields = ['site','reference']
 
-class HeatProductionViewSet(viewsets.ReadOnlyModelViewSet):
+class HeatProductionViewSet(DatatablesEditorModelViewSet):
     """API endpoint to request a set of heat production measurements."""
     queryset = HeatProduction.objects.all()
     serializer_class = serialize.HeatProduction
-    permission_classes = [permissions.IsAuthenticated]
-    pagination_class = DataTablesPaginator
     filterset_fields = ['reference','site']
 
-class TemperatureViewSet(viewsets.ReadOnlyModelViewSet):
+class TemperatureViewSet(DatatablesEditorModelViewSet):
     """API endpoint to request a set of temperature measurements."""
     queryset = Temperature.objects.all()
     serializer_class = serialize.Temperature
-    permission_classes = [permissions.IsAuthenticated]
-    pagination_class = DataTablesPaginator
     filterset_fields = ['reference','site']
