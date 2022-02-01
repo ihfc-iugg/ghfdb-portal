@@ -1,0 +1,14 @@
+{% load comments %}
+{% get_comment_count for object as comment_count %}
+
+{% render_comment_list for object %}
+
+{% if user.is_authenticated %}
+<div class='my-2'>
+  Hi {{ user.first_name }}!
+  {% if comment_count == 0 %} Be the first to leave a comment:
+  {% else %} Leave you comment below:
+  {% endif %}
+</div>
+{% endif %}
+{% render_comment_form for object %}

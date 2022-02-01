@@ -1,0 +1,20 @@
+{% autoescape off %}
+Hi Team!
+
+One of our users has claimed ownership of the publication "{{ publication.title }}" by the author/s {{ publication.author }}. Publication ID: {{ publication.pk }}
+
+Details of the requesting user are:
+
+    Name: {{ request.user.first_name }} {{ request.user.last_name }}
+    Email: {{ request.user.email }}
+
+You can confirm their claim by clicking the link below:
+
+{{scheme}}://{{ site }}{% url 'publications:claim_confirmed' %}?user_id={{ request.user.pk }}&pub_id={{publication.pk}}
+
+If you have questions or require further identification, email the user directly.
+
+Cheers,
+ThermoGlobe Admin
+{% endautoescape %}
+

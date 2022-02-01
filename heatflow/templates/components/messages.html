@@ -1,0 +1,15 @@
+{% load sekizai_tags %}
+
+{% if messages %}
+<div aria-live="polite" aria-atomic="true" class="mt-1" style="position: absolute; top: 0; right: 0; left:0;">
+  <div class='d-flex justify-content-center'>
+    {% for message in messages %}
+    <div class="alert {{ message.tags }}" data-delay="3000" role="alert">
+      <small>{{message}}</small>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% addtoblock "js" %}<script>$(function(){$('.alert').toast('show')})</script>{% endaddtoblock %}
+{% endif %}

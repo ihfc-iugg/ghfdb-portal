@@ -1,0 +1,31 @@
+{% extends "empty.html" %}
+{% load static widget_tweaks sekizai_tags crispy_forms_tags %}
+
+{% block content %}
+  {% include "mapping/map.html" with vh='100vh' %}
+  <div class="accordion shadow" id='map-panel'>
+    <div class="card">
+      <div class="card-header small" id="map-filter" data-toggle="collapse" data-target="#filterBody"> 
+        <a class='primary'><h3 class='text-right'><i class='fas fa-filter text-primary'></i></h3></a>
+      </div>
+      <div id="filterBody" class="collapse" aria-labelledby="map-panel" data-parent="#map-panel">
+        <div class="card-body">
+          <div class='card-title'><h3>Filter</h3></div>
+          {% crispy form %}
+        </div>
+        <div class='card-footer text-right'>
+          <button class='primary'>Download</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header small" id="map-filter" data-toggle="collapse" data-target="#settingsBody"> 
+        <a class='primary'><h3 class='text-right'><i class='fas fa-cogs text-primary'></i></h3></a>
+      </div>
+      <div id="settingsBody" class="collapse" aria-labelledby="map-panel" data-parent="#map-panel">
+        <div class="card-body">
+        <div class='card-title'><h3>Map Settings</h3></div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}

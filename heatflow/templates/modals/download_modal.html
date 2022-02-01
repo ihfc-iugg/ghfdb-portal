@@ -1,0 +1,16 @@
+{% load static sekizai_tags widget_tweaks crispy_forms_tags %}
+<div id="downloadOptions" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="downloadModal" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered bg-transparent" role="document">
+    <div class="modal-content">
+      <section class='banner d-flex'>
+          <div class="content p-5">
+            <header class="major"><h2>Download</h2></header>
+            {% crispy download_form %}
+          </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+
+
