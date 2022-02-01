@@ -24,36 +24,11 @@
 <body class="is-preload">
   {% cms_toolbar %}
   <div id="wrapper">
-    <div id="main" class='position-relative'>
-    {% include "components/messages.html" %}    
-    {% block content %}{% endblock content %}
-    </div>
-    <div id="sidebar" class="{{sidebar|default:'active'}}">
-        <div class="inner">
-          <section id="logo-banner" class='alt py-3'>
-            <header>
-              <a href="/">
-                <div class='d-flex flex-row align-items-center'>
-                    <div><img src="{% static "thermoglobe/images/logo_64.webp"%}" alt="logo"></div>
-                    <div><h2 class='pl-2 pb-0 mb-0'>HeatFlow.org</h2></div>
-                </div>
-              </a>
-            </header>
-          </section>
-          <nav id="menu" class='sidebar-menu'>
-            <header class='major'>
-              <h3>Menu</h3>
-            </header>
-            <ul>{% show_menu 0 100 100 100 %}</ul>
-          </nav>
-          {% include "menu/user_menu.html" %}
-        </div>
-    </div>
+    <div id="main">{% block content %}{% endblock content %}</div>
   </div>
 
   {% block modals %}{% endblock modals %}
 
-  {% comment %} {% if not user.is_authenticated %}{% include "modals/login_modal.html" %}{% endif %} {% endcomment %}
   {% render_block "modals"%}
 
 
@@ -61,6 +36,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
   <script src="https://kit.fontawesome.com/a08181010c.js"></script>
+
   {% comment %} USE THESE FOR DEVELOPMENT {% endcomment %}
   <script src="{% static "editorial/js/browser.min.js" %}"></script>
   <script src="{% static "editorial/js/breakpoints.min.js" %}"></script>

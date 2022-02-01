@@ -1,0 +1,62 @@
+{% comment %} <div class='flex-item'> {% endcomment %}
+  <ul class="pagination nav justify-content-end">           
+  {% if page_obj.has_previous %}
+    <li class="page-item px-0">
+      <a class="page-link" href="?page=1">
+        <i class="fas fa-angle-double-left fa-md"></i>
+      </a>
+    </li>
+    <li class="page-item px-0">
+      <a class="page-link" href="?page={{ page_obj.previous_page_number }}" tabindex="-1" aria-disabled="true">
+  {% else %}
+    <li class="page-item px-0 disabled">
+      <a class="page-link" href="?page=1">
+        <i class="fas fa-angle-double-left fa-md"></i>
+      </a>
+    </li>
+    <li class="page-item px-0 disabled">
+      <a class="page-link" href="\" tabindex="-1" aria-disabled="true">
+  {% endif %}
+        <i class="fas fa-angle-left fa-md"></i>
+      </a> 
+    </li>
+    {% for i in range %}
+      {% if i == page_obj.number %}
+        <li class="page-item px-0 active"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+      {% else %}
+        {% comment %} {{ page_obj.number|add:-2 }} {% endcomment %}
+
+        {% if i > page_obj.number|add:2 or i < page_obj.number|add:-2 %}
+           {% comment %} {{i}} {{ page_obj.number|add:2 }} {% endcomment %}
+          <li class="page-item px-0 d-none d-md-flex"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+        {% else %}
+          <li class="page-item px-0"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+        {% endif %}
+      {% endif %}     
+    {% endfor %}
+
+    {% if page_obj.number != paginator.num_pages %}
+      <li class="page-item px-0">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}" tabindex="1" aria-disabled="true">
+          <i class="fas fa-angle-right fa-md"></i>
+        </a> 
+      </li>
+      <li class="page-item px-0">
+        <a class="page-link" href="?page={{ paginator.num_pages }}">
+          <i class="fas fa-angle-double-right fa-md"></i>
+        </a>
+      </li>
+    {% else %}
+      <li class="page-item px-0 disabled">
+        <a class="page-link" href="\" tabindex="-1" aria-disabled="true">
+          <i class="fas fa-angle-right fa-md"></i>
+        </a> 
+      </li>
+      <li class="page-item px-0 disabled">
+        <a class="page-link" href="?page={{ paginator.num_pages }}">
+          <i class="fas fa-angle-double-right fa-md"></i>
+        </a>
+      </li>
+    {% endif %}
+  </ul>
+{% comment %} </div> {% endcomment %}

@@ -1,0 +1,29 @@
+{% load static sekizai_tags %}
+<div class="card border-0 {{class}}" >
+    <div id="{{fig.id}}" class="card-img-top"></div>
+    {% if fig.caption %}
+        <div class="card-body pt-0 ">
+            <p class="card-text">Figure {{fig.number}}) {{fig.caption}}</p>
+        </div>
+    {% endif %}
+</div>
+
+{% addtoblock "js" %}
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    {% comment %} <script src="{% static 'main/js/custom_charts.js' %}" type="text/javascript"></script> {% endcomment %}
+    <script>
+    var config = {
+            responsive: true,
+            modeBarButtonsToRemove: ['toImage', 'sendDataToCloud'],
+            modeBarButtonsToAdd: [{
+            name: 'saveFig',
+            icon: Plotly.Icons.camera,
+            click: function(gd) {
+                Plotly.downloadImage(gd, {format: 'svg'})
+            }
+            }]
+        }
+
+    Plotly.newPlot("{{fig.id}}", {{fig.js}}.data, {{fig.js}}.layout, config);
+    </script>
+{% endaddtoblock %}
