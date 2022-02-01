@@ -1,20 +1,32 @@
 {% load static sekizai_tags geojson_tags %}
-<div id="heat-production-container" class='tab-pane fade'>
+<div id="{{table.label|slugify}}-container" class='tab-pane fade'>
   <div class='table-responsive'>
-    <table id="heat-production-table" class="table table-hover w-100" data-ajax="{{table.url}}?format=datatables&{{filter_by}}">
-      <thead>
-        <tr>
+    <table id="{{table.label|slugify}}-table" 
+      class="table table-hover w-100"
+      data-ajax="{{table.url}}?format=datatables&{{filter_by}}"
+      >
+      <thead><tr>
+      {% if table.preheader %}
+        {% for cell in table.preheader %}
           <th colspan={{cell.0}}><span {% if cell.2 %}data-placement="right" data-trigger="hover" data-html="true" data-content="{{cell.2|safe}}"{% endif %}>{{cell.1|safe}}</th>
+        {% endfor %}
         </tr>
-        <tr>
-          <th data-data='{{cell.0}}'><span {% if cell.2 %}data-placement="bottom" data-trigger="hover" data-html="true" data-content="{{cell.2|safe}}"{% endif %}>{{cell.1|safe}}</th>
-        </tr>
-      </thead>
+      {% endif %}
+      <tr>
+      {% for cell in table.header %}
+        <th data-data='{{cell.0}}'><span {% if cell.2 %}data-placement="bottom" data-trigger="hover" data-html="true" data-content="{{cell.2|safe}}"{% endif %}>{{cell.1|safe}}</th>
+      {% endfor %}
+      </tr></thead>
     </table>
   </div>
 </div>
 
 {% addtoblock "css" %}<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.21/r-2.2.5/datatables.min.css"/>{% endaddtoblock %}
+{% comment %} {% addtoblock "css" %}<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.0/css/jquery.dataTables.min.css"/>{% endaddtoblock %} {% endcomment %}
+{% addtoblock "css" %}<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.0.0/css/buttons.dataTables.min.css"/>{% endaddtoblock %}
+{% addtoblock "css" %}<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/select/1.3.3/css/select.dataTables.min.css"/>{% endaddtoblock %}
+{% addtoblock "css" %}<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/keytable/2.6.4/css/keyTable.dataTables.min.css"/>{% endaddtoblock %}
+{% addtoblock "css" %}<link rel="stylesheet" type="text/css" href="{% static 'data_editor/css/editor.dataTables.css' %}"/>{% endaddtoblock %}
 {% addtoblock "css" %}<link rel="stylesheet" type="text/css" href="{% static 'data_editor/css/editor.dataTables.css' %}"/>{% endaddtoblock %}
 
 
@@ -26,16 +38,18 @@
 {% addtoblock "js" %}<script src="{% static 'thermoglobe/js/table.js' %}"></script>{% endaddtoblock %}
 
 {% comment %} Excel like navigation {% endcomment %}
+{% addtoblock "js" %}<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.0.0/js/dataTables.buttons.min.js"></script>{% endaddtoblock %}
+{% addtoblock "js" %}<script type="text/javascript" src="https://cdn.datatables.net/select/1.3.3/js/dataTables.select.min.js"></script>{% endaddtoblock %}
 {% addtoblock "js" %}<script type="text/javascript" src="https://cdn.datatables.net/keytable/2.6.4/js/dataTables.keyTable.min.js"></script>{% endaddtoblock %}
 
 {% comment %} Table Creation {% endcomment %}
 {% comment %} {% addtoblock "js" %}<script>$('#{{table.label|slugify}}-table').create_table()</script>{% endaddtoblock %} {% endcomment %}
 
-{% with table.label|slugify as id %}
+{% with id=table.label|slugify editor=table.editor %}
 {% addtoblock "js" %}
 <script>
   $(document).ready(function () {
-      editor = new $.fn.dataTable.Editor({
+      var {{editor}} = new $.fn.dataTable.Editor({
           ajax: "{{table.url}}editor/?format=datatables&{{filter_by}}",   
           table: '#{{id}}-table',
           idSrc: 'id',
@@ -67,20 +81,42 @@
 
     $('#{{id}}-table').DataTable( {
         columnDefs: [{targets: [0], render: $.fn.dataTable.render.href()}],
-
         keys: {
-            columns: ':not(:first-child)',
-            editor:  editor
+            editor:  {{editor}}
         },
-
+        select: {
+            style:    'os',
+            selector: 'td:first-child',
+            blurable: true
+        },
+        buttons: [
+            { extend: "create", editor: {{editor}} },
+            { extend: "edit",   editor: {{editor}} },
+            { extend: "remove", editor: {{editor}} }
+        ]
     });
 
 
     $('#{{id}}-table').on( 'click', 'tbody td:not(:first-child)', function (e) {
-        editor.inline( this );
+        {{editor}}.inline( this );
     } );
 
   });
 </script>
 {% endaddtoblock %}
+
+<style>
+div.DTE_Inline input {
+      border: none;
+      background-color: transparent;
+      padding: 0 !important;
+      font-size: 90%;
+  }
+ 
+div.DTE_Inline input:focus {
+    outline: none;
+    background-color: transparent;
+}
+
+</style>
 {% endwith %}
