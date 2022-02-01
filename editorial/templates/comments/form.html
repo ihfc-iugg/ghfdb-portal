@@ -1,0 +1,18 @@
+{% load comments %}
+
+{% if user.is_authenticated %}
+  {% get_comment_form for object as form %}
+  <form action="{% comment_form_target %}" method="POST">
+    {% csrf_token %}
+    {{ form.comment }}
+    {{ form.honeypot }}
+    {{ form.content_type }}
+    {{ form.object_pk }}
+    {{ form.timestamp }}
+    {{ form.security_hash }}
+    <input type="hidden" name="next" value="{% url 'publications:detail' publication.id %}" />
+    <input type="submit" value="Post" id="id_submit" class='mt-3'/>
+  </form>
+{% else %}
+  <p>Please <a href="{% url 'account_login' %}">log in</a> or <a href="/create-account/">create an account</a> to leave a comment.</p>
+{% endif %}
