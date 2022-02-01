@@ -2,16 +2,6 @@ SITE_TYPE = (   ('C','continental'),
                 ('O','oceanic'),)
 
 # ========== EXPORT SETS ==============
-SITE_BASIC = [
-            'id',
-            'site_name',
-            'latitude',
-            'longitude',
-            'elevation',
-            'site__country__name',
-            'site__sea__name',
-            ] 
-
 SITE_STANDARD = [
                 'id',
                 'site_name',
@@ -59,38 +49,20 @@ SITE_DETAILED = [
             'site__province__last_orogen',
                 ]
 
-HEAT_FLOW_BASIC = [
-            'depth_min',
-            'depth_max',
-            'heat_flow',
-            'gradient',
-            'average_conductivity',
-            'heat_production',
-            ]
-
 HEAT_FLOW_STANDARD = [
             'depth_min',
             'depth_max',
             'reliability',
             'number_of_temperatures',
             'temp_method',
-
-            'heat_flow_corrected',
-            'heat_flow_corrected_uncertainty',
-            'heat_flow_uncorrected',
-            'heat_flow_uncorrected_uncertainty',
-
-            'gradient_corrected',
-            'gradient_corrected_uncertainty',
-            'gradient_uncorrected',
-            'gradient_uncorrected_uncertainty',
-
+            'heat_flow',
+            'heat_flow_uncertainty',
+            'gradient',
+            'gradient_uncertainty',
             'average_conductivity',
             'conductivity_uncertainty',
-
             'heat_production',
             'heat_production_uncertainty',
-
             ]
 
 HEAT_FLOW_DETAILED = [
@@ -138,21 +110,16 @@ HEAT_FLOW_DETAILED = [
             'corrections__other_flag',
             'corrections__other_type',
             'corrections__other',
-
-            'global_flag',
-            'comment',
         ]
 
-CONDUCTIVITY_BASIC = [
+
+CONDUCTIVITY = [
             'depth',
             'sample_name',
             'conductivity',
             'uncertainty',
             'orientation',
             'method',
-            ]
-
-CONDUCTIVITY_STANDARD = CONDUCTIVITY_BASIC + [
             'sample_thickness',
             'sample_length',
             'sample_width',
@@ -168,14 +135,11 @@ CONDUCTIVITY_STANDARD = CONDUCTIVITY_BASIC + [
             'log_id',
         ]
 
-HEAT_GEN_BASIC = [
+HEAT_PROD = [
             'depth',
             'heat_production',
             'uncertainty',
             'method',
-            ]
-
-HEAT_GEN_STANDARD = HEAT_GEN_BASIC + [
             'formation',
             'rock_type',
             'year_logged',
@@ -187,15 +151,12 @@ HEAT_GEN_STANDARD = HEAT_GEN_BASIC + [
             'log_id',
         ]
 
-TEMPERATURE_BASIC = [
+TEMPERATURE = [
             'temperature',
             'uncertainty',
             'depth',
             'method',
             'source',
-            ]
-
-TEMPERATURE_STANDARD = TEMPERATURE_BASIC + [
             'log_id',
             'year_logged',
             'circ_time',
@@ -208,28 +169,22 @@ TEMPERATURE_STANDARD = TEMPERATURE_BASIC + [
             'source_id', 
             ]
 
-heat_flow = dict(
-    basic = SITE_BASIC + HEAT_FLOW_BASIC,
+intervals = dict(
     standard = SITE_STANDARD + HEAT_FLOW_STANDARD,
     detailed = SITE_DETAILED + HEAT_FLOW_DETAILED,
     )
 
-gradient = intervals = heat_flow
-
 temperature = dict(
-    basic = SITE_BASIC + TEMPERATURE_BASIC,
-    standard = SITE_STANDARD + TEMPERATURE_STANDARD,
-    detailed = SITE_DETAILED + TEMPERATURE_STANDARD,
+    standard = SITE_STANDARD + TEMPERATURE,
+    detailed = SITE_DETAILED + TEMPERATURE,
     )
 
 conductivity = dict(
-    basic = SITE_BASIC + CONDUCTIVITY_BASIC,
-    standard = SITE_STANDARD + CONDUCTIVITY_STANDARD,
-    detailed = SITE_DETAILED + CONDUCTIVITY_STANDARD,
+    standard = SITE_STANDARD + CONDUCTIVITY,
+    detailed = SITE_DETAILED + CONDUCTIVITY,
     )
 
-heatproduction = dict(
-    basic = SITE_BASIC + HEAT_GEN_BASIC,
-    standard = SITE_STANDARD + HEAT_GEN_STANDARD,
-    detailed = SITE_DETAILED + HEAT_GEN_STANDARD,
+heat_production = dict(
+    standard = SITE_STANDARD + HEAT_PROD,
+    detailed = SITE_DETAILED + HEAT_PROD,
     )
