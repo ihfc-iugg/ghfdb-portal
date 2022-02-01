@@ -1,198 +1,110 @@
+$(function(){map.fitWorld();})
 
-var map = createMap().fitWorld();
-var clusters = createClusters()
-var tmpMarker = L.marker()
-map.addLayer(clusters)
 
-function createMap()  {
-
-  var baseLayers = {
-    "Dark Gray": L.esri.basemapLayer('DarkGray',{detectRetina: true}),
-    "Imagery": L.esri.basemapLayer('Imagery',{detectRetina: true}),
-    "Oceans": L.esri.basemapLayer('Oceans',{detectRetina: true}),
-    "Topographic": L.esri.basemapLayer('Topographic',{detectRetina: true}),
-    "Nat Geo": L.esri.basemapLayer('NationalGeographic',{detectRetina: true}),
-  };
-
-  var map = L.map('map', {
-    layers: [baseLayers['Imagery']],
-    minZoom: 2,
-    worldCopyJump: true,
-    fullscreenControl: true,
-     });
-
-  L.control.scale().addTo(map);
-  L.control.layers(baseLayers).addTo(map);
-  return map;
+var baseLayers = {
+  "Dark Gray": L.esri.basemapLayer('DarkGray',{detectRetina: true}),
+  "Imagery": L.esri.basemapLayer('Imagery',{detectRetina: true}),
+  "Oceans": L.esri.basemapLayer('Oceans',{detectRetina: true}),
+  "Topographic": L.esri.basemapLayer('Topographic',{detectRetina: true}),
+  "Nat Geo": L.esri.basemapLayer('NationalGeographic',{detectRetina: true}),
 };
 
-function get_color() {
-  return '#' + Math.floor(Math.random()*16777215).toString(16);
-}
+var map = L.map('map', {
+  layers: [baseLayers['Oceans']],
+  minZoom: 3,
+  maxZoom: 10,
+  worldCopyJump: true,
+  fullscreenControl: true,
+  zoomControl:false,
+    })
 
-function add_to_map(geojson) {
+L.control.layers(baseLayers).addTo(map);
+L.control.zoom({position: 'topright'}).addTo(map);
+L.control.scale({position: 'bottomright'}).addTo(map);
 
-  let color = get_color();
-  var geoJsonLayer  = L.geoJson(geojson,{
-    onEachFeature: onEachFeature
-    });
+clusters = L.markerClusterGroup({    
+  chunkedLoading: true,
+  // chunkInterval:100,
+  disableClusteringAtZoom: 6,
+  spiderfyOnMaxZoom: false,
+});
 
-  if (geojson.features.length > 250 ) {
-    var clusters = L.markerClusterGroup({
-      disableClusteringAtZoom: 8,
-      spiderfyOnMaxZoom: false,
-    });
-    clusters.addLayer(geoJsonLayer)
-    clusters.addTo(map)
-  } else {
-    geoJsonLayer.addTo(map)
-  }
-  map.flyToBounds(geoJsonLayer.getBounds(),{maxZoom: 8})
-
-  return geoJsonLayer 
-}
-
-function add_and_zoom(geojson) {
-    layer = add_to_map(geojson)
-    map.flyToBounds(layer.getBounds(),{maxZoom: 8})
-}
-
-function add_shape(geojson) {
-  layer = L.geoJson(geojson).addTo(map)
-  // map.flyToBounds(layer.getBounds(),{maxZoom: 8})
-}
-
-function createMarkers(data,type) {
-
-  var lat = data.columns.indexOf('Latitude')
-  var lon = data.columns.indexOf('Longitude')
-  var val = data.columns.indexOf(type)
-
-  var new_data = [];
-  data.data.forEach(el => {
-  var m = L.circleMarker([el[lat], el[lon]], {
-          radius: 3, 
+map.spin(true)
+var data = new L.Util.ajax(get_url()).then(function(data){
+    markers = []
+    data.forEach(site => {
+      var m = L.circleMarker([site[1], site[2]], {
+          radius: 5, 
           fill:true,
           fillOpacity:0.75,
           fillColor: 'rgb(255,0,0,1)',
-          stroke:false
-      });
-    m.value = el[val];
-    new_data.push(m);
-  });
+          color:'rgb(200,0,0,1)', //stroke colour
+          weight:1, //stroke weight in pixels
+          });
+      m.on('click',getMarkerPopup)
+      m.url = `/api/site/${site[0]}`
+      markers.push(m)
+    });
+    var sites = L.featureGroup(markers)
+    clusters.addLayer(sites);
+    map.addLayer(clusters);
+    map.spin(false)
 
-  return L.featureGroup(new_data)
-};
+    map.flyToBounds(sites.getBounds())
+});
 
-function createClusters() {
-  //defines the clusters variable required for decluttering map
-  var clusters = L.markerClusterGroup({
-    chunkedLoading: true,
-    // chunkInterval:100,
-    disableClusteringAtZoom: 8,
-    spiderfyOnMaxZoom: false,
-    // iconCreateFunction: customClusterIcon,
-  });
-  return clusters;
-};
+function getMarkerPopup(e) {
+  var marker = this;
+  if (marker.getPopup() == undefined) {
+      $.get(this.url, function(data) {
+      var web_url = data.web_url;
+      var site_name = data.site_name;
 
-function updateData(){
-  map.spin(true);
-  $.post({
-    url:  $(location).attr('href'),
-    data: $("#filter-form").serializeArray(),
-    success: updatePage,
-    complete: stop_spin,
-    error: stop_spin,
-  })
-};
+      to_delete = ['site_name','link','url','geom','date_added','description']
+      to_delete.forEach(el=> {
+          delete data[el]
+        })
+      var table_content = ""
+      Object.entries(data).forEach(el=> {
+        table_content += `<tr><td>${el[0]}</td><td>${el[1]}</td></td>`
+      })
 
-async function updatePage(data) {
-  await new updateTable(data);
-  await new updateMap(data);
-};
-    
-function stop_spin() {
-  map.spin(false)
+      var content = `<h2><a href='${web_url}' target="_blank">${site_name}</a></h2>
+              <table class='table table-responsive' style='max-height:500px;'><tbody>
+                ${table_content}
+              </tbody></table>`
+
+    marker.bindPopup(content,{maxHeight: 600, maxWidth:600})
+    marker.openPopup()
+    })
+  }
 }
 
-function updateMap(data) {
-  data.columns.push(data.type)
+function get_url() {
+  url = "/world-map/data/"
 
+  if ($('#map').data() != {}) {
+    url += '?'
+    $.each($('#map').data(), function (k,v) {
+      if (v != undefined) {
+        url += `${k}=${v}`
+      }
+    })
+  }
+
+  return url
+}
+
+function updateMap() {
+  url = '/api/geojson/site/?'+ encodeURI($('#map-filter-form').serialize())
+  geojson.refresh(url)
   clusters.clearLayers()
-  markers = createMarkers(data,data.type);
-  clusters.addLayers(markers, {
-      chunkedLoading: true,
-  })
-
-  if (data.data.length > 0) {
-    map.flyToBounds(markers.getBounds())
-  } else {
-    map.fitWorld()
-  }
-}; 
-
-function updateTable(data) {
-
-  var col_headers = {
-    heat_flow: 'Heat Flow',
-    temperature: 'Temp. Count',
-    conductivity: 'Cond. Count',
-    gradient: 'Gradient',
-    heat_generation: 'Heat Gen. Count',
-  }
-  var ind = data.columns.indexOf(data.type);
-
-  data.id='#dataTable';
-  if ( $.fn.dataTable.isDataTable(data.id) ) {
-    table = $(data.id).DataTable();
-    table.clear();
-  } else {
-    table = table_from_values(data) 
-  }
-
-  table.rows.add(data.data)
-  $(table.column(ind).header()).html(col_headers[data.type])
-  table.draw()
+  clusters.addLayer(geojson)
+  map.flyToBounds(geojson.getBounds())
 }
 
-function customClusterIcon(cluster) {
-
-  var childCount = cluster.getChildCount();
-  var markers = cluster.getAllChildMarkers()
-
-  var value_sum = 0;
-
-  markers.forEach(element => {
-    value_sum += element.value;
-  });
-
-  var average = Math.round((value_sum / markers.length + Number.EPSILON) * 10) / 10;
-
-  color = query_cbar(average,.6)
-
-  html = '<div style="background-color:' +color+'">'+
-            '<span>' + average + '</span>'
-        '</div>'
-
-  return new L.DivIcon({ html: html, className: 'marker-cluster', iconSize: new L.Point(40, 40) });
-};
-
-function onEachFeature(feature, layer) {
-  delete feature.properties.model;
-
-  var properties = Object.entries(feature.properties)
-
-  tableContent = "<table><tbody>"
-
-  properties.forEach(el=> {
-    if (el[1] && el[0] != 'slug') {
-      tableContent += '<tr><td >' + el[0] + ':  </td><td>' + el[1] + '</td></td>'
-    }
-  })
-
-  tableContent += '</tbody></table>'
-  layer.bindPopup(tableContent);
-    
-};
-
+function filterSites(json) {
+  var att=json.properties;
+  var lat_gt = $("input[name='latitude__gt']").val();
+  return (att.latitude > lat_gt)
+}
