@@ -5,6 +5,7 @@ from rest_framework.schemas import get_schema_view
 from rest_framework_gis.schema import GeoFeatureAutoSchema
 
 router = routers.DefaultRouter()
+# router.register(r'geojson/site', views.GeoSiteViewSet,basename='geojson')
 router.register(r'site', views.SiteViewSet)
 router.register(r'publication', views.PublicationViewSet)
 router.register(r'heat-flow', views.HeatFlowViewSet,basename='heat-flow')
