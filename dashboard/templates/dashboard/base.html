@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags i18n %}
+
+{% block content %}
+<div class='inner'>
+	<header id="header">
+		<a href="{% url 'dashboard:dashboard' %}" class="logo"><span class='fas fa-tachometer-alt'></span><strong> Dashboard </strong>{{ user.display_name }}</a>
+		<ul class="icons">
+			<li><a href="{% url 'dashboard:settings' %}" class="icon brands"><span class="fas fa-user-cog"></span></a></li>
+		</ul>
+	</header>
+  {% block dashboard %}{% endblock dashboard %}
+</div>
+{% endblock content %}

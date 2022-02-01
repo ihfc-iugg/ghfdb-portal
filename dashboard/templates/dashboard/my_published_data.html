@@ -1,0 +1,14 @@
+{% load i18n %}
+
+<section>
+  {% if not user.publications %}
+    <p>{% trans "It looks like you don't have any published data in ThermoGlobe yet! If you believe your work is already featured in ThermoGlobe but it doesn't show up here, you probably haven't claimed it yet. Go to the " %}<a href="{% url 'publications:list' %}">{% trans 'publications page' %}</a>{% trans " and search for your work there. When you find it, click the 'claim this publication' link at the bottom and we'll take it from there!" %}</p>
+    <p>{% trans "Claiming ownership of a publication in ThermoGlobe will give you control over the data. Please note that, in most cases, only the first author can claim a publication but exceptions can be made if the first author is no longer a publishing researcher. If this is the case, please make it clear when you submit your claim." %}</p>
+    <p>{% trans "Claims are manually handled by a member of our team to make sure the right person gets control. Unfortunately, that means it can take time so please be patient!" %}</p>
+  {% else %}
+    {% for publication in user.publications.all %}
+      {% include "publications/publication.html" %}          
+    {% endfor %}
+    <p>{% trans "Go to the " %}<a href="{% url 'publications:list' %}">{% trans 'publications page' %}</a>{% trans " to claim more data!" %}</p>
+  {% endif %}
+</section>  
