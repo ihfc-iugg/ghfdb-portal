@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Rolling Stone Top 500 albums of all time</title>
+</head>
+<body>
+    <script src="//code.jquery.com/jquery-3.3.1.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/citation-js@0.4.0-8/build/citation.js"></script>
+
+
+    <script>
+        const Cite = require('citation-js')
+
+        let ref = Cite(
+            [
+            '10.1016/j.margeo.2019.106064',
+            "10.1016/j.tecto.2019.02.019",
+            ], {
+            output: {
+                style: 'bibtex'
+                }
+            }
+            )
+            $('body').append(
+
+            ref.format('bibtxt')
+
+            )
+
+            console.log(            
+                ref.format('bibtex', {
+                format: 'object',
+              }))
+
+    </script>
+</body>
+</html>

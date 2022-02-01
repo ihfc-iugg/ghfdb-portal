@@ -70,3 +70,4 @@ bwt.pkl
 thermoglobe.json
 /cache
 /media
+*.code-workspace
