@@ -1,15 +1,31 @@
 from .models import Site
 from mapping.models import Sea, Country, Continent, Province
-import django_filters
+# import django_filters as df
 from django_filters import MultipleChoiceFilter, ChoiceFilter, RangeFilter
 from django.contrib import admin
 from django.utils.translation import gettext as _
 from django.db.models import Q
 from django.db import models
-from thermoglobe.forms import DownloadForm
+from thermoglobe.forms import DownloadBasicForm, MapFilterForm
 from django.db.models.functions import Coalesce
+from django_filters import rest_framework as df
 
-class Filter(django_filters.FilterSet):
+class MapFilter(df.FilterSet):
+    site_name = df.CharFilter(lookup_expr='icontains', label='Site Name')
+    latitude__gt = df.NumberFilter(field_name='latitude', lookup_expr='gt', label='Site Name')
+    latitude__lt = df.NumberFilter(field_name='latitude', lookup_expr='lt', label=None)
+    longitude__gt = df.NumberFilter(field_name='longitude', lookup_expr='gt', label='Site Name')
+    longitude__lt = df.NumberFilter(field_name='longitude', lookup_expr='lt', label='Site Name')
+    elevation__gt = df.NumberFilter(field_name='elevation', lookup_expr='gt', label='Site Name')
+    elevation__lt = df.NumberFilter(field_name='elevation', lookup_expr='lt', label='Site Name')
+
+    class Meta:
+        model = Site
+        # form = MapFilterForm
+        fields = ['latitude__gt','latitude__lt','id','reference']
+
+
+class Filter(df.FilterSet):
 
     def filter_queryset(self, queryset):
         """
@@ -83,7 +99,7 @@ class WorldMapFilter(Filter):
         )
 
     # This is so i can include the download form as part of the map filter
-    download_form = DownloadForm()
+    download_form = DownloadBasicForm()
 
     class Meta:
         model = Site
