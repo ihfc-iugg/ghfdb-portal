@@ -10,7 +10,7 @@ from django.shortcuts import  render
 from django.http import HttpResponse
 from django.apps import apps
 from thermoglobe import choices
-from thermoglobe.forms import DownloadForm
+from thermoglobe.forms import DownloadBasicForm
 from django.contrib import messages
 from django_super_deduper.merge import MergedModelInstance
 from django.contrib.admin.models import LogEntry, ContentType
@@ -119,7 +119,7 @@ class SitePropertyAdminMixin(BaseAdmin):
         return queryset
 
 class DownloadMixin:
-    download_form = DownloadForm
+    download_form = DownloadBasicForm
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data( *args, **kwargs)
@@ -128,40 +128,33 @@ class DownloadMixin:
 
     def post(self, request,  *args, **kwargs):
 
-        options = self.download_form(self.request.POST)
-        if options.is_valid():
-            download_type = options.cleaned_data['download_type']
-            data_select = options.cleaned_data['data_select']
+        form = self.download_form(self.request.POST)
+        if form.is_valid():
+            download_type = form.cleaned_data['download_type']
 
             # prepare the response for csv file
             response = HttpResponse(content_type='application/zip')
-            
             response['Content-Disposition'] = f'attachment; filename="{self.get_object()}.zip"'
 
             zf = zipfile.ZipFile(response,'w')
 
-            publications = apps.get_model('thermoglobe','publication').objects
+            publications = apps.get_model('publications','publication').objects
             sites = apps.get_model('thermoglobe.Site').objects.all()
 
             reference_list = publications.none()
-            # reference_list = set()
             for key, qs in self.get_object().get_data().items():
-                # if key in data_select and qs.exists():
-                if key in data_select and qs:
-                    #get the download fields
-                    csv_headers = self.get_csv_headers(key, download_type)
+                csv_headers = self.get_csv_headers(key, download_type)
 
-                    # make site fields are appropriate for query
-                    formatted_fields = self.format_query_fields(key, download_type)
+                # make site fields are appropriate for query
+                formatted_fields = self.format_query_fields(key, download_type)
 
-                    # create a csv file an save it to the zip object
-                    zf.writestr(f'{key}.csv',self.csv_to_bytes(
-                            data=qs.values_list(*formatted_fields), 
-                            headers=csv_headers))
-                    
-                    # reference_list.update(list(qs.exclude(reference__bibtex__isnull=True).values_list('reference__bibtex',flat=True).distinct()))
-                    sites = sites.filter(**{f"{key}__in":qs})
-                    reference_list = reference_list | publications.filter(sites__in=sites).distinct()
+                # create a csv file an save it to the zip object
+                zf.writestr(f'{key}.csv',self.csv_to_bytes(
+                        data=qs.values_list(*formatted_fields), 
+                        headers=csv_headers))
+
+                sites = sites.filter(**{f"{key}__in":qs})
+                reference_list = reference_list | publications.filter(sites__in=sites).distinct()
 
             
             # add bibtex file to zip object
@@ -172,15 +165,15 @@ class DownloadMixin:
             return response
         else:
             context = self.get_context_data(*args, **kwargs)
-            context['download_form'] = options
+            context['download_form'] = form
             return render(request, template_name=self.template_name, context=context)
 
     def get_csv_headers(self, key, download_type):
         """This will be the header on the csv download"""
-        return getattr(choices, key).get(download_type) + ['reference__bib_id']
+        return getattr(choices, key).get(download_type) + ['reference__id']
 
     def format_query_fields(self, key, download_type):
-        csv_headers = getattr(choices, key).get(download_type) + ['reference__bib_id']
+        csv_headers = getattr(choices, key).get(download_type) + ['reference__id']
 
         # all fields on the site model
         site_fields = [f.name for f in apps.get_model('thermoglobe','site')._meta.fields]
