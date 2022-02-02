@@ -1,15 +1,36 @@
-from django.contrib.gis.geos import Point
 from django.contrib.gis.db import models
 from django.contrib.gis.utils import LayerMapping
 from django_extensions.db.fields import AutoSlugField
 from django.utils.translation import gettext as _
-from django.core.validators import MaxValueValidator, MinValueValidator
-import time, os, uuid
+import os
 from django.utils.html import mark_safe
 from django.apps import apps
+from thermoglobe.models import Site
+
+DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
+
+
+class GISManager(models.Manager):
+
+    def load(self, data_dir, verbose=True, strict=True, transform=False):
+        data_folder = os.path.join(DATA_DIR, data_dir)
+        shp_file = [f for f in os.listdir(data_folder) if f.endswith('.shp')]
+        if len(shp_file) == 1:
+            lm = LayerMapping(self.model, 
+            os.path.join(
+                data_folder,
+                shp_file[0]), 
+                self.model.mapping, 
+                transform=transform)
+            lm.save(strict=strict, verbose=verbose)
+        elif len(shp_file) > 1:
+            raise ValueError('Multiple shapefiles found in directory')
+        else:
+            raise ValueError('No shapefiles found in directory')
 
 class Base(models.Model):
     slug = AutoSlugField(populate_from='name')
+    objects = GISManager()
 
     class Meta:
         abstract=True
@@ -31,6 +52,14 @@ class Base(models.Model):
 
 class Country(Base):
     model_description = "<p>All country names in ThermoGlobe are determined using the World Borders Dataset provided by Bjorn Sandvik and accessible at <a href='http://thematicmapping.org/'>thematicmapping.org</a>.</p>"
+
+    mapping = {
+            'iso3' : 'ISO3',
+            'name' : 'NAME',
+            'region' : 'REGION',
+            'subregion' : 'SUBREGION',
+            'poly' : 'MULTIPOLYGON',
+        }
 
     region_choices = [
         (2,'Africa'),
@@ -65,19 +94,11 @@ class Country(Base):
         (61,'Polynesia'),
     ]
 
-    fips = models.CharField(max_length=2, null=True)
-    iso2 = models.CharField(max_length=2)
     iso3 = models.CharField(max_length=3)
-    un = models.IntegerField()
     name = models.CharField(max_length=50)
-    area = models.IntegerField()
-    pop2005 = models.BigIntegerField()
     region = models.IntegerField(choices=region_choices)
     subregion = models.IntegerField(choices=subregion_choices)
-    lon = models.FloatField()
-    lat = models.FloatField()
     poly = models.MultiPolygonField(srid=4326)
-
 
     def __str__(self):
         return '{}'.format(self.name)
@@ -86,17 +107,19 @@ class Country(Base):
         db_table = 'country'
         verbose_name = _('country')
         verbose_name_plural = _('countries')
-        # ordering = ['name',]
+        ordering = ['name',]
 
 class Continent(Base):
     model_description = "<p>Continents are determined using the World Continents layer package developed by ESRI and freely available online at <a href='https://www.arcgis.com/home/item.html?id=a3cb207855b348a297ab85261743351darcsgis.com'>arcgis.com</a>. The files downloaded for use in this web application were accesses at some point in early 2019."
 
+    mapping = {
+        'objectid': 'OBJECTID',
+        'name': 'CONTINENT',
+        'poly': 'MULTIPOLYGON',
+    }
+
     objectid = models.BigIntegerField()
     name = models.CharField(max_length=13)
-    sqmi = models.FloatField()
-    sqkm = models.FloatField()
-    shape_leng = models.FloatField()
-    shape_area = models.FloatField()
     poly = models.MultiPolygonField(srid=4326)
 
     class Meta:
@@ -105,12 +128,16 @@ class Continent(Base):
         verbose_name_plural = _('continents')
 
     def __str__(self):
-        return '{}'.format(self.name)
+        return f'{self.name}'
 
 class Sea(Base):
     
     model_description = "<p>Sea&nbsp;and ocean names&nbsp;in ThermoGlobe are calculated from reported site locations using the IHO Sea Areas, version 3 shapefile downloaded from <a href='https://www.marineregions.org/sources.php'>marineregions.org</a> in August of 2019. The source for the actual boundaries is the publication <em>Limits of Oceans, Seas, Special Publication No. 23</em> published by the IHO in 1953. The dataset was composed by the Flanders Marine Data and Information Centre.</p>"
-
+    mapping = {
+        'id': 'ID',
+        'name': 'NAME',
+        'poly': 'MULTIPOLYGON',
+    }
 
     id = models.CharField(max_length=16, primary_key=True)
     name = models.CharField(max_length=100)
@@ -132,6 +159,17 @@ class Political(Base):
 
     model_description = '<p>Political regions in ThermoGlobe are determined using the Marine and Land Zones shapefile which is freely available at <a href="https://www.marineregions.org/sources.php">marineregions.org</a>. It was created by the Flanders Marine Institute using the union of the ESRI world country database adn the EEZ V11 dataset.</p>'
     
+    mapping = {
+        'name': 'UNION',
+        'territory': 'TERRITORY1',
+        'iso_territory': 'ISO_TER1',
+        'un_territory': 'UN_TER1',
+        'sovereign': 'SOVEREIGN1',
+        'iso_sovereign': 'ISO_SOV1',
+        'un_sovereign': 'UN_SOV1',
+        'poly': 'MULTIPOLYGON',
+    }
+
     name = models.CharField(max_length=254)
 
     territory = models.CharField(max_length=254)
@@ -156,6 +194,25 @@ class Province(Base):
 
     model_description = "<p>Geological provinces are determined using the shapefiel of Hasterok (2021), in prep. It contains polygon features for over 600 geological provinces world wide as well as detailed attributes including minimum and maximum juvenile and thermotectonic age, tectonic environment, last orogenic event and more. Plus a list of references for the data within. Keep your eyes open for it's eventual publication as it is an incredibly useful package for those dealing with tectonics and geology on a global scale!</p>"
 
+    mapping = {
+        'source_id': 'id',
+        'name': 'prov_name',
+        'type': 'prov_type',
+        'reference': 'prov_ref',
+        'group': 'prov_group',
+        'juvenile_age_min': 'juviagemin',
+        'juvenile_age_max': 'juviagemax',
+        'thermotectonic_age_min': 'tectagemin',
+        'thermotectonic_age_max': 'tectagemax',
+        'last_orogen': 'lastorogen',
+        'continent': 'continent',
+        'plate': 'plate',
+        'juvenile_age_ref': 'juviageref',
+        'thermotectonic_age_ref': 'tectageref',
+        'conjugate_province': 'conjugate',
+        'poly': 'MULTIPOLYGON',
+    }
+
     source_id = models.BigIntegerField(blank=True, null=True)
     name = models.CharField(max_length=254)
     type = models.CharField(max_length=80,blank=True, null=True)
@@ -170,9 +227,7 @@ class Province(Base):
     plate = models.CharField(max_length=80,blank=True, null=True)
     juvenile_age_ref = models.CharField(max_length=128,blank=True, null=True)
     thermotectonic_age_ref = models.CharField(max_length=128,blank=True, null=True)
-    area_km2 = models.BigIntegerField(blank=True, null=True)
     conjugate_province = models.CharField(max_length=128,blank=True, null=True)
-    comments = models.CharField(max_length=254,blank=True, null=True)
     poly = models.MultiPolygonField(srid=4326)
 
     class Meta:
