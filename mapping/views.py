@@ -7,7 +7,7 @@ from django.apps import apps
 from thermoglobe.mixins import DownloadMixin
 import pandas as pd
 from django.utils.text import slugify
-from thermoglobe.forms import DownloadForm
+from thermoglobe.forms import DownloadBasicForm
 from djgeojson.serializers import Serializer as to_geojson
 from meta.views import Meta
 
@@ -152,7 +152,7 @@ class DescribeField(DownloadMixin, DetailView):
         temperature=['count','depth_min','depth_max','min_temperature','max_temperature'],
         heat_production=['count','depth_min','depth_max','min_heat_production','max_heat_production'],
     )
-    download_form = DownloadForm
+    download_form = DownloadBasicForm
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
