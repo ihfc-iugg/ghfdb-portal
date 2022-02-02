@@ -17,7 +17,7 @@ from django.db.models.functions import Coalesce
 @admin.register(Site)
 class SiteAdmin(BaseAdmin, ImportExportActionModelAdmin):
     resource_class = SiteResource
-    list_display = ['site_name', 'latitude', 'longitude','elevation','_reference']
+    list_display = ['site_name', 'latitude', 'longitude','elevation','well_depth','cruise','seafloor_age','_reference']
     readonly_fields = ['id','slug',"seamount_distance", "outcrop_distance", 'sediment_thickness','crustal_thickness']
     actions = ['export_sites',"merge",'recalculate_geo_fields']
     list_filter = [EmptySites,]
