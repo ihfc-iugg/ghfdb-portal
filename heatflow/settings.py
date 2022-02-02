@@ -24,9 +24,9 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 
 LANGUAGE_CODE = 'en'
 
-TIME_ZONE = 'Australia/Adelaide'
+TIME_ZONE = 'UTC'
 
-USE_I18N = False
+USE_I18N = True
 
 USE_L10N = True
 
@@ -39,10 +39,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 FILTERS_EMPTY_CHOICE_LABEL = None
 
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGIN_URL = '/accounts/login/'
+
 # Application definition
 INSTALLED_APPS = [
-    'users',
-    'djangocms_admin_style',  # for the admin skin.
+    'grappelli',
+    # 'djangocms_admin_style',  # for the admin skin.
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -51,9 +54,18 @@ INSTALLED_APPS = [
     'django.contrib.sitemaps',
     'django.contrib.staticfiles',
     'django.contrib.messages',
+    'django_cleanup.apps.CleanupConfig',
+    'users',
     'django.contrib.gis',
     'django.contrib.humanize',
     'django.contrib.admindocs',
+    "allauth", # new
+    "allauth.account", # new
+    "allauth.socialaccount", # new
+    "allauth.socialaccount.providers.google",
+    # "allauth.socialaccount.providers.github",
+    "allauth.socialaccount.providers.orcid",
+    "allauth.socialaccount.providers.openid",
     'cms',
     'menus',
     'sekizai',
@@ -61,37 +73,20 @@ INSTALLED_APPS = [
     'djangocms_text_ckeditor',
     'filer',
     'easy_thumbnails',
-    'djangocms_bootstrap4',
-    'djangocms_bootstrap4.contrib.bootstrap4_alerts',
-    'djangocms_bootstrap4.contrib.bootstrap4_badge',
-    'djangocms_bootstrap4.contrib.bootstrap4_card',
-    'djangocms_bootstrap4.contrib.bootstrap4_carousel',
-    'djangocms_bootstrap4.contrib.bootstrap4_collapse',
-    'djangocms_bootstrap4.contrib.bootstrap4_content',
-    'djangocms_bootstrap4.contrib.bootstrap4_grid',
-    'djangocms_bootstrap4.contrib.bootstrap4_jumbotron',
-    'djangocms_bootstrap4.contrib.bootstrap4_link',
-    'djangocms_bootstrap4.contrib.bootstrap4_listgroup',
-    'djangocms_bootstrap4.contrib.bootstrap4_media',
-    'djangocms_bootstrap4.contrib.bootstrap4_picture',
-    'djangocms_bootstrap4.contrib.bootstrap4_tabs',
-    'djangocms_bootstrap4.contrib.bootstrap4_utilities',
     'djangocms_file',
     'djangocms_icon',
     'djangocms_link',
     'djangocms_picture',
     'djangocms_style',
-    'djangocms_googlemap',
-    'djangocms_video',
+    'rest_framework',
+    'rest_framework_gis',
+    'rest_framework_datatables_editor',
     'mapping',
-    'cms_integration',
     'thermoglobe',
-    'uploads',
-    'sortedm2m',
+    'dashboard',
     'import_export',
     # 'simple_history',
     'captcha',
-    'betterforms',
     'django_extensions',
     'djgeojson',
     'widget_tweaks',
@@ -99,22 +94,22 @@ INSTALLED_APPS = [
     'meta',
     # 'djangocms_faq',
     'aldryn_apphooks_config',
-    'parler',
     'taggit',
     'taggit_autosuggest',
     # 'djangocms_blog',
     'publications', 
+    'data_editor',
     'editorial',
     'ordered_model', 
-    'rest_framework',
-    'rest_framework_gis',
+
+    'crispy_forms',
     'django_filters',
-    'django_cleanup.apps.CleanupConfig',
+    'django_comments',
     ]
 
 MIDDLEWARE = [
     'cms.middleware.utils.ApphookReloadMiddleware',
-    # 'django.middleware.security.SecurityMiddleware',
+    'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -155,7 +150,6 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             os.path.join(BASE_DIR, 'heatflow', 'templates'),
-            os.path.join(BASE_DIR, 'templates'),
         ],
         'OPTIONS': {
             'context_processors': [
@@ -245,22 +239,6 @@ CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
     },
-    'file_cache': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': os.path.join(BASE_DIR, 'cache','file'),
-        'TIMEOUT': 86400,
-        'OPTIONS': {
-            'MAX_ENTRIES': 100
-        }
-    },
-    'plots': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': os.path.join(BASE_DIR, 'cache','plots'),
-        'TIMEOUT': None,
-        'OPTIONS': {
-            'MAX_ENTRIES': 100
-        }
-    }
 }
 
 SERIALIZATION_MODULES = {
@@ -284,7 +262,6 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 META_SITE_PROTOCOL = 'https'
 META_SITE_DOMAIN = 'heatflow.org'
 META_SITE_NAME = 'HeatFlow.org'
-
 META_INCLUDE_KEYWORDS = ['heat flow','thermoglobe','heat flow','temperature','thermal','earth','science','research']
 META_DEFAULT_KEYWORDS = ['heat flow','thermoglobe','heat flow','temperature','thermal','earth','science','research']
 META_USE_TITLE_TAG = True
@@ -293,7 +270,7 @@ META_USE_OG_PROPERTIES = True
 META_USE_TWITTER_PROPERTIES = True
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-AUTH_USER_MODEL = 'users.CustomUser' # new
+AUTH_USER_MODEL = 'users.CustomUser'
 
 IMPORT_EXPORT_SKIP_ADMIN_LOG = True
 
@@ -315,13 +292,102 @@ RECAPTCHA_PRIVATE_KEY = os.environ.get('RECAPTCHA_PRIVATE_KEY')
 
 # Rest Framework
 REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework_datatables_editor.pagination.DatatablesPageNumberPagination',
+    'PAGE_SIZE': 50,
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
-    )
+        'rest_framework_datatables_editor.filters.DatatablesFilterBackend',
+    ),
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        'api.utils.BrowsableAPIRenderer',
+        'rest_framework_datatables_editor.renderers.DatatablesRenderer',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ]
     # 'DEFAULT_SCHEMA_CLASS': 'rest_framework_gis.schema.GeoFeatureAutoSchema',
 }
+
+# DJANGO-ALLAUTH
+ACCOUNT_LOGOUT_ON_GET = True #skip confirm logout screen
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_EMAIL_REQUIRED = True 
+ACCOUNT_USERNAME_REQUIRED = False #using email os this is False
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 3
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory' #email verification is REQUIRED
+ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True #log new user in after confirming email
+AUTHENTICATION_BACKENDS = (
+    "allauth.account.auth_backends.AuthenticationBackend",
+)
+
+SOCIALACCOUNT_PROVIDERS = {
+    # 'openid': {
+    #     'SERVERS': [
+    #         dict(id='yahoo',
+    #              name='Yahoo',
+    #              openid_url='http://me.yahoo.com'),
+    #         dict(id='hyves',
+    #              name='Hyves',
+    #              openid_url='http://hyves.nl'),
+    #         dict(id='google',
+    #              name='Google',
+    #              openid_url='https://www.google.com/accounts/o8/id'),
+    #     ]
+    # },
+    'google': {
+        'SCOPE': [
+            'profile',
+            'openid',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        }
+    },
+    'orcid': {
+        # Base domain of the API. Default value: 'orcid.org', for the production API
+        'BASE_DOMAIN':'sandbox.orcid.org',  # for the sandbox API
+        # Member API or Public API? Default: False (for the public API)
+        'MEMBER_API': False,
+    }
+}
+
+ACCOUNT_FORMS = {
+    'change_password': 'allauth.account.forms.ChangePasswordForm',
+    'disconnect': 'allauth.socialaccount.forms.DisconnectForm',
+    'login': 'users.forms.CustomLoginForm',
+    'reset_password': 'allauth.account.forms.ResetPasswordForm',
+    'reset_password_from_key': 'allauth.account.forms.ResetPasswordKeyForm',
+    'set_password': 'allauth.account.forms.SetPasswordForm',
+    'signup': 'users.forms.SignUpForm',
+        }
+
+SOCIALACCOUNT_FORMS = {
+    'disconnect': 'allauth.socialaccount.forms.DisconnectForm',
+    'signup': 'users.forms.SocialSignupForm',
+}
+
+# For error logging in production
+ADMINS = MANAGERS = [('Sam','debugger@geoluminate.com.au')]
+
+
+# Coloured Messages
+from django.contrib.messages import constants as messages
+MESSAGE_TAGS = {
+        messages.DEBUG: 'alert-secondary',
+        messages.INFO: 'alert-info',
+        messages.SUCCESS: 'alert-success',
+        messages.WARNING: 'alert-warning',
+        messages.ERROR: 'alert-danger',
+ }
+
+
+# GRAPELLI ADMIN CUSTOMIZATION
+GRAPPELLI_ADMIN_TITLE='The Mbantua Collection Administration'
+GRAPPELLI_SWITCH_USER=True
 
 
 django_heroku.settings(locals(), staticfiles=False)
