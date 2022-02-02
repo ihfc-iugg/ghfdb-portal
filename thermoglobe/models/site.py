@@ -214,7 +214,7 @@ class Site(ModelMeta,models.Model):
         }
 
     def get_absolute_url(self):
-        return reverse("thermoglobe:site", kwargs={"slug": self.slug})
+        return reverse("thermoglobe:site", kwargs={"pk": self.pk})
 
     def get_data(self):
         return {
