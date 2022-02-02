@@ -13,7 +13,7 @@ class UserAdmin(BaseUserAdmin):
     form = UserAdminChangeForm
     add_form = UserAdminCreationForm
 
-    list_display = ['username','last_name','first_name','is_superuser','is_staff','is_active','last_login','date_joined']
+    list_display = ['first_name','last_name','email','is_superuser','is_staff','is_active','last_login','date_joined']
     list_filter = ('is_staff','is_superuser',)
     
     # fieldsets for modifying user
