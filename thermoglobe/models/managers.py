@@ -9,12 +9,18 @@ class IntervalManager(models.Manager):
             self.field = field
 
     def get_queryset(self):
-        return (super().get_queryset()
-        .annotate(
+        return super().get_queryset().annotate(
             heat_flow=Coalesce('heat_flow_corrected', 'heat_flow_uncorrected'),
             heat_flow_uncertainty=Coalesce('heat_flow_corrected_uncertainty', 'heat_flow_uncorrected_uncertainty'),
             gradient=Coalesce('gradient_corrected', 'gradient_uncorrected'),
             gradient_uncertainty=Coalesce('gradient_corrected_uncertainty', 'gradient_uncorrected_uncertainty'),)
-        .exclude(**{f"{self.field}__isnull":True})
-        )
+
+class HeatFlowManager(IntervalManager):
+
+    def get_queryset(self):
+        return super().get_queryset().exclude(heat_flow__isnull=True)
  
+class GradientManager(IntervalManager):
+
+    def get_queryset(self):
+        return super().get_queryset().exclude(gradient__isnull=True)
