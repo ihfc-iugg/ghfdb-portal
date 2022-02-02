@@ -1,0 +1,14 @@
+{% load i18n crispy_forms_tags socialaccount %}
+
+<div class='card'>
+  <h3 class='card-header'>{% trans "Login" %}</h3>
+  <div class='card-body'>
+      {% crispy form %}  
+    <p><a href="{% url 'account_reset_password' %}">Lost password?</a></p>
+  </div>
+  <div class='card-footer'>
+    <h5 class='form-group'>Or sign in using one of our partners</h5>
+    <a class='button fit orcid form-group shadow-sm text-large' href="{% provider_login_url 'orcid' %}"><i class="fab fa-orcid"></i> ORCID</a>
+    <a class='button fit form-group shadow-sm plain text-large' href="{% provider_login_url 'google' %}"><i class=" fab fa-google"></i> Google</a>
+  </div>
+</div>

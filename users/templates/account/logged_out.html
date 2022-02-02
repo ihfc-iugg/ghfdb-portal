@@ -1,0 +1,6 @@
+{% extends "account/base.html" %}
+{% load crispy_forms_tags %}
+{% block main %}
+  <h3>You have beens succesfully logged out!</h3>
+  <a href="{% url 'account_login'%}">Click here to login again.</a>
+{% endblock main %}
