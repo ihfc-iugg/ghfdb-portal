@@ -7,9 +7,9 @@ from .querysets import HFQueryset, GradientQueryset
 from thermoglobe.models import managers 
 
 class Interval(models.Model):
-    objects = models.Manager()
-    heat_flow = managers.IntervalManager().from_queryset(HFQueryset)(field='heat_flow')
-    gradient = managers.IntervalManager().from_queryset(GradientQueryset)(field='gradient')
+    objects = managers.IntervalManager()
+    heat_flow = managers.HeatFlowManager()
+    gradient = managers.GradientManager()
 
     heat_flow_units = mark_safe('mW m<sup>2</sup>')
     gradient_units = mark_safe('&deg;C / Km')
