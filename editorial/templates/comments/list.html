@@ -4,8 +4,8 @@
 {% for comment in comment_list %}
 <div class='card mb-3'> 
   <h5 class='card-header d-flex'><i>{{comment.submit_date}} - {{comment.user.get_username}}</i>
-		<div class="dropleft no-arrow ml-auto">
-			<a id='dropdownMenuLink' class='fas fa-ellipsis-h ' href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></a>
+		<div class="dropleft no-arrow ms-auto">
+			<a id='dropdownMenuLink' class='fas fa-ellipsis-h ' href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></a>
 			<div class="dropdown-menu">
 				<h6 class="dropdown-header">Actions</h6>
         <a class="dropdown-item" href="/comments/flag/{{ comment.id }}/">Flag</a>
