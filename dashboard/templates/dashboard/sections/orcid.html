@@ -1,0 +1,27 @@
+{% load i18n socialaccount %}
+
+{% if user.orcid %}
+  <p>{% trans "Your ThermoGlobe account is connected to the following ORCID record:" %}</p>
+
+  <a href="{{ user.orcid.get_profile_url }}" class='border-0'>
+    <img alt="ORCID logo" src="https://info.orcid.org/wp-content/uploads/2019/11/orcid_16x16.png" width="16" height="16" />
+    {{ user.orcid.get_profile_url }}
+  </a>
+
+{% else %}
+  <p>{% trans 'Connect ThermoGlobe with your ORCID record to link your research to your data.' %}</p>
+
+  <div class='card shadow border-0'  style="width: 350px;">
+    <form id='connectORCID' method="post" action="{% provider_login_url 'orcid' process="connect" %}" hidden>
+      {% csrf_token %}
+    </form>
+    <img class="card-img py-2 px-5" alt="ORCID logo" src="https://upload.wikimedia.org/wikipedia/commons/1/14/ORCID_logo.svg"/>
+  
+    <a class="border-0 stretched-link" href="javascript:{}" onclick="document.getElementById('connectORCID').submit(); return false;">
+    </a>
+  </div>
+
+{% endif %}
+
+{% include "socialaccount/snippets/login_extra.html" %}
+

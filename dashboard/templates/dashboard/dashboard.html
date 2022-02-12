@@ -1,20 +1,38 @@
-{% extends "dashboard/base.html" %}
+{% extends "base.html" %}
 {% load crispy_forms_tags i18n %}
 
-{% block dashboard %}
-<section>
-  <h3>Overview</h3>
-  <div class='row'>
-    <div class='col-6'>
-      <h3><span class='fas fa-project-diagram'></span> Ongoing Projects</h3>
-      <section>
-        {% include "dashboard/my_projects.html" %}
-      </section>
-    </div>
-    <div class='col-6 border-left'>
-      <h3><span class='fas fa-newspaper'></span> Published Data</h3>
-      {% include "dashboard/my_published_data.html" %}
-    </div>
-  </div>
-</section>
-{% endblock dashboard %}
+{% block content %}
+<div class='inner container'>
+	<header id="header">
+		<div class='logo'>
+			<span class='fas fa-tachometer-alt'></span><strong> Dashboard </strong>{{ user.display_name }}
+		</div>
+		<ul class="icons">
+			<li><a href="{% url 'dashboard:settings' %}" class="icon brands"><span class="fas fa-user-cog"></span></a></li>
+		</ul>
+	</header>
+
+	<section class='d-flex flex-row-reverse'>
+		<div class='w-25 ps-3'>
+			<ul class='alt nav flex-column' id="myTab" role="tablist">
+				<li>
+					<a href="#publicationPanel" data-bs-toggle="tab" data-bs-target="#publicationPanel" class="active icon solid fa-book" aria-current="page"><span class='ps-2'>{% trans "Publications" %}</span></a>
+				</li>
+				<li>
+					<a href="#projectPanel" data-bs-toggle="tab" data-bs-target="#projectPanel" aria-current="page" class="icon solid fa-folder"><span class='ps-2'>{% trans "Projects" %}</span></a>
+				</li>
+				<li>
+					<a href="#accountPanel" data-bs-toggle="tab" data-bs-target="#accountPanel" aria-current="page" class="icon solid fa-user"><span class='ps-2'>{% trans "Account" %}</span></a>
+				</li>
+			</ul>
+		</div>
+		<div class='w-75 border-end pe-3'>
+			<section class='tab-content'>
+				{% include "dashboard/panels/publications.html" %}
+				{% include "dashboard/panels/projects.html" %}
+				{% include "dashboard/panels/account.html" %}
+			</section>  
+		</div>
+	</section>
+</div>
+{% endblock content %}

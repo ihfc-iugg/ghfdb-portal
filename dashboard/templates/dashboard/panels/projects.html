@@ -1,0 +1,13 @@
+{% load i18n %}
+<div id="projectPanel" class="tab-pane fade show" role="tabpanel" aria-labelledby="home-tab">
+  <div class='d-flex'>
+    <h2 class='flex-fill'>{% trans "Projects" %}</h2>
+    <h2><a href="" class='fas fa-plus-square text-primary'></a></h2>
+  </div>
+  <hr class="major mt-1">
+  <section>
+    {% for project in user.projects.all %}
+      {{ project }}
+    {% endfor %}
+  </section>
+</div>

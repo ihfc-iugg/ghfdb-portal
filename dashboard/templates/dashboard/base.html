@@ -2,13 +2,37 @@
 {% load crispy_forms_tags i18n %}
 
 {% block content %}
-<div class='inner'>
+<div class='inner container'>
 	<header id="header">
-		<a href="{% url 'dashboard:dashboard' %}" class="logo"><span class='fas fa-tachometer-alt'></span><strong> Dashboard </strong>{{ user.display_name }}</a>
+		<div class='logo'>
+			<span class='fas fa-tachometer-alt'></span><strong> Dashboard </strong>{{ user.display_name }}
+		</div>
 		<ul class="icons">
 			<li><a href="{% url 'dashboard:settings' %}" class="icon brands"><span class="fas fa-user-cog"></span></a></li>
 		</ul>
 	</header>
-  {% block dashboard %}{% endblock dashboard %}
+
+	<section class='d-flex flex-row-reverse'>
+		<div class='w-25 ps-3'>
+			<ul class='alt nav flex-column' id="myTab" role="tablist">
+				<li>
+					<a href="#publicationPanel" data-bs-toggle="tab" data-bs-target="#publicationPanel" class="active icon solid fa-book" aria-current="page"><span class='ps-2'>{% trans "Publications" %}</span></a>
+				</li>
+				<li>
+					<a href="#projectPanel" data-bs-toggle="tab" data-bs-target="#projectPanel" aria-current="page" class="icon solid fa-folder"><span class='ps-2'>{% trans "Projects" %}</span></a>
+				</li>
+				<li>
+					<a href="#accountPanel" data-bs-toggle="tab" data-bs-target="#accountPanel" aria-current="page" class="icon solid fa-user"><span class='ps-2'>{% trans "Account" %}</span></a>
+				</li>
+			</ul>
+		</div>
+		<div class='w-75 border-end pe-3'>
+			<section class='tab-content'>
+				{% include "dashboard/publications.html" %}
+				{% include "dashboard/projects.html" %}
+				{% include "dashboard/account.html" %}
+			</section>  
+		</div>
+	</section>
 </div>
 {% endblock content %}
