@@ -125,7 +125,7 @@ class Interval(models.Model):
         max_length=200,
         help_text=_('reason for denoting this measurement as suitable for global modelling'),
         blank=True, null=True)
-    global_by = models.ForeignKey("users.CustomUser",
+    global_by = models.ForeignKey("user.User",
         related_name='declared_global',
         blank=True, null=True, 
         on_delete=models.SET_NULL)

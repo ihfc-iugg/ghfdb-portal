@@ -141,19 +141,19 @@ class Site(ModelMeta,models.Model):
             null=True, blank=True)
     continent = models.ForeignKey("mapping.Continent",
             verbose_name=_('continent'),
-            help_text=_('As calculated using the <a href="https://www.arcgis.com/home/item.html?id=a3cb207855b348a297ab85261743351d">ESRI World Continents shapefile</a>.'), 
+            help_text=_('Continent land boundaries'), 
             related_name='sites', 
             blank=True, null=True, 
             on_delete=models.SET_NULL)
     country = models.ForeignKey("mapping.Country", 
             verbose_name=_("country"),
-            help_text=_('As calculated using the <a href="http://www.mappinghacks.com/data/">World Borders shapefile</a>.'), 
+            help_text=_('Country land boundaries'), 
             related_name='sites', 
             blank=True, null=True,
             on_delete=models.SET_NULL)
     political = models.ForeignKey("mapping.Political",
             verbose_name=_("political region"),
-            help_text=_('As calculated using the Flanders Marine Institute (2018)<a href="http://www.marineregions.org/">Marine and Land Zones</a>. DOI: <a href="https://doi.org/10.14284/403">10.14284/403</a>'), 
+            help_text=_('Countries inclusive of exclusive marine economic zones'), 
             related_name='sites', 
             blank=True, null=True,
             on_delete=models.SET_NULL)
@@ -162,9 +162,16 @@ class Site(ModelMeta,models.Model):
         related_name='sites', 
         blank=True, null=True, 
         on_delete=models.SET_NULL)
-    sea = models.ForeignKey("mapping.Sea",
-            verbose_name=_("sea/ocean"),
-            help_text=_('As calculated using the Flanders Marine Institute (2018)<a href="http://www.marineregions.org/">Oceans and Seas shapefile</a>. DOI: <a href="https://doi.org/10.14284/323">10.14284/323</a>'),
+    ocean = models.ForeignKey("mapping.Ocean",
+            verbose_name=_("ocean"),
+            help_text=_('Global oceans and seas'),
+            related_name='sites', 
+            blank=True, null=True, 
+            on_delete=models.SET_NULL)
+
+    plate = models.ForeignKey("mapping.Plate",
+            verbose_name=_("plate"),
+            help_text=_('tectonic plate'),
             related_name='sites', 
             blank=True, null=True, 
             on_delete=models.SET_NULL)
@@ -202,7 +209,7 @@ class Site(ModelMeta,models.Model):
         return force_str(self.site_name if self.site_name else self.pk)
 
     def save(self, *args, **kwargs):
-        self.geom = Point(float(self.longitude),float(self.latitude))
+        # self.geom = Point(float(self.longitude),float(self.latitude))
         super().save(*args, **kwargs)
 
     def data_counts(self):
