@@ -89,29 +89,21 @@ INSTALLED_APPS = [
     # "debug_toolbar",
 ]
 
-CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
-CRISPY_TEMPLATE_PACK = "bootstrap5"
+CRISPY_ALLOWED_TEMPLATE_PACKS = CRISPY_TEMPLATE_PACK = "bootstrap5"
 
-
-# SET TO TRUE TO COPY STATIC FILES
-if not DEBUG or False:
-    STATICFILES_STORAGE = 'mbantuacollection.custom_storage.StaticStorage'
-
-
-META_SITE_NAME = 'ThermoGlobe'
 ADMINS = MANAGERS = [('Sam','admin@thermoglobe.app')]
 
 GRAPPELLI_ADMIN_TITLE='ThermoGlobe'
 
-
-COMMENTS_XTD_FROM_EMAIL = "noreply@thermoglobe.appu"
+DEFAULT_FROM_EMAIL = 'admin@thermoglobe.app'
+COMMENTS_XTD_FROM_EMAIL = "messagin@thermoglobe.app"
 COMMENTS_XTD_CONTACT_EMAIL = "info@thermoglobe.app"
 
 
 META_SITE_DOMAIN = 'thermoglobe.app'
 META_SITE_NAME = 'ThermoGlobe'
-META_INCLUDE_KEYWORDS = ['heat flow','thermoglobe','heat flow','temperature','geothermal','earth','science','research']
-META_DEFAULT_KEYWORDS = ['heat flow','thermoglobe','heat flow','temperature','geothermal','earth','science','research']
+META_INCLUDE_KEYWORDS = ['heat flow','thermoglobe','temperature','geothermal','earth','science','research','data']
+META_DEFAULT_KEYWORDS = ['heat flow','thermoglobe','temperature','geothermal','earth','science','research','data']
 
 
 TAGGIT_CASE_INSENSITIVE = True
@@ -128,4 +120,3 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-DEFAULT_FROM_EMAIL = 'sam.jennings@geoluminate.com.au'
