@@ -2,22 +2,28 @@ from .models import Site, Conductivity, Interval, HeatProduction, Temperature
 from import_export import resources
 from django.utils.html import mark_safe
 from tqdm import tqdm
+from import_export.widgets import NumberWidget
+from django.contrib.gis.geos import Point
+from import_export.fields import Field
 
 
 class ResourceMixin(resources.ModelResource):
 
     def before_import(self, dataset, using_transactions, dry_run, **kwargs):
         self.pbar = tqdm(total=len(dataset))
+        pass
 
     def before_import_row(self,row=None,**kwargs):
+        # row['geom'] = Point(float(row['longitude']), float(row['latitude']))
         pass
 
     def after_import_row(self, row, row_result, **kwargs):
         """ Updates the progress bar"""
         self.pbar.update(1)
+        pass
 
     def after_import(self, dataset, result, using_transactions, dry_run,**kwargs):
-        self.clean_result(result)
+        # self.clean_result(result)
         print('Import Summary:')
         for key, count in result.totals.items():
             if count:
@@ -81,9 +87,29 @@ class SiteResource(ResourceMixin):
 
     class Meta:
         model = Site
-        exclude = ['geom','seamount_distance','outcrop_distance','crustal_thickness','continent','country','political','province','sea','slug']
-        import_id_fields = ['id']
+        exclude = ['seamount_distance','outcrop_distance','crustal_thickness','continent','country','political','province','sea','slug'] + [f.name for f in model._meta.related_objects] + [f.name for f in model._meta.many_to_many]
+        # fields = [f.name for f in Site._meta.concrete_fields]
 
+        # import_id_fields = ['id']
+        # skip_diff=True
+        use_bulk = True
+        # force_init_instance = True
+
+
+    def save_instance(self, instance, is_create=True, using_transactions=True, dry_run=False):
+        self.before_save_instance(instance, using_transactions, dry_run)
+        if self._meta.use_bulk:
+            if is_create:
+                self.create_instances.append(instance)
+            else:
+                self.update_instances.append(instance)
+        else:
+            if not using_transactions and dry_run:
+                # we don't have transactions and we want to do a dry_run
+                pass
+            else:
+                instance.save()
+        self.after_save_instance(instance, using_transactions, dry_run)
 
 class TempResource(ResourceMixin):
     class Meta:

@@ -8,7 +8,7 @@ from django.utils.html import mark_safe
 from django.apps import apps
 from thermoglobe.mixins import DownloadMixin 
 
-from .forms import SiteMultiForm, DownloadBasicForm,MapFilterForm
+# from .forms import MapFilterForm
 from .models import Site
 from .filters import MapFilter
 from meta.views import Meta
@@ -18,7 +18,7 @@ from thermoglobe.tables import heat_flow, heat_production, conductivity, tempera
 def quick_sites(request):
     """Very quick transfer of all site data for web mapping."""
     site_filter = MapFilter(request.GET, queryset=Site.objects.all())
-    sites = site_filter.qs.values_list('id','latitude','longitude',)
+    sites = site_filter.qs.values_list('id','latitude','longitude',)[:100]
     return JsonResponse(list(sites),safe=False)
 
 # for handling temporary file uploads before confirmation
@@ -31,7 +31,7 @@ class WorldMap(DownloadMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         context.update(dict(
             filter=self.filter(),
-            form=MapFilterForm(),
+            # form=MapFilterForm(),
             ))
 
         context['meta'] = Meta(

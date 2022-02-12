@@ -1,15 +1,14 @@
 from django.contrib import admin
-from .models import Site, Interval, Conductivity, HeatProduction, Temperature
+from .models import Site, Conductivity, HeatProduction, Temperature
 from .models.interval import HeatFlow, Gradient
 from .mixins import BaseAdmin
 from import_export.admin import ImportExportActionModelAdmin
 from .mixins import SitePropertyAdminMixin
 from .resources import ConductivityResource, HeatProductionResource, IntervalResource, TempResource, SiteResource
-from .models import Interval, Conductivity, HeatProduction
+from .models import Conductivity, HeatProduction
 from django.db.models import F
-from .filters import IsCorrectedFilter,IntervalType, EmptySites
+from .filters import IsCorrectedFilter, EmptySites
 from django.http import HttpResponse
-from mapping import update
 from django.utils.translation import gettext as _
 import csv
 from django.db.models.functions import Coalesce
@@ -60,8 +59,8 @@ class SiteAdmin(BaseAdmin, ImportExportActionModelAdmin):
 
     def recalculate_geo_fields(self, request, qs):
         geos = ['countries','continents','seas','political','province']
-        for geo in geos:
-            getattr(update,geo)()
+        # for geo in geos:
+        #     getattr(update,geo)()
 
     def export_sites(self, request, qs):
         response = HttpResponse(content_type='text/csv')
