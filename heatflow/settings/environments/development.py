@@ -16,7 +16,6 @@ if os.name == 'nt':
 # GEOS_LIBRARY_PATH = os.path.join(OSGEO4W, "bin","geos_c.dll")
 
 
-
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 DATABASES = {

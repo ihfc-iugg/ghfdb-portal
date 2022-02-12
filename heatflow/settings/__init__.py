@@ -127,3 +127,5 @@ SOCIALACCOUNT_PROVIDERS = {
         'MEMBER_API': False,
     }
 }
+
+DEFAULT_FROM_EMAIL = 'sam.jennings@geoluminate.com.au'
