@@ -28,9 +28,9 @@ class ContinentForm(forms.ModelForm):
         model = models.Continent
         fields = ['name']
 
-class SeaForm(forms.ModelForm):
+class OceanForm(forms.ModelForm):
     class Meta:
-        model = models.Sea
+        model = models.Ocean
         fields = ['name']
 
 class ProvinceForm(forms.ModelForm):

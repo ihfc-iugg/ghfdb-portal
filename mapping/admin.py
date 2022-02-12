@@ -1,5 +1,5 @@
 from django.contrib.gis import admin
-from .models import Country, Continent, Sea, Political, Province
+from .models import Country, Continent, Ocean, Political, Province, Ocean, Plate
 from django.db.models import Count, Avg
 from django.db.models.functions import Coalesce
 from django.urls import path
@@ -49,9 +49,6 @@ class MappingAbstract(ImportMixin, admin.GeoModelAdmin):
             path('process_import/',
                 self.admin_site.admin_view(self.load_data),
                 name='%s_%s_process_import' % info),
-            path('import/',
-                self.admin_site.admin_view(self.import_action),
-                name='%s_%s_import' % info),
         ]
         return my_urls + urls
 
@@ -76,59 +73,6 @@ class MappingAbstract(ImportMixin, admin.GeoModelAdmin):
             tmp_storage.remove()
 
             return self.process_result(result, request)
-
-    def import_action(self, request, *args, **kwargs):
-        context = self.get_import_context_data()
-        form_type = self.get_import_form()
-        form_kwargs = self.get_form_kwargs(form_type, *args, **kwargs)
-        form = form_type(request.POST or None,
-                         request.FILES or None,
-                         **form_kwargs)
-
-        if request.POST and form.is_valid():
-            import_file = form.cleaned_data['import_file']
-            # handle zip file and possibly save to disk
-            with zf.Zipfile(import_file,'r') as zipped:
-                shp_file = [f for f in zipped.infolist() if f.filename.endswith('.shp')]
-
-                if len(shp_file) == 1:
-                    lm = LayerMapping(self.model, 
-                        shp_file[0], 
-                        self.model.mapping, 
-                        transform=False)
-                    lm.save(strict=True, verbose=True)
-                elif len(shp_file) > 1:
-                    raise ValueError('Multiple shapefiles found in directory')
-                else:
-                    raise ValueError('No shapefiles found in directory')
-
-            # import data
-
-            # return import messages as context
-
-            # if not result.has_errors() and not result.has_validation_errors():
-            #     initial = {
-            #         'import_file_name': tmp_storage.name,
-            #         'original_file_name': import_file.name,
-            #         'input_format': form.cleaned_data['input_format'],
-            #     }
-            #     confirm_form = self.get_confirm_import_form()
-            #     initial = self.get_form_kwargs(form=form, **initial)
-            #     context['confirm_form'] = confirm_form(initial=initial)
-        else:
-            res_kwargs = self.get_import_resource_kwargs(request, form=form, *args, **kwargs)
-            resource = self.get_import_resource_class()(**res_kwargs)
-
-        context.update(self.admin_site.each_context(request))
-
-        context['title'] = _("Import")
-        context['form'] = form
-        context['opts'] = self.model._meta
-        context['fields'] = [f.column_name for f in resource.get_user_visible_fields()]
-
-        request.current_app = self.admin_site.name
-        return TemplateResponse(request, [self.import_template_name],
-                                context)
 
     def get_confirm_import_form(self):
         return ConfirmImportForm
@@ -159,33 +103,53 @@ class ContinentAdmin(MappingAbstract):
         ('shape_area','sqkm'),
     ]
 
-@admin.register(Sea)
-class SeaAdmin(MappingAbstract):
-    list_display = ['name','number_of_sites']
-    fields = [
-        'name',
-        'poly',
-        ('longitude','latitude'),
-        ('min_x','max_x'),
-        ('min_y','max_y'),
-    ]
-
 @admin.register(Political)
 class PoliticalAdmin(MappingAbstract):
-    list_display = ['name','territory','sovereign','area_km2',]
-    search_fields = ['name','territory','sovereign',]
+    list_display = ['iso','name']
+    search_fields = ['iso','name']
 
-    fields = [
-        'name',
-        'poly',
-    ]
+    fields = ['name','poly']
 
 @admin.register(Province)
 class ProvinceAdmin(MappingAbstract):
-    list_display = ['id','name','type','group','juvenile_age_min','juvenile_age_max','thermotectonic_age_min','thermotectonic_age_max','last_orogen','continent','plate','number_of_sites','ave_heat_flow']
-    search_fields = ['name','type','group','continent']
-    list_filter = ['continent','type','group','last_orogen','plate']
+    list_display = ['name',
+            'type',
+            'group',
+            'last_orogen',
+            'crust_type',
+            'reference','number_of_sites']
+    search_fields = ['name','reference',]
+    list_filter = ['type','group','crust_type','last_orogen',]
+    fields = [  'poly',
+                'name',
+                'type',
+                'reference',
+                'group',
+                'last_orogen',
+                'crust_type',
+                ]
+
+@admin.register(Ocean)
+class Ocean(MappingAbstract):
+    list_display = ['name','number_of_sites']
+    search_fields = ['name']
+
     fields = [
         'name',
         'poly',
     ]
+
+@admin.register(Plate)
+class Plate(MappingAbstract):
+    change_list_template = "admin/change_list_filter_sidebar.html"
+
+    list_display = [
+        'id','name','plate','plate_id','poly_name','plate_type',
+        'crust_type','domain','references','number_of_sites']
+
+    search_fields = ['name','plate','poly_name']
+
+    list_filter = ['plate','plate_type','crust_type','domain']
+    fields =  ['poly',
+        'id','name','plate','plate_id','poly_name','plate_type',
+        'crust_type','domain','references',]
