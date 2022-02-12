@@ -12,7 +12,7 @@ from django.conf.urls.i18n import i18n_patterns
 urlpatterns = i18n_patterns(
     path("sitemap.xml", sitemap, {"sitemaps": {"cmspages": CMSSitemap}}),
     path("accounts/", include("allauth.urls")),
-    path('', include('users.urls')),
+    path('', include('user.urls')),
 
     path('taggit_autosuggest/', include('taggit_autosuggest.urls')),
     path('', include('thermoglobe.urls')),
@@ -20,10 +20,11 @@ urlpatterns = i18n_patterns(
     path('comments/', include('django_comments.urls')),
     path('', include('dashboard.urls')),
 
-    path('grappelli/', include('grappelli.urls')), # grappelli URLS
+    path('rosetta/', include('rosetta.urls')),
+    path('admin/doc/', include('django.contrib.admindocs.urls')),
+    path('grappelli/', include('grappelli.urls')),
     path("admin/", admin.site.urls), 
     path('', include("cms.urls")),
-    
 )
 
     
