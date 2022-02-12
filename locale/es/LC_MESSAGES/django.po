@@ -1,0 +1,1354 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-02-10 00:29+1030\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: .\dashboard\templates\dashboard\base.html:19
+#: .\dashboard\templates\dashboard\dashboard.html:19
+#: .\dashboard\templates\dashboard\panels\publications.html:4
+msgid "Publications"
+msgstr ""
+
+#: .\dashboard\templates\dashboard\base.html:22
+#: .\dashboard\templates\dashboard\dashboard.html:22
+#: .\dashboard\templates\dashboard\panels\projects.html:4
+msgid "Projects"
+msgstr ""
+
+#: .\dashboard\templates\dashboard\base.html:25
+#: .\dashboard\templates\dashboard\dashboard.html:25
+#: .\dashboard\templates\dashboard\panels\account.html:4
+#: .\heatflow\templates\authentication\settings.html:15
+msgid "Account"
+msgstr ""
+
+#: .\dashboard\templates\dashboard\panels\account.html:8
+#: .\heatflow\templates\authentication\settings.html:7
+msgid "Email"
+msgstr ""
+
+#: .\dashboard\templates\dashboard\panels\account.html:13
+msgid "ORCID"
+msgstr ""
+
+#: .\dashboard\templates\dashboard\panels\account.html:18
+#: .\heatflow\templates\authentication\settings.html:11
+msgid "Password"
+msgstr ""
+
+#: .\dashboard\templates\dashboard\panels\account.html:19
+msgid "Click below to change your password."
+msgstr ""
+
+#: .\dashboard\templates\dashboard\sections\orcid.html:4
+msgid "Your ThermoGlobe account is connected to the following ORCID record:"
+msgstr ""
+
+#: .\dashboard\templates\dashboard\sections\orcid.html:12
+msgid ""
+"Connect ThermoGlobe with your ORCID record to link your research to your "
+"data."
+msgstr ""
+
+#: .\editorial\cms_plugins.py:12 .\editorial\cms_plugins.py:23
+#: .\editorial\cms_plugins.py:32 .\editorial\cms_plugins.py:41
+#: .\editorial\cms_plugins.py:49 .\editorial\cms_plugins.py:57
+#: .\editorial\cms_plugins.py:65
+msgid "Editorial"
+msgstr ""
+
+#: .\editorial\cms_plugins.py:16
+msgid "Section"
+msgstr ""
+
+#: .\editorial\cms_plugins.py:26
+msgid "Content"
+msgstr ""
+
+#: .\editorial\cms_plugins.py:36
+msgid "Heading"
+msgstr ""
+
+#: .\editorial\cms_plugins.py:45
+msgid "Image"
+msgstr ""
+
+#: .\editorial\cms_plugins.py:53
+msgid "Feature"
+msgstr ""
+
+#: .\editorial\cms_plugins.py:60
+msgid "Feature Container"
+msgstr ""
+
+#: .\editorial\cms_plugins.py:69
+msgid "Page Heading"
+msgstr ""
+
+#: .\editorial\templates\comments\base.html:4
+#: .\editorial\templates\comments\delete.html:4
+msgid "Remove a comment"
+msgstr ""
+
+#: .\editorial\templates\comments\delete.html:8
+msgid "The following comment will be removed"
+msgstr ""
+
+#: .\editorial\templates\comments\delete.html:15
+#: .\user\templates\account\email.html:34
+#: .\user\templates\socialaccount\connections.html:35
+msgid "Remove"
+msgstr ""
+
+#: .\editorial\templates\comments\flag.html:4
+msgid "Flag this comment"
+msgstr ""
+
+#: .\editorial\templates\comments\flag.html:8
+msgid "The following comment will be flagged for review"
+msgstr ""
+
+#: .\editorial\templates\comments\flag.html:14
+msgid "Flag"
+msgstr ""
+
+#: .\editorial\templates\comments\flagged.html:4
+msgid "Thanks for flagging"
+msgstr ""
+
+#: .\editorial\templates\comments\flagged.html:7
+msgid ""
+"Thanks for taking the time to improve the quality of discussion on our site!"
+msgstr ""
+
+#: .\editorial\templates\comments\flagged.html:8
+msgid ""
+"Comment sections are provided so that users can discuss the content of "
+"ThermoGlobe in a meaningful manner that benefits the broader community. "
+"Making sure the discussion stays on track helps keep the site relevant!"
+msgstr ""
+
+#: .\heatflow\old_settings.py:196
+#: .\heatflow\settings\components\internationalisation.py:15
+msgid "English"
+msgstr ""
+
+#: .\heatflow\old_settings.py:197
+#: .\heatflow\settings\components\internationalisation.py:16
+msgid "French"
+msgstr ""
+
+#: .\heatflow\old_settings.py:198
+#: .\heatflow\settings\components\internationalisation.py:17
+msgid "German"
+msgstr ""
+
+#: .\heatflow\old_settings.py:206 .\heatflow\settings\components\cms.py:8
+msgid "en"
+msgstr ""
+
+#: .\heatflow\templates\authentication\base.html:7
+msgid "Settings"
+msgstr ""
+
+#: .\heatflow\templates\menu\user_menu.html:5
+msgid "My Account"
+msgstr ""
+
+#: .\heatflow\templates\menu\user_menu.html:9
+msgid "Dashboard"
+msgstr ""
+
+#: .\heatflow\templates\menu\user_menu.html:10
+msgid "Logout"
+msgstr ""
+
+#: .\heatflow\templates\menu\user_menu.html:12
+msgid "Admin"
+msgstr ""
+
+#: .\heatflow\templates\modals\login_modal.html:6
+#: .\user\templates\account\login_form.html:4
+msgid "Login"
+msgstr ""
+
+#: .\heatflow\templates\modals\login_modal.html:13
+msgid "Lost password?"
+msgstr ""
+
+#: .\heatflow\templates\modals\login_modal.html:13
+msgid "create an account"
+msgstr ""
+
+#: .\heatflow\templates\modals\login_modal.html:16
+msgid "Sign in using one of our partners"
+msgstr ""
+
+#: .\mapping\admin.py:124 .\mapping\templates\admin\mapping\import.html:10
+msgid "Import"
+msgstr ""
+
+#: .\mapping\forms.py:8
+msgid "File to import"
+msgstr ""
+
+#: .\mapping\models.py:108 .\thermoglobe\models\site.py:149
+msgid "country"
+msgstr ""
+
+#: .\mapping\models.py:109
+msgid "countries"
+msgstr ""
+
+#: .\mapping\models.py:127 .\thermoglobe\models\site.py:143
+msgid "continent"
+msgstr ""
+
+#: .\mapping\models.py:128
+msgid "continents"
+msgstr ""
+
+#: .\mapping\models.py:149
+msgid "Sea/Ocean"
+msgstr ""
+
+#: .\mapping\models.py:150
+msgid "Seas/Oceans"
+msgstr ""
+
+#: .\mapping\models.py:190
+msgid "Political Region"
+msgstr ""
+
+#: .\mapping\models.py:191
+msgid "Political Regions"
+msgstr ""
+
+#: .\mapping\models.py:235
+msgid "Geological Province"
+msgstr ""
+
+#: .\mapping\models.py:236
+msgid "Geological Provinces"
+msgstr ""
+
+#: .\mapping\templates\admin\mapping\import.html:20
+msgid ""
+"Below is a preview of data to be imported. If you are satisfied with the "
+"results, click 'Confirm import'"
+msgstr ""
+
+#: .\mapping\templates\admin\mapping\import.html:23
+msgid "Confirm import"
+msgstr ""
+
+#: .\mapping\templates\admin\mapping\import.html:31
+msgid "This importer will import the following fields: "
+msgstr ""
+
+#: .\mapping\templates\admin\mapping\import.html:52
+msgid "Submit"
+msgstr ""
+
+#: .\mapping\templates\admin\mapping\import.html:61
+#: .\mapping\templates\admin\mapping\import.html:90
+msgid "Errors"
+msgstr ""
+
+#: .\mapping\templates\admin\mapping\import.html:72
+msgid "Line number"
+msgstr ""
+
+#: .\mapping\templates\admin\mapping\import.html:82
+msgid "Some rows failed to validate"
+msgstr ""
+
+#: .\mapping\templates\admin\mapping\import.html:84
+msgid ""
+"Please correct these errors in your data where possible, then reupload it "
+"using the form above."
+msgstr ""
+
+#: .\mapping\templates\admin\mapping\import.html:89
+msgid "Row"
+msgstr ""
+
+#: .\mapping\templates\admin\mapping\import.html:116
+msgid "Non field specific"
+msgstr ""
+
+#: .\mapping\templates\admin\mapping\import.html:137
+msgid "Preview"
+msgstr ""
+
+#: .\mapping\templates\admin\mapping\import.html:152
+msgid "New"
+msgstr ""
+
+#: .\mapping\templates\admin\mapping\import.html:154
+msgid "Skipped"
+msgstr ""
+
+#: .\mapping\templates\admin\mapping\import.html:156
+msgid "Delete"
+msgstr ""
+
+#: .\mapping\templates\admin\mapping\import.html:158
+msgid "Update"
+msgstr ""
+
+#: .\thermoglobe\filters.py:111
+msgid "is verified"
+msgstr ""
+
+#: .\thermoglobe\filters.py:117 .\thermoglobe\filters.py:206
+msgid "Yes"
+msgstr ""
+
+#: .\thermoglobe\filters.py:118 .\thermoglobe\filters.py:207
+msgid "No"
+msgstr ""
+
+#: .\thermoglobe\filters.py:131
+msgid "is empty"
+msgstr ""
+
+#: .\thermoglobe\filters.py:137
+msgid "Empty"
+msgstr ""
+
+#: .\thermoglobe\filters.py:151
+msgid "data type"
+msgstr ""
+
+#: .\thermoglobe\filters.py:157
+msgid "Has heat flow"
+msgstr ""
+
+#: .\thermoglobe\filters.py:158
+msgid "Has gradient"
+msgstr ""
+
+#: .\thermoglobe\filters.py:159
+msgid "Has temperature"
+msgstr ""
+
+#: .\thermoglobe\filters.py:160
+msgid "Has conductivity"
+msgstr ""
+
+#: .\thermoglobe\filters.py:161
+msgid "Has heat gen"
+msgstr ""
+
+#: .\thermoglobe\filters.py:162
+msgid "No data"
+msgstr ""
+
+#: .\thermoglobe\filters.py:163
+msgid "No sites or data"
+msgstr ""
+
+#: .\thermoglobe\filters.py:181
+msgid "interval type"
+msgstr ""
+
+#: .\thermoglobe\filters.py:187
+msgid "Heat flow"
+msgstr ""
+
+#: .\thermoglobe\filters.py:188
+msgid "Gradient"
+msgstr ""
+
+#: .\thermoglobe\filters.py:200
+msgid "corrected?"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:20
+msgid "reliability"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:21
+msgid "Heat flow reliability code"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:26 .\thermoglobe\models\logs.py:55
+#: .\thermoglobe\models\logs.py:106 .\thermoglobe\models\logs.py:151
+msgid "site"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:30
+msgid "probe tilt"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:31
+msgid "Angle between vertical and the orientation of the probe."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:37
+msgid "depth min"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:38
+msgid "Minimum depth of the measurement interval."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:43
+msgid "depth max"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:44
+msgid "Maximum depth of the measurement interval."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:49
+msgid "number of temperatures"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:50
+msgid "Number of temperatures used to determine the estimate."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:52
+msgid "temperature method"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:53
+msgid "The method used to obtain temperature values."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:56
+msgid "corrected heat flow"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:57 .\thermoglobe\models\interval.py:70
+msgid "The corrected value."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:59 .\thermoglobe\models\interval.py:72
+msgid "corrected uncertainty"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:60 .\thermoglobe\models\interval.py:73
+msgid "Uncertainty on the corrected value."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:62
+msgid "uncorrected heat flow"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:63 .\thermoglobe\models\interval.py:76
+msgid "The uncorrected value."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:65 .\thermoglobe\models\interval.py:78
+msgid "uncorrected uncertainty"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:66 .\thermoglobe\models\interval.py:79
+msgid "Uncertainty on the uncorrected value."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:69
+msgid "corrected gradient"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:75
+msgid "uncorrected gradient"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:82
+msgid "therm. cond."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:83
+msgid "Reported thermal conductivity to accompany the heat flow estimate."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:85
+msgid "thermal conductivity uncertainty"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:86
+msgid "Uncertainty of the reported thermal conductivity."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:88
+msgid "number of conductivity measurements"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:89
+msgid ""
+"Number of thermal conductivities from which the reported thermal "
+"conductivity was derived."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:91
+msgid "cond. method"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:92
+msgid "Method used to measure or derive thermal conductivity."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:96
+msgid "heat prod."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:97
+msgid "Average heat production to accompany the heat flow estimate."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:99
+msgid "heat production uncertainty"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:100
+msgid "Uncertainty of the reported heat production."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:102
+msgid "number of heat production measurements"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:103
+msgid ""
+"Number of heat production values from which the average heat production was "
+"derived."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:105
+msgid "heat production method"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:106
+msgid "Method used to measure or derive heat production."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:111
+msgid ""
+"The publication or other reference from which the measurement was reported."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:112
+msgid "reference"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:116 .\thermoglobe\models\logs.py:23
+msgid "comment"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:117 .\thermoglobe\models\logs.py:24
+msgid ""
+"Information supplied with the measurement either by the original author/"
+"researcher or the compiler."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:121
+msgid "global flag"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:122
+msgid "Measurement is suitable for use in global modelling."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:124
+msgid "reason"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:126
+msgid "reason for denoting this measurement as suitable for global modelling"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:133 .\thermoglobe\models\logs.py:40
+#: .\thermoglobe\models\site.py:183
+msgid "date added to ThermoGlobe"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:149
+msgid "climate corrected"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:150 .\thermoglobe\models\interval.py:155
+#: .\thermoglobe\models\interval.py:160 .\thermoglobe\models\interval.py:165
+#: .\thermoglobe\models\interval.py:170 .\thermoglobe\models\interval.py:175
+#: .\thermoglobe\models\interval.py:180 .\thermoglobe\models\interval.py:188
+msgid "value"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:151
+msgid ""
+"Value of a climatic correction applied to the associated heat flow and "
+"thermal gradient estimates."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:154
+msgid "topographic corrected"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:156
+msgid ""
+"Value of a topographic correction applied to the associated heat flow and "
+"thermal gradient estimates."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:159
+msgid "refraction corrected"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:161
+msgid ""
+"Value of a refraction correction applied to the associated heat flow and "
+"thermal gradient estimates."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:164
+msgid "sedimentation corrected"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:166
+msgid ""
+"Value of a sedimentation correction applied to the associated heat flow and "
+"thermal gradient estimates."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:169
+msgid "fluid corrected"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:171
+msgid ""
+"Value of a fluid correction applied to the associated heat flow and thermal "
+"gradient estimates."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:174
+msgid "BWV corrected"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:176
+msgid ""
+"Value of a bottom water variation correction applied to the associated heat "
+"flow and thermal gradient estimates."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:179
+msgid "compaction corrected"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:181
+msgid ""
+"Value of a compaction correction applied to the associated heat flow and "
+"thermal gradient estimates."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:184
+msgid "other"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:185
+msgid "type of correction"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:186
+msgid ""
+"Specifies the type of correction if the type does not belong to one of the "
+"other categories."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:189
+msgid ""
+"Value of any other correction applied to the associated heat flow and "
+"thermal gradient estimates."
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:207 .\thermoglobe\models\interval.py:208
+msgid "heat flow"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:218
+msgid "thermal gradient"
+msgstr ""
+
+#: .\thermoglobe\models\interval.py:219
+msgid "thermal gradients"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:10
+msgid "formation name"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:11
+msgid "The name of the sampled geological formation."
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:13
+msgid "depth"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:14
+msgid "The depth at which the measurement was taken (if applicable)."
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:16
+msgid "method"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:17
+msgid "The method used to obtain the reported value."
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:19
+msgid "operator"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:20
+msgid "The operator collecting the measurements"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:27
+msgid "source ID"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:28
+msgid "This is the ID for the measurement used by the original source"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:31
+msgid "log specific ID"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:32
+msgid "This is required for multiple logs to be stored on the same site."
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:35
+msgid "year logged"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:36
+msgid "Year the measurement was made."
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:50
+msgid "sample name"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:51
+msgid "The reported name of the sample if applicable."
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:60 .\thermoglobe\models\logs.py:110
+#: .\thermoglobe\models\logs.py:156
+msgid ""
+"The publications or other reference from which the measurement was reported."
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:64 .\thermoglobe\models\logs.py:93
+#: .\thermoglobe\models\logs.py:94
+msgid "thermal conductivity"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:65
+msgid "The reported thermal conductivity in of the sample."
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:67 .\thermoglobe\models\logs.py:124
+#: .\thermoglobe\models\logs.py:164
+msgid "uncertainty"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:68 .\thermoglobe\models\logs.py:125
+msgid "The uncertainty on the reported value."
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:71 .\thermoglobe\models\logs.py:116
+msgid "rock type"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:72 .\thermoglobe\models\logs.py:117
+msgid "The reported rock type."
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:75
+msgid "sample length"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:76
+msgid "Length of the sample."
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:78
+msgid "sample width"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:79
+msgid "Width of the sample."
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:81
+msgid "sample diameter"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:82
+msgid "Diameter of the sample."
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:84
+msgid "sample thickness"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:85
+msgid "Thickness of the sample."
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:87
+msgid "orientation"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:88
+msgid ""
+"The angle relative to the foliation or bedding where 0 is along foliation "
+"and 90 is perpendicular to foliation. Values can be a floating point number "
+"anywhere between 0 and 90."
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:121 .\thermoglobe\models\logs.py:136
+#: .\thermoglobe\models\logs.py:137
+msgid "heat production"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:122
+msgid "The reported value of the sample."
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:127
+msgid "K (wt%)"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:129
+msgid "Th (ppm)"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:131
+msgid "U (ppm)"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:161 .\thermoglobe\models\logs.py:180
+#: .\thermoglobe\models\logs.py:181
+msgid "temperature"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:162
+msgid "The reported temperature in at the given depth."
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:165
+msgid "Uncertainty on the reported temperature."
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:168
+msgid "circulation time"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:169
+msgid "Circulation time in hours."
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:171
+msgid "lag time"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:172
+msgid "Hours between drilling and measuring temperature."
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:174
+msgid "correction"
+msgstr ""
+
+#: .\thermoglobe\models\logs.py:175
+msgid "Applied temperature correction type."
+msgstr ""
+
+#: .\thermoglobe\models\site.py:86
+msgid "site name"
+msgstr ""
+
+#: .\thermoglobe\models\site.py:88
+msgid "The name given to the site."
+msgstr ""
+
+#: .\thermoglobe\models\site.py:90
+msgid "latitude"
+msgstr ""
+
+#: .\thermoglobe\models\site.py:91
+msgid "Latitude in decimal degrees. WGS84 preferred but not enforced."
+msgstr ""
+
+#: .\thermoglobe\models\site.py:95
+msgid "longitude"
+msgstr ""
+
+#: .\thermoglobe\models\site.py:96
+msgid "Longitude in decimal degrees. WGS84 preferred but not enforced."
+msgstr ""
+
+#: .\thermoglobe\models\site.py:101
+msgid "elevation"
+msgstr ""
+
+#: .\thermoglobe\models\site.py:102
+msgid "Site elevation"
+msgstr ""
+
+#: .\thermoglobe\models\site.py:104
+msgid "well depth"
+msgstr ""
+
+#: .\thermoglobe\models\site.py:105
+msgid "Total depth of the hole in metres."
+msgstr ""
+
+#: .\thermoglobe\models\site.py:110
+msgid "references"
+msgstr ""
+
+#: .\thermoglobe\models\site.py:111
+msgid ""
+"The reference or publication from which the data were sourced. Each site may "
+"have multiple references."
+msgstr ""
+
+#: .\thermoglobe\models\site.py:114
+msgid "name of cruise"
+msgstr ""
+
+#: .\thermoglobe\models\site.py:115
+msgid ""
+"For oceanic measurements - the name of the cruise on which the measurements "
+"were taken."
+msgstr ""
+
+#: .\thermoglobe\models\site.py:118
+msgid "sea floor age"
+msgstr ""
+
+#: .\thermoglobe\models\site.py:119
+msgid "Age of the sea floor"
+msgstr ""
+
+#: .\thermoglobe\models\site.py:123
+msgid "calculated sediment thickness"
+msgstr ""
+
+#: .\thermoglobe\models\site.py:124
+msgid "Sediment thickness at the site."
+msgstr ""
+
+#: .\thermoglobe\models\site.py:126
+msgid "type of sediment thickness"
+msgstr ""
+
+#: .\thermoglobe\models\site.py:128
+msgid "How sediment thickness was determined."
+msgstr ""
+
+#: .\thermoglobe\models\site.py:132
+msgid "distance to seamount"
+msgstr ""
+
+#: .\thermoglobe\models\site.py:134
+msgid "Distance in Km to the nearest seamount."
+msgstr ""
+
+#: .\thermoglobe\models\site.py:136
+msgid "distance to outcrop"
+msgstr ""
+
+#: .\thermoglobe\models\site.py:137
+msgid "Distance in Km to the nearest outcrop."
+msgstr ""
+
+#: .\thermoglobe\models\site.py:139
+msgid "calculated crustal thickness"
+msgstr ""
+
+#: .\thermoglobe\models\site.py:140
+msgid "Calculated crustal thickness at the site."
+msgstr ""
+
+#: .\thermoglobe\models\site.py:144
+msgid ""
+"As calculated using the <a href=\"https://www.arcgis.com/home/item.html?"
+"id=a3cb207855b348a297ab85261743351d\">ESRI World Continents shapefile</a>."
+msgstr ""
+
+#: .\thermoglobe\models\site.py:150
+msgid ""
+"As calculated using the <a href=\"http://www.mappinghacks.com/data/\">World "
+"Borders shapefile</a>."
+msgstr ""
+
+#: .\thermoglobe\models\site.py:155
+msgid "political region"
+msgstr ""
+
+#: .\thermoglobe\models\site.py:156
+msgid ""
+"As calculated using the Flanders Marine Institute (2018)<a href=\"http://www."
+"marineregions.org/\">Marine and Land Zones</a>. DOI: <a href=\"https://doi."
+"org/10.14284/403\">10.14284/403</a>"
+msgstr ""
+
+#: .\thermoglobe\models\site.py:161
+msgid "geological province"
+msgstr ""
+
+#: .\thermoglobe\models\site.py:166
+msgid "sea/ocean"
+msgstr ""
+
+#: .\thermoglobe\models\site.py:167
+msgid ""
+"As calculated using the Flanders Marine Institute (2018)<a href=\"http://www."
+"marineregions.org/\">Oceans and Seas shapefile</a>. DOI: <a href=\"https://"
+"doi.org/10.14284/323\">10.14284/323</a>"
+msgstr ""
+
+#: .\thermoglobe\models\site.py:172
+msgid "bottom_water_temperature"
+msgstr ""
+
+#: .\thermoglobe\models\site.py:173
+msgid "Temperature at the bottom of the water column."
+msgstr ""
+
+#: .\thermoglobe\models\site.py:177
+msgid "year drilled"
+msgstr ""
+
+#: .\thermoglobe\models\site.py:180
+msgid "site description"
+msgstr ""
+
+#: .\thermoglobe\widgets.py:26
+msgid "latitude must be between -90 and 90 degrees"
+msgstr ""
+
+#: .\thermoglobe\widgets.py:28
+msgid "Longitude must be between -90 and 90 degrees"
+msgstr ""
+
+#: .\thermoglobe\widgets.py:30
+msgid ""
+"Well depth cannot be deeper than 12,200 m. Have you supplied the correct "
+"units?"
+msgstr ""
+
+#: .\thermoglobe\widgets.py:34
+msgid ""
+"Your elevation value looks wrong. Have you supplied this data in the correct "
+"units?"
+msgstr ""
+
+#: .\user\templates\account\account_inactive.html:5
+#: .\user\templates\account\account_inactive.html:8
+msgid "Account Inactive"
+msgstr ""
+
+#: .\user\templates\account\account_inactive.html:9
+msgid "This account is inactive."
+msgstr ""
+
+#: .\user\templates\account\email.html:5 .\user\templates\account\email.html:8
+msgid "E-mail Addresses"
+msgstr ""
+
+#: .\user\templates\account\email.html:10
+msgid "The following e-mail addresses are associated with your account:"
+msgstr ""
+
+#: .\user\templates\account\email.html:25
+msgid "Unverified"
+msgstr ""
+
+#: .\user\templates\account\email.html:27
+msgid "primary"
+msgstr ""
+
+#: .\user\templates\account\email.html:32
+msgid "Make Primary"
+msgstr ""
+
+#: .\user\templates\account\email.html:33
+msgid "Re-send Verification"
+msgstr ""
+
+#: .\user\templates\account\email.html:41
+msgid "Warning:"
+msgstr ""
+
+#: .\user\templates\account\email.html:41
+msgid ""
+"You currently do not have any e-mail addresses set up. A verified email is "
+"required to claim your own data, receive notifications, reset your password, "
+"etc."
+msgstr ""
+
+#: .\user\templates\account\email.html:46
+msgid "Add E-mail Address"
+msgstr ""
+
+#: .\user\templates\account\email.html:50
+msgid "Add E-mail"
+msgstr ""
+
+#: .\user\templates\account\email.html:60
+msgid "Do you really want to remove the selected e-mail address?"
+msgstr ""
+
+#: .\user\templates\account\email\base_message.txt:1
+msgid "Hi there!"
+msgstr ""
+
+#: .\user\templates\account\email\base_message.txt:5
+msgid "See you soon!"
+msgstr ""
+
+#: .\user\templates\account\email_confirm.html:6
+#: .\user\templates\account\email_confirm.html:10
+msgid "Confirm E-mail Address"
+msgstr ""
+
+#: .\user\templates\account\email_confirm.html:16
+#, python-format
+msgid ""
+"Please confirm that <a href=\"mailto:%(email)s\">%(email)s</a> is an e-mail "
+"address for user %(user_display)s."
+msgstr ""
+
+#: .\user\templates\account\email_confirm.html:20
+msgid "Confirm"
+msgstr ""
+
+#: .\user\templates\account\email_confirm.html:27
+#, python-format
+msgid ""
+"This e-mail confirmation link expired or is invalid. Please <a href="
+"\"%(email_url)s\">issue a new e-mail confirmation request</a>."
+msgstr ""
+
+#: .\user\templates\account\logout.html:5
+#: .\user\templates\account\logout.html:8
+#: .\user\templates\account\logout.html:17
+msgid "Sign Out"
+msgstr ""
+
+#: .\user\templates\account\logout.html:10
+msgid "Are you sure you want to sign out?"
+msgstr ""
+
+#: .\user\templates\account\password_change.html:5
+#: .\user\templates\account\password_change.html:8
+#: .\user\templates\account\password_change.html:13
+#: .\user\templates\account\password_reset_from_key.html:4
+#: .\user\templates\account\password_reset_from_key.html:7
+#: .\user\templates\account\password_reset_from_key_done.html:4
+#: .\user\templates\account\password_reset_from_key_done.html:7
+msgid "Change Password"
+msgstr ""
+
+#: .\user\templates\account\password_change.html:14
+msgid "Forgot Password?"
+msgstr ""
+
+#: .\user\templates\account\password_reset.html:6
+#: .\user\templates\account\password_reset.html:10
+#: .\user\templates\account\password_reset_done.html:6
+#: .\user\templates\account\password_reset_done.html:9
+msgid "Password Reset"
+msgstr ""
+
+#: .\user\templates\account\password_reset.html:15
+msgid ""
+"Forgotten your password? Enter your e-mail address below, and we'll send you "
+"an e-mail allowing you to reset it."
+msgstr ""
+
+#: .\user\templates\account\password_reset.html:20
+msgid "Reset My Password"
+msgstr ""
+
+#: .\user\templates\account\password_reset.html:23
+msgid "Please contact us if you have any trouble resetting your password."
+msgstr ""
+
+#: .\user\templates\account\password_reset_done.html:15
+msgid ""
+"We have sent you an e-mail. Please contact us if you do not receive it "
+"within a few minutes."
+msgstr ""
+
+#: .\user\templates\account\password_reset_from_key.html:7
+msgid "Bad Token"
+msgstr ""
+
+#: .\user\templates\account\password_reset_from_key.html:11
+#, python-format
+msgid ""
+"The password reset link was invalid, possibly because it has already been "
+"used.  Please request a <a href=\"%(passwd_reset_url)s\">new password reset</"
+"a>."
+msgstr ""
+
+#: .\user\templates\account\password_reset_from_key.html:17
+msgid "change password"
+msgstr ""
+
+#: .\user\templates\account\password_reset_from_key.html:20
+#: .\user\templates\account\password_reset_from_key_done.html:8
+msgid "Your password is now changed."
+msgstr ""
+
+#: .\user\templates\account\password_set.html:5
+#: .\user\templates\account\password_set.html:8
+#: .\user\templates\account\password_set.html:13
+msgid "Set Password"
+msgstr ""
+
+#: .\user\templates\account\signup.html:6
+msgid "Create Account"
+msgstr ""
+
+#: .\user\templates\account\signup_closed.html:5
+#: .\user\templates\account\signup_closed.html:8
+msgid "Sign Up Closed"
+msgstr ""
+
+#: .\user\templates\account\signup_closed.html:10
+msgid "We are sorry, but the sign up is currently closed."
+msgstr ""
+
+#: .\user\templates\account\verification_sent.html:5
+#: .\user\templates\account\verification_sent.html:8
+#: .\user\templates\account\verified_email_required.html:5
+#: .\user\templates\account\verified_email_required.html:8
+msgid "Verify Your E-mail Address"
+msgstr ""
+
+#: .\user\templates\account\verification_sent.html:9
+msgid ""
+"We have sent an e-mail to you for verification. Follow the link provided to "
+"finalize the signup process. Please contact us if you do not receive it "
+"within a few minutes."
+msgstr ""
+
+#: .\user\templates\account\verified_email_required.html:12
+msgid ""
+"This part of the site requires us to verify that\n"
+"you are who you claim to be. For this purpose, we require that you\n"
+"verify ownership of your e-mail address. "
+msgstr ""
+
+#: .\user\templates\account\verified_email_required.html:16
+msgid ""
+"We have sent an e-mail to you for\n"
+"verification. Please click on the link inside this e-mail. Please\n"
+"contact us if you do not receive it within a few minutes."
+msgstr ""
+
+#: .\user\templates\account\verified_email_required.html:20
+#, python-format
+msgid ""
+"<strong>Note:</strong> you can still <a href=\"%(email_url)s\">change your e-"
+"mail address</a>."
+msgstr ""
+
+#: .\user\templates\socialaccount\authentication_error.html:5
+#: .\user\templates\socialaccount\authentication_error.html:8
+msgid "Social Network Login Failure"
+msgstr ""
+
+#: .\user\templates\socialaccount\authentication_error.html:10
+msgid ""
+"An error occurred while attempting to login via your social network account."
+msgstr ""
+
+#: .\user\templates\socialaccount\connections.html:5
+#: .\user\templates\socialaccount\connections.html:8
+msgid "Account Connections"
+msgstr ""
+
+#: .\user\templates\socialaccount\connections.html:11
+msgid ""
+"You can sign in to your account using any of the following third party "
+"accounts:"
+msgstr ""
+
+#: .\user\templates\socialaccount\connections.html:43
+msgid ""
+"You currently have no social network accounts connected to this account."
+msgstr ""
+
+#: .\user\templates\socialaccount\connections.html:46
+msgid "Add a 3rd Party Account"
+msgstr ""
+
+#: .\user\templates\socialaccount\login_cancelled.html:5
+#: .\user\templates\socialaccount\login_cancelled.html:9
+msgid "Login Cancelled"
+msgstr ""
+
+#: .\user\templates\socialaccount\login_cancelled.html:13
+#, python-format
+msgid ""
+"You decided to cancel logging in to our site using one of your existing "
+"accounts. If this was a mistake, please proceed to <a href=\"%(login_url)s"
+"\">sign in</a>."
+msgstr ""
+
+#: .\user\templates\socialaccount\messages\account_connected.txt:2
+msgid "The social account has been connected."
+msgstr ""
+
+#: .\user\templates\socialaccount\messages\account_connected_other.txt:2
+msgid "The social account is already connected to a different account."
+msgstr ""
+
+#: .\user\templates\socialaccount\messages\account_disconnected.txt:2
+msgid "The social account has been disconnected."
+msgstr ""
+
+#: .\user\templates\socialaccount\signup.html:5
+msgid "Signup"
+msgstr ""
+
+#: .\user\templates\socialaccount\signup.html:8
+#: .\user\templates\socialaccount\signup.html:19
+msgid "Sign Up"
+msgstr ""
+
+#: .\user\templates\socialaccount\signup.html:10
+#, python-format
+msgid ""
+"You are about to use your %(provider_name)s account to login to\n"
+"  %(site_name)s. As a final step, please complete the following form:"
+msgstr ""
