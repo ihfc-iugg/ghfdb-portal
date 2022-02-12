@@ -1,31 +1,32 @@
-{% extends "empty.html" %}
+{% extends "base.html" %}
 {% load static widget_tweaks sekizai_tags crispy_forms_tags %}
 
-{% block content %}
-  {% include "mapping/map.html" with vh='100vh' %}
-  <div class="accordion shadow" id='map-panel'>
-    <div class="card">
-      <div class="card-header small" id="map-filter" data-toggle="collapse" data-target="#filterBody"> 
-        <a class='primary'><h3 class='text-right'><i class='fas fa-filter text-primary'></i></h3></a>
-      </div>
-      <div id="filterBody" class="collapse" aria-labelledby="map-panel" data-parent="#map-panel">
-        <div class="card-body">
-          <div class='card-title'><h3>Filter</h3></div>
-          {% crispy form %}
-        </div>
-        <div class='card-footer text-right'>
-          <button class='primary'>Download</button>
-        </div>
-      </div>
+{% block main %}
+<div class="w-100 vh-100 bg-light d-flex">
+  <div class='d-flex flex-column px-2 map-sidebar'>
+    <ul class='alt '>
+      <li><a class="icon fas filter" data-bs-toggle="offcanvas" href="#offcanvasExample" role="button" aria-controls="offcanvasExample"></a></li>
+      <li><a class="icon solid download" data-bs-toggle="offcanvas" href="#offcanvasExample" role="button" aria-controls="offcanvasExample"></a></li>
+      <li><a class="icon solid settings" data-bs-toggle="offcanvas" href="#offcanvasExample" role="button" aria-controls="offcanvasExample"></a></li>
+    </ul>
+
+
+  </div>
+
+  <div class='flex-fill'>
+    {% include "mapping/map.html" with vh='100vh' %}   
+  </div>
+</div>
+
+
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="offcanvasExampleLabel">Filter</h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
-    <div class="card">
-      <div class="card-header small" id="map-filter" data-toggle="collapse" data-target="#settingsBody"> 
-        <a class='primary'><h3 class='text-right'><i class='fas fa-cogs text-primary'></i></h3></a>
-      </div>
-      <div id="settingsBody" class="collapse" aria-labelledby="map-panel" data-parent="#map-panel">
-        <div class="card-body">
-        <div class='card-title'><h3>Map Settings</h3></div>
-      </div>
+    <div class="offcanvas-body">
+      {% crispy filter.form filter.helper %}
     </div>
   </div>
-{% endblock content %}
+ 
+{% endblock main %}

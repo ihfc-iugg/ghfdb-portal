@@ -1,16 +1,21 @@
-{% load i18n %}
+{% load i18n authentication %}
 
 <section class='sidebar-menu'>
 	<header class="major">
-		<h3><i class="primary mr-2 icon fa-user-circle"></i>{% if user.is_authenticated %}{{user.display_name}}{% else %}{% trans "My Account" %}{% endif %}</h3>
+		<h3><i class="primary me-2 icon fa-user-circle"></i>{% if user.is_authenticated %}{{user.display_name}}{% else %}{% trans "My Account" %}{% endif %}</h3>
 	</header>
 	<ul>
 	{% if user.is_authenticated %}
 		<li><a href="{% url 'dashboard:dashboard' %}">{% trans "Dashboard" %}</a></li>
 		<li><a href="{% url 'account_logout' %}">{% trans "Logout" %}</a></li>
+		{% if user.is_staff %}
+			<li><a href="{% url 'admin:index' %}?toolbar_off">{% trans "Admin" %}</a></li>
+		{% endif %}
 	{% else %}
-		<li><a href="#" data-toggle="modal" data-target="#loginModal">{% trans "Login" %}</a></li>
-		
+		<li>{% auth_link '#loginModal' "Login" %}</li>
+		<li>{% auth_link '#createAccountModal' "Register" %}</li>
 	{% endif %}
-	</ul>
+</ul>
+
+
 </section>

@@ -3,12 +3,12 @@
 <header>
   <div class='d-flex py-2'>
     <ul class="nav nav-pills" role="tablist">
-      <li><a id="#details-tab" data-toggle="tab" href="#details-container" aria-controls="details-tab" class="button primary small" aria-selected="true">
+      <li><a id="#details-tab" data-bs-toggle="tab" href="#details-container" aria-controls="details-tab" class="button primary small" aria-selected="true">
           Details
         </a></li>
       {% for name, table in tables.items %}
         <li>
-          <a id="#{{table.id}}-tab" data-toggle="tab" href="#{{table.id}}-container" aria-controls="{{table.id}}-tab" 
+          <a id="#{{table.id}}-tab" data-bs-toggle="tab" href="#{{table.id}}-container" aria-controls="{{table.id}}-tab" 
           {% comment %} {% if table.active %}class="button primary small" aria-selected="true"> {% endcomment %}
           {% if table.data != '[]'%}class="button small" aria-selected="false">
           {% else %} class="button small disabled" aria-selected="disabled">
@@ -17,8 +17,8 @@
         </li>
       {% endfor %}
     </ul>
-    <div class="btn-group dropleft ml-auto">
-      <a id='dropdownMenuLink' class='button icon solid small' href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-2x fa-cog"></i></a>
+    <div class="btn-group dropleft ms-auto">
+      <a id='dropdownMenuLink' class='button icon solid small' href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-2x fa-cog"></i></a>
       <div class="dropdown-menu">
         <a class="dropdown-item" href="#">Action</a>
         <a class="dropdown-item" href="#">Another action</a>

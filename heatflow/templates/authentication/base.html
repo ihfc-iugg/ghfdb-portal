@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags i18n %}
+
+{% block content %}
+<div class='inner'>
+	<header id="header">
+		<a href="." class="logo"><span class='fas fa-tachometer-alt'></span><strong> {% trans "Settings" %} </strong>{{ user.display_name }}</a>
+	</header>
+  {% block profile_content %}{% endblock %}
+</div>
+{% endblock content %}
+
+
+

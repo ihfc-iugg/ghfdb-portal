@@ -1,0 +1,27 @@
+{% extends "authentication/base.html" %}
+{% load crispy_forms_tags i18n authentication %}
+ 
+{% block profile_content %}
+<section>
+
+  <h3>{% trans "Email" %}</h3>
+  {% auth_link '#addEmailModal' "Add Email" "btn button" %}
+  <hr class="major" />
+
+  <h3>{% trans "Password" %}</h3>
+  {% auth_link '#changePasswordModal' "Change Password" "btn button" %}
+  <hr class="major" />
+
+  <h3>{% trans "Account" %}</h3>
+  {% auth_link '#deactivateAccountModal' "Deactivate" "btn button" %}
+  <hr class="major" />
+
+</section>
+
+{% block "modals" %}
+  {% include "authentication/modals/change_password.html" %}
+  {% include "authentication/modals/add_email.html" %}
+  {% include "authentication/modals/deactivate_account.html" %}
+{% endblock %}
+
+{% endblock profile_content %}
