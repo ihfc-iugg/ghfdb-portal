@@ -8,11 +8,7 @@
   </span>
 	<ul>
 		{% show_menu from_level to_level extra_inactive extra_active template "" "" child %}
-
-
-		
 	</ul>
-
   {% else %}
 	<a href="{{ child.attr.redirect_url|default:child.get_absolute_url }}">{{ child.get_menu_title }}</a>
 	{% endif %}

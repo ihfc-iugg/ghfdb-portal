@@ -11,9 +11,9 @@
     <div class='flex-grow-1'><h2 id='refLabel' class='py-1 my-0'></h2></div>
     <div>
         {% if publication.is_verified %}
-          <i class="fas fa-check-circle text-success" data-toggle="tooltip" data-placement="bottom" title="This publication has been fully verified by the team at HeatFlow.org! You can be sure that the data represented here is faithful to the original publication. Users are still encouraged to make their own assessment on data quality by reviewing the original manuscript."></i>
+          <i class="fas fa-check-circle text-success" data-bs-toggle="tooltip" data-placement="bottom" title="This publication has been fully verified by the team at HeatFlow.org! You can be sure that the data represented here is faithful to the original publication. Users are still encouraged to make their own assessment on data quality by reviewing the original manuscript."></i>
         {% else %}
-          <i class="fas fa-exclamation-triangle text-warning" data-toggle="tooltip" data-placement="bottom" title="This publication has not yet been verified by the team at HeatFlow.org. We make no guarantee that the data on this page accurately reflects that of the original source. Users are urged to make their own assessment of data quality and interpret with care."></i>
+          <i class="fas fa-exclamation-triangle text-warning" data-bs-toggle="tooltip" data-placement="bottom" title="This publication has not yet been verified by the team at HeatFlow.org. We make no guarantee that the data on this page accurately reflects that of the original source. Users are urged to make their own assessment of data quality and interpret with care."></i>
         {% endif %}
     </div>
   </div>
@@ -26,7 +26,7 @@
       <a id='article-doi' class="button small fit {% if not publication.doi %}disabled{% endif %}"><i class='fas fa-lg fa-globe'> Article</i></a>
     </div>
     <div class='col-12 col-md-6'>
-      <button class="dropdown-toggle fit small" type="button" id="refDownload" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      <button class="dropdown-toggle fit small" type="button" id="refDownload" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
           <i class="fas fa-lg fa-graduation-cap">Citation</i>
       </button>
       <div id='refDownload' class="dropdown-menu" aria-labelledby="refDownload">
