@@ -13,7 +13,7 @@ include(*[
     f"environments/{environ.get('DJANGO_ENV','development')}.py",
 ])
 
-ALLOWED_HOSTS = ['127.0.0.1','localhost','thermoglobe.herokuapp.com','www.heatflow.org','heatflow.org']
+ALLOWED_HOSTS = ['127.0.0.1','localhost','thermoglobe.herokuapp.com','www.thermoglobe.app','thermoglobe.app']
 
 
 INSTALLED_APPS = [
