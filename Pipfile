@@ -142,9 +142,10 @@ django-lockdown = "*"
 django-background-tasks = "*"
 habanero = "*"
 drf-ujson = "*"
-django-publications-crossref = {git = "https://github.com/SSJenny90/django-publications-crossref.git"}
-comments = {git = "https://github.com/SSJenny90/comments.git"}
-authentication = {git = "https://github.com/SSJenny90/authentication.git"}
+django-publications-crossref = {editable = true,git = "https://github.com/SSJenny90/django-publications-crossref.git"}
+comments = {editable = true,git = "https://github.com/SSJenny90/comments.git"}
+authentication = {editable = true,git = "https://github.com/SSJenny90/authentication.git"}
+core = {editable = true,git = "https://github.com/SSJenny90/core.git"}
 
 [requires]
 python_version = "3.8"
