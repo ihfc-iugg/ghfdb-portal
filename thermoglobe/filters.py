@@ -1,29 +1,68 @@
 from .models import Site
-from mapping.models import Sea, Country, Continent, Province
+from mapping.models import Ocean, Country, Continent, Province
 # import django_filters as df
 from django_filters import MultipleChoiceFilter, ChoiceFilter, RangeFilter
 from django.contrib import admin
 from django.utils.translation import gettext as _
-from django.db.models import Q
 from django.db import models
-from thermoglobe.forms import DownloadBasicForm, MapFilterForm
+from thermoglobe.forms import DownloadBasicForm
+# from thermoglobe.forms import DownloadBasicForm, MapFilterForm
 from django.db.models.functions import Coalesce
 from django_filters import rest_framework as df
+from mapping.models import Plate
+from crispy_forms.helper import FormHelper
+from crispy_bootstrap5.bootstrap5 import FloatingField
+from crispy_forms.layout import Layout, ButtonHolder, Row, Column, Field, HTML, Button, Div
+
+def get_plate_choices():
+    values = list(Plate.objects.order_by("plate").values_list("plate",flat=True).distinct())
+    return [(x,x) for x in values]
 
 class MapFilter(df.FilterSet):
     site_name = df.CharFilter(lookup_expr='icontains', label='Site Name')
-    latitude__gt = df.NumberFilter(field_name='latitude', lookup_expr='gt', label='Site Name')
-    latitude__lt = df.NumberFilter(field_name='latitude', lookup_expr='lt', label=None)
-    longitude__gt = df.NumberFilter(field_name='longitude', lookup_expr='gt', label='Site Name')
-    longitude__lt = df.NumberFilter(field_name='longitude', lookup_expr='lt', label='Site Name')
-    elevation__gt = df.NumberFilter(field_name='elevation', lookup_expr='gt', label='Site Name')
-    elevation__lt = df.NumberFilter(field_name='elevation', lookup_expr='lt', label='Site Name')
+    latitude_gt = df.NumberFilter(field_name='latitude', lookup_expr='gt', label='Latitude')
+    latitude_lt = df.NumberFilter(field_name='latitude', lookup_expr='lt', label='Latitude')
+    longitude_gt = df.NumberFilter(field_name='longitude', lookup_expr='gt', label='Longitude')
+    longitude_lt = df.NumberFilter(field_name='longitude', lookup_expr='lt', label='Longitude')
+    elevation_gt = df.NumberFilter(field_name='elevation', lookup_expr='gt', label='Elevation (m)')
+    elevation_lt = df.NumberFilter(field_name='elevation', lookup_expr='lt', label='Elevation (m)')
+    plate = df.ChoiceFilter(field_name='plate__plate',
+        choices=get_plate_choices,
+        lookup_expr='exact', label='Tectonic Plate')
 
     class Meta:
         model = Site
-        # form = MapFilterForm
-        fields = ['latitude__gt','latitude__lt','id','reference']
+        fields = ["site_name"]
 
+    helper = FormHelper()
+    helper.form_method = 'GET'
+    helper.form_id = 'map-filter-form'
+    helper.layout = Layout(
+        FloatingField('site_name', placeholder='Site name'),
+        Row(
+            Div(FloatingField('latitude_lt'), css_class='w-50'),
+            css_class='justify-content-center'
+            ),
+        Row(
+            Column(FloatingField('longitude_gt')),
+            Column(FloatingField('longitude_lt')),
+            ),
+        Row(
+            Div(FloatingField('latitude_gt'), css_class='w-50'),
+            css_class='justify-content-center'
+            ),
+
+        Row(
+            Column(FloatingField('elevation_gt')),
+            Column(FloatingField('elevation_lt')),
+            css_class='justify-content-center'
+            ),
+        FloatingField('plate'),
+        ButtonHolder(
+            Button('button', 'Search', onclick='updateMap()', css_class='button solid large'),
+        )
+    )
+ 
 
 class Filter(df.FilterSet):
 
@@ -76,15 +115,10 @@ class WorldMapFilter(Filter):
             lookup_expr='exact',
         )
 
-    sea = MultipleChoiceFilter(
+    ocean = MultipleChoiceFilter(
             lookup_expr='exact',
-            choices = Sea.objects.exclude(sites__isnull=True).values_list('id','name').order_by('name'),
+            choices = Ocean.objects.exclude(sites__isnull=True).values_list('id','name').order_by('name'),
         )
-
-    # sea = ModelMultipleChoiceFilter(
-    #         queryset=Sea.objects.exclude(sites__isnull=True).values('id','name').order_by('name'),
-    #         lookup_expr='exact',
-    #     )
 
     province = MultipleChoiceFilter(
             choices=Province.objects.exclude(sites__isnull=True).values_list('id','name').order_by('name'),
@@ -103,7 +137,7 @@ class WorldMapFilter(Filter):
 
     class Meta:
         model = Site
-        fields = ['latitude','longitude','elevation','country','continent','sea','province']
+        fields = ['latitude','longitude','elevation','country','continent','ocean','province']
         # fields = ['value','latitude','longitude','elevation','country','continent','sea','province']
 
 class VerifiedFilter(admin.SimpleListFilter):
@@ -175,25 +209,7 @@ class EmptyPublications(admin.SimpleListFilter):
         )
         return options.get(self.value())
 
-class IntervalType(admin.SimpleListFilter):
-    """Show or hide if a publication has a complete reference or not
-    """
-    title = _('interval type')
 
-    parameter_name = 'interval_type'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('hf', _('Heat flow')),
-            ('tg', _('Gradient')),
-        )
-
-    def queryset(self, request, qs):
-        
-        if self.value() == 'hf':
-            return qs.filter(Q(heat_flow_corrected__isnull=False) | Q(heat_flow_uncorrected__isnull=False))
-        if self.value() == 'tg':
-            return qs.filter(Q(gradient_corrected__isnull=False) | Q(gradient_uncorrected__isnull=False))
 
 class IsCorrectedFilter(admin.SimpleListFilter):
 

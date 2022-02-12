@@ -1,50 +1,13 @@
 from django import forms
 from . import models, import_choices as choices
 from mapping import forms as map_forms
-
 from django import forms
 from django.forms import ModelForm
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, ButtonHolder, Submit, Div, Row, Column, Field, HTML, Button
-from thermoglobe.models import Site
+from crispy_bootstrap5.bootstrap5 import FloatingField
+from crispy_forms.layout import Layout, ButtonHolder, Submit, Field
 
-class MapFilterForm(forms.Form):
 
-    site_name__icontains = forms.CharField(required=False, label='Site Name')
-    latitude__gt = forms.FloatField(required=False, label='Latitude')
-    latitude__lt = forms.FloatField(required=False, label='<div class="invisible">Latitude</div>')
-    longitude__gt = forms.FloatField(required=False, label='Longitude')
-    longitude__lt = forms.FloatField(required=False, label='<div class="invisible">Longitude</div>')
-    elevation__gt = forms.FloatField(required=False, label='Elevation (m)')
-    elevation__lt = forms.FloatField(required=False, label='<div class="invisible">Elevation</div>')
-
-    class Meta:
-        model=Site
-        # fields = ['site_name','latitude__gt', 'latitude__gt']
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper(self)
-        self.helper.form_method = 'GET'
-        self.helper.form_show_labels = True
-        self.helper.form_id = 'map-filter-form'
-        self.helper.layout = Layout(
-            Field('site_name__icontains', css_class='mb-2'),
-            Row(
-                Column(Field('latitude__gt', placeholder='From', css_class='form-control'), 
-                        css_class='form-group col-md-6'),
-                Column(Field('latitude__lt', placeholder='To', css_class='form-control'), 
-                            css_class='form-group col-md-6'),
-            css_class='align-bottom',
-            ),
-            Row(Column(Field('longitude__gt', placeholder='From', css_class='form-control'), css_class='form-group col-md-6'),
-                Column(Field('longitude__lt', placeholder='To', css_class='form-control'), css_class='form-group col-md-6')),
-            Row(Column(Field('elevation__gt', placeholder='Greater than', css_class='form-control'), css_class='form-group col-md-6'),
-                Column(Field('elevation__lt', placeholder='Less than', css_class='form-control'), css_class='form-group col-md-6')),
-            ButtonHolder(
-                Button('button', 'Search', onclick='updateMap()', css_class='button mt-2'),
-            )
-            )
 class DownloadWithChoicesForm(forms.Form):
     download_type = forms.ChoiceField(
         label="Download Type",
@@ -175,6 +138,6 @@ class SiteMultiForm(ModelForm):
     form_classes = {
         'Site': SiteForm,
         'Country': map_forms.CountryForm,
-        'Sea': map_forms.SeaForm,
+        'Ocean': map_forms.OceanForm,
         'Geological Province': map_forms.ProvinceForm,
     }
