@@ -29,6 +29,7 @@ database_backup
 *.scss
 *.css.map
 *.json
+*.xz
 /heatflow/local_settings.py
 
 # Logs and databases #
@@ -70,4 +71,5 @@ bwt.pkl
 thermoglobe.json
 /cache
 /media
+/playground
 *.code-workspace

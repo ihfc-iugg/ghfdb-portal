@@ -133,6 +133,18 @@ django-rosetta = "*"
 djangorestframework-datatables-editor = "*"
 django-grappelli = "*"
 django-split-settings = "*"
+djangocms-googlemap = "*"
+djangocms-video = "*"
+crispy-bootstrap5 = "*"
+django-comments-xtd = "*"
+django-social-share = "*"
+django-lockdown = "*"
+django-background-tasks = "*"
+habanero = "*"
+drf-ujson = "*"
+django-publications-crossref = {git = "https://github.com/SSJenny90/django-publications-crossref.git"}
+comments = {git = "https://github.com/SSJenny90/comments.git"}
+authentication = {git = "https://github.com/SSJenny90/authentication.git"}
 
 [requires]
 python_version = "3.8"
