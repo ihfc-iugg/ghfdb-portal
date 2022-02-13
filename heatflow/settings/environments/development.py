@@ -11,11 +11,6 @@ if os.name == 'nt':
     os.environ['PROJ_LIB'] = OSGEO4W + r"\share\proj"
     os.environ['PATH'] = OSGEO4W + r"\bin;" + os.environ['PATH']
 
-
-# GDAL_LIBRARY_PATH = os.path.join(OSGEO4W, "bin", "gdal300.dll")
-# GEOS_LIBRARY_PATH = os.path.join(OSGEO4W, "bin","geos_c.dll")
-
-
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 DATABASES = {
