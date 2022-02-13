@@ -1,8 +1,6 @@
 import os
 from pathlib import Path
 
-APP_NAME = 'heatflow'
-
 DATA_DIR = os.path.dirname(os.path.dirname(__file__))
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -18,8 +16,8 @@ SITE_ID = 1
 INTERNAL_IPS = ['127.0.0.1',]
 
 # Application definition
-ROOT_URLCONF = f'{APP_NAME}.urls'
-WSGI_APPLICATION = f'{APP_NAME}.wsgi.application'
+ROOT_URLCONF = 'heatflow.urls'
+WSGI_APPLICATION = 'heatflow.wsgi.application'
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -69,7 +67,7 @@ GRAPPELLI_SWITCH_USER=True
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(APP_NAME, 'templates'),],
+        'DIRS': [os.path.join('heatflow', 'templates'),],
         'OPTIONS': {
             'context_processors': [
                 'django.contrib.auth.context_processors.auth',
