@@ -8,6 +8,8 @@ APP_NAME = 'heatflow'
 
 DEBUG = True if environ.get('DEBUG') == 'TRUE' else False
 
+print(environ.get('DJANGO_ENV','development'))
+
 include(*[
     'components/*.py',
     f"environments/{environ.get('DJANGO_ENV','development')}.py",

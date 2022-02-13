@@ -36,11 +36,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-if DEBUG:
-    # STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-    STATIC_ROOT = './static/'
-    MEDIA_ROOT = './media/'
-    # MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
