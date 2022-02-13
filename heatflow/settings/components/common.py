@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-APP_NAME = 'thermoglobe'
+APP_NAME = 'heatflow'
 
 DATA_DIR = os.path.dirname(os.path.dirname(__file__))
 
