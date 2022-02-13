@@ -74,7 +74,6 @@ INSTALLED_APPS = [
     'django_comments',
     'django_social_share',
     'background_task',
-    'lockdown',
     'meta',
     "sortedm2m",
     'ordered_model',
