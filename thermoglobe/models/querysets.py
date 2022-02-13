@@ -1,9 +1,6 @@
-import os
 import numpy as np
 from django.db.models.query import QuerySet
-from django.conf import settings
 
-json_data = os.path.join(settings.STATIC_ROOT, 'mapping','geojson')
 
 def options(file_name):
     return dict(
