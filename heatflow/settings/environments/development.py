@@ -13,6 +13,11 @@ if os.name == 'nt':
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+
+# STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_ROOT = './static/'
+
+
 DATABASES = {
         # 'default': {
         #     'ENGINE': 'django.db.backends.sqlite3',
