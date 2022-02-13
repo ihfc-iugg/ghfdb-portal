@@ -1,4 +1,4 @@
-import django_heroku, dj_database_url  
+import dj_database_url  
 import os 
 
 SECURE_SSL_REDIRECT = True
@@ -19,5 +19,3 @@ EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
-#KEEP THIS LAST
-django_heroku.settings(locals(), staticfiles=False)
