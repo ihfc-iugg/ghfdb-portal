@@ -1,5 +1,7 @@
 import os
 
+APP_NAME = 'thermoglobe'
+
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
@@ -19,7 +21,7 @@ DEFAULT_FILE_STORAGE = THUMBNAIL_DEFAULT_STORAGE = f'{APP_NAME}.storage_backends
 AWS_DEFAULT_ACL=None
 AWS_STATIC_LOCATION = 'static'
 STATICFILES_STORAGE = f'{APP_NAME}.storage_backends.StaticStorage'
-STATIC_URL = "https://%s/%s/" % (AWS_S3_CUSTOM_DOMAIN, AWS_STATIC_LOCATION)
+STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_STATIC_LOCATION}/"
 
 AWS_PUBLIC_MEDIA_LOCATION = 'media/public'
 DEFAULT_FILE_STORAGE = f'{APP_NAME}.storage_backends.PublicMediaStorage'
