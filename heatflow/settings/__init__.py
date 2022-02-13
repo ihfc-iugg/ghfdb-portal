@@ -91,14 +91,12 @@ INSTALLED_APPS = [
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = CRISPY_TEMPLATE_PACK = "bootstrap5"
 
-ADMINS = MANAGERS = [('Sam','admin@thermoglobe.app')]
-
 GRAPPELLI_ADMIN_TITLE='ThermoGlobe'
 
+ADMINS = MANAGERS = [('Sam','admin@thermoglobe.app')]
 DEFAULT_FROM_EMAIL = 'admin@thermoglobe.app'
-COMMENTS_XTD_FROM_EMAIL = "messagin@thermoglobe.app"
+COMMENTS_XTD_FROM_EMAIL = "messaging@thermoglobe.app"
 COMMENTS_XTD_CONTACT_EMAIL = "info@thermoglobe.app"
-
 
 META_SITE_DOMAIN = 'thermoglobe.app'
 META_SITE_NAME = 'ThermoGlobe'
