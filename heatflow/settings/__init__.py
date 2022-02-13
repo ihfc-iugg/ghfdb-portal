@@ -3,12 +3,13 @@ from os import environ
 from comments.app_settings import *
 from authentication.app_settings import *
 import os 
+import django_heroku, dj_database_url  
 
 APP_NAME = 'heatflow'
 
 DEBUG = True if environ.get('DEBUG') == 'TRUE' else False
 
-print(environ.get('DJANGO_ENV','development'))
+environ.get('DJANGO_ENV','development')
 
 include(*[
     'components/*.py',
@@ -120,3 +121,12 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
+#KEEP THIS LAST
+if environ.get('DJANGO_ENV','production'):
+    DATABASES = {
+        'default': dj_database_url.config(
+            conn_max_age=600, 
+            ssl_require=True)
+    }
+    django_heroku.settings(locals(), staticfiles=False)
+    DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
