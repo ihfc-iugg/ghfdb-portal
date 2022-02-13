@@ -146,6 +146,7 @@ django-publications-crossref = {editable = true,git = "https://github.com/SSJenn
 comments = {editable = true,git = "https://github.com/SSJenny90/comments.git"}
 authentication = {editable = true,git = "https://github.com/SSJenny90/authentication.git"}
 core = {editable = true,git = "https://github.com/SSJenny90/core.git"}
+django-storages = "*"
 
 [requires]
 python_version = "3.8"

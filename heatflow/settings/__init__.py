@@ -64,7 +64,7 @@ INSTALLED_APPS = [
     'taggit',
     'taggit_autosuggest',
     'django_filters',
-    # 'storages',
+    'storages',
     'crispy_forms',
     'crispy_bootstrap5',
     'django_comments_xtd',
