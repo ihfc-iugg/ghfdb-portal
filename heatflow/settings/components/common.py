@@ -106,5 +106,4 @@ MIDDLEWARE = [
     'cms.middleware.toolbar.ToolbarMiddleware',
     'cms.middleware.language.LanguageCookieMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
-    'lockdown.middleware.LockdownMiddleware',
 ]
