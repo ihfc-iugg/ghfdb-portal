@@ -26,6 +26,6 @@ class Corrections(admin.StackedInline):
         ('compaction_flag','compaction'),
         ('other_flag','other_type','other'),       
         ]
-    # radio_fields = {'climate_flag': admin.HORIZONTAL}
+
     classes = ['collapse']
 

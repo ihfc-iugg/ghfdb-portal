@@ -11,8 +11,9 @@ from django.db.models.functions import Coalesce
 from django_filters import rest_framework as df
 from mapping.models import Plate
 from crispy_forms.helper import FormHelper
-from crispy_bootstrap5.bootstrap5 import FloatingField
+from crispy_bootstrap5.bootstrap5 import FloatingField, BS5Accordion
 from crispy_forms.layout import Layout, ButtonHolder, Row, Column, Field, HTML, Button, Div
+from crispy_forms.bootstrap import AccordionGroup
 
 def get_plate_choices():
     values = list(Plate.objects.order_by("plate").values_list("plate",flat=True).distinct())
@@ -29,6 +30,9 @@ class MapFilter(df.FilterSet):
     plate = df.ChoiceFilter(field_name='plate__plate',
         choices=get_plate_choices,
         lookup_expr='exact', label='Tectonic Plate')
+    crust_type = df.ChoiceFilter(field_name='plate__plate',
+        choices=[('continental','Continental'),{'oceanic','Oceanic'}],
+        lookup_expr='exact', label='Crust Type')
 
     class Meta:
         model = Site
@@ -38,26 +42,34 @@ class MapFilter(df.FilterSet):
     helper.form_method = 'GET'
     helper.form_id = 'map-filter-form'
     helper.layout = Layout(
-        FloatingField('site_name', placeholder='Site name'),
-        Row(
-            Div(FloatingField('latitude_lt'), css_class='w-50'),
-            css_class='justify-content-center'
-            ),
-        Row(
-            Column(FloatingField('longitude_gt')),
-            Column(FloatingField('longitude_lt')),
-            ),
-        Row(
-            Div(FloatingField('latitude_gt'), css_class='w-50'),
-            css_class='justify-content-center'
-            ),
+        BS5Accordion(
+            AccordionGroup('Geographic',
+                FloatingField('site_name', placeholder='Site name'),
+                Row(
+                    Div(FloatingField('latitude_lt'), css_class='w-50'),
+                    css_class='justify-content-center'
+                    ),
+                Row(
+                    Column(FloatingField('longitude_gt')),
+                    Column(FloatingField('longitude_lt')),
+                    ),
+                Row(
+                    Div(FloatingField('latitude_gt'), css_class='w-50'),
+                    css_class='justify-content-center'
+                    ),
 
-        Row(
-            Column(FloatingField('elevation_gt')),
-            Column(FloatingField('elevation_lt')),
-            css_class='justify-content-center'
-            ),
-        FloatingField('plate'),
+                Row(
+                    Column(FloatingField('elevation_gt')),
+                    Column(FloatingField('elevation_lt')),
+                    css_class='justify-content-center'
+                    ),
+                ),
+            AccordionGroup('Geology',
+                FloatingField('plate'),
+                FloatingField('crust_type'),
+                ),
+        flush=True,
+        ),
         ButtonHolder(
             Button('button', 'Search', onclick='updateMap()', css_class='button solid large'),
         )
@@ -138,27 +150,6 @@ class WorldMapFilter(Filter):
     class Meta:
         model = Site
         fields = ['latitude','longitude','elevation','country','continent','ocean','province']
-        # fields = ['value','latitude','longitude','elevation','country','continent','sea','province']
-
-class VerifiedFilter(admin.SimpleListFilter):
-
-    title = _('is verified')
-
-    parameter_name = 'is_verified'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('yes', _('Yes')),
-            ('no',  _('No')),
-        )
-
-    def queryset(self, request, queryset):
-
-        if self.value() == 'yes':
-            return queryset.filter(is_verified=False)
-
-        if self.value() == 'no':
-            return queryset.filter(is_verified=True)
 
 class EmptySites(admin.SimpleListFilter):
 
