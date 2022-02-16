@@ -163,13 +163,6 @@ class Political(Base):
     id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=100,blank=True,null=True)
     iso = models.CharField(max_length=5,blank=True,null=True)
-    # territory = models.CharField(max_length=254)
-    # iso_territory = models.CharField(max_length=254, null=True, blank=True)
-    # un_territory = models.BigIntegerField(null=True, blank=True)
-
-    # sovereign = models.CharField(max_length=254)
-    # iso_sovereign = models.CharField(max_length=254,null=True, blank=True)
-    # un_sovereign = models.BigIntegerField(null=True, blank=True)
 
     poly = models.MultiPolygonField(srid=4326)
 
