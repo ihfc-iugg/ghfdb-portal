@@ -14,12 +14,13 @@ from .forms import ConfirmImportForm, ImportForm
 import zipfile as zf
 from django.contrib.gis.utils import LayerMapping
 from django.core.cache import caches
+from import_export.admin import ImportExportActionModelAdmin
 
-class MappingAbstract(ImportMixin, admin.GeoModelAdmin):
+class MappingAbstract(ImportExportActionModelAdmin, admin.GeoModelAdmin):
     #: template for change_list view
-    change_list_template = 'admin/mapping/change_list_import.html'
+    # change_list_template = 'admin/mapping/change_list_import.html'
     #: template for import view
-    import_template_name = 'admin/mapping/import.html'
+    # import_template_name = 'admin/mapping/import.html'
 
     def get_queryset(self, request):
         return (super().get_queryset(request)
@@ -74,11 +75,11 @@ class MappingAbstract(ImportMixin, admin.GeoModelAdmin):
 
             return self.process_result(result, request)
 
-    def get_confirm_import_form(self):
-        return ConfirmImportForm
+    # def get_confirm_import_form(self):
+    #     return ConfirmImportForm
 
-    def get_import_form(self):
-        return ImportForm
+    # def get_import_form(self):
+    #     return ImportForm
 
 @admin.register(Country)
 class CountryAdmin(MappingAbstract):
