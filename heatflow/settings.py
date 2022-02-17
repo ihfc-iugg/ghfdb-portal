@@ -9,6 +9,8 @@ ADMINS = MANAGERS = [('Sam','sam.jennings@geoluminate.com.au')]
 # UNCOMMENT TO COLLECTSTATIC TO AWS S3
 # STATICFILES_STORAGE = f'{APP_NAME}.storage_backends.StaticStorage'
 
+
+
 ALLOWED_HOSTS += ['thermoglobe.herokuapp.com','www.thermoglobe.app','thermoglobe.app']
 
 INSTALLED_APPS = [
@@ -113,7 +115,6 @@ TEMPLATES[0]['DIRS'].append(os.path.join(APP_NAME, 'templates'))
 # MIDDLEWARE.append('lockdown.middleware.LockdownMiddleware')
 
 
-STATICFILES_STORAGE = f'{APP_NAME}.storage_backends.StaticStorage'
 THUMBNAIL_DEFAULT_STORAGE = f'{APP_NAME}.storage_backends.PublicMediaStorage'
 PRIVATE_FILE_STORAGE = DEFAULT_FILE_STORAGE = f'{APP_NAME}.storage_backends.PrivateMediaStorage'
 
@@ -163,6 +164,9 @@ if os.getenv('DJANGO_ENV') == 'development':
 
 else:
     import django_heroku, dj_database_url  
+    STATICFILES_STORAGE = f'{APP_NAME}.storage_backends.StaticStorage'
+    STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_STATIC_LOCATION}/"
+
     SECURE_SSL_REDIRECT = True
     DATABASES = {
         'default': dj_database_url.config(
