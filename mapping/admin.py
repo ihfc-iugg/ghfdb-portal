@@ -83,74 +83,50 @@ class MappingAbstract(ImportExportActionModelAdmin, admin.GeoModelAdmin):
 
 @admin.register(Country)
 class CountryAdmin(MappingAbstract):
-    list_display = ['name','region','subregion','number_of_sites']
+    list_display = ['name','iso3','region','subregion','number_of_sites']
     search_fields = ['name','region','subregion',]
     list_filter = ['region']
-    # readonly_fields = ['name','region','subregion','iso3'],
-
-    fields = [
-        'poly',
-        'name',
-        ('region','subregion'),
-        'iso3',
-    ]
+    readonly_fields = ['name','region','subregion','iso3']
+    fields = ['poly', ('iso3','name', 'region','subregion')]
     
 @admin.register(Continent)
 class ContinentAdmin(MappingAbstract):
     list_display = ['name','number_of_sites']
-    fields = [
-        'name',
-        'poly',
-        ('shape_area','sqkm'),
-    ]
+    readonly_fields = ['name']
+    fields = ['name','poly']
 
 @admin.register(Political)
 class PoliticalAdmin(MappingAbstract):
-    list_display = ['iso','name']
+    list_display = ['name','iso','number_of_sites']
+    readonly_fields = ['iso','name']
     search_fields = ['iso','name']
-
-    fields = ['name','poly']
+    fields = ['poly',('iso','name')]
 
 @admin.register(Province)
 class ProvinceAdmin(MappingAbstract):
-    list_display = ['name',
-            'type',
-            'group',
-            'last_orogen',
-            'crust_type',
-            'reference','number_of_sites']
-    search_fields = ['name','reference',]
-    list_filter = ['type','group','crust_type','last_orogen',]
-    fields = [  'poly',
-                'name',
-                'type',
-                'reference',
-                'group',
-                'last_orogen',
-                'crust_type',
-                ]
+    list_display = ['name', 'type', 'group', 'last_orogen', 'crust', 'number_of_sites']
+    search_fields = ['name',]
+    list_filter = ['type','group','crust','last_orogen',]
+    readonly_fields = ['name', 'type', 'group', 'last_orogen', 'crust']
+    fields = ['poly',('name','group'), ('type', 'crust', 'last_orogen')]
 
 @admin.register(Ocean)
 class Ocean(MappingAbstract):
     list_display = ['name','number_of_sites']
     search_fields = ['name']
-
-    fields = [
-        'name',
-        'poly',
-    ]
+    readonly_fields = ['name']
+    fields = ['poly','name']
 
 @admin.register(Plate)
 class Plate(MappingAbstract):
     change_list_template = "admin/change_list_filter_sidebar.html"
-
     list_display = [
-        'id','name','plate','plate_id','poly_name','plate_type',
-        'crust_type','domain','references','number_of_sites']
+        'id','name','plate','plate_id','poly_name','type',
+        'crust_type','domain','number_of_sites']
 
     search_fields = ['name','plate','poly_name']
 
-    list_filter = ['plate','plate_type','crust_type','domain']
+    list_filter = ['plate','type','crust_type','domain']
     fields =  ['poly',
-        'id','name','plate','plate_id','poly_name','plate_type',
-        'crust_type','domain','references',]
+        'id','name','plate','plate_id','poly_name','type',
+        'crust_type','domain']

@@ -180,7 +180,6 @@ class Province(Base):
     mapping = {
     'name': 'prov_name',
     'type': 'prov_type',
-    'reference': 'prov_ref',
     'group': 'prov_group',
     'last_orogen': 'lastorogen',
     'crust_type': 'crust_type',
@@ -189,10 +188,9 @@ class Province(Base):
 
     name = models.CharField(max_length=64, blank=True, null=True)
     type = models.CharField(max_length=32, blank=True, null=True)
-    reference = models.CharField(max_length=64, blank=True, null=True)
     group = models.CharField(max_length=254, blank=True, null=True)
     last_orogen = models.CharField(max_length=254, blank=True, null=True)
-    crust_type = models.CharField(max_length=254, blank=True, null=True)
+    crust = models.CharField(max_length=254, blank=True, null=True)
     poly = models.MultiPolygonField(srid=4326)
 
     class Meta:
@@ -205,8 +203,8 @@ class Province(Base):
 
 class Plate(Base):
     crust_choices = [
-        ('continental', _('continental')),
-        ('oceanic', _('oceanic')),
+        ('C', _('Continental')),
+        ('O', _('Oceanic')),
     ]
 
     mapping = {
@@ -218,7 +216,6 @@ class Plate(Base):
         'plate_type': 'plate_type',
         'crust_type': 'crust_type',
         'domain': 'domain',
-        'references': 'plate_ref',
         'poly': 'MULTIPOLYGON',
     }
 
@@ -227,10 +224,9 @@ class Plate(Base):
     plate = models.CharField(max_length=128)
     name = models.CharField(max_length=128)
     poly_name = models.CharField(max_length=100)
-    plate_type = models.CharField(max_length=64)
-    crust_type = models.CharField(max_length=12,choices=crust_choices)
+    type = models.CharField(max_length=64)
+    crust_type = models.CharField(max_length=1,choices=crust_choices)
     domain = models.CharField(max_length=64, blank=True, null=True)
-    references = models.CharField(max_length=100, blank=True, null=True)
     poly = models.MultiPolygonField(srid=4236)
 
     class Meta:
