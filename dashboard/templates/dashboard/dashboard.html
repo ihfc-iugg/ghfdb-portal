@@ -7,20 +7,20 @@
 		<div class='logo'>
 			<span class='fas fa-tachometer-alt'></span><strong> Dashboard </strong>{{ user.display_name }}
 		</div>
-		<ul class="icons">
+		{% comment %} <ul class="icons">
 			<li><a href="{% url 'dashboard:settings' %}" class="icon brands"><span class="fas fa-user-cog"></span></a></li>
-		</ul>
+		</ul> {% endcomment %}
 	</header>
 
 	<section class='d-flex flex-row-reverse'>
 		<div class='w-25 ps-3'>
 			<ul class='alt nav flex-column' id="myTab" role="tablist">
-				<li>
+				{% comment %} <li>
 					<a href="#publicationPanel" data-bs-toggle="tab" data-bs-target="#publicationPanel" class="active icon solid fa-book" aria-current="page"><span class='ps-2'>{% trans "Publications" %}</span></a>
 				</li>
 				<li>
 					<a href="#projectPanel" data-bs-toggle="tab" data-bs-target="#projectPanel" aria-current="page" class="icon solid fa-folder"><span class='ps-2'>{% trans "Projects" %}</span></a>
-				</li>
+				</li> {% endcomment %}
 				<li>
 					<a href="#accountPanel" data-bs-toggle="tab" data-bs-target="#accountPanel" aria-current="page" class="icon solid fa-user"><span class='ps-2'>{% trans "Account" %}</span></a>
 				</li>
@@ -28,8 +28,8 @@
 		</div>
 		<div class='w-75 border-end pe-3'>
 			<section class='tab-content'>
-				{% include "dashboard/panels/publications.html" %}
-				{% include "dashboard/panels/projects.html" %}
+				{% comment %} {% include "dashboard/panels/publications.html" %}
+				{% include "dashboard/panels/projects.html" %} {% endcomment %}
 				{% include "dashboard/panels/account.html" %}
 			</section>  
 		</div>
