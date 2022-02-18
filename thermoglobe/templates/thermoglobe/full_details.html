@@ -13,7 +13,7 @@
   <table class='table table-sm text-left'>
     <tbody> 
       {% for ref in object.reference.all %}
-        <td><a href="{% url 'publications:detail' ref.pk %}">{{ref.citekey}}</a></td>
+        <td><a href="{% url 'publications:detail' ref.pk %}">{{ref.label}}</a></td>
       {% endfor %}
     </tbody>         
   </table>

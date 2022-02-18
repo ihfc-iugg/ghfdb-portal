@@ -55,7 +55,7 @@ class SiteAdmin(BaseAdmin, ImportExportActionModelAdmin):
         return queryset
 
     def _reference(self,obj):
-        return ','.join([r.citekey for r in obj.reference.all() if r.citekey])
+        return ','.join([r.label for r in obj.reference.all() if r.label])
 
     def recalculate_geo_fields(self, request, qs):
         geos = ['countries','continents','seas','political','province']
