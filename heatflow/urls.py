@@ -4,7 +4,6 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.sitemaps.views import sitemap
-from django.conf.urls import url
 from django.conf.urls.i18n import i18n_patterns
 
 
@@ -17,7 +16,7 @@ urlpatterns = i18n_patterns(
     path('taggit_autosuggest/', include('taggit_autosuggest.urls')),
     path('', include('thermoglobe.urls')),
     path('publications/', include('publications.urls')),
-    path('comments/', include('django_comments.urls')),
+    path('comments/', include('django_comments_xtd.urls')),
     path('', include('dashboard.urls')),
 
     path('rosetta/', include('rosetta.urls')),
