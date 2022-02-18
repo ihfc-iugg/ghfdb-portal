@@ -1,6 +1,7 @@
 # Folders and files
 ###################
-static/
+/heatflow/static/
+/editorial/static/editorial/original/
 
 # Compiled source #
 ###################

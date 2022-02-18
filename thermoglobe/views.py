@@ -1,4 +1,4 @@
-import json, zipfile
+import zipfile
 from datetime import datetime as dt
 from django.db.models import F
 from django.http import HttpResponse,  JsonResponse
@@ -8,12 +8,14 @@ from django.utils.html import mark_safe
 from django.apps import apps
 from thermoglobe.mixins import DownloadMixin 
 
-# from .forms import MapFilterForm
 from .models import Site
 from .filters import MapFilter
+from .forms import DownloadBasicForm, DownloadWithChoicesForm
+from mapping.forms import MapSettingsForm
 from meta.views import Meta
 from django.http import JsonResponse
 from thermoglobe.tables import heat_flow, heat_production, conductivity, temperature
+from django.views.decorators.http import require_POST
 
 def quick_sites(request):
     """Very quick transfer of all site data for web mapping."""
@@ -21,23 +23,23 @@ def quick_sites(request):
     sites = site_filter.qs.values_list('id','latitude','longitude',)
     return JsonResponse(list(sites),safe=False)
 
-# for handling temporary file uploads before confirmation
+
 class WorldMap(DownloadMixin, TemplateView):
-    template_name = 'world_map.html'
+    template_name = 'mapping/application.html'
     filter = MapFilter
-    # download_form = DownloadBasicForm
+    download_form = DownloadWithChoicesForm
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(dict(
             filter=self.filter(),
-            # form=MapFilterForm(),
+            settings=MapSettingsForm(),
             ))
 
         context['meta'] = Meta(
-            title='World Map | HeatFlow.org',
+            title='World Map | ThermoGlobe',
             description='Interactive search and download of all data within the ThermoGlobe database. The fastest wasy to find published and unpublished thermal data related to studies of the Earth.',
-            keywords=['heat flow',' thermal gradient', 'thermal conductivity','temperature','heat production','download','ThermoGlobe','data','access']
+            keywords=['heat flow',' thermal gradient', 'thermal conductivity','temperature','heat production','ThermoGlobe','data','access']
         )
         return context
    
@@ -48,6 +50,7 @@ class WorldMap(DownloadMixin, TemplateView):
 
     def post(self, request):
         """This function controls the download of the csv file"""
+        # PREFER TO HANDLE THIS IN SEPERATE VIEW
         data_type = request.POST.get('data_type')
 
         if request.is_ajax() and self.get_filtered_queryset().is_valid():
@@ -129,20 +132,32 @@ class WorldMap(DownloadMixin, TemplateView):
 class SiteView(DownloadMixin, DetailView):
     template_name = "thermoglobe/site_details.html"
     model = Site
-    # form = SiteMultiForm
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # context['formset'] = self.form(instance={
-        #     'Site': self.get_object(),
-        #     'Country': self.get_object().country,
-        #     'Sea': self.get_object().sea,
-        #     'Geological Province': self.get_object().province,
-        #     })
         context['tables'] = [heat_flow, heat_production, conductivity, temperature]
-
         context['meta'] = self.get_object().as_meta(self.request)
         return context
 
+@require_POST
+def download(request):
+    """This should be a simple view that handles download reuqests from the application"""
+    data_type = request.POST.get('data_type')
 
+    if request.is_ajax() and self.get_filtered_queryset().is_valid():
+        if data_type in ['heat_production','conductivity','temperature']:
+            value = 'count'
+        else:
+            value = data_type
 
+        return JsonResponse({
+            'type': data_type,
+            'options': self.table_options(),
+            'columns': self.field_aliases  + [value],
+            'data': list(self.get_filtered_queryset().qs
+                .annotate(site_slug=F('slug'))
+                .values_list(*self.table_fields + [value])
+                )
+        })
+    else:
+        return self.download()

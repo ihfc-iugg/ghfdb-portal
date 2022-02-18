@@ -1,7 +1,9 @@
-from . import models
 from django import forms
 import os
 from django.utils.translation import gettext_lazy as _
+from crispy_forms.helper import FormHelper
+from crispy_bootstrap5.bootstrap5 import FloatingField
+from crispy_forms.layout import Layout, ButtonHolder, Submit, Field
 
 class ImportForm(forms.Form):
     import_file = forms.FileField(
@@ -17,25 +19,20 @@ class ConfirmImportForm(forms.Form):
         data = os.path.basename(data)
         return data
 
-class CountryForm(forms.ModelForm):
+
+class MapSettingsForm(forms.Form):
+    decluster_level = forms.IntegerField()
 
     class Meta:
-        model = models.Country
-        fields = ['name','region','subregion']
+        fields = ['decluster_level']
 
-class ContinentForm(forms.ModelForm):
-    class Meta:
-        model = models.Continent
-        fields = ['name']
-
-class OceanForm(forms.ModelForm):
-    class Meta:
-        model = models.Ocean
-        fields = ['name']
-
-class ProvinceForm(forms.ModelForm):
-    help_text = 'These fields are calculated using the GIS shapefile produced by Hasterok (2020). The information may differ from similar fields calculated using other means. Please see the FAQ page for more info.'
-    class Meta:
-        model = models.Province
-        exclude = ['id','poly','comments','continent','reference','area_km2','source_id']
-
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.widget_icon = 'filter'
+        self.name = _('filter')
+        self.helper = FormHelper(self)
+        self.helper.form_method = 'GET'
+        self.helper.form_id = 'filterForm'
+        self.helper.layout = Layout(
+                Field('decluster_level'),
+            )

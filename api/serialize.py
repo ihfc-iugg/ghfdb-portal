@@ -29,32 +29,38 @@ class SimpleSite(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = models.Site
         fields = ['url','web_url','id','site_name','latitude','longitude','elevation','description','data_counts']
-        # exclude = ['reference','slug','geom','continent','country','political','province','sea','crustal_thickness','seamount_distance','outcrop_distance']
+        exclude = ['reference','slug','geom','continent','country','political','province','sea','crustal_thickness','seamount_distance','outcrop_distance']
 
     def get_data_counts(self,obj):
         return obj.data_counts()
 
+
 class Site(serializers.HyperlinkedModelSerializer):
-    id = serializers.ReadOnlyField()
+    # id = serializers.ReadOnlyField()
+    id = serializers.CharField(read_only=True)
     web_url = serializers.URLField(source='get_absolute_url', read_only=True)
-    data_counts = serializers.SerializerMethodField()
-    
+    # data_counts = serializers.SerializerMethodField()
+
+
     class Meta:
         model = models.Site
-        exclude = ['reference','slug',]
-        read_only_fields = ['continent','country','political','province','sea','crustal_thickness','seamount_distance','outcrop_distance']
+        exclude = ['reference','slug','geom','continent','country','political','province','ocean','plate','crustal_thickness','seamount_distance','outcrop_distance']
+
+        # read_only_fields = ['continent','country','political','province','crustal_thickness','seamount_distance','outcrop_distance']
 
     def to_internal_value(self, data):
         return get_object_or_404(models.Site, pk=data['id'])
 
-    def get_data_counts(self,obj):
-        return obj.data_counts()
+    # def get_data_counts(self,obj):
+    #     return obj.data_counts()
+
 
 class Publication(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = pub_models.Publication
         exclude = ['verified_by','bibtex','pdf',]
+
 
 class Interval(serializers.HyperlinkedModelSerializer):
     id = serializers.ReadOnlyField()
@@ -89,6 +95,7 @@ class Interval(serializers.HyperlinkedModelSerializer):
             gradient_uncertainty=obj.gradient_uncorrected_uncertainty,
         )
 
+
 class Conductivity(serializers.HyperlinkedModelSerializer):
     id = serializers.ReadOnlyField()
     site = SimpleSite(read_only=True)
@@ -97,6 +104,7 @@ class Conductivity(serializers.HyperlinkedModelSerializer):
         model = models.Conductivity
         exclude = ['date_added']
         datatables_always_serialize = ('id',)
+
 
 class HeatProduction(serializers.HyperlinkedModelSerializer):
     id = serializers.ReadOnlyField()
