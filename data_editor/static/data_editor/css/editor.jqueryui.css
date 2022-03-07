@@ -1,207 +1,3 @@
-div.DTE {
-  position: relative;
-}
-div.DTE div.DTE_Header {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 52px;
-  width: 100%;
-  background-color: #e8e9eb;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
-  padding: 16px 10px 2px 16px;
-  font-size: 1.3em;
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  box-sizing: border-box;
-}
-div.DTE div.DTE_Body {
-  position: relative;
-}
-div.DTE div.DTE_Footer {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 52px;
-  width: 100%;
-  background-color: #e8e9eb;
-  border-top: 1px solid rgba(0, 0, 0, 0.15);
-  padding: 10px;
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  box-sizing: border-box;
-}
-div.DTE div.DTE_Form_Info {
-  margin-bottom: 0.5em;
-  display: none;
-}
-div.DTE div.DTE_Form_Content {
-  position: relative;
-  padding: 10px;
-}
-div.DTE div.DTE_Form_Error {
-  float: left;
-  padding: 5px;
-  display: none;
-  color: #b11f1f;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-div.DTE button.btn,
-div.DTE div.DTE_Form_Buttons button {
-  position: relative;
-  text-align: center;
-  display: block;
-  margin-top: 0;
-  padding: 0.5em 1em;
-  cursor: pointer;
-  float: right;
-  margin-left: 0.75em;
-  color: inherit;
-  font-size: 14px;
-  white-space: nowrap;
-  border: 1px solid #999;
-  -webkit-border-radius: 2px;
-  -moz-border-radius: 2px;
-  -ms-border-radius: 2px;
-  -o-border-radius: 2px;
-  border-radius: 2px;
-  -webkit-box-shadow: 1px 1px 3px #ccc;
-  -moz-box-shadow: 1px 1px 3px #ccc;
-  box-shadow: 1px 1px 3px #ccc;
-  background-color: #dcdcdc;
-  /* Fallback */
-  background-image: -webkit-linear-gradient(top, #ffffff 0%, #dcdcdc 100%);
-  /* Chrome 10+, Saf5.1+, iOS 5+ */
-  background-image: -moz-linear-gradient(top, #ffffff 0%, #dcdcdc 100%);
-  /* FF3.6 */
-  background-image: -ms-linear-gradient(top, #ffffff 0%, #dcdcdc 100%);
-  /* IE10 */
-  background-image: -o-linear-gradient(top, #ffffff 0%, #dcdcdc 100%);
-  /* Opera 11.10+ */
-  background-image: linear-gradient(to bottom, #ffffff 0%, #dcdcdc 100%);
-  filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0,StartColorStr="#ffffff", EndColorStr="#dcdcdc");
-}
-div.DTE button.btn:hover,
-div.DTE div.DTE_Form_Buttons button:hover {
-  border: 1px solid #666;
-  -webkit-box-shadow: 1px 1px 3px #999;
-  -moz-box-shadow: 1px 1px 3px #999;
-  box-shadow: 1px 1px 3px #999;
-  background-color: #cccccc;
-  /* Fallback */
-  background-image: -webkit-linear-gradient(top, #eaeaea 0%, #cccccc 100%);
-  /* Chrome 10+, Saf5.1+, iOS 5+ */
-  background-image: -moz-linear-gradient(top, #eaeaea 0%, #cccccc 100%);
-  /* FF3.6 */
-  background-image: -ms-linear-gradient(top, #eaeaea 0%, #cccccc 100%);
-  /* IE10 */
-  background-image: -o-linear-gradient(top, #eaeaea 0%, #cccccc 100%);
-  /* Opera 11.10+ */
-  background-image: linear-gradient(to bottom, #eaeaea 0%, #cccccc 100%);
-  filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0,StartColorStr="#eaeaea", EndColorStr="#cccccc");
-}
-div.DTE button.btn:active,
-div.DTE div.DTE_Form_Buttons button:active {
-  -webkit-box-shadow: inset 1px 1px 3px #999;
-  -moz-box-shadow: inset 1px 1px 3px #999;
-  box-shadow: inset 1px 1px 3px #999;
-}
-div.DTE button.btn:focus,
-div.DTE div.DTE_Form_Buttons button:focus {
-  border: 1px solid #426c9e;
-  text-shadow: 0 1px 0 #c4def1;
-  background-color: #79ace9;
-  /* Fallback */
-  background-image: -webkit-linear-gradient(top, #bddef4 0%, #79ace9 100%);
-  /* Chrome 10+, Saf5.1+, iOS 5+ */
-  background-image: -moz-linear-gradient(top, #bddef4 0%, #79ace9 100%);
-  /* FF3.6 */
-  background-image: -ms-linear-gradient(top, #bddef4 0%, #79ace9 100%);
-  /* IE10 */
-  background-image: -o-linear-gradient(top, #bddef4 0%, #79ace9 100%);
-  /* Opera 11.10+ */
-  background-image: linear-gradient(to bottom, #bddef4 0%, #79ace9 100%);
-  filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0,StartColorStr="#bddef4", EndColorStr="#79ace9");
-  outline: none;
-}
-div.DTE button.btn:focus:after,
-div.DTE div.DTE_Form_Buttons button:focus:after {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: white;
-  display: block;
-  content: " ";
-  -webkit-animation-duration: 1s;
-  -webkit-animation-name: buttonPulse;
-  -webkit-animation-fill-mode: forwards;
-  -webkit-animation-iteration-count: infinite;
-  -webkit-animation-timing-function: linear;
-  -webkit-animation-direction: alternate;
-  -moz-animation-duration: 1s;
-  -moz-animation-name: buttonPulse;
-  -moz-animation-fill-mode: forwards;
-  -moz-animation-iteration-count: infinite;
-  -moz-animation-timing-function: linear;
-  -moz-animation-direction: alternate;
-  -o-animation-duration: 1s;
-  -o-animation-name: buttonPulse;
-  -o-animation-fill-mode: forwards;
-  -o-animation-iteration-count: infinite;
-  -o-animation-timing-function: linear;
-  -o-animation-direction: alternate;
-  animation-duration: 1s;
-  animation-name: buttonPulse;
-  animation-fill-mode: forwards;
-  animation-iteration-count: infinite;
-  animation-timing-function: linear;
-  animation-direction: alternate;
-}
-div.DTE.DTE_Action_Remove div.DTE_Body_Content {
-  text-align: center;
-  padding: 20px 0;
-}
-
-@-webkit-keyframes buttonPulse {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 0.2;
-  }
-}
-@-moz-keyframes buttonPulse {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 0.2;
-  }
-}
-@-o-keyframes buttonPulse {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 0.2;
-  }
-}
-@keyframes buttonPulse {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 0.2;
-  }
-}
-div.DTTT_container {
-  float: left;
-}
-
 div.DTE_Field input,
 div.DTE_Field textarea {
   box-sizing: border-box;
@@ -767,282 +563,6 @@ span.dtr-data div.DTE_Inline {
   display: inline-table;
 }
 
-div.DTED_Lightbox_Wrapper {
-  position: fixed;
-  top: 0;
-  left: 50%;
-  margin-left: -390px;
-  width: 780px;
-  height: 100%;
-  z-index: 11;
-}
-div.DTED_Lightbox_Wrapper div.DTED_Lightbox_Container {
-  display: table;
-  height: 100%;
-  width: 100%;
-}
-div.DTED_Lightbox_Wrapper div.DTED_Lightbox_Container div.DTED_Lightbox_Content_Wrapper {
-  display: table-cell;
-  vertical-align: middle;
-  width: 100%;
-}
-div.DTED_Lightbox_Wrapper div.DTED_Lightbox_Container div.DTED_Lightbox_Content_Wrapper div.DTED_Lightbox_Content {
-  position: relative;
-  box-shadow: 0 12px 30px 0 rgba(0, 0, 0, 0.5);
-  border-radius: 6px;
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  box-sizing: border-box;
-}
-div.DTED_Lightbox_Wrapper div.DTED_Lightbox_Container div.DTED_Lightbox_Content_Wrapper div.DTED_Lightbox_Content div.DTE {
-  background: white;
-  border-radius: 6px;
-  border: 1px solid #666;
-  background: #fcfcfc;
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  box-sizing: border-box;
-}
-div.DTED_Lightbox_Wrapper div.DTED_Lightbox_Container div.DTED_Lightbox_Content_Wrapper div.DTED_Lightbox_Content div.DTE div.DTE_Header {
-  right: 0;
-  width: auto;
-  border-top-left-radius: 6px;
-  border-top-right-radius: 6px;
-}
-div.DTED_Lightbox_Wrapper div.DTED_Lightbox_Container div.DTED_Lightbox_Content_Wrapper div.DTED_Lightbox_Content div.DTE div.DTE_Body_Content {
-  box-sizing: border-box;
-  background: #fcfcfc;
-}
-div.DTED_Lightbox_Wrapper div.DTED_Lightbox_Container div.DTED_Lightbox_Content_Wrapper div.DTED_Lightbox_Content div.DTE div.DTE_Footer {
-  right: 0;
-  width: auto;
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
-}
-div.DTED_Lightbox_Wrapper div.DTED_Lightbox_Container div.DTED_Lightbox_Content_Wrapper div.DTED_Lightbox_Content div.DTED_Lightbox_Close {
-  position: absolute;
-  top: 19px;
-  right: 19px;
-  cursor: pointer;
-  z-index: 12;
-}
-div.DTED_Lightbox_Wrapper div.DTED_Lightbox_Container div.DTED_Lightbox_Content_Wrapper div.DTED_Lightbox_Content div.DTED_Lightbox_Close:after {
-  content: "×";
-  color: rgba(0, 0, 0, 0.5);
-  font-weight: bold;
-  font-size: 22px;
-  font-family: "Courier New", Courier, monospace;
-}
-div.DTED_Lightbox_Wrapper div.DTED_Lightbox_Container div.DTED_Lightbox_Content_Wrapper div.DTED_Lightbox_Content div.DTED_Lightbox_Close:hover:after {
-  color: black;
-}
-
-div.DTED_Lightbox_Wrapper div.DTE_Footer {
-  display: flex;
-  justify-content: flex-end;
-}
-div.DTED_Lightbox_Wrapper div.DTE_Footer_Content {
-  display: none;
-}
-div.DTED_Lightbox_Wrapper div.DTE.inFormError div.DTE_Footer {
-  justify-content: space-between;
-}
-
-div.DTED_Lightbox_Background {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  /* Fallback */
-  background: -ms-radial-gradient(center, ellipse farthest-corner, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.7) 100%);
-  /* IE10 Consumer Preview */
-  background: -moz-radial-gradient(center, ellipse farthest-corner, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.7) 100%);
-  /* Firefox */
-  background: -o-radial-gradient(center, ellipse farthest-corner, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.7) 100%);
-  /* Opera */
-  background: -webkit-gradient(radial, center center, 0, center center, 497, color-stop(0, rgba(0, 0, 0, 0.3)), color-stop(1, rgba(0, 0, 0, 0.7)));
-  /* Webkit (Safari/Chrome 10) */
-  background: -webkit-radial-gradient(center, ellipse farthest-corner, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.7) 100%);
-  /* Webkit (Chrome 11+) */
-  background: radial-gradient(ellipse farthest-corner at center, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.7) 100%);
-  /* W3C Markup, IE10 Release Preview */
-  z-index: 10;
-}
-div.DTED_Lightbox_Background > div {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  bottom: 0;
-  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#99000000, endColorstr=#99000000);
-  -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#99000000, endColorstr=#99000000)";
-}
-div.DTED_Lightbox_Background > div:not([dummy]) {
-  filter: progid:DXImageTransform.Microsoft.gradient(enabled="false");
-}
-
-body.DTED_Lightbox_Mobile div.DTED_Lightbox_Background {
-  height: 0;
-}
-body.DTED_Lightbox_Mobile div.DTED_Lightbox_Shown {
-  display: none;
-}
-body.DTED_Lightbox_Mobile div.DTED_Lightbox_Wrapper {
-  position: fixed;
-  top: 0px;
-  left: 0px;
-  right: 0px;
-  bottom: 0px;
-  width: auto;
-  height: auto;
-  margin-left: 0;
-  -webkit-overflow-scrolling: touch;
-}
-body.DTED_Lightbox_Mobile div.DTED_Lightbox_Wrapper div.DTED_Lightbox_Container {
-  display: block;
-  height: 100%;
-}
-body.DTED_Lightbox_Mobile div.DTED_Lightbox_Wrapper div.DTED_Lightbox_Container div.DTED_Lightbox_Content_Wrapper {
-  display: block;
-  height: 100%;
-}
-body.DTED_Lightbox_Mobile div.DTED_Lightbox_Wrapper div.DTED_Lightbox_Container div.DTED_Lightbox_Content_Wrapper div.DTED_Lightbox_Content {
-  border-radius: 0;
-  box-shadow: none;
-  height: 100% !important;
-}
-body.DTED_Lightbox_Mobile div.DTED_Lightbox_Wrapper div.DTED_Lightbox_Container div.DTED_Lightbox_Content_Wrapper div.DTED_Lightbox_Content div.DTE {
-  border-radius: 0;
-  height: 100%;
-}
-body.DTED_Lightbox_Mobile div.DTED_Lightbox_Wrapper div.DTED_Lightbox_Container div.DTED_Lightbox_Content_Wrapper div.DTED_Lightbox_Content div.DTE div.DTE_Header {
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-}
-body.DTED_Lightbox_Mobile div.DTED_Lightbox_Wrapper div.DTED_Lightbox_Container div.DTED_Lightbox_Content_Wrapper div.DTED_Lightbox_Content div.DTE div.DTE_Body_Content {
-  padding-bottom: 52px;
-}
-body.DTED_Lightbox_Mobile div.DTED_Lightbox_Wrapper div.DTED_Lightbox_Container div.DTED_Lightbox_Content_Wrapper div.DTED_Lightbox_Content div.DTE div.DTE_Footer {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-}
-body.DTED_Lightbox_Mobile div.DTED_Lightbox_Wrapper div.DTED_Lightbox_Container div.DTED_Lightbox_Content_Wrapper div.DTED_Lightbox_Content div.DTED_Lightbox_Close {
-  top: 11px;
-  right: 15px;
-  background-color: transparent;
-  border: none;
-  box-shadow: none;
-}
-
-@media only screen and (max-width: 780px) {
-  body div.DTED_Lightbox_Wrapper {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    margin-left: 0;
-  }
-  body div.DTED_Lightbox_Wrapper div.DTED_Lightbox_Close {
-    right: 0 !important;
-  }
-}
-/*
- * Namespace: DTED - DataTables Editor Display - Envelope
- */
-div.DTED_Envelope_Wrapper {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  height: 100%;
-  z-index: 11;
-  display: none;
-  overflow: hidden;
-}
-div.DTED_Envelope_Wrapper div.DTED_Envelope_Shadow {
-  position: absolute;
-  top: -10px;
-  left: 10px;
-  right: 10px;
-  height: 10px;
-  z-index: 10;
-  box-shadow: 0 0 20px black;
-}
-div.DTED_Envelope_Wrapper div.DTED_Envelope_Container {
-  position: absolute;
-  top: 0;
-  left: 5%;
-  width: 90%;
-  border-left: 1px solid #777;
-  border-right: 1px solid #777;
-  border-bottom: 1px solid #777;
-  box-shadow: 3px 3px 10px #555;
-  border-bottom-left-radius: 5px;
-  border-bottom-right-radius: 5px;
-  background-color: white;
-}
-div.DTED_Envelope_Wrapper div.DTED_Envelope_Container div.DTE_Processing_Indicator {
-  right: 36px;
-}
-div.DTED_Envelope_Wrapper div.DTED_Envelope_Container div.DTE_Footer {
-  border-bottom-left-radius: 5px;
-  border-bottom-right-radius: 5px;
-}
-div.DTED_Envelope_Wrapper div.DTED_Envelope_Container div.DTED_Envelope_Close {
-  position: absolute;
-  top: 19px;
-  right: 19px;
-  cursor: pointer;
-  z-index: 12;
-}
-div.DTED_Envelope_Wrapper div.DTED_Envelope_Container div.DTED_Envelope_Close:after {
-  content: "×";
-  color: rgba(0, 0, 0, 0.5);
-  font-weight: bold;
-  font-size: 22px;
-  font-family: "Courier New", Courier, monospace;
-}
-div.DTED_Envelope_Wrapper div.DTED_Envelope_Container div.DTED_Envelope_Close:hover:after {
-  color: black;
-}
-
-div.DTED_Envelope_Background {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  /* Fallback */
-  background: -ms-radial-gradient(center, ellipse farthest-corner, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.7) 100%);
-  /* IE10 Consumer Preview */
-  background: -moz-radial-gradient(center, ellipse farthest-corner, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.7) 100%);
-  /* Firefox */
-  background: -o-radial-gradient(center, ellipse farthest-corner, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.7) 100%);
-  /* Opera */
-  background: -webkit-gradient(radial, center center, 0, center center, 497, color-stop(0, rgba(0, 0, 0, 0.3)), color-stop(1, rgba(0, 0, 0, 0.7)));
-  /* Webkit (Safari/Chrome 10) */
-  background: -webkit-radial-gradient(center, ellipse farthest-corner, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.7) 100%);
-  /* Webkit (Chrome 11+) */
-  background: radial-gradient(ellipse farthest-corner at center, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.7) 100%);
-  /* W3C Markup, IE10 Release Preview */
-  z-index: 10;
-}
-div.DTED_Envelope_Background > div {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  bottom: 0;
-  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#99000000, endColorstr=#99000000);
-  -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#99000000, endColorstr=#99000000)";
-}
-div.DTED_Envelope_Background > div:not([dummy]) {
-  filter: progid:DXImageTransform.Microsoft.gradient(enabled="false");
-}
-
 table.dataTable tbody tr.highlight {
   background-color: #FFFBCC !important;
 }
@@ -1304,4 +824,48 @@ div.DTE div.DTE_Processing_Indicator:after {
   40% {
     transform: scale(1, 1.5);
   }
+}
+
+div.DTE {
+  font-size: 0.91em;
+}
+div.DTE div.DTE_Header {
+  display: none;
+}
+div.DTE div.DTE_Body {
+  padding: 0;
+}
+div.DTE div.DTE_Body div.DTE_Body_Content {
+  overflow: hidden;
+}
+div.DTE div.DTE_Body div.DTE_Body_Content div.DTE_Field {
+  padding: 5px 5%;
+}
+div.DTE div.DTE_Footer {
+  display: none;
+}
+div.DTE div.DTE_Form_Error {
+  padding-top: 1em;
+  color: red;
+  display: none;
+  color: #b11f1f;
+}
+div.DTE div.DTE_Processing_Indicator {
+  top: 12px;
+  right: 2px;
+  font-size: 0.8em;
+}
+div.DTE div.DTE_Form_Buttons {
+  text-align: right;
+  padding: 0;
+}
+
+div.DTE_Field_Type_datatable div.dataTables_filter {
+  padding-bottom: 0.5em;
+}
+div.DTE_Field_Type_datatable div.dt-buttons {
+  float: none;
+}
+div.DTE_Field_Type_datatable div.dt-buttons button {
+  margin-bottom: 3px;
 }
