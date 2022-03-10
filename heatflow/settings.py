@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     
     # MY APPS
     'thermoglobe',
+    'well_logs',
     'publications', 
     'mapping',
     'dashboard',
@@ -100,6 +101,10 @@ TAGGIT_CASE_INSENSITIVE = True
 RECAPTCHA_PUBLIC_KEY = os.getenv('RECAPTCHA_PUBLIC_KEY')
 RECAPTCHA_PRIVATE_KEY = os.getenv('RECAPTCHA_PRIVATE_KEY')
 
+
+CROSSREF_UA_STRING = "ThermoGlobe Research Database (https://thermoglobe.app)"
+CROSSREF_MAILTO = 'sam.jennings@geoluminate.com.au'
+
 SOCIALACCOUNT_PROVIDERS = {
     'orcid': {
         # Base domain of the API. Default value: 'orcid.org', for the production API
@@ -120,21 +125,36 @@ PRIVATE_FILE_STORAGE = DEFAULT_FILE_STORAGE = f'{APP_NAME}.storage_backends.Priv
 
 
 REST_FRAMEWORK = {
+    "HTML_SELECT_CUTOFF": 10,
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
    ],
     'DEFAULT_RENDERER_CLASSES': [
-        'drf_ujson.renderers.UJSONRenderer',
-        # 'rest_framework.renderers.JSONRenderer',
+        # 'drf_ujson.renderers.UJSONRenderer',
+        'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
         'drf_renderer_xlsx.renderers.XLSXRenderer',
+        'rest_framework_datatables_editor.renderers.DatatablesRenderer',
     ],
+
+    'DEFAULT_FILTER_BACKENDS': (
+        'rest_framework_datatables_editor.filters.DatatablesFilterBackend',
+    ),
+
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework_datatables_editor.pagination.DatatablesPageNumberPagination',
+
+    # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+
+
+    'PAGE_SIZE': 50,
+    
     'DEFAULT_PARSER_CLASSES': [
-        'drf_ujson.parsers.UJSONParser',
+        'rest_framework.renderers.JSONRenderer',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 100
+
+       
+
 }
 
 

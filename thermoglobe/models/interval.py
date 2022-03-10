@@ -130,75 +130,16 @@ class Interval(models.Model):
         blank=True, null=True, 
         on_delete=models.SET_NULL)
     
-    date_added = models.DateTimeField(_('date added to ThermoGlobe'),
+    date_added = models.DateTimeField(_('added'),
             auto_now_add=True,
         )
 
     class Meta:
         db_table = 'interval'
-
+        ordering = ['date_added']
     def interval(self, obj):
         return '{}-{}'.format(obj.depth_min, obj.depth_max)
 
-class Correction(models.Model):
-    heatflow = models.OneToOneField("Interval",
-        related_name='corrections',
-        blank=True, null=True, 
-        on_delete=models.CASCADE)
-    
-    climate_flag = models.BooleanField(_('climate corrected'),null=True, default=None)
-    climate = models.FloatField(_('value'),
-            help_text=_('Value of a climatic correction applied to the associated heat flow and thermal gradient estimates.'),
-            blank=True, null=True)
-
-    topographic_flag = models.BooleanField(_('topographic corrected'),null=True, default=None)
-    topographic = models.FloatField(_('value'),
-            help_text=_('Value of a topographic correction applied to the associated heat flow and thermal gradient estimates.'),
-            blank=True, null=True)
-
-    refraction_flag = models.BooleanField(_('refraction corrected'),null=True, default=None)
-    refraction = models.FloatField(_('value'),
-            help_text=_('Value of a refraction correction applied to the associated heat flow and thermal gradient estimates.'),
-            blank=True, null=True)
-
-    sed_erosion_flag = models.BooleanField(_('sedimentation corrected'),null=True, default=None)
-    sed_erosion = models.FloatField(_('value'),
-            help_text=_('Value of a sedimentation correction applied to the associated heat flow and thermal gradient estimates.'),
-            blank=True, null=True)
-
-    fluid_flag = models.BooleanField(_('fluid corrected'),null=True, default=None)
-    fluid = models.FloatField(_('value'),
-            help_text=_('Value of a fluid correction applied to the associated heat flow and thermal gradient estimates.'),
-            blank=True, null=True)
-
-    bwv_flag = models.BooleanField(_('BWV corrected'),null=True, default=None)
-    bwv = models.FloatField(_('value'),
-            help_text=_('Value of a bottom water variation correction applied to the associated heat flow and thermal gradient estimates.'),
-            blank=True, null=True)
-
-    compaction_flag = models.BooleanField(_('compaction corrected'),null=True, default=None)
-    compaction = models.FloatField(_('value'),
-            help_text=_('Value of a compaction correction applied to the associated heat flow and thermal gradient estimates.'),
-            blank=True, null=True)
-
-    other_flag = models.BooleanField(_('other'),null=True, default=None)
-    other_type = models.CharField(_('type of correction'),
-            help_text=_('Specifies the type of correction if the type does not belong to one of the other categories.'),
-            max_length=100,blank=True, null=True)
-    other = models.FloatField(_('value'),
-            help_text=_('Value of any other correction applied to the associated heat flow and thermal gradient estimates.'),
-            blank=True, null=True)
-
-    class Meta:
-        db_table = 'correction'
-
-    def save(self, *args, **kwargs):
-        corrections = ['climate','topographic','refraction','sed_erosion','fluid','bwv','compaction','other']
-        for correction in corrections:
-            if getattr(self,correction):
-                setattr(self,correction+'_flag',True)
-
-        super().save(*args, **kwargs)
 
 class HeatFlow(Interval):
 
@@ -222,3 +163,28 @@ class Gradient(Interval):
     def _corrected(self):
         return True if self.gradient_corrected else False
     _corrected.boolean = True
+
+class Correction(models.Model):
+    class Type(models.TextChoices):
+        CLIMATE = 'CLIM', _('Climate')
+        TOPOGRAPHIC = 'TOPO', _('Topographic')
+        REFRACTION = 'REFR', _('Refraction')
+        FLUID = 'FLUI', _('Fluid')
+        BWV = 'BWV', _('Bottom Water Variation')
+        EROSION = 'EROS', _('Erosion')
+        COMPACTION = 'COMP', _('Compaction')
+        OTHER = 'OTH', _('Other')
+        COMPOSITE = 'CMPS', _('composite')
+        TILT = 'TILT', _('tilt')
+
+
+    interval = models.ForeignKey("thermoglobe.Interval",
+            verbose_name=_("interval"),
+            related_name='corrections', 
+            on_delete=models.CASCADE)
+    type = models.CharField(_('correction type'),
+        max_length=4, choices= Type.choices)
+    value = models.FloatField(_('value'), blank=True, null=True)
+
+    class Meta:
+        db_table = 'heat_flow_correction'
