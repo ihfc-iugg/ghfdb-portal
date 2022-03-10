@@ -1,53 +1,79 @@
 $.extend( $.fn.dataTable.defaults, {
-  dom: `<"top"lf>
-          rt
-        <"bottom"ip>
-        <"clear">`,
+  dom: '<"top"ipl>rt<"bottom"p><"clear">',
+  ordering: false,
   responsive: true,
+  processing: true,
   serverSide: true,
   pageLength: 50,
 } );
 
 $.fn.create_table = function(options) {
-  this.DataTable( {
-      columnDefs: [{targets: [0], render: $.fn.dataTable.render.href()}],
-  });
-return this;
-};
+    colDefs = [];
+    // web_url = $(this).attr("data-weburl");
+    // console.log(web_url)
+    // prepend = $(this).attr("data-linkPrepend");
 
+    // if (link) {
+      // colDefs.push({targets: [0], render: $.fn.dataTable.render.href(prepend,web_url)})
+    var colDefs = [{targets: [0], render: $.fn.dataTable.render.href()}];
+    // }
+
+    this.DataTable( {
+        columnDefs: colDefs,
+        ajax: {
+          type: "GET",
+          url: $(this).attr("data-url"),
+          dataSrc: 'results',
+          dataFilter: function(data) {
+              var json = jQuery.parseJSON( data );
+              json.recordsTotal = json.count;
+              json.recordsFiltered = json.count;
+              return JSON.stringify( json );
+          },
+        },
+    });
+  return this;
+};
 
 $.fn.dataTable.render.href = function ( href ) {
   return function ( data, type, row ) {
       return '<a href='+row.site.web_url+'>'+data+'</a>'
+      // return '<a href='+href+row.site.id+'>'+data+'</a>'
   }
 };
 
-function getCookie(name) {
-  var cookieValue = null;
-  if (document.cookie && document.cookie != '') {
-      var cookies = document.cookie.split(';');
-      for (var i = 0; i < cookies.length; i++) {
-          var cookie = jQuery.trim(cookies[i]);
-          // Does this cookie string begin with the name we want?
-          if (cookie.substring(0, name.length + 1) == (name + '=')) {
-              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-              break;
-          }
-      }
-  }
-  return cookieValue;
-}
-var csrftoken = getCookie('csrftoken');
+// $('tbody tr').hover(function () {
+//   var data = site.row( this ).data();
+//   console.log(data)
+//   var coordinates = new L.LatLng(data.latitude,data.longitude);
+//   marker.setLatLng(coordinates);
+//   marker.addTo(map)
+// });
 
-function csrfSafeMethod(method) {
-  // these HTTP methods do not require CSRF protection
-  return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-}
+// $('#dataTable').on( 'mouseenter', 'tbody tr', function () {
+//   var data = table.row( this ).data();
+//   var coordinates = new L.LatLng(data[2],data[3]);
+//   tmpMarker.setLatLng(coordinates);
+//   tmpMarker.addTo(map)
+// } );
 
-$.ajaxSetup({
-  beforeSend: function (xhr, settings) {
-      if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-          xhr.setRequestHeader("X-CSRFToken", csrftoken);
-      }
-  }
-});
+// $('#dataTable').on( 'click', 'tbody tr', function () {
+//   var data = table.cells( this, '' ).render( 'display' );
+
+//   var lat, lon = none,none;
+
+//   var popup = '<table>'
+//   table.columns().header().each(function(column, index){
+//     if (column.innerHTML.toLowerCase() === 'latitude') {
+//       lat = data[index]
+//     } else if (column.innerHTML.toLowerCase() === 'longitude')  {
+//       lon = data[index]
+//     }
+//     popup += `<tr><td>${column.innerHTML}:</td><td>${data[index]}</td></tr>`
+//   })
+//   var coordinates = new L.LatLng(lat, lon);
+//   new L.marker(coordinates).addTo(map).bindPopup(popup + '</table>');
+
+// } );
+
+

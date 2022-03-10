@@ -96,7 +96,8 @@ function get_url() {
 }
 
 function updateMap() {
-  url = '/api/geojson/site/?'+ encodeURI($('#map-filter-form').serialize())
+
+  url = '/api/geojson/site/?'+ encodeURI($('#map-filter-form').serialize()) + encodeURI(reference)
   geojson.refresh(url)
   clusters.clearLayers()
   clusters.addLayer(geojson)
