@@ -42,7 +42,7 @@ var data = new L.Util.ajax(get_url()).then(function(data){
           weight:1, //stroke weight in pixels
           });
       m.on('click',getMarkerPopup)
-      m.url = `/api/site/${site[0]}`
+      m.url = `/api/sites/${site[0]}`
       markers.push(m)
     });
     var sites = L.featureGroup(markers)

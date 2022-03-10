@@ -1,5 +1,6 @@
 import os
 from core.settings import *
+from django.utils.translation import ugettext_lazy as _
 
 SITE_NAME = 'ThermoGlobe'
 EMAIL_DOMAIN = "@thermoglobe.app"
@@ -7,7 +8,8 @@ APP_NAME = 'heatflow'
 ADMINS = MANAGERS = [('Sam','sam.jennings@geoluminate.com.au')]
 
 # UNCOMMENT TO COLLECTSTATIC TO AWS S3
-# STATICFILES_STORAGE = f'{APP_NAME}.storage_backends.StaticStorage'
+STATICFILES_STORAGE = f'{APP_NAME}.storage_backends.StaticStorage'
+STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_STATIC_LOCATION}/"
 
 
 
@@ -156,6 +158,14 @@ REST_FRAMEWORK = {
        
 
 }
+
+LANGUAGES = (
+    ## Customize this
+    ('en', _('English')),
+    ('de', _('German')),
+    ('fr', _('French')),
+    ('it', _('Italian')),
+)
 
 
 if os.getenv('DJANGO_ENV') == 'development':
