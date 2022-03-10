@@ -1,20 +1,21 @@
 # from django.contrib.auth.models import User, Group
 from rest_framework import serializers
-from thermoglobe import models
+from thermoglobe.models import Site, Interval
 from publications import models as pub_models
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 from django.shortcuts import get_object_or_404
+from well_logs import models
 
 class GeoSite(serializers.HyperlinkedModelSerializer):
 
     class Meta:
-        model = models.Site
+        model = Site
         fields = ['url','latitude','longitude',]
 
 class GeoSite2(serializers.HyperlinkedModelSerializer,GeoFeatureModelSerializer):
     # link = serializers.URLField(source='get_absolute_url', read_only=True)
     class Meta:
-        model = models.Site
+        model = Site
         geo_field = 'geom'
         fields = ['url','site_name',]
 
@@ -24,16 +25,11 @@ class GeoSite2(serializers.HyperlinkedModelSerializer,GeoFeatureModelSerializer)
 class SimpleSite(serializers.HyperlinkedModelSerializer):
     id = serializers.ReadOnlyField()
     web_url = serializers.URLField(source='get_absolute_url', read_only=True)
-    data_counts = serializers.SerializerMethodField()
 
     class Meta:
-        model = models.Site
-        fields = ['url','web_url','id','site_name','latitude','longitude','elevation','description','data_counts']
-        exclude = ['reference','slug','geom','continent','country','political','province','sea','crustal_thickness','seamount_distance','outcrop_distance']
-
-    def get_data_counts(self,obj):
-        return obj.data_counts()
-
+        model = Site
+        fields = ['web_url','id','site_name','latitude','longitude']
+        # exclude = ['reference','slug','geom','continent','country','political','province','crustal_thickness','seamount_distance','outcrop_distance']
 
 class Site(serializers.HyperlinkedModelSerializer):
     # id = serializers.ReadOnlyField()
@@ -43,13 +39,13 @@ class Site(serializers.HyperlinkedModelSerializer):
 
 
     class Meta:
-        model = models.Site
+        model = Site
         exclude = ['reference','slug','geom','continent','country','political','province','ocean','plate','crustal_thickness','seamount_distance','outcrop_distance']
 
         # read_only_fields = ['continent','country','political','province','crustal_thickness','seamount_distance','outcrop_distance']
 
     def to_internal_value(self, data):
-        return get_object_or_404(models.Site, pk=data['id'])
+        return get_object_or_404(Site, pk=data['id'])
 
     # def get_data_counts(self,obj):
     #     return obj.data_counts()
@@ -75,7 +71,7 @@ class Interval(serializers.HyperlinkedModelSerializer):
     _uncorrected = serializers.SerializerMethodField()
 
     class Meta:
-        model = models.Interval
+        model = Interval
         exclude = ['global_by','heat_flow_corrected','heat_flow_corrected_uncertainty','gradient_corrected','gradient_corrected_uncertainty','heat_flow_uncorrected','heat_flow_uncorrected_uncertainty','gradient_uncorrected','gradient_uncorrected_uncertainty']
         datatables_always_serialize = ('id',)
 
@@ -96,14 +92,6 @@ class Interval(serializers.HyperlinkedModelSerializer):
         )
 
 
-class Conductivity(serializers.HyperlinkedModelSerializer):
-    id = serializers.ReadOnlyField()
-    site = SimpleSite(read_only=True)
-
-    class Meta:
-        model = models.Conductivity
-        exclude = ['date_added']
-        datatables_always_serialize = ('id',)
 
 
 class HeatProduction(serializers.HyperlinkedModelSerializer):
@@ -111,15 +99,15 @@ class HeatProduction(serializers.HyperlinkedModelSerializer):
     site = SimpleSite(read_only=True)
 
     class Meta:
-        model = models.HeatProduction
+        model = models.HeatProductionLog
         exclude = ['date_added']
         datatables_always_serialize = ('id',)
 
-    DT_RowAttr = serializers.SerializerMethodField()
+    # DT_RowAttr = serializers.SerializerMethodField()
 
-    @staticmethod
-    def get_DT_RowAttr(album):
-        return {'data-pk': album.pk}
+    # @staticmethod
+    # def get_DT_RowAttr(album):
+    #     return {'data-pk': album.pk}
 
 
 class Temperature(serializers.HyperlinkedModelSerializer):
@@ -127,8 +115,9 @@ class Temperature(serializers.HyperlinkedModelSerializer):
     site = SimpleSite(read_only=True)
     
     class Meta:
-        model = models.Temperature
-        exclude = ['date_added']
+        model = models.TemperatureLog
+        # exclude = ['date_added']
+        fields = '__all__'
         datatables_always_serialize = ('id',)
 
 

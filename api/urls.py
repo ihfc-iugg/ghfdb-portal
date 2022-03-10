@@ -3,16 +3,16 @@ from rest_framework import routers
 from api import views
 from rest_framework.schemas import get_schema_view
 from rest_framework_gis.schema import GeoFeatureAutoSchema
-
+from well_logs.api.views import TemperatureViewSet, ConductivityViewSet, HeatProductionViewSet
 router = routers.DefaultRouter()
 # router.register(r'geojson/site', views.GeoSiteViewSet,basename='geojson')
-router.register(r'site', views.SiteViewSet)
-router.register(r'publication', views.PublicationViewSet)
-router.register(r'heat-flow', views.HeatFlowViewSet,basename='heat-flow')
-router.register(r'gradient', views.GradientViewSet)
-router.register(r'conductivity', views.ConductivityViewSet)
-router.register(r'heat-production', views.HeatProductionViewSet)
-router.register(r'temperature', views.TemperatureViewSet)
+router.register(r'sites', views.SiteViewSet)
+router.register(r'publications', views.PublicationViewSet)
+router.register(r'intervals/heat-flow', views.HeatFlowViewSet,basename='heat-flow')
+router.register(r'intervals/gradient', views.GradientViewSet)
+router.register(r'logs/conductivity', ConductivityViewSet)
+router.register(r'logs/heat-production', HeatProductionViewSet)
+router.register(r'logs/temperature', TemperatureViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
