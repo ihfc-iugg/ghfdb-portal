@@ -241,7 +241,7 @@
         "core": {
             "editable": true,
             "git": "https://github.com/SSJenny90/core.git",
-            "ref": "481fddb3ff0053d601f20b9b0ecf08ece7134d31"
+            "ref": "62f68037f4fbd2526048b114af63e6b26fae147e"
         },
         "crispy-bootstrap5": {
             "hashes": [
@@ -564,7 +564,7 @@
         "django-publications-crossref": {
             "editable": true,
             "git": "https://github.com/SSJenny90/django-publications-crossref.git",
-            "ref": "2ef768652c6d18e8fff16534bde68a1c12f73d35"
+            "ref": "f64d43f1c2d75eea4e9f7e1bf765024690c8c59c"
         },
         "django-recaptcha": {
             "hashes": [
