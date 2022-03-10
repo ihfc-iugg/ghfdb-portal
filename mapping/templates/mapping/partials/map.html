@@ -1,5 +1,5 @@
 {% load static sekizai_tags %}
-<div id='map' {% if publication %}data-reference='{{publication.id}}'{% endif %} {% if site %}data-id='{{site.id}}'{% endif %} style="height:{{vh|default:'50vh'}}">
+<div id='map' {% if publication %}data-reference='{{publication.pk}}'{% endif %} {% if site %}data-id='{{site.pk}}'{% endif %} style="height:{{vh|default:'50vh'}}">
   <div id='shadow' style='position:absolute'></div>
 </div>
 

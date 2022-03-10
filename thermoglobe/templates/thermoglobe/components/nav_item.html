@@ -1,15 +1,5 @@
-{% comment %} <li class="nav-item"><a id="#{{label|slugify}}-tab" class="nav-link button small {% if not list %}disabled{% endif %}" data-bs-toggle="tab" href="#{{label|slugify}}-container" aria-controls="{{label|slugify}}-tab">{{label}}</a></li> {% endcomment %}
-
-{% comment %} <a id="#{{label|slugify}}-tab" 
-    class="dropdown-item {% if not list %}disabled{% endif %}" 
-    data-bs-toggle="tab" 
-    href="#{{label|slugify}}-container" 
-    aria-controls="{{label|slugify}}-tab">{{label}}</a> {% endcomment %}
-
 <a id="#{{label|slugify}}-tab"
-    class="nav-link button small {% if not list %}disabled{% endif %}" 
+    class="nav-link small {% if not list %}disabled{% endif %}" 
     data-bs-toggle="tab" 
     href="#{{label|slugify}}-container" 
     aria-controls="{{label|slugify}}-tab">{{label}}</a>
-
-{% comment %} <a href="#details-container" aria-controls="details-tab" class="nav-link button small active" aria-selected="true">Details</a> {% endcomment %}

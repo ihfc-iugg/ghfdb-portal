@@ -34,7 +34,7 @@
 
 {% comment %} Datatables and Editor.js {% endcomment %}
 {% addtoblock "js" %}<script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.10.21/r-2.2.5/datatables.min.js"></script>{% endaddtoblock %}
-{% addtoblock "js" %}<script src="{% static 'data_editor/js/dataTables.editor.js' %}"></script>{% endaddtoblock %}
+{% addtoblock "js" %}<script src="{% static 'data_editor/js/dataTables.editor.min.js' %}"></script>{% endaddtoblock %}
 {% addtoblock "js" %}<script src="{% static 'thermoglobe/js/table.js' %}"></script>{% endaddtoblock %}
 
 {% comment %} Excel like navigation {% endcomment %}
@@ -43,9 +43,9 @@
 {% addtoblock "js" %}<script type="text/javascript" src="https://cdn.datatables.net/keytable/2.6.4/js/dataTables.keyTable.min.js"></script>{% endaddtoblock %}
 
 {% comment %} Table Creation {% endcomment %}
-{% comment %} {% addtoblock "js" %}<script>$('#{{table.label|slugify}}-table').create_table()</script>{% endaddtoblock %} {% endcomment %}
+{% addtoblock "js" %}<script>$('#{{table.label|slugify}}-table').create_table()</script>{% endaddtoblock %}
 
-{% with id=table.label|slugify editor=table.editor %}
+{% comment %} {% with id=table.label|slugify editor=table.editor %}
 {% addtoblock "js" %}
 <script>
   $(document).ready(function () {
@@ -119,4 +119,4 @@ div.DTE_Inline input:focus {
 }
 
 </style>
-{% endwith %}
+{% endwith %} {% endcomment %}
