@@ -134,7 +134,7 @@ REST_FRAMEWORK = {
         # 'drf_ujson.renderers.UJSONRenderer',
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
-        'drf_renderer_xlsx.renderers.XLSXRenderer',
+        'drf_excel.renderers.XLSXRenderer',
         'rest_framework_datatables_editor.renderers.DatatablesRenderer',
     ],
 

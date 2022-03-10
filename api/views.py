@@ -6,7 +6,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework_gis.filters import DistanceToPointOrderingFilter, DistanceToPointFilter
 from thermoglobe.filters import MapFilter
 from rest_framework_datatables_editor.viewsets import DatatablesEditorModelViewSet
-from drf_renderer_xlsx.mixins import XLSXFileMixin
+from drf_excel.mixins import XLSXFileMixin
 
 
 class DisabledFilterBackend(DjangoFilterBackend):

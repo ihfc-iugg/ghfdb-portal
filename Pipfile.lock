@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "0e8c46e2725d4bf5a568018c1d28a7794d79b7332770079be918e610d7615e11"
+            "sha256": "af17d2be3ee4643f87d20f21d8e5774a0344b1f50d2c6f0528a91bbc8f09e84f"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -819,15 +819,8 @@
                 "sha256:7326aff0a4be66e52cb2ad9291952c0ffcfcb651b70ab85c52c656c72e63bb44",
                 "sha256:d0c3e890f1d18bd7ac70c8c35ea759df85246774b9691d7b0acbdd08372554a3"
             ],
-            "version": "==2.1.0"
-        },
-        "drf-renderer-xlsx": {
-            "hashes": [
-                "sha256:3d0d67f4185aadd7a61fa527225eec1111afdaaa64edecac1533681f690c09af",
-                "sha256:d88643403cb455ad0d8165780626a7d659c18c5809c7b9e5852ea5605791c6d3"
-            ],
             "index": "pypi",
-            "version": "==1.0.0"
+            "version": "==2.1.0"
         },
         "drf-ujson2": {
             "hashes": [

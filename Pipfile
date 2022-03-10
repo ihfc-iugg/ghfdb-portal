@@ -148,7 +148,7 @@ django-storages = "*"
 drf-ujson2 = "*"
 rest-pandas = "*"
 django-publications-crossref = {editable = true,git = "https://github.com/SSJenny90/django-publications-crossref.git"}
-drf-renderer-xlsx = "*"
+drf-excel = "*"
 
 [requires]
 python_version = "3.8"
