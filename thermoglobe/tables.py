@@ -3,7 +3,7 @@ from django.urls import reverse
 heat_flow = dict(
     label='Heat Flow',
     editor='heatFlow', #reuired to make a unique js variable
-    url="/api/heat-flow/",
+    url="/api/intervals/heat-flow/",
     preheader = [ 
         # (colspan,label,popup)
         (4,'',None),
@@ -32,14 +32,14 @@ heat_flow = dict(
 heat_production = dict(
     label='Heat Production',
     editor='heatProd', #reuired to make a unique js variable
-    url="/api/heat-production/",
+    url="/api/logs/heat-production/",
     header = [
         ('site.site_name','Site',''),
         ('site.latitude','Lat',''),
         ('site.longitude','Lon',''),
-        ('depth','Depth','[m]'),
-        ('heat_production','Heat Prod. [<i>a</i>]',''),
-        ('uncertainty','Uncertainty [<i>&sigma;</i>]',''),
+        ('data_count','Count',''),
+        ('depth_upper','Depth Upper (m)',''),
+        ('depth_lower','Depth Lower (m)',''),
         ('method','Method',''),
         ],
     )
@@ -47,14 +47,20 @@ heat_production = dict(
 conductivity = dict(
     label='Thermal Conductivity',
     editor='cond', #reuired to make a unique js variable
-    url="/api/conductivity/",
+    url="/api/logs/conductivity/",
+    preheader = [ 
+        # (colspan,label,popup)
+        (1,'',None),
+        (2,'Depth',"[m]"),
+        (1,'',None),
+    ],
     header = [
         ('site.site_name','Site',''),
         ('site.latitude','Lat',''),
         ('site.longitude','Lon',''),
-        ('depth','Depth','[m]'),
-        ('conductivity','Conductivity [<i>k</i>]',''),
-        ('uncertainty','Uncertainty [<i>&sigma;</i>]',''),
+        ('data_count','Count',''),
+        ('depth_upper','Upper',''),
+        ('depth_lower','Lower',''),
         ('method','Method',''),
         ],
     )
@@ -62,14 +68,21 @@ conductivity = dict(
 temperature = dict(
     label='Temperature',
     editor='temperature', #reuired to make a unique js variable
-    url="/api/temperature/",
+    url="/api/logs/temperature/",
+
+    preheader = [ 
+        # (colspan,label,popup)
+        (1,'',None),
+        (2,'Depth',"[m]"),
+        (1,'',None),
+    ],
     header = [
         ('site.site_name','Site',''),
         ('site.latitude','Lat',''),
         ('site.longitude','Lon',''),
-        ('depth','Depth','[m]'),
-        ('temperature','Temperature [<i>&deg;C</i>]',''),
-        ('uncertainty','Uncertainty [<i>&sigma;</i>]',''),
+        ('data_count','Count',''),
+        ('depth_upper','Upper',''),
+        ('depth_lower','Lower',''),
         ('method','Method',''),
         ],
     )

@@ -33,10 +33,11 @@ class MapFilter(df.FilterSet):
     crust_type = df.ChoiceFilter(field_name='plate__plate',
         choices=[('continental','Continental'),{'oceanic','Oceanic'}],
         lookup_expr='exact', label='Crust Type')
+    # site = df.CharFilter(lookup_expr='icontains', label='Site Name')
 
     class Meta:
         model = Site
-        fields = ["site_name"]
+        fields = ["site_name", 'reference', 'id']
 
     helper = FormHelper()
     helper.form_method = 'GET'

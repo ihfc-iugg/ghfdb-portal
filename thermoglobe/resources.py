@@ -1,137 +1,41 @@
-from .models import Site, Conductivity, Interval, HeatProduction, Temperature
+from .models import Site, Interval, Correction
 from import_export import resources
 from django.utils.html import mark_safe
-from tqdm import tqdm
-from import_export.widgets import NumberWidget
-from django.contrib.gis.geos import Point
-from import_export.fields import Field
+from import_export.instance_loaders import ModelInstanceLoader
+from core.resources import ResourceMixin
 
+class CustomLoader(ModelInstanceLoader):
+    def get_queryset(self):
+        return self.resource.get_queryset()
 
-class ResourceMixin(resources.ModelResource):
-
-    def before_import(self, dataset, using_transactions, dry_run, **kwargs):
-        self.pbar = tqdm(total=len(dataset))
-        pass
-
-    def before_import_row(self,row=None,**kwargs):
-        # row['geom'] = Point(float(row['longitude']), float(row['latitude']))
-        pass
-
-    def after_import_row(self, row, row_result, **kwargs):
-        """ Updates the progress bar"""
-        self.pbar.update(1)
-        pass
-
-    def after_import(self, dataset, result, using_transactions, dry_run,**kwargs):
-        # self.clean_result(result)
-        print('Import Summary:')
-        for key, count in result.totals.items():
-            if count:
-                print('\t',key,': ',count)
-
-    def clean_result(self,result):
-        """Cleans up the result preview"""
-        # find the columns that do not contain any data and store the index
-        remove_these = []
-        if result.has_validation_errors():
-            # loop through each column of the result
-            for i, header in enumerate(result.diff_headers.copy()):
-                has_data = False
-                # look at each value in the column
-                for row in result.invalid_rows: 
-                    if row.values:
-                        # Applies a html background to field specific errors to help user identify issues
-                        if header in row.field_specific_errors.keys():
-                            row.values = list(row.values)
-                            row.values[i] = mark_safe('<span class="bg-danger">{}</span>'.format(row.values[i]))
-                        # if a values is found in this column then mark it as containing data
-                        if row.values[i] and row.values[i] != '---':
-                            has_data = True
-                            break
-                # if no data was found in the column, delete it
-                if not has_data:
-                    remove_these.append(i)
-                    # result.diff_headers.remove(header)
-
-            # result.diff_headers.pop()
-            for i in sorted(remove_these,reverse=True):
-                result.diff_headers.pop(i)
-                for row in result.invalid_rows:
-
-                    row.values = list(row.values)
-                    row.values.pop(i)
-                    # row.values.pop()
-
-        else:
-            for i, header in enumerate(result.diff_headers.copy()):
-                has_data = False
-                for row in result.rows: 
-                    if row.diff:
-                        if row.diff[i]:
-                            has_data = True
-                            break
-                if not has_data:
-                    remove_these.append(i)
- 
-            for i in sorted(remove_these,reverse=True):
-                result.diff_headers.pop(i)
-                for row in result.rows:
-                # remove stored indices from each row of the result
-                    if row.diff:
-                        del row.diff[i]
-
-
-        result.diff_headers = [h.replace('_',' ').capitalize() for h in result.diff_headers]
+    def get_instance(self, row):
+        try:
+            params = {}
+            for key in self.resource.get_import_id_fields():
+                field = self.resource.fields[key]
+                params[field.attribute] = field.clean(row)
+            if params:
+                # instance = self.get_queryset().get_or_create(**params)
+                # return instance
+                return Site(**params)
+            else:
+                return None
+        except self.resource._meta.model.DoesNotExist:
+            return None
 
 class SiteResource(ResourceMixin):
 
     class Meta:
         model = Site
-        exclude = ['seamount_distance','outcrop_distance','crustal_thickness','continent','country','political','province','sea','slug'] + [f.name for f in model._meta.related_objects] + [f.name for f in model._meta.many_to_many]
+        exclude = ['seamount_distance','outcrop_distance','crustal_thickness','continent','country','political','province','sea','slug'] + [f.name for f in model._meta.related_objects]
+        #  + [f.name for f in model._meta.many_to_many]
         # fields = [f.name for f in Site._meta.concrete_fields]
 
-        # import_id_fields = ['id']
+        import_id_fields = ['id']
         # skip_diff=True
-        use_bulk = True
+        instance_loader_class = CustomLoader
+        # use_bulk = True
         # force_init_instance = True
-
-
-    def save_instance(self, instance, is_create=True, using_transactions=True, dry_run=False):
-        self.before_save_instance(instance, using_transactions, dry_run)
-        if self._meta.use_bulk:
-            if is_create:
-                self.create_instances.append(instance)
-            else:
-                self.update_instances.append(instance)
-        else:
-            if not using_transactions and dry_run:
-                # we don't have transactions and we want to do a dry_run
-                pass
-            else:
-                instance.save()
-        self.after_save_instance(instance, using_transactions, dry_run)
-
-class TempResource(ResourceMixin):
-    class Meta:
-        model = Temperature
-        exclude = ['date_added']
-        import_id_fields = ['id']
-
-
-class HeatProductionResource(ResourceMixin):
-    class Meta:
-        model = HeatProduction
-        exclude = ['date_added']
-        import_id_fields = ['id']
-
-
-
-class ConductivityResource(ResourceMixin):
-    class Meta:
-        model = Conductivity
-        exclude = ['date_added']
-        import_id_fields = ['id']
-
 
 class CorrectionsMixin(resources.ModelResource):
     pass
@@ -142,3 +46,34 @@ class IntervalResource(CorrectionsMixin,ResourceMixin):
         exclude = ['date_added']
         import_id_fields = ['id']
 
+    # def before_import_row(self, row, row_number=None, **kwargs):
+
+    #     def get_instance(row, corr_type, value):
+    #         interval = Interval.objects.get(id=row.get('id'))
+    #         if row.get(corr_type+'_flag'):
+    #             if row.get(corr_type) != "":
+    #                 return interval.corrections.create(type=value, value=row.get(corr_type))
+    #             else:
+    #                 return interval.corrections.create(type=value, interval=interval)
+    #             # corrections.append(Correction(type='CLIM', value=val))
+
+    #     types = [
+    #         ('CLIM','climate'),
+    #         ('TOPO','topographic'),
+    #         ('REFR','refraction'),
+    #         ('EROS','sed_erosion'),
+    #         ('FLUI','fluid'),
+    #         ('BWV','bwv'),
+    #         ('COMP','compaction'),
+    #         ('OTH','other'),
+    #         ('CMPS','composite'),
+    #         ('TILT','tilt'),
+    #     ]
+
+    #     row['corrections'] = []
+    #     for value, corr_type in types:
+    #         x = get_instance(row, corr_type, value)
+    #         if x:
+    #             row['corrections'].append(x)
+      
+    #     return super().before_import_row(row, row_number, **kwargs)

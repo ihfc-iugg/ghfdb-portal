@@ -1,11 +1,9 @@
 from django.contrib import admin
-from .models import Site, Conductivity, HeatProduction, Temperature
-from .models.interval import HeatFlow, Gradient
+from .models import Site
+from .models.interval import HeatFlow, Gradient, Correction
 from .mixins import BaseAdmin
 from import_export.admin import ImportExportActionModelAdmin
-from .mixins import SitePropertyAdminMixin
-from .resources import ConductivityResource, HeatProductionResource, IntervalResource, TempResource, SiteResource
-from .models import Conductivity, HeatProduction
+from .resources import IntervalResource, SiteResource
 from django.db.models import F
 from .filters import IsCorrectedFilter, EmptySites
 from django.http import HttpResponse
@@ -227,62 +225,6 @@ class GradientAdmin(BaseAdmin,ImportExportActionModelAdmin):
     def mark_verified(self, request, queryset):
         queryset.update(is_verified=True)
 
-@admin.register(Conductivity)
-class ConductivityAdmin(SitePropertyAdminMixin,ImportExportActionModelAdmin):
-    resource_class = ConductivityResource
-    list_display = ['edit','site_name','latitude','longitude','depth','conductivity','uncertainty','method','reference']
-
-    fieldsets = [('Site', {'fields':[
-                            'site']}),
-                ('Sample', {'fields': [
-                            'sample_name',
-                            'rock_type',
-                            ('conductivity','uncertainty'),
-                            'method',
-                            'depth',
-                            ]}),
-                        ]
-
-@admin.register(HeatProduction)
-class HeatProductionAdmin(SitePropertyAdminMixin,ImportExportActionModelAdmin):
-    resource_class = HeatProductionResource
-    list_display = ['edit','site_name','latitude','longitude','depth','heat_production','uncertainty','method','reference']
-
-    fieldsets = [('Site', {'fields':[
-                            'site']}),
-                ('Sample', {'fields': [
-                            'sample_name',
-                            'rock_type',
-                            ('heat_production','uncertainty'),
-                            'method',
-                            'depth',
-                            ]}),
-            ]
-
-@admin.register(Temperature)
-class TemperatureAdmin(BaseAdmin,ImportExportActionModelAdmin):
-    resource_class=TempResource
-    list_display = ['edit','site_name','latitude','longitude','depth','temperature','method','circ_time','lag_time','reference']
-    list_filter = ['source','method']
-    autocomplete_fields = ['site']
-    search_fields = ['site__site_name','site__latitude','site__longitude','reference__bib_id']
-    fieldsets = [('Site', {'fields':['site']}),
-                ('Measurement', {'fields': [
-                        'temperature',
-                        'depth',
-                        'method',
-                        'lag_time',
-                        'comment',
-                            ]}),
-                ('Publication',{'fields':['reference']})
-                            ]
-
-    def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-        queryset = queryset.select_related('site').annotate(
-            _site_name=F('site__site_name'),
-            _latitude=F('site__latitude'),
-            _longitude=F('site__longitude'),
-            )
-
-        return queryset
+# @admin.register(Correction)
+# class CorrectionAdmin(BaseAdmin, ImportExportActionModelAdmin):
+#     resource_class = CorrectionResource

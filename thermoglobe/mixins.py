@@ -104,19 +104,6 @@ class BaseAdmin(gisadmin.OSMGeoAdmin):
         return mark_safe('<i class="fas fa-edit"></i>')
     edit.short_description = ''
     
-class SitePropertyAdminMixin(BaseAdmin):
-    search_fields = ['site__site_name','site__latitude','site__longitude','reference__bib_id']
-    autocomplete_fields = ['site']
-    list_filter = ['method']
-    
-    def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-        queryset = queryset.select_related('site').annotate(
-            _site_name=F('site__site_name'),
-            _latitude=F('site__latitude'),
-            _longitude=F('site__longitude'),)
-
-        return queryset
 
 class DownloadMixin:
     download_form = DownloadBasicForm

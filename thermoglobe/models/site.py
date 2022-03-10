@@ -88,12 +88,12 @@ class Site(ModelMeta,models.Model):
         help_text=_('The name given to the site.'),
         max_length=200)
     latitude = models.FloatField(_('latitude'),
-        help_text=_('Latitude in decimal degrees. WGS84 preferred but not enforced.'),
+        help_text=_('Latitude in decimal degrees'),
         validators=[MaxValueValidator(90),
                     MinValueValidator(-90)],
         db_index=True)
     longitude = models.FloatField(_('longitude'),
-        help_text=_('Longitude in decimal degrees. WGS84 preferred but not enforced.'),
+        help_text=_('Longitude in decimal degrees'),
         validators=[MaxValueValidator(180),
             MinValueValidator(-180)],
         db_index=True)
@@ -200,17 +200,26 @@ class Site(ModelMeta,models.Model):
     class Meta:
         unique_together = ('site_name','latitude','longitude')
         db_table = 'site'
-        # ordering = ['date_added']
+        ordering = ['-date_added']
         # indexes = [
         #     models.Index(fields=['latitude']),
         #     models.Index(fields=['longitude']),
         # ]
     def __str__(self):
-        return force_str(self.site_name if self.site_name else self.pk)
+        if self.site_name:
+            return force_str(self.site_name)
+        else:
+            return self.coordinates()
+        # return force_str(self.site_name if self.site_name else self.pk)
+
+
 
     def save(self, *args, **kwargs):
         # self.geom = Point(float(self.longitude),float(self.latitude))
         super().save(*args, **kwargs)
+
+    def coordinates(self):
+        return f"{self.latitude}, {self.longitude}"
 
     def data_counts(self):
         return {
