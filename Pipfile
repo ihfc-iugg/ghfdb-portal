@@ -141,14 +141,14 @@ django-social-share = "*"
 django-lockdown = "*"
 django-background-tasks = "*"
 habanero = "*"
-django-publications-crossref = {editable = true,git = "https://github.com/SSJenny90/django-publications-crossref.git"}
 comments = {editable = true,git = "https://github.com/SSJenny90/comments.git"}
 authentication = {editable = true,git = "https://github.com/SSJenny90/authentication.git"}
-core = {editable = true, git = "https://github.com/SSJenny90/core.git"}
+core = {editable = true,git = "https://github.com/SSJenny90/core.git"}
 django-storages = "*"
 drf-ujson2 = "*"
 drf-renderer-xlsx = "*"
 rest-pandas = "*"
+django-publications-crossref = {editable = true,git = "https://github.com/SSJenny90/django-publications-crossref.git"}
 
 [requires]
 python_version = "3.8"
