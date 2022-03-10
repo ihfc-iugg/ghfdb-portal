@@ -3,11 +3,11 @@
 
 {% block content %}
 <div class='inner'>
-  {% include "mapping/map.html" %}
-  <header id="header" class='py-3'>
+  {% include "mapping/partials/map.html" %}
+  <header class='py-3'>
     <div class='d-flex'>
         {% include "thermoglobe/components/nav_pills.html" %}
-        {% include "thermoglobe/components/nav_actions.html" %}
+        {% comment %} {% include "thermoglobe/components/nav_actions.html" %} {% endcomment %}
     </div>
 	</header>
   <section class='pt-0'>
