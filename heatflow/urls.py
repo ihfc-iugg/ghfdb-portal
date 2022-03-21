@@ -13,7 +13,7 @@ urlpatterns = i18n_patterns(
 
     path('taggit_autosuggest/', include('taggit_autosuggest.urls')),
     path('', include('thermoglobe.urls')),
-    path('crossref/', include('publications.urls')),
+    path('publications/', include('publications.urls')),
     path('comments/', include('django_comments_xtd.urls')),
     path('', include('dashboard.urls')),
 

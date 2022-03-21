@@ -62,7 +62,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name='interval',
-            name='cond_ave',
+            name='average_conductivity',
             field=models.FloatField(blank=True, help_text='Reported thermal conductivity to accompany the heat flow estimate.', null=True, verbose_name='conductivity'),
         ),
         migrations.AlterField(
