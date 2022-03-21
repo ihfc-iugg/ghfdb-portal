@@ -2,8 +2,16 @@ import uuid
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db.models.query import QuerySet
+from io import StringIO
+import csv, json, zipfile
+from core.querysets import QuerySetExtra
+
 
 class WellLog(models.Model):
+
+    objects = QuerySetExtra.as_manager()
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     
     site = models.ForeignKey("thermoglobe.Site",

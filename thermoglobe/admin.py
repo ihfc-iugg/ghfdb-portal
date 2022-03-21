@@ -13,6 +13,7 @@ from django.db.models.functions import Coalesce
 
 @admin.register(Site)
 class SiteAdmin(BaseAdmin, ImportExportActionModelAdmin):
+    change_list_template = 'smuggler/change_list.html'
     resource_class = SiteResource
     list_display = ['site_name', 'latitude', 'longitude','elevation','well_depth','cruise','seafloor_age','_reference']
     readonly_fields = ['id','slug',"seamount_distance", "outcrop_distance", 'sediment_thickness','crustal_thickness']
@@ -78,7 +79,8 @@ class HeatFlowAdmin(BaseAdmin,ImportExportActionModelAdmin):
     resource_class = IntervalResource
     autocomplete_fields = ['site']
     search_fields = ['site__site_name']
-    list_display = ['site_name','depth_min','depth_max','reliability','_corrected','heat_flow','average_conductivity','heat_production','reference']
+    list_display = ['site_name','depth_min','depth_max','reliability','_corrected','heat_flow','cond_ave','heat_prod','reference']
+    # list_display = ['site_name','depth_min','depth_max','reliability','_corrected','cond_ave','heat_production','reference']
 
     list_filter = ['reliability',IsCorrectedFilter]
     fieldsets = [ 
@@ -87,7 +89,7 @@ class HeatFlowAdmin(BaseAdmin,ImportExportActionModelAdmin):
             {'fields': [
                 'reference',
                 ('depth_min', 'depth_max'),
-                ('number_of_temperatures','temp_method'),
+                ('num_temp','temp_method'),
                 ('global_flag','global_reason','global_by'),
                 'comment',
                 ]
@@ -110,16 +112,16 @@ class HeatFlowAdmin(BaseAdmin,ImportExportActionModelAdmin):
         ),
         ('Thermal Conductivity',
             {'fields': [
-                ('average_conductivity', 'conductivity_uncertainty','number_of_conductivities'),
-                'conductivity_method',
+                ('cond_ave', 'cond_unc','num_cond'),
+                'cond_method',
                 ],
             # 'classes': ('collapse',),
             }
         ),
         ('heat production',
             {'fields': [
-                ('heat_production', 'heat_production_uncertainty','number_of_heat_gen'),
-                'heat_production_method',
+                ('heat_prod', 'heat_prod_unc','num_heat_prod'),
+                'heat_prod_method',
                 ],
             # 'classes': ('collapse',),
             }
@@ -136,9 +138,7 @@ class HeatFlowAdmin(BaseAdmin,ImportExportActionModelAdmin):
         super().save_model(request, obj, form, change)
 
     def get_queryset(self, request):
-        return (super().get_queryset(request)
-                .annotate(heat_flow=Coalesce('heat_flow_corrected', 'heat_flow_uncorrected'))
-                .exclude(heat_flow__isnull=True)
+        return (super().get_queryset(request).heat_flow()
                 .prefetch_related('reference')
                 .select_related('site')
                 .annotate(
@@ -146,6 +146,9 @@ class HeatFlowAdmin(BaseAdmin,ImportExportActionModelAdmin):
                     _latitude=F('site__latitude'),
                     _longitude=F('site__longitude'),
                     ))
+
+    def heat_flow(self, obj):
+        return obj.heat_flow
 
     def mark_verified(self, request, queryset):
         queryset.update(is_verified=True)
@@ -156,6 +159,7 @@ class GradientAdmin(BaseAdmin,ImportExportActionModelAdmin):
     autocomplete_fields = ['site']
     search_fields = ['site__site_name']
     list_display = ['site_name','depth_min','depth_max','_corrected','gradient','reference']
+    # list_display = ['site_name','depth_min','depth_max','_corrected','reference']
 
     list_filter = [IsCorrectedFilter]
     fieldsets = [ 
@@ -164,7 +168,7 @@ class GradientAdmin(BaseAdmin,ImportExportActionModelAdmin):
             {'fields': [
                 'reference',
                 ('depth_min', 'depth_max'),
-                ('number_of_temperatures','temp_method'),
+                ('num_temp','temp_method'),
                 ('global_flag','global_reason','global_by'),
                 'comment',
                 ]
@@ -187,16 +191,16 @@ class GradientAdmin(BaseAdmin,ImportExportActionModelAdmin):
         ),
         ('Thermal Conductivity',
             {'fields': [
-                ('average_conductivity', 'conductivity_uncertainty','number_of_conductivities'),
-                'conductivity_method',
+                ('cond_ave', 'cond_unc','num_cond'),
+                'cond_method',
                 ],
             # 'classes': ('collapse',),
             }
         ),
         ('heat production',
             {'fields': [
-                ('heat_production', 'heat_production_uncertainty','number_of_heat_gen'),
-                'heat_production_method',
+                ('heat_production', 'heat_prod_unc ','num_heat_prod'),
+                'heat_prod_method',
                 ],
             # 'classes': ('collapse',),
             }
@@ -213,18 +217,16 @@ class GradientAdmin(BaseAdmin,ImportExportActionModelAdmin):
         super().save_model(request, obj, form, change)
 
     def get_queryset(self, request):
-        return (super().get_queryset(request)
-                .annotate(gradient=Coalesce('gradient_corrected', 'gradient_uncorrected'))
-                .exclude(gradient__isnull=True)
+        return (super().get_queryset(request).gradient()
                 .prefetch_related('reference')
                 .select_related('site')
                 .annotate(
                     _site_name=F('site__site_name'),
                     ))
 
+    def gradient(self, obj):
+        return obj.gradient
+
     def mark_verified(self, request, queryset):
         queryset.update(is_verified=True)
 
-# @admin.register(Correction)
-# class CorrectionAdmin(BaseAdmin, ImportExportActionModelAdmin):
-#     resource_class = CorrectionResource

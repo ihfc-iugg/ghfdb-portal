@@ -30,7 +30,7 @@ HEAT_FLOW_FIELDS = [
             'depth_max',
             'tilt',
             'reliability',
-            'number_of_temperatures',
+            'num_temp',
             'temp_method',
 
             'heat_flow_corrected',
@@ -43,15 +43,15 @@ HEAT_FLOW_FIELDS = [
             'gradient_uncorrected',
             'gradient_uncorrected_uncertainty',
 
-            'average_conductivity',
-            'conductivity_uncertainty',
-            'number_of_conductivities',
-            'conductivity_method',
+            'cond_ave',
+            'cond_unc',
+            'num_cond',
+            'cond_method',
 
             'heat_production',
-            'heat_production_uncertainty',
-            'number_of_heat_gen',
-            'heat_production_method',
+            'heat_prod_unc ',
+            'num_heat_prod',
+            'heat_prod_method',
 
             'climate_flag',
             'climate_correction',

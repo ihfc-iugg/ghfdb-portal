@@ -1,16 +1,15 @@
 import os
 from core.settings import *
 from django.utils.translation import ugettext_lazy as _
-
+import djangocms_faq
 SITE_NAME = 'ThermoGlobe'
 EMAIL_DOMAIN = "@thermoglobe.app"
 APP_NAME = 'heatflow'
 ADMINS = MANAGERS = [('Sam','sam.jennings@geoluminate.com.au')]
 
 # UNCOMMENT TO COLLECTSTATIC TO AWS S3
-STATICFILES_STORAGE = f'{APP_NAME}.storage_backends.StaticStorage'
-STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_STATIC_LOCATION}/"
-
+# STATICFILES_STORAGE = f'{APP_NAME}.storage_backends.StaticStorage'
+# STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_STATIC_LOCATION}/"
 
 
 ALLOWED_HOSTS += ['thermoglobe.herokuapp.com','www.thermoglobe.app','thermoglobe.app']
@@ -55,6 +54,7 @@ INSTALLED_APPS = [
     'rest_framework_gis',
     'rest_framework_datatables_editor',
 
+    'solo',
     'import_export',
     'simple_history',
     'django_extensions',
@@ -74,20 +74,21 @@ INSTALLED_APPS = [
     "sortedm2m",
     'ordered_model',
     "rosetta",
-    
+
     # MY APPS
     'thermoglobe',
     'well_logs',
+    'crossref', 
+    'crossref.cms', 
     'publications', 
     'mapping',
     'dashboard',
     'data_editor',
     'editorial',
-    'comments',
+    # 'comments',
 
     # "debug_toolbar",
 ]
-
 
 ROOT_URLCONF = f'{APP_NAME}.urls'
 WSGI_APPLICATION = f'{APP_NAME}.wsgi.application'
@@ -104,8 +105,6 @@ RECAPTCHA_PUBLIC_KEY = os.getenv('RECAPTCHA_PUBLIC_KEY')
 RECAPTCHA_PRIVATE_KEY = os.getenv('RECAPTCHA_PRIVATE_KEY')
 
 
-CROSSREF_UA_STRING = "ThermoGlobe Research Database (https://thermoglobe.app)"
-CROSSREF_MAILTO = 'sam.jennings@geoluminate.com.au'
 
 SOCIALACCOUNT_PROVIDERS = {
     'orcid': {
@@ -118,7 +117,21 @@ SOCIALACCOUNT_PROVIDERS = {
 
 TEMPLATES[0]['DIRS'].append(os.path.join(APP_NAME, 'templates'))
 
-# MIDDLEWARE.prepend('debug_toolbar.middleware.DebugToolbarMiddleware')
+CROSSREF_UA_STRING = "ThermoGlobe Research Database (https://thermoglobe.app)"
+CROSSREF_MAILTO = 'sam.jennings@geoluminate.com.au'
+CROSSREF_MODELS = {
+    'publication': 'publications.Publication',
+    'author': 'publications.Author'
+}
+CROSSREF_DEFAULT_STYLE = 'harvard'
+CROSSREF_AUTHOR_TRUNCATE_AFTER = 2
+
+
+CROSSREF_CMS_STYLES = [
+            ('harvard', 'Harvard'),
+        ]
+
+# MIDDLEWARE.append('debug_toolbar.middleware.DebugToolbarMiddleware')
 # MIDDLEWARE.append('lockdown.middleware.LockdownMiddleware')
 
 
@@ -128,14 +141,29 @@ PRIVATE_FILE_STORAGE = DEFAULT_FILE_STORAGE = f'{APP_NAME}.storage_backends.Priv
 
 REST_FRAMEWORK = {
     "HTML_SELECT_CUTOFF": 10,
-    'DEFAULT_AUTHENTICATION_CLASSES': [
+    'DEFAULT_AUTHENTICATION_CLASSES': [ 
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-   ],
+    ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'api.v1.throttling.AnonBurstRate',
+        'api.v1.throttling.AnonSustainedRate',
+        'api.v1.throttling.UserBurstRate'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon_burst': '4/second',
+        'anon_sustained': '30/minute',
+        'user_burst': '25/second'
+    },
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ],
     'DEFAULT_RENDERER_CLASSES': [
-        # 'drf_ujson.renderers.UJSONRenderer',
-        'rest_framework.renderers.JSONRenderer',
+        # 'api.v1.renderers.UJSONRenderer',
+        # 'rest_framework.renderers.JSONRenderer',
+        "drf_orjson_renderer.renderers.ORJSONRenderer",
         'rest_framework.renderers.BrowsableAPIRenderer',
+        'rest_framework_csv.renderers.PaginatedCSVRenderer',
         'drf_excel.renderers.XLSXRenderer',
         'rest_framework_datatables_editor.renderers.DatatablesRenderer',
     ],
@@ -147,15 +175,11 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework_datatables_editor.pagination.DatatablesPageNumberPagination',
 
     # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-
-
-    'PAGE_SIZE': 50,
+    'PAGE_SIZE': 100,
     
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
-
-       
 
 }
 

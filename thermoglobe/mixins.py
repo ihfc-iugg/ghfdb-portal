@@ -1,22 +1,18 @@
 from io import StringIO
-import csv, json, zipfile
+import zipfile
 
-from django.db.models import F
 from django.utils.translation import gettext as _
 from django.contrib.gis import admin as gisadmin
-from django.contrib import admin
 from django.utils.html import mark_safe
-from django.shortcuts import  render
 from django.http import HttpResponse
-from django.apps import apps
-from thermoglobe import choices
-from thermoglobe.forms import DownloadBasicForm
 from django.contrib import messages
 from django_super_deduper.merge import MergedModelInstance
 from django.contrib.admin.models import LogEntry, ContentType
+from thermoglobe.models import Site
+from publications.models import Publication
+from datetime import datetime as dt
 
 class BaseAdmin(gisadmin.OSMGeoAdmin):
-# class BaseAdmin(admin.ModelAdmin):
     exclude = ['edited_by','added_by','date_added','date_edited']
 
     def save_model(self, request, obj, form, change):
@@ -106,96 +102,48 @@ class BaseAdmin(gisadmin.OSMGeoAdmin):
     
 
 class DownloadMixin:
-    download_form = DownloadBasicForm
 
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data( *args, **kwargs)
-        context['download_form'] = self.download_form()
-        return context
-
-    def post(self, request,  *args, **kwargs):
-
-        form = self.download_form(self.request.POST)
-        if form.is_valid():
-            download_type = form.cleaned_data['download_type']
-
-            # prepare the response for csv file
-            response = HttpResponse(content_type='application/zip')
-            response['Content-Disposition'] = f'attachment; filename="{self.get_object()}.zip"'
-
-            zf = zipfile.ZipFile(response,'w')
-
-            publications = apps.get_model('publications','publication').objects
-            sites = apps.get_model('thermoglobe.Site').objects.all()
-
-            reference_list = publications.none()
-            for key, qs in self.get_object().get_data().items():
-                csv_headers = self.get_csv_headers(key, download_type)
-
-                # make site fields are appropriate for query
-                formatted_fields = self.format_query_fields(key, download_type)
-
-                # create a csv file an save it to the zip object
-                zf.writestr(f'{key}.csv',self.csv_to_bytes(
-                        data=qs.values_list(*formatted_fields), 
-                        headers=csv_headers))
-
-                sites = sites.filter(**{f"{key}__in":qs})
-                reference_list = reference_list | publications.filter(sites__in=sites).distinct()
-
-            
-            # add bibtex file to zip object
-            reference_list = reference_list.distinct().exclude(bibtex__isnull=True).values_list('bibtex',flat=True)
-            if reference_list:
-                zf.writestr(f'{self.get_object()}.bib', self.bibtex_to_bytes(reference_list))
-
-            return response
+    def get(self, request, *args, **kwargs):
+        if "download" in request.GET.keys():
+            return self.download(request, *args, **kwargs)
         else:
-            context = self.get_context_data(*args, **kwargs)
-            context['download_form'] = form
-            return render(request, template_name=self.template_name, context=context)
+            return super().get(self, request, *args, **kwargs)
 
-    def get_csv_headers(self, key, download_type):
-        """This will be the header on the csv download"""
-        return getattr(choices, key).get(download_type) + ['reference__id']
+    def download(self, request, *args, **kwargs):
+        response, zf = self.prepare_zip_response(fname=self.get_object())
 
-    def format_query_fields(self, key, download_type):
-        csv_headers = getattr(choices, key).get(download_type) + ['reference__id']
+        references = Publication.objects.none()
+        for key, qs in self.get_object().get_data().items():
+            if key == 'intervals' and qs.exists():
+                # create a csv file and save it to the zip object
+                zf.writestr(f"{key}.csv", qs.values_list().to_csv_buffer())
+                sites = Site.objects.filter(**{f"{key}__in":qs})
+            elif qs.exists():
+                # create a csv file and save it to the zip object
+                zf.writestr(f"{key}.csv", qs.explode_values().to_csv_buffer())
+                sites = Site.objects.filter(**{f"{key}_logs__in":qs})
 
-        # all fields on the site model
-        site_fields = [f.name for f in apps.get_model('thermoglobe','site')._meta.fields]
+            references = references | Publication.objects.filter(sites__in=sites).distinct()
+        
+        # write references to .bib file
+        if references:
+            zf.writestr(f'{self.get_object()}.bib', self.references_to_bibtex(references))
 
-        # fix site fields
-        formatted = [f'site__{f}' if f in site_fields else f for f in csv_headers]
+        return response
 
-        return formatted
-
-    def bibtex_to_bytes(self, bibtex_list):
+    def references_to_bibtex(self, references):
+        # add bibtex file to zip object
+        references = references.distinct().exclude(bibtex__isnull=True).values_list('bibtex',flat=True)
         buffer = StringIO()
-        buffer.write('\n\n'.join(bibtex_list))
+        buffer.write('\n\n'.join(references))
         return buffer.getvalue()
 
-    def csv_to_bytes(self, data, headers):
-        csv_buffer = StringIO()
-        writer = csv.writer(csv_buffer)
+    def prepare_zip_response(self, fname=None):
+        # prepare the response for csv file
+        response = HttpResponse(content_type='application/zip')
+        if fname is None:
+            fname = f"Thermoglobe_{dt.now().strftime('%d_%b_%Y')}"
+        response['Content-Disposition'] = f'attachment; filename="{fname}.zip"'
+        return response, zipfile.ZipFile(response, 'w')
 
-        # nasty way of cleaning output headers so that field relationships don't show
-        output = []
-        for h in headers:
-            h = h.split('__')
 
-            if len(h) == 3:
-                output.append(h[1] if 'name' in h else h[2])
-            elif len(h) == 2:
-                output.append(h[0])
-            else:
-                output.append(h[0])
-
-        # write the header row;
-        writer.writerow(output)
-
-        # write the rows to the csv file
-        for i in data:
-            writer.writerow(i)
-
-        return csv_buffer.getvalue()

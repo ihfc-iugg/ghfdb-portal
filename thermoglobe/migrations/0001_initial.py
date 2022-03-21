@@ -91,7 +91,7 @@ class Migration(migrations.Migration):
                 ('global_reason', models.CharField(blank=True, help_text='reason for denoting this measurement as suitable for global modelling', max_length=200, null=True, verbose_name='reason')),
                 ('date_added', models.DateTimeField(auto_now_add=True, verbose_name='added')),
                 ('global_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='declared_global', to=settings.AUTH_USER_MODEL)),
-                ('reference', models.ForeignKey(blank=True, help_text='The publication or other reference from which the measurement was reported.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='intervals', to='publications.publication', verbose_name='reference')),
+                ('reference', models.ForeignKey(blank=True, help_text='The publication or other reference from which the measurement was reported.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='intervals', to='publications.Publication', verbose_name='reference')),
                 ('site', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='intervals', to='thermoglobe.site', verbose_name='site')),
             ],
             options={

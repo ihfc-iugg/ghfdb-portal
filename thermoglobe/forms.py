@@ -1,8 +1,30 @@
 from django import forms
+from thermoglobe.models import Site
 from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, ButtonHolder, Submit, Div, Row, Column, Field, HTML, Fieldset
 from crispy_bootstrap5.bootstrap5 import FloatingField
-from crispy_forms.layout import Layout, ButtonHolder, Submit, Field
 
+
+class SiteForm(forms.ModelForm):
+
+    class Meta:
+        model = Site
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for fieldname in self.fields.keys():
+            self.fields[fieldname].widget.attrs['readonly'] = True
+            self.fields[fieldname].help_text = None
+
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+                Fieldset(
+                    HTML('<h5>Site Information</h5>'),
+                    Field('site_name', template='thermoglobe/partials/text_only_template.html'),
+                    Row(Column('latitude'),Column('longitude')),
+                ),
+        )
 
 class DownloadWithChoicesForm(forms.Form):
     download_type = forms.ChoiceField(

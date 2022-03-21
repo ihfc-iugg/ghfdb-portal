@@ -1,88 +1,144 @@
-from django.urls import reverse
+from rest_framework.reverse import reverse_lazy
+# from django.urls import reverse
+class Table():
 
-heat_flow = dict(
-    label='Heat Flow',
-    editor='heatFlow', #reuired to make a unique js variable
-    url="/api/intervals/heat-flow/",
-    preheader = [ 
-        # (colspan,label,popup)
-        (4,'',None),
-        (2,'Depth',"[m]"),
-        (2,'Heat Flow',"[mW m<sup>-2</sup>]"),
-        (2,'Gradient',"[&deg;C/km]"),
-        (4,'Properties',""),
-    ],
-    header = [
-        # (data-attribute,label,popup)
-        ('site.site_name','Site',''),
-        ('site.latitude','Lat',''),
-        ('site.longitude','Lon',''),
-        ('number_of_temperatures','T (n)','number_of_temperatures'),
-        ('depth_min','Top',''),
-        ('depth_max','Bottom',''),
-        ('heat_flow','<i>q</i>',''),
-        ('heat_flow_uncertainty','<i>&sigma;</i>',''),
-        ('gradient','<i>&Delta;T</i>',''),
-        ('gradient_uncertainty','<i>&sigma;</i>',''),
-        ('average_conductivity','<i>k</i>','Thermal Conductivity<br>[W m<sup>-1</sup> K<sup>-1</sup>]'),
-        ('heat_production','<i>a</i>','Heat Production [&mu;W m<sup>-3</sup>]'),
-        ],
-    )
+    class Meta:
+        preheader = [] # (colspan,label,popup)
+        header = []  # (data-attribute,label,popup)
 
-heat_production = dict(
-    label='Heat Production',
-    editor='heatProd', #reuired to make a unique js variable
-    url="/api/logs/heat-production/",
-    header = [
-        ('site.site_name','Site',''),
-        ('site.latitude','Lat',''),
-        ('site.longitude','Lon',''),
-        ('data_count','Count',''),
-        ('depth_upper','Depth Upper (m)',''),
-        ('depth_lower','Depth Lower (m)',''),
-        ('method','Method',''),
-        ],
-    )
+    def __init__(self, object=None, qs=None):
+        self.object = object
+        self.qs = qs
+        self._meta = {}
+        for k, v in self.Meta.__dict__.items():
+            self._meta[k] = v
 
-conductivity = dict(
-    label='Thermal Conductivity',
-    editor='cond', #reuired to make a unique js variable
-    url="/api/logs/conductivity/",
-    preheader = [ 
-        # (colspan,label,popup)
-        (1,'',None),
-        (2,'Depth',"[m]"),
-        (1,'',None),
-    ],
-    header = [
-        ('site.site_name','Site',''),
-        ('site.latitude','Lat',''),
-        ('site.longitude','Lon',''),
-        ('data_count','Count',''),
-        ('depth_upper','Upper',''),
-        ('depth_lower','Lower',''),
-        ('method','Method',''),
-        ],
-    )
+        if not self._meta.get('api_view'):
+            raise Exception("Table instance must define api_view within the Meta class")
 
-temperature = dict(
-    label='Temperature',
-    editor='temperature', #reuired to make a unique js variable
-    url="/api/logs/temperature/",
+        if not self._meta.get('header'):
+            raise Exception("Table instance must define a header variable within the Meta class")
 
-    preheader = [ 
-        # (colspan,label,popup)
-        (1,'',None),
-        (2,'Depth',"[m]"),
-        (1,'',None),
-    ],
-    header = [
-        ('site.site_name','Site',''),
-        ('site.latitude','Lat',''),
-        ('site.longitude','Lon',''),
-        ('data_count','Count',''),
-        ('depth_upper','Upper',''),
-        ('depth_lower','Lower',''),
-        ('method','Method',''),
-        ],
-    )
+    def get_url(self):
+        return reverse_lazy(self._meta.get('api_view'))
+
+    def _label(self):
+        return 
+
+    def label(self):
+        if self._meta.get('label'):
+            return self._meta.get('label')
+
+        label = self.get_url().split('/')[-2]
+        return ' '.join(label.split("-")).title()
+
+    def header(self):
+        return self._meta.get('header')
+
+    def pre_header(self):
+        return self._meta.get('pre_header')
+
+    def object_list(self):
+        if self.object is None:
+            return None
+        return getattr(self.object, self._meta.get('related_name')).all()
+
+
+
+class SiteTable(Table):
+
+    class Meta:
+        label='sites'
+        related_name='sites'
+        api_view = "site-list"
+        web_url = "/sites/"
+        pre_header = [   (5,'',None),
+                        (3,'Data Logs',"")
+            ]
+        header = [
+            ('site_name','Site',''),
+            ('latitude','Lat',''),
+            ('longitude','Lon',''),
+            ('year_drilled','Year',''),
+            ('well_depth','Max Depth (m)',''),
+            ('interval_count','Intervals',''),
+            ('temperature_log_count','Temperature',''),
+            ('conductivity_log_count','Conductivity',''),
+            ('heat_production_log_count','Heat Production',''),
+
+
+            ]
+
+class IntervalTable(Table):
+
+    class Meta:
+        label='intervals'
+        related_name='intervals'
+        api_view = "interval-list"
+        pre_header = [   (4,'',None),
+                        (2,'Depth',"[m]"),
+                        (2,'Heat Flow',"[mW m<sup>-2</sup>]"),
+                        (2,'Gradient',"[&deg;C/km]"),
+                        (4,'Properties',"")]
+        header = [
+            ('site.site_name','Site',''),
+            ('site.latitude','Lat',''),
+            ('site.longitude','Lon',''),
+            ('num_temp','T (n)','num_temp'),
+            ('depth_min','Top',''),
+            ('depth_max','Bottom',''),
+            ('heat_flow','<i>q</i>',''),
+            ('heat_flow_uncertainty','<i>&sigma;</i>',''),
+            ('gradient','<i>&Delta;T</i>',''),
+            ('gradient_uncertainty','<i>&sigma;</i>',''),
+            ('cond_ave','<i>k</i>','Thermal Conductivity<br>[W m<sup>-1</sup> K<sup>-1</sup>]'),
+            ('heat_prod','<i>a</i>','Heat Production [&mu;W m<sup>-3</sup>]'),
+            ]
+
+
+class HeatProductionTable(Table):
+    class Meta:
+        label='heat production'
+        related_name='heat_production_logs'
+        api_view = "heatproductionlog-list"
+        header = [
+            ('site.site_name','Site',''),
+            ('site.latitude','Lat',''),
+            ('site.longitude','Lon',''),
+            ('data_count','Count',''),
+            ('depth_upper','Depth Upper (m)',''),
+            ('depth_lower','Depth Lower (m)',''),
+            ('method','Method',''),
+            ]
+
+
+class ConductivityTable(Table):
+    class Meta:
+        label='thermal conductivity'
+        related_name='conductivity_logs'
+        api_view = "conductivitylog-list"
+        header = [
+            ('site.site_name','Site',''),
+            ('site.latitude','Lat',''),
+            ('site.longitude','Lon',''),
+            ('data_count','Count',''),
+            ('depth_upper','Upper',''),
+            ('depth_lower','Lower',''),
+            ('method','Method',''),
+            ]
+
+
+class TemperatureTable(Table):
+    class Meta:
+        label='temperature'
+        related_name='temperature_logs'
+        api_view = "temperaturelog-list"
+        header = [
+            ('site.site_name','Site',''),
+            ('site.latitude','Lat',''),
+            ('site.longitude','Lon',''),
+            ('data_count','Count',''),
+            ('depth_upper','Upper',''),
+            ('depth_lower','Lower',''),
+            ('method','Method',''),
+            ]

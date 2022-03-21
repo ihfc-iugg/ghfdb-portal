@@ -3,13 +3,10 @@ from django.db import models
 from django.utils.translation import gettext as _
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.utils.html import mark_safe
-from .querysets import HFQueryset, GradientQueryset
 from thermoglobe.models import managers 
 
 class Interval(models.Model):
     objects = managers.IntervalManager()
-    heat_flow = managers.HeatFlowManager()
-    gradient = managers.GradientManager()
 
     heat_flow_units = mark_safe('mW m<sup>2</sup>')
     gradient_units = mark_safe('&deg;C / Km')
@@ -34,19 +31,19 @@ class Interval(models.Model):
                 MinValueValidator(0)],
             blank=True, null=True)
 
-    depth_min = models.FloatField(_("depth min"),
+    depth_min = models.FloatField(_("depth upper (m)"),
             help_text=_('Minimum depth of the measurement interval.'),
             validators=[
                 MaxValueValidator(12500,'Maximum depth may not exceed 12,500m.'),
                 MinValueValidator(0, 'Depth cannot be less than 0m.')],
             blank=True,null=True)
-    depth_max = models.FloatField(_("depth max"),
+    depth_max = models.FloatField(_("depth lower (m)"),
             help_text=_('Maximum depth of the measurement interval.'),
             validators=[
                 MaxValueValidator(12500,'Maximum depth may not exceed 12,500m.'),
                 MinValueValidator(0, 'Depth cannot be less than 0m.')],
             blank=True,null=True)
-    number_of_temperatures = models.IntegerField(_("number of temperatures"), 
+    num_temp = models.IntegerField(_("number of temperatures"), 
             help_text=_('Number of temperatures used to determine the estimate.'),
             blank=True, null=True)
     temp_method = models.CharField(_("temperature method"),
@@ -79,30 +76,30 @@ class Interval(models.Model):
             help_text=_('Uncertainty on the uncorrected value.'),
             blank=True, null=True)
 
-    average_conductivity = models.FloatField(_("therm. cond."),
+    cond_ave = models.FloatField(_("conductivity"),
             help_text=_('Reported thermal conductivity to accompany the heat flow estimate.'),
             blank=True, null=True)
-    conductivity_uncertainty = models.FloatField(_("thermal conductivity uncertainty"),
+    cond_unc = models.FloatField(_("thermal conductivity uncertainty"),
             help_text=_('Uncertainty of the reported thermal conductivity.'),
             blank=True, null=True)
-    number_of_conductivities = models.FloatField(_("number of conductivity measurements"),
+    num_cond = models.FloatField(_("number of conductivity measurements"),
             help_text=_('Number of thermal conductivities from which the reported thermal conductivity was derived.'),
             blank=True, null=True)
-    conductivity_method = models.CharField(_("cond. method"),
+    cond_method = models.CharField(_("cond. method"),
             help_text=_('Method used to measure or derive thermal conductivity.'),
             max_length=150,
             blank=True, null=True)
 
-    heat_production = models.FloatField(_("heat prod."),
+    heat_prod = models.FloatField(_("heat prod."),
             help_text=_('Average heat production to accompany the heat flow estimate.'),
             blank=True, null=True)
-    heat_production_uncertainty = models.FloatField(_("heat production uncertainty"),
+    heat_prod_unc = models.FloatField(_("heat production uncertainty"),
             help_text=_('Uncertainty of the reported heat production.'),
             blank=True, null=True)
-    number_of_heat_gen = models.FloatField(_("number of heat production measurements"),
+    num_heat_prod = models.FloatField(_("number of heat production measurements"),
             help_text=_('Number of heat production values from which the average heat production was derived.'),
             blank=True, null=True)
-    heat_production_method = models.CharField(_("heat production method"),
+    heat_prod_method = models.CharField(_("heat production method"),
             help_text=_('Method used to measure or derive heat production.'),
             max_length=150,
             blank=True, null=True)
@@ -165,6 +162,7 @@ class Gradient(Interval):
     _corrected.boolean = True
 
 class Correction(models.Model):
+    
     class Type(models.TextChoices):
         CLIMATE = 'CLIM', _('Climate')
         TOPOGRAPHIC = 'TOPO', _('Topographic')
@@ -176,7 +174,6 @@ class Correction(models.Model):
         OTHER = 'OTH', _('Other')
         COMPOSITE = 'CMPS', _('composite')
         TILT = 'TILT', _('tilt')
-
 
     interval = models.ForeignKey("thermoglobe.Interval",
             verbose_name=_("interval"),

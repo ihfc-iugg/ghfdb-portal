@@ -1,7 +1,9 @@
 {% load static sekizai_tags %}
-<div id='map' {% if publication %}data-reference='{{publication.pk}}'{% endif %} {% if site %}data-id='{{site.pk}}'{% endif %} style="height:{{vh|default:'50vh'}}">
-  <div id='shadow' style='position:absolute'></div>
+<div id='map' {% if publication %}data-reference='{{publication.pk}}'{% endif %} {% if site %}data-id='{{site.pk}}'{% endif %} class="{{css_class}}">
+  <div id='shadow'></div>
 </div>
+
+{% comment %} style="height:{{vh|default:'50vh'}} {% endcomment %}
 
 {% addtoblock "css" %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin=""/>{% endaddtoblock %}
 {% addtoblock "css" %}<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css"/>{% endaddtoblock %}

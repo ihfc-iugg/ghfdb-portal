@@ -6,7 +6,7 @@ from ..models.abstract import WellLog, RawData
 class HeatProductionLog(WellLog):
  
     class Meta:
-        default_related_name='heat_production'
+        default_related_name='heat_production_logs'
         verbose_name = _('heat production')
         verbose_name_plural = _('heat production')
         db_table = 'heat_production_log'

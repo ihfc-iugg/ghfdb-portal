@@ -23,7 +23,7 @@ class Sample(models.Model):
 class ConductivityLog(WellLog):
 
     class Meta:
-        default_related_name='conductivity'
+        default_related_name='conductivity_logs'
         verbose_name_plural = _('thermal conductivity')
         verbose_name = _('thermal conductivity')
         db_table = 'thermal_conductivity_log'

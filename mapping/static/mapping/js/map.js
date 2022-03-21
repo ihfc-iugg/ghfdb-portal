@@ -24,34 +24,62 @@ L.control.scale({position: 'bottomright'}).addTo(map);
 
 clusters = L.markerClusterGroup({    
   chunkedLoading: true,
-  // chunkInterval:100,
   disableClusteringAtZoom: 6,
   spiderfyOnMaxZoom: false,
 });
+map.addLayer(clusters);
 
 map.spin(true)
-var data = new L.Util.ajax(get_url()).then(function(data){
-    markers = []
-    data.forEach(site => {
-      var m = L.circleMarker([site[1], site[2]], {
-          radius: 5, 
-          fill:true,
-          fillOpacity:0.75,
-          fillColor: 'rgb(255,0,0,1)',
-          color:'rgb(200,0,0,1)', //stroke colour
-          weight:1, //stroke weight in pixels
-          });
-      m.on('click',getMarkerPopup)
-      m.url = `/api/sites/${site[0]}`
-      markers.push(m)
-    });
-    var sites = L.featureGroup(markers)
-    clusters.addLayer(sites);
-    map.addLayer(clusters);
-    map.spin(false)
+var data = new L.Util.ajax(get_url()).then(processData)
 
-    map.flyToBounds(sites.getBounds())
-});
+
+function processData(data) {
+
+  markers = []
+
+  data.forEach(site => {
+    var m = L.circleMarker([site[1], site[2]], {
+        radius: 5, 
+        fill:true,
+        fillOpacity:0.75,
+        fillColor: 'rgb(255,0,0,1)',
+        color:'rgb(200,0,0,1)', //stroke colour
+        weight:1, //stroke weight in pixels
+        });
+    m.on('click',getMarkerPopup)
+    m.url = `/api/v1/sites/${site[0]}`
+    markers.push(m)
+  });
+
+  var sites = L.featureGroup(markers)
+  clusters.addLayer(sites);
+
+
+  map.spin(false)
+  map.flyToBounds(sites.getBounds())
+  
+}
+
+
+
+function processLargeArrayAsync(array, fn, chunk, context) {
+  context = context || window;
+  chunk = chunk || 100;
+  var index = 0;
+  function doChunk() {
+      var cnt = chunk;
+      while (cnt-- && index < array.length) {
+          // callback called with args (value, index, array)
+          fn.call(context, array[index], index, array);
+          ++index;
+      }
+      if (index < array.length) {
+          // set Timeout for async iteration
+          setTimeout(doChunk, 1);
+      }
+  }    
+  doChunk();    
+}
 
 function getMarkerPopup(e) {
   var marker = this;
@@ -81,7 +109,7 @@ function getMarkerPopup(e) {
 }
 
 function get_url() {
-  url = "/world-map/data/"
+  url = "/api/v1/sites/coordinates/"
 
   if ($('#map').data() != {}) {
     url += '?'

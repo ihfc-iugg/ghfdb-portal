@@ -11,7 +11,7 @@ class TemperatureLog(WellLog):
             blank=True, null=True)
 
     class Meta:
-        default_related_name='temperature'
+        default_related_name='temperature_logs'
         verbose_name = _('temperature')
         verbose_name_plural = _('temperature')
         db_table = 'temp_meta'
