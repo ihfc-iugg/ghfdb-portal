@@ -8,21 +8,14 @@ $.extend( $.fn.dataTable.defaults, {
 } );
 
 $.fn.create_table = function(options) {
-    colDefs = [];
-    // web_url = $(this).attr("data-weburl");
-    // console.log(web_url)
-    // prepend = $(this).attr("data-linkPrepend");
-
-    // if (link) {
-      // colDefs.push({targets: [0], render: $.fn.dataTable.render.href(prepend,web_url)})
-    var colDefs = [{targets: [0], render: $.fn.dataTable.render.href()}];
-    // }
+    var detailsUrl = $(this).data('web-url')
+    var colDefs = [{targets: [0], render: $.fn.dataTable.render.href(detailsUrl)}];
 
     this.DataTable( {
         columnDefs: colDefs,
         ajax: {
           type: "GET",
-          url: $(this).attr("data-url"),
+          url: $(this).data("url"),
           dataSrc: 'results',
           dataFilter: function(data) {
               var json = jQuery.parseJSON( data );
@@ -37,10 +30,16 @@ $.fn.create_table = function(options) {
 
 $.fn.dataTable.render.href = function ( href ) {
   return function ( data, type, row ) {
-      return '<a href='+row.site.web_url+'>'+data+'</a>'
-      // return '<a href='+href+row.site.id+'>'+data+'</a>'
+      return '<a href='+href+row.id+'>'+data+'</a>'
   }
 };
+
+// $.fn.dataTable.render.href = function ( href ) {
+//   return function ( data, type, row ) {
+//       return '<a href='+row.site.web_url+'>'+data+'</a>'
+//       // return '<a href='+href+row.site.id+'>'+data+'</a>'
+//   }
+// };
 
 // $('tbody tr').hover(function () {
 //   var data = site.row( this ).data();

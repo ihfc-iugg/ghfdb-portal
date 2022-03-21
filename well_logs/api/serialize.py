@@ -1,12 +1,11 @@
 from rest_framework import serializers
 from well_logs import models
-from thermoglobe.models import Site
-from api.serialize import SimpleSite
+from api.v1.serialize import SimpleSite
 
 
-class LogSerializerMixin(serializers.HyperlinkedModelSerializer):
+class LogSerializerMixin(serializers.ModelSerializer):
 
-    id = serializers.ReadOnlyField()
+    # id = serializers.ReadOnlyField()
     data_count = serializers.IntegerField()
     depth_upper = serializers.FloatField()
     depth_lower = serializers.FloatField()
@@ -46,7 +45,8 @@ class HeatProductionSerializer(LogSerializerMixin):
 class NestedTemp(serializers.ModelSerializer):
     class Meta:
         model = models.Temperature
-        exclude = ['id','log']
+        fields = ['depth','value','uncertainty']
+        # exclude = ['id','log']
 
 
 class TemperatureSerializer(LogSerializerMixin):

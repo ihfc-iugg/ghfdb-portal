@@ -12,9 +12,9 @@
   <hr class="major mt-1">
   <section>
     {% for publication in user.publications.all %}
-      {% include "publications/publication.html" %}          
+      {% include "crossref/publication.html" %}          
     {% endfor %}
   </section>
 </div>
 
-{% include "publications/modals/create_from_doi.html" with form=publication_form %}
+{% include "crossref/modals/create_from_doi.html" with form=publication_form %}

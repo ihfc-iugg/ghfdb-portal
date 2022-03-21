@@ -1,8 +1,9 @@
 SITE_TYPE = (   ('C','continental'),
                 ('O','oceanic'),)
 
+
 # ========== EXPORT SETS ==============
-SITE_STANDARD = [
+SITE = [
                 'id',
                 'site_name',
                 'latitude',
@@ -13,64 +14,23 @@ SITE_STANDARD = [
                 'sediment_thickness',
                 'sediment_thickness_type',
                 'crustal_thickness',
-                # 'surface_temp',
                 'bottom_water_temp',
                 'cruise',
-                'site__country__name',
-                'site__sea__name',
+                'site__country',
+                'site__continent',
+                'site__political',
+                'site__sea',
+                'site__province',
+                'site__plate',
+
                 ]   
 
-SITE_DETAILED = [
-            'id',
-            'site_name',
-            'latitude',
-            'longitude',
-            'elevation',
-            'well_depth',
-            'seamount_distance',
-            'sediment_thickness',
-            'sediment_thickness_type',
-            'crustal_thickness',
-            # 'surface_temp',
-            'bottom_water_temp',
-            'cruise',
-            'site__country__name',
-            'site__sea__name',
-            'site__country__name',
-            'site__country__region',
-            'site__country__subregion',
-            'site__continent__name',
-            'site__political__name',
-            'site__province__name',
-            'site__province__juvenile_age_min',
-            'site__province__juvenile_age_max',
-            'site__province__thermotectonic_age_min',
-            'site__province__thermotectonic_age_max',
-            'site__province__last_orogen',
-                ]
-
-HEAT_FLOW_STANDARD = [
-            'depth_min',
-            'depth_max',
-            'reliability',
-            'number_of_temperatures',
-            'temp_method',
-            'heat_flow',
-            'heat_flow_uncertainty',
-            'gradient',
-            'gradient_uncertainty',
-            'average_conductivity',
-            'conductivity_uncertainty',
-            'heat_production',
-            'heat_production_uncertainty',
-            ]
-
-HEAT_FLOW_DETAILED = [
+intervals = SITE + [
             'depth_min',
             'depth_max',
             'tilt',
             'reliability',
-            'number_of_temperatures',
+            'num_temp',
             'temp_method',
 
             'heat_flow_corrected',
@@ -83,37 +43,19 @@ HEAT_FLOW_DETAILED = [
             'gradient_uncorrected',
             'gradient_uncorrected_uncertainty',
 
-            'average_conductivity',
-            'conductivity_uncertainty',
-            'number_of_conductivities',
-            'conductivity_method',
+            'cond_ave',
+            'cond_unc',
+            'num_cond',
+            'cond_method',
 
             'heat_production',
-            'heat_production_uncertainty',
-            'number_of_heat_gen',
-            'heat_production_method',
-            
-            'corrections__climate_flag',
-            'corrections__climate',
-            'corrections__topographic_flag',
-            'corrections__topographic',
-            'corrections__refraction_flag',
-            'corrections__refraction',
-            'corrections__sed_erosion_flag',
-            'corrections__sed_erosion',
-            'corrections__fluid_flag',
-            'corrections__fluid',
-            'corrections__bwv_flag',
-            'corrections__bwv',
-            'corrections__compaction_flag',
-            'corrections__compaction',
-            'corrections__other_flag',
-            'corrections__other_type',
-            'corrections__other',
+            'heat_prod_unc ',
+            'num_heat_prod',
+            'heat_prod_method',
         ]
 
 
-CONDUCTIVITY = [
+conductivity = SITE + [
             'depth',
             'sample_name',
             'conductivity',
@@ -135,7 +77,7 @@ CONDUCTIVITY = [
             'log_id',
         ]
 
-HEAT_PROD = [
+heat_production = SITE + [
             'depth',
             'heat_production',
             'uncertainty',
@@ -151,7 +93,7 @@ HEAT_PROD = [
             'log_id',
         ]
 
-TEMPERATURE = [
+temperature = SITE + [
             'temperature',
             'uncertainty',
             'depth',
@@ -168,23 +110,3 @@ TEMPERATURE = [
             'source',
             'source_id', 
             ]
-
-intervals = dict(
-    standard = SITE_STANDARD + HEAT_FLOW_STANDARD,
-    detailed = SITE_DETAILED + HEAT_FLOW_DETAILED,
-    )
-
-temperature = dict(
-    standard = SITE_STANDARD + TEMPERATURE,
-    detailed = SITE_DETAILED + TEMPERATURE,
-    )
-
-conductivity = dict(
-    standard = SITE_STANDARD + CONDUCTIVITY,
-    detailed = SITE_DETAILED + CONDUCTIVITY,
-    )
-
-heat_production = dict(
-    standard = SITE_STANDARD + HEAT_PROD,
-    detailed = SITE_DETAILED + HEAT_PROD,
-    )

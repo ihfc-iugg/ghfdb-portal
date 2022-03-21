@@ -1,75 +1,73 @@
-{% extends "base.html" %}
-{% load static sekizai_tags geojson_tags thermoglobe_extras comments %}
+{% extends "thermoglobe/wrappers/map_at_top.html" %}
+{% load static sekizai_tags geojson_tags thermoglobe_extras comments i18n %}
 
-{% block content %}
-{{ block.super }}
-<div class='inner'>
-  {% include "mapping/partials/map.html" %}
-
+{% block below_map %}
 	<header class='py-3'>
-    <div class='badges'>
-      {% if publication.is_verified %}
-        <p class='mb-0'><i class='text-success fas fa-check-circle'></i> Verified by:
-        {% for v in publication.verified_by.all %}
-          <span class="badge badge-pill badge-light border border-secondary">{{ v.username }}</span>
-        {% endfor %}
-        </p>
-      {% else %}
-        <p class='mb-3'>
-          <i class='text-warning fas fa-exclamation-triangle' data-bs-toggle="tooltip" data-bs-placement="bottom" title="This publication has not been verified"></i> 
-          <span>{{ publication.title }}</span>
-        </p>
-
-      {% endif %}
+    <div class='d-flex'>
+      <div class='pe-3' style='min-width:0'><p class='text-truncate my-0'>{{ publication.title }}<p></div>
+      <div>
+        {% if publication.is_verified %}
+          <i class='text-success fas fa-check-circle' data-bs-toggle="tooltip" data-bs-placement="bottom" title="This publication has been verified by {{publication.verified_by.count}} users"></i>
+        {% else %}
+          <i class='float-right text-warning fas fa-exclamation-triangle' data-bs-toggle="tooltip" data-bs-placement="bottom" title="This publication has not been verified"></i>
+        {% endif %}
+      </div>
     </div>
-
-
-    {% comment %} <div class='d-flex'> {% endcomment %}
+    <div class='d-flex'>
         {% include "thermoglobe/components/nav_pills.html" %}
-        {% comment %} {% include "thermoglobe/components/nav_actions.html" %} {% endcomment %}
-    {% comment %} </div> {% endcomment %}
+        {% include "thermoglobe/components/nav_actions.html" %}
+    </div>
 	</header>
 
   <section class='pt-0'>
     <div id="tabbedContent" class="tab-content pt-3">
+      {% with publication as pub %}
+
+      {% comment %} DETAILS TAB {% endcomment %}
       <div class="tab-pane fade show active" id="details-container" role="tabpanel" aria-labelledby="details-tab">
         <header class="main">
-          <h3 class='m-0'>{{ publication.title }}</h3>
-          <div><i>{{ publication.container_title }}, {{ publication.published.year }}</i></div>
-          {% if publication.author %}<div>{{publication.authors_display_long}}</div>{% endif %}
+          <div class='d-flex'>{% include "core/components/socials.html" %}</div>
+          <div><i>
+              {% if pub.container_title %}{{ pub.container_title }}, {% endif %}
+              {% if pub.published.year %}{{ pub.published.year }}{% endif %}
+              {% if pub.issue %}, Issue No. {{ pub.issue }}{% endif %}
+              {% if pub.issue %}, pp. {{ pub.page }}{% endif %}
+          </i></div>
+          {% if pub.author %}<div>{{pub.authors_display_long}}</div>{% endif %}
         </header>
-        {% if publication.abstract %}
-          <p>{{ publication.abstract }}</p>
+        {% if pub.abstract %}
+          <p>{{ pub.abstract }}</p>
         {% endif %}
-        {% if publication.keywords %}
-          {% for keyword in publication.keywords.all %}
-            <a class="keyword" href="{% url 'publications:keyword' keyword %}">{{ keyword }}</a>
+        {% if pub.keywords %}
+          {% for keyword in pub.keywords.all %}
+            <span class="keyword">{{ keyword }}</span>
           {% endfor %}
         {% endif %}
-        <hr class="major"/>
-        <header><h3>Comments</h3></header>
-        {% include "components/comments.html" with url="publications:detail" %}
       </div>
-      {% if user.is_authenticated %}
+      {% endwith %}
+
+      {% comment %} DataTables Tabs {% endcomment %}
       {% with "reference="|addstr:publication.pk as filter_by %}
         {% for table in tables %}
-        {% comment %} {% with tables.0 as table %} {% endcomment %}
           {% include "thermoglobe/components/table.html" %}
-        {% comment %} {% endwith %} {% endcomment %}
         {% endfor %}
       {% endwith %}
-      {% endif %}
+
+
+      {% comment %} DISCUSSION TAB {% endcomment %}
+      <div class="tab-pane fade" id="discussion-container" role="tabpanel" aria-labelledby="discussion-tab">
+        {% include "comments/render_comments.html" with object_descr="this publication" %}
+      </div>
+
     </div>
   </section>       
-</div>
 
 {% addtoblock "js" %}<script>$(function(){$('[data-bs-toggle="tooltip"]').tooltip()})</script>{% endaddtoblock %}
 
 
-{% endblock content %}
+{% endblock below_map %}
 
 {% block modals %}
-  {% include "modals/download_modal.html" %}
   {% include "modals/verification_modal.html" %}
 {% endblock modals %}
 

@@ -36,48 +36,6 @@ class SiteQS(PlotQueryset):
             'depth_min': Min('intervals__depth_min'),
             'depth_max': Max('intervals__depth_min'),
         }).exclude(gradient__isnull=True)
-        # return self.annotate(value=F('gradient')).distinct()
-
-    def temperature(self):
-        return self.exclude(temperature__isnull=True).annotate(
-            count=Count('temperature'),
-            min_temperature=Min('temperature__temperature'),
-            max_temperature=Max('temperature__temperature'),
-            depth_min=Min('temperature__depth'),
-            depth_max=Max('temperature__depth'),
-            )
-
-    def conductivity(self):
-        return self.exclude(conductivity__isnull=True).annotate(
-            count=Count('conductivity'),
-            std=StdDev('conductivity__conductivity'),
-            avg_conductivity=Round(Avg('conductivity__conductivity')),
-            min_conductivity=Min('conductivity__conductivity'),
-            max_conductivity=Max('conductivity__conductivity'),
-            depth_min=Min('conductivity__depth'),
-            depth_max=Max('conductivity__depth'),
-            )
-
-    def heat_production(self):
-        return self.exclude(heat_production__isnull=True).annotate(
-            count=Count('heat_production'),
-            avg_heat_production=Round(Avg('heat_production__heat_production')),
-            min_heat_production=Min('heat_production__heat_production'),
-            max_heat_production=Max('heat_production__heat_production'),
-            depth_min=Min('heat_production__depth'),
-            depth_max=Max('heat_production__depth'),
-            )
-
-    def table(self,data_type):
-        return getattr(self,data_type)()
-
-    def intervals(self):
-        return self.annotate(**{           
-            'heat_flow': Round(Avg(Coalesce('intervals__heat_flow_corrected', 'intervals__heat_flow_uncorrected'))),
-            'gradient': Round(Avg(Coalesce('intervals__gradient_corrected', 'intervals__gradient_uncorrected'))),
-            'depth_min': Min('intervals__depth_min'),
-            'depth_max': Max('intervals__depth_min'),
-        })
 
 class Site(ModelMeta,models.Model):
     objects = SiteQS().as_manager()
@@ -98,10 +56,10 @@ class Site(ModelMeta,models.Model):
             MinValueValidator(-180)],
         db_index=True)
     geom = geomodels.PointField(blank=True)
-    elevation = models.FloatField(_('elevation'),
+    elevation = models.FloatField(_('elevation (m)'),
         help_text=_('Site elevation'),
         blank=True, null=True)
-    well_depth = models.FloatField(_("well depth"),
+    well_depth = models.FloatField(_("well depth (m)"),
             help_text=_('Total depth of the hole in metres.'),
             validators=[MaxValueValidator(12500),
                     MinValueValidator(0)],
@@ -109,9 +67,8 @@ class Site(ModelMeta,models.Model):
     reference = models.ManyToManyField("publications.Publication",
             verbose_name=_("references"),
             help_text=_('The reference or publication from which the data were sourced. Each site may have multiple references.'),
-            related_name='sites',
             blank=True)
-    cruise = models.CharField(_("name of cruise"),
+    cruise = models.CharField(_("cruise name"),
             help_text=_('For oceanic measurements - the name of the cruise on which the measurements were taken.'),
             max_length=150, 
             blank=True, null=True)  
@@ -120,59 +77,53 @@ class Site(ModelMeta,models.Model):
             validators=[MaxValueValidator(220),
                     MinValueValidator(0)],
             blank=True, null=True)
-    sediment_thickness = models.FloatField(_("calculated sediment thickness"),
+    sediment_thickness = models.FloatField(_("sediment thickness"),
             help_text=_('Sediment thickness at the site.'),
             null=True, blank=True)
-    sediment_thickness_type = models.CharField(_("type of sediment thickness"),
+    sediment_thickness_type = models.CharField(_("sediment thickness"),
         max_length=250,
         help_text=_('How sediment thickness was determined.'),
         null=True, blank=True)
 
     #CALCULATED FIELDS
-    seamount_distance = models.FloatField(_("distance to seamount"),
-            # verbose_name=_("seamount distance [Km]"),
+    seamount_distance = models.FloatField(_("seamount distance"),
             help_text=_('Distance in Km to the nearest seamount.'),
             blank=True, null=True)
-    outcrop_distance = models.FloatField(_("distance to outcrop"),
+    outcrop_distance = models.FloatField(_("outcrop distance"),
             help_text=_('Distance in Km to the nearest outcrop.'),
             blank=True, null=True)
-    crustal_thickness = models.FloatField(_("calculated crustal thickness"),
+    crustal_thickness = models.FloatField(_("crustal thickness"),
             help_text=_('Calculated crustal thickness at the site.'),
             null=True, blank=True)
     continent = models.ForeignKey("mapping.Continent",
             verbose_name=_('continent'),
-            help_text=_('Continent land boundaries'), 
-            related_name='sites', 
+            help_text=_('Continent land boundaries'),
             blank=True, null=True, 
             on_delete=models.SET_NULL)
     country = models.ForeignKey("mapping.Country", 
             verbose_name=_("country"),
             help_text=_('Country land boundaries'), 
-            related_name='sites', 
             blank=True, null=True,
             on_delete=models.SET_NULL)
     political = models.ForeignKey("mapping.Political",
             verbose_name=_("political region"),
-            help_text=_('Countries inclusive of exclusive marine economic zones'), 
-            related_name='sites', 
+            help_text=_('Countries inclusive of exclusive marine economic zones'),
             blank=True, null=True,
             on_delete=models.SET_NULL)
     province = models.ForeignKey("mapping.Province",
         verbose_name=_("geological province"),
-        related_name='sites', 
         blank=True, null=True, 
         on_delete=models.SET_NULL)
+        
     ocean = models.ForeignKey("mapping.Ocean",
             verbose_name=_("ocean"),
             help_text=_('Global oceans and seas'),
-            related_name='sites', 
             blank=True, null=True, 
             on_delete=models.SET_NULL)
 
     plate = models.ForeignKey("mapping.Plate",
             verbose_name=_("plate"),
             help_text=_('tectonic plate'),
-            related_name='sites', 
             blank=True, null=True, 
             on_delete=models.SET_NULL)
 
@@ -187,7 +138,7 @@ class Site(ModelMeta,models.Model):
     description = models.TextField(_("site description"),
             null=True, blank=True)
     slug = AutoSlugField(populate_from=['site_name','latitude','longitude'])
-    date_added = models.DateTimeField(_('date added to ThermoGlobe'),
+    date_added = models.DateTimeField(_('date added'),
             auto_now_add=True,
         )
     history = HistoricalRecords()
@@ -198,47 +149,33 @@ class Site(ModelMeta,models.Model):
         }
 
     class Meta:
+        default_related_name = 'sites'
         unique_together = ('site_name','latitude','longitude')
         db_table = 'site'
         ordering = ['-date_added']
-        # indexes = [
-        #     models.Index(fields=['latitude']),
-        #     models.Index(fields=['longitude']),
-        # ]
+
     def __str__(self):
         if self.site_name:
             return force_str(self.site_name)
         else:
             return self.coordinates()
-        # return force_str(self.site_name if self.site_name else self.pk)
-
-
 
     def save(self, *args, **kwargs):
-        # self.geom = Point(float(self.longitude),float(self.latitude))
+        self.geom = Point(float(self.longitude),float(self.latitude))
         super().save(*args, **kwargs)
 
     def coordinates(self):
         return f"{self.latitude}, {self.longitude}"
-
-    def data_counts(self):
-        return {
-            # 'heat_flow' : self.intervals.heat_flow.count(),
-            'temperature': self.temperature.count(),
-            'conductivity': self.conductivity.count(),
-            'heat_production': self.heat_production.count(),
-        }
-
+       
     def get_absolute_url(self):
         return reverse("thermoglobe:site", kwargs={"pk": self.pk})
 
     def get_data(self):
         return {
-            # 'interval' : self.intervals.all(),
-            'intervals' : apps.get_model('thermoglobe','interval').heat_flow.filter(site=self),
-            'temperature': self.temperature.all(),
-            'conductivity': self.conductivity.all(),
-            'heat_production': self.heat_production.all(),
+            'intervals' : self.intervals.all(),
+            'temperature': self.temperature_logs.all(),
+            'conductivity': self.conductivity_logs.all(),
+            'heat_production': self.heat_production_logs.all(),
         }
 
     def get_meta_title(self):

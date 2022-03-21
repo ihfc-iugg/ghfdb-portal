@@ -43,7 +43,7 @@ class Migration(migrations.Migration):
                 ('circ_time', models.FloatField(blank=True, null=True, verbose_name='circulation time (hrs)')),
                 ('lag_time', models.FloatField(blank=True, null=True, verbose_name='lag time (hrs)')),
                 ('correction', models.CharField(blank=True, max_length=150, null=True, verbose_name='correction type')),
-                ('reference', models.ForeignKey(blank=True, help_text='The publications or other reference from which the measurement was reported.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='temperature', to='publications.publication', verbose_name='reference')),
+                ('reference', models.ForeignKey(blank=True, help_text='The publications or other reference from which the measurement was reported.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='temperature', to='publications.Publication', verbose_name='reference')),
                 ('site', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='temperature', to='thermoglobe.site', verbose_name='site')),
             ],
             options={
@@ -81,7 +81,7 @@ class Migration(migrations.Migration):
                 ('year_logged', models.PositiveSmallIntegerField(blank=True, null=True, validators=[django.core.validators.MinValueValidator(1900), django.core.validators.MaxValueValidator(2050)], verbose_name='year')),
                 ('comment', models.TextField(blank=True, null=True, verbose_name='comments')),
                 ('added', models.DateTimeField(auto_now_add=True, verbose_name='added')),
-                ('reference', models.ForeignKey(blank=True, help_text='The publications or other reference from which the measurement was reported.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='heat_production', to='publications.publication', verbose_name='reference')),
+                ('reference', models.ForeignKey(blank=True, help_text='The publications or other reference from which the measurement was reported.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='heat_production', to='publications.Publication', verbose_name='reference')),
                 ('site', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='heat_production', to='thermoglobe.site', verbose_name='site')),
             ],
             options={
@@ -120,7 +120,7 @@ class Migration(migrations.Migration):
                 ('year_logged', models.PositiveSmallIntegerField(blank=True, null=True, validators=[django.core.validators.MinValueValidator(1900), django.core.validators.MaxValueValidator(2050)], verbose_name='year')),
                 ('comment', models.TextField(blank=True, null=True, verbose_name='comments')),
                 ('added', models.DateTimeField(auto_now_add=True, verbose_name='added')),
-                ('reference', models.ForeignKey(blank=True, help_text='The publications or other reference from which the measurement was reported.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='conductivity', to='publications.publication', verbose_name='reference')),
+                ('reference', models.ForeignKey(blank=True, help_text='The publications or other reference from which the measurement was reported.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='conductivity', to='publications.Publication', verbose_name='reference')),
                 ('site', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='conductivity', to='thermoglobe.site', verbose_name='site')),
             ],
             options={

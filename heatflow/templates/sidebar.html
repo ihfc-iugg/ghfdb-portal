@@ -1,0 +1,21 @@
+{% load menu_tags thumbnail solo_tags %}
+
+<div id="sidebar" class="{{sidebar|default:'active'}}">
+  <div class="inner">
+    <section id="logo-banner" class='alt py-3'>
+      <header>
+        <div class='d-flex flex-row align-items-center'>
+            {% include 'core/components/logo.html' with size="45x45" %}
+            <div><h2 class='ps-2 pb-0 mb-0'>ThermoGlobe</h2></div>
+        </div>
+      </header>
+    </section>
+    <nav id="menu" class='sidebar-menu'>
+      <header class='major'>
+        <h3>Menu</h3>
+      </header>
+      <ul>{% show_menu 0 100 100 100 %}</ul>
+    </nav>
+    {% include "menu/user_menu.html" %}
+  </div>
+</div>
