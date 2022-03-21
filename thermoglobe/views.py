@@ -1,23 +1,14 @@
-import zipfile
-from datetime import datetime as dt
-from django.db.models import F
-from django.http import HttpResponse,  JsonResponse
-from django.shortcuts import render
-from django.views.generic import DetailView, TemplateView, View
-from django.utils.html import mark_safe
-from django.apps import apps
+from django.views.generic import DetailView, TemplateView
 from thermoglobe.mixins import DownloadMixin 
 from thermoglobe.models import Site
 from publications.models import Publication
 from .filters import MapFilter
-from .forms import DownloadBasicForm, DownloadWithChoicesForm, SiteForm
+from .forms import DownloadWithChoicesForm
 from mapping.forms import MapSettingsForm
 from meta.views import Meta
-from django.http import JsonResponse
 from thermoglobe.tables import IntervalTable, HeatProductionTable, ConductivityTable, TemperatureTable
 from django.views.decorators.http import require_POST
-from io import StringIO
-import csv
+
 
 class WorldMap(DownloadMixin, TemplateView):
     template_name = 'mapping/application.html'
@@ -28,6 +19,7 @@ class WorldMap(DownloadMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         context.update(dict(
             filter=self.filter(),
+            download_form=self.download_form(),
             settings=MapSettingsForm(),
             ))
 
