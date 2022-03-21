@@ -225,6 +225,3 @@ class DescribeField(DownloadMixin, DetailView):
         choices = self.model._meta.get_field(self.group_by).choices
         if choices:
             return dict(choices)
-
-    def description(self):
-        return f"View and download all thermal data related to the {self.model._meta.verbose_name} {self.get_object().name.title()} from the ThermoGlobe database."
