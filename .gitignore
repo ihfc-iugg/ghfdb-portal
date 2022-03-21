@@ -72,3 +72,4 @@ thermoglobe.json
 /media
 /playground
 *.code-workspace
+*images/
