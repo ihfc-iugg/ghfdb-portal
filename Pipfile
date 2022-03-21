@@ -149,6 +149,12 @@ drf-ujson2 = "*"
 rest-pandas = "*"
 django-publications-crossref = {editable = true,git = "https://github.com/SSJenny90/django-publications-crossref.git"}
 drf-excel = "*"
+drf-extensions = "*"
+djangorestframework-csv = "*"
+drf-orjson-renderer = "*"
+django-solo = "*"
+django-debug-toolbar-template-profiler = "*"
+django-smuggler = "*"
 
 [requires]
 python_version = "3.8"
