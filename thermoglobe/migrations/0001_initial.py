@@ -7,7 +7,6 @@ from django.db import migrations, models
 import django.db.models.deletion
 import django_extensions.db.fields
 import meta.models
-import simple_history.models
 import uuid
 
 
@@ -138,7 +137,6 @@ class Migration(migrations.Migration):
                 'ordering': ('-history_date', '-history_id'),
                 'get_latest_by': 'history_date',
             },
-            bases=(simple_history.models.HistoricalChanges, models.Model),
         ),
         migrations.CreateModel(
             name='Correction',

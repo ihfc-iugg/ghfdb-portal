@@ -145,7 +145,6 @@ comments = {editable = true,git = "https://github.com/SSJenny90/comments.git"}
 authentication = {editable = true,git = "https://github.com/SSJenny90/authentication.git"}
 core = {editable = true,git = "https://github.com/SSJenny90/core.git"}
 django-storages = "*"
-drf-ujson2 = "*"
 rest-pandas = "*"
 django-publications-crossref = {editable = true,git = "https://github.com/SSJenny90/django-publications-crossref.git"}
 drf-excel = "*"
@@ -157,4 +156,4 @@ django-debug-toolbar-template-profiler = "*"
 django-smuggler = "*"
 
 [requires]
-python_version = "3.8"
+python_version = "3.9"

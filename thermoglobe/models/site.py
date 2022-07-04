@@ -142,6 +142,7 @@ class Site(ModelMeta,models.Model):
             auto_now_add=True,
         )
     history = HistoricalRecords()
+
     _metadata = {
         'title': 'get_meta_title',
         'description': 'description',
