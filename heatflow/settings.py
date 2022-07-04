@@ -1,18 +1,17 @@
 import os
 from core.settings import *
 from django.utils.translation import ugettext_lazy as _
-import djangocms_faq
-SITE_NAME = 'ThermoGlobe'
+
+SITE_NAME = 'World Heat Flow Database'
 EMAIL_DOMAIN = "@thermoglobe.app"
 APP_NAME = 'heatflow'
-ADMINS = MANAGERS = [('Sam','sam.jennings@geoluminate.com.au')]
+ADMINS = MANAGERS = [('Sam','jennings@gfz-potsdam.de')]
 
 # UNCOMMENT TO COLLECTSTATIC TO AWS S3
 # STATICFILES_STORAGE = f'{APP_NAME}.storage_backends.StaticStorage'
 # STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_STATIC_LOCATION}/"
 
-
-ALLOWED_HOSTS += ['thermoglobe.herokuapp.com','www.thermoglobe.app','thermoglobe.app']
+ALLOWED_HOSTS += ['thermoglobe.herokuapp.com','www.thermoglobe.app','thermoglobe.app',"139.17.115.184"]
 
 INSTALLED_APPS = [
     'core',
@@ -135,8 +134,8 @@ CROSSREF_CMS_STYLES = [
 # MIDDLEWARE.append('lockdown.middleware.LockdownMiddleware')
 
 
-THUMBNAIL_DEFAULT_STORAGE = f'{APP_NAME}.storage_backends.PublicMediaStorage'
-PRIVATE_FILE_STORAGE = DEFAULT_FILE_STORAGE = f'{APP_NAME}.storage_backends.PrivateMediaStorage'
+# THUMBNAIL_DEFAULT_STORAGE = f'{APP_NAME}.storage_backends.PublicMediaStorage'
+# PRIVATE_FILE_STORAGE = DEFAULT_FILE_STORAGE = f'{APP_NAME}.storage_backends.PrivateMediaStorage'
 
 
 REST_FRAMEWORK = {
@@ -159,7 +158,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
     'DEFAULT_RENDERER_CLASSES': [
-        # 'api.v1.renderers.UJSONRenderer',
         # 'rest_framework.renderers.JSONRenderer',
         "drf_orjson_renderer.renderers.ORJSONRenderer",
         'rest_framework.renderers.BrowsableAPIRenderer',
@@ -193,11 +191,15 @@ LANGUAGES = (
 
 
 if os.getenv('DJANGO_ENV') == 'development':
+
+    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
     if os.name == 'nt':
         import platform
         OSGEO4W = r"C:\OSGeo4W"
-        if '64' in platform.architecture()[0]:
-            OSGEO4W += "64"
+        # if '64' in platform.architecture()[0]:
+            # OSGEO4W += "64"
         assert os.path.isdir(OSGEO4W), "Directory does not exist: " + OSGEO4W
         os.environ['OSGEO4W_ROOT'] = OSGEO4W
         os.environ['GDAL_DATA'] = OSGEO4W + r"\share\gdal"
