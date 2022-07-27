@@ -1,0 +1,28 @@
+{% load core_tags %}
+
+{% spaceless %}
+<h3><a href="{{site.get_absolute_url}}">{{site.name}}</a></h3>
+<div>{{site.lat}}, {{site.lng}}</div>
+{% comment %} <br> {% endcomment %}
+{{site.elevation|default_if_none:'?'}} (m)
+{% comment %} <span class='ms-auto'>{{site.get_expl_display|default_if_none:'?'}} {% endcomment %}
+{% comment %} <span class='ms-auto'>{{site.q_acq|default_if_none:'?'}}</span> {% endcomment %}
+<hr>
+
+<h3>{{site.q}}{% if site.q_unc %} &plusmn; {{site.q_unc}}{% endif %} mW m<sup>-2</sup></h3>
+
+
+{% comment %} <div>
+  <div><b>Heat Flow:</b></div>
+  <div>&emsp;{{site.q}}{% if site.q_unc %} &plusmn; {{site.q_unc}}{% endif %} mW m<sup>-2</sup></div>
+</div> {% endcomment %}
+
+{% comment %} <div> {% endcomment %}
+  {% comment %} <div class='d-flex'><b>{% verbose_name site "elevation" %}:</b>&emsp;<span class='ms-auto'>{{site.elevation|default_if_none:'?'}}</span></div> {% endcomment %}
+  {% comment %} <div class='d-flex'><b>{% verbose_name site "expl" %}:</b>&emsp;<span class='ms-auto'>{{site.get_expl_display|default_if_none:'?'}}</span></div> {% endcomment %}
+  {% comment %} <div class='d-flex'><b>{% verbose_name site "q_acq" %}:</b>&emsp;<span class='ms-auto'>{{site.q_acq|default_if_none:'?'}}</span></div> {% endcomment %}
+  {% comment %} {% if "offshore" in site.env %}
+    <div class='d-flex'><b>{% verbose_name site "wat_temp" %}:</b>&emsp;<span class='ms-auto'>{{site.wat_temp|default_if_none:'?'}}</span></div>
+  {% endif %} {% endcomment %}
+{% comment %} </div> {% endcomment %}
+{% endspaceless %}
