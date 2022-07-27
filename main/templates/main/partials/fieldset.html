@@ -1,0 +1,15 @@
+
+{% for header, rows in fieldset.items %}
+  {% if header %}<h5 class='py-3'>{{header}}</h5>{% endif %}
+  {% for row in rows %}
+    <div class='d-flex mb-3'>
+      {% for field, value in row.items %}
+      <div class='pe-5'>
+        <label class="mb-0 pe-3">{{field|capfirst}}:</label>
+        {{ value|default_if_none:"-" }}
+      </div>
+      {% endfor %}
+    </div>
+  {% endfor %}
+  <hr class="major"/>
+{% endfor %}

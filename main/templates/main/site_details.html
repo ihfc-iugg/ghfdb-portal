@@ -1,0 +1,77 @@
+{% extends "main/wrappers/map_at_top.html" %}
+{% load sekizai_tags geojson_tags thermoglobe_extras crispy_forms_tags i18n %}
+
+{% block below_map %}
+<header class='py-3'>
+  <div class='d-flex'>
+    <div class='pe-3' style='min-width:0'><p class='my-0'>{{ object.name }} <span class='text-muted'>({{object.id}})</span><p></div>
+    <div>
+      {% if object.is_verified %}
+        <i class='text-success fas fa-check-circle' data-bs-toggle="tooltip" data-bs-placement="bottom" title="This site is part of a verified publication"></i>
+      {% else %}
+        <i class='float-right text-warning fas fa-exclamation-triangle' data-bs-toggle="tooltip" data-bs-placement="bottom" title="This site is not part of a verified publication"></i>
+      {% endif %}
+    </div>
+  </div>
+  <div class='d-flex'>
+    <ul class="nav nav-tabs w-100" id='pills-tab' role="tablist">
+      {% comment %} DETAILS {% endcomment %}
+      <li class="nav-item"><a id="details-tab" data-bs-toggle="tab" href="#details-container" aria-controls="details-tab" class="small nav-link active" aria-selected="true">{% trans "Details" %}</a></li>
+
+      {% comment %} DATA {% endcomment %}
+      {% for table in tables %}
+        {% include "main/components/nav_item.html" %}
+      {% endfor %}
+
+      {% comment %} PUBLICATIONS {% endcomment %}
+      <li class="nav-item"><a id="publications-tab" data-bs-toggle="tab" href="#publications-container" aria-controls="publications-tab" class="small nav-link" aria-selected="true">{% trans "Related Publications" %}</a></li>
+
+      {% comment %} DISCUSSION {% endcomment %}
+      <li class="nav-item"><a id="discussion-tab" data-bs-toggle="tab" href="#discussion-container" aria-controls="discussion-tab" class="small nav-link" aria-selected="true">{% trans "Discussion" %}</a></li>
+    </ul>
+      {% include "main/components/nav_actions.html" %}
+  </div>
+</header>
+<section class='pt-0'>
+  <div id="tabbedContent" class="tab-content container-fluid pt-3">
+    
+    {% comment %} DETAILS TAB {% endcomment %}
+    <div class="tab-pane fade show active" id="details-container" role="tabpanel" aria-labelledby="details-tab">
+      {% include "main/partials/fieldset.html" %}
+    </div>
+
+    {% comment %} DATA TAB {% endcomment %}
+    {% with "site="|addstr:site.pk as filter_by %}
+      {% for table in tables %}
+        {% include "main/components/table.html" %}
+      {% endfor %}
+    {% endwith %}
+
+    {% comment %} PUBLICATIONS TAB {% endcomment %}
+    <div class="tab-pane fade" id="publications-container" role="tabpanel" aria-labelledby="publications-tab">
+      <div class='publication-group'>
+        {% for pub in object.references.all %}
+          {% include "crossref/publication.html" %}
+        {% endfor %}
+      </div>
+    </div>
+
+    {% comment %} DISCUSSION TAB {% endcomment %}
+    <div class="tab-pane fade" id="discussion-container" role="tabpanel" aria-labelledby="discussion-tab">
+      {% include "comments/render_comments.html" with object_descr="this publication" %}
+    </div>
+
+
+  </div>
+</section>      
+{% endblock below_map %}
+
+
+
+
+
+
+
+
+
+
