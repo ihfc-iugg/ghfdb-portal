@@ -2,6 +2,8 @@ from typing import Mapping
 from django.db import models
 from django.utils.translation import gettext as _
 
+"""These are the old static choice fields before moving to dynamic model based fields"""
+
 
 class ConductivitySource(models.TextChoices):
     OUTCROP = 'outcrop samples', _('Outcrop samples')
@@ -116,28 +118,3 @@ class TempCorrectionMethod(models.TextChoices):
     OTHER = 'other', _('Other')
     NOT_CORRECTED = 'not corrected', _('Not corrected')
     UNSPECIFIED = 'unspecified', _('Unspecified')
-
-
-
-
-
-
-# class StratigraphicAge(models.TextChoices):
-#     Cenozoic  
-#     Mesozoic  
-#     Mesozoic – Cretaceous  
-#     Mesozoic – Jurassic  
-#     Mesozoic – Triassic  
-#     Paleozoic  
-#     Paleozoic – Permian  
-#     Paleozoic – Carboniferous  
-#     Paleozoic–Devonian  
-#     Paleozoic – Silurian  
-#     Paleozoic – Ordovician  
-#     Paleozoic – Cambrian 
-#     Proterozoic  
-#     Neo–Proterozoic  
-#     Meso–Proterozoic  
-#     Paleo–Proterozoic  
-#     Archean  
-#     unspecified
