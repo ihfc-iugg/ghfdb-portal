@@ -1,0 +1,35 @@
+{
+	"folders": [
+		{
+			"path": "..\\authentication",
+			"name": "Authentication"
+		},
+		{
+			"path": "..\\core",
+			"name": "Core"
+		},
+		{
+			"name": "Django Crossref",
+			"path": "..\\django-crossref"
+		},
+		{
+			"name": "Django Earth Science",
+			"path": "../django-earth-science"
+		},
+		{
+			"name": "Global Tectonics",
+			"path": "..\\django-global-tectonics"
+		},
+		{
+			"path": ".",
+			"name": "Global Heat Flow"
+		},
+		{
+			"path": "..\\..\\..\\Downloads\\pmdmeta-master"
+		},
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "Global Heat Flow",
+		"python.envFile": "${workspaceFolder}/.env",
+	}
+}

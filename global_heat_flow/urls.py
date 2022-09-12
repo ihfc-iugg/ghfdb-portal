@@ -7,22 +7,17 @@ from django.contrib.sitemaps.views import sitemap
 from django.conf.urls.i18n import i18n_patterns
 
 urlpatterns = i18n_patterns(
-    path("sitemap.xml", sitemap, {"sitemaps": {"cmspages": CMSSitemap}}),
-    path("accounts/", include("allauth.urls")),
-    path('', include('user.urls')),
-
-    path('taggit_autosuggest/', include('taggit_autosuggest.urls')),
     path('', include('main.urls')),
     path('publications/', include('publications.urls')),
-    path('comments/', include('django_comments_xtd.urls')),
+    path('datacite/', include('django_datacite.urls')),
+    path('gfz-submit/', include('gfz_dataservices.urls')),
     path('', include('dashboard.urls')),
+    path('earth_science', include('earth_science.urls')),
     path("invitations/", include('invitations.urls', namespace='invitations')),
     path('translate/', include('rosetta.urls')),
-    path('admin/doc/', include('django.contrib.admindocs.urls')),
-    path('grappelli/', include('grappelli.urls')),
     path('admin/', include('smuggler.urls')),  # before admin url patterns!
-    path("admin/", admin.site.urls), 
-    path('', include("cms.urls")),
+
+    path('', include('core.urls')),
 )
 
     
