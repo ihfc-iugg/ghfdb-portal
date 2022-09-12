@@ -2,13 +2,13 @@
 
 from django.db import migrations
 import django.db.models.deletion
-import geologic_time.fields
+import earth_science.fields
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('geologic_time', '0009_auto_20220818_1253'),
+        ('earth_science', '0001_initial'),
         ('review', '0005_auto_20220816_1102'),
     ]
 
@@ -16,6 +16,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='reviewinterval',
             name='ics_strat',
-            field=geologic_time.fields.GeologicTimeOneToOne(blank=True, help_text='Stratigraphic age of the depth range involved in the reported heat-flow determination based on the official geologic timescale of the International Commission on Stratigraphy.', limit_choices_to=geologic_time.fields.limit_choices_to, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='review_intervals', to='geologic_time.geologictime', verbose_name='ICS stratigraphy'),
+            field=earth_science.fields.GeologicTimeOneToOne(blank=True, help_text='Stratigraphic age of the depth range involved in the reported heat-flow determination based on the official geologic timescale of the International Commission on Stratigraphy.', limit_choices_to=earth_science.fields.limit_choices_to, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='review_intervals', to='geologic_time.geologictime', verbose_name='ICS stratigraphy'),
         ),
     ]

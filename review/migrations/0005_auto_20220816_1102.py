@@ -2,13 +2,13 @@
 
 from django.db import migrations, models
 import django.db.models.deletion
-import earth_materials.fields
+import earth_science.fields
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('earth_materials', '0006_earthmaterial_label'),
+        ('earth_science', '0001_initial'),
         ('review', '0004_auto_20220809_1859'),
     ]
 
@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='reviewinterval',
             name='bgs_lith',
-            field=earth_materials.fields.EarthMaterialOneToOne(blank=True, help_text='Dominant rock type/lithology within the interval of heat-flow determination using the British Geological Society Earth Material Class (rock classification) scheme.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='review_intervals', to='earth_materials.earthmaterial', verbose_name='lithology'),
+            field=earth_science.fields.EarthMaterialOneToOne(blank=True, help_text='Dominant rock type/lithology within the interval of heat-flow determination using the British Geological Society Earth Material Class (rock classification) scheme.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='review_intervals', to='earth_materials.earthmaterial', verbose_name='lithology'),
         ),
         migrations.AlterField(
             model_name='reviewinterval',
