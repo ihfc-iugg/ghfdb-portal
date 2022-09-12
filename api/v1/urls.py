@@ -3,26 +3,23 @@ from rest_framework import routers
 from api.v1 import views
 from rest_framework.schemas import get_schema_view
 from rest_framework_gis.schema import GeoFeatureAutoSchema
-from well_logs.api.views import TemperatureViewSet, ConductivityViewSet, HeatProductionViewSet
-from api.v1.views import MapSites
-from api.v1.download_views import SiteDownloadView
+# from well_logs.api.views import TemperatureViewSet, ConductivityViewSet
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 router = routers.DefaultRouter()
-
 router.register(r'sites', views.SiteViewSet, basename='site')
+router.register(r'intervals', views.IntervalViewSet)
 router.register(r'publications', views.PublicationViewSet, basename='publication')
-router.register(r'interval', views.IntervalViewSet)
-router.register(r'conductivity', ConductivityViewSet)
-router.register(r'heat-production', HeatProductionViewSet)
-router.register(r'temperature', TemperatureViewSet)
+
 
 urlpatterns = [
-    path('sites/coordinates/', MapSites.as_view(), name='quick_sites'),
+    path('sites/coordinates/', views.MapSites.as_view(), name='quick_sites'),
+    path('sites/detail/<pk>/', views.MapPopupTemplate.as_view(), name='site_detail'),
+    path('', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('', include(router.urls)),
+    # path('', include("well_logs.api.urls")),
+
+    path('geofeatures/', views.FeatureList.as_view()),
     path('auth/', include('rest_framework.urls', namespace='rest_framework')),
-    path('openapi/', get_schema_view(
-        title="ThermoGlobe",
-        description="API for ThermoGlobe database",
-        version="beta",
-    ), name='openapi-schema'),
+    path('schema/', SpectacularAPIView.as_view(), name='schema'),
 ]
