@@ -1,6 +1,5 @@
 $(function(){map.fitWorld();})
 
-
 var baseLayers = {
   "Dark Gray": L.esri.basemapLayer('DarkGray',{detectRetina: true}),
   "Imagery": L.esri.basemapLayer('Imagery',{detectRetina: true}),
@@ -29,81 +28,48 @@ clusters = L.markerClusterGroup({
 });
 map.addLayer(clusters);
 
-map.spin(true)
-var data = new L.Util.ajax(get_url()).then(processData)
+var geojson = new L.GeoJSON.AJAX(get_url(), { //options object for GeoJSON
+  pointToLayer: function(geoJsonPoint, latlng) {
+    return L.circleMarker(latlng, {
+      radius: 5, 
+      fill:true,
+      fillOpacity:0.75,
+      fillColor: 'rgb(255,0,0,1)',
+      color:'rgb(200,0,0,1)', //stroke colour
+      weight:1, //stroke weight in pixels
+      });
+  },
+  onEachFeature: onEachFeature,
+});
 
 
-function processData(data) {
 
-  markers = []
+geojson.on('data:loading', function() { 
+  map.spin(true)
+})
 
-  data.forEach(site => {
-    var m = L.circleMarker([site[1], site[2]], {
-        radius: 5, 
-        fill:true,
-        fillOpacity:0.75,
-        fillColor: 'rgb(255,0,0,1)',
-        color:'rgb(200,0,0,1)', //stroke colour
-        weight:1, //stroke weight in pixels
-        });
-    m.on('click',getMarkerPopup)
-    m.url = `/api/v1/sites/${site[0]}`
-    markers.push(m)
-  });
-
-  var sites = L.featureGroup(markers)
-  clusters.addLayer(sites);
-
-
+geojson.on('data:loaded', function() { 
+  // Add markers to the cluster layer after the layer has loaded.
+  clusters.addLayer(this);
   map.spin(false)
-  map.flyToBounds(sites.getBounds())
-  
+  map.flyToBounds(this.getBounds())
+
+})
+
+function onEachFeature(feature, layer) {
+  // attaches a click handler to each layer that will fetch the popup content
+  layer.on({
+    click: getPopupContent
+  });
 }
 
-
-
-function processLargeArrayAsync(array, fn, chunk, context) {
-  context = context || window;
-  chunk = chunk || 100;
-  var index = 0;
-  function doChunk() {
-      var cnt = chunk;
-      while (cnt-- && index < array.length) {
-          // callback called with args (value, index, array)
-          fn.call(context, array[index], index, array);
-          ++index;
-      }
-      if (index < array.length) {
-          // set Timeout for async iteration
-          setTimeout(doChunk, 1);
-      }
-  }    
-  doChunk();    
-}
-
-function getMarkerPopup(e) {
+function getPopupContent(e) {
+  // gets the popup content from the API
   var marker = this;
   if (marker.getPopup() == undefined) {
-      $.get(this.url, function(data) {
-      var web_url = data.web_url;
-      var site_name = data.site_name;
-
-      to_delete = ['site_name','link','url','geom','date_added','description']
-      to_delete.forEach(el=> {
-          delete data[el]
-        })
-      var table_content = ""
-      Object.entries(data).forEach(el=> {
-        table_content += `<tr><td>${el[0]}</td><td>${el[1]}</td></td>`
-      })
-
-      var content = `<h2><a href='${web_url}' target="_blank">${site_name}</a></h2>
-              <table class='table table-responsive' style='max-height:500px;'><tbody>
-                ${table_content}
-              </tbody></table>`
-
-    marker.bindPopup(content,{maxHeight: 600, maxWidth:600})
-    marker.openPopup()
+      $.get(`/api/v1/sites/detail/${marker.feature.id}`, function(content) {
+      marker.bindPopup(content, {maxHeight: 600, maxWidth:600})
+      marker.openPopup()
     })
   }
 }

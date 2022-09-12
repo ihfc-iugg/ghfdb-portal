@@ -1,2 +1,2 @@
 release: python manage.py migrate
-web: gunicorn heatflow.wsgi --log-file -
+web: gunicorn global_heat_flow.wsgi --log-file -

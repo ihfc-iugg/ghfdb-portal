@@ -1,11 +1,3 @@
-$.extend( $.fn.dataTable.defaults, {
-  dom: '<"top"ipl>rt<"bottom"p><"clear">',
-  ordering: false,
-  responsive: true,
-  processing: true,
-  serverSide: true,
-  pageLength: 50,
-} );
 
 $.fn.create_table = function(options) {
     var detailsUrl = $(this).data('web-url')
@@ -24,22 +16,6 @@ $.fn.create_table = function(options) {
               return JSON.stringify( json );
           },
         },
-
-        // hides the length menu and paginator if number of data don't exceed max page rows
-        preDrawCallback: function (settings) {
-          var api = new $.fn.dataTable.Api(settings);
-          // hides paginator
-          $(this)
-              .closest('.dataTables_wrapper')
-              .find('.dataTables_paginate')
-              .toggle(api.page.info().pages > 1);
-
-          // hides length menu
-          $(this)
-              .closest('.dataTables_wrapper')
-              .find('.dataTables_length')
-              .toggle(settings.aLengthMenu[0][0] != -1 && settings.aLengthMenu[0][0] < api.page.info().recordsTotal);
-      },
     });
   return this;
 };
@@ -50,12 +26,29 @@ $.fn.dataTable.render.href = function ( href ) {
   }
 };
 
-// $.fn.dataTable.render.href = function ( href ) {
-//   return function ( data, type, row ) {
-//       return '<a href='+row.site.web_url+'>'+data+'</a>'
-//       // return '<a href='+href+row.site.id+'>'+data+'</a>'
-//   }
-// };
+$.extend( $.fn.dataTable.defaults, {
+  dom: '<"top"ipl>rt<"bottom"p><"clear">',
+  ordering: false,
+  responsive: true,
+  processing: true,
+  serverSide: true,
+  pageLength: 50,
+  // hides the length menu and paginator if number of data don't exceed max page rows
+  preDrawCallback: function (settings) {
+    var api = new $.fn.dataTable.Api(settings);
+    // hides paginator
+    $(this)
+        .closest('.dataTables_wrapper')
+        .find('.dataTables_paginate')
+        .toggle(api.page.info().pages > 1);
+
+    // hides length menu
+    $(this)
+        .closest('.dataTables_wrapper')
+        .find('.dataTables_length')
+        .toggle(settings.aLengthMenu[0][0] != -1 && settings.aLengthMenu[0][0] < api.page.info().recordsTotal);
+},
+} );
 
 // $('tbody tr').hover(function () {
 //   var data = site.row( this ).data();

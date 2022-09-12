@@ -1,23 +1,25 @@
 import os
 from core.settings import *
-from django.utils.translation import ugettext_lazy as _
-# import drf_spectacular
+from django.utils.translation import gettext_lazy as _
+
 SITE_NAME = 'World Heat Flow Database'
 EMAIL_DOMAIN = "@thermoglobe.app"
 APP_NAME = 'global_heat_flow'
 ADMINS = MANAGERS = [('Sam','jennings@gfz-potsdam.de')]
 
 # UNCOMMENT TO COLLECTSTATIC TO AWS S3
-# STATICFILES_STORAGE = f'{APP_NAME}.storage_backends.StaticStorage'
+# STATICFILES_STORAGE = f{APP_NAME}.storage_backends.StaticStorage'
 # STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_STATIC_LOCATION}/"
 
-ALLOWED_HOSTS += ['thermoglobe.herokuapp.com','www.thermoglobe.app','thermoglobe.app',"139.17.115.184","testserver"]
+ALLOWED_HOSTS += ['thermoglobe.herokuapp.com','www.thermoglobe.app','thermoglobe.app',"139.17.115.184"]
 
 INSTALLED_APPS = [
+
     'core',
-    'grappelli',
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    'grappelli.dashboard',
+    'grappelli',
     'django.contrib.sessions',
     'django.contrib.admin',
     'django.contrib.sites',
@@ -48,6 +50,21 @@ INSTALLED_APPS = [
     'djangocms_icon',
     'djangocms_link',
     'djangocms_picture',
+    'djangocms_bootstrap5',
+    'djangocms_bootstrap5.contrib.bootstrap5_alerts',
+    'djangocms_bootstrap5.contrib.bootstrap5_badge',
+    'djangocms_bootstrap5.contrib.bootstrap5_card',
+    'djangocms_bootstrap5.contrib.bootstrap5_carousel',
+    'djangocms_bootstrap5.contrib.bootstrap5_collapse',
+    'djangocms_bootstrap5.contrib.bootstrap5_content',
+    'djangocms_bootstrap5.contrib.bootstrap5_grid',
+    'djangocms_bootstrap5.contrib.bootstrap5_jumbotron',
+    'djangocms_bootstrap5.contrib.bootstrap5_link',
+    'djangocms_bootstrap5.contrib.bootstrap5_listgroup',
+    'djangocms_bootstrap5.contrib.bootstrap5_media',
+    'djangocms_bootstrap5.contrib.bootstrap5_picture',
+    'djangocms_bootstrap5.contrib.bootstrap5_tabs',
+    'djangocms_bootstrap5.contrib.bootstrap5_utilities',
     'djangocms_googlemap',
     'djangocms_video',
 
@@ -68,20 +85,30 @@ INSTALLED_APPS = [
     'storages',
     'crispy_forms',
     'crispy_bootstrap5',
-    'django_comments_xtd',
+    'fluent_comments',
+    'threadedcomments',
     'django_comments',
+
     'django_social_share',
-    'background_task',
+    # 'background_task',
     'meta',
     "sortedm2m",
     'ordered_model',
     "rosetta",
     'bootstrap_datepicker_plus',
+    "django_gravatar",
+    "django_ckeditor_5",
+    "django_jsonforms",
+    "treewidget",
+    'django_htmx',
+    'formtools',
+    'well_logs',
 
     # MY APPS
     'main',
     'database',
-    'well_logs',
+    'database_choices',
+    'thermal_data',
     'publications', 
     'crossref', 
     'crossref.cms', 
@@ -89,26 +116,70 @@ INSTALLED_APPS = [
     'dashboard',
     'data_editor',
     'editorial',
-    # 'comments',
+    'review',
+    'django_datacite',
+    'earth_science',
+    "global_tectonics",
+    "gfz_dataservices",
+    "research_organizations",
 
-    # "debug_toolbar",
+    "debug_toolbar",
 ]
+
+EARTH_MATERIALS_INCLUDE = [
+    'Igneous rock and sediment',
+    'Metamorphic rock',
+    'Sediment and sedimentary rock'
+    ]
+
+GRAPPELLI_INDEX_DASHBOARD = 'main.admin_dashboard.AdminDashboard'
+GRAPPELLI_AUTOCOMPLETE_LIMIT = None
+GRAPPELLI_ADMIN_TITLE = f'{SITE_NAME} Administration'
+
+TREEWIDGET_SETTINGS = {
+                'search':True,
+                # 'show_buttons': True
+                "can_add_related": False,
+                }
+
+TREEWIDGET_TREEOPTIONS = {
+        "core" : {
+            "themes" : {
+                "variant" : "large",
+                "icons": False,
+            },
+        },
+        'search': {
+            # 'fuzzy':True,
+            'show_only_matches': True,
+        },
+        'checkbox': {
+            'three_state': False,
+        },
+        "plugins" : [ "checkbox" ]
+}
+
+DATACITE_DEFAULTS = {
+    # These are default field values. The user cannot change these and they are hidden from the form.
+    'resourceTypeGeneral': 'Dataset',
+    'publisher': "GFZ Data Services",
+}
+
+DATACITE_RECOMMENDED = {
+    # These are recommended field values. The user is still able to change these when filling out the form.
+    'language': 'en',
+    'license': 'CC BY 4.0',
+}
+
 
 ROOT_URLCONF = f'{APP_NAME}.urls'
 WSGI_APPLICATION = f'{APP_NAME}.wsgi.application'
 
-GRAPPELLI_ADMIN_TITLE = f'{SITE_NAME} Administration'
 META_SITE_NAME = SITE_NAME
-COMMENTS_XTD_FROM_EMAIL = f"noreply{EMAIL_DOMAIN}"
-COMMENTS_XTD_CONTACT_EMAIL = f"info{EMAIL_DOMAIN}"
+
 DEFAULT_FROM_EMAIL = f'info{EMAIL_DOMAIN}'
 
 TAGGIT_CASE_INSENSITIVE = True
-
-RECAPTCHA_PUBLIC_KEY = os.getenv('RECAPTCHA_PUBLIC_KEY')
-RECAPTCHA_PRIVATE_KEY = os.getenv('RECAPTCHA_PRIVATE_KEY')
-
-
 
 SOCIALACCOUNT_PROVIDERS = {
     'orcid': {
@@ -131,31 +202,18 @@ REGISTRATION_BACKEND = 'organizations.backends.defaults.RegistrationBackend'
 
 TEMPLATES[0]['DIRS'].append(os.path.join(APP_NAME, 'templates'))
 
-CROSSREF_UA_STRING = "Global Heat Flow Database (https://thermoglobe.app)"
-CROSSREF_MAILTO = 'sam.jennings@geoluminate.com.au'
-CROSSREF_MODELS = {
-    'publication': 'publications.Publication',
-    'author': 'publications.Author'
-}
-CROSSREF_DEFAULT_STYLE = 'harvard'
-CROSSREF_AUTHOR_TRUNCATE_AFTER = 2
-
-
-CROSSREF_CMS_STYLES = [
-            ('harvard', 'Harvard'),
-        ]
+CROSSREF_UA_STRING = f"{SITE_NAME} (https://thermoglobe.app)"
+CROSSREF_MAILTO = ','.join([v[1] for v in ADMINS])
 
 MIDDLEWARE += [
     # 'debug_toolbar.middleware.DebugToolbarMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
+    "django_htmx.middleware.HtmxMiddleware",
 ]
 # MIDDLEWARE.append('lockdown.middleware.LockdownMiddleware')
 
-
 # THUMBNAIL_DEFAULT_STORAGE = f'{APP_NAME}.storage_backends.PublicMediaStorage'
 # PRIVATE_FILE_STORAGE = DEFAULT_FILE_STORAGE = f'{APP_NAME}.storage_backends.PrivateMediaStorage'
-
-
 
 REST_FRAMEWORK = {
     "HTML_SELECT_CUTOFF": 10,
@@ -174,7 +232,7 @@ REST_FRAMEWORK = {
         'user_burst': '25/second'
     },
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+        "api.access_policies.SiteAccessPolicy",
     ],
     'DEFAULT_RENDERER_CLASSES': [
         "drf_orjson_renderer.renderers.ORJSONRenderer",
@@ -182,12 +240,11 @@ REST_FRAMEWORK = {
         'rest_framework_csv.renderers.PaginatedCSVRenderer',
         'drf_excel.renderers.XLSXRenderer',
         'rest_framework_datatables_editor.renderers.DatatablesRenderer',
+        'api.v1.renderers.GeoJsonRenderer',
     ],
-
     'DEFAULT_FILTER_BACKENDS': (
         'rest_framework_datatables_editor.filters.DatatablesFilterBackend',
     ),
-
     'DEFAULT_PAGINATION_CLASS': 'rest_framework_datatables_editor.pagination.DatatablesPageNumberPagination',
 
     # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
@@ -199,40 +256,6 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
-LANGUAGES = (
-    ## Customize this
-    ('en', _('English')),
-    ('de', _('German')),
-    ('fr', _('French')),
-    ('it', _('Italian')),
-)
-
-USE_I18N=True
-
-
-SPECTACULAR_SETTINGS = {
-    'SCHEMA_PATH_PREFIX': '/api/v1',
-    'TITLE': 'World Heat Flow Database API',
-    'DESCRIPTION': 'Documentation for version 1.0 of the public API of the World Heat Flow Database Project.',
-    'TOS': None,
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
-    'SORT_OPERATIONS': False,
-    'SORT_OPERATION_PARAMETERS': False,
-    # OTHER SETTINGS
-    'AUTHENTICATION_WHITELIST': ['rest_framework.authentication.BasicAuthentication',],
-    'PARSER_WHITELIST': [],
-    'RENDERER_WHITELIST': ['drf_orjson_renderer.renderers.ORJSONRenderer'],
-    'SERVERS': [],
-    # Tags defined in the global scope
-    'TAGS': [],
-    "SWAGGER_UI_SETTINGS": {
-        "deepLinking": True,
-        "persistAuthorization": True,
-        "displayOperationId": True,
-    },
-}
-
 
 if os.getenv('DJANGO_ENV') == 'development':
 
@@ -242,6 +265,8 @@ if os.getenv('DJANGO_ENV') == 'development':
     if os.name == 'nt':
         import platform
         OSGEO4W = r"C:\OSGeo4W"
+        # GDAL_LIBRARY_PATH = os.path.join(OSGEO4W, "bin","gdal305.dll")
+
         # if '64' in platform.architecture()[0]:
             # OSGEO4W += "64"
         assert os.path.isdir(OSGEO4W), "Directory does not exist: " + OSGEO4W
