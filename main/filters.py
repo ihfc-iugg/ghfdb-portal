@@ -1,5 +1,5 @@
 from database.models import Site
-from mapping.models import Ocean, Country, Continent, Province
+from mapping.models import Ocean, Country, Continent
 # import django_filters as df
 from django_filters import MultipleChoiceFilter, ChoiceFilter, RangeFilter
 from django.contrib import admin
@@ -9,15 +9,12 @@ from main.forms import DownloadBasicForm
 # from main.forms import DownloadBasicForm, MapFilterForm
 from django.db.models.functions import Coalesce
 from django_filters import rest_framework as df
-from mapping.models import Plate
+from global_tectonics.models import Plate, Province
 from crispy_forms.helper import FormHelper
 from crispy_bootstrap5.bootstrap5 import FloatingField, BS5Accordion
 from crispy_forms.layout import Layout, ButtonHolder, Row, Column, Field, HTML, Button, Div
 from crispy_forms.bootstrap import AccordionGroup
-
-def get_plate_choices():
-    values = list(Plate.objects.order_by("plate").values_list("plate",flat=True).distinct())
-    return [(x,x) for x in values]
+from core.utils import get_choices
 
 class MapFilter(df.FilterSet):
     name = df.CharFilter(lookup_expr='icontains', label='Site Name')
@@ -28,7 +25,7 @@ class MapFilter(df.FilterSet):
     elevation_gt = df.NumberFilter(field_name='elevation', lookup_expr='gt', label='Elevation (m)')
     elevation_lt = df.NumberFilter(field_name='elevation', lookup_expr='lt', label='Elevation (m)')
     # plate = df.ChoiceFilter(field_name='plate__plate',
-    #     choices=get_plate_choices,
+    #     choices=get_choices(Plate, "plate"),
     #     lookup_expr='exact', label='Tectonic Plate')
     # crust_type = df.ChoiceFilter(field_name='plate__plate',
     #     choices=[('continental','Continental'),{'oceanic','Oceanic'}],
