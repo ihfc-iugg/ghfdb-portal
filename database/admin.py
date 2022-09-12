@@ -10,6 +10,7 @@ from django.utils.translation import gettext as _
 import csv
 from .admin_forms import AdminIntervalForm, AdminSiteForm
 
+
 # class CorrectionInline(admin.TabularInline):
 #     model = Correction.objects.through
 #     extra = 0
@@ -95,9 +96,9 @@ class HeatFlowAdmin(BaseAdmin, ImportExportActionModelAdmin):
 
     # list_editable = ['childcomp',]
     # inlines = [CorrectionInline,]
-    raw_id_fields = ('corrections','reference')
+    raw_id_fields = ('corrections','reference','ics_strat',)
     autocomplete_lookup_fields = {
-        'fk': ['reference'],
+        'fk': ['reference','ics_strat',],
         'm2m': ['corrections',],
     }
 
@@ -110,7 +111,9 @@ class HeatFlowAdmin(BaseAdmin, ImportExportActionModelAdmin):
                 ('year','month'),
                 # 'q_acq',
                 'geo_lith',
+                'bgs_lith',
                 'geo_strat',
+                'ics_strat',
             ],
             'classes': ('grp-collapse grp-open',),
             }
@@ -166,6 +169,11 @@ class HeatFlowAdmin(BaseAdmin, ImportExportActionModelAdmin):
 
     actions = ["mark_verified"] + ImportExportActionModelAdmin.actions
 
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        form.base_fields['bgs_lith'].widget.can_add_related = False
+        return form
+
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
 
@@ -190,3 +198,6 @@ class HeatFlowAdmin(BaseAdmin, ImportExportActionModelAdmin):
 class CorrectionAdmin(admin.ModelAdmin):
     list_display = ['id','type']
     fields = [('id','type')]
+
+
+

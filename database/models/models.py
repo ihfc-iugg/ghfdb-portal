@@ -9,13 +9,15 @@ from simple_history.models import HistoricalRecords
 from meta.models import ModelMeta
 from django.utils.encoding import force_str
 from django.contrib.gis.geos import Point
-from . import choices
+from database import choices
 from mapping.models import SiteAbstract
 from core.fields import RangeField
 from shortuuid.django_fields import ShortUUIDField
 from django.core.exceptions import ValidationError
+from earth_science.fields import EarthMaterialOneToOne, GeologicTimeOneToOne
 
-class Site(ModelMeta, SiteAbstract):
+
+class SiteAbstract(ModelMeta, SiteAbstract):
 
     id = ShortUUIDField(
             length=10,
@@ -84,9 +86,9 @@ class Site(ModelMeta, SiteAbstract):
 
     # META FIELDS
     # slug = AutoSlugField(populate_from=['name'])
+    last_modified = models.DateTimeField(_('last modified'), auto_now=True)
     date_added = models.DateTimeField(_('date added'),
             auto_now_add=True,)
-    history = HistoricalRecords()
     _metadata = {
         'title': 'get_meta_title',
         'description': 'description',
@@ -94,9 +96,11 @@ class Site(ModelMeta, SiteAbstract):
         }
 
     class Meta:
+        abstract = True
+        verbose_name = _('Site')
+        verbose_name_plural = _('Sites')
         default_related_name = 'sites'
         unique_together = ('name','lat','lng')
-        db_table = 'site'
         ordering = ['-date_added']
 
     def __unicode__(self):
@@ -113,10 +117,10 @@ class Site(ModelMeta, SiteAbstract):
         super().save(*args, **kwargs)
 
     def coordinates(self):
-        return f"{self.lat}, {self.lng}"
+        return str(self.lat).zfill(8) + ', ' + str(self.lng).zfill(9)
        
     def get_absolute_url(self):
-        return reverse("thermoglobe:site", kwargs={"pk": self.pk})
+        return reverse("main:site", kwargs={"pk": self.pk})
 
     def get_data(self):
         return {
@@ -130,7 +134,7 @@ class Site(ModelMeta, SiteAbstract):
         return f"{self.name} | HeatFlow.org"
 
 
-class Interval(models.Model):
+class IntervalAbstract(models.Model):
 
     id = ShortUUIDField(
             length=8,
@@ -142,7 +146,7 @@ class Interval(models.Model):
     historic_id = models.PositiveIntegerField(_('Historic ID'),
         help_text=_('This is the numeric identifier used in old forms of the GHFDB to identify measurements'),
         blank=True, null=True)
-    site = models.ForeignKey("Site",
+    site = models.ForeignKey("database.Site",
                 verbose_name=_("site"),
                 null=True,
                 on_delete=models.SET_NULL)
@@ -195,7 +199,6 @@ class Interval(models.Model):
     reference = models.ForeignKey("publications.Publication",
                 help_text=_('The publication or other reference from which the measurement was reported.'),
                 verbose_name=_("reference"),
-                related_name='intervals',
                 on_delete=models.CASCADE)
     q_acq = models.DateField(_('date of acquisition (YYYY-MM)'),
         help_text=_('Year of acquisition of the heat-flow data (may differ from publication year)'),
@@ -206,14 +209,25 @@ class Interval(models.Model):
         default=None, null=True, blank=True,  
         )
     geo_lith = models.CharField(_("lithology"),
-            help_text=_('Dominant rock type/lithology within the interval of heat-flow determination. Use existing BGS rock classification scheme for naming the lithology.'),
+            help_text=_('Old lithology. Needs to be converted to BGS classification using bgs_lith field.'),
             max_length=255, 
+            blank=True, null=True)
+    bgs_lith = EarthMaterialOneToOne(
+            verbose_name=_("lithology"),
+            help_text=_('Dominant rock type/lithology within the interval of heat-flow determination using the British Geological Society Earth Material Class (rock classification) scheme.'),
+            on_delete=models.SET_NULL,
             blank=True, null=True)
     geo_strat = models.CharField(_("stratigraphic age"),
             help_text=_('Stratigraphic age of the depth range involved in the reported heat-flow determination.'),
             max_length=64, 
             # choices=choices.StratigraphicAge.choices, 
             blank=True, null=True)
+    ics_strat = GeologicTimeOneToOne(
+            verbose_name=_("ICS stratigraphy"),
+            help_text=_('Stratigraphic age of the depth range involved in the reported heat-flow determination based on the official geologic timescale of the International Commission on Stratigraphy.'),
+            on_delete=models.SET_NULL,
+            blank=True, null=True)
+
 
     # Temperature Fields
     T_grad_mean_meas = models.FloatField(_("measured gradient (K/km)"),  
@@ -301,13 +315,18 @@ class Interval(models.Model):
         )
 
     # META
-    history = HistoricalRecords()
     date_added = models.DateTimeField(_('date added'), auto_now_add=True)
+    last_modified = models.DateTimeField(_('last modified'), auto_now=True)
 
     class Meta:
-        db_table = 'heat_flow_interval'
+        abstract = True
+        verbose_name = _('Heat Flow')
+        verbose_name_plural = _('Heat Flow')
         ordering = ['date_added']
         default_related_name = 'intervals'
+
+    def __str__(self):
+        return f"{self.pk}"
 
     def clean(self, *args, **kwargs):
         # run the base validation
@@ -323,6 +342,20 @@ class Interval(models.Model):
 
     def interval(self, obj):
         return '{}-{}'.format(obj.q_top, obj.q_bot)
+
+
+class Site(SiteAbstract):
+    history = HistoricalRecords()
+
+    class Meta(SiteAbstract.Meta):
+        db_table = 'site'
+
+
+class Interval(IntervalAbstract):
+    history = HistoricalRecords()
+
+    class Meta(IntervalAbstract.Meta):
+        db_table = 'heat_flow_interval'
 
 
 class Correction(models.Model):
