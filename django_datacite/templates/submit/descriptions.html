@@ -1,0 +1,54 @@
+{% extends 'submit/base.html' %}{% load i18n sekizai_tags %}
+
+{% block preform_message %}
+<p>{% trans "Tell us about your dataset" %}</p>
+{% endblock preform_message %}
+
+{% block preform %}
+<div id='helperInput'>
+  {{ form.descriptionType }}
+</div>
+
+
+{% addtoblock "js" %}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+$(function () {
+
+$("#helperInput select").select2({
+  placeholder: 'Add description',
+  allowClear: false,
+});
+
+
+$('.funderSearch').on('change', function () {
+
+  const data = $(this).select2('data')
+
+  $('#funders ul').html(function () {
+    html = ''
+    data.forEach(el => {
+      html += `<li>${el.name}</li>`
+    });
+    return html
+  })
+
+  $('#form #id_form-0-funderIdentifier').val(data[0].id)
+  $('#form #id_form-0-funderName').val(data[0].name)
+  $('#form #id_form-0-funderName').closest('.card').find('.funder-name').html(data[0].name)
+
+  $('#funder-details').css('display','none')
+  
+  $(this).val(null).trigger('change.select2')
+
+})
+
+
+})
+</script>
+
+{% endaddtoblock %}
+{% endblock preform %}
+
+

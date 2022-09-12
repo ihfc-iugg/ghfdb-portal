@@ -1,0 +1,20 @@
+{% load crispy_forms_tags %}
+
+
+<div class='card-body'> 
+  <form id='currentForm'
+        method='post' 
+        hx-post
+        hx-target="#form-container"
+        hx-vals='{"wizard_goto_step": "{{ wizard.steps.next }}"}'
+      >
+      {% if wizard.form.helper %}
+        {% crispy form %}
+      {% else %}
+        {% crispy form helper %}
+      {% endif %}
+
+
+
+  </form>
+</div>
