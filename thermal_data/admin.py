@@ -1,26 +1,26 @@
 from django.contrib import admin
-from .models import TemperatureLog, ConductivityLog, HeatProductionLog
-from .models import Conductivity, HeatProduction, Temperature
-from thermoglobe.mixins import BaseAdmin
+from .models import TemperatureLog, ConductivityLog
+from main.mixins import BaseAdmin
 from import_export.admin import ImportExportActionModelAdmin
-from .resources import ConductivityResource, HeatProductionResource, TempResource
+from .resources import ConductivityResource, TempResource
 from django.db.models import F, Count, Min, Max
 from django.utils.translation import gettext as _
+from well_logs.models import Log
 
+admin.site.unregister(Log)
 
 class AbstractAdmin(BaseAdmin, ImportExportActionModelAdmin):
 
     list_filter = ['source','method']
     autocomplete_fields = ['site']
-    search_fields = ['site__site_name','site__latitude','site__longitude','id']
-    readonly_fields = ['added']
+    search_fields = ['site__name','site__lat','site__lng','id']
+    readonly_fields = ['added','modified']
     fieldsets = [
             ('Site', {'fields':['site',]}),
             ('Log Information', {'fields': [
                 'year_logged',
                 'method',
                 'comment',
-                'formation',
             ]}),
             ('Data Source', 
                 {'fields':[
@@ -37,9 +37,9 @@ class AbstractAdmin(BaseAdmin, ImportExportActionModelAdmin):
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         queryset = queryset.select_related('site').prefetch_related('data').annotate(
-            _site_name=F('site__site_name'),
-            _latitude=F('site__latitude'),
-            _longitude=F('site__longitude'),
+            _name=F('site__name'),
+            _lat=F('site__lat'),
+            _lng=F('site__lng'),
             _data_count=Count('data'),
             _min_depth=Min('data__depth'),
             _max_depth=Max('data__depth'),
@@ -64,22 +64,22 @@ class AbstractAdmin(BaseAdmin, ImportExportActionModelAdmin):
 # Register your models here.
 @admin.register(TemperatureLog)
 class TemperatureLogAdmin(AbstractAdmin):
-    resource_class=TempResource
+
+    resource_class = TempResource
+
     list_display = [
-        'edit','site_name','latitude','longitude', 
-        'min_depth', 'max_depth', 'data_count', 'year_logged', 
+        'id','name','latitude','longitude',
+        'min_depth', 'max_depth', 'data_count', 'start_time','finish_time', 
         'method', 'correction', 'circ_time','lag_time',
         'reference','operator', 'source']
 
     fieldsets = [
             ('Site', {'fields':['site',]}),
             ('Log Information', {'fields': [
-                'year_logged',
                 ('circ_time','lag_time'),
                 'method', 
                 'correction',
                 'comment',
-                'formation',
                 ]}),
             ('Data Source', 
                 {'fields':[
@@ -93,24 +93,10 @@ class TemperatureLogAdmin(AbstractAdmin):
                 ]})
         ]
 
-
 @admin.register(ConductivityLog)
 class ConductivityAdmin(AbstractAdmin):
     resource_class = ConductivityResource
     list_display = [
-        'edit','site_name','latitude','longitude', 
-        'min_depth','max_depth', 'data_count', 'year_logged', 
+        'edit','name','latitude','longitude', 
+        'min_depth','max_depth', 'data_count', 'start_time','finish_time', 
         'method', 'reference','operator', 'source']
-
-@admin.register(HeatProductionLog)
-class HeatProductionAdmin(AbstractAdmin):
-    resource_class = HeatProductionResource
-    list_display = [
-        'edit','site_name','latitude','longitude', 
-        'min_depth','max_depth', 'data_count', 'year_logged', 
-        'method', 'reference','operator', 'source']
-
-
-# admin.site.register(Conductivity, ImportExportActionModelAdmin)
-# admin.site.register(Temperature, ImportExportActionModelAdmin)
-# admin.site.register(HeatProduction, ImportExportActionModelAdmin)
