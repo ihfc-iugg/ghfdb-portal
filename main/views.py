@@ -9,6 +9,7 @@ from meta.views import Meta
 from main.tables import IntervalTable, HeatProductionTable, ConductivityTable, TemperatureTable
 from django.views.decorators.http import require_POST
 from main.forms import SiteForm
+from core.views import FieldSetMixin
 
 class WorldMap(DownloadMixin, TemplateView):
     template_name = 'mapping/application.html'
@@ -24,25 +25,25 @@ class WorldMap(DownloadMixin, TemplateView):
             ))
 
         context['meta'] = Meta(
-            title='World Map | ThermoGlobe',
-            description='Interactive search and download of all data within the ThermoGlobe database. The fastest wasy to find published and unpublished thermal data related to studies of the Earth.',
-            keywords=['heat flow',' thermal gradient', 'thermal conductivity','temperature','heat production','ThermoGlobe','data','access']
+            title='World Map | World Heat Flow Database',
+            description='Interactive search and download of all data within the World Heat Flow Database database. The fastest wasy to find published and unpublished thermal data related to studies of the Earth.',
+            keywords=['heat flow',' thermal gradient', 'thermal conductivity','temperature','heat production','World Heat Flow Database','data','access']
         )
         return context
 
 
 
 
-class SiteView(DownloadMixin, DetailView):
+class SiteView(FieldSetMixin, DownloadMixin, DetailView):
     template_name = "main/site_details.html"
     model = Site
     fieldset = [ 
-        (None, 
-            {'fields': [
-                'name',
-                ('lat','lng'),
-                'elevation',
-                ]}),
+        # (None, 
+        #     {'fields': [
+        #         'name',
+        #         ('lat','lng'),
+        #         'elevation',
+        #         ]}),
         ("Heat Flow", 
             {'fields': [
                 'q',
@@ -70,20 +71,6 @@ class SiteView(DownloadMixin, DetailView):
         context['meta'] = self.get_object().as_meta(self.request)
         context['fieldset'] = self.get_fieldset()
         return context
-
-
-    def get_fieldset(self):
-        obj = self.get_object()
-        fieldset = {}
-        for fset in self.fieldset:
-            fieldset[fset[0]] = []
-            for k in fset[1]['fields']:
-                if isinstance(k, str):
-                    fieldset[fset[0]].append({obj._meta.get_field(k).verbose_name: getattr(obj, k)})
-                else:
-                    fieldset[fset[0]].append({obj._meta.get_field(sub_k).verbose_name: getattr(obj, sub_k) for sub_k in k})
-
-        return fieldset
 
     def get_queryset(self):
         return (super().get_queryset()
