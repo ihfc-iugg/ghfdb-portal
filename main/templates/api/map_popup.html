@@ -1,0 +1,43 @@
+{% load i18n %}
+
+{% spaceless %}
+<div style="width:400px">
+<header class="main py-4">
+<div>
+  <h2 class="card-title mb-0"><a href="{{site.get_absolute_url}}">{{ site.name }}</a></h2>
+  <i class='me-auto'>{{site.id}}</i>
+  <h5 class="card-subtitle mb-2 text-muted">{{ site.coordinates }}</h5>
+</div>
+<div class='d-flex'>
+  <a href="{% url "main:site" pk=site.pk %}" class="button primary me-2">
+    <span class="label">{% trans "View" %}</span>
+  </a>
+  <a href="{% url "main:site" pk=site.pk %}?download" class="button primary">
+    <span class="label">{% trans "Quick Download" %}</span>
+  </a>
+</div>
+</header>
+
+
+
+{% if site.description %}
+  <p>{{ site.description|default:"There is no description for this site." }}</p>
+{% endif %}
+
+{% for header, rows in fieldset.items %}
+  {% if header %}<h4 class='py-3'>{{header}}</h4>{% endif %}
+    <table style='max-width:600px'><tbody>
+    {% for row in rows %}
+    <tr>
+        {% for field, value in row.items %}
+        <td>{{field|capfirst}}:</td>
+        <td>{{ value|default_if_none:"-" }}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody></table>
+  {% comment %} <hr class="major"/> {% endcomment %}
+{% endfor %}
+
+</div>
+{% endspaceless %}

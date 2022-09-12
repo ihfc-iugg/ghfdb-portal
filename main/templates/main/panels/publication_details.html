@@ -1,0 +1,33 @@
+{% load sekizai_tags static %}
+{% with publication as pub %}
+  <header class="main">
+    <div>
+    {% include "crossref/partials/action_list.html" %}
+      {% if object.is_verified %}
+      <i class='text-success fas fa-check-circle' data-bs-toggle="tooltip" data-bs-placement="bottom" title="Data from this publication have been verified as part of the World Heat Flow Database Project!"></i>
+    {% else %}
+      <i class='text-warning fas fa-exclamation-triangle' data-bs-toggle="tooltip" data-bs-placement="bottom" title="Data from this publication are unverified. Use at your own discretion."></i>
+    {% endif %}
+      <i class='me-auto'>{{pub.container_title}}, {{ pub.published|date:'Y' }}
+        {% if pub.issue %}, Iss. {{ pub.issue }}{% endif %}
+        {% if pub.volume %}, vol. {{ pub.volume }}{% endif %}
+        {% if pub.page %}, pp. {{ pub.page }}{% endif %}
+      </i>
+      <h4 class="card-title">{{ pub.title }}</h4>
+      {% if pub.author.exists %}
+        <h5 class="card-subtitle mb-2 text-muted">{{ pub.authors_display }}</h5>
+      {% endif %}
+    </div>
+  </header>
+
+  {% if pub.abstract %}
+    <p>{{ pub.abstract }}</p>
+  {% endif %}
+  {% if pub.keywords %}
+    {% for keyword in pub.keywords.all %}
+      <span class="keyword">{{ keyword }}</span>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+{% addtoblock "js" %}<script>$(function(){$('[data-bs-toggle="tooltip"]').tooltip()})</script>{% endaddtoblock %}

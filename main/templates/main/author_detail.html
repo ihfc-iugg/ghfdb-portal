@@ -1,0 +1,23 @@
+{% extends "main/wrappers/map_at_top.html" %}
+{% load core_tags %}
+
+{% block navtabs %}
+  {% tab "Details" True %}
+  {% tab "Related Publications" %}
+{% endblock navtabs %}
+
+{% block tabpanels %}
+  {% panel "Details" "main/panels/author_detail.html" True %}
+  {% with object.publications.all as publications %}
+    {% panel "Related Publications" "main/panels/publications.html" %}
+  {% endwith %}
+{% endblock tabpanels %}
+
+
+
+
+
+
+
+
+

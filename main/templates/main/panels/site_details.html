@@ -1,0 +1,11 @@
+<header class="main">
+  <div>
+  <i class='me-auto'>{{site.id}}</i>
+  <h4 class="card-title">{{ site.name }}</h4>
+  <h5 class="card-subtitle mb-2 text-muted">{{ site.coordinates }}</h5>
+</div>
+</header>
+{% if site.description %}
+  <p>{{ site.description|default:"There is no description for this site." }}</p>
+{% endif %}
+<p>{% include "main/partials/fieldset.html" %}</p>

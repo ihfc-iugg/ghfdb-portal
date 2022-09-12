@@ -1,15 +1,15 @@
 
 {% for header, rows in fieldset.items %}
-  {% if header %}<h5 class='py-3'>{{header}}</h5>{% endif %}
-  {% for row in rows %}
-    <div class='d-flex mb-3'>
-      {% for field, value in row.items %}
-      <div class='pe-5'>
-        <label class="mb-0 pe-3">{{field|capfirst}}:</label>
-        {{ value|default_if_none:"-" }}
-      </div>
-      {% endfor %}
-    </div>
-  {% endfor %}
+  {% if header %}<h4 class='py-3'>{{header}}</h4>{% endif %}
+    <table style='max-width:600px'><tbody>
+    {% for row in rows %}
+    <tr>
+        {% for field, value in row.items %}
+        <td>{{field|capfirst}}:</td>
+        <td>{{ value|default_if_none:"-" }}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody></table>
   <hr class="major"/>
 {% endfor %}

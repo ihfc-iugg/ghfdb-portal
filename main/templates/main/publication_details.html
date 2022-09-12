@@ -1,75 +1,26 @@
 {% extends "main/wrappers/map_at_top.html" %}
-{% load static sekizai_tags geojson_tags thermoglobe_extras comments i18n %}
+{% load core_tags %}
 
-{% block below_map %}
-	<header class='py-3'>
-    <div class='d-flex'>
-      <div class='pe-3' style='min-width:0'><p class='text-truncate my-0'>{{ publication.title }}<p></div>
-      <div>
-        {% if publication.is_verified %}
-          <i class='text-success fas fa-check-circle' data-bs-toggle="tooltip" data-bs-placement="bottom" title="This publication has been verified by {{publication.verified_by.count}} users"></i>
-        {% else %}
-          <i class='float-right text-warning fas fa-exclamation-triangle' data-bs-toggle="tooltip" data-bs-placement="bottom" title="This publication has not been verified"></i>
-        {% endif %}
-      </div>
-    </div>
-    <div class='d-flex'>
-        {% include "main/components/nav_pills.html" %}
-        {% include "main/components/nav_actions.html" %}
-    </div>
-	</header>
+{% block navtabs %}
+  {% tab "Details" True %}
+  {% for table in tables %}
+    {% tab table.label %}
+  {% endfor %}
+  {% tab "Discussion" %}
+{% endblock navtabs %}
 
-  <section class='pt-0'>
-    <div id="tabbedContent" class="tab-content pt-3">
-      {% with publication as pub %}
+{% block tabpanels %}
+  {% panel "Details" "main/panels/publication_details.html" True %}
+  {% with "references="|addstr:publication.pk as filter_by %}
+    {% for table in tables %}
+      {% include "main/components/table.html" %}
+    {% endfor %}
+  {% endwith %}
+  <div class="tab-pane fade" id="discussion-container" role="tabpanel" aria-labelledby="discussion-tab">
+    {% include "comments/render_comments.html" with object_descr="this site" %}
+  </div>
+{% endblock tabpanels %}
 
-      {% comment %} DETAILS TAB {% endcomment %}
-      <div class="tab-pane fade show active" id="details-container" role="tabpanel" aria-labelledby="details-tab">
-        <header class="main">
-          <div class='d-flex'>{% include "core/components/socials.html" %}</div>
-          <div><i>
-              {% if pub.container_title %}{{ pub.container_title }}, {% endif %}
-              {% if pub.published.year %}{{ pub.published.year }}{% endif %}
-              {% if pub.issue %}, Issue No. {{ pub.issue }}{% endif %}
-              {% if pub.issue %}, pp. {{ pub.page }}{% endif %}
-          </i></div>
-          {% comment %} {% if pub.author %}<div>{{pub.authors_display_long}}</div>{% endif %} {% endcomment %}
-        </header>
-        {% if pub.abstract %}
-          <p>{{ pub.abstract }}</p>
-        {% endif %}
-        {% if pub.keywords %}
-          {% for keyword in pub.keywords.all %}
-            <span class="keyword">{{ keyword }}</span>
-          {% endfor %}
-        {% endif %}
-      </div>
-      {% endwith %}
-
-      {% comment %} DataTables Tabs {% endcomment %}
-      {% with "references="|addstr:publication.pk as filter_by %}
-        {% for table in tables %}
-          {% include "main/components/table.html" %}
-        {% endfor %}
-      {% endwith %}
-
-
-      {% comment %} DISCUSSION TAB {% endcomment %}
-      <div class="tab-pane fade" id="discussion-container" role="tabpanel" aria-labelledby="discussion-tab">
-        {% include "comments/render_comments.html" with object_descr="this publication" %}
-      </div>
-
-    </div>
-  </section>       
-
-{% addtoblock "js" %}<script>$(function(){$('[data-bs-toggle="tooltip"]').tooltip()})</script>{% endaddtoblock %}
-
-
-{% endblock below_map %}
-
-{% block modals %}
-  {% include "modals/verification_modal.html" %}
-{% endblock modals %}
 
 
 
