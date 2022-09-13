@@ -1,7 +1,7 @@
 from ensurepip import version
 from django import forms
 from django.conf import settings
-from .models import Schema, License, Keyword
+from .models import Schema, Right, Subject
 from django_ckeditor_5.widgets import CKEditor5Widget
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Submit, Hidden
@@ -74,7 +74,7 @@ class General(DataCiteForm):
     schemaVersion = forms.CharField()
     resourceTypeGeneral = forms.ChoiceField()
     resourceType = forms.CharField(label='Title')
-    rightsList = forms.ModelChoiceField(label='License', queryset=License.objects.all(), empty_label=None)
+    rightsList = forms.ModelChoiceField(label='License', queryset=Right.objects.all(), empty_label=None)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -92,7 +92,7 @@ class General(DataCiteForm):
 
 
 class Subject(DataCiteForm):
-    subjects = TreeModelMultipleChoiceField(label='', queryset=Keyword.objects.all())
+    subjects = TreeModelMultipleChoiceField(label='', queryset=Subject.objects.all())
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

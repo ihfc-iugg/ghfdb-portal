@@ -1,5 +1,5 @@
 from django.db import models
-from database.models import SiteAbstract, IntervalAbstract
+from database.models.models import SiteAbstract, IntervalAbstract
 from django.utils.translation import gettext as _
 
 

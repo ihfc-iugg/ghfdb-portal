@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Keyword, License, Schema
+from .models import Subject, Right, Schema
 from django.utils.html import mark_safe
 from treebeard.admin import TreeAdmin
 from treebeard.forms import movenodeform_factory
@@ -32,7 +32,7 @@ class SchemaAdmin(admin.ModelAdmin):
 
     set_default.short_description = "Set as default schema"
 
-@admin.register(License)
+@admin.register(Right)
 class LicenseAdmin(admin.ModelAdmin):
     list_display = ['name','about','_snippet']
     # list_editable = ['snippet']
@@ -43,9 +43,9 @@ class LicenseAdmin(admin.ModelAdmin):
     _snippet.admin_order_field = 'snippet'
 
 
-@admin.register(Keyword)
+@admin.register(Subject)
 class KeywordAdmin(TreeAdmin):
-    form = movenodeform_factory(Keyword)
+    form = movenodeform_factory(Subject)
     search_fields = [
         'keyword',
     ]

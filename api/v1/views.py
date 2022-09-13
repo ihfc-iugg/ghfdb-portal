@@ -36,7 +36,7 @@ class SiteViewSet(AccessViewSetMixin, viewsets.ModelViewSet):
 
 
 class FeatureList(generics.ListAPIView):
-    queryset = Site.objects.all().annotate(geometry=AsGeoJSON('geom'))[:100]
+    queryset = Site.objects.all().annotate(geometry=AsGeoJSON('geom'))
     serializer_class = serialize.FeatureSerializer
     renderer_classes = [ORJSONRenderer]
     pagination_class = None

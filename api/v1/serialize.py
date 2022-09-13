@@ -11,7 +11,7 @@ class FeatureSerializer(FasterGeoFeatureSerializer):
         model = Site
         as_geom = 'geometry'
         geo_field = 'geom'
-        exclude = ['references','date_added','lat','lng','country','continent','plate','province','ocean','political']
+        exclude = ['references','date_added','lat','lng','country','continent','plate','province','ocean','political','last_modified']
 
 
 class Site(serializers.HyperlinkedModelSerializer):
