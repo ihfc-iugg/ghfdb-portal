@@ -10,7 +10,6 @@ urlpatterns = i18n_patterns(
     path('', include('main.urls')),
     path('publications/', include('publications.urls')),
     path('datacite/', include('django_datacite.urls')),
-    path('gfz-submit/', include('gfz_dataservices.urls')),
     path('', include('dashboard.urls')),
     path('earth_science', include('earth_science.urls')),
     path("invitations/", include('invitations.urls', namespace='invitations')),

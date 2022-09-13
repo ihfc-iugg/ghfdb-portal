@@ -107,7 +107,6 @@ INSTALLED_APPS = [
     # MY APPS
     'main',
     'database',
-    'database_choices',
     'thermal_data',
     'publications', 
     'crossref', 
@@ -120,7 +119,6 @@ INSTALLED_APPS = [
     'django_datacite',
     'earth_science',
     "global_tectonics",
-    "gfz_dataservices",
     "research_organizations",
 
     "debug_toolbar",
