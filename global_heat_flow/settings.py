@@ -13,7 +13,6 @@ ADMINS = MANAGERS = [('Sam','jennings@gfz-potsdam.de')]
 
 ALLOWED_HOSTS += ['thermoglobe.herokuapp.com','www.thermoglobe.app','thermoglobe.app',"139.17.115.184"]
 
-
 INSTALLED_APPS = [
 
     'core',
@@ -102,21 +101,25 @@ INSTALLED_APPS = [
     'django_htmx',
     'formtools',
     
-    # MY APPS
-    'main',
+    
+    # Custom Standalone Apps
     'kepler',
-    'database',
     "well_logs",
-    'thermal_data',
-    'publications', 
     'crossref', 
     'crossref.cms', 
+    'datacite',
+    "global_tectonics",
+    'earth_science',
+    
+    
+    # GHFDB Apps
+    'main',
+    'database',
+    'thermal_data',
+    'publications', 
     'mapping',
     'theme',
     # 'review',
-    'datacite',
-    'earth_science',
-    "global_tectonics",
     "research_organizations",
 
     # "debug_toolbar",
