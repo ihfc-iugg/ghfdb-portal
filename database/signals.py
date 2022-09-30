@@ -17,6 +17,3 @@ def interval_changed(sender, instance, **kwargs):
     site.q_acq = most_recent.q_acq
     site.references.add(instance.reference)
     site.save()
-
-    # Do something
-    pass

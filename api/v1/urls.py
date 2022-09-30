@@ -17,7 +17,7 @@ urlpatterns = [
     path('sites/detail/<pk>/', views.MapPopupTemplate.as_view(), name='site_detail'),
     path('', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('', include(router.urls)),
-    # path('', include("well_logs.api.urls")),
+    path('', include("thermal_data.api.urls")),
 
     path('geofeatures/', views.FeatureList.as_view()),
     path('auth/', include('rest_framework.urls', namespace='rest_framework')),

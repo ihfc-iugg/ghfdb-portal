@@ -1,10 +1,9 @@
-from typing import Mapping
 from django.db import models
 from django.utils.translation import gettext as _
+from django.db.models import Q
+from django.apps import apps
 
 """These are the old static choice fields before moving to dynamic model based fields"""
-
-
 class ConductivitySource(models.TextChoices):
     OUTCROP = 'outcrop samples', _('Outcrop samples')
     CORE = 'core samples', _('Core samples')
@@ -118,3 +117,5 @@ class TempCorrectionMethod(models.TextChoices):
     OTHER = 'other', _('Other')
     NOT_CORRECTED = 'not corrected', _('Not corrected')
     UNSPECIFIED = 'unspecified', _('Unspecified')
+
+

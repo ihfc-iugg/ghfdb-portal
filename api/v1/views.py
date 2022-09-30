@@ -32,7 +32,9 @@ class SiteViewSet(AccessViewSetMixin, viewsets.ModelViewSet):
     distance_filter_field = 'geom'
     distance_ordering_filter_field = 'geom'
     filterset_fields = ['references',]
-    filter_backends = (DistanceToPointFilter, DistanceToPointOrderingFilter, DjangoFilterBackend)
+    # filter_backends = (DistanceToPointFilter, DistanceToPointOrderingFilter, DjangoFilterBackend)
+    filter_backends = (DistanceToPointFilter, DjangoFilterBackend)
+    pagination_class = None
 
 
 class FeatureList(generics.ListAPIView):
@@ -41,7 +43,8 @@ class FeatureList(generics.ListAPIView):
     renderer_classes = [ORJSONRenderer]
     pagination_class = None
     filterset_fields = ['references',]
-    filter_backends = (DistanceToPointFilter, DistanceToPointOrderingFilter, DjangoFilterBackend)
+    # filter_backends = (DistanceToPointFilter, DistanceToPointOrderingFilter, DjangoFilterBackend)
+    filter_backends = (DistanceToPointFilter, DjangoFilterBackend)
 
     def get_renderer_context(self):
         renderer_context = super().get_renderer_context()

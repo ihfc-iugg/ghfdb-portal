@@ -3,7 +3,7 @@ from core.settings import *
 from django.utils.translation import gettext_lazy as _
 
 SITE_NAME = 'World Heat Flow Database'
-EMAIL_DOMAIN = "@thermoglobe.app"
+EMAIL_DOMAIN = "@heatflow.world"
 APP_NAME = 'global_heat_flow'
 ADMINS = MANAGERS = [('Sam','jennings@gfz-potsdam.de')]
 
@@ -13,12 +13,13 @@ ADMINS = MANAGERS = [('Sam','jennings@gfz-potsdam.de')]
 
 ALLOWED_HOSTS += ['thermoglobe.herokuapp.com','www.thermoglobe.app','thermoglobe.app',"139.17.115.184"]
 
+
 INSTALLED_APPS = [
 
     'core',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'grappelli.dashboard',
+    # 'grappelli.dashboard',
     'grappelli',
     'django.contrib.sessions',
     'django.contrib.admin',
@@ -65,7 +66,6 @@ INSTALLED_APPS = [
     'djangocms_bootstrap5.contrib.bootstrap5_picture',
     'djangocms_bootstrap5.contrib.bootstrap5_tabs',
     'djangocms_bootstrap5.contrib.bootstrap5_utilities',
-    'djangocms_googlemap',
     'djangocms_video',
 
     'rest_framework',
@@ -90,7 +90,6 @@ INSTALLED_APPS = [
     'django_comments',
 
     'django_social_share',
-    # 'background_task',
     'meta',
     "sortedm2m",
     'ordered_model',
@@ -102,26 +101,25 @@ INSTALLED_APPS = [
     "treewidget",
     'django_htmx',
     'formtools',
-    'well_logs',
-
+    
     # MY APPS
     'main',
+    'kepler',
     'database',
+    "well_logs",
     'thermal_data',
     'publications', 
     'crossref', 
     'crossref.cms', 
     'mapping',
-    'dashboard',
-    'data_editor',
-    'editorial',
-    'review',
-    'django_datacite',
+    'theme',
+    # 'review',
+    'datacite',
     'earth_science',
     "global_tectonics",
     "research_organizations",
 
-    "debug_toolbar",
+    # "debug_toolbar",
 ]
 
 EARTH_MATERIALS_INCLUDE = [
@@ -201,7 +199,7 @@ REGISTRATION_BACKEND = 'organizations.backends.defaults.RegistrationBackend'
 TEMPLATES[0]['DIRS'].append(os.path.join(APP_NAME, 'templates'))
 
 CROSSREF_UA_STRING = f"{SITE_NAME} (https://thermoglobe.app)"
-CROSSREF_MAILTO = ','.join([v[1] for v in ADMINS])
+CROSSREF_MAILTO = ';'.join([v[1] for v in ADMINS])
 
 MIDDLEWARE += [
     # 'debug_toolbar.middleware.DebugToolbarMiddleware',
@@ -254,29 +252,27 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
+GRAPH_MODELS = {
+    'app_labels': ["database", "thermal_data", "publications","well_logs","crossref"],
+    "exclude_models": ['PublicationAbstract','UUIDTaggedItem','SiteAbstract','IntervalAbstract','HistoricalSite','HistoricalInterval','AbstractLog','ChoiceAbstract','AuthorAbstract', 'MP_Node'],
+    'all_applications': False,
+    'group_models': True,
+    # 'hide_edge_labels': True,
+    # "hide_relations_from_fields":True,
+    # 'skip_check':True,
+}
+
+
 
 if os.getenv('DJANGO_ENV') == 'development':
 
     STATIC_ROOT = os.path.join(BASE_DIR, 'static')
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-    if os.name == 'nt':
-        import platform
-        OSGEO4W = r"C:\OSGeo4W"
-        # GDAL_LIBRARY_PATH = os.path.join(OSGEO4W, "bin","gdal305.dll")
-
-        # if '64' in platform.architecture()[0]:
-            # OSGEO4W += "64"
-        assert os.path.isdir(OSGEO4W), "Directory does not exist: " + OSGEO4W
-        os.environ['OSGEO4W_ROOT'] = OSGEO4W
-        os.environ['GDAL_DATA'] = OSGEO4W + r"\share\gdal"
-        os.environ['PROJ_LIB'] = OSGEO4W + r"\share\proj"
-        os.environ['PATH'] = OSGEO4W + r"\bin;" + os.environ['PATH']
-
     DATABASES = {
         'default': {
             'CONN_MAX_AGE': 0,
             'NAME': os.environ.get('DB_NAME'),
+            # 'NAME': 'test',
             'USER': os.environ.get('DB_USERNAME'),
             'PASSWORD': os.environ.get('DB_PASSWORD'),
             'HOST': 'localhost',

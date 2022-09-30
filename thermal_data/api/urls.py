@@ -1,6 +1,6 @@
 from django.urls import include, path
 from rest_framework import routers
-from well_logs.api import views
+from thermal_data.api import views
 
 router = routers.DefaultRouter()
 

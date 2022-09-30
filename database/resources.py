@@ -1,4 +1,4 @@
-from database.models import Site, Interval, Correction
+from database.models import Site, Interval, Choice
 from import_export import resources
 from django.utils.html import mark_safe
 from import_export.instance_loaders import ModelInstanceLoader
@@ -51,9 +51,9 @@ class IntervalResource(ResourceMixin):
     site = Field(attribute='site',
         widget = SiteWidget(Site)
         )
-    corrections = Field(attribute='corrections',
-        widget = CorrectionsWidget(Correction)
-        )
+    # corrections = Field(attribute='corrections',
+    #     widget = CorrectionsWidget(Correction)
+    #     )
 
     reference_id = Field(attribute='reference',
         column_name = 'Ref_1', 
