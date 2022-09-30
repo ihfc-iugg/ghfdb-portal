@@ -1,8 +1,9 @@
 # Folders and files
 ###################
-/global_heat_flow/static/
 /static
-/theme/static/theme/original/
+
+#no migration files except __init__.py
+*/migrations/001.py 
 
 index.html
 

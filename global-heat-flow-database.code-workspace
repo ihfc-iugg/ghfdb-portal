@@ -13,6 +13,10 @@
 			"path": "../django-earth-science"
 		},
 		{
+			"name": "Django Well Logs",
+			"path": "../django-well-logs"
+		},
+		{
 			"name": "Global Tectonics",
 			"path": "../django-global-tectonics"
 		},
@@ -20,10 +24,6 @@
 			"path": ".",
 			"name": "Global Heat Flow"
 		},
-		{
-			"name": "django-well-logs",
-			"path": "../django-well-logs"
-		}
 	],
 	"settings": {
 		"liveServer.settings.multiRootWorkspaceName": "Global Heat Flow",
