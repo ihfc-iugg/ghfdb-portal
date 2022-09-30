@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from well_logs import models
+from thermal_data import models
 from api.v1.serialize import Site
 
 class LogSerializerMixin(serializers.HyperlinkedModelSerializer):
@@ -10,7 +10,7 @@ class LogSerializerMixin(serializers.HyperlinkedModelSerializer):
     site = Site()
 
     class Meta:
-        exclude = ['source_id','date_added']
+        exclude = ['source_id','added']
         datatables_always_serialize = ('id',)
 
 class ConductivityData(serializers.ModelSerializer):

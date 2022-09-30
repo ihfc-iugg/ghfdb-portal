@@ -1,5 +1,5 @@
 from django.contrib import admin
-from database.models import Site, Interval, Correction
+from database.models import Site, Interval, Choice
 from main.mixins import BaseAdmin
 from import_export.admin import ImportExportActionModelAdmin
 from database.resources import IntervalResource, SiteResource
@@ -9,7 +9,8 @@ from django.http import HttpResponse
 from django.utils.translation import gettext as _
 import csv
 from .admin_forms import AdminIntervalForm, AdminSiteForm
-
+from treebeard.admin import TreeAdmin
+from treebeard.forms import movenodeform_factory
 
 # class CorrectionInline(admin.TabularInline):
 #     model = Correction.objects.through
@@ -92,14 +93,14 @@ class HeatFlowAdmin(BaseAdmin, ImportExportActionModelAdmin):
     autocomplete_fields = ['site']
     search_fields = ['site__name']
     list_display = ['name','childcomp','q_top','q_bot','qc','qc_unc','q_method', 'T_grad_mean_meas','T_method_top','T_corr_top','T_method_bot','T_corr_bot', 'tc_mean', 'tc_satur','tc_pTcond','tc_strategy','reference']
-    list_filter = ['q_tf_mech','q_method','hf_probe','T_method_top','T_method_bot','T_corr_top','T_corr_bot','tc_source','tc_strategy','corrections']
+    list_filter = ['q_tf_mech','q_method','hf_probe','T_method_top','T_method_bot','T_corr_top','T_corr_bot','tc_source','tc_strategy']
 
     # list_editable = ['childcomp',]
     # inlines = [CorrectionInline,]
-    raw_id_fields = ('corrections','reference','ics_strat',)
+    raw_id_fields = ('reference','geo_strat',)
     autocomplete_lookup_fields = {
-        'fk': ['reference','ics_strat',],
-        'm2m': ['corrections',],
+        'fk': ['reference','geo_strat',],
+        'm2m': [],
     }
 
     fieldsets = [ 
@@ -111,9 +112,7 @@ class HeatFlowAdmin(BaseAdmin, ImportExportActionModelAdmin):
                 ('year','month'),
                 # 'q_acq',
                 'geo_lith',
-                'bgs_lith',
                 'geo_strat',
-                'ics_strat',
             ],
             'classes': ('grp-collapse grp-open',),
             }
@@ -171,7 +170,7 @@ class HeatFlowAdmin(BaseAdmin, ImportExportActionModelAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
-        form.base_fields['bgs_lith'].widget.can_add_related = False
+        form.base_fields['geo_lith'].widget.can_add_related = False
         return form
 
     def save_model(self, request, obj, form, change):
@@ -194,10 +193,17 @@ class HeatFlowAdmin(BaseAdmin, ImportExportActionModelAdmin):
         queryset.update(is_verified=True)
 
 
-@admin.register(Correction)
-class CorrectionAdmin(admin.ModelAdmin):
-    list_display = ['id','type']
-    fields = [('id','type')]
+# @admin.register(Correction)
+# class CorrectionAdmin(admin.ModelAdmin):
+#     list_display = ['id','type']
+#     fields = [('id','type')]
 
 
+class ChoiceTreeAdmin(TreeAdmin):
+    form = movenodeform_factory(Choice)
+    search_fields = [
+        'code', 'name',
+    ]
+    list_per_page = 200
 
+admin.site.register(Choice, ChoiceTreeAdmin)

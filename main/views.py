@@ -6,13 +6,14 @@ from .filters import MapFilter
 from .forms import DownloadWithChoicesForm
 from mapping.forms import MapSettingsForm
 from meta.views import Meta
-from main.tables import IntervalTable, HeatProductionTable, ConductivityTable, TemperatureTable
+from main.tables import IntervalTable
 from django.views.decorators.http import require_POST
 from main.forms import SiteForm
 from core.views import FieldSetMixin
 
 class WorldMap(DownloadMixin, TemplateView):
     template_name = 'mapping/application.html'
+    # template_name = 'kepler/application.html'
     filter = MapFilter
     download_form = DownloadWithChoicesForm
 
@@ -23,6 +24,10 @@ class WorldMap(DownloadMixin, TemplateView):
             download_form=self.download_form(),
             settings=MapSettingsForm(),
             ))
+
+
+            
+
 
         context['meta'] = Meta(
             title='World Map | World Heat Flow Database',

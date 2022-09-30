@@ -13,15 +13,15 @@ class AdminDashboard(Dashboard):
             children=[
                 ModelList(_('Heat Flow'),
                     collapsible=False,
-                    models=('database.*site','database.*interval',),
-                    exclude=('database.models.Correction',)
+                    models=('database.models.*Site','*Interval','*Choice',),
+                    # exclude=('database.models.Correction',)
 
                 ),
                 ModelList(_('Thermal Data'), models=(
                     'thermal_data.*',
                     # 'well_logs.*',
                     )),
-                ModelList(_('Literature'), models=('publications.*publication','publications.*author',)),
+                ModelList(_('Literature'), models=('publications*','crossref*',)),
                 ModelList(_('Shapefiles'), models=('mapping*','global_tectonics*')),
                 ModelList(_('Method Fields'), models=('database_choices.models.methods*',)),
                 ModelList(_('Type Fields'), models=('database_choices.models.types*',)),
@@ -39,7 +39,7 @@ class AdminDashboard(Dashboard):
             column=1,
             collapsible=True,
             models=(
-                "django_datacite*",
+                "datacite*",
                 ),
         ))
 

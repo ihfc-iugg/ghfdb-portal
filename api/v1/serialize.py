@@ -16,7 +16,7 @@ class FeatureSerializer(FasterGeoFeatureSerializer):
 
 class Site(serializers.HyperlinkedModelSerializer):
     id = serializers.CharField() #required for datatables
-
+    
     class Meta:
         model = Site
         datatables_always_serialize = ('id',)
@@ -35,7 +35,6 @@ class Interval(serializers.HyperlinkedModelSerializer):
 
 class PublicationSerializer(PublicationSerializer):
 
-    # site_count = serializers.SerializerMethodField()
     sites = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
 
