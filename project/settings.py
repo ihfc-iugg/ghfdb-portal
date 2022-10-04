@@ -2,16 +2,16 @@ import os
 from core.settings import *
 from django.utils.translation import gettext_lazy as _
 
-SITE_NAME = 'World Heat Flow Database'
+SITE_NAME = META_SITE_NAME = 'World Heat Flow Database'
 EMAIL_DOMAIN = "@heatflow.world"
-APP_NAME = 'global_heat_flow'
-ADMINS = MANAGERS = [('Sam','jennings@gfz-potsdam.de')]
+ADMINS = MANAGERS = [('Sam', 'jennings@gfz-potsdam.de')]
 
 # UNCOMMENT TO COLLECTSTATIC TO AWS S3
-# STATICFILES_STORAGE = f{APP_NAME}.storage_backends.StaticStorage'
+# STATICFILES_STORAGE = 'project.storage_backends.StaticStorage'
 # STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_STATIC_LOCATION}/"
 
-ALLOWED_HOSTS += ['thermoglobe.herokuapp.com','www.thermoglobe.app','thermoglobe.app',"139.17.115.184"]
+# enter additional domains or ip addresses of allowed hosts here. 127.0.0.1 and localhost are already included
+ALLOWED_HOSTS += []
 
 INSTALLED_APPS = [
 
@@ -100,23 +100,23 @@ INSTALLED_APPS = [
     "treewidget",
     'django_htmx',
     'formtools',
-    
-    
+
+
     # Custom Standalone Apps
     'kepler',
     "well_logs",
-    'crossref', 
-    'crossref.cms', 
+    'crossref',
+    'crossref.cms',
     'datacite',
     "global_tectonics",
     'earth_science',
-    
-    
+
+
     # GHFDB Apps
     'main',
     'database',
     'thermal_data',
-    'publications', 
+    'publications',
     'mapping',
     'theme',
     # 'review',
@@ -129,61 +129,42 @@ EARTH_MATERIALS_INCLUDE = [
     'Igneous rock and sediment',
     'Metamorphic rock',
     'Sediment and sedimentary rock'
-    ]
+]
 
 GRAPPELLI_INDEX_DASHBOARD = 'main.admin_dashboard.AdminDashboard'
 GRAPPELLI_AUTOCOMPLETE_LIMIT = None
 GRAPPELLI_ADMIN_TITLE = f'{SITE_NAME} Administration'
 
 TREEWIDGET_SETTINGS = {
-                'search':True,
-                # 'show_buttons': True
-                "can_add_related": False,
-                }
+    'search': True,
+    # 'show_buttons': True
+    "can_add_related": False,
+}
 
 TREEWIDGET_TREEOPTIONS = {
-        "core" : {
-            "themes" : {
-                "variant" : "large",
-                "icons": False,
-            },
+    "core": {
+        "themes": {
+            "variant": "large",
+            "icons": False,
         },
-        'search': {
-            # 'fuzzy':True,
-            'show_only_matches': True,
-        },
-        'checkbox': {
-            'three_state': False,
-        },
-        "plugins" : [ "checkbox" ]
+    },
+    'search': {
+        # 'fuzzy':True,
+        'show_only_matches': True,
+    },
+    'checkbox': {
+        'three_state': False,
+    },
+    "plugins": ["checkbox"]
 }
-
-DATACITE_DEFAULTS = {
-    # These are default field values. The user cannot change these and they are hidden from the form.
-    'resourceTypeGeneral': 'Dataset',
-    'publisher': "GFZ Data Services",
-}
-
-DATACITE_RECOMMENDED = {
-    # These are recommended field values. The user is still able to change these when filling out the form.
-    'language': 'en',
-    'license': 'CC BY 4.0',
-}
-
-
-ROOT_URLCONF = f'{APP_NAME}.urls'
-WSGI_APPLICATION = f'{APP_NAME}.wsgi.application'
-
-META_SITE_NAME = SITE_NAME
 
 DEFAULT_FROM_EMAIL = f'info{EMAIL_DOMAIN}'
 
-TAGGIT_CASE_INSENSITIVE = True
 
 SOCIALACCOUNT_PROVIDERS = {
     'orcid': {
         # Base domain of the API. Default value: 'orcid.org', for the production API
-        'BASE_DOMAIN':'sandbox.orcid.org',  # for the sandbox API
+        'BASE_DOMAIN': 'sandbox.orcid.org',  # for the sandbox API
         # Member API or Public API? Default: False (for the public API)
         'MEMBER_API': False,
     }
@@ -199,8 +180,6 @@ INVITATION_BACKEND = 'organizations.backends.defaults.InvitationBackend'
 REGISTRATION_BACKEND = 'organizations.backends.defaults.RegistrationBackend'
 
 
-TEMPLATES[0]['DIRS'].append(os.path.join(APP_NAME, 'templates'))
-
 CROSSREF_UA_STRING = f"{SITE_NAME} (https://thermoglobe.app)"
 CROSSREF_MAILTO = ';'.join([v[1] for v in ADMINS])
 
@@ -211,12 +190,12 @@ MIDDLEWARE += [
 ]
 # MIDDLEWARE.append('lockdown.middleware.LockdownMiddleware')
 
-# THUMBNAIL_DEFAULT_STORAGE = f'{APP_NAME}.storage_backends.PublicMediaStorage'
-# PRIVATE_FILE_STORAGE = DEFAULT_FILE_STORAGE = f'{APP_NAME}.storage_backends.PrivateMediaStorage'
+# THUMBNAIL_DEFAULT_STORAGE = 'project.storage_backends.PublicMediaStorage'
+# PRIVATE_FILE_STORAGE = DEFAULT_FILE_STORAGE = 'project.storage_backends.PrivateMediaStorage'
 
 REST_FRAMEWORK = {
     "HTML_SELECT_CUTOFF": 10,
-    'DEFAULT_AUTHENTICATION_CLASSES': [ 
+    'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
@@ -248,7 +227,7 @@ REST_FRAMEWORK = {
 
     # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 100,
-    
+
     'DEFAULT_PARSER_CLASSES': [
         'drf_orjson_renderer.parsers.ORJSONParser',
     ],
@@ -256,44 +235,11 @@ REST_FRAMEWORK = {
 }
 
 GRAPH_MODELS = {
-    'app_labels': ["database", "thermal_data", "publications","well_logs","crossref"],
-    "exclude_models": ['PublicationAbstract','UUIDTaggedItem','SiteAbstract','IntervalAbstract','HistoricalSite','HistoricalInterval','AbstractLog','ChoiceAbstract','AuthorAbstract', 'MP_Node'],
+    'app_labels': ["database", "thermal_data", "publications", "well_logs", "crossref"],
+    "exclude_models": ['PublicationAbstract', 'UUIDTaggedItem', 'SiteAbstract', 'IntervalAbstract', 'HistoricalSite', 'HistoricalInterval', 'AbstractLog', 'ChoiceAbstract', 'AuthorAbstract', 'MP_Node'],
     'all_applications': False,
     'group_models': True,
     # 'hide_edge_labels': True,
     # "hide_relations_from_fields":True,
     # 'skip_check':True,
 }
-
-
-
-if os.getenv('DJANGO_ENV') == 'development':
-
-    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-    DATABASES = {
-        'default': {
-            'CONN_MAX_AGE': 0,
-            'NAME': os.environ.get('DB_NAME'),
-            # 'NAME': 'test',
-            'USER': os.environ.get('DB_USERNAME'),
-            'PASSWORD': os.environ.get('DB_PASSWORD'),
-            'HOST': 'localhost',
-            'ENGINE':'django.contrib.gis.db.backends.postgis',
-            }
-        }
-
-
-else:
-    import django_heroku, dj_database_url  
-    STATICFILES_STORAGE = f'{APP_NAME}.storage_backends.StaticStorage'
-    STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_STATIC_LOCATION}/"
-
-    SECURE_SSL_REDIRECT = True
-    DATABASES = {
-        'default': dj_database_url.config(
-            conn_max_age=600, 
-            ssl_require=True)
-    }
-    django_heroku.settings(locals(), staticfiles=False)
-    DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
