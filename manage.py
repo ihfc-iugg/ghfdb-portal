@@ -4,7 +4,7 @@ import os
 import sys
 # print(sys.version)
 def main():
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'global_heat_flow.settings')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project.settings')
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

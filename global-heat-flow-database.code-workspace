@@ -28,5 +28,8 @@
 	"settings": {
 		"liveServer.settings.multiRootWorkspaceName": "Global Heat Flow",
 		"python.envFile": "${workspaceFolder}/.env",
+		"files.exclude": {
+			"**/__pycache__": true
+		},
 	}
 }
