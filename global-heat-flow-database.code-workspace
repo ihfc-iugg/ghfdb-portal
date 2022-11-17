@@ -1,25 +1,24 @@
 {
-	"folders": [
-		{
-			"path": "../core",
-			"name": "Core"
+	"folders": [{
+			"path": "../geoluminate",
+			"name": "GeoLuminate"
 		},
 		{
 			"name": "Django Crossref",
 			"path": "../django-crossref"
 		},
-		{
-			"name": "Django Earth Science",
-			"path": "../django-earth-science"
-		},
-		{
-			"name": "Django Well Logs",
-			"path": "../django-well-logs"
-		},
-		{
-			"name": "Global Tectonics",
-			"path": "../django-global-tectonics"
-		},
+		// {
+		// 	"name": "Django Earth Science",
+		// 	"path": "../django-earth-science"
+		// },
+		// {
+		// 	"name": "Django Well Logs",
+		// 	"path": "../django-well-logs"
+		// },
+		// {
+		// 	"name": "Global Tectonics",
+		// 	"path": "../django-global-tectonics"
+		// },
 		{
 			"path": ".",
 			"name": "Global Heat Flow"
@@ -31,5 +30,10 @@
 		"files.exclude": {
 			"**/__pycache__": true
 		},
+		"python.linting.pycodestyleEnabled": true,
+		"python.formatting.provider": "autopep8",
+		"python.formatting.autopep8Args": ["--aggressive"],
+		"editor.formatOnSave": true,
+
 	}
 }

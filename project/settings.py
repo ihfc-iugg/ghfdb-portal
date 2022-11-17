@@ -1,6 +1,10 @@
-import os
-from core.settings import *
 from django.utils.translation import gettext_lazy as _
+from geoluminate.settings import *
+from geoluminate.settings.components.django import (
+    ALLOWED_HOSTS,
+    INSTALLED_APPS,
+    MIDDLEWARE,
+)
 
 SITE_NAME = META_SITE_NAME = 'World Heat Flow Database'
 EMAIL_DOMAIN = "@heatflow.world"
@@ -10,130 +14,52 @@ ADMINS = MANAGERS = [('Sam', 'jennings@gfz-potsdam.de')]
 # STATICFILES_STORAGE = 'project.storage_backends.StaticStorage'
 # STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_STATIC_LOCATION}/"
 
-# enter additional domains or ip addresses of allowed hosts here. 127.0.0.1 and localhost are already included
-ALLOWED_HOSTS += []
+# enter additional domains or ip addresses of allowed hosts here.
+# 127.0.0.1 and localhost are already included
+ALLOWED_HOSTS.extend([])
 
-INSTALLED_APPS = [
-
-    'core',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    # 'grappelli.dashboard',
-    'grappelli',
-    'django.contrib.sessions',
-    'django.contrib.admin',
-    'django.contrib.sites',
-    'django.contrib.sitemaps',
-    'django.contrib.staticfiles',
-    'django.contrib.messages',
-    'django_cleanup.apps.CleanupConfig',
-    'authentication',
-    'user',
-    'django.contrib.gis',
-    'django.contrib.humanize',
-    'django.contrib.admindocs',
-    "allauth",
-    "allauth.account",
-    "allauth.socialaccount",
-    "allauth.socialaccount.providers.orcid",
-    "invitations",
-    'organizations',
-    'cms',
-    'menus',
-    'sekizai',
-    'treebeard',
-
-    'djangocms_text_ckeditor',
-    'filer',
-    'easy_thumbnails',
-    'djangocms_file',
-    'djangocms_icon',
-    'djangocms_link',
-    'djangocms_picture',
-    'djangocms_bootstrap5',
-    'djangocms_bootstrap5.contrib.bootstrap5_alerts',
-    'djangocms_bootstrap5.contrib.bootstrap5_badge',
-    'djangocms_bootstrap5.contrib.bootstrap5_card',
-    'djangocms_bootstrap5.contrib.bootstrap5_carousel',
-    'djangocms_bootstrap5.contrib.bootstrap5_collapse',
-    'djangocms_bootstrap5.contrib.bootstrap5_content',
-    'djangocms_bootstrap5.contrib.bootstrap5_grid',
-    'djangocms_bootstrap5.contrib.bootstrap5_jumbotron',
-    'djangocms_bootstrap5.contrib.bootstrap5_link',
-    'djangocms_bootstrap5.contrib.bootstrap5_listgroup',
-    'djangocms_bootstrap5.contrib.bootstrap5_media',
-    'djangocms_bootstrap5.contrib.bootstrap5_picture',
-    'djangocms_bootstrap5.contrib.bootstrap5_tabs',
-    'djangocms_bootstrap5.contrib.bootstrap5_utilities',
-    'djangocms_video',
-
+INSTALLED_APPS.extend([
+    'newsletter',
     'rest_framework',
     'rest_framework_gis',
     "drf_spectacular",
     'rest_framework_datatables_editor',
-
-    'solo',
+    "menu",
+    "django_select2",
+    "drf_auto_endpoint",
     'import_export',
+    # 'import_export_celery',
     'simple_history',
-    'django_extensions',
-    'djgeojson',
-    'widget_tweaks',
-    'taggit',
-    'taggit_autosuggest',
-    'django_filters',
-    'storages',
-    'crispy_forms',
-    'crispy_bootstrap5',
-    'fluent_comments',
-    'threadedcomments',
-    'django_comments',
-
-    'django_social_share',
-    'meta',
-    "sortedm2m",
-    'ordered_model',
-    "rosetta",
-    'bootstrap_datepicker_plus',
-    "django_gravatar",
-    "django_ckeditor_5",
-    "django_jsonforms",
     "treewidget",
-    'django_htmx',
-    'formtools',
-
-
-    # Custom Standalone Apps
-    'kepler',
-    "well_logs",
-    'crossref',
-    'crossref.cms',
     'datacite',
-    "global_tectonics",
-    'earth_science',
+    'geoluminate.gis',
+    'datatables',
 
 
     # GHFDB Apps
-    'main',
+    "well_logs",
+    "global_tectonics",
+    'earth_science',
     'database',
     'thermal_data',
-    'publications',
-    'mapping',
-    'theme',
-    # 'review',
+    'review',
     "research_organizations",
 
     # "debug_toolbar",
-]
+])
+
+
+MIDDLEWARE.extend([
+    # 'debug_toolbar.middleware.DebugToolbarMiddleware',
+    # 'author.middlewares.AuthorDefaultBackendMiddleware',
+    'simple_history.middleware.HistoryRequestMiddleware',
+])
 
 EARTH_MATERIALS_INCLUDE = [
     'Igneous rock and sediment',
     'Metamorphic rock',
     'Sediment and sedimentary rock'
 ]
-
-GRAPPELLI_INDEX_DASHBOARD = 'main.admin_dashboard.AdminDashboard'
-GRAPPELLI_AUTOCOMPLETE_LIMIT = None
-GRAPPELLI_ADMIN_TITLE = f'{SITE_NAME} Administration'
 
 TREEWIDGET_SETTINGS = {
     'search': True,
@@ -160,35 +86,31 @@ TREEWIDGET_TREEOPTIONS = {
 
 DEFAULT_FROM_EMAIL = f'info{EMAIL_DOMAIN}'
 
-
-SOCIALACCOUNT_PROVIDERS = {
-    'orcid': {
-        # Base domain of the API. Default value: 'orcid.org', for the production API
-        'BASE_DOMAIN': 'sandbox.orcid.org',  # for the sandbox API
-        # Member API or Public API? Default: False (for the public API)
-        'MEMBER_API': False,
+CACHES = {
+    # … default cache config and others
+    'default': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+    },
+    "select2": {
+        # "BACKEND": "django_redis.cache.RedisCache",
+        # "LOCATION": "redis://127.0.0.1:6379/2",
+        # "OPTIONS": {
+        #     "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        # }
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        'LOCATION': 'select2',
     }
 }
 
+# Tell select2 which cache configuration to use:
+SELECT2_CACHE_BACKEND = "select2"
 
-# ADAPTER FOR DJANGO-INVITATION TO USE DJANGO-ALLAUTH
-ACCOUNT_ADAPTER = 'invitations.models.InvitationsAdapter'
-
-
-# DJANGO-ORGANISATIONS SETTINGS
-INVITATION_BACKEND = 'organizations.backends.defaults.InvitationBackend'
-REGISTRATION_BACKEND = 'organizations.backends.defaults.RegistrationBackend'
-
-
-CROSSREF_UA_STRING = f"{SITE_NAME} (https://thermoglobe.app)"
-CROSSREF_MAILTO = ';'.join([v[1] for v in ADMINS])
-
-MIDDLEWARE += [
-    # 'debug_toolbar.middleware.DebugToolbarMiddleware',
-    'simple_history.middleware.HistoryRequestMiddleware',
-    "django_htmx.middleware.HtmxMiddleware",
+SELECT2_CSS = [
+    "https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css",
+    "https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css",
 ]
-# MIDDLEWARE.append('lockdown.middleware.LockdownMiddleware')
+
+SELECT2_THEME = 'bootstrap-5'
 
 # THUMBNAIL_DEFAULT_STORAGE = 'project.storage_backends.PublicMediaStorage'
 # PRIVATE_FILE_STORAGE = DEFAULT_FILE_STORAGE = 'project.storage_backends.PrivateMediaStorage'
@@ -200,9 +122,9 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_THROTTLE_CLASSES': [
-        'api.v1.throttling.AnonBurstRate',
-        'api.v1.throttling.AnonSustainedRate',
-        'api.v1.throttling.UserBurstRate'
+        'geoluminate.api.throttling.AnonBurstRate',
+        'geoluminate.api.throttling.AnonSustainedRate',
+        'geoluminate.api.throttling.UserBurstRate'
     ],
     'DEFAULT_THROTTLE_RATES': {
         'anon_burst': '4/second',
@@ -210,36 +132,57 @@ REST_FRAMEWORK = {
         'user_burst': '25/second'
     },
     'DEFAULT_PERMISSION_CLASSES': [
-        "api.access_policies.SiteAccessPolicy",
+        "geoluminate.access_policies.CoreAccessPolicy",
     ],
     'DEFAULT_RENDERER_CLASSES': [
         "drf_orjson_renderer.renderers.ORJSONRenderer",
+        "geoluminate.api.renderers.GeoJSONRenderer",
         'rest_framework.renderers.BrowsableAPIRenderer',
-        'rest_framework_csv.renderers.PaginatedCSVRenderer',
-        'drf_excel.renderers.XLSXRenderer',
-        'rest_framework_datatables_editor.renderers.DatatablesRenderer',
-        'api.v1.renderers.GeoJsonRenderer',
+        'rest_framework_csv.renderers.PaginatedCSVRenderer'
     ],
-    'DEFAULT_FILTER_BACKENDS': (
-        'rest_framework_datatables_editor.filters.DatatablesFilterBackend',
-    ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework_datatables_editor.pagination.DatatablesPageNumberPagination',
+    # 'DEFAULT_FILTER_BACKENDS': (
 
-    # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    # ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 100,
 
     'DEFAULT_PARSER_CLASSES': [
         'drf_orjson_renderer.parsers.ORJSONParser',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_METADATA_CLASS': 'datatables.metadata.DatatablesAutoMetadata',
 }
 
 GRAPH_MODELS = {
     'app_labels': ["database", "thermal_data", "publications", "well_logs", "crossref"],
-    "exclude_models": ['PublicationAbstract', 'UUIDTaggedItem', 'SiteAbstract', 'IntervalAbstract', 'HistoricalSite', 'HistoricalInterval', 'AbstractLog', 'ChoiceAbstract', 'AuthorAbstract', 'MP_Node'],
+    "exclude_models": ['PublicationAbstract', 'UUIDTaggedItem', 'HeatFlowAbstract', 'IntervalAbstract', 'HistoricalSite', 'HistoricalInterval', 'AbstractLog', 'ChoiceAbstract', 'AuthorAbstract'],
     'all_applications': False,
     'group_models': True,
     # 'hide_edge_labels': True,
     # "hide_relations_from_fields":True,
     # 'skip_check':True,
 }
+
+CELERY_BROKER_URL = "redis://localhost:6379"
+CELERY_RESULT_BACKEND = "redis://localhost:6379"
+
+IMPORT_EXPORT_CELERY_INIT_MODULE = "project.celery"
+
+IMPORT_EXPORT_CELERY_MODELS = {
+    "Winner": {
+        'app_label': 'database',
+        'model_name': 'Site',
+        # 'resource': SiteResource,  # Optional
+    }
+}
+
+DASHBOARDS = {
+    'user': 'user.dashboard.UserDashboard',
+}
+
+GEOLUMINATE_DATABASE = 'database.HeatFlow'
+GEOLUMINATE_API_ROUTERS = [
+    'geoluminate.gis.urls.router',
+    'literature.api.urls.router',
+    'literature.api.urls.lit_router',
+]

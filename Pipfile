@@ -4,6 +4,7 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+pycodestyle = "*"
 
 [packages]
 amqp = "*"
@@ -167,6 +168,15 @@ psycopg2-binary = "*"
 pydot = "*"
 appconf = "*"
 django-appconf = "*"
+pep8 = "*"
+redis = "*"
+django-import-export-celery = "*"
+django-celery-beat = "*"
+django-newsletter = "*"
+django-simple-menu = "*"
+django-select2 = "*"
+drf-nested-routers = "*"
+drf-schema-adapter = "*"
 
 [requires]
 python_version = "3.9"
