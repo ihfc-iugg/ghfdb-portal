@@ -3,8 +3,6 @@ from django.dispatch import receiver
 from database.models import Site, Interval
 
 
-
-
 @receiver(post_save, sender=Interval)
 def interval_changed(sender, instance, **kwargs):
 

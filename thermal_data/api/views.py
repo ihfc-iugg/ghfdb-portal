@@ -2,25 +2,27 @@ from rest_framework_datatables_editor.viewsets import DatatablesEditorModelViewS
 from . import serialize
 from .. import models
 from django.db.models import Count, Min, Max
-from core.utils import DjangoFilterBackend
+from geoluminate.rest_framework.utils import DjangoFilterBackend
 from rest_pandas import PandasView
 from django.shortcuts import get_object_or_404
 from rest_framework.generics import ListAPIView
 
+
 class WellLogViewSet(DatatablesEditorModelViewSet):
-    filterset_fields = ['reference','site']
+    filterset_fields = ['reference', 'site']
     filter_backends = (DjangoFilterBackend,)
 
     def get_queryset(self):
         return (super().get_queryset()
-        .select_related('site')
-        .prefetch_related('data')
-        .annotate(
+                .select_related('site')
+                .prefetch_related('data')
+                .annotate(
             data_count=Count('data'),
             depth_upper=Min('data__depth'),
             depth_lower=Max('data__depth'),
-            )
         )
+        )
+
 
 class LogDataMixin(PandasView):
     serializer_class = serialize.TemperatureData
@@ -35,7 +37,8 @@ class LogDataMixin(PandasView):
     def get_pandas_filename(self, request, format):
         if format in ('xls', 'xlsx'):
             # Use custom filename and Content-Disposition header
-            return str(self.get_object().pk) # Extension will be appended automatically
+            # Extension will be appended automatically
+            return str(self.get_object().pk)
         else:
             # Default filename from URL (no Content-Disposition header)
             return None
@@ -65,7 +68,3 @@ class ConductivityViewSet(WellLogViewSet):
 class ConductivityDataView(LogDataMixin):
     serializer_class = serialize.ConductivityData
     model = models.ConductivityLog
-
-
-
-
