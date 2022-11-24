@@ -1,0 +1,812 @@
+[
+    {
+        "model": "geoluminate.choice",
+        "pk": 1,
+        "fields": {
+            "type": "env",
+            "code": "onshore (continental)",
+            "name": "Onshore (Continental)",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 2,
+        "fields": {
+            "type": "env",
+            "code": "onshore (lake)",
+            "name": "Onshore (Lake)",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 3,
+        "fields": {
+            "type": "env",
+            "code": "offshore (continental)",
+            "name": "Offshore (Continental)",
+            "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec fermentum ex sit amet ipsum rhoncus lobortis."
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 4,
+        "fields": {
+            "type": "env",
+            "code": "offshore (marine)",
+            "name": "Offshore (Marine)",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 5,
+        "fields": {
+            "type": "method",
+            "code": "drilling",
+            "name": "Drilling",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 6,
+        "fields": {
+            "type": "method",
+            "code": "mining",
+            "name": "Mining",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 7,
+        "fields": {
+            "type": "method",
+            "code": "tunneling",
+            "name": "Tunneling",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 8,
+        "fields": {
+            "type": "method",
+            "code": "probing (lake)",
+            "name": "Probing (Lake)",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 9,
+        "fields": {
+            "type": "method",
+            "code": "probing (ocean)",
+            "name": "Probing (Ocean)",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 10,
+        "fields": {
+            "type": "expl",
+            "code": "hydrocarbon",
+            "name": "Hydrocarbon",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 11,
+        "fields": {
+            "type": "expl",
+            "code": "underground storage",
+            "name": "Underground Storage",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 12,
+        "fields": {
+            "type": "expl",
+            "code": "geothermal",
+            "name": "Geothermal",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 13,
+        "fields": {
+            "type": "expl",
+            "code": "mapping",
+            "name": "Mapping",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 14,
+        "fields": {
+            "type": "expl",
+            "code": "mining",
+            "name": "Mining",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 15,
+        "fields": {
+            "type": "expl",
+            "code": "tunneling",
+            "name": "Tunneling",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 16,
+        "fields": {
+            "type": "q_method",
+            "code": "fourier",
+            "name": "Fourier's Law",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 17,
+        "fields": {
+            "type": "q_method",
+            "code": "product",
+            "name": "Product method",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 18,
+        "fields": {
+            "type": "q_method",
+            "code": "interval",
+            "name": "Interval method",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 19,
+        "fields": {
+            "type": "q_method",
+            "code": "bullard",
+            "name": "Bullard",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 20,
+        "fields": {
+            "type": "q_method",
+            "code": "bootstrap",
+            "name": "Bootstrap",
+            "description": ""
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 21,
+        "fields": {
+            "type": "hf_probe",
+            "code": "corer-outrigger",
+            "name": "Corer-outrigger",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 22,
+        "fields": {
+            "type": "hf_probe",
+            "code": "bullard",
+            "name": "Bullard Probe",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 23,
+        "fields": {
+            "type": "hf_probe",
+            "code": "lister/violin",
+            "name": "Lister Violin-Bow Probe",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 24,
+        "fields": {
+            "type": "hf_probe",
+            "code": "ewing",
+            "name": "Ewing Probe",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 25,
+        "fields": {
+            "type": "hf_probe",
+            "code": "other",
+            "name": "Other",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 26,
+        "fields": {
+            "type": "q_tf_mech",
+            "code": "conductive",
+            "name": "Conductive",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 27,
+        "fields": {
+            "type": "q_tf_mech",
+            "code": "convective unspecified",
+            "name": "Convective - unspecified",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 28,
+        "fields": {
+            "type": "q_tf_mech",
+            "code": "convective upflow",
+            "name": "Convective - upflow",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 29,
+        "fields": {
+            "type": "q_tf_mech",
+            "code": "convective downflow",
+            "name": "Convective - downflow",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 30,
+        "fields": {
+            "type": "T_method",
+            "code": "bht",
+            "name": "Bottom hole temperature (uncorrected)",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 31,
+        "fields": {
+            "type": "T_method",
+            "code": "cbht",
+            "name": "Bottom hole temperature (corrected)",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 32,
+        "fields": {
+            "type": "T_method",
+            "code": "dst",
+            "name": "Drill stem test",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 33,
+        "fields": {
+            "type": "T_method",
+            "code": "pt100",
+            "name": "Pt-100 probe",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 34,
+        "fields": {
+            "type": "T_method",
+            "code": "pt1000",
+            "name": "Pt-1000 probe",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 35,
+        "fields": {
+            "type": "T_method",
+            "code": "log",
+            "name": "Continuous temperature log",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 36,
+        "fields": {
+            "type": "T_method",
+            "code": "clog",
+            "name": "Corrected temperature log",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 37,
+        "fields": {
+            "type": "T_method",
+            "code": "dts",
+            "name": "Distributed temperature sensing",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 38,
+        "fields": {
+            "type": "T_method",
+            "code": "cpd",
+            "name": "Cure point depth estimate",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 39,
+        "fields": {
+            "type": "T_method",
+            "code": "xen",
+            "name": "Xenolith",
+            "description": ""
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 40,
+        "fields": {
+            "type": "T_method",
+            "code": "gtm",
+            "name": "Geothermometry",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 41,
+        "fields": {
+            "type": "T_method",
+            "code": "bsr",
+            "name": "Bottom-simulating seismic reflector",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 42,
+        "fields": {
+            "type": "T_method",
+            "code": "apct/set-2",
+            "name": "Ocean drilling temperature tool",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 43,
+        "fields": {
+            "type": "T_method",
+            "code": "sur",
+            "name": "Surface temperature",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 44,
+        "fields": {
+            "type": "T_corr_method",
+            "code": "hp",
+            "name": "Horner Plot",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 45,
+        "fields": {
+            "type": "T_corr_method",
+            "code": "csm",
+            "name": "Cylinder source method",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 46,
+        "fields": {
+            "type": "T_corr_method",
+            "code": "lsm",
+            "name": "Line source explosion method",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 47,
+        "fields": {
+            "type": "T_corr_method",
+            "code": "im",
+            "name": "Inverse numerical modelling",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 48,
+        "fields": {
+            "type": "T_corr_method",
+            "code": "other",
+            "name": "Other",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 49,
+        "fields": {
+            "type": "T_corr_method",
+            "code": "not corrected",
+            "name": "Not corrected",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 50,
+        "fields": {
+            "type": "tc_source",
+            "code": "outcrop samples",
+            "name": "Outcrop samples",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 51,
+        "fields": {
+            "type": "tc_source",
+            "code": "core samples",
+            "name": "Core samples",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 52,
+        "fields": {
+            "type": "tc_source",
+            "code": "cutting samples",
+            "name": "Cutting samples",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 53,
+        "fields": {
+            "type": "tc_source",
+            "code": "mineral computation",
+            "name": "Mineral computation",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 54,
+        "fields": {
+            "type": "tc_source",
+            "code": "well log interpretation",
+            "name": "Well log interpretation",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 55,
+        "fields": {
+            "type": "tc_source",
+            "code": "core-log integration",
+            "name": "Core-log integration",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 56,
+        "fields": {
+            "type": "tc_source",
+            "code": "in-situ probe",
+            "name": "In-situ probe",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 57,
+        "fields": {
+            "type": "tc_source",
+            "code": "other",
+            "name": "Other (specify in comments field)",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 58,
+        "fields": {
+            "type": "tc_pTcond",
+            "code": "unrecorded ambient pt conditions",
+            "name": "Unrecorded ambient pT conditions",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 59,
+        "fields": {
+            "type": "tc_pTcond",
+            "code": "recorded ambient pt conditions",
+            "name": "Recorded ambient pT conditions",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 60,
+        "fields": {
+            "type": "tc_pTcond",
+            "code": "replicated in-situ (p)",
+            "name": "Replicated in-situ (p)",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 61,
+        "fields": {
+            "type": "tc_pTcond",
+            "code": "replicated in-situ (t)",
+            "name": "Replicated in-situ (T)",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 62,
+        "fields": {
+            "type": "tc_pTcond",
+            "code": "replicated in-situ (pt)",
+            "name": "Replicated in-situ (pT)",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 63,
+        "fields": {
+            "type": "tc_pTcond",
+            "code": "actual in-situ (pt) conditions",
+            "name": "Actual in-situ (pT) conditions",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 64,
+        "fields": {
+            "type": "tc_satur",
+            "code": "drymeas",
+            "name": "Dry measured (rocks have been technically dried before measurement)",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 65,
+        "fields": {
+            "type": "tc_satur",
+            "code": "satmeas",
+            "name": "Saturated measured (rocks have been technically saturated completely before measurement)",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 66,
+        "fields": {
+            "type": "tc_satur",
+            "code": "insitusatmeas",
+            "name": " Insitu saturated measured (measurements with probe sensing / marine measurements)",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 67,
+        "fields": {
+            "type": "tc_satur",
+            "code": "coresatmeas",
+            "name": "saturated measured on closed sediment cores on-board",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 68,
+        "fields": {
+            "type": "tc_satur",
+            "code": "satcalc",
+            "name": "Saturated calculated (thermal conductivity has been calculated from dry measured rocks, porosity and pore-filling fluid)",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 69,
+        "fields": {
+            "type": "tc_satur",
+            "code": "recov",
+            "name": "As recovered (rocks have been preserved and measured in close to their natural saturation state)",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 70,
+        "fields": {
+            "type": "tc_satur",
+            "code": "other",
+            "name": "Other",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 71,
+        "fields": {
+            "type": "tc_satur",
+            "code": "n/a",
+            "name": "N/A",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 72,
+        "fields": {
+            "type": "corrections",
+            "code": "BWT",
+            "name": "Bottom water temperature variation",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 73,
+        "fields": {
+            "type": "corrections",
+            "code": "CONV",
+            "name": "Convection processes",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 74,
+        "fields": {
+            "type": "corrections",
+            "code": "E",
+            "name": "Erosion",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 75,
+        "fields": {
+            "type": "corrections",
+            "code": "IS",
+            "name": "In-situ thermal properties",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 76,
+        "fields": {
+            "type": "corrections",
+            "code": "HP",
+            "name": "Heat production",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 77,
+        "fields": {
+            "type": "corrections",
+            "code": "HR",
+            "name": "Heat refraction",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 78,
+        "fields": {
+            "type": "corrections",
+            "code": "S",
+            "name": "Sedimentation",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 79,
+        "fields": {
+            "type": "corrections",
+            "code": "T",
+            "name": "Temperature",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 80,
+        "fields": {
+            "type": "corrections",
+            "code": "PAL",
+            "name": "Transient climatic",
+            "description": null
+        }
+    },
+    {
+        "model": "geoluminate.choice",
+        "pk": 81,
+        "fields": {
+            "type": "corrections",
+            "code": "TOPO",
+            "name": "Topographic",
+            "description": null
+        }
+    }
+]
