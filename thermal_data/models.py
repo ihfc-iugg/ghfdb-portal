@@ -128,8 +128,8 @@ class TemperatureLog(AbstractLog, Log):
 
     class Meta:
         default_related_name = 'temperature_logs'
-        verbose_name = _('thermal log')
-        verbose_name_plural = _('thermal logs')
+        verbose_name = _('temperature log')
+        verbose_name_plural = _('temperature logs')
         db_table = 'temp_meta'
         ordering = ['added']
 
