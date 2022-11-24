@@ -1,10 +1,10 @@
 from django.contrib import admin
-from database.models import HeatFlow, Interval, Choice
+from database.models import HeatFlow, Interval
 from import_export.admin import ImportExportActionModelAdmin
 from database.resources import IntervalResource, SiteResource
 from django.db.models import F
 from django.utils.translation import gettext as _
-from .admin_forms import AdminIntervalForm
+# from .admin_forms import AdminIntervalForm
 from geoluminate.gis.admin import SiteAdminMixin
 
 
@@ -84,7 +84,7 @@ class SiteAdmin(SiteAdminMixin, ImportExportActionModelAdmin):
 
 @admin.register(Interval)
 class HeatFlowAdmin(SiteAdminMixin, ImportExportActionModelAdmin):
-    form = AdminIntervalForm
+    # form = AdminIntervalForm
     geom_field = 'site__geom'
     resource_class = IntervalResource
     autocomplete_fields = ['site']
@@ -109,16 +109,16 @@ class HeatFlowAdmin(SiteAdminMixin, ImportExportActionModelAdmin):
         'tc_pTcond',
         'tc_strategy',
         'reference']
-    list_filter = [
-        'q_tf_mech',
-        'q_method',
-        'hf_probe',
-        'T_method_top',
-        'T_method_bot',
-        'T_corr_top',
-        'T_corr_bot',
-        'tc_source',
-        'tc_strategy']
+    # list_filter = [
+    #     'q_tf_mech',
+    #     'q_method',
+    #     'hf_probe',
+    #     'T_method_top',
+    #     'T_method_bot',
+    #     'T_corr_top',
+    #     'T_corr_bot',
+    #     'tc_source',
+    #     'tc_strategy']
 
     # list_editable = ['childcomp',]
     inlines = [CorrectionInline, ]
@@ -202,28 +202,3 @@ class HeatFlowAdmin(SiteAdminMixin, ImportExportActionModelAdmin):
         form = super().get_form(request, obj, **kwargs)
         form.base_fields['geo_lith'].widget.can_add_related = False
         return form
-
-
-@admin.register(Choice)
-class ChoiceAdmin(admin.ModelAdmin):
-    list_display = ['type', 'code', 'name', '_description']
-    list_filter = ['type', ]
-    search_fields = ['name', ]
-
-    def _description(self, obj):
-        if obj.description:
-            return obj.description[:50] + '...'
-    _description.admin_order_field = 'description'
-    _description.verbose_name = _('description'
-                                  )
-
-
-# class ChoiceTreeAdmin(TreeAdmin):
-#     form = movenodeform_factory(Choice)
-#     search_fields = [
-#         'code', 'name',
-#     ]
-#     list_per_page = 200
-
-
-# admin.site.register(Choice, ChoiceTreeAdmin)
