@@ -1,0 +1,21 @@
+{% extends 'theme/components/modal.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Nominate to review" %}{% endblock title %}
+
+{% block body %}
+  <p>Hi {{request.user.first_name }},</p>
+  <p>You are nominating yourself to review the following publication: </p>
+  <blockquote>
+    {{ pub }}
+  </blockquote>
+  <p>Please be aware of the <a href="/review-project/rules/">rules</a> laid out by the database administrators related to completing a review in a timely manner.</p>
+  <p>If you are happy to continue and contribute to this research database, please confirm your nomination to review this article by clicking the button below.</p>
+{% endblock body %}
+
+{% block footer %}
+<div class='d-flex'>
+  <button class='button'>Accept</button>
+</div>
+
+{% endblock footer %}

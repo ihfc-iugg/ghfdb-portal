@@ -1,0 +1,5 @@
+{% load i18n %}
+
+{% blocktrans %}
+Thank you for registering to become a reviewer with {{config.site.name}}. We have sent your application
+{% endblocktrans %}
