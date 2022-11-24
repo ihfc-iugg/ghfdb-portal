@@ -177,6 +177,8 @@ django-simple-menu = "*"
 django-select2 = "*"
 drf-nested-routers = "*"
 drf-schema-adapter = "*"
+sphinx = "*"
+furo = "*"
 
 [requires]
 python_version = "3.9"
