@@ -1,4 +1,4 @@
-from database.models import HeatFlow, Interval, Choice
+from database.models import HeatFlow, Interval
 from import_export import resources
 from django.utils.html import mark_safe
 from import_export.instance_loaders import ModelInstanceLoader
