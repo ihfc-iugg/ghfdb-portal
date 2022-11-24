@@ -11,7 +11,7 @@ EMAIL_DOMAIN = "@heatflow.world"
 ADMINS = MANAGERS = [('Sam', 'jennings@gfz-potsdam.de')]
 
 # UNCOMMENT TO COLLECTSTATIC TO AWS S3
-# STATICFILES_STORAGE = 'project.storage_backends.StaticStorage'
+# STATICFILES_STORAGE = 'geoluminate.backends.storage.StaticStorage'
 # STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_STATIC_LOCATION}/"
 
 # enter additional domains or ip addresses of allowed hosts here.
@@ -112,8 +112,8 @@ SELECT2_CSS = [
 
 SELECT2_THEME = 'bootstrap-5'
 
-# THUMBNAIL_DEFAULT_STORAGE = 'project.storage_backends.PublicMediaStorage'
-# PRIVATE_FILE_STORAGE = DEFAULT_FILE_STORAGE = 'project.storage_backends.PrivateMediaStorage'
+# THUMBNAIL_DEFAULT_STORAGE = 'geoluminate.backends.storage.PublicMediaStorage'
+# PRIVATE_FILE_STORAGE = DEFAULT_FILE_STORAGE = 'geoluminate.backends.storage.PrivateMediaStorage'
 
 REST_FRAMEWORK = {
     "HTML_SELECT_CUTOFF": 10,
@@ -150,7 +150,8 @@ REST_FRAMEWORK = {
         'drf_orjson_renderer.parsers.ORJSONParser',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    'DEFAULT_METADATA_CLASS': 'datatables.metadata.DatatablesAutoMetadata',
+    'DEFAULT_METADATA_CLASS': 'drf_auto_endpoint.metadata.AutoMetadata',
+    # 'DEFAULT_METADATA_CLASS': 'datatables.metadata.DatatablesAutoMetadata',
 }
 
 GRAPH_MODELS = {
@@ -186,3 +187,14 @@ GEOLUMINATE_API_ROUTERS = [
     'literature.api.urls.router',
     'literature.api.urls.lit_router',
 ]
+
+GEOLUMINATE_GLOSSARY = [
+    "database.HeatFlow",
+    "database.Interval",
+    "thermal_data.TemperatureLog",
+    "thermal_data.ConductivityLog",
+    "literature.Publication",
+    "crossref.Author",
+]
+
+GEOLUMINATE_DYNAMIC_CHOICE_FIELDS = 'database.choices.TypeChoices'
