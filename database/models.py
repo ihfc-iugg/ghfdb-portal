@@ -10,7 +10,6 @@ from geoluminate.fields import RangeField
 from shortuuid.django_fields import ShortUUIDField
 from django.core.exceptions import ValidationError
 from earth_science.fields import EarthMaterialOneToOne, GeologicTimeOneToOne
-from django_ckeditor_5.fields import CKEditor5Field
 from geoluminate.fields import (
     ChoicesForeignKey,
     ChoicesManyToMany,
@@ -21,18 +20,9 @@ from database import choices
 
 
 class HeatFlow(ModelMeta, Site):
-    """Abstract base class for the GHFDB HeatFlow model. All fields are stored
-    in this abstract class so that multiple tables can be constructed using
-    the same field definitions (e.g. for the review app).
-
-    Note: This is the "Parent" class from the GHFDB structure publications.
-
-    Mixins:
-        ModelMeta (django-meta.models.ModelMeta): ModelMeta mixin from the
-        `Django-Meta` application
-        HeatFlowAbstract (mapping.models.HeatFlowAbstract): An abstract base class
-        that contains relation fields to geographically enabled models.
-
+    """Terrestrial heat flow as part of the Global Heat Flow Database. This is
+    the "parent" table outlined in the formal structure of the database put
+    forth by Fuchs et. al. (2021).
     """
 
     name = models.CharField(
@@ -108,23 +98,23 @@ class HeatFlow(ModelMeta, Site):
     def __str__(self):
         if self.name:
             return force_str(self.name)
-        else:
+        elif self.geom:
             return f"{self.geom.latitude}, {self.geom.longitude}"
+        return self._meta.verbose_name
 
     def get_absolute_url(self):
         return reverse("geoluminate:site", kwargs={"pk": self.pk})
 
 
 class Interval(models.Model):
-    """Abstract base class for the GHFDB Interval model. All fields are stored
-    in this abstract class so that multiple tables can be constructed using
-    the same field definitions (e.g. for the review app).
-
-    Note: This is the "Child" table from the GHFDB structure publications and
-    stores a Foreign Key to the Site (parent) table.
+    """Interval heat flow as part of the Global Heat Flow Database. This is
+    the "child" schema outlined in the formal structure of the database put
+    forth by Fuchs et al (2021).
     """
     id = ShortUUIDField(
+        verbose_name='ID',
         length=8,
+        blank=True,
         max_length=15,
         prefix="GHFI-",
         alphabet="23456789ABCDEFGHJKLMNPQRSTUVWXYZ",
@@ -143,6 +133,7 @@ class Interval(models.Model):
     qc = models.FloatField(_("heat flow"), help_text=_('heat flow value'))
     qc_unc = RangeField(_("uncertainty"),
                         help_text=_('uncertainty standard deviation of the reported heat-flow value as estimated by an error propagation from uncertainty in thermal conductivity and temperature gradient (corrected preferred over measured gradient).'),
+                        # description='',
                         min_value=0,
                         blank=True, null=True)
     q_method = ChoicesForeignKey(_("method"),
@@ -348,48 +339,6 @@ class Interval(models.Model):
         return '{}-{}'.format(obj.q_top, obj.q_bot)
 
 
-class Choice(models.Model):
-    """This is a generic model for storing modifiable choices in a single table.
-    Each `type` relates to a collection of choices that can be utilised by
-    `django.db.models.ChoiceField` fields in other models.
-    """
-    class TypeChoices(models.TextChoices):
-        CON_PT = 'tc_pTcond', _('TC PT Conditions')
-        CON_SAT = 'tc_satur', _('TC Saturation State')
-        CON_SRC = 'tc_source', _('TC Source')
-        CORR = 'corrections', _('Correction')
-        ENV = 'env', _('Environment')
-        EX_METH = 'method', _('Exploration Method')
-        EX_PUR = 'expl', _('Exploration Purpose')
-        HF_METH = 'q_method', _('Heat Flow Method')
-        PROBE = 'hf_probe', _('Probe Type')
-        TMP_COR = 'T_corr_method', _('Temp. Corr. Method')
-        TMP_METH = 'T_method', _('Temp. Method')
-        TRA_MEC = 'q_tf_mech', _('Transfer Mechanism')
-
-    type = models.CharField(_('type'),
-                            choices=TypeChoices.choices,
-                            max_length=16)
-    code = models.CharField(_('code'), max_length=64)
-    name = models.CharField(_('name'), max_length=128)
-    description = CKEditor5Field(_('description'),
-                                 blank=True, null=True)
-
-    class Meta:
-        verbose_name = _('Choice')
-        verbose_name_plural = _('Choices')
-        unique_together = ('type', 'code')
-        ordering = ['type', 'code']
-
-    def __str__(self):
-        return f'{self.type}("{self.code}")'
-
-    @staticmethod
-    def autocomplete_search_fields():
-        # For Django Grappelli related lookups
-        return ("name__icontains", "code__icontains",)
-
-
 class IntervalCorrectionThrough(models.Model):
     """An intermediate table for the Interval-Correction m2m relationship that
     additionally stores a correction value."""
@@ -418,4 +367,4 @@ class IntervalCorrectionThrough(models.Model):
     def __str__(self):
         if self.applied == 0:
             return
-        return str(self.number)
+        return str(self.value)
