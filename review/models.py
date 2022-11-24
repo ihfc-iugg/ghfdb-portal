@@ -1,45 +1,64 @@
 from django.db import models
-from database.models.models import SiteAbstract, IntervalAbstract
+from database.models import HeatFlow, Interval
 from django.utils.translation import gettext as _
 
 
-# Create your models here.
 class Review(models.Model):
-    reviewer = models.OneToOneField("user.User", 
-    help_text=_('User reviewing this publication'),
-    on_delete=models.SET_NULL,
-    null=True)
-    nominated = models.DateTimeField(_('reviewer nominated'), auto_now_add=True,
-    help_text=_('Date the user nominated themselves to review this publication'),
+    """Stores information about each review"""
+    reviewer = models.ForeignKey(
+        to="user.User",
+        help_text=_(
+            'User reviewing this publication'),
+        on_delete=models.SET_NULL,
+        null=True)
+    nominated = models.DateTimeField(
+        verbose_name=_('reviewer nominated'), auto_now_add=True,
+        help_text=_(
+            'Date the user nominated themselves to review this publication'),
     )
-    accepted = models.DateTimeField(_('review accepted'),
-    help_text=_('Date the review was accepted by site admins and incorporated into the production database'),
-    null=True, blank=True,
+    accepted = models.DateTimeField(
+        verbose_name=_('review accepted'),
+        help_text=_(
+            'Date the review was accepted by site admins and incorporated into the production database'),
+        null=True, blank=True,
     )
-    submitted = models.DateTimeField(_('review submitted'),
-    help_text=_('Date the user submitted correction for final approval by site admins'),
-    null=True, blank=True)
-    publication = models.OneToOneField("publications.Publication", 
-    help_text=_('Publication being review'),
-    on_delete=models.SET_NULL, null=True)
+    submitted = models.DateTimeField(
+        verbose_name=_('review submitted'),
+        help_text=_(
+            'Date the user submitted correction for final approval by site admins'),
+        null=True, blank=True)
+    publication = models.OneToOneField(
+        to="literature.Publication",
+        help_text=_('Publication being reviewed'),
+        on_delete=models.SET_NULL, null=True)
+
+    def __str__(self):
+        return f"Review of {self.publication} by {self.reviewer}"
 
 
-class ReviewSite(SiteAbstract):
-    class Meta(SiteAbstract.Meta):
-        db_table = 'site_review'
-        default_related_name = 'review_sites'
+class HeatFlowReview(HeatFlow):
+    review_of = models.OneToOneField(
+        'database.HeatFlow',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='revised'
+    )
+
+    review = models.ForeignKey(Review, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'heat_flow_review'
 
 
-class ReviewInterval(IntervalAbstract):
+class IntervalReview(Interval):
+    review_of = models.OneToOneField(
+        'database.Interval',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='revised'
 
-    site = models.ForeignKey("review.ReviewSite",
-                verbose_name=_("site"),
-                null=True,
-                on_delete=models.SET_NULL)
+    )
+    review = models.ForeignKey(Review, on_delete=models.CASCADE)
 
-    class Meta(IntervalAbstract.Meta):
-        db_table = 'heat_flow_interval_review'
-        default_related_name = 'review_intervals'
-
-    def save(self, force_insert, force_update, using, update_fields):
-        return super().save(force_insert, force_update, using, update_fields)
+    class Meta:
+        db_table = 'interval_review'
