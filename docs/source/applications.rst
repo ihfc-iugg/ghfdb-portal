@@ -1,4 +1,4 @@
-Documentation
+Applications
 ==============
 
 .. toctree::
@@ -6,5 +6,5 @@ Documentation
 
    apps/api
    apps/database
-   apps/project
+   apps/thermal_data
    apps/review

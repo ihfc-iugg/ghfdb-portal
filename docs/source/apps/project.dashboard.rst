@@ -1,7 +1,7 @@
-admin\_dashboard.py
+dashboard.py
 ================================
 
-.. automodule:: database.admin_dashboard
+.. automodule:: project.dashboard
    :members:
    :undoc-members:
    :show-inheritance:

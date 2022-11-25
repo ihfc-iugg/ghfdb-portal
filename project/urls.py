@@ -1,5 +1,7 @@
 """
-Contains the project wide url patterns used in the application.
+Contains project wide url patterns used in the application. You should
+only need to modify this file if you are adding or removing
+additional Django applications.
 
 For more information on this file, see
 https://docs.djangoproject.com/en/3.2/topics/http/urls/

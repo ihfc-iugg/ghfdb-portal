@@ -11,6 +11,8 @@ import sys
 from datetime import datetime
 # import pathlib
 import django
+from django.conf import settings
+
 
 for p in sys.path:
     x = '/global-heat-flow-database/'
@@ -23,9 +25,10 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'project.settings'
 django.setup()
 
 
-project = 'World Heat Flow Database Project'
-copyright = f'{datetime.now().year}, Sam Jennings'
-author = 'Sam Jennings'
+manager = getattr(settings, 'ADMINS')[0][0]
+project = getattr(settings, 'SITE_NAME')
+copyright = f'{datetime.now().year}, {manager}'
+author = manager
 release = '0.0.1'
 
 # -- General configuration ---------------------------------------------------
@@ -55,6 +58,9 @@ exclude_patterns = [
 html_theme = 'furo'
 html_static_path = ['_static']
 html_favicon = 'icon.svg'
+html_logo = 'logo.svg'
+html_title = 'WHFDB Documentation'
+html_short_title = 'WHFDB Project'
 
 autodoc_default_options = {
     "exclude-members": "__weakref__",
