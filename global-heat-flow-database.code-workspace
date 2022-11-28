@@ -3,10 +3,10 @@
 			"path": "../geoluminate",
 			"name": "GeoLuminate"
 		},
-		{
-			"name": "Django Crossref",
-			"path": "../django-crossref"
-		},
+		// {
+		// 	"name": "Django Crossref",
+		// 	"path": "../django-crossref"
+		// },
 		// {
 		// 	"name": "Django Earth Science",
 		// 	"path": "../django-earth-science"

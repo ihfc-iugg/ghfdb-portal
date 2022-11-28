@@ -3,7 +3,7 @@
 /static
 
 #no migration files except __init__.py
-*/migrations/0*
+*/migrations/
 
 # index.html
 
@@ -15,11 +15,9 @@
 # files used for testing ideas
 /playground*
 
+*dump
 plotly_test.html
 test.py
-ThermoGlobe_4Dec2020
-important_server_configuration_settings.txt
-bwt.pkl
 
 .vscode/
 /assets

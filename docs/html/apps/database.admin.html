@@ -278,7 +278,10 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="database.admin.HeatFlowAdmin.autocomplete_lookup_fields">
-<span class="sig-name descname"><span class="pre">autocomplete_lookup_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'fk':</span> <span class="pre">['reference',</span> <span class="pre">'geo_strat'],</span> <span class="pre">'m2m':</span> <span class="pre">[]}</span></em><a class="headerlink" href="#database.admin.HeatFlowAdmin.autocomplete_lookup_fields" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">autocomplete_lookup_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{</span>
+<span class="pre">'fk':</span> <span class="pre">['reference',</span> <span class="pre">'geo_strat'],</span>
+<span class="pre">'m2m':</span> <span class="pre">[]</span>
+<span class="pre">}</span></em><a class="headerlink" href="#database.admin.HeatFlowAdmin.autocomplete_lookup_fields" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -301,8 +304,8 @@ add_view and change_view.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="database.admin.HeatFlowAdmin.get_queryset">
 <span class="sig-name descname"><span class="pre">get_queryset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#database.admin.HeatFlowAdmin.get_queryset" title="Permalink to this definition">#</a></dt>
-<dd><p>Return a QuerySet of all model instances that can be edited by the
-admin site. This is used by changelist_view.</p>
+<dd><p>Modified to annotate ‘lat’ and ‘lon’ coordinates to the
+admin queryset.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -350,7 +353,9 @@ admin site. This is used by changelist_view.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="database.admin.SiteAdmin.autocomplete_lookup_fields">
-<span class="sig-name descname"><span class="pre">autocomplete_lookup_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'m2m':</span> <span class="pre">['references']}</span></em><a class="headerlink" href="#database.admin.SiteAdmin.autocomplete_lookup_fields" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">autocomplete_lookup_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{</span>
+<span class="pre">'m2m':</span> <span class="pre">['references']</span>
+<span class="pre">}</span></em><a class="headerlink" href="#database.admin.SiteAdmin.autocomplete_lookup_fields" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -371,8 +376,8 @@ admin site. This is used by changelist_view.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="database.admin.SiteAdmin.get_queryset">
 <span class="sig-name descname"><span class="pre">get_queryset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#database.admin.SiteAdmin.get_queryset" title="Permalink to this definition">#</a></dt>
-<dd><p>Return a QuerySet of all model instances that can be edited by the
-admin site. This is used by changelist_view.</p>
+<dd><p>Modified to annotate ‘lat’ and ‘lon’ coordinates to the
+admin queryset.</p>
 </dd></dl>
 
 <dl class="py attribute">

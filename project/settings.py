@@ -177,9 +177,9 @@ IMPORT_EXPORT_CELERY_MODELS = {
     }
 }
 
-DASHBOARDS = {
-    'user': 'user.dashboard.UserDashboard',
-}
+# DASHBOARDS = {
+#     'user': 'user.dashboard.UserDashboard',
+# }
 
 GEOLUMINATE_DATABASE = 'database.HeatFlow'
 GEOLUMINATE_API_ROUTERS = [
