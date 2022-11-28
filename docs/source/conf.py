@@ -9,7 +9,6 @@
 import os
 import sys
 from datetime import datetime
-# import pathlib
 import django
 from django.conf import settings
 
