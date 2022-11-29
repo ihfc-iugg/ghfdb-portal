@@ -268,12 +268,57 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="database.admin_forms.AdminIntervalForm.base_fields">
-<span class="sig-name descname"><span class="pre">base_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'T_corr_bot':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span> <span class="pre">'T_corr_top':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span> <span class="pre">'T_grad_mean_cor':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span> <span class="pre">'T_grad_mean_meas':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span> <span class="pre">'T_grad_unc_cor':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span> <span class="pre">'T_grad_unc_meas':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span> <span class="pre">'T_method_bot':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span> <span class="pre">'T_method_top':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span> <span class="pre">'T_numb':</span> <span class="pre">&lt;django.forms.fields.IntegerField</span> <span class="pre">object&gt;,</span> <span class="pre">'T_shutin_bot':</span> <span class="pre">&lt;django.forms.fields.IntegerField</span> <span class="pre">object&gt;,</span> <span class="pre">'T_shutin_top':</span> <span class="pre">&lt;django.forms.fields.IntegerField</span> <span class="pre">object&gt;,</span> <span class="pre">'T_tilt':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span> <span class="pre">'childcomp':</span> <span class="pre">&lt;django.forms.fields.NullBooleanField</span> <span class="pre">object&gt;,</span> <span class="pre">'corrections':</span> <span class="pre">&lt;django.forms.models.ModelMultipleChoiceField</span> <span class="pre">object&gt;,</span> <span class="pre">'geo_lith':</span> <span class="pre">&lt;treewidget.fields.TreeModelChoiceField</span> <span class="pre">object&gt;,</span> <span class="pre">'geo_strat':</span> <span class="pre">&lt;treewidget.fields.TreeModelChoiceField</span> <span class="pre">object&gt;,</span> <span class="pre">'hf_pen':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span> <span class="pre">'hf_probe':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span> <span class="pre">'hf_probeL':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span> <span class="pre">'historic_id':</span> <span class="pre">&lt;django.forms.fields.IntegerField</span> <span class="pre">object&gt;,</span> <span class="pre">'id':</span> <span class="pre">&lt;django.forms.fields.CharField</span> <span class="pre">object&gt;,</span> <span class="pre">'month':</span> <span class="pre">&lt;django.forms.fields.ChoiceField</span> <span class="pre">object&gt;,</span> <span class="pre">'q_acq':</span> <span class="pre">&lt;django.forms.fields.DateField</span> <span class="pre">object&gt;,</span> <span class="pre">'q_bot':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span> <span class="pre">'q_method':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span> <span class="pre">'q_tf_mech':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span> <span class="pre">'q_top':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span> <span class="pre">'qc':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span> <span class="pre">'qc_unc':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span> <span class="pre">'reference':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span> <span class="pre">'site':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span> <span class="pre">'tc_mean':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span> <span class="pre">'tc_meth':</span> <span class="pre">&lt;django.forms.fields.CharField</span> <span class="pre">object&gt;,</span> <span class="pre">'tc_numb':</span> <span class="pre">&lt;django.forms.fields.IntegerField</span> <span class="pre">object&gt;,</span> <span class="pre">'tc_pTcond':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span> <span class="pre">'tc_pTfunc':</span> <span class="pre">&lt;django.forms.fields.CharField</span> <span class="pre">object&gt;,</span> <span class="pre">'tc_satur':</span> <span class="pre">&lt;django.forms.fields.CharField</span> <span class="pre">object&gt;,</span> <span class="pre">'tc_source':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span> <span class="pre">'tc_strategy':</span> <span class="pre">&lt;django.forms.fields.CharField</span> <span class="pre">object&gt;,</span> <span class="pre">'tc_unc':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span> <span class="pre">'year':</span> <span class="pre">&lt;django.forms.fields.IntegerField</span> <span class="pre">object&gt;}</span></em><a class="headerlink" href="#database.admin_forms.AdminIntervalForm.base_fields" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">base_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{</span>
+<span class="pre">'T_corr_bot':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'T_corr_top':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'T_grad_mean_cor':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'T_grad_mean_meas':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'T_grad_unc_cor':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'T_grad_unc_meas':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'T_method_bot':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'T_method_top':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'T_numb':</span> <span class="pre">&lt;django.forms.fields.IntegerField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'T_shutin_bot':</span> <span class="pre">&lt;django.forms.fields.IntegerField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'T_shutin_top':</span> <span class="pre">&lt;django.forms.fields.IntegerField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'T_tilt':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'childcomp':</span> <span class="pre">&lt;django.forms.fields.NullBooleanField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'corrections':</span> <span class="pre">&lt;django.forms.models.ModelMultipleChoiceField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'geo_lith':</span> <span class="pre">&lt;treewidget.fields.TreeModelChoiceField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'geo_strat':</span> <span class="pre">&lt;treewidget.fields.TreeModelChoiceField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'hf_pen':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'hf_probe':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'hf_probeL':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'historic_id':</span> <span class="pre">&lt;django.forms.fields.IntegerField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'id':</span> <span class="pre">&lt;django.forms.fields.CharField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'month':</span> <span class="pre">&lt;django.forms.fields.ChoiceField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'q_acq':</span> <span class="pre">&lt;django.forms.fields.DateField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'q_bot':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'q_method':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'q_tf_mech':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'q_top':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'qc':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'qc_unc':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'reference':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'site':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'tc_mean':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'tc_meth':</span> <span class="pre">&lt;django.forms.fields.CharField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'tc_numb':</span> <span class="pre">&lt;django.forms.fields.IntegerField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'tc_pTcond':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'tc_pTfunc':</span> <span class="pre">&lt;django.forms.fields.CharField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'tc_satur':</span> <span class="pre">&lt;django.forms.fields.CharField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'tc_source':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'tc_strategy':</span> <span class="pre">&lt;django.forms.fields.CharField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'tc_unc':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'year':</span> <span class="pre">&lt;django.forms.fields.IntegerField</span> <span class="pre">object&gt;</span>
+<span class="pre">}</span></em><a class="headerlink" href="#database.admin_forms.AdminIntervalForm.base_fields" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="database.admin_forms.AdminIntervalForm.declared_fields">
-<span class="sig-name descname"><span class="pre">declared_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'month':</span> <span class="pre">&lt;django.forms.fields.ChoiceField</span> <span class="pre">object&gt;,</span> <span class="pre">'year':</span> <span class="pre">&lt;django.forms.fields.IntegerField</span> <span class="pre">object&gt;}</span></em><a class="headerlink" href="#database.admin_forms.AdminIntervalForm.declared_fields" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">declared_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{</span>
+<span class="pre">'month':</span> <span class="pre">&lt;django.forms.fields.ChoiceField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'year':</span> <span class="pre">&lt;django.forms.fields.IntegerField</span> <span class="pre">object&gt;</span>
+<span class="pre">}</span></em><a class="headerlink" href="#database.admin_forms.AdminIntervalForm.declared_fields" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -307,12 +352,22 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="database.admin_forms.AdminSiteForm.base_fields">
-<span class="sig-name descname"><span class="pre">base_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'elevation':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span> <span class="pre">'geographic':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span> <span class="pre">'geom':</span> <span class="pre">&lt;django.contrib.gis.forms.fields.PointField</span> <span class="pre">object&gt;,</span> <span class="pre">'id':</span> <span class="pre">&lt;django.forms.fields.CharField</span> <span class="pre">object&gt;,</span> <span class="pre">'month':</span> <span class="pre">&lt;django.forms.fields.ChoiceField</span> <span class="pre">object&gt;,</span> <span class="pre">'year':</span> <span class="pre">&lt;django.forms.fields.IntegerField</span> <span class="pre">object&gt;}</span></em><a class="headerlink" href="#database.admin_forms.AdminSiteForm.base_fields" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">base_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{</span>
+<span class="pre">'elevation':</span> <span class="pre">&lt;django.forms.fields.FloatField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'geographic':</span> <span class="pre">&lt;django.forms.models.ModelChoiceField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'geom':</span> <span class="pre">&lt;django.contrib.gis.forms.fields.PointField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'id':</span> <span class="pre">&lt;django.forms.fields.CharField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'month':</span> <span class="pre">&lt;django.forms.fields.ChoiceField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'year':</span> <span class="pre">&lt;django.forms.fields.IntegerField</span> <span class="pre">object&gt;</span>
+<span class="pre">}</span></em><a class="headerlink" href="#database.admin_forms.AdminSiteForm.base_fields" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="database.admin_forms.AdminSiteForm.declared_fields">
-<span class="sig-name descname"><span class="pre">declared_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'month':</span> <span class="pre">&lt;django.forms.fields.ChoiceField</span> <span class="pre">object&gt;,</span> <span class="pre">'year':</span> <span class="pre">&lt;django.forms.fields.IntegerField</span> <span class="pre">object&gt;}</span></em><a class="headerlink" href="#database.admin_forms.AdminSiteForm.declared_fields" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">declared_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{</span>
+<span class="pre">'month':</span> <span class="pre">&lt;django.forms.fields.ChoiceField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'year':</span> <span class="pre">&lt;django.forms.fields.IntegerField</span> <span class="pre">object&gt;</span>
+<span class="pre">}</span></em><a class="headerlink" href="#database.admin_forms.AdminSiteForm.declared_fields" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -329,12 +384,18 @@
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ModelForm</span></code></p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="database.admin_forms.YearMonthMixin.base_fields">
-<span class="sig-name descname"><span class="pre">base_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'month':</span> <span class="pre">&lt;django.forms.fields.ChoiceField</span> <span class="pre">object&gt;,</span> <span class="pre">'year':</span> <span class="pre">&lt;django.forms.fields.IntegerField</span> <span class="pre">object&gt;}</span></em><a class="headerlink" href="#database.admin_forms.YearMonthMixin.base_fields" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">base_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{</span>
+<span class="pre">'month':</span> <span class="pre">&lt;django.forms.fields.ChoiceField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'year':</span> <span class="pre">&lt;django.forms.fields.IntegerField</span> <span class="pre">object&gt;</span>
+<span class="pre">}</span></em><a class="headerlink" href="#database.admin_forms.YearMonthMixin.base_fields" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="database.admin_forms.YearMonthMixin.declared_fields">
-<span class="sig-name descname"><span class="pre">declared_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'month':</span> <span class="pre">&lt;django.forms.fields.ChoiceField</span> <span class="pre">object&gt;,</span> <span class="pre">'year':</span> <span class="pre">&lt;django.forms.fields.IntegerField</span> <span class="pre">object&gt;}</span></em><a class="headerlink" href="#database.admin_forms.YearMonthMixin.declared_fields" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">declared_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{</span>
+<span class="pre">'month':</span> <span class="pre">&lt;django.forms.fields.ChoiceField</span> <span class="pre">object&gt;,</span>
+<span class="pre">'year':</span> <span class="pre">&lt;django.forms.fields.IntegerField</span> <span class="pre">object&gt;</span>
+<span class="pre">}</span></em><a class="headerlink" href="#database.admin_forms.YearMonthMixin.declared_fields" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
