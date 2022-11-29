@@ -179,6 +179,7 @@ drf-nested-routers = "*"
 drf-schema-adapter = "*"
 sphinx = "*"
 furo = "*"
+django-cms-parallax = {editable = true, git = "https://github.com/SSJenny90/djangocms-parallax"}
 
 [requires]
 python_version = "3.9"
