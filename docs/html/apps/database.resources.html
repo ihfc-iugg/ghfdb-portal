@@ -307,7 +307,11 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="database.resources.IntervalResource.Meta.widgets">
-<span class="sig-name descname"><span class="pre">widgets</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'q_acq':</span> <span class="pre">{'format':</span> <span class="pre">'%Y-%m-%d'}}</span></em><a class="headerlink" href="#database.resources.IntervalResource.Meta.widgets" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">widgets</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{</span>
+<span class="pre">'q_acq':</span> <span class="pre">{</span>
+<span class="pre">'format':</span> <span class="pre">'%Y-%m-%d'</span>
+<span class="pre">}</span>
+<span class="pre">}</span></em><a class="headerlink" href="#database.resources.IntervalResource.Meta.widgets" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -331,7 +335,48 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="database.resources.IntervalResource.fields">
-<span class="sig-name descname"><span class="pre">fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'T_corr_bot':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_corr_bot&gt;,</span> <span class="pre">'T_corr_top':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_corr_top&gt;,</span> <span class="pre">'T_grad_mean_cor':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_grad_mean_cor&gt;,</span> <span class="pre">'T_grad_mean_meas':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_grad_mean_meas&gt;,</span> <span class="pre">'T_grad_unc_cor':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_grad_unc_cor&gt;,</span> <span class="pre">'T_grad_unc_meas':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_grad_unc_meas&gt;,</span> <span class="pre">'T_method_bot':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_method_bot&gt;,</span> <span class="pre">'T_method_top':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_method_top&gt;,</span> <span class="pre">'T_numb':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_numb&gt;,</span> <span class="pre">'T_shutin_bot':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_shutin_bot&gt;,</span> <span class="pre">'T_shutin_top':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_shutin_top&gt;,</span> <span class="pre">'T_tilt':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_tilt&gt;,</span> <span class="pre">'childcomp':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">childcomp&gt;,</span> <span class="pre">'corrections':</span> <span class="pre">&lt;database.widgets.CorrectionField:</span> <span class="pre">corrections&gt;,</span> <span class="pre">'geo_lith':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">geo_lith&gt;,</span> <span class="pre">'geo_strat':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">geo_strat&gt;,</span> <span class="pre">'hf_pen':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">hf_pen&gt;,</span> <span class="pre">'hf_probe':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">hf_probe&gt;,</span> <span class="pre">'hf_probeL':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">hf_probeL&gt;,</span> <span class="pre">'historic_id':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">historic_id&gt;,</span> <span class="pre">'id':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">id&gt;,</span> <span class="pre">'q_acq':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">q_acq&gt;,</span> <span class="pre">'q_bot':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">q_bot&gt;,</span> <span class="pre">'q_method':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">q_method&gt;,</span> <span class="pre">'q_tf_mech':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">q_tf_mech&gt;,</span> <span class="pre">'q_top':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">q_top&gt;,</span> <span class="pre">'qc':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">qc&gt;,</span> <span class="pre">'qc_unc':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">qc_unc&gt;,</span> <span class="pre">'reference':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">reference&gt;,</span> <span class="pre">'reference_id':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">Ref_1&gt;,</span> <span class="pre">'site':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">site&gt;,</span> <span class="pre">'tc_mean':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">tc_mean&gt;,</span> <span class="pre">'tc_meth':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">tc_meth&gt;,</span> <span class="pre">'tc_numb':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">tc_numb&gt;,</span> <span class="pre">'tc_pTcond':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">tc_pTcond&gt;,</span> <span class="pre">'tc_pTfunc':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">tc_pTfunc&gt;,</span> <span class="pre">'tc_satur':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">tc_satur&gt;,</span> <span class="pre">'tc_source':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">tc_source&gt;,</span> <span class="pre">'tc_strategy':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">tc_strategy&gt;,</span> <span class="pre">'tc_unc':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">tc_unc&gt;}</span></em><a class="headerlink" href="#database.resources.IntervalResource.fields" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{</span>
+<span class="pre">'T_corr_bot':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_corr_bot&gt;,</span>
+<span class="pre">'T_corr_top':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_corr_top&gt;,</span>
+<span class="pre">'T_grad_mean_cor':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_grad_mean_cor&gt;,</span>
+<span class="pre">'T_grad_mean_meas':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_grad_mean_meas&gt;,</span>
+<span class="pre">'T_grad_unc_cor':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_grad_unc_cor&gt;,</span>
+<span class="pre">'T_grad_unc_meas':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_grad_unc_meas&gt;,</span>
+<span class="pre">'T_method_bot':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_method_bot&gt;,</span>
+<span class="pre">'T_method_top':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_method_top&gt;,</span>
+<span class="pre">'T_numb':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_numb&gt;,</span>
+<span class="pre">'T_shutin_bot':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_shutin_bot&gt;,</span>
+<span class="pre">'T_shutin_top':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_shutin_top&gt;,</span>
+<span class="pre">'T_tilt':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">T_tilt&gt;,</span>
+<span class="pre">'childcomp':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">childcomp&gt;,</span>
+<span class="pre">'corrections':</span> <span class="pre">&lt;database.widgets.CorrectionField:</span> <span class="pre">corrections&gt;,</span>
+<span class="pre">'geo_lith':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">geo_lith&gt;,</span>
+<span class="pre">'geo_strat':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">geo_strat&gt;,</span>
+<span class="pre">'hf_pen':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">hf_pen&gt;,</span>
+<span class="pre">'hf_probe':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">hf_probe&gt;,</span>
+<span class="pre">'hf_probeL':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">hf_probeL&gt;,</span>
+<span class="pre">'historic_id':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">historic_id&gt;,</span>
+<span class="pre">'id':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">id&gt;,</span>
+<span class="pre">'q_acq':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">q_acq&gt;,</span>
+<span class="pre">'q_bot':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">q_bot&gt;,</span>
+<span class="pre">'q_method':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">q_method&gt;,</span>
+<span class="pre">'q_tf_mech':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">q_tf_mech&gt;,</span>
+<span class="pre">'q_top':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">q_top&gt;,</span>
+<span class="pre">'qc':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">qc&gt;,</span>
+<span class="pre">'qc_unc':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">qc_unc&gt;,</span>
+<span class="pre">'reference':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">reference&gt;,</span>
+<span class="pre">'reference_id':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">Ref_1&gt;,</span>
+<span class="pre">'site':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">site&gt;,</span>
+<span class="pre">'tc_mean':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">tc_mean&gt;,</span>
+<span class="pre">'tc_meth':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">tc_meth&gt;,</span>
+<span class="pre">'tc_numb':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">tc_numb&gt;,</span>
+<span class="pre">'tc_pTcond':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">tc_pTcond&gt;,</span>
+<span class="pre">'tc_pTfunc':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">tc_pTfunc&gt;,</span>
+<span class="pre">'tc_satur':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">tc_satur&gt;,</span>
+<span class="pre">'tc_source':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">tc_source&gt;,</span>
+<span class="pre">'tc_strategy':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">tc_strategy&gt;,</span>
+<span class="pre">'tc_unc':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">tc_unc&gt;</span>
+<span class="pre">}</span></em><a class="headerlink" href="#database.resources.IntervalResource.fields" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -362,7 +407,11 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="database.resources.SiteResource.Meta.widgets">
-<span class="sig-name descname"><span class="pre">widgets</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'q_acq':</span> <span class="pre">{'format':</span> <span class="pre">'%Y-%m'}}</span></em><a class="headerlink" href="#database.resources.SiteResource.Meta.widgets" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">widgets</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{</span>
+<span class="pre">'q_acq':</span> <span class="pre">{</span>
+<span class="pre">'format':</span> <span class="pre">'%Y-%m'</span>
+<span class="pre">}</span>
+<span class="pre">}</span></em><a class="headerlink" href="#database.resources.SiteResource.Meta.widgets" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -375,7 +424,23 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="database.resources.SiteResource.fields">
-<span class="sig-name descname"><span class="pre">fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'elevation':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">elevation&gt;,</span> <span class="pre">'env':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">env&gt;,</span> <span class="pre">'expl':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">expl&gt;,</span> <span class="pre">'geographic':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">geographic&gt;,</span> <span class="pre">'geom':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">geom&gt;,</span> <span class="pre">'last_modified':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">last_modified&gt;,</span> <span class="pre">'method':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">method&gt;,</span> <span class="pre">'name':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">name&gt;,</span> <span class="pre">'q':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">q&gt;,</span> <span class="pre">'q_acq':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">q_acq&gt;,</span> <span class="pre">'q_comment':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">q_comment&gt;,</span> <span class="pre">'q_unc':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">q_unc&gt;,</span> <span class="pre">'references':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">references&gt;,</span> <span class="pre">'site_ptr':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">site_ptr&gt;,</span> <span class="pre">'wat_temp':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">wat_temp&gt;}</span></em><a class="headerlink" href="#database.resources.SiteResource.fields" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{</span>
+<span class="pre">'elevation':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">elevation&gt;,</span>
+<span class="pre">'env':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">env&gt;,</span>
+<span class="pre">'expl':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">expl&gt;,</span>
+<span class="pre">'geographic':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">geographic&gt;,</span>
+<span class="pre">'geom':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">geom&gt;,</span>
+<span class="pre">'last_modified':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">last_modified&gt;,</span>
+<span class="pre">'method':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">method&gt;,</span>
+<span class="pre">'name':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">name&gt;,</span>
+<span class="pre">'q':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">q&gt;,</span>
+<span class="pre">'q_acq':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">q_acq&gt;,</span>
+<span class="pre">'q_comment':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">q_comment&gt;,</span>
+<span class="pre">'q_unc':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">q_unc&gt;,</span>
+<span class="pre">'references':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">references&gt;,</span>
+<span class="pre">'site_ptr':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">site_ptr&gt;,</span>
+<span class="pre">'wat_temp':</span> <span class="pre">&lt;import_export.fields.Field:</span> <span class="pre">wat_temp&gt;</span>
+<span class="pre">}</span></em><a class="headerlink" href="#database.resources.SiteResource.fields" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
