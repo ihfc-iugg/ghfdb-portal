@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     "geoscience.gis.provinces",
     "ghfdb",
     "review",
-    "datatables",
     # "thermal_data",
     # "well_logs",
 ]
