@@ -1,28 +1,45 @@
 {
-	"folders": [{
+	"folders": [
+		{
+			"name": "Miscellaneous Apps",
+			"path": "../miscellaneous"
+		},
+		{
 			"path": "../geoluminate",
-			"name": "GeoLuminate"
+			"name": "Geoluminate"
 		},
 		{
-			"name": "Django Crossref",
-			"path": "../django-crossref"
+			"name": "Literature Management",
+			"path": "../django-literature"
 		},
-		// {
-		// 	"name": "Django Earth Science",
-		// 	"path": "../django-earth-science"
-		// },
-		// {
-		// 	"name": "Django Well Logs",
-		// 	"path": "../django-well-logs"
-		// },
-		// {
-		// 	"name": "Global Tectonics",
-		// 	"path": "../django-global-tectonics"
-		// },
 		{
-			"path": ".",
-			"name": "Global Heat Flow"
+			"name": "Global Heat Flow",
+			"path": "../global-heat-flow-database"
 		},
+		{
+			"name": "Organizations",
+			"path": "../django-ror"
+		},
+		{
+			"name": "django-licensing",
+			"path": "../django-licensing"
+		},
+		{
+			"name": "django-laboratory",
+			"path": "../django-laboratory"
+		},
+		{
+			"name": "django-earth-science",
+			"path": "../django-earth-science"
+		},
+		{
+			"name": "django-well-logs",
+			"path": "../django-well-logs"
+		},
+		{
+			"name": "django-datatables",
+			"path": "../django-auto-datatables"
+		}
 	],
 	"settings": {
 		"liveServer.settings.multiRootWorkspaceName": "Global Heat Flow",
@@ -31,9 +48,29 @@
 			"**/__pycache__": true
 		},
 		"python.linting.pycodestyleEnabled": true,
-		"python.formatting.provider": "autopep8",
-		"python.formatting.autopep8Args": ["--aggressive"],
-		"editor.formatOnSave": true,
+		// "python.formatting.provider": "black",
+		"terminal.integrated.env.linux": {
+			"PYTHONPATH": "../django-ror:../django-crossref:../django-auto-datatables:../django-licensing:../django-laboratory:../geoluminate:../django-earth-science:../django-literature:../miscellaneous",
+			"PIPENV_VERBOSITY":-1
+		},
+		"[python]": {
+			"editor.defaultFormatter": "ms-python.black-formatter",
+			"editor.formatOnSave": true,
+			"editor.codeActionsOnSave": {
+				"source.organizeImports": true
+			},
 
+		},
+		"[django-html]": {
+			"editor.formatOnSave": true,
+			// "editor.defaultFormatter": "monosans.djlint",
+			// "editor.foldingStrategy": "indentation"
+		},
+
+		"isort.args": [
+			"--profile",
+			"black"
+		],
+		"esbonio.sphinx.confDir": "",
 	}
 }
