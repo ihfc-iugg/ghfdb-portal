@@ -60,6 +60,8 @@ sentry-sdk = {extras = ["django"], version = "*"}
 django-cors-headers = "*"
 django-compressor = "*"
 django-libsass = "*"
+django-earth-science = {git = "https://github.com/Geoluminate/django-earth-science"}
+geoluminate-earth-science = {git = "https://github.com/Geoluminate/geoluminate-earth-science"}
 
 [dev-packages]
 autopep8 = "*"

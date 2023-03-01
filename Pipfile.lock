@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "5b183772889d61117a3b28b7bfd0fc3082ad6846945d8e881f25919bb40ec9a1"
+            "sha256": "b445d304c977e848913ee40b12e5ce0cf20ab387f8231814db8afea66f809761"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -498,6 +498,10 @@
             "index": "pypi",
             "version": "==4.0.2"
         },
+        "django-earth-science": {
+            "git": "https://github.com/Geoluminate/django-earth-science",
+            "ref": "a9c014c2d60460c9a878a59924c2faba5ebe2bfe"
+        },
         "django-entangled": {
             "hashes": [
                 "sha256:6011bc1bfd3dfeeed1df8b9197a84cef1f810adb7f41b92f339963e181a9211d",
@@ -800,6 +804,12 @@
             "markers": "python_version >= '3.6'",
             "version": "==4.4"
         },
+        "django-treewidget": {
+            "hashes": [
+                "sha256:00f8cf7096d7b357183d0c278d498a54c90a20e706bcbf92bb8b9048241ed278"
+            ],
+            "version": "==0.4.2"
+        },
         "djangocms-admin-style": {
             "hashes": [
                 "sha256:1c0d962e2d70bcce7ff270a187558dedf6f6d626e0e5e31d50a0331105d75e87",
@@ -924,6 +934,10 @@
             ],
             "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==0.18.3"
+        },
+        "geoluminate-earth-science": {
+            "git": "https://github.com/Geoluminate/geoluminate-earth-science",
+            "ref": "a9c014c2d60460c9a878a59924c2faba5ebe2bfe"
         },
         "gunicorn": {
             "hashes": [
@@ -1895,6 +1909,13 @@
         }
     },
     "develop": {
+        "accessible-pygments": {
+            "hashes": [
+                "sha256:0917b507646a6b3393eb49091a62506f6b2a3935f5d95e4d1249dc505f8a4eae",
+                "sha256:6a643a2979b1f14fead79a8bbf51a6ae09e9df70d5ed60bb61a6eb9092cdcb81"
+            ],
+            "version": "==0.0.3"
+        },
         "alabaster": {
             "hashes": [
                 "sha256:1ee19aca801bbabb5ba3f5f258e4422dfa86f82f3e9cefb0859b283cdd7f62a3",
@@ -2247,7 +2268,6 @@
             "hashes": [
                 "sha256:00f8cf7096d7b357183d0c278d498a54c90a20e706bcbf92bb8b9048241ed278"
             ],
-            "index": "pypi",
             "version": "==0.4.2"
         },
         "djangorestframework": {
@@ -2742,11 +2762,11 @@
         },
         "pydata-sphinx-theme": {
             "hashes": [
-                "sha256:8cf8fbc74c6c47d6ed497a91f3bedf94d57383b52eebb4fa05ae7fc4f50767a2",
-                "sha256:aa0ae055de5de36a637387941d0e18d8dad35d97d56f0faf25f5219658d49df2"
+                "sha256:0c012b633c20ded12b5d7912c46d5ec51a1ad0ad423d5f77a085189e473c4d94",
+                "sha256:f884d40bb69d31d964ff19d6064f7bceaaa6341935fdbc092d5c249d1ff00b52"
             ],
-            "markers": "python_version >= '3.5'",
-            "version": "==0.4.3"
+            "markers": "python_version >= '3.7'",
+            "version": "==0.13.0"
         },
         "pygments": {
             "hashes": [
@@ -2975,11 +2995,11 @@
         },
         "sphinx-book-theme": {
             "hashes": [
-                "sha256:07f9651233cb8ad4f5bde2b88205597622c6ef57c4d9f8799e93999e7ac4f070",
-                "sha256:ca6c8e53b6b39a5ef61b2826fcddb82d81e6a29ca2399a6c18237ae4888e3c8c"
+                "sha256:7c76ea51347e55d801504bfb1b2433cba49e7212a25fbebd0ce44b3c098ea946",
+                "sha256:f6baba7888d5a63328a210e9960a7a6e951e9632d74edb6fce48c9d5d8c28768"
             ],
             "index": "pypi",
-            "version": "==0.0.39"
+            "version": "==1.0.0"
         },
         "sphinx-copybutton": {
             "hashes": [
