@@ -50,7 +50,7 @@
 		"python.linting.pycodestyleEnabled": true,
 		// "python.formatting.provider": "black",
 		"terminal.integrated.env.linux": {
-			"PYTHONPATH": "../django-ror:../django-crossref:../django-licensing:../django-laboratory:../geoluminate:../django-earth-science:../django-literature:../miscellaneous",
+			"PYTHONPATH": "../django-ror:../django-crossref:../django-licensing:../django-laboratory:../geoluminate:../django-earth-science:../django-literature:",
 			"PIPENV_VERBOSITY":-1
 		},
 		"[python]": {

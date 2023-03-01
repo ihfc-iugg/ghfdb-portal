@@ -95,7 +95,7 @@ TREEWIDGET_TREEOPTIONS = {
 
 
 SPAGHETTI_SAUCE = {
-    "apps": ["database", "literature"],
+    "apps": ["ghfdb", "literature"],
     "show_fields": False,
     "exclude": {"auth": ["user"]},
 }
