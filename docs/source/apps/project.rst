@@ -1,7 +1,0 @@
-.. toctree::
-   :maxdepth: 2
-
-   project.dashboard
-   project.settings
-   project.urls
-   project.wsgi
