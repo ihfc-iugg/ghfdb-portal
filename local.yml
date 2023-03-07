@@ -48,7 +48,7 @@ services:
     volumes:
       - ./docs:/docs:z
       - ./config:/app/config:z
-      - ./ghfdb:/app/ghfdb:z
+      - ./project:/app/project:z
     ports:
       - "9000:9000"
     command: /start-docs

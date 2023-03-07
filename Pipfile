@@ -4,22 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-geoluminate-earth-science = {git = "https://github.com/Geoluminate/geoluminate-earth-science"}
-geoluminate = {ref = "master", git = "https://github.com/Geoluminate/geoluminate"}
 
 [dev-packages]
-ipython = "*"
-autopep8 = "*"
-pycodestyle = "*"
-sphinx = "*"
-coverage = "*"
-django-extensions = "*"
-djlint = "*"
-sphinx-copybutton = "*"
-sphinxext-opengraph = "*"
-sphinx-nested-apidoc = "*"
-sphinx-book-theme = "*"
-myst-parser = "*"
 
 [requires]
 python_version = "3.9"

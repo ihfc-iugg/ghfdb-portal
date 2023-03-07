@@ -1,45 +1,17 @@
 {
 	"folders": [
 		{
-			"name": "Miscellaneous Apps",
-			"path": "../miscellaneous"
-		},
-		{
-			"path": "../geoluminate",
-			"name": "Geoluminate"
-		},
-		{
-			"name": "Literature Management",
-			"path": "../django-literature"
-		},
-		{
 			"name": "Global Heat Flow",
-			"path": "../global-heat-flow-database"
+			"path": "../world-heat-flow-database"
 		},
 		{
-			"name": "Organizations",
-			"path": "../django-ror"
+			"name": "Data",
+			"path": "../GHFDB"
 		},
 		{
-			"name": "django-licensing",
-			"path": "../django-licensing"
+			"name": "Mapping",
+			"path": "../wem-map-app"
 		},
-		{
-			"name": "django-laboratory",
-			"path": "../django-laboratory"
-		},
-		{
-			"name": "django-earth-science",
-			"path": "../django-earth-science"
-		},
-		{
-			"name": "django-well-logs",
-			"path": "../django-well-logs"
-		},
-		{
-			"name": "django-datatables",
-			"path": "../django-auto-datatables"
-		}
 	],
 	"settings": {
 		"liveServer.settings.multiRootWorkspaceName": "Global Heat Flow",
