@@ -1,16 +1,16 @@
 {
 	"folders": [
 		{
+			"name": "Geoluminate",
+			"path": "../geoluminate"
+		},
+		{
 			"name": "Global Heat Flow",
-			"path": "../world-heat-flow-database"
+			"path": "../global-heat-flow-database"
 		},
 		{
-			"name": "Data",
-			"path": "../GHFDB"
-		},
-		{
-			"name": "Mapping",
-			"path": "../wem-map-app"
+			"name": "Organizations",
+			"path": "../django-ror"
 		},
 	],
 	"settings": {
