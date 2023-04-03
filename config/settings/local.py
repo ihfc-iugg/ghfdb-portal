@@ -1,15 +1,31 @@
+import environ
+
 from geoluminate.conf.local_defaults import *
 
 from .base import *  # noqa
 from .base import env
 
-# GENERAL
-# ------------------------------------------------------------------------------
-# https://docs.djangoproject.com/en/dev/ref/settings/#debug
 DEBUG = True
 
 HIDE_DEBUG_TOOLBAR = True
+env = environ.Env()
 
+READ_DOT_ENV_FILE = env.bool("DJANGO_READ_DOT_ENV_FILE", default=True)
+if READ_DOT_ENV_FILE:
+    # OS environment variables take precedence over variables from .env
+    env.read_env(str(BASE_DIR / ".env"))
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.contrib.gis.db.backends.postgis",
+        "NAME": env("DB_NAME"),
+        "USER": env("DB_USER"),
+        "PASSWORD": env("DB_PASSWORD"),
+        "HOST": "localhost",
+        "CONN_MAX_AGE": 0,
+        "ATOMIC_REQUESTS": True,
+    },
+}
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
 SECRET_KEY = env(
@@ -38,22 +54,18 @@ EMAIL_PORT = 1025
 
 # WhiteNoise
 # ------------------------------------------------------------------------------
-# http://whitenoise.evans.io/en/latest/django.html#using-whitenoise-in-development
+
 INSTALLED_APPS = ["whitenoise.runserver_nostatic"] + INSTALLED_APPS  # noqa F405
 
-# django-debug-toolbar
-# ------------------------------------------------------------------------------
 
-# https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#prerequisites
 INSTALLED_APPS += [
     "debug_toolbar",
 ]
 
 
-# https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#middleware
 # MIDDLEWARE += ["debug_toolbar.middleware.DebugToolbarMiddleware"]  # noqa F405
 
-# https://django-debug-toolbar.readthedocs.io/en/latest/configuration.html#debug-toolbar-config
+
 DEBUG_TOOLBAR_CONFIG = {
     "DISABLE_PANELS": ["debug_toolbar.panels.redirects.RedirectsPanel"],
     "SHOW_TEMPLATE_CONTEXT": True,
@@ -63,19 +75,16 @@ DEBUG_TOOLBAR_CONFIG = {
 #     "template_profiler_panel.panels.template.TemplateProfilerPanel",
 # ]
 
-
-# https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#internal-ips
 INTERNAL_IPS = ["127.0.0.1", "10.0.2.2"]
 
 
-if env("USE_DOCKER") == "yes":
-    import socket
+# if env("USE_DOCKER") == "yes":
+#     import socket
 
-    hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
-    INTERNAL_IPS += [".".join(ip.split(".")[:-1] + ["1"]) for ip in ips]
+#     hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
+#     INTERNAL_IPS += [".".join(ip.split(".")[:-1] + ["1"]) for ip in ips]
 
 
-# https://django-extensions.readthedocs.io/en/latest/installation_instructions.html#configuration
 INSTALLED_APPS += ["django_extensions"]  # noqa F405
 
 
@@ -95,3 +104,6 @@ DATABASES = {
 
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
 DATABASES["default"]["ENGINE"] = "django.contrib.gis.db.backends.postgis"
+COMPRESS_OFFLINE = False
+
+COMPRESS_PRECOMPILERS = (("text/x-scss", "django_libsass.SassCompiler"),)
