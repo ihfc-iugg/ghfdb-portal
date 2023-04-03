@@ -5,12 +5,15 @@ description = "Web application for the IHFC Global Heat Flow Database"
 authors = ["Sam <samuel.scott.jennings@gmail.com>"]
 license = "GPLv3"
 readme = "README.md"
-packages = [{include = "world_heat_flow_database"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-geoluminate = {git = "https://github.com/Geoluminate/geoluminate.git"}
-geoluminate-earth-science = {git = "https://github.com/Geoluminate/geoluminate-earth-science.git"}
+django-literature = {git = "https://github.com/SSJenny90/django-literature"}
+django-laboratory = {git = "https://github.com/SSJenny90/django-laboratory"}
+django-ror = {git = "https://github.com/SSJenny90/django-ror"}
+geoluminate-earth-science = {git = "https://github.com/Geoluminate/geoluminate-earth-science"}
+django-controlled-vocabulary = {git = "https://github.com/SSJenny90/django-controlled-vocabulary"}
+geoluminate = {path = "../geoluminate", develop = true}
 
 
 [tool.poetry.group.dev.dependencies]
@@ -36,6 +39,7 @@ werkzeug = {extras = ["watchdog"], version = "^2.2.3"}
 ipdb = "^0.13.11"
 psycopg2 = "^2.9.5"
 watchfiles = "^0.18.1"
+invoke = "^2.0.0"
 
 
 
