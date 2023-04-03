@@ -1,6 +1,7 @@
 # Folders and files
 ###################
 /static
+.code-workspace
 
 #no migration files except __init__.py
 **/migrations/*

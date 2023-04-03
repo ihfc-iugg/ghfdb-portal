@@ -9,9 +9,8 @@ packages = [{include = "world_heat_flow_database"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-psycopg2-binary = "^2.9.5"
-geoluminate = {path = "../geoluminate", develop = true}
-django-literature = {path = "../django-literature", develop = true}
+geoluminate = {git = "https://github.com/Geoluminate/geoluminate.git"}
+geoluminate-earth-science = {git = "https://github.com/Geoluminate/geoluminate-earth-science.git"}
 
 
 [tool.poetry.group.dev.dependencies]
@@ -35,11 +34,8 @@ pre-commit = "^3.1.1"
 django-debug-toolbar-template-profiler = "^2.1.0"
 werkzeug = {extras = ["watchdog"], version = "^2.2.3"}
 ipdb = "^0.13.11"
+psycopg2 = "^2.9.5"
 watchfiles = "^0.18.1"
-django-laboratory = {path = "../django-laboratory", develop = true}
-django-licensing = {path = "../django-licensing", develop = true}
-django-ror = {path = "../django-ror", develop = true}
-geoluminate-earth-science = {path = "../geoluminate-earth-science", develop = true}
 
 
 
