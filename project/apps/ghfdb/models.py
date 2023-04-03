@@ -8,11 +8,12 @@ from django.db import models
 from django.urls import reverse
 from django.utils.encoding import force_str
 from django.utils.translation import gettext as _
-from geoluminate.models import Geoluminate
 from geoscience.fields import EarthMaterialOneToOne, GeologicTimeOneToOne
 from ghfdb import choices
 from quantityfield.fields import PositiveIntegerQuantityField, QuantityField
 from shortuuid.django_fields import ShortUUIDField
+
+from geoluminate.models import Geoluminate
 
 
 class HeatFlow(Geoluminate):
@@ -300,110 +301,6 @@ class Interval(models.Model):
         null=True,
     )
 
-    # Temperature Fields
-    T_grad_mean = QuantityField(
-        base_units="K/km",
-        verbose_name=_("measured gradient"),
-        help_text=_(
-            "measured temperature gradient for the heat-flow determination interval."
-        ),
-        null=True,
-        blank=True,
-    )
-    T_grad_uncertainty = QuantityField(
-        base_units="K/km",
-        verbose_name=_("uncertainty"),
-        help_text=_(
-            "uncertainty (standard deviation) of the measured temperature gradient estimated by error propagation from uncertainty in the top and bottom interval temperatures."
-        ),
-        blank=True,
-        null=True,
-    )
-    T_grad_mean_cor = QuantityField(
-        base_units="K/km",
-        verbose_name=_("corrected gradient"),
-        help_text=_(
-            "temperature gradient corrected for borehole and environmental effects. Correction method should be recorded in the relevant field."
-        ),
-        blank=True,
-        null=True,
-    )
-    T_grad_uncertainty_cor = QuantityField(
-        base_units="K/km",
-        verbose_name=_("uncertainty"),
-        help_text=_(
-            "uncertainty (standard deviation) of the corrected temperature gradient estimated by error propagation from uncertainty of the measured gradient and the applied correction approaches."
-        ),
-        blank=True,
-        null=True,
-    )
-    T_method_top = ControlledTermField(
-        "T_method",
-        verbose_name=_("temperature method (top)"),
-        help_text=_(
-            "Method used to determine temperature at the top of the heat flow interval."
-        ),
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-    )
-    T_method_bottom = ControlledTermField(
-        "T_method",
-        verbose_name=_("temperature method (bottom)"),
-        help_text=_(
-            "Method used to determine temperature at the bottom of the heat flow interval."
-        ),
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-    )
-    T_shutin_top = PositiveIntegerQuantityField(
-        base_units="hour",
-        verbose_name=_("Shut-in time (top)"),
-        help_text=_(
-            "Time of measurement at the interval top in relation to the end of drilling/end of mud circulation. Positive values are measured after the drilling, 0 represents temperatures measured during the drilling."
-        ),
-        blank=True,
-        null=True,
-    )
-    T_shutin_bottom = PositiveIntegerQuantityField(
-        base_units="hour",
-        verbose_name=_("Shut-in time (bottom; hrs)"),
-        help_text=_(
-            "Time of measurement at the interval bottom in relation to the end of drilling/end of mud circulation. Positive values are measured after the drilling, 0 represents temperatures measured during the drilling."
-        ),
-        blank=True,
-        null=True,
-    )
-    T_correction_top = ControlledTermField(
-        "T_correction_method",
-        verbose_name=_("correction method (top)"),
-        help_text=_(
-            "Approach used at the top of the heat flow interval to correct the measured temperature for drilling perturbations."
-        ),
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-    )
-    T_correction_bottom = ControlledTermField(
-        "T_correction_method",
-        verbose_name=_("correction method (bottom)"),
-        help_text=_(
-            "Approach used at the bottom of the heat flow interval to correct the measured temperature for drilling perturbations."
-        ),
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-    )
-    T_count = models.PositiveSmallIntegerField(
-        _("number of temperature recordings"),
-        help_text=_(
-            "Number of discrete temperature points (e.g. number of used BHT values, log values or thermistors used in probe sensing) confirming the mean temperature gradient. Not the repetition of one measurement at a certain depth."
-        ),
-        blank=True,
-        null=True,
-    )
-
     # Conductivity fields
     tc_mean = QuantityField(
         base_units="W/mK",
@@ -524,6 +421,120 @@ class Interval(models.Model):
 
     def interval(self, obj):
         return "{}-{}".format(obj.q_top, obj.q_bot)
+
+
+class Temperature(models.Model):
+    interval = models.OneToOneField(
+        "ghfdb.Interval", on_delete=models.CASCADE, related_name="temp"
+    )
+
+    # Temperature Fields
+    grad_mean = QuantityField(
+        base_units="K/km",
+        verbose_name=_("measured gradient"),
+        help_text=_(
+            "measured temperature gradient for the heat-flow determination interval."
+        ),
+        null=True,
+        blank=True,
+    )
+    grad_uncertainty = QuantityField(
+        base_units="K/km",
+        verbose_name=_("uncertainty"),
+        help_text=_(
+            "uncertainty (standard deviation) of the measured temperature gradient estimated by error propagation from uncertainty in the top and bottom interval temperatures."
+        ),
+        blank=True,
+        null=True,
+    )
+    grad_mean_cor = QuantityField(
+        base_units="K/km",
+        verbose_name=_("corrected gradient"),
+        help_text=_(
+            "temperature gradient corrected for borehole and environmental effects. Correction method should be recorded in the relevant field."
+        ),
+        blank=True,
+        null=True,
+    )
+    grad_uncertainty_cor = QuantityField(
+        base_units="K/km",
+        verbose_name=_("uncertainty"),
+        help_text=_(
+            "uncertainty (standard deviation) of the corrected temperature gradient estimated by error propagation from uncertainty of the measured gradient and the applied correction approaches."
+        ),
+        blank=True,
+        null=True,
+    )
+    method_top = ControlledTermField(
+        "T_method",
+        verbose_name=_("temperature method (top)"),
+        help_text=_(
+            "Method used to determine temperature at the top of the heat flow interval."
+        ),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    method_bottom = ControlledTermField(
+        "T_method",
+        verbose_name=_("temperature method (bottom)"),
+        help_text=_(
+            "Method used to determine temperature at the bottom of the heat flow interval."
+        ),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    shutin_top = PositiveIntegerQuantityField(
+        base_units="hour",
+        verbose_name=_("Shut-in time (top)"),
+        help_text=_(
+            "Time of measurement at the interval top in relation to the end of drilling/end of mud circulation. Positive values are measured after the drilling, 0 represents temperatures measured during the drilling."
+        ),
+        blank=True,
+        null=True,
+    )
+    shutin_bottom = PositiveIntegerQuantityField(
+        base_units="hour",
+        verbose_name=_("Shut-in time (bottom; hrs)"),
+        help_text=_(
+            "Time of measurement at the interval bottom in relation to the end of drilling/end of mud circulation. Positive values are measured after the drilling, 0 represents temperatures measured during the drilling."
+        ),
+        blank=True,
+        null=True,
+    )
+    correction_top = ControlledTermField(
+        "T_correction_method",
+        verbose_name=_("correction method (top)"),
+        help_text=_(
+            "Approach used at the top of the heat flow interval to correct the measured temperature for drilling perturbations."
+        ),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    correction_bottom = ControlledTermField(
+        "T_correction_method",
+        verbose_name=_("correction method (bottom)"),
+        help_text=_(
+            "Approach used at the bottom of the heat flow interval to correct the measured temperature for drilling perturbations."
+        ),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    count = models.PositiveSmallIntegerField(
+        _("number of temperature recordings"),
+        help_text=_(
+            "Number of discrete temperature points (e.g. number of used BHT values, log values or thermistors used in probe sensing) confirming the mean temperature gradient. Not the repetition of one measurement at a certain depth."
+        ),
+        blank=True,
+        null=True,
+    )
+
+    class Meta:
+        verbose_name = _("Temperature")
+        verbose_name_plural = _("Temperature Data")
 
 
 class IntervalCorrectionThrough(models.Model):
