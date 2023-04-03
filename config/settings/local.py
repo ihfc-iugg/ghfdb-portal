@@ -88,3 +88,10 @@ CELERY_TASK_EAGER_PROPAGATES = True
 
 # ADDITIONAL SETTINGS
 # ------------------------------------------------------------------------------
+DATABASES = {
+    # DATABASE_URL var is set in compose/production/django/entrypoint.sh
+    "default": env.db("DATABASE_URL")
+}
+
+DATABASES["default"]["ATOMIC_REQUESTS"] = True
+DATABASES["default"]["ENGINE"] = "django.contrib.gis.db.backends.postgis"
