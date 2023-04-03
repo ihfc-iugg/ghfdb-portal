@@ -1,6 +1,0 @@
-django-laboratory = { git = "https://github.com/SSJenny90/django-laboratory.git", branch = "main" }
-django-literature = { git = "https://github.com/SSJenny90/django-literature.git", branch = "main" }
-django-ror = { git = "https://github.com/SSJenny90/django-ror.git", branch = "main" }
-django-tellme = { git = "https://github.com/ludrao/django-tellme.git", branch = "master" }
-geoluminate = { git = "https://github.com/Geoluminate/geoluminate.git", branch = "master" }
-geoluminate-earth-science = { git = "https://github.com/Geoluminate/geoluminate-earth-science.git", branch = "main" }
