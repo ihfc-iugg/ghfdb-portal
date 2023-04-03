@@ -11,7 +11,7 @@ services:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
 
-    image: global_heat_flow_database_production_django
+    image: ghfdb_production_django
     depends_on:
       - postgres
       - redis
@@ -24,7 +24,7 @@ services:
     build:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
-    image: global_heat_flow_database_production_postgres
+    image: ghfdb_production_postgres
     volumes:
       - production_postgres_data:/var/lib/postgresql/data
       - production_postgres_data_backups:/backups
@@ -35,7 +35,7 @@ services:
     build:
       context: .
       dockerfile: ./compose/production/traefik/Dockerfile
-    image: global_heat_flow_database_production_traefik
+    image: ghfdb_production_traefik
     depends_on:
       - django
     volumes:
@@ -50,15 +50,15 @@ services:
 
   celeryworker:
     <<: *django
-    image: global_heat_flow_database_production_celeryworker
+    image: ghfdb_production_celeryworker
     command: /start-celeryworker
 
   celerybeat:
     <<: *django
-    image: global_heat_flow_database_production_celerybeat
+    image: ghfdb_production_celerybeat
     command: /start-celerybeat
 
   flower:
     <<: *django
-    image: global_heat_flow_database_production_flower
+    image: ghfdb_production_flower
     command: /start-flower
