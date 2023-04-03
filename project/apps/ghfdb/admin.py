@@ -1,20 +1,27 @@
 from django.contrib import admin
 from django.db.models import F
 from django.utils.translation import gettext as _
-
-# from .admin_forms import AdminIntervalForm
-from geoluminate.contrib.gis.admin import SiteAdminMixin
-from geoluminate.widgets import QuantityFieldWidget, QuantityFormField
-from ghfdb.models import HeatFlow, Interval
+from ghfdb.models import HeatFlow, Interval, Temperature
 from ghfdb.resources import IntervalResource, SiteResource
 from import_export.admin import ImportExportActionModelAdmin
 from quantityfield import fields, widgets
 from quantityfield.fields import QuantityField
 
+# from .admin_forms import AdminIntervalForm
+from geoluminate.contrib.gis.admin import SiteAdminMixin
+from geoluminate.widgets import QuantityFieldWidget, QuantityFormField
+
 
 class CorrectionInline(admin.TabularInline):
     model = Interval.corrections.through
     extra = 0
+
+
+class TemperatureInline(admin.StackedInline):
+    model = Temperature
+    can_delete = False
+    show_change_link = False
+    max_num = 0
 
 
 @admin.register(HeatFlow)
@@ -134,11 +141,11 @@ class IntervalAdmin(SiteAdminMixin, ImportExportActionModelAdmin):
         "qc",
         "qc_unc",
         "q_method",
-        "T_grad_mean",
-        "T_method_top",
-        "T_correction_top",
-        "T_method_bottom",
-        "T_correction_bottom",
+        # "T_grad_mean",
+        # "T_method_top",
+        # "T_correction_top",
+        # "T_method_bottom",
+        # "T_correction_bottom",
         "tc_mean",
         "tc_saturation",
         "tc_pT_conditions",
@@ -149,15 +156,16 @@ class IntervalAdmin(SiteAdminMixin, ImportExportActionModelAdmin):
         "q_tf_mech",
         "q_method",
         "hf_probe",
-        "T_method_top",
-        "T_method_bottom",
-        "T_correction_top",
-        "T_correction_bottom",
+        # "T_method_top",
+        # "T_method_bottom",
+        # "T_correction_top",
+        # "T_correction_bottom",
         "tc_source",
         "tc_strategy",
     ]
 
     inlines = [
+        TemperatureInline,
         CorrectionInline,
     ]
     raw_id_fields = (
@@ -209,18 +217,18 @@ class IntervalAdmin(SiteAdminMixin, ImportExportActionModelAdmin):
                 ],
             },
         ),
-        (
-            _("Temperature"),
-            {
-                "fields": [
-                    ("T_grad_mean", "T_grad_uncertainty"),
-                    ("T_grad_mean_cor", "T_grad_uncertainty_cor"),
-                    ("T_method_top", "T_correction_top", "T_shutin_top"),
-                    ("T_method_bottom", "T_correction_bottom", "T_shutin_bottom"),
-                    "T_count",
-                ],
-            },
-        ),
+        # (
+        #     _("Temperature"),
+        #     {
+        #         "fields": [
+        #             ("T_grad_mean", "T_grad_uncertainty"),
+        #             ("T_grad_mean_cor", "T_grad_uncertainty_cor"),
+        #             ("T_method_top", "T_correction_top", "T_shutin_top"),
+        #             ("T_method_bottom", "T_correction_bottom", "T_shutin_bottom"),
+        #             "T_count",
+        #         ],
+        #     },
+        # ),
         (
             _("Thermal Conductivity"),
             {
