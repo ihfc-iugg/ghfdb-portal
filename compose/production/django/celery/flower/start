@@ -5,7 +5,8 @@ set -o nounset
 
 
 exec celery \
-    -A config.celery_app \
+    -A geoluminate.conf.backends.celery \
     -b "${CELERY_BROKER_URL}" \
     flower \
     --basic_auth="${CELERY_FLOWER_USER}:${CELERY_FLOWER_PASSWORD}"
+
