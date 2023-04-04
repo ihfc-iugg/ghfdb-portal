@@ -4,7 +4,7 @@
 *.code-workspace
 
 #no migration files except __init__.py
-**/migrations/*
+# **/migrations/*
 !**/migrations/__init__.py
 
 # index.html
