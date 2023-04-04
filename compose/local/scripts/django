@@ -4,6 +4,7 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
+export PYTHONPATH=../geoluminate:../geoluminate-earth-science:../django-literature:../django-ror:../django-controlled-vocabulary:../django-laboratory
 
 python manage.py migrate
 python manage.py compress
