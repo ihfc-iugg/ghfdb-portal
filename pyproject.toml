@@ -51,6 +51,10 @@ sphinx-book-theme = "^1.0.0"
 myst-parser = "^0.19.1"
 sphinx-autobuild = "^2021.3.14"
 
+
+[tool.poetry.group.local.dependencies]
+geoluminate = {path = "../geoluminate", develop = true}
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

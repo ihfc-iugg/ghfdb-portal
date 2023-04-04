@@ -7,23 +7,25 @@ volumes:
 services:
   django: &django
     build:
-      context: .
-      dockerfile: ./compose/local/django/Dockerfile
+      context: ../
+      dockerfile: ./world-heat-flow-database/compose/local/django/Dockerfile
     image: ghfdb_local_django
     container_name: ghfdb_local_django
     depends_on:
       - postgres
       - redis
       - mailhog
-
+    working_dir: /app/world-heat-flow-database
     volumes:
-      - .:/app:z
+      - ./compose/local/scripts/:/scripts:z
+      - ../:/app:z
     env_file:
       - ./.envs/.local/.django
       - ./.envs/.local/.postgres
     ports:
       - "8000:8000"
-    command: /start
+    command: /scripts/django
+    # entrypoint: "tail -f /dev/null"
 
   postgres:
     build:
@@ -37,21 +39,21 @@ services:
     env_file:
       - ./.envs/.local/.postgres
 
-  docs:
-    image: ghfdb_local_docs
-    container_name: ghfdb_local_docs
-    build:
-      context: .
-      dockerfile: ./compose/local/docs/Dockerfile
-    env_file:
-      - ./.envs/.local/.django
-    volumes:
-      - ./docs:/docs:z
-      - ./config:/app/config:z
-      - ./project:/app/project:z
-    ports:
-      - "9000:9000"
-    command: /start-docs
+  # docs:
+  #   image: ghfdb_local_docs
+  #   container_name: ghfdb_local_docs
+  #   build:
+  #     context: .
+  #     dockerfile: ./compose/local/docs/Dockerfile
+  #   env_file:
+  #     - ./.envs/.local/.django
+  #   volumes:
+  #     - ./docs:/docs:z
+  #     - ./config:/app/config:z
+  #     - ./project:/app/project:z
+  #   ports:
+  #     - "9000:9000"
+  #   command: /scripts/docs
 
   mailhog:
     image: mailhog/mailhog:v1.0.0
@@ -63,34 +65,34 @@ services:
     image: redis:6
     container_name: ghfdb_local_redis
 
-  celeryworker:
-    <<: *django
-    image: ghfdb_local_celeryworker
-    container_name: ghfdb_local_celeryworker
-    depends_on:
-      - redis
-      - postgres
-      - mailhog
-    ports: []
-    command: /start-celeryworker
+  # celeryworker:
+  #   <<: *django
+  #   image: ghfdb_local_celeryworker
+  #   container_name: ghfdb_local_celeryworker
+  #   depends_on:
+  #     - redis
+  #     - postgres
+  #     - mailhog
+  #   ports: []
+  #   command: /scripts/celery_worker
 
-  celerybeat:
-    <<: *django
-    image: ghfdb_local_celerybeat
-    container_name: ghfdb_local_celerybeat
-    depends_on:
-      - redis
-      - postgres
-      - mailhog
+  # celerybeat:
+  #   <<: *django
+  #   image: ghfdb_local_celerybeat
+  #   container_name: ghfdb_local_celerybeat
+  #   depends_on:
+  #     - redis
+  #     - postgres
+  #     - mailhog
 
-    ports: []
-    command: /start-celerybeat
+  #   ports: []
+  #   command: /scripts/celery_beat
 
-  flower:
-    <<: *django
-    image: ghfdb_local_flower
-    container_name: ghfdb_local_flower
-    ports:
-      - "5555:5555"
-    command: /start-flower
+  # flower:
+  #   <<: *django
+  #   image: ghfdb_local_flower
+  #   container_name: ghfdb_local_flower
+  #   ports:
+  #     - "5555:5555"
+  #   command: /scripts/celery_flower
 
