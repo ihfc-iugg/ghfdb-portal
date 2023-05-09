@@ -1,5 +1,0 @@
--r production.txt
-
--r dev.txt
-
--r docs.txt
