@@ -7,15 +7,10 @@ from django.contrib.sessions.middleware import SessionMiddleware
 from django.http import HttpRequest, HttpResponseRedirect
 from django.test import RequestFactory
 from django.urls import reverse
-
-from {{ cookiecutter.project_slug }}.users.forms import UserAdminChangeForm
-from {{ cookiecutter.project_slug }}.users.models import User
-from {{ cookiecutter.project_slug }}.users.tests.factories import UserFactory
-from {{ cookiecutter.project_slug }}.users.views import (
-    UserRedirectView,
-    UserUpdateView,
-    user_detail_view,
-)
+from ghfdb.users.forms import UserAdminChangeForm
+from ghfdb.users.models import User
+from ghfdb.users.tests.factories import UserFactory
+from ghfdb.users.views import UserRedirectView, UserUpdateView, user_detail_view
 
 pytestmark = pytest.mark.django_db
 

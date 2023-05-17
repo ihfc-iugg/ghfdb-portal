@@ -3,7 +3,7 @@
         "model": "geoluminate.choice",
         "pk": 1,
         "fields": {
-            "type": "env",
+            "type": "environment",
             "code": "onshore (continental)",
             "name": "Onshore (Continental)",
             "description": null
@@ -13,7 +13,7 @@
         "model": "geoluminate.choice",
         "pk": 2,
         "fields": {
-            "type": "env",
+            "type": "environment",
             "code": "onshore (lake)",
             "name": "Onshore (Lake)",
             "description": null
@@ -23,7 +23,7 @@
         "model": "geoluminate.choice",
         "pk": 3,
         "fields": {
-            "type": "env",
+            "type": "environment",
             "code": "offshore (continental)",
             "name": "Offshore (Continental)",
             "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec fermentum ex sit amet ipsum rhoncus lobortis."
@@ -33,7 +33,7 @@
         "model": "geoluminate.choice",
         "pk": 4,
         "fields": {
-            "type": "env",
+            "type": "environment",
             "code": "offshore (marine)",
             "name": "Offshore (Marine)",
             "description": null
@@ -43,7 +43,7 @@
         "model": "geoluminate.choice",
         "pk": 5,
         "fields": {
-            "type": "method",
+            "type": "explo_method",
             "code": "drilling",
             "name": "Drilling",
             "description": null
@@ -53,7 +53,7 @@
         "model": "geoluminate.choice",
         "pk": 6,
         "fields": {
-            "type": "method",
+            "type": "explo_method",
             "code": "mining",
             "name": "Mining",
             "description": null
@@ -63,7 +63,7 @@
         "model": "geoluminate.choice",
         "pk": 7,
         "fields": {
-            "type": "method",
+            "type": "explo_method",
             "code": "tunneling",
             "name": "Tunneling",
             "description": null
@@ -73,7 +73,7 @@
         "model": "geoluminate.choice",
         "pk": 8,
         "fields": {
-            "type": "method",
+            "type": "explo_method",
             "code": "probing (lake)",
             "name": "Probing (Lake)",
             "description": null
@@ -83,7 +83,7 @@
         "model": "geoluminate.choice",
         "pk": 9,
         "fields": {
-            "type": "method",
+            "type": "explo_method",
             "code": "probing (ocean)",
             "name": "Probing (Ocean)",
             "description": null
@@ -93,7 +93,7 @@
         "model": "geoluminate.choice",
         "pk": 10,
         "fields": {
-            "type": "expl",
+            "type": "explo_purpose",
             "code": "hydrocarbon",
             "name": "Hydrocarbon",
             "description": null
@@ -103,7 +103,7 @@
         "model": "geoluminate.choice",
         "pk": 11,
         "fields": {
-            "type": "expl",
+            "type": "explo_purpose",
             "code": "underground storage",
             "name": "Underground Storage",
             "description": null
@@ -113,7 +113,7 @@
         "model": "geoluminate.choice",
         "pk": 12,
         "fields": {
-            "type": "expl",
+            "type": "explo_purpose",
             "code": "geothermal",
             "name": "Geothermal",
             "description": null
@@ -123,7 +123,7 @@
         "model": "geoluminate.choice",
         "pk": 13,
         "fields": {
-            "type": "expl",
+            "type": "explo_purpose",
             "code": "mapping",
             "name": "Mapping",
             "description": null
@@ -133,7 +133,7 @@
         "model": "geoluminate.choice",
         "pk": 14,
         "fields": {
-            "type": "expl",
+            "type": "explo_purpose",
             "code": "mining",
             "name": "Mining",
             "description": null
@@ -143,7 +143,7 @@
         "model": "geoluminate.choice",
         "pk": 15,
         "fields": {
-            "type": "expl",
+            "type": "explo_purpose",
             "code": "tunneling",
             "name": "Tunneling",
             "description": null
@@ -433,7 +433,7 @@
         "model": "geoluminate.choice",
         "pk": 44,
         "fields": {
-            "type": "T_corr_method",
+            "type": "T_correction_method",
             "code": "hp",
             "name": "Horner Plot",
             "description": null
@@ -443,7 +443,7 @@
         "model": "geoluminate.choice",
         "pk": 45,
         "fields": {
-            "type": "T_corr_method",
+            "type": "T_correction_method",
             "code": "csm",
             "name": "Cylinder source method",
             "description": null
@@ -453,7 +453,7 @@
         "model": "geoluminate.choice",
         "pk": 46,
         "fields": {
-            "type": "T_corr_method",
+            "type": "T_correction_method",
             "code": "lsm",
             "name": "Line source explosion method",
             "description": null
@@ -463,7 +463,7 @@
         "model": "geoluminate.choice",
         "pk": 47,
         "fields": {
-            "type": "T_corr_method",
+            "type": "T_correction_method",
             "code": "im",
             "name": "Inverse numerical modelling",
             "description": null
@@ -473,7 +473,7 @@
         "model": "geoluminate.choice",
         "pk": 48,
         "fields": {
-            "type": "T_corr_method",
+            "type": "T_correction_method",
             "code": "other",
             "name": "Other",
             "description": null
@@ -483,7 +483,7 @@
         "model": "geoluminate.choice",
         "pk": 49,
         "fields": {
-            "type": "T_corr_method",
+            "type": "T_correction_method",
             "code": "not corrected",
             "name": "Not corrected",
             "description": null
@@ -573,7 +573,7 @@
         "model": "geoluminate.choice",
         "pk": 58,
         "fields": {
-            "type": "tc_pTcond",
+            "type": "tc_pT_conditions",
             "code": "unrecorded ambient pt conditions",
             "name": "Unrecorded ambient pT conditions",
             "description": null
@@ -583,7 +583,7 @@
         "model": "geoluminate.choice",
         "pk": 59,
         "fields": {
-            "type": "tc_pTcond",
+            "type": "tc_pT_conditions",
             "code": "recorded ambient pt conditions",
             "name": "Recorded ambient pT conditions",
             "description": null
@@ -593,7 +593,7 @@
         "model": "geoluminate.choice",
         "pk": 60,
         "fields": {
-            "type": "tc_pTcond",
+            "type": "tc_pT_conditions",
             "code": "replicated in-situ (p)",
             "name": "Replicated in-situ (p)",
             "description": null
@@ -603,7 +603,7 @@
         "model": "geoluminate.choice",
         "pk": 61,
         "fields": {
-            "type": "tc_pTcond",
+            "type": "tc_pT_conditions",
             "code": "replicated in-situ (t)",
             "name": "Replicated in-situ (T)",
             "description": null
@@ -613,7 +613,7 @@
         "model": "geoluminate.choice",
         "pk": 62,
         "fields": {
-            "type": "tc_pTcond",
+            "type": "tc_pT_conditions",
             "code": "replicated in-situ (pt)",
             "name": "Replicated in-situ (pT)",
             "description": null
@@ -623,7 +623,7 @@
         "model": "geoluminate.choice",
         "pk": 63,
         "fields": {
-            "type": "tc_pTcond",
+            "type": "tc_pT_conditions",
             "code": "actual in-situ (pt) conditions",
             "name": "Actual in-situ (pT) conditions",
             "description": null
@@ -713,7 +713,7 @@
         "model": "geoluminate.choice",
         "pk": 72,
         "fields": {
-            "type": "corrections",
+            "type": "correction",
             "code": "BWT",
             "name": "Bottom water temperature variation",
             "description": null
@@ -723,7 +723,7 @@
         "model": "geoluminate.choice",
         "pk": 73,
         "fields": {
-            "type": "corrections",
+            "type": "correction",
             "code": "CONV",
             "name": "Convection processes",
             "description": null
@@ -733,7 +733,7 @@
         "model": "geoluminate.choice",
         "pk": 74,
         "fields": {
-            "type": "corrections",
+            "type": "correction",
             "code": "E",
             "name": "Erosion",
             "description": null
@@ -743,7 +743,7 @@
         "model": "geoluminate.choice",
         "pk": 75,
         "fields": {
-            "type": "corrections",
+            "type": "correction",
             "code": "IS",
             "name": "In-situ thermal properties",
             "description": null
@@ -753,7 +753,7 @@
         "model": "geoluminate.choice",
         "pk": 76,
         "fields": {
-            "type": "corrections",
+            "type": "correction",
             "code": "HP",
             "name": "Heat production",
             "description": null
@@ -763,7 +763,7 @@
         "model": "geoluminate.choice",
         "pk": 77,
         "fields": {
-            "type": "corrections",
+            "type": "correction",
             "code": "HR",
             "name": "Heat refraction",
             "description": null
@@ -773,7 +773,7 @@
         "model": "geoluminate.choice",
         "pk": 78,
         "fields": {
-            "type": "corrections",
+            "type": "correction",
             "code": "S",
             "name": "Sedimentation",
             "description": null
@@ -783,7 +783,7 @@
         "model": "geoluminate.choice",
         "pk": 79,
         "fields": {
-            "type": "corrections",
+            "type": "correction",
             "code": "T",
             "name": "Temperature",
             "description": null
@@ -793,7 +793,7 @@
         "model": "geoluminate.choice",
         "pk": 80,
         "fields": {
-            "type": "corrections",
+            "type": "correction",
             "code": "PAL",
             "name": "Transient climatic",
             "description": null
@@ -803,7 +803,7 @@
         "model": "geoluminate.choice",
         "pk": 81,
         "fields": {
-            "type": "corrections",
+            "type": "correction",
             "code": "TOPO",
             "name": "Topographic",
             "description": null

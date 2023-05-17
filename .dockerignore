@@ -3,10 +3,15 @@
 .github
 .gitignore
 .gitlab-ci.yml
+.mypy_cache
+.vscode
 .idea
 .pre-commit-config.yaml
 .readthedocs.yml
 .travis.yml
 venv
 .git
-*static
+static
+docs
+node_modules
+media

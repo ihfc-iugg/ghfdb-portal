@@ -1,56 +1,46 @@
-import os
-import webbrowser
-
 from invoke import task
 
 
-def open_browser(path):
-    try:
-        from urllib import pathname2url
-    except:
-        from urllib.request import pathname2url
-    webbrowser.open("file://wsl%24/Ubuntu-20.04" + pathname2url(os.path.abspath(path)))
+@task
+def install(c):
+    """
+    Install the project dependencies
+    """
+    print("🚀 Creating virtual environment using pyenv and poetry")
+    c.run("poetry install")
+    c.run("poetry run pre-commit install")
+    c.run("poetry shell")
 
 
 @task
-def requirements(c):
+def check(c):
     """
-    Build requirements files from pyproject.toml
+    Check the consistency of the project using various tools
     """
-    c.run("poetry export -o requirements/docs.txt --without-hashes --only docs")
-    c.run("poetry export -o requirements/dev.txt --without-hashes --only dev")
-    c.run("poetry export -o requirements/production.txt --without-hashes")
+    print("🚀 Checking Poetry lock file consistency with 'pyproject.toml': Running poetry lock --check")
+    c.run("poetry lock --check")
+
+    print("🚀 Linting code: Running pre-commit")
+    c.run("poetry run pre-commit run -a")
+
+    print("🚀 Static type checking: Running mypy")
+    c.run("poetry run mypy")
+
+    print("🚀 Checking for obsolete dependencies: Running deptry")
+    c.run("poetry run deptry .")
 
 
 @task
-def clean_build(c):
+def test(c, tox=False):
     """
-    Remove build artifacts
+    Run the test suite
     """
-    c.run("rm -fr build/")
-    c.run("rm -fr dist/")
-    c.run("rm -fr *.egg-info")
-
-
-@task
-def clean_pyc(c):
-    """
-    Remove python file artifacts
-    """
-    c.run("find . -name '*.pyc' -exec rm -f {} +")
-    c.run("find . -name '*.pyo' -exec rm -f {} +")
-    c.run("find . -name '*~' -exec rm -f {} +")
-
-
-@task
-def coverage(c):
-    """
-    check code coverage quickly with the default Python
-    """
-    c.run("coverage run --source geoluminate runtests.py tests")
-    c.run("coverage report -m")
-    c.run("coverage html")
-    c.run("open htmlcov/index.html")
+    if tox:
+        print("🚀 Testing code: Running pytest with all tests")
+        c.run("tox")
+    else:
+        print("🚀 Testing code: Running pytest")
+        c.run("poetry run pytest --cov --cov-config=pyproject.toml --cov-report=html")
 
 
 @task
@@ -58,68 +48,54 @@ def docs(c):
     """
     Build the documentation and open it in the browser
     """
-    c.run("rm -f docs/geoluminate.rst")
-    c.run("rm -f docs/modules.rst")
-    c.run("sphinx-apidoc -o docs/ geoluminate")
-
+    c.run("sphinx-apidoc -M -T -o docs/ laboratory **/migrations/* -e --force -d 2")
     c.run("sphinx-build -E -b html docs docs/_build")
-    # open_browser(path="docs/_build/html/index.html")
 
 
 @task
-def test_all(c):
+def release(c, rule=""):
     """
-    Run tests on every python version with tox
+    Create a new git tag and push it to the remote repository.
+
+    .. note::
+        This will create a new tag and push it to the remote repository, which will trigger a new build and deployment of the package to PyPI.
+
+    RULE	    BEFORE	AFTER
+    major	    1.3.0	2.0.0
+    minor	    2.1.4	2.2.0
+    patch	    4.1.1	4.1.2
+    premajor	1.0.2	2.0.0a0
+    preminor	1.0.2	1.1.0a0
+    prepatch	1.0.2	1.0.3a0
+    prerelease	1.0.2	1.0.3a0
+    prerelease	1.0.3a0	1.0.3a1
+    prerelease	1.0.3b0	1.0.3b1
     """
-    c.run("tox")
+    if rule:
+        # bump the current version using the specified rule
+        c.run(f"poetry version {rule}")
 
+    # 1. Get the current version number as a variable
+    version_short = c.run("poetry version -s", hide=True).stdout.strip()
+    version = c.run("poetry version", hide=True).stdout.strip()
 
-@task
-def clean(c):
-    """
-    Remove python file and build artifacts
-    """
-    clean_build(c)
-    clean_pyc(c)
+    # 2. commit the changes to pyproject.toml
+    c.run(f'git commit pyproject.toml -m "bump to v{version_short}"')
 
-
-@task
-def unittest(c):
-    """
-    Run unittests
-    """
-    c.run("pytest")
-    # c.run("python manage.py test")
-
-
-@task
-def lint(c):
-    """
-    Check style with flake8
-    """
-    c.run("flake8 geoluminate tests")
-
-
-@task(help={"bumpsize": 'Bump either for a "feature" or "breaking" change'})
-def release(c, bumpsize=""):
-    """
-    Package and upload a release
-    """
-    clean(c)
-    if bumpsize:
-        bumpsize = "--" + bumpsize
-
-    c.run("bumpversion {bump} --no-input".format(bump=bumpsize))
-
-    import geoluminate
-
-    c.run("python setup.py sdist bdist_wheel")
-    c.run("twine upload dist/*")
-
-    c.run(
-        'git tag -a {version} -m "New version: {version}"'.format(
-            version=geoluminate.__version__
-        )
-    )
+    # 3. create a tag and push it to the remote repository
+    c.run(f'git tag -a v{version_short} -m "{version}"')
     c.run("git push --tags")
-    c.run("git push origin master")
+    c.run("git push origin main")
+
+
+@task
+def runserver(c, production=False):
+    """
+    Start the development server
+    """
+    if production:
+        print("🚀 Starting the production server")
+        c.run("docker compose -f production.yml up -d")
+    else:
+        print("🚀 Starting the development server")
+        c.run("docker compose -f local.yml up -d")

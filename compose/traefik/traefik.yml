@@ -1,0 +1,61 @@
+log:
+  level: DEBUG
+
+entryPoints:
+  web:
+    # http
+    address: ":80"
+    http:
+      # https://docs.traefik.io/routing/entrypoints/#entrypoint
+      redirections:
+        entryPoint:
+          to: web-secure
+
+  web-secure:
+    # https
+    address: ":443"
+
+http:
+  routers:
+    web-router:
+      rule: "Host(`*`)"
+      entryPoints:
+        - web
+      middlewares:
+        - csrf
+      service: django
+
+  middlewares:
+    csrf:
+      # https://docs.traefik.io/master/middlewares/headers/#hostsproxyheaders
+      # https://docs.djangoproject.com/en/dev/ref/csrf/#ajax
+      headers:
+        hostsProxyHeaders: ["X-CSRFToken"]
+
+  services:
+    django:
+      loadBalancer:
+        servers:
+          - url: http://django:5000
+      # labels:
+      #   - "traefik.http.routers.django.rule=Host(`localhost`)"
+
+    # flower:
+    #   loadBalancer:
+    #     servers:
+    #       - url: http://flower:5555
+
+    # django-media:
+    #   loadBalancer:
+    #     servers:
+    #       - url: http://nginx:80
+
+api:
+  dashboard: true
+  insecure: true
+
+providers:
+  # https://docs.traefik.io/master/providers/file/
+  file:
+    filename: /etc/traefik/traefik.yml
+    watch: true

@@ -1,8 +1,0 @@
-#!/bin/bash
-
-set -o errexit
-set -o nounset
-
-
-rm -f './celerybeat.pid'
-exec watchfiles celery.__main__.main --args '-A geoluminate.conf.backends.celery beat -l INFO'

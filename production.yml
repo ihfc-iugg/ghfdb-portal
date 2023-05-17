@@ -1,29 +1,36 @@
 version: '3'
-
+name: ghfdb_production
 volumes:
   production_postgres_data: {}
   production_postgres_data_backups: {}
   production_traefik: {}
-
+  production_django_media: {}
+  ghfdb_external_apps:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: 'C:\Users\jennings\Documents\geoluminate_apps'
 services:
   django: &django
     build:
       context: .
-      dockerfile: ./compose/production/django/Dockerfile
-
-    image: ghfdb_production_django
+      dockerfile: ./compose/geoluminate/production
+    image: ghfdb_production
     depends_on:
       - postgres
       - redis
+    volumes:
+      - ghfdb_external_apps:/external_apps
     env_file:
       - ./.envs/.production/.django
       - ./.envs/.production/.postgres
-    command: /start
+    command: /external_apps/geoluminate/bin/production/django
 
   postgres:
     build:
       context: .
-      dockerfile: ./compose/production/postgres/Dockerfile
+      dockerfile: ./compose/postgres/Dockerfile
     image: ghfdb_production_postgres
     volumes:
       - production_postgres_data:/var/lib/postgresql/data
@@ -31,10 +38,28 @@ services:
     env_file:
       - ./.envs/.production/.postgres
 
+  redis:
+    image: redis:6
+
+  celeryworker:
+    <<: *django
+    image: ghfdb_production_celeryworker
+    command: /scripts/production/celery_worker
+
+  celerybeat:
+    <<: *django
+    image: ghfdb_production_celerybeat
+    command: /scripts/production/celery_beat
+
+  flower:
+    <<: *django
+    image: ghfdb_production_flower
+    command: /scripts/production/celery_flower
+
   traefik:
     build:
       context: .
-      dockerfile: ./compose/production/traefik/Dockerfile
+      dockerfile: ./compose/traefik/Dockerfile
     image: ghfdb_production_traefik
     depends_on:
       - django
@@ -44,21 +69,16 @@ services:
       - "0.0.0.0:80:80"
       - "0.0.0.0:443:443"
       - "0.0.0.0:5555:5555"
+      # - "0.0.0.0:8080:8080"
+    # volumes:
+      # - /var/run/docker.sock:/var/run/docker.sock
 
-  redis:
-    image: redis:6
-
-  celeryworker:
-    <<: *django
-    image: ghfdb_production_celeryworker
-    command: /start-celeryworker
-
-  celerybeat:
-    <<: *django
-    image: ghfdb_production_celerybeat
-    command: /start-celerybeat
-
-  flower:
-    <<: *django
-    image: ghfdb_production_flower
-    command: /start-flower
+  nginx:
+    build:
+      context: .
+      dockerfile: ./compose/nginx/Dockerfile
+    image: ghfdb_local_nginx
+    depends_on:
+      - django
+    volumes:
+      - production_django_media:/usr/share/nginx/media:ro

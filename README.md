@@ -90,4 +90,3 @@ See detailed [cookiecutter-django Heroku documentation](http://cookiecutter-djan
 ### Docker
 
 See detailed [cookiecutter-django Docker documentation](http://cookiecutter-django.readthedocs.io/en/latest/deployment-with-docker.html).
-

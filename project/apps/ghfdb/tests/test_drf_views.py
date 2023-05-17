@@ -1,7 +1,6 @@
 from django.test import RequestFactory
-
-from {{ cookiecutter.project_slug }}.users.api.views import UserViewSet
-from {{ cookiecutter.project_slug }}.users.models import User
+from ghfdb.users.api.views import UserViewSet
+from ghfdb.users.models import User
 
 
 class TestUserViewSet:
