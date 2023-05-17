@@ -1,0 +1,19 @@
+version: '3'
+name: ghfdb_lite
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: ./compose/geoluminate/lite
+    image: ghfdb_lite
+    working_dir: /app
+    volumes:
+      - ./:/app:z
+    ports:
+      - "8000:8000"
+    command: ./compose/bin/local/django
+    env_file:
+      - ./.envs/.local/.django
+    # entrypoint: "tail -f /dev/null"
+

@@ -1,98 +1,76 @@
 version: '3'
-
+name: ghfdb_local
 volumes:
   ghfdb_local_postgres_data: {}
   ghfdb_local_postgres_data_backups: {}
+  ghfdb_external_apps:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: 'C:\Users\jennings\Documents\geoluminate_apps'
 
 services:
   django: &django
     build:
-      context: ../
-      dockerfile: ./world-heat-flow-database/compose/local/django/Dockerfile
-    image: ghfdb_local_django
-    container_name: ghfdb_local_django
+      context: .
+      dockerfile: ./compose/geoluminate/local
+    image: ghfdb_local
     depends_on:
       - postgres
       - redis
       - mailhog
-    working_dir: /app/world-heat-flow-database
+    working_dir: /app
     volumes:
-      - ./compose/local/scripts/:/scripts:z
-      - ../:/app:z
+      - ghfdb_external_apps:/external_apps
+      - ./:/app:z
     env_file:
       - ./.envs/.local/.django
       - ./.envs/.local/.postgres
     ports:
       - "8000:8000"
-    command: /scripts/django
-    # entrypoint: "tail -f /dev/null"
+    command: /external_apps/geoluminate/bin/local/django
+    entrypoint: /external_apps/geoluminate/bin/entrypoint
+     # entrypoint: "tail -f /dev/null"
 
   postgres:
     build:
       context: .
-      dockerfile: ./compose/production/postgres/Dockerfile
+      dockerfile: ./compose/postgres/Dockerfile
     image: ghfdb_production_postgres
-    container_name: ghfdb_local_postgres
     volumes:
       - ghfdb_local_postgres_data:/var/lib/postgresql/data
       - ghfdb_local_postgres_data_backups:/backups
     env_file:
       - ./.envs/.local/.postgres
 
-  # docs:
-  #   image: ghfdb_local_docs
-  #   container_name: ghfdb_local_docs
-  #   build:
-  #     context: .
-  #     dockerfile: ./compose/local/docs/Dockerfile
-  #   env_file:
-  #     - ./.envs/.local/.django
-  #   volumes:
-  #     - ./docs:/docs:z
-  #     - ./config:/app/config:z
-  #     - ./project:/app/project:z
-  #   ports:
-  #     - "9000:9000"
-  #   command: /scripts/docs
+  redis:
+    image: redis:6
+
+  celeryworker:
+    <<: *django
+    ports: []
+    command: /external_apps/geoluminate/bin/local/celery_worker
+
+  celerybeat:
+    <<: *django
+    ports: []
+    command: /external_apps/geoluminate/bin/local/celery_beat
+
+  flower:
+    <<: *django
+    ports:
+      - "5555:5555"
+    command: /external_apps/geoluminate/bin/local/celery_flower
 
   mailhog:
     image: mailhog/mailhog:v1.0.0
-    container_name: ghfdb_local_mailhog
     ports:
       - "8025:8025"
 
-  redis:
-    image: redis:6
-    container_name: ghfdb_local_redis
-
-  # celeryworker:
-  #   <<: *django
-  #   image: ghfdb_local_celeryworker
-  #   container_name: ghfdb_local_celeryworker
-  #   depends_on:
-  #     - redis
-  #     - postgres
-  #     - mailhog
-  #   ports: []
-  #   command: /scripts/celery_worker
-
-  # celerybeat:
-  #   <<: *django
-  #   image: ghfdb_local_celerybeat
-  #   container_name: ghfdb_local_celerybeat
-  #   depends_on:
-  #     - redis
-  #     - postgres
-  #     - mailhog
-
-  #   ports: []
-  #   command: /scripts/celery_beat
-
-  # flower:
-  #   <<: *django
-  #   image: ghfdb_local_flower
-  #   container_name: ghfdb_local_flower
-  #   ports:
-  #     - "5555:5555"
-  #   command: /scripts/celery_flower
-
+  docs:
+    <<: *django
+    working_dir: /app/docs
+    ports:
+      - "9000:9000"
+    command: /external_apps/geoluminate/bin/local/docs

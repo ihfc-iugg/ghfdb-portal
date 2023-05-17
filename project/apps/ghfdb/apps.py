@@ -7,6 +7,3 @@ class GHFDBConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "ghfdb"
     verbose_name = "Global Heat Flow Database"
-
-    def ready(self):
-        from . import signals

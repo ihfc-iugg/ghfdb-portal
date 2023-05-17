@@ -1,0 +1,24 @@
+database:
+  name: "Global Heat Flow Database"
+  acronym: "GHFDB"
+  keywords: 
+    - "heat flow"
+    - "geothermal"
+    - "geoenergy"
+
+governance:
+  name: "International Heat Flow Commission"
+  short_name: "IHFC"
+  website: "https://www.ihfc-iugg.org"
+  custodians:
+    - name: Sven Fuchs
+      email: fuchs@gfz-potsdam.de
+    - name: Florian Neumann
+      email: f.neumann@gfz-potsdam.de
+
+application:
+  domain: "www.heatflow.world"
+  # base_model: "geoluminate.contrib.gis.base.AbstractSite"
+  developers:
+    - name: Sam Jennings
+      email: jennings@gfz-potsdam.de
