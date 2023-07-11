@@ -1,12 +1,13 @@
 from django.contrib import admin
-from django.db.models import F
+
+# from django.db.models import F
 from django.utils.translation import gettext as _
 from geoluminate.contrib.gis.admin import SiteAdminMixin
-from geoluminate.widgets import QuantityFormField
-from ghfdb.models import HeatFlow, Interval, Temperature
 
-# from ghfdb.resources import IntervalResource, SiteResource
-from quantityfield.fields import QuantityField
+# from heat_flow.resources import IntervalResource, SiteResource
+# from quantityfield.fields import QuantityField
+# from geoluminate.widgets import QuantityFormField
+from heat_flow.models import HeatFlow, Interval, Temperature
 
 
 class CorrectionInline(admin.TabularInline):
@@ -32,10 +33,10 @@ class HeatFlowAdmin(SiteAdminMixin):
 
     list_display = [
         "id",
-        "name",
-        "lon",
-        "lat",
-        "elevation",
+        # "name",
+        # "lon",
+        # "lat",
+        # "elevation",
         # "__str__",
         "q",
         "q_unc",
@@ -57,9 +58,9 @@ class HeatFlowAdmin(SiteAdminMixin):
             {
                 "fields": [
                     "id",
-                    "name",
+                    # "name",
                     # "geom",
-                    "elevation",
+                    # "elevation",
                     "borehole_depth",
                     "expedition",
                     # ('year', 'month'),
@@ -101,7 +102,7 @@ class HeatFlowAdmin(SiteAdminMixin):
 
     search_fields = [
         "id",
-        "name",
+        # "name",
     ]
     point_zoom = 8
     map_width = 900
@@ -201,9 +202,3 @@ class IntervalAdmin(admin.ModelAdmin):
             },
         ),
     ]
-
-    formfield_overrides = {
-        QuantityField: {
-            "form_class": QuantityFormField,
-        },
-    }

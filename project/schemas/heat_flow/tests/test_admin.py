@@ -1,5 +1,6 @@
 from django.urls import reverse
-from ghfdb.models import HeatFlow
+
+from heat_flow.models import HeatFlow
 
 
 class TestHeatFlowAdmin:

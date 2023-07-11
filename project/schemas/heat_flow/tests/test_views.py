@@ -7,10 +7,11 @@ from django.contrib.sessions.middleware import SessionMiddleware
 from django.http import HttpRequest, HttpResponseRedirect
 from django.test import RequestFactory
 from django.urls import reverse
-from ghfdb.users.forms import UserAdminChangeForm
-from ghfdb.users.models import User
-from ghfdb.users.tests.factories import UserFactory
-from ghfdb.users.views import UserRedirectView, UserUpdateView, user_detail_view
+
+from heat_flow.users.forms import UserAdminChangeForm
+from heat_flow.users.models import User
+from heat_flow.users.tests.factories import UserFactory
+from heat_flow.users.views import UserRedirectView, UserUpdateView, user_detail_view
 
 pytestmark = pytest.mark.django_db
 
