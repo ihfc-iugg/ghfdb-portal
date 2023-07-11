@@ -1,5 +1,6 @@
 from django.urls import resolve, reverse
-from ghfdb.models import HeatFlow, Interval
+
+from heat_flow.models import HeatFlow, Interval
 
 # def test_detail(user: User):
 #     assert (

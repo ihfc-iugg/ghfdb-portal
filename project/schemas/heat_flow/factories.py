@@ -2,12 +2,12 @@
 import datetime
 
 import factory
-from geoluminate.factories import GeoluminateFactory, VocabularyIterator
+from geoluminate.factories import SampleFactory, VocabularyIterator
 
 from .models import HeatFlow, Interval
 
 
-class HeatFlowFactory(GeoluminateFactory):
+class HeatFlowFactory(SampleFactory):
     class Meta:
         model = HeatFlow
 

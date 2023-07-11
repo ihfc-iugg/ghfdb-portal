@@ -1,6 +1,7 @@
 from django.test import RequestFactory
-from ghfdb.users.api.views import UserViewSet
-from ghfdb.users.models import User
+
+from heat_flow.users.api.views import UserViewSet
+from heat_flow.users.models import User
 
 
 class TestUserViewSet:

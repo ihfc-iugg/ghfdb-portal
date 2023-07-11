@@ -1,31 +1,45 @@
-from django.conf import settings
+"""
+Global Heat Flow Database (GHFDB) models for Django. The models are defined using the Django ORM and are used to create 
+the database schema. The models are defined using the following sources:
+
+    - Fuchs et. al., (2021). A new database structure for the IHFC Global Heat Flow Database. International Journal of 
+    Terrestrial Heat Flow and Applications, 4(1), pp.1-14.
+
+    - Fuchs et. al. (2023). The Global Heat Flow Database: Update 2023.
+
+"""
+
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator as MaxVal
 from django.core.validators import MinValueValidator as MinVal
-from django.db import models
 from django.urls import reverse
-from django.utils.encoding import force_str
 from django.utils.translation import gettext as _
-from geoluminate.contrib.controlled_vocabulary.fields import VocabularyField
-from geoluminate.db.fields import PositiveIntegerQuantityField, QuantityField
-from geoluminate.models import Geoluminate
+from geoluminate.contrib.project.models import Measurement
+from geoluminate.db import models
 
 # from geoscience.fields import EarthMaterialOneToOne, GeologicTimeOneToOne
 
 
-class HeatFlow(Geoluminate):
+class HeatFlow(Measurement):
     """Terrestrial heat flow as part of the Global Heat Flow Database. This is
     the "parent" table outlined in the formal structure of the database put
     forth by Fuchs et. al. (2021).
     """
 
-    q = QuantityField(
+    site = models.SiteField(
+        verbose_name=_("site"),
+        help_text=_("The physical site from which the heat flow measurement was derived"),
+        on_delete=models.PROTECT,
+    )
+
+    q = models.QuantityField(
+        is_primary_data=True,
         base_units="mW / m^2",
         verbose_name=_("heat flow"),
         help_text=_("site heat flow value"),
         validators=[MinVal(-(10**6)), MaxVal(10**6)],
     )
-    q_unc = QuantityField(
+    q_unc = models.QuantityField(
         base_units="mW / m^2",
         verbose_name=_("heat flow uncertainty"),
         help_text=_(
@@ -44,7 +58,7 @@ class HeatFlow(Geoluminate):
         ),
         null=True,
     )
-    borehole_depth = QuantityField(
+    borehole_depth = models.QuantityField(
         verbose_name=_("total borehole depth"),
         base_units="m",
         help_text=_("Specification of the total drilling depth below ground surface level."),
@@ -63,7 +77,7 @@ class HeatFlow(Geoluminate):
         max_length=255,
     )
 
-    environment = VocabularyField(
+    environment = models.VocabularyField(
         "environment",
         verbose_name=_("basic geographical environment"),
         help_text=_("Describes the general geographical setting of the heat-flow site (not the applied methodology)."),
@@ -71,7 +85,7 @@ class HeatFlow(Geoluminate):
         blank=True,
         on_delete=models.SET_NULL,
     )
-    water_temp = QuantityField(
+    water_temp = models.QuantityField(
         base_units="°C",
         unit_choices=["°C", "K"],
         verbose_name=_("bottom water temperature"),
@@ -80,7 +94,7 @@ class HeatFlow(Geoluminate):
         blank=True,
     )
 
-    explo_method = VocabularyField(
+    explo_method = models.VocabularyField(
         "explo_method",
         verbose_name=_("exploration method"),
         help_text=_(
@@ -91,7 +105,7 @@ class HeatFlow(Geoluminate):
         blank=True,
         on_delete=models.SET_NULL,
     )
-    explo_purpose = VocabularyField(
+    explo_purpose = models.VocabularyField(
         "explo_purpose",
         verbose_name=_("exploration purpose"),
         help_text=_("Main purpose of the original excavation providing access for the temperature sensors."),
@@ -114,13 +128,8 @@ class HeatFlow(Geoluminate):
         return "%s" % (self.name)
 
     def __str__(self):
-        """
-        <Unnamed Site: 45.2 +/- 3.2 mW/m^2>
-
-        """
-        name = self.name if self.name else _("Unnamed Site")
-
-        # q = self.q.plus_minus(self.q_unc)
+        """<Unnamed Site: 45.2 +/- 3.2 mW/m^2>"""
+        name = self.name or _("Unnamed Site")
         return f"{name}: {self.q}"
         # return f"{name} <{q:~P}>"
 
@@ -128,7 +137,7 @@ class HeatFlow(Geoluminate):
         return reverse("site", kwargs={"pk": self.pk})
 
 
-class Interval(models.Model):
+class Interval(Measurement):
     """Interval heat flow as part of the Global Heat Flow Database. This is
     the "child" schema outlined in the formal structure of the database put
     forth by Fuchs et al (2021).
@@ -145,13 +154,14 @@ class Interval(models.Model):
     )
 
     # HEAT FLOW DENSITY FIELDS
-    qc = QuantityField(
+    qc = models.QuantityField(
+        is_primary_data=True,
         base_units="mW / m^2",
         verbose_name=_("heat flow"),
         help_text=_("child heat flow value"),
         validators=[MinVal(-(10**6)), MaxVal(10**6)],
     )
-    qc_unc = QuantityField(
+    qc_unc = models.QuantityField(
         base_units="mW / m^2",
         verbose_name=_("heat flow uncertainty"),
         help_text=_(
@@ -164,7 +174,7 @@ class Interval(models.Model):
         null=True,
     )
 
-    q_method = VocabularyField(
+    q_method = models.VocabularyField(
         "q_method",
         verbose_name=_("method"),
         help_text=_("Principal method of heat-flow density calculation from temperature and thermal conductivity data"),
@@ -172,7 +182,7 @@ class Interval(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
     )
-    q_top = QuantityField(
+    q_top = models.QuantityField(
         base_units="m",
         verbose_name=_("interval top"),
         help_text=_(
@@ -183,7 +193,7 @@ class Interval(models.Model):
         blank=True,
         null=True,
     )
-    q_bot = QuantityField(
+    q_bot = models.QuantityField(
         base_units="m",
         verbose_name=_("interval bottom"),
         help_text=_(
@@ -196,7 +206,7 @@ class Interval(models.Model):
     )
 
     # PROBE SENSING
-    hf_pen = QuantityField(
+    hf_pen = models.QuantityField(
         base_units="m",
         verbose_name=_("penetration depth"),
         help_text=_("Depth of penetration of marine probe into the sediment."),
@@ -204,7 +214,7 @@ class Interval(models.Model):
         blank=True,
         null=True,
     )
-    hf_probe = VocabularyField(
+    hf_probe = models.VocabularyField(
         "hf_probe",
         verbose_name=_("probe type"),
         help_text=_("Type of marine probe used for measurement."),
@@ -212,7 +222,7 @@ class Interval(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
     )
-    hf_probeL = QuantityField(
+    hf_probeL = models.QuantityField(
         base_units="m",
         verbose_name=_("probe length"),
         help_text=_("length of the marine probe."),
@@ -220,7 +230,7 @@ class Interval(models.Model):
         blank=True,
         null=True,
     )
-    probe_tilt = QuantityField(
+    probe_tilt = models.QuantityField(
         base_units="degree",
         verbose_name=_("tilt"),
         help_text=_("Tilt of the marine probe."),
@@ -230,7 +240,7 @@ class Interval(models.Model):
     )
 
     # METADATA AND FLAGS
-    q_tf_mech = VocabularyField(
+    q_tf_mech = models.VocabularyField(
         "q_tf_mech",
         verbose_name=_("transfer mechanism"),
         help_text=_(
@@ -278,7 +288,7 @@ class Interval(models.Model):
     # )
 
     # Conductivity fields
-    tc_mean = QuantityField(
+    tc_mean = models.QuantityField(
         base_units="W/mK",
         verbose_name=_("Mean conductivity"),
         help_text=_(
@@ -289,7 +299,7 @@ class Interval(models.Model):
         blank=True,
         validators=[MinVal(0), MaxVal(100)],
     )
-    tc_uncertainty = QuantityField(
+    tc_uncertainty = models.QuantityField(
         base_units="W/mK",
         verbose_name=_("uncertainty"),
         help_text=_("Uncertainty of the mean thermal conductivity given as one-sigma standard deviation."),
@@ -297,7 +307,7 @@ class Interval(models.Model):
         blank=True,
         null=True,
     )
-    tc_source = VocabularyField(
+    tc_source = models.VocabularyField(
         "tc_source",
         verbose_name=_("source"),
         help_text=_("Nature of the samples from which the mean thermal conductivity was determined"),
@@ -319,7 +329,7 @@ class Interval(models.Model):
         null=True,
         blank=True,
     )
-    tc_pT_conditions = VocabularyField(
+    tc_pT_conditions = models.VocabularyField(
         "tc_pT_conditions",
         verbose_name=_("pT conditions"),
         help_text=_(
@@ -362,7 +372,7 @@ class Interval(models.Model):
     corrections = models.ManyToManyField(
         "controlled_vocabulary.ControlledVocabulary",
         verbose_name=_("Applied Corrections"),
-        through="ghfdb.IntervalCorrectionThrough",
+        through="heat_flow.IntervalCorrectionThrough",
         blank=True,
     )
 
@@ -388,25 +398,22 @@ class Interval(models.Model):
             if self.q_date_acq.year < 1900:
                 raise ValidationError("Acquisition year cannot be less than 1900.")
 
-    def full_clean(self, exclude, validate_unique):
-        return super().full_clean(exclude, validate_unique)
-
     def interval(self, obj):
         return f"{obj.q_top}-{obj.q_bot}"
 
 
 class Temperature(models.Model):
-    interval = models.OneToOneField("ghfdb.Interval", on_delete=models.CASCADE, related_name="temp")
+    interval = models.OneToOneField("heat_flow.Interval", on_delete=models.CASCADE, related_name="temp")
 
     # Temperature Fields
-    grad_mean = QuantityField(
+    grad_mean = models.QuantityField(
         base_units="K/km",
         verbose_name=_("measured gradient"),
         help_text=_("measured temperature gradient for the heat-flow determination interval."),
         null=True,
         blank=True,
     )
-    grad_uncertainty = QuantityField(
+    grad_uncertainty = models.QuantityField(
         base_units="K/km",
         verbose_name=_("uncertainty"),
         help_text=_(
@@ -416,7 +423,7 @@ class Temperature(models.Model):
         blank=True,
         null=True,
     )
-    grad_mean_cor = QuantityField(
+    grad_mean_cor = models.QuantityField(
         base_units="K/km",
         verbose_name=_("corrected gradient"),
         help_text=_(
@@ -426,7 +433,7 @@ class Temperature(models.Model):
         blank=True,
         null=True,
     )
-    grad_uncertainty_cor = QuantityField(
+    grad_uncertainty_cor = models.QuantityField(
         base_units="K/km",
         verbose_name=_("uncertainty"),
         help_text=_(
@@ -436,7 +443,7 @@ class Temperature(models.Model):
         blank=True,
         null=True,
     )
-    method_top = VocabularyField(
+    method_top = models.VocabularyField(
         "T_method",
         verbose_name=_("temperature method (top)"),
         help_text=_("Method used to determine temperature at the top of the heat flow interval."),
@@ -444,7 +451,7 @@ class Temperature(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
     )
-    method_bottom = VocabularyField(
+    method_bottom = models.VocabularyField(
         "T_method",
         verbose_name=_("temperature method (bottom)"),
         help_text=_("Method used to determine temperature at the bottom of the heat flow interval."),
@@ -452,7 +459,7 @@ class Temperature(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
     )
-    shutin_top = PositiveIntegerQuantityField(
+    shutin_top = models.PositiveIntegerQuantityField(
         base_units="hour",
         verbose_name=_("Shut-in time (top)"),
         help_text=_(
@@ -462,7 +469,7 @@ class Temperature(models.Model):
         blank=True,
         null=True,
     )
-    shutin_bottom = PositiveIntegerQuantityField(
+    shutin_bottom = models.PositiveIntegerQuantityField(
         base_units="hour",
         verbose_name=_("Shut-in time (bottom; hrs)"),
         help_text=_(
@@ -472,7 +479,7 @@ class Temperature(models.Model):
         blank=True,
         null=True,
     )
-    correction_top = VocabularyField(
+    correction_top = models.VocabularyField(
         "T_correction_method",
         verbose_name=_("correction method (top)"),
         help_text=_(
@@ -483,7 +490,7 @@ class Temperature(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
     )
-    correction_bottom = VocabularyField(
+    correction_bottom = models.VocabularyField(
         "T_correction_method",
         verbose_name=_("correction method (bottom)"),
         help_text=_(
@@ -519,8 +526,8 @@ class IntervalCorrectionThrough(models.Model):
         NO = "no", _("No")
         MENTIONED = "mentioned", _("Mentioned in-text but unclear if applied")
 
-    interval = models.ForeignKey("ghfdb.Interval", on_delete=models.CASCADE)
-    correction = VocabularyField("correction", on_delete=models.CASCADE)
+    interval = models.ForeignKey("heat_flow.Interval", on_delete=models.CASCADE)
+    correction = models.VocabularyField("correction", on_delete=models.CASCADE)
     applied = models.CharField(
         max_length=9,
         verbose_name=_("Applied?"),

@@ -1,0 +1,58 @@
+{% extends "review/base.html" %}
+{% load geoluminate static sekizai_tags i18n %}
+
+{% block nav_title_bold %}{% trans "Reviewing" %}:{% endblock %}
+{% block nav_title %}{{review.publication.title|truncatewords:5}}{% endblock nav_title %}
+
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin=""/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"/>
+{% endblock head %}
+
+{% block app_menu %}
+
+<div class="btn-group flex-wrap" role="tablist">
+  <button id="description-tab" class="nav-link btn btn-primary active" data-bs-toggle="tab" data-bs-target="#description-panel" type="button" role="tab" aria-controls="description-panel" aria-selected="true">
+    <span>{% trans "Description" %}</span>
+  </button> 
+  <button id="references-tab" class="nav-link btn btn-primary" data-bs-toggle="tab" data-bs-target="#references-panel" type="button" role="tab" aria-controls="references-panel">
+    <span>{% trans "Publications" %}</span>
+  </button>
+  <button id="contributors-tab" class="nav-link btn btn-primary" data-bs-toggle="tab" data-bs-target="#contributors-panel" type="button" role="tab" aria-controls="contributors-panel">
+    <span>{% trans "Contributors" %}</span>
+  </button>  
+  <button id="files-tab" class="nav-link btn btn-primary" data-bs-toggle="tab" data-bs-target="#files-panel" type="button" role="tab" aria-controls="files-panel">
+    <span>{% trans "Files" %}</span>
+  </button>
+  <button id="data-tab" class="btn btn-primary" data-bs-toggle="tab" data-bs-target="#data-panel" type="button" role="tab" aria-controls="home-panel">
+    <span>{% trans "Data" %}</span>
+  </button> 
+  <button id="map-tab" class="btn btn-primary" data-bs-toggle="tab" data-bs-target="#map-panel" type="button" role="tab" aria-controls="map-panel">
+    <span>{% trans "Map" %}</span>
+  </button> 
+</div>
+
+<div class='ms-auto p-1'>
+  <button id="submit-tab" class="btn btn-sm btn-success" type="button">
+    <span>{% trans "Review & Submit" %}</span>
+  </button>
+</div>
+{% endblock app_menu %}
+
+
+{% block content %}
+<div class='w-100'>
+  <div class="tab-content" id="myTabContent">
+    <div class="tab-pane fade show active" id="description-panel" role="tabpanel" aria-labelledby="description-tab" tabindex="0">
+      {% include "review/includes/dataset.html" %}
+    </div>
+    <div class="tab-pane fade" id="references-panel" role="tabpanel" aria-labelledby="references-tab" tabindex="0">...</div>
+    <div class="tab-pane fade" id="contributors-panel" role="tabpanel" aria-labelledby="contributors-tab" tabindex="0">...</div>
+    <div class="tab-pane fade" id="data-panel" role="tabpanel" aria-labelledby="data-tab" tabindex="0">...</div>
+    <div class="tab-pane fade" id="map-panel" role="tabpanel" aria-labelledby="map-tab" tabindex="0">
+      {% include "review/includes/map.html" %}
+    </div>
+  </div>
+</div>
+{% endblock content %}

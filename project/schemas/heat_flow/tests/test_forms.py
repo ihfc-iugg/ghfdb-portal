@@ -2,8 +2,9 @@
 Module for all Form Tests.
 """
 from django.utils.translation import gettext_lazy as _
-from ghfdb.users.forms import UserAdminCreationForm
-from ghfdb.users.models import User
+
+from heat_flow.users.forms import UserAdminCreationForm
+from heat_flow.users.models import User
 
 
 class TestUserAdminCreationForm:
