@@ -9,9 +9,33 @@
 .pre-commit-config.yaml
 .readthedocs.yml
 .travis.yml
-venv
-.git
 static
 docs
 node_modules
 media
+
+# **/__pycache__
+# **/.venv
+# **/.classpath
+# **/.dockerignore
+# **/.env
+# **/.git
+# **/.gitignore
+# **/.project
+# **/.settings
+# **/.toolstarget
+# **/.vs
+# **/.vscode
+# **/*.*proj.user
+# **/*.dbmdl
+# **/*.jfm
+# **/charts
+# **/docker-compose*
+# **/Dockerfile*
+# **/node_modules
+# **/npm-debug.log
+# **/obj
+# **/secrets.dev.yaml
+# **/values.dev.yaml
+# LICENSE
+# README.md

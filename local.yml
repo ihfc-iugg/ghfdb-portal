@@ -3,12 +3,6 @@ name: ghfdb_local
 volumes:
   ghfdb_local_postgres_data: {}
   ghfdb_local_postgres_data_backups: {}
-  ghfdb_external_apps:
-    driver: local
-    driver_opts:
-      type: 'none'
-      o: 'bind'
-      device: 'C:\Users\jennings\Documents\geoluminate_apps'
 
 services:
   django: &django
@@ -22,16 +16,18 @@ services:
       - mailhog
     working_dir: /app
     volumes:
-      - ghfdb_external_apps:/external_apps
+      - ../external_apps:/external_apps
       - ./:/app:z
     env_file:
       - ./.envs/.local/.django
       - ./.envs/.local/.postgres
     ports:
-      - "8000:8000"
-    command: /external_apps/geoluminate/bin/local/django
-    entrypoint: /external_apps/geoluminate/bin/entrypoint
-     # entrypoint: "tail -f /dev/null"
+      - 8000:8000
+      - 5678:5678
+    # command: ["sh", "-c", "pip install debugpy -t /tmp && python ./manage.py migrate && python /tmp/debugpy --wait-for-client --listen 0.0.0.0:5678 ./manage.py runserver 0.0.0.0:8000"]
+    command: /app/bin/local/django
+    entrypoint: /app/bin/entrypoint
+    #  entrypoint: "tail -f /dev/null"
 
   postgres:
     build:
@@ -50,18 +46,18 @@ services:
   celeryworker:
     <<: *django
     ports: []
-    command: /external_apps/geoluminate/bin/local/celery_worker
+    command: /app/bin/local/celery_worker
 
   celerybeat:
     <<: *django
     ports: []
-    command: /external_apps/geoluminate/bin/local/celery_beat
+    command: /app/bin/local/celery_beat
 
   flower:
     <<: *django
     ports:
       - "5555:5555"
-    command: /external_apps/geoluminate/bin/local/celery_flower
+    command: /app/bin/local/celery_flower
 
   mailhog:
     image: mailhog/mailhog:v1.0.0
@@ -73,4 +69,4 @@ services:
     working_dir: /app/docs
     ports:
       - "9000:9000"
-    command: /external_apps/geoluminate/bin/local/docs
+    command: /app/bin/local/docs

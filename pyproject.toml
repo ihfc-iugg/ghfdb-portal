@@ -3,9 +3,13 @@ name = "global-heat-flow-database"
 version = "0.0.0"
 description = "Code base for the IHFC's Global Heat Flow Database web application"
 authors = ["Sam <samuel.scott.jennings@gmail.com>"]
-license = "GPLv3"
+license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/SSJenny90/world-heat-flow-database"
+packages = [
+    { include = "schemas", from = "project" },
+]
+include = ["LICENSE", "README.md", "requirements.txt"]
 
 classifiers = [
     "Development Status :: 1 - Planning",
@@ -19,6 +23,11 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
 ]
 
+[tool.poetry.urls]
+"World Heat Flow Database Project" = "https://heatflow.world"
+"IHFC" = "http://ihfc-iugg.org"
+
+
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
 django = "^4.2.1"
@@ -27,6 +36,7 @@ django-pint = "^0.7.1"
 django-environ = "^0.10.0"
 flower = "^1.2.0"
 factory-boy = "^3.2.1"
+djangorestframework-datatables = "^0.7.0"
 
 
 [tool.poetry.group.dev.dependencies]

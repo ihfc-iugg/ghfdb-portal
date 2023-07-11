@@ -20,7 +20,7 @@ previous developers.
    :caption: Contents:
 
    readme
-   .. configuration
+   database
    .. applications
    deployment
 

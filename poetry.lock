@@ -2138,6 +2138,22 @@ django = ">=3.0"
 pytz = "*"
 
 [[package]]
+name = "djangorestframework-datatables"
+version = "0.7.0"
+description = "Seamless integration between Django REST framework and Datatables (https://datatables.net)"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "djangorestframework-datatables-0.7.0.tar.gz", hash = "sha256:64ccae255cbe03ae14793c55b900ce58894eb856816d6f9e16acea4a2197a6d9"},
+    {file = "djangorestframework_datatables-0.7.0-py2.py3-none-any.whl", hash = "sha256:1be615b811a5625546e93f4c331b868743925776b6c7ad6c77d22e1af6f49819"},
+]
+
+[package.dependencies]
+djangorestframework = ">=3.7.0"
+pytz = "*"
+
+[[package]]
 name = "djangorestframework-datatables-editor"
 version = "0.3.3"
 description = "Seamless integration between Django REST framework and Datatables (https://datatables.net) with supporting Datatables editor"
@@ -5725,4 +5741,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4.0"
-content-hash = "85b0f826c848b22cd76b67079dfe3b76f85fef3832f0d0320df2862e107376e8"
+content-hash = "426a202c4a80fd42d57ab0aa0cbc98deb16a2357cc2ab2b1d2152c418fb616a5"
