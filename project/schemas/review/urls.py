@@ -1,10 +1,11 @@
 from django.urls import path
+
 from review import views
 
 # from .menu import ReviewMenu
 app_name = "review"
 urlpatterns = [
-    path("", views.ReviewDataTable.as_view(), name="review_list"),
+    # path("", views.ReviewDataTable.as_view(), name="review_list"),
     # path("", views.ReviewList.as_view(), name="list"),
     # path("register/", views.BecomeReviewer.as_view(), name="become_a_reviewer"),
     path("<pk>/", views.ReviewDetailView.as_view(), name="review_detail"),

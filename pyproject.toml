@@ -37,6 +37,13 @@ django-environ = "^0.10.0"
 flower = "^1.2.0"
 factory-boy = "^3.2.1"
 djangorestframework-datatables = "^0.7.0"
+xmlschema = "^2.3.1"
+django-bleach = "^3.0.1"
+django-multiselectfield = "^0.1.12"
+django-client-side-image-cropping = "^0.1.10"
+django-contact-form = "^2.1"
+django-organizations = "^2.1.0"
+django-imagekit = "^4.1.0"
 
 
 [tool.poetry.group.dev.dependencies]

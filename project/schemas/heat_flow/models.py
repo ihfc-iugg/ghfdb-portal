@@ -1,8 +1,8 @@
 """
-Global Heat Flow Database (GHFDB) models for Django. The models are defined using the Django ORM and are used to create 
+Global Heat Flow Database (GHFDB) models for Django. The models are defined using the Django ORM and are used to create
 the database schema. The models are defined using the following sources:
 
-    - Fuchs et. al., (2021). A new database structure for the IHFC Global Heat Flow Database. International Journal of 
+    - Fuchs et. al., (2021). A new database structure for the IHFC Global Heat Flow Database. International Journal of
     Terrestrial Heat Flow and Applications, 4(1), pp.1-14.
 
     - Fuchs et. al. (2023). The Global Heat Flow Database: Update 2023.
@@ -28,7 +28,7 @@ class HeatFlow(Measurement):
 
     site = models.SiteField(
         verbose_name=_("site"),
-        help_text=_("The physical site from which the heat flow measurement was derived"),
+        help_text=_("The physical location from which the heat flow measurement was derived."),
         on_delete=models.PROTECT,
     )
 
@@ -36,16 +36,15 @@ class HeatFlow(Measurement):
         is_primary_data=True,
         base_units="mW / m^2",
         verbose_name=_("heat flow"),
-        help_text=_("site heat flow value"),
+        help_text=_("Measured heat flow value at the site in milliwatts per square meter (mW/m²)."),
         validators=[MinVal(-(10**6)), MaxVal(10**6)],
     )
     q_unc = models.QuantityField(
         base_units="mW / m^2",
         verbose_name=_("heat flow uncertainty"),
         help_text=_(
-            "uncertainty standard deviation of the reported heat-flow value as estimated by an error propagation from"
-            " uncertainty in thermal conductivity and temperature gradient (corrected preferred over measured"
-            " gradient)."
+            "Uncertainty standard deviation of the reported heat flow value as estimated by error propagation from "
+            "uncertainty in thermal conductivity and temperature gradient (corrected preferred over measured gradient)."
         ),
         validators=[MinVal(0), MaxVal(10**6)],
         blank=True,
@@ -61,7 +60,7 @@ class HeatFlow(Measurement):
     borehole_depth = models.QuantityField(
         verbose_name=_("total borehole depth"),
         base_units="m",
-        help_text=_("Specification of the total drilling depth below ground surface level."),
+        help_text=_("The total drilling depth below the ground surface level at the site."),
         validators=[MinVal(0), MaxVal(15000)],
         null=True,
         blank=True,
@@ -70,9 +69,9 @@ class HeatFlow(Measurement):
         verbose_name=_("expedition/platform/ship"),
         null=True,
         help_text=_(
-            "Specify the expedition, cruise, platform or research vessel where the marine heat flow survey was"
-            " conducted. Only applies to marine probe sensing and drillings. Examples: Expedition cruise number OR R/V"
-            " Ship OR D/V Platform"
+            "Specify the expedition, cruise, platform, or research vessel where the marine heat flow survey was"
+            " conducted. This field applies only to marine probe sensing and drillings. Examples: Expedition cruise"
+            " number OR R/V Ship OR D/V Platform."
         ),
         max_length=255,
     )
@@ -80,7 +79,7 @@ class HeatFlow(Measurement):
     environment = models.VocabularyField(
         "environment",
         verbose_name=_("basic geographical environment"),
-        help_text=_("Describes the general geographical setting of the heat-flow site (not the applied methodology)."),
+        help_text=_("Describes the general geographical setting of the heat flow site (not the applied methodology)."),
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
@@ -89,7 +88,7 @@ class HeatFlow(Measurement):
         base_units="°C",
         unit_choices=["°C", "K"],
         verbose_name=_("bottom water temperature"),
-        help_text=_("Seafloor temperature where heat-flow measurements were taken."),
+        help_text=_("Seafloor temperature where the heat flow measurement was made."),
         null=True,
         blank=True,
     )
@@ -97,10 +96,7 @@ class HeatFlow(Measurement):
     explo_method = models.VocabularyField(
         "explo_method",
         verbose_name=_("exploration method"),
-        help_text=_(
-            "Specification of the general means by which the rock was accessed by temperature sensors for the"
-            " respective data entry."
-        ),
+        help_text=_("Indicates the general method by which the rock was accessed by temperature sensors."),
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
@@ -108,7 +104,10 @@ class HeatFlow(Measurement):
     explo_purpose = models.VocabularyField(
         "explo_purpose",
         verbose_name=_("exploration purpose"),
-        help_text=_("Main purpose of the original excavation providing access for the temperature sensors."),
+        help_text=_(
+            "The primary objective of the original exploration, which allowed access for placement of temperature"
+            " sensors."
+        ),
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
@@ -133,8 +132,12 @@ class HeatFlow(Measurement):
         return f"{name}: {self.q}"
         # return f"{name} <{q:~P}>"
 
-    def get_absolute_url(self):
-        return reverse("site", kwargs={"pk": self.pk})
+    def validate(self):
+        """Validate the model instance."""
+        # Don't allow year older than 1900.
+        if self.q_date_acq is not None:
+            if self.q_date_acq.year < 1900:
+                raise ValidationError("Acquisition year cannot be less than 1900.")
 
 
 class Interval(Measurement):
