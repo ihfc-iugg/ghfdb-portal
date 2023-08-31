@@ -1,7 +1,7 @@
 database:
   name: "Global Heat Flow Database"
   acronym: "GHFDB"
-  keywords: 
+  keywords:
     - "heat flow"
     - "geothermal"
     - "geoenergy"

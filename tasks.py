@@ -99,3 +99,11 @@ def runserver(c, production=False):
     else:
         print("🚀 Starting the development server")
         c.run("docker compose -f local.yml up -d")
+
+
+@task
+def reset_db(c):
+    """
+    Build the documentation and open it in a live browser
+    """
+    c.run("docker compose -f local.yml run django python manage.py flush")

@@ -11,4 +11,18 @@ geoluminate.setup(development=True)
 
 os.environ.setdefault("SHOW_DEBUG_TOOLBAR", "True")
 
-ALLOWED_HOSTS = ["139.17.54.176", "ghfdb.localhost", "ghfdb.local"]
+
+# https://docs.djangoproject.com/en/dev/ref/settings/#auth-password-validators
+# removing validators for local development
+AUTH_PASSWORD_VALIDATORS = []
+
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+SERVER_EMAIL = EMAIL_HOST_USER
+
+
+print(EMAIL_HOST)
+print(EMAIL_HOST_PASSWORD)
+print(EMAIL_HOST_USER)

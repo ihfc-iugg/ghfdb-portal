@@ -20,7 +20,7 @@ COMPRESS_STORAGE = "compressor.storage.GzipCompressorFileStorage"
 # Fixes issue with missing static files https://stackoverflow.com/a/71686908
 STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
-ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1"]
+ALLOWED_HOSTS = ["139.17.54.176", "ghfdb.localhost", "ghfdb.local"]
 
 # production email settings
 # ---------------------------

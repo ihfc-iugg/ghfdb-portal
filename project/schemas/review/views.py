@@ -1,5 +1,3 @@
-from auto_datatables.mixins import ScrollerMixin
-from auto_datatables.tables import BaseDataTable
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.mail import send_mail
 from django.db import transaction
@@ -11,15 +9,14 @@ from django.views.generic import DetailView, TemplateView
 
 from .models import Review
 
-
-class ReviewDataTable(BaseDataTable, ScrollerMixin):
-    model = Review
-    fields = ["id", "reviewer", "dataset", "nominated", "submitted", "accepted"]
-    stateSave = True
-    fixedHeader = True
-    scrollY = "100vh"
-    scroller = {"loadingIndicator": True}
-    dom = "rti"
+# class ReviewDataTable(BaseDataTable, ScrollerMixin):
+#     model = Review
+#     fields = ["id", "reviewer", "dataset", "nominated", "submitted", "accepted"]
+#     stateSave = True
+#     fixedHeader = True
+#     scrollY = "100vh"
+#     scroller = {"loadingIndicator": True}
+#     dom = "rti"
 
 
 def user_review_list(request):
