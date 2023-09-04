@@ -15,7 +15,6 @@ setup(development=True)
 
 # OVERRIDE DEFAULT LOCAL SETTINGS BELOW HERE
 # -------------------------------------------
-ALLOWED_HOSTS = ["*"]
 
 DATABASES = {
     "default": {
