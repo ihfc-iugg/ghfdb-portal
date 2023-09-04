@@ -2,6 +2,7 @@
 ###################
 /static
 *.code-workspace
+/.envs
 
 #no migration files except __init__.py
 # **/migrations/*

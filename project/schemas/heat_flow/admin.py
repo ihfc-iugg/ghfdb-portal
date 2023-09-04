@@ -3,23 +3,12 @@ from django.contrib import admin
 # from django.db.models import F
 from django.utils.translation import gettext as _
 from geoluminate.contrib.gis.admin import SiteAdminMixin
-
-# from heat_flow.resources import IntervalResource, SiteResource
-# from quantityfield.fields import QuantityField
-# from geoluminate.widgets import QuantityFormField
-from heat_flow.models import HeatFlow, Interval, Temperature
+from heat_flow.models import Correction, HeatFlow, Interval
 
 
 class CorrectionInline(admin.TabularInline):
-    model = Interval.corrections.through
+    model = Correction
     extra = 0
-
-
-class TemperatureInline(admin.StackedInline):
-    model = Temperature
-    can_delete = False
-    show_change_link = False
-    max_num = 0
 
 
 class IntervalInline(admin.StackedInline):
@@ -31,42 +20,27 @@ class IntervalInline(admin.StackedInline):
 class HeatFlowAdmin(SiteAdminMixin):
     # resource_class = SiteResource
 
-    list_display = [
+    list_display = [  # noqa: RUF012
         "id",
-        # "name",
-        # "lon",
-        # "lat",
-        # "elevation",
-        # "__str__",
         "q",
         "q_unc",
         "q_date_acq",
-        # "environment",
         "water_temp",
-        # "explo_method",
-        # "explo_purpose",
-        # "_reference",
     ]
     readonly_fields = ["id"]
 
     list_filter = ["environment", "explo_method", "explo_purpose"]
 
     inlines = [IntervalInline]
-    fieldsets = [
+    fieldsets = [  # noqa: RUF012
         (
             "Geographic",
             {
                 "fields": [
                     "id",
-                    # "name",
-                    # "geom",
-                    # "elevation",
                     "borehole_depth",
                     "expedition",
-                    # ('year', 'month'),
                     "q_date_acq",
-                    # "environment",
-                    # "water_temp",
                 ]
             },
         ),
@@ -134,12 +108,9 @@ class IntervalAdmin(admin.ModelAdmin):
         "tc_strategy",
     ]
 
-    inlines = [
-        TemperatureInline,
-        CorrectionInline,
-    ]
+    # inlines = [CorrectionInline]
 
-    fieldsets = [
+    fieldsets = [  # noqa: RUF012
         (
             _("Metadata"),
             {
