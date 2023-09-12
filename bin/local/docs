@@ -4,9 +4,4 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-# sphinx-apidoc -o ./api .
-
-# sphinx-apidoc -M -T -o docs/ project/schemas/* **/migrations/* -e --force -d 2
-    # c.run("sphinx-build -E -b html docs docs/_build")
-
 exec sphinx-autobuild -b html --host 0.0.0.0 --port 9000 --watch . -c . . _build/html
