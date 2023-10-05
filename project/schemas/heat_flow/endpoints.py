@@ -1,6 +1,6 @@
 from geoluminate import api
 
-from .models import HeatFlow, Interval
+from .models import HeatFlow, HeatFlowChild
 
 # @api.register
 # class SampleEndpoint(api.Endpoint):
@@ -9,4 +9,4 @@ from .models import HeatFlow, Interval
 
 # @api.register
 # class SiteEndpoint(api.Endpoint):
-#     model = Interval
+#     model = HeatFlowChild

@@ -1,29 +1,8 @@
-from django import forms
-from django.forms import widgets
-from django.forms.fields import IntegerField
-from django.forms.models import ModelForm, construct_instance, model_to_dict
-from django.forms.widgets import HiddenInput
+from django.forms.models import ModelForm
 from django.utils.translation import gettext as _
-from formset.collection import FormCollection
-from formset.fieldset import Fieldset, FieldsetMixin
-from formset.renderers import bootstrap
-from formset.richtext.widgets import RichTextarea
-from formset.utils import FormMixin
-from formset.widgets import (  # DateTimeInput,
-    DateInput,
-    DualSortableSelector,
-    Selectize,
-    SelectizeMultiple,
-    UploadedFileInput,
-)
+from formset.fieldset import FieldsetMixin
 
-# from geoluminate.contrib.project.models import Contributor, Dataset, Description, KeyDate, Project
-from geoluminate.contrib.project.forms import GenericForm, SampleForm
-from geoluminate.contrib.user.forms import ProfileFormNoImage
-from geoluminate.contrib.user.models import Profile
-from geoluminate.utils.forms import DefaultFormRenderer
-
-from .models import HeatFlow, Interval
+from .models import HeatFlow, HeatFlowChild
 
 
 # ===================== FORMS =====================
@@ -41,8 +20,18 @@ class HeatFlowChildForm(FieldsetMixin, ModelForm):
     help_text = _("Add a new child heat flow.")
 
     class Meta:
-        model = Interval
-        fields = ["qc", "qc_unc", "q_method", "q_top", "q_bot", "hf_pen", "hf_probe", "hf_probeL", "probe_title"]
+        model = HeatFlowChild
+        fields = [
+            "qc",
+            "qc_uncertainty",
+            "q_method",
+            "q_top",
+            "q_bottom",
+            "hf_pen",
+            "probe_type",
+            "hf_probeL",
+            "probe_title",
+        ]
 
 
 class ProbeSensingForm(FieldsetMixin, ModelForm):
@@ -50,8 +39,8 @@ class ProbeSensingForm(FieldsetMixin, ModelForm):
     help_text = _("Probe sensing for marine heat flow measurements.")
 
     class Meta:
-        model = Interval
-        fields = ["hf_pen", "hf_probe", "hf_probeL", "probe_title"]
+        model = HeatFlowChild
+        fields = ["hf_pen", "probe_type", "hf_probeL", "probe_title"]
 
 
 class MetadataAndFlagsForm(FieldsetMixin, ModelForm):
@@ -59,16 +48,20 @@ class MetadataAndFlagsForm(FieldsetMixin, ModelForm):
     help_text = _("Metadata and flags for heat flow child measurements.")
 
     class Meta:
-        model = Interval
-        fields = ["q_tf_mech", "q_date_acquired", "q_method", "relevant_child"]
+        model = HeatFlowChild
+        fields = ["q_method", "relevant_child"]
 
 
 class TemperatureForm(FieldsetMixin, ModelForm):
     label = _("Temperature")
     help_text = _("Temperature for heat flow child measurements.")
 
+    # T_corr_top and T_corr_bottom applicable only if gradient corection for borehole effects is reported - see spreadsheet
+
+    # tc_location = [literature/unspecified] only if {tc_source} = [Assumed from literature]
+
     class Meta:
-        model = Interval
+        model = HeatFlowChild
         fields = [
             "t_grad_mean",
             "T_grad_uncertainty",
@@ -89,7 +82,7 @@ class ConductivityForm(FieldsetMixin, ModelForm):
     help_text = _("Conductivity for heat flow child measurements.")
 
     class Meta:
-        model = Interval
+        model = HeatFlowChild
         fields = [
             "tc_mean",
             "tc_uncertainty",

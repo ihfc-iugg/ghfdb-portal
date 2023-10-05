@@ -1,6 +1,5 @@
 import pytest
 from celery.result import EagerResult
-
 from heat_flow.users.tasks import get_users_count
 from heat_flow.users.tests.factories import UserFactory
 

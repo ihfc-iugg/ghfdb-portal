@@ -1,109 +1,58 @@
 from django.contrib import admin
-
-# from django.db.models import F
 from django.utils.translation import gettext as _
-from geoluminate.contrib.gis.admin import SiteAdminMixin
-from heat_flow.models import Correction, HeatFlow, Interval
+from heat_flow.models import HeatFlow, HeatFlowChild
 
 
-class CorrectionInline(admin.TabularInline):
-    model = Correction
-    extra = 0
-
-
-class IntervalInline(admin.StackedInline):
-    model = Interval
+class HeatFlowChildInline(admin.StackedInline):
+    model = HeatFlowChild
     max_num = 0
 
 
 @admin.register(HeatFlow)
-class HeatFlowAdmin(SiteAdminMixin):
-    # resource_class = SiteResource
-
+class HeatFlowAdmin(admin.ModelAdmin):
     list_display = [  # noqa: RUF012
         "id",
         "q",
-        "q_unc",
-        "q_date_acq",
-        "water_temp",
+        "q_uncertainty",
     ]
-    readonly_fields = ["id"]
 
     list_filter = ["environment", "explo_method", "explo_purpose"]
 
-    inlines = [IntervalInline]
+    inlines = [HeatFlowChildInline]
+    readonly_fields = ["uuid"]
     fieldsets = [  # noqa: RUF012
         (
-            "Geographic",
-            {
-                "fields": [
-                    "id",
-                    "borehole_depth",
-                    "expedition",
-                    "q_date_acq",
-                ]
-            },
-        ),
-        (
             "Heat Flow",
-            {"fields": ["q", "q_unc"]},
-        ),
-        (
-            "Marine",
-            {
-                "fields": [
-                    "water_temp",
-                ]
-            },
-        ),
-        (
-            "References",
-            {
-                "fields": [
-                    "literature",
-                ]
-            },
-        ),
-        (
-            "Comment",
-            {
-                "fields": [
-                    "comment",
-                ]
-            },
+            {"fields": ["uuid", "q", "q_uncertainty"]},
         ),
     ]
 
     search_fields = [
-        "id",
-        # "name",
+        "uuid",
     ]
     point_zoom = 8
     map_width = 900
     modifiable = True
 
-    def coords(self, obj):
-        return obj.geom.coords
 
-
-@admin.register(Interval)
-class IntervalAdmin(admin.ModelAdmin):
+@admin.register(HeatFlowChild)
+class HeatFlowChildAdmin(admin.ModelAdmin):
     list_display = [
         "relevant_child",
         "q_top",
-        "q_bot",
+        "q_bottom",
         "qc",
-        "qc_unc",
+        "qc_uncertainty",
         "q_method",
+        "water_temperature",
         "tc_mean",
         "tc_saturation",
         "tc_pT_conditions",
         "tc_strategy",
     ]
     list_filter = [
-        "q_tf_mech",
         "q_method",
-        "hf_probe",
+        "probe_type",
         "tc_source",
         "tc_strategy",
     ]
@@ -125,11 +74,10 @@ class IntervalAdmin(admin.ModelAdmin):
             _("Heat Flow"),
             {
                 "fields": [
-                    ("qc", "qc_unc"),
-                    # "q_tf_mech",
+                    ("qc", "qc_uncertainty"),
                     "q_method",
                     "q_top",
-                    "q_bot",
+                    "q_bottom",
                     # 'corrections',
                 ],
             },
@@ -140,7 +88,7 @@ class IntervalAdmin(admin.ModelAdmin):
                 "fields": [
                     "hf_pen",
                     "probe_tilt",
-                    "hf_probe",
+                    "probe_type",
                     "hf_probeL",
                 ],
             },

@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   libcairo2 libcairo2-dev \
   # dependencies for building Python packages
   build-essential && \
-  # install poetry for dependencies   
+  # install poetry for dependencies
   pip install "poetry==$POETRY_VERSION" && \
   # # cleaning up unused files
   apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false  && \
@@ -22,7 +22,7 @@ COPY pyproject.toml poetry.lock ./
 # Create Python Dependency and Sub-Dependency Wheels.
 RUN poetry export -o requirements.txt --with dev,docs && \
   pip wheel --wheel-dir /usr/src/app/wheels \
-  -r requirements.txt 
+  -r requirements.txt
 
 
 # # ====================== RUN STAGE ============================

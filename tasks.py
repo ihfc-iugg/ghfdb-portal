@@ -89,16 +89,25 @@ def release(c, rule=""):
 
 
 @task
-def runserver(c, production=False):
+def runserver(c, f="local", build=False):
     """
     Start the development server
     """
-    if production:
-        print("🚀 Starting the production server")
-        c.run("docker compose -f production.yml up -d")
-    else:
-        print("🚀 Starting the development server")
-        c.run("docker compose -f local.yml up -d")
+    print(f"🚀 Starting the {f} server")
+    if build:
+        # print("Locking dependencies")
+        # c.run("poetry lock")
+        print("🚀 Building the images")
+    # print(f"docker compose -f {f}.yml up django {'--build' if build else ''} -d")
+    c.run(f"docker compose -f {f}.yml up django {'--build' if build else ''} -d")
+
+
+@task
+def rundocs(c):
+    """
+    Start the development server
+    """
+    c.run("docker compose -f local.yml up django -d")
 
 
 @task
@@ -107,3 +116,11 @@ def reset_db(c):
     Build the documentation and open it in a live browser
     """
     c.run("docker compose -f local.yml run django python manage.py flush")
+
+
+@task
+def run(c, command):
+    """
+    Start the development server
+    """
+    c.run(f"docker compose -f local.yml run django {command}")
