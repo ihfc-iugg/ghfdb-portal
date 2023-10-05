@@ -8,122 +8,108 @@ Global Heat Flow Database (GHFDB) models for Django. The models are defined usin
 
 """
 
-from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator as MaxVal
 from django.core.validators import MinValueValidator as MinVal
 from django.urls import reverse
 from django.utils.translation import gettext as _
-from geoluminate.contrib.project.models import Measurement
-from geoluminate.db import models
+from geoluminate import models
+from geoluminate.contrib.samples.models import Measurement
+from geoluminate.utils.generic import max_length_from_choices
 
 # from geoscience.fields import EarthMaterialOneToOne, GeologicTimeOneToOne
+from . import choices
 
 
 class HeatFlow(Measurement):
     """Terrestrial heat flow as part of the Global Heat Flow Database. This is
     the "parent" table outlined in the formal structure of the database put
     forth by Fuchs et. al. (2021).
+
+    ```{note}
+    This model inherits from `geoluminate.contrib.samples.models.Measurement` which implicitly defines a relationship to the `geoluminate.contrib.samples.models.Sample` model. This means we already have access to several fields from the newly defined schema (Fuchs et al 2021) which do not need to be redefined here. Convenience methods are added to the model to retrieve these data in the expected way
+    ```
+
     """
 
-    site = models.SiteField(
-        verbose_name=_("site"),
-        help_text=_("The physical location from which the heat flow measurement was derived."),
-        on_delete=models.PROTECT,
-    )
+    PRIMARY_DATA_FIELDS = ["q"]
 
     q = models.QuantityField(
-        is_primary_data=True,
         base_units="mW / m^2",
         verbose_name=_("heat flow"),
-        help_text=_("Measured heat flow value at the site in milliwatts per square meter (mW/m²)."),
+        help_text=_(
+            "Heat-flow density for the location after all corrections for instrumental and environmental effects."
+        ),
         validators=[MinVal(-(10**6)), MaxVal(10**6)],
     )
-    q_unc = models.QuantityField(
+    q_uncertainty = models.QuantityField(
         base_units="mW / m^2",
         verbose_name=_("heat flow uncertainty"),
         help_text=_(
-            "Uncertainty standard deviation of the reported heat flow value as estimated by error propagation from "
-            "uncertainty in thermal conductivity and temperature gradient (corrected preferred over measured gradient)."
+            "Uncertainty (one standard deviation) of the heat-flow value [q] estimated by an error propagation from"
+            " uncertainty in thermal conductivity and temperature gradient, standard deviation from the average of the"
+            " heat flow intervals or deviation from the linear regression of the Bullard plot."
         ),
         validators=[MinVal(0), MaxVal(10**6)],
         blank=True,
         null=True,
     )
-    q_date_acq = models.DateField(
-        _("date acquired"),
-        help_text=_(
-            'Year of acquisition of the heat-flow data in the form "YYYY-MM" (may differ from publication year)'
-        ),
-        null=True,
-    )
-    borehole_depth = models.QuantityField(
-        verbose_name=_("total borehole depth"),
-        base_units="m",
-        help_text=_("The total drilling depth below the ground surface level at the site."),
-        validators=[MinVal(0), MaxVal(15000)],
-        null=True,
-        blank=True,
-    )
-    expedition = models.CharField(
-        verbose_name=_("expedition/platform/ship"),
-        null=True,
-        help_text=_(
-            "Specify the expedition, cruise, platform, or research vessel where the marine heat flow survey was"
-            " conducted. This field applies only to marine probe sensing and drillings. Examples: Expedition cruise"
-            " number OR R/V Ship OR D/V Platform."
-        ),
+    environment = models.CharField(
         max_length=255,
-    )
-
-    environment = models.VocabularyField(
-        "environment",
         verbose_name=_("basic geographical environment"),
-        help_text=_("Describes the general geographical setting of the heat flow site (not the applied methodology)."),
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-    )
-    water_temp = models.QuantityField(
-        base_units="°C",
-        unit_choices=["°C", "K"],
-        verbose_name=_("bottom water temperature"),
-        help_text=_("Seafloor temperature where the heat flow measurement was made."),
+        help_text=_("Describes the general geographical setting of the heat-flow site (not the applied methodology)."),
+        choices=choices.GeographicEnvironment.choices,
         null=True,
         blank=True,
     )
-
-    explo_method = models.VocabularyField(
-        "explo_method",
-        verbose_name=_("exploration method"),
-        help_text=_("Indicates the general method by which the rock was accessed by temperature sensors."),
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-    )
-    explo_purpose = models.VocabularyField(
-        "explo_purpose",
-        verbose_name=_("exploration purpose"),
+    corr_HP_flag = models.BooleanField(
+        verbose_name=_("HP correction flag"),
         help_text=_(
-            "The primary objective of the original exploration, which allowed access for placement of temperature"
-            " sensors."
+            "Specifies if corrections to the calculated heat flow considers the contribution of the heat production of"
+            " the overburden to the terrestrial surface heat flow q."
         ),
         null=True,
         blank=True,
-        on_delete=models.SET_NULL,
+        default=None,
+    )
+    total_depth_MD = models.QuantityField(
+        base_units="m",
+        verbose_name=_("total mesaured depth"),
+        help_text=_("Total measured depth (MD) of the borehole."),
+        validators=[MinVal(-12000), MaxVal(9000)],
+        null=True,
+        blank=True,
+    )
+    total_depth_TVD = models.QuantityField(
+        base_units="m",
+        verbose_name=_("total true vertical depth"),
+        help_text=_("Specification of the total true vertical depth below mean sea level."),
+        validators=[MinVal(-12000), MaxVal(9000)],
+        null=True,
+        blank=True,
+    )
+    explo_method = models.CharField(
+        max_length=255,
+        verbose_name=_("exploration method"),
+        help_text=_(
+            "Specification of the general means by which the rock was accessed by temperature sensors for the"
+            " respective data entry."
+        ),
+        choices=choices.ExplorationMethod.choices,
+        null=True,
+        blank=True,
+    )
+    explo_purpose = models.CharField(
+        max_length=255,
+        verbose_name=_("exploration purpose"),
+        help_text=_("Main purpose of the reconnaissance target providing access for the temperature sensors."),
+        choices=choices.ExplorationPurpose.choices,
+        null=True,
+        blank=True,
     )
 
     class Meta:
         verbose_name = _("Heat Flow")
         verbose_name_plural = _("Heat Flow (Parent)")
-        default_related_name = "sites"
-        db_table = "global_heat_flow"
-
-    def save(self, *args, **kwargs):
-        # if uncertainty > 50%? of mean, ask user for validation
-        return super().save(*args, **kwargs)
-
-    def __unicode__(self):
-        return "%s" % (self.name)
 
     def __str__(self):
         """<Unnamed Site: 45.2 +/- 3.2 mW/m^2>"""
@@ -131,19 +117,55 @@ class HeatFlow(Measurement):
         return f"{name}: {self.q}"
         # return f"{name} <{q:~P}>"
 
-    def validate(self):
-        """Validate the model instance."""
-        # Don't allow year older than 1900.
-        if self.q_date_acq is not None:
-            if self.q_date_acq.year < 1900:
-                raise ValidationError("Acquisition year cannot be less than 1900.")
+    @property
+    def name(self):
+        return self.get_sample.name
+
+    @property
+    def lat_NS(self):
+        return self.get_location.point.y
+
+    @property
+    def long_EW(self):
+        return self.get_location.point.x
+
+    @property
+    def elevation(self):
+        return self.get_location.elevation
+
+    @property
+    def q_comment(self):
+        return self.get_sample.comment
+
+    def get_quality(self):
+        """From Fuchs et al 2023 - Quality-assurance of heat-flow data: The new structure and evaluation scheme of the IHFC Global Heat Flow Database (Section 3.4 - Evaluation of the site-specific HFD quality on the parent level).
+
+        >So far, the evaluation scheme was applied on the child level only. To provide a quality score on the parent level, several cases need to be distinguished. First, if only one child element is present, the score of this entry is simply passed to the parent level. Secondly, if more than one child element is present and all child elements were considered in the calculation of the site-specific HFD value, the poorest ranking is inherited to the parent level (Fig. 5). Thirdly, if more than one child element is present but not all of them were used to calculate a site-specific HFD, only the ones used are considered and the poorest ranking of the relevant child elements is inherited to the parent level again (cf. underlines in Fig. 5).
+        """
+        count = self.children.count()
+
+        if count == 1:
+            return self.children.first().get_quality()
+        elif count > 1:
+            # get the quality of the children that were used to calculate the parent
+            children = self.children.filter(relevant_child=True)
+            if children.count() == 0:
+                return None
+            elif children.count() == 1:
+                return children.first().get_quality()
+            else:
+                return children.order_by("quality").first().get_quality()
+        else:
+            return None
 
 
-class Interval(Measurement):
-    """Interval heat flow as part of the Global Heat Flow Database. This is
+class HeatFlowChild(Measurement):
+    """Child heat flow as part of the Global Heat Flow Database. This is
     the "child" schema outlined in the formal structure of the database put
     forth by Fuchs et al (2021).
     """
+
+    PRIMARY_DATA_FIELDS = ["qc"]
 
     parent = models.ForeignKey(
         HeatFlow,
@@ -151,115 +173,73 @@ class Interval(Measurement):
         blank=True,
         verbose_name=_("parent"),
         help_text=_("parent heat flow site"),
-        related_name="intervals",
+        related_name="children",
         on_delete=models.CASCADE,
     )
 
     # HEAT FLOW DENSITY FIELDS
     qc = models.QuantityField(
-        is_primary_data=True,
         base_units="mW / m^2",
-        verbose_name=_("heat flow"),
-        help_text=_("child heat flow value"),
+        verbose_name=_("heat flow (child)"),
+        help_text=_("Any kind of heat-flow value."),
         validators=[MinVal(-(10**6)), MaxVal(10**6)],
     )
-    qc_unc = models.QuantityField(
+    qc_uncertainty = models.QuantityField(
         base_units="mW / m^2",
         verbose_name=_("heat flow uncertainty"),
         help_text=_(
-            "uncertainty standard deviation of the reported heat-flow value as estimated by an error propagation from"
-            " uncertainty in thermal conductivity and temperature gradient (corrected preferred over measured"
-            " gradient)."
+            "Uncertainty (one standard deviation) of the heat-flow value [qc] estimated by an error propagation from"
+            " uncertainty in thermal conductivity and temperature gradient or deviation from the linear regression of"
+            " the Bullard plot (corrected preferred over measured gradient)."
         ),
         validators=[MinVal(0), MaxVal(10**6)],
         blank=True,
         null=True,
     )
 
-    q_method = models.VocabularyField(
-        "q_method",
+    q_method = models.CharField(
+        max_length=255,
+        choices=choices.HeatFlowMethod.choices,
         verbose_name=_("method"),
-        help_text=_("Principal method of heat-flow density calculation from temperature and thermal conductivity data"),
+        help_text=_("Principal method of heat-flow calculation from temperature and thermal conductivity data."),
         null=True,
         blank=True,
-        on_delete=models.SET_NULL,
     )
     q_top = models.QuantityField(
         base_units="m",
         verbose_name=_("interval top"),
         help_text=_(
-            "Specifies the true vertical depth at the top of the heat-flow interval relative to land surface/ocean"
-            " bottom."
+            "Describes the true vertical depth (TVD) of the top end of the heat-flow determination interval relative to"
+            " the land surface/seafloor."
         ),
-        validators=[MinVal(0), MaxVal(10000)],
+        validators=[MinVal(0), MaxVal(20000)],
         blank=True,
         null=True,
     )
-    q_bot = models.QuantityField(
+    q_bottom = models.QuantityField(
         base_units="m",
         verbose_name=_("interval bottom"),
         help_text=_(
-            "Describes the true vertical depth of the bottom end of the heat-flow determination interval relative to"
-            " the land surface/ocean bottom."
+            "Describes the true vertical depth (TVD) of the bottom end of the heat-flow determination interval relative"
+            " to the land surface."
         ),
-        validators=[MinVal(0), MaxVal(10000)],
+        validators=[MinVal(0), MaxVal(20000)],
         blank=True,
         null=True,
     )
 
-    # PROBE SENSING
-    hf_pen = models.QuantityField(
-        base_units="m",
-        verbose_name=_("penetration depth"),
-        help_text=_("Depth of penetration of marine probe into the sediment."),
-        validators=[MinVal(0), MaxVal(100)],
-        blank=True,
+    expedition = models.CharField(
+        verbose_name=_("expedition/platform/ship"),
         null=True,
-    )
-    hf_probe = models.VocabularyField(
-        "hf_probe",
-        verbose_name=_("probe type"),
-        help_text=_("Type of marine probe used for measurement."),
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-    )
-    hf_probeL = models.QuantityField(
-        base_units="m",
-        verbose_name=_("probe length"),
-        help_text=_("length of the marine probe."),
-        validators=[MinVal(0), MaxVal(100)],
-        blank=True,
-        null=True,
-    )
-    probe_tilt = models.QuantityField(
-        base_units="degree",
-        verbose_name=_("tilt"),
-        help_text=_("Tilt of the marine probe."),
-        validators=[MinVal(0), MaxVal(90)],
-        blank=True,
-        null=True,
-    )
-
-    # METADATA AND FLAGS
-    q_tf_mech = models.VocabularyField(
-        "q_tf_mech",
-        verbose_name=_("transfer mechanism"),
         help_text=_(
-            "Specification of the predominant heat transfer mechanism relevant to the reported heat flow value."
+            "Specification of the expedition, cruise, platform or research vessel where the marine heat flow survey was"
+            " conducted."
         ),
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
+        max_length=255,
     )
-    q_date_acq = models.DateField(
-        _("date of acquisition (YYYY-MM)"),
-        help_text=_("Year of acquisition of the heat-flow data (may differ from publication year)"),
-        null=True,
-        blank=True,
-    )
+
     relevant_child = models.BooleanField(
-        verbose_name=_("Is relevant child?"),
+        verbose_name=_("Relevant child"),
         help_text=_(
             "Specify whether the child entry is used for computation of representative location heat flow values at the"
             " parent level or not."
@@ -267,6 +247,53 @@ class Interval(Measurement):
         default=None,
         null=True,
         blank=True,
+    )
+
+    # PROBE SENSING
+    probe_penetration = models.QuantityField(
+        base_units="m",
+        verbose_name=_("penetration depth"),
+        help_text=_("Penetration depth of marine probe into the sediment."),
+        validators=[MinVal(0), MaxVal(1000)],
+        blank=True,
+        null=True,
+    )
+    probe_type = models.CharField(
+        max_length=255,
+        choices=choices.ProbeType.choices,
+        verbose_name=_("probe type"),
+        help_text=_("Type of heat-flow probe used for measurement."),
+        null=True,
+        blank=True,
+    )
+    probe_length = models.QuantityField(
+        base_units="m",
+        verbose_name=_("probe length"),
+        help_text=_("Length of marine heat-flow probe."),
+        validators=[MinVal(0), MaxVal(100)],
+        blank=True,
+        null=True,
+    )
+    probe_tilt = models.QuantityField(
+        base_units="degree",
+        verbose_name=_("probe tilt"),
+        help_text=_("Tilt of the marine heat-flow probe."),
+        validators=[MinVal(0), MaxVal(90)],
+        blank=True,
+        null=True,
+    )
+
+    water_temperature = models.QuantityField(
+        base_units="°C",
+        unit_choices=["°C", "K"],
+        verbose_name=_("bottom water temperature"),
+        help_text=_(
+            "Seafloor temperature where surface heat-flow value (q) is taken. e.g. PT 100 or Mudline temperature for"
+            " ocean drilling data."
+        ),
+        null=True,
+        blank=True,
+        validators=[MinVal(-10), MaxVal(1000)],
     )
     # lithology = EarthMaterialOneToOne(
     #     verbose_name=_("lithology"),
@@ -289,108 +316,124 @@ class Interval(Measurement):
     #     null=True,
     # )
 
+    # q_date_acq = models.DateField(
+    #     _("date of acquisition (YYYY-MM)"),
+    #     help_text=_("Year of acquisition of the heat-flow data (may differ from publication year)"),
+    #     null=True,
+    #     blank=True,
+    # )
+
     # Temperature Fields
     T_grad_mean = models.QuantityField(
         base_units="K/km",
-        verbose_name=_("measured gradient"),
-        help_text=_("measured temperature gradient for the heat-flow determination interval."),
+        verbose_name=_("Calculated or inferred temperature gradient "),
+        help_text=_("Mean temperature gradient measured for the heat-flow determination interval."),
         null=True,
         blank=True,
+        validators=[MinVal(-(10**5)), MaxVal(10**5)],
     )
     T_grad_uncertainty = models.QuantityField(
         base_units="K/km",
-        verbose_name=_("uncertainty"),
+        verbose_name=_("Temperature gradient uncertainty"),
         help_text=_(
-            "uncertainty (standard deviation) of the measured temperature gradient estimated by error propagation from"
-            " uncertainty in the top and bottom interval temperatures."
+            "Uncertainty (one standard deviation) of mean measured temperature gradient [T_grad_mean] as estimated by"
+            " an error propagation from the uncertainty in the top and bottom temperature determinations or deviation"
+            " from the linear regression of the temperature-depth data."
         ),
         blank=True,
         null=True,
+        validators=[MinVal(0), MaxVal(10**5)],
     )
     T_grad_mean_cor = models.QuantityField(
         base_units="K/km",
-        verbose_name=_("corrected gradient"),
+        verbose_name=_("Mean temperature gradient corrected"),
         help_text=_(
-            "temperature gradient corrected for borehole and environmental effects. Correction method should be"
-            " recorded in the relevant field."
+            "Mean temperature gradient corrected for borehole (drilling/mud circulation) and environmental effects"
+            " (terrain effects/topography, sedimentation, erosion, magmatic intrusions, paleoclimate, etc.). Name the"
+            " correction method in the corresponding item."
         ),
         blank=True,
         null=True,
+        validators=[MinVal(-(10**5)), MaxVal(10**5)],
     )
     T_grad_uncertainty_cor = models.QuantityField(
         base_units="K/km",
-        verbose_name=_("uncertainty"),
+        verbose_name=_("Corrected temperature gradient uncertainty"),
         help_text=_(
-            "uncertainty (standard deviation) of the corrected temperature gradient estimated by error propagation from"
-            " uncertainty of the measured gradient and the applied correction approaches."
+            "Uncertainty (one standard deviation) of  mean corrected temperature gradient [T_grad_mean_cor] as"
+            " estimated by an error propagation from the uncertainty in the top and bottom temperature determinations"
+            " or deviation from the linear regression of the temperature depth data."
         ),
         blank=True,
         null=True,
+        validators=[MinVal(-(10**5)), MaxVal(10**5)],
     )
-    T_method_top = models.VocabularyField(
-        "T_method",
-        verbose_name=_("temperature method (top)"),
-        help_text=_("Method used to determine temperature at the top of the heat flow interval."),
+    T_method_top = models.CharField(
+        max_length=255,
+        choices=choices.TemperatureMethod.choices,
+        verbose_name=_("Temperature method (top)"),
+        help_text=_("Method used for temperature determination at the top of the heat-flow determination interval."),
         null=True,
         blank=True,
-        on_delete=models.SET_NULL,
     )
-    T_method_bottom = models.VocabularyField(
-        "T_method",
-        verbose_name=_("temperature method (bottom)"),
-        help_text=_("Method used to determine temperature at the bottom of the heat flow interval."),
+    T_method_bottom = models.CharField(
+        max_length=255,
+        choices=choices.TemperatureMethod.choices,
+        verbose_name=_("Temperature method (bottom)"),
+        help_text=_("Method used for temperature determination at the bottom of the heat-flow determination interval."),
         null=True,
         blank=True,
-        on_delete=models.SET_NULL,
     )
     T_shutin_top = models.PositiveIntegerQuantityField(
         base_units="hour",
         verbose_name=_("Shut-in time (top)"),
         help_text=_(
-            "Time of measurement at the interval top in relation to the end of drilling/end of mud circulation."
-            " Positive values are measured after the drilling, 0 represents temperatures measured during the drilling."
+            "Time of measurement at the interval top in relation to the end values measured during the drilling are"
+            " equal to zero."
         ),
         blank=True,
         null=True,
+        validators=[MaxVal(10000)],
     )
     T_shutin_bottom = models.PositiveIntegerQuantityField(
         base_units="hour",
-        verbose_name=_("Shut-in time (bottom; hrs)"),
+        verbose_name=_("Shut-in time (bottom)"),
         help_text=_(
-            "Time of measurement at the interval bottom in relation to the end of drilling/end of mud circulation."
-            " Positive values are measured after the drilling, 0 represents temperatures measured during the drilling."
+            "Time of measurement at the interval bottom in relation to the end values measured during the drilling are"
+            " equal to zero."
         ),
         blank=True,
         null=True,
+        validators=[MaxVal(10000)],
     )
-    T_correction_top = models.VocabularyField(
-        "T_correction_method",
-        verbose_name=_("correction method (top)"),
+    T_correction_top = models.CharField(
+        max_length=255,
+        choices=choices.TemperatureCorrection.choices,
+        verbose_name=_("Temperature correction method (top)"),
         help_text=_(
-            "Approach used at the top of the heat flow interval to correct the measured temperature for drilling"
-            " perturbations."
+            "Approach applied to correct the temperature measurement for drilling perturbations at the top of the"
+            " interval used for heat-flow determination."
         ),
         null=True,
         blank=True,
-        on_delete=models.SET_NULL,
     )
-    T_correction_bottom = models.VocabularyField(
-        "T_correction_method",
-        verbose_name=_("correction method (bottom)"),
+    T_correction_bottom = models.CharField(
+        max_length=255,
+        choices=choices.TemperatureCorrection.choices,
+        verbose_name=_("Temperature correction method (bottom)"),
         help_text=_(
-            "Approach used at the bottom of the heat flow interval to correct the measured temperature for drilling"
-            " perturbations."
+            "Approach applied to correct the temperature measurement for drilling perturbations at the bottom of the"
+            " interval used for heat-flow determination."
         ),
         null=True,
         blank=True,
-        on_delete=models.SET_NULL,
     )
-    T_count = models.PositiveSmallIntegerField(
-        _("number of temperature recordings"),
+    T_number = models.PositiveSmallIntegerField(
+        _("Number of temperature recordings"),
         help_text=_(
             "Number of discrete temperature points (e.g. number of used BHT values, log values or thermistors used in"
-            " probe sensing) confirming the mean temperature gradient. Not the repetition of one measurement at a"
-            " certain depth."
+            " probe sensing) confirming the mean temperature gradient [T_grad_mean_meas]. NOT the repetition of one"
+            " measurement at a certain depth. "
         ),
         blank=True,
         null=True,
@@ -399,10 +442,10 @@ class Interval(Measurement):
     # Conductivity fields
     tc_mean = models.QuantityField(
         base_units="W/mK",
-        verbose_name=_("Mean conductivity"),
+        verbose_name=_("Mean thermal conductivity"),
         help_text=_(
-            "Mean conductivity in the vertical direction representative for the heat-flow determination interval. Value"
-            " should reflect true in-situ conditions for the interval."
+            "Mean conductivity in vertical direction representative for the interval of heat-flow determination. In"
+            " best case, the value reflects the true in-situ conditions for the corresponding heat-flow interval."
         ),
         null=True,
         blank=True,
@@ -410,87 +453,197 @@ class Interval(Measurement):
     )
     tc_uncertainty = models.QuantityField(
         base_units="W/mK",
-        verbose_name=_("uncertainty"),
-        help_text=_("Uncertainty of the mean thermal conductivity given as one-sigma standard deviation."),
+        verbose_name=_("Thermal conductivity uncertainty"),
+        help_text=_("Uncertainty (one standard deviation) of mean thermal conductivity."),
         validators=[MinVal(0), MaxVal(100)],
         blank=True,
         null=True,
     )
-    tc_source = models.VocabularyField(
-        "tc_source",
-        verbose_name=_("source"),
-        help_text=_("Nature of the samples from which the mean thermal conductivity was determined"),
+    tc_source = models.CharField(
+        max_length=255,
+        choices=choices.ConductivitySource.choices,
+        verbose_name=_("Thermal conductivity source"),
+        help_text=_("Nature of the samples from which the mean thermal conductivity was determined."),
         null=True,
         blank=True,
-        on_delete=models.SET_NULL,
+    )
+    tc_location = models.CharField(
+        max_length=255,
+        choices=choices.ConductivityLocation.choices,
+        verbose_name=_("Thermal conductivity location"),
+        help_text=_("Location of conductivity data used for heat-flow calculation."),
+        null=True,
+        blank=True,
     )
     tc_method = models.CharField(
-        _("method"),
-        help_text=_("Method used to determine the mean thermal conductivity over the given interval"),
-        max_length=100,
+        max_length=255,
+        choices=choices.ConductivityMethod.choices,
+        verbose_name=_("Thermal conductivity method"),
+        help_text=_("Method used to determine mean thermal conductivity."),
         blank=True,
         null=True,
     )
     tc_saturation = models.CharField(
-        _("saturation state"),
-        help_text=_("Saturation state of the rock sample studied for thermal conductivity"),
-        max_length=100,
+        max_length=255,
+        choices=choices.ConductivitySaturation.choices,
+        verbose_name=_("Thermal conductivity saturation"),
+        help_text=_("Saturation state of the studied rock interval studied for thermal conductivity."),
         null=True,
         blank=True,
     )
-    tc_pT_conditions = models.VocabularyField(
-        "tc_pT_conditions",
-        verbose_name=_("pT conditions"),
+    tc_pT_conditions = models.CharField(
+        max_length=255,
+        choices=choices.ConductivityPTConditions.choices,
+        verbose_name=_("Thermal conductivity pT conditions"),
         help_text=_(
-            "Pressure and temperature conditions under which the mean thermal conductivity for the given interval was"
-            ' determined. "Recorded" - determined under true conditions at target depths (e.g. sensing in boreholes),'
-            ' "Replicated" - determined in a laboratory under replicated in-situ conditions, "Actual" - under'
-            " conditions at the respective depth of the heat-flow interval"
+            "Qualified conditions of pressure and temperature under which the mean thermal conductivity used for the"
+            " heat-flow computation was determined."
         ),
         null=True,
         blank=True,
-        on_delete=models.SET_NULL,
     )
     tc_pT_function = models.CharField(
-        _("assumed pT function"),
+        max_length=255,
+        choices=choices.ConductivityPTFunction,
+        verbose_name=_("Thermal conductivity pT assumed function"),
         help_text=_(
-            "Technique or approach used to correct the measured thermal conductivity towards in-situ pT conditions"
+            "Technique or approach used to correct the measured thermal conductivity towards in-situ pressure (p)"
+            " and/or temperature (T)  conditions."
         ),
         blank=True,
         null=True,
-        max_length=255,
     )
     tc_strategy = models.CharField(
-        verbose_name=_("averaging methodoloy"),
-        help_text=_("Strategy employed to estimate thermal conductivity over the given interval"),
         max_length=255,
+        choices=choices.ConductivityStrategy.choices,
+        verbose_name=_("Thermal conductivity averaging methodology"),
+        help_text=_(
+            "Strategy that was employed to estimate the thermal conductivity over the vertical interval of heat-flow"
+            " determination."
+        ),
         null=True,
         blank=True,
     )
-    tc_count = models.PositiveSmallIntegerField(
-        _("number of temperature recordings"),
+    tc_number = models.PositiveSmallIntegerField(
+        _("Thermal conductivity number"),
         help_text=_(
-            "Number of discrete temperature points (e.g. number of used BHT values, log values or thermistors used in"
-            " probe sensing) confirming the mean temperature gradient. Not the repetition of one measurement at a"
-            " certain depth."
+            "Number of discrete conductivity determinations used to determine the mean thermal conductivity, e.g."
+            " number of rock samples with a conductivity value used, or number of thermistors used by probe sensing"
+            " techniques. Not the repetition of one measurement on one rock sample or one thermistor."
+        ),
+        blank=True,
+        null=True,
+        validators=[MaxVal(10000)],
+    )
+
+    IGSN = models.TextField(
+        verbose_name="IGSN",
+        help_text=_(
+            "International Generic Sample Numbers (IGSN, semicolon separated) for rock samples used for laboratory"
+            " measurements of thermal conductivity in the heat flow calculation."
         ),
         blank=True,
         null=True,
     )
 
-    # corrections = models.ManyToManyField(
-    #     "controlled_vocabulary.ControlledVocabulary",
-    #     verbose_name=_("Applied Corrections"),
-    #     through="heat_flow.IntervalCorrectionThrough",
-    #     blank=True,
-    # )
+    # Flag Fields
+
+    corr_IS_flag = models.CharField(
+        max_length=max_length_from_choices(choices.InSituFlagChoices.choices),
+        choices=choices.InSituFlagChoices.choices,
+        default="unspecified",
+        verbose_name=_("Flag in-situ thermal properties"),
+        help_text=_(
+            "Specifies whether the in-situ pressure and temperature conditions were considered to the reported thermal"
+            " conductivity value or not."
+        ),
+    )
+    corr_T_flag = models.CharField(
+        max_length=max_length_from_choices(choices.TemperatureFlagChoices.choices),
+        choices=choices.TemperatureFlagChoices.choices,
+        default="unspecified",
+        verbose_name=_("Flag in-situ thermal properties"),
+        help_text=_(
+            "Specifies whether the in-situ pressure and temperature conditions were considered to the reported thermal"
+            " conductivity value or not."
+        ),
+    )
+
+    corr_S_flag = models.CharField(
+        max_length=max_length_from_choices(choices.GenericFlagChoices.choices),
+        choices=choices.GenericFlagChoices.choices,
+        default="unspecified",
+        verbose_name=_("Flag sedimentation effect (temperature/heat flow correction)"),
+        help_text=_(
+            "Specifies if sedimentation/subsidence effects with respect to the reported heat-flow value were present"
+            " and if corrections were performed."
+        ),
+    )
+    corr_E_flag = models.CharField(
+        max_length=max_length_from_choices(choices.GenericFlagChoices.choices),
+        choices=choices.GenericFlagChoices.choices,
+        default="unspecified",
+        verbose_name=_("Flag erosion effect (heat-flow correction)"),
+        help_text=_(
+            "Specifies if erosion effects with respect to the reported heat-flow value were present and if corrections"
+            " were performed."
+        ),
+    )
+    corr_TOPO_flag = models.CharField(
+        max_length=max_length_from_choices(choices.GenericFlagChoices.choices),
+        choices=choices.GenericFlagChoices.choices,
+        default="unspecified",
+        verbose_name=_("Flag topographic effect (heat-flow correction)"),
+        help_text=_(
+            "Specifies if topographic effects with respect to the reported heat-flow value were present and if"
+            " corrections were performed."
+        ),
+    )
+    corr_PAL_flag = models.CharField(
+        max_length=max_length_from_choices(choices.GenericFlagChoices.choices),
+        choices=choices.GenericFlagChoices.choices,
+        default="unspecified",
+        verbose_name=_("Flag paleoclimatic effect (heat-flow correction)"),
+        help_text=_(
+            "Specifies if topographic effects with respect to the reported heat-flow value were present and if"
+            " corrections were performed."
+        ),
+    )
+    corr_SUR_flag = models.CharField(
+        max_length=max_length_from_choices(choices.GenericFlagChoices.choices),
+        choices=choices.GenericFlagChoices.choices,
+        default="unspecified",
+        verbose_name=_("Flag in-situ thermal properties"),
+        help_text=_(
+            "Specifies if climatic conditions (glaciation, post-industrial warming, etc.) with respect to the reported"
+            " heat-flow value were present and if corrections were performed."
+        ),
+    )
+    corr_CONV_flag = models.CharField(
+        max_length=max_length_from_choices(choices.GenericFlagChoices.choices),
+        choices=choices.GenericFlagChoices.choices,
+        default="unspecified",
+        verbose_name=_("Flag convection processes (heat-flow correction) "),
+        help_text=_(
+            "Specifies if convection effects with respect to the reported heat-flow value were present and if"
+            " corrections were performed."
+        ),
+    )
+    corr_HR_flag = models.CharField(
+        max_length=max_length_from_choices(choices.GenericFlagChoices.choices),
+        choices=choices.GenericFlagChoices.choices,
+        default="unspecified",
+        verbose_name=_("Flag heat refraction effect (heat-flow correction) "),
+        help_text=_(
+            "Specifies if refraction effects, e.g., due to significant local conductivity contrasts, with respect to"
+            " the reported heat-flow value were present and if corrections were performed. "
+        ),
+    )
 
     class Meta:
-        verbose_name = _("Interval")
-        verbose_name_plural = _("Heat Flow (Child)")
+        verbose_name = _("Heat Flow (Child)")
+        verbose_name_plural = _("Heat Flow (Children)")
         ordering = ["relevant_child", "q_top"]
-        default_related_name = "intervals"
-        db_table = "heat_flow_interval"
 
     def __str__(self):
         return f"{self.pk}"
@@ -499,86 +652,60 @@ class Interval(Measurement):
         # run the base validation
         super().clean(*args, **kwargs)
 
-        # Don't allow year older than 1900.
-        if self.q_date_acq is not None:
-            if self.q_date_acq.year < 1900:
-                raise ValidationError("Acquisition year cannot be less than 1900.")
+        # # Don't allow year older than 1900.
+        # if self.q_date_acq is not None:
+        #     if self.q_date_acq.year < 1900:
+        #         raise ValidationError("Acquisition year cannot be less than 1900.")
 
     def interval(self, obj):
-        return f"{obj.q_top}-{obj.q_bot}"
+        return f"{obj.q_top}-{obj.q_bottom}"
+
+    def get_U_score(self):
+        """From Fuchs et al 2023 - Quality-assurance of heat-flow data: The new structure and evaluation scheme of the IHFC Global Heat Flow Database, Section 3.1. Uncertainty quantification (U-score).
+
+        COV	U-score (Numerical uncertainty)	Ranking description
+        < 5%	U1	Excellent
+        5–15%	U2	Good
+        15–25%	U3	Ok
+        > 25%	U4	Poor
+        not applicable	Ux	not determined / missing data
 
 
-class Correction(models.Model):
-    """A correction that can be applied to an interval."""
+        """
+        cov = self.qc_uncertainty / self.qc
+        if cov < 0.05:
+            return 1
+        elif cov < 0.15:
+            return 2
+        elif cov < 0.25:
+            return 3
+        elif cov > 0.25:
+            return 4
+        else:
+            return None
 
-    class CorrectionApplied(models.TextChoices):
-        YES = "yes", _("Yes")
-        NO = "no", _("No")
-        MENTIONED = "mentioned", _("Mentioned in-text but unclear if applied")
+        return None
 
-    hf_child = models.ForeignKey(
-        "Interval",
-        verbose_name=_("heat flow child"),
-        help_text=_("The heat flow child to which the correction is applied."),
-        related_name="corrections",
-        on_delete=models.CASCADE,
-    )
-    correction = models.CharField(
-        max_length=255,
-        verbose_name=_("correction"),
-        help_text=_("Name of the applied correction."),
-    )
+    def get_M_score(self):
+        """From Fuchs et al 2023 - Quality-assurance of heat-flow data: The new structure and evaluation scheme of the IHFC Global Heat Flow Database, 3.2. Methodological quality evaluation of thermal conductivity and temperature gradient (M-score)."""
+        return None
 
-    applied = models.CharField(
-        max_length=9,
-        verbose_name=_("Applied?"),
-        help_text=_("Has the correction been applied to this interval?"),
-        choices=CorrectionApplied.choices,
-    )
-    value = models.FloatField(
-        verbose_name=_("value"),
-        help_text=_("Value of the applied correction in (mW m^-2). Can be positive or negative."),
-        blank=True,
-        null=True,
-    )
+    def get_TC_score(self):
+        """From Fuchs et al 2023 - Quality-assurance of heat-flow data: The new structure and evaluation scheme of the IHFC Global Heat Flow Database, Section 3.2.1.2 & 3.2.2.2 Thermal conductivity.
 
-    class Meta:
-        verbose_name = _("correction")
-        verbose_name_plural = _("corrections")
+        Evaluation criteria for the thermal conductivity quality score include 1) the location, 2) the source type and saturation condition, 3) the number of conductivity measurements and 4) the pressure and temperature conditions. Table 2 shows in detail the score reductions or enhancements based on the defined threshold values. The score starts at 1.0 and varies from 0.2 to 1.2.
+        """
+        score = 1
+        if self.tc_source == "core":
+            score -= 0.2
+        elif self.tc_source == "outcrop":
+            score -= 0.4
+        elif self.tc_source == "lab":
+            score -= 0.6
 
-    def __str__(self):
-        return self.name
+    def get_perturbation_effects(self):
+        """Return the perturbation effects of the interval."""
+        return None
 
-
-class IntervalCorrectionThrough(models.Model):
-    """An intermediate table for the Interval-Correction m2m relationship that
-    additionally stores a correction value."""
-
-    class CorrectionApplied(models.TextChoices):
-        YES = "yes", _("Yes")
-        NO = "no", _("No")
-        MENTIONED = "mentioned", _("Mentioned in-text but unclear if applied")
-
-    interval = models.ForeignKey("heat_flow.Interval", on_delete=models.CASCADE)
-    correction = models.VocabularyField("correction", on_delete=models.CASCADE)
-    applied = models.CharField(
-        max_length=9,
-        verbose_name=_("Applied?"),
-        help_text=_("Has the correction been applied to this interval?"),
-        choices=CorrectionApplied.choices,
-    )
-    value = models.FloatField(
-        verbose_name=_("value"),
-        help_text=_("Value of the applied correction in (mW m^-2). Can be positive or negative."),
-        blank=True,
-        null=True,
-    )
-
-    class Meta:
-        verbose_name = _("correction")
-        verbose_name_plural = _("corrections")
-
-    def __str__(self):
-        if self.applied == 0:
-            return ""
-        return str(self.value)
+    def get_quality(self):
+        """"""

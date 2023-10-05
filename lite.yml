@@ -16,4 +16,3 @@ services:
     env_file:
       - ./.envs/.local/.django
     # entrypoint: "tail -f /dev/null"
-

@@ -5,7 +5,7 @@ description = "Code base for the IHFC's Global Heat Flow Database web applicatio
 authors = ["Sam <samuel.scott.jennings@gmail.com>"]
 license = "MIT"
 readme = "README.md"
-homepage = "https://github.com/SSJenny90/world-heat-flow-database"
+homepage = "https://github.com/WorldHeatFlowDatabase/world-heat-flow-database"
 packages = [
     { include = "schemas", from = "project" },
 ]
@@ -43,7 +43,9 @@ django-multiselectfield = "^0.1.12"
 django-client-side-image-cropping = "^0.1.10"
 django-contact-form = "^2.1"
 django-organizations = "^2.1.0"
-django-imagekit = "^4.1.0"
+django-imagekit = "^5.0"
+sphinx-autodoc2 = "^0.4.2"
+django-el-pagination = "^4.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -74,7 +76,6 @@ django-debug-toolbar-template-profiler = "^2.1.0"
 werkzeug = {extras = ["watchdog"], version = "^2.2.3"}
 ipdb = "^0.13.11"
 watchfiles = "^0.18.1"
-django-modeltranslation = "^0.18.9"
 django-redis = "^5.2.0"
 
 
@@ -87,6 +88,8 @@ sphinx-book-theme = "^1.0.0"
 myst-parser = "^0.19.1"
 sphinx-autobuild = "^2021.3.14"
 toml = "^0.10.2"
+sphinx-comments = "^0.0.3"
+sphinx-autodoc2 = "^0.4.2"
 
 
 

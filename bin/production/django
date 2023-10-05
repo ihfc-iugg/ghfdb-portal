@@ -8,7 +8,7 @@ set -o nounset
 
 # python /app/manage.py makemigrations --noinput
 # python /app/manage.py migrate --noinput
-# python /app/manage.py init_superuser  
+# python /app/manage.py init_superuser
 # python /app/manage.py collectstatic --noinput
 
 

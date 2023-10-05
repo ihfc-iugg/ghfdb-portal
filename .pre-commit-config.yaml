@@ -25,12 +25,12 @@ repos:
     hooks:
       - id: isort
 
-  - repo: https://github.com/PyCQA/flake8
-    rev: 6.0.0
-    hooks:
-      - id: flake8
-        args: ["--config=setup.cfg"]
-        additional_dependencies: [flake8-isort]
+  # - repo: https://github.com/PyCQA/flake8
+  #   rev: 6.0.0
+  #   hooks:
+  #     - id: flake8
+  #       args: ["--config=setup.cfg"]
+  #       additional_dependencies: [flake8-isort]
 
   # - repo: https://github.com/python-poetry/poetry
   #   rev: 1.4.2

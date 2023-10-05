@@ -4,10 +4,10 @@ from heat_flow.models import HeatFlow
 
 # def test_user_detail(user: User):
 #     assert (
-#         reverse("api:user-detail", kwargs={"username": user.username})
-#         == f"/api/users/{user.username}/"
+#         reverse("api:user-detail", kwargs={"username": users.Username})
+#         == f"/api/users/{users.Username}/"
 #     )
-#     assert resolve(f"/api/users/{user.username}/").view_name == "api:user-detail"
+#     assert resolve(f"/api/users/{users.Username}/").view_name == "api:user-detail"
 
 
 # def test_user_list():
