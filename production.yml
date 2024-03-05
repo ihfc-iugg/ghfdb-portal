@@ -26,7 +26,10 @@ services:
       - ./.envs/.production/.django
       - ./.envs/.production/.postgres
     command: /external_apps/geoluminate/bin/production/django
-
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
   postgres:
     build:
       context: .
@@ -37,25 +40,40 @@ services:
       - production_postgres_data_backups:/backups
     env_file:
       - ./.envs/.production/.postgres
-
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
   redis:
     image: redis:6
-
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
   celeryworker:
     <<: *django
     image: ghfdb_production_celeryworker
     command: /scripts/production/celery_worker
-
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
   celerybeat:
     <<: *django
     image: ghfdb_production_celerybeat
     command: /scripts/production/celery_beat
-
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
   flower:
     <<: *django
     image: ghfdb_production_flower
     command: /scripts/production/celery_flower
-
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
   traefik:
     build:
       context: .
@@ -72,7 +90,10 @@ services:
       # - "0.0.0.0:8080:8080"
     # volumes:
       # - /var/run/docker.sock:/var/run/docker.sock
-
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
   nginx:
     build:
       context: .
@@ -82,3 +103,7 @@ services:
       - django
     volumes:
       - production_django_media:/usr/share/nginx/media:ro
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"

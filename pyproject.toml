@@ -29,35 +29,24 @@ classifiers = [
 
 
 [tool.poetry.dependencies]
-python = ">=3.8,<4.0"
+python = ">=3.10,<4.0"
 django = "^4.2.1"
-geoluminate = "^0.0.2"
+geoluminate = {git = "https://github.com/Geoluminate/geoluminate.git", rev = "main"}
 django-pint = "^0.7.1"
 django-environ = "^0.10.0"
 flower = "^1.2.0"
-factory-boy = "^3.2.1"
-djangorestframework-datatables = "^0.7.0"
-xmlschema = "^2.3.1"
-django-bleach = "^3.0.1"
-django-multiselectfield = "^0.1.12"
-django-client-side-image-cropping = "^0.1.10"
-django-contact-form = "^2.1"
-django-organizations = "^2.1.0"
-django-imagekit = "^5.0"
-sphinx-autodoc2 = "^0.4.2"
-django-el-pagination = "^4.0.0"
+django-formset = "<1.3"
+django-research-vocabs = {git = "https://github.com/Geoluminate/django-research-vocabs.git", branch="master"}
+django-content-license = {git = "https://github.com/Geoluminate/django-content-license.git", branch="main"}
 
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.2.1"
-black = "^23.1.0"
 pytest = "^7.2.2"
-factory-boy = "^3.2.1"
 django-coverage-plugin = "^3.0.0"
 pytest-django = "^4.5.2"
 django-stubs = "^1.15.0"
 pylint-django = "^2.5.3"
-model-bakery = "^1.10.1"
 invoke = "^2.0.0"
 tox = "^4.4.6"
 deptry = "^0.8.0"
@@ -73,28 +62,17 @@ djangorestframework-stubs = "^1.9.1"
 flake8-isort = "^6.0.0"
 pylint-celery = "^0.3"
 django-debug-toolbar-template-profiler = "^2.1.0"
-werkzeug = {extras = ["watchdog"], version = "^2.2.3"}
 ipdb = "^0.13.11"
 watchfiles = "^0.18.1"
 django-redis = "^5.2.0"
-
-
-
-[tool.poetry.group.docs.dependencies]
-sphinx = "^6.1.3"
-sphinx-copybutton = "^0.5.1"
-sphinxext-opengraph = "^0.8.1"
-sphinx-book-theme = "^1.0.0"
-myst-parser = "^0.19.1"
-sphinx-autobuild = "^2021.3.14"
-toml = "^0.10.2"
-sphinx-comments = "^0.0.3"
-sphinx-autodoc2 = "^0.4.2"
-
+geoluminate-docs = {git = "https://github.com/Geoluminate/geoluminate-docs.git", rev = "21f7a7da5a1e1f6903707430eeddd7bd354c7247"}
+factory-boy = "^3.3.0"
+django-werkzeug = "^1.0.0"
 
 
 [tool.poetry.group.production.dependencies]
-sentry-sdk = "^1.22.2"
+sentry-sdk = {extras = ["django"], version = "^1.17.0"}
+
 
 [build-system]
 requires = ["poetry-core"]
@@ -175,7 +153,7 @@ ignore = [
 # "docs/conf.py" = ["*"]
 
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "config.settings.test"
+DJANGO_SETTINGS_MODULE = "config.settings.local"
 reuse_db = true
 python_files = ["test_*.py", "*_test.py", "testing/python/*.py"]
 filterwarnings = [

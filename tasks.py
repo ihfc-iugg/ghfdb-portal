@@ -48,8 +48,9 @@ def docs(c):
     """
     Build the documentation and open it in the browser
     """
-    c.run("sphinx-apidoc -M -T -o docs/ project/schemas/* **/migrations/* -e --force -d 2")
-    c.run("sphinx-build -E -b html docs docs/_build")
+    # c.run("sphinx-apidoc -M -T -o docs/ project/schemas/* **/migrations/* -e --force -d 2")
+    # c.run("sphinx-build -E -b html docs docs/_build")
+    c.run("docker compose -f local.yml up docs")
 
 
 @task
@@ -103,14 +104,6 @@ def runserver(c, f="local", build=False):
 
 
 @task
-def rundocs(c):
-    """
-    Start the development server
-    """
-    c.run("docker compose -f local.yml up django -d")
-
-
-@task
 def reset_db(c):
     """
     Build the documentation and open it in a live browser
@@ -124,3 +117,23 @@ def run(c, command):
     Start the development server
     """
     c.run(f"docker compose -f local.yml run django {command}")
+
+
+@task
+def dumpdata(c):
+    c.run(
+        "docker compose -f local.yml run django python manage.py dumpdata users organizations contributors projects"
+        " datasets samples core --natural-foreign --natural-primary --output=geoluminate.json.gz"
+    )
+
+
+@task
+def loaddata(c):
+    c.run("docker compose -f local.yml run django python manage.py loaddata core --app geoluminate")
+
+@task
+def create_fixtures(c, users=75, orgs=25, projects=12):
+    """
+    Build the documentation and open it in a live browser
+    """
+    c.run(f"docker compose -f local.yml run django python manage.py create_fixtures --users {users} --orgs {orgs} --projects {projects}")

@@ -5,6 +5,7 @@ volumes:
   ghfdb_local_postgres_data_backups: {}
 
 services:
+
   django: &django
     build:
       context: .
@@ -13,7 +14,7 @@ services:
     depends_on:
       - postgres
       - redis
-      - mailhog
+      # - mailhog
     working_dir: /app
     volumes:
       - ../external_apps:/external_apps
@@ -28,6 +29,15 @@ services:
     command: /app/bin/local/django
     entrypoint: /app/bin/entrypoint
     #  entrypoint: "tail -f /dev/null"
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  api:
+    <<: *django
+    ports: 
+      - 8010:8000
 
   postgres:
     build:
@@ -39,30 +49,45 @@ services:
       - ghfdb_local_postgres_data_backups:/backups
     env_file:
       - ./.envs/.local/.postgres
-
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
   redis:
     image: redis:6
-
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
   celeryworker:
     <<: *django
     ports: []
     command: /app/bin/local/celery_worker
-
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
   celerybeat:
     <<: *django
     ports: []
     command: /app/bin/local/celery_beat
-
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
   flower:
     <<: *django
     ports:
       - "5555:5555"
     command: /app/bin/local/celery_flower
-
-  mailhog:
-    image: mailhog/mailhog:v1.0.0
-    ports:
-      - "8025:8025"
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
+  # mailhog:
+  #   image: mailhog/mailhog:v1.0.0
+  #   ports:
+  #     - "8025:8025"
 
   docs:
     <<: *django

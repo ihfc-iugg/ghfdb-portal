@@ -9,16 +9,11 @@ database:
 governance:
   name: "International Heat Flow Commission"
   short_name: "IHFC"
-  website: "https://www.ihfc-iugg.org"
-  custodians:
-    - name: Sven Fuchs
-      email: fuchs@gfz-potsdam.de
-    - name: Florian Neumann
-      email: f.neumann@gfz-potsdam.de
+  url: "https://www.ihfc-iugg.org"
 
 application:
   domain: "www.heatflow.world"
-  # base_model: "geoluminate.contrib.gis.base.AbstractSite"
+  name: "Global Heat Flow Database"
   developers:
     - name: Sam Jennings
       email: jennings@gfz-potsdam.de

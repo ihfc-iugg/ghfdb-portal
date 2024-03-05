@@ -3,6 +3,10 @@
 /static
 *.code-workspace
 /.envs
+/logs
+/.ipython
+api.yml
+
 
 #no migration files except __init__.py
 # **/migrations/*
@@ -12,7 +16,7 @@
 
 # any root level json/geojson files (includes compressed)
 /*json*
-/*.txt*
+# /*.txt*
 /*.xsd*
 
 # files used for testing ideas
