@@ -1,6 +1,5 @@
 import os
 
-import geoluminate
 from geoluminate.conf.setup import setup
 
 from .base import *
@@ -16,9 +15,6 @@ setup(development=False)
 
 COMPRESS_STORAGE = "compressor.storage.GzipCompressorFileStorage"
 
-
-# Fixes issue with missing static files https://stackoverflow.com/a/71686908
-STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
 ALLOWED_HOSTS = ["139.17.54.176", "ghfdb.localhost", "ghfdb.local"]
 
