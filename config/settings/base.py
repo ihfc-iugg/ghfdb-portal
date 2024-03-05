@@ -9,12 +9,18 @@ INSTALLED_APPS = [
     # "geoscience.gis.plates",
     # "geoscience.gis.provinces",
     "heat_flow",
-    "glossary",
+    # "glossary",
     # "review",
     # "thermal_data",
     # "well_logs",
 ]
 
+GEOLUMINATE_SAMPLE_TYPES = ["Heat Flow Site"]
+
+GEOLUMINATE_KEYWORD_CHOICES = [
+    "heat_flow.vocabularies.ISC2020",
+    "heat_flow.vocabularies.SimpleLithology",
+]
 
 EARTH_MATERIALS_INCLUDE = [
     "Igneous rock and sediment",

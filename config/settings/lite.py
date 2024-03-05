@@ -33,7 +33,6 @@ CACHES = {
         "LOCATION": "ghfdblite",
     }
 }
+# STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
-
-COMPRESS_STORAGE = "compressor.storage.GzipCompressorFileStorage"
+# COMPRESS_STORAGE = "compressor.storage.GzipCompressorFileStorage"

@@ -8,9 +8,7 @@ geoluminate.setup(development=True)
 
 # OVERRIDE DEFAULT LOCAL SETTINGS BELOW HERE
 # -------------------------------------------
-
-os.environ.setdefault("SHOW_DEBUG_TOOLBAR", "True")
-
+# INSTALLED_APPS = ["django_werkzeug"] + GEOLUMINATE_APPS + INSTALLED_APPS + ["compressor", "django_extensions"]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#auth-password-validators
 # removing validators for local development
@@ -28,3 +26,8 @@ SERVER_EMAIL = EMAIL_HOST_USER
 # print(EMAIL_HOST_USER)
 # print(DEFAULT_FROM_EMAIL)
 # print(SERVER_EMAIL)
+# ACCOUNT_AUTHENTICATION_METHOD = "email"
+
+ACCOUNT_EMAIL_VERIFICATION = "optional"
+
+LOGIN_REDIRECT_URL = "/profile/"
