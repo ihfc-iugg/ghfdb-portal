@@ -15,4 +15,8 @@ services:
     command: ./compose/bin/local/django
     env_file:
       - ./.envs/.local/.django
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
     # entrypoint: "tail -f /dev/null"
