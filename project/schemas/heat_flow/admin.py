@@ -1,123 +1,136 @@
 from django.contrib import admin
-from django.utils.translation import gettext as _
-from heat_flow.models import HeatFlow, HeatFlowChild
 
+from .models import HeatFlow, HeatFlowChild
 
-class HeatFlowChildInline(admin.StackedInline):
-    model = HeatFlowChild
-    max_num = 0
+admin.site.unregister(HeatFlow)
+admin.site.unregister(HeatFlowChild)
 
 
 @admin.register(HeatFlow)
 class HeatFlowAdmin(admin.ModelAdmin):
-    list_display = [  # noqa: RUF012
-        "id",
+    list_display = [
         "q",
         "q_uncertainty",
+        "environment",
+        "total_depth_MD",
+        "total_depth_TVD",
+        "explo_method",
+        "explo_purpose",
+        "corr_HP_flag",
     ]
 
-    list_filter = ["environment", "explo_method", "explo_purpose"]
+    list_filter = [
+        "environment",
+        "explo_method",
+        "explo_purpose",
+        "corr_HP_flag",
+    ]
 
-    inlines = [HeatFlowChildInline]
-    readonly_fields = ["uuid"]
-    fieldsets = [  # noqa: RUF012
+    fieldsets = (
+        (
+            None,
+            {"fields": ("sample",)},
+        ),
         (
             "Heat Flow",
-            {"fields": ["uuid", "q", "q_uncertainty"]},
+            {
+                "fields": (
+                    ("q", "q_uncertainty"),
+                    "environment",
+                    "corr_hp_flag",
+                    ("total_depth_MD", "total_depth_TVD"),
+                    ("explo_method", "explo_purpose"),
+                )
+            },
         ),
-    ]
-
-    search_fields = [
-        "uuid",
-    ]
-    point_zoom = 8
-    map_width = 900
-    modifiable = True
+    )
 
 
 @admin.register(HeatFlowChild)
 class HeatFlowChildAdmin(admin.ModelAdmin):
     list_display = [
-        "relevant_child",
-        "q_top",
-        "q_bottom",
+        "parent",
         "qc",
         "qc_uncertainty",
-        "q_method",
-        "water_temperature",
-        "tc_mean",
-        "tc_saturation",
-        "tc_pT_conditions",
-        "tc_strategy",
-    ]
-    list_filter = [
-        "q_method",
-        "probe_type",
-        "tc_source",
-        "tc_strategy",
     ]
 
-    # inlines = [CorrectionInline]
+    list_filter = ["parent__uuid"]
 
-    fieldsets = [  # noqa: RUF012
+    fieldsets = (
         (
-            _("Metadata"),
+            "Heat Flow",
             {
-                "fields": [
+                "fields": (
+                    "parent",
                     "relevant_child",
-                    # "lithology",
-                    # "stratigraphy",
-                ],
-            },
-        ),
-        (
-            _("Heat Flow"),
-            {
-                "fields": [
                     ("qc", "qc_uncertainty"),
+                    ("q_top", "q_bottom"),
                     "q_method",
-                    "q_top",
-                    "q_bottom",
-                    # 'corrections',
-                ],
+                )
             },
         ),
         (
-            _("Probe Sensing"),
+            "Probe Sensing",
             {
-                "fields": [
-                    "hf_pen",
+                "fields": (
+                    ("probe_penetration", "probe_type", "probe_length"),
                     "probe_tilt",
-                    "probe_type",
-                    "hf_probeL",
-                ],
+                )
             },
         ),
-        # (
-        #     _("Temperature"),
-        #     {
-        #         "fields": [
-        #             ("T_grad_mean", "T_grad_uncertainty"),
-        #             ("T_grad_mean_cor", "T_grad_uncertainty_cor"),
-        #             ("T_method_top", "T_correction_top", "T_shutin_top"),
-        #             ("T_method_bottom", "T_correction_bottom", "T_shutin_bottom"),
-        #             "T_count",
-        #         ],
-        #     },
-        # ),
         (
-            _("Thermal Conductivity"),
+            "Temperature",
             {
-                "fields": [
+                "fields": (
+                    ("T_grad_mean", "T_grad_uncertainty"),
+                    ("T_grad_mean_cor", "T_grad_uncertainty_cor"),
+                    ("T_method_top", "T_method_bottom"),
+                    ("T_shutin_top", "T_shutin_bottom"),
+                    ("T_correction_top", "T_correction_bottom"),
+                    "T_number",
+                )
+            },
+        ),
+        (
+            "Thermal Conductivity",
+            {
+                "fields": (
                     ("tc_mean", "tc_uncertainty"),
                     "tc_source",
+                    "tc_location",
                     "tc_method",
                     "tc_saturation",
-                    "tc_pT_conditions",
-                    "tc_pT_function",
+                    ("tc_pT_conditions", "tc_pT_function"),
                     "tc_strategy",
-                    "tc_count",
-                ],
+                    "tc_number",
+                )
             },
         ),
-    ]
+        (
+            "Corrections",
+            {
+                "fields": (
+                    "corr_IS_flag",
+                    "corr_T_flag",
+                    "corr_S_flag",
+                    "corr_E_flag",
+                    "corr_TOPO_flag",
+                    "corr_PAL_flag",
+                    "corr_SUR_flag",
+                    "corr_CONV_flag",
+                    "corr_HR_flag",
+                )
+            },
+        ),
+        (
+            "Metadata",
+            {
+                "fields": (
+                    "expedition",
+                    "water_temperature",
+                    "lithology",
+                    "IGSN",
+                )
+            },
+        ),
+    )
