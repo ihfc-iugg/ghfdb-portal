@@ -59,11 +59,13 @@ Development phase of the Global Heat Flow Database online web application is sup
 
 
 ```{toctree}
-:caption: Implementation
+<!-- :caption: Implementation -->
 :maxdepth: 1
 :hidden:
 
 implementation/framework
+functionality/index
+implementation/features
 implementation/schemas
 implementation/vocabularies
 
