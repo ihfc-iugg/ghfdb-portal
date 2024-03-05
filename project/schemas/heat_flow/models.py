@@ -15,9 +15,10 @@ from django.utils.translation import gettext as _
 from geoluminate import models
 from geoluminate.contrib.samples.models import Measurement
 from geoluminate.utils.generic import max_length_from_choices
+from research_vocabs.fields import ConceptField, TaggableConcepts
 
 # from geoscience.fields import EarthMaterialOneToOne, GeologicTimeOneToOne
-from . import choices
+from . import vocabularies
 
 
 class HeatFlow(Measurement):
@@ -57,7 +58,7 @@ class HeatFlow(Measurement):
         max_length=255,
         verbose_name=_("basic geographical environment"),
         help_text=_("Describes the general geographical setting of the heat-flow site (not the applied methodology)."),
-        choices=choices.GeographicEnvironment.choices,
+        choices=vocabularies.GeographicEnvironment.choices,
         null=True,
         blank=True,
     )
@@ -73,7 +74,7 @@ class HeatFlow(Measurement):
     )
     total_depth_MD = models.QuantityField(
         base_units="m",
-        verbose_name=_("total mesaured depth"),
+        verbose_name=_("total measured depth"),
         help_text=_("Total measured depth (MD) of the borehole."),
         validators=[MinVal(-12000), MaxVal(9000)],
         null=True,
@@ -94,7 +95,7 @@ class HeatFlow(Measurement):
             "Specification of the general means by which the rock was accessed by temperature sensors for the"
             " respective data entry."
         ),
-        choices=choices.ExplorationMethod.choices,
+        choices=vocabularies.ExplorationMethod.choices,
         null=True,
         blank=True,
     )
@@ -102,7 +103,7 @@ class HeatFlow(Measurement):
         max_length=255,
         verbose_name=_("exploration purpose"),
         help_text=_("Main purpose of the reconnaissance target providing access for the temperature sensors."),
-        choices=choices.ExplorationPurpose.choices,
+        choices=vocabularies.ExplorationPurpose.choices,
         null=True,
         blank=True,
     )
@@ -112,14 +113,14 @@ class HeatFlow(Measurement):
         verbose_name_plural = _("Heat Flow (Parent)")
 
     def __str__(self):
-        """<Unnamed Site: 45.2 +/- 3.2 mW/m^2>"""
-        name = self.name or _("Unnamed Site")
-        return f"{name}: {self.q}"
-        # return f"{name} <{q:~P}>"
+        return self.__repr__()
+
+    def __repr__(self):
+        return f"<HF Parent: {self.q} lat={self.lat_NS:.5f} lon={self.long_EW:.5f}>"
 
     @property
     def name(self):
-        return self.get_sample.name
+        return self.get_sample.title
 
     @property
     def lat_NS(self):
@@ -167,6 +168,8 @@ class HeatFlowChild(Measurement):
 
     PRIMARY_DATA_FIELDS = ["qc"]
 
+    sample = None
+
     parent = models.ForeignKey(
         HeatFlow,
         null=True,
@@ -187,10 +190,13 @@ class HeatFlowChild(Measurement):
     qc_uncertainty = models.QuantityField(
         base_units="mW / m^2",
         verbose_name=_("heat flow uncertainty"),
+        # help_text=_(
+        #     "Uncertainty (one standard deviation) of the heat-flow value [qc] estimated by an error propagation from"
+        #     " uncertainty in thermal conductivity and temperature gradient or deviation from the linear regression of"
+        #     " the Bullard plot (corrected preferred over measured gradient)."
+        # ),
         help_text=_(
-            "Uncertainty (one standard deviation) of the heat-flow value [qc] estimated by an error propagation from"
-            " uncertainty in thermal conductivity and temperature gradient or deviation from the linear regression of"
-            " the Bullard plot (corrected preferred over measured gradient)."
+            "The uncertainty (expressed as one standard deviation) of the heat-flow value [qc], which is estimated by propagating errors from uncertainties in thermal conductivity and temperature gradient. Alternatively, it can be determined by the deviation from the linear regression of the Bullard plot, with preference given to corrected values over directly measured gradients."
         ),
         validators=[MinVal(0), MaxVal(10**6)],
         blank=True,
@@ -199,7 +205,7 @@ class HeatFlowChild(Measurement):
 
     q_method = models.CharField(
         max_length=255,
-        choices=choices.HeatFlowMethod.choices,
+        choices=vocabularies.HeatFlowMethod.choices,
         verbose_name=_("method"),
         help_text=_("Principal method of heat-flow calculation from temperature and thermal conductivity data."),
         null=True,
@@ -260,7 +266,7 @@ class HeatFlowChild(Measurement):
     )
     probe_type = models.CharField(
         max_length=255,
-        choices=choices.ProbeType.choices,
+        choices=vocabularies.ProbeType.choices,
         verbose_name=_("probe type"),
         help_text=_("Type of heat-flow probe used for measurement."),
         null=True,
@@ -295,26 +301,26 @@ class HeatFlowChild(Measurement):
         blank=True,
         validators=[MinVal(-10), MaxVal(1000)],
     )
-    # lithology = EarthMaterialOneToOne(
-    #     verbose_name=_("lithology"),
-    #     help_text=_(
-    #         "Dominant rock type/lithology within the interval of heat-flow determination using the British Geological"
-    #         " Society Earth Material Class (rock classification) scheme."
-    #     ),
-    #     on_delete=models.SET_NULL,
-    #     blank=True,
-    #     null=True,
-    # )
-    # stratigraphy = GeologicTimeOneToOne(
-    #     verbose_name=_("ICS stratigraphy"),
-    #     help_text=_(
-    #         "Stratigraphic age of the depth range involved in the reported heat-flow determination based on the"
-    #         " official geologic timescale of the International Commission on Stratigraphy."
-    #     ),
-    #     on_delete=models.SET_NULL,
-    #     blank=True,
-    #     null=True,
-    # )
+
+    lithology = ConceptField(
+        scheme=vocabularies.SimpleLithology,
+        help_text=_(
+            "Dominant rock type/lithology within the interval of heat-flow determination using the CGI Simple Lithology research vocabulary."
+        ),
+        null=True,
+        blank=True,
+    )
+
+    stratigraphy = ConceptField(
+        scheme=vocabularies.ISC2020,
+        verbose_name=_("ISC Geologic Age"),
+        help_text=_(
+            "Stratigraphic age of the depth range involved in the reported heat-flow determination based on the"
+            " official geologic timescale of the International Commission on Stratigraphy."
+        ),
+        blank=True,
+        null=True,
+    )
 
     # q_date_acq = models.DateField(
     #     _("date of acquisition (YYYY-MM)"),
@@ -370,7 +376,7 @@ class HeatFlowChild(Measurement):
     )
     T_method_top = models.CharField(
         max_length=255,
-        choices=choices.TemperatureMethod.choices,
+        choices=vocabularies.TemperatureMethod.choices,
         verbose_name=_("Temperature method (top)"),
         help_text=_("Method used for temperature determination at the top of the heat-flow determination interval."),
         null=True,
@@ -378,7 +384,7 @@ class HeatFlowChild(Measurement):
     )
     T_method_bottom = models.CharField(
         max_length=255,
-        choices=choices.TemperatureMethod.choices,
+        choices=vocabularies.TemperatureMethod.choices,
         verbose_name=_("Temperature method (bottom)"),
         help_text=_("Method used for temperature determination at the bottom of the heat-flow determination interval."),
         null=True,
@@ -408,7 +414,7 @@ class HeatFlowChild(Measurement):
     )
     T_correction_top = models.CharField(
         max_length=255,
-        choices=choices.TemperatureCorrection.choices,
+        choices=vocabularies.TemperatureCorrection.choices,
         verbose_name=_("Temperature correction method (top)"),
         help_text=_(
             "Approach applied to correct the temperature measurement for drilling perturbations at the top of the"
@@ -419,7 +425,7 @@ class HeatFlowChild(Measurement):
     )
     T_correction_bottom = models.CharField(
         max_length=255,
-        choices=choices.TemperatureCorrection.choices,
+        choices=vocabularies.TemperatureCorrection.choices,
         verbose_name=_("Temperature correction method (bottom)"),
         help_text=_(
             "Approach applied to correct the temperature measurement for drilling perturbations at the bottom of the"
@@ -461,7 +467,7 @@ class HeatFlowChild(Measurement):
     )
     tc_source = models.CharField(
         max_length=255,
-        choices=choices.ConductivitySource.choices,
+        choices=vocabularies.ConductivitySource.choices,
         verbose_name=_("Thermal conductivity source"),
         help_text=_("Nature of the samples from which the mean thermal conductivity was determined."),
         null=True,
@@ -469,7 +475,7 @@ class HeatFlowChild(Measurement):
     )
     tc_location = models.CharField(
         max_length=255,
-        choices=choices.ConductivityLocation.choices,
+        choices=vocabularies.ConductivityLocation.choices,
         verbose_name=_("Thermal conductivity location"),
         help_text=_("Location of conductivity data used for heat-flow calculation."),
         null=True,
@@ -477,7 +483,7 @@ class HeatFlowChild(Measurement):
     )
     tc_method = models.CharField(
         max_length=255,
-        choices=choices.ConductivityMethod.choices,
+        choices=vocabularies.ConductivityMethod.choices,
         verbose_name=_("Thermal conductivity method"),
         help_text=_("Method used to determine mean thermal conductivity."),
         blank=True,
@@ -485,7 +491,7 @@ class HeatFlowChild(Measurement):
     )
     tc_saturation = models.CharField(
         max_length=255,
-        choices=choices.ConductivitySaturation.choices,
+        choices=vocabularies.ConductivitySaturation.choices,
         verbose_name=_("Thermal conductivity saturation"),
         help_text=_("Saturation state of the studied rock interval studied for thermal conductivity."),
         null=True,
@@ -493,7 +499,7 @@ class HeatFlowChild(Measurement):
     )
     tc_pT_conditions = models.CharField(
         max_length=255,
-        choices=choices.ConductivityPTConditions.choices,
+        choices=vocabularies.ConductivityPTConditions.choices,
         verbose_name=_("Thermal conductivity pT conditions"),
         help_text=_(
             "Qualified conditions of pressure and temperature under which the mean thermal conductivity used for the"
@@ -504,7 +510,7 @@ class HeatFlowChild(Measurement):
     )
     tc_pT_function = models.CharField(
         max_length=255,
-        choices=choices.ConductivityPTFunction,
+        choices=vocabularies.ConductivityPTFunction,
         verbose_name=_("Thermal conductivity pT assumed function"),
         help_text=_(
             "Technique or approach used to correct the measured thermal conductivity towards in-situ pressure (p)"
@@ -515,7 +521,7 @@ class HeatFlowChild(Measurement):
     )
     tc_strategy = models.CharField(
         max_length=255,
-        choices=choices.ConductivityStrategy.choices,
+        choices=vocabularies.ConductivityStrategy.choices,
         verbose_name=_("Thermal conductivity averaging methodology"),
         help_text=_(
             "Strategy that was employed to estimate the thermal conductivity over the vertical interval of heat-flow"
@@ -549,8 +555,8 @@ class HeatFlowChild(Measurement):
     # Flag Fields
 
     corr_IS_flag = models.CharField(
-        max_length=max_length_from_choices(choices.InSituFlagChoices.choices),
-        choices=choices.InSituFlagChoices.choices,
+        max_length=max_length_from_choices(vocabularies.InSituFlagChoices.choices),
+        choices=vocabularies.InSituFlagChoices.choices,
         default="unspecified",
         verbose_name=_("Flag in-situ thermal properties"),
         help_text=_(
@@ -559,8 +565,8 @@ class HeatFlowChild(Measurement):
         ),
     )
     corr_T_flag = models.CharField(
-        max_length=max_length_from_choices(choices.TemperatureFlagChoices.choices),
-        choices=choices.TemperatureFlagChoices.choices,
+        max_length=max_length_from_choices(vocabularies.TemperatureFlagChoices.choices),
+        choices=vocabularies.TemperatureFlagChoices.choices,
         default="unspecified",
         verbose_name=_("Flag in-situ thermal properties"),
         help_text=_(
@@ -570,8 +576,8 @@ class HeatFlowChild(Measurement):
     )
 
     corr_S_flag = models.CharField(
-        max_length=max_length_from_choices(choices.GenericFlagChoices.choices),
-        choices=choices.GenericFlagChoices.choices,
+        max_length=max_length_from_choices(vocabularies.GenericFlagChoices.choices),
+        choices=vocabularies.GenericFlagChoices.choices,
         default="unspecified",
         verbose_name=_("Flag sedimentation effect (temperature/heat flow correction)"),
         help_text=_(
@@ -580,8 +586,8 @@ class HeatFlowChild(Measurement):
         ),
     )
     corr_E_flag = models.CharField(
-        max_length=max_length_from_choices(choices.GenericFlagChoices.choices),
-        choices=choices.GenericFlagChoices.choices,
+        max_length=max_length_from_choices(vocabularies.GenericFlagChoices.choices),
+        choices=vocabularies.GenericFlagChoices.choices,
         default="unspecified",
         verbose_name=_("Flag erosion effect (heat-flow correction)"),
         help_text=_(
@@ -590,8 +596,8 @@ class HeatFlowChild(Measurement):
         ),
     )
     corr_TOPO_flag = models.CharField(
-        max_length=max_length_from_choices(choices.GenericFlagChoices.choices),
-        choices=choices.GenericFlagChoices.choices,
+        max_length=max_length_from_choices(vocabularies.GenericFlagChoices.choices),
+        choices=vocabularies.GenericFlagChoices.choices,
         default="unspecified",
         verbose_name=_("Flag topographic effect (heat-flow correction)"),
         help_text=_(
@@ -600,8 +606,8 @@ class HeatFlowChild(Measurement):
         ),
     )
     corr_PAL_flag = models.CharField(
-        max_length=max_length_from_choices(choices.GenericFlagChoices.choices),
-        choices=choices.GenericFlagChoices.choices,
+        max_length=max_length_from_choices(vocabularies.GenericFlagChoices.choices),
+        choices=vocabularies.GenericFlagChoices.choices,
         default="unspecified",
         verbose_name=_("Flag paleoclimatic effect (heat-flow correction)"),
         help_text=_(
@@ -610,8 +616,8 @@ class HeatFlowChild(Measurement):
         ),
     )
     corr_SUR_flag = models.CharField(
-        max_length=max_length_from_choices(choices.GenericFlagChoices.choices),
-        choices=choices.GenericFlagChoices.choices,
+        max_length=max_length_from_choices(vocabularies.GenericFlagChoices.choices),
+        choices=vocabularies.GenericFlagChoices.choices,
         default="unspecified",
         verbose_name=_("Flag in-situ thermal properties"),
         help_text=_(
@@ -620,8 +626,8 @@ class HeatFlowChild(Measurement):
         ),
     )
     corr_CONV_flag = models.CharField(
-        max_length=max_length_from_choices(choices.GenericFlagChoices.choices),
-        choices=choices.GenericFlagChoices.choices,
+        max_length=max_length_from_choices(vocabularies.GenericFlagChoices.choices),
+        choices=vocabularies.GenericFlagChoices.choices,
         default="unspecified",
         verbose_name=_("Flag convection processes (heat-flow correction) "),
         help_text=_(
@@ -630,8 +636,8 @@ class HeatFlowChild(Measurement):
         ),
     )
     corr_HR_flag = models.CharField(
-        max_length=max_length_from_choices(choices.GenericFlagChoices.choices),
-        choices=choices.GenericFlagChoices.choices,
+        max_length=max_length_from_choices(vocabularies.GenericFlagChoices.choices),
+        choices=vocabularies.GenericFlagChoices.choices,
         default="unspecified",
         verbose_name=_("Flag heat refraction effect (heat-flow correction) "),
         help_text=_(
@@ -643,10 +649,13 @@ class HeatFlowChild(Measurement):
     class Meta:
         verbose_name = _("Heat Flow (Child)")
         verbose_name_plural = _("Heat Flow (Children)")
-        ordering = ["relevant_child", "q_top"]
+        ordering = ["parent", "relevant_child", "q_top"]
+        constraints = [
+            models.CheckConstraint(check=models.Q(q_bottom__gt=models.F("q_top")), name="q_top_above_q_bottom")
+        ]
 
     def __str__(self):
-        return f"{self.pk}"
+        return f"<HF Child ({self.q_top} - {self.q_bottom}): {self.qc}>"
 
     def clean(self, *args, **kwargs):
         # run the base validation
