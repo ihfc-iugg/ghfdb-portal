@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   libpq-dev \
   # dependencies for building Python packages
   build-essential && \
+  # install git
+  apt-get install -y git && \
   # install poetry for dependencies
   pip install "poetry==$POETRY_VERSION" && \
   # dependencies for building Python packages
@@ -23,7 +25,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 COPY pyproject.toml poetry.lock ./
 
 # Create Python Dependency and Sub-Dependency Wheels.
-RUN poetry export -o requirements.txt --with dev,docs && \
+RUN poetry export --without-hashes -o requirements.txt --with dev && \
   pip wheel --wheel-dir /usr/src/app/wheels \
   -r requirements.txt
 
