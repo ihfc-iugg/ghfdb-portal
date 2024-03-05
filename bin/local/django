@@ -4,13 +4,5 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-
-python manage.py makemigrations
-python manage.py migrate
-python manage.py init_superuser
-
-exec python manage.py runserver 0.0.0.0:8000
-
-# it would be nice to run the app with runserver_plus but there appears to be issues with
-# monitoring file changes when mounting a directory using docker
-# exec python manage.py runserver_plus 0.0.0.0:8000
+exec python manage.py runserver 0.0.0.0:8000 
+# The  run_local  command is a custom management command included with geoluminate that sequentially runs makemigrations, migrate, check for a superuser and creates one if none already exist, then runs the development server.
