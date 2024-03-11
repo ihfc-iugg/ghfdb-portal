@@ -1,6 +1,5 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from rdflib.namespace import SKOS
 from research_vocabs.concepts import ConceptSchemeBuilder, LocalConceptScheme
 
 
@@ -14,39 +13,53 @@ class ISC2020(LocalConceptScheme):
         source = "isc2020.ttl"
 
 
-# class HeatFlowMethod(ConceptSchemeBuilder):
+class HeatFlowMethodConcept(ConceptSchemeBuilder):
+    fourier = {
+        "SKOS.prefLabel": _("Fourier's Law"),
+        "SKOS.definition": _(
+            "Product of the mean thermal gradient to the mean thermal conductivity with reference to a specified depth interval"
+        ),
+    }
+    product = {
+        "SKOS.prefLabel": _("Product or Interval"),
+        "SKOS.definition": _(
+            "Product of the mean thermal gradient to the mean thermal conductivity with reference to a specified depth interval"
+        ),
+    }
+    bullard = {
+        "SKOS.prefLabel": _("Bullard"),
+        "SKOS.definition": _(
+            "Heat-flow value given as the angular coefficient of the linear regression of the thermal resistance vs. temperature data (used when there is a significant variation of thermal conductivity within the depth range over which the temperatures have been measured)"
+        ),
+    }
+    bootstrap = {
+        "SKOS.prefLabel": _("Boot-strapping"),
+        "SKOS.definition": _(
+            "Iterative procedure aimed at minimize the difference between the measured and modelled temperatures by solving the 1-D steady-state conductive geotherm (radiogenic heat production of rocks is accounted for)"
+        ),
+    }
+    other = {
+        "SKOS.prefLabel": _("Other"),
+        "SKOS.definition": _("Specify the method in comments"),
+    }
 
-#     fourier = {
-#         SKOS.prefLabel: _("Fourier's Law"),
-#         SKOS.definition: _(
-#             "Product of the mean thermal gradient to the mean thermal conductivity with reference to a specified depth interval"
-#         ),
-#     }
-#     product = {
-#         SKOS.prefLabel: _("Product or Interval"),
-#         SKOS.definition: _(
-#             "Product of the mean thermal gradient to the mean thermal conductivity with reference to a specified depth interval"
-#         ),
-#     }
-#     bullard = {
-#         SKOS.prefLabel: _("Bullard"),
-#         SKOS.definition: _(
-#             "Heat-flow value given as the angular coefficient of the linear regression of the thermal resistance vs. temperature data (used when there is a significant variation of thermal conductivity within the depth range over which the temperatures have been measured)"
-#         ),
-#     }
-#     bootstrap = {
-#         SKOS.prefLabel: _("Boot-strapping"),
-#         SKOS.definition: _(
-#             "Iterative procedure aimed at minimize the difference between the measured and modelled temperatures by solving the 1-D steady-state conductive geotherm (radiogenic heat production of rocks is accounted for)"
-#         ),
-#     }
-#     other = {
-#         SKOS.prefLabel: _("Other"),
-#         SKOS.definition: _("Specify the method in comments"),
-#     }
-
-#     class Meta:
-#         source = "heat_flow_method.ttl"
+    class Meta:
+        namespace = "https://heatflow.world/vocabularies/"
+        namespace_prefix = "ghfdb"
+        conceptscheme = {
+            "SKOS.altLabel": _("My Material Scheme"),
+            "SKOS.prefLabel": _("My Materials"),
+            "SKOS.hasTopConcept": [
+                "Wood",
+                "Metal",
+            ],
+        }
+        # ordered_collections = {"orderedCollectionA": ["Metal", "Plastic", "Wood"]}
+        # collections = {
+        #     "collectionA": ["Wood", "Metal"],
+        #     "collectionB": ["Wood"],
+        # }
+        # source = "heat_flow_method.ttl"
 
 
 class HeatFlowMethod(models.TextChoices):
@@ -618,15 +631,15 @@ class GenericFlagChoices(models.TextChoices):
 
 class InSituFlagChoices(models.TextChoices):
     """
-    [Considered – p]
-    [Considered – T]
-    [Considered – pT]
+    [Considered - p]
+    [Considered - T]
+    [Considered - pT]
     [not Considered ]
     [unspecified]"""
 
-    CONSIDERED_P = "Considered – p", _("Considered –  p")
-    CONSIDERED_T = "Considered – T", _("Considered –  T")
-    CONSIDERED_PT = "Considered – pT", _("Considered –  pT")
+    CONSIDERED_P = "Considered - p", _("Considered - p")
+    CONSIDERED_T = "Considered - T", _("Considered - T")
+    CONSIDERED_PT = "Considered - pT", _("Considered - pT")
     NOT_CONSIDERED = "not Considered", _("Not considered")
     UNSPECIFIED = "unspecified", _("Unspecified")
 
