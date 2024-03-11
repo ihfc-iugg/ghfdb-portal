@@ -1,27 +1,21 @@
 version: '3'
 name: ghfdb_production
 volumes:
-  production_postgres_data: {}
-  production_postgres_data_backups: {}
-  production_traefik: {}
-  production_django_media: {}
-  ghfdb_external_apps:
-    driver: local
-    driver_opts:
-      type: 'none'
-      o: 'bind'
-      device: 'C:\Users\jennings\Documents\geoluminate_apps'
+  postgres: {}
+  postgres_backups: {}
+  traefik: {}
+  media: {}
+
 services:
   django: &django
     build:
       context: .
       dockerfile: ./compose/geoluminate/production
-    image: ghfdb_production
+    image: production_django
     depends_on:
       - postgres
       - redis
-    volumes:
-      - ghfdb_external_apps:/external_apps
+      - minio
     env_file:
       - ./.envs/.production/.django
       - ./.envs/.production/.postgres
@@ -34,10 +28,10 @@ services:
     build:
       context: .
       dockerfile: ./compose/postgres/Dockerfile
-    image: ghfdb_production_postgres
+    image: production_postgres
     volumes:
-      - production_postgres_data:/var/lib/postgresql/data
-      - production_postgres_data_backups:/backups
+      - postgres:/var/lib/postgresql/data
+      - postgres_backups:/backups
     env_file:
       - ./.envs/.production/.postgres
     logging:
@@ -52,7 +46,7 @@ services:
         max-file: "5"
   celeryworker:
     <<: *django
-    image: ghfdb_production_celeryworker
+    image: celery_worker
     command: /scripts/production/celery_worker
     logging:
       options:
@@ -60,7 +54,7 @@ services:
         max-file: "5"
   celerybeat:
     <<: *django
-    image: ghfdb_production_celerybeat
+    image: celery_beat
     command: /scripts/production/celery_beat
     logging:
       options:
@@ -68,7 +62,7 @@ services:
         max-file: "5"
   flower:
     <<: *django
-    image: ghfdb_production_flower
+    image: celery_flower
     command: /scripts/production/celery_flower
     logging:
       options:
@@ -78,31 +72,16 @@ services:
     build:
       context: .
       dockerfile: ./compose/traefik/Dockerfile
-    image: ghfdb_production_traefik
+    image: traefik
     depends_on:
       - django
     volumes:
-      - production_traefik:/etc/traefik/acme
+      - traefik:/etc/traefik/acme
     ports:
       - "0.0.0.0:80:80"
       - "0.0.0.0:443:443"
       - "0.0.0.0:5555:5555"
       # - "0.0.0.0:8080:8080"
-    # volumes:
-      # - /var/run/docker.sock:/var/run/docker.sock
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "5"
-  nginx:
-    build:
-      context: .
-      dockerfile: ./compose/nginx/Dockerfile
-    image: ghfdb_local_nginx
-    depends_on:
-      - django
-    volumes:
-      - production_django_media:/usr/share/nginx/media:ro
     logging:
       options:
         max-size: "10m"
