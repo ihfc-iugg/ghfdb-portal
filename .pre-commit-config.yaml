@@ -1,44 +1,45 @@
-exclude: "^docs/|/migrations/"
+exclude: "^docs/|/migrations/|^tests/"
 default_stages: [commit]
 
 repos:
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
       - id: trailing-whitespace
-      - id: end-of-file-fixer
       - id: check-yaml
+      - id: check-added-large-files
+        args: [--maxkb=100]
+      - id: check-merge-conflict
+      - id: check-json
+      - id: check-case-conflict
+      - id: check-symlinks
+      - id: check-executables-have-shebangs
+      - id: check-byte-order-marker
+      - id: check-ast
+      - id: check-toml
+      - id: check-vcs-permalinks
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.3.1
+    rev: v3.9.0
     hooks:
       - id: pyupgrade
-        args: [--py310-plus]
+        args: [--py311-plus]
 
-  - repo: https://github.com/psf/black
-    rev: 22.12.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.2
     hooks:
-      - id: black
-
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.12.0
-    hooks:
-      - id: isort
-
-  # - repo: https://github.com/PyCQA/flake8
-  #   rev: 6.0.0
-  #   hooks:
-  #     - id: flake8
-  #       args: ["--config=setup.cfg"]
-  #       additional_dependencies: [flake8-isort]
+      - id: ruff
+      - id: ruff-format
 
   # - repo: https://github.com/python-poetry/poetry
-  #   rev: 1.4.2
+  #   rev: '1.5.1'
   #   hooks:
   #     - id: poetry-check
   #     - id: poetry-lock
   #     - id: poetry-export
-  #       args: ["-f", "requirements.txt", "-o", "requirements.txt"]
+  #       args: ["-o", "requirements.txt", "--with=dev", "--without-hashes"]
+
 
 # sets up .pre-commit-ci.yaml to ensure pre-commit dependencies stay up to date
 ci:
