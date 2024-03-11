@@ -1,23 +1,23 @@
 version: '3'
 name: ghfdb_local
+
 volumes:
-  ghfdb_local_postgres_data: {}
-  ghfdb_local_postgres_data_backups: {}
+  postgres: {}
+  postgres_backups: {}
+  media: {}
 
 services:
 
   django: &django
     build:
       context: .
-      dockerfile: ./compose/geoluminate/local
-    image: ghfdb_local
+      dockerfile: ./compose/django/local
+    image: local_django
     depends_on:
       - postgres
       - redis
-      # - mailhog
-    working_dir: /app
+      - minio
     volumes:
-      - ../external_apps:/external_apps
       - ./:/app:z
     env_file:
       - ./.envs/.local/.django
@@ -25,28 +25,21 @@ services:
     ports:
       - 8000:8000
       - 5678:5678
-    # command: ["sh", "-c", "pip install debugpy -t /tmp && python ./manage.py migrate && python /tmp/debugpy --wait-for-client --listen 0.0.0.0:5678 ./manage.py runserver 0.0.0.0:8000"]
     command: /app/bin/local/django
     entrypoint: /app/bin/entrypoint
-    #  entrypoint: "tail -f /dev/null"
+    # entrypoint: "tail -f /dev/null"
     logging:
       options:
         max-size: "10m"
         max-file: "5"
-
-  api:
-    <<: *django
-    ports: 
-      - 8010:8000
-
   postgres:
     build:
       context: .
       dockerfile: ./compose/postgres/Dockerfile
-    image: ghfdb_production_postgres
+    image: production_postgres
     volumes:
-      - ghfdb_local_postgres_data:/var/lib/postgresql/data
-      - ghfdb_local_postgres_data_backups:/backups
+      - postgres:/var/lib/postgresql/data
+      - postgres_backups:/backups
     env_file:
       - ./.envs/.local/.postgres
     logging:
@@ -59,39 +52,61 @@ services:
       options:
         max-size: "10m"
         max-file: "5"
-  celeryworker:
-    <<: *django
-    ports: []
-    command: /app/bin/local/celery_worker
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "5"
-  celerybeat:
-    <<: *django
-    ports: []
-    command: /app/bin/local/celery_beat
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "5"
-  flower:
-    <<: *django
-    ports:
-      - "5555:5555"
-    command: /app/bin/local/celery_flower
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "5"
-  # mailhog:
-  #   image: mailhog/mailhog:v1.0.0
+  # celeryworker:
+  #   <<: *django
+  #   ports: []
+  #   command: /app/bin/local/celery_worker
+  #   logging:
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "5"
+  # celerybeat:
+  #   <<: *django
+  #   ports: []
+  #   command: /app/bin/local/celery_beat
+  #   logging:
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "5"
+  # flower:
+  #   <<: *django
   #   ports:
-  #     - "8025:8025"
-
-  docs:
-    <<: *django
-    working_dir: /app/docs
+  #     - "5555:5555"
+  #   command: /app/bin/local/celery_flower
+  #   logging:
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "5"
+  # docs:
+  #   <<: *django
+  #   working_dir: /app/docs
+  #   ports:
+  #     - "9000:9000"
+  #   command: /app/bin/local/docs
+  minio:
+    image: quay.io/minio/minio:latest
+    volumes:
+      - media:/minio
+    env_file:
+      - ./.envs/.local/.minio
     ports:
       - "9000:9000"
-    command: /app/bin/local/docs
+      - "9001:9001"
+    command: server /minio
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
+  node:
+    build:
+      context: .
+      dockerfile: ./compose/node/Dockerfile
+    image: local_node
+    depends_on:
+      - django
+    volumes:
+      - ./:/app:z
+      - /app/node_modules
+    command: npm run dev
+    ports:
+      - '3000:3000'
