@@ -18,13 +18,13 @@ class HeatFlowChildFactory(factory.django.DjangoModelFactory):
     # )
 
     qc = factory.LazyAttribute(lambda _: round(random.gauss(mu=50, sigma=30), 2))
-    qc_uncertainty = factory.LazyAttribute(lambda o: o.qc * random.uniform(0.05, 0.25))
+    qc_uncertainty = factory.LazyAttribute(lambda o: o.qc * random.uniform(0.05, 0.25))  # noqa: S311
     # qc_uncertainty = factory.Faker("pyfloat", min_value=0, max_value=10**6, right_digits=2)
 
     # metadata fields
     q_method = FuzzyChoice(vocabularies.HeatFlowMethod.values)
     q_top = factory.Faker("pyfloat", min_value=0, max_value=11999)
-    q_bottom = factory.LazyAttribute(lambda o: random.uniform(o.q_top, 12000))
+    q_bottom = factory.LazyAttribute(lambda o: random.uniform(o.q_top, 12000))  # noqa: S311
     expedition = factory.Faker("text", max_nb_chars=100)
     lithology = FuzzyChoice(vocabularies.SimpleLithology.values)
     stratigraphy = FuzzyChoice(vocabularies.ISC2020.values)

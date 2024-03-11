@@ -10,12 +10,11 @@ Global Heat Flow Database (GHFDB) models for Django. The models are defined usin
 
 from django.core.validators import MaxValueValidator as MaxVal
 from django.core.validators import MinValueValidator as MinVal
-from django.urls import reverse
 from django.utils.translation import gettext as _
-from geoluminate import models
 from geoluminate.contrib.samples.models import Measurement
+from geoluminate.db import models
 from geoluminate.utils.generic import max_length_from_choices
-from research_vocabs.fields import ConceptField, TaggableConcepts
+from research_vocabs.fields import ConceptField
 
 # from geoscience.fields import EarthMaterialOneToOne, GeologicTimeOneToOne
 from . import vocabularies
@@ -29,7 +28,6 @@ class HeatFlow(Measurement):
     ```{note}
     This model inherits from `geoluminate.contrib.samples.models.Measurement` which implicitly defines a relationship to the `geoluminate.contrib.samples.models.Sample` model. This means we already have access to several fields from the newly defined schema (Fuchs et al 2021) which do not need to be redefined here. Convenience methods are added to the model to retrieve these data in the expected way
     ```
-
     """
 
     PRIMARY_DATA_FIELDS = ["q"]
@@ -332,7 +330,7 @@ class HeatFlowChild(Measurement):
     # Temperature Fields
     T_grad_mean = models.QuantityField(
         base_units="K/km",
-        verbose_name=_("Calculated or inferred temperature gradient "),
+        verbose_name=_("Calculated or inferred temperature gradient"),
         help_text=_("Mean temperature gradient measured for the heat-flow determination interval."),
         null=True,
         blank=True,
@@ -439,7 +437,7 @@ class HeatFlowChild(Measurement):
         help_text=_(
             "Number of discrete temperature points (e.g. number of used BHT values, log values or thermistors used in"
             " probe sensing) confirming the mean temperature gradient [T_grad_mean_meas]. NOT the repetition of one"
-            " measurement at a certain depth. "
+            " measurement at a certain depth."
         ),
         blank=True,
         null=True,
@@ -522,7 +520,7 @@ class HeatFlowChild(Measurement):
     tc_strategy = models.CharField(
         max_length=255,
         choices=vocabularies.ConductivityStrategy.choices,
-        verbose_name=_("Thermal conductivity averaging methodology"),
+        verbose_name=_("Thermal conductivity averaging methodology"),
         help_text=_(
             "Strategy that was employed to estimate the thermal conductivity over the vertical interval of heat-flow"
             " determination."
@@ -591,7 +589,7 @@ class HeatFlowChild(Measurement):
         default="unspecified",
         verbose_name=_("Flag erosion effect (heat-flow correction)"),
         help_text=_(
-            "Specifies if erosion effects with respect to the reported heat-flow value were present and if corrections"
+            "Specifies if erosion effects with respect to the reported heat-flow value were present and if corrections"
             " were performed."
         ),
     )
@@ -601,7 +599,7 @@ class HeatFlowChild(Measurement):
         default="unspecified",
         verbose_name=_("Flag topographic effect (heat-flow correction)"),
         help_text=_(
-            "Specifies if topographic effects with respect to the reported heat-flow value were present and if"
+            "Specifies if topographic effects with respect to the reported heat-flow value were present and if"
             " corrections were performed."
         ),
     )
@@ -611,7 +609,7 @@ class HeatFlowChild(Measurement):
         default="unspecified",
         verbose_name=_("Flag paleoclimatic effect (heat-flow correction)"),
         help_text=_(
-            "Specifies if topographic effects with respect to the reported heat-flow value were present and if"
+            "Specifies if topographic effects with respect to the reported heat-flow value were present and if"
             " corrections were performed."
         ),
     )
@@ -622,14 +620,14 @@ class HeatFlowChild(Measurement):
         verbose_name=_("Flag in-situ thermal properties"),
         help_text=_(
             "Specifies if climatic conditions (glaciation, post-industrial warming, etc.) with respect to the reported"
-            " heat-flow value were present and if corrections were performed."
+            " heat-flow value were present and if corrections were performed."
         ),
     )
     corr_CONV_flag = models.CharField(
         max_length=max_length_from_choices(vocabularies.GenericFlagChoices.choices),
         choices=vocabularies.GenericFlagChoices.choices,
         default="unspecified",
-        verbose_name=_("Flag convection processes (heat-flow correction) "),
+        verbose_name=_("Flag convection processes (heat-flow correction)"),
         help_text=_(
             "Specifies if convection effects with respect to the reported heat-flow value were present and if"
             " corrections were performed."
@@ -639,7 +637,7 @@ class HeatFlowChild(Measurement):
         max_length=max_length_from_choices(vocabularies.GenericFlagChoices.choices),
         choices=vocabularies.GenericFlagChoices.choices,
         default="unspecified",
-        verbose_name=_("Flag heat refraction effect (heat-flow correction) "),
+        verbose_name=_("Flag heat refraction effect (heat-flow correction)"),
         help_text=_(
             "Specifies if refraction effects, e.g., due to significant local conductivity contrasts, with respect to"
             " the reported heat-flow value were present and if corrections were performed. "
@@ -674,8 +672,8 @@ class HeatFlowChild(Measurement):
 
         COV	U-score (Numerical uncertainty)	Ranking description
         < 5%	U1	Excellent
-        5–15%	U2	Good
-        15–25%	U3	Ok
+        5-15%	U2	Good
+        15-25%	U3	Ok
         > 25%	U4	Poor
         not applicable	Ux	not determined / missing data
 
