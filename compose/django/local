@@ -12,9 +12,9 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   # psycopg2 dependencies
   libpq-dev \
   # dependencies for building Python packages
-  build-essential && \
+  build-essential \
   # install git
-  apt-get install -y git && \
+  git && \
   # install poetry for dependencies
   pip install "poetry==$POETRY_VERSION" && \
   # dependencies for building Python packages
@@ -33,7 +33,6 @@ RUN poetry export --without-hashes -o requirements.txt --with dev && \
 # # ====================== RUN STAGE ============================
 FROM base as run-stage
 
-# copy python dependency wheels from python-build-stage
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
   # the python wheels for pycairo will not build without these and therefore package installation will fail. Pycairo is required through the following dependency tree django-cms > django-filer > easy-thumbnails[svg] > reportlab > pycairo
@@ -46,12 +45,14 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
 
-
+# copy python dependency wheels from python-build-stage
 COPY --from=build-stage /usr/src/app/wheels /wheels/
 
 # use wheels to install python dependencies
 RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
 	&& rm -rf /wheels/
+
+WORKDIR /app
 
 
 # COPY ./bin/entrypoint /entrypoint
