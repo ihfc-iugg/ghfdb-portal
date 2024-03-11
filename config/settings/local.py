@@ -1,10 +1,10 @@
-import os
-
 import geoluminate
 
 from .base import *
 
 geoluminate.setup(development=True)
+
+INSTALLED_APPS.remove("sortedm2m")
 
 # OVERRIDE DEFAULT LOCAL SETTINGS BELOW HERE
 # -------------------------------------------
@@ -31,3 +31,7 @@ SERVER_EMAIL = EMAIL_HOST_USER
 ACCOUNT_EMAIL_VERIFICATION = "optional"
 
 LOGIN_REDIRECT_URL = "/profile/"
+
+STORAGES["staticfiles"] = {
+    "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+}
