@@ -4,5 +4,7 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-exec python manage.py runserver 0.0.0.0:8000 
+python manage.py makemigrations
+python manage.py migrate
+exec python manage.py runserver 0.0.0.0:8000
 # The  run_local  command is a custom management command included with geoluminate that sequentially runs makemigrations, migrate, check for a superuser and creates one if none already exist, then runs the development server.
