@@ -15,6 +15,9 @@ INSTALLED_APPS = [
     # "well_logs",
 ]
 
+cache = False
+
+
 GEOLUMINATE_SAMPLE_TYPES = ["Heat Flow Site"]
 
 GEOLUMINATE_KEYWORD_CHOICES = [
