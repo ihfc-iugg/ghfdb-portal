@@ -12,7 +12,7 @@ services:
     build:
       context: .
       dockerfile: ./compose/django/local
-    image: local_django
+    image: ghfdb_local_django
     depends_on:
       - postgres
       - redis
@@ -28,55 +28,32 @@ services:
     command: /app/bin/local/django
     entrypoint: /app/bin/entrypoint
     # entrypoint: "tail -f /dev/null"
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "5"
+
   postgres:
-    build:
-      context: .
-      dockerfile: ./compose/postgres/Dockerfile
-    image: production_postgres
+    image: geoluminate/postgis:latest
     volumes:
       - postgres:/var/lib/postgresql/data
       - postgres_backups:/backups
     env_file:
       - ./.envs/.local/.postgres
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "5"
   redis:
     image: redis:6
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "5"
   # celeryworker:
   #   <<: *django
   #   ports: []
   #   command: /app/bin/local/celery_worker
-  #   logging:
-  #     options:
-  #       max-size: "10m"
-  #       max-file: "5"
+
   # celerybeat:
   #   <<: *django
   #   ports: []
   #   command: /app/bin/local/celery_beat
-  #   logging:
-  #     options:
-  #       max-size: "10m"
-  #       max-file: "5"
+
   # flower:
   #   <<: *django
   #   ports:
   #     - "5555:5555"
   #   command: /app/bin/local/celery_flower
-  #   logging:
-  #     options:
-  #       max-size: "10m"
-  #       max-file: "5"
+
   # docs:
   #   <<: *django
   #   working_dir: /app/docs
@@ -93,20 +70,3 @@ services:
       - "9000:9000"
       - "9001:9001"
     command: server /minio
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "5"
-  node:
-    build:
-      context: .
-      dockerfile: ./compose/node/Dockerfile
-    image: local_node
-    depends_on:
-      - django
-    volumes:
-      - ./:/app:z
-      - /app/node_modules
-    command: npm run dev
-    ports:
-      - '3000:3000'
