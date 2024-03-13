@@ -32,6 +32,12 @@ repos:
       - id: ruff
       - id: ruff-format
 
+  - repo: https://github.com/djlint/djLint
+    rev: v1.34.1
+    hooks:
+      - id: djlint-reformat-django
+      - id: djlint-django
+
   # - repo: https://github.com/python-poetry/poetry
   #   rev: '1.5.1'
   #   hooks:
