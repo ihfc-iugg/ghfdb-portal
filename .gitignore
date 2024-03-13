@@ -27,7 +27,6 @@ plotly_test.html
 test.py
 
 .vscode/
-/assets
 /node_modules
 /mapping/data
 thermoglobe.json
@@ -168,3 +167,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+Global
+GlobalHeatFlow.bib
+staticfiles/

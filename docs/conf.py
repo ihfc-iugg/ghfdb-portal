@@ -1,16 +1,11 @@
-# -*- coding: utf-8 -*-
 # All configuration values have a default; values that are commented out
 # serve to show the default.
-import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent.parent.resolve()
 
 
-os.environ["GEOLUMINATE_CONFIG_PATH"] = str(BASE_DIR / "geoluminate.yml")
-
-
-from docs.conf import *  # noqa: F401, F403
+from docs.conf import *
 
 # app_dir = Path(__file__).parent.parent.resolve()
 # sys.path.append(str(app_dir))
@@ -23,12 +18,14 @@ from docs.conf import *  # noqa: F401, F403
 
 # https://sphinx-book-theme.readthedocs.io/en/stable/reference.html
 # https://pydata-sphinx-theme.readthedocs.io/en/latest/user_guide/index.html
-html_theme_options.update({
-    "announcement": (
-        "⚠️The Global Heat Flow Database is in an early development phase and may not work exactly as described in"
-        " this documentation. If you find any inconsistencies, please report to the github repository. ⚠️"
-    ),
-})
+html_theme_options.update(
+    {
+        "announcement": (
+            "⚠️The Global Heat Flow Database is in an early development phase and may not work exactly as described in"
+            " this documentation. If you find any inconsistencies, please report to the github repository. ⚠️"
+        ),
+    }
+)
 
 
 autodoc2_parse_docstrings = True
@@ -37,10 +34,7 @@ autodoc2_docstring_parser_regexes = [("myst", r".*choices*")]
 
 
 # Auto list fields from django models - from https://djangosnippets.org/snippets/2533/#c5977
-import inspect
 
-from django.utils.encoding import force_str
-from django.utils.html import strip_tags
 
 # def process_docstring(app, what, name, obj, options, lines):
 #     # This causes import errors if left outside the function

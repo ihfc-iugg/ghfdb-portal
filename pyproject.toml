@@ -197,7 +197,7 @@ plugins = ["mypy_django_plugin.main"]
 django_settings_module = "tests.settings"
 
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "config.settings.local"
+DJANGO_SETTINGS_MODULE = "config.settings.development"
 reuse_db = true
 python_files = ["test_*.py", "*_test.py", "testing/python/*.py"]
 filterwarnings = [
