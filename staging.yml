@@ -1,0 +1,69 @@
+version: '3'
+name: ghfdb_staging
+
+volumes:
+  postgres: {}
+  postgres_backups: {}
+  media: {}
+
+services:
+
+  django: &django
+    build:
+      context: .
+      dockerfile: ./compose/production/django
+    image: production_django
+    depends_on:
+      - postgres
+      - redis
+      - minio
+    env_file:
+      - ./compose/production/.envs/.django
+      - ./compose/production/.envs/.postgres
+    command: start-django
+    label:
+      - "traefik.enable=true"
+      - "traefik.http.routers.django.rule=Host(`geoluminate.net`) || Host(`www.geoluminate.net`) || Host(`localhost`)"
+      - "traefik.http.routers.django.entrypoints=web"
+      - "traefik.http.services.django.loadbalancer.server.port=5000"
+      - "traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken"
+  postgres:
+    image: geoluminate/postgis:latest
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - postgres_backups:/backups
+    env_file:
+      - ./compose/production/.envs/.postgres
+  redis:
+    image: redis:6
+  celeryworker:
+    <<: *django
+    command: start-celeryworker
+  celerybeat:
+    <<: *django
+    command: start-celerybeat
+  flower:
+    <<: *django
+    command: start-flower
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.flower.rule=Host(`flower.geoluminate.net`)"
+      - "traefik.http.routers.flower.entrypoints=web"
+      - "traefik.http.services.flower.loadbalancer.server.port=5555"
+  minio:
+    image: quay.io/minio/minio:latest
+    volumes:
+      - media:/minio
+    env_file:
+      - ./compose/production/.envs/.minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /minio
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.minio.rule=Host(`media.geoluminate.net`)"
+      - "traefik.http.routers.minio.entrypoints=web"
+      - "traefik.http.services.minio.loadbalancer.server.port=9000"
+
+

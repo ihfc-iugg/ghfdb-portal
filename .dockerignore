@@ -5,7 +5,7 @@
 .ruff_cache
 .tox
 htmlcov
-
+docs
 
 dist
 build
@@ -43,3 +43,13 @@ logs
 *.pid
 *.seed
 *.pid.lock
+
+.editorconfig
+.gitattributes
+.github
+.gitignore
+.gitlab-ci.yml
+.pre-commit-config.yaml
+venv
+.git
+.envs/

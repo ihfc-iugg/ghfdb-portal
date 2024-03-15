@@ -61,7 +61,7 @@ jobs:
       - name: "📦 Build and push image to Docker Hub"
         uses: docker/build-push-action@v3
         with:
-          file: ./compose/geoluminate/lite
+          file: ./compose/django/local
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}

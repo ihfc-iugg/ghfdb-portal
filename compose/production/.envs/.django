@@ -1,0 +1,52 @@
+# General
+# --------------------------------
+# DJANGO_READ_DOT_ENV_FILE=True
+DJANGO_SETTINGS_MODULE=config.production
+DJANGO_SECRET_KEY=*ad=sdv!xt-#$=(1@apa)!y^xx@zj%%v(5+&!r*cq#7)2-1x1m
+DJANGO_ADMIN_URL=a8237ce9580ba3555bcdbf974e5e17ab/
+DJANGO_ALLOWED_HOSTS=139.17.54.176,heatflow.world,
+DJANGO_SETTINGS_MODULE=config.production
+
+CACHE=True
+
+# Security
+# ---------------------------------
+# TIP: better off using DNS, however, redirect is OK too
+DJANGO_SECURE_SSL_REDIRECT=False
+
+# Email
+# -------------------------------------
+EMAIL_HOST=mail.gfz-potsdam.de
+EMAIL_HOST_USER=ghfdbweb@gfz-potsdam.de
+EMAIL_HOST_PASSWORD=8m!E00CZu%mp
+DJANGO_DEFAULT_FROM_EMAIL=ghfdbweb@gfz-potsdam.de
+DJANGO_SERVER_EMAIL=ghfdbweb@gfz-potsdam.de
+DJANGO_EMAIL_USE_TLS=True
+DJANGO_EMAIL_PORT=587
+
+# django-allauth
+# -----------------------------------------
+DJANGO_ACCOUNT_ALLOW_REGISTRATION=True
+
+# Gunicorn
+# ---------------------------------------
+WEB_CONCURRENCY=4
+
+# Redis
+# ----------------------------------------
+REDIS_URL=redis://redis:6379/0
+
+# Celery
+# ----------------------------------------
+
+# Flower
+CELERY_FLOWER_USER=ghfdb_web
+CELERY_FLOWER_PASSWORD=havMxmT0Hxx9OLNe
+
+
+# STORAGE
+# ----------------------------------------
+AWS_ACCESS_KEY_ID=ghfdb_web
+AWS_SECRET_ACCESS_KEY=K6tAuYOXeuOs4HS4
+AWS_BUCKET_NAME=ghfdb
+AWS_S3_CUSTOM_DOMAIN="127.0.0.1:9000/ghfdb"

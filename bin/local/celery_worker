@@ -1,6 +1,0 @@
-#!/bin/bash
-
-set -o errexit
-set -o nounset
-
-exec watchfiles celery.__main__.main --args '-A geoluminate.conf.backends.celery worker -l INFO'

@@ -1,5 +1,6 @@
 version: '3'
 name: ghfdb_production
+
 volumes:
   postgres: {}
   postgres_backups: {}
@@ -7,71 +8,52 @@ volumes:
   media: {}
 
 services:
+
   django: &django
     build:
       context: .
-      dockerfile: ./compose/geoluminate/production
+      dockerfile: ./compose/production/django
     image: production_django
     depends_on:
       - postgres
       - redis
       - minio
     env_file:
-      - ./.envs/.production/.django
-      - ./.envs/.production/.postgres
-    command: /external_apps/geoluminate/bin/production/django
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "5"
+      - ./compose/production/.envs/.django
+      - ./compose/production/.envs/.postgres
+    command: start-django
   postgres:
-    build:
-      context: .
-      dockerfile: ./compose/postgres/Dockerfile
-    image: production_postgres
+    image: geoluminate/postgis:latest
     volumes:
       - postgres:/var/lib/postgresql/data
       - postgres_backups:/backups
     env_file:
-      - ./.envs/.production/.postgres
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "5"
+      - ./compose/production/.envs/.postgres
   redis:
     image: redis:6
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "5"
-  celeryworker:
-    <<: *django
-    image: celery_worker
-    command: /scripts/production/celery_worker
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "5"
-  celerybeat:
-    <<: *django
-    image: celery_beat
-    command: /scripts/production/celery_beat
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "5"
-  flower:
-    <<: *django
-    image: celery_flower
-    command: /scripts/production/celery_flower
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "5"
+  # celeryworker:
+  #   <<: *django
+  #   command: start-celeryworker
+  # celerybeat:
+  #   <<: *django
+  #   command: start-celerybeat
+  # flower:
+  #   <<: *django
+  #   command: start-flower
+  minio:
+    image: quay.io/minio/minio:latest
+    volumes:
+      - media:/minio
+    env_file:
+      - ./compose/production/.envs/.minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /minio
   traefik:
     build:
       context: .
-      dockerfile: ./compose/traefik/Dockerfile
+      dockerfile: ./compose/production/traefik
     image: traefik
     depends_on:
       - django
@@ -82,7 +64,4 @@ services:
       - "0.0.0.0:443:443"
       - "0.0.0.0:5555:5555"
       # - "0.0.0.0:8080:8080"
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "5"
+

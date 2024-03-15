@@ -11,7 +11,7 @@ services:
   django: &django
     build:
       context: .
-      dockerfile: ./compose/django/local
+      dockerfile: ./compose/development/django
     image: ghfdb_local_django
     depends_on:
       - postgres
@@ -20,14 +20,12 @@ services:
     volumes:
       - ./:/app:z
     env_file:
-      - ./.envs/.local/.django
-      - ./.envs/.local/.postgres
+      - ./compose/development/.envs/.django
+      - ./compose/development/.envs/.postgres
     ports:
       - 8000:8000
       - 5678:5678
-    command: /app/bin/local/django
-    entrypoint: /app/bin/entrypoint
-    # entrypoint: "tail -f /dev/null"
+    command: start-django-local
 
   postgres:
     image: geoluminate/postgis:latest
@@ -35,37 +33,37 @@ services:
       - postgres:/var/lib/postgresql/data
       - postgres_backups:/backups
     env_file:
-      - ./.envs/.local/.postgres
+      - ./compose/development/.envs/.postgres
   redis:
     image: redis:6
   # celeryworker:
   #   <<: *django
   #   ports: []
-  #   command: /app/bin/local/celery_worker
+  #   command: start-celeryworker-local
 
   # celerybeat:
   #   <<: *django
   #   ports: []
-  #   command: /app/bin/local/celery_beat
+  #   command: start-celerybeat-local
 
   # flower:
   #   <<: *django
   #   ports:
   #     - "5555:5555"
-  #   command: /app/bin/local/celery_flower
+  #   command: start-flower-local
 
   # docs:
   #   <<: *django
   #   working_dir: /app/docs
   #   ports:
   #     - "9000:9000"
-  #   command: /app/bin/local/docs
+  #   command: start-docs
   minio:
     image: quay.io/minio/minio:latest
     volumes:
       - media:/minio
     env_file:
-      - ./.envs/.local/.minio
+      - ./compose/development/.envs/.minio
     ports:
       - "9000:9000"
       - "9001:9001"
