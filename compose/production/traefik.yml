@@ -37,18 +37,11 @@ http:
       loadBalancer:
         servers:
           - url: http://django:5000
-      # labels:
-      #   - "traefik.http.routers.django.rule=Host(`localhost`)"
 
     # flower:
     #   loadBalancer:
     #     servers:
     #       - url: http://flower:5555
-
-    # django-media:
-    #   loadBalancer:
-    #     servers:
-    #       - url: http://nginx:80
 
 api:
   dashboard: true
