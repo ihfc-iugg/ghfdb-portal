@@ -70,4 +70,3 @@ services:
       - "traefik.http.routers.minio.entrypoints=web"
       - "traefik.http.services.minio.loadbalancer.server.port=9000"
 
-
