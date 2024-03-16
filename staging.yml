@@ -39,9 +39,23 @@ services:
   celeryworker:
     <<: *django
     command: start-celeryworker
+  # celerybeat:
+  #   <<: *django
+  #   command: start-celerybeat
   celerybeat:
-    <<: *django
-    command: start-celerybeat
+      build:
+        context: .
+        dockerfile: ./compose/production/django
+      image: production_django
+      depends_on:
+        - postgres
+        - redis
+        - minio
+      env_file:
+        - ./compose/production/.envs/.django
+        - ./compose/production/.envs/.postgres
+      command: start-celerybeat
+
   flower:
     <<: *django
     command: start-flower
