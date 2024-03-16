@@ -39,13 +39,9 @@ services:
   celeryworker:
     <<: *django
     command: start-celeryworker
-    labels:
-      - "traefik.enable=false"
   celerybeat:
     <<: *django
     command: start-celerybeat
-    labels:
-      - "traefik.enable=false"
   flower:
     <<: *django
     command: start-flower
