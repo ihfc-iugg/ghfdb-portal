@@ -37,8 +37,18 @@ services:
   redis:
     image: redis:6
   celeryworker:
-    <<: *django
-    command: start-celeryworker
+      build:
+        context: .
+        dockerfile: ./compose/production/django
+      image: production_django
+      depends_on:
+        - postgres
+        - redis
+        - minio
+      env_file:
+        - ./compose/production/.envs/.django
+        - ./compose/production/.envs/.postgres
+      command: start-celeryworker
   # celerybeat:
   #   <<: *django
   #   command: start-celerybeat
