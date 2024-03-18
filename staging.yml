@@ -6,6 +6,10 @@ volumes:
   postgres_backups: {}
   media: {}
 
+networks:
+  traefik:
+    external: true
+
 services:
 
   django: &django
@@ -22,6 +26,7 @@ services:
       - ./compose/production/.envs/.postgres
     command: start-django
     networks:
+      - default
       - traefik
     labels:
       - traefik.enable=true
@@ -52,6 +57,9 @@ services:
   flower:
     <<: *django
     command: start-flower
+    networks:
+      - default
+      - traefik
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.flower.rule=Host(`flower.env.rz-vm71.gfz-potsdam.de`)"
@@ -67,6 +75,9 @@ services:
       - "9000:9000"
       - "9001:9001"
     command: server /minio
+    networks:
+      - default
+      - traefik
     labels:
       - traefik.enable=true
       - traefik.http.routers.media.entrypoints=https
@@ -81,6 +92,4 @@ services:
 
 
 
-networks:
-  traefik:
-    external: true
+
