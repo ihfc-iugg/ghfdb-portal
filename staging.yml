@@ -22,6 +22,8 @@ services:
       - redis
       - minio
     command: start-django
+    ports:
+      - "5000:5000"
     env_file:
       - stack.env
     networks:
@@ -30,7 +32,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.django.tls=true
-      - traefik.http.routers.django.rule=Host(`env.rz-vm71.gfz-potsdam.de`)
+      - traefik.http.routers.django.rule=Host(`${DJANGO_HOST_NAME}`)
       - traefik.http.routers.django.entrypoints=https
       - traefik.http.services.django.loadbalancer.server.port=5000
       - traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken
@@ -46,22 +48,25 @@ services:
   celeryworker:
     <<: *django
     command: start-celeryworker
-    labels:
-      - "traefik.enable=false"
+    ports: []
+    labels: []
   celerybeat:
     <<: *django
     command: start-celerybeat
-    labels:
-      - "traefik.enable=false"
+    ports: []
+    labels: []
   flower:
     <<: *django
     command: start-flower
+    ports:
+      - "5555:5555"
     networks:
       - default
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.flower.rule=Host(`flower.env.rz-vm71.gfz-potsdam.de`)"
+      - traefik.http.routers.django.tls=true
+      - "traefik.http.routers.flower.rule=Host(`tasks.${DJANGO_HOST_NAME}`)"
       - "traefik.http.routers.flower.entrypoints=https"
       - traefik.http.services.flower.loadbalancer.server.port=5555
   minio:
@@ -80,12 +85,12 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.media.entrypoints=https
-      - traefik.http.routers.media.rule=Host(`env.rz-vm71.gfz-potsdam.de`) && PathPrefix(`/media`)
+      - traefik.http.routers.media.rule=Host(`media.${DJANGO_HOST_NAME}`)
       - traefik.http.routers.media.service=media
       - traefik.http.services.media.loadbalancer.server.port=9000
 
       - traefik.http.routers.minio.entrypoints=https
-      - traefik.http.routers.minio.rule=Host(`env.rz-vm71.gfz-potsdam.de`) && PathPrefix(`/media`) && PathPrefix(`/dashboard`)
+      - traefik.http.routers.minio.rule=Host(`media.${DJANGO_HOST_NAME}`) && PathPrefix(`/dashboard`)
       - traefik.http.routers.minio.service=minio
       - traefik.http.services.minio.loadbalancer.server.port=9001
 
