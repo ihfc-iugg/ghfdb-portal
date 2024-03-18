@@ -22,11 +22,12 @@ services:
       - ./compose/production/.envs/.postgres
     command: start-django
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.django.rule=Host(`env.rz-vm71.gfz-potsdam.de`)"
-      - "traefik.http.routers.django.entrypoints=https"
-      - traefik.http.services.myminio.loadbalancer.server.port=5000
-      - "traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken"
+      - traefik.enable=true
+      - traefik.http.routers.django.tls=true
+      - traefik.http.routers.django.rule=Host(`env.rz-vm71.gfz-potsdam.de`)
+      - traefik.http.routers.django.entrypoints=https
+      - traefik.http.services.django.loadbalancer.server.port=5000
+      - traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken
   postgres:
     image: geoluminate/postgis:latest
     volumes:
@@ -53,7 +54,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.flower.rule=Host(`flower.env.rz-vm71.gfz-potsdam.de`)"
       - "traefik.http.routers.flower.entrypoints=https"
-      - traefik.http.services.myminio.loadbalancer.server.port=5555
+      - traefik.http.services.flower.loadbalancer.server.port=5555
   minio:
     image: quay.io/minio/minio:latest
     volumes:
