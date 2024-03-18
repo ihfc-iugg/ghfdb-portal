@@ -12,4 +12,6 @@ STORAGES["staticfiles"] = {
     "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
 }
 
-print(ALLOWED_HOSTS)
+ALLOWED_HOSTS = ["env.rz-vm71.gfz-potsdam.de"]
+
+# print(ALLOWED_HOSTS)
