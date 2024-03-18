@@ -22,6 +22,8 @@ services:
       - redis
       - minio
     command: start-django
+    env_file:
+      - stack.env
     networks:
       - default
       - traefik
@@ -34,6 +36,8 @@ services:
       - traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken
   postgres:
     image: geoluminate/postgis:latest
+    env_file:
+      - stack.env
     volumes:
       - postgres:/var/lib/postgresql/data
       - postgres_backups:/backups
@@ -64,6 +68,8 @@ services:
     image: quay.io/minio/minio:latest
     volumes:
       - media:/minio
+    env_file:
+      - stack.env
     ports:
       - "9000:9000"
       - "9001:9001"
