@@ -21,6 +21,8 @@ services:
       - ./compose/production/.envs/.django
       - ./compose/production/.envs/.postgres
     command: start-django
+    networks:
+      - traefik
     labels:
       - traefik.enable=true
       - traefik.http.routers.django.tls=true
@@ -76,3 +78,9 @@ services:
       - traefik.http.routers.minio.rule=Host(`media.env.rz-vm71.gfz-potsdam.de`) && PathPrefix(`/dashboard`)
       - traefik.http.routers.minio.service=minio
       - traefik.http.services.minio.loadbalancer.server.port=9001
+
+
+
+networks:
+  traefik:
+    external: true
