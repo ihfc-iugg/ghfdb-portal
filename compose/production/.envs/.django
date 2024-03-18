@@ -4,8 +4,7 @@
 DJANGO_SETTINGS_MODULE=config.production
 DJANGO_SECRET_KEY=*ad=sdv!xt-#$=(1@apa)!y^xx@zj%%v(5+&!r*cq#7)2-1x1m
 DJANGO_ADMIN_URL=a8237ce9580ba3555bcdbf974e5e17ab/
-DJANGO_ALLOWED_HOSTS=139.17.54.176,heatflow.world,
-DJANGO_SETTINGS_MODULE=config.production
+DJANGO_ALLOWED_HOSTS=139.17.54.176,heatflow.world,env.rz-vm71.gfz-potsdam.de
 
 CACHE=True
 
