@@ -1,3 +1,5 @@
+import os
+
 import geoluminate
 
 from .common import *
@@ -33,12 +35,12 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "verbose",
         },
-        # "file": {
-        #     "level": "INFO",  # Adjust the level as needed
-        #     "class": "logging.FileHandler",
-        #     "filename": os.path.join(BASE_DIR, "logs", "debug.log"),
-        #     "formatter": "verbose",
-        # },
+        "file": {
+            "level": "INFO",  # Adjust the level as needed
+            "class": "logging.FileHandler",
+            "filename": os.path.join(BASE_DIR, "logs", "debug.log"),
+            "formatter": "verbose",
+        },
         # "mail_admins": {"level": "ERROR", "class": "django.utils.log.AdminEmailHandler", "formatter": "simple"},
     },
     "loggers": {
@@ -49,7 +51,7 @@ LOGGING = {
         #     "propagate": True,
         # },
         "geoluminate": {  # Replace with the name of your Django app
-            "handlers": ["console"],
+            "handlers": ["file", "console"],
             "level": "DEBUG",  # Adjust the level as needed
             "propagate": False,
         },
