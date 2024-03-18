@@ -23,7 +23,7 @@ services:
     command: start-django
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.django.rule=Host(`env.rz-vm71.gfz-potsdam.de`) && (PathPrefix(`/demo`)"
+      - "traefik.http.routers.django.rule=Host(`env.rz-vm71.gfz-potsdam.de`) && PathPrefix(`/demo`)"
       - "traefik.http.routers.django.entrypoints=https"
       - "traefik.http.services.django.loadbalancer.server.port=5000"
       - "traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken"
