@@ -53,7 +53,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.flower.rule=Host(`flower.env.rz-vm71.gfz-potsdam.de`)"
       - "traefik.http.routers.flower.entrypoints=https"
-      - "traefik.http.services.flower.loadbalancer.server.port=5555"
+      - "traefik.http.services.django.loadbalancer.server.url=http://flower:5555"
   minio:
     image: quay.io/minio/minio:latest
     volumes:
@@ -68,5 +68,5 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.minio.rule=Host(`media.env.rz-vm71.gfz-potsdam.de`)"
       - "traefik.http.routers.minio.entrypoints=https"
-      - "traefik.http.services.minio.loadbalancer.server.port=9000"
+      - "traefik.http.services.django.loadbalancer.server.url=http://minio:9000"
 
