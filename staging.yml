@@ -25,7 +25,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.django.rule=Host(`env.rz-vm71.gfz-potsdam.de`)"
       - "traefik.http.routers.django.entrypoints=https"
-      - "traefik.http.services.django.loadbalancer.server.port=5000"
+      - "traefik.http.services.django.loadbalancer.server.url=http://django:5000"
       - "traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken"
   postgres:
     image: geoluminate/postgis:latest
