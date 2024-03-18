@@ -2,7 +2,7 @@
 ###################
 /static
 *.code-workspace
-/.envs
+**/.envs/*
 /logs
 /.ipython
 api.yml
