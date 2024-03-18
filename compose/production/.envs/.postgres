@@ -1,7 +1,0 @@
-# PostgreSQL
-# ------------------------------------------------------------------------------
-POSTGRES_HOST=postgres
-POSTGRES_PORT=5432
-POSTGRES_DB=global_heat_flow_database
-POSTGRES_USER=ciKZMZyFlWISprOeosgNkqGpaTIPESRW
-POSTGRES_PASSWORD=PGTaP5F5Jigs0ZPMcd3wh1C80CwfbWw4BnKXojG56MbSG8uTj1ITLVu8L8Quoa59
