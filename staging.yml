@@ -51,7 +51,7 @@ services:
     command: start-flower
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.django.rule=Host(`flower.env.rz-vm71.gfz-potsdam.de`)"
+      - "traefik.http.routers.flower.rule=Host(`flower.env.rz-vm71.gfz-potsdam.de`)"
       - "traefik.http.routers.flower.entrypoints=https"
       - "traefik.http.services.flower.loadbalancer.server.port=5555"
   minio:
