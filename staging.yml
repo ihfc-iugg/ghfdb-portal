@@ -23,8 +23,8 @@ services:
     command: start-django
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.django.rule=Host(`geoluminate.net`) || Host(`www.geoluminate.net`) || Host(`localhost`)"
-      - "traefik.http.routers.django.entrypoints=web"
+      - "traefik.http.routers.django.rule=Host(`env.rz-vm71.gfz-potsdam.de`)"
+      - "traefik.http.routers.django.entrypoints=http"
       - "traefik.http.services.django.loadbalancer.server.port=5000"
       - "traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken"
   postgres:
@@ -51,8 +51,8 @@ services:
     command: start-flower
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.flower.rule=Host(`flower.geoluminate.net`)"
-      - "traefik.http.routers.flower.entrypoints=web"
+      - "traefik.http.routers.django.rule=Host(`flower.env.rz-vm71.gfz-potsdam.de`)"
+      - "traefik.http.routers.flower.entrypoints=http"
       - "traefik.http.services.flower.loadbalancer.server.port=5555"
   minio:
     image: quay.io/minio/minio:latest
@@ -66,7 +66,7 @@ services:
     command: server /minio
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.minio.rule=Host(`media.geoluminate.net`)"
-      - "traefik.http.routers.minio.entrypoints=web"
+      - "traefik.http.routers.minio.rule=Host(`media.env.rz-vm71.gfz-potsdam.de`)"
+      - "traefik.http.routers.minio.entrypoints=http"
       - "traefik.http.services.minio.loadbalancer.server.port=9000"
 
