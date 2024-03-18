@@ -11,3 +11,7 @@ geoluminate.setup(development=False)
 STORAGES["staticfiles"] = {
     "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
 }
+
+
+STATIC_URL = "/django-static/"
+COMPRESS_URL = STATIC_URL
