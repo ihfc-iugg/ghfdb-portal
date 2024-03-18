@@ -11,7 +11,3 @@ geoluminate.setup(development=False)
 STORAGES["staticfiles"] = {
     "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
 }
-
-ALLOWED_HOSTS = ["env.rz-vm71.gfz-potsdam.de"]
-
-# print(ALLOWED_HOSTS)
