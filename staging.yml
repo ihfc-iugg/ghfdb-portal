@@ -31,9 +31,9 @@ services:
       - traefik
     labels:
       - traefik.enable=true
-      # - traefik.http.routers.django.tls=true
+      - traefik.http.routers.django.tls=true
       - traefik.http.routers.django.rule=Host(`${DJANGO_HOST_NAME}`)
-      - traefik.http.routers.django.entrypoints=http
+      - traefik.http.routers.django.entrypoints=https
       - traefik.http.services.django.loadbalancer.server.port=5000
       - traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken
   postgres:
@@ -65,9 +65,9 @@ services:
       - traefik
     labels:
       - "traefik.enable=true"
-      # - traefik.http.routers.flower.tls=true
+      - traefik.http.routers.flower.tls=true
       - "traefik.http.routers.flower.rule=Host(`tasks.${DJANGO_HOST_NAME}`)"
-      - "traefik.http.routers.flower.entrypoints=http"
+      - "traefik.http.routers.flower.entrypoints=https"
       - traefik.http.services.flower.loadbalancer.server.port=5555
   minio:
     image: quay.io/minio/minio:latest
@@ -84,14 +84,14 @@ services:
       - traefik
     labels:
       - traefik.enable=true
-      # - traefik.http.routers.media.tls=true
-      - traefik.http.routers.media.entrypoints=http
+      - traefik.http.routers.media.tls=true
+      - traefik.http.routers.media.entrypoints=https
       - traefik.http.routers.media.rule=Host(`media.${DJANGO_HOST_NAME}`)
       - traefik.http.routers.media.service=media
       - traefik.http.services.media.loadbalancer.server.port=9000
 
-      # - traefik.http.routers.minio.tls=true
-      - traefik.http.routers.minio.entrypoints=http
+      - traefik.http.routers.minio.tls=true
+      - traefik.http.routers.minio.entrypoints=https
       - traefik.http.routers.minio.rule=Host(`media.${DJANGO_HOST_NAME}`) && PathPrefix(`/dashboard`)
       - traefik.http.routers.minio.service=minio
       - traefik.http.services.minio.loadbalancer.server.port=9001
