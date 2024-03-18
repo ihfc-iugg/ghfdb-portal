@@ -23,8 +23,8 @@ services:
     command: start-django
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.django.rule=Host(`env.rz-vm71.gfz-potsdam.de`)"
-      - "traefik.http.routers.django.entrypoints=http"
+      - "traefik.http.routers.django.rule=Host(`env.rz-vm71.gfz-potsdam.de`) && (PathPrefix(`/demo`)"
+      - "traefik.http.routers.django.entrypoints=https"
       - "traefik.http.services.django.loadbalancer.server.port=5000"
       - "traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken"
   postgres:
@@ -52,7 +52,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.django.rule=Host(`flower.env.rz-vm71.gfz-potsdam.de`)"
-      - "traefik.http.routers.flower.entrypoints=http"
+      - "traefik.http.routers.flower.entrypoints=https"
       - "traefik.http.services.flower.loadbalancer.server.port=5555"
   minio:
     image: quay.io/minio/minio:latest
@@ -67,6 +67,6 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.minio.rule=Host(`media.env.rz-vm71.gfz-potsdam.de`)"
-      - "traefik.http.routers.minio.entrypoints=http"
+      - "traefik.http.routers.minio.entrypoints=https"
       - "traefik.http.services.minio.loadbalancer.server.port=9000"
 
