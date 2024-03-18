@@ -11,3 +11,5 @@ geoluminate.setup(development=False)
 STORAGES["staticfiles"] = {
     "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
 }
+
+print(ALLOWED_HOSTS)
