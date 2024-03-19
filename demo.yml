@@ -18,8 +18,6 @@ services:
       - redis
       - minio
     command: start-django
-    ports:
-      - "5000:5000"
     env_file:
       - stack.env
     labels:
@@ -27,7 +25,7 @@ services:
       - traefik.http.routers.django.tls=true
       - traefik.http.routers.django.rule=Host(`${DJANGO_HOST_NAME}`)
       - traefik.http.routers.django.entrypoints=websecure
-      - traefik.http.services.django.loadbalancer.server.port=5000
+      - traefik.http.services.django.loadbalancer.server.url=http://django:5000
       - traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken
   postgres:
     image: geoluminate/postgis:latest
@@ -41,33 +39,24 @@ services:
   celeryworker:
     <<: *django
     command: start-celeryworker
-    ports: []
-    labels: []
   celerybeat:
     <<: *django
     command: start-celerybeat
-    ports: []
-    labels: []
   flower:
     <<: *django
     command: start-flower
-    ports:
-      - "5555:5555"
     labels:
-      - "traefik.enable=true"
+      - traefik.enable=true
       - traefik.http.routers.flower.tls=true
-      - "traefik.http.routers.flower.rule=Host(`tasks.${DJANGO_HOST_NAME}`)"
-      - "traefik.http.routers.flower.entrypoints=websecure"
-      - traefik.http.services.flower.loadbalancer.server.port=5555
+      - traefik.http.routers.flower.rule=Host(`taskmanager.${DJANGO_HOST_NAME}`)
+      - traefik.http.routers.flower.entrypoints=websecure
+      - traefik.http.services.flower.loadbalancer.server.url=http://flower:5555
   minio:
     image: quay.io/minio/minio:latest
     volumes:
       - media:/minio
     env_file:
       - stack.env
-    ports:
-      - "9001:9000"
-      - "9002:9001"
     command: server /minio
     labels:
       - traefik.enable=true
@@ -75,13 +64,13 @@ services:
       - traefik.http.routers.media.entrypoints=websecure
       - traefik.http.routers.media.rule=Host(`media.${DJANGO_HOST_NAME}`)
       - traefik.http.routers.media.service=media
-      - traefik.http.services.media.loadbalancer.server.port=9001
+      - traefik.http.services.media.loadbalancer.server.url=http://minio:9000
 
       - traefik.http.routers.minio.tls=true
       - traefik.http.routers.minio.entrypoints=websecure
       - traefik.http.routers.minio.rule=Host(`media.${DJANGO_HOST_NAME}`) && PathPrefix(`/dashboard`)
       - traefik.http.routers.minio.service=minio
-      - traefik.http.services.minio.loadbalancer.server.port=9002
+      - traefik.http.services.minio.loadbalancer.server.url=http://minio:9001
   traefik:
     image: "traefik:latest"
     volumes:
