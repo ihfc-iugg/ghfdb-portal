@@ -13,5 +13,5 @@ STORAGES["staticfiles"] = {
 }
 
 
-STATIC_URL = "/django-static/"
-COMPRESS_URL = STATIC_URL
+# STATIC_URL = "/django-static/"
+# COMPRESS_URL = STATIC_URL
