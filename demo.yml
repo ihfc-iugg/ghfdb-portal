@@ -65,7 +65,7 @@ services:
       - media:/minio
     env_file:
       - stack.env
-    # ports:
+    ports:
       - "9000:9001"
       - "9001:9002"
     command: server /minio
