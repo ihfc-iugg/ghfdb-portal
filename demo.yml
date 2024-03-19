@@ -39,9 +39,11 @@ services:
   celeryworker:
     <<: *django
     command: start-celeryworker
+    labels: []
   celerybeat:
     <<: *django
     command: start-celerybeat
+    labels: []
   flower:
     <<: *django
     command: start-flower
