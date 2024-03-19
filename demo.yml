@@ -73,19 +73,26 @@ services:
       - traefik.http.services.minio.loadbalancer.server.url=http://minio:9001
   traefik:
     image: "traefik:latest"
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.websecure.address=:443"
     ports:
       - "80:80"
-      - "8080:8080"
-    command:
-      - --api.insecure=true
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-      - --entrypoints.web.address=:80
-      - --entrypoints.web.http.redirections.entryPoint.to=websecure
-      - --entrypoints.websecure.address=:443
-      # - traefik.http.routers.portainer.tls=true
-      # - traefik.http.routers.flower.rule=Host(`management.${DJANGO_HOST_NAME}`)"
-      # - traefik.http.routers.flower.entrypoints=websecure"
-      # - traefik.http.services.flower.loadbalancer.server.port=9000
+      - "443:443"
+      - "8080:8080"  # Traefik dashboard (optional)
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.${DJANGO_HOST_NAME}`)"  # Change to your domain
+      - "traefik.http.routers.traefik.entrypoints=web"
+      - "traefik.http.middlewares.traefik-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.traefik-secure.rule=Host(`traefik.${DJANGO_HOST_NAME}`)"  # Change to your domain
+      - "traefik.http.routers.traefik-secure.entrypoints=websecure"
+      - "traefik.http.routers.traefik-secure.tls=true"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+
