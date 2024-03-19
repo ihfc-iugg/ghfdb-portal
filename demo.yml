@@ -66,8 +66,8 @@ services:
     env_file:
       - stack.env
     ports:
-      - "9000:9001"
-      - "9001:9002"
+      - "9001:9000"
+      - "9002:9001"
     command: server /minio
     labels:
       - traefik.enable=true
