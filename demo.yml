@@ -20,6 +20,8 @@ services:
     command: start-django
     env_file:
       - stack.env
+    labels:
+      - "traefik.http.routers.django.rule=Host(`${TRAEFIK_HOST_NAME}`)"
   postgres:
     image: geoluminate/postgis:latest
     env_file:
@@ -40,6 +42,8 @@ services:
   flower:
     <<: *django
     command: start-flower
+    labels:
+      - "traefik.routers.flower.rule=Host(`taskmanager.${TRAEFIK_HOST_NAME}`)"
   minio:
     image: quay.io/minio/minio:latest
     volumes:
@@ -47,8 +51,13 @@ services:
     env_file:
       - stack.env
     command: server /minio
+    labels:
+      - "traefik.http.routers.minio.rule=Host(`minio.${TRAEFIK_HOST_NAME}`)"
+      - "traefik.http.routers.media.rule=Host(`media.${TRAEFIK_HOST_NAME}`)"
   traefik:
     image: "geoluminate/traefik"
+    commands:
+      - --certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}
     env_file:
       - stack.env
     ports:
