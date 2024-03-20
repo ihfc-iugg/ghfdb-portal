@@ -5,6 +5,7 @@ volumes:
   postgres: {}
   postgres_backups: {}
   media: {}
+  traefik: {}
 
 services:
 
@@ -85,6 +86,7 @@ services:
       - "8080:8080"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - traefik:/etc/traefik/acme
     labels:
       - "traefik.http.routers.traefik.rule=Host(`traefik.${TRAEFIK_HOST_NAME}`)"
       - "traefik.http.routers.traefik.entrypoints=https"
