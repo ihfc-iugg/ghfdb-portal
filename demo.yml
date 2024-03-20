@@ -18,7 +18,6 @@ services:
     env_file:
       - stack.env
     labels:
-      - traefik.enable=true
       # - traefik.http.routers.django.tls=true
       - traefik.http.routers.django.rule=Host(`${DJANGO_HOST_NAME}`)
       - traefik.http.routers.django.entrypoints=web
@@ -49,7 +48,7 @@ services:
       # - traefik.http.routers.flower.tls=true
       - traefik.http.routers.flower.rule=Host(`taskmanager.${DJANGO_HOST_NAME}`)
       - traefik.http.routers.flower.entrypoints=web
-      - traefik.http.services.flower.loadbalancer.server.url=http://flower:5555
+      - traefik.http.services.flower.loadbalancer.server.port=5555
   minio:
     image: quay.io/minio/minio:latest
     volumes:
@@ -63,12 +62,12 @@ services:
       - traefik.http.routers.media.entrypoints=web
       - traefik.http.routers.media.rule=Host(`media.${DJANGO_HOST_NAME}`)
       - traefik.http.routers.media.service=media
-      - traefik.http.services.media.loadbalancer.server.url=http://minio:9000
-      - traefik.http.routers.minio.tls=true
+      - traefik.http.services.media.loadbalancer.server.port=9000
+      # - traefik.http.routers.minio.tls=true
       - traefik.http.routers.minio.entrypoints=web
-      - traefik.http.routers.minio.rule=Host(`media.${DJANGO_HOST_NAME}`) && PathPrefix(`/dashboard`)
+      - traefik.http.routers.minio.rule=Host(`minio.${DJANGO_HOST_NAME}`)
       - traefik.http.routers.minio.service=minio
-      - traefik.http.services.minio.loadbalancer.server.url=http://minio:9001
+      - traefik.http.services.media.loadbalancer.server.port=9001
   traefik:
     image: "traefik:latest"
     command:
@@ -93,7 +92,7 @@ services:
       - "traefik.http.routers.traefik.rule=Host(`traefik.${DJANGO_HOST_NAME}`)"  # Change to your domain
       - "traefik.http.routers.traefik.entrypoints=web"
       # - "traefik.http.middlewares.traefik-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.traefik-secure.rule=Host(`traefik.${DJANGO_HOST_NAME}`)"  # Change to your domain
-      - "traefik.http.routers.traefik-secure.entrypoints=web"
+      # - "traefik.http.routers.traefik-secure.rule=Host(`traefik.${DJANGO_HOST_NAME}`)"  # Change to your domain
+      # - "traefik.http.routers.traefik-secure.entrypoints=web"
       # - "traefik.http.routers.traefik-secure.tls=true"
       - "traefik.http.services.traefik.loadbalancer.server.port=8080"
