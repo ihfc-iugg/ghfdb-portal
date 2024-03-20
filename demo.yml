@@ -20,12 +20,6 @@ services:
     command: start-django
     env_file:
       - stack.env
-    labels:
-      # - traefik.http.routers.django.tls=true
-      - traefik.http.routers.django.rule=Host(`${DJANGO_HOST_NAME}`)
-      - traefik.http.services.django.loadbalancer.server.port=5000
-      # - traefik.http.routers.django.entrypoints=https
-      # - traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken
   postgres:
     image: geoluminate/postgis:latest
     env_file:
@@ -46,11 +40,6 @@ services:
   flower:
     <<: *django
     command: start-flower
-    labels:
-      # - traefik.http.routers.flower.tls=true
-      - traefik.http.routers.flower.rule=Host(`taskmanager.${DJANGO_HOST_NAME}`)
-      # - traefik.http.routers.flower.entrypoints=https
-      - traefik.http.services.flower.loadbalancer.server.url=http://flower:5555
   minio:
     image: quay.io/minio/minio:latest
     volumes:
@@ -58,32 +47,14 @@ services:
     env_file:
       - stack.env
     command: server /minio
-    labels:
-      # - traefik.http.routers.media.tls=true
-      # - traefik.http.routers.media.entrypoints=https
-      - traefik.http.routers.media.rule=Host(`media.${DJANGO_HOST_NAME}`)
-      - traefik.http.routers.media.service=media
-      - traefik.http.services.media.loadbalancer.server.url=http://minio:9000
-
-      # - traefik.http.routers.minio.tls=true
-      # - traefik.http.routers.minio.entrypoints=https
-      - traefik.http.routers.minio.rule=Host(`media.${DJANGO_HOST_NAME}`) && PathPrefix(`/dashboard`)
-      # - traefik.http.routers.minio.service=minio
-      - traefik.http.services.minio.loadbalancer.server.url=http://minio:9001
   traefik:
     image: "geoluminate/traefik"
-    command:
-      - --certificatesresolvers.letsencrypt.acme.email=${SSL_CERTIFICATE_EMAIL}
-      # - "--providers.docker=true"
-      # - "--providers.docker.exposedbydefault=false"
-      # - --log.level=DEBUG
+    env_file:
+      - stack.env
     ports:
       - "80:80"
       - "443:443"
       - "8080:8080"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
-    # env_file:
-      # - stack.env
-    labels:
-      - "traefik.http.routers.traefik.rule=Host(`traefik.${DJANGO_HOST_NAME}`)"
+
