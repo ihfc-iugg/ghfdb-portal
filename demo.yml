@@ -85,7 +85,7 @@ services:
       - traefik:/etc/traefik/acme
     labels:
       - "traefik.http.routers.traefik.rule=Host(`traefik.${TRAEFIK_HOST_NAME}`)"
-      - "traefik.http.routers.traefik.entrypoints=https"
+      - "traefik.http.routers.traefik.entrypoints=http"
       - "traefik.http.services.traefik.loadbalancer.server.port=8080"
-      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+      # - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
       - "traefik.http.routers.middleware.csrf.headers.hostsproxyheaders=X-CSRFToken"
