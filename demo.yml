@@ -18,6 +18,7 @@ services:
     env_file:
       - stack.env
     labels:
+      - "traefik.enable=true"
       # - traefik.http.routers.django.tls=true
       - traefik.http.routers.django.rule=Host(`${DJANGO_HOST_NAME}`)
       - traefik.http.routers.django.entrypoints=web
@@ -44,6 +45,7 @@ services:
     <<: *django
     command: start-flower
     labels:
+      - "traefik.enable=true"
       # - traefik.http.routers.flower.tls=true
       - traefik.http.routers.flower.rule=Host(`taskmanager.${DJANGO_HOST_NAME}`)
       - traefik.http.routers.flower.entrypoints=web
@@ -56,6 +58,7 @@ services:
       - stack.env
     command: server /minio
     labels:
+      - "traefik.enable=true"
       # - traefik.http.routers.media.tls=true
       - traefik.http.routers.media.entrypoints=web
       - traefik.http.routers.media.rule=Host(`media.${DJANGO_HOST_NAME}`)
@@ -86,6 +89,7 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     labels:
+      - "traefik.enable=true"
       - "traefik.http.routers.traefik.rule=Host(`traefik.${DJANGO_HOST_NAME}`)"  # Change to your domain
       - "traefik.http.routers.traefik.entrypoints=web"
       # - "traefik.http.middlewares.traefik-redirect.redirectscheme.scheme=https"
