@@ -44,7 +44,6 @@ services:
     <<: *django
     command: start-flower
     labels:
-      - traefik.enable=true
       # - traefik.http.routers.flower.tls=true
       - traefik.http.routers.flower.rule=Host(`taskmanager.${DJANGO_HOST_NAME}`)
       - traefik.http.routers.flower.entrypoints=web
@@ -57,7 +56,6 @@ services:
       - stack.env
     command: server /minio
     labels:
-      - traefik.enable=true
       # - traefik.http.routers.media.tls=true
       - traefik.http.routers.media.entrypoints=web
       - traefik.http.routers.media.rule=Host(`media.${DJANGO_HOST_NAME}`)
@@ -71,10 +69,10 @@ services:
   traefik:
     image: "traefik:latest"
     command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
       # - "--entrypoints.web.http.redirections.entrypoint.to=web"
       # - "--entrypoints.web.address=:443"
       - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
@@ -88,7 +86,6 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     labels:
-      - "traefik.enable=true"
       - "traefik.http.routers.traefik.rule=Host(`traefik.${DJANGO_HOST_NAME}`)"  # Change to your domain
       - "traefik.http.routers.traefik.entrypoints=web"
       # - "traefik.http.middlewares.traefik-redirect.redirectscheme.scheme=https"
