@@ -21,12 +21,11 @@ services:
     env_file:
       - stack.env
     labels:
-      - traefik.enable=true
-      - traefik.http.routers.django.tls=true
+      # - traefik.http.routers.django.tls=true
       - traefik.http.routers.django.rule=Host(`${DJANGO_HOST_NAME}`)
-      - traefik.http.routers.django.entrypoints=websecure
       - traefik.http.services.django.loadbalancer.server.port=5000
-      - traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken
+      # - traefik.http.routers.django.entrypoints=https
+      # - traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken
   postgres:
     image: geoluminate/postgis:latest
     env_file:
@@ -48,10 +47,9 @@ services:
     <<: *django
     command: start-flower
     labels:
-      - traefik.enable=true
-      - traefik.http.routers.flower.tls=true
+      # - traefik.http.routers.flower.tls=true
       - traefik.http.routers.flower.rule=Host(`taskmanager.${DJANGO_HOST_NAME}`)
-      - traefik.http.routers.flower.entrypoints=websecure
+      # - traefik.http.routers.flower.entrypoints=https
       - traefik.http.services.flower.loadbalancer.server.url=http://flower:5555
   minio:
     image: quay.io/minio/minio:latest
@@ -61,48 +59,31 @@ services:
       - stack.env
     command: server /minio
     labels:
-      - traefik.enable=true
-      - traefik.http.routers.media.tls=true
-      - traefik.http.routers.media.entrypoints=websecure
+      # - traefik.http.routers.media.tls=true
+      # - traefik.http.routers.media.entrypoints=https
       - traefik.http.routers.media.rule=Host(`media.${DJANGO_HOST_NAME}`)
       - traefik.http.routers.media.service=media
       - traefik.http.services.media.loadbalancer.server.url=http://minio:9000
 
-      - traefik.http.routers.minio.tls=true
-      - traefik.http.routers.minio.entrypoints=websecure
+      # - traefik.http.routers.minio.tls=true
+      # - traefik.http.routers.minio.entrypoints=https
       - traefik.http.routers.minio.rule=Host(`media.${DJANGO_HOST_NAME}`) && PathPrefix(`/dashboard`)
-      - traefik.http.routers.minio.service=minio
+      # - traefik.http.routers.minio.service=minio
       - traefik.http.services.minio.loadbalancer.server.url=http://minio:9001
   traefik:
-    image: "traefik:latest"
+    image: "geoluminate/traefik"
     command:
-      - "mkdir -p /etc/traefik/acme"
-      - "touch /etc/traefik/acme/acme.json"
-      - "chmod 600 /etc/traefik/acme/acme.json"
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
-      - "--entrypoints.websecure.address=:443"
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
-      - --certificatesresolvers.letsencrypt.acme.email=${SSL_CERTIFICATE_EMAIL} #Set your email address here, is for the generation of SSL certificates with Let's Encrypt.
-      - --certificatesresolvers.letsencrypt.acme.storage=/etc/traefik/acme/acme.json
+      - --certificatesresolvers.letsencrypt.acme.email=${SSL_CERTIFICATE_EMAIL}
+      # - "--providers.docker=true"
+      # - "--providers.docker.exposedbydefault=false"
+      # - --log.level=DEBUG
     ports:
       - "80:80"
       - "443:443"
       - "8080:8080"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    # env_file:
+      # - stack.env
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`traefik.${DJANGO_HOST_NAME}`)"  # Change to your domain
-      - "traefik.http.routers.traefik.entrypoints=web"
-      - "traefik.http.middlewares.traefik-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.traefik-secure.rule=Host(`traefik.${DJANGO_HOST_NAME}`)"  # Change to your domain
-      - "traefik.http.routers.traefik-secure.entrypoints=websecure"
-      - "traefik.http.routers.traefik-secure.tls=true"
-      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
-      - "traefik.log.level=DEBUG"
-
+      - "traefik.http.routers.traefik.rule=Host(`traefik.${DJANGO_HOST_NAME}`)"
