@@ -21,7 +21,11 @@ services:
     env_file:
       - stack.env
     labels:
-      - "traefik.http.routers.django.rule=Host(`${TRAEFIK_HOST_NAME}`)"
+      - traefik.http.routers.django.rule=Host(`${DJANGO_HOST_NAME}`)
+      - traefik.http.routers.django.entrypoints=https
+      - traefik.http.services.django.loadbalancer.server.port=5000
+      - traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken
+      - traefik.http.routers.django.tls.certresolver=letsencrypt
   postgres:
     image: geoluminate/postgis:latest
     env_file:
@@ -43,7 +47,10 @@ services:
     <<: *django
     command: start-flower
     labels:
-      - "traefik.routers.flower.rule=Host(`taskmanager.${TRAEFIK_HOST_NAME}`)"
+      - traefik.routers.flower.rule=Host(`taskmanager.${TRAEFIK_HOST_NAME}`)
+      - traefik.http.routers.flower.entrypoints=https
+      - traefik.http.services.flower.loadbalancer.server.port=5555
+      - traefik.http.routers.flower.tls.certresolver=letsencrypt
   minio:
     image: quay.io/minio/minio:latest
     volumes:
@@ -52,24 +59,36 @@ services:
       - stack.env
     command: server /minio
     labels:
-      - "traefik.http.routers.minio.rule=Host(`minio.${TRAEFIK_HOST_NAME}`)"
-      - "traefik.http.routers.media.rule=Host(`media.${TRAEFIK_HOST_NAME}`)"
+      - traefik.http.routers.media.tls.certresolver=letsencrypt
+      - traefik.http.routers.media.entrypoints=https
+      - traefik.http.routers.media.rule=Host(`media.${DJANGO_HOST_NAME}`)
+      - traefik.http.routers.media.service=media
+      - traefik.http.services.media.loadbalancer.server.port=9000
+
+      - traefik.http.routers.minio.tls.certresolver=letsencrypt
+      - traefik.http.routers.minio.entrypoints=https
+      - traefik.http.routers.minio.rule=Host(`minio.${DJANGO_HOST_NAME}`)
+      - traefik.http.routers.minio.service=minio
+      - traefik.http.services.minio.loadbalancer.server.port=9001
   traefik:
     image: "geoluminate/traefik"
     command:
       - --certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}
-      - --traefik.http.routers.django.rule=Host(`${TRAEFIK_HOST_NAME}`)
-      - --traefik.http.routers.traefik.rule=Host(`traefik.${TRAEFIK_HOST_NAME}`)
-      - --traefik.http.routers.flower.rule=Host(`taskmanager.${TRAEFIK_HOST_NAME}`)
-      - --traefik.http.routers.minio.rule=Host(`minio.${TRAEFIK_HOST_NAME}`)
-      - --traefik.http.routers.media.rule=Host(`media.${TRAEFIK_HOST_NAME}`)
-
-    env_file:
-      - stack.env
+      # - --http.routers.django.rule=Host(`${TRAEFIK_HOST_NAME}`)
+      # - --http.routers.traefik.rule=Host(`traefik.${TRAEFIK_HOST_NAME}`)
+      # - --http.routers.flower.rule=Host(`taskmanager.${TRAEFIK_HOST_NAME}`)
+      # - --http.routers.minio.rule=Host(`minio.${TRAEFIK_HOST_NAME}`)
+      # - --http.routers.media.rule=Host(`media.${TRAEFIK_HOST_NAME}`)
     ports:
       - "80:80"
       - "443:443"
       - "8080:8080"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    labels:
+      - "traefik.http.routers.traefik.rule=Host(`traefik.${TRAEFIK_HOST_NAME}`)"
+      - "traefik.http.routers.traefik.entrypoints=https"
+      - "traefik.http.router.service=api@internal"
+      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.middleware.csrf.headers.hostsproxyheaders=X-CSRFToken"
 
