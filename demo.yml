@@ -56,7 +56,7 @@ services:
       - "traefik.http.routers.media.rule=Host(`media.${TRAEFIK_HOST_NAME}`)"
   traefik:
     image: "geoluminate/traefik"
-    commands:
+    command:
       - --certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}
     env_file:
       - stack.env
