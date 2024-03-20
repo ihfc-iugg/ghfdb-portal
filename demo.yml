@@ -76,6 +76,9 @@ services:
   traefik:
     image: "traefik:latest"
     command:
+      - "mkdir -p /etc/traefik/acme"
+      - "touch /etc/traefik/acme/acme.json"
+      - "chmod 600 /etc/traefik/acme/acme.json"
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
@@ -83,9 +86,9 @@ services:
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.websecure.address=:443"
       - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
       - --certificatesresolvers.letsencrypt.acme.email=${SSL_CERTIFICATE_EMAIL} #Set your email address here, is for the generation of SSL certificates with Let's Encrypt.
       - --certificatesresolvers.letsencrypt.acme.storage=/etc/traefik/acme/acme.json
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
     ports:
       - "80:80"
       - "443:443"
@@ -101,4 +104,5 @@ services:
       - "traefik.http.routers.traefik-secure.entrypoints=websecure"
       - "traefik.http.routers.traefik-secure.tls=true"
       - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+      - "traefik.log.level=DEBUG"
 
