@@ -64,11 +64,12 @@ services:
       - traefik.http.routers.media.rule=Host(`media.${DJANGO_HOST_NAME}`)
       - traefik.http.routers.media.service=media
       - traefik.http.services.media.loadbalancer.server.port=9000
+
       # - traefik.http.routers.minio.tls=true
       - traefik.http.routers.minio.entrypoints=web
-      - traefik.http.routers.minio.rule=Host(`minio.${DJANGO_HOST_NAME}`)
       - traefik.http.routers.minio.service=minio
-      - traefik.http.services.media.loadbalancer.server.port=9001
+      - traefik.http.routers.minio.rule=Host(`minio.${DJANGO_HOST_NAME}`)
+      - traefik.http.services.minio.loadbalancer.server.port=9001
   traefik:
     image: "traefik:latest"
     command:
@@ -86,6 +87,8 @@ services:
       - "80:80"
       - "443:443"
       - "8080:8080"
+      - "5000:5000"
+      - "5555:5555"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     labels:
