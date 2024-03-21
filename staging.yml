@@ -47,14 +47,13 @@ services:
       - redis
       - minio
     env_file:
-      - ./compose/production/.envs/.django
-      - ./compose/production/.envs/.postgres
+      - stack.env
     command: start-django
     restart: always
     labels:
       - traefik.enable=true
-      - traefik.http.routers.django.rule=Host(`localhost`)
-      - traefik.http.routers.django.entrypoints=https
+      - traefik.http.routers.django.rule=Host(`${DJANGO_DOMAIN_NAME:-localhost}`)
+      - traefik.http.routers.django.entrypoints=http
       - traefik.http.services.django.loadbalancer.server.port=5000
       - traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken
   postgres:
@@ -64,7 +63,7 @@ services:
       - postgres_backups:/backups
     restart: always
     env_file:
-      - ./compose/production/.envs/.postgres
+      - stack.env
   redis:
     image: redis:6
     restart: always
@@ -81,8 +80,8 @@ services:
     command: start-flower
     labels:
       - traefik.enable=true
-      - traefik.http.routers.tasks.rule=Host(`tasks.localhost`)
-      - traefik.http.routers.tasks.entrypoints=https
+      - traefik.http.routers.tasks.rule=Host(`tasks.${DJANGO_DOMAIN_NAME:-localhost}`)
+      - traefik.http.routers.tasks.entrypoints=http
       - traefik.http.routers.tasks.service=tasks
       - traefik.http.services.tasks.loadbalancer.server.port=5555
   minio:
@@ -90,19 +89,19 @@ services:
     volumes:
       - media:/minio
     env_file:
-      - ./compose/production/.envs/.minio
+      - stack.env
     command: server /minio
     restart: always
     labels:
       - traefik.enable=true
       - traefik.http.routers.media.service=media
-      - traefik.http.routers.media.entrypoints=https
-      - traefik.http.routers.media.rule=Host(`media.localhost`)
+      - traefik.http.routers.media.entrypoints=http
+      - traefik.http.routers.media.rule=Host(`media.${DJANGO_DOMAIN_NAME:-localhost}`)
       - traefik.http.services.media.loadbalancer.server.port=9000
 
       - traefik.http.routers.minio.service=minio
-      - traefik.http.routers.minio.entrypoints=https
-      - traefik.http.routers.minio.rule=Host(`minio.localhost`)
+      - traefik.http.routers.minio.entrypoints=http
+      - traefik.http.routers.minio.rule=Host(`minio.${DJANGO_DOMAIN_NAME:-localhost}`)
       - traefik.http.services.minio.loadbalancer.server.port=9001
   traefik:
     image: "traefik:v2.11"
@@ -122,20 +121,18 @@ services:
       - --entrypoints.http.address=:80
       - --entrypoints.http.http.redirections.entryPoint.to=https
       - --entrypoints.https.address=:443
-      - --entrypoints.https.http.tls.certresolver=
-
-      # LetsEncrypt settings for automatic SSL certificate generation
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http
-      - --certificatesresolvers.letsencrypt.acme.email=admin@localhost
-      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --entrypoints.https.http.tls.certresolver=${TRAEFIK_CERT_RESOLVER}
 
       # LetsEncrypt Staging Server - uncomment when testing
       - --certificatesResolvers.letsencrypt.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory
-
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http
+      - --certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_CERT_EMAIL:admin@localhost}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
 
     labels:
       - traefik.enable=true
-      - traefik.http.routers.traefik.rule=Host(`traefik.localhost`)
-      - traefik.http.routers.traefik.entrypoints=https
+      - traefik.http.routers.traefik.rule=Host(`traefik.${DJANGO_DOMAIN_NAME:-localhost}`)
+      - traefik.http.routers.traefik.entrypoints=http
       - traefik.http.routers.traefik.service=api@internal
+
