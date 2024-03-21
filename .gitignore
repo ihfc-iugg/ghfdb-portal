@@ -170,3 +170,4 @@ dmypy.json
 Global
 GlobalHeatFlow.bib
 staticfiles/
+data/letsencrypt/acme.json
