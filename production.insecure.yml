@@ -1,32 +1,6 @@
-# =====================================================================================================================
-# This file contains all services necessary to run the application in a single server production environment. It
-# includes the following services:
-#
-#   - Django application:
-#       - The main application that serves the web pages and API endpoints. It is built from the Dockerfile located
-#         at ./compose/production/django.
-#   - PostgreSQL database:
-#       - The database that stores all the data for the application. It is built from a using the geoluminate/postgis
-#         image hosted at DockerHub. This image is based on the official PostgreSQL image and includes the PostGIS
-#         extension and other necessary geospatial applications.
-#   - Redis:
-#       - The in-memory data structure store that is used as both a message broker for Celery workers and a cache for
-#         the Django application.
-#   - Celery workers:
-#       - The background workers that process asynchronous tasks such as sending emails, processing uploaded files, and
-#         other long-running tasks.
-#   - Celery beat:
-#       - The scheduler that sends tasks to the Celery workers at specified intervals.
-#   - Flower:
-#       - The web-based monitoring tool for Celery workers and tasks. It is available at tasks.${DJANGO_DOMAIN}.
-#   - Minio:
-#       - The object storage server that is used to store media files such as images and documents. It is available at
-#         media.${DJANGO_DOMAIN}. The dashboard is available at minio.${DJANGO_DOMAIN}.
-#       - NOTE: this service can be commented or deleted if you are using an external S3 based service such as AWS S3.
-#   - Traefik:
-#       - The reverse proxy and load balancer that routes incoming requests to the appropriate services. It also
-#         automatically requests and renews SSL certificates from Let's Encrypt.
-# =====================================================================================================================
+# THESE ARE THE EXACT SAME SETTINGS AS PRODUCTION.YML, BUT WITHOUT THE REDIRECTION TO HTTPS
+# THIS IS USEFUL TO TEST THE PRODUCTION SETUP LOCALLY
+
 version: "3.7"
 name: ghfdb_production
 
@@ -54,7 +28,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.django.rule=Host(`localhost`)
-      - traefik.http.routers.django.entrypoints=https
+      - traefik.http.routers.django.entrypoints=http
       - traefik.http.services.django.loadbalancer.server.port=5000
       - traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken
   postgres:
@@ -82,7 +56,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.tasks.rule=Host(`tasks.localhost`)
-      - traefik.http.routers.tasks.entrypoints=https
+      - traefik.http.routers.tasks.entrypoints=http
       - traefik.http.routers.tasks.service=tasks
       - traefik.http.services.tasks.loadbalancer.server.port=5555
   minio:
@@ -96,12 +70,12 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.media.service=media
-      - traefik.http.routers.media.entrypoints=https
+      - traefik.http.routers.media.entrypoints=http
       - traefik.http.routers.media.rule=Host(`media.localhost`)
       - traefik.http.services.media.loadbalancer.server.port=9000
 
       - traefik.http.routers.minio.service=minio
-      - traefik.http.routers.minio.entrypoints=https
+      - traefik.http.routers.minio.entrypoints=http
       - traefik.http.routers.minio.rule=Host(`minio.localhost`)
       - traefik.http.services.minio.loadbalancer.server.port=9001
   traefik:
@@ -120,7 +94,7 @@ services:
       - --api=true
 
       - --entrypoints.http.address=:80
-      - --entrypoints.http.http.redirections.entryPoint.to=https
+      # - --entrypoints.http.http.redirections.entryPoint.to=https  # COMMENTED OUT TO DISABLE REDIRECTION TO HTTPS
       - --entrypoints.https.address=:443
       - --entrypoints.https.http.tls.certresolver=
 
@@ -134,5 +108,5 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.traefik.rule=Host(`traefik.localhost`)
-      - traefik.http.routers.traefik.entrypoints=https
+      - traefik.http.routers.traefik.entrypoints=http
       - traefik.http.routers.traefik.service=api@internal
