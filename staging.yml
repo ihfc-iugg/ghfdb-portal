@@ -119,7 +119,7 @@ services:
       - --api=true
 
       - --entrypoints.http.address=:80
-      - --entrypoints.http.http.redirections.entryPoint.to=https
+      # - --entrypoints.http.http.redirections.entryPoint.to=https
       - --entrypoints.https.address=:443
       - --entrypoints.https.http.tls.certresolver=${TRAEFIK_CERT_RESOLVER}
 
@@ -133,6 +133,6 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.traefik.rule=Host(`traefik.${DJANGO_DOMAIN_NAME:-localhost}`)
-      - traefik.http.routers.traefik.entrypoints=https,https
+      - traefik.http.routers.traefik.entrypoints=https
       - traefik.http.routers.traefik.service=api@internal
 
