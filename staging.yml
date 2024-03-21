@@ -121,12 +121,12 @@ services:
       - --api.insecure=true
 
       - --entrypoints.http.address=:80
-      # - --entrypoints.http.http.redirections.entryPoint.to=https
+      - --entrypoints.http.http.redirections.entryPoint.to=https
       - --entrypoints.https.address=:443
       - --entrypoints.https.http.tls.certresolver=${TRAEFIK_CERT_RESOLVER}
 
       # LetsEncrypt Staging Server - uncomment when testing
-      # - --certificatesResolvers.letsencrypt.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory
+      - --certificatesResolvers.letsencrypt.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory
       - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
       - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http
       - --certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_CERT_EMAIL:-admin@localhost}
