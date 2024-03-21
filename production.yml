@@ -127,7 +127,7 @@ services:
       # - --certificatesResolvers.letsencrypt.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory
       - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
       - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http
-      - --certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_CERT_EMAIL:admin@localhost}
+      - --certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_CERT_EMAIL:-admin@localhost}
       - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
 
     labels:
