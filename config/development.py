@@ -24,9 +24,6 @@ ALLOWED_HOSTS = ["*"]
 COMPRESS_OFFLINE = True
 COMPRESS_ENABLED = True
 
-print("Compress offline: ", COMPRESS_OFFLINE)
-print("Compress enabled: ", COMPRESS_ENABLED)
-
 STORAGES["staticfiles"] = {
     "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
 }
