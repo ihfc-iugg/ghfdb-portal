@@ -53,7 +53,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.django.rule=Host(`${DJANGO_DOMAIN_NAME:-localhost}`)
-      - traefik.http.routers.django.entrypoints=http
+      - traefik.http.routers.django.entrypoints=https
       - traefik.http.services.django.loadbalancer.server.port=5000
       - traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken
   postgres:
@@ -81,7 +81,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.tasks.rule=Host(`tasks.${DJANGO_DOMAIN_NAME:-localhost}`)
-      - traefik.http.routers.tasks.entrypoints=http
+      - traefik.http.routers.tasks.entrypoints=https
       - traefik.http.routers.tasks.service=tasks
       - traefik.http.services.tasks.loadbalancer.server.port=5555
   minio:
@@ -95,12 +95,12 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.media.service=media
-      - traefik.http.routers.media.entrypoints=http
+      - traefik.http.routers.media.entrypoints=https
       - traefik.http.routers.media.rule=Host(`media.${DJANGO_DOMAIN_NAME:-localhost}`)
       - traefik.http.services.media.loadbalancer.server.port=9000
 
       - traefik.http.routers.minio.service=minio
-      - traefik.http.routers.minio.entrypoints=http
+      - traefik.http.routers.minio.entrypoints=https
       - traefik.http.routers.minio.rule=Host(`minio.${DJANGO_DOMAIN_NAME:-localhost}`)
       - traefik.http.services.minio.loadbalancer.server.port=9001
   traefik:
@@ -113,7 +113,7 @@ services:
       - "80:80"
       - "443:443"
     command:
-      # - --log.level=DEBUG
+      - --log.level=DEBUG
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --api=true
@@ -133,6 +133,6 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.traefik.rule=Host(`traefik.${DJANGO_DOMAIN_NAME:-localhost}`)
-      - traefik.http.routers.traefik.entrypoints=http
+      - traefik.http.routers.traefik.entrypoints=https,https
       - traefik.http.routers.traefik.service=api@internal
 
