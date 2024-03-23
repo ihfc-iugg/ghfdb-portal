@@ -1,0 +1,138 @@
+# =====================================================================================================================
+# This file contains all services necessary to run the application in a single server production environment. It
+# includes the following services:
+#
+#   - Django application:
+#       - The main application that serves the web pages and API endpoints. It is built from the Dockerfile located
+#         at ./compose/production/django.
+#   - PostgreSQL database:
+#       - The database that stores all the data for the application. It is built from a using the geoluminate/postgis
+#         image hosted at DockerHub. This image is based on the official PostgreSQL image and includes the PostGIS
+#         extension and other necessary geospatial applications.
+#   - Redis:
+#       - The in-memory data structure store that is used as both a message broker for Celery workers and a cache for
+#         the Django application.
+#   - Celery workers:
+#       - The background workers that process asynchronous tasks such as sending emails, processing uploaded files, and
+#         other long-running tasks.
+#   - Celery beat:
+#       - The scheduler that sends tasks to the Celery workers at specified intervals.
+#   - Flower:
+#       - The web-based monitoring tool for Celery workers and tasks. It is available at tasks.${DJANGO_DOMAIN}.
+#   - Minio:
+#       - The object storage server that is used to store media files such as images and documents. It is available at
+#         media.${DJANGO_DOMAIN}. The dashboard is available at minio.${DJANGO_DOMAIN}.
+#       - NOTE: this service can be commented or deleted if you are using an external S3 based service such as AWS S3.
+#   - Traefik:
+#       - The reverse proxy and load balancer that routes incoming requests to the appropriate services. It also
+#         automatically requests and renews SSL certificates from Let's Encrypt.
+# =====================================================================================================================
+version: "3.7"
+name: ghfdb_staging
+
+volumes:
+  postgres: {}
+  postgres_backups: {}
+  media: {}
+
+services:
+
+  django: &django
+    build:
+      context: .
+      dockerfile: ./compose/production/django
+    image: production_django
+    depends_on:
+      - postgres
+      - redis
+      - minio
+    env_file:
+      - stack.env
+    command: start-django
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.django.rule=Host(`demo.heatflow.world`)
+      - traefik.http.routers.django.entrypoints=https
+      - traefik.http.services.django.loadbalancer.server.port=5000
+      - traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken
+  postgres:
+    image: geoluminate/postgis
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - postgres_backups:/backups
+    restart: always
+    env_file:
+      - stack.env
+  redis:
+    image: redis:6
+    restart: always
+  celeryworker:
+    <<: *django
+    command: start-celeryworker
+    labels: []
+  celerybeat:
+    <<: *django
+    command: start-celerybeat
+    labels: []
+  flower:
+    <<: *django
+    command: start-flower
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.tasks.rule=Host(`tasks.heatflow.world`)
+      - traefik.http.routers.tasks.entrypoints=https
+      - traefik.http.routers.tasks.service=tasks
+      - traefik.http.services.tasks.loadbalancer.server.port=5555
+  minio:
+    image: quay.io/minio/minio
+    volumes:
+      - media:/minio
+    env_file:
+      - stack.env
+    command: server /minio
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.media.service=media
+      - traefik.http.routers.media.entrypoints=https
+      - traefik.http.routers.media.rule=Host(`media.heatflow.world`)
+      - traefik.http.services.media.loadbalancer.server.port=9000
+
+      - traefik.http.routers.minio.service=minio
+      - traefik.http.routers.minio.entrypoints=https
+      - traefik.http.routers.minio.rule=Host(`minio.heatflow.world`)
+      - traefik.http.services.minio.loadbalancer.server.port=9001
+  traefik:
+    image: "traefik:v2.11"
+    restart: always
+    volumes:
+      - ./data/letsencrypt:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    command:
+      - --log.level=DEBUG
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --api=true
+
+      - --entrypoints.http.address=:80
+      - --entrypoints.http.http.redirections.entryPoint.to=https
+      - --entrypoints.https.address=:443
+      - --entrypoints.https.http.tls.certresolver=${TRAEFIK_CERT_RESOLVER}
+
+      # LetsEncrypt Staging Server - uncomment when testing
+      # - --certificatesResolvers.letsencrypt.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http
+      - --certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_CERT_EMAIL:-admin@localhost}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik.rule=Host(`traefik.demo.geoluminate.net`)
+      - traefik.http.routers.traefik.entrypoints=https
+      - traefik.http.routers.traefik.service=api@internal
+
