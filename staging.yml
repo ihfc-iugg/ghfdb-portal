@@ -112,13 +112,11 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "8080:8080"
     command:
       - --log.level=DEBUG
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --api=true
-      - --api.insecure=true
 
       - --entrypoints.http.address=:80
       - --entrypoints.http.http.redirections.entryPoint.to=https
