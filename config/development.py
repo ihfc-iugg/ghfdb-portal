@@ -4,10 +4,11 @@ from .common import *
 from .geoluminate import *
 
 SHOW_DEBUG_TOOLBAR = False
-DEBUG = False
+DEBUG = True
 geoluminate.setup(development=True)
-# geoluminate.setup(development=False)
-DEBUG = False
+
+GEOLUMINATE_LABELS["sample"] = {"verbose_name": "Heat Flow Site", "verbose_name_plural": "Heat Flow Sites"}
+
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#auth-password-validators
 # removing validators for local development
@@ -21,9 +22,9 @@ ACCOUNT_EMAIL_VERIFICATION = "optional"
 AWS_USE_SSL = False
 
 ALLOWED_HOSTS = ["*"]
-COMPRESS_OFFLINE = True
-COMPRESS_ENABLED = True
+# COMPRESS_OFFLINE = False
+# COMPRESS_ENABLED = False
 
-STORAGES["staticfiles"] = {
-    "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
-}
+# STORAGES["staticfiles"] = {
+#     "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+# }
