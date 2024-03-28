@@ -7,7 +7,6 @@ from .geoluminate import *
 SHOW_DEBUG_TOOLBAR = False
 geoluminate.setup(development=False)
 
-DEBUG = True
 COMPRESS_OFFLINE = False
 COMPRESS_ENABLED = False
 
@@ -42,7 +41,7 @@ LOGGING = {
     "loggers": {
         "django": {
             "handlers": ["console"],
-            "level": "DEBUG",  # Set the desired log level
+            "level": "ERROR",  # Set the desired log level
             "propagate": True,
         },
         "django.request": {
