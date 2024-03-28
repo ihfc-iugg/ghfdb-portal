@@ -28,7 +28,7 @@
 #         automatically requests and renews SSL certificates from Let's Encrypt.
 # =====================================================================================================================
 version: "3.7"
-name: ghfdb_staging
+name: ghfdb_demo
 
 volumes:
   postgres: {}
@@ -41,7 +41,7 @@ services:
     build:
       context: .
       dockerfile: ./compose/production/django
-    image: production_django
+    image: ghfdb_django_demo
     depends_on:
       - postgres
       - redis
@@ -113,7 +113,7 @@ services:
       - "80:80"
       - "443:443"
     command:
-      - --log.level=DEBUG
+      # - --log.level=INFO
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --api=true
