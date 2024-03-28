@@ -7,6 +7,7 @@ from .geoluminate import *
 SHOW_DEBUG_TOOLBAR = False
 geoluminate.setup(development=False)
 
+DEBUG = True
 COMPRESS_OFFLINE = False
 COMPRESS_ENABLED = False
 
