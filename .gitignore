@@ -6,7 +6,16 @@
 /logs
 /.ipython
 api.yml
+!assets/map/dist/*
+# assets/map/dist/css/chunk-vendors.5b557d9a.css
+# assets/map/dist/img/2D_profile.1eeacbcd.png
+# assets/map/dist/img/digital_borehole_example.c3dd2b3b.png
+# assets/map/dist/js/app.4079f5ad.js
+# assets/map/dist/js/app.4079f5ad.js.map
+# assets/map/dist/js/chunk-vendors.038f9446.js
+# assets/map/dist/js/chunk-vendors.038f9446.js.map
 
+data/
 
 #no migration files except __init__.py
 # **/migrations/*
@@ -28,8 +37,6 @@ test.py
 
 .vscode/
 /node_modules
-/mapping/data
-thermoglobe.json
 /cache
 /media
 /playground
@@ -50,7 +57,7 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/
+# dist/
 downloads/
 eggs/
 .eggs/
@@ -172,3 +179,4 @@ GlobalHeatFlow.bib
 staticfiles/
 data/letsencrypt/acme.json
 stack.env
+

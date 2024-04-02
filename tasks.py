@@ -140,3 +140,32 @@ def create_fixtures(c, users=75, orgs=25, projects=12):
     c.run(
         f"docker compose -f local.yml run django python manage.py create_fixtures --users {users} --orgs {orgs} --projects {projects}"
     )
+
+
+@task
+def up(c, environment="local", domain=""):
+    """
+    Start the development server
+    """
+    c.run(f"docker compose -f {environment}.yml up -d")
+
+
+@task
+def savedemo(c):
+    """Save the initial data for the core geoluminate app"""
+    c.run(
+        " ".join(
+            [
+                "docker compose run",
+                "django python -Xutf8 manage.py dumpdata",
+                "--natural-foreign",
+                "--natural-primary",
+                # "-e users.User",
+                "-e admin.LogEntry",
+                "-e contenttypes",
+                "-e auth.Permission",
+                "-e sessions",
+                "-o project/fixtures/project.json.bz2",
+            ]
+        )
+    )
