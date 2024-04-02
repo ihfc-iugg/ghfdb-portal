@@ -57,9 +57,6 @@ RUN chown -R django:django /app
 
 # compile messages for all locales
 # NOTE: a locale directory must be present, or this will fail with some vague error about DJANGO_SETTINGS_MODULE not being set
-RUN DATABASE_URL="" \
-  CELERY_BROKER_URL="" \
-  DJANGO_SETTINGS_MODULE="config.development" \
-  python manage.py compilemessages
+RUN python manage.py compilemessages
 
 ENTRYPOINT ["entrypoint"]
