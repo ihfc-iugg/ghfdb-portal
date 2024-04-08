@@ -8,6 +8,7 @@ Global Heat Flow Database (GHFDB) models for Django. The models are defined usin
 
 """
 
+# PRIMARY_DATA_FIELDS = ["q"]
 from django.core.validators import MaxValueValidator as MaxVal
 from django.core.validators import MinValueValidator as MinVal
 from django.utils.translation import gettext as _
@@ -21,24 +22,18 @@ from . import vocabularies
 
 
 class HeatFlow(Measurement):
-    """Terrestrial heat flow as part of the Global Heat Flow Database. This is
-    the "parent" table outlined in the formal structure of the database put
-    forth by Fuchs et. al. (2021).
-
-    ```{note}
-    This model inherits from `geoluminate.contrib.samples.models.Measurement` which implicitly defines a relationship to the `geoluminate.contrib.samples.models.Sample` model. This means we already have access to several fields from the newly defined schema (Fuchs et al 2021) which do not need to be redefined here. Convenience methods are added to the model to retrieve these data in the expected way
-    ```
-    """
-
-    PRIMARY_DATA_FIELDS = ["q"]
+    """Database table that stores terrestrial heat flow data. This is the "parent" schema outlined in the formal structure of the database put forth by Fuchs et al (2021)."""
 
     q = models.QuantityField(
-        base_units="mW / m^2",
         verbose_name=_("heat flow"),
+        base_units="mW / m^2",
         help_text=_(
             "Heat-flow density for the location after all corrections for instrumental and environmental effects."
         ),
-        validators=[MinVal(-(10**6)), MaxVal(10**6)],
+        validators=[
+            MinVal(-(10**6)),
+            MaxVal(10**6),
+        ],
     )
     q_uncertainty = models.QuantityField(
         base_units="mW / m^2",
