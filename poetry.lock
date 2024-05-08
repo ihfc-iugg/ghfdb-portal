@@ -2491,7 +2491,7 @@ django-imagekit = "^4.1.0"
 django-invitations = "^2.0.0"
 django-laboratory = "^0.0.1"
 django-libsass = "^0.9"
-django-literature = "^0.1.2"
+django-literature = {git = "https://github.com/Geoluminate/django-literature", rev = "main"}
 django-lockdown = "^4.0.0"
 django-meta = "^2.1.0"
 django-model-utils = "^4.3.1"
@@ -2529,7 +2529,7 @@ whitenoise = "^6.4.0"
 type = "git"
 url = "https://github.com/Geoluminate/geoluminate"
 reference = "main"
-resolved_reference = "bad075e22341918b415d7a0e55ca6adb94baf300"
+resolved_reference = "2df9facfe06d5b59a8be405166292ee9f7b14336"
 
 [[package]]
 name = "geoluminate-docs"
