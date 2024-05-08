@@ -964,18 +964,18 @@ with-social = ["django-allauth (>=0.40.0,<0.53.0)"]
 
 [[package]]
 name = "django"
-version = "4.2.11"
+version = "5.0.6"
 description = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.10"
 files = [
-    {file = "Django-4.2.11-py3-none-any.whl", hash = "sha256:ddc24a0a8280a0430baa37aff11f28574720af05888c62b7cfe71d219f4599d3"},
-    {file = "Django-4.2.11.tar.gz", hash = "sha256:6e6ff3db2d8dd0c986b4eec8554c8e4f919b5c1ff62a5b4390c17aff2ed6e5c4"},
+    {file = "Django-5.0.6-py3-none-any.whl", hash = "sha256:8363ac062bb4ef7c3f12d078f6fa5d154031d129a15170a1066412af49d30905"},
+    {file = "Django-5.0.6.tar.gz", hash = "sha256:ff1b61005004e476e0aeea47c7f79b85864c70124030e95146315396f1e7951f"},
 ]
 
 [package.dependencies]
 argon2-cffi = {version = ">=19.1.0", optional = true, markers = "extra == \"argon2\""}
-asgiref = ">=3.6.0,<4"
+asgiref = ">=3.7.0,<4"
 sqlparse = ">=0.3.1"
 tzdata = {version = "*", markers = "sys_platform == \"win32\""}
 
@@ -1389,35 +1389,36 @@ Django = ">=3.2"
 
 [[package]]
 name = "django-filer"
-version = "2.2.6"
+version = "3.1.1"
 description = "A file management application for django that makes handling of files and images a breeze."
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.8"
 files = [
-    {file = "django-filer-2.2.6.tar.gz", hash = "sha256:a9b1bcc1693a739df8bdd6595909448051311ed6f0e54e22d3cf209493124642"},
-    {file = "django_filer-2.2.6-py3-none-any.whl", hash = "sha256:b4feb5c7c7118df54a7e2f001c8f777892eee7d11e6fb8954994c3370916d27a"},
+    {file = "django-filer-3.1.1.tar.gz", hash = "sha256:c58628155ace4bb9f10f6ea9cdf92049b5961bd2ef82c5a3b76f09091f8af50d"},
+    {file = "django_filer-3.1.1-py3-none-any.whl", hash = "sha256:126026a15a160561097e0c486839c4cf3076f4363065e287e692c9316d197a86"},
 ]
 
 [package.dependencies]
-django = ">=2.2,<5"
-django-mptt = "*"
+django = ">=3.2,<5.1"
 django-polymorphic = "*"
 easy-thumbnails = {version = "*", extras = ["svg"]}
-Unidecode = ">=0.04,<1.2"
+
+[package.extras]
+heif = ["pillow-heif"]
 
 [[package]]
 name = "django-filter"
-version = "22.1"
+version = "24.2"
 description = "Django-filter is a reusable Django application for allowing users to filter querysets dynamically."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "django-filter-22.1.tar.gz", hash = "sha256:ed473b76e84f7e83b2511bb2050c3efb36d135207d0128dfe3ae4b36e3594ba5"},
-    {file = "django_filter-22.1-py3-none-any.whl", hash = "sha256:ed429e34760127e3520a67f415bec4c905d4649fbe45d0d6da37e6ff5e0287eb"},
+    {file = "django-filter-24.2.tar.gz", hash = "sha256:48e5fc1da3ccd6ca0d5f9bb550973518ce977a4edde9d2a8a154a7f4f0b9f96e"},
+    {file = "django_filter-24.2-py3-none-any.whl", hash = "sha256:df2ee9857e18d38bed203c8745f62a803fa0f31688c9fe6f8e868120b1848e48"},
 ]
 
 [package.dependencies]
-Django = ">=3.2"
+Django = ">=4.2"
 
 [[package]]
 name = "django-fluent-comments"
@@ -1519,23 +1520,6 @@ files = [
 django = ">=3.2"
 
 [[package]]
-name = "django-js-asset"
-version = "2.2.0"
-description = "script tag with additional attributes for django.forms.Media"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "django_js_asset-2.2.0-py3-none-any.whl", hash = "sha256:7ef3e858e13d06f10799b56eea62b1e76706f42cf4e709be4e13356bc0ae30d8"},
-    {file = "django_js_asset-2.2.0.tar.gz", hash = "sha256:0c57a82cae2317e83951d956110ce847f58ff0cdc24e314dbc18b35033917e94"},
-]
-
-[package.dependencies]
-django = ">=3.2"
-
-[package.extras]
-tests = ["coverage"]
-
-[[package]]
 name = "django-laboratory"
 version = "0.0.1"
 description = "A Django application for managing collections of scientific instruments"
@@ -1579,7 +1563,7 @@ files = []
 develop = false
 
 [package.dependencies]
-django = ">=3.2,<5"
+django = "^5.0.4"
 django-entangled = "^0.5.4"
 django-formset = "^1.3.8"
 django-taggit = "^3.1.0"
@@ -1593,7 +1577,7 @@ python-dateutil = "^2.8.2"
 type = "git"
 url = "https://github.com/Geoluminate/django-literature"
 reference = "main"
-resolved_reference = "5b7e9b1ac8e887a09436fee23f0f27e8b31a6999"
+resolved_reference = "9e79a8eb2d4a878814171cc90cd0baf9b1f80079"
 
 [[package]]
 name = "django-lockdown"
@@ -1638,23 +1622,6 @@ files = [
 Django = ">=3.2"
 
 [[package]]
-name = "django-mptt"
-version = "0.16.0"
-description = "Utilities for implementing Modified Preorder Tree Traversal with your Django Models and working with trees of Model instances."
-optional = false
-python-versions = ">=3.9"
-files = [
-    {file = "django_mptt-0.16.0-py3-none-any.whl", hash = "sha256:8716849ba3318d94e2e100ed0923a05c1ffdf8195f8472b690dbaf737d2af3b5"},
-    {file = "django_mptt-0.16.0.tar.gz", hash = "sha256:56c9606bf0b329b5f5afd55dd8bfd073612ea1d5999b10903b09de62bee84c8e"},
-]
-
-[package.dependencies]
-django-js-asset = "*"
-
-[package.extras]
-tests = ["coverage[toml]", "mock-django"]
-
-[[package]]
 name = "django-organizations"
 version = "2.3.1"
 description = "Group accounts for Django"
@@ -1668,6 +1635,21 @@ files = [
 [package.dependencies]
 Django = ">=3.2.0"
 django-extensions = ">=2.0.8"
+
+[[package]]
+name = "django-partial-date"
+version = "1.3.2"
+description = "Django custom model field for partial dates with the form YYYY, YYYY-MM, YYYY-MM-DD"
+optional = false
+python-versions = "*"
+files = [
+    {file = "django_partial_date-1.3.2-py3-none-any.whl", hash = "sha256:8243ce1f9062e36d217a630c15a1436c419b3949799754f8cefb403b17d59fb4"},
+    {file = "django_partial_date-1.3.2.tar.gz", hash = "sha256:07bc97c04e7fbce8803f2a95723b508c726e466c175874985c5568b29f6ff893"},
+]
+
+[package.dependencies]
+django = "*"
+six = "*"
 
 [[package]]
 name = "django-pint"
@@ -1738,6 +1720,23 @@ type = "git"
 url = "https://github.com/Geoluminate/django-research-vocabs"
 reference = "master"
 resolved_reference = "4fdd05b27403a693c2eefc5deedeb77024c11ac7"
+
+[[package]]
+name = "django-rest-polymorphic"
+version = "0.1.10"
+description = "Polymorphic serializers for Django REST Framework."
+optional = false
+python-versions = "*"
+files = [
+    {file = "django-rest-polymorphic-0.1.10.tar.gz", hash = "sha256:2960f58ed9a8bb0d42bc72c8ffaadfbd7f37d2573d42a1cd9a6460f3d572b519"},
+    {file = "django_rest_polymorphic-0.1.10-py2.py3-none-any.whl", hash = "sha256:f3980e3e2af73357e7913f9b1410ef856866bcfcc46903b70fe9621118bb538c"},
+]
+
+[package.dependencies]
+django = "*"
+django-polymorphic = "*"
+djangorestframework = "*"
+six = "*"
 
 [[package]]
 name = "django-sekizai"
@@ -2483,7 +2482,7 @@ django-downloadview = "^2.3.0"
 django-el-pagination = "^4.0.0"
 django-entangled = "^0.5.4"
 django-environ = "^0.10.0"
-django-filter = "^22.1"
+django-filter = ">=24.1"
 django-fluent-comments = {version = "^3.0", extras = ["threadedcomments"]}
 django-formset = "^1.2.1"
 django-htmx = "^1.16.0"
@@ -2496,8 +2495,10 @@ django-lockdown = "^4.0.0"
 django-meta = "^2.1.0"
 django-model-utils = "^4.3.1"
 django-organizations = "^2.1.0"
+django-partial-date = "^1.3.2"
 django-pint = "^0.7.1"
 django-redis = "^5.2.0"
+django-rest-polymorphic = "^0.1.10"
 django-select2 = "^8.1.1"
 django-simple-menu = "^2.1.1"
 django-social-share = "^2.3.0"
@@ -2529,7 +2530,7 @@ whitenoise = "^6.4.0"
 type = "git"
 url = "https://github.com/Geoluminate/geoluminate"
 reference = "main"
-resolved_reference = "2df9facfe06d5b59a8be405166292ee9f7b14336"
+resolved_reference = "910a4694ebe101309b3daf0917fecd667125ca42"
 
 [[package]]
 name = "geoluminate-docs"
@@ -5385,17 +5386,6 @@ files = [
 ]
 
 [[package]]
-name = "unidecode"
-version = "1.1.2"
-description = "ASCII transliterations of Unicode text"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-files = [
-    {file = "Unidecode-1.1.2-py2.py3-none-any.whl", hash = "sha256:4c9d15d2f73eb0d2649a151c566901f80a030da1ccb0a2043352e1dbf647586b"},
-    {file = "Unidecode-1.1.2.tar.gz", hash = "sha256:a039f89014245e0cad8858976293e23501accc9ff5a7bdbc739a14a2b7b85cdc"},
-]
-
-[[package]]
 name = "uritemplate"
 version = "4.1.1"
 description = "Implementation of RFC 6570 URI Templates"
@@ -5599,4 +5589,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "b9d83759b77265449566f501c9bfbae8eef8dbbec4a7f1d135ab9106902ea3ae"
+content-hash = "ae9e5e43de261e74eaa0466ccb214ddaa417af54ef435723187dfa0301a835d9"
