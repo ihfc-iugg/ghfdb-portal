@@ -13,29 +13,25 @@ from django.core.validators import MaxValueValidator as MaxVal
 from django.core.validators import MinValueValidator as MinVal
 from django.utils.translation import gettext as _
 from geoluminate.contrib.samples.models import Measurement
-from geoluminate.db import models
+from geoluminate.db import QuantityField, models
 from geoluminate.utils.generic import max_length_from_choices
 from research_vocabs.fields import ConceptField
 
-# from geoscience.fields import EarthMaterialOneToOne, GeologicTimeOneToOne
-from . import vocabularies
+from project.schemas.heat_flow import vocabularies
 
 
 class HeatFlow(Measurement):
     """Database table that stores terrestrial heat flow data. This is the "parent" schema outlined in the formal structure of the database put forth by Fuchs et al (2021)."""
 
-    q = models.QuantityField(
+    q = QuantityField(
         verbose_name=_("heat flow"),
         base_units="mW / m^2",
         help_text=_(
             "Heat-flow density for the location after all corrections for instrumental and environmental effects."
         ),
-        validators=[
-            MinVal(-(10**6)),
-            MaxVal(10**6),
-        ],
+        validators=[MinVal(-(10**6)), MaxVal(10**6)],
     )
-    q_uncertainty = models.QuantityField(
+    q_uncertainty = QuantityField(
         base_units="mW / m^2",
         verbose_name=_("heat flow uncertainty"),
         help_text=_(
@@ -44,16 +40,12 @@ class HeatFlow(Measurement):
             " heat flow intervals or deviation from the linear regression of the Bullard plot."
         ),
         validators=[MinVal(0), MaxVal(10**6)],
-        blank=True,
-        null=True,
     )
     environment = models.CharField(
         max_length=255,
         verbose_name=_("basic geographical environment"),
         help_text=_("Describes the general geographical setting of the heat-flow site (not the applied methodology)."),
         choices=vocabularies.GeographicEnvironment.choices,
-        null=True,
-        blank=True,
     )
     corr_HP_flag = models.BooleanField(
         verbose_name=_("HP correction flag"),
