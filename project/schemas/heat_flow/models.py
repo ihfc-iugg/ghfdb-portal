@@ -13,7 +13,7 @@ from django.core.validators import MaxValueValidator as MaxVal
 from django.core.validators import MinValueValidator as MinVal
 from django.utils.translation import gettext as _
 from geoluminate.contrib.samples.models import Measurement
-from geoluminate.db.models import QuantityField, models
+from geoluminate.db import models
 from geoluminate.utils.generic import max_length_from_choices
 from research_vocabs.fields import ConceptField
 
@@ -23,7 +23,7 @@ from project.schemas.heat_flow import vocabularies
 class HeatFlow(Measurement):
     """Database table that stores terrestrial heat flow data. This is the "parent" schema outlined in the formal structure of the database put forth by Fuchs et al (2021)."""
 
-    q = QuantityField(
+    q = models.QuantityField(
         verbose_name=_("heat flow"),
         base_units="mW / m^2",
         help_text=_(
@@ -31,7 +31,7 @@ class HeatFlow(Measurement):
         ),
         validators=[MinVal(-(10**6)), MaxVal(10**6)],
     )
-    q_uncertainty = QuantityField(
+    q_uncertainty = models.QuantityField(
         base_units="mW / m^2",
         verbose_name=_("heat flow uncertainty"),
         help_text=_(
