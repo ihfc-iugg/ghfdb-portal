@@ -13,7 +13,7 @@ from django.core.validators import MaxValueValidator as MaxVal
 from django.core.validators import MinValueValidator as MinVal
 from django.utils.translation import gettext as _
 from geoluminate.contrib.samples.models import Measurement
-from geoluminate.db import QuantityField, models
+from geoluminate.db.models import QuantityField, models
 from geoluminate.utils.generic import max_length_from_choices
 from research_vocabs.fields import ConceptField
 
