@@ -1,5 +1,4 @@
 from django.urls import reverse
-from heat_flow.models import HeatFlow
 
 
 class TestHeatFlowAdmin:
@@ -31,7 +30,7 @@ class TestHeatFlowAdmin:
 
     def test_view_object(self, admin_client):
         pass
-        # user = HeatFlow.objects.get(username="admin")
+        # user = ParentHeatFlow.objects.get(username="admin")
         # url = reverse("admin:users_user_change", kwargs={"object_id": user.pk})
         # response = admin_client.get(url)
         # assert response.status_code == 200
