@@ -8,6 +8,8 @@
 api.yml
 !assets/map/dist/*
 .vocabularies-cache
+test*.py
+
 # assets/map/dist/css/chunk-vendors.5b557d9a.css
 # assets/map/dist/img/2D_profile.1eeacbcd.png
 # assets/map/dist/img/digital_borehole_example.c3dd2b3b.png
@@ -16,7 +18,7 @@ api.yml
 # assets/map/dist/js/chunk-vendors.038f9446.js
 # assets/map/dist/js/chunk-vendors.038f9446.js.map
 
-data/
+/data/
 
 #no migration files except __init__.py
 # **/migrations/*
