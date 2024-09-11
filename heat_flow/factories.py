@@ -5,12 +5,12 @@ from factory.fuzzy import FuzzyChoice
 from geoluminate.factories import MeasurementFactory, randint
 
 from . import vocabularies
-from .models import HeatFlow, HeatFlowChild
+from .models import ChildHeatFlow, ParentHeatFlow
 
 
-class HeatFlowChildFactory(factory.django.DjangoModelFactory):
+class ChildHeatFlowFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = HeatFlowChild
+        model = ChildHeatFlow
 
     # parent = factory.RelatedFactory(
     #     "heat_flow.factories.HeatFlowFactory",
@@ -46,8 +46,8 @@ class HeatFlowChildFactory(factory.django.DjangoModelFactory):
     T_method_bottom = FuzzyChoice(vocabularies.TemperatureMethod.values)
     T_shutin_top = factory.Faker("pyfloat", min_value=0, max_value=10000)
     T_shutin_bottom = factory.Faker("pyfloat", min_value=0, max_value=10000)
-    T_correction_top = FuzzyChoice(vocabularies.TemperatureCorrection.values)
-    T_correction_bottom = FuzzyChoice(vocabularies.TemperatureCorrection.values)
+    T_corr_top = FuzzyChoice(vocabularies.TemperatureCorrection.values)
+    T_corr_bottom = FuzzyChoice(vocabularies.TemperatureCorrection.values)
     T_number = factory.Faker("pyint", min_value=1, max_value=100)
 
     # Conductivity fields
@@ -75,7 +75,7 @@ class HeatFlowChildFactory(factory.django.DjangoModelFactory):
 
 class HeatFlowFactory(MeasurementFactory):
     class Meta:
-        model = HeatFlow
+        model = ParentHeatFlow
 
     q = factory.Faker("pyfloat", min_value=-10, max_value=150)
     q_uncertainty = factory.Faker("pyfloat", min_value=0, max_value=100)
@@ -86,7 +86,7 @@ class HeatFlowFactory(MeasurementFactory):
     explo_method = FuzzyChoice(vocabularies.ExplorationMethod.values)
     explo_purpose = FuzzyChoice(vocabularies.ExplorationPurpose.values)
     children = factory.RelatedFactoryList(
-        "heat_flow.factories.HeatFlowChildFactory",
+        "heat_flow.factories.ChildHeatFlowFactory",
         parent=None,
         factory_related_name="parent",
         size=randint(1, 5),
