@@ -41,7 +41,7 @@ services:
     build:
       context: .
       dockerfile: ./compose/production/django
-    image: production_django
+    image: django_staging
     depends_on:
       - postgres
       - redis
@@ -67,23 +67,23 @@ services:
   redis:
     image: redis:6
     restart: always
-  celeryworker:
-    <<: *django
-    command: start-celeryworker
-    labels: []
-  celerybeat:
-    <<: *django
-    command: start-celerybeat
-    labels: []
-  flower:
-    <<: *django
-    command: start-flower
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.tasks.rule=Host(`tasks.${DJANGO_SITE_DOMAIN:-localhost}`)
-      - traefik.http.routers.tasks.entrypoints=https
-      - traefik.http.routers.tasks.service=tasks
-      - traefik.http.services.tasks.loadbalancer.server.port=5555
+  # celeryworker:
+  #   <<: *django
+  #   command: start-celeryworker
+  #   labels: []
+  # celerybeat:
+  #   <<: *django
+  #   command: start-celerybeat
+  #   labels: []
+  # flower:
+  #   <<: *django
+  #   command: start-flower
+  #   labels:
+  #     - traefik.enable=true
+  #     - traefik.http.routers.tasks.rule=Host(`tasks.${DJANGO_SITE_DOMAIN:-localhost}`)
+  #     - traefik.http.routers.tasks.entrypoints=https
+  #     - traefik.http.routers.tasks.service=tasks
+  #     - traefik.http.services.tasks.loadbalancer.server.port=5555
   minio:
     image: quay.io/minio/minio
     volumes:
@@ -113,7 +113,7 @@ services:
       - "80:80"
       - "443:443"
     command:
-      - --log.level=DEBUG
+      # - --log.level=DEBUG
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --api=true

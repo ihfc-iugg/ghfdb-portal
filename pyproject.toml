@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "global-heat-flow-database"
-version = "0.0.0"
+version = "0.0.1"
 description = "Code base for the IHFC's Global Heat Flow Database web application"
 authors = ["Sam <samuel.scott.jennings@gmail.com>"]
 license = "MIT"
@@ -9,7 +9,7 @@ homepage = "https://github.com/WorldHeatFlowDatabase/world-heat-flow-database"
 packages = [
     { include = "schemas", from = "project" },
 ]
-include = ["LICENSE", "README.md", "requirements.txt"]
+include = ["LICENSE", "README.md"]
 
 classifiers = [
     "Development Status :: 1 - Planning",
@@ -30,41 +30,43 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
-django = ">5"
-django-research-vocabs = {git = "https://github.com/Geoluminate/django-research-vocabs", rev = "master"}
 geoluminate = {git = "https://github.com/Geoluminate/geoluminate", rev = "main"}
-django-formset = "^1.3.8"
+django-formset = "^1.5"
+django = "^5.0.7"
+geoluminate-earth-science = {git = "https://github.com/Geoluminate/earth-science", rev = "main"}
+pandas = {extras = ["excel"], version = "^2.2.2"}
+django-classy-doc = "^0.0.8"
+django-admin-actions = "^0.1.1"
+django-admin-extra-buttons = "^1.5.8"
+django-appconf = "^1.0.6"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.2.1"
-pytest = "^7.2.2"
-django-coverage-plugin = "^3.0.0"
-pytest-django = "^4.5.2"
-django-stubs = "^1.15.0"
-pylint-django = "^2.5.3"
-invoke = "^2.0.0"
-tox = "^4.4.6"
 deptry = "^0.8.0"
+django-coverage-plugin = "^3.0.0"
+django-debug-toolbar = "^3.8.1"
+django-debug-toolbar-template-profiler = "^2.1.0"
+django-extensions = "^3.2.1"
+django-redis = "^5.2.0"
+django-stubs = "^1.15.0"
+djangorestframework-stubs = "^1.9.1"
+djlint = "^1.34.1"
+factory-boy = "^3.3.0"
+geoluminate-docs = {git = "https://github.com/Geoluminate/geoluminate-docs.git", rev = "master"}
+invoke = "^2.0.0"
+ipdb = "^0.13.11"
 mypy = "^1.2.0"
 pre-commit = "^3.2.2"
-pytest-cov = "^4.0.0"
-types-requests = "^2.28.11.17"
-types-python-dateutil = "^2.8.19.12"
-pytest-sugar = "^0.9.7"
-django-debug-toolbar = "^3.8.1"
-django-extensions = "^3.2.1"
-djangorestframework-stubs = "^1.9.1"
 pylint-celery = "^0.3"
-django-debug-toolbar-template-profiler = "^2.1.0"
-ipdb = "^0.13.11"
-django-redis = "^5.2.0"
-geoluminate-docs = {git = "https://github.com/Geoluminate/geoluminate-docs.git", rev = "master"}
-factory-boy = "^3.3.0"
-django-auto-datatables = {git = "https://github.com/SSJenny90/django-auto-datatables", rev = "main"}
-django-literature = {git = "https://github.com/Geoluminate/django-literature", rev = "main"}
-django-laboratory = {git = "https://github.com/Geoluminate/django-laboratory", rev = "main"}
-django-content-license = {git = "https://github.com/Geoluminate/django-content-license", rev = "main"}
-djlint = "^1.34.1"
+pylint-django = "^2.5.3"
+pytest = "^7.2.2"
+pytest-cov = "^4.0.0"
+pytest-django = "^4.5.2"
+pytest-sugar = "^0.9.7"
+tox = "^4.4.6"
+types-python-dateutil = "^2.8.19.12"
+types-requests = "^2.28.11.17"
+django-parler = "^2.3"
 
 
 [tool.poetry.group.production.dependencies]
@@ -79,7 +81,6 @@ build-backend = "poetry.core.masonry.api"
 target-version = "py311"
 line-length = 120
 fix = true
-
 [tool.ruff.lint]
 select = [
     # flake8-2020
@@ -121,7 +122,6 @@ ignore = [
     # ClassAttributesShouldBeAnnotated
     "RUF012",
     "TRY003",
-
     "A003",
     "F403",
     "F405",
@@ -153,7 +153,9 @@ exclude = [
     "staticfiles/*",
     'geoluminate/conf/*',
     "docs/",
+    "test.py"
 ]
+
 [tool.ruff.lint.per-file-ignores]
 "**/tests/*" = ["S101","S105"]
 
@@ -161,6 +163,7 @@ exclude = [
 docstring-code-format = true
 docstring-code-line-length = 88
 line-ending = "lf"
+
 [tool.djlint]
 blank_line_after_tag="load,endblock"
 close_void_tags=true
@@ -190,7 +193,7 @@ check_untyped_defs = false
 warn_return_any = true
 warn_unused_ignores = true
 show_error_codes = true
-exclude = ["docs/","migrations/","tests/settings.py"]
+exclude = ["docs/","migrations/","tests/settings.py", "test.py"]
 mypy_path = "project/"
 plugins = ["mypy_django_plugin.main"]
 
@@ -205,7 +208,9 @@ filterwarnings = [
     "ignore",
     "default:::laboratory",
 ]
-
+env = [
+    "DJANGO_ENV=development",
+]
 
 [tool.coverage.report]
 skip_empty = true
