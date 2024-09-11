@@ -23,9 +23,8 @@
 #       - The object storage server that is used to store media files such as images and documents. It is available at
 #         media.${DJANGO_DOMAIN}. The dashboard is available at minio.${DJANGO_DOMAIN}.
 #       - NOTE: this service can be commented or deleted if you are using an external S3 based service such as AWS S3.
-#   - Traefik:
-#       - The reverse proxy and load balancer that routes incoming requests to the appropriate services. It also
-#         automatically requests and renews SSL certificates from Let's Encrypt.
+#   - Traefik [ REMOVED ]:
+#       - This has been removed for the GFZ production server as Traefik has already been made available on the server.
 # =====================================================================================================================
 version: "3.7"
 name: ghfdb_production
@@ -34,6 +33,12 @@ volumes:
   postgres: {}
   postgres_backups: {}
   media: {}
+
+# The Traefik reverse-proxy service and "traefik" network is defined by the GFZ IT team in a seperate Portainer
+# stack.
+networks:
+  traefik:
+    external: true
 
 services:
 
@@ -49,6 +54,9 @@ services:
     env_file:
       - stack.env
     command: start-django
+    network:
+      - traefik
+      - default
     restart: always
     labels:
       - traefik.enable=true
@@ -78,6 +86,9 @@ services:
   flower:
     <<: *django
     command: start-flower
+    network:
+      - traefik
+      - default
     labels:
       - traefik.enable=true
       - traefik.http.routers.tasks.rule=Host(`tasks.${DJANGO_SITE_DOMAIN:-localhost}`)
@@ -91,6 +102,9 @@ services:
     env_file:
       - stack.env
     command: server /minio
+    network:
+      - traefik
+      - default
     restart: always
     labels:
       - traefik.enable=true
@@ -103,35 +117,4 @@ services:
       - traefik.http.routers.minio.entrypoints=http,https
       - traefik.http.routers.minio.rule=Host(`minio.${DJANGO_SITE_DOMAIN:-localhost}`)
       - traefik.http.services.minio.loadbalancer.server.port=9001
-  traefik:
-    image: "traefik:v2.11"
-    restart: always
-    volumes:
-      - ./data/letsencrypt:/letsencrypt
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    ports:
-      - "80:80"
-      - "443:443"
-    command:
-      # - --log.level=DEBUG
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-      - --api=true
 
-      - --entrypoints.http.address=:80
-      - --entrypoints.http.http.redirections.entryPoint.to=https
-      - --entrypoints.https.address=:443
-      - --entrypoints.https.http.tls.certresolver=${TRAEFIK_CERT_RESOLVER}
-
-      # LetsEncrypt Staging Server - uncomment when testing
-      # - --certificatesResolvers.letsencrypt.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http
-      - --certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_CERT_EMAIL:-admin@localhost}
-      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
-
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.traefik.rule=Host(`traefik.${DJANGO_SITE_DOMAIN:-localhost}`)
-      - traefik.http.routers.traefik.entrypoints=http,https
-      - traefik.http.routers.traefik.service=api@internal
