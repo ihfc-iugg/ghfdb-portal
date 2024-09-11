@@ -1,7 +1,3 @@
-from django.urls import resolve, reverse
-
-from heat_flow.models import HeatFlow, HeatFlowChild
-
 # def test_detail(user: User):
 #     assert (
 #         reverse("users:detail", kwargs={"username": users.Username})
