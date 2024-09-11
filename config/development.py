@@ -1,30 +1,45 @@
+import os
+
 import geoluminate
 
-from .common import *
-from .geoluminate import *
-
-SHOW_DEBUG_TOOLBAR = False
-DEBUG = True
-geoluminate.setup(development=True)
-
-GEOLUMINATE_LABELS["sample"] = {"verbose_name": "Heat Flow Site", "verbose_name_plural": "Heat Flow Sites"}
-
-
-# https://docs.djangoproject.com/en/dev/ref/settings/#auth-password-validators
-# removing validators for local development
-AUTH_PASSWORD_VALIDATORS = []
-
-# Verifying emails in development is annoying
-# For testing, uncomment the following line
-ACCOUNT_EMAIL_VERIFICATION = "optional"
+os.environ.setdefault("DJANGO_ENV", "development")
+geoluminate.setup(
+    apps=[
+        "heat_flow",
+        "earth_science",
+        "earth_science.location",
+        "earth_science.geology.lithology",
+        "earth_science.geology.stratigraphy",
+        "earth_science.geology.geologic_time",
+    ]
+)
 
 
-AWS_USE_SSL = False
+EARTH_SCIENCE_X_COORD = {
+    "decimal_places": 5,
+    "max_digits": None,
+}
 
-ALLOWED_HOSTS = ["*"]
-# COMPRESS_OFFLINE = False
-# COMPRESS_ENABLED = False
+EARTH_SCIENCE_Y_COORD = {
+    "decimal_places": 5,
+    "max_digits": None,
+}
 
-# STORAGES["staticfiles"] = {
-#     "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+# INSTALLED_APPS += [
+#     "django_classy_doc",
+# ]
+
+
+# CLASSY_DOC_BASES = ["heat_flow", "earth_science"]
+# # CLASSY_DOC_NON_INSTALLED_APPS = ['django.views.generic']
+# CLASSY_DOC_MODULE_TYPES = [
+#     "models",
+# ]
+
+# CLASSY_KNOWN_APPS = {
+#     "django": ["django"],
+#     "samples": ["samples"],
+#     "polymorphic_treebeard": ["polymorphic_treebeard"],
+#     "polymorphic": ["polymorphic"],
+#     "treebeard": ["treebeard"],
 # }
