@@ -1,0 +1,42 @@
+{% extends "admin_extra_buttons/action_page.html" %}
+{% load i18n static admin_list admin_urls %}
+
+{% block action-content %}
+  <form method="post" enctype="multipart/form-data" class="grp-form">
+    {% csrf_token %}
+    <fieldset class="module aligned">
+      {{ form.as_p }}
+    </fieldset>
+    <div class="submit-row">
+      <button type="submit" class="default">{% trans "Upload" %}</button>
+    </div>
+  </form>
+  {% if errors %}
+    <div class="errors">
+      <h2 class="subtitle">{% trans "Import Errors" %}</h2>
+      {% for index, row in errors.items %}
+        <div class="grp-module grp-table">
+          <div class="grp-row">
+            <h3 class="grp-collapse-handler">{% trans "Row" %} {{ index }}:</h3>
+          </div>
+          <table class="grp-table">
+            <thead>
+              <tr>
+                <th>{% trans "Field" %}</th>
+                <th>{% trans "Error" %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for field, error in row.items %}
+                <tr class="grp-row">
+                  <td>{{ field }}</td>
+                  <td>{{ error }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endblock action-content %}
