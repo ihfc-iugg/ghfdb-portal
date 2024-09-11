@@ -1177,27 +1177,6 @@ files = [
 django = "*"
 
 [[package]]
-name = "django-auto-datatables"
-version = "0.0.1"
-description = "A high-level Django app for easily creating datatables(.net) from models."
-optional = false
-python-versions = ">=3.10,<4.0"
-files = []
-develop = false
-
-[package.dependencies]
-django = "^5.0.7"
-djangorestframework-datatables = "^0.7.2"
-djangorestframework-datatables-editor = "^0.3.3"
-drf-schema-adapter = "^3.0.6"
-
-[package.source]
-type = "git"
-url = "https://github.com/SamuelJennings/django-auto-datatables.git"
-reference = "main"
-resolved_reference = "c095a2a616131298bd37b60d99368d9712a12aec"
-
-[[package]]
 name = "django-bleach"
 version = "3.1.0"
 description = "Easily use bleach with Django models and templates"
@@ -2263,34 +2242,6 @@ django = ">=3.0"
 pytz = "*"
 
 [[package]]
-name = "djangorestframework-datatables"
-version = "0.7.2"
-description = "Seamless integration between Django REST framework and Datatables (https://datatables.net)"
-optional = false
-python-versions = "*"
-files = [
-    {file = "djangorestframework_datatables-0.7.2-py2.py3-none-any.whl", hash = "sha256:fd5747b1e3d0bfb84713a975394dd4d879b57ee8bc66cc0f97566fa67f4406f4"},
-    {file = "djangorestframework_datatables-0.7.2.tar.gz", hash = "sha256:d7953968088ceb14968621a0c0a83d2f39ec1cda24b5ebe1240f3c9619bc7129"},
-]
-
-[package.dependencies]
-djangorestframework = ">=3.14.0"
-
-[[package]]
-name = "djangorestframework-datatables-editor"
-version = "0.3.3"
-description = "Seamless integration between Django REST framework and Datatables (https://datatables.net) with supporting Datatables editor"
-optional = false
-python-versions = "*"
-files = [
-    {file = "djangorestframework-datatables-editor-0.3.3.tar.gz", hash = "sha256:735b66a574694fcf958a58a364fd070c18866c3ac845f96490ac648858415465"},
-    {file = "djangorestframework_datatables_editor-0.3.3-py2.py3-none-any.whl", hash = "sha256:9c688a553e4d0c78324969b695ecd7cfcb8903edd57c2d462f9eb17966daa7e0"},
-]
-
-[package.dependencies]
-djangorestframework = ">=3.9.1"
-
-[[package]]
 name = "djangorestframework-gis"
 version = "1.0"
 description = "Geographic add-ons for Django Rest Framework"
@@ -2704,10 +2655,10 @@ dj-rest-auth = "^3.0.0"
 django = {version = ">=3.2", extras = ["argon2"]}
 django-account-management = {git = "https://github.com/SamuelJennings/django-account-management"}
 django-activity-stream = "^2.0.0"
+django-admin-extra-buttons = "^1.5.8"
 django-admin-tools = "^0.9.3"
 django-adminactions = "^2.0.0"
 django-allauth = {version = "^64.0.0", extras = ["mfa", "socialaccount"]}
-django-auto-datatables = {git = "https://github.com/SamuelJennings/django-auto-datatables.git", rev = "main"}
 django-bleach = "^3.0.1"
 django-celery-beat = "^2.5.0"
 django-classy-tags = "^4.1.0"
@@ -2740,6 +2691,7 @@ django-meta = "^2.1.0"
 django-migration-zero = "^2.0.0"
 django-model-utils = "^4.3.1"
 django-organizations = "^2.1.0"
+django-parler = "^2.3"
 django-partial-date = "^1.3.2"
 django-pint = "^0.7.1"
 django-redis = "^5.2.0"
@@ -2781,7 +2733,7 @@ whitenoise = "^6.4.0"
 type = "git"
 url = "https://github.com/Geoluminate/geoluminate"
 reference = "main"
-resolved_reference = "d337a4af9130f117395ee1d5a8de23c1b9b42761"
+resolved_reference = "01d58c51fdd0abab7672eab058f8ac6464e2501a"
 
 [[package]]
 name = "geoluminate-docs"
