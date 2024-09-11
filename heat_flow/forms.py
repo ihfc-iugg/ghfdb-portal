@@ -2,7 +2,7 @@ from django.forms.models import ModelForm
 from django.utils.translation import gettext as _
 from formset.fieldset import FieldsetMixin
 
-from .models import HeatFlow, HeatFlowChild
+from .models import ChildHeatFlow, ParentHeatFlow
 
 
 # ===================== FORMS =====================
@@ -11,16 +11,16 @@ class HeatFlowParentForm(FieldsetMixin, ModelForm):
     help_text = _("Add a new heat flow.")
 
     class Meta:
-        model = HeatFlow
+        model = ParentHeatFlow
         fields = "__all__"
 
 
-class HeatFlowChildForm(FieldsetMixin, ModelForm):
+class ChildHeatFlowForm(FieldsetMixin, ModelForm):
     label = _("Heat Flow (Child)")
     help_text = _("Add a new child heat flow.")
 
     class Meta:
-        model = HeatFlowChild
+        model = ChildHeatFlow
         fields = [
             "qc",
             "qc_uncertainty",
@@ -39,7 +39,7 @@ class ProbeSensingForm(FieldsetMixin, ModelForm):
     help_text = _("Probe sensing for marine heat flow measurements.")
 
     class Meta:
-        model = HeatFlowChild
+        model = ChildHeatFlow
         fields = ["hf_pen", "probe_type", "hf_probeL", "probe_title"]
 
 
@@ -48,7 +48,7 @@ class MetadataAndFlagsForm(FieldsetMixin, ModelForm):
     help_text = _("Metadata and flags for heat flow child measurements.")
 
     class Meta:
-        model = HeatFlowChild
+        model = ChildHeatFlow
         fields = ["q_method", "relevant_child"]
 
 
@@ -61,7 +61,7 @@ class TemperatureForm(FieldsetMixin, ModelForm):
     # tc_location = [literature/unspecified] only if {tc_source} = [Assumed from literature]
 
     class Meta:
-        model = HeatFlowChild
+        model = ChildHeatFlow
         fields = [
             "t_grad_mean",
             "T_grad_uncertainty",
@@ -71,8 +71,8 @@ class TemperatureForm(FieldsetMixin, ModelForm):
             "T_method_bottom",
             "T_shutin_top",
             "T_shutin_bottom",
-            "T_correction_top",
-            "T_correction_bottom",
+            "T_corr_top",
+            "T_corr_bottom",
             "T_count",
         ]
 
@@ -82,7 +82,7 @@ class ConductivityForm(FieldsetMixin, ModelForm):
     help_text = _("Conductivity for heat flow child measurements.")
 
     class Meta:
-        model = HeatFlowChild
+        model = ChildHeatFlow
         fields = [
             "tc_mean",
             "tc_uncertainty",

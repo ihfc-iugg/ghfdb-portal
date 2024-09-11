@@ -9,5 +9,5 @@ class HeatFlowSchemaConfig(AppConfig):
     name = "heat_flow"
     verbose_name = _("Heat Flow")
 
-    # HeatFlow = {"list_display": ["q", "q_uncertainty"]}
-    # HeatFlowChild = {}
+    # ParentHeatFlow = {"list_display": ["q", "q_uncertainty"]}
+    # ChildHeatFlow = {}
