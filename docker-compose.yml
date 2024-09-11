@@ -24,7 +24,8 @@ services:
     ports:
       - 8000:8000
       - 5678:5678
-    command: start-django-local
+    command: ./compose/development/start-django-local
+    entrypoint: ./compose/development/entrypoint
 
   postgres:
     image: geoluminate/postgis:latest

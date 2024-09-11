@@ -52,8 +52,8 @@ services:
     restart: always
     labels:
       - traefik.enable=true
-      - traefik.http.routers.django.rule=Host(`${DJANGO_DOMAIN_NAME:-localhost}`)
-      - traefik.http.routers.django.entrypoints=http
+      - traefik.http.routers.django.rule=Host(`${DJANGO_SITE_DOMAIN:-localhost}`)
+      - traefik.http.routers.django.entrypoints=http,https
       - traefik.http.services.django.loadbalancer.server.port=5000
       - traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken
   postgres:
@@ -80,8 +80,8 @@ services:
     command: start-flower
     labels:
       - traefik.enable=true
-      - traefik.http.routers.tasks.rule=Host(`tasks.${DJANGO_DOMAIN_NAME:-localhost}`)
-      - traefik.http.routers.tasks.entrypoints=http
+      - traefik.http.routers.tasks.rule=Host(`tasks.${DJANGO_SITE_DOMAIN:-localhost}`)
+      - traefik.http.routers.tasks.entrypoints=http,https
       - traefik.http.routers.tasks.service=tasks
       - traefik.http.services.tasks.loadbalancer.server.port=5555
   minio:
@@ -95,13 +95,13 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.media.service=media
-      - traefik.http.routers.media.entrypoints=http
-      - traefik.http.routers.media.rule=Host(`media.${DJANGO_DOMAIN_NAME:-localhost}`)
+      - traefik.http.routers.media.entrypoints=http,https
+      - traefik.http.routers.media.rule=Host(`media.${DJANGO_SITE_DOMAIN:-localhost}`)
       - traefik.http.services.media.loadbalancer.server.port=9000
 
       - traefik.http.routers.minio.service=minio
-      - traefik.http.routers.minio.entrypoints=http
-      - traefik.http.routers.minio.rule=Host(`minio.${DJANGO_DOMAIN_NAME:-localhost}`)
+      - traefik.http.routers.minio.entrypoints=http,https
+      - traefik.http.routers.minio.rule=Host(`minio.${DJANGO_SITE_DOMAIN:-localhost}`)
       - traefik.http.services.minio.loadbalancer.server.port=9001
   traefik:
     image: "traefik:v2.11"
@@ -132,6 +132,6 @@ services:
 
     labels:
       - traefik.enable=true
-      - traefik.http.routers.traefik.rule=Host(`traefik.${DJANGO_DOMAIN_NAME:-localhost}`)
-      - traefik.http.routers.traefik.entrypoints=http
+      - traefik.http.routers.traefik.rule=Host(`traefik.${DJANGO_SITE_DOMAIN:-localhost}`)
+      - traefik.http.routers.traefik.entrypoints=http,https
       - traefik.http.routers.traefik.service=api@internal
