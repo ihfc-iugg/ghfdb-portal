@@ -2797,7 +2797,7 @@ whitenoise = "^6.4.0"
 type = "git"
 url = "https://github.com/Geoluminate/geoluminate"
 reference = "HEAD"
-resolved_reference = "a9a8ac8891f2b1160c79cebaefa0530b0735ce8d"
+resolved_reference = "d843a5e6174d47377b1749d6112ffe6068819322"
 
 [[package]]
 name = "geoluminate-docs"
