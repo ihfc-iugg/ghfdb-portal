@@ -26,6 +26,8 @@ services:
       - postgres
       - redis
       - minio
+    environment:
+      - S3_CUSTOM_DOMAIN=media.${DJANGO_SITE_DOMAIN:-localhost}
     env_file:
       - deploy/config/.postgres
       - deploy/config/.django
@@ -66,12 +68,15 @@ services:
       - traefik.http.routers.tasks.service=tasks
       - traefik.http.services.tasks.loadbalancer.server.port=5555
   minio:
+    ports:
+      - "9000:9000"
+      - "9001:9001"
     image: quay.io/minio/minio
     volumes:
       - media:/minio
     environment:
       - MINIO_ROOT_USER=${DJANGO_SUPERUSER_EMAIL:-super.user@example.com}
-      - MINIO_BROWSER_REDIRECT_URL=https://minio.${DJANGO_SITE_DOMAIN:-localhost}
+      - MINIO_BROWSER_REDIRECT_URL=minio.${DJANGO_SITE_DOMAIN:-localhost}
     env_file:
       - deploy/config/.minio
     command: server /minio
