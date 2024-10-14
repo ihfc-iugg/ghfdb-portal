@@ -4,7 +4,6 @@ name: ghfdb_production
 
 volumes:
   postgres:
-  letsencrypt:
   media:
 
 # The Traefik reverse-proxy service and "traefik" network is defined by the GFZ IT team in a seperate Portainer
@@ -15,13 +14,11 @@ networks:
 
 services:
   django: &django
-    # ports:
-      # - "5000:5000"
+    networks:
+      - traefik
     image: django
-    # restart: always
-    # pull_policy: build
-    # command: deploy/start-django
-    # command: sleep infinity
+    restart: always
+    pull_policy: build
     command: start-django
     build:
       context: .
@@ -29,7 +26,7 @@ services:
     depends_on:
       - postgres
       - redis
-      # - minio
+      - minio
     env_file:
       - deploy/config/.postgres
       - deploy/config/.django
@@ -61,6 +58,8 @@ services:
     command: start-celerybeat
     labels: []
   flower:
+    networks:
+      - traefik
     <<: *django
     command: start-flower
     labels:
@@ -70,6 +69,8 @@ services:
       - traefik.http.routers.tasks.service=tasks
       - traefik.http.services.tasks.loadbalancer.server.port=5555
   minio:
+    networks:
+      - traefik
     image: quay.io/minio/minio
     volumes:
       - media:/minio
@@ -90,35 +91,4 @@ services:
       - traefik.http.routers.minio.entrypoints=http,https
       - traefik.http.routers.minio.rule=Host(`minio.${DJANGO_SITE_DOMAIN:-localhost}`)
       - traefik.http.services.minio.loadbalancer.server.port=9001
-  traefik:
-    image: "traefik:v3.2"
-    restart: always
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
-      - "letsencrypt:/letsencrypt"
-    ports:
-      - "80:80"
-      - "443:443"
-    command:
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-      - --api=true
 
-      - --entrypoints.http.address=:80
-      - --entrypoints.http.http.redirections.entryPoint.to=https
-      - --entrypoints.https.address=:443
-      - --entrypoints.https.http.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}
-
-      # LetsEncrypt Staging Server - uncomment when testing
-      - --certificatesResolvers.letsencrypt.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http
-      - --certificatesresolvers.letsencrypt.acme.email=${DJANGO_SUPERUSER_EMAIL:-super.user@example.com}
-      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
-
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.traefik.rule=Host(`traefik.${DJANGO_SITE_DOMAIN:-localhost}`)
-      - traefik.http.routers.traefik.entrypoints=http,https
-      - traefik.http.routers.traefik.service=api@internal
-      - traefik.http.routers.traefik.tls=true # Ensure HTTPS for the dashboard
