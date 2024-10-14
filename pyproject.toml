@@ -6,10 +6,7 @@ authors = ["Sam <samuel.scott.jennings@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/WorldHeatFlowDatabase/world-heat-flow-database"
-packages = [
-    { include = "schemas", from = "project" },
-]
-include = ["LICENSE", "README.md"]
+include = ["heat_flow", "LICENSE", "README.md"]
 
 classifiers = [
     "Development Status :: 1 - Planning",
@@ -30,15 +27,16 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
-geoluminate = {git = "https://github.com/Geoluminate/geoluminate", rev = "main"}
+geoluminate = {git = "https://github.com/Geoluminate/geoluminate"}
 django-formset = "^1.5"
 django = "^5.0.7"
-geoluminate-earth-science = {git = "https://github.com/Geoluminate/earth-science", rev = "main"}
+geoluminate-earth-science = {git = "https://github.com/Geoluminate/earth-science"}
 pandas = {extras = ["excel"], version = "^2.2.2"}
 django-classy-doc = "^0.0.8"
 django-admin-actions = "^0.1.1"
 django-admin-extra-buttons = "^1.5.8"
 django-appconf = "^1.0.6"
+django-tables2 = "^2.7.0"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.2.1"
@@ -201,7 +199,7 @@ plugins = ["mypy_django_plugin.main"]
 django_settings_module = "tests.settings"
 
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "config.development"
+DJANGO_SETTINGS_MODULE = "config.settings"
 reuse_db = true
 python_files = ["test_*.py", "*_test.py", "testing/python/*.py"]
 filterwarnings = [
