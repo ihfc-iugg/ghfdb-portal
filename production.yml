@@ -19,8 +19,6 @@ services:
     restart: always
     pull_policy: build
     command: start-django
-    ports:
-      - "5000:5000"
     build:
       context: .
       dockerfile: ./deploy/production
@@ -42,6 +40,7 @@ services:
       - traefik.http.routers.django.entrypoints=http,https
       - traefik.http.routers.django.tls=true                   # Enable TLS for this service
       - traefik.http.routers.django.tls.certresolver=sectigo  # Specify the certificate resolver
+      - traefik.http.routers.portainer.tls.domains[0].main	rz-vm71.gfz-potsdam.de
       - traefik.http.services.django.loadbalancer.server.port=5000
       - traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken
   postgres:
@@ -89,9 +88,23 @@ services:
       - traefik.http.routers.media.entrypoints=http,https
       - traefik.http.routers.media.rule=Host(`media.${DJANGO_SITE_DOMAIN:-localhost}`)
       - traefik.http.services.media.loadbalancer.server.port=9000
+      - traefik.http.routers.media.tls.certresolver=sectigo  # Specify the certificate resolver
+      - traefik.http.routers.media.tls.domains[0].main	rz-vm71.gfz-potsdam.de
 
       - traefik.http.routers.minio.service=minio
       - traefik.http.routers.minio.entrypoints=http,https
       - traefik.http.routers.minio.rule=Host(`minio.${DJANGO_SITE_DOMAIN:-localhost}`)
       - traefik.http.services.minio.loadbalancer.server.port=9001
+      - traefik.http.routers.minio.tls.certresolver=sectigo  # Specify the certificate resolver
+      - traefik.http.routers.minio.tls.domains[0].main	rz-vm71.gfz-potsdam.de
 
+# traefik.enable	true
+# traefik.http.middlewares.portainer-strip-prefix.stripprefix.forceSlash	false
+# traefik.http.middlewares.portainer-strip-prefix.stripprefix.prefixes	/portainer
+# traefik.http.routers.portainer.entrypoints	https
+# traefik.http.routers.portainer.middlewares	portainer-strip-prefix, stack-ipallowlist
+# traefik.http.routers.portainer.rule	Host(`env.rz-vm71.gfz-potsdam.de`) && PathPrefix(`/portainer`)
+# traefik.http.routers.portainer.service	portainer
+# traefik.http.routers.portainer.tls.certresolver	sectigo
+# traefik.http.routers.portainer.tls.domains[0].main	rz-vm71.gfz-potsdam.de
+# traefik.http.services.portainer.loadbalancer.server.port	9000
