@@ -54,7 +54,7 @@ geoluminate-docs = {git = "https://github.com/Geoluminate/geoluminate-docs.git",
 invoke = "^2.0.0"
 ipdb = "^0.13.11"
 mypy = "^1.2.0"
-pre-commit = "^3.2.2"
+pre-commit = "^4.0.1"
 pylint-celery = "^0.3"
 pylint-django = "^2.5.3"
 pytest = "^7.2.2"
