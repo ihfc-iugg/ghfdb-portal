@@ -469,7 +469,7 @@ class TemperatureCorrection(VocabularyBuilder):
     )
 
     not_corrected = Concept(
-        prefLabel=_("Not corrected"),
+        prefLabel=_("not corrected"),
         definition=_(""),
     )
 

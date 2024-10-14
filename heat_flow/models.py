@@ -13,6 +13,7 @@ from django.core.validators import MinValueValidator as MinVal
 from django.utils.translation import gettext as _
 from earth_science.models.features import Borehole
 from earth_science.models.samples.intervals import GeoDepthInterval
+from geoluminate.contrib.datasets.models import Dataset
 from geoluminate.contrib.measurements.models import Measurement
 from geoluminate.db import models
 from geoluminate.metadata import Authority, Citation, Metadata
@@ -33,6 +34,10 @@ default_metadata = {
     "keywords": [],
     "repo_url": "https://github.com/ihfc-iugg/ghfdb-portal",
 }
+
+
+class GHFDBDataset(Dataset):
+    pass
 
 
 class HeatFlowSite(Borehole):
@@ -300,7 +305,7 @@ class ChildHeatFlow(Measurement):
     # Temperature Fields
     T_grad_mean = models.DecimalQuantityField(
         base_units="K/km",
-        max_digits=5,
+        max_digits=7,
         decimal_places=2,
         db_comment="Calculated or inferred temperature gradient.",
         verbose_name=_("temperature gradient"),
@@ -311,7 +316,7 @@ class ChildHeatFlow(Measurement):
     )
     T_grad_uncertainty = models.DecimalQuantityField(
         base_units="K/km",
-        max_digits=5,
+        max_digits=7,
         decimal_places=2,
         db_comment="Uncertainty of the temperature gradient.",
         verbose_name=_("uncertainty"),
