@@ -1,12 +1,8 @@
-# import os
-# from pprint import pprint
 import geoluminate
 from django.utils.translation import gettext_lazy as _
 
 # pprint(INSTALLED_APPS)
 
-
-# pprint(os.environ.__dict__)
 
 LANGUAGES = [
     ("en", _("English")),

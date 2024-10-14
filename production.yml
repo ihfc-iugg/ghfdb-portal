@@ -10,7 +10,7 @@ volumes:
 # stack.
 networks:
   default:
-    external: true  # Set the external network as the default
+    # external: true  # Set the external network as the default
     name: traefik  # The name of the external network
 
 services:
@@ -18,8 +18,9 @@ services:
     image: django
     restart: always
     pull_policy: build
-    command: deploy/start-django
-    # command: start-django
+    # command: sleep infinity
+    # command: deploy/start-django
+    command: start-django
     ports:
       - "5000:5000"
     build:
@@ -31,6 +32,7 @@ services:
       - minio
     environment:
       - S3_CUSTOM_DOMAIN=media.${DJANGO_SITE_DOMAIN:-localhost}
+      - S3_REGION_NAME="us-east-1"
     env_file:
       - deploy/config/.postgres
       - deploy/config/.django
@@ -72,7 +74,6 @@ services:
   #     - traefik.http.services.tasks.loadbalancer.server.port=5555
   minio:
     image: quay.io/minio/minio
-    pull_policy: always
     volumes:
       - media:/minio
     environment:
