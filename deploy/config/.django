@@ -17,10 +17,10 @@ EMAIL_HOST_USER=
 EMAIL_HOST_PASSWORD=
 # MEDIA STORAGE
 # ---------------------------------------------------
-AWS_BUCKET_NAME=development
-AWS_ACCESS_KEY_ID=debug
+S3_BUCKET_NAME=development
+S3_ACCESS_KEY_ID=debug
 AWS_SECRET_ACCESS_KEY=debug
-AWS_S3_CUSTOM_DOMAIN="127.0.0.1:9000/development"
+S3_CUSTOM_DOMAIN="127.0.0.1:9000/development"
 # Optional
 # ---------------------------------------------------
 LOCKDOWN_PASSWORD=password
@@ -29,6 +29,6 @@ LOCKDOWN_ENABLED=False
 # ---------------------------------------------------
 IPYTHONDIR=./.ipython
 PYDEVD_DISABLE_FILE_VALIDATION=1
-WEB_CONCURRENCY=1
+WEB_CONCURRENCY=4
 POSTGRES_HOST=postgres
 FLOWER_PASSWORD=password
