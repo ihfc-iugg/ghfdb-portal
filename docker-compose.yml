@@ -24,8 +24,9 @@ services:
     ports:
       - 8000:8000
       - 5678:5678
-    command: ./compose/development/start-django-local
-    entrypoint: ./compose/development/entrypoint
+    # command: sleep infinity
+    # command: start-django
+    command: ./compose/development/start-django
 
   postgres:
     image: geoluminate/postgis:latest
@@ -39,18 +40,18 @@ services:
   # celeryworker:
   #   <<: *django
   #   ports: []
-  #   command: start-celeryworker-local
+  #   command: start-celeryworker
 
   # celerybeat:
   #   <<: *django
   #   ports: []
-  #   command: start-celerybeat-local
+  #   command: start-celerybeat
 
   # flower:
   #   <<: *django
   #   ports:
   #     - "5555:5555"
-  #   command: start-flower-local
+  #   command: start-flower
 
   # docs:
   #   <<: *django
@@ -58,13 +59,13 @@ services:
   #   ports:
   #     - "9000:9000"
   #   command: start-docs
-  minio:
-    image: quay.io/minio/minio:latest
-    volumes:
-      - media:/minio
-    env_file:
-      - stack.local.env
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    command: server /minio
+  # minio:
+  #   image: quay.io/minio/minio:latest
+  #   volumes:
+  #     - media:/minio
+  #   env_file:
+  #     - stack.local.env
+  #   ports:
+  #     - "9000:9000"
+  #     - "9001:9001"
+  #   command: server /minio
