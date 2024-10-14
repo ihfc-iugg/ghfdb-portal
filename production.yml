@@ -16,6 +16,7 @@ services:
   django: &django
     networks:
       - traefik
+      - default
     image: django
     restart: always
     pull_policy: build
@@ -58,8 +59,6 @@ services:
     command: start-celerybeat
     labels: []
   flower:
-    networks:
-      - traefik
     <<: *django
     command: start-flower
     labels:
