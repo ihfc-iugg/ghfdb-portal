@@ -10,7 +10,7 @@ volumes:
 # stack.
 networks:
   default:
-    # external: true  # Set the external network as the default
+    external: true  # Set the external network as the default
     name: traefik  # The name of the external network
 
 services:
