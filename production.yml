@@ -18,7 +18,10 @@ services:
     image: django
     restart: always
     pull_policy: build
-    command: start-django
+    command: deploy/start-django
+    # command: start-django
+    ports:
+      - "5000:5000"
     build:
       context: .
       dockerfile: ./deploy/production
@@ -50,28 +53,26 @@ services:
   redis:
     image: redis:6
     restart: always
-  celeryworker:
-    <<: *django
-    command: start-celeryworker
-    labels: []
-  celerybeat:
-    <<: *django
-    command: start-celerybeat
-    labels: []
-  flower:
-    <<: *django
-    command: start-flower
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.tasks.rule=Host(`tasks.${DJANGO_SITE_DOMAIN:-localhost}`)
-      - traefik.http.routers.tasks.entrypoints=http,https
-      - traefik.http.routers.tasks.service=tasks
-      - traefik.http.services.tasks.loadbalancer.server.port=5555
+  # celeryworker:
+  #   <<: *django
+  #   command: start-celeryworker
+  #   labels: []
+  # celerybeat:
+  #   <<: *django
+  #   command: start-celerybeat
+  #   labels: []
+  # flower:
+  #   <<: *django
+  #   command: start-flower
+  #   labels:
+  #     - traefik.enable=true
+  #     - traefik.http.routers.tasks.rule=Host(`tasks.${DJANGO_SITE_DOMAIN:-localhost}`)
+  #     - traefik.http.routers.tasks.entrypoints=http,https
+  #     - traefik.http.routers.tasks.service=tasks
+  #     - traefik.http.services.tasks.loadbalancer.server.port=5555
   minio:
-    ports:
-      - "9000:9000"
-      - "9001:9001"
     image: quay.io/minio/minio
+    pull_policy: always
     volumes:
       - media:/minio
     environment:
