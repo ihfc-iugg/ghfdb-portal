@@ -4,7 +4,7 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-python manage.py check --deploy
+python manage.py check --deploy --settings=config.settings
 # python manage.py makemigrations
 # python manage.py migrate
 
