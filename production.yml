@@ -9,14 +9,12 @@ volumes:
 # The Traefik reverse-proxy service and "traefik" network is defined by the GFZ IT team in a seperate Portainer
 # stack.
 networks:
-  traefik:
-    external: true
+  default:
+    external: true  # Set the external network as the default
+    name: traefik  # The name of the external network
 
 services:
   django: &django
-    networks:
-      - traefik
-      - default
     image: django
     restart: always
     pull_policy: build
@@ -68,8 +66,6 @@ services:
       - traefik.http.routers.tasks.service=tasks
       - traefik.http.services.tasks.loadbalancer.server.port=5555
   minio:
-    networks:
-      - traefik
     image: quay.io/minio/minio
     volumes:
       - media:/minio
