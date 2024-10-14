@@ -52,73 +52,73 @@ services:
   redis:
     image: redis:6
     restart: always
-  # celeryworker:
-  #   <<: *django
-  #   command: start-celeryworker
-  #   labels: []
-  # celerybeat:
-  #   <<: *django
-  #   command: start-celerybeat
-  #   labels: []
-  # flower:
-  #   <<: *django
-  #   command: start-flower
-  #   labels:
-  #     - traefik.enable=true
-  #     - traefik.http.routers.tasks.rule=Host(`tasks.${DJANGO_SITE_DOMAIN:-localhost}`)
-  #     - traefik.http.routers.tasks.entrypoints=http,https
-  #     - traefik.http.routers.tasks.service=tasks
-  #     - traefik.http.services.tasks.loadbalancer.server.port=5555
-  # minio:
-  #   image: quay.io/minio/minio
-  #   volumes:
-  #     - media:/minio
-  #   environment:
-  #     - MINIO_ROOT_USER=${DJANGO_SUPERUSER_EMAIL:-super.user@example.com}
-  #   env_file:
-  #     - deploy/config/.minio
-  #   command: server /minio
-  #   restart: always
-  #   labels:
-  #     - traefik.enable=true
-  #     - traefik.http.routers.media.service=media
-  #     - traefik.http.routers.media.entrypoints=http,https
-  #     - traefik.http.routers.media.rule=Host(`media.${DJANGO_SITE_DOMAIN:-localhost}`)
-  #     - traefik.http.services.media.loadbalancer.server.port=9000
+  celeryworker:
+    <<: *django
+    command: start-celeryworker
+    labels: []
+  celerybeat:
+    <<: *django
+    command: start-celerybeat
+    labels: []
+  flower:
+    <<: *django
+    command: start-flower
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.tasks.rule=Host(`tasks.${DJANGO_SITE_DOMAIN:-localhost}`)
+      - traefik.http.routers.tasks.entrypoints=http,https
+      - traefik.http.routers.tasks.service=tasks
+      - traefik.http.services.tasks.loadbalancer.server.port=5555
+  minio:
+    image: quay.io/minio/minio
+    volumes:
+      - media:/minio
+    environment:
+      - MINIO_ROOT_USER=${DJANGO_SUPERUSER_EMAIL:-super.user@example.com}
+    env_file:
+      - deploy/config/.minio
+    command: server /minio
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.media.service=media
+      - traefik.http.routers.media.entrypoints=http,https
+      - traefik.http.routers.media.rule=Host(`media.${DJANGO_SITE_DOMAIN:-localhost}`)
+      - traefik.http.services.media.loadbalancer.server.port=9000
 
-  #     - traefik.http.routers.minio.service=minio
-  #     - traefik.http.routers.minio.entrypoints=http,https
-  #     - traefik.http.routers.minio.rule=Host(`minio.${DJANGO_SITE_DOMAIN:-localhost}`)
-  #     - traefik.http.services.minio.loadbalancer.server.port=9001
-  # traefik:
-  #   image: "traefik:v3.2"
-  #   restart: always
-  #   volumes:
-  #     - "/var/run/docker.sock:/var/run/docker.sock"
-  #     - "letsencrypt:/letsencrypt"
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
-  #   command:
-  #     - --providers.docker=true
-  #     - --providers.docker.exposedbydefault=false
-  #     - --api=true
+      - traefik.http.routers.minio.service=minio
+      - traefik.http.routers.minio.entrypoints=http,https
+      - traefik.http.routers.minio.rule=Host(`minio.${DJANGO_SITE_DOMAIN:-localhost}`)
+      - traefik.http.services.minio.loadbalancer.server.port=9001
+  traefik:
+    image: "traefik:v3.2"
+    restart: always
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "letsencrypt:/letsencrypt"
+    ports:
+      - "80:80"
+      - "443:443"
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --api=true
 
-  #     - --entrypoints.http.address=:80
-  #     - --entrypoints.http.http.redirections.entryPoint.to=https
-  #     - --entrypoints.https.address=:443
-  #     - --entrypoints.https.http.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}
+      - --entrypoints.http.address=:80
+      - --entrypoints.http.http.redirections.entryPoint.to=https
+      - --entrypoints.https.address=:443
+      - --entrypoints.https.http.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}
 
-  #     # LetsEncrypt Staging Server - uncomment when testing
-  #     - --certificatesResolvers.letsencrypt.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory
-  #     - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
-  #     - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http
-  #     - --certificatesresolvers.letsencrypt.acme.email=${DJANGO_SUPERUSER_EMAIL:-super.user@example.com}
-  #     - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      # LetsEncrypt Staging Server - uncomment when testing
+      - --certificatesResolvers.letsencrypt.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http
+      - --certificatesresolvers.letsencrypt.acme.email=${DJANGO_SUPERUSER_EMAIL:-super.user@example.com}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
 
-  #   labels:
-  #     - traefik.enable=true
-  #     - traefik.http.routers.traefik.rule=Host(`traefik.${DJANGO_SITE_DOMAIN:-localhost}`)
-  #     - traefik.http.routers.traefik.entrypoints=http,https
-  #     - traefik.http.routers.traefik.service=api@internal
-  #     - traefik.http.routers.traefik.tls=true # Ensure HTTPS for the dashboard
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik.rule=Host(`traefik.${DJANGO_SITE_DOMAIN:-localhost}`)
+      - traefik.http.routers.traefik.entrypoints=http,https
+      - traefik.http.routers.traefik.service=api@internal
+      - traefik.http.routers.traefik.tls=true # Ensure HTTPS for the dashboard
