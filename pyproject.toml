@@ -53,7 +53,7 @@ factory-boy = "^3.3.0"
 geoluminate-docs = {git = "https://github.com/Geoluminate/geoluminate-docs.git", rev = "master"}
 invoke = "^2.0.0"
 ipdb = "^0.13.11"
-mypy = "^1.2.0"
+mypy = "^1.13.0"
 pre-commit = "^3.2.2"
 pylint-celery = "^0.3"
 pylint-django = "^2.5.3"
