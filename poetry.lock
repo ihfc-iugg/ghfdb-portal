@@ -1352,6 +1352,20 @@ files = [
 Django = ">=3.2"
 
 [[package]]
+name = "django-cotton"
+version = "1.2.1"
+description = "Bringing component based design to Django templates."
+optional = false
+python-versions = "<4,>=3.8"
+files = [
+    {file = "django_cotton-1.2.1-py3-none-any.whl", hash = "sha256:395b7b6e0b00206be762bc9f20ac6a56e960e24d5ebaf4fb41ac08929f58c4dc"},
+    {file = "django_cotton-1.2.1.tar.gz", hash = "sha256:2ad65df214104e6103ea55d134c3d971e3887ead3bc9a92fed713249561572f9"},
+]
+
+[package.dependencies]
+django = ">=4.2,<5.2"
+
+[[package]]
 name = "django-coverage-plugin"
 version = "3.1.0"
 description = "Django template coverage.py plugin"
@@ -2728,6 +2742,7 @@ django-compressor = "^4.5.1"
 django-contact-form = "^2.1"
 django-content-license = {git = "https://github.com/Geoluminate/django-content-license"}
 django-cors-headers = "^3.14.0"
+django-cotton = "^1.2.1"
 django-crispy-forms = "^2.3"
 django-dbbackup = "^4.0.2"
 django-downloadview = "^2.3.0"
@@ -2797,7 +2812,7 @@ whitenoise = "^6.4.0"
 type = "git"
 url = "https://github.com/Geoluminate/geoluminate"
 reference = "HEAD"
-resolved_reference = "4de5f1d477889114cc58bfd4cd36904e74ec2c6f"
+resolved_reference = "ba2fbfa1f6adcdfa286bb0a92c5cf64a2f28629c"
 
 [[package]]
 name = "geoluminate-docs"
