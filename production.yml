@@ -110,5 +110,5 @@ services:
       - traefik.http.routers.map.entrypoints=https
       - traefik.http.routers.map.rule=Host(`${DJANGO_SITE_DOMAIN:-localhost}`) && PathPrefix(`/map`)
       - traefik.http.services.map.loadbalancer.server.port=80
-      # - traefik.http.routers.minio.tls.certresolver=sectigo  # Specify the certificate resolver
-      # - traefik.http.routers.minio.tls.domains[0].main=ghfdb.gfz-potsdam.de
+      - traefik.http.routers.map.tls.certresolver=sectigo  # Specify the certificate resolver
+      - traefik.http.routers.map.tls.domains[0].main=ghfdb.gfz-potsdam.de
