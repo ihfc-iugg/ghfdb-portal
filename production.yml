@@ -105,6 +105,7 @@ services:
     environment:
       - VITE_ROOT_API_DOMAIN=${DJANGO_SITE_DOMAIN}
       - VITE_APP_NAME=Global Heat Flow Database
+      - SUBDIR=/map
     labels:
       - traefik.enable=true
       - traefik.http.routers.map.entrypoints=https
