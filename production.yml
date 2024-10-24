@@ -100,10 +100,11 @@ services:
       - traefik.http.routers.minio.tls.domains[0].main=ghfdb.gfz-potsdam.de
   # TDU map service
   map:
-    image: tanzwutgandalf/demo:latest
+    image: tanzwutgandalf/whfdb-map:latest
     restart: always
     environment:
-      - BASE_URL=${DJANGO_SITE_DOMAIN}
+      - VITE_ROOT_API_DOMAIN=${DJANGO_SITE_DOMAIN}
+      - VITE_APP_NAME=Global Heat Flow Database
     labels:
       - traefik.enable=true
       - traefik.http.routers.map.service=map
