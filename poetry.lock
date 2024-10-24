@@ -2812,7 +2812,7 @@ whitenoise = "^6.4.0"
 type = "git"
 url = "https://github.com/Geoluminate/geoluminate"
 reference = "HEAD"
-resolved_reference = "ba2fbfa1f6adcdfa286bb0a92c5cf64a2f28629c"
+resolved_reference = "01d04bbb190ed1b10429127e50acc78de84e4bca"
 
 [[package]]
 name = "geoluminate-docs"
@@ -2860,7 +2860,7 @@ pyproj = "^3.6.1"
 type = "git"
 url = "https://github.com/Geoluminate/earth-science"
 reference = "HEAD"
-resolved_reference = "d4039dfc138193ec84a905a0dc6fb6c331f064e0"
+resolved_reference = "32f393521d996b5540d1711c5cc67b0370dcbaae"
 
 [[package]]
 name = "gunicorn"
