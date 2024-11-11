@@ -40,7 +40,7 @@ django-tables2 = "^2.7.0"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.2.1"
-deptry = "^0.8.0"
+deptry = "^0.21.0"
 django-coverage-plugin = "^3.0.0"
 django-debug-toolbar = "^3.8.1"
 django-debug-toolbar-template-profiler = "^2.1.0"
