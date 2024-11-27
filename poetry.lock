@@ -112,13 +112,13 @@ tests = ["pytest"]
 
 [[package]]
 name = "asgiref"
-version = "3.7.2"
+version = "3.8.1"
 description = "ASGI specs, helper code, and adapters"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "asgiref-3.7.2-py3-none-any.whl", hash = "sha256:89b2ef2247e3b562a16eef663bc0e2e703ec6468e2fa8a5cd61cd449786d4f6e"},
-    {file = "asgiref-3.7.2.tar.gz", hash = "sha256:9e0ce3aa93a819ba5b45120216b23878cf6e8525eb3848653452b4192b92afed"},
+    {file = "asgiref-3.8.1-py3-none-any.whl", hash = "sha256:3e1e3ecc849832fe52ccf2cb6686b7a55f82bb1d6aee72a58826471390335e47"},
+    {file = "asgiref-3.8.1.tar.gz", hash = "sha256:c343bd80a0bec947a9860adb4c432ffa7db769836c64238fc34bdc3fec84d590"},
 ]
 
 [package.dependencies]
@@ -931,17 +931,17 @@ tomli = {version = ">=2.0.1,<3.0.0", markers = "python_version < \"3.11\""}
 
 [[package]]
 name = "diff-match-patch"
-version = "20230430"
-description = "Diff Match and Patch"
+version = "20241021"
+description = "Repackaging of Google's Diff Match and Patch libraries."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "diff-match-patch-20230430.tar.gz", hash = "sha256:953019cdb9c9d2c9e47b5b12bcff3cf4746fc4598eb406076fa1fc27e6a1f15c"},
-    {file = "diff_match_patch-20230430-py3-none-any.whl", hash = "sha256:dce43505fb7b1b317de7195579388df0746d90db07015ed47a85e5e44930ef93"},
+    {file = "diff_match_patch-20241021-py3-none-any.whl", hash = "sha256:93cea333fb8b2bc0d181b0de5e16df50dd344ce64828226bda07728818936782"},
+    {file = "diff_match_patch-20241021.tar.gz", hash = "sha256:beae57a99fa48084532935ee2968b8661db861862ec82c6f21f4acdd6d835073"},
 ]
 
 [package.extras]
-dev = ["attribution (==1.6.2)", "black (==23.3.0)", "flit (==3.8.0)", "mypy (==1.2.0)", "ufmt (==2.1.0)", "usort (==1.0.6)"]
+dev = ["attribution (==1.8.0)", "black (==24.8.0)", "build (>=1)", "flit (==3.9.0)", "mypy (==1.12.1)", "ufmt (==2.7.3)", "usort (==1.0.8.post1)"]
 
 [[package]]
 name = "dill"
@@ -988,18 +988,18 @@ with-social = ["django-allauth (>=0.40.0,<0.53.0)"]
 
 [[package]]
 name = "django"
-version = "5.0.8"
+version = "5.1.3"
 description = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
 optional = false
 python-versions = ">=3.10"
 files = [
-    {file = "Django-5.0.8-py3-none-any.whl", hash = "sha256:333a7988f7ca4bc14d360d3d8f6b793704517761ae3813b95432043daec22a45"},
-    {file = "Django-5.0.8.tar.gz", hash = "sha256:ebe859c9da6fead9c9ee6dbfa4943b04f41342f4cea2c4d8c978ef0d10694f2b"},
+    {file = "Django-5.1.3-py3-none-any.whl", hash = "sha256:8b38a9a12da3ae00cb0ba72da985ec4b14de6345046b1e174b1fd7254398f818"},
+    {file = "Django-5.1.3.tar.gz", hash = "sha256:c0fa0e619c39325a169208caef234f90baa925227032ad3f44842ba14d75234a"},
 ]
 
 [package.dependencies]
 argon2-cffi = {version = ">=19.1.0", optional = true, markers = "extra == \"argon2\""}
-asgiref = ">=3.7.0,<4"
+asgiref = ">=3.8.1,<4"
 sqlparse = ">=0.3.1"
 tzdata = {version = "*", markers = "sys_platform == \"win32\""}
 
@@ -1043,19 +1043,6 @@ Django = ">=3.2"
 
 [package.extras]
 drf = ["django-rest-framework", "rest-framework-generic-relations"]
-
-[[package]]
-name = "django-admin-actions"
-version = "0.1.1"
-description = "Display Django admin custom actions in change list, change form or per row in change list."
-optional = false
-python-versions = "*"
-files = [
-    {file = "django-admin-actions-0.1.1.tar.gz", hash = "sha256:4a10875f31b24093a1067c49e880b74da2f4fcc39f8824db0690579b9df0904f"},
-]
-
-[package.dependencies]
-django = "*"
 
 [[package]]
 name = "django-admin-extra-buttons"
@@ -1184,34 +1171,22 @@ Django = ">=3.2"
 
 [[package]]
 name = "django-celery-beat"
-version = "2.6.0"
+version = "2.7.0"
 description = "Database-backed Periodic Tasks."
 optional = false
-python-versions = "*"
+python-versions = ">=3.8"
 files = [
-    {file = "django-celery-beat-2.6.0.tar.gz", hash = "sha256:f75b2d129731f1214be8383e18fae6bfeacdb55dffb2116ce849222c0106f9ad"},
+    {file = "django_celery_beat-2.7.0-py3-none-any.whl", hash = "sha256:851c680d8fbf608ca5fecd5836622beea89fa017bc2b3f94a5b8c648c32d84b1"},
+    {file = "django_celery_beat-2.7.0.tar.gz", hash = "sha256:8482034925e09b698c05ad61c36ed2a8dbc436724a3fe119215193a4ca6dc967"},
 ]
 
 [package.dependencies]
 celery = ">=5.2.3,<6.0"
 cron-descriptor = ">=1.2.32"
-Django = ">=2.2,<5.1"
+Django = ">=2.2,<5.2"
 django-timezone-field = ">=5.0"
 python-crontab = ">=2.3.4"
 tzdata = "*"
-
-[[package]]
-name = "django-classy-doc"
-version = "0.0.8"
-description = "Django package to generate ccbv.co.uk-style documentation for your own code"
-optional = false
-python-versions = "*"
-files = [
-    {file = "django_classy_doc-0.0.8.tar.gz", hash = "sha256:301ea41dcb7b758923cef382cc06837528c083718f43d59748dd4dfd5c713163"},
-]
-
-[package.dependencies]
-Django = ">=3.2"
 
 [[package]]
 name = "django-classy-tags"
@@ -1253,22 +1228,26 @@ Django = ">=2.2"
 
 [[package]]
 name = "django-comments-xtd"
-version = "2.10.0"
-description = "Django Comments Framework extension app with thread support, follow up notifications and email confirmations."
+version = "2.10.1"
+description = ""
 optional = false
 python-versions = "*"
-files = [
-    {file = "django_comments_xtd-2.10.0-py3-none-any.whl", hash = "sha256:d9e670931a427028a7b8f4f2e6a737b014bf83d713368bd6ff4823bc2caca04e"},
-    {file = "django_comments_xtd-2.10.0.tar.gz", hash = "sha256:6217c41ed398942c07a44374a308cd9bf541f5444d3d25b3eaae0447c4a66d48"},
-]
+files = []
+develop = false
 
 [package.dependencies]
-Django = ">=3,<5.1"
+Django = ">=3,<5.2"
 django-contrib-comments = ">=2.2,<2.3"
 djangorestframework = ">=3.12,<3.16"
 docutils = "*"
 pytz = "*"
 six = "*"
+
+[package.source]
+type = "git"
+url = "https://github.com/danirus/django-comments-xtd"
+reference = "HEAD"
+resolved_reference = "4b8f7a6bbfb30394bac84b3f7fac5e60ae68ffef"
 
 [[package]]
 name = "django-compressor"
@@ -1411,17 +1390,17 @@ pytz = "*"
 
 [[package]]
 name = "django-debug-toolbar"
-version = "3.8.1"
+version = "4.4.6"
 description = "A configurable set of panels that display various debug information about the current request/response."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "django_debug_toolbar-3.8.1-py3-none-any.whl", hash = "sha256:879f8a4672d41621c06a4d322dcffa630fc4df056cada6e417ed01db0e5e0478"},
-    {file = "django_debug_toolbar-3.8.1.tar.gz", hash = "sha256:24ef1a7d44d25e60d7951e378454c6509bf536dce7e7d9d36e7c387db499bc27"},
+    {file = "django_debug_toolbar-4.4.6-py3-none-any.whl", hash = "sha256:3beb671c9ec44ffb817fad2780667f172bd1c067dbcabad6268ce39a81335f45"},
+    {file = "django_debug_toolbar-4.4.6.tar.gz", hash = "sha256:36e421cb908c2f0675e07f9f41e3d1d8618dc386392ec82d23bcfcd5d29c7044"},
 ]
 
 [package.dependencies]
-django = ">=3.2.4"
+django = ">=4.2.9"
 sqlparse = ">=0.2"
 
 [[package]]
@@ -1471,20 +1450,6 @@ type = "git"
 url = "https://github.com/SamuelJennings/django-easy-icons"
 reference = "HEAD"
 resolved_reference = "13094788f188dec7d87174063b1d7791cce544c2"
-
-[[package]]
-name = "django-el-pagination"
-version = "4.0.0"
-description = "Django pagination tools supporting Ajax, multiple and lazy pagination, Twitter-style and Digg-style pagination."
-optional = false
-python-versions = "*"
-files = [
-    {file = "django-el-pagination-4.0.0.tar.gz", hash = "sha256:eb9a5be4cd46d1b43c1a5f3732fc428a3eb168b72ce122b7506e3da615187384"},
-    {file = "django_el_pagination-4.0.0-py2.py3-none-any.whl", hash = "sha256:61d76242a29de5705f01f0ffa6df9af436b978839ea39fd411269a30a410dfc0"},
-]
-
-[package.dependencies]
-django = ">=3.2.0"
 
 [[package]]
 name = "django-entangled"
@@ -1573,7 +1538,7 @@ anytree = "^2.12.1"
 type = "git"
 url = "https://github.com/SamuelJennings/django-flex-menus"
 reference = "HEAD"
-resolved_reference = "ffc496f86c9fb3053a4ca83951247feeb29d5ecc"
+resolved_reference = "d060553e382feb15701c61874f8185f3234a682d"
 
 [[package]]
 name = "django-fluent-comments"
@@ -1598,13 +1563,13 @@ threadedcomments = ["django-threadedcomments (>=1.2)"]
 
 [[package]]
 name = "django-formset"
-version = "1.5"
+version = "1.5.5"
 description = "The missing widgets and form manipulation library for Django"
 optional = false
 python-versions = "*"
 files = [
-    {file = "django_formset-1.5-py3-none-any.whl", hash = "sha256:41a8bd11ca82f8d0f4846f5bd3e45244f45b875788b97e86359bbc9c43af408e"},
-    {file = "django_formset-1.5.tar.gz", hash = "sha256:e9c6e412bdf916a9baf8bc2de783a5d982234519216783125305fba7d555e195"},
+    {file = "django_formset-1.5.5-py3-none-any.whl", hash = "sha256:a1ee0c82e4d5cc6214ec5f85b716a8f87569ed3a48254016bda05721837bf4ea"},
+    {file = "django_formset-1.5.5.tar.gz", hash = "sha256:cfa044847e859490a3caec60092b0bcacd71449f862543c8a0ed932ec52a97ee"},
 ]
 
 [package.dependencies]
@@ -1667,28 +1632,30 @@ async-rq = ["django-rq (>=0.6.0)"]
 
 [[package]]
 name = "django-import-export"
-version = "4.1.1"
+version = "4.3.1"
 description = "Django application and library for importing and exporting data with included admin integration."
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 files = [
-    {file = "django_import_export-4.1.1-py3-none-any.whl", hash = "sha256:730ae2443a02b1ba27d8dba078a27ae9123adfcabb78161b4f130843607b3df9"},
-    {file = "django_import_export-4.1.1.tar.gz", hash = "sha256:16ecc5a9f0df46bde6eb278a3e65ebda0ee1db55656f36440e9fb83f40ab85a3"},
+    {file = "django_import_export-4.3.1-py3-none-any.whl", hash = "sha256:7cd9165851872c8b0eb6ce71029f1e92411b757c2a2e69e7a7ea12e6274c173a"},
+    {file = "django_import_export-4.3.1.tar.gz", hash = "sha256:9e47bc3bf632d930870dab221c5ef0bb02c5d5efd3720c4607c08f3f946a1caa"},
 ]
 
 [package.dependencies]
-diff-match-patch = "*"
-Django = ">=3.2"
-tablib = "3.5.0"
+diff-match-patch = "20241021"
+Django = ">=4.2"
+tablib = "3.7.0"
 
 [package.extras]
-all = ["tablib[all] (==3.5.0)"]
+all = ["tablib[all]"]
 cli = ["tablib[cli]"]
+docs = ["openpyxl (==3.1.5)", "sphinx (==8.1.3)", "sphinx-rtd-theme (==3.0.1)"]
 ods = ["tablib[ods]"]
 pandas = ["tablib[pandas]"]
-xls = ["tablib[xls] (==3.5.0)"]
-xlsx = ["tablib[xlsx] (==3.5.0)"]
-yaml = ["tablib[yaml] (==3.5.0)"]
+tests = ["chardet (==5.2.0)", "coverage (==7.6.4)", "django-extensions (==3.2.3)", "memory-profiler (==0.61.0)", "mysqlclient (==2.2.5)", "psycopg2-binary (==2.9.10)", "pytz (==2024.2)", "setuptools-scm (==8.1.0)", "tablib[all] (>=3.7.0)"]
+xls = ["tablib[xls]"]
+xlsx = ["tablib[xlsx]"]
+yaml = ["tablib[yaml]"]
 
 [[package]]
 name = "django-invitations"
@@ -1889,6 +1856,24 @@ Django = ">=3.2.0"
 django-extensions = ">=2.0.8"
 
 [[package]]
+name = "django-pandas"
+version = "0.6.7"
+description = "Tools for working with pydata.pandas in your Django projects"
+optional = false
+python-versions = "*"
+files = [
+    {file = "django-pandas-0.6.7.tar.gz", hash = "sha256:f64fdf4aec1ff36f853a87400482f2f7826c403a2582a7429610a3eae97dca02"},
+    {file = "django_pandas-0.6.7-py3-none-any.whl", hash = "sha256:09db19db618591da76a555b8cf01cef632856261c5d39e47d3ce0a172bac1829"},
+]
+
+[package.dependencies]
+pandas = ">=0.14.1"
+six = ">=1.15.0"
+
+[package.extras]
+test = ["coverage (==5.4)", "pandas (>=0.20.1)", "semver (==2.10.1)"]
+
+[[package]]
 name = "django-parler"
 version = "2.3"
 description = "Simple Django model translations without nasty hacks, featuring nice admin integration."
@@ -1901,6 +1886,22 @@ files = [
 
 [package.dependencies]
 Django = ">=2.2"
+
+[[package]]
+name = "django-parler-rest"
+version = "2.2"
+description = "Multilingual support for django-rest-framework"
+optional = false
+python-versions = "*"
+files = [
+    {file = "django-parler-rest-2.2.tar.gz", hash = "sha256:58d0d7155964214dfbdb72783eff6a200c5e786e2d4f3cd74ea463d56cb10e9c"},
+    {file = "django_parler_rest-2.2-py2.py3-none-any.whl", hash = "sha256:3cba9a47ec64771394e99ca49f9bef6f7dd76c1e39634fd634d2c1050fb9630a"},
+]
+
+[package.dependencies]
+django = ">=2.2"
+django-parler = ">=1.9.2"
+djangorestframework = ">=3.5"
 
 [[package]]
 name = "django-partial-date"
@@ -1973,6 +1974,20 @@ type = "git"
 url = "https://github.com/SamuelJennings/django-polymorphic-treebeard"
 reference = "HEAD"
 resolved_reference = "ddb33709550b9ac2dad790f716e67bab7c644138"
+
+[[package]]
+name = "django-pwa"
+version = "2.0.1"
+description = "A Django app to include a manifest.json and Service Worker instance to enable progressive web app behavior"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "django_pwa-2.0.1-py3-none-any.whl", hash = "sha256:41dc931c645c6125c556bd753205ca051aa48e5d46edbf281003594f3d76d4a3"},
+    {file = "django_pwa-2.0.1.tar.gz", hash = "sha256:5539fabb41fe189cc2a82cb1f0f889b45671a8144d7b5bb5206a9ddd0fddb3c2"},
+]
+
+[package.dependencies]
+django = ">=3.2"
 
 [[package]]
 name = "django-redis"
@@ -2077,20 +2092,6 @@ type = "git"
 url = "https://github.com/SamuelJennings/django-setup-tools"
 reference = "HEAD"
 resolved_reference = "c6b5e92130304997c548507221b7ad0727656ed7"
-
-[[package]]
-name = "django-simple-menu"
-version = "2.1.3"
-description = "Simple, yet powerful, code-based menus for Django applications"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "django-simple-menu-2.1.3.tar.gz", hash = "sha256:4246c12fa267598e4652793dfec5d123f97f82430965bd34a8c42d38d5be1801"},
-    {file = "django_simple_menu-2.1.3-py3-none-any.whl", hash = "sha256:371ed124cc35c72496c2b99672fac759d268950454984c7f15f2cbdedb4f2840"},
-]
-
-[package.dependencies]
-Django = ">=3.2"
 
 [[package]]
 name = "django-social-share"
@@ -2298,6 +2299,17 @@ python-versions = "*"
 files = [
     {file = "django-webpack-loader-3.0.1.tar.gz", hash = "sha256:51331b33da76688eb4d3bf3ea3bb56434b0c1dfb2dcd88cbfb0a39618f68dd7a"},
     {file = "django_webpack_loader-3.0.1-py2.py3-none-any.whl", hash = "sha256:d65b48c46e9e02b66255b1459c1e7a6664b4d3a6874b0b1e9d1d92518e6e999c"},
+]
+
+[[package]]
+name = "django-widget-tweaks"
+version = "1.5.0"
+description = "Tweak the form field rendering in templates, not in python-level form definitions."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "django-widget-tweaks-1.5.0.tar.gz", hash = "sha256:1c2180681ebb994e922c754804c7ffebbe1245014777ac47897a81f57cc629c7"},
+    {file = "django_widget_tweaks-1.5.0-py3-none-any.whl", hash = "sha256:a41b7b2f05bd44d673d11ebd6c09a96f1d013ee98121cb98c384fe84e33b881e"},
 ]
 
 [[package]]
@@ -2726,7 +2738,7 @@ develop = false
 celery = "^5.4.0"
 crispy-bootstrap5 = "^2024.2"
 dj-rest-auth = "^3.0.0"
-django = {version = "^5", extras = ["argon2"]}
+django = {version = "^5.1.3", extras = ["argon2"]}
 django-account-management = {git = "https://github.com/SamuelJennings/django-account-management"}
 django-activity-stream = "^2.0.0"
 django-admin-extra-buttons = "^1.5.8"
@@ -2738,7 +2750,7 @@ django-celery-beat = "^2.5.0"
 django-classy-tags = "^4.1.0"
 django-cleanup = "^8.1.0"
 django-client-side-image-cropping = "^0.1.10"
-django-comments-xtd = "^2.10.0"
+django-comments-xtd = {git = "https://github.com/danirus/django-comments-xtd"}
 django-compressor = "^4.5.1"
 django-contact-form = "^2.1"
 django-content-license = {git = "https://github.com/Geoluminate/django-content-license"}
@@ -2748,7 +2760,6 @@ django-crispy-forms = "^2.3"
 django-dbbackup = "^4.0.2"
 django-downloadview = "^2.3.0"
 django-easy-icons = {git = "https://github.com/SamuelJennings/django-easy-icons"}
-django-el-pagination = "^4.0.0"
 django-entangled = "^0.5.4"
 django-environ = "^0.10.0"
 django-filter = "^24.3"
@@ -2768,17 +2779,18 @@ django-meta = "^2.1.0"
 django-migration-zero = "^2.0.0"
 django-model-utils = "^4.3.1"
 django-organizations = "^2.1.0"
+django-pandas = "^0.6.7"
 django-parler = "^2.3"
-django-partial-date = "^1.3.2"
+django-parler-rest = "^2.2"
 django-pint = "^0.7.3"
 django-polymorphic-treebeard = {git = "https://github.com/SamuelJennings/django-polymorphic-treebeard"}
+django-pwa = "^2.0.1"
 django-redis = "^5.2.0"
 django-research-vocabs = {git = "https://github.com/Geoluminate/django-research-vocabs"}
 django-rest-polymorphic = "^0.1.10"
 django-sekizai = "^4.1.0"
 django-select2 = "^8.1.1"
 django-setup-tools = {git = "https://github.com/SamuelJennings/django-setup-tools"}
-django-simple-menu = "^2.1.1"
 django-social-share = "^2.3.0"
 django-solo = "^2.2.0"
 django-split-settings = "^1.2.0"
@@ -2787,6 +2799,7 @@ django-tables2 = "^2.7.0"
 django-template-partials = "^24.2"
 django-treebeard = "^4.7.1"
 django-webpack-loader = "^3.0.1"
+django-widget-tweaks = "^1.5.0"
 djangorestframework = "^3.14.0"
 djangorestframework-gis = "^1.0"
 drf-access-policy = "^1.5.0"
@@ -2801,11 +2814,13 @@ faker = "^24.1.0"
 flower = "^1.2.0"
 gunicorn = "^20.1.0"
 lxml = "^5.1.0"
-neapolitan = "^24.4"
+neapolitan = "24.7"
 psycopg2-binary = "^2.9.5"
 pyyaml = "^6.0"
 redis = "^4.5.2"
+rest-pandas = "^1.1.0"
 shortuuid = "^1.0.13"
+tablib = {version = "^3.7.0", extras = ["all"]}
 tldextract = "^3.4.0"
 whitenoise = "^6.4.0"
 
@@ -2813,7 +2828,7 @@ whitenoise = "^6.4.0"
 type = "git"
 url = "https://github.com/Geoluminate/geoluminate"
 reference = "HEAD"
-resolved_reference = "01d04bbb190ed1b10429127e50acc78de84e4bca"
+resolved_reference = "a62f0fc982fac1a90ef40d40dff6b45c85f8aa0e"
 
 [[package]]
 name = "geoluminate-docs"
@@ -2861,7 +2876,7 @@ pyproj = "^3.6.1"
 type = "git"
 url = "https://github.com/Geoluminate/earth-science"
 reference = "HEAD"
-resolved_reference = "32f393521d996b5540d1711c5cc67b0370dcbaae"
+resolved_reference = "d9818ec15e41481e2f1a9dd8e6bd57ba6c638551"
 
 [[package]]
 name = "gunicorn"
@@ -3736,13 +3751,13 @@ testing-docutils = ["pygments", "pytest (>=7,<8)", "pytest-param-files (>=0.3.4,
 
 [[package]]
 name = "neapolitan"
-version = "24.6"
+version = "24.7"
 description = "Neapolitan: quick CRUD views for Django."
 optional = false
 python-versions = "*"
 files = [
-    {file = "neapolitan-24.6-py2.py3-none-any.whl", hash = "sha256:2315b23fdfac09c380fd3e3899af237b77db702f60e6779e66dd9f133bce571b"},
-    {file = "neapolitan-24.6.tar.gz", hash = "sha256:0c84963a4b5cab2411952ee5bd939adbb8987ef27b3a53ca1399ab607b691cab"},
+    {file = "neapolitan-24.7-py2.py3-none-any.whl", hash = "sha256:2b3bf2490dce77819c0c46f2e4841820e1f68df9e745a84837b818395f3b7fdb"},
+    {file = "neapolitan-24.7.tar.gz", hash = "sha256:4081f1b4fa7e7f9142688ab7efde3b24af3fb262d72f2fb96af834d8481851bf"},
 ]
 
 [package.dependencies]
@@ -3927,40 +3942,53 @@ files = [
 
 [[package]]
 name = "pandas"
-version = "2.2.2"
+version = "2.2.3"
 description = "Powerful data structures for data analysis, time series, and statistics"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "pandas-2.2.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:90c6fca2acf139569e74e8781709dccb6fe25940488755716d1d354d6bc58bce"},
-    {file = "pandas-2.2.2-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:c7adfc142dac335d8c1e0dcbd37eb8617eac386596eb9e1a1b77791cf2498238"},
-    {file = "pandas-2.2.2-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:4abfe0be0d7221be4f12552995e58723c7422c80a659da13ca382697de830c08"},
-    {file = "pandas-2.2.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8635c16bf3d99040fdf3ca3db669a7250ddf49c55dc4aa8fe0ae0fa8d6dcc1f0"},
-    {file = "pandas-2.2.2-cp310-cp310-musllinux_1_1_aarch64.whl", hash = "sha256:40ae1dffb3967a52203105a077415a86044a2bea011b5f321c6aa64b379a3f51"},
-    {file = "pandas-2.2.2-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:8e5a0b00e1e56a842f922e7fae8ae4077aee4af0acb5ae3622bd4b4c30aedf99"},
-    {file = "pandas-2.2.2-cp310-cp310-win_amd64.whl", hash = "sha256:ddf818e4e6c7c6f4f7c8a12709696d193976b591cc7dc50588d3d1a6b5dc8772"},
-    {file = "pandas-2.2.2-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:696039430f7a562b74fa45f540aca068ea85fa34c244d0deee539cb6d70aa288"},
-    {file = "pandas-2.2.2-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:8e90497254aacacbc4ea6ae5e7a8cd75629d6ad2b30025a4a8b09aa4faf55151"},
-    {file = "pandas-2.2.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:58b84b91b0b9f4bafac2a0ac55002280c094dfc6402402332c0913a59654ab2b"},
-    {file = "pandas-2.2.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6d2123dc9ad6a814bcdea0f099885276b31b24f7edf40f6cdbc0912672e22eee"},
-    {file = "pandas-2.2.2-cp311-cp311-musllinux_1_1_aarch64.whl", hash = "sha256:2925720037f06e89af896c70bca73459d7e6a4be96f9de79e2d440bd499fe0db"},
-    {file = "pandas-2.2.2-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:0cace394b6ea70c01ca1595f839cf193df35d1575986e484ad35c4aeae7266c1"},
-    {file = "pandas-2.2.2-cp311-cp311-win_amd64.whl", hash = "sha256:873d13d177501a28b2756375d59816c365e42ed8417b41665f346289adc68d24"},
-    {file = "pandas-2.2.2-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:9dfde2a0ddef507a631dc9dc4af6a9489d5e2e740e226ad426a05cabfbd7c8ef"},
-    {file = "pandas-2.2.2-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:e9b79011ff7a0f4b1d6da6a61aa1aa604fb312d6647de5bad20013682d1429ce"},
-    {file = "pandas-2.2.2-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:1cb51fe389360f3b5a4d57dbd2848a5f033350336ca3b340d1c53a1fad33bcad"},
-    {file = "pandas-2.2.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:eee3a87076c0756de40b05c5e9a6069c035ba43e8dd71c379e68cab2c20f16ad"},
-    {file = "pandas-2.2.2-cp312-cp312-musllinux_1_1_aarch64.whl", hash = "sha256:3e374f59e440d4ab45ca2fffde54b81ac3834cf5ae2cdfa69c90bc03bde04d76"},
-    {file = "pandas-2.2.2-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:43498c0bdb43d55cb162cdc8c06fac328ccb5d2eabe3cadeb3529ae6f0517c32"},
-    {file = "pandas-2.2.2-cp312-cp312-win_amd64.whl", hash = "sha256:d187d355ecec3629624fccb01d104da7d7f391db0311145817525281e2804d23"},
-    {file = "pandas-2.2.2-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:0ca6377b8fca51815f382bd0b697a0814c8bda55115678cbc94c30aacbb6eff2"},
-    {file = "pandas-2.2.2-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:9057e6aa78a584bc93a13f0a9bf7e753a5e9770a30b4d758b8d5f2a62a9433cd"},
-    {file = "pandas-2.2.2-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:001910ad31abc7bf06f49dcc903755d2f7f3a9186c0c040b827e522e9cef0863"},
-    {file = "pandas-2.2.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:66b479b0bd07204e37583c191535505410daa8df638fd8e75ae1b383851fe921"},
-    {file = "pandas-2.2.2-cp39-cp39-musllinux_1_1_aarch64.whl", hash = "sha256:a77e9d1c386196879aa5eb712e77461aaee433e54c68cf253053a73b7e49c33a"},
-    {file = "pandas-2.2.2-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:92fd6b027924a7e178ac202cfbe25e53368db90d56872d20ffae94b96c7acc57"},
-    {file = "pandas-2.2.2-cp39-cp39-win_amd64.whl", hash = "sha256:640cef9aa381b60e296db324337a554aeeb883ead99dc8f6c18e81a93942f5f4"},
-    {file = "pandas-2.2.2.tar.gz", hash = "sha256:9e79019aba43cb4fda9e4d983f8e88ca0373adbb697ae9c6c43093218de28b54"},
+    {file = "pandas-2.2.3-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:1948ddde24197a0f7add2bdc4ca83bf2b1ef84a1bc8ccffd95eda17fd836ecb5"},
+    {file = "pandas-2.2.3-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:381175499d3802cde0eabbaf6324cce0c4f5d52ca6f8c377c29ad442f50f6348"},
+    {file = "pandas-2.2.3-cp310-cp310-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:d9c45366def9a3dd85a6454c0e7908f2b3b8e9c138f5dc38fed7ce720d8453ed"},
+    {file = "pandas-2.2.3-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:86976a1c5b25ae3f8ccae3a5306e443569ee3c3faf444dfd0f41cda24667ad57"},
+    {file = "pandas-2.2.3-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:b8661b0238a69d7aafe156b7fa86c44b881387509653fdf857bebc5e4008ad42"},
+    {file = "pandas-2.2.3-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:37e0aced3e8f539eccf2e099f65cdb9c8aa85109b0be6e93e2baff94264bdc6f"},
+    {file = "pandas-2.2.3-cp310-cp310-win_amd64.whl", hash = "sha256:56534ce0746a58afaf7942ba4863e0ef81c9c50d3f0ae93e9497d6a41a057645"},
+    {file = "pandas-2.2.3-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:66108071e1b935240e74525006034333f98bcdb87ea116de573a6a0dccb6c039"},
+    {file = "pandas-2.2.3-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:7c2875855b0ff77b2a64a0365e24455d9990730d6431b9e0ee18ad8acee13dbd"},
+    {file = "pandas-2.2.3-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:cd8d0c3be0515c12fed0bdbae072551c8b54b7192c7b1fda0ba56059a0179698"},
+    {file = "pandas-2.2.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c124333816c3a9b03fbeef3a9f230ba9a737e9e5bb4060aa2107a86cc0a497fc"},
+    {file = "pandas-2.2.3-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:63cc132e40a2e084cf01adf0775b15ac515ba905d7dcca47e9a251819c575ef3"},
+    {file = "pandas-2.2.3-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:29401dbfa9ad77319367d36940cd8a0b3a11aba16063e39632d98b0e931ddf32"},
+    {file = "pandas-2.2.3-cp311-cp311-win_amd64.whl", hash = "sha256:3fc6873a41186404dad67245896a6e440baacc92f5b716ccd1bc9ed2995ab2c5"},
+    {file = "pandas-2.2.3-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:b1d432e8d08679a40e2a6d8b2f9770a5c21793a6f9f47fdd52c5ce1948a5a8a9"},
+    {file = "pandas-2.2.3-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:a5a1595fe639f5988ba6a8e5bc9649af3baf26df3998a0abe56c02609392e0a4"},
+    {file = "pandas-2.2.3-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:5de54125a92bb4d1c051c0659e6fcb75256bf799a732a87184e5ea503965bce3"},
+    {file = "pandas-2.2.3-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fffb8ae78d8af97f849404f21411c95062db1496aeb3e56f146f0355c9989319"},
+    {file = "pandas-2.2.3-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:6dfcb5ee8d4d50c06a51c2fffa6cff6272098ad6540aed1a76d15fb9318194d8"},
+    {file = "pandas-2.2.3-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:062309c1b9ea12a50e8ce661145c6aab431b1e99530d3cd60640e255778bd43a"},
+    {file = "pandas-2.2.3-cp312-cp312-win_amd64.whl", hash = "sha256:59ef3764d0fe818125a5097d2ae867ca3fa64df032331b7e0917cf5d7bf66b13"},
+    {file = "pandas-2.2.3-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:f00d1345d84d8c86a63e476bb4955e46458b304b9575dcf71102b5c705320015"},
+    {file = "pandas-2.2.3-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:3508d914817e153ad359d7e069d752cdd736a247c322d932eb89e6bc84217f28"},
+    {file = "pandas-2.2.3-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:22a9d949bfc9a502d320aa04e5d02feab689d61da4e7764b62c30b991c42c5f0"},
+    {file = "pandas-2.2.3-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f3a255b2c19987fbbe62a9dfd6cff7ff2aa9ccab3fc75218fd4b7530f01efa24"},
+    {file = "pandas-2.2.3-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:800250ecdadb6d9c78eae4990da62743b857b470883fa27f652db8bdde7f6659"},
+    {file = "pandas-2.2.3-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:6374c452ff3ec675a8f46fd9ab25c4ad0ba590b71cf0656f8b6daa5202bca3fb"},
+    {file = "pandas-2.2.3-cp313-cp313-win_amd64.whl", hash = "sha256:61c5ad4043f791b61dd4752191d9f07f0ae412515d59ba8f005832a532f8736d"},
+    {file = "pandas-2.2.3-cp313-cp313t-macosx_10_13_x86_64.whl", hash = "sha256:3b71f27954685ee685317063bf13c7709a7ba74fc996b84fc6821c59b0f06468"},
+    {file = "pandas-2.2.3-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:38cf8125c40dae9d5acc10fa66af8ea6fdf760b2714ee482ca691fc66e6fcb18"},
+    {file = "pandas-2.2.3-cp313-cp313t-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:ba96630bc17c875161df3818780af30e43be9b166ce51c9a18c1feae342906c2"},
+    {file = "pandas-2.2.3-cp313-cp313t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1db71525a1538b30142094edb9adc10be3f3e176748cd7acc2240c2f2e5aa3a4"},
+    {file = "pandas-2.2.3-cp313-cp313t-musllinux_1_2_aarch64.whl", hash = "sha256:15c0e1e02e93116177d29ff83e8b1619c93ddc9c49083f237d4312337a61165d"},
+    {file = "pandas-2.2.3-cp313-cp313t-musllinux_1_2_x86_64.whl", hash = "sha256:ad5b65698ab28ed8d7f18790a0dc58005c7629f227be9ecc1072aa74c0c1d43a"},
+    {file = "pandas-2.2.3-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:bc6b93f9b966093cb0fd62ff1a7e4c09e6d546ad7c1de191767baffc57628f39"},
+    {file = "pandas-2.2.3-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:5dbca4c1acd72e8eeef4753eeca07de9b1db4f398669d5994086f788a5d7cc30"},
+    {file = "pandas-2.2.3-cp39-cp39-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:8cd6d7cc958a3910f934ea8dbdf17b2364827bb4dafc38ce6eef6bb3d65ff09c"},
+    {file = "pandas-2.2.3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:99df71520d25fade9db7c1076ac94eb994f4d2673ef2aa2e86ee039b6746d20c"},
+    {file = "pandas-2.2.3-cp39-cp39-musllinux_1_2_aarch64.whl", hash = "sha256:31d0ced62d4ea3e231a9f228366919a5ea0b07440d9d4dac345376fd8e1477ea"},
+    {file = "pandas-2.2.3-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:7eee9e7cea6adf3e3d24e304ac6b8300646e2a5d1cd3a3c2abed9101b0846761"},
+    {file = "pandas-2.2.3-cp39-cp39-win_amd64.whl", hash = "sha256:4850ba03528b6dd51d6c5d273c46f183f39a9baf3f0143e566b89450965b105e"},
+    {file = "pandas-2.2.3.tar.gz", hash = "sha256:4f18ba62b61d7e192368b84517265a99b4d7ee8912f8708660fb4a366cc82667"},
 ]
 
 [package.dependencies]
@@ -3969,15 +3997,9 @@ numpy = [
     {version = ">=1.23.2", markers = "python_version == \"3.11\""},
     {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
 ]
-odfpy = {version = ">=1.4.1", optional = true, markers = "extra == \"excel\""}
-openpyxl = {version = ">=3.1.0", optional = true, markers = "extra == \"excel\""}
-python-calamine = {version = ">=0.1.7", optional = true, markers = "extra == \"excel\""}
 python-dateutil = ">=2.8.2"
 pytz = ">=2020.1"
-pyxlsb = {version = ">=1.0.10", optional = true, markers = "extra == \"excel\""}
 tzdata = ">=2022.7"
-xlrd = {version = ">=2.0.1", optional = true, markers = "extra == \"excel\""}
-xlsxwriter = {version = ">=3.0.5", optional = true, markers = "extra == \"excel\""}
 
 [package.extras]
 all = ["PyQt5 (>=5.15.9)", "SQLAlchemy (>=2.0.0)", "adbc-driver-postgresql (>=0.8.0)", "adbc-driver-sqlite (>=0.8.0)", "beautifulsoup4 (>=4.11.2)", "bottleneck (>=1.3.6)", "dataframe-api-compat (>=0.1.7)", "fastparquet (>=2022.12.0)", "fsspec (>=2022.11.0)", "gcsfs (>=2022.11.0)", "html5lib (>=1.1)", "hypothesis (>=6.46.1)", "jinja2 (>=3.1.2)", "lxml (>=4.9.2)", "matplotlib (>=3.6.3)", "numba (>=0.56.4)", "numexpr (>=2.8.4)", "odfpy (>=1.4.1)", "openpyxl (>=3.1.0)", "pandas-gbq (>=0.19.0)", "psycopg2 (>=2.9.6)", "pyarrow (>=10.0.1)", "pymysql (>=1.0.2)", "pyreadstat (>=1.2.0)", "pytest (>=7.3.2)", "pytest-xdist (>=2.2.0)", "python-calamine (>=0.1.7)", "pyxlsb (>=1.0.10)", "qtpy (>=2.3.0)", "s3fs (>=2022.11.0)", "scipy (>=1.10.0)", "tables (>=3.8.0)", "tabulate (>=0.9.0)", "xarray (>=2022.12.0)", "xlrd (>=2.0.1)", "xlsxwriter (>=3.0.5)", "zstandard (>=0.19.0)"]
@@ -4675,115 +4697,6 @@ files = [
 requests = "*"
 
 [[package]]
-name = "python-calamine"
-version = "0.2.3"
-description = "Python binding for Rust's library for reading excel and odf file - calamine"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "python_calamine-0.2.3-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:f292a03591b1cab1537424851b74baa33b0a55affc315248a7592ba3de1c3e83"},
-    {file = "python_calamine-0.2.3-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:6cfbd23d1147f53fd70fddfb38af2a98896ecad069c9a4120e77358a6fc43b39"},
-    {file = "python_calamine-0.2.3-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:847373d0152bafd92b739c911de8c2d23e32ea93d9358bf32b58ed4ace382ae7"},
-    {file = "python_calamine-0.2.3-cp310-cp310-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:1e0dcdc796eb4b4907618392c4b71146812774ca30bf6162a711b63e54214912"},
-    {file = "python_calamine-0.2.3-cp310-cp310-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:b2ee8250638ad174aa22a3776ebd41500cf88af62346f1c857505158d2685852"},
-    {file = "python_calamine-0.2.3-cp310-cp310-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:9ac718eb8e9753b986f329aec5dea964005a79115c622a2671fccd0c563d345a"},
-    {file = "python_calamine-0.2.3-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fa1baf404027779cb298d15939a5268eb3d477c86a7a8f4cad0734ea513876c2"},
-    {file = "python_calamine-0.2.3-cp310-cp310-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:dc36a85f1a182e49fc318b3e91f06f390d3889ce8c843721cb03a68ca4c7e4ce"},
-    {file = "python_calamine-0.2.3-cp310-cp310-musllinux_1_1_aarch64.whl", hash = "sha256:11e2a74da47adc502c776e399972864802a20d358001a1cfaefb13c36a5116c0"},
-    {file = "python_calamine-0.2.3-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:f19c8eb9f2182cca54c274145b6c8409776b7c08ee5be8a61d44f0448dc55192"},
-    {file = "python_calamine-0.2.3-cp310-none-win32.whl", hash = "sha256:37367f85282d87c0d9453cb3caec5a74f2720252bfbc1365d627e9fe12251e56"},
-    {file = "python_calamine-0.2.3-cp310-none-win_amd64.whl", hash = "sha256:6d73ef3131b3a7c3894a533857b02fc50198fb65528cbf869742555d1497ee52"},
-    {file = "python_calamine-0.2.3-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:e5a36cca8b447295e9edddbe055857bdfdec56cb78554455a03bacd78e3c45a0"},
-    {file = "python_calamine-0.2.3-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:7b5b0803c70269d93b67c42f03e5711a7ba02166fd473a6cb89ef71632167154"},
-    {file = "python_calamine-0.2.3-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:73766349215f69854afb092ef891cb1ff253f4b6611342566c469b46516c6ada"},
-    {file = "python_calamine-0.2.3-cp311-cp311-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:3bf4cf41518541016b9442082360a83f3579955a872cfca5cec50acc3101cce5"},
-    {file = "python_calamine-0.2.3-cp311-cp311-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:7f1f6dab7b44deed8cf7b45a6d6d2743b622ba5e21a8b73f52ef1064cc5e3638"},
-    {file = "python_calamine-0.2.3-cp311-cp311-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:1991261d40be3d577ce48c0884c6403aefd1cbef5dcc451e039746aa1d185931"},
-    {file = "python_calamine-0.2.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f675e7f45d9e3f1430f3114701133432c279aba06442e743220f6b648023b5ee"},
-    {file = "python_calamine-0.2.3-cp311-cp311-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:8bb7444454cff2c1ad44e7f1a1be776845cbad8f1210d868c7058d2183b3da74"},
-    {file = "python_calamine-0.2.3-cp311-cp311-musllinux_1_1_aarch64.whl", hash = "sha256:7a604306cd5ceca720f0426deb49192f2ede5eedd1597b7ff4fa9659a36dc462"},
-    {file = "python_calamine-0.2.3-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:b95afd1a1cd3871d472aa117537b8731c1609756347874b251300cff152176a5"},
-    {file = "python_calamine-0.2.3-cp311-none-win32.whl", hash = "sha256:a0ae5a740c9d97b2842d948a91f926a0fab278d247d816fe786219b94507c5a2"},
-    {file = "python_calamine-0.2.3-cp311-none-win_amd64.whl", hash = "sha256:a32c64e74673fb0203ad877c6ba4832de7976fd31c79c637552b567d295ff6b5"},
-    {file = "python_calamine-0.2.3-cp311-none-win_arm64.whl", hash = "sha256:f8c4c9e7ade09b4122c59e3e0da7e5fba872a0e47d3076702185a4ffdf99dec4"},
-    {file = "python_calamine-0.2.3-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:40e5f75c4a7bb2105e3bd65e7b4656e085c6d86e46af1c56468a2f87c2ed639a"},
-    {file = "python_calamine-0.2.3-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:3557bdd36060db4929f42bf4c2c728a76af60ccc95d5c98f2110331d993a7299"},
-    {file = "python_calamine-0.2.3-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:baa75b28686f9dc727d26a97b41c6a2a6ca1d2c679139b6199edbae2782e7c77"},
-    {file = "python_calamine-0.2.3-cp312-cp312-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:d2c8577b00e13f5f43b1c03a2eca01848c3b24467ebaf597729d1e483613c110"},
-    {file = "python_calamine-0.2.3-cp312-cp312-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:4639255202380251833a9ab75c077e687ebbef2120f54030b2dc46eb6ce43105"},
-    {file = "python_calamine-0.2.3-cp312-cp312-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:583656c6a6e8efac8951cd72459e2d84eea5f2617214ebc7e1c96217b44a0fa1"},
-    {file = "python_calamine-0.2.3-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:68fc61b34a1d82d3eee2109d323268dd455107dfb639b027aa5c388e2781273c"},
-    {file = "python_calamine-0.2.3-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:64bb1f212275ed0288f578ee817e5cad4a063cfe5c38bf4c4dc6968957cb95b0"},
-    {file = "python_calamine-0.2.3-cp312-cp312-musllinux_1_1_aarch64.whl", hash = "sha256:a7da299c1676dc34cd5f0adf93e92139afbfb832722d5d50a696ac180885aabb"},
-    {file = "python_calamine-0.2.3-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:599752629ab0c5231159c5bea4f94795dd9b11a36c02dd5bd0613cf257ecd710"},
-    {file = "python_calamine-0.2.3-cp312-none-win32.whl", hash = "sha256:fc73da2863c3251862583d64c0d07fe907f489a86a205e2b6ac94a39a1df1b42"},
-    {file = "python_calamine-0.2.3-cp312-none-win_amd64.whl", hash = "sha256:a8d1662b4767f863c17ea4c1afc3c3fe3174d7b007ae77349d481e6792d142fe"},
-    {file = "python_calamine-0.2.3-cp312-none-win_arm64.whl", hash = "sha256:87af11076364ade6f3da9e33993b6f55ec8dfd5f017129de688fd6d94d7bc24a"},
-    {file = "python_calamine-0.2.3-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:1ae98e1db1d3e74df08291f66d872bf7a4c47d96d39f8f589bff5dab873fbd13"},
-    {file = "python_calamine-0.2.3-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:bc270e8827191e7125600c97b61b3c78ec17d394820c2607c801f93c3475a0aa"},
-    {file = "python_calamine-0.2.3-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c25b18eca7976aac0748fc122fa5109be66801d94b77a7676125fb825a8b67b9"},
-    {file = "python_calamine-0.2.3-cp313-cp313-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:484330c0a917879afc615dc15e5ad925953a726f1a839ce3c35504a5befdae0c"},
-    {file = "python_calamine-0.2.3-cp313-cp313-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:c15ccb20f49eb6f824664ca8ec741edf09679977c2d41d13a02f0532f71a318b"},
-    {file = "python_calamine-0.2.3-cp313-cp313-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:19421a1b8a808333c39b03e007b74c85220700ceed1229449a21d51803d0671b"},
-    {file = "python_calamine-0.2.3-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e0cd8e3069c57a26eea5e6d3addb3dab812cc39b70f0cd11246d6f6592b7f293"},
-    {file = "python_calamine-0.2.3-cp313-cp313-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:d13822a6669a00da497394719a1fa63033ab79858fd653d330a6a7a681a5f6ce"},
-    {file = "python_calamine-0.2.3-cp313-cp313-musllinux_1_1_aarch64.whl", hash = "sha256:767db722eeb9c4d3847a87e4c3c4c9cc3e48938efaed4c507a5dd538a6bc5910"},
-    {file = "python_calamine-0.2.3-cp313-cp313-musllinux_1_1_x86_64.whl", hash = "sha256:4cac4095c25c64ef091fd994f62c5169f3ab0eec39c5bdbd0f319cac633b8183"},
-    {file = "python_calamine-0.2.3-cp313-none-win32.whl", hash = "sha256:79aab3dc2c54525896b24002756e12fe09ec573efc2787285c244520bc17c39f"},
-    {file = "python_calamine-0.2.3-cp313-none-win_amd64.whl", hash = "sha256:bd6606c893493eb555db5e63aef85b87fd806e6a0aa59bad0dbb591b88db2a0d"},
-    {file = "python_calamine-0.2.3-cp313-none-win_arm64.whl", hash = "sha256:9f7b93851c941efba8387bb3c004437541230e8253230868204a079f1dacc21a"},
-    {file = "python_calamine-0.2.3-cp38-cp38-macosx_10_12_x86_64.whl", hash = "sha256:5fa0395816ecff641b5df7ee3a2a953fb0f449a88f780e1c8b762b94578fdb9c"},
-    {file = "python_calamine-0.2.3-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:7397213b734e71434be06c3391ba9c23660215dc5e1c5601b8141f9f623fef84"},
-    {file = "python_calamine-0.2.3-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:be628b380f190b4140801731786f14d59d5a25c54398a724543181e6f46e71d3"},
-    {file = "python_calamine-0.2.3-cp38-cp38-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:d7fc182ebd15dd629d5c355207b125fd2301f109bc6cd2d91b1e67626fdbec1f"},
-    {file = "python_calamine-0.2.3-cp38-cp38-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:0ae983b57379225f44102e0ff2f3724428174d0156ac42b1b69ed7f63ce105b1"},
-    {file = "python_calamine-0.2.3-cp38-cp38-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:98592f79f46cd2d74cd7f4e69ef2031a51138159a5852efe56fa5bc289c106b4"},
-    {file = "python_calamine-0.2.3-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:660347ae698f63f4a495b60411e913cfa448b149e7f51434934782559df6158f"},
-    {file = "python_calamine-0.2.3-cp38-cp38-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:fef87aa0b533c15e22ddb1bd6c257b3de9616c7a4ed3ca00c3c19e4cd8825d08"},
-    {file = "python_calamine-0.2.3-cp38-cp38-musllinux_1_1_aarch64.whl", hash = "sha256:06ab4232827eed11f6a40ddca5dd9015fe73a10c1cf71a4ab2aa26e63f3d1ffb"},
-    {file = "python_calamine-0.2.3-cp38-cp38-musllinux_1_1_x86_64.whl", hash = "sha256:a6f64365bfc2cf6acefc3a618c7f25f64c317be3187d50dba3a2ccdbf405f911"},
-    {file = "python_calamine-0.2.3-cp38-none-win32.whl", hash = "sha256:08b4b35d5943574ab44e87e4ccc2250f14ce7e8b34ad437ff95c1ae845823d0e"},
-    {file = "python_calamine-0.2.3-cp38-none-win_amd64.whl", hash = "sha256:cd9b57326453be8ab52807cde90f3a61a008ed22a69489b41e9edbf66fb86a68"},
-    {file = "python_calamine-0.2.3-cp39-cp39-macosx_10_12_x86_64.whl", hash = "sha256:b439270ac6283a2e00abaae167ed35dececaa73f394bf5be8bf8631f3c9757fc"},
-    {file = "python_calamine-0.2.3-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:38b6d1c315feaacfa95336f7d8d82bdc9fc75854ceae3dd003f075a4cf943582"},
-    {file = "python_calamine-0.2.3-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:411812b0ffcf042be71408ae82b6fcc8dd70e2ee9ba8e8024a70242f7bce305e"},
-    {file = "python_calamine-0.2.3-cp39-cp39-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:4086c857d2cd1bf388bab6f18ca6ae453fb6618b8f3547e76447dc759b9a3a2a"},
-    {file = "python_calamine-0.2.3-cp39-cp39-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:c6b43b8d0b556cb6e9fa9280cc6a61945fcef0005622590c45fa1471705476b5"},
-    {file = "python_calamine-0.2.3-cp39-cp39-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:ce29ebf7b8bd978ef7aaf7755489f67f056327a53ef112a9b24c7a90970f9467"},
-    {file = "python_calamine-0.2.3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:042385ce2ba386ef72bd678ed44ee6d4a5de20c9561c3cd1ecd2a57bfdc874cc"},
-    {file = "python_calamine-0.2.3-cp39-cp39-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:9e55fd471afd1c50ad88b442ef20c57d7efd38c7c300992708aa2cff943a29b9"},
-    {file = "python_calamine-0.2.3-cp39-cp39-musllinux_1_1_aarch64.whl", hash = "sha256:4972a653bd54a4513e9419c26576429b391cdb4b417e7afa46469089ee7c10ee"},
-    {file = "python_calamine-0.2.3-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:206524d140eb7d2999791afd4dfd62ceed531af3cfa487ff2b8b8fdc4b7c2b50"},
-    {file = "python_calamine-0.2.3-cp39-none-win32.whl", hash = "sha256:e5a2c540d631343ba9f16be2afbb7b9fa187b3ced1b292ecc4cfcd51b8859bef"},
-    {file = "python_calamine-0.2.3-cp39-none-win_amd64.whl", hash = "sha256:af65a13551d6575468d7cfcc61028df5d4218796dc4886419049e136148694e6"},
-    {file = "python_calamine-0.2.3-pp310-pypy310_pp73-macosx_10_12_x86_64.whl", hash = "sha256:10f28b56fb84bd622e23f32881fd17b07ab039e7f2cacdfb6101dce702e77970"},
-    {file = "python_calamine-0.2.3-pp310-pypy310_pp73-macosx_11_0_arm64.whl", hash = "sha256:d00cef2e12e4b6660b5fab13f936194263e7e11f707f7951b1867995278051df"},
-    {file = "python_calamine-0.2.3-pp310-pypy310_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:7aebcbd105e49516dd1831f05a0ffca7c9b85f855bf3a9c68f9bc509a212e381"},
-    {file = "python_calamine-0.2.3-pp310-pypy310_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1d5a9182590f5ad12e08a0ba9b72dfe0e6b1780ff95153926e2f4564a6018a14"},
-    {file = "python_calamine-0.2.3-pp310-pypy310_pp73-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:2af3805806088acc7b4d766b58b03d08947a7100e1ef26e55509161adbb36201"},
-    {file = "python_calamine-0.2.3-pp310-pypy310_pp73-musllinux_1_1_aarch64.whl", hash = "sha256:5283e049cc36a0e2442f72d0c2c156dc1e7dc7ca48cba02d52c5cb223525b5c3"},
-    {file = "python_calamine-0.2.3-pp310-pypy310_pp73-musllinux_1_1_x86_64.whl", hash = "sha256:9b7d0ef322f073099ea69e4a3db8c31ff4c4f7cdf4cd333f0577ab0c9320eaf5"},
-    {file = "python_calamine-0.2.3-pp310-pypy310_pp73-win_amd64.whl", hash = "sha256:0bcd07be6953efb08340ccb19b9ae0732b104a9e672edf1ffd2d6b3cc226d815"},
-    {file = "python_calamine-0.2.3-pp38-pypy38_pp73-macosx_10_12_x86_64.whl", hash = "sha256:7a8b12de6e2329643dd6b0a56570b853b94149ca7b1b323db3f69a06f61ec1e2"},
-    {file = "python_calamine-0.2.3-pp38-pypy38_pp73-macosx_11_0_arm64.whl", hash = "sha256:cad27b0e491060dc72653ccd9288301120b23261e3e374f2401cc133547615d4"},
-    {file = "python_calamine-0.2.3-pp38-pypy38_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:303e2f2a1bdfaf428db7aca50d954667078c0cdf1b585ff090dfca2fac9107d7"},
-    {file = "python_calamine-0.2.3-pp38-pypy38_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8a21187b6ebcdabdfe2113df11c2a522b9adc02bcf54bd3ba424ca8c6762cd9b"},
-    {file = "python_calamine-0.2.3-pp38-pypy38_pp73-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:2773094cc62602f6bcc2acd8e905b3e2292daf6a6c24ddbc85f41065604fd9d4"},
-    {file = "python_calamine-0.2.3-pp38-pypy38_pp73-musllinux_1_1_aarch64.whl", hash = "sha256:6de5646a9ec3d24b5089ed174f4dcee13620e65e20dc463097c00e803c81f86f"},
-    {file = "python_calamine-0.2.3-pp38-pypy38_pp73-musllinux_1_1_x86_64.whl", hash = "sha256:e976c948ab18e9fee589994b68878381e1e393d870362babf9634258deb4f13b"},
-    {file = "python_calamine-0.2.3-pp38-pypy38_pp73-win_amd64.whl", hash = "sha256:00fdfd24d13d8b04619dd933be4888bc6a70427e217fb179f3a1f71f2e377219"},
-    {file = "python_calamine-0.2.3-pp39-pypy39_pp73-macosx_10_12_x86_64.whl", hash = "sha256:ab7d60482520508ebf00476cde1b97011084a2e73ac49b2ca32003547e7444c9"},
-    {file = "python_calamine-0.2.3-pp39-pypy39_pp73-macosx_11_0_arm64.whl", hash = "sha256:00c915fc67b0b4e1ddd000d374bd808d947f2ecb0f6051a4669a77abada4b7b8"},
-    {file = "python_calamine-0.2.3-pp39-pypy39_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c869fe1b568a2a970b13dd59a58a13a81a667aff2f365a95a577555585ff14bc"},
-    {file = "python_calamine-0.2.3-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:602ebad70b176a41f22547d6bb99a6d32a531a11dbf74720f3984e6bf98c94ab"},
-    {file = "python_calamine-0.2.3-pp39-pypy39_pp73-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:f6a7c4eb79803ee7cdfd00a0b8267c60c33f25da8bb9275f6168a4dd1a54db76"},
-    {file = "python_calamine-0.2.3-pp39-pypy39_pp73-musllinux_1_1_aarch64.whl", hash = "sha256:68275fed9dcbe90a9185c9919980933e4feea925db178461f0cdb336a2587021"},
-    {file = "python_calamine-0.2.3-pp39-pypy39_pp73-musllinux_1_1_x86_64.whl", hash = "sha256:5efc667fd002db9482a7b9f2c70b41fa69c86e18206132be1a0adcad3c998c17"},
-    {file = "python_calamine-0.2.3-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:d2d845cbcd767c7b85c616849f0c6cd619662adb98d86af2a3fd8630d6acc48d"},
-    {file = "python_calamine-0.2.3.tar.gz", hash = "sha256:d6b3858c3756629d9b4a166de0facfa6c8033fa0b73dcddd3d82144f3170c0dc"},
-]
-
-[[package]]
 name = "python-crontab"
 version = "3.0.0"
 description = "Python Crontab API"
@@ -4824,17 +4737,6 @@ python-versions = "*"
 files = [
     {file = "pytz-2024.1-py2.py3-none-any.whl", hash = "sha256:328171f4e3623139da4983451950b28e95ac706e13f3f2630a879749e7a8b319"},
     {file = "pytz-2024.1.tar.gz", hash = "sha256:2a29735ea9c18baf14b448846bde5a48030ed267578472d8955cd0e7443a9812"},
-]
-
-[[package]]
-name = "pyxlsb"
-version = "1.0.10"
-description = "Excel 2007-2010 Binary Workbook (xlsb) parser"
-optional = false
-python-versions = "*"
-files = [
-    {file = "pyxlsb-1.0.10-py2.py3-none-any.whl", hash = "sha256:87c122a9a622e35ca5e741d2e541201d28af00fb46bec492cfa9586890b120b4"},
-    {file = "pyxlsb-1.0.10.tar.gz", hash = "sha256:8062d1ea8626d3f1980e8b1cfe91a4483747449242ecb61013bc2df85435f685"},
 ]
 
 [[package]]
@@ -5184,6 +5086,21 @@ requests = ">=2.0.0"
 
 [package.extras]
 rsa = ["oauthlib[signedtoken] (>=3.0.0)"]
+
+[[package]]
+name = "rest-pandas"
+version = "1.1.0"
+description = "Serves up pandas dataframes via the Django REST Framework for client-side(i.e. d3.js) visualizations"
+optional = false
+python-versions = "*"
+files = [
+    {file = "rest-pandas-1.1.0.tar.gz", hash = "sha256:13796398565a08c668e0fd31861939df6d0f9cc859b1493308f7cc5c11ea247c"},
+    {file = "rest_pandas-1.1.0-py3-none-any.whl", hash = "sha256:28238165223042d1618490b689fef04740dbdb63adb1ced58e4fbb8af87f63f6"},
+]
+
+[package.dependencies]
+djangorestframework = ">=3.3.1"
+pandas = ">=0.19.0"
 
 [[package]]
 name = "rjsmin"
@@ -5771,24 +5688,46 @@ tests = ["cython", "littleutils", "pygments", "pytest", "typeguard"]
 
 [[package]]
 name = "tablib"
-version = "3.5.0"
+version = "3.7.0"
 description = "Format agnostic tabular data library (XLS, JSON, YAML, CSV, etc.)"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 files = [
-    {file = "tablib-3.5.0-py3-none-any.whl", hash = "sha256:9821caa9eca6062ff7299fa645e737aecff982e6b2b42046928a6413c8dabfd9"},
-    {file = "tablib-3.5.0.tar.gz", hash = "sha256:f6661dfc45e1d4f51fa8a6239f9c8349380859a5bfaa73280645f046d6c96e33"},
+    {file = "tablib-3.7.0-py3-none-any.whl", hash = "sha256:9a6930037cfe0f782377963ca3f2b1dae3fd4cdbf0883848f22f1447e7bb718b"},
+    {file = "tablib-3.7.0.tar.gz", hash = "sha256:f9db84ed398df5109bd69c11d46613d16cc572fb9ad3213f10d95e2b5f12c18e"},
 ]
 
+[package.dependencies]
+odfpy = {version = "*", optional = true, markers = "extra == \"all\""}
+openpyxl = {version = ">=2.6.0", optional = true, markers = "extra == \"all\""}
+pandas = {version = "*", optional = true, markers = "extra == \"all\""}
+pyyaml = {version = "*", optional = true, markers = "extra == \"all\""}
+tabulate = {version = "*", optional = true, markers = "extra == \"all\""}
+xlrd = {version = "*", optional = true, markers = "extra == \"all\""}
+xlwt = {version = "*", optional = true, markers = "extra == \"all\""}
+
 [package.extras]
-all = ["markuppy", "odfpy", "openpyxl (>=2.6.0)", "pandas", "pyyaml", "tabulate", "xlrd", "xlwt"]
+all = ["odfpy", "openpyxl (>=2.6.0)", "pandas", "pyyaml", "tabulate", "xlrd", "xlwt"]
 cli = ["tabulate"]
-html = ["markuppy"]
 ods = ["odfpy"]
 pandas = ["pandas"]
 xls = ["xlrd", "xlwt"]
 xlsx = ["openpyxl (>=2.6.0)"]
 yaml = ["pyyaml"]
+
+[[package]]
+name = "tabulate"
+version = "0.9.0"
+description = "Pretty-print tabular data"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "tabulate-0.9.0-py3-none-any.whl", hash = "sha256:024ca478df22e9340661486f85298cff5f6dcdba14f3813e8830015b9ed1948f"},
+    {file = "tabulate-0.9.0.tar.gz", hash = "sha256:0095b12bf5966de529c0feb1fa08671671b3368eec77d7ef7ab114be2c068b3c"},
+]
+
+[package.extras]
+widechars = ["wcwidth"]
 
 [[package]]
 name = "termcolor"
@@ -6214,17 +6153,6 @@ docs = ["sphinx"]
 test = ["pytest", "pytest-cov"]
 
 [[package]]
-name = "xlsxwriter"
-version = "3.2.0"
-description = "A Python module for creating Excel XLSX files."
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "XlsxWriter-3.2.0-py3-none-any.whl", hash = "sha256:ecfd5405b3e0e228219bcaf24c2ca0915e012ca9464a14048021d21a995d490e"},
-    {file = "XlsxWriter-3.2.0.tar.gz", hash = "sha256:9977d0c661a72866a61f9f7a809e25ebbb0fb7036baa3b9fe74afcfca6b3cb8c"},
-]
-
-[[package]]
 name = "xlwt"
 version = "1.3.0"
 description = "Library to create spreadsheet files compatible with MS Excel 97/2000/XP/2003 XLS files, on any platform, with Python 2.6, 2.7, 3.3+"
@@ -6238,4 +6166,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "2134b13d0b966f2ff11dfb4f1eafa69e011533405f23e959a99a77704792124c"
+content-hash = "bfda46c4a1c2238e3c68e51ab1e10ac84957a0651de9aed3dbf287feffe2fc7f"

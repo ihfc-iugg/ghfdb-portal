@@ -1,0 +1,8 @@
+{% extends "literature/literatureitem_card.html" %}
+{% block footer %}
+  {% if not obj.review %}
+    <c-bs5.button hx-post="{% url "review-create" %}" hx-vals='{"literature": "{{ obj.pk }}"}' icon="review" class="btn btn-secondary" text="{% trans "Start review" %}" />
+  {% else %}
+    <c-bs5.button icon="review" class="btn btn-secondary disabled" text="{{ obj.review.get_status_display }}" />
+  {% endif %}
+{% endblock footer %}
