@@ -6,10 +6,8 @@ from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.utils.translation import gettext as _
 from django_select2.forms import Select2MultipleWidget, Select2Widget
-from geoluminate.contrib.datasets.admin import DatasetAdmin
-from geoluminate.contrib.datasets.models import Dataset
-from geoluminate.contrib.measurements.admin import MeasurementAdmin
-from geoluminate.contrib.samples.admin import SampleAdmin
+from geoluminate.contrib.core.admin import DatasetAdmin, MeasurementAdmin, SampleAdmin
+from geoluminate.contrib.core.models import Dataset
 
 from .importer import HeatFlowParentImporter
 from .models import ChildHeatFlow, HeatFlowInterval, HeatFlowSite, ParentHeatFlow
@@ -55,11 +53,11 @@ class HeatFlowDatasetAdmin(ExtraButtonsMixin, DatasetAdmin):
 
 @admin.register(ParentHeatFlow)
 class HeatFlowAdmin(MeasurementAdmin):
-    list_display = ["q", "q_uncertainty", "corr_HP_flag"]
+    list_display = ["value", "uncertainty", "corr_HP_flag"]
 
     fields = (
         "sample",
-        ("q", "q_uncertainty"),
+        ("value", "uncertainty"),
         "corr_HP_flag",
     )
 
@@ -68,11 +66,9 @@ class HeatFlowAdmin(MeasurementAdmin):
 class ChildHeatFlowAdmin(admin.ModelAdmin):
     list_display = [
         "parent",
-        "qc",
-        "qc_uncertainty",
+        "value",
+        "uncertainty",
     ]
-
-    # list_filter = ["parent__uuid"]
 
     fieldsets = (
         ("", {"fields": ("sample",)}),
@@ -82,9 +78,9 @@ class ChildHeatFlowAdmin(admin.ModelAdmin):
                 "fields": (
                     "parent",
                     "relevant_child",
-                    ("qc", "qc_uncertainty"),
+                    ("value", "uncertainty"),
                     # ("depth_top", "depth_bottom"),
-                    "q_method",
+                    "method",
                 )
             },
         ),

@@ -1,12 +1,8 @@
-# import os
-# from pprint import pprint
 import geoluminate
 from django.utils.translation import gettext_lazy as _
 
 # pprint(INSTALLED_APPS)
 
-
-# pprint(os.environ.__dict__)
 
 LANGUAGES = [
     ("en", _("English")),
@@ -25,6 +21,20 @@ geoluminate.setup(
     ]
 )
 
+EASY_ICONS = globals().get("EASY_ICONS", {})
+
+EASY_ICONS["aliases"].update(
+    {
+        "geology": "fas fa-mountain",
+        "lithology": "fas fa-layer-group",
+        "stratigraphy": "fas fa-layer-group",
+        "geologic_time": "fas fa-clock",
+        "location": "fas fa-map-marker-alt",
+        "map": "fas fa-map-location-dot",
+        "heat_flow": "fas fa-fire",
+        "review": "fas fa-highlighter",
+    }
+)
 
 # DEPLOYMENT_PIPELINE = {}
 
