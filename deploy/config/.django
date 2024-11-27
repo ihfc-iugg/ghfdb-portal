@@ -5,8 +5,6 @@ DJANGO_SUPERUSER_PASSWORD=admin
 DJANGO_SITE_NAME=Global Heat Flow Database
 DJANGO_SITE_DOMAIN=localhost:8000
 DJANGO_ALLOWED_HOSTS=localhost
-DJANGO_CACHE=False
-DJANGO_DEBUG=True
 DJANGO_ROOT_URLCONF=config.urls
 DJANGO_SECRET_KEY=insecure-*ad=sdv!xt-#$=(1@apa)!y^xx@zj%%v(5+&!r*cq#7)2-1x1m
 DJANGO_SECURE_SSL_REDIRECT=False

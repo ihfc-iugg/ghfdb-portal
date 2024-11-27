@@ -97,6 +97,8 @@ class HeatFlowParentImporter(GHFDBImporterMixin, SampleLocationImporterMixin, Ge
         ParentHeatFlow: {
             "field_map": {
                 "sample": HeatFlowSite,
+                "value": "q",
+                "uncertainty": "q_uncertainty",
             },
             "form_kwargs": {
                 "exclude": ["contributors"],
@@ -125,11 +127,14 @@ class HeatFlowParentImporter(GHFDBImporterMixin, SampleLocationImporterMixin, Ge
             "field_map": {
                 "sample": HeatFlowInterval,
                 "parent": ParentHeatFlow,
+                "value": "qc",
+                "uncertainty": "qc_uncertainty",
+                "method": "q_method",
             },
             "form_kwargs": {
                 "exclude": ["contributors"],
                 "widgets": {
-                    "q_method": CustomSelect,
+                    "method": CustomSelect,
                     "tc_strategy": CustomSelect,
                     "tc_source": CustomSelect,
                     "tc_location": CustomSelect,
@@ -182,6 +187,9 @@ class ChildHeatFlowImporter(GHFDBImporterMixin, GeoluminateBaseImporter):
         ChildHeatFlow: {
             "field_map": {
                 "sample": HeatFlowInterval,
+                "value": "qc",
+                "uncertainty": "qc_uncertainty",
+                "method": "q_method",
                 # "parent": ParentHeatFlow,
             },
             "form_kwargs": {

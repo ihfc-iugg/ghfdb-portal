@@ -169,3 +169,22 @@ def savedemo(c):
             ]
         )
     )
+
+
+@task
+def update_deps(c):
+    """
+    Update the project dependencies
+    """
+    packages = [
+        "django-literature",
+        "django-jsonfield-toolkit",
+        "django-polymorphic-treebeard",
+        "django-account-management",
+        "geoluminate-docs",
+        "django-research-vocabs",
+        "django-setup-tools",
+        "django-flex-menus",
+    ]
+
+    c.run(f"poetry update {' '.join(packages)}")
