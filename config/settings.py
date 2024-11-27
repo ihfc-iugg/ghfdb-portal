@@ -21,6 +21,20 @@ geoluminate.setup(
     ]
 )
 
+EASY_ICONS = globals().get("EASY_ICONS", {})
+
+EASY_ICONS["aliases"].update(
+    {
+        "geology": "fas fa-mountain",
+        "lithology": "fas fa-layer-group",
+        "stratigraphy": "fas fa-layer-group",
+        "geologic_time": "fas fa-clock",
+        "location": "fas fa-map-marker-alt",
+        "map": "fas fa-map-location-dot",
+        "heat_flow": "fas fa-fire",
+        "review": "fas fa-highlighter",
+    }
+)
 
 # DEPLOYMENT_PIPELINE = {}
 

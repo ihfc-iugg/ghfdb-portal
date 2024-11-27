@@ -102,6 +102,7 @@ services:
   map:
     image: tanzwutgandalf/whfdb-map:latest
     restart: always
+    pull_policy: always
     environment:
       - VITE_ROOT_API_DOMAIN=${DJANGO_SITE_DOMAIN}
       - VITE_APP_NAME=Global Heat Flow Database
