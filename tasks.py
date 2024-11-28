@@ -177,6 +177,7 @@ def update_deps(c):
     Update the project dependencies
     """
     packages = [
+        "django-easy-icons",
         "django-literature",
         "django-jsonfield-toolkit",
         "django-polymorphic-treebeard",
