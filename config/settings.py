@@ -18,6 +18,7 @@ geoluminate.setup(
         "earth_science.geology.lithology",
         "earth_science.geology.stratigraphy",
         "earth_science.geology.geologic_time",
+        "django_better_admin_arrayfield",
     ]
 )
 
