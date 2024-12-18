@@ -28,12 +28,14 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: ghcr.io/${{ github.repository_owner }}/ghfdb-portal
+          images: ghcr.io/ihfc-iugg/ghfdb-portal
           tags: |
-            type=ref,event=release  # Tag as the latest release
-            type=raw,value=latest   # Tag as latest
+            ${{ github.ref }}  # Use the release tag (e.g., refs/tags/v2024.2) directly
+            latest  # Always tag as latest
           labels: |
             org.opencontainers.image.source=${{ github.repository }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: "📦 Build and push image to GHCR"
         uses: docker/build-push-action@v3

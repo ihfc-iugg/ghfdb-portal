@@ -56,52 +56,17 @@ def docs(c):
 
 
 @task
-def release(c, rule=""):
+def release(c):
     """
     Release a new version of the app using year.release-number versioning.
     """
-    # if rule:
-    #     # bump the current version using the specified rule
-    #     c.run(f"poetry version {rule}")
-
-    # # 1. Get the current version number as a variable
-    # version_short = c.run("poetry version -s", hide=True).stdout.strip()
-    # version = c.run("poetry version", hide=True).stdout.strip()
-
-    # # 2. commit the changes to pyproject.toml
-    # c.run(f'git commit pyproject.toml -m "bump to v{version_short}"')
-
-    # # 3. create a tag and push it to the remote repository
-    # c.run(f'git tag -a v{version_short} -m "{version}"')
-    # c.run("git push --tags")
-    # c.run("git push origin main")
-
-    # # 1. Bump and commit the version
-    # vnum = c.run(f"poetry version {rule} -s", hide=True).stdout.strip()
-    # c.run(f'git commit pyproject.toml -m "bump version v{vnum}"')
-
-    # if rule in ["major", "minor"]:
-    #     # 3. create a tag and push it to the remote repository
-    #     c.run(f'git tag -a v{vnum} -m "{vnum}"')
-    #     c.run("git push --tags")
-
     # 1. Determine the current year
     current_year = datetime.datetime.now().year
 
-    # 2. Get the latest tag to find the current release number
-    # result = c.run(
-    #     f"git tag --list 'v{current_year}.*' --sort=-v:refname",
-    #     hide=True,
-    #     warn=True,
-    # )
-    # tags = result.stdout.strip().splitlines()
-    # version = c.run("poetry version", hide=True).stdout.strip()
+    # # 3. Form the new version string
     year, num = c.run("poetry version -s", hide=True).stdout.strip().split(".")
-
     year = int(year)
     num = int(num)
-
-    # # 3. Form the new version string
     version = f"{current_year}.1" if year != current_year else f"{year}.{num + 1}"
 
     # # 4. Update the version in pyproject.toml
