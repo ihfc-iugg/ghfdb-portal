@@ -1,10 +1,10 @@
 name: Publish container to GitHub Container Registry
 
 on:
-  # release:
-    # types: [released]
-  push:
-    branches: ["main"]
+  release:
+    types: [released]
+  # push:
+    # branches: ["main"]
 
   # Allows you to manually run the workflow
   workflow_dispatch:
