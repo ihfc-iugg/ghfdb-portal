@@ -2,17 +2,15 @@ import random
 
 import factory
 from earth_science.factories.location import BoreholeFactory, GeoDepthIntervalFactory
-from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 from geoluminate.factories import MeasurementFactory
 
 from .models import (
-    ChildConductivity,
+    # ChildConductivity,
     ChildHeatFlow,
     HeatFlowInterval,
     HeatFlowSite,
     ParentHeatFlow,
-    TemperatureGradient,
 )
 
 
@@ -71,8 +69,8 @@ class ChildHeatFlowFactory(MeasurementFactory):
     probe_tilt = factory.Faker("pyfloat", min_value=0, max_value=90)
     water_temperature = factory.Faker("pyfloat", min_value=-10, max_value=1000)
 
-    temperature_gradient = factory.SubFactory("heat_flow.factories.TemperatureGradientFactory")
-    thermal_conductivity = factory.SubFactory("heat_flow.factories.ChildConductivityFactory")
+    # temperature_gradient = factory.SubFactory("heat_flow.factories.TemperatureGradientFactory")
+    # thermal_conductivity = factory.SubFactory("heat_flow.factories.ChildConductivityFactory")
 
     # correction fields
     corr_IS_flag = FuzzyChoice(ChildHeatFlow.corr_IS_flag_vocab.values)
@@ -86,33 +84,33 @@ class ChildHeatFlowFactory(MeasurementFactory):
     corr_HR_flag = FuzzyChoice(ChildHeatFlow.corr_IS_flag_vocab.values)
 
 
-class TemperatureGradientFactory(MeasurementFactory):
-    class Meta:
-        model = "heat_flow.TemperatureGradient"
+# class TemperatureGradientFactory(MeasurementFactory):
+#     class Meta:
+#         model = "heat_flow.TemperatureGradient"
 
-    mean = factory.Faker("pyfloat", min_value=-(10**5), max_value=10**5)
-    uncertainty = factory.Faker("pyfloat", min_value=0, max_value=10**5)
-    corrected_mean = factory.Faker("pyfloat", min_value=-(10**5), max_value=10**5)
-    corrected_uncertainty = factory.Faker("pyfloat", min_value=0, max_value=10**5)
-    method_top = FuzzyChoice(TemperatureGradient.method_top_vocab.values)
-    method_bottom = FuzzyChoice(TemperatureGradient.method_bottom_vocab.values)
-    shutin_top = factory.Faker("pyfloat", min_value=0, max_value=10000)
-    shutin_bottom = factory.Faker("pyfloat", min_value=0, max_value=10000)
-    correction_top = FuzzyChoice(TemperatureGradient.correction_top_vocab.values)
-    correction_bottom = FuzzyChoice(TemperatureGradient.correction_bottom_vocab.values)
-    number = factory.Faker("pyint", min_value=1, max_value=100)
+#     mean = factory.Faker("pyfloat", min_value=-(10**5), max_value=10**5)
+#     uncertainty = factory.Faker("pyfloat", min_value=0, max_value=10**5)
+#     corrected_mean = factory.Faker("pyfloat", min_value=-(10**5), max_value=10**5)
+#     corrected_uncertainty = factory.Faker("pyfloat", min_value=0, max_value=10**5)
+#     method_top = FuzzyChoice(TemperatureGradient.method_top_vocab.values)
+#     method_bottom = FuzzyChoice(TemperatureGradient.method_bottom_vocab.values)
+#     shutin_top = factory.Faker("pyfloat", min_value=0, max_value=10000)
+#     shutin_bottom = factory.Faker("pyfloat", min_value=0, max_value=10000)
+#     correction_top = FuzzyChoice(TemperatureGradient.correction_top_vocab.values)
+#     correction_bottom = FuzzyChoice(TemperatureGradient.correction_bottom_vocab.values)
+#     number = factory.Faker("pyint", min_value=1, max_value=100)
 
 
-class ChildConductivityFactory(DjangoModelFactory):
-    class Meta:
-        model = "heat_flow.ChildConductivity"
+# class ChildConductivityFactory(DjangoModelFactory):
+#     class Meta:
+#         model = "heat_flow.ChildConductivity"
 
-    mean = factory.Faker("pyfloat", min_value=0, max_value=100)
-    uncertainty = factory.Faker("pyfloat", min_value=0, max_value=100)
-    source = FuzzyChoice(ChildConductivity.source_vocab.values)
-    method = FuzzyChoice(ChildConductivity.method_vocab.values)
-    saturation = FuzzyChoice(ChildConductivity.saturation_vocab.values)
-    pT_conditions = FuzzyChoice(ChildConductivity.pT_conditions_vocab.values)
-    pT_function = FuzzyChoice(ChildConductivity.pT_function_vocab, getter=lambda c: c[0])
-    strategy = FuzzyChoice(ChildConductivity.strategy_vocab.values)
-    number = factory.Faker("pyint", min_value=1, max_value=10000)
+#     mean = factory.Faker("pyfloat", min_value=0, max_value=100)
+#     uncertainty = factory.Faker("pyfloat", min_value=0, max_value=100)
+#     source = FuzzyChoice(ChildConductivity.source_vocab.values)
+#     method = FuzzyChoice(ChildConductivity.method_vocab.values)
+#     saturation = FuzzyChoice(ChildConductivity.saturation_vocab.values)
+#     pT_conditions = FuzzyChoice(ChildConductivity.pT_conditions_vocab.values)
+#     pT_function = FuzzyChoice(ChildConductivity.pT_function_vocab, getter=lambda c: c[0])
+#     strategy = FuzzyChoice(ChildConductivity.strategy_vocab.values)
+#     number = factory.Faker("pyint", min_value=1, max_value=10000)
