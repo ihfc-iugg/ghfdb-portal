@@ -179,7 +179,7 @@ class ParentHeatFlow(Measurement):
                 "Heat flow refers to the rate at which heat is transferred from the Earth's interior to its surface. This data is crucial for understanding the geothermal gradient, which indicates how temperature increases with depth beneath the Earth's surface. By analyzing heat flow, scientists can assess the thermal properties of subsurface rocks and fluids, determine the heat generation from radioactive decay within the Earth's crust, and evaluate the potential for geothermal energy resources. This data helps identify areas with higher geothermal potential, guiding the development of geothermal power plants."
             ),
         )
-        filterset_fields = ["q", "corr_HP_flag"]
+        filterset_fields = ["name", "value", "uncertainty", "corr_HP_flag"]
         table_class = "heat_flow.tables.ParentHeatFlowTable"
 
     def save(self, *args, **kwargs):
@@ -757,6 +757,10 @@ class ChildHeatFlow(Measurement):
 
     def get_quality(self):
         """"""
+
+
+# =========== REQUIREMENT =================
+# Convert some vocabulary fields to Vocabulary tables for user with M2M fields.
 
 
 # class TemperatureGradient(Measurement):
