@@ -5,9 +5,11 @@ on:
     types: [released]
   # push:
     # branches: ["main"]
-
+  push:
+    tags:
+      - v20**
   # Allows you to manually run the workflow
-  workflow_dispatch:
+  # workflow_dispatch:
 
 jobs:
   docker:
@@ -30,7 +32,8 @@ jobs:
         with:
           images: ghcr.io/ihfc-iugg/ghfdb-portal
           tags: |
-            ${{ github.ref_name }} latest
+            ${{ github.ref_name }}
+            latest
           labels: |
             org.opencontainers.image.source=${{ github.repository }}
         env:
