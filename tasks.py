@@ -1,3 +1,5 @@
+import datetime
+
 from invoke import task
 
 
@@ -56,67 +58,62 @@ def docs(c):
 @task
 def release(c, rule=""):
     """
-    Create a new git tag and push it to the remote repository.
-
-    .. note::
-        This will create a new tag and push it to the remote repository, which will trigger a new build and deployment of the package to PyPI.
-
-    RULE	    BEFORE	AFTER
-    major	    1.3.0	2.0.0
-    minor	    2.1.4	2.2.0
-    patch	    4.1.1	4.1.2
-    premajor	1.0.2	2.0.0a0
-    preminor	1.0.2	1.1.0a0
-    prepatch	1.0.2	1.0.3a0
-    prerelease	1.0.2	1.0.3a0
-    prerelease	1.0.3a0	1.0.3a1
-    prerelease	1.0.3b0	1.0.3b1
+    Release a new version of the app using year.release-number versioning.
     """
-    if rule:
-        # bump the current version using the specified rule
-        c.run(f"poetry version {rule}")
+    # if rule:
+    #     # bump the current version using the specified rule
+    #     c.run(f"poetry version {rule}")
 
-    # 1. Get the current version number as a variable
-    version_short = c.run("poetry version -s", hide=True).stdout.strip()
-    version = c.run("poetry version", hide=True).stdout.strip()
+    # # 1. Get the current version number as a variable
+    # version_short = c.run("poetry version -s", hide=True).stdout.strip()
+    # version = c.run("poetry version", hide=True).stdout.strip()
 
-    # 2. commit the changes to pyproject.toml
-    c.run(f'git commit pyproject.toml -m "bump to v{version_short}"')
+    # # 2. commit the changes to pyproject.toml
+    # c.run(f'git commit pyproject.toml -m "bump to v{version_short}"')
 
-    # 3. create a tag and push it to the remote repository
-    c.run(f'git tag -a v{version_short} -m "{version}"')
+    # # 3. create a tag and push it to the remote repository
+    # c.run(f'git tag -a v{version_short} -m "{version}"')
+    # c.run("git push --tags")
+    # c.run("git push origin main")
+
+    # # 1. Bump and commit the version
+    # vnum = c.run(f"poetry version {rule} -s", hide=True).stdout.strip()
+    # c.run(f'git commit pyproject.toml -m "bump version v{vnum}"')
+
+    # if rule in ["major", "minor"]:
+    #     # 3. create a tag and push it to the remote repository
+    #     c.run(f'git tag -a v{vnum} -m "{vnum}"')
+    #     c.run("git push --tags")
+
+    # 1. Determine the current year
+    current_year = datetime.datetime.now().year
+
+    # 2. Get the latest tag to find the current release number
+    # result = c.run(
+    #     f"git tag --list 'v{current_year}.*' --sort=-v:refname",
+    #     hide=True,
+    #     warn=True,
+    # )
+    # tags = result.stdout.strip().splitlines()
+    # version = c.run("poetry version", hide=True).stdout.strip()
+    year, num = c.run("poetry version -s", hide=True).stdout.strip().split(".")
+
+    year = int(year)
+    num = int(num)
+
+    # # 3. Form the new version string
+    version = f"{current_year}.1" if year != current_year else f"{year}.{num + 1}"
+
+    # # 4. Update the version in pyproject.toml
+    c.run(f"poetry version {version}")
+
+    # # 5. Commit the change
+    c.run(f'git commit pyproject.toml -m "release v{version}"')
+
+    # # 6. Create a tag and push it
+    c.run(f'git tag -a v{version} -m "Release {version}"')
     c.run("git push --tags")
     c.run("git push origin main")
-
-
-@task
-def runserver(c, f="local", build=False):
-    """
-    Start the development server
-    """
-    print(f"🚀 Starting the {f} server")
-    if build:
-        # print("Locking dependencies")
-        # c.run("poetry lock")
-        print("🚀 Building the images")
-    # print(f"docker compose -f {f}.yml up django {'--build' if build else ''} -d")
-    c.run(f"docker compose -f {f}.yml up django {'--build' if build else ''} -d")
-
-
-@task
-def reset_db(c):
-    """
-    Build the documentation and open it in a live browser
-    """
-    c.run("docker compose -f local.yml run django python manage.py flush")
-
-
-@task
-def run(c, command):
-    """
-    Start the development server
-    """
-    c.run(f"docker compose -f local.yml run django {command}")
 
 
 @task
@@ -140,14 +137,6 @@ def create_fixtures(c, users=75, orgs=25, projects=12):
     c.run(
         f"docker compose -f local.yml run django python manage.py create_fixtures --users {users} --orgs {orgs} --projects {projects}"
     )
-
-
-@task
-def up(c, environment="local", domain=""):
-    """
-    Start the development server
-    """
-    c.run(f"docker compose -f {environment}.yml up -d")
 
 
 @task
