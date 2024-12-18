@@ -30,8 +30,7 @@ jobs:
         with:
           images: ghcr.io/ihfc-iugg/ghfdb-portal
           tags: |
-            ${{ github.ref }}  # Use the release tag (e.g., refs/tags/v2024.2) directly
-            latest  # Always tag as latest
+            ${{ github.ref_name }} latest
           labels: |
             org.opencontainers.image.source=${{ github.repository }}
         env:
