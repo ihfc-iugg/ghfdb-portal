@@ -29,6 +29,7 @@ classifiers = [
 python = ">=3.10,<4.0"
 geoluminate = {git = "https://github.com/Geoluminate/geoluminate"}
 geoluminate-earth-science = {git = "https://github.com/Geoluminate/earth-science"}
+django-browser-reload = "^1.17.0"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.2.1"

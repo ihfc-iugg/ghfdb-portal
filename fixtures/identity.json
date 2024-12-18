@@ -1,0 +1,43 @@
+[
+  {
+    "model": "identity.authoritytranslation",
+    "pk": 1,
+    "fields": {
+      "language_code": "en",
+      "name": "International Heat Flow Commission",
+      "short_name": "IHFC",
+      "description": "The International Heat Flow Commission (IHFC) is a specialized body within the International Association of Seismology and Physics of the Earth's Interior (IASPEI). It plays a pivotal role in advancing geothermal research by promoting the collection, standardization, and dissemination of heat flow data. The IHFC oversees the maintenance and development of the Global Heat Flow Database, ensuring its accuracy, accessibility, and scientific integrity. By fostering international collaboration and providing guidelines for data acquisition and reporting, the IHFC supports studies on Earth's thermal regime, contributing to broader geoscientific research and practical applications in energy and environmental fields.",
+      "master": 1
+    }
+  },
+  {
+    "model": "identity.authority",
+    "pk": 1,
+    "fields": {
+      "url": "https://ihfc-iugg.org",
+      "contact": null,
+      "logo": "",
+      "icon": ""
+    }
+  },
+  {
+    "model": "identity.databasetranslation",
+    "pk": 1,
+    "fields": {
+      "language_code": "en",
+      "name": "Global Heat Flow Database",
+      "short_name": "GHFDB",
+      "description": "The Global Heat Flow Database is a comprehensive collection of geothermal heat flow measurements from around the world. It serves as a critical resource for understanding the Earth's thermal structure and processes, contributing to studies in geodynamics, plate tectonics, and climate history. The database aggregates data from scientific publications, including terrestrial and marine heat flow measurements, offering insights into variations in heat flux across different geological settings. Managed collaboratively by institutions and researchers, it aims to support global research and applications in Earth sciences, energy exploration, and environmental studies.",
+      "master": 1
+    }
+  },
+  {
+    "model": "identity.database",
+    "pk": 1,
+    "fields": {
+      "logo": "",
+      "icon": "",
+      "keywords": []
+    }
+  }
+]
