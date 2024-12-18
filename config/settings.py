@@ -21,6 +21,7 @@ geoluminate.setup(
     ]
 )
 
+
 EASY_ICONS = globals().get("EASY_ICONS", {})
 
 EASY_ICONS["aliases"].update(
@@ -65,6 +66,14 @@ EARTH_SCIENCE_Y_COORD = {
     "max_digits": None,
 }
 
+
+COMPRESS_ENABLED = True
+COMPRESS_OFFLINE = False
+
+# if DEBUG:
+#     INSTALLED_APPS += [
+#         "django_browser_reload",
+#     ]
 
 # DJANGO_SETUP_TOOLS = {
 #     "": {

@@ -1170,6 +1170,21 @@ bleach = {version = ">=5,<6", extras = ["css"]}
 Django = ">=3.2"
 
 [[package]]
+name = "django-browser-reload"
+version = "1.17.0"
+description = "Automatically reload your browser in development."
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "django_browser_reload-1.17.0-py3-none-any.whl", hash = "sha256:d372c12c1c5962c02279a53cac7e8a020c48f104592c637a06d0768b28d2d6be"},
+    {file = "django_browser_reload-1.17.0.tar.gz", hash = "sha256:3667939cde0eee1a6d698dbe3b78cf10b573dabc4e711fb7933f1ba91fb98da4"},
+]
+
+[package.dependencies]
+asgiref = ">=3.6"
+django = ">=4.2"
+
+[[package]]
 name = "django-celery-beat"
 version = "2.7.0"
 description = "Database-backed Periodic Tasks."
@@ -6169,4 +6184,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "bfda46c4a1c2238e3c68e51ab1e10ac84957a0651de9aed3dbf287feffe2fc7f"
+content-hash = "77a747b5b1996f9f20f449ad35ad5230be0e7dd6c82c0247def6571cf2968010"
