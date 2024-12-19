@@ -1,5 +1,3 @@
-# Folders and files
-###################
 /static
 *.code-workspace
 **/.envs/*
@@ -10,16 +8,15 @@ api.yml
 .vocabularies-cache
 test*.py
 *.bib
+Global
+GlobalHeatFlow.bib
+staticfiles/
+data/letsencrypt/acme.json
+stack.env
 
-# assets/map/dist/css/chunk-vendors.5b557d9a.css
-# assets/map/dist/img/2D_profile.1eeacbcd.png
-# assets/map/dist/img/digital_borehole_example.c3dd2b3b.png
-# assets/map/dist/js/app.4079f5ad.js
-# assets/map/dist/js/app.4079f5ad.js.map
-# assets/map/dist/js/chunk-vendors.038f9446.js
-# assets/map/dist/js/chunk-vendors.038f9446.js.map
 
-/data/
+
+
 
 #no migration files except __init__.py
 # **/migrations/*
@@ -161,26 +158,9 @@ ENV/
 env.bak/
 venv.bak/
 
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
 
 # mypy
 .mypy_cache/
 .dmypy.json
 dmypy.json
-
-# Pyre type checker
-.pyre/
-Global
-GlobalHeatFlow.bib
-staticfiles/
-data/letsencrypt/acme.json
-stack.env
 
