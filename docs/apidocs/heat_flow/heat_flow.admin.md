@@ -15,172 +15,211 @@
 :class: autosummary longtable
 :align: left
 
-* - {py:obj}`HeatFlowChildInline <heat_flow.admin.HeatFlowChildInline>`
+* - {py:obj}`UploadForm <heat_flow.admin.UploadForm>`
+  -
+* - {py:obj}`HeatFlowDatasetAdmin <heat_flow.admin.HeatFlowDatasetAdmin>`
   -
 * - {py:obj}`HeatFlowAdmin <heat_flow.admin.HeatFlowAdmin>`
   -
-* - {py:obj}`HeatFlowChildAdmin <heat_flow.admin.HeatFlowChildAdmin>`
+* - {py:obj}`ChildHeatFlowAdmin <heat_flow.admin.ChildHeatFlowAdmin>`
   -
+* - {py:obj}`HeatFlowIntervalAdmin <heat_flow.admin.HeatFlowIntervalAdmin>`
+  -
+* - {py:obj}`HeatFlowSiteAdmin <heat_flow.admin.HeatFlowSiteAdmin>`
+  -
+````
+
+### Functions
+
+````{list-table}
+:class: autosummary longtable
+:align: left
+
+* - {py:obj}`admin_urlname <heat_flow.admin.admin_urlname>`
+  - ```{autodoc2-docstring} heat_flow.admin.admin_urlname
+    :summary:
+    ```
 ````
 
 ### API
 
-`````{py:class} HeatFlowChildInline(parent_model, admin_site)
-:canonical: heat_flow.admin.HeatFlowChildInline
+`````{py:class} UploadForm(data=None, files=None, auto_id='id_%s', prefix=None, initial=None, error_class=ErrorList, label_suffix=None, empty_permitted=False, field_order=None, use_required_attribute=None, renderer=None)
+:canonical: heat_flow.admin.UploadForm
 
-Bases: {py:obj}`django.contrib.admin.StackedInline`
+Bases: {py:obj}`django.forms.Form`
 
-````{py:attribute} model
-:canonical: heat_flow.admin.HeatFlowChildInline.model
+````{py:attribute} docfile
+:canonical: heat_flow.admin.UploadForm.docfile
 :value: >
-   None
+   'FileField(...)'
 
-```{autodoc2-docstring} heat_flow.admin.HeatFlowChildInline.model
-```
-
-````
-
-````{py:attribute} max_num
-:canonical: heat_flow.admin.HeatFlowChildInline.max_num
-:value: >
-   0
-
-```{autodoc2-docstring} heat_flow.admin.HeatFlowChildInline.max_num
+```{autodoc2-docstring} heat_flow.admin.UploadForm.docfile
 ```
 
 ````
 
 `````
 
-`````{py:class} HeatFlowAdmin(*args, **kwargs)
+````{py:function} admin_urlname(opts, name)
+:canonical: heat_flow.admin.admin_urlname
+
+```{autodoc2-docstring} heat_flow.admin.admin_urlname
+```
+````
+
+`````{py:class} HeatFlowDatasetAdmin(model, admin_site)
+:canonical: heat_flow.admin.HeatFlowDatasetAdmin
+
+Bases: {py:obj}`admin_extra_buttons.api.ExtraButtonsMixin`, {py:obj}`geoluminate.contrib.core.admin.DatasetAdmin`
+
+````{py:attribute} actions_detail
+:canonical: heat_flow.admin.HeatFlowDatasetAdmin.actions_detail
+:value: >
+   ['custom_detail_action']
+
+```{autodoc2-docstring} heat_flow.admin.HeatFlowDatasetAdmin.actions_detail
+```
+
+````
+
+````{py:method} upload(request, pk=None)
+:canonical: heat_flow.admin.HeatFlowDatasetAdmin.upload
+
+```{autodoc2-docstring} heat_flow.admin.HeatFlowDatasetAdmin.upload
+```
+
+````
+
+`````
+
+`````{py:class} HeatFlowAdmin(model, admin_site, *args, **kwargs)
 :canonical: heat_flow.admin.HeatFlowAdmin
 
-Bases: {py:obj}`geoluminate.contrib.gis.admin.SiteAdminMixin`
+Bases: {py:obj}`geoluminate.contrib.core.admin.MeasurementAdmin`
 
 ````{py:attribute} list_display
 :canonical: heat_flow.admin.HeatFlowAdmin.list_display
 :value: >
-   ['id', 'q', 'q_uncertainty']
+   ['value', 'uncertainty', 'corr_HP_flag']
 
 ```{autodoc2-docstring} heat_flow.admin.HeatFlowAdmin.list_display
 ```
 
 ````
 
-````{py:attribute} readonly_fields
-:canonical: heat_flow.admin.HeatFlowAdmin.readonly_fields
+````{py:attribute} fields
+:canonical: heat_flow.admin.HeatFlowAdmin.fields
 :value: >
-   ['id']
+   ('sample', ('value', 'uncertainty'), 'corr_HP_flag')
 
-```{autodoc2-docstring} heat_flow.admin.HeatFlowAdmin.readonly_fields
-```
-
-````
-
-````{py:attribute} list_filter
-:canonical: heat_flow.admin.HeatFlowAdmin.list_filter
-:value: >
-   ['environment', 'explo_method', 'explo_purpose']
-
-```{autodoc2-docstring} heat_flow.admin.HeatFlowAdmin.list_filter
-```
-
-````
-
-````{py:attribute} inlines
-:canonical: heat_flow.admin.HeatFlowAdmin.inlines
-:value: >
-   None
-
-```{autodoc2-docstring} heat_flow.admin.HeatFlowAdmin.inlines
-```
-
-````
-
-````{py:attribute} fieldsets
-:canonical: heat_flow.admin.HeatFlowAdmin.fieldsets
-:value: >
-   [('Geographic',), ('Heat Flow',), ('Marine',), ('References',), ('Comment',)]
-
-```{autodoc2-docstring} heat_flow.admin.HeatFlowAdmin.fieldsets
-```
-
-````
-
-````{py:attribute} search_fields
-:canonical: heat_flow.admin.HeatFlowAdmin.search_fields
-:value: >
-   ['id']
-
-```{autodoc2-docstring} heat_flow.admin.HeatFlowAdmin.search_fields
-```
-
-````
-
-````{py:attribute} point_zoom
-:canonical: heat_flow.admin.HeatFlowAdmin.point_zoom
-:value: >
-   8
-
-```{autodoc2-docstring} heat_flow.admin.HeatFlowAdmin.point_zoom
-```
-
-````
-
-````{py:attribute} map_width
-:canonical: heat_flow.admin.HeatFlowAdmin.map_width
-:value: >
-   900
-
-```{autodoc2-docstring} heat_flow.admin.HeatFlowAdmin.map_width
-```
-
-````
-
-````{py:attribute} modifiable
-:canonical: heat_flow.admin.HeatFlowAdmin.modifiable
-:value: >
-   True
-
-```{autodoc2-docstring} heat_flow.admin.HeatFlowAdmin.modifiable
+```{autodoc2-docstring} heat_flow.admin.HeatFlowAdmin.fields
 ```
 
 ````
 
 `````
 
-`````{py:class} HeatFlowChildAdmin(model, admin_site)
-:canonical: heat_flow.admin.HeatFlowChildAdmin
+`````{py:class} ChildHeatFlowAdmin(model, admin_site)
+:canonical: heat_flow.admin.ChildHeatFlowAdmin
 
 Bases: {py:obj}`django.contrib.admin.ModelAdmin`
 
 ````{py:attribute} list_display
-:canonical: heat_flow.admin.HeatFlowChildAdmin.list_display
+:canonical: heat_flow.admin.ChildHeatFlowAdmin.list_display
 :value: >
-   ['relevant_child', 'q_top', 'q_bottom', 'qc', 'qc_uncertainty', 'q_method', 'water_temperature', 'tc...
+   ['parent', 'value', 'uncertainty']
 
-```{autodoc2-docstring} heat_flow.admin.HeatFlowChildAdmin.list_display
-```
-
-````
-
-````{py:attribute} list_filter
-:canonical: heat_flow.admin.HeatFlowChildAdmin.list_filter
-:value: >
-   ['q_method', 'probe_type', 'tc_source', 'tc_strategy']
-
-```{autodoc2-docstring} heat_flow.admin.HeatFlowChildAdmin.list_filter
+```{autodoc2-docstring} heat_flow.admin.ChildHeatFlowAdmin.list_display
 ```
 
 ````
 
 ````{py:attribute} fieldsets
-:canonical: heat_flow.admin.HeatFlowChildAdmin.fieldsets
+:canonical: heat_flow.admin.ChildHeatFlowAdmin.fieldsets
 :value: >
-   [(), (), (), ()]
+   (('',), ('Heat Flow',), ('Probe Sensing',), ('Temperature',), ('Thermal Conductivity',), ('Correctio...
 
-```{autodoc2-docstring} heat_flow.admin.HeatFlowChildAdmin.fieldsets
+```{autodoc2-docstring} heat_flow.admin.ChildHeatFlowAdmin.fieldsets
 ```
+
+````
+
+````{py:attribute} formfield_overrides
+:canonical: heat_flow.admin.ChildHeatFlowAdmin.formfield_overrides
+:value: >
+   None
+
+```{autodoc2-docstring} heat_flow.admin.ChildHeatFlowAdmin.formfield_overrides
+```
+
+````
+
+`````
+
+`````{py:class} HeatFlowIntervalAdmin(model, admin_site)
+:canonical: heat_flow.admin.HeatFlowIntervalAdmin
+
+Bases: {py:obj}`geoluminate.contrib.core.admin.SampleAdmin`
+
+````{py:attribute} list_display
+:canonical: heat_flow.admin.HeatFlowIntervalAdmin.list_display
+:value: >
+   ['top', 'bottom']
+
+```{autodoc2-docstring} heat_flow.admin.HeatFlowIntervalAdmin.list_display
+```
+
+````
+
+````{py:attribute} formfield_overrides
+:canonical: heat_flow.admin.HeatFlowIntervalAdmin.formfield_overrides
+:value: >
+   None
+
+```{autodoc2-docstring} heat_flow.admin.HeatFlowIntervalAdmin.formfield_overrides
+```
+
+````
+
+`````
+
+`````{py:class} HeatFlowSiteAdmin(model, admin_site)
+:canonical: heat_flow.admin.HeatFlowSiteAdmin
+
+Bases: {py:obj}`geoluminate.contrib.core.admin.SampleAdmin`
+
+````{py:attribute} list_display
+:canonical: heat_flow.admin.HeatFlowSiteAdmin.list_display
+:value: >
+   ['top', 'bottom']
+
+```{autodoc2-docstring} heat_flow.admin.HeatFlowSiteAdmin.list_display
+```
+
+````
+
+````{py:attribute} formfield_overrides
+:canonical: heat_flow.admin.HeatFlowSiteAdmin.formfield_overrides
+:value: >
+   None
+
+```{autodoc2-docstring} heat_flow.admin.HeatFlowSiteAdmin.formfield_overrides
+```
+
+````
+
+````{py:attribute} fieldsets
+:canonical: heat_flow.admin.HeatFlowSiteAdmin.fieldsets
+:value: >
+   ((),)
+
+```{autodoc2-docstring} heat_flow.admin.HeatFlowSiteAdmin.fieldsets
+```
+
+````
+
+````{py:method} get_fieldsets(request, obj=None)
+:canonical: heat_flow.admin.HeatFlowSiteAdmin.get_fieldsets
 
 ````
 

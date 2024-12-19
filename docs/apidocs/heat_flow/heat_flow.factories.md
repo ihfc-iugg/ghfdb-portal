@@ -15,283 +15,372 @@
 :class: autosummary longtable
 :align: left
 
-* - {py:obj}`HeatFlowFactory <heat_flow.factories.HeatFlowFactory>`
-  - ```{autodoc2-docstring} heat_flow.factories.HeatFlowFactory
-    :summary:
-    ```
-* - {py:obj}`IntervalFactory <heat_flow.factories.IntervalFactory>`
+* - {py:obj}`HeatFlowSiteFactory <heat_flow.factories.HeatFlowSiteFactory>`
+  -
+* - {py:obj}`HeatFlowIntervalFactory <heat_flow.factories.HeatFlowIntervalFactory>`
+  -
+* - {py:obj}`ParentHeatFlowFactory <heat_flow.factories.ParentHeatFlowFactory>`
+  -
+* - {py:obj}`ChildHeatFlowFactory <heat_flow.factories.ChildHeatFlowFactory>`
   -
 ````
 
 ### API
 
-``````{py:class} HeatFlowFactory
-:canonical: heat_flow.factories.HeatFlowFactory
+``````{py:class} HeatFlowSiteFactory
+:canonical: heat_flow.factories.HeatFlowSiteFactory
 
-Bases: {py:obj}`geoluminate.factories.SampleFactory`
+Bases: {py:obj}`earth_science.factories.location.BoreholeFactory`
 
-```{autodoc2-docstring} heat_flow.factories.HeatFlowFactory
+````{py:attribute} environment
+:canonical: heat_flow.factories.HeatFlowSiteFactory.environment
+:value: >
+   'FuzzyChoice(...)'
+
+```{autodoc2-docstring} heat_flow.factories.HeatFlowSiteFactory.environment
 ```
 
-`````{py:class} Meta
-:canonical: heat_flow.factories.HeatFlowFactory.Meta
+````
 
-```{autodoc2-docstring} heat_flow.factories.HeatFlowFactory.Meta
+````{py:attribute} explo_method
+:canonical: heat_flow.factories.HeatFlowSiteFactory.explo_method
+:value: >
+   'FuzzyChoice(...)'
+
+```{autodoc2-docstring} heat_flow.factories.HeatFlowSiteFactory.explo_method
+```
+
+````
+
+````{py:attribute} explo_purpose
+:canonical: heat_flow.factories.HeatFlowSiteFactory.explo_purpose
+:value: >
+   'FuzzyChoice(...)'
+
+```{autodoc2-docstring} heat_flow.factories.HeatFlowSiteFactory.explo_purpose
+```
+
+````
+
+`````{py:class} Meta
+:canonical: heat_flow.factories.HeatFlowSiteFactory.Meta
+
+```{autodoc2-docstring} heat_flow.factories.HeatFlowSiteFactory.Meta
 ```
 
 ````{py:attribute} model
-:canonical: heat_flow.factories.HeatFlowFactory.Meta.model
+:canonical: heat_flow.factories.HeatFlowSiteFactory.Meta.model
 :value: >
    None
 
-```{autodoc2-docstring} heat_flow.factories.HeatFlowFactory.Meta.model
+```{autodoc2-docstring} heat_flow.factories.HeatFlowSiteFactory.Meta.model
 ```
 
 ````
 
 `````
 
-````{py:attribute} q
-:canonical: heat_flow.factories.HeatFlowFactory.q
+``````
+
+``````{py:class} HeatFlowIntervalFactory
+:canonical: heat_flow.factories.HeatFlowIntervalFactory
+
+Bases: {py:obj}`earth_science.factories.location.GeoDepthIntervalFactory`
+
+`````{py:class} Meta
+:canonical: heat_flow.factories.HeatFlowIntervalFactory.Meta
+
+```{autodoc2-docstring} heat_flow.factories.HeatFlowIntervalFactory.Meta
+```
+
+````{py:attribute} model
+:canonical: heat_flow.factories.HeatFlowIntervalFactory.Meta.model
 :value: >
    None
 
-```{autodoc2-docstring} heat_flow.factories.HeatFlowFactory.q
+```{autodoc2-docstring} heat_flow.factories.HeatFlowIntervalFactory.Meta.model
 ```
 
 ````
 
-````{py:attribute} q_uncertainty
-:canonical: heat_flow.factories.HeatFlowFactory.q_uncertainty
+`````
+
+``````
+
+``````{py:class} ParentHeatFlowFactory
+:canonical: heat_flow.factories.ParentHeatFlowFactory
+
+Bases: {py:obj}`geoluminate.factories.MeasurementFactory`
+
+`````{py:class} Meta
+:canonical: heat_flow.factories.ParentHeatFlowFactory.Meta
+
+```{autodoc2-docstring} heat_flow.factories.ParentHeatFlowFactory.Meta
+```
+
+````{py:attribute} model
+:canonical: heat_flow.factories.ParentHeatFlowFactory.Meta.model
 :value: >
    None
 
-```{autodoc2-docstring} heat_flow.factories.HeatFlowFactory.q_uncertainty
+```{autodoc2-docstring} heat_flow.factories.ParentHeatFlowFactory.Meta.model
 ```
 
 ````
 
-````{py:attribute} borehole_depth
-:canonical: heat_flow.factories.HeatFlowFactory.borehole_depth
-:value: >
-   None
+`````
 
-```{autodoc2-docstring} heat_flow.factories.HeatFlowFactory.borehole_depth
+````{py:attribute} value
+:canonical: heat_flow.factories.ParentHeatFlowFactory.value
+:value: >
+   'LazyAttribute(...)'
+
+```{autodoc2-docstring} heat_flow.factories.ParentHeatFlowFactory.value
 ```
 
 ````
 
-````{py:attribute} expedition
-:canonical: heat_flow.factories.HeatFlowFactory.expedition
+````{py:attribute} uncertainty
+:canonical: heat_flow.factories.ParentHeatFlowFactory.uncertainty
 :value: >
-   None
+   'LazyAttribute(...)'
 
-```{autodoc2-docstring} heat_flow.factories.HeatFlowFactory.expedition
+```{autodoc2-docstring} heat_flow.factories.ParentHeatFlowFactory.uncertainty
 ```
 
 ````
 
-````{py:attribute} water_temperature
-:canonical: heat_flow.factories.HeatFlowFactory.water_temperature
+````{py:attribute} corr_HP_flag
+:canonical: heat_flow.factories.ParentHeatFlowFactory.corr_HP_flag
 :value: >
-   None
+   'FuzzyChoice(...)'
 
-```{autodoc2-docstring} heat_flow.factories.HeatFlowFactory.water_temperature
+```{autodoc2-docstring} heat_flow.factories.ParentHeatFlowFactory.corr_HP_flag
+```
+
+````
+
+````{py:attribute} is_ghfdb
+:canonical: heat_flow.factories.ParentHeatFlowFactory.is_ghfdb
+:value: >
+   'Faker(...)'
+
+```{autodoc2-docstring} heat_flow.factories.ParentHeatFlowFactory.is_ghfdb
 ```
 
 ````
 
 ``````
 
-``````{py:class} IntervalFactory
-:canonical: heat_flow.factories.IntervalFactory
+``````{py:class} ChildHeatFlowFactory
+:canonical: heat_flow.factories.ChildHeatFlowFactory
 
-Bases: {py:obj}`factory.Factory`
+Bases: {py:obj}`geoluminate.factories.MeasurementFactory`
 
 `````{py:class} Meta
-:canonical: heat_flow.factories.IntervalFactory.Meta
+:canonical: heat_flow.factories.ChildHeatFlowFactory.Meta
 
-```{autodoc2-docstring} heat_flow.factories.IntervalFactory.Meta
+```{autodoc2-docstring} heat_flow.factories.ChildHeatFlowFactory.Meta
 ```
 
 ````{py:attribute} model
-:canonical: heat_flow.factories.IntervalFactory.Meta.model
+:canonical: heat_flow.factories.ChildHeatFlowFactory.Meta.model
 :value: >
    None
 
-```{autodoc2-docstring} heat_flow.factories.IntervalFactory.Meta.model
+```{autodoc2-docstring} heat_flow.factories.ChildHeatFlowFactory.Meta.model
 ```
 
 ````
 
 `````
 
-````{py:attribute} qc
-:canonical: heat_flow.factories.IntervalFactory.qc
+````{py:attribute} value
+:canonical: heat_flow.factories.ChildHeatFlowFactory.value
 :value: >
-   None
+   'LazyAttribute(...)'
 
-```{autodoc2-docstring} heat_flow.factories.IntervalFactory.qc
+```{autodoc2-docstring} heat_flow.factories.ChildHeatFlowFactory.value
 ```
 
 ````
 
-````{py:attribute} qc_uncertainty
-:canonical: heat_flow.factories.IntervalFactory.qc_uncertainty
+````{py:attribute} uncertainty
+:canonical: heat_flow.factories.ChildHeatFlowFactory.uncertainty
 :value: >
-   None
+   'LazyAttribute(...)'
 
-```{autodoc2-docstring} heat_flow.factories.IntervalFactory.qc_uncertainty
+```{autodoc2-docstring} heat_flow.factories.ChildHeatFlowFactory.uncertainty
 ```
 
 ````
 
-````{py:attribute} q_method
-:canonical: heat_flow.factories.IntervalFactory.q_method
+````{py:attribute} method
+:canonical: heat_flow.factories.ChildHeatFlowFactory.method
 :value: >
-   None
+   'FuzzyChoice(...)'
 
-```{autodoc2-docstring} heat_flow.factories.IntervalFactory.q_method
+```{autodoc2-docstring} heat_flow.factories.ChildHeatFlowFactory.method
 ```
 
 ````
 
-````{py:attribute} q_top
-:canonical: heat_flow.factories.IntervalFactory.q_top
+````{py:attribute} expedition
+:canonical: heat_flow.factories.ChildHeatFlowFactory.expedition
 :value: >
-   None
+   'Faker(...)'
 
-```{autodoc2-docstring} heat_flow.factories.IntervalFactory.q_top
+```{autodoc2-docstring} heat_flow.factories.ChildHeatFlowFactory.expedition
 ```
 
 ````
 
-````{py:attribute} q_bottom
-:canonical: heat_flow.factories.IntervalFactory.q_bottom
+````{py:attribute} relevant_child
+:canonical: heat_flow.factories.ChildHeatFlowFactory.relevant_child
 :value: >
-   None
+   'Faker(...)'
 
-```{autodoc2-docstring} heat_flow.factories.IntervalFactory.q_bottom
+```{autodoc2-docstring} heat_flow.factories.ChildHeatFlowFactory.relevant_child
 ```
 
 ````
 
-````{py:attribute} hf_pen
-:canonical: heat_flow.factories.IntervalFactory.hf_pen
+````{py:attribute} probe_penetration
+:canonical: heat_flow.factories.ChildHeatFlowFactory.probe_penetration
 :value: >
-   None
+   'Faker(...)'
 
-```{autodoc2-docstring} heat_flow.factories.IntervalFactory.hf_pen
+```{autodoc2-docstring} heat_flow.factories.ChildHeatFlowFactory.probe_penetration
 ```
 
 ````
 
 ````{py:attribute} probe_type
-:canonical: heat_flow.factories.IntervalFactory.probe_type
+:canonical: heat_flow.factories.ChildHeatFlowFactory.probe_type
 :value: >
-   None
+   'FuzzyChoice(...)'
 
-```{autodoc2-docstring} heat_flow.factories.IntervalFactory.probe_type
+```{autodoc2-docstring} heat_flow.factories.ChildHeatFlowFactory.probe_type
 ```
 
 ````
 
-````{py:attribute} hf_probeL
-:canonical: heat_flow.factories.IntervalFactory.hf_probeL
+````{py:attribute} probe_length
+:canonical: heat_flow.factories.ChildHeatFlowFactory.probe_length
 :value: >
-   None
+   'Faker(...)'
 
-```{autodoc2-docstring} heat_flow.factories.IntervalFactory.hf_probeL
+```{autodoc2-docstring} heat_flow.factories.ChildHeatFlowFactory.probe_length
 ```
 
 ````
 
 ````{py:attribute} probe_tilt
-:canonical: heat_flow.factories.IntervalFactory.probe_tilt
+:canonical: heat_flow.factories.ChildHeatFlowFactory.probe_tilt
 :value: >
-   None
+   'Faker(...)'
 
-```{autodoc2-docstring} heat_flow.factories.IntervalFactory.probe_tilt
+```{autodoc2-docstring} heat_flow.factories.ChildHeatFlowFactory.probe_tilt
 ```
 
 ````
 
-````{py:attribute} tc_mean
-:canonical: heat_flow.factories.IntervalFactory.tc_mean
+````{py:attribute} water_temperature
+:canonical: heat_flow.factories.ChildHeatFlowFactory.water_temperature
 :value: >
-   None
+   'Faker(...)'
 
-```{autodoc2-docstring} heat_flow.factories.IntervalFactory.tc_mean
+```{autodoc2-docstring} heat_flow.factories.ChildHeatFlowFactory.water_temperature
 ```
 
 ````
 
-````{py:attribute} tc_uncertainty
-:canonical: heat_flow.factories.IntervalFactory.tc_uncertainty
+````{py:attribute} corr_IS_flag
+:canonical: heat_flow.factories.ChildHeatFlowFactory.corr_IS_flag
 :value: >
-   None
+   'FuzzyChoice(...)'
 
-```{autodoc2-docstring} heat_flow.factories.IntervalFactory.tc_uncertainty
+```{autodoc2-docstring} heat_flow.factories.ChildHeatFlowFactory.corr_IS_flag
 ```
 
 ````
 
-````{py:attribute} tc_source
-:canonical: heat_flow.factories.IntervalFactory.tc_source
+````{py:attribute} corr_T_flag
+:canonical: heat_flow.factories.ChildHeatFlowFactory.corr_T_flag
 :value: >
-   None
+   'FuzzyChoice(...)'
 
-```{autodoc2-docstring} heat_flow.factories.IntervalFactory.tc_source
+```{autodoc2-docstring} heat_flow.factories.ChildHeatFlowFactory.corr_T_flag
 ```
 
 ````
 
-````{py:attribute} tc_method
-:canonical: heat_flow.factories.IntervalFactory.tc_method
+````{py:attribute} corr_S_flag
+:canonical: heat_flow.factories.ChildHeatFlowFactory.corr_S_flag
 :value: >
-   None
+   'FuzzyChoice(...)'
 
-```{autodoc2-docstring} heat_flow.factories.IntervalFactory.tc_method
+```{autodoc2-docstring} heat_flow.factories.ChildHeatFlowFactory.corr_S_flag
 ```
 
 ````
 
-````{py:attribute} tc_saturation
-:canonical: heat_flow.factories.IntervalFactory.tc_saturation
+````{py:attribute} corr_E_flag
+:canonical: heat_flow.factories.ChildHeatFlowFactory.corr_E_flag
 :value: >
-   None
+   'FuzzyChoice(...)'
 
-```{autodoc2-docstring} heat_flow.factories.IntervalFactory.tc_saturation
+```{autodoc2-docstring} heat_flow.factories.ChildHeatFlowFactory.corr_E_flag
 ```
 
 ````
 
-````{py:attribute} tc_pT_conditions
-:canonical: heat_flow.factories.IntervalFactory.tc_pT_conditions
+````{py:attribute} corr_TOPO_flag
+:canonical: heat_flow.factories.ChildHeatFlowFactory.corr_TOPO_flag
 :value: >
-   None
+   'FuzzyChoice(...)'
 
-```{autodoc2-docstring} heat_flow.factories.IntervalFactory.tc_pT_conditions
+```{autodoc2-docstring} heat_flow.factories.ChildHeatFlowFactory.corr_TOPO_flag
 ```
 
 ````
 
-````{py:attribute} tc_pT_function
-:canonical: heat_flow.factories.IntervalFactory.tc_pT_function
+````{py:attribute} corr_PAL_flag
+:canonical: heat_flow.factories.ChildHeatFlowFactory.corr_PAL_flag
 :value: >
-   None
+   'FuzzyChoice(...)'
 
-```{autodoc2-docstring} heat_flow.factories.IntervalFactory.tc_pT_function
+```{autodoc2-docstring} heat_flow.factories.ChildHeatFlowFactory.corr_PAL_flag
 ```
 
 ````
 
-````{py:attribute} tc_strategy
-:canonical: heat_flow.factories.IntervalFactory.tc_strategy
+````{py:attribute} corr_SUR_flag
+:canonical: heat_flow.factories.ChildHeatFlowFactory.corr_SUR_flag
 :value: >
-   None
+   'FuzzyChoice(...)'
 
-```{autodoc2-docstring} heat_flow.factories.IntervalFactory.tc_strategy
+```{autodoc2-docstring} heat_flow.factories.ChildHeatFlowFactory.corr_SUR_flag
+```
+
+````
+
+````{py:attribute} corr_CONV_flag
+:canonical: heat_flow.factories.ChildHeatFlowFactory.corr_CONV_flag
+:value: >
+   'FuzzyChoice(...)'
+
+```{autodoc2-docstring} heat_flow.factories.ChildHeatFlowFactory.corr_CONV_flag
+```
+
+````
+
+````{py:attribute} corr_HR_flag
+:canonical: heat_flow.factories.ChildHeatFlowFactory.corr_HR_flag
+:value: >
+   'FuzzyChoice(...)'
+
+```{autodoc2-docstring} heat_flow.factories.ChildHeatFlowFactory.corr_HR_flag
 ```
 
 ````

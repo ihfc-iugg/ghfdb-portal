@@ -1,37 +1,42 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 from pathlib import Path
+import os
 
 BASE_DIR = Path(__file__).parent.parent.resolve()
-
+os.environ.setdefault("DJANGO_ENV", "development")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
 from docs.conf import *
+
 
 # app_dir = Path(__file__).parent.parent.resolve()
 # sys.path.append(str(app_dir))
 
 
 # html_short_title = "GHFDB"
-# html_logo = "_static/logo.svg"
+# html_logo = "_static/logo.svg"\
 # html_favicon = "_static/icon.svg"
-
+html_static_path = ["_static", os.path.abspath("../assets/img")]
 
 # https://sphinx-book-theme.readthedocs.io/en/stable/reference.html
 # https://pydata-sphinx-theme.readthedocs.io/en/latest/user_guide/index.html
-html_theme_options.update(
-    {
-        "announcement": (
-            "⚠️The Global Heat Flow Database is in an early development phase and may not work exactly as described in"
-            " this documentation. If you find any inconsistencies, please report to the github repository. ⚠️"
-        ),
-    }
-)
+# html_theme_options.update(
+#     {
+#         "announcement": (
+#             "⚠️Heatflow.world is in an early development phase and may not work exactly as described in"
+#             " this documentation. If you find any inconsistencies, please report to the github repository. ⚠️"
+#         ),
+#     }
+# )
 
+extensions.remove("autodoc2")
 
 autodoc2_parse_docstrings = True
 
 autodoc2_docstring_parser_regexes = [("myst", r".*choices*")]
 
+autodoc2_packages = ["../heat_flow"]
 
 # Auto list fields from django models - from https://djangosnippets.org/snippets/2533/#c5977
 

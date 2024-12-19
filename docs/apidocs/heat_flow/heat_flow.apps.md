@@ -15,54 +15,54 @@
 :class: autosummary longtable
 :align: left
 
-* - {py:obj}`HeatFlowConfig <heat_flow.apps.HeatFlowConfig>`
-  - ```{autodoc2-docstring} heat_flow.apps.HeatFlowConfig
+* - {py:obj}`HeatFlowSchemaConfig <heat_flow.apps.HeatFlowSchemaConfig>`
+  - ```{autodoc2-docstring} heat_flow.apps.HeatFlowSchemaConfig
     :summary:
     ```
 ````
 
 ### API
 
-`````{py:class} HeatFlowConfig(app_name, app_module)
-:canonical: heat_flow.apps.HeatFlowConfig
+`````{py:class} HeatFlowSchemaConfig(app_name, app_module)
+:canonical: heat_flow.apps.HeatFlowSchemaConfig
 
 Bases: {py:obj}`django.apps.AppConfig`
 
-```{autodoc2-docstring} heat_flow.apps.HeatFlowConfig
+```{autodoc2-docstring} heat_flow.apps.HeatFlowSchemaConfig
 ```
 
 ```{rubric} Initialization
 ```
 
-```{autodoc2-docstring} heat_flow.apps.HeatFlowConfig.__init__
+```{autodoc2-docstring} heat_flow.apps.HeatFlowSchemaConfig.__init__
 ```
 
 ````{py:attribute} default_auto_field
-:canonical: heat_flow.apps.HeatFlowConfig.default_auto_field
+:canonical: heat_flow.apps.HeatFlowSchemaConfig.default_auto_field
 :value: >
    'django.db.models.BigAutoField'
 
-```{autodoc2-docstring} heat_flow.apps.HeatFlowConfig.default_auto_field
+```{autodoc2-docstring} heat_flow.apps.HeatFlowSchemaConfig.default_auto_field
 ```
 
 ````
 
 ````{py:attribute} name
-:canonical: heat_flow.apps.HeatFlowConfig.name
+:canonical: heat_flow.apps.HeatFlowSchemaConfig.name
 :value: >
    'heat_flow'
 
-```{autodoc2-docstring} heat_flow.apps.HeatFlowConfig.name
+```{autodoc2-docstring} heat_flow.apps.HeatFlowSchemaConfig.name
 ```
 
 ````
 
 ````{py:attribute} verbose_name
-:canonical: heat_flow.apps.HeatFlowConfig.verbose_name
+:canonical: heat_flow.apps.HeatFlowSchemaConfig.verbose_name
 :value: >
-   None
+   '_(...)'
 
-```{autodoc2-docstring} heat_flow.apps.HeatFlowConfig.verbose_name
+```{autodoc2-docstring} heat_flow.apps.HeatFlowSchemaConfig.verbose_name
 ```
 
 ````
