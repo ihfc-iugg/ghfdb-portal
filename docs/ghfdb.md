@@ -1,0 +1,5 @@
+## Global Heat Flow Database
+
+### Purpose and History
+
+Studies of Earth's heat flow cover a wide range of scientific and applied aspects, including the planetary energy balance, driving mechanisms of tectonic processes, and the thermodynamic conditions within the Earth's interior. Understanding Earth's heat flow is also fundamental for studying the evolution of hydrocarbons, minerals, and geothermal resources. The International Heat Flow Commission (IHFC) has been actively involved in compiling the Global Heat Flow Database (GHFDB) since 1963. The purpose of the database is to provide objective, unique, and unambiguous heat-flow data, gathering information from various acquisition methods, including borehole measurements, shallow deep-sea probe sensing, and novel techniques used in mines and tunnels.
