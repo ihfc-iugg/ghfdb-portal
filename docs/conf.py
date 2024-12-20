@@ -38,6 +38,7 @@ autodoc2_parse_docstrings = True
 
 autodoc2_docstring_parser_regexes = [("myst", r".*choices*")]
 
+epub_theme = "sphinx_book_theme"
 
 # Auto list fields from django models - from https://djangosnippets.org/snippets/2533/#c5977
 
