@@ -14,8 +14,11 @@ build:
     post_create_environment:
       # Install poetry
       - pip install poetry
+      - poetry install --with docs
+      - poetry show
+      - pip list
 
-      - poetry export --with docs --without-hashes -f requirements.txt -o requirements.txt
+      # - poetry export --with docs --without-hashes -f requirements.txt -o requirements.txt
       # Tell poetry to not use a virtual environment
       # - poetry config virtualenvs.create false
     # post_install:
@@ -30,6 +33,6 @@ sphinx:
 # Optionally, but recommended,
 # declare the Python requirements required to build your documentation
 # See https://docs.readthedocs.io/en/stable/guides/reproducible-builds.html
-python:
-   install:
-      - requirements: requirements.txt
+# python:
+#    install:
+#       - requirements: requirements.txt
