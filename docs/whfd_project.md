@@ -27,7 +27,7 @@ The World Heat Flow Database Project is a joint initiative by [Helmholtz Centre 
 For more information regarding the project, please visit the [official project website](http://heatflow.world).
 ```
 
-### Technical Revision
+## Technical Revision
 
 In 2020, the International Heat Flow Commission (IHFC) embarked on a comprehensive overhaul of the Global Heat Flow Database (GHFDB). This undertaking represented a multinational, collaborative initiative geared towards addressing both present and future requirements of the database. The primary objectives centered on the establishment of an authenticated database containing information regarding heat-flow data type and quality. Additionally, the aim was to align the database with the standards of modern research data infrastructure, encompassing extensive metadata descriptions and interoperability with existing infrastructure.
 
@@ -41,6 +41,6 @@ The end result of this collaborative effort was an updated GHFDB structure, to b
 2023, [Quality-assurance of heat-flow data: The new structure and evaluation scheme of the IHFC Global Heat Flow Database](https://doi.org/10.1016/j.tecto.2023.229976): updated data structure and evaluation scheme of the GHFDB.
 ```
 
-### Modernised Infrastructure
+## Modernised Infrastructure
 
 The recent revisions of the GHFDB schema is accompanied by efforts to modernise the technical infrastructure hosting the GHFDB. This includes adaptation to a modern relational database and the development of a new web application for online, collaborative management of the database. This documentation describes the implementation, usage and development of the new web application which is built using the [Geoluminate Research Database Framework](https://geoluminate.github.io/geoluminate/).

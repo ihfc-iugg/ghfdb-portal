@@ -14,10 +14,12 @@ from docs.conf import *
 # sys.path.append(str(app_dir))
 
 
-# html_short_title = "GHFDB"
-# html_logo = "_static/logo.svg"\
-# html_favicon = "_static/icon.svg"
+html_short_title = "Heatflow.world"
+
 html_static_path = ["_static", os.path.abspath("../assets/img")]
+
+html_logo = "_static/logo.svg"
+html_favicon = "_static/icon.svg"
 
 # https://sphinx-book-theme.readthedocs.io/en/stable/reference.html
 # https://pydata-sphinx-theme.readthedocs.io/en/latest/user_guide/index.html
@@ -36,7 +38,6 @@ autodoc2_parse_docstrings = True
 
 autodoc2_docstring_parser_regexes = [("myst", r".*choices*")]
 
-autodoc2_packages = ["../heat_flow"]
 
 # Auto list fields from django models - from https://djangosnippets.org/snippets/2533/#c5977
 
