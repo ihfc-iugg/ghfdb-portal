@@ -2,14 +2,11 @@
 
 Heatflow.world is a web portal designed to host the newly restructured Global Heat Flow Database (GHFDB). It is built using the FairDM framework. 
 
-
-
 <!-- ## Features
 
 - ✅ Detailed metadata collection in accordance with DataCite schema. XML metadata can be easily downloaded and submitted to GFZ Data Services for formal publication.
 - 🔲 Discover and browse public datasets that have been made public by other community members via an intuitive catalogue page.
 - ✅ Create and publish a Docker image for building the core application
-
 
 
 ## Functionality
@@ -22,18 +19,16 @@ Heatflow.world is a web portal designed to host the newly restructured Global He
 - 🔲 Auto-tagging projects based on dataset-level attributes. -->
 
 
-## Contents
 
 ```{toctree}
-<!-- :caption: Implementation -->
 :maxdepth: 1
 :hidden:
 
 whfd_project
 ghfdb
-implementation/features
-implementation/schemas
-literature
+features
+contributors
+roadmap
 ```
 
 ```{toctree}
@@ -42,8 +37,10 @@ literature
 :hidden:
 
 apidocs/heat_flow/heat_flow
+
+
+```
+
 <!-- development/contributing -->
 <!-- development/authors -->
 <!-- development/history -->
-
-```
