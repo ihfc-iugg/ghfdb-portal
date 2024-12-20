@@ -14,13 +14,15 @@ build:
     post_create_environment:
       # Install poetry
       - pip install poetry
+
+      - poetry export --with docs --without-hashes -f requirements.txt -o requirements.txt
       # Tell poetry to not use a virtual environment
-      - poetry config virtualenvs.create false
-    post_install:
+      # - poetry config virtualenvs.create false
+    # post_install:
       # Install dependencies
-      - poetry install --with docs
-      - poetry show
-      - pip list
+      # - poetry install --with docs
+      # - poetry show
+      # - pip list
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
    configuration: docs/conf.py
