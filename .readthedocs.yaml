@@ -20,6 +20,8 @@ build:
       # https://python-poetry.org/docs/managing-dependencies/#dependency-groups
       - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry install --with docs
 
+formats: all
+
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
    configuration: docs/conf.py
