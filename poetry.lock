@@ -973,7 +973,7 @@ django-htmx = "^1.21.0"
 type = "git"
 url = "https://github.com/SamuelJennings/django-account-management"
 reference = "HEAD"
-resolved_reference = "45b17acec75a30025fd0c424d5366d228f47c40a"
+resolved_reference = "c19a58424bc6a304e8d8fe7bce5add17652e2f68"
 
 [[package]]
 name = "django-activity-stream"
@@ -1793,6 +1793,26 @@ Django = ">=4.2"
 dev = ["ambient-package-update", "coverage (>=7.3,<8.0)", "flit (>=3.9,<4.0)", "freezegun (>=1.3,<2.0)", "keyring (>=25.2,<26.0)", "m2r2 (==0.3.3.post2)", "mistune (<2.0.0)", "pre-commit (>=3.7,<4.0)", "pytest-django (>=4.7,<5.0)", "pytest-mock (>=3.12,<4.0)", "ruff (>=0.4,<1.0)", "sphinx (>=7.1,<8.0)", "sphinx-rtd-theme (>=2.0,<3.0)", "typer (>=0.9,<1.0)", "unittest-parametrize (>=1.3,<2.0)"]
 
 [[package]]
+name = "django-model-info"
+version = "2024.11.5"
+description = "A set of Django Management Commands to help you understand and visualize your project's models."
+optional = false
+python-versions = "<4.0,>=3.10"
+files = [
+    {file = "django_model_info-2024.11.5-py3-none-any.whl", hash = "sha256:fe8497cb71cd045b929d79548bf7f5f3f5261e15c8b585005d684838363d9f7d"},
+    {file = "django_model_info-2024.11.5.tar.gz", hash = "sha256:3ceffa8f9b8d6f98fef9e0d4bad7a6f35694315f3fdb30f21e687ecba79bc071"},
+]
+
+[package.dependencies]
+django = "*"
+networkx = ">=3.4.2"
+pydot = ">=3.0.2"
+rich = ">=13"
+
+[package.extras]
+dev = ["black (==23.3.0)", "coverage (>=7)", "coverage (>=7)", "flake8 (==6.0.0)", "flake8 (>=5)", "invoke (>=2)", "isort (==5.11.4)", "pydocstyle[toml] (==6.2.3)", "tox (>=4)", "twine (>=4)", "wheel (>=0.38.1)"]
+
+[[package]]
 name = "django-model-utils"
 version = "4.4.0"
 description = "Django model mixins and utilities"
@@ -1990,7 +2010,7 @@ rdflib = "^7.0.0"
 type = "git"
 url = "https://github.com/Geoluminate/django-research-vocabs"
 reference = "HEAD"
-resolved_reference = "3f149c5111274dc555693c4327a1837f11c3636b"
+resolved_reference = "0f3f977db9df5f2d8d2bab420b1925c9728e929f"
 
 [[package]]
 name = "django-rest-polymorphic"
@@ -2729,7 +2749,7 @@ whitenoise = "^6.4.0"
 type = "git"
 url = "https://github.com/Geoluminate/geoluminate"
 reference = "HEAD"
-resolved_reference = "f790e594f895e62e907dc82db31d52f682b252d1"
+resolved_reference = "74623357707a24c078b86f1a5bd149bef2163cbd"
 
 [[package]]
 name = "geoluminate-docs"
@@ -3506,6 +3526,25 @@ docs = ["Sphinx"]
 tests = ["coverage[toml]", "django_coverage_plugin"]
 
 [[package]]
+name = "networkx"
+version = "3.4.2"
+description = "Python package for creating and manipulating graphs and networks"
+optional = false
+python-versions = ">=3.10"
+files = [
+    {file = "networkx-3.4.2-py3-none-any.whl", hash = "sha256:df5d4365b724cf81b8c6a7312509d0c22386097011ad1abe274afd5e9d3bbc5f"},
+    {file = "networkx-3.4.2.tar.gz", hash = "sha256:307c3669428c5362aab27c8a1260aa8f47c4e91d3891f48be0141738d8d053e1"},
+]
+
+[package.extras]
+default = ["matplotlib (>=3.7)", "numpy (>=1.24)", "pandas (>=2.0)", "scipy (>=1.10,!=1.11.0,!=1.11.1)"]
+developer = ["changelist (==0.5)", "mypy (>=1.1)", "pre-commit (>=3.2)", "rtoml"]
+doc = ["intersphinx-registry", "myst-nb (>=1.1)", "numpydoc (>=1.8.0)", "pillow (>=9.4)", "pydata-sphinx-theme (>=0.15)", "sphinx (>=7.3)", "sphinx-gallery (>=0.16)", "texext (>=0.6.7)"]
+example = ["cairocffi (>=1.7)", "contextily (>=1.6)", "igraph (>=0.11)", "momepy (>=0.7.2)", "osmnx (>=1.9)", "scikit-learn (>=1.5)", "seaborn (>=0.13)"]
+extra = ["lxml (>=4.6)", "pydot (>=3.0.1)", "pygraphviz (>=1.14)", "sympy (>=1.10)"]
+test = ["pytest (>=7.2)", "pytest-cov (>=4.0)"]
+
+[[package]]
 name = "nodeenv"
 version = "1.8.0"
 description = "Node.js virtual environment builder"
@@ -4147,6 +4186,25 @@ dev = ["pandoc", "pre-commit", "pydata-sphinx-theme[doc,test]", "pyyaml", "sphin
 doc = ["ablog (>=0.11.8)", "colorama", "graphviz", "ipykernel", "ipyleaflet", "ipywidgets", "jupyter_sphinx", "jupyterlite-sphinx", "linkify-it-py", "matplotlib", "myst-parser", "nbsphinx", "numpy", "numpydoc", "pandas", "plotly", "rich", "sphinx-autoapi (>=3.0.0)", "sphinx-copybutton", "sphinx-design", "sphinx-favicon (>=1.0.1)", "sphinx-sitemap", "sphinx-togglebutton", "sphinxcontrib-youtube (>=1.4.1)", "sphinxext-rediraffe", "xarray"]
 i18n = ["Babel", "jinja2"]
 test = ["pytest", "pytest-cov", "pytest-regressions", "sphinx[test]"]
+
+[[package]]
+name = "pydot"
+version = "3.0.3"
+description = "Python interface to Graphviz's Dot"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "pydot-3.0.3-py3-none-any.whl", hash = "sha256:9b0b3081e0bd362d0c61148da10eb1281ec80089b02a28cf06f9093843986f3d"},
+    {file = "pydot-3.0.3.tar.gz", hash = "sha256:5e009d97b2fff92b7a88f09ec1fd5b163f07f3b10469c927d362471d6faa0d50"},
+]
+
+[package.dependencies]
+pyparsing = ">=3.0.9"
+
+[package.extras]
+dev = ["chardet", "parameterized", "ruff"]
+release = ["zest.releaser[recommended]"]
+tests = ["chardet", "parameterized", "pytest", "pytest-cov", "pytest-xdist[psutil]", "ruff", "tox"]
 
 [[package]]
 name = "pygments"
@@ -4840,6 +4898,25 @@ djangorestframework = ">=3.3.1"
 pandas = ">=0.19.0"
 
 [[package]]
+name = "rich"
+version = "13.9.4"
+description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
+optional = false
+python-versions = ">=3.8.0"
+files = [
+    {file = "rich-13.9.4-py3-none-any.whl", hash = "sha256:6049d5e6ec054bf2779ab3358186963bac2ea89175919d699e378b99738c2a90"},
+    {file = "rich-13.9.4.tar.gz", hash = "sha256:439594978a49a09530cff7ebc4b5c7103ef57baf48d5ea3184f21d9a2befa098"},
+]
+
+[package.dependencies]
+markdown-it-py = ">=2.2.0"
+pygments = ">=2.13.0,<3.0.0"
+typing-extensions = {version = ">=4.0.0,<5.0", markers = "python_version < \"3.11\""}
+
+[package.extras]
+jupyter = ["ipywidgets (>=7.5.1,<9)"]
+
+[[package]]
 name = "rjsmin"
 version = "1.2.2"
 description = "Javascript Minifier"
@@ -5272,6 +5349,17 @@ sphinx = ">=1.8"
 [package.extras]
 code-style = ["pre-commit (==2.12.1)"]
 rtd = ["ipython", "myst-nb", "sphinx", "sphinx-book-theme", "sphinx-examples"]
+
+[[package]]
+name = "sphinx-exec-code"
+version = "0.15"
+description = "Execute code blocks in Sphinx and display the output"
+optional = false
+python-versions = "*"
+files = [
+    {file = "sphinx_exec_code-0.15-py3-none-any.whl", hash = "sha256:ec099311d0257347a1874eb3b35673efe5146db6c67a1b1d696743c3aa76f38d"},
+    {file = "sphinx_exec_code-0.15.tar.gz", hash = "sha256:e6d5916a75e84c34fe389e923ed314894d048b3d3a069fc86096c95f2ea8b072"},
+]
 
 [[package]]
 name = "sphinx-tippy"
@@ -6114,4 +6202,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "f71ab34057625b491296be062d7c0fbec8ad75cbcc791b13406b386d0c9146f0"
+content-hash = "a5a81539c8470c2d5127985180b9fa517b5d4dd0c9510cf21a8a6aa8e3a8d3a0"

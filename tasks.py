@@ -46,13 +46,14 @@ def test(c, tox=False):
 
 
 @task
-def docs(c):
+def docs(c, live=False):
     """
-    Build the documentation and open it in the browser
+    Build the documentation
     """
-    # c.run("sphinx-apidoc -M -T -o docs/ project/schemas/* **/migrations/* -e --force -d 2")
-    # c.run("sphinx-build -E -b html docs docs/_build")
-    c.run("docker compose -f local.yml up docs")
+    if live:
+        c.run("sphinx-autobuild -b html --watch docs -c docs docs docs/_build/html --open-browser --port 5000")
+    else:
+        c.run("sphinx-build -E -b html docs docs/_build")
 
 
 @task

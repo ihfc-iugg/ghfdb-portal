@@ -19,5 +19,5 @@ We extend our gratitude to all individuals, organizations, and institutions who 
 ## Supporting Organizations
 
 [![World Heat Flow Database Project](./assets/img/brand/logo.png)](https://www.heatflow.world)
-[![Deutsche Forschungsgemeinschaft](./assets/img/brand/dfg_logo.gif)](https://www.dfg.de)
+[![Deutsche Forschungsgemeinschaft](./assets/img/brand/DFG.gif)](https://www.dfg.de)
 [![GFZ](./assets/img/brand/GFZ_logo.png)](https://www.gfz-potsdam.de)
