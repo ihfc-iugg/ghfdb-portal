@@ -1,0 +1,99 @@
+{% extends "fairdm/home.html" %}
+{% load static %}
+
+{% block slides %}
+  <c-home.slide style="fullscreen"
+                display="{{ site_name }}"
+                lead="{% trans "The official web portal for the IHFC Global Heat Flow Database" %}"
+                img="https://picsum.photos/id/60/1200/600" />
+  <c-home.slide style="columns"
+                display="{% trans "Explore" %}"
+                lead="{% trans "Explore and interact with the Global Heat Flow Database." %}"
+                text="{% trans "Use the custom map viewer to explore the latest release of the Global Heat Flow Database in an interactive, online environment — no tools or downloads necessary. Create filters, visualise the results and download data for further analysis." %}"
+                action="{% url "map" %}"
+                action_text="{% trans "Get started!" %}">
+    <c-slot name="actions">
+      <c-bs5.button href="{% url "map" %}"
+                    class="btn btn-primary"
+                    icon="map"
+                    text="{% trans "Get started" %}" />
+      <c-bs5.button href="https://heatflowworld.readthedocs.io/en/latest/more/publishing.html"
+                    class="btn btn-outline-primary"
+                    icon="arrow-right"
+                    text="{% trans "View tutorials" %}" />
+    </c-slot>
+    <c-slot name="column2">
+      <img src="{% static 'img/mapping-tool_crop4x3.png' %}"
+           loading="lazy"
+           alt=""
+           class="h-100 w-100 object-fit-cover"
+           style="object-position: left" />
+    </c-slot>
+  </c-home.slide>
+  <c-home.slide style="columns"
+                reverse
+                display="{% trans "Browse" %}"
+                lead="{% trans "Browse publicly available heat flow datasets and research projects shared by community members." %}"
+                text="{% trans "Heatflow.world showcases +1000 heat flow datasets that make up the Global Heat Flow Database. Explore datasets that meet your criteria, view them within the portal and download the data for reuse in your personal research projects." %}"
+                img="https://picsum.photos/id/9/600/">
+    <c-slot name="actions">
+      <c-bs5.button href="{% url "project-list" %}"
+                    class="btn btn-outline-primary"
+                    icon="project"
+                    text="{% trans "View projects" %}" />
+      <c-bs5.button href="{% url "dataset-list" %}"
+                    class="btn btn-outline-primary"
+                    icon="dataset"
+                    text="{% trans "View datasets" %}" />
+    </c-slot>
+  </c-home.slide>
+  <c-home.slide style="columns"
+                display="{% trans "Community driven" %}"
+                lead="{% trans "Join other researchers in helping to build and maintain the Global Heat Flow Database." %}"
+                text="{% trans "Promote and showcase your past and present research and datasets within the portal. Join our online community to share, collaborate and expand your network." %}"
+                slide_class="bg-secondary-subtle"
+                img="{% static 'img/community.jpg' %}">
+    <c-slot name="actions">
+      <c-bs5.button href="{% url "account_login" %}"
+                    class="btn btn-primary"
+                    text="{% trans "Sign In" %}" />
+      <c-bs5.button href="{% url "account_signup" %}"
+                    class="btn btn-outline-primary"
+                    text="{% trans "Create an account" %}" />
+    </c-slot>
+  </c-home.slide>
+  <c-home.slide style="columns"
+                display="{% trans "Upload & publish" %}"
+                lead="{% trans "Publish and share datasets that meet strict quality standards." %}"
+                text="{% trans "Upload pre-existing datasets that reflect the current structure and standards of the Global Heat Flow Database. Datasets shared in the portal are eligible for formal publication via GFZ Potsdam data publishing. Follow the link below to learn more." %}"
+                img="https://picsum.photos/600/?random"
+                action="https://heatflowworld.readthedocs.io/en/latest/more/publishing.html"
+                action_text="{% trans "Learn more" %}" />
+  <c-home.slide style="columns"
+                reverse
+                display="{% trans "Literature" %}"
+                lead="{% trans "Link and share related publications to your datasets and projects." %}"
+                text="{% trans "Linking related literature ensures traceability for both datasets and published literature." %}"
+                img="https://picsum.photos/600/?random"
+                slide_class="bg-primary-subtle"
+                action="{% url "literature-list" %}"
+                action_text="{% trans "View literature" %}" />
+  <c-home.slide style="card"
+                display="{% trans "Interoperable" %}"
+                lead="{% trans "Integrate data or metadata into your custom applications and workflows." %}"
+                text="{% trans "Heatflow.world features a RESTful API that can be used to programmatically browse and access data within the portal." %}"
+                img="https://picsum.photos/600/?random"
+                slide_class="bg-secondary-subtle">
+    <c-slot name="actions">
+      <c-bs5.button href="{% url "api:swagger-ui" %}"
+                    class="btn btn-primary"
+                    text="{% trans "View documentation" %}" />
+      <c-bs5.button href="{% url "account_signup" %}"
+                    class="btn btn-outline-primary"
+                    text="{% trans "Find tutorials" %}" />
+    </c-slot>
+  </c-home.slide>
+  <swiper-slide class="bg-secondary text-light">
+    {% include "fairdm/footer.html" %}
+  </swiper-slide>
+{% endblock slides %}

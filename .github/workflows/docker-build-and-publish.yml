@@ -1,4 +1,4 @@
-name: Publish container to GitHub Container Registry
+name: Package
 
 on:
   release:
@@ -34,10 +34,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}  # GitHub automatically generates this for the actor
-
-
-      # - name: Log in to GitHub Container Registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta

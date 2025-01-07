@@ -70,6 +70,11 @@ EARTH_SCIENCE_Y_COORD = {
 COMPRESS_ENABLED = True
 COMPRESS_OFFLINE = False
 
+INSTALLED_APPS += [  # noqa: F821
+    "django_model_info.apps.DjangoModelInfoConfig",
+]
+
+
 # if DEBUG:
 #     INSTALLED_APPS += [
 #         "django_browser_reload",

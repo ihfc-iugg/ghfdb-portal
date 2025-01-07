@@ -40,10 +40,6 @@ default_metadata = {
 }
 
 
-class GHFDBDataset(Dataset):
-    pass
-
-
 class HeatFlowSite(Borehole):
     environment = ConceptField(
         vocabulary=vocabularies.GeographicEnvironment,
@@ -129,6 +125,15 @@ class ParentHeatFlow(Measurement):
     """Database table that stores terrestrial heat flow data. This is the "parent" schema outlined in the formal structure of the database put forth by Fuchs et al (2021)."""
 
     ALLOWED_SAMPLE_TYPES = [HeatFlowSite]
+
+    sample2 = models.ForeignKey(
+        "HeatFlowSite",
+        verbose_name=_("sample"),
+        help_text=_("The sample on which the measurement was made."),
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+    )
 
     value = models.QuantityField(
         verbose_name=_("heat flow"),
