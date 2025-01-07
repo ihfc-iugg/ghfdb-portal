@@ -13,15 +13,14 @@ article h1:first-of-type {
 </style>
 ```
 
-![World Heat Flow Database Project](_static/brand/logo.png)
-<!-- [![Deutsche Forschungsgemeinschaft](./assets/img/brand/dfg_logo.gif)](https://www.dfg.de) -->
+![World Heat Flow Database Project](/_static/logo.svg)
 
 The World Heat Flow Database Project is a joint initiative by [Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences](https://www.gfz-potsdam.de/en/) and the [Technical University of Dresden](https://tu-dresden.de). Phase one of the project (2022-2025) is funded by the [Deutsche Forschungsgemeinschaft](https://www.dfg.de/en/index.jsp) (DFG, German Research Foundation) and involves the development of new research data infrastructure for the [International Heat Flow Commission'](http://ihfc-iugg.org)s (IHFC) Global Heat Flow Database.
 
 
-[![GFZ Potsdam](_static/brand/GFZ_logo.png){.w-25}](https://www.gfz-potsdam.de)
-[![TU Dresden](_static/brand/TU_Dresden.svg){.w-25}](https://tu-dresden.de/)
-[![DFG](_static/brand/dfg_logo.gif){.w-25}](https://tu-dresden.de/)
+<!-- [![GFZ Potsdam](/_static/brand/GFZ_logo.png){.w-25}](https://www.gfz-potsdam.de)
+[![TU Dresden](/_static/brand/TU_Dresden.svg){.w-25}](https://tu-dresden.de/)
+[![DFG](/_static/brand/DFG.gif){.w-25}](https://tu-dresden.de/) -->
 
 ```{seealso}
 For more information regarding the project, please visit the [official project website](http://heatflow.world).
