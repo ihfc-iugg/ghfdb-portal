@@ -74,7 +74,6 @@ INSTALLED_APPS += [  # noqa: F821
     "django_model_info.apps.DjangoModelInfoConfig",
 ]
 
-
 # if DEBUG:
 #     INSTALLED_APPS += [
 #         "django_browser_reload",
