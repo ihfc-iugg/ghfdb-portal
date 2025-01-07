@@ -1,22 +1,20 @@
-# All configuration values have a default; values that are commented out
-# serve to show the default.
-from pathlib import Path
 import os
+import sys
 
-BASE_DIR = Path(__file__).parent.parent.resolve()
 os.environ.setdefault("DJANGO_ENV", "development")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
 from docs.conf import *
 
 
-# app_dir = Path(__file__).parent.parent.resolve()
-# sys.path.append(str(app_dir))
-
-
 html_short_title = "Heatflow.world"
 
-html_static_path = ["_static", os.path.abspath("../assets/img")]
+sys.path.append(os.path.abspath("../assets"))
+
+html_static_path = [
+    "_static",
+    "../assets/img",
+]
 
 html_logo = "_static/logo.svg"
 html_favicon = "_static/icon.svg"
@@ -33,63 +31,12 @@ html_favicon = "_static/icon.svg"
 # )
 
 extensions.remove("autodoc2")
-
+extensions += [
+    "sphinx_exec_code",
+    "extensions.modelinfo",
+]
 autodoc2_parse_docstrings = True
 
 autodoc2_docstring_parser_regexes = [("myst", r".*choices*")]
 
 epub_theme = "sphinx_book_theme"
-
-# Auto list fields from django models - from https://djangosnippets.org/snippets/2533/#c5977
-
-
-# def process_docstring(app, what, name, obj, options, lines):
-#     # This causes import errors if left outside the function
-#     from django.db import models
-
-#     # Only look at objects that inherit from Django's base model class
-#     if inspect.isclass(obj) and issubclass(obj, models.Model):
-#         # Grab the field list from the meta class
-#         fields = obj._meta.get_fields()
-
-#         for field in fields:
-#             # Skip ManyToOneRel and ManyToManyRel fields which have no 'verbose_name' or 'help_text'
-#             if not hasattr(field, "verbose_name"):
-#                 continue
-
-#             # Decode and strip any html out of the field's help text
-#             help_text = strip_tags(force_str(field.help_text))
-
-#             # Decode and capitalize the verbose name, for use if there isn't
-#             # any help text
-#             verbose_name = force_str(field.verbose_name).capitalize()
-
-#             if help_text:
-#                 # Add the model field to the end of the docstring as a param
-#                 # using the help text as the description
-#                 lines.append(":param %s: %s" % (field.attname, help_text))
-#             else:
-#                 # Add the model field to the end of the docstring as a param
-#                 # using the verbose name as the description
-#                 lines.append(":param %s: %s" % (field.attname, verbose_name))
-
-#             # Add the field's type to the docstring
-#             if isinstance(field, models.ForeignKey):
-#                 to = field.rel.to
-#                 lines.append(
-#                     ":type %s: %s to :class:`~%s.%s`"
-#                     % (field.attname, type(field).__name__, to.__module__, to.__name__)
-#                 )
-#             else:
-#                 lines.append(":type %s: %s" % (field.attname, type(field).__name__))
-
-#     # Return the extended docstring
-#     return lines
-
-
-# def setup(app):
-#     # Register the docstring processor with sphinx
-#     app.connect("autodoc2-object", process_docstring)
-
-
-# END Auto list fields from django models -
