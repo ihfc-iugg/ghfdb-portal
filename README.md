@@ -21,6 +21,7 @@ We extend our gratitude to all individuals, organizations, and institutions who 
 [![World Heat Flow Database Project](./assets/img/brand/logo.png)](https://www.heatflow.world)
 [![Deutsche Forschungsgemeinschaft](./assets/img/brand/DFG.gif)](https://www.dfg.de)
 [![GFZ](./assets/img/brand/GFZ_logo.png)](https://www.gfz-potsdam.de)
+[![TUD](./assets/img/brand/TUD_Logo_HKS41_57.png)](https://tu-dresden.de/)
 
 ## Fork
 
@@ -47,6 +48,8 @@ cd ProjectDir/
 poetry shell
 invoke docs --live
 ```
+
+[Demo](https://heatflowworld.readthedocs.io/en/latest/index.html)
 
 #### Run Portel
 
