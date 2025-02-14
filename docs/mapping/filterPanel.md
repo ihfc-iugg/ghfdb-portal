@@ -5,12 +5,9 @@ Users can choose between two categories of filter. One is based on the attribute
 ```
 # Pseudo Code
 
-filtered-points
-    31.5mW/m^2 < Heat-flow value < 106mW/m^2 # Attribute filter 1
-    AND 
-    Type of exploration method === Mining OR Drilling OR Tunelling # Attribute Filter 2
-    AND 
-    Coordinates of points inside the polygon # Location filter 1
+subsetFilter1 = return points from ghfdb where 31.5mW/m^2 < Heat-flow value < 106mW/m^2
+subsetFilter2 = return points from subsetFilter1 if Type of exploration method === Mining OR Drilling OR Tunelling
+filteredPoints = return points from subsetFilter2 if points inside polygon
 ```
 
 <img src="../../docs/_static/_mapping/filter-combination.PNG" alt="Circle color" width="100%"/> 
