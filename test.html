@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+    <title>Select2 with Drag and Drop</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css"
+          rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css"
+          rel="stylesheet" />
+    <style>
+      .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        cursor: move;
+      }
+    </style>
+  </head>
+  <body>
+    <select id="mySelect"
+            multiple="multiple"
+            style="width: 100%">
+      <option value="1">Banana</option>
+      <option value="2">Apple</option>
+      <option value="3">Orange</option>
+      <option value="4">Grape</option>
+      <option value="5">Pineapple</option>
+    </select>
+    <input type="text" id="valueList" />
+    <option value="1">Banana</option>
+    <option value="2">Apple</option>
+    <option value="3">Orange</option>
+    <option value="4">Grape</option>
+    <option value="5">Pineapple</option>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <style>
+      .select2-results__option[aria-selected=true] {
+        display: none;
+      }
+    </style>
+    <script>
+         $('#mySelect').select2({
+              placeholder: 'Select fruits',
+              sorter: function(data) {
+                   return data // Prevent reordering by returning data as is
+              }
+         })
+
+
+         $("#mySelect").next(".select2").find(".select2-selection").sortable({
+              items: 'li',
+              containment: 'parent',
+              tolerance: 'pointer',
+
+              update: function() {
+                   // orderSortedPassageValues()
+                   var selectedItems = $('#mySelect').val() // Get the selected values
+                   var selectedOptions = $('#mySelect').find('option')
+                   var newOrder = []
+
+                   // Build the new order based on the sorted selection container
+                   $selectionContainer.find('li').each(function() {
+                        var value = $(this).data('select2-id') // Get the value associated with the list item
+                        if (selectedItems.includes(value)) {
+                             newOrder.push(value)
+                        }
+                   })
+
+                   // Set the new order in the select element
+                   $('#mySelect').val(newOrder).trigger('change')
+              }
+         })
+
+         orderSortedPassageValues = function() {
+              $("#mySelect").parent().find("ul.select2-selection__rendered").children("li[title]").each(function(i, obj) {
+                   var element = $("#mySelect").children("option[value=" + obj.title + "]")
+                   moveElementToEndOfParent(element)
+              })
+         }
+
+         moveElementToEndOfParent = function(element) {
+              var parent = element.parent()
+
+              element.detach()
+
+              parent.append(element)
+         }
+
+         $("#mySelect").on("select2:select", function(evt) {
+              var id = evt.params.data.id
+
+              var element = $(this).children("option[value=" + id + "]")
+
+              moveElementToEndOfParent(element)
+
+              $(this).trigger("change")
+         })
+
+         // $('#mySelect').on('change', function (e) {
+         //   var selectedItems = $(this).val()
+         //   $(this).val(selectedItems).trigger('change') // Ensure the selected items are preserved in order
+         // });
+    </script>
+    <!-- <script>
+      $(document).ready(function() {
+
+           // Initialize Select2
+           $('#mySelect').select2({
+                placeholder: 'Select fruits'
+           })
+
+           // Make selected items sortable
+           $('#mySelect').on('select2:select', function() {
+                makeSortable()
+           })
+
+           // Function to make the selected items sortable
+           function makeSortable() {
+                var $choices = $('.select2-selection__choice').parent()
+                $choices.sortable({
+                     tolerance: 'pointer',
+                     stop: function(event, ui) {
+                          // Get the new order of selected items
+                          var order = $(this).children('.select2-selection__choice').map(function() {
+                               // return $(this).data('data').id
+                               return $(this).data().select2Id
+                          }).get()
+                          $("#valueList").val(order.join(','))
+                          // Update the Select2 selection
+                          // var $select = $('#mySelect')
+                          // $select.val(order).trigger('change')
+                     }
+                }).disableSelection()
+           }
+
+           // Initialize sortable after the first item is selected
+           if ($('#mySelect').val().length > 0) {
+                makeSortable()
+           }
+      });
+ </script> -->
+  </body>
+</html>

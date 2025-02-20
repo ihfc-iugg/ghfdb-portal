@@ -1,19 +1,20 @@
+import os
 from datetime import date
 
 from django import forms
 from django.contrib.staticfiles import finders
-from django.urls import reverse
+from django.core.files import File
 from django.utils.translation import gettext as _
-from django.views.generic.edit import FormView
 from django_downloadview import PathDownloadView
+from django_downloadview.exceptions import FileNotFound
 from django_htmx.http import HttpResponseClientRedirect
-from geoluminate.core.view_mixins import HTMXMixin
-from geoluminate.models import Dataset
-from meta.views import MetadataMixin
+from fairdm.contrib.import_export.views import DataExportView, DataImportView
+from fairdm.registry import registry
+from fairdm.utils.view_mixins import HTMXMixin
 from neapolitan.views import CRUDView
 
-from .importer import HeatFlowParentImporter
-from .models import Review
+from .models import HeatFlow, Review
+from .resources import GHFDBImportFormat, GHFDBResource
 
 
 class GHFDBPathDownloadView(PathDownloadView):
@@ -40,37 +41,68 @@ class ReviewCRUDView(HTMXMixin, CRUDView):
 
     def form_valid(self, form):
         self.object = form.save()
+        # add user as a contributor of the dataset with the role of reviewer
+        # self.request.user.add_to(self.object.dataset, ["reviewer"])
+
+        if self.role.value == "create":
+            # add user as a contributor of the dataset with the role of reviewer
+            self.request.user.add_to(self.object.dataset, ["reviewer"])
+            # action.send(
+            #     self.request.user,
+            #     verb=_("harvesting"),
+            #     target=self.object.literature,
+            #     description=_("is harvesting data from"),
+            # )
         return HttpResponseClientRedirect(self.object.dataset.get_absolute_url())
 
 
-class UploadForm(forms.Form):
-    docfile = forms.FileField(label="Select a file")
+class GHFDBImport(DataImportView):
+    template_name = "heat_flow/ghfdb_import.html"
+
+    def get_resource(self):
+        return GHFDBResource(dataset=self.get_object())
+
+    def get_resource_model(self):
+        """
+        Retrieves the model class based on the 'type' query parameter.
+        """
+        self.meta = registry.get_model(HeatFlow)
+        self.dtype = f"{self.meta['app_label']}.{self.meta['model']}"  # Ensures dtype is still assigned
+        return HeatFlow
+
+    def get_meta_title(self, context):
+        return _("GHFDB Upload")
+
+    def get_dataset_format(self, file):
+        return GHFDBImportFormat(encoding=self.from_encoding)
 
 
-class GHFDBUpload(HTMXMixin, MetadataMixin, FormView):
-    title = _("Upload")
-    template_name = "geoluminate/import.html"
-    form_class = UploadForm
-    extra_context = {"title": _("GHFDB Upload")}
-    importer_class = HeatFlowParentImporter
+class GHFDBExport(DataExportView):
+    template_path = "ghfdb/template.xlsx"
 
-    def process_import(self, dataset, import_file):
-        importer = self.importer_class(import_file, dataset)
-        return importer.process_import()
+    def get_file(self):
+        if not self.request.POST.get("template"):
+            return super().get_file()
 
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        return form
+        filename = finders.find(self.template_path)
 
-    def form_valid(self, form):
-        self.dataset = Dataset.objects.get(pk=self.kwargs["pk"])
-        errors = self.process_import(self.dataset, form.cleaned_data["docfile"])
-        if errors:
-            # add errors to context and re-render form
-            context = self.get_context_data(form=form)
-            context["errors"] = errors
-            return self.render_to_response(context)
-        return super().form_valid(form)
+        if not os.path.isfile(filename):
+            raise FileNotFound(f'File "{filename}" does not exists')
+        with open(filename, "rb") as f:
+            return File(f)
 
-    def get_success_url(self):
-        return reverse("dataset-measurements", kwargs={"pk": self.dataset.pk})
+    def get_resource(self):
+        return GHFDBResource(dataset=self.get_object())
+
+    def get_resource_model(self):
+        """
+        Retrieves the model class based on the 'type' query parameter.
+        """
+        self.meta = registry.get_model(HeatFlow)
+        self.dtype = f"{self.meta['app_label']}.{self.meta['model']}"  # Ensures dtype is still assigned
+        return HeatFlow
+
+    def get_basename(self):
+        if self.request.POST.get("template"):
+            return os.path.basename(self.template_path)
+        return f"GHFDB.{self.format_class.get_extension()}"

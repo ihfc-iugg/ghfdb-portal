@@ -1,7 +1,6 @@
-import django_filters as df
-from geoluminate.contrib.core.filters import SampleFilter
+from fairdm.core.filters import MeasurementFilter, SampleFilter
 
-from .models import ChildHeatFlow, HeatFlowSite
+from .models import HeatFlow, HeatFlowSite
 
 
 class HeatFlowSiteFilter(SampleFilter):
@@ -10,7 +9,7 @@ class HeatFlowSiteFilter(SampleFilter):
         fields = ["name", "environment", "explo_method", "explo_purpose", "lithology", "age", "stratigraphy"]
 
 
-class ChildHeatFlowFilter(df.FilterSet):
+class HeatFlowFilter(MeasurementFilter):
     class Meta:
-        model = ChildHeatFlow
-        exclude = ["created", "modified", "polymorphic_ctype", "options", "measurement_ptr", "image"]
+        model = HeatFlow
+        exclude = ["created", "modified", "polymorphic_ctype", "options", "measurement_ptr", "image", "tags"]

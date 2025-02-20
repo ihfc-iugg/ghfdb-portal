@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+    <title>Selectize Example</title>
+    <!-- Include Selectize CSS -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.15.2/css/selectize.default.min.css"
+          integrity="sha512-pTaEn+6gF1IeWv3W1+7X7eM60TFu/agjgoHmYhAfLEU8Phuf6JKiiE8YmsNC0aCgQv4192s4Vai8YZ6VNM6vyQ=="
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css"
+          rel="stylesheet" />
+    <!-- Include jQuery (required for Selectize) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <!-- Include Selectize JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.15.2/js/selectize.min.js"
+            integrity="sha512-IOebNkvA/HZjMM7MxL0NYeLYEalloZ8ckak+NDtOViP7oiYzG5vn6WVXyrJDiJPhl4yRdmNAG49iuLmhkUdVsQ=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"></script>
+  </head>
+  <body>
+    <h1>Selectize Example with Drag and Drop</h1>
+    <!-- The multi-select element -->
+    <select id="mySelect" multiple="multiple">
+      <option value="1">Item 1</option>
+      <option value="2">Item 2</option>
+      <option value="3">Item 3</option>
+      <option value="4">Item 4</option>
+      <option value="5">Item 5</option>
+    </select>
+    <script>
+         // Initialize Selectize with drag-and-drop support
+         $('#mySelect').selectize({
+              plugins: ['drag_drop'] // Enable drag-and-drop functionality
+         })
+    </script>
+  </body>
+</html>

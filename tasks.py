@@ -86,13 +86,13 @@ def release(c):
 def dumpdata(c):
     c.run(
         "docker compose -f local.yml run django python manage.py dumpdata users organizations contributors projects"
-        " datasets samples core --natural-foreign --natural-primary --output=geoluminate.json.gz"
+        " datasets samples core --natural-foreign --natural-primary --output=fairdm.json.gz"
     )
 
 
 @task
 def loaddata(c):
-    c.run("docker compose -f local.yml run django python manage.py loaddata core --app geoluminate")
+    c.run("docker compose -f local.yml run django python manage.py loaddata core --app fairdm")
 
 
 @task
@@ -107,7 +107,7 @@ def create_fixtures(c, users=75, orgs=25, projects=12):
 
 @task
 def savedemo(c):
-    """Save the initial data for the core geoluminate app"""
+    """Save the initial data for the core fairdm app"""
     c.run(
         " ".join(
             [
@@ -137,7 +137,7 @@ def update_deps(c):
         "django-jsonfield-toolkit",
         "django-polymorphic-treebeard",
         "django-account-management",
-        "geoluminate-docs",
+        "fairdm-docs",
         "django-research-vocabs",
         "django-setup-tools",
         "django-flex-menus",

@@ -1,59 +1,182 @@
 import django_tables2 as tables
-from earth_science.tables import PointTable
-from geoluminate.contrib.core.tables import MeasurementTable
+from django.utils.translation import gettext_lazy as _
+from fairdm.core.tables import MeasurementTable, SampleTable
 
-from .models import ChildHeatFlow, HeatFlowSite, ParentHeatFlow
+from heat_flow.models.measurements import IntervalConductivity, ThermalGradient
+
+from .models import HeatFlow, HeatFlowInterval, HeatFlowSite, SurfaceHeatFlow
 
 
-class HeatFlowSiteTable(PointTable):
+class HeatFlowSiteTable(SampleTable):
+    name = tables.Column(verbose_name=_("Site name"), linkify=True)
+
     class Meta:
         model = HeatFlowSite
-        exclude = ["path", "status", "has_children", "has_parent", "site_icon"]
         fields = [
             "id",
             "dataset",
+            "location",
             "name",
-            # "location",
             "latitude",
             "longitude",
             "elevation",
+            "elevation_datum",
+            "azimuth",
+            "inclination",
+            "length",
             "environment",
             "explo_method",
             "explo_purpose",
-            "total_depth_MD",
-            "total_depth_TVD",
+            "lithology",
+            "age",
+            "stratigraphy",
         ]
 
 
-class ParentHeatFlowTable(MeasurementTable):
-    site = tables.Column(verbose_name="name", accessor="sample", linkify=True)
+class HeatFlowIntervalTable(SampleTable):
+    class Meta:
+        model = HeatFlowInterval
+        fields = [
+            "id",
+            "dataset",
+            "location",
+            "latitude",
+            "longitude",
+            "top",
+            "bottom",
+            "vertical_depth",
+            "vertical_datum",
+            "lithology",
+            "age",
+            "stratigraphy",
+            # "status",
+            # "local_id",
+        ]
+
+
+class SurfaceHeatFlowTable(MeasurementTable):
+    site = tables.Column(verbose_name=_("Site name"), accessor="sample", linkify=True)
 
     class Meta:
-        model = ParentHeatFlow
-        fields = ["site", "lat_NS", "heat_flow"]
+        model = SurfaceHeatFlow
+        fields = [
+            "id",
+            "dataset",
+            "location",
+            "site",
+            "latitude",
+            "longitude",
+            "value",
+            "uncertainty",
+            "corr_HP_flag",
+            "is_ghfdb",
+        ]
+        exclude = ["sample"]
+
+    def __init__(self, data=None, *args, **kwargs):
+        data = data.prefetch_related("sample__heatflowsite")
+        # modify the queryset (data) here if required
+        super().__init__(*args, data=data, **kwargs)
 
 
-class ChildHeatFlowTable(MeasurementTable):
-    id = tables.Column(verbose_name="id", visible=False)
-    # parent = tables.Column(verbose_name="name", accessor="parent", linkify=True)
-    value = tables.Column(verbose_name="qc")
-    uncertainty = tables.Column(verbose_name="qc_uncertainty")
-    method = tables.Column(verbose_name="q_method")
-    probe_penetration = tables.Column(verbose_name="probe_penetration")
-    relevant_child = tables.Column(verbose_name="relevant_child")
+class IntervalMixin:
+    def __init__(self, data=None, *args, **kwargs):
+        # modify the queryset (data) here if required
+        data = data.prefetch_related("sample__heatflowinterval")
+        super().__init__(*args, data=data, **kwargs)
 
+
+class HeatFlowTable(IntervalMixin, MeasurementTable):
     class Meta:
-        model = ChildHeatFlow
-        exclude = [
-            "created",
-            "modified",
-            "polymorphic_ctype",
-            "name",
+        model = HeatFlow
+        exclude = ["latitude", "longitude"]
+        fields = [
+            "id",
+            "dataset",
+            "location",
             "sample",
-            "parent",
-            "options",
-            "measurement_ptr",
-            "image",
+            "sample__heatflowinterval__top",
+            "sample__heatflowinterval__bottom",
+            "value",
+            "uncertainty",
+            "method",
+            "thermal_gradient",
+            "thermal_conductivity",
+            "expedition",
+            "probe_penetration",
+            "probe_length",
+            "probe_tilt",
+            "water_temperature",
+            "corr_IS_flag",
+            "corr_T_flag",
+            "corr_S_flag",
+            "corr_E_flag",
+            "corr_TOPO_flag",
+            "corr_PAL_flag",
+            "corr_SUR_flag",
+            "corr_CONV_flag",
+            "corr_HR_flag",
+        ]
+
+
+class ThermalGradientTable(IntervalMixin, MeasurementTable):
+    # depth_top = tables.Column(verbose_name=_("Top depth"), empty_values=())
+
+    class Meta:
+        model = ThermalGradient
+        exclude = ["latitude", "longitude"]
+        fields = [
+            "id",
+            "dataset",
+            "location",
+            "sample",
+            # "sample_type",
+            "sample__heatflowinterval__top",
+            "sample__heatflowinterval__bottom",
+            # "sample__top",
+            # "sample__bottom",
+            # "depth_top",
+            "value",
+            "uncertainty",
+            "corrected_value",
+            "corrected_uncertainty",
+            "method_top",
+            "method_bottom",
+            "shutin_top",
+            "shutin_bottom",
+            "correction_top",
+            "correction_bottom",
+            "number",
+        ]
+
+
+class ThermalConductivityTable(IntervalMixin, MeasurementTable):
+    # depth_top = tables.Column(verbose_name=_("Top depth"), empty_values=())
+
+    class Meta:
+        model = IntervalConductivity
+        fields = [
+            "id",
+            "dataset",
+            "location",
+            "sample",
+            # "sample_type",
+            "sample__heatflowinterval__top",
+            "sample__heatflowinterval__bottom",
+            # "sample__top",
+            # "sample__bottom",
+            # "depth_top",
+            "value",
+            "uncertainty",
+            "corrected_value",
+            "corrected_uncertainty",
+            "method_top",
+            "method_bottom",
+            "shutin_top",
+            "shutin_bottom",
+            "correction_top",
+            "correction_bottom",
+            "number",
         ]
 
 
@@ -62,7 +185,7 @@ class GHFDBTable(tables.Table):
     parent__uncertainty = tables.Column(verbose_name="q_uncertainty")
 
     class Meta:
-        model = ChildHeatFlow
+        model = HeatFlow
         fields = [
             "id",
             "parent__sample__name",

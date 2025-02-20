@@ -1,31 +1,29 @@
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout
-from django import forms
+from fairdm.core.forms import SampleForm
 
 from .models import HeatFlowSite
 
 
 # ===================== FORMS =====================
-class HeatFlowSiteForm(forms.ModelForm):
+class HeatFlowSiteForm(SampleForm):
     class Meta:
         model = HeatFlowSite
-        fields = ["name", "internal_id", "dataset", "environment", "explo_method", "explo_purpose"]
+        fields = ["name", "local_id", "dataset", "environment", "explo_method", "explo_purpose"]
         # widgets = {
         #     "length": forms.NumberInput(),
         # }
 
-    def __init__(self, *args, **kwargs):
-        self.request = kwargs.pop("request", None)
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.layout = Layout(
-            "name",
-            "internal_id",
-            "dataset",
-            "environment",
-            "explo_method",
-            "explo_purpose",
-        )
+    # def __init__(self, *args, **kwargs):
+    #     self.request = kwargs.pop("request", None)
+    #     super().__init__(*args, **kwargs)
+    #     self.helper = FormHelper()
+    #     self.helper.layout = Layout(
+    #         "name",
+    #         "local_id",
+    #         "dataset",
+    #         "environment",
+    #         "explo_method",
+    #         "explo_purpose",
+    #     )
 
 
 # class HeatFlowParentForm(forms.ModelForm):
@@ -33,7 +31,7 @@ class HeatFlowSiteForm(forms.ModelForm):
 #     help_text = _("Add a new heat flow.")
 
 #     class Meta:
-#         model = ParentHeatFlow
+#         model = SurfaceHeatFlow
 #         fields = "__all__"
 
 #     def __init__(self, *args, **kwargs):
@@ -47,12 +45,12 @@ class HeatFlowSiteForm(forms.ModelForm):
 #         )
 
 
-# class ChildHeatFlowForm(forms.ModelForm):
+# class HeatFlowForm(forms.ModelForm):
 #     label = _("Heat Flow (Child)")
 #     help_text = _("Add a new child heat flow.")
 
 #     class Meta:
-#         model = ChildHeatFlow
+#         model = HeatFlow
 #         fields = [
 #             "qc",
 #             "qc_uncertainty",
@@ -71,7 +69,7 @@ class HeatFlowSiteForm(forms.ModelForm):
 #     help_text = _("Probe sensing for marine heat flow measurements.")
 
 #     class Meta:
-#         model = ChildHeatFlow
+#         model = HeatFlow
 #         fields = ["hf_pen", "probe_type", "hf_probeL", "probe_title"]
 
 
@@ -80,7 +78,7 @@ class HeatFlowSiteForm(forms.ModelForm):
 #     help_text = _("Metadata and flags for heat flow child measurements.")
 
 #     class Meta:
-#         model = ChildHeatFlow
+#         model = HeatFlow
 #         fields = ["q_method", "relevant_child"]
 
 
@@ -93,7 +91,7 @@ class HeatFlowSiteForm(forms.ModelForm):
 #     # tc_location = [literature/unspecified] only if {tc_source} = [Assumed from literature]
 
 #     class Meta:
-#         model = ChildHeatFlow
+#         model = HeatFlow
 #         fields = [
 #             "t_grad_mean",
 #             "T_grad_uncertainty",
@@ -114,7 +112,7 @@ class HeatFlowSiteForm(forms.ModelForm):
 #     help_text = _("Conductivity for heat flow child measurements.")
 
 #     class Meta:
-#         model = ChildHeatFlow
+#         model = HeatFlow
 #         fields = [
 #             "tc_mean",
 #             "tc_uncertainty",

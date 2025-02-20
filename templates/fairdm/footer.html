@@ -30,9 +30,9 @@
       </div>
     </div>
   </div>
-  <div class="w-100 text-center fixed-bottom border-top border-light">
-    {% blocktrans %}
-    This data portal was created using the free and open-source <a href="//fairdm.com">FairDM framework</a>.
+  <div class="w-100 small text-center fixed-bottom">
+    {% blocktrans with site_name=config.site_name %}
+      {{ site_name }} was created using the free and open-source <a href="//fairdm.com">FairDM framework</a>.
     {% endblocktrans %}
   </div>
 </div>
