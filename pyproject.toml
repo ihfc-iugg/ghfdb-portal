@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "global-heat-flow-database"
-version = "2025.1"
+version = "2025.2"
 description = "Code base for the IHFC's Global Heat Flow Database web application"
 authors = ["Sam <samuel.scott.jennings@gmail.com>"]
 license = "MIT"
