@@ -7,9 +7,7 @@ license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/ihfc-iugg/ghfdb-portal"
 include = ["heat_flow", "LICENSE", "README.md"]
-packages = [
-    { include = "heat_flow" },
-]
+
 classifiers = [
     "Development Status :: 1 - Planning",
     "Framework :: Django :: 5.0",
