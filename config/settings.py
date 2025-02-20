@@ -1,4 +1,4 @@
-import geoluminate
+import fairdm
 from django.utils.translation import gettext_lazy as _
 
 # pprint(INSTALLED_APPS)
@@ -10,14 +10,13 @@ LANGUAGES = [
 ]
 
 
-geoluminate.setup(
+fairdm.setup(
     apps=[
         "heat_flow",
-        "earth_science",
-        "earth_science.location",
-        "earth_science.geology.lithology",
-        "earth_science.geology.stratigraphy",
-        "earth_science.geology.geologic_time",
+        "fairdm_geo",
+        "fairdm_geo.geology.lithology",
+        "fairdm_geo.geology.stratigraphy",
+        "fairdm_geo.geology.geologic_time",
     ]
 )
 
@@ -41,8 +40,9 @@ EASY_ICONS["aliases"].update(
 
 DJANGO_SETUP_TOOLS = globals().get("DJANGO_SETUP_TOOLS", {})
 
-# this line is only required during staging because no migrations are being committed to the geoluminate repo
+# this line is only required during staging because no migrations are being committed to the fairdm repo
 DJANGO_SETUP_TOOLS[""]["always_run"].insert(0, ("makemigrations", "--no-input"))
+DJANGO_SETUP_TOOLS[""]["on_initial"].append(("loaddata", "dump.json"))
 
 
 PARLER_LANGUAGES = {
@@ -66,9 +66,13 @@ EARTH_SCIENCE_Y_COORD = {
     "max_digits": None,
 }
 
+# import sys
 
-COMPRESS_ENABLED = True
-COMPRESS_OFFLINE = False
+# for p in sys.path:
+#     print(p)
+
+# COMPRESS_ENABLED = True
+# COMPRESS_OFFLINE = False
 
 INSTALLED_APPS += [  # noqa: F821
     "django_model_info.apps.DjangoModelInfoConfig",
@@ -135,7 +139,7 @@ INSTALLED_APPS += [  # noqa: F821
 # ]
 
 
-# CLASSY_DOC_BASES = ["heat_flow", "earth_science"]
+# CLASSY_DOC_BASES = ["heat_flow", "fairdm_geo"]
 # # CLASSY_DOC_NON_INSTALLED_APPS = ['django.views.generic']
 # CLASSY_DOC_MODULE_TYPES = [
 #     "models",
