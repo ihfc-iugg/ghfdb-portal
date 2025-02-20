@@ -21,3 +21,38 @@ We extend our gratitude to all individuals, organizations, and institutions who 
 [![World Heat Flow Database Project](./assets/img/brand/logo.png)](https://www.heatflow.world)
 [![Deutsche Forschungsgemeinschaft](./assets/img/brand/DFG.gif)](https://www.dfg.de)
 [![GFZ](./assets/img/brand/GFZ_logo.png)](https://www.gfz-potsdam.de)
+[![TUD](./assets/img/brand/TUD_Logo_HKS41_57.png)](https://tu-dresden.de/)
+
+## Fork
+
+[Fork according to GitHub tutorial](https://docs.github.com/de/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo#cloning-your-forked-repository)
+
+### Setup Portel
+
+#### Clean up heat_flow/migrations
+
+In heat_flow/migrations delete all files excep _init_.py
+
+#### Setup project
+
+```bash
+python manage.py setup
+```
+
+### Actions for Portal and Docs
+
+#### Run Docs
+
+```bash
+cd ProjectDir/
+poetry shell
+invoke docs --live
+```
+
+[Demo](http://127.0.0.1:5000/mapping/index.html)
+
+#### Run Portel
+
+```bash
+python manage.py runserver
+```
