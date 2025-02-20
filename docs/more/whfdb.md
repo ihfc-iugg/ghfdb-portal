@@ -42,4 +42,4 @@ The end result of this collaborative effort was an updated GHFDB structure, to b
 
 ## Modernised Infrastructure
 
-The recent revisions of the GHFDB schema is accompanied by efforts to modernise the technical infrastructure hosting the GHFDB. This includes adaptation to a modern relational database and the development of a new web application for online, collaborative management of the database. This documentation describes the implementation, usage and development of the new web application which is built using the [Geoluminate Research Database Framework](https://geoluminate.github.io/geoluminate/).
+The recent revisions of the GHFDB schema is accompanied by efforts to modernise the technical infrastructure hosting the GHFDB. This includes adaptation to a modern relational database and the development of a new web application for online, collaborative management of the database. This documentation describes the implementation, usage and development of the new web application which is built using the [FairDM Research Database Framework](https://fairdm.github.io/fairdm/).

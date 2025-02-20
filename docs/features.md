@@ -27,7 +27,7 @@ Add contributors to any project, dataset or sample within the application. Contr
 The optional literature review feature encourages community members to explore existing literature for potentially relevant data, fostering rapid database growth.
 ::: -->
 
-While there has been a growing awareness of the importance of data sharing and transparency in scientific research, historically speaking, this has not been the case. Unfortunately, this means that many datasets are hidden away in supplementary files, or provided in tables and figures that make the data difficult to access, discover and reuse. The literature review addon for Geoluminate allows you to provide a list of existing literature items that are likely to contain data that are relevant to the database. Community members can then review these literature items, assessing them for any relevant data before submitting them for formal review and inclusion into the database. 
+While there has been a growing awareness of the importance of data sharing and transparency in scientific research, historically speaking, this has not been the case. Unfortunately, this means that many datasets are hidden away in supplementary files, or provided in tables and figures that make the data difficult to access, discover and reuse. The literature review addon for FairDM allows you to provide a list of existing literature items that are likely to contain data that are relevant to the database. Community members can then review these literature items, assessing them for any relevant data before submitting them for formal review and inclusion into the database. 
 
 <!-- ### How does it work?
 
