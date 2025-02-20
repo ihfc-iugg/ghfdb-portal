@@ -169,7 +169,9 @@ class GeographicEnvironment(VocabularyBuilder):
 
     offshore_marine = Concept(
         prefLabel=_("Offshore (marine)"),
-        definition=_(""),
+        definition=_(
+            "An offshore marine environment refers to the part of the ocean that is beyond the coastal zone, typically starting from the edge of the continental shelf and extending into the open ocean. It includes deep-sea regions, open waters, and underwater ecosystems such as seamounts, mid-ocean ridges, and abyssal plains."
+        ),
     )
 
     unspecified = Concept(
@@ -401,10 +403,10 @@ class TemperatureMethod(VocabularyBuilder):
         prefLabel=_("cRTD: perturbed but corrected"),
     )
     ODTT_PC = Concept(
-        prefLabel=_("ODTT-PC: piston corer"),
+        prefLabel=_("ODTT-PC"),
     )
     ODTT_TP = Concept(
-        prefLabel=_("ODTT-TP: thermistor probe"),
+        prefLabel=_("ODTT-TP"),
     )
     CPD = Concept(
         prefLabel=_("CPD: Curie Point/Depth estimates"),
@@ -1222,7 +1224,7 @@ class GenericFlagChoices(VocabularyBuilder):
     )
 
     unspecified = Concept(
-        prefLabel=_("Unspecified"),
+        prefLabel=_("unspecified"),
         definition=_(""),
     )
 

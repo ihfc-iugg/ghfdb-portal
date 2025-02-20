@@ -29,7 +29,7 @@ services:
     command: ./compose/development/start-django
 
   postgres:
-    image: geoluminate/postgis:latest
+    image: fairdm/postgis:latest
     volumes:
       - postgres:/var/lib/postgresql/data
       - postgres_backups:/backups

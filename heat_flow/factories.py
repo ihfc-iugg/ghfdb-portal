@@ -1,16 +1,16 @@
 import random
 
 import factory
-from earth_science.factories.location import BoreholeFactory, GeoDepthIntervalFactory
 from factory.fuzzy import FuzzyChoice
-from geoluminate.factories import MeasurementFactory
+from fairdm.factories import MeasurementFactory
+from fairdm_geo.factories.location import BoreholeFactory, GeoDepthIntervalFactory
 
 from .models import (
     # ChildConductivity,
-    ChildHeatFlow,
+    HeatFlow,
     HeatFlowInterval,
     HeatFlowSite,
-    ParentHeatFlow,
+    SurfaceHeatFlow,
 )
 
 
@@ -28,25 +28,25 @@ class HeatFlowIntervalFactory(GeoDepthIntervalFactory):
         model = HeatFlowInterval
 
 
-class ParentHeatFlowFactory(MeasurementFactory):
+class SurfaceHeatFlowFactory(MeasurementFactory):
     class Meta:
-        model = ParentHeatFlow
+        model = SurfaceHeatFlow
 
     value = factory.LazyAttribute(lambda _: round(random.gauss(mu=50, sigma=30), 2))
     uncertainty = factory.LazyAttribute(lambda o: o.value * random.uniform(0.05, 0.25))  # noqa: S311
     corr_HP_flag = FuzzyChoice([True, False, None])
     is_ghfdb = factory.Faker("boolean", chance_of_getting_true=0.9)
     # children = factory.RelatedFactoryList(
-    #     "heat_flow.factories.ChildHeatFlowFactory",
+    #     "heat_flow.factories.HeatFlowFactory",
     #     parent=None,
     #     factory_related_name="parent",
     #     size=randint(1, 5),
     # )
 
 
-class ChildHeatFlowFactory(MeasurementFactory):
+class HeatFlowFactory(MeasurementFactory):
     class Meta:
-        model = ChildHeatFlow
+        model = HeatFlow
 
     # parent = factory.RelatedFactory(
     #     "heat_flow.factories.HeatFlowFactory",
@@ -57,14 +57,14 @@ class ChildHeatFlowFactory(MeasurementFactory):
     uncertainty = factory.LazyAttribute(lambda o: o.value * random.uniform(0.05, 0.25))  # noqa: S311
 
     # metadata fields
-    method = FuzzyChoice(ChildHeatFlow.method_vocab.values)
+    method = FuzzyChoice(HeatFlow.method_vocab.values)
     expedition = factory.Faker("text", max_nb_chars=100)
     relevant_child = factory.Faker("boolean", chance_of_getting_true=0.8)
 
     # probe fields
     # length = factory.LazyAttribute(lambda o: random.uniform(0, o.probe_length))
     probe_penetration = factory.Faker("pyfloat", min_value=0, max_value=1000)
-    probe_type = FuzzyChoice(ChildHeatFlow.probe_type_vocab.values)
+    probe_type = FuzzyChoice(HeatFlow.probe_type_vocab.values)
     probe_length = factory.Faker("pyfloat", min_value=0, max_value=100)
     probe_tilt = factory.Faker("pyfloat", min_value=0, max_value=90)
     water_temperature = factory.Faker("pyfloat", min_value=-10, max_value=1000)
@@ -73,15 +73,15 @@ class ChildHeatFlowFactory(MeasurementFactory):
     # thermal_conductivity = factory.SubFactory("heat_flow.factories.ChildConductivityFactory")
 
     # correction fields
-    corr_IS_flag = FuzzyChoice(ChildHeatFlow.corr_IS_flag_vocab.values)
-    corr_T_flag = FuzzyChoice(ChildHeatFlow.corr_IS_flag_vocab.values)
-    corr_S_flag = FuzzyChoice(ChildHeatFlow.corr_IS_flag_vocab.values)
-    corr_E_flag = FuzzyChoice(ChildHeatFlow.corr_IS_flag_vocab.values)
-    corr_TOPO_flag = FuzzyChoice(ChildHeatFlow.corr_IS_flag_vocab.values)
-    corr_PAL_flag = FuzzyChoice(ChildHeatFlow.corr_IS_flag_vocab.values)
-    corr_SUR_flag = FuzzyChoice(ChildHeatFlow.corr_IS_flag_vocab.values)
-    corr_CONV_flag = FuzzyChoice(ChildHeatFlow.corr_IS_flag_vocab.values)
-    corr_HR_flag = FuzzyChoice(ChildHeatFlow.corr_IS_flag_vocab.values)
+    corr_IS_flag = FuzzyChoice(HeatFlow.corr_IS_flag_vocab.values)
+    corr_T_flag = FuzzyChoice(HeatFlow.corr_IS_flag_vocab.values)
+    corr_S_flag = FuzzyChoice(HeatFlow.corr_IS_flag_vocab.values)
+    corr_E_flag = FuzzyChoice(HeatFlow.corr_IS_flag_vocab.values)
+    corr_TOPO_flag = FuzzyChoice(HeatFlow.corr_IS_flag_vocab.values)
+    corr_PAL_flag = FuzzyChoice(HeatFlow.corr_IS_flag_vocab.values)
+    corr_SUR_flag = FuzzyChoice(HeatFlow.corr_IS_flag_vocab.values)
+    corr_CONV_flag = FuzzyChoice(HeatFlow.corr_IS_flag_vocab.values)
+    corr_HR_flag = FuzzyChoice(HeatFlow.corr_IS_flag_vocab.values)
 
 
 # class TemperatureGradientFactory(MeasurementFactory):

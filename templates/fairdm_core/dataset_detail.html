@@ -1,0 +1,9 @@
+{% extends "fairdm_core/dataset_detail.html" %}
+{% block content %}
+  <c-slot name="detail_nav_actions">
+    <c-bs5.button href="{% url "ghfdb-import" pk=dataset.pk %}"
+                  class="btn btn-sm btn-outline-primary"
+                  icon="upload"
+                  :visible="user_can_edit" />
+  </c-slot>
+{% endblock content %}

@@ -1,0 +1,18 @@
+{% extends "import_export/import.html" %}
+{% block content %}
+  <c-slot name="actions">
+    <form method="post"
+          action="{% url "ghfdb-export" pk=dataset.pk %}">
+      {% csrf_token %}
+      <input type="hidden" name="template" value="true" />
+      <input type="hidden" name="format" value="xlsx" />
+      <c-bs5.button class="btn btn-sm btn-primary"
+                    type="submit"
+                    text="{% trans "Download template" %}"
+                    icon="download" />
+    </form>
+  </c-slot>
+  <p>
+    This is a special import workflow that will parse heat flow data that adheres to the current structure of the Global Heat Flow Database. If you do not have the correct template, you can download it using the button above.
+  </p>
+{% endblock content %}

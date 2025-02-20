@@ -6,11 +6,11 @@ from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.utils.translation import gettext as _
 from django_select2.forms import Select2MultipleWidget, Select2Widget
-from geoluminate.contrib.core.admin import DatasetAdmin, MeasurementAdmin, SampleAdmin
-from geoluminate.contrib.core.models import Dataset
+from fairdm.core.admin import DatasetAdmin, MeasurementAdmin, SampleAdmin
+from fairdm.core.models import Dataset
 
 from .importer import HeatFlowParentImporter
-from .models import ChildHeatFlow, HeatFlowInterval, HeatFlowSite, ParentHeatFlow
+from .models import HeatFlow, HeatFlowInterval, HeatFlowSite, SurfaceHeatFlow
 
 admin.site.unregister(Dataset)
 
@@ -51,8 +51,8 @@ class HeatFlowDatasetAdmin(ExtraButtonsMixin, DatasetAdmin):
         return TemplateResponse(request, "admin_extra_buttons/upload.html", context)
 
 
-@admin.register(ParentHeatFlow)
-class HeatFlowAdmin(MeasurementAdmin):
+@admin.register(SurfaceHeatFlow)
+class SurfaceHeatFlowAdmin(MeasurementAdmin):
     list_display = ["value", "uncertainty", "corr_HP_flag"]
 
     fields = (
@@ -62,8 +62,8 @@ class HeatFlowAdmin(MeasurementAdmin):
     )
 
 
-@admin.register(ChildHeatFlow)
-class ChildHeatFlowAdmin(admin.ModelAdmin):
+@admin.register(HeatFlow)
+class HeatFlowAdmin(admin.ModelAdmin):
     list_display = [
         "parent",
         "value",

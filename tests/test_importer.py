@@ -1,9 +1,9 @@
 from decimal import Decimal
 
 import pytest
-from earth_science.geology.geologic_time.models import GeologicalTimescale
-from earth_science.geology.lithology.models import SimpleLithology
-from geoluminate.models import Dataset
+from fairdm.models import Dataset
+from fairdm_geo.geology.geologic_time.models import GeologicalTimescale
+from fairdm_geo.geology.lithology.models import SimpleLithology
 
 from heat_flow.importer import ChildHeatFlowImporter, HeatFlowParentImporter  # noqa: F401
 from heat_flow.models import ChildHeatFlow, HeatFlowInterval, HeatFlowSite, ParentHeatFlow

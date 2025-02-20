@@ -1,4 +1,4 @@
-# SEE: docs.geoluminate/deployment
+# SEE: docs.fairdm/deployment
 version: "3.7"
 name: ghfdb_production
 

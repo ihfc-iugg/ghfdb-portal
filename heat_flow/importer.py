@@ -1,11 +1,12 @@
 from decimal import Decimal
 
 from django import forms
-from earth_science.imports import SampleLocationImporterMixin
-from geoluminate.imports import GeoluminateBaseImporter
+from fairdm.imports import FairDMBaseImporter
+
+# from fairdm_geo.imports import SampleLocationImporterMixin
 from quantityfield.fields import DecimalQuantityFormField
 
-from heat_flow.models import ChildHeatFlow, HeatFlowInterval, HeatFlowSite, ParentHeatFlow
+from heat_flow.models import HeatFlow, HeatFlowInterval, HeatFlowSite, SurfaceHeatFlow
 
 
 class CustomChoiceField(forms.ChoiceField):
@@ -84,9 +85,9 @@ class GHFDBImporterMixin:
         return form_class
 
 
-class HeatFlowParentImporter(GHFDBImporterMixin, SampleLocationImporterMixin, GeoluminateBaseImporter):
+class HeatFlowParentImporter(GHFDBImporterMixin, FairDMBaseImporter):
     """This imported class is responsible for iterating over the excel template and parsing the necessary data to create
-    `heat_flow.ParentHeatFlow` instances and their associated `heat_flow.HeatFlowSite` instances."""
+    `heat_flow.SurfaceHeatFlow` instances and their associated `heat_flow.HeatFlowSite` instances."""
 
     location_fields = {
         "x": "long_EW",
@@ -94,7 +95,7 @@ class HeatFlowParentImporter(GHFDBImporterMixin, SampleLocationImporterMixin, Ge
     }
 
     models = {
-        ParentHeatFlow: {
+        SurfaceHeatFlow: {
             "field_map": {
                 "sample": HeatFlowSite,
                 "value": "q",
@@ -123,10 +124,10 @@ class HeatFlowParentImporter(GHFDBImporterMixin, SampleLocationImporterMixin, Ge
                 },
             },
         },
-        ChildHeatFlow: {
+        HeatFlow: {
             "field_map": {
                 "sample": HeatFlowInterval,
-                "parent": ParentHeatFlow,
+                "parent": SurfaceHeatFlow,
                 "value": "qc",
                 "uncertainty": "qc_uncertainty",
                 "method": "q_method",
@@ -179,18 +180,18 @@ class HeatFlowParentImporter(GHFDBImporterMixin, SampleLocationImporterMixin, Ge
     #     return super().read_dataframe().drop_duplicates(subset=["lat_NS", "long_EW"])
 
 
-class ChildHeatFlowImporter(GHFDBImporterMixin, GeoluminateBaseImporter):
+class HeatFlowImporter(GHFDBImporterMixin, FairDMBaseImporter):
     """This importer class is responsible for iterating over the excel template and parsing the necessary data to create
-    `heat_flow.ChildHeatFlow` instances and their associated `heat_flow.HeatFlowInterval` instances."""
+    `heat_flow.HeatFlow` instances and their associated `heat_flow.HeatFlowInterval` instances."""
 
     models = {
-        ChildHeatFlow: {
+        HeatFlow: {
             "field_map": {
                 "sample": HeatFlowInterval,
                 "value": "qc",
                 "uncertainty": "qc_uncertainty",
                 "method": "q_method",
-                # "parent": ParentHeatFlow,
+                # "parent": SurfaceHeatFlow,
             },
             "form_kwargs": {
                 "exclude": ["contributors"],
