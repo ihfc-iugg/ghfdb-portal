@@ -111,16 +111,15 @@ def savedemo(c):
     c.run(
         " ".join(
             [
-                "docker compose run",
-                "django python -Xutf8 manage.py dumpdata",
+                "python -Xutf8 manage.py dumpdata",
                 "--natural-foreign",
                 "--natural-primary",
-                # "-e users.User",
+                "-e users.User",
                 "-e admin.LogEntry",
                 "-e contenttypes",
                 "-e auth.Permission",
                 "-e sessions",
-                "-o project/fixtures/project.json.bz2",
+                "-o fixtures/demo.json",
             ]
         )
     )
@@ -144,3 +143,8 @@ def update_deps(c):
     ]
 
     c.run(f"poetry update {' '.join(packages)}")
+
+
+@task
+def build_image(c):
+    c.run("docker build -t ghcr.io/ihfc-iugg/ghfd-portal .")
