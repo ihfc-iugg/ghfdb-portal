@@ -10,5 +10,8 @@ services:
       - DJANGO_SITE_NAME=Heatflow.world
       - DJANGO_SITE_DOMAIN=138.68.69.242
       - DJANGO_SECURE_SSL_REDIRECT=False
+      - DJANGO_SUPERUSER_EMAIL=super.user@example.com
+    env_file:
+      - stack.env
     ports:
       - 80:5000
