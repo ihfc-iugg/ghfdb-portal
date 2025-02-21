@@ -13,11 +13,13 @@ COPY pyproject.toml poetry.lock LICENSE README.md ./
 RUN poetry bundle venv $(test "$DJANGO_ENV" == production && echo "--only=main") /venv
 
 # Second stage: Copy application and dependencies to final image
-FROM ssjenny90/geoluminate:latest AS run-stage
+FROM ghcr.io/fair-dm/fairdm:latest AS run-stage
 ENV DJANGO_ENV=production
 ENV DJANGO_SETTINGS_MODULE=config.settings
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYDEVD_DISABLE_FILE_VALIDATION=1
+
 COPY --from=builder --chown=django:django /venv /venv
 
 # copy application code to WORKDIR

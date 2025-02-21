@@ -1,8 +1,0 @@
-# REQUIRED
-POSTGRES_DB=debug
-POSTGRES_PASSWORD=debug
-POSTGRES_USER=postgres
-
-# OPTIONAL
-# defaults to: user=postgres, port=5432
-POSTGRES_PORT=5432
