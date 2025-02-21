@@ -4,6 +4,12 @@ name: ghfdb
 
 services:
   django:
+    # image: ghfdb-portal
     image: ghcr.io/iugg-ihfc/ghfdb-portal
+    environment:
+      - WEB_CONCURRENCY=2
+      - DJANGO_SITE_NAME=Heatflow.world
+      - DJANGO_SITE_DOMAIN=138.68.69.242
+      - DJANGO_SECURE_SSL_REDIRECT=False
     ports:
       - 80:5000
