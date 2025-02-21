@@ -6,7 +6,6 @@ services:
   django:
     image: ghcr.io/ihfc-iugg/ghfdb-portal:latest
     environment:
-      - WEB_CONCURRENCY=2
       - DJANGO_SITE_NAME=Heatflow.world
       - DJANGO_SITE_DOMAIN=138.68.69.242
       - DJANGO_SECURE_SSL_REDIRECT=False
