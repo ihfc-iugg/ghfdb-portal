@@ -4,8 +4,7 @@ name: ghfdb
 
 services:
   django:
-    # image: ghfdb-portal
-    image: ghcr.io/iugg-ihfc/ghfdb-portal
+    image: ghcr.io/ihfc-iugg/ghfdb-portal:latest
     environment:
       - WEB_CONCURRENCY=2
       - DJANGO_SITE_NAME=Heatflow.world
