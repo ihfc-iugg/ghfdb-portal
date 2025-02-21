@@ -1,0 +1,18 @@
+# SEE: docs.fairdm/deployment
+version: "3.7"
+name: ghfdb_sqlite
+
+services:
+  django: &django
+    image: django
+    build:
+      context: .
+      dockerfile: ./deploy/production
+    pull_policy: build
+    command: start-django
+    entrypoint: /app/custom-entrypoint
+    env_file:
+      - deploy/config/.django
+      - stack.demo.env
+    ports:
+      - 80:5000
