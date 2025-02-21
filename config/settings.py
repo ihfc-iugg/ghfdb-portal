@@ -1,14 +1,10 @@
 import fairdm
 from django.utils.translation import gettext_lazy as _
 
-# pprint(INSTALLED_APPS)
-
-
 LANGUAGES = [
     ("en", _("English")),
     ("de", _("German")),
 ]
-
 
 fairdm.setup(
     apps=[
@@ -36,8 +32,6 @@ EASY_ICONS["aliases"].update(
     }
 )
 
-# DEPLOYMENT_PIPELINE = {}
-
 DJANGO_SETUP_TOOLS = globals().get("DJANGO_SETUP_TOOLS", {})
 
 # this line is only required during staging because no migrations are being committed to the fairdm repo
@@ -56,84 +50,49 @@ PARLER_LANGUAGES = {
     },
 }
 
-EARTH_SCIENCE_X_COORD = {
-    "decimal_places": 5,
-    "max_digits": None,
-}
+# INSTALLED_APPS += [
+#     "django_model_info.apps.DjangoModelInfoConfig",
+# ]
 
-EARTH_SCIENCE_Y_COORD = {
-    "decimal_places": 5,
-    "max_digits": None,
-}
 
-# import sys
+# import os
+# import pprint
 
-# for p in sys.path:
-#     print(p)
+# pprint.pprint(os.environ.__dict__)
 
-# COMPRESS_ENABLED = True
-# COMPRESS_OFFLINE = False
 
-INSTALLED_APPS += [  # noqa: F821
-    "django_model_info.apps.DjangoModelInfoConfig",
-]
+# if not env("POSTGRES_HOST"):
+#     print("Using sqlite3")
 
-# if DEBUG:
-#     INSTALLED_APPS += [
-#         "django_browser_reload",
-#     ]
-
-# DJANGO_SETUP_TOOLS = {
-#     "": {
-#         "on_initial": [
-#             ("makemigrations", "--no-input"),
-#             ("migrate", "--no-input"),
-#             ("createsuperuser", "--no-input", "--first_name", "Super", "--last_name", "User"),
-#             ("loaddata", "creativecommons"),
-#         ],
-#         "always_run": [
-#             ("makemigrations", "--no-input"),
-#             ("migrate", "--no-input"),
-#             "django_setup_tools.scripts.sync_site_id",
-#             ("collectstatic", "--noinput"),
-#             ("compress",),
-#         ],
+# LOGGING = {
+#     "version": 1,
+#     "disable_existing_loggers": False,
+#     "filters": {
+#         "require_debug_true": {
+#             "()": RequireDebugTrue,  # Only log in DEBUG mode
+#         },
 #     },
-#     # "development": {
-#     #     "on_initial": [
-#     #         ("loaddata", "myapp"),
-#     #     ],
-#     #     "always_run": [
-#     #         "django_setup_tools.scripts.some_extra_func",
-#     #     ],
-#     # },
-#     # "production": {
-#     #     "on_initial": [
-#     #         # ("loaddata", "myapp"),
-#     #     ],
-#     #     "always_run": [
-#     #         ("collectstatic", "--noinput"),
-#     #         ("compress",),
-#     #     ],
-#     # },
+#     "handlers": {
+#         "console": {
+#             "level": "DEBUG",
+#             "filters": ["require_debug_true"],
+#             "class": "logging.StreamHandler",
+#         },
+#     },
+#     "loggers": {
+#         "django.server": {
+#             "handlers": ["console"],
+#             "level": "DEBUG",
+#             "propagate": False,
+#         },
+#         "import_export": {
+#             "handlers": ["console"],
+#             "level": "INFO",
+#         },
+#     },
 # }
 
-
-# print(env.str("POSTGRES_USER"))
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": env.str("POSTGRES_DB"),
-#         "PASSWORD": env.str("POSTGRES_PASSWORD"),
-#         "USER": env.str("POSTGRES_USER"),
-#         "HOST": env.str("POSTGRES_HOST"),
-#         "PORT": env.str("POSTGRES_PORT"),
-#     }
-# }
-
-
-# pprint(DATABASES)
-
+#
 # INSTALLED_APPS += [
 #     "django_classy_doc",
 # ]
