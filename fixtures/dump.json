@@ -1,20 +1,5 @@
 [
   {
-    "model": "sessions.session",
-    "pk": "go2rh9tnzzlwdivkyx945xbvnk7869wq",
-    "fields": {
-      "session_data": ".eJxVkDFvgzAQhf_LzQjZPjCGqUqWLo0ytB1aVcg2l0AKGGHTUkX5743bLNlOet_7nnRn0Na6ZQy1XkJLY-isDp0b64FC6xoP1fsZ_m-oYNLef7u5gQR0gIoXGWNSMJmlsuTImUiABt31V9QvE83p4ml-oFUPU0-pdQNcPhL4m6pjVHfRak35Wu6_HrNT9nLc0n63vm2edwh3pNH2k8aINyc9Ht3VNoa5M2lE0lvq0yfXUL-5sXeCVvs2trmSWGYmV1yRUVZjyRoSB5MpxCIXhSyUEiXleBDIDCLXDRoUkkuULFdR6sn7-CNap27-gYpdfgHdOWsL:1tl7dA:Yv26KYj7ZgRv0vznKCZVC856rSUOq9GGzv4rQHtL2rA",
-      "expire_date": "2025-03-06T14:34:24.935Z"
-    }
-  },
-  {
-    "model": "sites.site",
-    "fields": {
-      "domain": "example.com",
-      "name": "example.com"
-    }
-  },
-  {
     "model": "contributors.contributor",
     "pk": "c2yXNhrh3nB2Phh3LraQimN",
     "fields": {
@@ -897,8 +882,7 @@
         1,
         2,
         3,
-        4,
-        5
+        4
       ],
       "related_literature": []
     }
@@ -3363,16 +3347,6 @@
       "uri": "http://resource.geosciml.org/classifier/cgi/lithology/ultramafic_igneous_rock",
       "name": "ultramafic_igneous_rock",
       "label": "ultramafic igneous rock"
-    }
-  },
-  {
-    "model": "research_vocabs.concept",
-    "pk": 5,
-    "fields": {
-      "vocab_name": "gts2020",
-      "uri": "http://resource.geosciml.org/classifier/ics/ischart/Phanerozoic",
-      "name": "Phanerozoic",
-      "label": "Phanerozoic"
     }
   },
   {
