@@ -1,71 +1,9 @@
-version: '3'
-name: ghfdb_local
-
-volumes:
-  postgres: {}
-  postgres_backups: {}
-  media: {}
+# SEE: docs.fairdm/deployment
+version: "3.7"
+name: ghfdb
 
 services:
-
-  django: &django
-    build:
-      context: .
-      dockerfile: ./compose/development/django
-    image: ghfdb_local_django
-    depends_on:
-      - postgres
-      - redis
-      # - minio
-    volumes:
-      - ./:/app:z
-    env_file:
-      - stack.local.env
+  django:
+    image: ghcr.io/iugg-ihfc/ghfdb-portal
     ports:
-      - 8000:8000
-      - 5678:5678
-    # command: sleep infinity
-    # command: start-django
-    command: ./compose/development/start-django
-
-  postgres:
-    image: fairdm/postgis:latest
-    volumes:
-      - postgres:/var/lib/postgresql/data
-      - postgres_backups:/backups
-    env_file:
-      - stack.local.env
-  redis:
-    image: redis:6
-  # celeryworker:
-  #   <<: *django
-  #   ports: []
-  #   command: start-celeryworker
-
-  # celerybeat:
-  #   <<: *django
-  #   ports: []
-  #   command: start-celerybeat
-
-  # flower:
-  #   <<: *django
-  #   ports:
-  #     - "5555:5555"
-  #   command: start-flower
-
-  # docs:
-  #   <<: *django
-  #   working_dir: /app/docs
-  #   ports:
-  #     - "9000:9000"
-  #   command: start-docs
-  # minio:
-  #   image: quay.io/minio/minio:latest
-  #   volumes:
-  #     - media:/minio
-  #   env_file:
-  #     - stack.local.env
-  #   ports:
-  #     - "9000:9000"
-  #     - "9001:9001"
-  #   command: server /minio
+      - 80:5000
