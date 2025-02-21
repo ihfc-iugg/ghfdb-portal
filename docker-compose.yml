@@ -7,9 +7,9 @@ services:
     image: ghcr.io/ihfc-iugg/ghfdb-portal:latest
     environment:
       - DJANGO_SITE_NAME=Heatflow.world
-      - DJANGO_SECURE_SSL_REDIRECT=False
       - DJANGO_SUPERUSER_EMAIL=super.user@example.com
+      - DJANGO_SECURE=False
     env_file:
       - stack.env
     ports:
-      - 80:5000
+      - 8000:5000
