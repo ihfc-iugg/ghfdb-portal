@@ -13,11 +13,11 @@
                 action="{% url "map" %}"
                 action_text="{% trans "Get started!" %}">
     <c-slot name="actions">
-      <c-bs5.button href="{% url "map" %}"
+      <c-bs5.button href="https://worldheatflowdatabase.github.io/HeatFlowMapping/"
                     class="btn btn-primary"
                     icon="map"
                     text="{% trans "Get started" %}" />
-      <c-bs5.button href="https://heatflowworld.readthedocs.io/en/latest/more/publishing.html"
+      <c-bs5.button href="https://heatflowworld.readthedocs.io"
                     class="btn btn-outline-primary"
                     icon="arrow-right"
                     text="{% trans "View tutorials" %}" />
@@ -67,17 +67,9 @@
                 lead="{% trans "Publish and share datasets that meet strict quality standards." %}"
                 text="{% trans "Upload pre-existing datasets that reflect the current structure and standards of the Global Heat Flow Database. Datasets shared in the portal are eligible for formal publication via GFZ Potsdam data publishing. Follow the link below to learn more." %}"
                 img="https://picsum.photos/600/?random"
-                action="https://heatflowworld.readthedocs.io/en/latest/more/publishing.html"
+                action="https://heatflowworld.readthedocs.io"
                 action_text="{% trans "Learn more" %}" />
-  <c-home.slide style="columns"
-                reverse
-                display="{% trans "Literature" %}"
-                lead="{% trans "Link and share related publications to your datasets and projects." %}"
-                text="{% trans "Linking related literature ensures traceability for both datasets and published literature." %}"
-                img="https://picsum.photos/600/?random"
-                slide_class="bg-primary-subtle"
-                action="{% url "literature-list" %}"
-                action_text="{% trans "View literature" %}" />
+  {% comment %} <c-home.slide style="columns" reverse display="{% trans "Literature" %}" lead="{% trans "Link and share related publications to your datasets and projects." %}" text="{% trans "Linking related literature ensures traceability for both datasets and published literature." %}" img="https://picsum.photos/600/?random" slide_class="bg-primary-subtle" action="{% url "literature-list" %}" action_text="{% trans "View literature" %}" /> {% endcomment %}
   <c-home.slide style="card"
                 display="{% trans "Interoperable" %}"
                 lead="{% trans "Integrate data or metadata into your custom applications and workflows." %}"
