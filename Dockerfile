@@ -14,6 +14,8 @@ RUN poetry bundle venv $(test "$DJANGO_ENV" == production && echo "--only=main")
 
 # Second stage: Copy application and dependencies to final image
 FROM ghcr.io/fair-dm/fairdm:latest AS run-stage
+ARG DJANGO_ENV=production
+
 ENV DJANGO_ENV=production
 ENV DJANGO_SETTINGS_MODULE=config.settings
 ENV PYTHONUNBUFFERED=1

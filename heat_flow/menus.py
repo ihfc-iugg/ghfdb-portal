@@ -26,6 +26,11 @@ DatabaseMenu.get("DatabaseMoreMenu").insert(
     [
         MenuItem(_("International Heat Flow Commission"), url="https://ihfc-iugg.org", icon="globe"),
         MenuItem(_("HeatFlow.world"), url="https://heatflow.world", icon="globe"),
+        MenuItem(_("Team"), url="https://www.heatflow.world/about/team", icon="contributors"),
     ],
     position=0,
 )
+
+
+DatabaseMenu.get("Literature").check = False
+DatabaseMenu.get("Contributors").check = False
