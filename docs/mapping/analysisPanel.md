@@ -160,7 +160,7 @@ How to generate a digital borehole?
 
 <img src="../../docs/_static/_mapping/digital-borehole_result.PNG" alt="Circle color" width="100%"/>
 
-## 2D Profile
+## 2D Profile (Cross section)
 
 The 2D Proifle projects values of existing points within a threshold distance to a useres drawn line on the line and displays.
 
@@ -190,7 +190,7 @@ The results will be a popup showing the points within a users defined threshold.
 
 #### Practice example
 
-How to generate a digital borehole?
+How to generate a 2D Profile?
 
 1) Click the "Analysis" button located in the bottom center of the map.
 2) In the analysis panel, select "2D Profile."
