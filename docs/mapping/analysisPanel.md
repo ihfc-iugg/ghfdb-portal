@@ -146,7 +146,7 @@ Here, you will find information about the method.
 
 As a result, a popup will appear on the map at the drawn point. The graph will update automatically if you modify any parameters for the layer within the table.
 
-#### Practice example
+### Practice example
 
 How to generate a digital borehole?
 
@@ -188,7 +188,7 @@ The logic behind the graph is shown in the following figure.
 
 The results will be a popup showing the points within a users defined threshold.
 
-#### Practice example
+### Practice example
 
 How to generate a 2D Profile?
 
