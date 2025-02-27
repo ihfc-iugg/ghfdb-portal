@@ -51,4 +51,6 @@ filterPanel
 statisticsPanel
 
 analysisPanel
+
+practiceExamples
 ```
