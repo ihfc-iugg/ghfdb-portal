@@ -4,7 +4,9 @@ This panel provides you some insides about the data like the distribution, min, 
 
 ## Select Dataset
 
-You can apply the statistics to either the entire <strong>GHFDB</strong> or a filtered subset. By default, the entire GHFDB is selected. If you've previously applied filters and wish to explore the filtered subset, simply choose the <strong>Filtered GHFDB</strong> option.
+You can apply the statistics to either the entire <strong>GHFDB</strong> or a filtered subset. By default, the entire GHFDB is selected. If you've previously applied filters and wish to explore the filtered subset, simply choose the <strong>Filtered GHFDB</strong> option. If not, this can be done here [FilterPanel](filterPanel.md)
+
+
 
 <img src="../../docs/_static/_mapping/statistics-select-dataset.PNG" alt="Circle color" width="50%"/>
 
