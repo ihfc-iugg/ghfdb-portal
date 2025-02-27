@@ -208,6 +208,3 @@ How to generate a 2D Profile?
 The resulting 2D Profile in the app looks like this.
 
 <img src="../../docs/_static/_mapping/2d-profile-results.PNG" alt="Circle color" width="100%"/>
-
-### Practice example
-
