@@ -1,4 +1,6 @@
 from docutils import nodes
+from sphinx.util.docutils import Directive
+from docutils import nodes
 from docutils.parsers.rst import Directive
 from sphinx.util.logging import getLogger
 from django.core.management import call_command
@@ -8,18 +10,17 @@ import markdown
 logger = getLogger(__name__)
 
 
-class ModelInfo(Directive):
-    has_content = False
+class MyCustomDirective(Directive):
+    # Optional: Define the directive name that will be used in reStructuredText
+    has_content = True
     required_arguments = 1
 
     def run(self):
-        print("Running modelinfo directive...")
         app_name = self.arguments[0]
         output = StringIO()
-        logger.error("Running modelinfo")
 
         try:
-            call_command("modelinfo", app_name, "-v", "2", "--markdown", stdout=output)
+            call_command("modelinfo", app_name, "-v", "2", "-o", "test.html", stdout=output)
             content = output.getvalue()
             html_content = markdown.markdown(content)  # Convert to HTML
         except Exception as e:
@@ -28,18 +29,12 @@ class ModelInfo(Directive):
         finally:
             output.close()
 
-        return [nodes.raw("", html_content, format="html")]
+        # Create a raw node with the HTML content
+        raw_node = nodes.raw(text=html_content, format="html")
+
+        # Return the raw node so it will be included in the document
+        return [raw_node]
 
 
 def setup(app):
-    app.add_directive("modelinfo", ModelInfo)
-    return {"version": "0.1"}
-
-    # print(content)
-    # print(type(content))
-
-    # Return a literal block node with the content
-    # literal = nodes.literal_block(content, content)
-    # literal["language"] = "markdown"  # Syntax highlighting for Markdown
-    # return [literal]
-    # Inject raw Markdown content
+    app.add_directive("mycustomdirective", MyCustomDirective)
