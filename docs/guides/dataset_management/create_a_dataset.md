@@ -25,7 +25,7 @@ At the top of your dashboard, locate the heading labeled **“Home”**.
 
 ## Step 3: Fill Out the Dataset Form
 
-![Dataset Creation Form](/_static/tutorials/create_dataset_page.png)
+<!-- ![Dataset Creation Form](/_static/tutorials/create_dataset_page.png) -->
 
 You will now be taken to the **dataset creation form**. Fill in the following fields:
 
