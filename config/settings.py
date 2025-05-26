@@ -190,3 +190,4 @@ html_context = {
     "github_version": "main",
     "doc_path": "docs",
 }
+CSRF_TRUSTED_ORIGINS = [f"https://{domain}" for domain in globals().get("ALLOWED_HOSTS", [])]
