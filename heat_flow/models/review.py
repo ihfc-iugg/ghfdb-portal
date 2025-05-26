@@ -25,7 +25,7 @@ class Review(dj_models.Model):
     )
 
     dataset = models.OneToOneField(
-        "fairdm_core.Dataset",
+        "dataset.Dataset",
         verbose_name=_("dataset"),
         help_text=_("The dataset that was reviewed."),
         on_delete=models.CASCADE,

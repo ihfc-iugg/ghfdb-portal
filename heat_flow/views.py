@@ -5,6 +5,7 @@ from django import forms
 from django.contrib.staticfiles import finders
 from django.core.files import File
 from django.utils.translation import gettext as _
+from django.views.generic import TemplateView
 from django_downloadview import PathDownloadView
 from django_downloadview.exceptions import FileNotFound
 from django_htmx.http import HttpResponseClientRedirect
@@ -106,3 +107,7 @@ class GHFDBExport(DataExportView):
         if self.request.POST.get("template"):
             return os.path.basename(self.template_path)
         return f"GHFDB.{self.format_class.get_extension()}"
+
+
+class GHFDBExploreView(TemplateView):
+    template_name = "explore.html"
