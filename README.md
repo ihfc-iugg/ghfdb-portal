@@ -1,8 +1,7 @@
-# Heatflow.world
+# About
 
-[![Github Build](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/build.yml/badge.svg)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/build.yml)
-[![Github Docs](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/docs.yml/badge.svg)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/docs.yml)
-[![Github Docs](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/docker-build-and-publish.yml/badge.svg)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/docker-build-and-publish.yml)
+![Github Docs](https://readthedocs.org/projects/heatflowworld/badge/?version=latest&style=flat)
+[![Package](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/docker-build-and-publish.yml/badge.svg?branch=)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/docker-build-and-publish.yml)
 ![GitHub](https://img.shields.io/github/license/ihfc-iugg/ghfdb-portal)
 ![GitHub last commit](https://img.shields.io/github/last-commit/ihfc-iugg/ghfdb-portal)
 
@@ -26,33 +25,3 @@ We extend our gratitude to all individuals, organizations, and institutions who 
 ## Fork
 
 [Fork according to GitHub tutorial](https://docs.github.com/de/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo#cloning-your-forked-repository)
-
-### Setup Portel
-
-#### Clean up heat_flow/migrations
-
-In heat_flow/migrations delete all files excep _init_.py
-
-#### Setup project
-
-```bash
-python manage.py setup
-```
-
-### Actions for Portal and Docs
-
-#### Run Docs
-
-```bash
-cd ProjectDir/
-poetry shell
-invoke docs --live
-```
-
-[Demo](http://127.0.0.1:5000/mapping/index.html)
-
-#### Run Portel
-
-```bash
-python manage.py runserver
-```

@@ -1,4 +1,4 @@
-from fairdm.core.forms import SampleForm
+from fairdm.core.sample.forms import SampleForm
 
 from .models import HeatFlowSite
 
