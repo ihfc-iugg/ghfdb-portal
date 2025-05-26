@@ -190,3 +190,11 @@ html_context = {
     "github_version": "main",
     "doc_path": "docs",
 }
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://ghfdb.gfz-potsdam.de",
+]
+#     "https://ghfdb.heatflow.world",
+#     "https://www.heatflow.world",
+#     "http://localhost:8000",
+#     "http://
