@@ -1,13 +1,15 @@
 
 FROM python:3.11-slim-bullseye as builder
-ARG POETRY_VERSION=2.1
+# ARG POETRY_VERSION=2.1
+ENV POETRY_VERSION=1.8.0
+ENV BUNDLE_VERSION=1.5.0
 ENV DJANGO_ENV=production
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
 RUN apt-get update && apt-get install --no-install-suggests --no-install-recommends && \
     pip install poetry==${POETRY_VERSION} && \
-    poetry self add poetry-plugin-bundle
+    poetry self add poetry-plugin-bundle@${BUNDLE_VERSION}
 
 COPY pyproject.toml poetry.lock LICENSE README.md ./
 RUN poetry bundle venv $(test "$DJANGO_ENV" == production && echo "--only=main") /venv
