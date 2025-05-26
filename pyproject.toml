@@ -29,7 +29,6 @@ classifiers = [
 python = ">=3.11,<4.0"
 fairdm = {git = "https://github.com/FAIR-DM/fairdm"}
 fairdm-geo = {git = "https://github.com/FAIR-DM/fairdm-geo"}
-sphinx-exec-code = "^0.15"
 
 [tool.poetry.group.dev.dependencies]
 fairdm-dev-tools = {git = "https://github.com/FAIR-DM/dev-tools"}
@@ -38,7 +37,7 @@ fairdm-dev-tools = {git = "https://github.com/FAIR-DM/dev-tools"}
 sentry-sdk = {extras = ["django"], version = "^1.17.0"}
 
 [tool.poetry.group.docs.dependencies]
-fairdm-docs = {git = "https://github.com/FAIR-DM/fairdm-docs"}
+fairdm-docs = {git = "https://github.com/FAIR-DM/fairdm-docs", extras = ["sphinx-book-theme"]}
 
 [build-system]
 requires = ["poetry-core"]
