@@ -132,11 +132,6 @@ FAIRDM_CONFIG = {
             "url": "https://github.com/FAIR-DM/fairdm",
             "icon": "fa-brands fa-github fa-lg",
         },
-        {
-            "name": "Login",
-            "url": "/account/login/",
-            "icon": "fa-solid fa-right-to-bracket fa-lg",
-        },
     ],
     "logo": {
         "text": "FairDM",
@@ -153,7 +148,7 @@ FAIRDM_CONFIG = {
     "navbar_end": [
         "pst.components.theme-switcher",
         "pst.components.navbar-icon-links",
-        # "dac.sections.user-sidebar",
+        "dac.sections.user-sidebar.toggle",
     ],
     "navbar_persistent": ["pst.components.search-button-field"],
     "footer_start": ["copyright"],
@@ -190,4 +185,3 @@ html_context = {
     "github_version": "main",
     "doc_path": "docs",
 }
-CSRF_TRUSTED_ORIGINS = [f"https://{domain}" for domain in globals().get("ALLOWED_HOSTS", [])]
