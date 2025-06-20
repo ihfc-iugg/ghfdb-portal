@@ -191,10 +191,4 @@ html_context = {
     "doc_path": "docs",
 }
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://ghfdb.gfz-potsdam.de",
-]
-#     "https://ghfdb.heatflow.world",
-#     "https://www.heatflow.world",
-#     "http://localhost:8000",
-#     "http://
+CSRF_TRUSTED_ORIGINS = [f"https://{domain}" for domain in globals().get("ALLOWED_HOSTS", [])]
