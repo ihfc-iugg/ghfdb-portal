@@ -58,27 +58,38 @@ def docs(c, live=False):
         c.run("sphinx-build -E -b html docs docs/_build")
 
 
-@task
-def release(c):
+@task(help={"overwrite": "Re-release the current version (overwrite tag if needed)"})
+def release(c, overwrite=False):
     """
     Release a new version of the app using year.release-number versioning.
     """
-    # 1. Determine the current year
-    current_year = datetime.datetime.now().year
+    if overwrite:
+        version = c.run("poetry version -s", hide=True).stdout.strip()
+        print(f"Overwriting release {version}")
+    else:
+        # 1. Determine the current year
+        current_year = datetime.datetime.now().year
 
-    # # 3. Form the new version string
-    year, num = c.run("poetry version -s", hide=True).stdout.strip().split(".")
-    year = int(year)
-    num = int(num)
-    version = f"{current_year}.1" if year != current_year else f"{year}.{num + 1}"
+        # 2. Get the current version
+        year, num = c.run("poetry version -s", hide=True).stdout.strip().split(".")
+        year = int(year)
+        num = int(num)
 
-    # # 4. Update the version in pyproject.toml
-    c.run(f"poetry version {version}")
+        # 3. Form the new version string
+        version = f"{current_year}.1" if year != current_year else f"{year}.{num + 1}"
 
-    # # 5. Commit the change
-    c.run(f'git commit pyproject.toml -m "release v{version}"')
+        # 4. Update the version in pyproject.toml
+        c.run(f"poetry version {version}")
 
-    # # 6. Create a tag and push it
+        # 5. Commit the change
+        c.run(f'git commit pyproject.toml -m "release v{version}"')
+
+    # 6. Delete the existing tag if overwriting
+    if overwrite:
+        c.run(f"git tag -d v{version}", warn=True)
+        c.run(f"git push --delete origin v{version}", warn=True)
+
+    # 7. Create a tag and push it
     c.run(f'git tag -a v{version} -m "Release {version}"')
     c.run("git push --tags")
     c.run("git push origin main")
