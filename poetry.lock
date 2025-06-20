@@ -732,7 +732,7 @@ files = []
 develop = false
 
 [package.dependencies]
-django-cotton = "^2.0.3"
+django-cotton = ">2.1"
 django-libsass = "^0.9"
 
 [package.extras]
@@ -742,7 +742,7 @@ django-compressor = ["django-compressor (>=4.5.1,<5.0.0)"]
 type = "git"
 url = "https://github.com/SamuelJennings/cotton-bs5"
 reference = "HEAD"
-resolved_reference = "153e56d71fbaadd0e52c13126e49d9af020740cc"
+resolved_reference = "e192315f4e6869d930df3ea8f881eb18b430a24a"
 
 [[package]]
 name = "coverage"
@@ -2204,14 +2204,14 @@ files = []
 develop = false
 
 [package.dependencies]
-django = ">=3.2"
+django = ">=5"
 rdflib = "^7.0.0"
 
 [package.source]
 type = "git"
 url = "https://github.com/SamuelJennings/django-research-vocabs"
 reference = "HEAD"
-resolved_reference = "a7611e8c8d2b0529cad084e00d118750a989b4e5"
+resolved_reference = "0e8b04aca806eb89175350212483a9500e311af4"
 
 [[package]]
 name = "django-rest-polymorphic"
