@@ -21,6 +21,7 @@ This document describes the FAIR data infrastructure set up to manage and grow t
 about
 features
 data_models/index
+ghfdb_fields
 acknowledgements
 :::
 
@@ -40,9 +41,8 @@ guides/map_exploration/index
 
 development/contributing/index
 development/roadmap
-development/modelinfo
-development/translations
 :::
+<!-- development/translations -->
 <!-- apidocs/heat_flow/heat_flow -->
 <!-- development/contributing -->
 <!-- development/authors -->
