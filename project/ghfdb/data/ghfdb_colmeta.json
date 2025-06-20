@@ -1,0 +1,734 @@
+{
+  "q": {
+    "name": "Heat-flow value",
+    "unit": "mW/m²",
+    "min_value": -999999.9,
+    "max_value": 999999.9,
+    "obligation": "M",
+    "quality_relevance": "U score",
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "q_uncertainty": {
+    "name": "Heat-flow uncertainty",
+    "unit": "mW/m²",
+    "min_value": 0,
+    "max_value": 999999.9,
+    "obligation": "M",
+    "quality_relevance": "U score",
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "name": {
+    "name": "Site name",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "lat_ns": {
+    "name": "Geographical latitude",
+    "unit": "degrees",
+    "min_value": -90.0,
+    "max_value": 90.0,
+    "obligation": "M",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "long_ew": {
+    "name": "Geographical longitude",
+    "unit": "degrees",
+    "min_value": -180.0,
+    "max_value": 180.0,
+    "obligation": "M",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "elevation": {
+    "name": "Elevation (Geographical)",
+    "unit": "m",
+    "min_value": -12000,
+    "max_value": 9000,
+    "obligation": "M",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "environment": {
+    "name": "Basic geographical environment",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "p_comment": {
+    "name": "General comments parent level",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "corr_hp_flag": {
+    "name": "Flag heat production of the overburden (heat-flow correction)",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "R",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "total_depth_md": {
+    "name": "Total Measured Depth",
+    "unit": "m",
+    "min_value": -12000,
+    "max_value": 9000,
+    "obligation": "R",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "total_depth_tvd": {
+    "name": "Total True Vertical Depth",
+    "unit": "m",
+    "min_value": -12000,
+    "max_value": 9000,
+    "obligation": "R",
+    "quality_relevance": null,
+    "domain": [
+      "B"
+    ]
+  },
+  "explo_method": {
+    "name": "Type of exploration method",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "explo_purpose": {
+    "name": "Original exploration purpose",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "R",
+    "quality_relevance": null,
+    "domain": [
+      "B"
+    ]
+  },
+  "qc": {
+    "name": "Heat-flow value child",
+    "unit": "mW/m²",
+    "min_value": -999999.9,
+    "max_value": 999999.9,
+    "obligation": "M",
+    "quality_relevance": "U score",
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "qc_uncertainty": {
+    "name": "Heat-flow uncertainty child",
+    "unit": "mW/m²",
+    "min_value": 0,
+    "max_value": 999999.9,
+    "obligation": "R",
+    "quality_relevance": "U score",
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "q_method": {
+    "name": "Heat-flow method",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "q_top": {
+    "name": "Heat-flow interval top",
+    "unit": "m",
+    "min_value": 0,
+    "max_value": 19999.9,
+    "obligation": "M",
+    "quality_relevance": "M Score",
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "q_bottom": {
+    "name": "Heat-flow interval bottom",
+    "unit": "m",
+    "min_value": 0,
+    "max_value": 19999.9,
+    "obligation": "M",
+    "quality_relevance": "M Score",
+    "domain": [
+      "B"
+    ]
+  },
+  "probe_penetration": {
+    "name": "Penetration depth",
+    "unit": "m",
+    "min_value": 0,
+    "max_value": 999.9,
+    "obligation": "M",
+    "quality_relevance": "M Score",
+    "domain": [
+      "S"
+    ]
+  },
+  "publication_reference": {
+    "name": "Primary publication reference",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "data_reference": {
+    "name": "Primary reference",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "R",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "relevant_child": {
+    "name": "Relevant child",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "c_comment": {
+    "name": "General comments child level",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "R",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "corr_is_flag": {
+    "name": "Flag in-situ thermal properties",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": "M Score",
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "corr_t_flag": {
+    "name": "Flag temperature corrections (instrumental correction)",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "corr_s_flag": {
+    "name": "Flag sedimentation effect (temperature/heat flow correction)",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": "P Score",
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "corr_e_flag": {
+    "name": "Flag erosion effect (heat-flow correction)",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": "P Score",
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "corr_topo_flag": {
+    "name": "Flag topographic effect (heat-flow correction)",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": "P Score",
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "corr_pal_flag": {
+    "name": "Flag paleoclimatic effect (heat-flow correction)",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": "P Score",
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "corr_sur_flag": {
+    "name": "Flag transient surface temperature (heat-flow correction)",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": "P Score",
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "corr_conv_flag": {
+    "name": "Flag convection processes (heat-flow correction)",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": "P Score",
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "corr_hr_flag": {
+    "name": "Flag heat refraction effect (heat-flow correction)",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": "P Score",
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "expedition": {
+    "name": "Platform, Vessel, Expedition",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "R",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "probe_type": {
+    "name": "Probe type",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "R",
+    "quality_relevance": null,
+    "domain": [
+      "S"
+    ]
+  },
+  "probe_length": {
+    "name": "Probe length",
+    "unit": "m",
+    "min_value": 0,
+    "max_value": 99.99,
+    "obligation": "R",
+    "quality_relevance": null,
+    "domain": [
+      "S"
+    ]
+  },
+  "probe_tilt": {
+    "name": "Probe tilt",
+    "unit": "degrees",
+    "min_value": 0,
+    "max_value": 99.9,
+    "obligation": "M",
+    "quality_relevance": "M Score",
+    "domain": [
+      "S"
+    ]
+  },
+  "water_temperature": {
+    "name": "Bottom-water temperature",
+    "unit": "°C",
+    "min_value": -9.99,
+    "max_value": 999.99,
+    "obligation": "O",
+    "quality_relevance": null,
+    "domain": [
+      "S"
+    ]
+  },
+  "geo_lithology": {
+    "name": "Lithology",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "O",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "geo_stratigraphy": {
+    "name": "Stratigraphic age",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "O",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "t_grad_mean": {
+    "name": "Calculated or inferred temperature gradient",
+    "unit": "K/km",
+    "min_value": -99999.99,
+    "max_value": 99999.99,
+    "obligation": "M",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "t_grad_uncertainty": {
+    "name": "Temperature gradient uncertainty",
+    "unit": "K/km",
+    "min_value": -99999.99,
+    "max_value": 99999.99,
+    "obligation": "R",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "t_grad_mean_cor": {
+    "name": "Mean temperature gradient corrected",
+    "unit": "K/km",
+    "min_value": -99999.99,
+    "max_value": 99999.99,
+    "obligation": "O",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "t_grad_uncertainty_cor": {
+    "name": "Corrected temperature gradient uncertainty",
+    "unit": "K/km",
+    "min_value": -99999.99,
+    "max_value": 99999.99,
+    "obligation": "O",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "t_method_top": {
+    "name": "Temperature method (top)",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": "M Score",
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "t_method_bottom": {
+    "name": "Temperature method (bottom)",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": "M Score",
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "t_shutin_top": {
+    "name": "Shut-in time (top)",
+    "unit": "hr",
+    "min_value": 0,
+    "max_value": 99999.99,
+    "obligation": "R",
+    "quality_relevance": null,
+    "domain": [
+      "B"
+    ]
+  },
+  "t_shutin_bottom": {
+    "name": "Shut-in time (bottom)",
+    "unit": "hr",
+    "min_value": 0,
+    "max_value": 99999.99,
+    "obligation": "R",
+    "quality_relevance": null,
+    "domain": [
+      "B"
+    ]
+  },
+  "t_corr_top": {
+    "name": "T correction method (top)",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "R",
+    "quality_relevance": null,
+    "domain": [
+      "B"
+    ]
+  },
+  "t_corr_bottom": {
+    "name": "T correction method (bottom)",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "R",
+    "quality_relevance": null,
+    "domain": [
+      "B"
+    ]
+  },
+  "t_number": {
+    "name": "Number of temeprature recordings",
+    "unit": null,
+    "min_value": 0,
+    "max_value": 999999,
+    "obligation": "R",
+    "quality_relevance": "M Score",
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "q_date": {
+    "name": "Date of acquisition",
+    "unit": "YYYY-MM",
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "tc_mean": {
+    "name": "Mean thermal conductivity",
+    "unit": "W/(mK)",
+    "min_value": 0,
+    "max_value": 99.99,
+    "obligation": "M",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "tc_uncertainty": {
+    "name": "Thermal conductivity uncertainty",
+    "unit": "W/(mK)",
+    "min_value": 0,
+    "max_value": 99.99,
+    "obligation": "R",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "tc_source": {
+    "name": "Thermal conductivity source",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": "M Score",
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "tc_location": {
+    "name": "Thermal conductivity location",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": "M Score",
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "tc_method": {
+    "name": "Thermal conductivity method",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": "M Score",
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "tc_saturation": {
+    "name": "Thermal conductivity saturation",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": "M Score",
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "tc_pT_conditions": {
+    "name": "Thermal conductivity pT conditions",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "M",
+    "quality_relevance": "M Score",
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "tc_pT_function": {
+    "name": "Thermal conductivity pT assumed function",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "R",
+    "quality_relevance": "M Score",
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "tc_number": {
+    "name": "TC number",
+    "unit": null,
+    "min_value": 0,
+    "max_value": 9999,
+    "obligation": "M",
+    "quality_relevance": "M Score",
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "tc_strategy": {
+    "name": "Thermal conductivity averaging methodology",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "R",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  },
+  "igsn": {
+    "name": "IGSN",
+    "unit": null,
+    "min_value": null,
+    "max_value": null,
+    "obligation": "O",
+    "quality_relevance": null,
+    "domain": [
+      "B",
+      "S"
+    ]
+  }
+}
