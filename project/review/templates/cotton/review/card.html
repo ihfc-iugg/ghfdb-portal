@@ -1,0 +1,38 @@
+{% with obj.review as review %}
+  <c-bs5.card class="fdm-card border-0">
+    <c-bs5.card.body class="pb-2">
+      <h2 class="card-title fs-5 text-truncate">{{ obj.title }}</h2>
+      <div class="card-lead fs-6 text-secondary mb-1">
+        {% for author in obj.item.author %}
+          {% if not forloop.last %}
+            {{ author.given }} {{ author.family }},
+          {% else %}
+            {{ author.given }} {{ author.family }}
+          {% endif %}
+        {% endfor %}
+      </div>
+      {% if obj.item.abstract %}
+        <p class="card-text preview">{{ obj.item.abstract|truncatewords_html:100 }}</p>
+      {% else %}
+        <c-text.empty text="{% trans "No preview available" %}" />
+      {% endif %}
+    </c-bs5.card.body>
+    <c-bs5.card.footer class="border-0 bg-body hstack gap-1 align-items-stretch">
+      {% if current_user_is_reviewer and not review.status %}
+        <c-components.link icon="arrow-right"
+                           icon_position="end"
+                           href="{% url "review-create" literature_id=obj.id %}"
+                           text="{% trans "Start review" %}" />
+      {% endif %}
+      {% comment %} {% if obj.review.dataset %}
+          <c-components.link icon="arrow-right" icon_position="end" href="{{ obj.review.dataset.get_absolute_url }}" text="{% trans "View dataset" %}" />
+      {% endif %} {% endcomment %}
+      {% if obj.item.DOI %}
+        <c-components.link icon="globe"
+                           icon_position="end"
+                           href="{{ obj.item.DOI }}"
+                           text="{% trans "View online" %}" />
+      {% endif %}
+    </c-bs5.card.footer>
+  </c-card>
+{% endwith %}
