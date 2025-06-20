@@ -9,10 +9,12 @@ LANGUAGES = [
 fairdm.setup(
     apps=[
         "heat_flow",
+        "ghfdb",
+        "review",
         "fairdm_geo",
-        "fairdm_geo.geology.lithology",
+        # "fairdm_geo.geology.lithology",
         "fairdm_geo.geology.stratigraphy",
-        "fairdm_geo.geology.geologic_time",
+        # "fairdm_geo.geology.geologic_time",
     ]
 )
 
@@ -29,6 +31,7 @@ EASY_ICONS["aliases"].update(
         "map": "fas fa-map-location-dot",
         "heat_flow": "fas fa-fire",
         "review": "fas fa-highlighter",
+        "submit_review": "fa-solid fa-clipboard-check",
     }
 )
 
@@ -36,7 +39,8 @@ DJANGO_SETUP_TOOLS = globals().get("DJANGO_SETUP_TOOLS", {})
 
 # this line is only required during staging because no migrations are being committed to the fairdm repo
 DJANGO_SETUP_TOOLS[""]["always_run"].insert(0, ("makemigrations", "--no-input"))
-DJANGO_SETUP_TOOLS[""]["on_initial"].append(("loaddata", "dump.json"))
+DJANGO_SETUP_TOOLS[""]["always_run"].append(("loaddata", "ghfdb_review_group.json"))
+# DJANGO_SETUP_TOOLS[""]["on_initial"].append(("loaddata", "ghfdb_review_group.json"))
 
 
 PARLER_LANGUAGES = {
@@ -120,68 +124,22 @@ FAIRDM_CONFIG = {
         },
     ],
     "documentation_url": "https://heatflowworld.readthedocs.io/en/latest/",
+    "repository_url": "https://github.com/ihfc-iugg/ghfdb-portal",
     "header_links_before_dropdown": 5,
-    "icon_links": [
-        {
-            "name": "Documentation",
-            "url": "https://heatflowworld.readthedocs.io/en/latest/",
-            "icon": "fa-solid fa-book",
-        },
-        {
-            "name": "GitHub",
-            "url": "https://github.com/FAIR-DM/fairdm",
-            "icon": "fa-brands fa-github fa-lg",
-        },
-    ],
+    "welcome_message": "Explore, create, and share heat flow data with the global research community.",
     "logo": {
-        "text": "FairDM",
+        "text": _("Global Heat Flow Database Portal"),
         "image_dark": "img/brand/logo.svg",
         "image_light": "img/brand/logo.svg",
     },
     "announcement": "",
-    "navbar_start": [
-        "pst.components.navbar-logo",
-    ],
-    "navbar_center": [
-        "pst.components.navbar-nav",
-    ],
-    "navbar_end": [
-        "pst.components.theme-switcher",
-        "pst.components.navbar-icon-links",
-        "dac.sections.user-sidebar.toggle",
-    ],
-    "navbar_persistent": ["pst.components.search-button-field"],
+    # "navbar_start": [
+    #     "pst.components.navbar-logo",
+    # ],
+    "navbar_persistent": ["sections.navbar.search"],
     "footer_start": ["copyright"],
     "footer_center": ["sphinx-version"],
     "back_to_top_button": True,
     "search_bar": False,
     "search_as_you_type": False,
-}
-
-html_sidebars = {
-    "community/index": [
-        "sidebar-nav-bs",
-        "custom-template",
-    ],  # This ensures we test for custom sidebars
-    "examples/no-sidebar": [],  # Test what page looks like with no sidebar items
-    "examples/persistent-search-field": ["search-field"],
-    # Blog sidebars
-    # ref: https://ablog.readthedocs.io/manual/ablog-configuration-options/#blog-sidebars
-    "examples/blog/*": [
-        "ablog/postcard.html",
-        "ablog/recentposts.html",
-        "ablog/tagcloud.html",
-        "ablog/categories.html",
-        "ablog/authors.html",
-        "ablog/languages.html",
-        "ablog/locations.html",
-        "ablog/archives.html",
-    ],
-}
-
-html_context = {
-    "github_user": "pydata",
-    "github_repo": "pydata-sphinx-theme",
-    "github_version": "main",
-    "doc_path": "docs",
 }
