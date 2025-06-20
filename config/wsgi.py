@@ -21,6 +21,9 @@ from pathlib import Path
 
 from django.core.wsgi import get_wsgi_application
 
+# so that apps can be imported from the project directory
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), "project"))
+
 # This allows easy placement of apps within the interior
 # test_cookiecutter directory.
 # BASE_DIR = Path(__file__).resolve(strict=True).parent.parent

@@ -11,7 +11,9 @@ RUN apt-get update && apt-get install --no-install-suggests --no-install-recomme
     pip install poetry==${POETRY_VERSION} && \
     poetry self add poetry-plugin-bundle@${BUNDLE_VERSION}
 
-COPY pyproject.toml poetry.lock LICENSE README.md ./
+COPY . ./
+# COPY project ./project
+
 RUN poetry bundle venv $(test "$DJANGO_ENV" == production && echo "--only=main") /venv
 
 # Second stage: Copy application and dependencies to final image

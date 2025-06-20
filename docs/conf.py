@@ -1,7 +1,12 @@
 import os
 import sys
+from pathlib import Path
 
+BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
+
+sys.path.append(str(BASE_DIR / "project"))
 sys.path.insert(0, os.path.abspath("../extensions"))
+# sys.path.append(os.path.join(os.path.dirname(__file__), "project"))
 
 os.environ.setdefault("DJANGO_ENV", "development")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
@@ -29,10 +34,10 @@ html_short_title = "Heatflow.world"
 extensions.remove("autodoc2")
 extensions += [
     "sphinx_design",
-    "fairdm.utils.docs",
-    "sphinx_tippy",
+    "docs.extensions.auto_django_model",
+    # "sphinx_tippy",
     "sphinx_exec_code",
-    "extensions.modelinfo",
+    # "docs.extensions.modelinfo",
     # "extensions.mycustomdirective",
 ]
 
@@ -48,6 +53,9 @@ myst_html_meta = {
 autodoc2_parse_docstrings = True
 
 autodoc2_docstring_parser_regexes = [("myst", r".*choices*")]
+
+
+autodjango_model_extra = {"about": ""}
 
 autodjango_model_apps = [
     "heat_flow",
