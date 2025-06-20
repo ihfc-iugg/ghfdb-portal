@@ -1,13 +1,17 @@
 [tool.poetry]
 name = "global-heat-flow-database"
-version = "2025.14"
+version = "2025.19"
 description = "Code base for the IHFC's Global Heat Flow Database web application"
 authors = ["Sam <samuel.scott.jennings@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/ihfc-iugg/ghfdb-portal"
-include = ["heat_flow", "LICENSE", "README.md"]
-
+include = ["LICENSE", "README.md"]
+packages = [
+  { include = "heat_flow", from = "project" },
+  { include = "ghfdb", from = "project" },
+  { include = "review", from = "project" },
+]
 classifiers = [
     "Development Status :: 1 - Planning",
     "Framework :: Django :: 5.0",
@@ -32,9 +36,6 @@ fairdm-geo = {git = "https://github.com/FAIR-DM/fairdm-geo"}
 
 [tool.poetry.group.dev.dependencies]
 fairdm-dev-tools = {git = "https://github.com/FAIR-DM/dev-tools"}
-
-[tool.poetry.group.production.dependencies]
-sentry-sdk = {extras = ["django"], version = "^1.17.0"}
 
 [tool.poetry.group.docs.dependencies]
 fairdm-docs = {git = "https://github.com/FAIR-DM/fairdm-docs", extras = ["sphinx-book-theme"]}
@@ -92,6 +93,8 @@ ignore = [
     "F403",
     "F405",
     "C901",
+    # Use of mark_safe
+    "S308",
 ]
 exclude = [
     ".bzr",
