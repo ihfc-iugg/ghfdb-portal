@@ -6,7 +6,7 @@ authors = ["Sam <samuel.scott.jennings@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/ihfc-iugg/ghfdb-portal"
-include = ["heat_flow", "LICENSE", "README.md"]
+include = ["LICENSE", "README.md"]
 packages = [
   { include = "heat_flow", from = "project" },
   { include = "ghfdb", from = "project" },
