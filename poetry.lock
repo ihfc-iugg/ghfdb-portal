@@ -2247,13 +2247,13 @@ django-classy-tags = ">=3.0"
 
 [[package]]
 name = "django-select2"
-version = "8.3.0"
+version = "8.4.1"
 description = "This is a Django_ integration of Select2_."
 optional = false
 python-versions = ">=3.10"
 files = [
-    {file = "django_select2-8.3.0-py3-none-any.whl", hash = "sha256:70af282123db358a9612241d6b077cbb2a92ce642893e6efcbda2cb8ce5b7c8f"},
-    {file = "django_select2-8.3.0.tar.gz", hash = "sha256:9975a74f13f20468d07deae027672045f58e0d6d1983c305805ba40b16a0f0ec"},
+    {file = "django_select2-8.4.1-py3-none-any.whl", hash = "sha256:1df5e6788cc032795c1be0f2e2a2ea7a5a1dd89878575217a2c23f25d7301fbf"},
+    {file = "django_select2-8.4.1.tar.gz", hash = "sha256:e6cdc0ae647b91b1bed610628893d10dea50a96fffba8e83af27f35dd6003572"},
 ]
 
 [package.dependencies]
@@ -2898,7 +2898,7 @@ django-render-fields = {git = "https://github.com/SamuelJennings/django-render-f
 django-research-vocabs = {git = "https://github.com/SamuelJennings/django-research-vocabs"}
 django-rest-polymorphic = "^0.1.10"
 django-sekizai = "^4.1.0"
-django-select2 = "^8.1.1"
+django-select2 = "^8.4.1"
 django-setup-tools = {git = "https://github.com/SamuelJennings/django-setup-tools"}
 django-smuggler = "^1.0.4"
 django-social-share = "^2.3.0"
@@ -2921,8 +2921,8 @@ drf-orjson-renderer = "^1.7.1"
 drf-schema-adapter = "^3.0.6"
 drf-spectacular = {version = "^0.26.1", extras = ["sidecar"]}
 easy-thumbnails = "^2.10"
-flower = "^1.2.0"
-gunicorn = "^20.1.0"
+flower = "^2.0.1"
+gunicorn = "^23.0.0"
 lxml = "^5.1.0"
 neapolitan = "24.7"
 plotly = "^6.1.2"
@@ -2941,7 +2941,7 @@ whitenoise = "^6.4.0"
 type = "git"
 url = "https://github.com/FAIR-DM/fairdm"
 reference = "HEAD"
-resolved_reference = "0999dae86b174fa79b005807dac4482489bec734"
+resolved_reference = "b9285a889d889160fefc96f7fcedd62b50c692ba"
 
 [[package]]
 name = "fairdm-dev-tools"
@@ -3125,13 +3125,13 @@ test = ["pytest", "pytest-cov", "pytest-mpl", "pytest-subtests"]
 
 [[package]]
 name = "flower"
-version = "1.2.0"
+version = "2.0.1"
 description = "Celery Flower"
 optional = false
-python-versions = "*"
+python-versions = ">=3.7"
 files = [
-    {file = "flower-1.2.0-py2.py3-none-any.whl", hash = "sha256:ae2977cf7343c526cf44def8c7e7173db8dedb8249b91ba4b88cfd18e7a2d486"},
-    {file = "flower-1.2.0.tar.gz", hash = "sha256:46493c7e8d9ca2167e8a46eb97ae8d280997cb40a81993230124d74f0fe40bac"},
+    {file = "flower-2.0.1-py2.py3-none-any.whl", hash = "sha256:9db2c621eeefbc844c8dd88be64aef61e84e2deb29b271e02ab2b5b9f01068e2"},
+    {file = "flower-2.0.1.tar.gz", hash = "sha256:5ab717b979530770c16afb48b50d2a98d23c3e9fe39851dcf6bc4d01845a02a0"},
 ]
 
 [package.dependencies]
@@ -3143,22 +3143,23 @@ tornado = ">=5.0.0,<7.0.0"
 
 [[package]]
 name = "gunicorn"
-version = "20.1.0"
+version = "23.0.0"
 description = "WSGI HTTP Server for UNIX"
 optional = false
-python-versions = ">=3.5"
+python-versions = ">=3.7"
 files = [
-    {file = "gunicorn-20.1.0-py3-none-any.whl", hash = "sha256:9dcc4547dbb1cb284accfb15ab5667a0e5d1881cc443e0677b4882a4067a807e"},
-    {file = "gunicorn-20.1.0.tar.gz", hash = "sha256:e0a968b5ba15f8a328fdfd7ab1fcb5af4470c28aaf7e55df02a99bc13138e6e8"},
+    {file = "gunicorn-23.0.0-py3-none-any.whl", hash = "sha256:ec400d38950de4dfd418cff8328b2c8faed0edb0d517d3394e457c317908ca4d"},
+    {file = "gunicorn-23.0.0.tar.gz", hash = "sha256:f014447a0101dc57e294f6c18ca6b40227a4c90e9bdb586042628030cba004ec"},
 ]
 
 [package.dependencies]
-setuptools = ">=3.0"
+packaging = "*"
 
 [package.extras]
-eventlet = ["eventlet (>=0.24.1)"]
+eventlet = ["eventlet (>=0.24.1,!=0.36.0)"]
 gevent = ["gevent (>=1.4.0)"]
 setproctitle = ["setproctitle"]
+testing = ["coverage", "eventlet", "gevent", "pytest", "pytest-cov"]
 tornado = ["tornado (>=0.2)"]
 
 [[package]]
