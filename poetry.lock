@@ -742,7 +742,7 @@ django-compressor = ["django-compressor (>=4.5.1,<5.0.0)"]
 type = "git"
 url = "https://github.com/SamuelJennings/cotton-bs5"
 reference = "HEAD"
-resolved_reference = "e192315f4e6869d930df3ea8f881eb18b430a24a"
+resolved_reference = "ea0f0038efa439c351c95a76152019b8cc758252"
 
 [[package]]
 name = "coverage"
@@ -1072,7 +1072,7 @@ stripe = "<12"
 type = "git"
 url = "https://github.com/SamuelJennings/django-account-management"
 reference = "HEAD"
-resolved_reference = "86b91a287e315adbc597f7c615c1968d43726f24"
+resolved_reference = "6c0817e7a8de7977bc676aa2ee4d201cd647f8d3"
 
 [[package]]
 name = "django-activity-stream"
@@ -2281,17 +2281,6 @@ reference = "HEAD"
 resolved_reference = "c6b5e92130304997c548507221b7ad0727656ed7"
 
 [[package]]
-name = "django-smuggler"
-version = "1.0.4"
-description = "Pluggable application for Django that helps you to import/export fixtures via the administration interface"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "django-smuggler-1.0.4.tar.gz", hash = "sha256:e53b02bdc48c94012950d5fa4e4b30bc4259e62fc986d22b9d571de1a45dcc80"},
-    {file = "django_smuggler-1.0.4-py2.py3-none-any.whl", hash = "sha256:49db0724d8b8ffb84e93581f12d363d4113f1b9ef07c74c1cdd63f8752397b8c"},
-]
-
-[[package]]
 name = "django-social-share"
 version = "2.3.0"
 description = "Templatetags for 'tweet this' and 'share on facebook'"
@@ -2900,7 +2889,6 @@ django-rest-polymorphic = "^0.1.10"
 django-sekizai = "^4.1.0"
 django-select2 = "^8.4.1"
 django-setup-tools = {git = "https://github.com/SamuelJennings/django-setup-tools"}
-django-smuggler = "^1.0.4"
 django-social-share = "^2.3.0"
 django-solo = "^2.2.0"
 django-split-settings = "^1.2.0"
@@ -2941,7 +2929,7 @@ whitenoise = "^6.4.0"
 type = "git"
 url = "https://github.com/FAIR-DM/fairdm"
 reference = "HEAD"
-resolved_reference = "b9285a889d889160fefc96f7fcedd62b50c692ba"
+resolved_reference = "cf17a1554278245bfe4357319995b811fed95692"
 
 [[package]]
 name = "fairdm-dev-tools"
