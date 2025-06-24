@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block body %}
+  <c-layouts.error title="{% trans "Server Error" %}" class="vh-100">
+    <c-slot name="message">
+      {% url "django_contact_form" as contact_url %}
+      <p>
+        {% blocktrans %}
+        Something went wrong on our side and we are probably already looking into it. If you wish to report the problem, you can do so via our <a href="{{ contact_url }}">contact page</a>.
+        {% endblocktrans %}
+      </p>
+      <c-components.button onclick="history.back()"
+                           style="primary"
+                           size="md"
+                           icon="arrow-left"
+                           text="{% trans "Go back" %}" />
+    </c-slot>
+  </c-layouts.error>
+{% endblock body %}
