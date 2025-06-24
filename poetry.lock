@@ -2929,7 +2929,7 @@ whitenoise = "^6.4.0"
 type = "git"
 url = "https://github.com/FAIR-DM/fairdm"
 reference = "HEAD"
-resolved_reference = "2b00b790d90ce98b20b3fc3ae87dbb2118877671"
+resolved_reference = "d4ae739d076d5a2fba78e7de34c2c81c98d55927"
 
 [[package]]
 name = "fairdm-dev-tools"
