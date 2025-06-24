@@ -1,11 +1,11 @@
 from datetime import date
 
+import django_filters as filters
 from braces.views import GroupRequiredMixin, MessageMixin, SelectRelatedMixin
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext as _
 from django.views.generic.edit import UpdateView
-from django_filters import FilterSet
 from fairdm import plugins
 from fairdm.core.models import Dataset
 from fairdm.views import FairDMCreateView, FairDMListView
@@ -15,18 +15,35 @@ from .forms import CreateReviewForm, SubmitReviewForm
 from .models import Review
 
 
-class ReviewFilterSet(FilterSet):
+class ReviewFilterSet(filters.FilterSet):
+    # citation_key = filters.CharFilter(
+    #     field_name="citation_key",
+    #     lookup_expr="icontains",
+    #     label=_("Citation Key"),
+    # )
+    title = filters.CharFilter(
+        field_name="title",
+        lookup_expr="icontains",
+        label=_("Title"),
+    )
+
     class Meta:
         model = LiteratureItem
-        fields = ["review__status"]
+        fields = ["title", "review__status"]
 
 
 class ReviewListView(SelectRelatedMixin, FairDMListView):
     title = _("GHFDB Review")
     model = LiteratureItem
-    card = "review.card"
     filterset_class = ReviewFilterSet
     select_related = ("review",)
+    title_config = {
+        "icon": "review",
+        "text": _("Literature Review"),
+    }
+    grid_config = {
+        "card": "review.card",
+    }
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -39,7 +56,10 @@ class ReviewCreateView(GroupRequiredMixin, FairDMCreateView):
     title = _("Start Review")
     model = Review
     form_class = CreateReviewForm
-    fields = ["literature", "reviewers"]
+    fields = ["literature", "start_date", "reviewers"]
+    title_config = {
+        "text": _("Start Review"),
+    }
 
     def dispatch(self, request, *args, **kwargs):
         literature_id = kwargs.get("literature_id")
