@@ -742,7 +742,7 @@ django-compressor = ["django-compressor (>=4.5.1,<5.0.0)"]
 type = "git"
 url = "https://github.com/SamuelJennings/cotton-bs5"
 reference = "HEAD"
-resolved_reference = "ea0f0038efa439c351c95a76152019b8cc758252"
+resolved_reference = "1d763a2527d362485723d2242e776bf148e56a14"
 
 [[package]]
 name = "coverage"
@@ -1072,7 +1072,7 @@ stripe = "<12"
 type = "git"
 url = "https://github.com/SamuelJennings/django-account-management"
 reference = "HEAD"
-resolved_reference = "6c0817e7a8de7977bc676aa2ee4d201cd647f8d3"
+resolved_reference = "4a693e98e862f6f5baf7ee786262b05caf85ad12"
 
 [[package]]
 name = "django-activity-stream"
@@ -2929,7 +2929,7 @@ whitenoise = "^6.4.0"
 type = "git"
 url = "https://github.com/FAIR-DM/fairdm"
 reference = "HEAD"
-resolved_reference = "478d4beb9874716c9055226282a01f79a4c479d8"
+resolved_reference = "d0ab02ff6b81ed6c8660176c8682675a51c3a74d"
 
 [[package]]
 name = "fairdm-dev-tools"
