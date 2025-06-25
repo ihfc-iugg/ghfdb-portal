@@ -103,7 +103,7 @@ FAIRDM_CONFIG = {
         "create": [
             "fdm.dashboard.create-project",
             "fdm.dashboard.create-dataset",
-            "fdm.dashboard.digitize",
+            "home.digitize",
         ],
         "more": [
             "fdm.dashboard.login-signup",
@@ -141,4 +141,21 @@ FAIRDM_CONFIG = {
     "back_to_top_button": True,
     "search_bar": False,
     "search_as_you_type": False,
+    "sponsors": [
+        {
+            "name": "GFZ German Research Centre for Geosciences",
+            "url": "https://www.gfz-potsdam.de/en/",
+            "image": "img/brand/gfz-logo.png",
+        },
+        {
+            "name": "International Heat Flow Commission",
+            "url": "https://ihfc-iugg.com/",
+            "image": "img/brand/ihfc-logo.png",
+        },
+        {
+            "name": "DFG - Deutsche Forschungsgemeinschaft",
+            "url": "https://www.dfg.de/en/",
+            "image": "img/brand/dfg-logo.png",
+        },
+    ],
 }
