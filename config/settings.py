@@ -143,17 +143,17 @@ FAIRDM_CONFIG = {
         {
             "name": "GFZ German Research Centre for Geosciences",
             "url": "https://www.gfz-potsdam.de/en/",
-            "image": "img/brand/gfz_english.jpg",
+            "image": "img/brand/GFZ_english.jpg",
         },
         {
             "name": "International Heat Flow Commission",
             "url": "https://ihfc-iugg.com/",
-            "image": "img/brand/ihfc.svg",
+            "image": "img/brand/IHFC.svg",
         },
         {
             "name": "DFG - Deutsche Forschungsgemeinschaft",
             "url": "https://www.dfg.de/en/",
-            "image": "img/brand/dfg.gif",
+            "image": "img/brand/DFG.gif",
         },
     ],
 }
