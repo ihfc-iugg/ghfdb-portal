@@ -98,7 +98,7 @@ FAIRDM_CONFIG = {
         "explore": [
             "home.map-viewer",
             "fdm.dashboard.research-projects",
-            "fdm.dashboard.latest-activity",
+            # "fdm.dashboard.latest-activity",
         ],
         "create": [
             "fdm.dashboard.create-project",
