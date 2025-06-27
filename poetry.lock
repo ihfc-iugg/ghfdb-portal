@@ -742,7 +742,7 @@ django-compressor = ["django-compressor (>=4.5.1,<5.0.0)"]
 type = "git"
 url = "https://github.com/SamuelJennings/cotton-bs5"
 reference = "HEAD"
-resolved_reference = "1d763a2527d362485723d2242e776bf148e56a14"
+resolved_reference = "3b986eff1669415084964697910e59c4ea01e2d6"
 
 [[package]]
 name = "coverage"
@@ -1072,7 +1072,7 @@ stripe = "<12"
 type = "git"
 url = "https://github.com/SamuelJennings/django-account-management"
 reference = "HEAD"
-resolved_reference = "4a693e98e862f6f5baf7ee786262b05caf85ad12"
+resolved_reference = "7b59f3112eafd7f4ae5be72bbd6d574ce86f44b5"
 
 [[package]]
 name = "django-activity-stream"
@@ -1695,6 +1695,20 @@ files = [
 
 [package.dependencies]
 django = ">=4.2"
+
+[[package]]
+name = "django-guardian"
+version = "3.0.3"
+description = "Per object permissions for Django"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "django_guardian-3.0.3-py3-none-any.whl", hash = "sha256:d2164cea9f03c369d7ade21802710f3ab23ca6734bcc7dfcfb385906783916c7"},
+    {file = "django_guardian-3.0.3.tar.gz", hash = "sha256:4e59eab4d836da5a027cf0c176d14bc2a4e22cbbdf753159a03946c08c8a196d"},
+]
+
+[package.dependencies]
+django = ">=3.2"
 
 [[package]]
 name = "django-htmx"
@@ -2860,6 +2874,7 @@ django-filter = "^24.3"
 django-flex-menus = {git = "https://github.com/SamuelJennings/django-flex-menus"}
 django-fluent-comments = {version = "^3.0", extras = ["threadedcomments"]}
 django-formset = "^1.2.1"
+django-guardian = "^3.0.3"
 django-htmx = "^1.16.0"
 django-image-uploader-widget = "^0.5.0"
 django-imagekit = "^5.0.0"
@@ -2929,7 +2944,7 @@ whitenoise = "^6.4.0"
 type = "git"
 url = "https://github.com/FAIR-DM/fairdm"
 reference = "HEAD"
-resolved_reference = "d2c572b309fb56b155c06f6f442febdd6a431fa8"
+resolved_reference = "6fcbdd301ea4dc93c830550525b8194342ddfad9"
 
 [[package]]
 name = "fairdm-dev-tools"
@@ -6931,4 +6946,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<4.0"
-content-hash = "1104304e61f02a2dee8fb86c8535b71e659575e5e274cba0b933dafe918f8056"
+content-hash = "479c8ab35dd13f24a81e4299c365a29550ed64a884ea81bcbc654dd2127c4836"
