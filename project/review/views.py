@@ -1,6 +1,7 @@
 from datetime import date
 
 import django_filters as filters
+from actstream import action
 from braces.views import GroupRequiredMixin, MessageMixin, SelectRelatedMixin
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect
@@ -8,6 +9,7 @@ from django.utils.translation import gettext as _
 from django.views.generic.edit import UpdateView
 from fairdm import plugins
 from fairdm.core.models import Dataset
+from fairdm.utils.permissions import assign_all_model_perms
 from fairdm.views import FairDMCreateView, FairDMListView
 from literature.models import LiteratureItem
 
@@ -88,10 +90,23 @@ class ReviewCreateView(GroupRequiredMixin, FairDMCreateView):
         self.object.dataset = dataset
         self.object.save()
         form.save_m2m()  # Save many-to-many relationships
-        return redirect(self.object.dataset.get_absolute_url())
+        # assign all perms to all reviewers
+        # these will be removed when the review is closed
+        for reviewer in self.object.reviewers.all():
+            assign_all_model_perms(reviewer, dataset)
+            # Add the reviewer to the dataset as a DataCurator (ensures they get credit for the review)
+            dataset.add_contributor(reviewer, with_roles="DataCurator")
+            # add activity for the dataset
+            action.send(
+                self.request.user,
+                verb="started a review",
+                target=dataset,
+            )
+
+        return redirect(dataset.get_absolute_url())
 
 
-@plugins.dataset.register()
+@plugins.dataset.register
 class ReviewSubmitView(plugins.Action, MessageMixin, UpdateView):
     title = _("Submit Review")
     name = "submit-review"
@@ -101,6 +116,10 @@ class ReviewSubmitView(plugins.Action, MessageMixin, UpdateView):
     }
     model = Review
     form_class = SubmitReviewForm
+
+    @staticmethod
+    def check(request, instance, **kwargs):
+        return request.user.is_superuser
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
