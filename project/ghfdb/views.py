@@ -63,6 +63,7 @@ class GHFDBImport(DataImportView):
         "This data import workflow allows you to upload an existing dataset formatted according to the latest specifications of the Global Heat Flow Database. "
     )
     form_class = GHFDBImportForm
+    template_name = "ghfdb_import.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -71,6 +72,10 @@ class GHFDBImport(DataImportView):
             "icon": "upload",
             "style": "primary",
         }
+        context["samples"] = self.base_object.samples.exists()
+        context["measurements"] = self.base_object.measurements.exists()
+        if context["samples"] and context["measurements"]:
+            context["form"] = None
         return context
 
     def get_resource(self):
