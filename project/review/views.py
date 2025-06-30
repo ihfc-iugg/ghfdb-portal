@@ -1,14 +1,17 @@
 from datetime import date
 
-import django_filters as filters
+import django_filters as df
 from actstream import action
 from braces.views import GroupRequiredMixin, MessageMixin, SelectRelatedMixin
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext as _
 from django.views.generic.edit import UpdateView
+from django_select2.forms import Select2Widget
 from fairdm import plugins
+from fairdm.contrib.contributors.models import Person
 from fairdm.core.models import Dataset
+from fairdm.utils.filters import LiteratureFilterset
 from fairdm.utils.permissions import assign_all_model_perms
 from fairdm.views import FairDMCreateView, FairDMListView
 from literature.models import LiteratureItem
@@ -17,21 +20,17 @@ from .forms import CreateReviewForm, SubmitReviewForm
 from .models import Review
 
 
-class ReviewFilterSet(filters.FilterSet):
-    # citation_key = filters.CharFilter(
-    #     field_name="citation_key",
-    #     lookup_expr="icontains",
-    #     label=_("Citation Key"),
-    # )
-    title = filters.CharFilter(
-        field_name="title",
-        lookup_expr="icontains",
-        label=_("Title"),
+class ReviewFilterSet(LiteratureFilterset):
+    reviewer = df.ModelChoiceFilter(
+        field_name="review__reviewers",
+        queryset=Person.objects.filter(groups__name="reviewers"),
+        label=_("Reviewer"),
+        widget=Select2Widget,
     )
 
     class Meta:
         model = LiteratureItem
-        fields = ["title", "review__status"]
+        fields = ["review__status", "reviewer", "type", "issued", "doi", "title", "author", "o"]
 
 
 class ReviewListView(SelectRelatedMixin, FairDMListView):
