@@ -1,0 +1,26 @@
+{% load crispy_forms_tags %}
+
+<c-layouts.plugin>
+  {% if form %}
+    <c-components.form.default />
+  {% else %}
+    {% trans "You have already uploaded data into this dataset. Re-uploading is currently not allowed. " %}
+  {% endif %}
+  {% if result.has_errors %}
+    <hr />
+    <div class="container">
+      <h2>{% translate "Errors" %}</h2>
+      <ul>
+        {% for error in result.base_errors %}
+          <li>
+            {{ error.error }}
+            <div class="traceback">{{ error.traceback|linebreaks }}</div>
+          </li>
+        {% endfor %}
+        {% for line, errors in result.row_errors %}
+          {% for error in errors %}<c-import-export.result.error />{% endfor %}
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+</c-layouts.plugin>
