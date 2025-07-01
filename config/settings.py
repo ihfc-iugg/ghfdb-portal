@@ -53,6 +53,12 @@ PARLER_LANGUAGES = {
     },
 }
 
+# Required for the temporary AWS S3 configuration
+# Who knows why this is needed, but it is
+# see https://github.com/jschneier/django-storages/issues/782
+AWS_S3_ADDRESSING_STYLE = "virtual"
+
+
 # INSTALLED_APPS += [
 #     "django_model_info.apps.DjangoModelInfoConfig",
 # ]
