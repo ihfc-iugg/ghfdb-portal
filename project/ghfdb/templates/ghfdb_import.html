@@ -2,7 +2,7 @@
 
 <c-layouts.plugin>
   {% if form %}
-    <c-components.form.default />
+    <c-components.form.default :form="form" :attrs="sections.form" />
   {% else %}
     {% trans "You have already uploaded data into this dataset. Re-uploading is currently not allowed. " %}
   {% endif %}

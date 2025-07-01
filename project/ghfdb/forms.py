@@ -13,6 +13,3 @@ class GHFDBImportForm(ImportForm):
 
     class Meta:
         fields = ["file"]
-        help_text = _(
-            "Select a file to import. Your file must conform to the latest version of the GHFDB structure. The following formats are supported: XLSX."
-        )
