@@ -23,10 +23,6 @@ services:
     depends_on:
       - postgres
       - redis
-      - minio
-    environment:
-      - S3_CUSTOM_DOMAIN=media.${DJANGO_SITE_DOMAIN:-localhost}
-      - S3_REGION_NAME="us-east-1"
     labels:
       - traefik.enable=true
       - traefik.http.routers.django.rule=Host(`${DJANGO_SITE_DOMAIN:-localhost}`)
