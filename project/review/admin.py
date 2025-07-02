@@ -13,7 +13,7 @@ class RelatedPersonFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         # Get only Person instances linked to at least one MyModel instance
-        linked_people = Person.objects.filter(heat_flow_reviews__isnull=False).distinct()
+        linked_people = Person.contributors.filter(heat_flow_reviews__isnull=False).distinct()
         return [(person.id, str(person)) for person in linked_people]
 
     def queryset(self, request, queryset):
