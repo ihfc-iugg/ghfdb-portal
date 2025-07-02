@@ -400,9 +400,11 @@ class GHFDBResource(ModelResource):
     def before_import(self, dataset, **kwargs):
         # rather than fetch reviewers for each imported row, we fetch them once and store them for later use
         # This is useful for large datasets to avoid repeated database queries but will only work if the same reviewers are listed on each column.
-        self.review = self.get_review(dataset)
-        self.dataset.review = self.review
-        self.dataset.save()
+        # NOTE: Data recorded in the review columns are too heterogeneous to be reliably imported.
+        # self.review = self.get_review(dataset)
+        # self.dataset.review = self.review
+        # self.dataset.save()
+        pass
 
     def import_data(self, dataset, dry_run=False, **kwargs):
         # Force errors to be raised instead of being caught

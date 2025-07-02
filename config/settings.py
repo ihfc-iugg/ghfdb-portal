@@ -53,6 +53,12 @@ PARLER_LANGUAGES = {
     },
 }
 
+# Required for the temporary AWS S3 configuration
+# Who knows why this is needed, but it is
+# see https://github.com/jschneier/django-storages/issues/782
+AWS_S3_ADDRESSING_STYLE = "virtual"
+
+
 # INSTALLED_APPS += [
 #     "django_model_info.apps.DjangoModelInfoConfig",
 # ]
@@ -98,12 +104,12 @@ FAIRDM_CONFIG = {
         "explore": [
             "home.map-viewer",
             "fdm.dashboard.research-projects",
-            "fdm.dashboard.latest-activity",
+            # "fdm.dashboard.latest-activity",
         ],
         "create": [
             "fdm.dashboard.create-project",
             "fdm.dashboard.create-dataset",
-            "fdm.dashboard.digitize",
+            "home.digitize",
         ],
         "more": [
             "fdm.dashboard.login-signup",
@@ -139,8 +145,23 @@ FAIRDM_CONFIG = {
     "footer_start": ["copyright"],
     "footer_center": ["sphinx-version"],
     "back_to_top_button": True,
-    "search_bar": False,
-    "search_as_you_type": False,
+    "sponsors": [
+        {
+            "name": "GFZ German Research Centre for Geosciences",
+            "url": "https://www.gfz-potsdam.de/en/",
+            "image": "img/brand/GFZ_english.jpg",
+        },
+        {
+            "name": "International Heat Flow Commission",
+            "url": "https://ihfc-iugg.com/",
+            "image": "img/brand/IHFC.svg",
+        },
+        {
+            "name": "DFG - Deutsche Forschungsgemeinschaft",
+            "url": "https://www.dfg.de/en/",
+            "image": "img/brand/DFG.gif",
+        },
+    ],
 }
 
 CSRF_TRUSTED_ORIGINS = [f"https://{domain}" for domain in globals().get("ALLOWED_HOSTS", [])]
