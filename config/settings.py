@@ -39,8 +39,8 @@ DJANGO_SETUP_TOOLS = globals().get("DJANGO_SETUP_TOOLS", {})
 
 # this line is only required during staging because no migrations are being committed to the fairdm repo
 DJANGO_SETUP_TOOLS[""]["always_run"].insert(0, ("makemigrations", "--no-input"))
+DJANGO_SETUP_TOOLS[""]["always_run"].append(("compress",))
 DJANGO_SETUP_TOOLS[""]["on_initial"].append(("loaddata", "ghfdb_review_group.json"))
-
 
 PARLER_LANGUAGES = {
     1: (
@@ -163,3 +163,5 @@ FAIRDM_CONFIG = {
         },
     ],
 }
+
+CSRF_TRUSTED_ORIGINS = [f"https://{domain}" for domain in globals().get("ALLOWED_HOSTS", [])]

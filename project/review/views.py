@@ -23,7 +23,7 @@ from .models import Review
 class ReviewFilterSet(LiteratureFilterset):
     reviewer = df.ModelChoiceFilter(
         field_name="review__reviewers",
-        queryset=Person.objects.filter(groups__name="reviewers"),
+        queryset=Person.contributors.filter(groups__name="reviewers"),
         label=_("Reviewer"),
         widget=Select2Widget,
     )
