@@ -1,13 +1,18 @@
 from datetime import date
 
+import django_filters as df
+from actstream import action
 from braces.views import GroupRequiredMixin, MessageMixin, SelectRelatedMixin
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext as _
 from django.views.generic.edit import UpdateView
-from django_filters import FilterSet
+from django_select2.forms import Select2Widget
 from fairdm import plugins
+from fairdm.contrib.contributors.models import Person
 from fairdm.core.models import Dataset
+from fairdm.utils.filters import LiteratureFilterset
+from fairdm.utils.permissions import assign_all_model_perms
 from fairdm.views import FairDMCreateView, FairDMListView
 from literature.models import LiteratureItem
 
@@ -15,18 +20,31 @@ from .forms import CreateReviewForm, SubmitReviewForm
 from .models import Review
 
 
-class ReviewFilterSet(FilterSet):
+class ReviewFilterSet(LiteratureFilterset):
+    reviewer = df.ModelChoiceFilter(
+        field_name="review__reviewers",
+        queryset=Person.objects.filter(groups__name="reviewers"),
+        label=_("Reviewer"),
+        widget=Select2Widget,
+    )
+
     class Meta:
         model = LiteratureItem
-        fields = ["review__status"]
+        fields = ["review__status", "reviewer", "type", "issued", "doi", "title", "author", "o"]
 
 
 class ReviewListView(SelectRelatedMixin, FairDMListView):
     title = _("GHFDB Review")
     model = LiteratureItem
-    card = "review.card"
     filterset_class = ReviewFilterSet
     select_related = ("review",)
+    title_config = {
+        "icon": "review",
+        "text": _("Literature Review"),
+    }
+    grid_config = {
+        "card": "review.card",
+    }
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -39,7 +57,10 @@ class ReviewCreateView(GroupRequiredMixin, FairDMCreateView):
     title = _("Start Review")
     model = Review
     form_class = CreateReviewForm
-    fields = ["literature", "reviewers"]
+    fields = ["literature", "start_date", "reviewers"]
+    title_config = {
+        "text": _("Start Review"),
+    }
 
     def dispatch(self, request, *args, **kwargs):
         literature_id = kwargs.get("literature_id")
@@ -68,10 +89,23 @@ class ReviewCreateView(GroupRequiredMixin, FairDMCreateView):
         self.object.dataset = dataset
         self.object.save()
         form.save_m2m()  # Save many-to-many relationships
-        return redirect(self.object.dataset.get_absolute_url())
+        # assign all perms to all reviewers
+        # these will be removed when the review is closed
+        for reviewer in self.object.reviewers.all():
+            assign_all_model_perms(reviewer, dataset)
+            # Add the reviewer to the dataset as a DataCurator (ensures they get credit for the review)
+            dataset.add_contributor(reviewer, with_roles="DataCurator")
+            # add activity for the dataset
+            action.send(
+                self.request.user,
+                verb="started a review",
+                target=dataset,
+            )
+
+        return redirect(dataset.get_absolute_url())
 
 
-@plugins.dataset.register()
+@plugins.dataset.register
 class ReviewSubmitView(plugins.Action, MessageMixin, UpdateView):
     title = _("Submit Review")
     name = "submit-review"
@@ -81,6 +115,10 @@ class ReviewSubmitView(plugins.Action, MessageMixin, UpdateView):
     }
     model = Review
     form_class = SubmitReviewForm
+
+    @staticmethod
+    def check(request, instance, **kwargs):
+        return request.user.is_superuser
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()

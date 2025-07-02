@@ -27,6 +27,8 @@ plugins.dataset.unregister(DataImportView)
 
 data_dir = Path(__file__).resolve().parent / "data"
 
+user_guide = "heatflowworld.org/docs/ghfdb/import-export/"
+
 
 @extend_schema(
     summary="Metadata reflecting field the contents of my_data.json",
@@ -55,22 +57,39 @@ class GHFDBPathDownloadView(PathDownloadView):
         return finders.find("ghfdb/IHFC_2024_GHFDB.csv")
 
 
-@plugins.dataset.register()
+@plugins.dataset.register
 class GHFDBImport(DataImportView):
     name = "import"
     title = _("GHFDB Import")
-    description = _(
-        "This data import workflow allows you to upload an existing dataset formatted according to the latest specifications of the Global Heat Flow Database. "
-    )
-    form_class = GHFDBImportForm
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["submit_button_config"] = {
+    heading_config = {
+        "title": _("Import data"),
+        "description": _(
+            "This data import workflow allows you to upload an existing dataset formatted according to the latest specifications of the Global Heat Flow Database. "
+        ),
+        "links": [
+            {
+                "text": _("Learn more"),
+                "url": user_guide,
+                "icon": "fa-solid fa-book",
+            }
+        ],
+    }
+    form_config = {
+        "submit_button": {
             "text": _("Import"),
             "icon": "upload",
             "style": "primary",
-        }
+        },
+    }
+    form_class = GHFDBImportForm
+    template_name = "ghfdb_import.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["samples"] = self.base_object.samples.exists()
+        context["measurements"] = self.base_object.measurements.exists()
+        if context["samples"] and context["measurements"]:
+            context["form"] = None
         return context
 
     def get_resource(self):

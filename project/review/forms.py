@@ -1,4 +1,3 @@
-from crispy_forms.layout import Submit
 from django import forms
 from django.utils.translation import gettext as _
 from django_filters import FilterSet
@@ -55,8 +54,8 @@ class ReviewForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.helper.include_media = False
-        self.helper.layout.append(Submit("submit", _("Submit Review")))
+        self.helper.include_media = True
+        # self.helper.layout.append(Submit("submit", _("Submit Review")))
 
 
 class CreateReviewForm(ReviewForm):
