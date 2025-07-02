@@ -1680,7 +1680,7 @@ anytree = "^2.12.1"
 type = "git"
 url = "https://github.com/SamuelJennings/django-flex-menus"
 reference = "HEAD"
-resolved_reference = "d3db7446d3140e3ac45a8e23f3a14185dd128f00"
+resolved_reference = "9b84be19a06e96f4e0bb73b493264a2cb2af1404"
 
 [[package]]
 name = "django-fluent-comments"
@@ -1949,7 +1949,7 @@ python-dateutil = "*"
 type = "git"
 url = "https://github.com/SamuelJennings/django-literature"
 reference = "HEAD"
-resolved_reference = "267aab689711a1b852635150dd34a84be02c7065"
+resolved_reference = "b41d6533d5008fc90d63183af5aa2319d17e1855"
 
 [[package]]
 name = "django-lockdown"
@@ -2965,7 +2965,7 @@ whitenoise = "^6.4.0"
 type = "git"
 url = "https://github.com/FAIR-DM/fairdm"
 reference = "HEAD"
-resolved_reference = "281f120e30b3dc379f2bb1e85ffa76fd4b21ece0"
+resolved_reference = "8a0eab3c4d042d1844909ad2f188594925a33bc9"
 
 [[package]]
 name = "fairdm-dev-tools"
