@@ -64,32 +64,32 @@ services:
   #     - traefik.http.routers.tasks.service=tasks
   #     - traefik.http.routers.tasks.tls.domains[0].main=portal.heatflow.world
   #     - traefik.http.services.tasks.loadbalancer.server.port=5555
-  minio:
-    image: quay.io/minio/minio
-    volumes:
-      - media:/minio
-    environment:
-      - MINIO_ROOT_USER=${DJANGO_SUPERUSER_EMAIL:-super.user@example.com}
-      - MINIO_BROWSER_REDIRECT_URL=https://minio.${DJANGO_SITE_DOMAIN:-localhost}
-    env_file:
-      - stack.env
-    command: server /minio
-    restart: always
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.media.service=media
-      - traefik.http.routers.media.entrypoints=https
-      - traefik.http.routers.media.rule=Host(`media.${DJANGO_SITE_DOMAIN:-localhost}`)
-      - traefik.http.services.media.loadbalancer.server.port=9000
-      - traefik.http.routers.media.tls.certresolver=sectigo  # Specify the certificate resolver
-      - traefik.http.routers.media.tls.domains[0].main=portal.heatflow.world
+  # minio:
+  #   image: quay.io/minio/minio
+  #   volumes:
+  #     - media:/minio
+  #   environment:
+  #     - MINIO_ROOT_USER=${DJANGO_SUPERUSER_EMAIL:-super.user@example.com}
+  #     - MINIO_BROWSER_REDIRECT_URL=https://minio.${DJANGO_SITE_DOMAIN:-localhost}
+  #   env_file:
+  #     - stack.env
+  #   command: server /minio
+  #   restart: always
+  #   labels:
+  #     - traefik.enable=true
+  #     - traefik.http.routers.media.service=media
+  #     - traefik.http.routers.media.entrypoints=https
+  #     - traefik.http.routers.media.rule=Host(`media.${DJANGO_SITE_DOMAIN:-localhost}`)
+  #     - traefik.http.services.media.loadbalancer.server.port=9000
+  #     - traefik.http.routers.media.tls.certresolver=sectigo  # Specify the certificate resolver
+  #     - traefik.http.routers.media.tls.domains[0].main=portal.heatflow.world
 
-      - traefik.http.routers.minio.service=minio
-      - traefik.http.routers.minio.entrypoints=https
-      - traefik.http.routers.minio.rule=Host(`minio.${DJANGO_SITE_DOMAIN:-localhost}`)
-      - traefik.http.services.minio.loadbalancer.server.port=9001
-      - traefik.http.routers.minio.tls.certresolver=sectigo  # Specify the certificate resolver
-      - traefik.http.routers.minio.tls.domains[0].main=portal.heatflow.world
+  #     - traefik.http.routers.minio.service=minio
+  #     - traefik.http.routers.minio.entrypoints=https
+  #     - traefik.http.routers.minio.rule=Host(`minio.${DJANGO_SITE_DOMAIN:-localhost}`)
+  #     - traefik.http.services.minio.loadbalancer.server.port=9001
+  #     - traefik.http.routers.minio.tls.certresolver=sectigo  # Specify the certificate resolver
+  #     - traefik.http.routers.minio.tls.domains[0].main=portal.heatflow.world
   # # TDU map service
   # map:
   #   image: tanzwutgandalf/whfdb-map:latest
