@@ -4,9 +4,6 @@ from .samples import HeatFlowInterval, HeatFlowSite
 # from .vocabularies import ConductivitySource, ExplorationMethod, ExplorationPurpose
 
 __all__ = [
-    # "ConductivitySource",
-    # "ExplorationMethod",
-    # "ExplorationPurpose",
     "HeatFlow",
     "HeatFlowInterval",
     "HeatFlowSite",

@@ -2,6 +2,7 @@ from itertools import islice
 
 import tablib
 from django import forms
+from django.core.exceptions import ValidationError
 from django.forms import modelform_factory
 from fairdm.contrib.contributors.models import Person
 from fairdm.contrib.location.models import Point
@@ -17,6 +18,8 @@ from research_vocabs.fields import ConceptField, ConceptManyToManyField
 from research_vocabs.models import Concept
 from review.models import Review
 
+# list of fields that contains controlled vocabulary choices that need to be cleaned
+# fields correlate to spreadsheet columns
 MULTI_CHOICE_FIELDS = [
     "explo_purpose",
     "q_method",
@@ -50,34 +53,84 @@ CHOICE_FIELDS = [
     "corr_TOPO_flag",
     "corr_E_flag",
     "corr_S_flag",
+    "corr_HP_flag",
 ]
 
 
-def my_formfield_callback(field):
-    form_field = field.formfield()
+def my_formfield_callback(field, **kwargs):
+    """
+    Custom form field callback for Django model fields.
+
+    This function determines the appropriate form field to use for a given model field,
+    particularly handling custom field types such as ConceptField and ConceptManyToManyField.
+    It is typically used as the `formfield_callback` argument in Django admin or forms.
+
+    Args:
+        field: The Django model field instance for which a form field is required.
+
+    Returns:
+        A Django form field instance suitable for the provided model field.
+
+    Notes:
+        - If the field is an instance of ConceptField, it returns a SimpleConceptField
+          initialized with the field's vocabulary.
+        - If the field is an instance of ConceptManyToManyField, it returns a CustomMultiSelect
+          initialized with the field's vocabulary.
+        - For all other field types, it returns the default form field.
+    """
+    form_field = field.formfield(**kwargs)
     if isinstance(field, ConceptField):
         form_field = SimpleConceptField(vocabulary=field.vocabulary)
-        # form_field.widget = CustomSelect(choices=field.vocabulary().choices)
     elif isinstance(field, ConceptManyToManyField):
         form_field = CustomMultiSelect(vocabulary=field.vocabulary)
-        # form_field.queryset = Concept.get_for_vocabulary(field.vocabulary)
-        # form_field.widget = MultiSelectWidget()
     return form_field
 
 
 def clean_choices(value, choices):
-    """Cleans the value to match the choices provided."""
+    """
+    Cleans and maps a semicolon-separated string of display labels to their corresponding values based on provided choices.
+
+    Args:
+        value (str): A semicolon-separated string containing display labels, possibly with square brackets.
+        choices (Iterable[Tuple[Any, str]]): An iterable of (value, label) pairs, where 'label' is the display string and 'value' is the corresponding internal value.
+
+    Returns:
+        List[Any]: A list of values corresponding to the cleaned and matched display labels from the input string.
+    """
+    # Build a mapping from display label to internal value
     display_to_value = {label: value for value, label in choices}
+    # Split the input string by semicolon to get individual labels
     values = value.split(";")
     cleaned_values = []
     for v in values:
+        # Remove square brackets and whitespace from each label
         item = v.replace("[", "").replace("]", "").strip()
         if item:
+            # Map the cleaned label to its value using the mapping
             cleaned_values.append(display_to_value.get(item))
     return cleaned_values
 
 
 class SimpleConceptField(forms.ChoiceField):
+    """
+    A custom Django ChoiceField that supports mapping between display labels and database values
+    using a provided vocabulary.
+
+    Args:
+        vocabulary (callable, optional): A callable that returns an object with a 'choices' attribute,
+            which should be an iterable of (value, label) pairs. If provided, these choices are used
+            for the field, and an internal mapping is created to invert labels to values.
+
+    Attributes:
+        vocabulary: The vocabulary object used to provide choices.
+        inverted_choices (dict): A mapping from display labels to database values.
+
+    Methods:
+        to_python(value):
+            Converts the display value (label) selected by the user back to the corresponding
+            database value using the inverted_choices mapping. Returns None if the value is empty.
+    """
+
     def __init__(self, *args, **kwargs):
         self.vocabulary = kwargs.pop("vocabulary", None)
         if self.vocabulary:
@@ -95,6 +148,17 @@ class SimpleConceptField(forms.ChoiceField):
 
 
 class CustomSelect(forms.Select):
+    """
+    A custom Django form widget that overrides the default Select widget to allow
+    conversion from a display value back to the corresponding database value.
+
+    Methods
+    -------
+    value_from_datadict(data, files, name):
+        Converts the display value from the submitted form data back to the
+        corresponding database value using the widget's choices mapping.
+    """
+
     def value_from_datadict(self, data, files, name):
         """Converts the display value back to the database value."""
         display_to_value = {label: value for value, label in self.choices}
@@ -103,6 +167,22 @@ class CustomSelect(forms.Select):
 
 
 class MultiSelectWidget(forms.SelectMultiple):
+    """
+    A custom Django form widget for selecting multiple values, using a semicolon (';') as the separator.
+
+    This widget overrides the default behavior of `forms.SelectMultiple` to handle multiple selections
+    represented as a single string separated by semicolons. It provides a method to convert the
+    submitted string value back into a list of individual values.
+
+    Attributes:
+        separator (str): The character used to separate multiple values in the input string.
+
+    Methods:
+        value_from_datadict(data, files, name):
+            Extracts and splits the input string from the form data into a list of values,
+            trimming whitespace from each value.
+    """
+
     separator = ";"
 
     def value_from_datadict(self, data, files, name):
@@ -110,10 +190,50 @@ class MultiSelectWidget(forms.SelectMultiple):
         values = super().value_from_datadict(data, files, name)
         if values is None:
             return []
-        return values.split(self.separator)
+        cleaned = [v.strip() for v in values.split(self.separator)]
+        return [v for v in cleaned if v != "unspecified"]
+
+
+def clean_concept_value(values, separator=";"):
+    if values is None:
+        return []
+    cleaned = [v.strip() for v in values.split(separator)]
+    return [v for v in cleaned if v != "unspecified"]
+
+
+def validate_concept(value, vocabulary, field="label"):
+    queryset = Concept.get_for_vocabulary(vocabulary)
+    choices = queryset.values_list(field, flat=True)
+    invalid = []
+    for val in value:
+        if val not in choices:
+            invalid.append(val)
+    if invalid:
+        raise ValidationError(f"The following values are not part of the {vocabulary().label()} vocabulary: {invalid}")
 
 
 class CustomMultiSelect(forms.ModelMultipleChoiceField):
+    """
+    A custom Django form field for selecting multiple concepts from a specific vocabulary.
+
+    This field extends `forms.ModelMultipleChoiceField` and uses a custom widget (`MultiSelectWidget`).
+    It allows filtering the queryset based on a provided vocabulary and validates that selected values
+    are valid labels within that vocabulary.
+
+    Args:
+        vocabulary (Optional[Callable or str]): The vocabulary to filter concepts by. If provided,
+            the queryset is set to all concepts belonging to this vocabulary.
+
+    Methods:
+        clean(value):
+            Validates that the provided values are valid labels in the queryset and returns
+            the filtered queryset. Raises a ValidationError if any value is invalid.
+
+    Attributes:
+        vocabulary: The vocabulary used to filter the queryset.
+        widget: The widget class used for rendering the field.
+    """
+
     widget = MultiSelectWidget
 
     def __init__(self, *args, **kwargs):
@@ -126,10 +246,18 @@ class CustomMultiSelect(forms.ModelMultipleChoiceField):
         """Converts the display value to the database value."""
         if not value:
             return self.queryset.none()
-        # Clean the choices to match the vocabulary
-        # cleaned_values = clean_choices(value, self.choices)
+
+        choices = self.queryset.values_list("label", flat=True)
+        invalid = []
+        for val in value:
+            if val not in choices:
+                invalid.append(val)
+        if invalid:
+            raise ValidationError(
+                f"The following values are not part of the {self.vocabulary().label()} vocabulary: {invalid}"
+            )
         return self.queryset.filter(label__in=value)
-        # return [self.queryset.get(pk=val) for val in cleaned_values if val is not None]
+        # return [self.queryset.get(pk=val) for val in value if val is not None]
 
     # def value_from_datadict(self, data, files, name):
     #     """Converts the display value back to the database value."""
@@ -140,11 +268,42 @@ class CustomMultiSelect(forms.ModelMultipleChoiceField):
 
 
 class YesNoWidget(BooleanWidget):
-    TRUE_VALUES = ["1", 1, True, "true", "TRUE", "True", "Yes", "yes", "YES"]
-    FALSE_VALUES = ["0", 0, False, "false", "FALSE", "False", "No", "no", "NO"]
+    """
+    An extension of the default Boolean widget that handles more true/false values including "yes" and "no".
+
+    This widget is useful for parsing user input or data sources where boolean values may be represented in multiple formats.
+    """
+
+    TRUE_VALUES = ["1", 1, True, "true", "TRUE", "True", "Yes", "yes", "YES", "[Yes]"]
+    FALSE_VALUES = ["0", 0, False, "false", "FALSE", "False", "No", "no", "NO", "[No]"]
 
 
-class SampleWidget(ForeignKeyWidget):
+class ForeignObjectWidget(ForeignKeyWidget):
+    """
+    A custom widget for handling foreign key relationships with dynamic field mapping and form creation.
+
+    This widget extends `ForeignKeyWidget` to allow for additional flexibility when importing or processing
+    data that involves foreign key relationships. It supports mapping fields from the input row to the
+    target model's fields and dynamically generates a model form for validation and object creation.
+
+    Attributes:
+        field_map (dict): A mapping from the target model's field names to the corresponding keys in the input row.
+        factory_kwargs (dict): Additional keyword arguments to pass to the `modelform_factory` function.
+
+    Args:
+        model (Model, optional): The Django model class to associate with this widget. Defaults to `HeatFlowInterval` if not provided.
+        field_map (dict, optional): A dictionary mapping model field names to input row keys.
+        **kwargs: Additional keyword arguments, including `factory_kwargs` for form factory customization.
+
+    Methods:
+        clean(value, row=None, *args, **kwargs):
+            Processes the input value and row, applies field mapping, dynamically creates a model form,
+            validates the data, and returns the saved model instance. Raises a ValueError if validation fails.
+
+    Raises:
+        ValueError: If the generated form is not valid, with form errors included in the exception.
+    """
+
     def __init__(self, model=None, field_map=None, **kwargs):
         self.field_map = field_map
         self.factory_kwargs = kwargs.pop("factory_kwargs", {})
@@ -179,6 +338,28 @@ class SampleWidget(ForeignKeyWidget):
 
 
 class ConceptWidget(CharWidget):
+    """
+    A widget for handling concept choices with display-to-value mapping.
+
+    Inherits from:
+        CharWidget
+
+    Args:
+        choices (list of tuple): Optional. A list of (value, label) pairs representing the available choices.
+
+    Attributes:
+        choices (list of tuple): The list of available choices.
+        display_to_value (dict): A mapping from display labels to their corresponding values.
+
+    Methods:
+        clean(value, row=None, **kwargs):
+            Cleans and validates the input value. Converts "unspecified" to None, checks for empty values,
+            and maps the display label to its corresponding value. Raises ValueError if the value is invalid.
+
+    Raises:
+        ValueError: If the provided value does not correspond to any valid choice.
+    """
+
     def __init__(self, *args, **kwargs):
         self.choices = kwargs.pop("choices", [])
         self.display_to_value = {label: value for value, label in self.choices}
@@ -198,34 +379,51 @@ class ConceptWidget(CharWidget):
 
 
 class MultiConceptWidget(ManyToManyWidget):
+    """
+    A widget for handling ManyToMany relationships with Concept objects filtered by a specific vocabulary.
+
+    This widget is designed for use with import/export operations, allowing for the conversion between
+    a delimited string of concept names and the corresponding queryset of Concept instances, restricted
+    to a given vocabulary.
+
+    Args:
+        vocabulary: The vocabulary instance to filter Concept objects by.
+        separator (str, optional): The delimiter used to separate concept names in the input/output string. Defaults to ";".
+        field (str, optional): The field of the Concept model to use for matching and rendering. Defaults to "name".
+
+    Methods:
+        clean(value, row=None, *args, **kwargs):
+            Converts a delimited string of concept names into a queryset of Concept objects filtered by the specified vocabulary.
+            Returns an empty queryset if the input value is empty.
+
+        render(value, obj=None):
+            Converts a queryset of Concept objects into a delimited string of concept names.
+            Returns an empty string if the input value is empty.
+    """
+
     def __init__(self, vocabulary, separator=";", field="name"):
         super().__init__(Concept, separator=separator, field=field)
         self.vocabulary = vocabulary
         self.vocabulary_name = vocabulary.scheme().name
+        self.queryset = Concept.get_for_vocabulary(vocabulary.__class__)
 
     def clean(self, value, row=None, *args, **kwargs):
         if not value:
-            return self.model.objects.none()
+            return self.queryset.none()
+        values = clean_concept_value(value, self.separator)
+        validate_concept(values, self.vocabulary.__class__)
+        return self.queryset.filter(label__in=values)
 
-        names = [v.strip() for v in value.split(self.separator)]
-        filter_kwargs = {
-            f"{self.field}__in": names,
-            "vocabulary__name": self.vocabulary_name,
-        }
-        return self.model.objects.filter(**filter_kwargs)
+        # filter_kwargs = {
+        #     f"{self.field}__in": names,
+        #     "vocabulary__name": self.vocabulary_name,
+        # }
+        # return self.model.objects.filter(**filter_kwargs)
 
     def render(self, value, obj=None):
         if not value:
             return ""
         return self.separator.join(getattr(obj, self.field) for obj in value.all())
-
-
-# class ManyToManyConceptWidget(ManyToManyWidget):
-
-#     def __init__(self, *args, **kwargs):
-#         self.choices = kwargs.pop("choices", [])
-#         self.display_to_value = {label: value for value, label in self.choices}
-#         super().__init__(*args, **kwargs)
 
 
 class GHFDBImportFormat(XLSX):
@@ -285,9 +483,10 @@ class GHFDBResource(ModelResource):
     explo_method = Field("parent__sample__explo_method", readonly=True)
     explo_purpose = Field("sample__explo_purpose", readonly=True)
 
+    # uses the ForeignObjectWidget to create a ThermalGradient instance and associate it with the import
     thermal_gradient = Field(
         "thermal_gradient",
-        widget=SampleWidget(
+        widget=ForeignObjectWidget(
             model=ThermalGradient,
             field_map={
                 "value": "T_grad_mean",
@@ -305,9 +504,10 @@ class GHFDBResource(ModelResource):
         ),
     )
 
+    # uses the ForeignObjectWidget to create an IntervalConductivity instance and associate it with the import
     thermal_conductivity = Field(
         "thermal_conductivity",
-        widget=SampleWidget(
+        widget=ForeignObjectWidget(
             model=IntervalConductivity,
             field_map={
                 "value": "tc_mean",
@@ -318,6 +518,7 @@ class GHFDBResource(ModelResource):
                 "saturation": "tc_saturation",
                 "pT_conditions": "tc_pT_conditions",
                 "pT_function": "tc_pT_function",
+                "strategy": "tc_strategy",
                 "number": "tc_number",
             },
         ),
@@ -335,7 +536,9 @@ class GHFDBResource(ModelResource):
     relevant_child = Field("relevant_child", widget=YesNoWidget())
     c_comment = Field("c_comment")
 
-    corr_IS_flag = Field("corr_IS_flag", widget=MultiConceptWidget(vocabulary=HeatFlow.corr_IS_flag_vocab))
+    corr_IS_flag = Field(
+        "corr_IS_flag", widget=MultiConceptWidget(vocabulary=HeatFlow.corr_IS_flag_vocab, field="label")
+    )
     corr_T_flag = Field("corr_T_flag", widget=MultiConceptWidget(vocabulary=HeatFlow.corr_T_flag_vocab))
     corr_S_flag = Field("corr_S_flag", widget=ConceptWidget(choices=HeatFlow.corr_S_flag_vocab.choices))
     corr_E_flag = Field("corr_E_flag", widget=ConceptWidget(choices=HeatFlow.corr_E_flag_vocab.choices))
@@ -366,7 +569,7 @@ class GHFDBResource(ModelResource):
     T_corr_bottom = Field("thermal_gradient__correction_bottom", readonly=True)
     T_number = Field("thermal_gradient__number", readonly=True)
 
-    q_date_acq = Field("date_acquired")
+    q_date = Field("date_acquired", widget=CharWidget())
 
     # # Thermal conductivity fields
     tc_mean = Field("thermal_conductivity__value", readonly=True)
@@ -420,7 +623,11 @@ class GHFDBResource(ModelResource):
 
     def before_import_row(self, row, **kwargs):
         """Hook to modify the row before it is imported."""
+
         self.clean_choices(row)
+        hp_flag = row.get("corr_HP_flag").lower()
+        row["corr_HP_flag"] = hp_flag == "yes"
+
         row["dataset"] = self.dataset.pk
         row["thermal_gradient"] = None
         row["thermal_conductivity"] = None
@@ -431,15 +638,15 @@ class GHFDBResource(ModelResource):
 
         # next, we create the HeatFlowSite and store it in the row as sample. When we create the SurfaceHeatFlow object,
         # this sample will be attached.
-        row["heat_flow_site"] = self.get_site(row).pk
+        row["heat_flow_site"] = self.get_heat_flow_site(row).pk
 
         # create a SurfaceHeatFlow instance and store as parent in the row. It will be found during creation of the
         # HeatFlow child instance
-        row["parent"] = self.get_parent(row).pk
+        row["parent"] = self.get_parent_heat_flow(row).pk
 
         # overwrite the previous sample with the sample for the HeatFlowInterval. This will be attached to the HeatFlow
         # child instance
-        row["sample"] = self.get_sample(row).pk
+        row["sample"] = self.get_heat_flow_interval(row).pk
 
     def get_review(self, dataset):
         # NOTE: need to incorporate Review_date column from the dataset
@@ -504,10 +711,12 @@ class GHFDBResource(ModelResource):
         )
         return loc
 
-    def get_site(self, row):
-        return SampleWidget(
+    def get_heat_flow_site(self, row):
+        return ForeignObjectWidget(
             model=HeatFlowSite,
             field_map={
+                "lithology": "geo_lithology",
+                "age": "geo_stratigraphy",
                 "length": "total_depth_MD",
                 "vertical_depth": "total_depth_TVD",
                 "country": "Country",
@@ -520,16 +729,14 @@ class GHFDBResource(ModelResource):
                     "status",
                     "azimuth",
                     "inclination",
-                    "top",
-                    "bottom",
                     "type",
                     "elevation_datum",
                 ],
             },
         ).clean(None, row)
 
-    def get_parent(self, row):
-        return SampleWidget(
+    def get_parent_heat_flow(self, row):
+        return ForeignObjectWidget(
             model=SurfaceHeatFlow,
             field_map={
                 "sample": "heat_flow_site",
@@ -544,24 +751,27 @@ class GHFDBResource(ModelResource):
                     "age",
                     "status",
                 ],
+                # "widgets": {
+                #     "corr_HP_flag": YesNoWidget(),
+                # },
             },
         ).clean(None, row)
 
-    def get_sample(self, row):
-        return SampleWidget(
+    def get_heat_flow_interval(self, row):
+        # To include lithology and age or not to.
+        # That is the question.
+        return ForeignObjectWidget(
             model=HeatFlowInterval,
             field_map={
-                "top": "q_top",
-                "bottom": "q_bottom",
                 "lithology": "geo_lithology",
                 "age": "geo_stratigraphy",
+                "top": "q_top",
+                "bottom": "q_bottom",
             },
             factory_kwargs={
                 "exclude": [
                     "image",
                     "status",
-                    "lithology",
-                    "age",
                 ],
             },
         ).clean(None, row)

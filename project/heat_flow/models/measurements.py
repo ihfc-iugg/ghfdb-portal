@@ -222,7 +222,7 @@ class HeatFlow(Measurement):
         validators=[MinVal(-10), MaxVal(1000)],
     )
 
-    date_acquired = models.DateField(
+    date_acquired = models.PartialDateField(
         _("date of acquisition "),
         help_text=_(
             "Year of acquisition of the heat-flow data which may differ from publication year. Must be in YYYY-MM-DD format. Note: DD is optional."
