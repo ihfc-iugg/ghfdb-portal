@@ -24,4 +24,13 @@ class HeatFlowSiteFilter(SampleFilter):
 class HeatFlowFilter(MeasurementFilter):
     class Meta:
         model = HeatFlow
-        exclude = ["created", "modified", "polymorphic_ctype", "options", "measurement_ptr", "image", "tags"]
+        exclude = [
+            "created",
+            "modified",
+            "polymorphic_ctype",
+            "options",
+            "measurement_ptr",
+            "image",
+            "tags",
+            "date_acquired",
+        ]

@@ -77,7 +77,7 @@ class ProbeType(VocabularyBuilder):
     )
 
     bullard = Concept(
-        prefLabel=_("Bullard probe"),
+        prefLabel=_("Single Steel probe (Bullard)"),
         definition=_(""),
     )
 
@@ -366,67 +366,94 @@ class TemperatureMethod(VocabularyBuilder):
     """
 
     LOGeq = Concept(
-        prefLabel=_("LOGeq: borehole in equilibrium"),
+        prefLabel=_("LOGeq"),
+        definition=_(
+            "Continuous temperature logging in borehole equilibrium using semiconductor transducer or thermistor probe."
+        ),
     )
     LOGpert = Concept(
-        prefLabel=_("LOGpert: borehole perturbed"),
+        prefLabel=_("LOGpert"),
+        definition=_(
+            "Continuous temperature logging in a perturbed borehole using semiconductor transducer or thermistor probe."
+        ),
     )
     cLOG = Concept(
-        prefLabel=_("cLOG: perturbed but corrected"),
+        prefLabel=_("cLOG"),
+        definition=_("Continuous temperature logging in a perturbed borehole, corrected for perturbations."),
     )
     DTSeq = Concept(
-        prefLabel=_("DTSeq: in equilibrium"),
+        prefLabel=_("DTSeq"),
+        definition=_("Distributed Temperature Sensing (DTS) in equilibrium conditions."),
     )
     DTSpert = Concept(
-        prefLabel=_("DTSpert: perturbed"),
+        prefLabel=_("DTSpert"),
+        definition=_("Distributed Temperature Sensing (DTS) in perturbed conditions."),
     )
     cDTS = Concept(
-        prefLabel=_("cDTS: perturbed but corrected"),
+        prefLabel=_("cDTS"),
+        definition=_("Distributed Temperature Sensing (DTS) in perturbed conditions, corrected for perturbations."),
     )
     BHT = Concept(
-        prefLabel=_("BHT: uncorrected"),
+        prefLabel=_("BHT"),
+        definition=_("Bottom Hole Temperature, uncorrected."),
     )
     cBHT = Concept(
-        prefLabel=_("cBHT: corrected"),
+        prefLabel=_("cBHT"),
+        definition=_("Bottom Hole Temperature, corrected for perturbations."),
     )
     DST = Concept(
-        prefLabel=_("DST: uncorrected"),
+        prefLabel=_("DST"),
+        definition=_("Drill Stem Test temperature, uncorrected."),
     )
     cDST = Concept(
-        prefLabel=_("cDST: corrected"),
+        prefLabel=_("cDST"),
+        definition=_("Drill Stem Test temperature, corrected for effects."),
     )
     RTDeq = Concept(
-        prefLabel=_("RTDeq: in equilibrium"),
+        prefLabel=_("RTDeq"),
+        definition=_("Resistance Temperature Detector (RTD) measurement in equilibrium conditions."),
     )
     RTDpert = Concept(
-        prefLabel=_("RTDpert: perturbed"),
+        prefLabel=_("RTDpert"),
+        definition=_("Resistance Temperature Detector (RTD) measurement in perturbed conditions."),
     )
     cRTD = Concept(
-        prefLabel=_("cRTD: perturbed but corrected"),
+        prefLabel=_("cRTD"),
+        definition=_(
+            "Resistance Temperature Detector (RTD) measurement in perturbed conditions, corrected for perturbations."
+        ),
     )
     ODTT_PC = Concept(
         prefLabel=_("ODTT-PC"),
+        definition=_("Ocean Drilling Temperature Tool - piston corer."),
     )
     ODTT_TP = Concept(
         prefLabel=_("ODTT-TP"),
+        definition=_("Ocean Drilling Temperature Tool - thermistor probe."),
     )
     CPD = Concept(
-        prefLabel=_("CPD: Curie Point/Depth estimates"),
+        prefLabel=_("CPD"),
+        definition=_("Curie Point/Depth temperature estimates."),
     )
     XEN = Concept(
-        prefLabel=_("XEN: Xenolith"),
+        prefLabel=_("XEN"),
+        definition=_("Temperature estimates from xenoliths."),
     )
     GTM = Concept(
-        prefLabel=_("GTM: Geothermometry"),
+        prefLabel=_("GTM"),
+        definition=_("Temperature estimates from geothermometry."),
     )
     BSR = Concept(
-        prefLabel=_("BSR: bottom-simulating seismic reflector"),
+        prefLabel=_("BSR"),
+        definition=_("Temperature estimates from bottom-simulating seismic reflector."),
     )
     SUR = Concept(
-        prefLabel=_("SUR: surface temperature/bottom water temperature"),
+        prefLabel=_("SUR"),
+        definition=_("Surface temperature or bottom water temperature measurement."),
     )
     OTH = Concept(
-        prefLabel=_("Other (method must be specified in comments)"),
+        prefLabel=_("OTH"),
+        definition=_("Other temperature determination method (must be specified in comments)."),
     )
 
     class Meta:
@@ -780,7 +807,7 @@ class ConductivitySaturation(VocabularyBuilder):
     )
 
     class Meta:
-        name = "conductivity-location"
+        name = "conductivity-saturation"
         namespace = BASE_NAMESPACE + name + "/"
         prefix = "ghfdb"
         scheme_attrs = {
@@ -1186,12 +1213,12 @@ class GenericFlagChoices(VocabularyBuilder):
     )
 
     consideredP = Concept(
-        prefLabel=_("Considered - pressure"),
+        prefLabel=_("Considered - p"),
         definition=_(""),
     )
 
     consideredT = Concept(
-        prefLabel=_("Considered - temperature"),
+        prefLabel=_("Considered - t"),
         definition=_(""),
     )
 
@@ -1201,7 +1228,7 @@ class GenericFlagChoices(VocabularyBuilder):
     )
 
     notConsidered = Concept(
-        prefLabel=_("Not considered"),
+        prefLabel=_("not considered"),
         definition=_(""),
     )
 

@@ -53,7 +53,7 @@ class ReviewListView(SelectRelatedMixin, FairDMListView):
 
 
 class ReviewCreateView(GroupRequiredMixin, FairDMCreateView):
-    group_required = ["reviewers"]
+    group_required = ["Reviewers"]
     title = _("Start Review")
     model = Review
     form_class = CreateReviewForm
