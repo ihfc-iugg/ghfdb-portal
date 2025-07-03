@@ -175,6 +175,7 @@ django_settings_module = "tests.settings"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
+pythonpath = ["project"]
 reuse_db = true
 python_files = ["test_*.py", "*_test.py", "testing/python/*.py"]
 filterwarnings = [
