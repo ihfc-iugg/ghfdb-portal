@@ -57,7 +57,6 @@ class GHFDBPathDownloadView(PathDownloadView):
         return finders.find("ghfdb/IHFC_2024_GHFDB.csv")
 
 
-@plugins.dataset.register
 class GHFDBImport(DataImportView):
     name = "import"
     title = _("GHFDB Import")
@@ -108,6 +107,21 @@ class GHFDBImport(DataImportView):
 
     def get_dataset_format(self, file):
         return GHFDBImportFormat(encoding=self.from_encoding)
+
+
+class GHFDBImportConfirm(GHFDBImport):
+    name = "import_confirm"
+    title = _("GHFDB Import Confirmation")
+    heading_config = {
+        "title": _("Confirm import"),
+        "description": _(
+            "Please review the data you are about to import. If everything looks correct, click 'Import' to proceed."
+        ),
+    }
+    form_class = None
+
+
+plugins.dataset.register(GHFDBImport, GHFDBImportConfirm)
 
 
 class GHFDBExport(DataExportView):
