@@ -334,7 +334,7 @@ class ForeignObjectWidget(ForeignKeyWidget):
             obj = form.save()
             return obj
 
-        raise ValueError(form.errors)
+        raise ValidationError(form.errors)
 
 
 class ConceptWidget(CharWidget):
@@ -731,6 +731,7 @@ class GHFDBResource(ModelResource):
                     "inclination",
                     "type",
                     "elevation_datum",
+                    # "vertical_datum",
                 ],
             },
         ).clean(None, row)
@@ -772,6 +773,7 @@ class GHFDBResource(ModelResource):
                 "exclude": [
                     "image",
                     "status",
+                    "vertical_datum",
                 ],
             },
         ).clean(None, row)
