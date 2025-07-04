@@ -598,6 +598,7 @@ class GHFDBResource(ModelResource):
 
     def __init__(self, *args, **kwargs):
         self.dataset = kwargs.pop("dataset")
+        self._location_cache = {}
         super().__init__(*args, **kwargs)
 
     def before_import(self, dataset, **kwargs):
@@ -705,11 +706,23 @@ class GHFDBResource(ModelResource):
         return review
 
     def get_location(self, row):
-        loc, created = Point.objects.update_or_create(
-            y=row.get("lat_NS"),
-            x=row.get("long_EW"),
+        x = f"{row.get('long_EW'):.5f}"
+        y = f"{row.get('lat_NS'):.5f}"
+        loc, created = Point.objects.get_or_create(
+            y=y,
+            x=x,
         )
         return loc
+
+    # def get_location(self, row):
+    #     key = (row["long_EW"], row["lat_NS"])
+    #     if key in self._location_cache:
+    #         return self._location_cache[key]
+    #     if row["Short Name"] == 27:
+    #         x = 8
+    #     obj, _ = Point.objects.get_or_create(x=key[0], y=key[1])
+    #     self._location_cache[key] = obj
+    #     return obj
 
     def get_heat_flow_site(self, row):
         return ForeignObjectWidget(
@@ -731,7 +744,7 @@ class GHFDBResource(ModelResource):
                     "inclination",
                     "type",
                     "elevation_datum",
-                    # "vertical_datum",
+                    "vertical_datum",
                 ],
             },
         ).clean(None, row)
