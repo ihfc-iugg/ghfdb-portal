@@ -60,6 +60,9 @@ class GHFDBPathDownloadView(PathDownloadView):
 class GHFDBImport(DataImportView):
     name = "import"
     title = _("GHFDB Import")
+    sections = {
+        "form": "components.form.default",
+    }
     heading_config = {
         "title": _("Import data"),
         "description": _(
@@ -74,6 +77,7 @@ class GHFDBImport(DataImportView):
         ],
     }
     form_config = {
+        "actions": True,
         "submit_button": {
             "text": _("Import"),
             "icon": "upload",
