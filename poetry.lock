@@ -2885,6 +2885,7 @@ django-contact-form = "^2.1"
 django-content-license = {git = "https://github.com/SamuelJennings/django-content-license"}
 django-cors-headers = "^3.14.0"
 django-cotton = ">=2.1"
+django-countries = "^7.6.1"
 django-crispy-forms = "^2.3"
 django-dbbackup = "^4.0.2"
 django-downloadview = "^2.3.0"
@@ -2965,7 +2966,7 @@ whitenoise = "^6.4.0"
 type = "git"
 url = "https://github.com/FAIR-DM/fairdm"
 reference = "HEAD"
-resolved_reference = "4249882d44ccc38ef98ef00487ab3825a874bb79"
+resolved_reference = "f44a3e2743548703c4bf3c596c84aab3d37782df"
 
 [[package]]
 name = "fairdm-dev-tools"
