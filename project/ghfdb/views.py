@@ -125,7 +125,7 @@ class GHFDBImportConfirm(GHFDBImport):
     form_class = None
 
 
-plugins.dataset.register(GHFDBImport, GHFDBImportConfirm)
+plugins.dataset.register(GHFDBImport)
 
 
 class GHFDBExport(DataExportView):
