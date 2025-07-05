@@ -456,7 +456,8 @@ class GHFDBImportFormat(XLSX):
 
         # get the headers from the 6th row of the worksheet
         dataset.headers = [cell.value for cell in sheet[self.header_row]]
-
+        if "tc_fuction" in dataset.headers:
+            raise ValueError('"tc_fuction" is not a valid header.')
         # iterate over rows and append to dataset
         # skip the first 8 rows
         for row in islice(sheet.rows, self.skip_rows, None):
