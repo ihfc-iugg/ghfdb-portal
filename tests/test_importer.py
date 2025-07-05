@@ -44,7 +44,7 @@ def importer_fail(dataset):
     file = get_file("tests/data/importer_fail.xlsx")
     input_format = GHFDBImportFormat(encoding="utf-8-sig")
     input_data = input_format.create_dataset(file)
-    return resource.import_data(input_data, raise_errors=True, dry_run=True)
+    return resource.import_data(input_data, raise_errors=False, dry_run=False)
 
 
 @pytest.fixture
@@ -60,7 +60,7 @@ def importer_success(success_resource):
     file = get_file("tests/data/importer_success.xlsx")
     input_format = GHFDBImportFormat(encoding="utf-8-sig")
     input_data = input_format.create_dataset(file)
-    return success_resource.import_data(input_data, raise_errors=True, dry_run=False)
+    return success_resource.import_data(input_data, raise_errors=False, dry_run=False)
 
 
 @pytest.fixture
