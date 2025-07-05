@@ -1,5 +1,7 @@
 from django import forms
+from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
+from django_addanother.widgets import AddAnotherWidgetWrapper
 from django_filters import FilterSet
 from django_select2 import forms as s2forms
 from django_select2.forms import Select2Widget
@@ -42,7 +44,10 @@ class ReviewForm(ModelForm):
         required=True,
         label=_("Reviewers"),
         help_text=_("Select users who have reviewed the data."),
-        widget=ContributorWidget,
+        widget=AddAnotherWidgetWrapper(
+            ContributorWidget,
+            reverse_lazy("person-create"),
+        ),
     )
 
     class Meta:
