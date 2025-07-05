@@ -2966,7 +2966,7 @@ whitenoise = "^6.4.0"
 type = "git"
 url = "https://github.com/FAIR-DM/fairdm"
 reference = "HEAD"
-resolved_reference = "e581bff32c0b84ea10c1250223d2ffdf7dfa9ca2"
+resolved_reference = "8f742a633dbb995afd7b1703a85ba77d6f54fbea"
 
 [[package]]
 name = "fairdm-dev-tools"
@@ -3065,7 +3065,7 @@ pyproj = "^3.6.1"
 type = "git"
 url = "https://github.com/FAIR-DM/fairdm-geo"
 reference = "HEAD"
-resolved_reference = "c2eb6ab432d773eb907eb7bc1d0e0c71a3a3b282"
+resolved_reference = "b7922796403d001173bcc8d05599500e1a535d20"
 
 [[package]]
 name = "faker"
