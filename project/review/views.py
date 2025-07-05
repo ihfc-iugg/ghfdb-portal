@@ -48,7 +48,7 @@ class ReviewListView(SelectRelatedMixin, FairDMListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["current_user_is_reviewer"] = self.request.user.groups.filter(name="reviewers").exists()
+        context["current_user_is_reviewer"] = self.request.user.groups.filter(name="Reviewers").exists()
         return context
 
 
