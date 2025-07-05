@@ -3,9 +3,11 @@ from itertools import islice
 import tablib
 from django import forms
 from django.core.exceptions import ValidationError
+from django.db.models.functions import Lower
 from django.forms import modelform_factory
 from fairdm.contrib.contributors.models import Person
 from fairdm.contrib.location.models import Point
+from fairdm.contrib.location.utils import normalize_coordinate
 from heat_flow.models import HeatFlow, HeatFlowInterval
 from heat_flow.models.measurements import IntervalConductivity, SurfaceHeatFlow, ThermalGradient
 from heat_flow.models.samples import HeatFlowSite
@@ -103,11 +105,9 @@ def clean_choices(value, choices):
     values = value.split(";")
     cleaned_values = []
     for v in values:
-        # Remove square brackets and whitespace from each label
-        item = v.replace("[", "").replace("]", "").strip()
-        if item:
+        if v:
             # Map the cleaned label to its value using the mapping
-            cleaned_values.append(display_to_value.get(item))
+            cleaned_values.append(display_to_value.get(v))
     return cleaned_values
 
 
@@ -115,6 +115,8 @@ class SimpleConceptField(forms.ChoiceField):
     """
     A custom Django ChoiceField that supports mapping between display labels and database values
     using a provided vocabulary.
+
+    Provided values are always converted to lowercase to ensure case-insensitivity in matching.
 
     Args:
         vocabulary (callable, optional): A callable that returns an object with a 'choices' attribute,
@@ -137,33 +139,41 @@ class SimpleConceptField(forms.ChoiceField):
             # we invert the choices because spreadsheet values are displayed as labels
             # kwargs["choices"] = [(x[1], x[0]) for x in self.vocabulary().choices]
             kwargs["choices"] = self.vocabulary().choices
-        self.inverted_choices = {label: value for value, label in kwargs["choices"]}
+        self.inverted_choices = {label.lower(): value for value, label in kwargs["choices"]}
         super().__init__(*args, **kwargs)
 
     def to_python(self, value):
         """Converts the display value to the database value."""
         if not value:
             return None
+        value = value.replace("(specify in comments)", "").strip().lower()
         return self.inverted_choices.get(value, value)
 
 
-class CustomSelect(forms.Select):
-    """
-    A custom Django form widget that overrides the default Select widget to allow
-    conversion from a display value back to the corresponding database value.
+# class CustomSelect(forms.Select):
+#     """
+#     A custom Django form widget that overrides the default Select widget to allow
+#     conversion from a display value back to the corresponding database value.
 
-    Methods
-    -------
-    value_from_datadict(data, files, name):
-        Converts the display value from the submitted form data back to the
-        corresponding database value using the widget's choices mapping.
-    """
+#     Methods
+#     -------
+#     value_from_datadict(data, files, name):
+#         Converts the display value from the submitted form data back to the
+#         corresponding database value using the widget's choices mapping.
+#     """
 
-    def value_from_datadict(self, data, files, name):
-        """Converts the display value back to the database value."""
-        display_to_value = {label: value for value, label in self.choices}
-        display_value = data.get(name)
-        return display_to_value.get(display_value, display_value)
+#     def value_from_datadict(self, data, files, name):
+#         """Converts the display value back to the database value."""
+#         display_to_value = {label: value for value, label in self.choices}
+#         display_value = data.get(name)
+#         return display_to_value.get(display_value, display_value)
+
+
+def clean_concept_value(values, separator=";"):
+    if values is None:
+        return []
+    cleaned = [v.strip().lower() for v in values.split(separator)]
+    return [v for v in cleaned if v != "unspecified"]
 
 
 class MultiSelectWidget(forms.SelectMultiple):
@@ -173,6 +183,8 @@ class MultiSelectWidget(forms.SelectMultiple):
     This widget overrides the default behavior of `forms.SelectMultiple` to handle multiple selections
     represented as a single string separated by semicolons. It provides a method to convert the
     submitted string value back into a list of individual values.
+
+    Values are always converted to lowercase and any "unspecified" values are removed.
 
     Attributes:
         separator (str): The character used to separate multiple values in the input string.
@@ -188,25 +200,18 @@ class MultiSelectWidget(forms.SelectMultiple):
     def value_from_datadict(self, data, files, name):
         """Converts the display value back to the database value."""
         values = super().value_from_datadict(data, files, name)
-        if values is None:
-            return []
-        cleaned = [v.strip() for v in values.split(self.separator)]
-        return [v for v in cleaned if v != "unspecified"]
+        return clean_concept_value(values, self.separator)
 
 
-def clean_concept_value(values, separator=";"):
-    if values is None:
-        return []
-    cleaned = [v.strip() for v in values.split(separator)]
-    return [v for v in cleaned if v != "unspecified"]
+def case_insensitive_qs(vocabulary, field="label"):
+    return Concept.get_for_vocabulary(vocabulary).annotate(ilabel=Lower(field))
 
 
 def validate_concept(value, vocabulary, field="label"):
-    queryset = Concept.get_for_vocabulary(vocabulary)
-    choices = queryset.values_list(field, flat=True)
+    choices = case_insensitive_qs(vocabulary, field=field).values_list("ilabel", flat=True)
     invalid = []
     for val in value:
-        if val not in choices:
+        if val.lower() not in choices:
             invalid.append(val)
     if invalid:
         raise ValidationError(f"The following values are not part of the {vocabulary().label()} vocabulary: {invalid}")
@@ -246,25 +251,9 @@ class CustomMultiSelect(forms.ModelMultipleChoiceField):
         """Converts the display value to the database value."""
         if not value:
             return self.queryset.none()
-
-        choices = self.queryset.values_list("label", flat=True)
-        invalid = []
-        for val in value:
-            if val not in choices:
-                invalid.append(val)
-        if invalid:
-            raise ValidationError(
-                f"The following values are not part of the {self.vocabulary().label()} vocabulary: {invalid}"
-            )
-        return self.queryset.filter(label__in=value)
-        # return [self.queryset.get(pk=val) for val in value if val is not None]
-
-    # def value_from_datadict(self, data, files, name):
-    #     """Converts the display value back to the database value."""
-    #     values = super().value_from_datadict(data, files, name)
-    #     display_to_value = {label: value for value, label in self.choices}
-    #     display_value = data.get(name)
-    #     return display_to_value.get(display_value, display_value)
+        validate_concept(value, self.vocabulary)
+        qs = case_insensitive_qs(self.vocabulary)
+        return qs.filter(ilabel__in=value)
 
 
 class YesNoWidget(BooleanWidget):
@@ -274,8 +263,8 @@ class YesNoWidget(BooleanWidget):
     This widget is useful for parsing user input or data sources where boolean values may be represented in multiple formats.
     """
 
-    TRUE_VALUES = ["1", 1, True, "true", "TRUE", "True", "Yes", "yes", "YES", "[Yes]"]
-    FALSE_VALUES = ["0", 0, False, "false", "FALSE", "False", "No", "no", "NO", "[No]"]
+    TRUE_VALUES = ["1", 1, True, "true", "TRUE", "True", "Yes", "yes", "YES", "[Yes]", "[yes]"]
+    FALSE_VALUES = ["0", 0, False, "false", "FALSE", "False", "No", "no", "NO", "[No]", "[no]"]
 
 
 class ForeignObjectWidget(ForeignKeyWidget):
@@ -334,7 +323,7 @@ class ForeignObjectWidget(ForeignKeyWidget):
             obj = form.save()
             return obj
 
-        raise ValueError(form.errors)
+        raise ValidationError(form.errors)
 
 
 class ConceptWidget(CharWidget):
@@ -361,8 +350,9 @@ class ConceptWidget(CharWidget):
     """
 
     def __init__(self, *args, **kwargs):
-        self.choices = kwargs.pop("choices", [])
-        self.display_to_value = {label: value for value, label in self.choices}
+        self.vocabulary = kwargs.pop("vocabulary", None)
+        self.choices = self.vocabulary.choices
+        self.display_to_value = {label.lower(): value for value, label in self.choices}
         super().__init__(*args, **kwargs)
 
     def clean(self, value, row=None, **kwargs):
@@ -372,9 +362,11 @@ class ConceptWidget(CharWidget):
         if val is None or val == "":
             return None
 
-        result = self.display_to_value.get(val)
+        result = self.display_to_value.get(val.lower())
         if result is None:
-            raise ValueError("Invalid choice.")
+            raise ValidationError(
+                f"The following values are not part of the {self.vocabulary.label()} vocabulary: {val}"
+            )
         return result
 
 
@@ -412,7 +404,8 @@ class MultiConceptWidget(ManyToManyWidget):
             return self.queryset.none()
         values = clean_concept_value(value, self.separator)
         validate_concept(values, self.vocabulary.__class__)
-        return self.queryset.filter(label__in=values)
+        qs = case_insensitive_qs(self.vocabulary.__class__, field="label")
+        return qs.filter(ilabel__in=values)
 
         # filter_kwargs = {
         #     f"{self.field}__in": names,
@@ -427,8 +420,19 @@ class MultiConceptWidget(ManyToManyWidget):
 
 
 class GHFDBImportFormat(XLSX):
-    """This is a custom import format (django-import-export) that will properly read the GHFDB spreadsheet template. It
-    uses a worksheet by the name 'data list', searches for headers on the 6th row and skips the first 8 rows."""
+    """GHFDBImportFormat is a class for importing and parsing data from a specific Excel (XLSX) format used in the Global Heat Flow Database (GHFDB).
+
+    Attributes:
+        header_row (int): The row index (1-based) in the Excel sheet where the column headers are located.
+        skip_rows (int): The number of initial rows to skip before reading data rows.
+
+    Methods:
+        create_dataset(in_stream):
+            Reads an Excel file from the provided input stream, extracts headers from the specified header row,
+            skips the specified number of rows, and loads the remaining data into a tablib.Dataset object.
+            Only the first sheet named "data list" is processed.
+            Returns:
+                tablib.Dataset: The dataset containing the imported data."""
 
     header_row = 6
     skip_rows = 8
@@ -449,7 +453,8 @@ class GHFDBImportFormat(XLSX):
 
         # get the headers from the 6th row of the worksheet
         dataset.headers = [cell.value for cell in sheet[self.header_row]]
-
+        if "tc_fuction" in dataset.headers:
+            raise ValueError('"tc_fuction" is not a valid header.')
         # iterate over rows and append to dataset
         # skip the first 8 rows
         for row in islice(sheet.rows, self.skip_rows, None):
@@ -540,13 +545,13 @@ class GHFDBResource(ModelResource):
         "corr_IS_flag", widget=MultiConceptWidget(vocabulary=HeatFlow.corr_IS_flag_vocab, field="label")
     )
     corr_T_flag = Field("corr_T_flag", widget=MultiConceptWidget(vocabulary=HeatFlow.corr_T_flag_vocab))
-    corr_S_flag = Field("corr_S_flag", widget=ConceptWidget(choices=HeatFlow.corr_S_flag_vocab.choices))
-    corr_E_flag = Field("corr_E_flag", widget=ConceptWidget(choices=HeatFlow.corr_E_flag_vocab.choices))
-    corr_TOPO_flag = Field("corr_TOPO_flag", widget=ConceptWidget(choices=HeatFlow.corr_TOPO_flag_vocab.choices))
-    corr_PAL_flag = Field("corr_PAL_flag", widget=ConceptWidget(choices=HeatFlow.corr_PAL_flag_vocab.choices))
-    corr_SUR_flag = Field("corr_SUR_flag", widget=ConceptWidget(choices=HeatFlow.corr_SUR_flag_vocab.choices))
-    corr_CONV_flag = Field("corr_CONV_flag", widget=ConceptWidget(choices=HeatFlow.corr_CONV_flag_vocab.choices))
-    corr_HR_flag = Field("corr_HR_flag", widget=ConceptWidget(choices=HeatFlow.corr_HR_flag_vocab.choices))
+    corr_S_flag = Field("corr_S_flag", widget=ConceptWidget(vocabulary=HeatFlow.corr_S_flag_vocab))
+    corr_E_flag = Field("corr_E_flag", widget=ConceptWidget(vocabulary=HeatFlow.corr_E_flag_vocab))
+    corr_TOPO_flag = Field("corr_TOPO_flag", widget=ConceptWidget(vocabulary=HeatFlow.corr_TOPO_flag_vocab))
+    corr_PAL_flag = Field("corr_PAL_flag", widget=ConceptWidget(vocabulary=HeatFlow.corr_PAL_flag_vocab))
+    corr_SUR_flag = Field("corr_SUR_flag", widget=ConceptWidget(vocabulary=HeatFlow.corr_SUR_flag_vocab))
+    corr_CONV_flag = Field("corr_CONV_flag", widget=ConceptWidget(vocabulary=HeatFlow.corr_CONV_flag_vocab))
+    corr_HR_flag = Field("corr_HR_flag", widget=ConceptWidget(vocabulary=HeatFlow.corr_HR_flag_vocab))
 
     expedition = Field("expedition")
     probe_type = Field("probe_type", widget=MultiConceptWidget(vocabulary=HeatFlow.probe_type_vocab))
@@ -615,11 +620,29 @@ class GHFDBResource(ModelResource):
         return super().import_data(dataset, dry_run=dry_run, **kwargs)
 
     def clean_choices(self, row):
-        """Removes brackets and whitespace from choice fields in the row."""
+        """
+        Cleans controlled vocabulary fields in a row by removing square brackets and stripping whitespace.
+
+        For each field in CHOICE_FIELDS, if the field exists in the row and has a value,
+        this method removes any '[' and ']' characters and trims leading/trailing whitespace.
+
+        Args:
+            row (dict): A dictionary representing a data row with possible controlled vocabulary fields.
+
+        Example:
+            [Yes] -> 'Yes'
+            [not corrected];[Active] -> 'not corrected; Active'
+        """
+
+        TO_REMOVE = ["[", "]", "(specify)", "(specify in comments)"]
+
         for field in CHOICE_FIELDS:
-            if row.get(field):
+            if value := row.get(field):
+                for remove in TO_REMOVE:
+                    value = value.replace(remove, "")
+                value = value.replace("–", "-").replace("—", "-")  # noqa: RUF001
                 # Clean the choices for fields that are controlled vocabularies
-                row[field] = row[field].replace("[", "").replace("]", "").strip()
+                row[field] = value.strip().lower()
 
     def before_import_row(self, row, **kwargs):
         """Hook to modify the row before it is imported."""
@@ -705,11 +728,20 @@ class GHFDBResource(ModelResource):
         return review
 
     def get_location(self, row):
-        loc, created = Point.objects.update_or_create(
-            y=row.get("lat_NS"),
-            x=row.get("long_EW"),
-        )
+        x = normalize_coordinate(row.get("long_EW"))
+        y = normalize_coordinate(row.get("lat_NS"))
+        loc, created = Point.objects.get_or_create(x=x, y=y)
         return loc
+
+    # def get_location(self, row):
+    #     key = (row["long_EW"], row["lat_NS"])
+    #     if key in self._location_cache:
+    #         return self._location_cache[key]
+    #     if row["Short Name"] == 27:
+    #         x = 8
+    #     obj, _ = Point.objects.get_or_create(x=key[0], y=key[1])
+    #     self._location_cache[key] = obj
+    #     return obj
 
     def get_heat_flow_site(self, row):
         return ForeignObjectWidget(
@@ -731,6 +763,7 @@ class GHFDBResource(ModelResource):
                     "inclination",
                     "type",
                     "elevation_datum",
+                    "vertical_datum",
                 ],
             },
         ).clean(None, row)
@@ -772,6 +805,7 @@ class GHFDBResource(ModelResource):
                 "exclude": [
                     "image",
                     "status",
+                    "vertical_datum",
                 ],
             },
         ).clean(None, row)
