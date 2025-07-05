@@ -6,20 +6,6 @@ BASE_NAMESPACE = "https://heatflow.world/vocabularies/"
 
 
 class HeatFlowMethod(VocabularyBuilder):
-    fourier = Concept(
-        prefLabel=_("Fourier's Law"),
-        definition=_(
-            "Product of the mean thermal gradient to the mean thermal conductivity with reference to a specified depth interval"
-        ),
-    )
-
-    product = Concept(
-        prefLabel=_("Product method"),
-        definition=_(
-            "Product of the mean thermal gradient to the mean thermal conductivity with reference to a specified depth interval"
-        ),
-    )
-
     interval = Concept(
         prefLabel=_("Interval method"),
         definition=_(
@@ -41,6 +27,11 @@ class HeatFlowMethod(VocabularyBuilder):
         ),
     )
 
+    numerical = Concept(
+        prefLabel=_("Other numerical computations"),
+        definition=_(""),
+    )
+
     other = Concept(
         prefLabel=_("Other"),
         definition=_("Specify the method in comments"),
@@ -56,43 +47,59 @@ class HeatFlowMethod(VocabularyBuilder):
         }
 
 
-# [Single Steel probe (Bullard)]
-# [Single Steel probe (Bullard) in-situ TC]
-# [Violin-Bow probe (Lister)]
-# [Outrigger probe (Von Herzen) in-situ TC, without corer]
-# [Outrigger probe (Ewing) with corer]
-# [Outrigger probe (autonomous) without corer]
-# [Outrigger probe (autonomous) with corer]
-# [Submersible probe]
-# [Other (specify in comments)]
-# [unspecified]
-
-
 class ProbeType(VocabularyBuilder):
     """Type of heat-flow probe used for measurement."""
 
-    corer = Concept(
-        prefLabel=_("Corer-outrigger"),
-        definition=_(""),
-    )
-
-    bullard = Concept(
+    single_steel = Concept(
         prefLabel=_("Single Steel probe (Bullard)"),
         definition=_(""),
     )
 
-    violin_bow = Concept(
-        prefLabel=_("Lister Violin-Bow probe"),
+    single_steel_insituTC = Concept(
+        prefLabel=_("Single Steel probe (Bullard) in-situ TC"),
         definition=_(""),
     )
 
-    ewing = Concept(
-        prefLabel=_("Ewing probe"),
+    violin_bow = Concept(
+        prefLabel=_("Violin-Bow probe (Lister)"),
+        definition=_(""),
+    )
+
+    outrigger_von_herzen = Concept(
+        prefLabel=_("Outrigger probe (Von Herzen) in-situ TC"),
+        definition=_(""),
+    )
+
+    outrigger_haenel = Concept(
+        prefLabel=_("Outrigger probe (Haenel) in-situ TC"),
+        definition=_(""),
+    )
+
+    outrigger_ewing = Concept(
+        prefLabel=_("Outrigger probe (Ewing) with corer"),
+        definition=_(""),
+    )
+
+    outrigger_lister = Concept(
+        prefLabel=_("Outrigger probe (Lister) with corer"),
+        definition=_(""),
+    )
+
+    outrigger_autonomous_no_corer = Concept(
+        prefLabel=_("Outrigger probe (autonomous) without corer"),
+        definition=_(""),
+    )
+    outrigger_autonomous_with_corer = Concept(
+        prefLabel=_("Outrigger probe (autonomous) with corer"),
+        definition=_(""),
+    )
+    submersible = Concept(
+        prefLabel=_("Submersible probe"),
         definition=_(""),
     )
 
     other = Concept(
-        prefLabel=_("Other probe"),
+        prefLabel=_("Other (specify in comments)"),
         definition=_(""),
     )
 
@@ -113,42 +120,43 @@ class ProbeType(VocabularyBuilder):
         }
 
 
-class HeatFlowTransferMechanism(VocabularyBuilder):
-    """Specification of the predominant heat transfer mechanism relevant for the reported heatflow value."""
+# WHERE THE HELL DID THIS COME FROM?
+# class HeatFlowTransferMechanism(VocabularyBuilder):
+#     """Specification of the predominant heat transfer mechanism relevant for the reported heatflow value."""
 
-    conductive = Concept(
-        prefLabel=_("Conductive"),
-        definition=_(""),
-    )
+#     conductive = Concept(
+#         prefLabel=_("Conductive"),
+#         definition=_(""),
+#     )
 
-    convective = Concept(
-        prefLabel=_("Convective unspecified"),
-        definition=_(""),
-    )
+#     convective = Concept(
+#         prefLabel=_("Convective unspecified"),
+#         definition=_(""),
+#     )
 
-    upflow = Concept(
-        prefLabel=_("Convective upflow"),
-        definition=_(""),
-    )
+#     upflow = Concept(
+#         prefLabel=_("Convective upflow"),
+#         definition=_(""),
+#     )
 
-    downflow = Concept(
-        prefLabel=_("Convective downflow"),
-        definition=_(""),
-    )
+#     downflow = Concept(
+#         prefLabel=_("Convective downflow"),
+#         definition=_(""),
+#     )
 
-    unspecified = Concept(
-        prefLabel=_("Unspecified"),
-        definition=_(""),
-    )
+#     unspecified = Concept(
+#         prefLabel=_("Unspecified"),
+#         definition=_(""),
+#     )
 
-    class Meta:
-        name = "transfer-mechanisms"
-        prefix = "ghfdb"
-        namespace = BASE_NAMESPACE + name + "/"
-        scheme_attrs = {
-            "skos:prefLabel": _("Heat-flow specific transfer mechanisms"),
-            "skos:definition": _("Mechanisms of heat transfer though the Earth's crust."),
-        }
+#     class Meta:
+#         name = "transfer-mechanisms"
+#         prefix = "ghfdb"
+#         namespace = BASE_NAMESPACE + name + "/"
+#         scheme_attrs = {
+#             "skos:prefLabel": _("Heat-flow specific transfer mechanisms"),
+#             "skos:definition": _("Mechanisms of heat transfer though the Earth's crust."),
+#         }
 
 
 class GeographicEnvironment(VocabularyBuilder):
@@ -159,7 +167,7 @@ class GeographicEnvironment(VocabularyBuilder):
         definition=_(""),
     )
 
-    onshore_lake = Concept(
+    onshore_marine = Concept(
         prefLabel=_("Onshore (lake, river, etc.)"),
         definition=_(""),
     )
@@ -232,8 +240,23 @@ class ExplorationMethod(VocabularyBuilder):
         definition=_(""),
     )
 
+    drilling_clustering = Concept(
+        prefLabel=_("Drilling-Clustering"),
+        definition=_(""),
+    )
+
+    probing_clustering = Concept(
+        prefLabel=_("Probing-Clustering"),
+        definition=_(""),
+    )
+
+    indirect = Concept(
+        prefLabel=_("Indirect (GTM, CPD, etc.)"),
+        definition=_(""),
+    )
+
     other = Concept(
-        prefLabel=_("Other (specify in comments)"),
+        prefLabel=_("Other"),
         definition=_(""),
     )
 
@@ -280,13 +303,13 @@ class ExplorationPurpose(VocabularyBuilder):
         definition=_(""),
     )
 
-    mining = Concept(
-        prefLabel=_("Mining"),
+    research = Concept(
+        prefLabel=_("Research"),
         definition=_(""),
     )
 
-    research = Concept(
-        prefLabel=_("Research"),
+    mining = Concept(
+        prefLabel=_("Mining"),
         definition=_(""),
     )
 
@@ -296,7 +319,7 @@ class ExplorationPurpose(VocabularyBuilder):
     )
 
     other = Concept(
-        prefLabel=_("Other (specify in comments)"),
+        prefLabel=_("Other"),
         definition=_(""),
     )
 
@@ -320,49 +343,6 @@ class ExplorationPurpose(VocabularyBuilder):
 class TemperatureMethod(VocabularyBuilder):
     """
     The allowed temperature methods for the T_method_top and T_method_bottom fields at the heat flow child level.
-
-
-    **Continuous temperature logging** (using semiconductor transducer, or thermistor probe):
-
-    * *LOGeq* - borehole in equilibrium
-    * *LOGpert* - borehole perturbed
-    * *cLOG* - perturbed but corrected
-
-    **Distributed Temperature Sensing**:
-
-    * *DTSeq* - in equilibrium
-    * *DTSpert* - perturbed
-    * *cDTS* - perturbed but corrected
-
-    **Bottom Hole Temperature**:
-
-    * *BHT* - uncorrected
-    * *cBHT* - corrected
-
-    **Drill stem test**:
-
-    * *DST* - uncorrected
-    * *cDST* - corrected for effects
-
-    **Resistance temperature detectors**:
-
-    * *RTDeq* - in equilibrium
-    * *RTDpert* - perturbed
-    * *cRTD* - perturbed but corrected
-
-    **Ocean Drilling Temperature Tool**:
-
-    * *ODTT-PC* - piston corer
-    * *ODTT-TP* - thermistor probe
-
-    **Other**:
-
-    * *CPD* - Curie Point/Depth estimates
-    * *XEN* - Xenolith
-    * *GTM* - Geothermometry
-    * *BSR* - bottom-simulating seismic reflector
-    * *SUR* - surface temperature/bottom water temperature
-    * *OTH* - other (method must be specified in comments)
     """
 
     LOGeq = Concept(
@@ -401,13 +381,13 @@ class TemperatureMethod(VocabularyBuilder):
         prefLabel=_("cBHT"),
         definition=_("Bottom Hole Temperature, corrected for perturbations."),
     )
-    DST = Concept(
-        prefLabel=_("DST"),
-        definition=_("Drill Stem Test temperature, uncorrected."),
+    HT_FT = Concept(
+        prefLabel=_("HT-FT"),
+        definition=_(""),
     )
-    cDST = Concept(
-        prefLabel=_("cDST"),
-        definition=_("Drill Stem Test temperature, corrected for effects."),
+    cHT_FT = Concept(
+        prefLabel=_("cHT-FT"),
+        definition=_(""),
     )
     RTDeq = Concept(
         prefLabel=_("RTDeq"),
@@ -422,14 +402,6 @@ class TemperatureMethod(VocabularyBuilder):
         definition=_(
             "Resistance Temperature Detector (RTD) measurement in perturbed conditions, corrected for perturbations."
         ),
-    )
-    ODTT_PC = Concept(
-        prefLabel=_("ODTT-PC"),
-        definition=_("Ocean Drilling Temperature Tool - piston corer."),
-    )
-    ODTT_TP = Concept(
-        prefLabel=_("ODTT-TP"),
-        definition=_("Ocean Drilling Temperature Tool - thermistor probe."),
     )
     CPD = Concept(
         prefLabel=_("CPD"),
@@ -447,12 +419,36 @@ class TemperatureMethod(VocabularyBuilder):
         prefLabel=_("BSR"),
         definition=_("Temperature estimates from bottom-simulating seismic reflector."),
     )
+    BLK = Concept(
+        prefLabel=_("BLK"),
+        definition=_(""),
+    )
+    ODTT_PC = Concept(
+        prefLabel=_("ODTT-PC"),
+        definition=_("Ocean Drilling Temperature Tool - piston corer."),
+    )
+    ODTT_TP = Concept(
+        prefLabel=_("ODTT-TP"),
+        definition=_("Ocean Drilling Temperature Tool - thermistor probe."),
+    )
+    GRT = Concept(
+        prefLabel=_("GRT"),
+        definition=_(""),
+    )
+    EGRT = Concept(
+        prefLabel=_("EGRT"),
+        definition=_(""),
+    )
     SUR = Concept(
         prefLabel=_("SUR"),
         definition=_("Surface temperature or bottom water temperature measurement."),
     )
-    OTH = Concept(
-        prefLabel=_("OTH"),
+    unspecified = Concept(
+        prefLabel=_("Unspecified"),
+        definition=_("Unspecified temperature determination method."),
+    )
+    other = Concept(
+        prefLabel=_("Other"),
         definition=_("Other temperature determination method (must be specified in comments)."),
     )
 
@@ -486,6 +482,11 @@ class TemperatureCorrection(VocabularyBuilder):
 
     inverseNM = Concept(
         prefLabel=_("Inverse numerical modelling"),
+        definition=_(""),
+    )
+
+    aapg = Concept(
+        prefLabel=_("AAPG correction"),
         definition=_(""),
     )
 
@@ -924,23 +925,23 @@ class ConductivityStrategy(VocabularyBuilder):
     """
 
     random = Concept(
-        prefLabel=_("Random or periodic depth sampling (number)"),
-        definition=_("Random or periodic depth sampling (number)"),
+        prefLabel=_("Random or periodic depth sampling"),
+        definition=_(""),
     )
 
     characterize = Concept(
         prefLabel=_("Characterize formation conductivities"),
-        definition=_("Characterize formation conductivities"),
+        definition=_(""),
     )
 
     well_log = Concept(
         prefLabel=_("Well log interpretation"),
-        definition=_("Well log interpretation"),
+        definition=_(""),
     )
 
     computation = Concept(
         prefLabel=_("Computation from probe sensing"),
-        definition=_("Computation from probe sensing"),
+        definition=_(""),
     )
 
     other = Concept(
@@ -970,144 +971,156 @@ class ConductivityPTFunction(VocabularyBuilder):
     Specification of the function used to determine the thermal conductivity.
     """
 
+    BirchClark1940 = Concept(
+        prefLabel="T - Birch and Clark (1940)",
+    )
+
     Tikhomirov1968 = Concept(
         prefLabel="T - Tikhomirov (1968)",
     )
 
     KutasGordienko1971 = Concept(
-        prefLabel="Kutas & Gordienko (1971)",
+        prefLabel="T - Kutas & Gordienko (1971)",
     )
 
     Anand1973 = Concept(
-        prefLabel="Anand et al. (1973)",
+        prefLabel="T - Anand et al. (1973)",
     )
 
     HaenelZoth1973 = Concept(
-        prefLabel="Haenel & Zoth (1973)",
+        prefLabel="T - Haenel & Zoth (1973)",
     )
 
     Blesch1983 = Concept(
-        prefLabel="Blesch et al. (1983)",
+        prefLabel="T - Blesch et al. (1983)",
     )
 
     Sekiguchi1984 = Concept(
-        prefLabel="Sekiguchi (1984)",
+        prefLabel="T - Sekiguchi (1984)",
     )
 
     Chapman1984 = Concept(
-        prefLabel="Chapman et al. (1984)",
+        prefLabel="T - Chapman et al. (1984)",
     )
 
     ZothHaenal1988 = Concept(
-        prefLabel="Zoth & Haenel (1988)",
+        prefLabel="T - Zoth & Haenel (1988)",
     )
 
     Somerton1992 = Concept(
-        prefLabel="Somerton (1992)",
+        prefLabel="T - Somerton (1992)",
     )
 
     Sass1992 = Concept(
-        prefLabel="Sass et al. (1992)",
+        prefLabel="T - Sass et al. (1992)",
     )
 
     Funnell1996 = Concept(
-        prefLabel="Funnell et al. (1996)",
+        prefLabel="T - Funnell et al. (1996)",
     )
 
     Kukkonen1999 = Concept(
-        prefLabel="Kukkonen et al. (1999)",
+        prefLabel="T - Kukkonen et al. (1999)",
     )
 
     Seipold2001 = Concept(
-        prefLabel="Seipold (2001)",
+        prefLabel="T - Seipold (2001)",
     )
 
     VosteenSchellschmidt2003 = Concept(
-        prefLabel="Vosteen & Schellschmidt (2003)",
+        prefLabel="T - Vosteen & Schellschmidt (2003)",
     )
 
     Sun2017 = Concept(
-        prefLabel="Sun et al. (2017)",
+        prefLabel="T - Sun et al. (2017)",
     )
 
     Miranda2018 = Concept(
-        prefLabel="Miranda et al. (2018)",
+        prefLabel="T - Miranda et al. (2018)",
     )
 
     Ratcliff1960 = Concept(
-        prefLabel="Ratcliff (1960)",
+        prefLabel="T - Ratcliff (1960)",
     )
 
     Bridgman1924 = Concept(
-        prefLabel="Bridgman (1924)",
+        prefLabel="p - Bridgman (1924)",
     )
 
     Sibbitt1975 = Concept(
-        prefLabel="Sibbitt (1975)",
+        prefLabel="p - Sibbitt (1975)",
     )
 
     Kukkonen1999 = Concept(
-        prefLabel="Kukkonen et al. (1999)",
+        prefLabel="p - Kukkonen et al. (1999)",
     )
 
     Seipold2001 = Concept(
-        prefLabel="Seipold (2001)",
+        prefLabel="p - Seipold (2001)",
     )
 
     Duruturk2002 = Concept(
-        prefLabel="Durutürk et al. (2002)",
+        prefLabel="p - Durutürk et al. (2002)",
     )
 
     Demirci2004 = Concept(
-        prefLabel="Demirci et al. (2004)",
+        prefLabel="p - Demirci et al. (2004)",
     )
 
     Gorgulu2008 = Concept(
-        prefLabel="Görgülü et al. (2008)",
+        prefLabel="p - Görgülü et al. (2008)",
     )
 
     FuchsFoerster2014 = Concept(
-        prefLabel="Fuchs & Förster (2014)",
+        prefLabel="p - Fuchs & Förster (2014)",
     )
 
     Radcliff1960 = Concept(
-        prefLabel="Radcliff (1960)",
+        prefLabel="pT - Radcliff (1960)",
+    )
+
+    Langseth1965 = Concept(
+        prefLabel="pT - Langseth (1965)",
+    )
+
+    Hyndman1974 = Concept(
+        prefLabel="pT - Hyndman (1974)",
     )
 
     Buntebarth1991 = Concept(
-        prefLabel="Buntebarth (1991)",
+        prefLabel="pT - Buntebarth (1991)",
     )
 
     ChapmanFurlong1992 = Concept(
-        prefLabel="Chapman & Furlong (1992)",
+        prefLabel="pT - Chapman & Furlong (1992)",
     )
 
     Emirov1997 = Concept(
-        prefLabel="Emirov et al. (1997)",
+        prefLabel="pT - Emirov et al. (1997)",
     )
 
     Abdulagatov2006 = Concept(
-        prefLabel="Abdulagatov et al. (2006)",
+        prefLabel="pT - Abdulagatov et al. (2006)",
     )
 
     EmirovRamazanova2007 = Concept(
-        prefLabel="Emirov & Ramazanova (2007)",
+        prefLabel="pT - Emirov & Ramazanova (2007)",
     )
 
     Abdulagatova2009 = Concept(
-        prefLabel="Abdulagatova et al. (2009)",
+        prefLabel="pT - Abdulagatova et al. (2009)",
     )
 
     RamazanovaEmirov2010 = Concept(
-        prefLabel="Ramazanova & Emirov (2010)",
+        prefLabel="pT - Ramazanova & Emirov (2010)",
     )
 
     RamazanovaEmirov2012 = Concept(
-        prefLabel="Ramazanova & Emirov (2012)",
+        prefLabel="pT - Ramazanova & Emirov (2012)",
     )
 
     Emirov2017 = Concept(
-        prefLabel="Emirov et al. (2017)",
+        prefLabel="pT - Emirov et al. (2017)",
     )
 
     site_specific = Concept(
@@ -1243,12 +1256,12 @@ class GenericFlagChoices(VocabularyBuilder):
     )
 
     notCorrected = Concept(
-        prefLabel=_("Not corrected"),
+        prefLabel=_("not corrected"),
         definition=_(""),
     )
 
     corrected = Concept(
-        prefLabel=_("Corrected (specify)"),
+        prefLabel=_("Corrected"),
         definition=_(""),
     )
 
