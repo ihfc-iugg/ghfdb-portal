@@ -202,7 +202,7 @@ class TestSuccesfulImport:
         assert obj.probe_penetration.magnitude == 6.5
         assert obj.probe_length.magnitude == 12
         assert obj.probe_tilt.magnitude == 20
-        assert relation_contains(obj.probe_type, "name", {"bullard"})
+        assert relation_contains(obj.probe_type, "name", {"single_steel"})
         assert obj.water_temperature.magnitude == 10
         # Note below that date_acquired is a PartialDate object so we cannot do a direct comparison.
         assert str(obj.date_acquired) == "1990-04"  # "1990-04"

@@ -101,16 +101,14 @@ def clean_choices(value, choices):
     """
     # Build a mapping from display label to internal value
     display_to_value = {label: value for value, label in choices}
+
     # Split the input string by semicolon to get individual labels
     values = value.split(";")
     cleaned_values = []
     for v in values:
-        # Remove square brackets and whitespace from each label
-        for to_remove in ["[", "]", "(specify)", "(specify in comments)"]:
-            v = v.replace(to_remove, "")
-        if item := v.strip():
+        if v:
             # Map the cleaned label to its value using the mapping
-            cleaned_values.append(display_to_value.get(item))
+            cleaned_values.append(display_to_value.get(v))
     return cleaned_values
 
 
@@ -175,7 +173,7 @@ class SimpleConceptField(forms.ChoiceField):
 def clean_concept_value(values, separator=";"):
     if values is None:
         return []
-    cleaned = [v.replace("(specify in comments)", "").strip().lower() for v in values.split(separator)]
+    cleaned = [v.strip().lower() for v in values.split(separator)]
     return [v for v in cleaned if v != "unspecified"]
 
 
@@ -636,10 +634,16 @@ class GHFDBResource(ModelResource):
             [Yes] -> 'Yes'
             [not corrected];[Active] -> 'not corrected; Active'
         """
+
+        TO_REMOVE = ["[", "]", "(specify)", "(specify in comments)"]
+
         for field in CHOICE_FIELDS:
-            if row.get(field):
+            if value := row.get(field):
+                for remove in TO_REMOVE:
+                    value = value.replace(remove, "")
+                value = value.replace("–", "-").replace("—", "-")  # noqa: RUF001
                 # Clean the choices for fields that are controlled vocabularies
-                row[field] = row[field].replace("[", "").replace("]", "").strip()
+                row[field] = value.strip().lower()
 
     def before_import_row(self, row, **kwargs):
         """Hook to modify the row before it is imported."""
