@@ -742,7 +742,7 @@ django-compressor = ["django-compressor (>=4.5.1,<5.0.0)"]
 type = "git"
 url = "https://github.com/SamuelJennings/cotton-bs5"
 reference = "HEAD"
-resolved_reference = "dc70587e9d8ccc7175628cfa07cda93d2c322b35"
+resolved_reference = "3366346185dcf2d9ad758b6a2ae6789826a49c94"
 
 [[package]]
 name = "coverage"
@@ -1949,7 +1949,7 @@ python-dateutil = "*"
 type = "git"
 url = "https://github.com/SamuelJennings/django-literature"
 reference = "HEAD"
-resolved_reference = "b41d6533d5008fc90d63183af5aa2319d17e1855"
+resolved_reference = "4af0f66f3e6a131ba2c4ae398920cf66ebd8cb25"
 
 [[package]]
 name = "django-lockdown"
@@ -2966,7 +2966,7 @@ whitenoise = "^6.4.0"
 type = "git"
 url = "https://github.com/FAIR-DM/fairdm"
 reference = "HEAD"
-resolved_reference = "13bfda3390ef80529e493d5c2a3b742fdb728d06"
+resolved_reference = "9ec5d183ed5231efd77eb3c99b4811761f62eb80"
 
 [[package]]
 name = "fairdm-dev-tools"
