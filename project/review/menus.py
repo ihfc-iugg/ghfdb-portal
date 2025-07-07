@@ -11,3 +11,12 @@ literature_menu.insert(
     ],
     position=1,
 )
+
+SiteNavigation.get("Community").insert(
+    SubMenuItem(
+        _("Reviewers"),
+        view_name="reviewer-list",
+        icon="review",
+    ),
+    position=3,
+)
