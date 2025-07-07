@@ -4,19 +4,22 @@ from pathlib import Path
 
 from django.contrib.staticfiles import finders
 from django.core.files import File
+from django.shortcuts import redirect
 from django.utils.translation import gettext as _
 from django.views.generic import TemplateView
 from django_downloadview import PathDownloadView
 from django_downloadview.exceptions import FileNotFound
 from drf_spectacular.utils import extend_schema
 from fairdm import plugins
-from fairdm.contrib.import_export.views import DataExportView, DataImportView
+from fairdm.contrib.import_export.views import DataExportView, DataImportView, DatasetPublishConfirm
 from fairdm.layouts import ApplicationLayout
+from fairdm.plugins import check_has_edit_permission
 from fairdm.registry import registry
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from review.utils import docs_link
 
 from .forms import GHFDBImportForm
 from .models import HeatFlow
@@ -26,8 +29,6 @@ from .serializers import MyJSONSchemaSerializer
 plugins.dataset.unregister(DataImportView)
 
 data_dir = Path(__file__).resolve().parent / "data"
-
-user_guide = "heatflowworld.org/docs/ghfdb/import-export/"
 
 
 @extend_schema(
@@ -68,13 +69,7 @@ class GHFDBImport(DataImportView):
         "description": _(
             "This data import workflow allows you to upload an existing dataset formatted according to the latest specifications of the Global Heat Flow Database. "
         ),
-        "links": [
-            {
-                "text": _("Learn more"),
-                "url": user_guide,
-                "icon": "fa-solid fa-book",
-            }
-        ],
+        "links": [docs_link("ghfdb-import")],
     }
     form_config = {
         "actions": True,
@@ -86,6 +81,11 @@ class GHFDBImport(DataImportView):
     }
     form_class = GHFDBImportForm
     template_name = "ghfdb_import.html"
+    # import_kwargs = {
+    #     "dry_run": True,
+    #     "raise_errors": False,
+    #     "rollback_on_validation_errors": True,
+    # }
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -161,3 +161,50 @@ class GHFDBExport(DataExportView):
 
 class GHFDBExploreView(ApplicationLayout, TemplateView):
     template_name = "explore.html"
+
+
+plugins.dataset.unregister(DatasetPublishConfirm)
+
+
+@plugins.dataset.register()
+class GetPublishedView(DatasetPublishConfirm):
+    """This view will override the default publishing view of FairDM so that we can integrate directly with GFZ Data Services."""
+
+    heading_config = {
+        "description": _(
+            "This portal is integrated with GFZ Data Services, allowing you to submit your dataset for formal publication. "
+            "When you click Confirm Submission, your dataset and its metadata will be packaged and transferred to GFZ Data "
+            "Services for verification and feedback. The team there will review the submission and contact you with further "
+            "information about the publication process. For more details, please refer to the link below."
+        ),
+        "links": [docs_link("get-published")],
+    }
+    menu_item = {
+        "name": _("Publish Dataset"),
+        "icon": "fa-solid fa-file-export",
+    }
+    sections = {
+        "components.form.default",
+    }
+
+    check = check_has_edit_permission
+
+    # @staticmethod
+    # def check(request, instance, **kwargs):
+    #     user = request.user
+    #     if not user.is_authenticated:
+    #         return False
+    #     return user.has_perm("can_publish", instance) or user.is_data_admin
+
+    def form_valid(self, form):
+        """
+        Override the form_valid method to handle the submission of the dataset to GFZ Data Services.
+        """
+        # TODO: Implement the logic to package and send the dataset to GFZ Data Services.
+
+        self.messages.success(
+            _(
+                "Your dataset has been successfully submitted for publication. The GFZ Data Services team will contact you with further information."
+            ),
+        )
+        return redirect(self.base_object.get_absolute_url())
