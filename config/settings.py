@@ -104,6 +104,7 @@ FAIRDM_CONFIG = {
         "explore": [
             "home.map-viewer",
             "fdm.dashboard.research-projects",
+            "home.whfdb_project",
             # "fdm.dashboard.latest-activity",
         ],
         "create": [
@@ -113,7 +114,6 @@ FAIRDM_CONFIG = {
         ],
         "more": [
             "fdm.dashboard.login-signup",
-            "home.whfdb_project",
             "fdm.dashboard.user-guide",
             "fdm.dashboard.fairdm-framework",
         ],
