@@ -4,12 +4,14 @@ import django_filters as df
 from actstream import action
 from braces.views import GroupRequiredMixin, MessageMixin, SelectRelatedMixin
 from django.db import transaction
+from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext as _
 from django.views.generic.edit import UpdateView
 from django_select2.forms import Select2Widget
 from fairdm import plugins
 from fairdm.contrib.contributors.models import Person
+from fairdm.contrib.contributors.views.person import ContributorListView
 from fairdm.core.models import Dataset
 from fairdm.utils.filters import LiteratureFilterset
 from fairdm.utils.permissions import assign_all_model_perms
@@ -18,6 +20,7 @@ from literature.models import LiteratureItem
 
 from .forms import CreateReviewForm, SubmitReviewForm
 from .models import Review
+from .utils import docs_link
 
 
 class ReviewFilterSet(LiteratureFilterset):
@@ -38,9 +41,19 @@ class ReviewListView(SelectRelatedMixin, FairDMListView):
     model = LiteratureItem
     filterset_class = ReviewFilterSet
     select_related = ("review",)
-    title_config = {
+    heading_config = {
         "icon": "review",
-        "text": _("Literature Review"),
+        "title": _("Literature Review"),
+        "description": _(
+            "The Global Heat Flow Database (GHFDB) is committed to maintaining the highest standards of data quality. To achieve this, we have implemented a rigorous literature review process that ensures all datasets are thoroughly vetted before being made publicly available. To learn more about the review process and how you can contribute, please click the button below."
+        ),
+        "links": [
+            {
+                "text": _("Learn More"),
+                "url": "https://www.heatflow.world/about/support-us",
+                "icon": "fa-solid fa-book",
+            },
+        ],
     }
     grid_config = {
         "card": "review.card",
@@ -58,8 +71,13 @@ class ReviewCreateView(GroupRequiredMixin, FairDMCreateView):
     model = Review
     form_class = CreateReviewForm
     fields = ["literature", "start_date", "reviewers"]
-    title_config = {
-        "text": _("Start Review"),
+    heading_config = {
+        "icon": "review",
+        "title": _("Start Review"),
+        "description": _(
+            "As a reviewer, you are responsible for harvesting data from existing literature and converting it into a quality-controlled dataset that can be made publicly available. This process is essential for maintaining the integrity and reliability of the Global Heat Flow Database. To begin a new review, please fill out the form below with the details of the literature you wish to review."
+        ),
+        "links": [docs_link("guides/review")],
     }
 
     def dispatch(self, request, *args, **kwargs):
@@ -137,3 +155,37 @@ class ReviewSubmitView(plugins.Action, MessageMixin, UpdateView):
 
     def get_success_url(self):
         return self.object.dataset.get_absolute_url()
+
+
+class ReviewerListView(ContributorListView):
+    title = _("Reviewers")
+    model = Person
+    heading_config = {
+        "icon": "reviewer",
+        "title": _("Reviewers"),
+        "description": _(
+            "The individuals listed below are recognized experts who contribute to the quality control and validation of global heat flow data. Drawing on their backgrounds in geophysics, geology, geostatistics, and related fields, these reviewers help ensure the scientific accuracy and consistency of data within this portal. Their efforts enhance the reliability and usability of this portal for both academic researchers and industry professionals working in geothermal energy, tectonics, and Earth system modeling."
+        ),
+        "links": [
+            {
+                "text": _("Learn More"),
+                "url": "https://www.heatflow.world/about/support-us#c216",
+                "icon": "fa-solid fa-book",
+            },
+        ],
+    }
+    grid_config = {
+        "card": "contributor.card.person-alt",
+        "responsive": {"md": 4, "sm": 2},
+    }
+
+    def get_queryset(self):
+        # Get users in the "Reviewers" group
+        qs = super().get_queryset()
+        # Annotate with number of completed reviews
+        reviewers = (
+            qs.filter(groups__name="Reviewers")
+            .annotate(review_count=Count("heat_flow_reviews", distinct=True))
+            .order_by("-review_count")
+        )
+        return reviewers
