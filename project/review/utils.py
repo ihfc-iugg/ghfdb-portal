@@ -10,5 +10,5 @@ def docs_link(name):
     return {
         "text": _("Learn More"),
         "icon": "fa-solid fa-book",
-        "url": f"{DOCUMENTATION_URL}/{name}/",
+        "href": f"{DOCUMENTATION_URL}{name}/",
     }
