@@ -101,7 +101,6 @@ def clean_choices(value, choices):
     """
     # Build a mapping from display label to internal value
     display_to_value = {label: value for value, label in choices}
-
     # Split the input string by semicolon to get individual labels
     values = value.split(";")
     cleaned_values = []
