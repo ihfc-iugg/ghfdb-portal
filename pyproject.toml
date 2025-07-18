@@ -35,12 +35,15 @@ fairdm = {git = "https://github.com/FAIR-DM/fairdm"}
 fairdm-geo = {git = "https://github.com/FAIR-DM/fairdm-geo"}
 django-guardian = "^3.0.3"
 django-countries = "^7.6.1"
+martor = "^1.6.45"
+uncertainties = "^3.2.3"
 
 [tool.poetry.group.dev.dependencies]
 fairdm-dev-tools = {git = "https://github.com/FAIR-DM/dev-tools"}
 
 [tool.poetry.group.docs.dependencies]
 fairdm-docs = {git = "https://github.com/FAIR-DM/fairdm-docs", extras = ["sphinx-book-theme"]}
+shot-scraper = "^1.8"
 
 [build-system]
 requires = ["poetry-core"]

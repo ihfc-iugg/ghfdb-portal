@@ -161,3 +161,13 @@ def update_deps(c):
 @task
 def build_image(c):
     c.run("docker build -t ghcr.io/ihfc-iugg/ghfd-portal .")
+
+
+@task
+def screenshots(c):
+    """
+    Take screenshots of the application
+    """
+    c.run(
+        "cd docs/_static/screenshots && shot-scraper multi shots.yml -a auth.json --auth-password admin --auth-username super.user@example.com"
+    )
