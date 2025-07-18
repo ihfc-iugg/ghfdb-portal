@@ -31,6 +31,15 @@ plugins.dataset.unregister(DataImportView)
 data_dir = Path(__file__).resolve().parent / "data"
 
 
+def can_publish_dataset(request, instance, **kwargs):
+    """
+    Check if the user has permission to publish the dataset.
+    This is a placeholder function and should be replaced with actual permission logic.
+    """
+    if check_has_edit_permission(request, instance, **kwargs) and instance.has_data:
+        return True
+
+
 @extend_schema(
     summary="Metadata reflecting field the contents of my_data.json",
     description="Serves a JSON file from disk as a DRF API endpoint.",
@@ -67,9 +76,9 @@ class GHFDBImport(DataImportView):
     heading_config = {
         "title": _("Import data"),
         "description": _(
-            "This data import workflow allows you to upload an existing dataset formatted according to the latest specifications of the Global Heat Flow Database. "
+            "This data import workflow allows you to upload an existing dataset formatted according to the latest specifications of the Global Heat Flow Database. To access the correct template or learn more about this process, please refer to the documentation linked below."
         ),
-        "links": [docs_link("ghfdb-import")],
+        "links": [docs_link("guides/importing-data")],
     }
     form_config = {
         "actions": True,
@@ -187,14 +196,7 @@ class GetPublishedView(DatasetPublishConfirm):
         "components.form.default",
     }
 
-    check = check_has_edit_permission
-
-    # @staticmethod
-    # def check(request, instance, **kwargs):
-    #     user = request.user
-    #     if not user.is_authenticated:
-    #         return False
-    #     return user.has_perm("can_publish", instance) or user.is_data_admin
+    check = can_publish_dataset
 
     def form_valid(self, form):
         """

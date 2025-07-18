@@ -8,6 +8,7 @@ from django_select2.forms import Select2Widget
 from fairdm.contrib.contributors.models import Person
 from fairdm.forms import ModelForm
 from literature.models import LiteratureItem
+from martor.fields import MartorFormField
 
 from .models import Review
 
@@ -79,15 +80,12 @@ class CreateReviewForm(ReviewForm):
 
 
 class SubmitReviewForm(ReviewForm):
+    comment = MartorFormField(
+        label=_("Comment"),
+        help_text=_("Provide any comments or feedback regarding the review."),
+        required=False,
+    )
+
     class Meta:
         model = Review
         fields = ["literature", ("start_date", "end_date"), "reviewers", "comment"]
-        help_text = _(
-            "Please review the information below before submitting your review. "
-            "You can update the comment and date if necessary."
-        )
-        field_overrides = {
-            "comment": {
-                "help_text": _("Provide any comments or feedback regarding the review."),
-            },
-        }
