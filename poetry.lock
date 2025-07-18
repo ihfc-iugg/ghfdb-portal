@@ -759,7 +759,7 @@ django-compressor = ["django-compressor (>=4.5.1,<5.0.0)"]
 type = "git"
 url = "https://github.com/SamuelJennings/cotton-bs5"
 reference = "HEAD"
-resolved_reference = "3366346185dcf2d9ad758b6a2ae6789826a49c94"
+resolved_reference = "f55ddfedf63b211373f93a4f45f77e531b172f5c"
 
 [[package]]
 name = "coverage"
@@ -2983,7 +2983,7 @@ whitenoise = "^6.4.0"
 type = "git"
 url = "https://github.com/FAIR-DM/fairdm"
 reference = "HEAD"
-resolved_reference = "2d5984d3a6ea2566c5dfa50c3c2368fbd19a6f86"
+resolved_reference = "741521d32ece78a0b66b42f94cb6f5e3d70371bf"
 
 [[package]]
 name = "fairdm-dev-tools"
