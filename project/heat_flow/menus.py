@@ -8,5 +8,5 @@ SiteNavigation.insert(
             view_name="ghfdb-explore",
         ),
     ],
-    position=1,
+    position=0,
 )
