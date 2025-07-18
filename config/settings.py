@@ -45,7 +45,7 @@ DJANGO_SETUP_TOOLS[""]["on_initial"].append(("loaddata", "ghfdb_review_group.jso
 PARLER_LANGUAGES = {
     1: (
         {"code": "en"},
-        {"code": "de"},
+        # {"code": "de"},
     ),
     "default": {
         "fallback": "en",  # Default fallback language
