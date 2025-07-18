@@ -29,10 +29,10 @@ acknowledgements
 :maxdepth: 1
 :caption: Guides
 
-guides/account_management/index
-guides/project_management/index
-guides/dataset_management/index
 guides/map_exploration/index
+guides/importing-data
+guides/reviewing
+guides/publishing
 :::
 
 :::{toctree}
