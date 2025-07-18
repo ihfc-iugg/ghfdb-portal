@@ -25,16 +25,21 @@ class HeatFlowSiteTable(SampleTable):
             "continent",
             "domain",
             # "elevation_datum",
-            "azimuth",
-            "inclination",
+            # "azimuth",
+            # "inclination",
             "length",
             "environment",
             "explo_method",
             "explo_purpose",
             "lithology",
             "age",
-            "stratigraphy",
+            # "stratigraphy",
         ]
+        attrs = {
+            "thead": {
+                "th": {"class": "text-nowrap"}  # class for all <th> elements
+            }
+        }
 
 
 class HeatFlowIntervalTable(SampleTable):
@@ -49,13 +54,19 @@ class HeatFlowIntervalTable(SampleTable):
             "top",
             "bottom",
             "vertical_depth",
-            "vertical_datum",
+            # "vertical_datum",
             "lithology",
             "age",
-            "stratigraphy",
+            # "stratigraphy",
             # "status",
             # "local_id",
         ]
+        exclude = ["name"]
+
+    def __init__(self, data=None, *args, **kwargs):
+        # data = data.prefetch_related("sample__heatflowsite")
+        # modify the queryset (data) here if required
+        super().__init__(*args, data=data, **kwargs)
 
 
 class SurfaceHeatFlowTable(MeasurementTable):

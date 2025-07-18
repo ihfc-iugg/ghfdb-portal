@@ -37,6 +37,7 @@ extensions += [
     "docs.extensions.auto_django_model",
     # "sphinx_tippy",
     "sphinx_exec_code",
+    # "test",
     # "docs.extensions.modelinfo",
     # "extensions.mycustomdirective",
 ]

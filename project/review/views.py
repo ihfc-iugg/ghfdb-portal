@@ -2,7 +2,7 @@ from datetime import date
 
 import django_filters as df
 from actstream import action
-from braces.views import GroupRequiredMixin, MessageMixin, SelectRelatedMixin
+from braces.views import GroupRequiredMixin, SelectRelatedMixin
 from django.db import transaction
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect
@@ -15,12 +15,29 @@ from fairdm.contrib.contributors.views.person import ContributorListView
 from fairdm.core.models import Dataset
 from fairdm.utils.filters import LiteratureFilterset
 from fairdm.utils.permissions import assign_all_model_perms
+from fairdm.utils.view_mixins import FairDMModelFormMixin
 from fairdm.views import FairDMCreateView, FairDMListView
+from ghfdb.views import can_publish_dataset
 from literature.models import LiteratureItem
 
 from .forms import CreateReviewForm, SubmitReviewForm
 from .models import Review
 from .utils import docs_link
+
+
+def can_submit_review(request, instance: Dataset, **kwargs):
+    """
+    Check if the user has permission to submit a review.
+    This is a placeholder function and should be replaced with actual permission logic.
+    """
+    review = instance.review
+    if review.status != Review.STATUS_CHOICES.PENDING:
+        return False
+
+    can_publish = can_publish_dataset(request, instance, **kwargs)
+    is_reviewer = review.reviewers.filter(pk=request.user.pk).exists()
+    if can_publish and is_reviewer:
+        return True
 
 
 class ReviewFilterSet(LiteratureFilterset):
@@ -50,7 +67,7 @@ class ReviewListView(SelectRelatedMixin, FairDMListView):
         "links": [
             {
                 "text": _("Learn More"),
-                "url": "https://www.heatflow.world/about/support-us",
+                "href": "https://www.heatflow.world/about/support-us",
                 "icon": "fa-solid fa-book",
             },
         ],
@@ -78,6 +95,13 @@ class ReviewCreateView(GroupRequiredMixin, FairDMCreateView):
             "As a reviewer, you are responsible for harvesting data from existing literature and converting it into a quality-controlled dataset that can be made publicly available. This process is essential for maintaining the integrity and reliability of the Global Heat Flow Database. To begin a new review, please fill out the form below with the details of the literature you wish to review."
         ),
         "links": [docs_link("guides/review")],
+    }
+    form_config = {
+        "submit_button": {
+            "text": _("Start Review"),
+            "icon": "arrow-right",
+            "icon_position": "end",
+        },
     }
 
     def dispatch(self, request, *args, **kwargs):
@@ -124,7 +148,14 @@ class ReviewCreateView(GroupRequiredMixin, FairDMCreateView):
 
 
 @plugins.dataset.register
-class ReviewSubmitView(plugins.Action, MessageMixin, UpdateView):
+class ReviewSubmitView(plugins.Action, FairDMModelFormMixin, UpdateView):
+    """
+    TODO:
+     - Run checks for essential metadata before allowing submission.
+     - Run validation checks on the data.
+     - Notify Data Administrators or other relevant parties.
+    """
+
     title = _("Submit Review")
     name = "submit-review"
     menu_item = {
@@ -133,10 +164,21 @@ class ReviewSubmitView(plugins.Action, MessageMixin, UpdateView):
     }
     model = Review
     form_class = SubmitReviewForm
-
-    @staticmethod
-    def check(request, instance, **kwargs):
-        return request.user.is_superuser
+    check = can_submit_review
+    heading_config = {
+        "title": _("Submit Review"),
+        "description": _(
+            "Please review the information below before submitting your review. "
+            "You can update the comment and date if necessary."
+        ),
+    }
+    form_config = {
+        "submit_button": {
+            "text": _("Submit Review"),
+            "icon": "arrow-right",
+            "icon_position": "end",
+        },
+    }
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -151,6 +193,7 @@ class ReviewSubmitView(plugins.Action, MessageMixin, UpdateView):
         self.messages.success(
             _("Your review of %(title)s has been submitted.") % {"title": self.object.literature.title},
         )
+        # TODO: Implement logic to notify Data Administrators or other relevant parties
         return response
 
     def get_success_url(self):

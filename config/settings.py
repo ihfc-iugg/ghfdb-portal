@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 
 LANGUAGES = [
     ("en", _("English")),
-    ("de", _("German")),
+    # ("de", _("German")),
 ]
 
 fairdm.setup(
@@ -45,7 +45,7 @@ DJANGO_SETUP_TOOLS[""]["on_initial"].append(("loaddata", "ghfdb_review_group.jso
 PARLER_LANGUAGES = {
     1: (
         {"code": "en"},
-        {"code": "de"},
+        # {"code": "de"},
     ),
     "default": {
         "fallback": "en",  # Default fallback language
@@ -114,6 +114,8 @@ FAIRDM_CONFIG = {
         ],
         "more": [
             "fdm.dashboard.login-signup",
+            "home.issues",
+            "home.feedback",
             "fdm.dashboard.user-guide",
             "fdm.dashboard.fairdm-framework",
         ],
