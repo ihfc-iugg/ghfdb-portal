@@ -1,4 +1,4 @@
-# Map Exploration
+# Using the Map
 
 Heatflow.world provides a custom map interface for interacting with the Global Heat Flow Database. The map is built using [VueJS](https://vuejs.org/) as JavaScirpt Framework, [MapLibre](https://maplibre.org/) for Mapping and the [The Global Heat Flow Database](https://dataservices.gfz-potsdam.de/panmetaworks/showshort.php?id=e6755429-fbbf-11ee-967a-4ffbfe06208e) as data source.
 
