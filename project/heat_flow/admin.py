@@ -59,34 +59,6 @@ class HeatFlowAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "Temperature",
-            {
-                "fields": (
-                    ("T_grad_mean", "T_grad_uncertainty"),
-                    ("T_grad_mean_cor", "T_grad_uncertainty_cor"),
-                    ("T_method_top", "T_method_bottom"),
-                    ("T_shutin_top", "T_shutin_bottom"),
-                    ("T_corr_top", "T_corr_bottom"),
-                    "T_number",
-                )
-            },
-        ),
-        (
-            "Thermal Conductivity",
-            {
-                "fields": (
-                    ("tc_mean", "tc_uncertainty"),
-                    "tc_source",
-                    "tc_location",
-                    "tc_method",
-                    "tc_saturation",
-                    ("tc_pT_conditions", "tc_pT_function"),
-                    "tc_strategy",
-                    "tc_number",
-                )
-            },
-        ),
-        (
             "Corrections",
             {
                 "fields": (
