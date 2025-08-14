@@ -1,8 +1,3 @@
 {% load static %}
 
-<c-fdm.dashboard.card image_src="{% static "img/stock/issues.jpg" %}"
-  image_alt="{% trans "Problems with the portal?" %}"
-  title="{% trans "Problems with the portal?" %}"
-  description="{% trans "If you have discovered something that is not quite working as expected, please report it on our issue tracker! It's the only way we can continually improve." %}"
-  action="https://github.com/ihfc-iugg/ghfdb-portal/issues"
-  external />
+<c-fdm.dashboard.card image_src="{% static "img/stock/issues.jpg" %}" image_alt="{% trans "Problems" %}" title="{% trans "Problems?" %}" description="{% trans "If something is not quite working as expected, please report it on our issue tracker!" %}" action="https://github.com/ihfc-iugg/ghfdb-portal/issues" external />
