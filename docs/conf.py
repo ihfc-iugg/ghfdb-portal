@@ -30,7 +30,7 @@ html_short_title = "Heatflow.world"
 #     }
 # )
 
-
+html_theme_options["path_to_docs"] = "docs"
 extensions.remove("autodoc2")
 extensions += [
     "sphinx_design",
