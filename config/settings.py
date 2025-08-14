@@ -15,7 +15,11 @@ fairdm.setup(
         # "fairdm_geo.geology.lithology",
         "fairdm_geo.geology.stratigraphy",
         # "fairdm_geo.geology.geologic_time",
-    ]
+    ],
+    addons=[
+        "fairdm_discussions",
+        "fairdm_api",
+    ],
 )
 
 
@@ -40,7 +44,7 @@ DJANGO_SETUP_TOOLS = globals().get("DJANGO_SETUP_TOOLS", {})
 # this line is only required during staging because no migrations are being committed to the fairdm repo
 DJANGO_SETUP_TOOLS[""]["always_run"].insert(0, ("makemigrations", "--no-input"))
 DJANGO_SETUP_TOOLS[""]["always_run"].append(("compress",))
-DJANGO_SETUP_TOOLS[""]["on_initial"].append(("loaddata", "ghfdb_review_group.json"))
+# DJANGO_SETUP_TOOLS[""]["on_initial"].append(("loaddata", "ghfdb_review_group.json"))
 
 PARLER_LANGUAGES = {
     1: (
@@ -53,10 +57,12 @@ PARLER_LANGUAGES = {
     },
 }
 
-# Required for the temporary AWS S3 configuration
-# Who knows why this is needed, but it is
-# see https://github.com/jschneier/django-storages/issues/782
-AWS_S3_ADDRESSING_STYLE = "virtual"
+# These are required for the switch to GFZ dog service
+# AWS_STORAGE_BUCKET_NAME = "dog.heatflow-world.ghfdb"
+# AWS_S3_ENDPOINT_URL = "https://s3.gfz-potsdam.de"
+# AWS_S3_CLIENT_CONFIG = Config(
+#     request_checksum_calculation="when_required", response_checksum_validation="when_required"
+# )
 
 
 # INSTALLED_APPS += [
@@ -92,8 +98,6 @@ AWS_S3_ADDRESSING_STYLE = "virtual"
 #     },
 # }
 
-LOGIN_BACKGROUND_IMAGE = "img/stock/community.jpg"
-
 
 FAIRDM_CONFIG = {
     "colors": {
@@ -101,21 +105,21 @@ FAIRDM_CONFIG = {
         "secondary": "#699bd1",
     },
     "home": {
-        "explore": [
+        "Explore": [
             "home.map-viewer",
-            "fdm.dashboard.research-projects",
+            "home.ghfdb_projects",
             "home.whfdb_project",
             # "fdm.dashboard.latest-activity",
         ],
-        "create": [
+        "Create": [
+            "fdm.dashboard.login-signup",
             "fdm.dashboard.create-project",
             "fdm.dashboard.create-dataset",
-            "home.digitize",
         ],
-        "more": [
-            "fdm.dashboard.login-signup",
+        "Feedback & More": [
             "home.issues",
             "home.feedback",
+            "home.digitize",
             "fdm.dashboard.user-guide",
             "fdm.dashboard.fairdm-framework",
         ],
@@ -133,7 +137,6 @@ FAIRDM_CONFIG = {
     "documentation_url": "https://heatflowworld.readthedocs.io/en/latest/",
     "repository_url": "https://github.com/ihfc-iugg/ghfdb-portal",
     "header_links_before_dropdown": 5,
-    "welcome_message": "Explore, create, and share heat flow data with the global research community.",
     "logo": {
         "text": _("Global Heat Flow Database Portal"),
         "image_dark": "img/brand/logo.svg",
@@ -150,18 +153,18 @@ FAIRDM_CONFIG = {
     "sponsors": [
         {
             "name": "GFZ German Research Centre for Geosciences",
-            "url": "https://www.gfz-potsdam.de/en/",
-            "image": "img/brand/GFZ_english.jpg",
+            "url": "https://www.gfz.de/en/",
+            "image": "img/web_logo_box_GFZ-min.png",
         },
         {
             "name": "International Heat Flow Commission",
-            "url": "https://ihfc-iugg.com/",
-            "image": "img/brand/IHFC.svg",
+            "url": "https://www.ihfc-iugg.org",
+            "image": "img/web_logo_box_IHFC-min.png",
         },
         {
             "name": "DFG - Deutsche Forschungsgemeinschaft",
             "url": "https://www.dfg.de/en/",
-            "image": "img/brand/DFG.gif",
+            "image": "img/web_logo_box_DFG-min.png",
         },
     ],
 }
