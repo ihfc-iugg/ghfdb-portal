@@ -153,6 +153,11 @@ def update_deps(c):
         "django-research-vocabs",
         "django-setup-tools",
         "django-flex-menus",
+        "cotton-bs5",
+        "fairdm",
+        "fairdm-discussions",
+        "fairdm-geo",
+        "fairdm-rest-api",
     ]
 
     c.run(f"poetry update {' '.join(packages)}")
