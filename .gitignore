@@ -167,3 +167,4 @@ dmypy.json
 
 production copy.yml
 GHFDB.xlsx
+docs/_static/screenshots/auth.json
