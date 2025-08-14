@@ -3,7 +3,7 @@
 import auto_prefetch
 import django.db.models.deletion
 import django.db.models.manager
-import django_bleach.models
+
 import django_lifecycle.mixins
 import partial_date.fields
 from django.conf import settings
@@ -11,7 +11,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -82,7 +81,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "comment",
-                    django_bleach.models.BleachField(
+                    models.TextField(
                         blank=True,
                         help_text="General comment on the review.",
                         null=True,

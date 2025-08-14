@@ -30,7 +30,10 @@ def can_submit_review(request, instance: Dataset, **kwargs):
     Check if the user has permission to submit a review.
     This is a placeholder function and should be replaced with actual permission logic.
     """
-    review = instance.review
+    try:
+        review = instance.review
+    except Review.DoesNotExist:
+        return False
     if review.status != Review.STATUS_CHOICES.PENDING:
         return False
 
