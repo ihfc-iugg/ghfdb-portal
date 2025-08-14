@@ -8,6 +8,8 @@ Global Heat Flow Database (GHFDB) models for Django. The models are defined usin
 
 """
 
+from functools import cached_property
+
 from django.core.validators import MaxValueValidator as MaxVal
 from django.core.validators import MinValueValidator as MinVal
 from django.utils.translation import gettext as _
@@ -16,6 +18,8 @@ from fairdm.db import models
 from research_vocabs.fields import ConceptField, ConceptManyToManyField
 
 from heat_flow import vocabularies
+
+from ..utils import MScoreOptions, UScoreOptions, calculate_U_score
 
 
 class SurfaceHeatFlow(Measurement):
@@ -116,6 +120,8 @@ class HeatFlow(Measurement):
     the "child" schema outlined in the formal structure of the database put
     forth by Fuchs et al (2021).
     """
+
+    U_SCORE_CHOICES = UScoreOptions
 
     parent = models.ForeignKey(
         SurfaceHeatFlow,
@@ -370,14 +376,37 @@ class HeatFlow(Measurement):
         null=True,
     )
 
+    U_score = models.CharField(
+        max_length=2,
+        choices=UScoreOptions.choices,
+        verbose_name=_("U-score"),
+        help_text=_(
+            "Numerical uncertainty of the heat-flow value, as defined in Fuchs et al. (2023)."
+            " U1 = Excellent, U2 = Good, U3 = Ok, U4 = Poor, Ux = not determined / missing data."
+        ),
+        default=UScoreOptions.Ux,
+    )
+    M_score = models.CharField(
+        max_length=2,
+        choices=MScoreOptions.choices,
+        verbose_name=_("M-score"),
+        help_text=_(
+            "Methodological quality of the heat-flow value, as defined in Fuchs et al. (2023)."
+            " M1 = Excellent, M2 = Good, M3 = Ok, M4 = Poor, Mx = not determined / missing data."
+        ),
+        default=MScoreOptions.Mx,
+    )
+
     class Meta:
         verbose_name = _("Heat Flow")
         verbose_name_plural = _("Heat Flow")
         ordering = ["parent", "relevant_child"]
         db_table_comment = "Global Heat Flow Database (GHFDB) child table."
 
-    # def __str__(self):
-    # return f"HeatFlow({self.value})"
+    @cached_property
+    def is_probe(self):
+        """Check if the heat flow measurement is from a probe."""
+        return any(self.probe_penetration, self.probe_type.all().exists(), self.probe_length, self.probe_tilt)
 
     @property
     def interval(self):
@@ -393,19 +422,7 @@ class HeatFlow(Measurement):
         > 25%	U4	Poor
         not applicable	Ux	not determined / missing data
         """
-        cov = self.qc_uncertainty / self.qc
-        if cov < 0.05:
-            return 1
-        elif cov < 0.15:
-            return 2
-        elif cov < 0.25:
-            return 3
-        elif cov > 0.25:
-            return 4
-        else:
-            return None
-
-        return None
+        calculate_U_score(self)
 
     def get_M_score(self):
         """From Fuchs et al 2023 - Quality-assurance of heat-flow data: The new structure and evaluation scheme of the IHFC Global Heat Flow Database, 3.2. Methodological quality evaluation of thermal conductivity and temperature gradient (M-score)."""
@@ -548,6 +565,15 @@ class ThermalGradient(Measurement):
         blank=True,
         null=True,
     )
+    score = models.FloatField(
+        verbose_name=_("T-score"),
+        help_text=_(
+            "Score of the temperature gradient measurement, ranging from 0.0 to 1.0. A score of 1.0 indicates a"
+            " high-quality measurement, while a score of 0.0 indicates a low-quality measurement."
+        ),
+        default=1.0,
+        validators=[MinVal(0.0), MaxVal(1.0)],
+    )
 
     class Meta:
         verbose_name = _("Thermal Gradient")
@@ -556,6 +582,11 @@ class ThermalGradient(Measurement):
 
     # def __str__(self):
     # return self.value
+
+    def get_score(self):
+        score = 1.0
+        if self.number > 3:
+            score += 0.1
 
     def save(self, *args, **kwargs):
         # if self.value:

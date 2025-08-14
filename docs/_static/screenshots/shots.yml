@@ -1,0 +1,38 @@
+# - server: python ../../../manage.py runserver
+# - python: |
+#     import time
+#     print("Starting server...")
+#     time.sleep(10)  # wait for the server to start
+#     print("Server started.")
+- output: review/list_view.png
+  javascript: |
+    $('#pst-header').popover({
+      content: '1. Site Navigation: Use the sidebar to navigate through the site. The sidebar is always visible on larger screens.',
+      customClass: 'bg-highlight',
+      animation: false
+      }).popover('show');
+  url: http://localhost:8000/reviews/
+  height: 700
+- output: review/list_filter.png
+  url: http://localhost:8000/reviews/
+  javascript: |
+    $('#div_id_review__status').popover({
+      content: '1. Site Navigation: Use the sidebar to navigate through the site. The sidebar is always visible on larger screens.',
+      customClass: 'bg-highlight',
+      animation: false
+      }).popover('show');
+  height: 700
+  selectors:
+    - ".sidebar-primary"
+    - ".popover"
+  padding: 10
+- output: review/create_review.png
+  url: http://localhost:8000/reviews/740/create/
+  javascript: |
+    $('.fdm-card').first().addClass('outline-element').removeClass('border-0');
+  padding: 10
+  # height: 600
+  selectors:
+    - "#itemList"
+
+  # javascript: "$('html').attr('data-theme', 'dark');"
