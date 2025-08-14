@@ -2,7 +2,7 @@ from decimal import Decimal
 
 import pytest
 from django.core.management import call_command
-from fairdm.models import Dataset
+from fairdm.core.models import Dataset
 from ghfdb.resources import GHFDBResource
 from ghfdb.views import GHFDBImportFormat
 from heat_flow.models import (

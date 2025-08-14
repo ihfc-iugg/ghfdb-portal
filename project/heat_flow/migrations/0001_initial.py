@@ -4,7 +4,7 @@ import auto_prefetch
 import django.core.validators
 import django.db.models.deletion
 import django.db.models.manager
-import django_bleach.models
+
 import fairdm.db.fields
 import fairdm_geo.vocabularies.cgi.geosciml
 import fairdm_geo.vocabularies.odm2
@@ -15,7 +15,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -70,7 +69,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "p_comment",
-                    django_bleach.models.BleachField(
+                    models.TextField(
                         blank=True,
                         help_text="General comments on the parent level.",
                         null=True,
@@ -914,7 +913,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "IGSN",
-                    django_bleach.models.BleachField(
+                    models.TextField(
                         blank=True,
                         help_text="International Generic Sample Numbers (IGSN, semicolon separated) for rock samples used for laboratory measurements of thermal conductivity in the heat flow calculation.",
                         null=True,
@@ -1007,7 +1006,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "c_comment",
-                    django_bleach.models.BleachField(
+                    models.TextField(
                         blank=True,
                         help_text="General comments on the child level.",
                         null=True,
