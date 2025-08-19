@@ -23,9 +23,6 @@ services:
     depends_on:
       - postgres
       - redis
-    command: tail -f /dev/null
-    volumes:
-      - config:/app/config
     labels:
       - traefik.enable=true
       - traefik.http.routers.django.rule=Host(`${DJANGO_SITE_DOMAIN:-localhost}`)
