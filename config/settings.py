@@ -23,8 +23,6 @@ fairdm.setup(
     ],
 )
 
-print("Hello")
-
 EASY_ICONS = globals().get("EASY_ICONS", {})
 
 EASY_ICONS["aliases"].update(
