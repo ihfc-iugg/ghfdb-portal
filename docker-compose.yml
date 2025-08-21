@@ -32,6 +32,7 @@ services:
       - traefik.http.routers.django.tls.domains[0].main=portal.heatflow.world
       - traefik.http.services.django.loadbalancer.server.port=5000
       - traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken
+      - com.centurylinklabs.watchtower.enable=true
   postgres:
     image: postgres:16-alpine
     restart: always
