@@ -1,5 +1,5 @@
 exclude: "^docs/|/migrations/|^tests/"
-default_stages: [commit]
+default_stages: [pre-commit]
 
 repos:
 

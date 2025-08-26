@@ -1,0 +1,11 @@
+{% extends "fairdm/pages/home.html" %}
+{% load static %}
+
+{% block title %}
+{% endblock title %}
+
+{% block footer_links %}
+  <a href="https://www.heatflow.world/legal-notice/">{% trans "Legal Notice" %}</a>
+  <a href="https://www.heatflow.world/data-protection/">{% trans "Data Protection" %}</a>
+  {{ block.super }}
+{% endblock footer_links %}

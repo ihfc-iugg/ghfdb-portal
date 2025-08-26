@@ -1,0 +1,15 @@
+{% load fairdm %}
+
+{% with obj.review as review %}
+  <c-literature.card>
+    <c-slot name="footer_start">
+      {% if current_user_is_reviewer and not review.status %}
+        <c-components.link icon="arrow-right"
+                           icon_position="end"
+                           href="{% url "review-create" literature_id=obj.id %}"
+                           text="{% trans "Start review" %}" />
+      {% endif %}
+    </c-slot>
+  </c-bs5.card>
+{% endwith %}
+<hr />

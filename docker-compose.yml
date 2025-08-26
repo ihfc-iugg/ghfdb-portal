@@ -1,71 +1,104 @@
-version: '3'
-name: ghfdb_local
+# SEE: docs.geoluminate/deployment
+version: "3.7"
+name: ghfdb_production
 
 volumes:
-  postgres: {}
-  postgres_backups: {}
-  media: {}
+  postgres:
+  media:
+
+# The Traefik reverse-proxy service and "traefik" network is defined by the GFZ IT team in a seperate Portainer
+# stack.
+networks:
+  default:
+    external: true  # Set the external network as the default
+    name: traefik  # The name of the external network
 
 services:
-
   django: &django
-    build:
-      context: .
-      dockerfile: ./compose/development/django
-    image: ghfdb_local_django
+    image: ghcr.io/ihfc-iugg/ghfdb-portal:latest
+    pull_policy: always
+    restart: always
+    env_file:
+      - stack.env
     depends_on:
       - postgres
       - redis
-      # - minio
-    volumes:
-      - ./:/app:z
-    env_file:
-      - stack.local.env
-    ports:
-      - 8000:8000
-      - 5678:5678
-    # command: sleep infinity
-    # command: start-django
-    command: ./compose/development/start-django
-
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.django.rule=Host(`${DJANGO_SITE_DOMAIN:-localhost}`)
+      - traefik.http.routers.django.entrypoints=https
+      - traefik.http.routers.django.tls=true                   # Enable TLS for this service
+      - traefik.http.routers.django.tls.certresolver=sectigo  # Specify the certificate resolver
+      - traefik.http.routers.django.tls.domains[0].main=portal.heatflow.world
+      - traefik.http.services.django.loadbalancer.server.port=5000
+      - traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken
   postgres:
-    image: geoluminate/postgis:latest
+    image: postgres:16-alpine
+    restart: always
     volumes:
       - postgres:/var/lib/postgresql/data
-      - postgres_backups:/backups
     env_file:
-      - stack.local.env
+      - stack.env
   redis:
     image: redis:6
+    restart: always
   # celeryworker:
   #   <<: *django
-  #   ports: []
   #   command: start-celeryworker
-
+  #   labels: []
   # celerybeat:
   #   <<: *django
-  #   ports: []
   #   command: start-celerybeat
-
+  #   labels: []
   # flower:
   #   <<: *django
-  #   ports:
-  #     - "5555:5555"
   #   command: start-flower
-
-  # docs:
-  #   <<: *django
-  #   working_dir: /app/docs
-  #   ports:
-  #     - "9000:9000"
-  #   command: start-docs
+  #   labels:
+  #     - traefik.enable=true
+  #     - traefik.http.routers.tasks.rule=Host(`tasks.${DJANGO_SITE_DOMAIN:-localhost}`)
+  #     - traefik.http.routers.tasks.entrypoints=https
+  #     - traefik.http.routers.tasks.service=tasks
+  #     - traefik.http.routers.tasks.tls.domains[0].main=portal.heatflow.world
+  #     - traefik.http.services.tasks.loadbalancer.server.port=5555
   # minio:
-  #   image: quay.io/minio/minio:latest
+  #   image: quay.io/minio/minio
   #   volumes:
   #     - media:/minio
+  #   environment:
+  #     - MINIO_ROOT_USER=${DJANGO_SUPERUSER_EMAIL:-super.user@example.com}
+  #     - MINIO_BROWSER_REDIRECT_URL=https://minio.${DJANGO_SITE_DOMAIN:-localhost}
   #   env_file:
-  #     - stack.local.env
-  #   ports:
-  #     - "9000:9000"
-  #     - "9001:9001"
+  #     - stack.env
   #   command: server /minio
+  #   restart: always
+  #   labels:
+  #     - traefik.enable=true
+  #     - traefik.http.routers.media.service=media
+  #     - traefik.http.routers.media.entrypoints=https
+  #     - traefik.http.routers.media.rule=Host(`media.${DJANGO_SITE_DOMAIN:-localhost}`)
+  #     - traefik.http.services.media.loadbalancer.server.port=9000
+  #     - traefik.http.routers.media.tls.certresolver=sectigo  # Specify the certificate resolver
+  #     - traefik.http.routers.media.tls.domains[0].main=portal.heatflow.world
+
+  #     - traefik.http.routers.minio.service=minio
+  #     - traefik.http.routers.minio.entrypoints=https
+  #     - traefik.http.routers.minio.rule=Host(`minio.${DJANGO_SITE_DOMAIN:-localhost}`)
+  #     - traefik.http.services.minio.loadbalancer.server.port=9001
+  #     - traefik.http.routers.minio.tls.certresolver=sectigo  # Specify the certificate resolver
+  #     - traefik.http.routers.minio.tls.domains[0].main=portal.heatflow.world
+  # # TDU map service
+  # map:
+  #   image: tanzwutgandalf/whfdb-map:latest
+  #   restart: always
+  #   pull_policy: always
+  #   environment:
+  #     - VITE_ROOT_API_DOMAIN=${DJANGO_SITE_DOMAIN}
+  #     - VITE_APP_NAME=Global Heat Flow Database
+  #     - SUBDIR=/map
+  #   labels:
+  #     - traefik.enable=true
+  #     - traefik.http.routers.map.entrypoints=https
+  #     - traefik.http.routers.map.rule=Host(`${DJANGO_SITE_DOMAIN:-localhost}`) && PathPrefix(`/map`)
+  #     - traefik.http.services.map.loadbalancer.server.port=80
+  #     - traefik.http.routers.map.tls.certresolver=sectigo  # Specify the certificate resolver
+  #     - traefik.http.routers.map.tls.domains[0].main=portal.heatflow.world

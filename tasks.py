@@ -51,32 +51,45 @@ def docs(c, live=False):
     Build the documentation
     """
     if live:
-        c.run("sphinx-autobuild -b html --watch docs -c docs docs docs/_build/html --open-browser --port 5000")
+        c.run(
+            "sphinx-autobuild -b html --watch docs -c docs docs docs/_build/html --ignore docs/data_models/* --open-browser --port 5000"
+        )
     else:
         c.run("sphinx-build -E -b html docs docs/_build")
 
 
-@task
-def release(c):
+@task(help={"overwrite": "Re-release the current version (overwrite tag if needed)"})
+def release(c, overwrite=False):
     """
     Release a new version of the app using year.release-number versioning.
     """
-    # 1. Determine the current year
-    current_year = datetime.datetime.now().year
+    if overwrite:
+        version = c.run("poetry version -s", hide=True).stdout.strip()
+        print(f"Overwriting release {version}")
+    else:
+        # 1. Determine the current year
+        current_year = datetime.datetime.now().year
 
-    # # 3. Form the new version string
-    year, num = c.run("poetry version -s", hide=True).stdout.strip().split(".")
-    year = int(year)
-    num = int(num)
-    version = f"{current_year}.1" if year != current_year else f"{year}.{num + 1}"
+        # 2. Get the current version
+        year, num = c.run("poetry version -s", hide=True).stdout.strip().split(".")
+        year = int(year)
+        num = int(num)
 
-    # # 4. Update the version in pyproject.toml
-    c.run(f"poetry version {version}")
+        # 3. Form the new version string
+        version = f"{current_year}.1" if year != current_year else f"{year}.{num + 1}"
 
-    # # 5. Commit the change
-    c.run(f'git commit pyproject.toml -m "release v{version}"')
+        # 4. Update the version in pyproject.toml
+        c.run(f"poetry version {version}")
 
-    # # 6. Create a tag and push it
+        # 5. Commit the change
+        c.run(f'git commit pyproject.toml -m "release v{version}"')
+
+    # 6. Delete the existing tag if overwriting
+    if overwrite:
+        c.run(f"git tag -d v{version}", warn=True)
+        c.run(f"git push --delete origin v{version}", warn=True)
+
+    # 7. Create a tag and push it
     c.run(f'git tag -a v{version} -m "Release {version}"')
     c.run("git push --tags")
     c.run("git push origin main")
@@ -86,13 +99,13 @@ def release(c):
 def dumpdata(c):
     c.run(
         "docker compose -f local.yml run django python manage.py dumpdata users organizations contributors projects"
-        " datasets samples core --natural-foreign --natural-primary --output=geoluminate.json.gz"
+        " datasets samples core --natural-foreign --natural-primary --output=fairdm.json.gz"
     )
 
 
 @task
 def loaddata(c):
-    c.run("docker compose -f local.yml run django python manage.py loaddata core --app geoluminate")
+    c.run("docker compose -f local.yml run django python manage.py loaddata core --app fairdm")
 
 
 @task
@@ -107,20 +120,19 @@ def create_fixtures(c, users=75, orgs=25, projects=12):
 
 @task
 def savedemo(c):
-    """Save the initial data for the core geoluminate app"""
+    """Save the initial data for the core fairdm app"""
     c.run(
         " ".join(
             [
-                "docker compose run",
-                "django python -Xutf8 manage.py dumpdata",
+                "python -Xutf8 manage.py dumpdata",
                 "--natural-foreign",
                 "--natural-primary",
-                # "-e users.User",
+                "-e users.User",
                 "-e admin.LogEntry",
                 "-e contenttypes",
                 "-e auth.Permission",
                 "-e sessions",
-                "-o project/fixtures/project.json.bz2",
+                "-o fixtures/demo.json",
             ]
         )
     )
@@ -137,10 +149,30 @@ def update_deps(c):
         "django-jsonfield-toolkit",
         "django-polymorphic-treebeard",
         "django-account-management",
-        "geoluminate-docs",
+        "fairdm-docs",
         "django-research-vocabs",
         "django-setup-tools",
         "django-flex-menus",
+        "cotton-bs5",
+        "fairdm",
+        "fairdm-discussions",
+        "fairdm-geo",
+        "fairdm-rest-api",
     ]
 
     c.run(f"poetry update {' '.join(packages)}")
+
+
+@task
+def build_image(c):
+    c.run("docker build -t ghcr.io/ihfc-iugg/ghfd-portal .")
+
+
+@task
+def screenshots(c):
+    """
+    Take screenshots of the application
+    """
+    c.run(
+        "cd docs/_static/screenshots && shot-scraper multi shots.yml -a auth.json --auth-password admin --auth-username super.user@example.com"
+    )

@@ -1,24 +1,26 @@
-import geoluminate
+import fairdm
+from botocore.config import Config
 from django.utils.translation import gettext_lazy as _
-
-# pprint(INSTALLED_APPS)
-
 
 LANGUAGES = [
     ("en", _("English")),
-    ("de", _("German")),
+    # ("de", _("German")),
 ]
 
-
-geoluminate.setup(
+fairdm.setup(
     apps=[
         "heat_flow",
-        "earth_science",
-        "earth_science.location",
-        "earth_science.geology.lithology",
-        "earth_science.geology.stratigraphy",
-        "earth_science.geology.geologic_time",
-    ]
+        "ghfdb",
+        "review",
+        "fairdm_geo",
+        # "fairdm_geo.geology.lithology",
+        "fairdm_geo.geology.stratigraphy",
+        # "fairdm_geo.geology.geologic_time",
+    ],
+    addons=[
+        "fairdm_discussions",
+        "fairdm_api",
+    ],
 )
 
 
@@ -34,21 +36,21 @@ EASY_ICONS["aliases"].update(
         "map": "fas fa-map-location-dot",
         "heat_flow": "fas fa-fire",
         "review": "fas fa-highlighter",
+        "submit_review": "fa-solid fa-clipboard-check",
     }
 )
 
-# DEPLOYMENT_PIPELINE = {}
-
 DJANGO_SETUP_TOOLS = globals().get("DJANGO_SETUP_TOOLS", {})
 
-# this line is only required during staging because no migrations are being committed to the geoluminate repo
+# this line is only required during staging because no migrations are being committed to the fairdm repo
 DJANGO_SETUP_TOOLS[""]["always_run"].insert(0, ("makemigrations", "--no-input"))
-
+DJANGO_SETUP_TOOLS[""]["always_run"].append(("compress",))
+# DJANGO_SETUP_TOOLS[""]["on_initial"].append(("loaddata", "ghfdb_review_group.json"))
 
 PARLER_LANGUAGES = {
     1: (
         {"code": "en"},
-        {"code": "de"},
+        # {"code": "de"},
     ),
     "default": {
         "fallback": "en",  # Default fallback language
@@ -56,95 +58,117 @@ PARLER_LANGUAGES = {
     },
 }
 
-EARTH_SCIENCE_X_COORD = {
-    "decimal_places": 5,
-    "max_digits": None,
-}
+# These are required for the switch to GFZ dog service
+AWS_STORAGE_BUCKET_NAME = "dog-ext.heatflow-world.ghfdb"
+AWS_S3_ENDPOINT_URL = "https://s3.gfz-potsdam.de"
+AWS_S3_CLIENT_CONFIG = Config(
+    request_checksum_calculation="when_required",
+    response_checksum_validation="when_required",
+)
 
-EARTH_SCIENCE_Y_COORD = {
-    "decimal_places": 5,
-    "max_digits": None,
-}
-
-
-COMPRESS_ENABLED = True
-COMPRESS_OFFLINE = False
-
-INSTALLED_APPS += [  # noqa: F821
-    "django_model_info.apps.DjangoModelInfoConfig",
-]
-
-# if DEBUG:
-#     INSTALLED_APPS += [
-#         "django_browser_reload",
-#     ]
-
-# DJANGO_SETUP_TOOLS = {
-#     "": {
-#         "on_initial": [
-#             ("makemigrations", "--no-input"),
-#             ("migrate", "--no-input"),
-#             ("createsuperuser", "--no-input", "--first_name", "Super", "--last_name", "User"),
-#             ("loaddata", "creativecommons"),
-#         ],
-#         "always_run": [
-#             ("makemigrations", "--no-input"),
-#             ("migrate", "--no-input"),
-#             "django_setup_tools.scripts.sync_site_id",
-#             ("collectstatic", "--noinput"),
-#             ("compress",),
-#         ],
-#     },
-#     # "development": {
-#     #     "on_initial": [
-#     #         ("loaddata", "myapp"),
-#     #     ],
-#     #     "always_run": [
-#     #         "django_setup_tools.scripts.some_extra_func",
-#     #     ],
-#     # },
-#     # "production": {
-#     #     "on_initial": [
-#     #         # ("loaddata", "myapp"),
-#     #     ],
-#     #     "always_run": [
-#     #         ("collectstatic", "--noinput"),
-#     #         ("compress",),
-#     #     ],
-#     # },
-# }
-
-
-# print(env.str("POSTGRES_USER"))
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": env.str("POSTGRES_DB"),
-#         "PASSWORD": env.str("POSTGRES_PASSWORD"),
-#         "USER": env.str("POSTGRES_USER"),
-#         "HOST": env.str("POSTGRES_HOST"),
-#         "PORT": env.str("POSTGRES_PORT"),
-#     }
-# }
-
-
-# pprint(DATABASES)
 
 # INSTALLED_APPS += [
-#     "django_classy_doc",
+#     "django_model_info.apps.DjangoModelInfoConfig",
 # ]
 
 
-# CLASSY_DOC_BASES = ["heat_flow", "earth_science"]
-# # CLASSY_DOC_NON_INSTALLED_APPS = ['django.views.generic']
-# CLASSY_DOC_MODULE_TYPES = [
-#     "models",
-# ]
-
-# CLASSY_KNOWN_APPS = {
-#     "django": ["django"],
-#     "samples": ["samples"],
-#     "polymorphic_treebeard": ["polymorphic_treebeard"],
-#     "polymorphic": ["polymorphic"],
-#     "treebeard": ["treebeard"],
+# LOGGING = {
+#     "version": 1,
+#     "disable_existing_loggers": False,
+#     "filters": {
+#         "require_debug_true": {
+#             "()": RequireDebugTrue,  # Only log in DEBUG mode
+#         },
+#     },
+#     "handlers": {
+#         "console": {
+#             "level": "DEBUG",
+#             "filters": ["require_debug_true"],
+#             "class": "logging.StreamHandler",
+#         },
+#     },
+#     "loggers": {
+#         "django.server": {
+#             "handlers": ["console"],
+#             "level": "DEBUG",
+#             "propagate": False,
+#         },
+#         "import_export": {
+#             "handlers": ["console"],
+#             "level": "INFO",
+#         },
+#     },
 # }
+
+
+FAIRDM_CONFIG = {
+    "colors": {
+        "primary": "#354b9b",
+        "secondary": "#699bd1",
+    },
+    "home": {
+        "Explore": [
+            "home.map-viewer",
+            "home.ghfdb_projects",
+            "home.whfdb_project",
+            # "fdm.dashboard.latest-activity",
+        ],
+        "Create": [
+            "fdm.dashboard.login-signup",
+            "fdm.dashboard.create-project",
+            "fdm.dashboard.create-dataset",
+        ],
+        "Feedback & More": [
+            "home.issues",
+            "home.feedback",
+            "home.digitize",
+            "fdm.dashboard.user-guide",
+            "fdm.dashboard.fairdm-framework",
+        ],
+    },
+    "external_links": [
+        {
+            "url": "https://heatflow.world/",
+            "name": "World Heat Flow Database Project",
+        },
+        {
+            "url": "https://ihfc-iugg.com/",
+            "name": "International Heat Flow Commission",
+        },
+    ],
+    "documentation_url": "https://heatflowworld.readthedocs.io/en/latest/",
+    "repository_url": "https://github.com/ihfc-iugg/ghfdb-portal",
+    "header_links_before_dropdown": 5,
+    "logo": {
+        "text": _("Global Heat Flow Database Portal"),
+        "image_dark": "img/brand/logo.svg",
+        "image_light": "img/brand/logo.svg",
+    },
+    "announcement": "",
+    # "navbar_start": [
+    #     "pst.components.navbar-logo",
+    # ],
+    "navbar_persistent": ["sections.navbar.search"],
+    "footer_start": ["copyright"],
+    "footer_center": ["sphinx-version"],
+    "back_to_top_button": True,
+    "sponsors": [
+        {
+            "name": "GFZ German Research Centre for Geosciences",
+            "url": "https://www.gfz.de/en/",
+            "image": "img/web_logo_box_GFZ-min.png",
+        },
+        {
+            "name": "International Heat Flow Commission",
+            "url": "https://www.ihfc-iugg.org",
+            "image": "img/web_logo_box_IHFC-min.png",
+        },
+        {
+            "name": "DFG - Deutsche Forschungsgemeinschaft",
+            "url": "https://www.dfg.de/en/",
+            "image": "img/web_logo_box_DFG-min.png",
+        },
+    ],
+}
+
+CSRF_TRUSTED_ORIGINS = [f"https://{domain}" for domain in globals().get("ALLOWED_HOSTS", [])]
