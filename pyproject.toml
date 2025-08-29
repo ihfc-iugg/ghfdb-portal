@@ -35,7 +35,7 @@ fairdm = {git = "https://github.com/FAIR-DM/fairdm"}
 fairdm-geo = {git = "https://github.com/FAIR-DM/fairdm-geo"}
 django-guardian = "^3.0.3"
 django-countries = "^7.6.1"
-martor = "^1.6.45"
+martor = "^1.7.14"
 uncertainties = "^3.2.3"
 fairdm-discussions = {git = "https://github.com/FAIR-DM/fairdm-discussions"}
 fairdm-rest-api = {git = "https://github.com/FAIR-DM/fairdm-rest-api"}
