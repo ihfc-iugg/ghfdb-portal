@@ -1,0 +1,66 @@
+name: Documentation Validation
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - '.specify/memory/constitution.md'
+      - 'pyproject.toml'
+      - '.github/workflows/docs-validation.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - '.specify/memory/constitution.md'
+
+jobs:
+  validate-docs:
+    name: Build and Validate Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --with docs --no-interaction --no-root
+
+      - name: Build HTML documentation (warnings as errors)
+        run: |
+          poetry run sphinx-build -b html docs docs/_build/html -W --keep-going
+        env:
+          DJANGO_ENV: development
+
+      - name: Run linkcheck
+        run: |
+          poetry run sphinx-build -b linkcheck docs docs/_build/linkcheck -W --keep-going
+        env:
+          DJANGO_ENV: development
+
+      - name: Upload build artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-build-output
+          path: docs/_build/

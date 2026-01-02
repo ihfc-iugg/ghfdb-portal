@@ -2,6 +2,7 @@
 
 ![Github Docs](https://readthedocs.org/projects/heatflowworld/badge/?version=latest&style=flat)
 [![Package](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/docker-build-and-publish.yml/badge.svg?branch=)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/docker-build-and-publish.yml)
+[![Docs Validation](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/docs-validation.yml/badge.svg)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/docs-validation.yml)
 ![GitHub](https://img.shields.io/github/license/ihfc-iugg/ghfdb-portal)
 ![GitHub last commit](https://img.shields.io/github/last-commit/ihfc-iugg/ghfdb-portal)
 

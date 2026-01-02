@@ -53,27 +53,27 @@ Key documents include:
 poetry install
 
 # Extract full content to terminal (for AI to read)
-poetry run python scripts/parse_pdf_for_ai.py "docs/constitution/references/WHDB - Project Description.pdf"
+poetry run python utils/parse_pdf.py "docs/constitution/references/WHDB - Project Description.pdf"
 
 # Save to file for later reference
-poetry run python scripts/parse_pdf_for_ai.py "docs/constitution/references/filename.pdf" output.md
+poetry run python utils/parse_pdf.py "docs/constitution/references/filename.pdf" output.md
 ```
 
 #### Method 2: Get Summary Only
 
 ```bash
 # Quick metadata summary (pages, word count, tokens)
-poetry run python scripts/parse_pdf_for_ai.py "docs/constitution/references/filename.pdf" --summary-only
+poetry run python utils/parse_pdf.py "docs/constitution/references/filename.pdf" --summary-only
 ```
 
 #### Method 3: Extract Specific Pages (using head/tail)
 
 ```bash
 # Read first 80 lines of extracted content (PowerShell)
-poetry run python scripts/parse_pdf_for_ai.py "docs/constitution/references/filename.pdf" | Select-Object -First 80
+poetry run python utils/parse_pdf.py "docs/constitution/references/filename.pdf" | Select-Object -First 80
 
 # Or in bash/Linux
-poetry run python scripts/parse_pdf_for_ai.py "docs/constitution/references/filename.pdf" | head -n 80
+poetry run python utils/parse_pdf.py "docs/constitution/references/filename.pdf" | head -n 80
 ```
 
 ### When to Read Reference Documents
@@ -97,10 +97,10 @@ poetry run python scripts/parse_pdf_for_ai.py "docs/constitution/references/file
 ls docs/constitution/references/
 
 # 2. Get summary to estimate reading time
-poetry run python scripts/parse_pdf_for_ai.py "docs/constitution/references/WHDB - Project Description.pdf" --summary-only
+poetry run python utils/parse_pdf.py "docs/constitution/references/WHDB - Project Description.pdf" --summary-only
 
 # 3. Extract full content for AI analysis
-poetry run python scripts/parse_pdf_for_ai.py "docs/constitution/references/WHDB - Project Description.pdf" > /tmp/whdb_project.md
+poetry run python utils/parse_pdf.py "docs/constitution/references/WHDB - Project Description.pdf" > /tmp/whdb_project.md
 
 # 4. AI agent reads the markdown file
 # [Agent reads /tmp/whdb_project.md]
@@ -196,7 +196,7 @@ poetry run ruff check .
 cat docs/ghfdb_fields.md
 
 # Extract conceptual schema PDF
-poetry run python scripts/parse_pdf_for_ai.py "docs/constitution/references/Conceptual Metadata structure.pdf"
+poetry run python utils/parse_pdf.py "docs/constitution/references/Conceptual Metadata structure.pdf"
 
 # Review Django models
 ls project/heat_flow/models/
@@ -206,7 +206,7 @@ ls project/heat_flow/models/
 
 ```bash
 # Extract project description
-poetry run python scripts/parse_pdf_for_ai.py "docs/constitution/references/WHDB - Project Description.pdf" > /tmp/dfg_project.md
+poetry run python utils/parse_pdf.py "docs/constitution/references/WHDB - Project Description.pdf" > /tmp/dfg_project.md
 
 # Check against constitution requirements
 grep -i "DFG\|funding\|grant" .specify/memory/constitution.md

@@ -16,6 +16,7 @@ fairdm.setup(
         # "fairdm_geo.geology.lithology",
         "fairdm_geo.geology.stratigraphy",
         # "fairdm_geo.geology.geologic_time",
+        "cotton_layouts",
     ],
     addons=[
         "fairdm_discussions",
@@ -25,7 +26,13 @@ fairdm.setup(
 
 EASY_ICONS = globals().get("EASY_ICONS", {})
 
-EASY_ICONS["aliases"].update(
+# Update icons for the default provider (FontAwesome)
+if "default" not in EASY_ICONS:
+    EASY_ICONS["default"] = {"icons": {}}
+if "icons" not in EASY_ICONS["default"]:
+    EASY_ICONS["default"]["icons"] = {}
+
+EASY_ICONS["default"]["icons"].update(
     {
         "geology": "fas fa-mountain",
         "lithology": "fas fa-layer-group",

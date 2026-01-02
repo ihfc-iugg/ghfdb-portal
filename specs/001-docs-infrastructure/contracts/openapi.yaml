@@ -1,0 +1,10 @@
+openapi: 3.0.3
+info:
+  title: Documentation Infrastructure (No Runtime API)
+  version: 0.1.0
+  description: |
+    This feature is documentation infrastructure and CI validation.
+
+    There are no user-facing runtime API endpoints introduced by this feature.
+    Validation occurs via Sphinx build and linkcheck steps executed in CI.
+paths: {}

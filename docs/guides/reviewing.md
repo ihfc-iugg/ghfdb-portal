@@ -4,6 +4,12 @@ This guide explains how to review a literature item within the portal, extract r
 for inclusion in the heat flow database. **Only authorized reviewers** have access to this functionality. If you would
 like to become a reviewer, please contact the portal administrators.
 
+:::{important}
+This guide describes the WHDB data assessment activity of **reviewing literature** (curation). It is distinct from the
+portal's **publication approval review**, where a Data Administrator decides whether a dataset can become public.
+No dataset becomes public without administrative approval.
+:::
+
 * * *
 
 ## Selecting an Item to Review

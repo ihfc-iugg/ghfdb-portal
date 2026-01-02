@@ -57,7 +57,6 @@ files = [
 [package.dependencies]
 idna = ">=2.8"
 sniffio = ">=1.1"
-typing_extensions = {version = ">=4.5", markers = "python_version < \"3.13\""}
 
 [package.extras]
 trio = ["trio (>=0.26.1)"]
@@ -167,17 +166,6 @@ files = [
 [package.extras]
 astroid = ["astroid (>=2,<4)"]
 test = ["astroid (>=2,<4)", "pytest", "pytest-cov", "pytest-xdist"]
-
-[[package]]
-name = "async-timeout"
-version = "5.0.1"
-description = "Timeout context manager for asyncio programs"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "async_timeout-5.0.1-py3-none-any.whl", hash = "sha256:39e3809566ff85354557ec2398b55e096c8364bacac9405a7a1fa429e77fe76c"},
-    {file = "async_timeout-5.0.1.tar.gz", hash = "sha256:d9321a7a3d5a6a5e187e824d2fa0793ce379a202935782d555d6e9d2735677d3"},
-]
 
 [[package]]
 name = "attrs"
@@ -1712,13 +1700,13 @@ django = ">=5.0"
 
 [[package]]
 name = "django-guardian"
-version = "3.0.3"
+version = "3.2.0"
 description = "Per object permissions for Django"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "django_guardian-3.0.3-py3-none-any.whl", hash = "sha256:d2164cea9f03c369d7ade21802710f3ab23ca6734bcc7dfcfb385906783916c7"},
-    {file = "django_guardian-3.0.3.tar.gz", hash = "sha256:4e59eab4d836da5a027cf0c176d14bc2a4e22cbbdf753159a03946c08c8a196d"},
+    {file = "django_guardian-3.2.0-py3-none-any.whl", hash = "sha256:0768565a057988a93fc4a1d93649c4a794abfd7473a8408a079cfbf83c559d77"},
+    {file = "django_guardian-3.2.0.tar.gz", hash = "sha256:9e18ecd2e211b665972690c2d03d27bce0ea4932b5efac24a4bb9d526950a69e"},
 ]
 
 [package.dependencies]
@@ -2353,17 +2341,20 @@ Django = ">=3.2,<6.0"
 
 [[package]]
 name = "django-treebeard"
-version = "4.7.1"
+version = "4.8.0"
 description = "Efficient tree implementations for Django"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.10"
 files = [
-    {file = "django-treebeard-4.7.1.tar.gz", hash = "sha256:846e462904b437155f76e04907ba4e48480716855f88b898df4122bdcfbd6e98"},
-    {file = "django_treebeard-4.7.1-py3-none-any.whl", hash = "sha256:995c7120153ab999898fe3043bbdcd8a0fc77cc106eb94de7350e9d02c885135"},
+    {file = "django_treebeard-4.8.0-py3-none-any.whl", hash = "sha256:ecaa7a0bbfa86a48fc91ff335513e83c841cdfe1add6229d04ac7096198d5d51"},
+    {file = "django_treebeard-4.8.0.tar.gz", hash = "sha256:61b8076b576107da21f6f6040774c0d17025200c2efdb70dd1f14b18c9206c3a"},
 ]
 
 [package.dependencies]
-Django = ">=3.2"
+django = ">=4.2"
+
+[package.extras]
+test = ["pytest-django (>=4.0,<5.0)", "pytest-pythonpath (>=0.7,<1.0)"]
 
 [[package]]
 name = "django-waffle"
@@ -3053,6 +3044,8 @@ files = [
     {file = "greenlet-3.2.4-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:c2ca18a03a8cfb5b25bc1cbe20f3d9a4c80d8c3b13ba3df49ac3961af0b1018d"},
     {file = "greenlet-3.2.4-cp310-cp310-musllinux_1_1_aarch64.whl", hash = "sha256:9fe0a28a7b952a21e2c062cd5756d34354117796c6d9215a87f55e38d15402c5"},
     {file = "greenlet-3.2.4-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:8854167e06950ca75b898b104b63cc646573aa5fef1353d4508ecdd1ee76254f"},
+    {file = "greenlet-3.2.4-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:f47617f698838ba98f4ff4189aef02e7343952df3a615f847bb575c3feb177a7"},
+    {file = "greenlet-3.2.4-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:af41be48a4f60429d5cad9d22175217805098a9ef7c40bfef44f7669fb9d74d8"},
     {file = "greenlet-3.2.4-cp310-cp310-win_amd64.whl", hash = "sha256:73f49b5368b5359d04e18d15828eecc1806033db5233397748f4ca813ff1056c"},
     {file = "greenlet-3.2.4-cp311-cp311-macosx_11_0_universal2.whl", hash = "sha256:96378df1de302bc38e99c3a9aa311967b7dc80ced1dcc6f171e99842987882a2"},
     {file = "greenlet-3.2.4-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:1ee8fae0519a337f2329cb78bd7a8e128ec0f881073d43f023c7b8d4831d5246"},
@@ -3062,6 +3055,8 @@ files = [
     {file = "greenlet-3.2.4-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:2523e5246274f54fdadbce8494458a2ebdcdbc7b802318466ac5606d3cded1f8"},
     {file = "greenlet-3.2.4-cp311-cp311-musllinux_1_1_aarch64.whl", hash = "sha256:1987de92fec508535687fb807a5cea1560f6196285a4cde35c100b8cd632cc52"},
     {file = "greenlet-3.2.4-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:55e9c5affaa6775e2c6b67659f3a71684de4c549b3dd9afca3bc773533d284fa"},
+    {file = "greenlet-3.2.4-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:c9c6de1940a7d828635fbd254d69db79e54619f165ee7ce32fda763a9cb6a58c"},
+    {file = "greenlet-3.2.4-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:03c5136e7be905045160b1b9fdca93dd6727b180feeafda6818e6496434ed8c5"},
     {file = "greenlet-3.2.4-cp311-cp311-win_amd64.whl", hash = "sha256:9c40adce87eaa9ddb593ccb0fa6a07caf34015a29bf8d344811665b573138db9"},
     {file = "greenlet-3.2.4-cp312-cp312-macosx_11_0_universal2.whl", hash = "sha256:3b67ca49f54cede0186854a008109d6ee71f66bd57bb36abd6d0a0267b540cdd"},
     {file = "greenlet-3.2.4-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:ddf9164e7a5b08e9d22511526865780a576f19ddd00d62f8a665949327fde8bb"},
@@ -3071,6 +3066,8 @@ files = [
     {file = "greenlet-3.2.4-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:3b3812d8d0c9579967815af437d96623f45c0f2ae5f04e366de62a12d83a8fb0"},
     {file = "greenlet-3.2.4-cp312-cp312-musllinux_1_1_aarch64.whl", hash = "sha256:abbf57b5a870d30c4675928c37278493044d7c14378350b3aa5d484fa65575f0"},
     {file = "greenlet-3.2.4-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:20fb936b4652b6e307b8f347665e2c615540d4b42b3b4c8a321d8286da7e520f"},
+    {file = "greenlet-3.2.4-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:ee7a6ec486883397d70eec05059353b8e83eca9168b9f3f9a361971e77e0bcd0"},
+    {file = "greenlet-3.2.4-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:326d234cbf337c9c3def0676412eb7040a35a768efc92504b947b3e9cfc7543d"},
     {file = "greenlet-3.2.4-cp312-cp312-win_amd64.whl", hash = "sha256:a7d4e128405eea3814a12cc2605e0e6aedb4035bf32697f72deca74de4105e02"},
     {file = "greenlet-3.2.4-cp313-cp313-macosx_11_0_universal2.whl", hash = "sha256:1a921e542453fe531144e91e1feedf12e07351b1cf6c9e8a3325ea600a715a31"},
     {file = "greenlet-3.2.4-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:cd3c8e693bff0fff6ba55f140bf390fa92c994083f838fece0f63be121334945"},
@@ -3080,6 +3077,8 @@ files = [
     {file = "greenlet-3.2.4-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:23768528f2911bcd7e475210822ffb5254ed10d71f4028387e5a99b4c6699671"},
     {file = "greenlet-3.2.4-cp313-cp313-musllinux_1_1_aarch64.whl", hash = "sha256:00fadb3fedccc447f517ee0d3fd8fe49eae949e1cd0f6a611818f4f6fb7dc83b"},
     {file = "greenlet-3.2.4-cp313-cp313-musllinux_1_1_x86_64.whl", hash = "sha256:d25c5091190f2dc0eaa3f950252122edbbadbb682aa7b1ef2f8af0f8c0afefae"},
+    {file = "greenlet-3.2.4-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:6e343822feb58ac4d0a1211bd9399de2b3a04963ddeec21530fc426cc121f19b"},
+    {file = "greenlet-3.2.4-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:ca7f6f1f2649b89ce02f6f229d7c19f680a6238af656f61e0115b24857917929"},
     {file = "greenlet-3.2.4-cp313-cp313-win_amd64.whl", hash = "sha256:554b03b6e73aaabec3745364d6239e9e012d64c68ccd0b8430c64ccc14939a8b"},
     {file = "greenlet-3.2.4-cp314-cp314-macosx_11_0_universal2.whl", hash = "sha256:49a30d5fda2507ae77be16479bdb62a660fa51b1eb4928b524975b3bde77b3c0"},
     {file = "greenlet-3.2.4-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:299fd615cd8fc86267b47597123e3f43ad79c9d8a22bebdce535e53550763e2f"},
@@ -3087,6 +3086,8 @@ files = [
     {file = "greenlet-3.2.4-cp314-cp314-manylinux2014_s390x.manylinux_2_17_s390x.whl", hash = "sha256:b4a1870c51720687af7fa3e7cda6d08d801dae660f75a76f3845b642b4da6ee1"},
     {file = "greenlet-3.2.4-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:061dc4cf2c34852b052a8620d40f36324554bc192be474b9e9770e8c042fd735"},
     {file = "greenlet-3.2.4-cp314-cp314-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:44358b9bf66c8576a9f57a590d5f5d6e72fa4228b763d0e43fee6d3b06d3a337"},
+    {file = "greenlet-3.2.4-cp314-cp314-musllinux_1_2_aarch64.whl", hash = "sha256:2917bdf657f5859fbf3386b12d68ede4cf1f04c90c3a6bc1f013dd68a22e2269"},
+    {file = "greenlet-3.2.4-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:015d48959d4add5d6c9f6c5210ee3803a830dce46356e3bc326d6776bde54681"},
     {file = "greenlet-3.2.4-cp314-cp314-win_amd64.whl", hash = "sha256:e37ab26028f12dbb0ff65f29a8d3d44a765c61e729647bf2ddfbbed621726f01"},
     {file = "greenlet-3.2.4-cp39-cp39-macosx_11_0_universal2.whl", hash = "sha256:b6a7c19cf0d2742d0809a4c05975db036fdff50cd294a93632d6a310bf9ac02c"},
     {file = "greenlet-3.2.4-cp39-cp39-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:27890167f55d2387576d1f41d9487ef171849ea0359ce1510ca6e06c8bece11d"},
@@ -3096,6 +3097,8 @@ files = [
     {file = "greenlet-3.2.4-cp39-cp39-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:c9913f1a30e4526f432991f89ae263459b1c64d1608c0d22a5c79c287b3c70df"},
     {file = "greenlet-3.2.4-cp39-cp39-musllinux_1_1_aarch64.whl", hash = "sha256:b90654e092f928f110e0007f572007c9727b5265f7632c2fa7415b4689351594"},
     {file = "greenlet-3.2.4-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:81701fd84f26330f0d5f4944d4e92e61afe6319dcd9775e39396e39d7c3e5f98"},
+    {file = "greenlet-3.2.4-cp39-cp39-musllinux_1_2_aarch64.whl", hash = "sha256:28a3c6b7cd72a96f61b0e4b2a36f681025b60ae4779cc73c1535eb5f29560b10"},
+    {file = "greenlet-3.2.4-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:52206cd642670b0b320a1fd1cbfd95bca0e043179c1d8a045f2c6109dfe973be"},
     {file = "greenlet-3.2.4-cp39-cp39-win32.whl", hash = "sha256:65458b409c1ed459ea899e939f0e1cdb14f58dbc803f2f93c5eab5694d32671b"},
     {file = "greenlet-3.2.4-cp39-cp39-win_amd64.whl", hash = "sha256:d2e685ade4dafd447ede19c31277a224a239a0a1a4eca4e6390efedf20260cfb"},
     {file = "greenlet-3.2.4.tar.gz", hash = "sha256:0dca0d95ff849f9a364385f36ab49f50065d76964944638be9691e1832e9f86d"},
@@ -3256,7 +3259,6 @@ prompt_toolkit = ">=3.0.41,<3.1.0"
 pygments = ">=2.4.0"
 stack_data = "*"
 traitlets = ">=5.13.0"
-typing_extensions = {version = ">=4.6", markers = "python_version < \"3.12\""}
 
 [package.extras]
 all = ["ipython[doc,matplotlib,test,test-extra]"]
@@ -3726,13 +3728,13 @@ files = [
 
 [[package]]
 name = "martor"
-version = "1.7.11"
+version = "1.7.16"
 description = "Django Markdown Editor"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "martor-1.7.11-py3-none-any.whl", hash = "sha256:dbf3720aac34ab73f016ef8b8095bdacec8c2b336c33dc093b56ecc674ba4cae"},
-    {file = "martor-1.7.11.tar.gz", hash = "sha256:9cfdc0dcd6aa0c4a66288c0ba7cbf85bbd34b58fa5180177521cff26edbd83ea"},
+    {file = "martor-1.7.16-py3-none-any.whl", hash = "sha256:c025d49a599e6ceff4162a8453c0d03d4b38d5d012af83978145de0caa51a81f"},
+    {file = "martor-1.7.16.tar.gz", hash = "sha256:de2ec5a6d2f59fb7d863796375d5b24d7d50ac5183059026c2b59edeb0c0fd81"},
 ]
 
 [package.dependencies]
@@ -4253,10 +4255,7 @@ files = [
 ]
 
 [package.dependencies]
-numpy = [
-    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
-    {version = ">=1.23.2", markers = "python_version == \"3.11\""},
-]
+numpy = {version = ">=1.26.0", markers = "python_version >= \"3.12\""}
 python-dateutil = ">=2.8.2"
 pytz = ">=2020.1"
 tzdata = ">=2022.7"
@@ -4689,6 +4688,7 @@ files = [
     {file = "psycopg2_binary-2.9.10-cp313-cp313-musllinux_1_2_i686.whl", hash = "sha256:bb89f0a835bcfc1d42ccd5f41f04870c1b936d8507c6df12b7737febc40f0909"},
     {file = "psycopg2_binary-2.9.10-cp313-cp313-musllinux_1_2_ppc64le.whl", hash = "sha256:f0c2d907a1e102526dd2986df638343388b94c33860ff3bbe1384130828714b1"},
     {file = "psycopg2_binary-2.9.10-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:f8157bed2f51db683f31306aa497311b560f2265998122abe1dce6428bd86567"},
+    {file = "psycopg2_binary-2.9.10-cp313-cp313-win_amd64.whl", hash = "sha256:27422aa5f11fbcd9b18da48373eb67081243662f9b46e6fd07c3eb46e4535142"},
     {file = "psycopg2_binary-2.9.10-cp38-cp38-macosx_12_0_x86_64.whl", hash = "sha256:eb09aa7f9cecb45027683bb55aebaaf45a0df8bf6de68801a6afdc7947bb09d4"},
     {file = "psycopg2_binary-2.9.10-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b73d6d7f0ccdad7bc43e6d34273f70d587ef62f824d7261c4ae9b8b1b6af90e8"},
     {file = "psycopg2_binary-2.9.10-cp38-cp38-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:ce5ab4bf46a211a8e924d307c1b1fcda82368586a19d0a24f8ae166f5c784864"},
@@ -4895,10 +4895,7 @@ files = [
 [package.dependencies]
 astroid = ">=3.3.8,<=3.4.0.dev0"
 colorama = {version = ">=0.4.5", markers = "sys_platform == \"win32\""}
-dill = [
-    {version = ">=0.3.7", markers = "python_version >= \"3.12\""},
-    {version = ">=0.3.6", markers = "python_version >= \"3.11\" and python_version < \"3.12\""},
-]
+dill = {version = ">=0.3.7", markers = "python_version >= \"3.12\""}
 isort = ">=4.2.5,<5.13 || >5.13,<7"
 mccabe = ">=0.6,<0.8"
 platformdirs = ">=2.2"
@@ -4968,6 +4965,25 @@ files = [
 
 [package.extras]
 diagrams = ["jinja2", "railroad-diagrams"]
+
+[[package]]
+name = "pypdf"
+version = "6.5.0"
+description = "A pure-python PDF library capable of splitting, merging, cropping, and transforming PDF files"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "pypdf-6.5.0-py3-none-any.whl", hash = "sha256:9cef8002aaedeecf648dfd9ff1ce38f20ae8d88e2534fced6630038906440b25"},
+    {file = "pypdf-6.5.0.tar.gz", hash = "sha256:9e78950906380ae4f2ce1d9039e9008098ba6366a4d9c7423c4bdbd6e6683404"},
+]
+
+[package.extras]
+crypto = ["cryptography"]
+cryptodome = ["PyCryptodome"]
+dev = ["black", "flit", "pip-tools", "pre-commit", "pytest-cov", "pytest-socket", "pytest-timeout", "pytest-xdist", "wheel"]
+docs = ["myst_parser", "sphinx", "sphinx_rtd_theme"]
+full = ["Pillow (>=8.0.0)", "cryptography"]
+image = ["Pillow (>=8.0.0)"]
 
 [[package]]
 name = "pyproj"
@@ -5390,9 +5406,6 @@ files = [
     {file = "redis-4.6.0.tar.gz", hash = "sha256:585dc516b9eb042a619ef0a39c3d7d55fe81bdb4df09a52c9cdde0d07bf1aa7d"},
 ]
 
-[package.dependencies]
-async-timeout = {version = ">=4.0.2", markers = "python_full_version <= \"3.11.2\""}
-
 [package.extras]
 hiredis = ["hiredis (>=1.0.0)"]
 ocsp = ["cryptography (>=36.0.1)", "pyopenssl (==20.0.1)", "requests (>=2.26.0)"]
@@ -5411,7 +5424,6 @@ files = [
 [package.dependencies]
 attrs = ">=22.2.0"
 rpds-py = ">=0.7.0"
-typing-extensions = {version = ">=4.4.0", markers = "python_version < \"3.13\""}
 
 [[package]]
 name = "regex"
@@ -6325,7 +6337,6 @@ files = [
 
 [package.dependencies]
 anyio = ">=3.6.2,<5"
-typing-extensions = {version = ">=4.10.0", markers = "python_version < \"3.13\""}
 
 [package.extras]
 full = ["httpx (>=0.27.0,<0.29.0)", "itsdangerous", "jinja2", "python-multipart (>=0.0.18)", "pyyaml"]
@@ -7068,5 +7079,5 @@ type = ["pytest-mypy"]
 
 [metadata]
 lock-version = "2.0"
-python-versions = ">=3.11,<4.0"
-content-hash = "e5ae579e5d35cfd056755f9d2a00484aadcce83007b0c79d995ccc963389b4b9"
+python-versions = ">=3.13,<4.0"
+content-hash = "8a37ba0938cec832300d74f51ac8b0873f5c830127a9db2daf8560c7aa5eba9c"
