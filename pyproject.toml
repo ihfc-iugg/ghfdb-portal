@@ -16,12 +16,9 @@ classifiers = [
     "Development Status :: 1 - Planning",
     "Framework :: Django :: 5.0",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: BSD License",
+    "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.13",
 ]
 
 [tool.poetry.urls]
@@ -30,18 +27,15 @@ classifiers = [
 
 
 [tool.poetry.dependencies]
-python = ">=3.11,<4.0"
+python = ">=3.13,<4.0"
 fairdm = {git = "https://github.com/FAIR-DM/fairdm"}
 fairdm-geo = {git = "https://github.com/FAIR-DM/fairdm-geo"}
-django-guardian = "^3.0.3"
-django-countries = "^7.6.1"
-martor = "^1.6.45"
-uncertainties = "^3.2.3"
 fairdm-discussions = {git = "https://github.com/FAIR-DM/fairdm-discussions"}
 fairdm-rest-api = {git = "https://github.com/FAIR-DM/fairdm-rest-api"}
 
 [tool.poetry.group.dev.dependencies]
 fairdm-dev-tools = {git = "https://github.com/FAIR-DM/dev-tools"}
+pypdf = "^6.5.0"
 
 [tool.poetry.group.docs.dependencies]
 fairdm-docs = {git = "https://github.com/FAIR-DM/fairdm-docs", extras = ["sphinx-book-theme"]}
@@ -181,8 +175,21 @@ django_settings_module = "tests.settings"
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 pythonpath = ["project"]
-reuse_db = true
-python_files = ["test_*.py", "*_test.py", "testing/python/*.py"]
+python_files = ["test_*.py", "*_test.py"]
+addopts = [
+    "--tb=short",
+    "--strict-markers",
+    "--reuse-db",
+    "--nomigrations",
+]
+markers = [
+    "heat_flow: Tests for the heat_flow app",
+    "ghfdb: Tests for the ghfdb app",
+    "review: Tests for the review app",
+    "integration: Integration tests",
+    "slow: Slow running tests",
+]
+
 filterwarnings = [
     "ignore",
     "default:::laboratory",
@@ -199,6 +206,7 @@ omit = [
     "*.tox*",
     ]
 show_missing = "true"
+
 
 [tool.coverage.run]
 branch = "true"
