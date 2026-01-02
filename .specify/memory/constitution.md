@@ -1,32 +1,36 @@
 <!--
 SYNC IMPACT REPORT (Constitution Update)
 ===========================================
-Version: 1.0.0 → 1.1.0
+Version: 1.0.0
 Date: 2026-01-02
-Type: MINOR (WHDB Phase 1 evidence + infrastructure requirements)
+Type: MINOR (add non-negotiable provenance + clarify dual review processes and role hierarchy)
 
 PRINCIPLES UPDATED:
-- I. Schema Fidelity to GHFDB Standards (parent/child obligations, PID requirements)
-- IV. Open Science & Data Quality (GFZ Data Services DOI publication + validation workflow)
-- Technology Stack & Standards (production architecture requirements)
+- IV. Open Science & Data Quality (clarify review terminology and publication gating)
+- VI. Provenance, Attribution & Review Governance (new)
 
 SECTIONS UPDATED:
 - Core Principles
-- Technology Stack & Standards
-- Funding & Institutional Alignment
+- Governance (role/permission hierarchy expectations)
 
 TEMPLATE IMPACT:
-✅ plan-template.md - aligned with schema fidelity and FairDM principles
-✅ spec-template.md - updated to include schema mapping requirements
-✅ tasks-template.md - task categories reflect GHFDB, schema, and community tasks
-✅ commands/*.md - no agent-specific references found; generic guidance retained
+✅ .specify/templates/plan-template.md - no change required
+✅ .specify/templates/spec-template.md - no change required
+✅ .specify/templates/tasks-template.md - no change required
+⚠ .specify/templates/commands/*.md - directory not present in this repo (N/A)
+
+RUNTIME DOC IMPACT:
+✅ .github/instructions/copilot.instructions.md - aligned with revised Principle I
+✅ docs/constitution/references/README.md - aligned with revised Principle I
+✅ docs/guides/reviewing.md - clarify terminology
+✅ docs/guides/importing-data.md - clarify publication gating
 
 DEFERRED ITEMS:
 None - all placeholders filled with project-specific values
 
 FOLLOW-UP ACTIONS:
-- Ensure docs/whdb_project.md stays aligned with WHDB reports
-- Consider correcting Poetry metadata license/classifiers to match LICENSE
+- Consider adding explicit “publish-time completeness rules” docs for template export
+- Consider documenting the portal role hierarchy in docs/ (Reviewer vs Data Administrator permissions)
 -->
 
 # Global Heat Flow Database Portal Constitution
@@ -35,32 +39,40 @@ FOLLOW-UP ACTIONS:
 
 ### I. Schema Fidelity to GHFDB Standards
 
-All database models **MUST** faithfully implement the conceptual metadata structure defined by the International Heat Flow Commission (IHFC) in:
+The portal’s **canonical** data model **MUST** be a modern, normalized relational schema designed for correctness,
+maintainability, and usability.
+
+The IHFC GHFDB conceptual schema (as published in the references below) **MUST** be treated as an
+interchange/publishing format (“product”) that the portal can reliably import from and export to:
 
 - Fuchs et al. (2021): *A new database structure for the IHFC Global Heat Flow Database*
 - Fuchs et al. (2023): *The Global Heat Flow Database: Update 2023*
 
 **Non-negotiable requirements:**
 
-- Every Django model corresponds to a documented entity in the GHFDB schema (parent/child heat flow structure, sites, intervals, measurements)
-- Field names, constraints, and relationships align with published GHFDB specifications
-- Quality scoring (U-score, M-score) and correction flags implement the official evaluation scheme
-- Database table comments reference the corresponding GHFDB schema section
+- The portal database schema is authoritative for internal storage and MUST prioritize relational best practices (normalization, provenance, extensibility)
+- Import/export tooling MUST provide a deterministic mapping between the portal schema and the IHFC GHFDB schema (see Principle III)
+- “Mandatory” (M) fields in the IHFC schema MUST NOT be blindly enforced as hard requirements for portal UI data entry when they would block reasonable workflows
+- The portal MUST support capturing incomplete records and MUST track completeness/state such that stricter requirements can be enforced at publish/export time
+- Quality scoring (U-score, M-score) and correction flags MUST implement the official evaluation scheme and MUST export to IHFC-compatible fields
+- Any material divergence from the IHFC schema MUST be documented (mapping docs + release notes) with rationale
 
-**Schema structure obligations (conceptual metadata structure):**
+**Semantic obligations (what MUST be preserved even if implemented differently):**
 
-- The portal MUST preserve the GHFDB parent/child level structure, including which fields are mandatory, recommended, or optional (M/R/O)
-- The portal MUST preserve the intended quality relevance of fields, including U-score fields, M-score fields, and perturbation/correction flags (P)
-- Administrative/review metadata (e.g., reviewer name, review date, reviewer comments) MUST be treated as privileged editorial data and must not be conflated with scientific measurement metadata
+- The portal MUST preserve the scientific meaning of the GHFDB parent/child structure (site → interval → measurement), even if internal normalization differs
+- The portal MUST preserve the intended quality relevance of fields (U-score fields, M-score fields, perturbation/correction flags), even if internal storage differs
+- Administrative/review metadata (e.g., reviewer name, review date, reviewer comments) MUST be treated as privileged editorial data and MUST NOT be conflated with scientific measurement metadata
 
 **Persistent identifiers (PIDs) are first-class metadata:**
 
-- DOI MUST be used to link each heat-flow record to its primary publication reference where available
-- ORCID MUST be used to identify contributors/authors where available
-- IGSN MUST be supported to link measurements to physical samples where applicable
+- DOI MUST be supported end-to-end (capture, storage, and export) to link heat-flow records to primary literature where available
+- ORCID MUST be supported end-to-end for contributor/author identification where available
+- IGSN MUST be supported where applicable to link measurements to physical samples
 - ROR MUST be supported for research organization affiliations
 
-**Rationale:** The portal serves as the authoritative implementation of the community-defined GHFDB structure. Schema fidelity ensures interoperability, reproducibility, and trust across the international heat flow research community.
+**Rationale:** The portal’s job is to implement the community intent of the GHFDB in a maintainable, usable system.
+Treating the IHFC schema as an interchange “product” enables rigorous publication compatibility without inheriting
+spreadsheet-era constraints that harm UI workflows or long-term maintainability.
 
 ### II. FairDM Framework Integration
 
@@ -84,7 +96,8 @@ The portal **MUST** leverage the FairDM framework for all core data management, 
 
 ### III. Conceptual vs. Relational Schema Transparency
 
-The portal **MUST** document and expose the mapping between the flat GHFDB conceptual schema (spreadsheet template) and the underlying normalized relational database schema.
+The portal **MUST** document and expose the mapping between the flat GHFDB conceptual schema
+(spreadsheet template / interchange format) and the underlying normalized relational database schema.
 
 **Documentation requirements:**
 
@@ -124,6 +137,11 @@ The portal **MUST** embody open science principles and enforce rigorous data qua
 - New submissions MUST undergo multi-level validation, including database-level constraints, application-level validation, and manual/editorial review
 - Literature-derived data enrichment and quality control SHOULD follow a “four-eyes principle” (independent verification) where feasible
 
+**Terminology clarification:**
+
+- “Literature review” refers to the WHDB data assessment activity of extracting/curating data from publications
+- “Publication approval review” refers to portal administrator approval required before any dataset becomes public
+
 **Rationale:** The portal is funded by public research funds (DFG grant 491795283) and serves the global scientific community. Open access, reproducibility, and data integrity are foundational to the project's mission and funding mandate.
 
 ### V. Community-Driven Collaboration
@@ -146,6 +164,35 @@ The portal **MUST** facilitate researcher engagement, collaboration, and knowled
 - Transparent contribution guidelines and code of conduct
 
 **Rationale:** The GHFDB is a community-built resource spanning decades of research. The portal must lower barriers to contribution, recognize all contributors, and foster global collaboration among heat flow researchers.
+
+### VI. Provenance, Attribution & Review Governance (NON-NEGOTIABLE)
+
+The initial portal release is designed to support the WHDB data assessment workflow, where **reviewers**
+systematically analyze historic publications to extract data and metadata.
+
+The portal MUST support two distinct review processes with unambiguous provenance tracking:
+
+1. **Literature assessment review (curation)**: reviewers extract/curate data from a publication.
+2. **Publication approval review (editorial/admin)**: administrators decide whether a dataset can become public.
+
+**Non-negotiable provenance and attribution requirements:**
+
+- Datasets derived from literature MUST retain an accurate record of the original publication (bibliographic reference and DOI where available)
+- The portal MUST record original scientific contributors (authors) separately from portal contributors (reviewers/curators/editors)
+- The portal MUST record all participants in the assessment workflow (reviewers, collaborators) as contributors with appropriate roles
+- The portal MUST record administrative/editorial actions taken during publication approval (approver identity and timestamp at minimum)
+- Provenance metadata MUST be preserved across import/export and public publishing so that downstream users can attribute work correctly
+
+**Publication gating and role hierarchy requirements:**
+
+- No uploaded dataset MAY become public without explicit approval by authorized portal administrators
+- The portal MUST enforce a strict hierarchy of roles/permissions for administrative actions (e.g., not all staff can approve publication)
+- Permission to approve publication MUST be separable from permission to curate/submit a dataset for review
+- Role assignments and permission changes MUST be restricted to a small set of high-privilege administrators
+
+**Rationale:** Reviewers often do not own the underlying data they curate, but they provide essential scholarly labor.
+Accurate provenance preserves scientific attribution to original authors while crediting assessment contributors and ensuring
+that public releases meet administrative review standards.
 
 ## Technology Stack & Standards
 
@@ -200,7 +247,7 @@ The portal **MUST** facilitate researcher engagement, collaboration, and knowled
 
 - All changes require pull request review
 - Reviewers verify:
-  - Schema fidelity (references Fuchs et al. where applicable)
+  - GHFDB interchange compatibility (import/export mapping and round-trip integrity)
   - FairDM integration (no custom reimplementations)
   - Documentation updates (especially for schema changes)
   - Test coverage for new functionality
@@ -238,6 +285,12 @@ The portal **MUST** facilitate researcher engagement, collaboration, and knowled
 - Annual review of constitution relevance given GHFDB schema updates (Fuchs et al. revisions)
 - Major GHFDB schema changes (new publications) trigger constitution review
 
+**Role & Permission Governance:**
+
+- The portal MUST implement least-privilege permissions and role-based access control for reviewer and administrator capabilities
+- Publication approval authority MUST be limited to explicitly designated administrative roles
+- Administrative role hierarchy MUST be documented and reviewed periodically as part of compliance review
+
 **Funding & Institutional Alignment:**
 
 - This project is funded by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) under project number 491795283
@@ -249,4 +302,4 @@ The portal **MUST** facilitate researcher engagement, collaboration, and knowled
 
 - GFZ has committed to sustainably operate the research data infrastructure in-house beyond the initial grant period; architectural decisions MUST support long-term maintainability and institutional operation
 
-**Version**: 1.1.0 | **Ratified**: 2026-01-02 | **Last Amended**: 2026-01-02
+**Version**: 1.0.0 | **Ratified**: 2026-01-02 | **Last Amended**: 2026-01-02
