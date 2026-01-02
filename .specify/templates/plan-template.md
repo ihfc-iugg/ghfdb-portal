@@ -31,7 +31,16 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+**I. Schema Fidelity**: Does this feature preserve GHFDB schema semantics and document any mapping changes?
+**II. FairDM Integration**: Does this feature use FairDM components or justify custom implementations?
+**III. Schema Transparency**: Does this feature require updates to field mapping documentation?
+**IV. Open Science & Data Quality**: Does this feature maintain open access and quality standards?
+**V. Community Collaboration**: Does this feature support or enhance community engagement?
+**VI. Provenance & Attribution**: Does this feature properly track data provenance and contributor roles?
+**VII. Test-Driven Development**: Will tests be written BEFORE implementation (TDD)? Is pytest coverage adequate?
+**VIII. Documentation Standards**: Are specs, data models, and FairDM registrations properly documented?
+
+[Provide answers for each principle - PASS/FAIL/N/A with brief justification]
 
 ## Project Structure
 
