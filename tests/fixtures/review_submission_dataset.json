@@ -1,0 +1,72 @@
+[
+  {
+    "model": "project.project",
+    "pk": 100,
+    "fields": {
+      "uuid": "pTEST001ReviewSubmission",
+      "name": "Test Review Project",
+      "added": "2025-07-10T14:30:00Z",
+      "modified": "2025-07-10T14:30:00Z",
+      "visibility": 1,
+      "status": 1
+    }
+  },
+  {
+    "model": "dataset.dataset",
+    "pk": 100,
+    "fields": {
+      "uuid": "dTEST001PendingReview",
+      "name": "Test Submission - Pending Review",
+      "added": "2025-07-10T14:30:00Z",
+      "modified": "2025-07-10T14:30:00Z",
+      "visibility": 0,
+      "project": 100,
+      "reference": null
+    }
+  },
+  {
+    "model": "dataset.datasetdescription",
+    "pk": 100,
+    "fields": {
+      "type": "Abstract",
+      "value": "This is a test dataset submitted for review. It contains heat flow measurements from a test drilling campaign conducted for quality assurance testing purposes.",
+      "related": 100
+    }
+  },
+  {
+    "model": "dataset.datasetdescription",
+    "pk": 101,
+    "fields": {
+      "type": "Methods",
+      "value": "Heat flow measurements were obtained using standard borehole temperature logging and thermal conductivity measurements following IHFC guidelines.",
+      "related": 100
+    }
+  },
+  {
+    "model": "dataset.datasetdate",
+    "pk": 100,
+    "fields": {
+      "type": "Submitted",
+      "value": "2025-07-10",
+      "related": 100
+    }
+  },
+  {
+    "model": "dataset.datasetdate",
+    "pk": 101,
+    "fields": {
+      "type": "CollectionStart",
+      "value": "2025-01-15",
+      "related": 100
+    }
+  },
+  {
+    "model": "dataset.datasetdate",
+    "pk": 102,
+    "fields": {
+      "type": "CollectionEnd",
+      "value": "2025-03-20",
+      "related": 100
+    }
+  }
+]
