@@ -52,16 +52,16 @@
 ### Documentation for User Story 1
 
 - [ ] T015 [US1] Create docs/guides/testing-standards.md with test pyramid introduction and TDD workflow section
-- [ ] T016 [US1] Add unit test conventions section to testing-standards.md (file organization, naming patterns)
-- [ ] T017 [US1] Add unit test database policy section to testing-standards.md (when to use @pytest.mark.django_db)
-- [ ] T018 [US1] Add parametrized test pattern examples to testing-standards.md with 3-5 code samples
-- [ ] T019 [US1] Add fixture naming conventions section to testing-standards.md (lowercase_with_underscores, scope usage)
+- [X] T016 [US1] Add unit test conventions section to testing-standards.md (file organization, naming patterns)
+- [X] T017 [US1] Add unit test database policy section to testing-standards.md (when to use @pytest.mark.django_db)
+- [X] T018 [US1] Add parametrized test pattern examples to testing-standards.md with 3-5 code samples
+- [X] T019 [US1] Add fixture naming conventions section to testing-standards.md (lowercase_with_underscores, scope usage)
 
 ### Example Unit Tests for User Story 1
 
-- [ ] T020 [P] [US1] Create example unit test in tests/test_heat_flow/test_validation.py for temperature range validation
-- [ ] T021 [P] [US1] Create example parametrized unit test in tests/test_heat_flow/test_coordinates.py for coordinate normalization
-- [ ] T022 [P] [US1] Create example unit test in tests/test_heat_flow/test_quality_scores.py for U-score calculation with known values
+- [X] T020 [P] [US1] Create example unit test in tests/test_heat_flow/test_validation.py for temperature range validation
+- [X] T021 [P] [US1] Create example parametrized unit test in tests/test_heat_flow/test_coordinates.py for coordinate normalization
+- [X] T022 [P] [US1] Create example unit test in tests/test_heat_flow/test_quality_scores.py for U-score calculation with known values
 
 **Checkpoint**: Unit test conventions documented and validated with working examples
 

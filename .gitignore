@@ -6,7 +6,7 @@
 api.yml
 !assets/map/dist/*
 .vocabularies-cache
-test*.py
+/test*.py
 *.bib
 Global
 GlobalHeatFlow.bib
