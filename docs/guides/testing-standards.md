@@ -618,11 +618,45 @@ def test_approve_for_publication_requires_admin():
 
 ### API Schema Validation Patterns
 
-Contract tests protect external API consumers from breaking changes.
+Contract tests protect external API consumers from breaking changes by validating:
+- **Field presence**: Required fields must always be present
+- **Field types**: Field types must remain consistent across versions
+- **Response structure**: Objects, arrays, pagination must follow documented format
+- **Nullable fields**: Explicit `null` values instead of field omission
 
+**Example: Dataset Detail Response**
 ```python
 import pytest
 
+@pytest.mark.contract
+@pytest.mark.django_db
+def test_get_dataset_response_schema(client, admin_approval_dataset):
+    """GET /api/v1/datasets/{id}/ must return consistent schema."""
+    response = client.get(f'/api/v1/datasets/{admin_approval_dataset.pk}/')
+    
+    assert response.status_code == 200
+    data = response.json()
+    
+    # Required fields (must be present)
+    assert 'uuid' in data
+    assert 'name' in data
+    assert 'visibility' in data
+    assert 'created_date' in data
+    
+    # Field type validation
+    assert isinstance(data['uuid'], str)
+    assert isinstance(data['name'], str)
+    assert isinstance(data['visibility'], int)
+    assert isinstance(data['created_date'], str)  # ISO 8601
+    
+    # Nullable field handling (explicit null, not omitted)
+    assert 'description' in data  # Must be present even if null
+    if data['description'] is not None:
+        assert isinstance(data['description'], str)
+```
+
+**Example: List Response Schema**
+```python
 @pytest.mark.contract
 @pytest.mark.django_db
 def test_dataset_list_response_schema(client):
@@ -632,17 +666,34 @@ def test_dataset_list_response_schema(client):
     assert response.status_code == 200
     data = response.json()
     
-    # List endpoint contract
+    # Pagination contract
     assert 'count' in data
-    assert 'next' in data  # Pagination
+    assert 'next' in data
     assert 'previous' in data
     assert 'results' in data
+    
+    # Type validation
+    assert isinstance(data['count'], int)
+    assert data['next'] is None or isinstance(data['next'], str)  # URL or null
+    assert data['previous'] is None or isinstance(data['previous'], str)
     assert isinstance(data['results'], list)
+    
+    # Results structure (if not empty)
+    if data['results']:
+        first_item = data['results'][0]
+        assert 'uuid' in first_item
+        assert 'name' in first_item
 ```
 
 ### Standard Error Payload Format
 
-All API errors must follow consistent schema:
+All API errors must follow consistent schema to support client error handling.
+
+**Error Contract Requirements**:
+- **detail**: Human-readable error message (string, required)
+- **error_code**: Machine-readable error code (string, optional but recommended)
+- **timestamp**: ISO 8601 timestamp (string, optional)
+- **field_errors**: Field-level validation errors (object, for 400 responses)
 
 ```python
 @pytest.mark.contract
@@ -653,19 +704,61 @@ def test_unauthorized_request_error_contract(client):
     assert response.status_code == 401
     error = response.json()
     
-    # Error contract
+    # Required error fields
     assert 'detail' in error
     assert isinstance(error['detail'], str)
-    # Optional: error_code, timestamp fields
+    assert len(error['detail']) > 0  # Non-empty error message
+    
+    # Optional but recommended fields
+    if 'error_code' in error:
+        assert isinstance(error['error_code'], str)
+        assert error['error_code'] in ['unauthorized', 'authentication_failed']
+    
+    if 'timestamp' in error:
+        assert isinstance(error['timestamp'], str)
+        # Validate ISO 8601 format
+        from datetime import datetime
+        datetime.fromisoformat(error['timestamp'].replace('Z', '+00:00'))
+
+@pytest.mark.contract
+def test_validation_error_payload_format(client):
+    """HTTP 400 validation errors must include field-level details."""
+    response = client.post('/api/v1/datasets/', json={'name': ''})  # Invalid: empty name
+    
+    assert response.status_code == 400
+    error = response.json()
+    
+    # Field-level error contract
+    assert 'detail' in error or 'field_errors' in error
+    
+    if 'field_errors' in error:
+        assert isinstance(error['field_errors'], dict)
+        # Each field error should be a list of error messages
+        for field, messages in error['field_errors'].items():
+            assert isinstance(messages, list)
+            assert all(isinstance(msg, str) for msg in messages)
 ```
 
 ### API Versioning Guidance
 
-When adding new fields or endpoints:
+**Versioning Strategy**: Maintain backward compatibility within major versions
 
-1. **Additive changes** (safe): Add optional fields, new endpoints
-2. **Breaking changes** (unsafe): Remove fields, change types, rename fields
+**Additive Changes (Safe)**:
+- Add new optional fields to responses
+- Add new endpoints
+- Add new optional query parameters
+- Add new enum values (with fallback)
 
+**Breaking Changes (Require Version Bump)**:
+- Remove fields from responses
+- Rename fields
+- Change field types
+- Make optional fields required
+- Remove enum values
+- Change response status codes
+- Change error payload structure
+
+**Testing Version Compatibility**:
 ```python
 @pytest.mark.contract
 def test_dataset_response_backward_compatible(client, admin_approval_dataset):
@@ -673,15 +766,54 @@ def test_dataset_response_backward_compatible(client, admin_approval_dataset):
     response = client.get(f'/api/v1/datasets/{admin_approval_dataset.pk}/')
     data = response.json()
     
-    # REQUIRED fields (v1.0 contract - cannot be removed)
+    # v1.0 contract fields (cannot be removed or changed)
     assert 'uuid' in data
     assert 'name' in data
     assert 'visibility' in data
+    assert isinstance(data['uuid'], str)
+    assert isinstance(data['name'], str)
+    assert isinstance(data['visibility'], int)
     
-    # OPTIONAL fields (v1.1 additions - can be added)
-    # If present, validate type
+    # v1.1 additions (optional fields)
     if 'created_date' in data:
         assert isinstance(data['created_date'], str)  # ISO 8601 format
+    
+    if 'updated_date' in data:
+        assert isinstance(data['updated_date'], str)
+
+@pytest.mark.contract
+def test_deprecated_field_still_present(client):
+    """Deprecated fields must remain until next major version."""
+    response = client.get('/api/v1/datasets/')
+    data = response.json()
+    
+    # Field deprecated in v1.3, marked for removal in v2.0
+    # Must still be present in v1.x responses
+    if data['results']:
+        first_item = data['results'][0]
+        assert 'old_field_name' in first_item, (
+            "Deprecated field must remain until v2.0"
+        )
+```
+
+**Deprecation Headers**:
+```python
+@pytest.mark.contract
+def test_deprecated_endpoint_warning_header(client):
+    """Deprecated endpoints must include Deprecation header."""
+    response = client.get('/api/v1/old-endpoint/')
+    
+    # RFC 8594 Deprecation header
+    assert 'Deprecation' in response.headers or 'Sunset' in response.headers
+    
+    if 'Deprecation' in response.headers:
+        # Example: "Deprecation: true" or "Deprecation: @1672531200"
+        assert response.headers['Deprecation']
+    
+    if 'Sunset' in response.headers:
+        # RFC 8594: HTTP date indicating removal date
+        # Example: "Sunset: Sat, 31 Dec 2024 23:59:59 GMT"
+        assert response.headers['Sunset']
 ```
 
 ---

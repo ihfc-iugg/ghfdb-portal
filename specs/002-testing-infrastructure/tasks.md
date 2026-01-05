@@ -102,18 +102,18 @@
 
 ### Documentation for User Story 3
 
-- [ ] T034 [US3] Add contract test conventions section to docs/guides/testing-standards.md (API schema validation patterns)
-- [ ] T035 [US3] Add contract test error handling section to testing-standards.md (standard error payload format validation)
-- [ ] T036 [US3] Add contract test versioning guidance to testing-standards.md (how to handle API version changes)
+- [X] T034 [US3] Add contract test conventions section to docs/guides/testing-standards.md (API schema validation patterns)
+- [X] T035 [US3] Add contract test error handling section to testing-standards.md (standard error payload format validation)
+- [X] T036 [US3] Add contract test versioning guidance to testing-standards.md (how to handle API version changes)
 
 ### Implementation for User Story 3
 
-- [ ] T037 [US3] Create tests/contracts/test_public_api_contract.py with @pytest.mark.contract marker
-- [ ] T038 [P] [US3] Implement test_get_dataset_response_schema in test_public_api_contract.py (validates required fields and types for /api/v1/datasets/{id}/)
-- [ ] T039 [P] [US3] Implement test_get_dataset_list_response_schema in test_public_api_contract.py (validates list endpoint response structure)
-- [ ] T040 [P] [US3] Implement test_unauthorized_request_error_contract in test_public_api_contract.py (validates HTTP 401 error payload format)
-- [ ] T041 [P] [US3] Implement test_nullable_field_explicit_null in test_public_api_contract.py (validates nullable fields return explicit null, not omitted)
-- [ ] T042 [US3] Implement test_pagination_contract in test_public_api_contract.py (validates pagination metadata fields)
+- [X] T037 [US3] Create tests/contracts/test_public_api_contract.py with @pytest.mark.contract marker
+- [X] T038 [P] [US3] Implement test_get_dataset_response_schema in test_public_api_contract.py (validates required fields and types for /api/v1/datasets/{id}/)
+- [X] T039 [P] [US3] Implement test_get_dataset_list_response_schema in test_public_api_contract.py (validates list endpoint response structure)
+- [X] T040 [P] [US3] Implement test_unauthorized_request_error_contract in test_public_api_contract.py (validates HTTP 401 error payload format)
+- [X] T041 [P] [US3] Implement test_nullable_field_explicit_null in test_public_api_contract.py (validates nullable fields return explicit null, not omitted)
+- [X] T042 [US3] Implement test_pagination_contract in test_public_api_contract.py (validates pagination metadata fields)
 
 **Checkpoint**: Contract tests protect external API consumers from breaking changes
 
