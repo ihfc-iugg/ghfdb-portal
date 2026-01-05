@@ -1,0 +1,102 @@
+[
+  {
+    "model": "project.project",
+    "pk": 200,
+    "fields": {
+      "uuid": "pTEST002ApprovedDataset",
+      "name": "Test Approved Project",
+      "added": "2025-06-01T10:00:00Z",
+      "modified": "2025-06-15T16:30:00Z",
+      "visibility": 1,
+      "status": 3
+    }
+  },
+  {
+    "model": "dataset.dataset",
+    "pk": 200,
+    "fields": {
+      "uuid": "dTEST002ApprovedPublished",
+      "name": "Test Dataset - Approved and Published",
+      "added": "2025-06-01T10:00:00Z",
+      "modified": "2025-06-15T16:30:00Z",
+      "visibility": 1,
+      "project": 200,
+      "reference": null
+    }
+  },
+  {
+    "model": "dataset.datasetdescription",
+    "pk": 200,
+    "fields": {
+      "type": "Abstract",
+      "value": "This test dataset has been reviewed and approved. It represents heat flow data that has passed quality control and is ready for publication in the Global Heat Flow Database.",
+      "related": 200
+    }
+  },
+  {
+    "model": "dataset.datasetdescription",
+    "pk": 201,
+    "fields": {
+      "type": "Methods",
+      "value": "All measurements were conducted following IHFC standards. Quality scores (M-score and U-score) were calculated according to Fuchs et al. (2023). Data underwent rigorous QA/QC including validation of coordinates, depth intervals, and thermal conductivity values.",
+      "related": 200
+    }
+  },
+  {
+    "model": "dataset.datasetdescription",
+    "pk": 202,
+    "fields": {
+      "type": "TechnicalInfo",
+      "value": "Dataset format: GHFDB v2.0 template. All mandatory fields completed. Includes provenance metadata with DOI references and contributor ORCID identifiers.",
+      "related": 200
+    }
+  },
+  {
+    "model": "dataset.datasetdate",
+    "pk": 200,
+    "fields": {
+      "type": "Submitted",
+      "value": "2025-06-01",
+      "related": 200
+    }
+  },
+  {
+    "model": "dataset.datasetdate",
+    "pk": 201,
+    "fields": {
+      "type": "Available",
+      "value": "2025-06-15",
+      "related": 200
+    }
+  },
+  {
+    "model": "dataset.datasetdate",
+    "pk": 202,
+    "fields": {
+      "type": "CollectionStart",
+      "value": "2024-09-01",
+      "related": 200
+    }
+  },
+  {
+    "model": "dataset.datasetdate",
+    "pk": 203,
+    "fields": {
+      "type": "CollectionEnd",
+      "value": "2024-11-30",
+      "related": 200
+    }
+  },
+  {
+    "model": "review.review",
+    "pk": 200,
+    "fields": {
+      "dataset": 200,
+      "literature": null,
+      "start_date": "2025-06-05",
+      "end_date": "2025-06-15",
+      "status": 2,
+      "comment": "Dataset reviewed and approved. All quality checks passed. Coordinates validated against known site locations. Thermal conductivity values are within expected ranges for reported lithologies. Measurement methods are well-documented. Recommended for publication in GHFDB."
+    }
+  }
+]

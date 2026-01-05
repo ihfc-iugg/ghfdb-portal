@@ -15,7 +15,7 @@
 
 **Purpose**: Project initialization, pytest configuration, and directory structure
 
-- [x] T001 Create tests/contracts/ directory with __init__.py for contract tests
+- [x] T001 Create tests/contracts/ directory with **init**.py for contract tests
 - [x] T002 Update pyproject.toml with pytest markers (integration, contract, slow, external)
 - [x] T003 Update pyproject.toml with pytest test discovery configuration (default to unit tests only)
 - [x] T004 Add pytest-cov configuration to pyproject.toml (80% coverage threshold, omit migrations/tests)
@@ -29,15 +29,15 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T006 Create fixtures/minimal_ghfdb_import.xlsx with 5 heat flow sites (complete mandatory fields)
-- [ ] T007 Create fixtures/invalid_ghfdb_import.xlsx with 5 validation error cases (missing fields, invalid ranges)
-- [ ] T008 Create fixtures/review_submission_dataset.json Django fixture (dataset in pending review state with provenance)
-- [ ] T009 Create fixtures/admin_approval_dataset.json Django fixture (dataset in reviewed state ready for approval)
-- [ ] T010 Create fixtures/round_trip_reference.xlsx with 10 heat flow sites covering all GHFDB field types
-- [ ] T011 Create fixtures/README.md documenting each fixture's purpose, content, and update process
-- [ ] T012 Extend tests/conftest.py with pytest fixtures for loading minimal_ghfdb_import fixture
-- [ ] T013 [P] Extend tests/conftest.py with pytest fixtures for loading invalid_ghfdb_import fixture
-- [ ] T014 [P] Extend tests/conftest.py with pytest fixtures for loading review/approval workflow fixtures
+- [x] T006 Create fixtures/minimal_ghfdb_import.xlsx with 5 heat flow sites (complete mandatory fields)
+- [x] T007 Create fixtures/invalid_ghfdb_import.xlsx with 5 validation error cases (missing fields, invalid ranges)
+- [x] T008 Create fixtures/review_submission_dataset.json Django fixture (dataset in pending review state with provenance)
+- [x] T009 Create fixtures/admin_approval_dataset.json Django fixture (dataset in reviewed state ready for approval)
+- [x] T010 Create fixtures/round_trip_reference.xlsx with 10 heat flow sites covering all GHFDB field types
+- [x] T011 Create fixtures/README.md documenting each fixture's purpose, content, and update process
+- [x] T012 Extend tests/conftest.py with pytest fixtures for loading minimal_ghfdb_import fixture
+- [x] T013 [P] Extend tests/conftest.py with pytest fixtures for loading invalid_ghfdb_import fixture
+- [x] T014 [P] Extend tests/conftest.py with pytest fixtures for loading review/approval workflow fixtures
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -220,11 +220,13 @@
 ### Within Each User Story
 
 **User Story 1 (Unit Test Conventions)**:
+
 - Documentation tasks (T015-T019) can run in parallel
 - Example tests (T020-T022) depend on T015 (testing-standards.md exists) but can run in parallel with each other
 - Suggested order: T015 first, then T016-T019 and T020-T022 in parallel
 
 **User Story 2 (Integration Tests)**:
+
 - Documentation (T023-T025) can run in parallel
 - Test files (T026, T029) can be created in parallel
 - Test implementations within each file should follow workflow order (import → review → approval → export)
@@ -233,12 +235,14 @@
 - T032-T033 depend on earlier tests existing for context
 
 **User Story 3 (Contract Tests)**:
+
 - Documentation (T034-T036) can run in parallel
 - T037 (create test file) must complete before test implementations
 - T038-T041 (schema validation tests) can run in parallel
 - T042 (pagination) independent
 
 **User Story 4 (Schema Mapping)**:
+
 - Documentation (T043-T044) can run in parallel
 - T045 (create test file) must complete first
 - T046-T050 (accessor path tests) can run in parallel
@@ -246,6 +250,7 @@
 - T052-T053 (quality scores) can run in parallel, independent of accessor tests
 
 **User Story 5 (Round-Trip)**:
+
 - Documentation (T054-T056) can run in parallel
 - T057 (create test file) must complete first
 - T058 (main round-trip test) should be implemented first
@@ -257,33 +262,40 @@
 **Setup Phase**: T002-T004 (pyproject.toml updates) can run in parallel if coordinated
 
 **Foundational Phase**:
+
 - T006-T010 (fixture creation) can run in parallel - different files
 - T012-T014 (conftest fixtures) can run in parallel - different fixture loaders
 
 **User Story 1**:
+
 - T016-T019 (documentation sections) can run in parallel
 - T020-T022 (example tests) can run in parallel
 
 **User Story 2**:
+
 - T023-T025 (documentation) can run in parallel
 - T026 and T029 (test file creation) can run in parallel
 - T027-T028 can run in parallel (different test functions)
 - T030-T031 can run in parallel (different test functions)
 
 **User Story 3**:
+
 - T034-T036 (documentation) can run in parallel
 - T038-T041 (schema tests) can run in parallel after T037
 
 **User Story 4**:
+
 - T043-T044 (documentation) can run in parallel
 - T046-T050 (accessor tests) can run in parallel after T045
 - T052-T053 (quality score tests) can run in parallel
 
 **User Story 5**:
+
 - T054-T056 (documentation) can run in parallel
 - T059-T061 (helper functions) can be developed in parallel
 
 **Polish Phase**:
+
 - T065-T067 (documentation completion) can run in parallel
 - T069-T071 (CI workflow sections) can run in parallel
 
