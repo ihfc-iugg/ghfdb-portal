@@ -122,6 +122,7 @@ docs/
 **Key Decisions**:
 
 1. **pytest marker registration**: Add to `pyproject.toml` under `[tool.pytest.ini_options]`:
+
    ```toml
    markers = [
        "integration: Integration tests requiring full Django stack and database",
@@ -133,6 +134,7 @@ docs/
    ```
 
 2. **Test discovery configuration**: Configure pytest to default to unit tests only:
+
    ```toml
    testpaths = ["tests"]
    python_files = ["test_*.py"]
@@ -147,6 +149,7 @@ docs/
    ```
 
 3. **Coverage configuration**: Add pytest-cov settings:
+
    ```toml
    [tool.coverage.run]
    source = ["project"]
@@ -213,6 +216,7 @@ docs/
    - Use `pytest.mark.django_db(transaction=True)` for tests requiring transaction rollback
 
 4. **Parametrized test pattern**:
+
    ```python
    @pytest.mark.parametrize("latitude,expected_error", [
        (-91, "Latitude must be >= -90"),
@@ -242,6 +246,7 @@ docs/
 3. **Database strategy**: Use Django test database with transaction rollback after each test (pytest-django default)
 
 4. **Workflow test structure**:
+
    ```python
    @pytest.mark.integration
    @pytest.mark.django_db
@@ -283,6 +288,7 @@ docs/
 3. **Schema definition source**: Reference OpenAPI schema or inline JSON Schema definitions (decide based on P4-01 API contract spec availability)
 
 4. **Contract test structure**:
+
    ```python
    @pytest.mark.contract
    def test_get_dataset_response_schema():
@@ -313,6 +319,7 @@ docs/
 1. **Test data source**: Use `minimal_ghfdb_import.xlsx` fixture with known field values
 
 2. **Mapping test structure**:
+
    ```python
    @pytest.mark.django_db
    def test_ghfdb_field_site_name_accessor_path():
@@ -335,6 +342,7 @@ docs/
    ```
 
 3. **Derived field testing**: Quality score calculations tested separately with known input/output pairs from Fuchs et al. (2023):
+
    ```python
    def test_u_score_calculation_reference_case():
        # Known inputs from literature
@@ -372,6 +380,7 @@ docs/
    - **Unacceptable lossiness**: Missing mandatory fields, value corruption, incorrect relationships
 
 3. **Round-trip test structure**:
+
    ```python
    @pytest.mark.integration
    @pytest.mark.django_db
@@ -418,6 +427,7 @@ docs/
    - Test markers reference
 
 2. **CI configuration** (GitHub Actions or similar):
+
    ```yaml
    # Fast feedback: Run unit tests on every push
    - name: Run unit tests
@@ -451,16 +461,19 @@ docs/
 ## Risk Assessment
 
 **Low Risk**:
+
 - Test infrastructure is additive (doesn't modify production code)
 - Fixture creation is straightforward (static data files)
 - pytest marker configuration is standard practice
 
 **Medium Risk**:
+
 - Schema mapping tests depend on `docs/ghfdb_fields.md` accuracy (mitigation: validate accessor paths during fixture creation)
 - Integration test timing (<2 minutes) may require optimization if fixture loading is slow (mitigation: use minimal fixtures, lazy loading)
 - Round-trip lossiness rules may be incomplete initially (mitigation: document discovered lossiness incrementally, don't block on perfection)
 
 **High Risk**:
+
 - None identified
 
 ---

@@ -14,7 +14,7 @@ import pytest
 class TestUScoreCalculation:
     """
     Unit tests for U-score (uncertainty quality) calculation.
-    
+
     Based on Fuchs et al. (2023) quality evaluation scheme for GHFDB.
     U-score categories: U1 (highest) to U5 (lowest)
     """
@@ -23,9 +23,7 @@ class TestUScoreCalculation:
         """U1: Logging method, low uncertainty (<2 mW/m²), long shutin (>24h)."""
         from heat_flow.utils import calculate_U_score
 
-        result = calculate_U_score(
-            method="Logging", uncertainty=0.5, shutin_time=24
-        )
+        result = calculate_U_score(method="Logging", uncertainty=0.5, shutin_time=24)
         assert result == "U1"
 
     def test_calculate_u_score_good_quality_u2(self):
@@ -79,9 +77,7 @@ class TestUScoreCalculation:
             "u5_unknown_method",
         ],
     )
-    def test_calculate_u_score_multiple_quality_levels(
-        self, method, uncertainty, shutin, expected
-    ):
+    def test_calculate_u_score_multiple_quality_levels(self, method, uncertainty, shutin, expected):
         """U-score correctly categorizes measurements across quality spectrum."""
         from heat_flow.utils import calculate_U_score
 
@@ -131,7 +127,7 @@ class TestUScoreCalculation:
 class TestMScoreCalculation:
     """
     Unit tests for M-score (method quality) calculation.
-    
+
     Based on Fuchs et al. (2023) methodology evaluation scheme.
     M-score categories: M1 (highest) to M5 (lowest)
     """
@@ -140,45 +136,35 @@ class TestMScoreCalculation:
         """M1: Interval method with multiple measurements, full documentation."""
         from heat_flow.utils import calculate_M_score
 
-        result = calculate_M_score(
-            method="Interval method", num_measurements=10, documentation_level="Full"
-        )
+        result = calculate_M_score(method="Interval method", num_measurements=10, documentation_level="Full")
         assert result == "M1"
 
     def test_calculate_m_score_good_quality_m2(self):
         """M2: Bullard method with good documentation."""
         from heat_flow.utils import calculate_M_score
 
-        result = calculate_M_score(
-            method="Bullard method", num_measurements=8, documentation_level="Good"
-        )
+        result = calculate_M_score(method="Bullard method", num_measurements=8, documentation_level="Good")
         assert result == "M2"
 
     def test_calculate_m_score_moderate_quality_m3(self):
         """M3: Probe method with adequate measurements."""
         from heat_flow.utils import calculate_M_score
 
-        result = calculate_M_score(
-            method="Probe", num_measurements=5, documentation_level="Adequate"
-        )
+        result = calculate_M_score(method="Probe", num_measurements=5, documentation_level="Adequate")
         assert result == "M3"
 
     def test_calculate_m_score_poor_quality_m4(self):
         """M4: Single measurement with minimal documentation."""
         from heat_flow.utils import calculate_M_score
 
-        result = calculate_M_score(
-            method="Probe", num_measurements=1, documentation_level="Minimal"
-        )
+        result = calculate_M_score(method="Probe", num_measurements=1, documentation_level="Minimal")
         assert result == "M4"
 
     def test_calculate_m_score_unreliable_quality_m5(self):
         """M5: Unknown method or no documentation."""
         from heat_flow.utils import calculate_M_score
 
-        result = calculate_M_score(
-            method="Unknown", num_measurements=0, documentation_level="None"
-        )
+        result = calculate_M_score(method="Unknown", num_measurements=0, documentation_level="None")
         assert result == "M5"
 
     @pytest.mark.parametrize(
@@ -202,9 +188,7 @@ class TestMScoreCalculation:
             "m5_estimated_none",
         ],
     )
-    def test_calculate_m_score_multiple_quality_levels(
-        self, method, num_measurements, documentation, expected
-    ):
+    def test_calculate_m_score_multiple_quality_levels(self, method, num_measurements, documentation, expected):
         """M-score correctly categorizes methodology across quality spectrum."""
         from heat_flow.utils import calculate_M_score
 
@@ -222,7 +206,7 @@ class TestMScoreCalculation:
 class TestCombinedQualityScore:
     """
     Unit tests for combined quality score (U-score + M-score).
-    
+
     The combined score represents overall data reliability.
     """
 
@@ -271,9 +255,7 @@ class TestCombinedQualityScore:
             "unreliable_u5m5",
         ],
     )
-    def test_calculate_combined_quality_level_mapping(
-        self, u_score, m_score, expected_level
-    ):
+    def test_calculate_combined_quality_level_mapping(self, u_score, m_score, expected_level):
         """Combined quality correctly maps U+M scores to quality levels."""
         from heat_flow.utils import calculate_combined_quality
 
@@ -298,7 +280,7 @@ class TestCombinedQualityScore:
 class TestQualityScoreInheritance:
     """
     Unit tests for quality score inheritance from child to parent level.
-    
+
     Based on Fuchs et al. (2023) Section 3.4: parent inherits poorest child score.
     """
 
@@ -369,11 +351,7 @@ class TestQualityScoreReferenceValues:
         """
         from heat_flow.utils import calculate_U_score
 
-        result = calculate_U_score(
-            method="Logging",
-            uncertainty=1.5,
-            shutin_time=48
-        )
+        result = calculate_U_score(method="Logging", uncertainty=1.5, shutin_time=48)
 
         assert result == "U1", (
             f"Reference case failed: Expected U1 for Logging/1.5mW/m²/48h, got {result}. "
@@ -395,11 +373,7 @@ class TestQualityScoreReferenceValues:
         """
         from heat_flow.utils import calculate_U_score
 
-        result = calculate_U_score(
-            method="BHT",
-            uncertainty=3.0,
-            shutin_time=18
-        )
+        result = calculate_U_score(method="BHT", uncertainty=3.0, shutin_time=18)
 
         assert result == "U2", (
             f"Reference case failed: Expected U2 for BHT/3.0mW/m²/18h, got {result}. "
@@ -421,11 +395,7 @@ class TestQualityScoreReferenceValues:
         """
         from heat_flow.utils import calculate_M_score
 
-        result = calculate_M_score(
-            method="Interval method",
-            num_measurements=12,
-            documentation_level="Full"
-        )
+        result = calculate_M_score(method="Interval method", num_measurements=12, documentation_level="Full")
 
         assert result == "M1", (
             f"Reference case failed: Expected M1 for Interval/12meas/Full, got {result}. "
@@ -447,11 +417,7 @@ class TestQualityScoreReferenceValues:
         """
         from heat_flow.utils import calculate_M_score
 
-        result = calculate_M_score(
-            method="Bullard method",
-            num_measurements=8,
-            documentation_level="Good"
-        )
+        result = calculate_M_score(method="Bullard method", num_measurements=8, documentation_level="Good")
 
         assert result == "M2", (
             f"Reference case failed: Expected M2 for Bullard/8meas/Good, got {result}. "
@@ -467,15 +433,11 @@ class TestQualityScoreReferenceValues:
         - Interval method with many measurements and full documentation (M1)
         - Combined quality: Excellent
         """
-        from heat_flow.utils import calculate_U_score, calculate_M_score
+        from heat_flow.utils import calculate_M_score, calculate_U_score
 
         # Calculate component scores
         u_score = calculate_U_score(method="Logging", uncertainty=1.0, shutin_time=48)
-        m_score = calculate_M_score(
-            method="Interval method",
-            num_measurements=15,
-            documentation_level="Full"
-        )
+        m_score = calculate_M_score(method="Interval method", num_measurements=15, documentation_level="Full")
 
         # Assert component scores
         assert u_score == "U1", f"Expected U1, got {u_score}"
@@ -483,9 +445,7 @@ class TestQualityScoreReferenceValues:
 
         # Combined quality should be Excellent (U1M1)
         combined = f"{u_score}{m_score}"
-        assert combined == "U1M1", (
-            f"Reference case: Highest quality should be U1M1, got {combined}"
-        )
+        assert combined == "U1M1", f"Reference case: Highest quality should be U1M1, got {combined}"
 
     def test_combined_quality_reference_case_u5m5(self):
         """
@@ -496,15 +456,11 @@ class TestQualityScoreReferenceValues:
         - Estimated values with no measurements or documentation (M5)
         - Combined quality: Unreliable
         """
-        from heat_flow.utils import calculate_U_score, calculate_M_score
+        from heat_flow.utils import calculate_M_score, calculate_U_score
 
         # Calculate component scores
         u_score = calculate_U_score(method="Unknown", uncertainty=25.0, shutin_time=0)
-        m_score = calculate_M_score(
-            method="Estimated",
-            num_measurements=0,
-            documentation_level="None"
-        )
+        m_score = calculate_M_score(method="Estimated", num_measurements=0, documentation_level="None")
 
         # Assert component scores
         assert u_score == "U5", f"Expected U5, got {u_score}"
@@ -512,6 +468,4 @@ class TestQualityScoreReferenceValues:
 
         # Combined quality should be Unreliable (U5M5)
         combined = f"{u_score}{m_score}"
-        assert combined == "U5M5", (
-            f"Reference case: Lowest quality should be U5M5, got {combined}"
-        )
+        assert combined == "U5M5", f"Reference case: Lowest quality should be U5M5, got {combined}"

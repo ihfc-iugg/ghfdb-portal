@@ -10,9 +10,9 @@ This module demonstrates unit testing best practices:
 
 import pytest
 from heat_flow.utils import (
-    validate_temperature_range,
-    normalize_temperature_value,
     convert_temperature_units,
+    normalize_temperature_value,
+    validate_temperature_range,
 )
 
 
@@ -68,9 +68,7 @@ class TestTemperatureRangeValidation:
             "boiling_fahrenheit",
         ],
     )
-    def test_validate_temperature_range_accepts_various_valid_temperatures(
-        self, temp, unit
-    ):
+    def test_validate_temperature_range_accepts_various_valid_temperatures(self, temp, unit):
         """Temperature validation handles various valid temperature values."""
         result = validate_temperature_range(temp, unit=unit)
         assert result is True
@@ -156,9 +154,7 @@ class TestTemperatureUnitConversion:
             "same_unit_no_change",
         ],
     )
-    def test_convert_temperature_multiple_conversions(
-        self, value, from_unit, to_unit, expected
-    ):
+    def test_convert_temperature_multiple_conversions(self, value, from_unit, to_unit, expected):
         """Temperature conversion handles various unit combinations."""
         result = convert_temperature_units(value, from_unit=from_unit, to_unit=to_unit)
         assert abs(result - expected) < 0.01  # Allow small floating-point error

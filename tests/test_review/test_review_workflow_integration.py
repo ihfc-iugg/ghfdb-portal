@@ -38,45 +38,29 @@ def test_submit_for_review_state_transition(review_submission_dataset):
     assert dataset.visibility == 0, "Dataset should be private before review"
 
     # Arrange: Get or create review
-    review, created = Review.objects.get_or_create(
-        dataset=dataset,
-        defaults={'status': 'pending'}
-    )
+    review, created = Review.objects.get_or_create(dataset=dataset, defaults={"status": "pending"})
 
     # Assert: Review in pending state
-    assert review.status == 'pending', (
-        "Review should be in pending state after submission"
-    )
-    assert dataset.visibility == 0, (
-        "Dataset should remain private while pending review"
-    )
+    assert review.status == "pending", "Review should be in pending state after submission"
+    assert dataset.visibility == 0, "Dataset should remain private while pending review"
 
     # Act: Assign reviewer
     User = get_user_model()
-    reviewer = User.objects.create_user(
-        username='reviewer_user',
-        email='reviewer@example.com'
-    )
-    if hasattr(review, 'reviewers'):
+    reviewer = User.objects.create_user(username="reviewer_user", email="reviewer@example.com")
+    if hasattr(review, "reviewers"):
         review.reviewers.add(reviewer)
-    elif hasattr(review, 'reviewer'):
+    elif hasattr(review, "reviewer"):
         review.reviewer = reviewer
         review.save()
 
     # Assert: Reviewer assigned
-    if hasattr(review, 'reviewers'):
-        assert reviewer in review.reviewers.all(), (
-            "Reviewer should be assigned to review"
-        )
-    elif hasattr(review, 'reviewer'):
-        assert review.reviewer == reviewer, (
-            "Reviewer should be assigned to review"
-        )
+    if hasattr(review, "reviewers"):
+        assert reviewer in review.reviewers.all(), "Reviewer should be assigned to review"
+    elif hasattr(review, "reviewer"):
+        assert review.reviewer == reviewer, "Reviewer should be assigned to review"
 
     # Assert: Dataset still private with reviewer assigned
-    assert dataset.visibility == 0, (
-        "Dataset should remain private even with reviewer assigned"
-    )
+    assert dataset.visibility == 0, "Dataset should remain private even with reviewer assigned"
 
 
 @pytest.mark.integration
@@ -100,70 +84,52 @@ def test_approve_for_publication_requires_admin(admin_approval_dataset):
     dataset = Dataset.objects.get(pk=200)
 
     # Assert: Initial approved state (from fixture)
-    assert dataset.visibility == 1, (
-        "Dataset should be public in admin_approval_dataset fixture"
-    )
+    assert dataset.visibility == 1, "Dataset should be public in admin_approval_dataset fixture"
 
-    review, _ = Review.objects.get_or_create(
-        dataset=dataset,
-        defaults={'status': 'complete'}
-    )
+    review, _ = Review.objects.get_or_create(dataset=dataset, defaults={"status": "complete"})
 
     # Test case 1: Regular user cannot approve
     User = get_user_model()
     regular_user = User.objects.create_user(
-        username='regular_user',
-        email='regular@example.com',
-        is_staff=False,
-        is_superuser=False
+        username="regular_user", email="regular@example.com", is_staff=False, is_superuser=False
     )
 
     # Arrange: Create new dataset for permission test
     test_dataset = Dataset.objects.create(
         name="Permission Test Dataset",
-        visibility=0  # Private
+        visibility=0,  # Private
     )
-    test_review = Review.objects.create(
-        dataset=test_dataset,
-        status='pending'
-    )
+    test_review = Review.objects.create(dataset=test_dataset, status="pending")
 
     # Act & Assert: Regular user approval should fail
     # Note: Actual implementation might raise PermissionError or check user.is_staff
     # This test demonstrates the expected authorization pattern
-    if hasattr(test_review, 'approve'):
+    if hasattr(test_review, "approve"):
         # If approve() method exists, it should check permissions
         try:
             # Attempt approval as regular user (should fail)
             test_review.approve(user=regular_user)
             # If we reach here without error, check that approval didn't work
-            assert test_review.status != 'complete', (
-                "Regular user should not be able to approve review"
-            )
+            assert test_review.status != "complete", "Regular user should not be able to approve review"
         except PermissionError:
             # Expected: Permission error raised
             pass
     else:
         # If no approve() method, manual authorization check
-        assert not regular_user.is_staff, (
-            "Regular user should not have staff privileges"
-        )
+        assert not regular_user.is_staff, "Regular user should not have staff privileges"
 
     # Test case 2: Admin user can approve
     admin_user = User.objects.create_user(
-        username='admin_user',
-        email='admin@example.com',
-        is_staff=True,
-        is_superuser=True
+        username="admin_user", email="admin@example.com", is_staff=True, is_superuser=True
     )
 
     # Act: Admin approves dataset
-    if hasattr(test_review, 'approve'):
+    if hasattr(test_review, "approve"):
         test_review.approve(user=admin_user)
     else:
         # Manual approval workflow
-        test_review.status = 'complete'
-        if hasattr(test_review, 'approved_by'):
+        test_review.status = "complete"
+        if hasattr(test_review, "approved_by"):
             test_review.approved_by = admin_user
         test_review.save()
 
@@ -174,18 +140,12 @@ def test_approve_for_publication_requires_admin(admin_approval_dataset):
     test_review.refresh_from_db()
     test_dataset.refresh_from_db()
 
-    assert test_review.status == 'complete', (
-        "Admin user should be able to complete review"
-    )
-    assert test_dataset.visibility == 1, (
-        "Dataset should be public after admin approval"
-    )
+    assert test_review.status == "complete", "Admin user should be able to complete review"
+    assert test_dataset.visibility == 1, "Dataset should be public after admin approval"
 
     # Assert: Approval audit trail
-    if hasattr(test_review, 'approved_by'):
-        assert test_review.approved_by == admin_user, (
-            "Approval should record admin user who approved"
-        )
+    if hasattr(test_review, "approved_by"):
+        assert test_review.approved_by == admin_user, "Approval should record admin user who approved"
 
 
 @pytest.mark.integration
@@ -204,12 +164,9 @@ def test_review_workflow_prevents_premature_publication():
     # Arrange: Create dataset and pending review
     dataset = Dataset.objects.create(
         name="Review Gate Test Dataset",
-        visibility=0  # Private
+        visibility=0,  # Private
     )
-    review = Review.objects.create(
-        dataset=dataset,
-        status='pending'
-    )
+    review = Review.objects.create(dataset=dataset, status="pending")
 
     # Act: Attempt to publish without completing review
     # Note: Actual implementation should prevent this
@@ -217,7 +174,7 @@ def test_review_workflow_prevents_premature_publication():
 
     # Assert: Cannot publish while review pending
     # (Actual enforcement might be in model save(), view permissions, etc.)
-    assert review.status == 'pending', "Review should still be pending"
+    assert review.status == "pending", "Review should still be pending"
     assert dataset.visibility == 0, "Dataset should remain private"
 
     # Verify that publication requires review completion
@@ -233,9 +190,7 @@ def test_review_workflow_prevents_premature_publication():
 
     # Assert: Expected gate behavior
     # (Implementation-specific - might raise ValidationError)
-    assert review.status != 'complete', (
-        "Publication attempted before review completion"
-    )
+    assert review.status != "complete", "Publication attempted before review completion"
 
 
 @pytest.mark.integration
@@ -253,43 +208,31 @@ def test_review_workflow_state_transitions():
     """
     # Arrange: Create dataset
     User = get_user_model()
-    admin_user = User.objects.create_user(
-        username='admin_state',
-        email='admin_state@example.com',
-        is_staff=True
-    )
+    admin_user = User.objects.create_user(username="admin_state", email="admin_state@example.com", is_staff=True)
 
-    dataset = Dataset.objects.create(
-        name="State Transition Test",
-        visibility=0
-    )
+    dataset = Dataset.objects.create(name="State Transition Test", visibility=0)
 
     # State 1: Draft (no review)
-    assert not Review.objects.filter(dataset=dataset).exists(), (
-        "No review should exist initially"
-    )
+    assert not Review.objects.filter(dataset=dataset).exists(), "No review should exist initially"
 
     # State 2: Pending review
-    review = Review.objects.create(
-        dataset=dataset,
-        status='pending'
-    )
-    assert review.status == 'pending', "Review should be pending after creation"
+    review = Review.objects.create(dataset=dataset, status="pending")
+    assert review.status == "pending", "Review should be pending after creation"
 
     # State 3: In review (optional intermediate state)
     # Some implementations might have additional states
-    if hasattr(review, 'status') and 'in_review' in getattr(Review, 'STATUS_CHOICES', []):
-        review.status = 'in_review'
+    if hasattr(review, "status") and "in_review" in getattr(Review, "STATUS_CHOICES", []):
+        review.status = "in_review"
         review.save()
-        assert review.status == 'in_review', "Review should be in_review state"
+        assert review.status == "in_review", "Review should be in_review state"
 
     # State 4: Complete
-    review.status = 'complete'
-    if hasattr(review, 'approved_by'):
+    review.status = "complete"
+    if hasattr(review, "approved_by"):
         review.approved_by = admin_user
     review.save()
 
-    assert review.status == 'complete', "Review should be complete"
+    assert review.status == "complete", "Review should be complete"
 
     # Verify final state allows publication
     dataset.visibility = 1
@@ -310,32 +253,23 @@ def test_review_workflow_with_comments():
     """
     # Arrange: Create dataset and review
     User = get_user_model()
-    reviewer = User.objects.create_user(
-        username='reviewer_comments',
-        email='reviewer_comments@example.com'
-    )
+    reviewer = User.objects.create_user(username="reviewer_comments", email="reviewer_comments@example.com")
 
-    dataset = Dataset.objects.create(
-        name="Comments Test Dataset",
-        visibility=0
-    )
+    dataset = Dataset.objects.create(name="Comments Test Dataset", visibility=0)
 
-    review = Review.objects.create(
-        dataset=dataset,
-        status='pending'
-    )
+    review = Review.objects.create(dataset=dataset, status="pending")
 
-    if hasattr(review, 'reviewer'):
+    if hasattr(review, "reviewer"):
         review.reviewer = reviewer
         review.save()
 
     # Act: Add review comments (if supported)
-    if hasattr(review, 'comments'):
+    if hasattr(review, "comments"):
         review.comments = "Please update the temperature units to Kelvin."
         review.save()
 
     # Assert: Comments preserved
-    if hasattr(review, 'comments'):
+    if hasattr(review, "comments"):
         review.refresh_from_db()
         assert review.comments == "Please update the temperature units to Kelvin.", (
             "Review comments should be preserved"

@@ -9,7 +9,6 @@ This module demonstrates parametrized testing patterns:
 """
 
 import pytest
-from decimal import Decimal
 
 
 class TestLatitudeNormalization:
@@ -209,9 +208,7 @@ class TestCoordinatePairValidation:
             "missing_longitude",
         ],
     )
-    def test_validate_coordinate_pair_rejects_invalid_coordinates(
-        self, lat, lon, error_pattern
-    ):
+    def test_validate_coordinate_pair_rejects_invalid_coordinates(self, lat, lon, error_pattern):
         """Coordinate pair validation rejects out-of-range or missing values."""
         from heat_flow.utils import validate_coordinate_pair
 
@@ -241,9 +238,7 @@ class TestCoordinateConversionToDecimal:
             "with_seconds",
         ],
     )
-    def test_convert_dms_to_decimal_valid_values(
-        self, degrees, minutes, seconds, expected
-    ):
+    def test_convert_dms_to_decimal_valid_values(self, degrees, minutes, seconds, expected):
         """DMS to decimal conversion handles various coordinate formats."""
         from heat_flow.utils import convert_dms_to_decimal
 
@@ -265,9 +260,7 @@ class TestCoordinateConversionToDecimal:
             "negative_seconds",
         ],
     )
-    def test_convert_dms_to_decimal_rejects_invalid_components(
-        self, degrees, minutes, seconds
-    ):
+    def test_convert_dms_to_decimal_rejects_invalid_components(self, degrees, minutes, seconds):
         """DMS conversion rejects invalid minute/second values."""
         from heat_flow.utils import convert_dms_to_decimal
 

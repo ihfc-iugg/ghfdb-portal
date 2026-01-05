@@ -1,7 +1,7 @@
 # Testing Standards & Conventions
 
-**Version**: 1.0  
-**Last Updated**: 2026-01-05  
+**Version**: 1.0
+**Last Updated**: 2026-01-05
 **Applies To**: Global Heat Flow Database (GHFDB) Project
 
 ## Table of Contents
@@ -78,31 +78,31 @@ def normalize_latitude(lat_str):
 def normalize_latitude(lat_str):
     """
     Convert latitude string with hemisphere suffix to decimal degrees.
-    
+
     Args:
         lat_str: Latitude with N/S suffix (e.g., "45.5N", "12.3S")
-        
+
     Returns:
         float: Decimal degrees (positive=North, negative=South)
-        
+
     Raises:
         ValueError: If format invalid or value out of range [-90, 90]
     """
     if not isinstance(lat_str, str) or len(lat_str) < 2:
         raise ValueError(f"Invalid latitude format: {lat_str}")
-    
+
     hemisphere = lat_str[-1].upper()
     if hemisphere not in ('N', 'S'):
         raise ValueError(f"Latitude must end with N or S: {lat_str}")
-    
+
     try:
         value = float(lat_str[:-1])
     except ValueError:
         raise ValueError(f"Invalid numeric value in latitude: {lat_str}")
-    
+
     if not -90 <= value <= 90:
         raise ValueError(f"Latitude out of range [-90, 90]: {value}")
-    
+
     return value if hemisphere == 'N' else -value
 ```
 
@@ -123,6 +123,7 @@ def normalize_latitude(lat_str):
 **Purpose**: Test individual functions/methods in complete isolation
 
 **Characteristics**:
+
 - No database access (@pytest.mark.django_db NOT used)
 - No network calls (external APIs mocked)
 - No file I/O (use in-memory data structures)
@@ -130,6 +131,7 @@ def normalize_latitude(lat_str):
 - Run by default: `pytest` (no markers needed)
 
 **Example**:
+
 ```python
 from heat_flow.utils import calculate_U_score
 
@@ -157,6 +159,7 @@ def test_calculate_u_score_poor_quality():
 **Purpose**: Test complete workflows through Django ORM, views, and forms
 
 **Characteristics**:
+
 - Uses Django test database (automatic transaction rollback)
 - Tests multiple components working together
 - Marked with `@pytest.mark.integration`
@@ -164,6 +167,7 @@ def test_calculate_u_score_poor_quality():
 - Run explicitly: `pytest -m integration`
 
 **Example**:
+
 ```python
 import pytest
 from django.core.management import call_command
@@ -183,10 +187,10 @@ def test_import_minimal_dataset_creates_heat_flow_sites(
         resource = GHFDBResource(dataset)
         input_format = GHFDBImportFormat(encoding="utf-8-sig")
         input_data = input_format.create_dataset(minimal_ghfdb_import_data)
-        
+
         # Act
         result = resource.import_data(input_data, raise_errors=True)
-        
+
         # Assert
         assert not result.has_errors()
         assert HeatFlowSite.objects.filter(dataset=dataset).count() == 5
@@ -197,6 +201,7 @@ def test_import_minimal_dataset_creates_heat_flow_sites(
 **Purpose**: Validate public API responses match documented schemas
 
 **Characteristics**:
+
 - Tests API endpoint response structure
 - Verifies backward compatibility
 - Marked with `@pytest.mark.contract`
@@ -204,6 +209,7 @@ def test_import_minimal_dataset_creates_heat_flow_sites(
 - Run explicitly: `pytest -m contract`
 
 **Example**:
+
 ```python
 import pytest
 from django.urls import reverse
@@ -214,10 +220,10 @@ def test_dataset_api_response_schema(client, admin_approval_dataset):
     """Dataset API must return required fields with correct types."""
     url = reverse('api:dataset-detail', kwargs={'pk': admin_approval_dataset.pk})
     response = client.get(url)
-    
+
     assert response.status_code == 200
     data = response.json()
-    
+
     # Validate schema contract
     assert 'uuid' in data
     assert 'name' in data
@@ -280,13 +286,13 @@ def test_error():
 ```python
 class TestCoordinateNormalization:
     """Unit tests for coordinate normalization functions."""
-    
+
     def test_latitude_north_hemisphere(self):
         pass
-    
+
     def test_latitude_south_hemisphere(self):
         pass
-    
+
     def test_longitude_east_hemisphere(self):
         pass
 ```
@@ -306,9 +312,9 @@ def test_fetch_literature_handles_network_error():
     """Literature fetcher should log error and return None on network failure."""
     with patch('requests.get') as mock_get:
         mock_get.side_effect = requests.ConnectionError("Network unreachable")
-        
+
         result = fetch_literature_by_doi("10.1234/example")
-        
+
         assert result is None
         assert mock_get.called
 
@@ -373,14 +379,14 @@ def test_review_submission_workflow():
         name="Test Dataset",
         visibility=0  # Private
     )
-    
+
     # Act: Submit for review
     review = Review.objects.create(
         dataset=dataset,
         status=Review.STATUS_CHOICES.PENDING
     )
     review.reviewers.add(user)
-    
+
     # Assert: State transitions correctly
     assert dataset.visibility == 0  # Still private
     assert review.status == Review.STATUS_CHOICES.PENDING
@@ -401,9 +407,9 @@ def test_import_workflow_with_minimal_fixture(
     resource = GHFDBResource(ghfdb_dataset)
     input_format = GHFDBImportFormat(encoding="utf-8-sig")
     input_data = input_format.create_dataset(minimal_ghfdb_import_data)
-    
+
     result = resource.import_data(input_data)
-    
+
     assert not result.has_errors()
     assert HeatFlowSite.objects.count() == 5
 ```
@@ -411,6 +417,7 @@ def test_import_workflow_with_minimal_fixture(
 ### Assertion Strategies
 
 **State Transitions**: Verify workflow state changes
+
 ```python
 # Before action
 assert dataset.visibility == 0  # Private
@@ -424,6 +431,7 @@ assert dataset.review.status == Review.STATUS_CHOICES.COMPLETE
 ```
 
 **Data Preservation**: Ensure data survives round-trip
+
 ```python
 # Original data
 original_sites = list(HeatFlowSite.objects.values('name', 'lat', 'lon'))
@@ -439,6 +447,7 @@ assert original_sites == reimported_sites
 ```
 
 **Relationship Integrity**: Check foreign key relationships
+
 ```python
 site = HeatFlowSite.objects.first()
 assert site.dataset == ghfdb_dataset
@@ -462,40 +471,40 @@ def test_full_workflow_import_to_export():
         is_staff=True
     )
     dataset = Dataset.objects.create(name="E2E Test Dataset")
-    
+
     # Act 1: Import data
     resource = GHFDBResource(dataset)
     input_format = GHFDBImportFormat(encoding="utf-8-sig")
     input_data = input_format.create_dataset(minimal_ghfdb_import_data)
     import_result = resource.import_data(input_data)
-    
+
     # Assert 1: Import successful
     assert not import_result.has_errors()
     assert HeatFlowSite.objects.filter(dataset=dataset).count() == 5
-    
+
     # Act 2: Submit for review
     review = Review.objects.create(
         dataset=dataset,
         status=Review.STATUS_CHOICES.PENDING
     )
-    
+
     # Assert 2: Review created
     assert review.status == Review.STATUS_CHOICES.PENDING
-    
+
     # Act 3: Admin approval
     review.status = Review.STATUS_CHOICES.COMPLETE
     review.approved_by = admin_user
     review.save()
     dataset.visibility = 1  # Public
     dataset.save()
-    
+
     # Assert 3: Approved and published
     assert dataset.visibility == 1
     assert review.status == Review.STATUS_CHOICES.COMPLETE
-    
+
     # Act 4: Export data
     export_data = resource.export()
-    
+
     # Assert 4: Export contains all sites
     assert len(export_data.dict) == 5  # 5 sites exported
 ```
@@ -509,6 +518,7 @@ Integration tests must complete within **2 minutes** per suite:
 - Use `@pytest.mark.slow` for tests >30 seconds
 
 **Performance Tips**:
+
 ```python
 # ✅ Good: Reuse database fixtures
 @pytest.fixture(scope='module')
@@ -526,6 +536,7 @@ def test_workflow_step_1():
 The `tests/fixtures/` directory contains ready-to-use test data:
 
 **Excel Fixtures** (see `tests/fixtures/README.md` for details):
+
 ```python
 @pytest.mark.integration
 def test_import_minimal_fixture(minimal_ghfdb_import_data):
@@ -545,6 +556,7 @@ def test_round_trip_fixture(round_trip_reference_data):
 ```
 
 **JSON Fixtures** (Django models):
+
 ```python
 @pytest.mark.integration
 @pytest.mark.django_db
@@ -575,11 +587,11 @@ def test_export_without_approval_fails():
         name="Private Dataset",
         visibility=0  # Private
     )
-    
+
     # Act: Attempt export
     resource = GHFDBResource(dataset)
     export_data = resource.export()
-    
+
     # Assert: Export blocked or returns empty
     assert len(export_data.dict) == 0  # No data exported
 
@@ -598,11 +610,11 @@ def test_approve_for_publication_requires_admin():
         dataset=dataset,
         status=Review.STATUS_CHOICES.PENDING
     )
-    
+
     # Act & Assert: Regular user cannot approve
     with pytest.raises(PermissionError):
         review.approve(user=regular_user)
-    
+
     # Act & Assert: Admin user can approve
     admin_user = User.objects.create_user(
         username='admin',
@@ -619,12 +631,14 @@ def test_approve_for_publication_requires_admin():
 ### API Schema Validation Patterns
 
 Contract tests protect external API consumers from breaking changes by validating:
+
 - **Field presence**: Required fields must always be present
 - **Field types**: Field types must remain consistent across versions
 - **Response structure**: Objects, arrays, pagination must follow documented format
 - **Nullable fields**: Explicit `null` values instead of field omission
 
 **Example: Dataset Detail Response**
+
 ```python
 import pytest
 
@@ -633,22 +647,22 @@ import pytest
 def test_get_dataset_response_schema(client, admin_approval_dataset):
     """GET /api/v1/datasets/{id}/ must return consistent schema."""
     response = client.get(f'/api/v1/datasets/{admin_approval_dataset.pk}/')
-    
+
     assert response.status_code == 200
     data = response.json()
-    
+
     # Required fields (must be present)
     assert 'uuid' in data
     assert 'name' in data
     assert 'visibility' in data
     assert 'created_date' in data
-    
+
     # Field type validation
     assert isinstance(data['uuid'], str)
     assert isinstance(data['name'], str)
     assert isinstance(data['visibility'], int)
     assert isinstance(data['created_date'], str)  # ISO 8601
-    
+
     # Nullable field handling (explicit null, not omitted)
     assert 'description' in data  # Must be present even if null
     if data['description'] is not None:
@@ -656,28 +670,29 @@ def test_get_dataset_response_schema(client, admin_approval_dataset):
 ```
 
 **Example: List Response Schema**
+
 ```python
 @pytest.mark.contract
 @pytest.mark.django_db
 def test_dataset_list_response_schema(client):
     """GET /api/v1/datasets/ must return standard list response."""
     response = client.get('/api/v1/datasets/')
-    
+
     assert response.status_code == 200
     data = response.json()
-    
+
     # Pagination contract
     assert 'count' in data
     assert 'next' in data
     assert 'previous' in data
     assert 'results' in data
-    
+
     # Type validation
     assert isinstance(data['count'], int)
     assert data['next'] is None or isinstance(data['next'], str)  # URL or null
     assert data['previous'] is None or isinstance(data['previous'], str)
     assert isinstance(data['results'], list)
-    
+
     # Results structure (if not empty)
     if data['results']:
         first_item = data['results'][0]
@@ -690,6 +705,7 @@ def test_dataset_list_response_schema(client):
 All API errors must follow consistent schema to support client error handling.
 
 **Error Contract Requirements**:
+
 - **detail**: Human-readable error message (string, required)
 - **error_code**: Machine-readable error code (string, optional but recommended)
 - **timestamp**: ISO 8601 timestamp (string, optional)
@@ -700,20 +716,20 @@ All API errors must follow consistent schema to support client error handling.
 def test_unauthorized_request_error_contract(client):
     """HTTP 401 errors must include standard error payload."""
     response = client.get('/api/v1/datasets/999/')
-    
+
     assert response.status_code == 401
     error = response.json()
-    
+
     # Required error fields
     assert 'detail' in error
     assert isinstance(error['detail'], str)
     assert len(error['detail']) > 0  # Non-empty error message
-    
+
     # Optional but recommended fields
     if 'error_code' in error:
         assert isinstance(error['error_code'], str)
         assert error['error_code'] in ['unauthorized', 'authentication_failed']
-    
+
     if 'timestamp' in error:
         assert isinstance(error['timestamp'], str)
         # Validate ISO 8601 format
@@ -724,13 +740,13 @@ def test_unauthorized_request_error_contract(client):
 def test_validation_error_payload_format(client):
     """HTTP 400 validation errors must include field-level details."""
     response = client.post('/api/v1/datasets/', json={'name': ''})  # Invalid: empty name
-    
+
     assert response.status_code == 400
     error = response.json()
-    
+
     # Field-level error contract
     assert 'detail' in error or 'field_errors' in error
-    
+
     if 'field_errors' in error:
         assert isinstance(error['field_errors'], dict)
         # Each field error should be a list of error messages
@@ -744,12 +760,14 @@ def test_validation_error_payload_format(client):
 **Versioning Strategy**: Maintain backward compatibility within major versions
 
 **Additive Changes (Safe)**:
+
 - Add new optional fields to responses
 - Add new endpoints
 - Add new optional query parameters
 - Add new enum values (with fallback)
 
 **Breaking Changes (Require Version Bump)**:
+
 - Remove fields from responses
 - Rename fields
 - Change field types
@@ -759,13 +777,14 @@ def test_validation_error_payload_format(client):
 - Change error payload structure
 
 **Testing Version Compatibility**:
+
 ```python
 @pytest.mark.contract
 def test_dataset_response_backward_compatible(client, admin_approval_dataset):
     """New fields must be optional, existing fields must remain."""
     response = client.get(f'/api/v1/datasets/{admin_approval_dataset.pk}/')
     data = response.json()
-    
+
     # v1.0 contract fields (cannot be removed or changed)
     assert 'uuid' in data
     assert 'name' in data
@@ -773,11 +792,11 @@ def test_dataset_response_backward_compatible(client, admin_approval_dataset):
     assert isinstance(data['uuid'], str)
     assert isinstance(data['name'], str)
     assert isinstance(data['visibility'], int)
-    
+
     # v1.1 additions (optional fields)
     if 'created_date' in data:
         assert isinstance(data['created_date'], str)  # ISO 8601 format
-    
+
     if 'updated_date' in data:
         assert isinstance(data['updated_date'], str)
 
@@ -786,7 +805,7 @@ def test_deprecated_field_still_present(client):
     """Deprecated fields must remain until next major version."""
     response = client.get('/api/v1/datasets/')
     data = response.json()
-    
+
     # Field deprecated in v1.3, marked for removal in v2.0
     # Must still be present in v1.x responses
     if data['results']:
@@ -797,19 +816,20 @@ def test_deprecated_field_still_present(client):
 ```
 
 **Deprecation Headers**:
+
 ```python
 @pytest.mark.contract
 def test_deprecated_endpoint_warning_header(client):
     """Deprecated endpoints must include Deprecation header."""
     response = client.get('/api/v1/old-endpoint/')
-    
+
     # RFC 8594 Deprecation header
     assert 'Deprecation' in response.headers or 'Sunset' in response.headers
-    
+
     if 'Deprecation' in response.headers:
         # Example: "Deprecation: true" or "Deprecation: @1672531200"
         assert response.headers['Deprecation']
-    
+
     if 'Sunset' in response.headers:
         # RFC 8594: HTTP date indicating removal date
         # Example: "Sunset: Sat, 31 Dec 2024 23:59:59 GMT"
@@ -930,6 +950,7 @@ def test_ghfdb_field_heat_flow_value_accessor_path():
 Quality scores are derived fields calculated from measurement metadata. Test these calculations with known reference values from literature (Fuchs et al. 2023).
 
 **U-Score Reference Test**:
+
 ```python
 import pytest
 
@@ -1218,12 +1239,14 @@ def test_multiple_sites(make_heat_flow_site):
 ### When to Use @pytest.mark.django_db
 
 **Unit tests (NO database)**:
+
 - Testing pure functions (calculations, formatting)
 - Testing business logic without persistence
 - Testing validators that don't query DB
 - Use mocks for ORM queries
 
 **Integration tests (USE database)**:
+
 - Testing Django ORM queries
 - Testing model save() methods with database constraints
 - Testing views/forms that interact with DB
@@ -1237,9 +1260,9 @@ def test_calculate_heat_flow_from_gradient_and_conductivity():
     """Pure calculation - no database needed."""
     gradient = 30.0  # °C/km
     conductivity = 2.5  # W/(m·K)
-    
+
     result = calculate_heat_flow(gradient, conductivity)
-    
+
     assert result == 75.0  # mW/m²
 
 # Integration test (USE @pytest.mark.django_db)
@@ -1251,16 +1274,16 @@ def test_heat_flow_site_save_updates_quality_score():
         name="Test Site",
         location=Point(-120.0, 45.0)
     )
-    
+
     measurement = SurfaceHeatFlow.objects.create(
         value=50.0,
         uncertainty=5.0,
         sample=site
     )
-    
+
     # Trigger save() to recalculate quality
     measurement.save()
-    
+
     assert measurement.quality_score in ["U1", "U2", "U3", "U4", "U5"]
 ```
 
@@ -1279,7 +1302,7 @@ def test_database_rollback_behavior():
     # Create object
     site = HeatFlowSite.objects.create(name="Temp Site")
     assert HeatFlowSite.objects.count() == 1
-    
+
     # After this test completes, rollback happens automatically
     # Next test will see count == 0
 ```
@@ -1306,9 +1329,9 @@ def test_get_high_quality_sites_good(mock_objects):
     mock_qs = Mock()
     mock_qs.filter.return_value.values_list.return_value = ["Site 1"]
     mock_objects.filter.return_value = mock_qs
-    
+
     sites = get_high_quality_sites()
-    
+
     assert len(sites) == 1
     mock_objects.filter.assert_called_with(quality__in=["U1", "U2"])
 ```
@@ -1358,6 +1381,7 @@ skip_covered = false
 ### What to Cover
 
 **DO test**:
+
 - Business logic functions
 - Model methods (property calculations, validation)
 - API serializers and views
@@ -1365,6 +1389,7 @@ skip_covered = false
 - Utility functions and helpers
 
 **DON'T obsess over**:
+
 - Django admin configuration
 - Database migrations
 - Settings files

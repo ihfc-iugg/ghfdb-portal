@@ -12,8 +12,9 @@ Expected time: <20 seconds for all tests in this file
 Reference: docs/ghfdb_fields.md for complete field mapping documentation
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
 from fairdm.core.models import Dataset
 from ghfdb.models import HeatFlowSite
 
@@ -32,20 +33,13 @@ def test_ghfdb_field_site_name_accessor_path():
     """
     # Arrange: Create test record
     dataset = Dataset.objects.create(name="Schema Test Dataset")
-    site = HeatFlowSite.objects.create(
-        dataset=dataset,
-        name="Test Site Alpha",
-        lat=45.0,
-        lon=-120.0
-    )
+    site = HeatFlowSite.objects.create(dataset=dataset, name="Test Site Alpha", lat=45.0, lon=-120.0)
 
     # Act: Access field via documented path
     site_name = site.name
 
     # Assert: Value matches
-    assert site_name == "Test Site Alpha", (
-        f"site_name accessor failed: expected 'Test Site Alpha', got '{site_name}'"
-    )
+    assert site_name == "Test Site Alpha", f"site_name accessor failed: expected 'Test Site Alpha', got '{site_name}'"
     assert isinstance(site_name, str), "site_name must be string type"
 
 
@@ -64,32 +58,19 @@ def test_ghfdb_field_coordinates_accessor_path():
     """
     # Arrange: Create test record with precise coordinates
     dataset = Dataset.objects.create(name="Coordinate Test Dataset")
-    site = HeatFlowSite.objects.create(
-        dataset=dataset,
-        name="Coordinate Test Site",
-        lat=45.123456,
-        lon=-120.987654
-    )
+    site = HeatFlowSite.objects.create(dataset=dataset, name="Coordinate Test Site", lat=45.123456, lon=-120.987654)
 
     # Act: Access coordinates via documented paths
     latitude = site.lat
     longitude = site.lon
 
     # Assert: Values match within precision tolerance (0.0001 degrees)
-    assert abs(latitude - 45.123456) < 0.0001, (
-        f"Latitude accessor error: expected 45.123456, got {latitude}"
-    )
-    assert abs(longitude - (-120.987654)) < 0.0001, (
-        f"Longitude accessor error: expected -120.987654, got {longitude}"
-    )
+    assert abs(latitude - 45.123456) < 0.0001, f"Latitude accessor error: expected 45.123456, got {latitude}"
+    assert abs(longitude - (-120.987654)) < 0.0001, f"Longitude accessor error: expected -120.987654, got {longitude}"
 
     # Assert: Types are numeric
-    assert isinstance(latitude, (int, float, Decimal)), (
-        "latitude must be numeric type"
-    )
-    assert isinstance(longitude, (int, float, Decimal)), (
-        "longitude must be numeric type"
-    )
+    assert isinstance(latitude, (int, float, Decimal)), "latitude must be numeric type"
+    assert isinstance(longitude, (int, float, Decimal)), "longitude must be numeric type"
 
     # Assert: Valid coordinate ranges
     assert -90 <= latitude <= 90, f"Latitude out of range: {latitude}"
@@ -114,34 +95,21 @@ def test_ghfdb_field_depth_interval_accessor_path():
 
     # Arrange: Create test site
     dataset = Dataset.objects.create(name="Depth Test Dataset")
-    site = HeatFlowSite.objects.create(
-        dataset=dataset,
-        name="Depth Test Site",
-        lat=45.0,
-        lon=-120.0
-    )
+    site = HeatFlowSite.objects.create(dataset=dataset, name="Depth Test Site", lat=45.0, lon=-120.0)
 
     # Try to create interval if model exists
     try:
         from ghfdb.models import HeatFlowInterval
 
-        interval = HeatFlowInterval.objects.create(
-            site=site,
-            top_depth=100.5,
-            bottom_depth=150.75
-        )
+        interval = HeatFlowInterval.objects.create(site=site, top_depth=100.5, bottom_depth=150.75)
 
         # Act: Access depth fields via documented paths
         top = interval.top_depth
         bottom = interval.bottom_depth
 
         # Assert: Values match within precision tolerance (0.01 meters)
-        assert abs(top - 100.5) < 0.01, (
-            f"top_depth accessor error: expected 100.5, got {top}"
-        )
-        assert abs(bottom - 150.75) < 0.01, (
-            f"bottom_depth accessor error: expected 150.75, got {bottom}"
-        )
+        assert abs(top - 100.5) < 0.01, f"top_depth accessor error: expected 100.5, got {top}"
+        assert abs(bottom - 150.75) < 0.01, f"bottom_depth accessor error: expected 150.75, got {bottom}"
 
         # Assert: Logical constraints
         assert bottom > top, "bottom_depth must be greater than top_depth"
@@ -165,12 +133,7 @@ def test_ghfdb_field_heat_flow_value_accessor_path():
     """
     # Arrange: Create test site
     dataset = Dataset.objects.create(name="Heat Flow Test Dataset")
-    site = HeatFlowSite.objects.create(
-        dataset=dataset,
-        name="Heat Flow Test Site",
-        lat=45.0,
-        lon=-120.0
-    )
+    site = HeatFlowSite.objects.create(dataset=dataset, name="Heat Flow Test Site", lat=45.0, lon=-120.0)
 
     # Try to create heat flow measurement if model exists
     try:
@@ -179,26 +142,20 @@ def test_ghfdb_field_heat_flow_value_accessor_path():
         heat_flow = SurfaceHeatFlow.objects.create(
             site=site,
             value=65.5,  # mW/m²
-            uncertainty=2.0
+            uncertainty=2.0,
         )
 
         # Act: Access value via documented path
         hf_value = heat_flow.value
 
         # Assert: Value matches within precision (0.01 mW/m²)
-        assert abs(hf_value - 65.5) < 0.01, (
-            f"heat_flow accessor error: expected 65.5, got {hf_value}"
-        )
+        assert abs(hf_value - 65.5) < 0.01, f"heat_flow accessor error: expected 65.5, got {hf_value}"
 
         # Assert: Type is numeric
-        assert isinstance(hf_value, (int, float, Decimal)), (
-            "heat_flow must be numeric type"
-        )
+        assert isinstance(hf_value, (int, float, Decimal)), "heat_flow must be numeric type"
 
         # Assert: Reasonable value range (typical range: 10-150 mW/m²)
-        assert 0 < hf_value < 1000, (
-            f"Heat flow value out of typical range: {hf_value} mW/m²"
-        )
+        assert 0 < hf_value < 1000, f"Heat flow value out of typical range: {hf_value} mW/m²"
 
     except ImportError:
         pytest.skip("SurfaceHeatFlow model not available - TDD placeholder")
@@ -219,12 +176,7 @@ def test_ghfdb_field_thermal_conductivity_accessor_path():
     """
     # Arrange: Create test site
     dataset = Dataset.objects.create(name="Conductivity Test Dataset")
-    site = HeatFlowSite.objects.create(
-        dataset=dataset,
-        name="Conductivity Test Site",
-        lat=45.0,
-        lon=-120.0
-    )
+    site = HeatFlowSite.objects.create(dataset=dataset, name="Conductivity Test Site", lat=45.0, lon=-120.0)
 
     # Try to create conductivity measurement if model exists
     try:
@@ -233,26 +185,20 @@ def test_ghfdb_field_thermal_conductivity_accessor_path():
         conductivity = IntervalConductivity.objects.create(
             site=site,
             value=2.5,  # W/(m·K)
-            uncertainty=0.1
+            uncertainty=0.1,
         )
 
         # Act: Access value via documented path
         tc_value = conductivity.value
 
         # Assert: Value matches within precision (0.01 W/(m·K))
-        assert abs(tc_value - 2.5) < 0.01, (
-            f"thermal_conductivity accessor error: expected 2.5, got {tc_value}"
-        )
+        assert abs(tc_value - 2.5) < 0.01, f"thermal_conductivity accessor error: expected 2.5, got {tc_value}"
 
         # Assert: Type is numeric
-        assert isinstance(tc_value, (int, float, Decimal)), (
-            "thermal_conductivity must be numeric type"
-        )
+        assert isinstance(tc_value, (int, float, Decimal)), "thermal_conductivity must be numeric type"
 
         # Assert: Reasonable value range (typical rock: 1-7 W/(m·K))
-        assert 0 < tc_value < 20, (
-            f"Thermal conductivity out of typical range: {tc_value} W/(m·K)"
-        )
+        assert 0 < tc_value < 20, f"Thermal conductivity out of typical range: {tc_value} W/(m·K)"
 
     except ImportError:
         pytest.skip("IntervalConductivity model not available - TDD placeholder")
@@ -260,6 +206,7 @@ def test_ghfdb_field_thermal_conductivity_accessor_path():
 
 # Additional accessor path tests can be added incrementally
 # Target: 10-15 critical fields initially, expand over time
+
 
 @pytest.mark.django_db
 def test_ghfdb_field_elevation_accessor_path():
@@ -274,15 +221,10 @@ def test_ghfdb_field_elevation_accessor_path():
     """
     # Arrange
     dataset = Dataset.objects.create(name="Elevation Test Dataset")
-    site = HeatFlowSite.objects.create(
-        dataset=dataset,
-        name="Elevation Test Site",
-        lat=45.0,
-        lon=-120.0
-    )
+    site = HeatFlowSite.objects.create(dataset=dataset, name="Elevation Test Site", lat=45.0, lon=-120.0)
 
     # Check if elevation field exists
-    if hasattr(site, 'elevation'):
+    if hasattr(site, "elevation"):
         site.elevation = 1234.5
         site.save()
 
@@ -290,9 +232,7 @@ def test_ghfdb_field_elevation_accessor_path():
         elevation = site.elevation
 
         # Assert
-        assert abs(elevation - 1234.5) < 1.0, (
-            f"elevation accessor error: expected 1234.5, got {elevation}"
-        )
+        assert abs(elevation - 1234.5) < 1.0, f"elevation accessor error: expected 1234.5, got {elevation}"
     else:
         pytest.skip("elevation field not available on HeatFlowSite model")
 
@@ -313,15 +253,10 @@ def test_ghfdb_field_measurement_date_accessor_path():
 
     # Arrange
     dataset = Dataset.objects.create(name="Date Test Dataset")
-    site = HeatFlowSite.objects.create(
-        dataset=dataset,
-        name="Date Test Site",
-        lat=45.0,
-        lon=-120.0
-    )
+    site = HeatFlowSite.objects.create(dataset=dataset, name="Date Test Site", lat=45.0, lon=-120.0)
 
     # Check if date field exists
-    if hasattr(site, 'measurement_date'):
+    if hasattr(site, "measurement_date"):
         test_date = date(2023, 6, 15)
         site.measurement_date = test_date
         site.save()
@@ -330,9 +265,7 @@ def test_ghfdb_field_measurement_date_accessor_path():
         meas_date = site.measurement_date
 
         # Assert
-        assert meas_date == test_date, (
-            f"measurement_date accessor error: expected {test_date}, got {meas_date}"
-        )
+        assert meas_date == test_date, f"measurement_date accessor error: expected {test_date}, got {meas_date}"
         assert isinstance(meas_date, date), "measurement_date must be date type"
     else:
         pytest.skip("measurement_date field not available on HeatFlowSite model")

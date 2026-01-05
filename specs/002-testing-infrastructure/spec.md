@@ -215,4 +215,3 @@ A release manager preparing a public data release needs to verify that data expo
 - **Django testing documentation**: <https://docs.djangoproject.com/en/5.0/topics/testing/> - Django testing patterns
 - **Constitution Principle VII**: `.specify/memory/constitution.md` - Test-Driven Development mandate
 - **Fuchs et al. (2023)**: Section 3.4 - Quality scoring evaluation scheme referenced in schema mapping tests
-
