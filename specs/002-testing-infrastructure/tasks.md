@@ -75,20 +75,20 @@
 
 ### Documentation for User Story 2
 
-- [ ] T023 [US2] Add integration test conventions section to docs/guides/testing-standards.md (workflow testing patterns)
-- [ ] T024 [US2] Add integration test fixture usage guide to testing-standards.md (how to use minimal fixtures in tests)
-- [ ] T025 [US2] Add integration test assertion strategies to testing-standards.md (state transitions, data preservation checks)
+- [X] T023 [US2] Add integration test conventions section to docs/guides/testing-standards.md (workflow testing patterns)
+- [X] T024 [US2] Add integration test fixture usage guide to testing-standards.md (how to use minimal fixtures in tests)
+- [X] T025 [US2] Add integration test assertion strategies to testing-standards.md (state transitions, data preservation checks)
 
 ### Implementation for User Story 2
 
-- [ ] T026 [P] [US2] Create tests/test_ghfdb/test_import_workflow_integration.py with @pytest.mark.integration marker
-- [ ] T027 [US2] Implement test_import_minimal_dataset_happy_path in test_import_workflow_integration.py (uses minimal_ghfdb_import fixture)
-- [ ] T028 [US2] Implement test_import_invalid_dataset_raises_validation_errors in test_import_workflow_integration.py (uses invalid_ghfdb_import fixture)
-- [ ] T029 [P] [US2] Create tests/test_review/test_review_workflow_integration.py with @pytest.mark.integration marker
-- [ ] T030 [US2] Implement test_submit_for_review_state_transition in test_review_workflow_integration.py (uses review_submission_dataset fixture)
-- [ ] T031 [US2] Implement test_approve_for_publication_requires_admin in test_review_workflow_integration.py (uses admin_approval_dataset fixture, tests authorization)
-- [ ] T032 [US2] Implement test_export_without_approval_fails in test_import_workflow_integration.py (validates approval gate)
-- [ ] T033 [US2] Implement test_full_workflow_import_to_export in test_import_workflow_integration.py (end-to-end happy path, asserts 5 sites exported)
+- [X] T026 [P] [US2] Create tests/test_ghfdb/test_import_workflow_integration.py with @pytest.mark.integration marker
+- [X] T027 [US2] Implement test_import_minimal_dataset_happy_path in test_import_workflow_integration.py (uses minimal_ghfdb_import fixture)
+- [X] T028 [US2] Implement test_import_invalid_dataset_raises_validation_errors in test_import_workflow_integration.py (uses invalid_ghfdb_import fixture)
+- [X] T029 [P] [US2] Create tests/test_review/test_review_workflow_integration.py with @pytest.mark.integration marker
+- [X] T030 [US2] Implement test_submit_for_review_state_transition in test_review_workflow_integration.py (uses review_submission_dataset fixture)
+- [X] T031 [US2] Implement test_approve_for_publication_requires_admin in test_review_workflow_integration.py (uses admin_approval_dataset fixture, tests authorization)
+- [X] T032 [US2] Implement test_export_without_approval_fails in test_import_workflow_integration.py (validates approval gate)
+- [X] T033 [US2] Implement test_full_workflow_import_to_export in test_import_workflow_integration.py (end-to-end happy path, asserts 5 sites exported)
 
 **Checkpoint**: Integration test suite validates complete data lifecycle with minimal fixtures
 

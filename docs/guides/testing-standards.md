@@ -446,6 +446,172 @@ assert site.measurements.count() > 0
 assert site.measurements.first().sample == site
 ```
 
+### Test Execution Flow
+
+Integration tests follow a consistent **Arrange-Act-Assert** pattern:
+
+```python
+@pytest.mark.integration
+@pytest.mark.django_db
+def test_full_workflow_import_to_export():
+    """End-to-end test: import → review → approve → export."""
+    # Arrange: Set up initial state
+    User = get_user_model()
+    admin_user = User.objects.create_user(
+        username='admin',
+        is_staff=True
+    )
+    dataset = Dataset.objects.create(name="E2E Test Dataset")
+    
+    # Act 1: Import data
+    resource = GHFDBResource(dataset)
+    input_format = GHFDBImportFormat(encoding="utf-8-sig")
+    input_data = input_format.create_dataset(minimal_ghfdb_import_data)
+    import_result = resource.import_data(input_data)
+    
+    # Assert 1: Import successful
+    assert not import_result.has_errors()
+    assert HeatFlowSite.objects.filter(dataset=dataset).count() == 5
+    
+    # Act 2: Submit for review
+    review = Review.objects.create(
+        dataset=dataset,
+        status=Review.STATUS_CHOICES.PENDING
+    )
+    
+    # Assert 2: Review created
+    assert review.status == Review.STATUS_CHOICES.PENDING
+    
+    # Act 3: Admin approval
+    review.status = Review.STATUS_CHOICES.COMPLETE
+    review.approved_by = admin_user
+    review.save()
+    dataset.visibility = 1  # Public
+    dataset.save()
+    
+    # Assert 3: Approved and published
+    assert dataset.visibility == 1
+    assert review.status == Review.STATUS_CHOICES.COMPLETE
+    
+    # Act 4: Export data
+    export_data = resource.export()
+    
+    # Assert 4: Export contains all sites
+    assert len(export_data.dict) == 5  # 5 sites exported
+```
+
+### Timing Requirements
+
+Integration tests must complete within **2 minutes** per suite:
+
+- Single integration test: <10 seconds
+- Full integration suite: <120 seconds
+- Use `@pytest.mark.slow` for tests >30 seconds
+
+**Performance Tips**:
+```python
+# ✅ Good: Reuse database fixtures
+@pytest.fixture(scope='module')
+def shared_dataset(django_db_blocker):
+    with django_db_blocker.unblock():
+        return Dataset.objects.create(name="Shared Dataset")
+
+# ❌ Avoid: Creating database objects in every test
+def test_workflow_step_1():
+    dataset = Dataset.objects.create(...)  # Slow!
+```
+
+### Using Predefined Fixtures
+
+The `tests/fixtures/` directory contains ready-to-use test data:
+
+**Excel Fixtures** (see `tests/fixtures/README.md` for details):
+```python
+@pytest.mark.integration
+def test_import_minimal_fixture(minimal_ghfdb_import_data):
+    """minimal_ghfdb_import.xlsx: 5 sites, happy path validation."""
+    # Use for testing successful imports
+    pass
+
+def test_import_invalid_fixture(invalid_ghfdb_import_data):
+    """invalid_ghfdb_import.xlsx: 5 error cases."""
+    # Use for testing error detection
+    pass
+
+def test_round_trip_fixture(round_trip_reference_data):
+    """round_trip_reference.xlsx: 10 comprehensive sites."""
+    # Use for export/re-import validation
+    pass
+```
+
+**JSON Fixtures** (Django models):
+```python
+@pytest.mark.integration
+@pytest.mark.django_db
+def test_review_workflow(review_submission_dataset):
+    """review_submission_dataset.json: Dataset with pending review."""
+    dataset = Dataset.objects.get(pk=100)
+    assert dataset.visibility == 0  # Private
+    assert dataset.review.status == Review.STATUS_CHOICES.PENDING
+
+def test_admin_approval(admin_approval_dataset):
+    """admin_approval_dataset.json: Dataset approved for publication."""
+    dataset = Dataset.objects.get(pk=200)
+    assert dataset.visibility == 1  # Public
+    assert dataset.review.status == Review.STATUS_CHOICES.COMPLETE
+```
+
+### Workflow Gates and Authorization
+
+Test permission checks in multi-step workflows:
+
+```python
+@pytest.mark.integration
+@pytest.mark.django_db
+def test_export_without_approval_fails():
+    """Export should fail for unapproved datasets."""
+    # Arrange: Private dataset
+    dataset = Dataset.objects.create(
+        name="Private Dataset",
+        visibility=0  # Private
+    )
+    
+    # Act: Attempt export
+    resource = GHFDBResource(dataset)
+    export_data = resource.export()
+    
+    # Assert: Export blocked or returns empty
+    assert len(export_data.dict) == 0  # No data exported
+
+@pytest.mark.integration
+@pytest.mark.django_db
+def test_approve_for_publication_requires_admin():
+    """Only admin users can approve datasets."""
+    # Arrange: Regular user and dataset
+    User = get_user_model()
+    regular_user = User.objects.create_user(
+        username='regularuser',
+        is_staff=False
+    )
+    dataset = Dataset.objects.create(name="Test Dataset")
+    review = Review.objects.create(
+        dataset=dataset,
+        status=Review.STATUS_CHOICES.PENDING
+    )
+    
+    # Act & Assert: Regular user cannot approve
+    with pytest.raises(PermissionError):
+        review.approve(user=regular_user)
+    
+    # Act & Assert: Admin user can approve
+    admin_user = User.objects.create_user(
+        username='admin',
+        is_staff=True
+    )
+    review.approve(user=admin_user)  # Should succeed
+    assert review.status == Review.STATUS_CHOICES.COMPLETE
+```
+
 ---
 
 ## Contract Test Conventions
