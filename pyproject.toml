@@ -176,18 +176,26 @@ django_settings_module = "tests.settings"
 DJANGO_SETTINGS_MODULE = "config.settings"
 pythonpath = ["project"]
 python_files = ["test_*.py", "*_test.py"]
+testpaths = ["tests"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
 addopts = [
+    "-v",
     "--tb=short",
     "--strict-markers",
     "--reuse-db",
     "--nomigrations",
+    "-m", "not integration and not contract and not slow and not external",
 ]
 markers = [
     "heat_flow: Tests for the heat_flow app",
     "ghfdb: Tests for the ghfdb app",
     "review: Tests for the review app",
-    "integration: Integration tests",
-    "slow: Slow running tests",
+    "integration: Integration tests requiring full Django stack and database",
+    "contract: Contract tests validating API response schemas",
+    "slow: Tests taking >5 seconds (excluded from default run)",
+    "external: Tests requiring external services (skip when unavailable)",
+    "django_db: Tests requiring database access",
 ]
 
 filterwarnings = [
@@ -198,19 +206,22 @@ env = [
     "DJANGO_ENV=development",
 ]
 
+[tool.coverage.run]
+branch = true
+source = ["project"]
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "*/conftest.py",
+    "*site-packages*",
+    "*.tox*",
+]
+
 [tool.coverage.report]
 skip_empty = true
-omit = [
-    "*site-packages*",
-    "*tests*",
-    "*.tox*",
-    ]
-show_missing = "true"
-
-
-[tool.coverage.run]
-branch = "true"
-source = ["laboratory"]
+fail_under = 80
+show_missing = true
+skip_covered = false
 
 
 [tool.deptry]
