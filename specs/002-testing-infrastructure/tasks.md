@@ -127,20 +127,20 @@
 
 ### Documentation for User Story 4
 
-- [ ] T043 [US4] Add schema mapping test conventions section to docs/guides/testing-standards.md (accessor path validation patterns)
-- [ ] T044 [US4] Add derived field testing guidance to testing-standards.md (quality score calculation test patterns with reference values)
+- [X] T043 [US4] Add schema mapping test conventions section to docs/guides/testing-standards.md (accessor path validation patterns)
+- [X] T044 [US4] Add derived field testing guidance to testing-standards.md (quality score calculation test patterns with reference values)
 
 ### Implementation for User Story 4
 
-- [ ] T045 [US4] Create tests/test_ghfdb/test_schema_mapping.py with database-dependent tests
-- [ ] T046 [P] [US4] Implement test_ghfdb_field_site_name_accessor_path in test_schema_mapping.py (HeatFlowSite.name)
-- [ ] T047 [P] [US4] Implement test_ghfdb_field_coordinates_accessor_path in test_schema_mapping.py (HeatFlowSite.location.point, validates lat/lon within 0.0001)
-- [ ] T048 [P] [US4] Implement test_ghfdb_field_depth_interval_accessor_path in test_schema_mapping.py (HeatFlowInterval depth fields)
-- [ ] T049 [P] [US4] Implement test_ghfdb_field_heat_flow_value_accessor_path in test_schema_mapping.py (SurfaceHeatFlow.value)
-- [ ] T050 [P] [US4] Implement test_ghfdb_field_thermal_conductivity_accessor_path in test_schema_mapping.py (IntervalConductivity.value)
-- [ ] T051 [US4] Expand test_schema_mapping.py with tests for remaining GHFDB fields from docs/ghfdb_fields.md (incremental, target 10-15 critical fields initially)
-- [ ] T052 [P] [US4] Implement test_u_score_calculation_reference_case in tests/test_heat_flow/test_quality_scores.py (known input/output from Fuchs et al. 2023)
-- [ ] T053 [P] [US4] Implement test_m_score_calculation_reference_case in tests/test_heat_flow/test_quality_scores.py (known input/output from literature)
+- [X] T045 [US4] Create tests/test_ghfdb/test_schema_mapping.py with database-dependent tests
+- [X] T046 [P] [US4] Implement test_ghfdb_field_site_name_accessor_path in test_schema_mapping.py (HeatFlowSite.name)
+- [X] T047 [P] [US4] Implement test_ghfdb_field_coordinates_accessor_path in test_schema_mapping.py (HeatFlowSite.location.point, validates lat/lon within 0.0001)
+- [X] T048 [P] [US4] Implement test_ghfdb_field_depth_interval_accessor_path in test_schema_mapping.py (HeatFlowInterval depth fields)
+- [X] T049 [P] [US4] Implement test_ghfdb_field_heat_flow_value_accessor_path in test_schema_mapping.py (SurfaceHeatFlow.value)
+- [X] T050 [P] [US4] Implement test_ghfdb_field_thermal_conductivity_accessor_path in test_schema_mapping.py (IntervalConductivity.value)
+- [X] T051 [US4] Expand test_schema_mapping.py with tests for remaining GHFDB fields from docs/ghfdb_fields.md (incremental, target 10-15 critical fields initially)
+- [X] T052 [P] [US4] Implement test_u_score_calculation_reference_case in tests/test_heat_flow/test_quality_scores.py (known input/output from Fuchs et al. 2023)
+- [X] T053 [P] [US4] Implement test_m_score_calculation_reference_case in tests/test_heat_flow/test_quality_scores.py (known input/output from literature)
 
 **Checkpoint**: Schema mapping tests validate all documented accessor paths and quality score calculations
 

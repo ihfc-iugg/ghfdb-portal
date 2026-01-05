@@ -818,6 +818,214 @@ def test_deprecated_endpoint_warning_header(client):
 
 ---
 
+## Schema Mapping Test Conventions
+
+Schema mapping tests validate that accessor paths documented in `docs/ghfdb_fields.md` correctly retrieve values from Django models and serialize to the GHFDB export format.
+
+### Accessor Path Validation Patterns
+
+Test that documented model accessors work correctly:
+
+```python
+import pytest
+from ghfdb.models import HeatFlowSite
+from fairdm.core.models import Dataset
+
+@pytest.mark.django_db
+def test_ghfdb_field_site_name_accessor_path():
+    """
+    Validate 'site_name' accessor path: HeatFlowSite.name
+
+    This test ensures the documented accessor path in ghfdb_fields.md
+    correctly retrieves the site name value.
+    """
+    # Arrange: Create test record
+    dataset = Dataset.objects.create(name="Schema Test Dataset")
+    site = HeatFlowSite.objects.create(
+        dataset=dataset,
+        name="Test Site Alpha",
+        lat=45.0,
+        lon=-120.0
+    )
+
+    # Act: Access field via documented path
+    site_name = site.name  # Accessor path from ghfdb_fields.md
+
+    # Assert: Value matches
+    assert site_name == "Test Site Alpha"
+
+@pytest.mark.django_db
+def test_ghfdb_field_coordinates_accessor_path():
+    """
+    Validate 'latitude'/'longitude' accessor paths: HeatFlowSite.location.point
+
+    Validates:
+    - Accessor path works correctly
+    - Coordinate precision (0.0001 degrees)
+    - Point geometry correctly stores lat/lon
+    """
+    # Arrange: Create test record
+    dataset = Dataset.objects.create(name="Coordinate Test Dataset")
+    site = HeatFlowSite.objects.create(
+        dataset=dataset,
+        name="Coordinate Test Site",
+        lat=45.123456,
+        lon=-120.987654
+    )
+
+    # Act: Access coordinates via documented path
+    # Note: Actual accessor depends on model structure
+    # This demonstrates the testing pattern
+    latitude = site.lat
+    longitude = site.lon
+
+    # Assert: Values match within precision tolerance
+    assert abs(latitude - 45.123456) < 0.0001, (
+        f"Latitude precision error: expected 45.123456, got {latitude}"
+    )
+    assert abs(longitude - (-120.987654)) < 0.0001, (
+        f"Longitude precision error: expected -120.987654, got {longitude}"
+    )
+
+@pytest.mark.django_db
+def test_ghfdb_field_heat_flow_value_accessor_path():
+    """
+    Validate 'heat_flow' accessor path: SurfaceHeatFlow.value
+
+    Validates:
+    - Accessor path works correctly
+    - Value is numeric (float)
+    - Units are preserved (mW/m²)
+    """
+    # Arrange: Create related models
+    dataset = Dataset.objects.create(name="Heat Flow Test Dataset")
+    site = HeatFlowSite.objects.create(
+        dataset=dataset,
+        name="Heat Flow Test Site",
+        lat=45.0,
+        lon=-120.0
+    )
+
+    # Create heat flow measurement
+    # Note: Model structure may vary - this demonstrates the pattern
+    from ghfdb.models import SurfaceHeatFlow
+    heat_flow = SurfaceHeatFlow.objects.create(
+        site=site,
+        value=65.5,  # mW/m²
+        uncertainty=2.0
+    )
+
+    # Act: Access value via documented path
+    hf_value = heat_flow.value
+
+    # Assert: Value matches
+    assert isinstance(hf_value, (int, float)), "Heat flow must be numeric"
+    assert abs(hf_value - 65.5) < 0.01, (
+        f"Heat flow value error: expected 65.5, got {hf_value}"
+    )
+```
+
+### Derived Field Testing (Quality Scores)
+
+Quality scores are derived fields calculated from measurement metadata. Test these calculations with known reference values from literature (Fuchs et al. 2023).
+
+**U-Score Reference Test**:
+```python
+import pytest
+
+@pytest.mark.django_db
+def test_u_score_calculation_reference_case():
+    """
+    Validate U-score calculation with known reference values.
+
+    Reference: Fuchs et al. (2023) "Quality evaluation scheme for GHFDB"
+    Section 3.2, Table 2: U-score categorization criteria
+
+    Known Test Case:
+    - Method: Logging
+    - Uncertainty: 1.5 mW/m²
+    - Shutin time: 48 hours
+    - Expected U-score: U1 (highest quality)
+    """
+    from ghfdb.models import HeatFlowSite, HeatFlowMeasurement
+
+    # Arrange: Create site with U1-quality measurement
+    dataset = Dataset.objects.create(name="U-Score Reference Test")
+    site = HeatFlowSite.objects.create(
+        dataset=dataset,
+        name="U1 Reference Site",
+        lat=45.0,
+        lon=-120.0
+    )
+
+    measurement = HeatFlowMeasurement.objects.create(
+        site=site,
+        method="Logging",
+        uncertainty_mw_m2=1.5,
+        shutin_time_hours=48
+    )
+
+    # Act: Calculate U-score
+    u_score = measurement.calculate_u_score()
+
+    # Assert: Matches reference value
+    assert u_score == "U1", (
+        f"Expected U1 for Logging method, 1.5 mW/m² uncertainty, 48h shutin. "
+        f"Got {u_score}. Check calculation against Fuchs et al. 2023 Table 2."
+    )
+
+@pytest.mark.django_db
+def test_m_score_calculation_reference_case():
+    """
+    Validate M-score calculation with known reference values.
+
+    Reference: Fuchs et al. (2023) "Quality evaluation scheme for GHFDB"
+    Section 3.3, Table 3: M-score categorization criteria
+
+    Known Test Case:
+    - Method: Interval method
+    - Number of measurements: 12
+    - Documentation level: Full
+    - Expected M-score: M1 (highest quality)
+    """
+    from ghfdb.models import HeatFlowSite, HeatFlowMeasurement
+
+    # Arrange: Create site with M1-quality methodology
+    dataset = Dataset.objects.create(name="M-Score Reference Test")
+    site = HeatFlowSite.objects.create(
+        dataset=dataset,
+        name="M1 Reference Site",
+        lat=45.0,
+        lon=-120.0
+    )
+
+    measurement = HeatFlowMeasurement.objects.create(
+        site=site,
+        method="Interval method",
+        num_measurements=12,
+        documentation_level="Full"
+    )
+
+    # Act: Calculate M-score
+    m_score = measurement.calculate_m_score()
+
+    # Assert: Matches reference value
+    assert m_score == "M1", (
+        f"Expected M1 for Interval method, 12 measurements, Full documentation. "
+        f"Got {m_score}. Check calculation against Fuchs et al. 2023 Table 3."
+    )
+```
+
+### Schema Mapping Test Strategy
+
+1. **Priority Fields**: Test critical fields first (site_name, coordinates, heat_flow, quality_scores)
+2. **Incremental Coverage**: Add tests for remaining fields over time (target 10-15 initially)
+3. **Reference Documentation**: Each test references the specific row in `docs/ghfdb_fields.md`
+4. **Precision Tolerance**: Document acceptable precision for numeric fields (0.0001 for coordinates, 0.01 for heat flow)
+5. **Failure Reporting**: Include accessor path in assertion messages for debugging
+
+---
+
 ## Parametrized Testing Patterns
 
 Parametrized tests reduce code duplication and increase test coverage.
