@@ -56,6 +56,11 @@ From here, you can verify the imported content by navigating to the **Data** tab
 
 It’s important to note that importing data does not immediately make it public. The dataset must still undergo review and be approved by a Data Administrator before it is published on the portal. Until then, your data remains private and editable only by the reviewers and administrators associated with the dataset.
 
+:::{note}
+In portal terminology, this Data Administrator step is the **publication approval review**. It is distinct from the WHDB
+data assessment activity of **reviewing literature**, where reviewers curate data from publications.
+:::
+
 This is a good place for a **screenshot of a successfully imported dataset**, showing the overview tab with a success message, and possibly the data tab with previewed rows.
 
 

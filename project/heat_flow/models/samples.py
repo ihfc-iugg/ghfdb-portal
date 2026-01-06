@@ -71,20 +71,31 @@ class HeatFlowSite(Borehole):
         null=True,
     )
 
-    total_depth_MD = lambda self: self.length
-    """Total measured depth (MD) of the borehole."""
+    @property
+    def total_depth_MD(self):
+        """Total measured depth (MD) of the borehole."""
+        return self.length
 
-    total_depth_TVD = lambda self: self.vertical_depth
-    """Specification of the total true vertical depth below mean sea level."""
+    @property
+    def total_depth_TVD(self):
+        """Specification of the total true vertical depth below mean sea level."""
+        return self.vertical_depth
 
     class Meta:
         verbose_name = _("Heat Flow Site")
         verbose_name_plural = _("Heat Flow Sites")
         db_table_comment = "A geographic location where heat flow data has been collected. Multiple heat flow measurements may be associated with a single site."
+        indexes = [
+            models.Index(fields=["country"]),
+            models.Index(fields=["continent"]),
+            models.Index(fields=["environment"]),
+        ]
 
     def save(self, *args, **kwargs):
         if not self.top:
             self.top = 0
+        # TODO: Implement automatic geographic field population from coordinates when GIS is enabled
+        # This would populate country, region, continent, domain from location coordinates
         super().save(*args, **kwargs)
 
 
@@ -93,10 +104,8 @@ class HeatFlowInterval(GeoDepthInterval):
         verbose_name = _("Depth interval")
         verbose_name_plural = _("Depth intervals")
 
-    def save(self):
-        super().save()
-
-    # def __str__(self):
-    #     top = self.top.magnitude if self.top is not None else "?"
-    #     bottom = self.bottom if self.bottom is not None else "?"
-    #     return f"{self.__class__.__name__}({top}-{bottom})"
+    def __str__(self):
+        """String representation of the heat flow interval."""
+        top = getattr(self.top, "magnitude", self.top) if self.top is not None else "?"
+        bottom = getattr(self.bottom, "magnitude", self.bottom) if self.bottom is not None else "?"
+        return f"{self.__class__.__name__}({top}-{bottom})"

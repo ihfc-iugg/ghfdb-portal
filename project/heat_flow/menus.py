@@ -1,12 +1,11 @@
 from django.utils.translation import gettext as _
-from fairdm.menus import NavLink, SiteNavigation
+from fairdm.menus import SiteNavigation
+from flex_menu import MenuItem
 
 SiteNavigation.insert(
-    [
-        NavLink(
-            _("Explore"),
-            view_name="ghfdb-explore",
-        ),
-    ],
+    MenuItem(
+        name=_("Explore"),
+        view_name="ghfdb-explore",
+    ),
     position=0,
 )

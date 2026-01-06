@@ -81,3 +81,28 @@ tippy_rtd_urls = [
     "https://www.sphinx-doc.org/en/master",
     "https://markdown-it-py.readthedocs.io/en/latest",
 ]
+
+# ============================================================================
+# Documentation Infrastructure & Conventions Configuration
+# Feature: 001-docs-infrastructure
+# ============================================================================
+
+# Linkcheck configuration (T005)
+# Ignore patterns for URLs that should not be checked
+linkcheck_ignore = [
+    r"https://localhost:\d+/",  # Local development URLs
+    # Add more patterns as needed during validation
+]
+
+# Allow specific redirects to avoid false positives
+linkcheck_allowed_redirects = {
+    # Example: all redirects from old domain to new domain
+    # r'https://old-domain\.org/.*': r'https://new-domain\.org/.*'
+}
+
+# Custom request headers for linkcheck
+linkcheck_request_headers = {
+    "*": {
+        "Accept": "text/html,application/xhtml+xml",
+    }
+}

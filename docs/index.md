@@ -19,10 +19,12 @@ This document describes the FAIR data infrastructure set up to manage and grow t
 :maxdepth: 1
 
 about
+whdb_project
 features
 data_models/index
 ghfdb_fields
 acknowledgements
+constitution/index
 :::
 
 :::{toctree}
@@ -40,6 +42,9 @@ guides/publishing
 :caption: Development
 
 development/contributing/index
+development/documentation-conventions
+development/feature-documentation-checklist
+development/spec-driven-workflow
 development/roadmap
 :::
 <!-- development/translations -->

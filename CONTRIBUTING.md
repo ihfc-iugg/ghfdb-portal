@@ -15,7 +15,7 @@ Please review the contributor [Code of Conduct](code_of_conduct.md) before contr
 Before you begin, ensure that you have the following installed on your local machine:
 
 - [Git](https://git-scm.com/downloads)
-- [Docker](https://docs.docker.com/get-docker/
+- [Docker](<https://docs.docker.com/get-docker/>
 - [Python Poetry](https://python-poetry.org/docs/) (version 1.1.0 or higher)
 
 ## Step 1: Fork the Repository and Clone it to Your Local Machine
@@ -68,6 +68,32 @@ Before you begin, ensure that you have the following installed on your local mac
 1. Ensure that the project has a testing framework in place.
 2. Write tests to cover your changes, ensuring that they pass successfully.
 3. Run the tests using the appropriate command (often provided in the project's documentation).
+
+## Step 5a: Understand What CI/CD Checks Will Run
+
+When you open a pull request, automated checks will run to validate your changes:
+
+- **Linting & Formatting**: Code must pass Ruff linting and formatting checks
+- **Type Checking**: Code must pass mypy type checking
+- **Unit Tests**: Fast unit tests run with 80% coverage minimum
+- **Documentation**: If you modify docs, Sphinx builds must succeed
+- **Secrets Scanning**: Gitleaks scans for accidentally committed credentials
+
+See [docs/development/ci-cd-guide.md](docs/development/ci-cd-guide.md) for details on what runs on PRs and how to run these checks locally before pushing.
+
+**Pro tip**: Run these commands locally before pushing to catch issues early:
+
+```shell
+# Run linting and formatting
+poetry run ruff check . --fix
+poetry run ruff format .
+
+# Run type checking
+poetry run mypy project
+
+# Run fast unit tests with coverage
+poetry run pytest -m "not integration and not contract and not slow and not external" --cov=project
+```
 
 ## Step 6: Commit Your Changes
 

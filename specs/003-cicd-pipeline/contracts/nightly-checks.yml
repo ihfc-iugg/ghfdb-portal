@@ -1,0 +1,226 @@
+# Workflow Contract: Nightly Checks
+
+**Workflow File**: `.github/workflows/nightly-checks.yml`
+**Trigger**: `schedule` (cron: `0 3 * * *` - daily at 3 AM UTC)
+**Purpose**: Comprehensive security, quality, and stability checks
+
+## Trigger Configuration
+
+```yaml
+on:
+  schedule:
+    - cron: '0 3 * * *'  # 3 AM UTC daily
+  workflow_dispatch:  # Allow manual trigger
+```
+
+## Jobs
+
+### Job: `security-scan`
+
+**Runs on**: `ubuntu-latest`
+**Timeout**: 15 minutes
+
+#### Steps
+
+1. **Checkout Code**
+   - Action: `actions/checkout@v4`
+
+2. **Setup Python**
+   - Action: `actions/setup-python@v5`
+   - Version: `3.13`
+
+3. **Install Poetry**
+   - Action: `snok/install-poetry@v1`
+
+4. **Install Dependencies**
+   - Command: `poetry install --with dev`
+
+5. **Run Bandit Security Scan**
+   - Command: `poetry run bandit -r project/ -f json -o bandit-report.json`
+   - Continue on error: Yes (report collected)
+
+6. **Run Poetry Audit**
+   - Command: `poetry audit || true`
+   - Output: JSON format for parsing
+
+7. **Parse Security Findings**
+   - Script: Parse Bandit and audit outputs
+   - Classify: HIGH, MEDIUM, LOW severity
+
+8. **Create GitHub Issues for Critical Findings**
+   - Action: `actions/github-script@v7`
+   - Condition: HIGH or CRITICAL severity detected
+   - Creates issue with labels: `security`, `dependencies`, severity label
+   - Assigns to: `@maintainers` team
+
+9. **Upload Security Report**
+   - Action: `actions/upload-artifact@v4`
+   - Artifact: `security-report`
+
+### Job: `test-comprehensive`
+
+**Runs on**: `ubuntu-latest`
+**Timeout**: 30 minutes
+**Services**: PostgreSQL 15
+
+#### Steps
+
+1. **Checkout Code**
+   - Action: `actions/checkout@v4`
+
+2. **Setup Python & Dependencies**
+   - (Same as main-integration)
+
+3. **Run Full Test Suite Including Slow/External**
+   - Command: `poetry run pytest --cov=project --cov-report=xml`
+   - Includes: ALL test markers (slow, external, integration, contract)
+   - Database: Fresh PostgreSQL (no `--reuse-db`)
+
+4. **Identify Flaky Tests**
+   - Script: Compare test results from past 7 days
+   - Flag: Tests with <100% pass rate
+   - Output: `flaky-tests-report.md`
+
+5. **Upload Coverage Trends**
+   - Action: `codecov/codecov-action@v4`
+   - Flags: `nightly`
+   - Compare: 7-day trend
+
+6. **Upload Test Results**
+   - Action: `actions/upload-artifact@v4`
+   - Artifact: `test-results`
+
+### Job: `dependency-audit`
+
+**Runs on**: `ubuntu-latest`
+**Timeout**: 10 minutes
+
+#### Steps
+
+1. **Checkout Code**
+   - Action: `actions/checkout@v4`
+
+2. **Setup Python**
+   - Action: `actions/setup-python@v5`
+
+3. **Install Poetry**
+   - Action: `snok/install-poetry@v1`
+
+4. **Check for Outdated Dependencies**
+   - Command: `poetry show --outdated --format json`
+   - Output: `outdated-deps.json`
+
+5. **Check for Deprecated Packages**
+   - Script: Check PyPI deprecation warnings
+   - Output: `deprecated-deps.json`
+
+6. **Generate Dependency Report**
+   - Combines: Security, outdated, deprecated
+   - Format: Markdown table
+   - Upload as artifact
+
+### Job: `coverage-trends`
+
+**Runs on**: `ubuntu-latest`
+**Timeout**: 5 minutes
+**Depends on**: `test-comprehensive`
+
+#### Steps
+
+1. **Download Coverage Data**
+   - Action: `actions/download-artifact@v4`
+   - Artifact: Coverage from `test-comprehensive`
+
+2. **Compare with 7-Day History**
+   - Script: Query Codecov API for trend
+   - Threshold: Flag if coverage decreased >2% in a week
+
+3. **Generate Trend Report**
+   - Format: Markdown with graph
+   - Output: `coverage-trends.md`
+
+4. **Post Comment if Declining**
+   - Action: `actions/github-script@v7`
+   - Condition: Coverage declining trend
+   - Creates: GitHub issue for maintainers
+
+### Job: `notify-results`
+
+**Runs on**: `ubuntu-latest`
+**Timeout**: 2 minutes
+**Depends on**: All jobs
+**Condition**: Always
+
+#### Steps
+
+1. **Collect All Reports**
+   - Downloads all artifacts from previous jobs
+
+2. **Generate Summary Email**
+   - Format: HTML email with:
+     - Security findings summary
+     - Test results (pass/fail/flaky count)
+     - Coverage trends
+     - Dependency status
+
+3. **Send to Team**
+   - Action: `dawidd6/action-send-mail@v3`
+   - Recipients: Maintainer email list
+   - Webhook: Also post to Slack
+
+## Success Criteria
+
+Nightly checks are informational; they do not block development but create actionable items:
+- 🔴 Critical security findings → GitHub issue + urgent notification
+- 🟡 Flaky tests detected → Report generated for review
+- 🟢 Coverage trends stable → No action
+- 🔴 Coverage declining >2%/week → GitHub issue created
+
+## Expected Duration
+
+- **security-scan**: ~5-8 minutes
+- **test-comprehensive**: ~15-20 minutes
+- **dependency-audit**: ~3-5 minutes
+- **coverage-trends**: ~2-3 minutes
+- **Total**: ~25-35 minutes
+
+## Failure Handling
+
+Nightly checks are non-blocking:
+- Failures create issues for triage
+- Maintainers review within 24 hours
+- High-severity security findings are urgent
+
+## Secrets Required
+
+- `CODECOV_TOKEN`: Coverage API access
+- `GITHUB_TOKEN`: Issue creation
+- `SLACK_WEBHOOK`: Team notifications
+- `MAINTAINER_EMAIL`: Email notifications
+
+## Outputs
+
+### GitHub Issues Created
+
+- Security vulnerabilities (HIGH/CRITICAL)
+- Declining coverage trends (>2%/week decrease)
+- Deprecated dependencies requiring migration
+
+### Artifacts
+
+- `security-report`: Bandit + audit results (JSON)
+- `test-results`: Full test output with flaky test analysis
+- `dependency-report`: Outdated/deprecated packages
+- `coverage-trends`: 7-day coverage graph
+
+### Notifications
+
+- Email summary to maintainers
+- Slack post with key metrics
+- Urgent alerts for critical security findings
+
+## Manual Trigger Use Cases
+
+1. **Before Release**: Run comprehensive checks manually
+2. **After Dependency Update**: Validate security implications
+3. **Investigation**: Generate fresh reports for triage
