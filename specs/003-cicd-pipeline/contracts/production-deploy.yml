@@ -1,0 +1,327 @@
+# Workflow Contract: Production Deployment
+
+**Workflow File**: `.github/workflows/production-deploy.yml`
+**Trigger**: `workflow_dispatch` (manual only)
+**Purpose**: Controlled production deployment with approval and audit trail
+
+## Trigger Configuration
+
+```yaml
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - production
+      commit_sha:
+        description: 'Commit SHA or tag to deploy (e.g., v2025.21 or full SHA)'
+        required: true
+        type: string
+      approval_confirmation:
+        description: 'Type APPROVED to confirm deployment'
+        required: true
+        type: string
+```
+
+## Permissions
+
+**Required Role**: Repository maintainer with `write` permissions
+**Enforcement**: GitHub environment protection rules
+
+## Jobs
+
+### Job: `validate-deployment`
+
+**Runs on**: `ubuntu-latest`
+**Timeout**: 5 minutes
+
+#### Steps
+
+1. **Validate Approval Confirmation**
+   - Script: Check input `approval_confirmation == 'APPROVED'`
+   - Fail if: Not exactly `APPROVED`
+
+2. **Validate Environment**
+   - Script: Check input `environment == 'production'`
+   - Fail if: Invalid environment
+
+3. **Checkout Target Commit**
+   - Action: `actions/checkout@v4`
+   - Ref: `${{ inputs.commit_sha }}`
+
+4. **Verify Tests Passed for Commit**
+   - Action: `actions/github-script@v7`
+   - Queries: GitHub API for workflow runs on this commit
+   - Verifies: `main-integration.yml` succeeded for this commit
+   - Fail if: No successful test run found
+
+5. **Verify Commit is Tagged or on Main**
+   - Script: Check commit is either:
+     - A tagged release (starts with `v`)
+     - On main branch history
+   - Fail if: Arbitrary branch tip
+
+6. **Generate Pre-Deployment Report**
+   - Collects:
+     - Commits since last production deploy
+     - Test results summary
+     - Coverage report
+     - Security scan findings
+   - Output: `deployment-report.md`
+
+### Job: `build-release-image`
+
+**Runs on**: `ubuntu-latest`
+**Timeout**: 15 minutes
+**Depends on**: `validate-deployment`
+
+#### Steps
+
+1. **Checkout Target Commit**
+   - Action: `actions/checkout@v4`
+   - Ref: `${{ inputs.commit_sha }}`
+
+2. **Set up Docker Buildx**
+   - Action: `docker/setup-buildx-action@v3`
+
+3. **Login to GHCR**
+   - Action: `docker/login-action@v3`
+
+4. **Extract Version Tag**
+   - Script: Parse tag or use SHA for version
+   - Format: `v2025.21` or `sha-abc123`
+
+5. **Build and Push Release Image**
+   - Action: `docker/build-push-action@v5`
+   - Tags:
+     - `ghcr.io/ihfc-iugg/global-heat-flow-database:${{ version }}`
+     - `ghcr.io/ihfc-iugg/global-heat-flow-database:production`
+   - Cache: GitHub Actions cache
+
+### Job: `deploy-production`
+
+**Runs on**: `ubuntu-latest`
+**Timeout**: 15 minutes
+**Depends on**: `build-release-image`
+**Environment**: `production`
+
+#### Steps
+
+1. **Record Deployment Start**
+   - Action: `actions/github-script@v7`
+   - Creates: GitHub deployment with status `in_progress`
+   - Records:
+     - Deployer: `${{ github.actor }}`
+     - Commit: `${{ inputs.commit_sha }}`
+     - Timestamp: `${{ github.event.created_at }}`
+
+2. **Setup SSH**
+   - Action: `webfactory/ssh-agent@v0.9.0`
+   - Key: `${{ secrets.PRODUCTION_DEPLOY_KEY }}`
+
+3. **Backup Current Production State**
+   - Command:
+     ```bash
+     ssh production-server << 'EOF'
+       cd /app/ghfdb
+       docker-compose ps > pre-deploy-state.txt
+       docker tag ghfdb:production ghfdb:rollback-$(date +%Y%m%d-%H%M%S)
+     EOF
+     ```
+
+4. **Deploy to Production**
+   - Command:
+     ```bash
+     ssh production-server << 'EOF'
+       cd /app/ghfdb
+       docker-compose -f production.yml pull
+       docker-compose -f production.yml up -d --no-build
+       docker-compose -f production.yml ps
+     EOF
+     ```
+
+5. **Wait for Containers**
+   - Script: Poll until containers healthy (30s max)
+
+6. **Run Smoke Tests**
+   - Script: `.github/scripts/smoke-test.sh`
+   - Target: `https://heatflow.world`
+   - Tests:
+     - Health endpoint responds 200
+     - Admin page loads
+     - Database connectivity
+     - Static files served
+   - Retry: 3 attempts with 30s delay
+
+7. **Record Deployment Success**
+   - Action: `actions/github-script@v7`
+   - Updates: Deployment status to `success`
+   - Records: Completion timestamp
+
+8. **Handle Deployment Failure**
+   - Condition: `failure()`
+   - Command:
+     ```bash
+     ssh production-server << 'EOF'
+       cd /app/ghfdb
+       docker-compose -f production.yml down
+       docker tag ghfdb:rollback-latest ghfdb:production
+       docker-compose -f production.yml up -d
+     EOF
+     ```
+   - Updates: Deployment status to `failure`
+
+### Job: `create-release`
+
+**Runs on**: `ubuntu-latest`
+**Timeout**: 5 minutes
+**Depends on**: `deploy-production`
+**Condition**: Success and deploying a tag
+
+#### Steps
+
+1. **Checkout Code**
+   - Action: `actions/checkout@v4`
+   - Ref: `${{ inputs.commit_sha }}`
+   - Fetch depth: Full history for changelog
+
+2. **Generate Changelog**
+   - Action: `github-changelog-generator-action@v2`
+   - From: Last release tag
+   - To: Current tag
+
+3. **Create GitHub Release**
+   - Action: `actions/create-release@v1`
+   - Tag: `${{ inputs.commit_sha }}`
+   - Name: `Release ${{ inputs.commit_sha }}`
+   - Body: Generated changelog + deployment report
+   - Draft: false
+   - Prerelease: false
+
+4. **Attach Deployment Report**
+   - Uploads: `deployment-report.md` as release asset
+
+### Job: `notify-deployment`
+
+**Runs on**: `ubuntu-latest`
+**Timeout**: 2 minutes
+**Depends on**: `deploy-production`
+**Condition**: Always
+
+#### Steps
+
+1. **Send Team Notification**
+   - Action: `8398a7/action-slack@v3`
+   - Webhook: `${{ secrets.SLACK_WEBHOOK }}`
+   - Message:
+     ```
+     🚀 Production Deployment: ${{ job.status }}
+     Version: ${{ inputs.commit_sha }}
+     Deployer: ${{ github.actor }}
+     Environment: https://heatflow.world
+     Logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+     ```
+
+2. **Send Email to Stakeholders**
+   - Action: `dawidd6/action-send-mail@v3`
+   - Recipients: Maintainers + stakeholders list
+   - Subject: `[GHFDB] Production Deployment: ${{ job.status }}`
+   - Body: Deployment report with details
+
+## Success Criteria
+
+Deployment succeeds when:
+- ✅ Approval confirmation is `APPROVED`
+- ✅ Target commit has passing tests
+- ✅ Commit is tagged or on main branch
+- ✅ Release Docker image builds successfully
+- ✅ Production containers start healthy
+- ✅ Smoke tests pass
+- ✅ GitHub release created (if deploying tag)
+
+## Expected Duration
+
+- **validate-deployment**: ~2-3 minutes
+- **build-release-image**: ~5-7 minutes
+- **deploy-production**: ~5-8 minutes
+- **create-release**: ~1-2 minutes
+- **Total**: ~15-20 minutes
+
+## Failure Handling
+
+### Validation Failure
+- Deployment halted immediately
+- No changes to production
+- Team notified of validation reason
+
+### Build Failure
+- Deployment halted
+- No changes to production
+- Previous production image remains active
+
+### Deployment Failure
+- Automatic rollback to previous state
+- Urgent notification sent
+- Deployment status recorded as `failure`
+- Incident created for investigation
+
+## Rollback Procedure
+
+### Automatic Rollback
+Triggered if smoke tests fail:
+1. Stop new containers
+2. Restore backup image tagged as `rollback-*`
+3. Restart with previous configuration
+4. Verify smoke tests pass on rollback
+5. Notify team of rollback
+
+### Manual Rollback
+Maintainer can manually trigger rollback:
+1. Run workflow again with previous commit SHA
+2. Approval confirmation required
+3. Same validation and smoke test process
+
+## Secrets Required
+
+- `GITHUB_TOKEN`: Auto-provided
+- `PRODUCTION_DEPLOY_KEY`: SSH key for production server
+- `SLACK_WEBHOOK`: Team notifications
+- `STAKEHOLDER_EMAIL_LIST`: Email notifications
+
+## Environment Variables
+
+- `DJANGO_SETTINGS_MODULE`: `config.settings`
+- `DJANGO_ENV`: `production`
+- `DATABASE_URL`: Production PostgreSQL URL (from secrets)
+
+## Audit Trail
+
+Every production deployment records:
+- **Who**: `${{ github.actor }}` (GitHub username)
+- **What**: Commit SHA and tag
+- **When**: Timestamp (start and completion)
+- **Where**: Environment (`production`)
+- **Why**: Manual trigger (requires explicit approval)
+- **How**: GitHub deployment API + Docker image tag
+- **Outcome**: Success or failure with logs
+
+Audit data is:
+- Immutable (GitHub deployment records)
+- Queryable via GitHub API
+- Visible in GitHub UI (Deployments tab)
+- Recorded in notification messages
+
+## Pre-Flight Checklist
+
+Before triggering production deployment, verify:
+- [ ] All tests passed on target commit
+- [ ] Code reviewed and approved
+- [ ] Changelog prepared
+- [ ] Stakeholders notified of deployment window
+- [ ] Rollback plan understood
+- [ ] Target commit is tagged or on main
+- [ ] Database migrations (if any) reviewed
+- [ ] Breaking changes documented

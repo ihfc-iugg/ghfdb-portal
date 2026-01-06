@@ -187,6 +187,13 @@ addopts = [
     "--nomigrations",
     "-m", "not integration and not contract and not slow and not external",
 ]
+# Marker definitions:
+# - heat_flow, ghfdb, review: App-specific test organization markers
+# - integration: Tests requiring full Django stack, database, and multiple components (run on main branch)
+# - contract: API contract tests validating response schemas (run on main branch)
+# - slow: Tests taking >5 seconds, excluded from PR runs for fast feedback (run nightly)
+# - external: Tests requiring external services like S3, APIs (run nightly, skip when unavailable)
+# - django_db: Standard pytest-django marker for tests requiring database access
 markers = [
     "heat_flow: Tests for the heat_flow app",
     "ghfdb: Tests for the ghfdb app",
@@ -219,7 +226,7 @@ omit = [
 
 [tool.coverage.report]
 skip_empty = true
-fail_under = 80
+fail_under = 80  # Minimum 80% overall coverage; critical paths (import/export/quality) require 100%
 show_missing = true
 skip_covered = false
 
