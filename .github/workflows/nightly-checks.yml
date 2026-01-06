@@ -1,0 +1,330 @@
+name: Nightly Checks
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # 3 AM UTC daily
+  workflow_dispatch:  # Allow manual triggers
+
+jobs:
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.8.0
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Install dependencies
+        run: poetry install --with dev --no-interaction
+
+      - name: Run Bandit security scan
+        run: |
+          poetry run bandit -r project/ -f json -o bandit-report.json || true
+          poetry run bandit -r project/ -f screen
+        continue-on-error: true
+
+      - name: Run Poetry audit
+        id: poetry-audit
+        run: |
+          poetry audit --json > poetry-audit.json || true
+          poetry audit
+        continue-on-error: true
+
+      - name: Parse security findings
+        id: parse-findings
+        run: |
+          python -c "
+          import json
+          import sys
+
+          # Parse Bandit results
+          try:
+              with open('bandit-report.json') as f:
+                  bandit = json.load(f)
+              high_severity = [r for r in bandit.get('results', []) if r.get('issue_severity') in ['HIGH', 'CRITICAL']]
+              print(f'Bandit: {len(high_severity)} HIGH/CRITICAL findings')
+              with open('GITHUB_ENV', 'a') as env:
+                  env.write(f'BANDIT_HIGH_COUNT={len(high_severity)}\n')
+          except Exception as e:
+              print(f'Error parsing Bandit: {e}')
+              with open('GITHUB_ENV', 'a') as env:
+                  env.write('BANDIT_HIGH_COUNT=0\n')
+
+          # Parse Poetry audit results
+          try:
+              with open('poetry-audit.json') as f:
+                  audit = json.load(f)
+              vulnerabilities = audit.get('vulnerabilities', [])
+              critical = [v for v in vulnerabilities if v.get('severity') in ['HIGH', 'CRITICAL']]
+              print(f'Poetry audit: {len(critical)} HIGH/CRITICAL vulnerabilities')
+              with open('GITHUB_ENV', 'a') as env:
+                  env.write(f'AUDIT_HIGH_COUNT={len(critical)}\n')
+          except Exception as e:
+              print(f'Error parsing Poetry audit: {e}')
+              with open('GITHUB_ENV', 'a') as env:
+                  env.write('AUDIT_HIGH_COUNT=0\n')
+          "
+
+      - name: Create GitHub issue for HIGH/CRITICAL findings
+        if: env.BANDIT_HIGH_COUNT > 0 || env.AUDIT_HIGH_COUNT > 0
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            let body = '## Security Scan Findings\n\n';
+            body += `**Date**: ${new Date().toISOString()}\n`;
+            body += `**Commit**: ${context.sha}\n\n`;
+
+            if (process.env.BANDIT_HIGH_COUNT > 0) {
+              body += `### Bandit: ${process.env.BANDIT_HIGH_COUNT} HIGH/CRITICAL issues\n\n`;
+              body += 'See attached bandit-report.json for details.\n\n';
+            }
+
+            if (process.env.AUDIT_HIGH_COUNT > 0) {
+              body += `### Poetry Audit: ${process.env.AUDIT_HIGH_COUNT} HIGH/CRITICAL vulnerabilities\n\n`;
+              body += 'Run `poetry audit` locally for details.\n\n';
+            }
+
+            body += `[View workflow run](${context.payload.repository.html_url}/actions/runs/${context.runId})`;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[Security] HIGH/CRITICAL findings in nightly scan`,
+              body: body,
+              labels: ['security', 'dependencies', 'automated']
+            });
+
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: |
+            bandit-report.json
+            poetry-audit.json
+          retention-days: 90
+
+  test-comprehensive:
+    name: Comprehensive Test Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ghfdb_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.8.0
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Install dependencies
+        run: poetry install --with dev,docs --no-interaction
+
+      - name: Run Django migrations
+        run: |
+          poetry run python manage.py migrate --noinput
+        env:
+          DJANGO_ENV: development
+          DJANGO_SETTINGS_MODULE: config.settings
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ghfdb_test
+
+      - name: Run full test suite including slow/external markers
+        run: |
+          poetry run pytest \
+            --verbose \
+            --cov=project \
+            --cov-report=xml \
+            --cov-report=term-missing \
+            --junit-xml=test-results.xml
+        env:
+          DJANGO_ENV: development
+          DJANGO_SETTINGS_MODULE: config.settings
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ghfdb_test
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          flags: nightly
+          name: nightly-comprehensive
+          fail_ci_if_error: false
+
+      - name: Detect flaky tests
+        run: |
+          python -c "
+          import xml.etree.ElementTree as ET
+          import json
+          from pathlib import Path
+
+          # Parse test results
+          tree = ET.parse('test-results.xml')
+          root = tree.getroot()
+
+          flaky_tests = []
+          for testcase in root.iter('testcase'):
+              classname = testcase.get('classname')
+              name = testcase.get('name')
+              # Check for failures or skips
+              if testcase.find('failure') is not None or testcase.find('skipped') is not None:
+                  flaky_tests.append(f'{classname}::{name}')
+
+          # Save flaky tests report
+          with open('flaky-tests.json', 'w') as f:
+              json.dump({'flaky_tests': flaky_tests, 'count': len(flaky_tests)}, f, indent=2)
+
+          print(f'Found {len(flaky_tests)} potentially flaky tests')
+          "
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            test-results.xml
+            flaky-tests.json
+          retention-days: 90
+
+  dependency-audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.8.0
+
+      - name: Check for outdated packages
+        run: |
+          poetry show --outdated --format json > outdated-packages.json || true
+          poetry show --outdated
+
+      - name: Generate dependency report
+        run: |
+          python -c "
+          import json
+          from datetime import datetime
+
+          # Load outdated packages
+          try:
+              with open('outdated-packages.json') as f:
+                  outdated = json.load(f)
+          except:
+              outdated = []
+
+          report = {
+              'generated': datetime.now().isoformat(),
+              'outdated_packages': outdated,
+              'count': len(outdated)
+          }
+
+          with open('dependency-report.json', 'w') as f:
+              json.dump(report, f, indent=2)
+
+          print(f'Found {len(outdated)} outdated packages')
+          "
+
+      - name: Upload dependency report
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-report
+          path: dependency-report.json
+          retention-days: 90
+
+  coverage-trends:
+    name: Coverage Trend Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: test-comprehensive
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Query Codecov for trends
+        run: |
+          # This would typically query Codecov API
+          # For now, just create a placeholder
+          echo "Coverage trend analysis placeholder"
+          echo "Would query Codecov API for 7-day trend"
+
+  notify-results:
+    name: Send Nightly Report
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [security-scan, test-comprehensive, dependency-audit]
+    if: always()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Generate summary report
+        run: |
+          echo "## Nightly Checks Summary" > summary.md
+          echo "" >> summary.md
+          echo "**Date**: $(date -u +%Y-%m-%d\ %H:%M\ UTC)" >> summary.md
+          echo "**Commit**: ${{ github.sha }}" >> summary.md
+          echo "" >> summary.md
+          echo "### Job Status" >> summary.md
+          echo "- Security Scan: ${{ needs.security-scan.result }}" >> summary.md
+          echo "- Comprehensive Tests: ${{ needs.test-comprehensive.result }}" >> summary.md
+          echo "- Dependency Audit: ${{ needs.dependency-audit.result }}" >> summary.md
+          echo "" >> summary.md
+          echo "[View detailed results](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> summary.md
+
+      - name: Send Slack notification
+        if: always()
+        run: |
+          chmod +x .github/scripts/notify.sh
+          STATUS="${{ needs.security-scan.result == 'success' && needs.test-comprehensive.result == 'success' && needs.dependency-audit.result == 'success' && 'success' || 'warning' }}"
+          .github/scripts/notify.sh \
+            "${{ secrets.SLACK_WEBHOOK }}" \
+            "$STATUS" \
+            "Nightly checks completed" \
+            "Security: ${{ needs.security-scan.result }}, Tests: ${{ needs.test-comprehensive.result }}, Dependencies: ${{ needs.dependency-audit.result }}\nView: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

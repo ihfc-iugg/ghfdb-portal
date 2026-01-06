@@ -1,8 +1,10 @@
 # portal.heatflow.world
 
 ![Github Docs](https://readthedocs.org/projects/heatflowworld/badge/?version=latest&style=flat)
-[![Package](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/docker-build-and-publish.yml/badge.svg?branch=)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/docker-build-and-publish.yml)
+[![PR Validation](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/pr-validation.yml/badge.svg)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/pr-validation.yml)
+[![Main Integration](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/main-integration.yml/badge.svg)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/main-integration.yml)
 [![Docs Validation](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/docs-validation.yml/badge.svg)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/docs-validation.yml)
+[![codecov](https://codecov.io/gh/ihfc-iugg/ghfdb-portal/branch/main/graph/badge.svg)](https://codecov.io/gh/ihfc-iugg/ghfdb-portal)
 ![GitHub](https://img.shields.io/github/license/ihfc-iugg/ghfdb-portal)
 ![GitHub last commit](https://img.shields.io/github/last-commit/ihfc-iugg/ghfdb-portal)
 
