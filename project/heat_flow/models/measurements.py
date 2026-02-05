@@ -42,10 +42,6 @@ class HeatFlowQuerySet(django_models.QuerySet):
             "thermal_conductivity__method",
         )
 
-    def relevant_children_only(self):
-        """Filter to only relevant child measurements."""
-        return self.filter(relevant_child=True)
-
     def probe_measurements(self):
         """Filter to probe measurements only."""
         return self.filter(
@@ -79,9 +75,6 @@ class HeatFlowManager(django_models.Manager):
 
     def with_related_data(self):
         return self.get_queryset().with_related_data()
-
-    def relevant_children_only(self):
-        return self.get_queryset().relevant_children_only()
 
     def probe_measurements(self):
         return self.get_queryset().probe_measurements()
@@ -206,16 +199,6 @@ class HeatFlow(Measurement):
 
     U_SCORE_CHOICES = UScoreOptions
 
-    parent = models.ForeignKey(
-        SurfaceHeatFlow,
-        null=True,
-        blank=True,
-        verbose_name=_("parent"),
-        help_text=_("parent heat flow site"),
-        related_name="children",
-        on_delete=models.CASCADE,
-    )
-
     # HEAT FLOW DENSITY FIELDS
     value = models.QuantityField(
         base_units="mW / m^2",
@@ -250,14 +233,6 @@ class HeatFlow(Measurement):
         max_length=255,
         null=True,
         blank=True,
-    )
-    relevant_child = models.BooleanField(
-        verbose_name=_("Relevant child"),
-        help_text=_(
-            "Specify whether the child entry is used for computation of representative location heat flow values at the"
-            " parent level or not."
-        ),
-        default=False,
     )
 
     # PROBE SENSING (MARINE) FIELDS
@@ -310,7 +285,6 @@ class HeatFlow(Measurement):
         blank=True,
         validators=[MinVal(-10), MaxVal(1000)],
     )
-
     date_acquired = models.PartialDateField(
         _("date of acquisition "),
         help_text=_(
@@ -319,7 +293,6 @@ class HeatFlow(Measurement):
         null=True,
         blank=True,
     )
-
     thermal_gradient = models.OneToOneField(
         "heat_flow.ThermalGradient",
         verbose_name=_("temperature gradient"),
@@ -329,7 +302,6 @@ class HeatFlow(Measurement):
         null=True,
         blank=True,
     )
-
     thermal_conductivity = models.OneToOneField(
         "heat_flow.IntervalConductivity",
         verbose_name=_("thermal conductivity"),
@@ -486,13 +458,11 @@ class HeatFlow(Measurement):
     class Meta:
         verbose_name = _("Heat Flow")
         verbose_name_plural = _("Heat Flow")
-        ordering = ["parent", "relevant_child"]
+        ordering = ["pk"]
         db_table_comment = "Global Heat Flow Database (GHFDB) child table."
         indexes = [
-            models.Index(fields=["relevant_child"]),
             models.Index(fields=["U_score"]),
             models.Index(fields=["M_score"]),
-            # models.Index(fields=['parent', 'relevant_child']),
         ]
         constraints = [
             # Note: Constraints with Quantity fields are commented out due to SQLite compatibility issues
