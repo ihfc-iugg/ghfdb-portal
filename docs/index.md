@@ -47,6 +47,13 @@ development/feature-documentation-checklist
 development/spec-driven-workflow
 development/roadmap
 :::
+
+:::{toctree}
+:maxdepth: 1
+:caption: Data Models
+
+data_models/ghfdb-erd
+:::
 <!-- development/translations -->
 <!-- apidocs/heat_flow/heat_flow -->
 <!-- development/contributing -->

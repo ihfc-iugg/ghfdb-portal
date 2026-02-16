@@ -11,7 +11,7 @@ Global Heat Flow Database (GHFDB) models for Django. The models are defined usin
 from django.utils.translation import gettext as _
 from fairdm.db import models
 from fairdm_geo.models.features import Borehole
-from fairdm_geo.models.samples.intervals import GeoDepthInterval
+from fairdm_geo.models.samples.intervals import GeoDepthInterval as AbstractGeoDepthInterval
 from research_vocabs.fields import ConceptField, ConceptManyToManyField
 
 from heat_flow import vocabularies
@@ -99,13 +99,15 @@ class HeatFlowSite(Borehole):
         super().save(*args, **kwargs)
 
 
-class HeatFlowInterval(GeoDepthInterval):
+class GeoDepthInterval(AbstractGeoDepthInterval):
+    """Depth interval for heat flow measurements with geological context."""
+
     class Meta:
         verbose_name = _("Depth interval")
         verbose_name_plural = _("Depth intervals")
 
     def __str__(self):
-        """String representation of the heat flow interval."""
+        """String representation of the depth interval."""
         top = getattr(self.top, "magnitude", self.top) if self.top is not None else "?"
         bottom = getattr(self.bottom, "magnitude", self.bottom) if self.bottom is not None else "?"
         return f"{self.__class__.__name__}({top}-{bottom})"

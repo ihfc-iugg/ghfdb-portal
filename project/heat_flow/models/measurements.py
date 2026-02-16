@@ -16,7 +16,7 @@ from django.db import models as django_models
 from django.utils.translation import gettext as _
 from fairdm.core.models import Measurement
 from fairdm.db import models
-from research_vocabs.fields import ConceptField, ConceptManyToManyField
+from research_vocabs.fields import ConceptManyToManyField
 
 from heat_flow import vocabularies
 
@@ -29,12 +29,10 @@ class HeatFlowQuerySet(django_models.QuerySet):
     def with_related_data(self):
         """Prefetch all related data for efficient queries."""
         return self.select_related(
-            "parent", "parent__sample", "thermal_gradient", "thermal_conductivity"
+            "parent", "parent__sample", "thermal_gradient", "thermal_conductivity", "probe_metadata"
         ).prefetch_related(
             "method",
-            "probe_type",
-            "corr_IS_flag",
-            "corr_T_flag",
+            "corrections",
             "thermal_gradient__method_top",
             "thermal_gradient__method_bottom",
             "thermal_conductivity__source",
@@ -44,21 +42,11 @@ class HeatFlowQuerySet(django_models.QuerySet):
 
     def probe_measurements(self):
         """Filter to probe measurements only."""
-        return self.filter(
-            django_models.Q(probe_penetration__isnull=False)
-            | django_models.Q(probe_type__isnull=False)
-            | django_models.Q(probe_length__isnull=False)
-            | django_models.Q(probe_tilt__isnull=False)
-        )
+        return self.filter(probe_metadata__isnull=False)
 
     def borehole_measurements(self):
         """Filter to borehole measurements only."""
-        return self.exclude(
-            django_models.Q(probe_penetration__isnull=False)
-            | django_models.Q(probe_type__isnull=False)
-            | django_models.Q(probe_length__isnull=False)
-            | django_models.Q(probe_tilt__isnull=False)
-        )
+        return self.filter(probe_metadata__isnull=True)
 
     def high_quality(self):
         """Filter to high quality measurements (U1, U2, M1, M2)."""
@@ -130,44 +118,6 @@ class HeatFlow(Measurement):
         blank=True,
     )
 
-    # PROBE SENSING (MARINE) FIELDS
-    probe_penetration = models.DecimalQuantityField(
-        base_units="m",
-        max_digits=5,
-        decimal_places=2,
-        verbose_name=_("probe penetration"),
-        help_text=_("Penetration depth of marine heat-flow probe."),
-        validators=[MinVal(0), MaxVal(100)],
-        blank=True,
-        null=True,
-    )
-    probe_type = ConceptManyToManyField(
-        vocabulary=vocabularies.ProbeType,
-        verbose_name=_("probe type"),
-        help_text=_("Type of heat-flow probe used for measurement."),
-        blank=True,
-    )
-    probe_length = models.DecimalQuantityField(
-        base_units="m",
-        max_digits=5,
-        decimal_places=2,
-        verbose_name=_("probe length"),
-        help_text=_("Length of marine heat-flow probe."),
-        validators=[MinVal(0), MaxVal(100)],
-        blank=True,
-        null=True,
-    )
-    probe_tilt = models.DecimalQuantityField(
-        base_units="°",
-        max_digits=4,
-        decimal_places=2,
-        verbose_name=_("probe tilt"),
-        help_text=_("Tilt angle of marine heat-flow probe."),
-        validators=[MinVal(0), MaxVal(90)],
-        blank=True,
-        null=True,
-    )
-
     water_temperature = models.QuantityField(
         base_units="°C",
         unit_choices=["°C", "K"],
@@ -220,105 +170,6 @@ class HeatFlow(Measurement):
         null=True,
     )
 
-    # Flag Fields
-    corr_IS_flag = ConceptManyToManyField(
-        vocabulary=vocabularies.GenericFlagChoices,
-        default="unspecified",
-        verbose_name=_("Correction (IS)"),
-        help_text=_(
-            "Specifies whether the in-situ pressure and temperature conditions were considered to the reported thermal"
-            " conductivity value or not."
-        ),
-        blank=True,
-    )
-    corr_T_flag = ConceptManyToManyField(
-        vocabulary=vocabularies.GenericFlagChoices,
-        default="unspecified",
-        verbose_name=_("Correction (T)"),
-        help_text=_(
-            "Specifies whether the in-situ pressure and temperature conditions were considered to the reported thermal"
-            " conductivity value or not."
-        ),
-        blank=True,
-    )
-    corr_S_flag = ConceptField(
-        vocabulary=vocabularies.GenericFlagChoices,
-        default="unspecified",
-        verbose_name=_("Correction (S)"),
-        help_text=_(
-            "Specifies if sedimentation/subsidence effects with respect to the reported heat-flow value were present"
-            " and if corrections were performed."
-        ),
-        blank=True,
-        null=True,
-    )
-    corr_E_flag = ConceptField(
-        vocabulary=vocabularies.GenericFlagChoices,
-        default="unspecified",
-        verbose_name=_("Correction (E)"),
-        help_text=_(
-            "Specifies if erosion effects with respect to the reported heat-flow value were present and if corrections"
-            " were performed."
-        ),
-        blank=True,
-        null=True,
-    )
-    corr_TOPO_flag = ConceptField(
-        vocabulary=vocabularies.GenericFlagChoices,
-        default="unspecified",
-        verbose_name=_("Correction (TOPO)"),
-        help_text=_(
-            "Specifies if topographic effects with respect to the reported heat-flow value were present and if"
-            " corrections were performed."
-        ),
-        blank=True,
-        null=True,
-    )
-    corr_PAL_flag = ConceptField(
-        vocabulary=vocabularies.GenericFlagChoices,
-        default="unspecified",
-        verbose_name=_("Correction (PAL)"),
-        help_text=_(
-            "Specifies if paleoclimatic effects with respect to the reported heat-flow value were present and if"
-            " corrections were performed."
-        ),
-        blank=True,
-        null=True,
-    )
-    corr_SUR_flag = ConceptField(
-        vocabulary=vocabularies.GenericFlagChoices,
-        default="unspecified",
-        verbose_name=_("Correction (SUR)"),
-        help_text=_(
-            "Specifies if climatic conditions (glaciation, post-industrial warming, etc.) with respect to the reported"
-            " heat-flow value were present and if corrections were performed."
-        ),
-        blank=True,
-        null=True,
-    )
-    corr_CONV_flag = ConceptField(
-        vocabulary=vocabularies.GenericFlagChoices,
-        default="unspecified",
-        verbose_name=_("Correction (CONV)"),
-        help_text=_(
-            "Specifies if convection effects with respect to the reported heat-flow value were present and if"
-            " corrections were performed."
-        ),
-        blank=True,
-        null=True,
-    )
-    corr_HR_flag = ConceptField(
-        vocabulary=vocabularies.GenericFlagChoices,
-        default="unspecified",
-        verbose_name=_("Correction (HR)"),
-        help_text=_(
-            "Specifies if refraction effects, e.g., due to significant local conductivity contrasts, with respect to"
-            " the reported heat-flow value were present and if corrections were performed. "
-        ),
-        blank=True,
-        null=True,
-    )
-
     c_comment = models.TextField(
         verbose_name=_("comment"),
         help_text=_("General comments on the child level."),
@@ -366,24 +217,12 @@ class HeatFlow(Measurement):
             #     condition=models.Q(uncertainty__gte=0) | models.Q(uncertainty__isnull=True),
             #     name="non_negative_uncertainty",
             # ),
-            # models.CheckConstraint(
-            #     condition=models.Q(probe_penetration__gte=0) | models.Q(probe_penetration__isnull=True),
-            #     name="non_negative_probe_penetration",
-            # ),
-            # models.CheckConstraint(
-            #     condition=models.Q(probe_length__gte=0) | models.Q(probe_length__isnull=True),
-            #     name="non_negative_probe_length",
-            # ),
         ]
 
     @cached_property
     def is_probe(self):
         """Check if the heat flow measurement is from a probe."""
-        has_penetration = bool(self.probe_penetration)
-        has_probe_type = self.probe_type.exists() if self.probe_type else False
-        has_length = bool(self.probe_length)
-        has_tilt = bool(self.probe_tilt)
-        return any([has_penetration, has_probe_type, has_length, has_tilt])
+        return hasattr(self, 'probe_metadata') and self.probe_metadata is not None
 
     @property
     def interval(self):
@@ -403,41 +242,30 @@ class HeatFlow(Measurement):
 
     def get_M_score(self):
         """From Fuchs et al 2023 - Quality-assurance of heat-flow data: The new structure and evaluation scheme of the IHFC Global Heat Flow Database, 3.2. Methodological quality evaluation of thermal conductivity and temperature gradient (M-score)."""
-        return None
 
-    def get_TC_score(self):
-        """From Fuchs et al 2023 - Quality-assurance of heat-flow data: The new structure and evaluation scheme of the IHFC Global Heat Flow Database, Section 3.2.1.2 & 3.2.2.2 Thermal conductivity.
+        # Set both scores to default low values if data is missing
+        T_score = self.thermal_gradient.score if self.thermal_gradient else 0.4
+        TC_score = self.thermal_conductivity.score if self.thermal_conductivity else 0.1
 
-        Evaluation criteria for the thermal conductivity quality score include 1) the location, 2) the source type and saturation condition, 3) the number of conductivity measurements and 4) the pressure and temperature conditions. Table 2 shows in detail the score reductions or enhancements based on the defined threshold values. The score starts at 1.0 and varies from 0.2 to 1.2.
-        """
-        score = 1
-        if self.tc_source == "core":
-            score -= 0.2
-        elif self.tc_source == "outcrop":
-            score -= 0.4
-        elif self.tc_source == "lab":
-            score -= 0.6
+        product = T_score * TC_score
+        if product >= 0.75:
+            return MScoreOptions.M1
+        elif product >= 0.5:
+            return MScoreOptions.M2
+        elif product >= 0.25:
+            return MScoreOptions.M3
+
+        return MScoreOptions.M4
 
     def get_perturbation_effects(self):
         """Return the perturbation effects of the interval based on correction flags."""
         effects = []
 
-        correction_flags = [
-            (self.corr_S_flag, "Sedimentation/Subsidence"),
-            (self.corr_E_flag, "Erosion"),
-            (self.corr_TOPO_flag, "Topographic"),
-            (self.corr_PAL_flag, "Paleoclimatic"),
-            (self.corr_SUR_flag, "Surface/Climatic"),
-            (self.corr_CONV_flag, "Convection"),
-            (self.corr_HR_flag, "Heat Refraction"),
-        ]
-
-        for flag, effect_name in correction_flags:
-            if flag and hasattr(flag, "id"):
-                if flag.id == "present_corrected":
-                    effects.append(f"{effect_name} (corrected)")
-                elif flag.id == "present_uncorrected":
-                    effects.append(f"{effect_name} (uncorrected)")
+        for correction in self.corrections.all():
+            correction_type = correction.get_correction_type_display()
+            status = correction.get_status_display() if hasattr(correction.status, 'label') else str(correction.status)
+            if correction.status in ['present_corrected', 'present_uncorrected']:
+                effects.append(f"{correction_type} ({status})")
 
         return effects if effects else None
 
@@ -446,8 +274,131 @@ class HeatFlow(Measurement):
         return None
 
 
+class ProbeMetadata(django_models.Model):
+    """Supplementary metadata for calcuations made with marine heat flow probes."""
+
+    interval = models.OneToOneField(
+        "heat_flow.GeoDepthInterval",
+        on_delete=models.CASCADE,
+        related_name="probe_metadata",
+        verbose_name=_("heat flow measurement"),
+    )
+    penetration = models.DecimalQuantityField(
+        base_units="m",
+        max_digits=5,
+        decimal_places=2,
+        verbose_name=_("probe penetration"),
+        help_text=_("Penetration depth of marine heat-flow probe."),
+        validators=[MinVal(0), MaxVal(100)],
+        blank=True,
+        null=True,
+    )
+    probe_type = ConceptManyToManyField(
+        vocabulary=vocabularies.ProbeType,
+        verbose_name=_("probe type"),
+        help_text=_("Type of heat-flow probe used for measurement."),
+        blank=True,
+    )
+    length = models.DecimalQuantityField(
+        base_units="m",
+        max_digits=5,
+        decimal_places=2,
+        verbose_name=_("probe length"),
+        help_text=_("Length of marine heat-flow probe."),
+        validators=[MinVal(0), MaxVal(100)],
+        blank=True,
+        null=True,
+    )
+    tilt = models.DecimalQuantityField(
+        base_units="°",
+        max_digits=4,
+        decimal_places=2,
+        verbose_name=_("probe tilt"),
+        help_text=_("Tilt angle of marine heat-flow probe."),
+        validators=[MinVal(0), MaxVal(90)],
+        blank=True,
+        null=True,
+    )
+
+    class Meta:
+        verbose_name = _("Probe Metadata")
+        verbose_name_plural = _("Probe Metadata")
+        db_table_comment = "Metadata for marine heat flow probe measurements"
+
+    def __str__(self):
+        return f"Probe metadata for {self.heat_flow}"
+
+
+class HeatFlowCorrection(django_models.Model):
+    """Environmental and methodological corrections applied to heat flow measurements."""
+
+    class CorrectionTypeChoices(models.TextChoices):
+        IS = "IS", _("In-situ conditions")
+        T = "T", _("Temperature")
+        S = "S", _("Sedimentation/Subsidence")
+        E = "E", _("Erosion")
+        TOPO = "TOPO", _("Topographic")
+        PAL = "PAL", _("Paleoclimatic")
+        SUR = "SUR", _("Surface/Climatic")
+        CONV = "CONV", _("Convection")
+        HR = "HR", _("Heat Refraction")
+
+    class StatusChoices(models.TextChoices):
+        PRESENT_CORRECTED = "present_corrected", _("Present and corrected")
+        PRESENT_NOT_CORRECTED = "present_not_corrected", _("Present and not corrected")
+        PRESENT_NOT_SIGNIFICANT = "present_not_significant", _("Present not significant")
+        NOT_RECOGNIZED = "not_recognized", _("not recognized")
+        CONSIDERED_P = "considered_p", _("Considered - p")
+        CONSIDERED_T = "considered_t", _("Considered - t")
+        CONSIDERED_PT = "considered_pt", _("Considered - pT")
+        NOT_CONSIDERED = "not_considered", _("not considered")
+        TILT_CORRECTED = "tilt_corrected", _("Tilt corrected")
+        DRIFT_CORRECTED = "drift_corrected", _("Drift corrected")
+        NOT_CORRECTED = "not_corrected", _("not corrected")
+        CORRECTED = "corrected", _("Corrected")
+        UNSPECIFIED = "-", _("unspecified")
+
+    heat_flow = models.ForeignKey(
+        "heat_flow.HeatFlow",
+        on_delete=models.CASCADE,
+        related_name="corrections",
+        verbose_name=_("heat flow measurement"),
+    )
+    correction_type = models.CharField(
+        max_length=10,
+        choices=CorrectionTypeChoices.choices,
+        verbose_name=_("correction type"),
+        help_text=_("Type of correction applied to the heat flow measurement."),
+    )
+    status = models.CharField(
+        max_length=25,
+        choices=StatusChoices.choices,
+        verbose_name=_("correction status"),
+        help_text=_("Whether the correction was present and applied."),
+        default=StatusChoices.UNSPECIFIED,
+    )
+    comment = models.TextField(
+        verbose_name=_("comment"),
+        help_text=_("Comment regarding the applied correction."),
+        blank=True,
+        null=True,
+    )
+
+    class Meta:
+        verbose_name = _("Heat Flow Correction")
+        verbose_name_plural = _("Heat Flow Corrections")
+        db_table_comment = "Corrections applied to heat flow measurements"
+        unique_together = [("heat_flow", "correction_type")]
+        indexes = [
+            models.Index(fields=["correction_type"]),
+            models.Index(fields=["status"]),
+        ]
+
+    def __str__(self):
+        return f"{self.get_correction_type_display()} - {self.status}"
+
+
 class ThermalGradient(Measurement):
-    # Temperature Fields
     value = models.DecimalQuantityField(
         base_units="K/km",
         max_digits=7,
@@ -598,6 +549,26 @@ class ThermalGradient(Measurement):
             return f"{self.value}"
         return "ThermalGradient(undefined)"
 
+    def calculate_score(self):
+        """Calculate quality score for thermal gradient measurement.
+
+        Based on Fuchs et al 2023 criteria for thermal gradient quality assessment.
+        """
+        # TODO: Implement score calculation
+        pass
+        # score = 1.0
+
+        # # Number of measurements
+        # if self.number:
+        #     if self.number >= 10:
+        #         score += 0.1
+        #     elif self.number >= 5:
+        #         score += 0.05
+        #     elif self.number < 3:
+        #         score -= 0.1
+
+        # return max(0.2, min(1.2, score))
+
     def is_corrected(self):
         """Check if the thermal gradient has been corrected."""
         return self.corrected_value is not None
@@ -689,6 +660,15 @@ class IntervalConductivity(Measurement):
         null=True,
         validators=[MaxVal(10000)],
     )
+    score = models.FloatField(
+        verbose_name=_("TC-score"),
+        help_text=_(
+            "Score of the thermal conductivity measurement, ranging from 0.0 to 1.0. A score of 1.0 indicates a high-quality measurement, while a score of 0.0 indicates a low-quality measurement."
+        ),
+        default=1.1,
+        validators=[MinVal(0.0), MaxVal(1.1)],
+    )
+
 
     class Meta:
         verbose_name = _("Thermal Conductivity")
@@ -717,7 +697,7 @@ class IntervalConductivity(Measurement):
             return f"{self.value}"
         return "IntervalConductivity(undefined)"
 
-    def get_quality_score(self):
+    def calculate_score(self):
         """Calculate quality score for thermal conductivity measurement.
 
         Based on Fuchs et al 2023 criteria for thermal conductivity quality assessment.

@@ -1,10 +1,10 @@
 import django_tables2 as tables
 from django.utils.translation import gettext_lazy as _
-from fairdm.core.tables import MeasurementTable, SampleTable
+from fairdm.contrib.collections.tables import MeasurementTable, SampleTable
 
 from heat_flow.models.measurements import IntervalConductivity, ThermalGradient
 
-from .models import HeatFlow, HeatFlowInterval, HeatFlowSite, SurfaceHeatFlow
+from .models import HeatFlow, HeatFlowInterval, HeatFlowSite
 
 
 class HeatFlowSiteTable(SampleTable):
@@ -65,31 +65,6 @@ class HeatFlowIntervalTable(SampleTable):
 
     def __init__(self, data=None, *args, **kwargs):
         # data = data.prefetch_related("sample__heatflowsite")
-        # modify the queryset (data) here if required
-        super().__init__(*args, data=data, **kwargs)
-
-
-class SurfaceHeatFlowTable(MeasurementTable):
-    site = tables.Column(verbose_name=_("Site name"), accessor="sample", linkify=True)
-
-    class Meta:
-        model = SurfaceHeatFlow
-        fields = [
-            "id",
-            "dataset",
-            "location",
-            "site",
-            "latitude",
-            "longitude",
-            "value",
-            "uncertainty",
-            "corr_HP_flag",
-            "is_ghfdb",
-        ]
-        exclude = ["sample"]
-
-    def __init__(self, data=None, *args, **kwargs):
-        data = data.prefetch_related("sample__heatflowsite")
         # modify the queryset (data) here if required
         super().__init__(*args, data=data, **kwargs)
 
@@ -194,18 +169,3 @@ class ThermalConductivityTable(IntervalMixin, MeasurementTable):
             "number",
         ]
 
-
-class GHFDBTable(tables.Table):
-    parent__value = tables.Column(verbose_name="q")
-    parent__uncertainty = tables.Column(verbose_name="q_uncertainty")
-
-    class Meta:
-        model = HeatFlow
-        fields = [
-            "id",
-            "parent__sample__name",
-            "parent__value",
-            "parent__uncertainty",
-            "value",
-            "uncertainty",
-        ]

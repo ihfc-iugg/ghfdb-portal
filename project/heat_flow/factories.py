@@ -10,7 +10,6 @@ from .models import (
     HeatFlowInterval,
     HeatFlowSite,
     IntervalConductivity,
-    SurfaceHeatFlow,
     ThermalGradient,
 )
 
@@ -30,22 +29,6 @@ class HeatFlowIntervalFactory(SampleFactory):
         model = HeatFlowInterval
 
 
-class SurfaceHeatFlowFactory(MeasurementFactory):
-    class Meta:
-        model = SurfaceHeatFlow
-
-    value = LazyAttribute(lambda _: round(random.gauss(mu=50, sigma=30), 2))
-    uncertainty = LazyAttribute(lambda o: o.value * random.uniform(0.05, 0.25))  # noqa: S311
-    corr_HP_flag = FuzzyChoice([True, False, None])
-    is_ghfdb = Faker("boolean", chance_of_getting_true=0.9)
-    # children = factory.RelatedFactoryList(
-    #     "heat_flow.factories.HeatFlowFactory",
-    #     parent=None,
-    #     factory_related_name="parent",
-    #     size=randint(1, 5),
-    # )
-
-
 class HeatFlowFactory(MeasurementFactory):
     class Meta:
         model = HeatFlow
@@ -56,7 +39,6 @@ class HeatFlowFactory(MeasurementFactory):
     # metadata fields
     # method = FuzzyChoice(HeatFlow.method_vocab.choices)  # ConceptManyToManyField
     expedition = Faker("text", max_nb_chars=100)
-    relevant_child = Faker("boolean", chance_of_getting_true=0.8)
 
     # probe fields
     # length = LazyAttribute(lambda o: random.uniform(0, o.probe_length))

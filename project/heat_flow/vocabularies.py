@@ -1,6 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 from research_vocabs.builder.skos import Collection, Concept
 from research_vocabs.vocabularies import VocabularyBuilder
+from django.db import models
 
 BASE_NAMESPACE = "https://heatflow.world/vocabularies/"
 
@@ -1312,3 +1313,19 @@ class GenericFlagChoices(VocabularyBuilder):
                 ],
             ),
         }
+
+
+class GenericFlagChoices(models.TextChoices):
+    PRESENT_CORRECTED = "present_corrected", _("Present and corrected")
+    PRESENT_NOT_CORRECTED = "present_not_corrected", _("Present and not corrected")
+    PRESENT_NOT_SIGNIFICANT = "present_not_significant", _("Present not significant")
+    NOT_RECOGNIZED = "not_recognized", _("not recognized")
+    CONSIDERED_P = "considered_p", _("Considered - p")
+    CONSIDERED_T = "considered_t", _("Considered - t")
+    CONSIDERED_PT = "considered_pt", _("Considered - pT")
+    NOT_CONSIDERED = "not_considered", _("not considered")
+    TILT_CORRECTED = "tilt_corrected", _("Tilt corrected")
+    DRIFT_CORRECTED = "drift_corrected", _("Drift corrected")
+    NOT_CORRECTED = "not_corrected", _("not corrected")
+    CORRECTED = "corrected", _("Corrected")
+    UNSPECIFIED = "unspecified", _("unspecified")

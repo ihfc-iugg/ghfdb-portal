@@ -1,0 +1,210 @@
+# GHFDB Field Mappings
+# Maps IHFC GHFDB conceptual fields to Django model implementation
+# Version: 1.0
+# Last Updated: 2026-01-06
+
+ghfdb_fields:
+  # Site Metadata Mappings
+
+  - name: site_name
+    django_model: Sample
+    django_field: name
+    relationship_type: direct
+    nullable: false
+    accessor_path: sample.name
+    orm_example: Sample.objects.values_list('name', flat=True)
+    notes: Direct mapping to Sample.name CharField
+
+  - name: latitude
+    django_model: Sample
+    django_field: latitude
+    relationship_type: direct
+    nullable: false
+    accessor_path: sample.latitude
+    orm_example: Sample.objects.filter(latitude__gte=-45.0)
+    notes: Direct mapping to Sample.latitude DecimalField
+
+  - name: longitude
+    django_model: Sample
+    django_field: longitude
+    relationship_type: direct
+    nullable: false
+    accessor_path: sample.longitude
+    orm_example: Sample.objects.filter(longitude__range=(-10, 10))
+    notes: Direct mapping to Sample.longitude DecimalField
+
+  - name: elevation
+    django_model: Sample
+    django_field: elevation
+    relationship_type: direct
+    nullable: true
+    accessor_path: sample.elevation
+    orm_example: Sample.objects.exclude(elevation__isnull=True)
+    notes: Direct mapping to Sample.elevation FloatField
+
+  - name: location_quality_flag
+    django_model: Sample
+    django_field: location_quality
+    relationship_type: direct
+    nullable: true
+    accessor_path: sample.location_quality
+    orm_example: Sample.objects.filter(location_quality='High')
+    notes: Maps to Sample.location_quality CharField with controlled vocabulary
+
+  # Measurement Data Mappings
+
+  - name: heat_flow_value
+    django_model: Sample
+    django_field: heat_flow
+    relationship_type: direct
+    nullable: false
+    accessor_path: sample.heat_flow
+    orm_example: Sample.objects.filter(heat_flow__gt=50.0)
+    notes: Direct mapping to Sample.heat_flow FloatField in mW/m²
+
+  - name: heat_flow_uncertainty
+    django_model: Sample
+    django_field: heat_flow_uncertainty
+    relationship_type: direct
+    nullable: true
+    accessor_path: sample.heat_flow_uncertainty
+    orm_example: Sample.objects.annotate(relative_uncertainty=F('heat_flow_uncertainty')/F('heat_flow'))
+    notes: Direct mapping to Sample.heat_flow_uncertainty FloatField
+
+  - name: measurement_method
+    django_model: Sample
+    django_field: method
+    relationship_type: direct
+    nullable: false
+    accessor_path: sample.method
+    orm_example: Sample.objects.filter(method__contains='gradient')
+    notes: Maps to Sample.method CharField
+
+  - name: measurement_date
+    django_model: Sample
+    django_field: measurement_date
+    relationship_type: direct
+    nullable: true
+    accessor_path: sample.measurement_date
+    orm_example: Sample.objects.filter(measurement_date__year=2023)
+    notes: Direct mapping to Sample.measurement_date DateField
+
+  - name: depth_top
+    django_model: Sample
+    django_field: depth_top
+    relationship_type: direct
+    nullable: true
+    accessor_path: sample.depth_top
+    orm_example: Sample.objects.filter(depth_top__lte=100.0)
+    notes: Direct mapping to Sample.depth_top FloatField in meters
+
+  - name: depth_bottom
+    django_model: Sample
+    django_field: depth_bottom
+    relationship_type: direct
+    nullable: true
+    accessor_path: sample.depth_bottom
+    orm_example: Sample.objects.annotate(depth_range=F('depth_bottom')-F('depth_top'))
+    notes: Direct mapping to Sample.depth_bottom FloatField in meters
+
+  - name: temperature_gradient
+    django_model: Sample
+    django_field: temperature_gradient
+    relationship_type: direct
+    nullable: true
+    accessor_path: sample.temperature_gradient
+    orm_example: Sample.objects.filter(temperature_gradient__range=(20, 40))
+    notes: Direct mapping to Sample.temperature_gradient FloatField in K/km
+
+  - name: thermal_conductivity
+    django_model: Sample
+    django_field: thermal_conductivity
+    relationship_type: direct
+    nullable: true
+    accessor_path: sample.thermal_conductivity
+    orm_example: Sample.objects.aggregate(avg_conductivity=Avg('thermal_conductivity'))
+    notes: Direct mapping to Sample.thermal_conductivity FloatField in W/(m·K)
+
+  # Quality Indicators
+
+  - name: correction_applied
+    django_model: Sample
+    django_field: correction_applied
+    relationship_type: direct
+    nullable: false
+    accessor_path: sample.correction_applied
+    orm_example: Sample.objects.filter(correction_applied=True)
+    notes: Direct mapping to Sample.correction_applied BooleanField
+
+  - name: quality_score
+    django_model: Sample
+    django_field: calculate_quality_score
+    relationship_type: computed
+    nullable: true
+    accessor_path: sample.calculate_quality_score()
+    calculation_dependencies:
+      - location_quality_flag
+      - measurement_method
+      - correction_applied
+      - heat_flow_uncertainty
+    orm_example: |
+      # Computed at runtime, not queryable via ORM
+      score = sample.calculate_quality_score()
+    notes: Implements Fuchs et al. (2023) quality evaluation scheme as model method
+
+  # Data Provenance
+
+  - name: data_source
+    django_model: Sample
+    django_field: data_source
+    relationship_type: foreign_key
+    nullable: true
+    accessor_path: sample.data_source.citation
+    orm_example: Sample.objects.select_related('data_source').filter(data_source__citation__icontains='Fuchs')
+    notes: Foreign key to DataSource model with citation field
+
+  - name: contributors
+    django_model: Sample
+    django_field: contributors
+    relationship_type: many_to_many
+    nullable: true
+    accessor_path: sample.contributors.all()
+    join_semantics: Through SampleContributor join table with role assignment inherited from FairDM
+    orm_example: |
+      sample.contributors.values('orcid', 'name', 'samplecontributor__role')
+    notes: Inherits FairDM Contributor model via many-to-many relationship
+
+  - name: publication_doi
+    django_model: Sample
+    django_field: publication_doi
+    relationship_type: foreign_key
+    nullable: true
+    accessor_path: sample.publication.doi
+    orm_example: Sample.objects.select_related('publication').values_list('publication__doi', flat=True)
+    notes: Foreign key to Publication model containing DOI field
+
+# Django Model Extensions (non-canonical fields)
+
+extensions:
+  - name: internal_review_status
+    django_model: Sample
+    django_field: review_status
+    justification: |
+      Track internal editorial review state for publication approval workflow.
+      Required to implement multi-stage review process defined in Constitution VI.
+      Not part of IHFC GHFDB specification but necessary for data curation.
+    lifecycle: permanent
+    non_canonical: true
+    added_date: "2025-01-15"
+    review_date: "2025-12-01"
+
+  - name: internal_notes
+    django_model: Sample
+    django_field: internal_notes
+    justification: |
+      Store curator notes for data quality assessment and review workflow.
+      Supports data quality auditing and issue tracking during curation process.
+    lifecycle: permanent
+    non_canonical: true
+    added_date: "2025-01-15"
+    review_date: "2025-12-01"

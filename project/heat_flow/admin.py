@@ -2,10 +2,10 @@ from django import forms
 from django.contrib import admin
 from django.utils.translation import gettext as _
 from django_select2.forms import Select2MultipleWidget, Select2Widget
-from fairdm.core.admin import MeasurementAdmin, SampleAdmin
+from fairdm.core.admin import SampleAdmin
 from fairdm.db import models
 
-from .models import HeatFlow, HeatFlowInterval, HeatFlowSite, SurfaceHeatFlow
+from .models import HeatFlow, HeatFlowInterval, HeatFlowSite
 
 
 class UploadForm(forms.Form):
@@ -16,21 +16,9 @@ def admin_urlname(opts, name):
     return f"admin:{opts.app_label}_{opts.model_name}_{name}"
 
 
-@admin.register(SurfaceHeatFlow)
-class SurfaceHeatFlowAdmin(MeasurementAdmin):
-    list_display = ["value", "uncertainty", "corr_HP_flag"]
-
-    fields = (
-        "sample",
-        ("value", "uncertainty"),
-        "corr_HP_flag",
-    )
-
-
 @admin.register(HeatFlow)
 class HeatFlowAdmin(admin.ModelAdmin):
     list_display = [
-        "parent",
         "value",
         "uncertainty",
     ]
@@ -41,8 +29,6 @@ class HeatFlowAdmin(admin.ModelAdmin):
             "Heat Flow",
             {
                 "fields": (
-                    "parent",
-                    "relevant_child",
                     ("value", "uncertainty"),
                     # ("depth_top", "depth_bottom"),
                     "method",

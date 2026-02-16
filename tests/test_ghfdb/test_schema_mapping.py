@@ -124,7 +124,7 @@ def test_ghfdb_field_heat_flow_value_accessor_path():
     Validate heat flow value accessor path.
 
     GHFDB Field: heat_flow
-    Accessor Path: SurfaceHeatFlow.value or HeatFlowSite.heat_flow_value
+    Accessor Path: ParentHeatFlow.value (was SurfaceHeatFlow.value)
     Type: Float (mW/m²)
     Precision: 0.01 mW/m²
     Required: Yes (primary measurement)
@@ -137,10 +137,11 @@ def test_ghfdb_field_heat_flow_value_accessor_path():
 
     # Try to create heat flow measurement if model exists
     try:
-        from ghfdb.models import SurfaceHeatFlow
+        from ghfdb.models import ParentHeatFlow
 
-        heat_flow = SurfaceHeatFlow.objects.create(
-            site=site,
+        heat_flow = ParentHeatFlow.objects.create(
+            sample=site,
+            dataset=dataset,
             value=65.5,  # mW/m²
             uncertainty=2.0,
         )
@@ -158,7 +159,7 @@ def test_ghfdb_field_heat_flow_value_accessor_path():
         assert 0 < hf_value < 1000, f"Heat flow value out of typical range: {hf_value} mW/m²"
 
     except ImportError:
-        pytest.skip("SurfaceHeatFlow model not available - TDD placeholder")
+        pytest.skip("ParentHeatFlow model not available - TDD placeholder")
 
 
 @pytest.mark.django_db

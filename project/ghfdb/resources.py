@@ -9,8 +9,9 @@ from fairdm.contrib.contributors.models import Person
 from fairdm.contrib.location.models import Point
 from fairdm.contrib.location.utils import normalize_coordinate
 from heat_flow.models import HeatFlow, HeatFlowInterval
-from heat_flow.models.measurements import IntervalConductivity, SurfaceHeatFlow, ThermalGradient
+from heat_flow.models.measurements import IntervalConductivity, ThermalGradient
 from heat_flow.models.samples import HeatFlowSite
+from ghfdb.models import ParentHeatFlow
 from import_export.fields import Field
 from import_export.formats.base_formats import XLSX
 from import_export.resources import ModelResource
@@ -472,21 +473,20 @@ class GHFDBResource(ModelResource):
 
     """
 
-    q = Field("parent__value", readonly=True)
-    q_uncertainty = Field("parent__uncertainty", readonly=True)
-
-    # Parent fields
-    # name = Field("parent__sample__name", readonly=True)
-    lat_NS = Field("parent__sample__location__latitude", readonly=True)
-    lon_EW = Field("parent__sample__location__longitude", readonly=True)
-    elevation = Field("parent__sample__location__elevation", readonly=True)
-    environment = Field("parent__sample__environment", readonly=True)
-    # p_comment = Field("parent__comment", readonly=True)
-    corr_HP_flag = Field("parent__correction_flag", readonly=True)
-    total_depth_MD = Field("parent__sample__length", readonly=True)
-    total_depth_TVD = Field("parent__sample__vertical_depth", readonly=True)
-    explo_method = Field("parent__sample__explo_method", readonly=True)
-    explo_purpose = Field("sample__explo_purpose", readonly=True)
+    # NOTE: Parent fields are no longer accessible via parent__ FK since we removed that relationship.
+    # These fields would need to be accessed differently now or removed from export.
+    # Commenting out for now as they reference the old parent FK structure.
+    # q = Field("parent__value", readonly=True)
+    # q_uncertainty = Field("parent__uncertainty", readonly=True)
+    # lat_NS = Field("parent__sample__location__latitude", readonly=True)
+    # lon_EW = Field("parent__sample__location__longitude", readonly=True)
+    # elevation = Field("parent__sample__location__elevation", readonly=True)
+    # environment = Field("parent__sample__environment", readonly=True)
+    # corr_HP_flag = Field("parent__correction_flag", readonly=True)
+    # total_depth_MD = Field("parent__sample__length", readonly=True)
+    # total_depth_TVD = Field("parent__sample__vertical_depth", readonly=True)
+    # explo_method = Field("parent__sample__explo_method", readonly=True)
+    # explo_purpose = Field("sample__explo_purpose", readonly=True)
 
     # uses the ForeignObjectWidget to create a ThermalGradient instance and associate it with the import
     thermal_gradient = Field(
@@ -538,7 +538,7 @@ class GHFDBResource(ModelResource):
     probe_penetration = Field("probe_penetration")
     # publication_reference = Field("dataset__review__reference")
     # data_reference = Field("dataset__reference")
-    relevant_child = Field("relevant_child", widget=YesNoWidget())
+    # relevant_child removed - now tracked via ParentChildRelation.is_relevant
     c_comment = Field("c_comment")
 
     corr_IS_flag = Field(
@@ -659,13 +659,13 @@ class GHFDBResource(ModelResource):
         # sample types
         row["location"] = self.get_location(row).pk
 
-        # next, we create the HeatFlowSite and store it in the row as sample. When we create the SurfaceHeatFlow object,
-        # this sample will be attached.
+        # next, we create the HeatFlowSite and store it in the row as sample.
         row["heat_flow_site"] = self.get_heat_flow_site(row).pk
 
-        # create a SurfaceHeatFlow instance and store as parent in the row. It will be found during creation of the
-        # HeatFlow child instance
-        row["parent"] = self.get_parent_heat_flow(row).pk
+        # NOTE: ParentHeatFlow creation needs refactoring - no longer uses parent FK on HeatFlow.
+        # Instead should create ParentChildRelation entries after import.
+        # Commenting out for now until import logic is redesigned.
+        # row["parent"] = self.get_parent_heat_flow(row).pk
 
         # overwrite the previous sample with the sample for the HeatFlowInterval. This will be attached to the HeatFlow
         # child instance
@@ -769,13 +769,14 @@ class GHFDBResource(ModelResource):
         ).clean(None, row)
 
     def get_parent_heat_flow(self, row):
+        # NOTE: Switched from SurfaceHeatFlow to ParentHeatFlow
         return ForeignObjectWidget(
-            model=SurfaceHeatFlow,
+            model=ParentHeatFlow,
             field_map={
                 "sample": "heat_flow_site",
                 "value": "q",
                 "uncertainty": "q_uncertainty",
-                "method": "q_method",
+                # Note: ParentHeatFlow doesn't have method field, removed
             },
             factory_kwargs={
                 "exclude": [

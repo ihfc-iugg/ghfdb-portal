@@ -492,17 +492,17 @@ def calculate_heat_flow_quality(heat_flow):
     }
 
 
-def calculate_parent_quality(surface_heat_flow):
+def calculate_parent_quality(parent_heat_flow):
     """
-    Calculate quality for parent level (SurfaceHeatFlow) based on children.
+    Calculate quality for parent level (ParentHeatFlow) based on children.
 
     Args:
-        surface_heat_flow: SurfaceHeatFlow model instance
+        parent_heat_flow: ParentHeatFlow model instance (from ghfdb app)
 
     Returns:
         dict: Parent level quality assessment
     """
-    children = surface_heat_flow.children.all()
+    children = parent_heat_flow.children.all()
 
     if not children.exists():
         return {

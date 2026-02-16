@@ -1,0 +1,186 @@
+# GHFDB Specification - Version 1.0
+# IHFC Global Heat Flow Database Conceptual Model
+# Based on: Fuchs et al. (2023): The Global Heat Flow Database: Update 2023
+
+ghfdb_specification:
+  version: "1.0"
+  publication: "Fuchs et al. (2023): The Global Heat Flow Database: Update 2023"
+  doi: "10.5880/fidgeo.2023.005"
+  release_date: "2023-06-15"
+
+  fields:
+    # ===== Site Metadata =====
+
+    - name: site_name
+      description: "Name or identifier for the measurement site"
+      data_type: string
+      nullable: false
+      controlled_vocabulary: null
+      category: site_metadata
+      quality_relevance: null
+
+    - name: latitude
+      description: "Latitude of measurement site in decimal degrees (WGS84)"
+      data_type: float
+      nullable: false
+      controlled_vocabulary: null
+      category: site_metadata
+      quality_relevance: U-score
+      constraints:
+        min: -90.0
+        max: 90.0
+
+    - name: longitude
+      description: "Longitude of measurement site in decimal degrees (WGS84)"
+      data_type: float
+      nullable: false
+      controlled_vocabulary: null
+      category: site_metadata
+      quality_relevance: U-score
+      constraints:
+        min: -180.0
+        max: 180.0
+
+    - name: elevation
+      description: "Elevation above sea level in meters"
+      data_type: float
+      nullable: true
+      controlled_vocabulary: null
+      category: site_metadata
+      quality_relevance: null
+
+    - name: location_quality_flag
+      description: "Quality indicator for site location determination"
+      data_type: string
+      nullable: true
+      controlled_vocabulary:
+        - "High"
+        - "Medium"
+        - "Low"
+        - "Unknown"
+      category: site_metadata
+      quality_relevance: U-score
+
+    # ===== Measurement Data =====
+
+    - name: heat_flow_value
+      description: "Measured heat flow in mW/m²"
+      data_type: float
+      nullable: false
+      controlled_vocabulary: null
+      category: measurement_data
+      quality_relevance: null
+      constraints:
+        min: 0.0
+        max: 1000.0
+
+    - name: heat_flow_uncertainty
+      description: "Uncertainty in heat flow measurement in mW/m²"
+      data_type: float
+      nullable: true
+      controlled_vocabulary: null
+      category: measurement_data
+      quality_relevance: M-score
+
+    - name: measurement_method
+      description: "Method used to determine heat flow"
+      data_type: string
+      nullable: false
+      controlled_vocabulary:
+        - "Temperature gradient + thermal conductivity"
+        - "Continuous temperature log"
+        - "Bottom hole temperature"
+        - "Other"
+      category: measurement_data
+      quality_relevance: M-score
+
+    - name: measurement_date
+      description: "Date when measurement was taken (ISO 8601)"
+      data_type: date
+      nullable: true
+      controlled_vocabulary: null
+      category: measurement_data
+      quality_relevance: null
+
+    - name: depth_top
+      description: "Top depth of measurement interval in meters"
+      data_type: float
+      nullable: true
+      controlled_vocabulary: null
+      category: measurement_data
+      quality_relevance: null
+
+    - name: depth_bottom
+      description: "Bottom depth of measurement interval in meters"
+      data_type: float
+      nullable: true
+      controlled_vocabulary: null
+      category: measurement_data
+      quality_relevance: null
+
+    - name: temperature_gradient
+      description: "Temperature gradient in K/km or °C/km"
+      data_type: float
+      nullable: true
+      controlled_vocabulary: null
+      category: measurement_data
+      quality_relevance: null
+
+    - name: thermal_conductivity
+      description: "Thermal conductivity in W/(m·K)"
+      data_type: float
+      nullable: true
+      controlled_vocabulary: null
+      category: measurement_data
+      quality_relevance: null
+
+    # ===== Quality Indicators =====
+
+    - name: correction_applied
+      description: "Whether corrections have been applied to the data"
+      data_type: boolean
+      nullable: false
+      controlled_vocabulary: null
+      category: quality_indicators
+      quality_relevance: correction_flag
+
+    - name: quality_score
+      description: "Overall quality score (0-10 scale per Fuchs et al. 2023)"
+      data_type: float
+      nullable: true
+      controlled_vocabulary: null
+      category: quality_indicators
+      quality_relevance: null
+      constraints:
+        min: 0.0
+        max: 10.0
+
+    # ===== Data Provenance =====
+
+    - name: data_source
+      description: "Original publication or data source reference"
+      data_type: string
+      nullable: true
+      controlled_vocabulary: null
+      category: data_provenance
+      quality_relevance: null
+
+    - name: contributors
+      description: "Individuals or organizations who contributed this data"
+      data_type: string
+      nullable: true
+      controlled_vocabulary: null
+      category: data_provenance
+      quality_relevance: null
+
+    - name: publication_doi
+      description: "DOI of associated publication"
+      data_type: string
+      nullable: true
+      controlled_vocabulary: null
+      category: data_provenance
+      quality_relevance: null
+
+  deprecated_fields: []
+
+  migration_guidance: "Initial specification release. No migration required."

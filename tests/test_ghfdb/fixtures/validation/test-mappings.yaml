@@ -1,0 +1,62 @@
+# Test Field Mappings for Validation Testing
+# Minimal subset for testing purposes
+
+ghfdb_fields:
+  - name: site_name
+    django_model: TestSample
+    django_field: name
+    relationship_type: direct
+    nullable: false
+    accessor_path: sample.name
+    orm_example: TestSample.objects.values_list('name', flat=True)
+    notes: Test mapping for site name
+
+  - name: latitude
+    django_model: TestSample
+    django_field: latitude
+    relationship_type: direct
+    nullable: false
+    accessor_path: sample.latitude
+    orm_example: TestSample.objects.filter(latitude__gte=-45.0)
+    notes: Test mapping for latitude
+
+  - name: heat_flow_value
+    django_model: TestSample
+    django_field: heat_flow
+    relationship_type: direct
+    nullable: false
+    accessor_path: sample.heat_flow
+    orm_example: TestSample.objects.filter(heat_flow__gt=50.0)
+    notes: Test mapping for heat flow
+
+  - name: quality_score
+    django_model: TestSample
+    django_field: calculate_quality_score
+    relationship_type: computed
+    nullable: true
+    accessor_path: sample.calculate_quality_score()
+    calculation_dependencies:
+      - location_quality_flag
+      - correction_applied
+    orm_example: score = sample.calculate_quality_score()
+    notes: Test computed field
+
+  - name: contributors
+    django_model: TestSample
+    django_field: contributors
+    relationship_type: many_to_many
+    nullable: true
+    accessor_path: sample.contributors.all()
+    join_semantics: Through SampleContributor join table
+    orm_example: sample.contributors.values('orcid', 'name')
+    notes: Test many-to-many relationship
+
+extensions:
+  - name: test_extension
+    django_model: TestSample
+    django_field: review_status
+    justification: Test extension for review workflow
+    lifecycle: temporary
+    non_canonical: true
+    added_date: "2026-01-01"
+    review_date: "2026-06-01"

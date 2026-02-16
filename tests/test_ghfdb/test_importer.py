@@ -5,12 +5,12 @@ from django.core.management import call_command
 from fairdm.core.models import Dataset
 from ghfdb.resources import GHFDBResource
 from ghfdb.views import GHFDBImportFormat
+from ghfdb.models import ParentHeatFlow
 from heat_flow.models import (
     HeatFlow,
     HeatFlowInterval,
     HeatFlowSite,
     IntervalConductivity,
-    SurfaceHeatFlow,
     ThermalGradient,
 )
 from research_vocabs.models import Concept
@@ -145,17 +145,18 @@ class TestSuccesfulImport:
         # Test relations
         assert obj.dataset == success_resource.dataset
         assert obj.measurements.count() == 1
-        assert obj.measurements.instance_of(SurfaceHeatFlow).count() == 1
+        # Note: ParentHeatFlow is now in ghfdb app, not a measurement on the site
+        # assert obj.measurements.instance_of(ParentHeatFlow).count() == 1
 
     def test_heat_flow_parent_created(self, success_resource, importer_success):
-        """Test that the SurfaceHeatFlow instance is created and has the expected fields."""
-        assert SurfaceHeatFlow.objects.count() == 1
-        obj = SurfaceHeatFlow.objects.first()
+        """Test that the ParentHeatFlow instance is created and has the expected fields."""
+        assert ParentHeatFlow.objects.count() == 1
+        obj = ParentHeatFlow.objects.first()
 
         assert obj.value.magnitude == 45.0
         assert obj.uncertainty.magnitude == 5.0
         assert obj.name == "Test name"  # this is the current behavior but it is unclear if it is desirable
-        assert obj.is_ghfdb is False  # this is the current behavior but it is unclear if it is desirable
+        assert obj.is_ghfdb is True  # Updated: ParentHeatFlow defaults to True
         assert obj.corr_HP_flag is True  # failing
 
         # test relations
@@ -198,7 +199,7 @@ class TestSuccesfulImport:
         assert obj.value.magnitude == 63
         assert obj.uncertainty.magnitude == 3.6
         assert obj.expedition == "Test Expedition"
-        assert obj.relevant_child is True  # "Yes"
+        # Note: relevant_child field removed - now tracked via ParentChildRelation.is_relevant
         assert obj.probe_penetration.magnitude == 6.5
         assert obj.probe_length.magnitude == 12
         assert obj.probe_tilt.magnitude == 20
