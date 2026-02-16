@@ -1,7 +1,7 @@
 # Research: CI/CD Pipeline & Automation
 
 **Feature**: CI/CD Pipeline & Automation
-**Branch**: `003-cicd-pipeline`
+**Branch**: `001-cicd-pipeline`
 **Date**: January 5, 2026
 
 ## Research Objectives

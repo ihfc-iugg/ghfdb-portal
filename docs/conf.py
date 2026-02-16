@@ -82,11 +82,6 @@ tippy_rtd_urls = [
     "https://markdown-it-py.readthedocs.io/en/latest",
 ]
 
-# ============================================================================
-# Documentation Infrastructure & Conventions Configuration
-# Feature: 001-docs-infrastructure
-# ============================================================================
-
 # Linkcheck configuration (T005)
 # Ignore patterns for URLs that should not be checked
 linkcheck_ignore = [

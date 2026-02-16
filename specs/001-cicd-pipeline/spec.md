@@ -1,6 +1,6 @@
 # Feature Specification: CI/CD Pipeline & Automation
 
-**Feature Branch**: `003-cicd-pipeline`
+**Feature Branch**: `001-cicd-pipeline`
 **Created**: January 5, 2026
 **Status**: Draft
 **Input**: User description: "Create a feature spec defining continuous integration and deployment automation including what runs on PR, what runs on merge to main, and what runs nightly or on-demand. The spec should define test execution strategy in CI (which test suites run when), coverage collection and reporting expectations, build and deployment automation steps, environment-specific configurations, and failure notification and handling."
@@ -312,10 +312,6 @@ Tests are categorized by speed and dependencies, with fast unit tests running on
   - `pyproject.toml` test and tooling configuration (already exists)
   - `Dockerfile` and `docker-compose.yml` (already exist)
   - Environment variable files: `stack.env`, `stack.development.env` (already exist)
-
-- **Related Specifications**:
-  - `001-docs-infrastructure`: Documentation validation steps depend on documentation standards and conventions
-  - `002-testing-infrastructure`: Test execution strategy depends on test layers, fixtures, and conventions defined in testing infrastructure spec
 
 ## References
 

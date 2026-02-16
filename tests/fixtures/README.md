@@ -346,7 +346,6 @@ Fixtures should be versioned alongside the GHFDB template version they represent
 
 ## Related Documentation
 
-- [Testing Infrastructure Specification](../specs/002-testing-infrastructure/spec.md)
 - [Test Organization Guide](../tests/README.md)
 - [GHFDB Field Mapping](../docs/ghfdb_fields.md)
 - [Testing Standards Guide](../docs/guides/testing-standards.md) (to be created)

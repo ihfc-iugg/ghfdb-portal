@@ -1,7 +1,7 @@
 # Implementation Plan: CI/CD Pipeline & Automation
 
-**Branch**: `003-cicd-pipeline` | **Date**: January 5, 2026 | **Spec**: [spec.md](spec.md)
-**Input**: Feature specification from `/specs/003-cicd-pipeline/spec.md`
+**Branch**: `001-cicd-pipeline` | **Date**: January 5, 2026 | **Spec**: [spec.md](spec.md)
+**Input**: Feature specification from `/specs/001-cicd-pipeline/spec.md`
 
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
@@ -50,7 +50,7 @@ All applicable constitution principles PASS. No violations to justify. This feat
 ### Documentation (this feature)
 
 ```text
-specs/003-cicd-pipeline/
+specs/001-cicd-pipeline/
 ├── plan.md              # This file (/speckit.plan command output)
 ├── research.md          # Phase 0 output (/speckit.plan command)
 ├── data-model.md        # Phase 1 output - N/A for infrastructure feature

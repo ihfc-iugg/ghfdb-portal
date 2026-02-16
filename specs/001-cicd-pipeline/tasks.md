@@ -1,6 +1,6 @@
 # Tasks: CI/CD Pipeline & Automation
 
-**Input**: Design documents from `/specs/003-cicd-pipeline/`
+**Input**: Design documents from `/specs/001-cicd-pipeline/`
 **Prerequisites**: plan.md ✅, spec.md ✅, research.md ✅, quickstart.md ✅, contracts/ ✅
 
 **Tests**: Tests are NOT explicitly requested in the feature specification. This is an infrastructure feature focused on implementing the CI/CD workflows themselves.
@@ -235,7 +235,7 @@ This project uses standard GitHub repository structure with workflows in `.githu
 - [X] T130a [P] Create contributor feedback form (Google Forms or GitHub Discussions template) for quarterly CI/CD experience survey
 - [ ] T131 Run complete CI/CD validation: PR → merge → staging deploy → manual production deploy
 - [X] T132 Validate quickstart.md matches actual implemented workflows
-- [X] T133 Update specs/003-cicd-pipeline/checklists/requirements.md marking feature complete
+- [X] T133 Update specs/001-cicd-pipeline/checklists/requirements.md marking feature complete
 
 ---
 

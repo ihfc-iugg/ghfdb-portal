@@ -22,15 +22,6 @@ Create a feature specification that defines the problem, user stories, requireme
 - Success criteria (SC-###)
 - Edge cases and assumptions
 
-**Example**:
-
-```text
-specs/001-docs-infrastructure/spec.md
-- User Story 1: Follow documentation conventions (Priority: P1)
-- FR-001: Documentation MUST define audiences
-- SC-001: Contributors can find placement in under 2 minutes
-```
-
 **Constitutional Alignment**: Specifications must reference relevant constitutional principles (see [Constitution](../../constitution/index.md)).
 
 ### Phase 1: Planning
@@ -46,16 +37,6 @@ Create an implementation plan that translates requirements into technical decisi
 - Project structure (file organization)
 - Phase breakdown (phases 0-6)
 - Dependencies and external documentation
-
-**Example**:
-
-```text
-specs/001-docs-infrastructure/plan.md
-- Tech stack: Sphinx + sphinx-book-theme + MyST Markdown
-- Phase 1: Setup and configuration
-- Phase 2: Documentation conventions
-- Phase 3: CI validation
-```
 
 **Supporting Artifacts** (created alongside plan.md):
 
@@ -77,15 +58,6 @@ Break the implementation plan into concrete, actionable tasks organized by user 
 - Parallel execution markers [P] for independent tasks
 - File paths and specific implementation details
 - Dependencies and execution order
-
-**Example**:
-
-```text
-specs/001-docs-infrastructure/tasks.md
-- T001: Audit existing documentation structure
-- T006 [P] [US1]: Create documentation-conventions.md
-- T011 [P] [US2]: Create .github/workflows/docs-validation.yml
-```
 
 **Task Format**: `[ID] [P?] [Story] Description`
 
@@ -203,10 +175,10 @@ Let's trace a real example through the workflow:
 ### 4. Implementation
 
 ```bash
-git checkout -b 001-docs-infrastructure
+git checkout -b 001-data-model
 # Implement T001, T006, T011...
 # Mark tasks complete in tasks.md
-git commit -m "feat(docs): add documentation conventions and CI validation"
+git commit -m "feat: establish and test data model"
 ```
 
 ### 5. Review & Merge

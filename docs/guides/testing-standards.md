@@ -1416,7 +1416,6 @@ def legacy_import_function():
 
 ## Related Documentation
 
-- [Testing Infrastructure Specification](../../specs/002-testing-infrastructure/spec.md)
 - [Test Organization Guide](../../tests/README.md)
 - [Test Fixtures Reference](../../tests/fixtures/README.md)
 - [Contributing Guidelines](../../CONTRIBUTING.md)

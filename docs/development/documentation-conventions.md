@@ -150,7 +150,6 @@ All documentation changes follow the same review process as code:
 
 1. Create a feature branch
 2. Make documentation changes
-3. Build documentation locally to verify (see [Quickstart](../../specs/001-docs-infrastructure/quickstart.md))
 4. Submit a pull request
 5. CI validation will check for broken links and build errors
 6. Reviewer approval required before merge
