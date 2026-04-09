@@ -1,7 +1,6 @@
 from datetime import date
 
 import django_filters as df
-from actstream import action
 from braces.views import GroupRequiredMixin, SelectRelatedMixin
 from django.db import transaction
 from django.db.models import Count
@@ -15,8 +14,7 @@ from fairdm.contrib.contributors.views.person import ContributorListView
 from fairdm.core.models import Dataset
 from fairdm.utils.filters import LiteratureFilterset
 from fairdm.utils.permissions import assign_all_model_perms
-from fairdm.utils.view_mixins import FairDMModelFormMixin
-from fairdm.views import FairDMCreateView, FairDMListView
+from fairdm.views import FairDMCreateView, FairDMListView, FairDMModelFormMixin
 from ghfdb.views import can_publish_dataset
 from literature.models import LiteratureItem
 
@@ -46,14 +44,14 @@ def can_submit_review(request, instance: Dataset, **kwargs):
 class ReviewFilterSet(LiteratureFilterset):
     reviewer = df.ModelChoiceFilter(
         field_name="review__reviewers",
-        queryset=Person.contributors.filter(groups__name="reviewers"),
+        queryset=Person.objects.real().filter(groups__name="reviewers"),
         label=_("Reviewer"),
         widget=Select2Widget,
     )
 
     class Meta:
         model = LiteratureItem
-        fields = ["review__status", "reviewer", "type", "issued", "doi", "title", "author", "o"]
+        fields = ["review__status", "reviewer", "type", "issued", "doi", "title"]
 
 
 class ReviewListView(SelectRelatedMixin, FairDMListView):
@@ -140,18 +138,12 @@ class ReviewCreateView(GroupRequiredMixin, FairDMCreateView):
             assign_all_model_perms(reviewer, dataset)
             # Add the reviewer to the dataset as a DataCurator (ensures they get credit for the review)
             dataset.add_contributor(reviewer, with_roles="DataCurator")
-            # add activity for the dataset
-            action.send(
-                self.request.user,
-                verb="started a review",
-                target=dataset,
-            )
 
         return redirect(dataset.get_absolute_url())
 
 
-@plugins.dataset.register
-class ReviewSubmitView(plugins.Action, FairDMModelFormMixin, UpdateView):
+@plugins.register(Dataset)
+class ReviewSubmitView(plugins.Plugin, FairDMModelFormMixin, UpdateView):
     """
     TODO:
      - Run checks for essential metadata before allowing submission.

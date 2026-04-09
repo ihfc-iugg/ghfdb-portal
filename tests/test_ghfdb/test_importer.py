@@ -5,12 +5,12 @@ from django.core.management import call_command
 from fairdm.core.models import Dataset
 from ghfdb.resources import GHFDBResource
 from ghfdb.views import GHFDBImportFormat
-from ghfdb.models import ParentHeatFlow
 from heat_flow.models import (
     HeatFlow,
     HeatFlowInterval,
     HeatFlowSite,
     IntervalConductivity,
+    ParentHeatFlow,
     ThermalGradient,
 )
 from research_vocabs.models import Concept

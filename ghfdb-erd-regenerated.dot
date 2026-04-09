@@ -1,0 +1,318 @@
+// GHFDB Entity Relationship Diagram (Graphviz DOT format)
+// Regenerated from ghfdb-erd.pdf (February 2026)
+// This is the source of truth for the GHFDB data model structure
+//
+// Generate outputs:
+//   PNG: dot -Tpng ghfdb-erd-regenerated.dot -o ghfdb-erd-new.png
+//   SVG: dot -Tsvg ghfdb-erd-regenerated.dot -o ghfdb-erd-new.svg
+//   PDF: dot -Tpdf ghfdb-erd-regenerated.dot -o ghfdb-erd-new.pdf
+
+digraph GHFDB_ERD {
+    // ============================================================
+    // GRAPH SETTINGS
+    // ============================================================
+    
+    rankdir=LR;                // Left-to-right layout
+    splines=polyline;          // Polyline edge routing
+    nodesep=0.4;               // Node separation
+    ranksep=0.8;               // Rank separation
+    pad="0.2,0.2";             // Padding around graph
+    margin="0,0";              // Margin
+    compound=true;             // Allow edges between clusters
+    newrank=true;              // Use new ranking algorithm
+    
+    // Graph title
+    labelloc="t";
+    label="Global Heat Flow Database\nEntity Relationship Diagram";
+    fontname="Arial Bold";
+    fontsize=14;
+    
+    // ============================================================
+    // DEFAULT STYLES
+    // ============================================================
+    
+    node [
+        shape=plaintext,
+        fontname="Arial",
+        fontsize=9
+    ];
+    
+    edge [
+        fontname="Arial",
+        fontsize=8,
+        fontcolor="#555555",
+        penwidth=1.5,
+        arrowhead=crow,
+        arrowtail=none
+    ];
+    
+    // ============================================================
+    // PARENT-RELATED ENTITIES (GHFDB APP)
+    // ============================================================
+    
+    subgraph cluster_parent {
+        label="Parent-Related Entities";
+        fontsize=12;
+        fontname="Arial Bold";
+        style="filled,rounded";
+        color="#2E8B57";
+        fillcolor="#E8F8E8";
+        penwidth=2;
+        margin=15;
+        
+        // HeatFlowSite - Blue entity
+        HeatFlowSite [label=<
+            <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#4A90E2">
+                <TR><TD COLSPAN="2" BGCOLOR="#2E5C8A"><FONT COLOR="white"><B>HeatFlowSite</B></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white"><U>id</U>: int</TD><TD ALIGN="LEFT" BGCOLOR="white">Primary key</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7"><I>location_id</I>: int FK</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Geographic coordinates</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">name: string</TD><TD ALIGN="LEFT" BGCOLOR="white">Site or survey name</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">elevation: decimal</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Surface elevation</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">length: quantity</TD><TD ALIGN="LEFT" BGCOLOR="white">Total measured depth (MD)</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">vertical_depth: quantity</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">True vertical depth (TVD)</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">environment: string</TD><TD ALIGN="LEFT" BGCOLOR="white">Geographic environment type</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">explo_method: string</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Exploration method</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">explo_purpose: string</TD><TD ALIGN="LEFT" BGCOLOR="white">Purpose of exploration</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">country: string</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Country location</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">region: string</TD><TD ALIGN="LEFT" BGCOLOR="white">Regional location</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">continent: string</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Continent</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">domain: string</TD><TD ALIGN="LEFT" BGCOLOR="white">Geological domain</TD></TR>
+            </TABLE>
+        >];
+        
+        // ParentHeatFlow - Green entity
+        ParentHeatFlow [label=<
+            <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#50C878">
+                <TR><TD COLSPAN="2" BGCOLOR="#2E8B57"><FONT COLOR="white"><B>ParentHeatFlow</B></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white"><U>id</U>: int</TD><TD ALIGN="LEFT" BGCOLOR="white">Primary key</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7"><I>sample_id</I>: int FK</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Associated heat flow site</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">value: quantity</TD><TD ALIGN="LEFT" BGCOLOR="white">Surface heat flow density (mW/m²)</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">uncertainty: quantity</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Uncertainty (1 sigma, mW/m²)</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">corr_HP_flag: boolean</TD><TD ALIGN="LEFT" BGCOLOR="white">Heat production correction applied</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">comment: text</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">General comments</TD></TR>
+            </TABLE>
+        >];
+        
+        // Vertical ordering within parent cluster
+        HeatFlowSite -> ParentHeatFlow [style=invis, weight=100];
+    }
+    
+    // ============================================================
+    // SPATIAL REFERENCE (OUTSIDE CLUSTERS)
+    // ============================================================
+    
+    Point [label=<
+        <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#4A90E2">
+            <TR><TD COLSPAN="2" BGCOLOR="#2E5C8A"><FONT COLOR="white"><B>Point</B></FONT></TD></TR>
+            <TR><TD ALIGN="LEFT" BGCOLOR="white"><U>id</U>: int</TD><TD ALIGN="LEFT" BGCOLOR="white">Primary key</TD></TR>
+            <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">x: decimal</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">X-coordinate (longitude)</TD></TR>
+            <TR><TD ALIGN="LEFT" BGCOLOR="white">y: decimal</TD><TD ALIGN="LEFT" BGCOLOR="white">Y-coordinate (latitude)</TD></TR>
+            <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">crs: string</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Coordinate reference system</TD></TR>
+        </TABLE>
+    >];
+    
+    // Position Point below HeatFlowSite
+    {rank=same; Point;}
+    
+    // ============================================================
+    // BRIDGE ENTITY (CENTER)
+    // ============================================================
+    
+    ParentChildRelation [label=<
+        <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#9370DB">
+            <TR><TD COLSPAN="2" BGCOLOR="#6A5ACD"><FONT COLOR="white"><B>ParentChildRelation</B></FONT></TD></TR>
+            <TR><TD ALIGN="LEFT" BGCOLOR="white"><U>id</U>: int</TD><TD ALIGN="LEFT" BGCOLOR="white">Primary key</TD></TR>
+            <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7"><I>parent_id</I>: int FK</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Parent heat flow</TD></TR>
+            <TR><TD ALIGN="LEFT" BGCOLOR="white"><I>child_id</I>: int FK</TD><TD ALIGN="LEFT" BGCOLOR="white">Child heat flow</TD></TR>
+            <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">is_relevant: boolean</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Used in parent calculation</TD></TR>
+        </TABLE>
+    >];
+    
+    // ============================================================
+    // CHILD-RELATED ENTITIES (HEAT_FLOW APP)
+    // ============================================================
+    
+    subgraph cluster_child {
+        label="Child-Related Entities";
+        fontsize=12;
+        fontname="Arial Bold";
+        style="filled,rounded";
+        color="#D2691E";
+        fillcolor="#FFF4E8";
+        penwidth=2;
+        margin=15;
+        
+        // GeoDepthInterval - Blue entity
+        GeoDepthInterval [label=<
+            <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#4A90E2">
+                <TR><TD COLSPAN="2" BGCOLOR="#2E5C8A"><FONT COLOR="white"><B>GeoDepthInterval</B></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white"><U>id</U>: int</TD><TD ALIGN="LEFT" BGCOLOR="white">Primary key</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7"><I>sample_id</I>: int FK</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Parent heat flow site</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">top: quantity</TD><TD ALIGN="LEFT" BGCOLOR="white">Top depth of interval</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">bottom: quantity</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Bottom depth of interval</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">vertical_depth: quantity</TD><TD ALIGN="LEFT" BGCOLOR="white">Vertical depth</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">vertical_datum: string</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Vertical datum (MSL)</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">lithology: string</TD><TD ALIGN="LEFT" BGCOLOR="white">Lithology of the interval</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">age: string</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Geologic age of the interval</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">stratigraphy: string</TD><TD ALIGN="LEFT" BGCOLOR="white">Stratigraphic unit</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">notes: string</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Additional notes</TD></TR>
+            </TABLE>
+        >];
+        
+        // ThermalGradient - Orange entity
+        ThermalGradient [label=<
+            <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#FFB347">
+                <TR><TD COLSPAN="2" BGCOLOR="#D2691E"><FONT COLOR="white"><B>ThermalGradient</B></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white"><U>id</U>: int</TD><TD ALIGN="LEFT" BGCOLOR="white">Primary key</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7"><I>sample_id</I>: int FK</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Depth interval (via Measurement)</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">value: quantity</TD><TD ALIGN="LEFT" BGCOLOR="white">Temperature gradient (K/km)</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">uncertainty: quantity</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Gradient uncertainty (K/km)</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">corrected_value: quantity</TD><TD ALIGN="LEFT" BGCOLOR="white">Corrected gradient (K/km)</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">corrected_uncertainty: quantity</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Corrected uncertainty (K/km)</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">method_top: string</TD><TD ALIGN="LEFT" BGCOLOR="white">Top temperature method</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">method_bottom: string</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Bottom temperature method</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">shutin_top: quantity</TD><TD ALIGN="LEFT" BGCOLOR="white">Top shut-in time (hours)</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">shutin_bottom: quantity</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Bottom shut-in time (hours)</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">correction_top: string</TD><TD ALIGN="LEFT" BGCOLOR="white">Top correction method</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">correction_bottom: string</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Bottom correction method</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">number: int</TD><TD ALIGN="LEFT" BGCOLOR="white">Number of temperature recordings</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">score: float</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Quality score (0.0-1.0)</TD></TR>
+            </TABLE>
+        >];
+        
+        // IntervalConductivity - Orange entity
+        IntervalConductivity [label=<
+            <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#FFB347">
+                <TR><TD COLSPAN="2" BGCOLOR="#D2691E"><FONT COLOR="white"><B>IntervalConductivity</B></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white"><U>id</U>: int</TD><TD ALIGN="LEFT" BGCOLOR="white">Primary key</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7"><I>sample_id</I>: int FK</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Depth interval (via Measurement)</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">value: quantity</TD><TD ALIGN="LEFT" BGCOLOR="white">Mean thermal conductivity (W/mK)</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">uncertainty: quantity</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Conductivity uncertainty (W/mK)</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">source: string</TD><TD ALIGN="LEFT" BGCOLOR="white">Sample source type</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">location: string</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Conductivity data location</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">method: string</TD><TD ALIGN="LEFT" BGCOLOR="white">Determination method</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">saturation: string</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Sample saturation state</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">pT_conditions: string</TD><TD ALIGN="LEFT" BGCOLOR="white">Pressure-temp conditions</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">pT_function: string</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">pT correction technique</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">strategy: string</TD><TD ALIGN="LEFT" BGCOLOR="white">Averaging methodology</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">score: float</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Quality score (0.0-1.0)</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">number: int</TD><TD ALIGN="LEFT" BGCOLOR="white">Number of measurements</TD></TR>
+            </TABLE>
+        >];
+        
+        // HeatFlow - Orange entity
+        HeatFlow [label=<
+            <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#FFB347">
+                <TR><TD COLSPAN="2" BGCOLOR="#D2691E"><FONT COLOR="white"><B>HeatFlow</B></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white"><U>id</U>: int</TD><TD ALIGN="LEFT" BGCOLOR="white">Primary key</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7"><I>thermal_gradient_id</I>: int FK</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Temperature gradient data</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white"><I>thermal_conductivity_id</I>: int FK</TD><TD ALIGN="LEFT" BGCOLOR="white">Thermal conductivity data</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">value: quantity</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Heat flow density (mW/m²)</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">uncertainty: quantity</TD><TD ALIGN="LEFT" BGCOLOR="white">Uncertainty (1 sigma, mW/m²)</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">method: string</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Calculation method (Fourier, Bullard, etc.)</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">expedition: string</TD><TD ALIGN="LEFT" BGCOLOR="white">Expedition/cruise/vessel name</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">water_temperature: quantity</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Bottom water temperature</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">date_acquired: date</TD><TD ALIGN="LEFT" BGCOLOR="white">Date of data acquisition</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">U_score: char</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Uncertainty quality (U1-U4, Ux)</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">M_score: char</TD><TD ALIGN="LEFT" BGCOLOR="white">Methodological quality (M1-M4, Mx)</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">c_comment: text</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">General comments</TD></TR>
+            </TABLE>
+        >];
+        
+        // ProbeMetadata - Blue entity
+        ProbeMetadata [label=<
+            <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#4A90E2">
+                <TR><TD COLSPAN="2" BGCOLOR="#2E5C8A"><FONT COLOR="white"><B>ProbeMetadata</B></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white"><U>id</U>: int</TD><TD ALIGN="LEFT" BGCOLOR="white">Primary key</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7"><I>interval_id</I>: int FK</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Associated depth interval</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">penetration: quantity</TD><TD ALIGN="LEFT" BGCOLOR="white">Marine probe penetration depth</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">probe_type: string</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Type of probe used</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">length: quantity</TD><TD ALIGN="LEFT" BGCOLOR="white">Length of probe</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">tilt: quantity</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Tilt angle of probe</TD></TR>
+            </TABLE>
+        >];
+        
+        // HeatFlowCorrection - Orange entity
+        HeatFlowCorrection [label=<
+            <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#FFB347">
+                <TR><TD COLSPAN="2" BGCOLOR="#D2691E"><FONT COLOR="white"><B>HeatFlowCorrection</B></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white"><U>id</U>: int</TD><TD ALIGN="LEFT" BGCOLOR="white">Primary key</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7"><I>heat_flow_id</I>: int FK</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Associated heat flow</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="white">correction_type: string</TD><TD ALIGN="LEFT" BGCOLOR="white">Type of correction (IS, T, S, E, TOPO, PAL, SUR, CONV, HR)</TD></TR>
+                <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">status: string</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Correction status (present/corrected/uncorrected)</TD></TR>
+            </TABLE>
+        >];
+        
+        // Vertical positioning within child cluster
+        {rank=same; ThermalGradient; IntervalConductivity;}
+        {rank=same; ProbeMetadata; HeatFlowCorrection;}
+    }
+    
+    // ============================================================
+    // RELATIONSHIPS
+    // ============================================================
+    
+    // Spatial reference
+    Point -> HeatFlowSite [
+        xlabel="location",
+        dir=back,
+        constraint=true
+    ];
+    
+    // Parent cluster relationships
+    HeatFlowSite -> ParentHeatFlow [
+        xlabel="has",
+        constraint=true
+    ];
+    
+    // Cross-cluster: Site to Child entities
+    HeatFlowSite -> GeoDepthInterval [
+        xlabel="contains",
+        constraint=false,
+        weight=2
+    ];
+    
+    // Bridge relationships
+    ParentHeatFlow -> ParentChildRelation [
+        xlabel="parent of",
+        constraint=false
+    ];
+    
+    HeatFlow -> ParentChildRelation [
+        xlabel="child of",
+        constraint=false,
+        dir=back
+    ];
+    
+    // Child cluster measurement flow
+    GeoDepthInterval -> ThermalGradient [
+        xlabel="measured in",
+        constraint=true
+    ];
+    
+    GeoDepthInterval -> IntervalConductivity [
+        xlabel="measured in",
+        constraint=true
+    ];
+    
+    ThermalGradient -> HeatFlow [
+        xlabel="calculates",
+        constraint=true
+    ];
+    
+    IntervalConductivity -> HeatFlow [
+        xlabel="calculates",
+        constraint=true
+    ];
+    
+    // Metadata relationships
+    GeoDepthInterval -> ProbeMetadata [
+        xlabel="metadata",
+        constraint=true
+    ];
+    
+    HeatFlow -> HeatFlowCorrection [
+        xlabel="corrections",
+        constraint=true
+    ];
+}

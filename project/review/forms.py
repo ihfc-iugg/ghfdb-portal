@@ -41,7 +41,7 @@ class ReviewForm(ModelForm):
     )
 
     reviewers = forms.ModelMultipleChoiceField(
-        queryset=Person.contributors.all(),
+        queryset=Person.objects.real().all(),
         required=True,
         label=_("Reviewers"),
         help_text=_("Select users who have reviewed the data."),

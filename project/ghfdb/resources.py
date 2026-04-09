@@ -8,10 +8,6 @@ from django.forms import modelform_factory
 from fairdm.contrib.contributors.models import Person
 from fairdm.contrib.location.models import Point
 from fairdm.contrib.location.utils import normalize_coordinate
-from heat_flow.models import HeatFlow, HeatFlowInterval
-from heat_flow.models.measurements import IntervalConductivity, ThermalGradient
-from heat_flow.models.samples import HeatFlowSite
-from ghfdb.models import ParentHeatFlow
 from import_export.fields import Field
 from import_export.formats.base_formats import XLSX
 from import_export.resources import ModelResource
@@ -20,6 +16,15 @@ from literature.models import LiteratureItem
 from research_vocabs.fields import ConceptField, ConceptManyToManyField
 from research_vocabs.models import Concept
 from review.models import Review
+
+from ..heat_flow.models import (
+    HeatFlow,
+    HeatFlowInterval,
+    HeatFlowSite,
+    IntervalConductivity,
+    ParentHeatFlow,
+    ThermalGradient,
+)
 
 # list of fields that contains controlled vocabulary choices that need to be cleaned
 # fields correlate to spreadsheet columns
@@ -149,25 +154,6 @@ class SimpleConceptField(forms.ChoiceField):
             return None
         value = value.replace("(specify in comments)", "").strip().lower()
         return self.inverted_choices.get(value, value)
-
-
-# class CustomSelect(forms.Select):
-#     """
-#     A custom Django form widget that overrides the default Select widget to allow
-#     conversion from a display value back to the corresponding database value.
-
-#     Methods
-#     -------
-#     value_from_datadict(data, files, name):
-#         Converts the display value from the submitted form data back to the
-#         corresponding database value using the widget's choices mapping.
-#     """
-
-#     def value_from_datadict(self, data, files, name):
-#         """Converts the display value back to the database value."""
-#         display_to_value = {label: value for value, label in self.choices}
-#         display_value = data.get(name)
-#         return display_to_value.get(display_value, display_value)
 
 
 def clean_concept_value(values, separator=";"):
@@ -408,12 +394,6 @@ class MultiConceptWidget(ManyToManyWidget):
         qs = case_insensitive_qs(self.vocabulary.__class__, field="label")
         return qs.filter(ilabel__in=values)
 
-        # filter_kwargs = {
-        #     f"{self.field}__in": names,
-        #     "vocabulary__name": self.vocabulary_name,
-        # }
-        # return self.model.objects.filter(**filter_kwargs)
-
     def render(self, value, obj=None):
         if not value:
             return ""
@@ -473,21 +453,6 @@ class GHFDBResource(ModelResource):
 
     """
 
-    # NOTE: Parent fields are no longer accessible via parent__ FK since we removed that relationship.
-    # These fields would need to be accessed differently now or removed from export.
-    # Commenting out for now as they reference the old parent FK structure.
-    # q = Field("parent__value", readonly=True)
-    # q_uncertainty = Field("parent__uncertainty", readonly=True)
-    # lat_NS = Field("parent__sample__location__latitude", readonly=True)
-    # lon_EW = Field("parent__sample__location__longitude", readonly=True)
-    # elevation = Field("parent__sample__location__elevation", readonly=True)
-    # environment = Field("parent__sample__environment", readonly=True)
-    # corr_HP_flag = Field("parent__correction_flag", readonly=True)
-    # total_depth_MD = Field("parent__sample__length", readonly=True)
-    # total_depth_TVD = Field("parent__sample__vertical_depth", readonly=True)
-    # explo_method = Field("parent__sample__explo_method", readonly=True)
-    # explo_purpose = Field("sample__explo_purpose", readonly=True)
-
     # uses the ForeignObjectWidget to create a ThermalGradient instance and associate it with the import
     thermal_gradient = Field(
         "thermal_gradient",
@@ -536,9 +501,6 @@ class GHFDBResource(ModelResource):
     q_top = Field("top")
     q_bottom = Field("bottom")
     probe_penetration = Field("probe_penetration")
-    # publication_reference = Field("dataset__review__reference")
-    # data_reference = Field("dataset__reference")
-    # relevant_child removed - now tracked via ParentChildRelation.is_relevant
     c_comment = Field("c_comment")
 
     corr_IS_flag = Field(
@@ -558,8 +520,6 @@ class GHFDBResource(ModelResource):
     probe_length = Field("probe_length")
     probe_tilt = Field("probe_tilt")
     water_temperature = Field("water_temperature")
-    # geo_lithology = Field("sample__lithology")
-    # geo_stratigraphy = Field("sample__age")
 
     # Temperature gradient fields
     T_grad_mean = Field("thermal_gradient__value", readonly=True)
@@ -576,7 +536,7 @@ class GHFDBResource(ModelResource):
 
     q_date = Field("date_acquired", widget=CharWidget())
 
-    # # Thermal conductivity fields
+    # Thermal conductivity fields
     tc_mean = Field("thermal_conductivity__value", readonly=True)
     tc_uncertainty = Field("thermal_conductivity__uncertainty", readonly=True)
     tc_source = Field("thermal_conductivity__source", readonly=True)
@@ -593,8 +553,6 @@ class GHFDBResource(ModelResource):
     continent = Field("heat_flow_site__continent", readonly=True)
     domain = Field("heat_flow_site__domain", readonly=True)
 
-    # Ref_IGSN = Field("sample__dataset__reference")
-
     class Meta:
         model = HeatFlow
         import_order = ["hf_site", "sample"]
@@ -606,17 +564,9 @@ class GHFDBResource(ModelResource):
         super().__init__(*args, **kwargs)
 
     def before_import(self, dataset, **kwargs):
-        # rather than fetch reviewers for each imported row, we fetch them once and store them for later use
-        # This is useful for large datasets to avoid repeated database queries but will only work if the same reviewers are listed on each column.
-        # NOTE: Data recorded in the review columns are too heterogeneous to be reliably imported.
-        # self.review = self.get_review(dataset)
-        # self.dataset.review = self.review
-        # self.dataset.save()
         pass
 
     def import_data(self, dataset, dry_run=False, **kwargs):
-        # Force errors to be raised instead of being caught
-        # kwargs["raise_errors"] = True
         return super().import_data(dataset, dry_run=dry_run, **kwargs)
 
     def clean_choices(self, row):
@@ -662,10 +612,8 @@ class GHFDBResource(ModelResource):
         # next, we create the HeatFlowSite and store it in the row as sample.
         row["heat_flow_site"] = self.get_heat_flow_site(row).pk
 
-        # NOTE: ParentHeatFlow creation needs refactoring - no longer uses parent FK on HeatFlow.
-        # Instead should create ParentChildRelation entries after import.
-        # Commenting out for now until import logic is redesigned.
-        # row["parent"] = self.get_parent_heat_flow(row).pk
+        # create the ParentHeatFlow and set parent FK on the child row
+        row["parent"] = self.get_parent_heat_flow(row).pk
 
         # overwrite the previous sample with the sample for the HeatFlowInterval. This will be attached to the HeatFlow
         # child instance
@@ -733,16 +681,6 @@ class GHFDBResource(ModelResource):
         loc, created = Point.objects.get_or_create(x=x, y=y)
         return loc
 
-    # def get_location(self, row):
-    #     key = (row["long_EW"], row["lat_NS"])
-    #     if key in self._location_cache:
-    #         return self._location_cache[key]
-    #     if row["Short Name"] == 27:
-    #         x = 8
-    #     obj, _ = Point.objects.get_or_create(x=key[0], y=key[1])
-    #     self._location_cache[key] = obj
-    #     return obj
-
     def get_heat_flow_site(self, row):
         return ForeignObjectWidget(
             model=HeatFlowSite,
@@ -769,14 +707,12 @@ class GHFDBResource(ModelResource):
         ).clean(None, row)
 
     def get_parent_heat_flow(self, row):
-        # NOTE: Switched from SurfaceHeatFlow to ParentHeatFlow
         return ForeignObjectWidget(
             model=ParentHeatFlow,
             field_map={
                 "sample": "heat_flow_site",
                 "value": "q",
                 "uncertainty": "q_uncertainty",
-                # Note: ParentHeatFlow doesn't have method field, removed
             },
             factory_kwargs={
                 "exclude": [
@@ -785,15 +721,10 @@ class GHFDBResource(ModelResource):
                     "age",
                     "status",
                 ],
-                # "widgets": {
-                #     "corr_HP_flag": YesNoWidget(),
-                # },
             },
         ).clean(None, row)
 
     def get_heat_flow_interval(self, row):
-        # To include lithology and age or not to.
-        # That is the question.
         return ForeignObjectWidget(
             model=HeatFlowInterval,
             field_map={
@@ -810,30 +741,3 @@ class GHFDBResource(ModelResource):
                 ],
             },
         ).clean(None, row)
-
-    # def before_save_instance(self, instance, row, **kwargs):
-    # x = 8
-
-    # instance.full_clean()  # Validate the instance
-    # try:
-    # except ValidationError as e:
-    # raise ValueError(f"Validation failed: {e}")
-
-    # def after_import_row(self, row, row_result, row_number=None, **kwargs):
-    # return super().after_import_row(row, row_result, row_number, **kwargs)
-
-    # def before_save_instance(self, instance, using_transactions, dry_run):
-    #     return super().before_save_instance(instance, using_transactions, dry_run)
-
-    # def get_import_fields(self):
-    #     return list(super().get_import_fields()) + ["dataset"]
-
-    # def after_import(self, dataset, result, **kwargs):
-    #     """
-    #     Hook to perform actions after the import is complete.
-    #     """
-    #     # Here you can add any post-import actions, such as logging or cleanup
-    #     # print(f"Imported {result.totals['imported']} rows successfully.")
-    #     # print(f"Skipped {result.totals['skipped']} rows.")
-    #     # print(f"Errors: {result.errors}")
-    #     x = 0

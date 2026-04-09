@@ -16,7 +16,7 @@ from decimal import Decimal
 
 import pytest
 from fairdm.core.models import Dataset
-from ghfdb.models import HeatFlowSite
+from heat_flow.models import HeatFlowSite
 
 
 @pytest.mark.django_db
@@ -99,7 +99,7 @@ def test_ghfdb_field_depth_interval_accessor_path():
 
     # Try to create interval if model exists
     try:
-        from ghfdb.models import HeatFlowInterval
+        from heat_flow.models import HeatFlowInterval
 
         interval = HeatFlowInterval.objects.create(site=site, top_depth=100.5, bottom_depth=150.75)
 
@@ -137,7 +137,7 @@ def test_ghfdb_field_heat_flow_value_accessor_path():
 
     # Try to create heat flow measurement if model exists
     try:
-        from ghfdb.models import ParentHeatFlow
+        from heat_flow.models import ParentHeatFlow
 
         heat_flow = ParentHeatFlow.objects.create(
             sample=site,
@@ -181,7 +181,7 @@ def test_ghfdb_field_thermal_conductivity_accessor_path():
 
     # Try to create conductivity measurement if model exists
     try:
-        from ghfdb.models import IntervalConductivity
+        from heat_flow.models import IntervalConductivity
 
         conductivity = IntervalConductivity.objects.create(
             site=site,

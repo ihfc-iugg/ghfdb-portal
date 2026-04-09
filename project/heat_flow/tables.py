@@ -2,7 +2,7 @@ import django_tables2 as tables
 from django.utils.translation import gettext_lazy as _
 from fairdm.contrib.collections.tables import MeasurementTable, SampleTable
 
-from heat_flow.models.measurements import IntervalConductivity, ThermalGradient
+from heat_flow.models.child import IntervalConductivity, ThermalGradient
 
 from .models import HeatFlow, HeatFlowInterval, HeatFlowSite
 
@@ -168,4 +168,3 @@ class ThermalConductivityTable(IntervalMixin, MeasurementTable):
             "correction_bottom",
             "number",
         ]
-

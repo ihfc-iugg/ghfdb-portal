@@ -1,8 +1,8 @@
 from django.utils.translation import gettext as _
-from fairdm.menus import SiteNavigation
+from fairdm.menus import AppMenu
 from flex_menu import MenuItem
 
-SiteNavigation.insert(
+AppMenu.insert(
     MenuItem(
         name=_("Explore"),
         view_name="ghfdb-explore",

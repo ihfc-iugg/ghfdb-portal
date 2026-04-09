@@ -1,11 +1,14 @@
 """
-Global Heat Flow Database (GHFDB) models for Django. The models are defined using the Django ORM and are used to create the database schema. The models are defined using the following sources:
+Child-level heat flow models for the Global Heat Flow Database (GHFDB).
 
-    - Fuchs et. al., (2021). A new database structure for the IHFC Global Heat Flow Database. International Journal of
-    Terrestrial Heat Flow and Applications, 4(1), pp.1-14.
+This module contains HeatFlowInterval (the depth interval within a borehole),
+the child HeatFlow record, and all directly associated sub-measurement models
+(ThermalGradient, IntervalConductivity, ProbeMetadata, HeatFlowCorrection).
+Each HeatFlow child links to a ParentHeatFlow via ForeignKey.
 
-    - Fuchs et. al. (2023). The Global Heat Flow Database: Update 2023.
-
+References:
+    - Fuchs et al. (2021). A new database structure for the IHFC Global Heat Flow Database.
+    - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
 """
 
 from functools import cached_property
@@ -16,11 +19,27 @@ from django.db import models as django_models
 from django.utils.translation import gettext as _
 from fairdm.core.models import Measurement
 from fairdm.db import models
+from fairdm_geo.core.models import GeoDepthInterval as AbstractGeoDepthInterval
+from fairdm_geo.core.models import Interval
 from research_vocabs.fields import ConceptManyToManyField
 
 from heat_flow import vocabularies
 
 from ..utils import MScoreOptions, UScoreOptions, calculate_U_score
+
+
+class HeatFlowInterval(Interval, AbstractGeoDepthInterval):
+    """Depth interval within a HeatFlowSite borehole over which a child heat flow measurement is calculated."""
+
+    class Meta:
+        verbose_name = _("Depth interval")
+        verbose_name_plural = _("Depth intervals")
+
+    def __str__(self):
+        """String representation of the depth interval."""
+        top = getattr(self.top, "magnitude", self.top) if self.top is not None else "?"
+        bottom = getattr(self.bottom, "magnitude", self.bottom) if self.bottom is not None else "?"
+        return f"{self.__class__.__name__}({top}-{bottom})"
 
 
 class HeatFlowQuerySet(django_models.QuerySet):
@@ -198,6 +217,26 @@ class HeatFlow(Measurement):
         default=MScoreOptions.Mx,
     )
 
+    parent = models.ForeignKey(
+        "heat_flow.ParentHeatFlow",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="children",
+        verbose_name=_("parent heat flow"),
+        help_text=_(
+            "The parent-level heat flow record this measurement contributes to."
+        ),
+    )
+    is_relevant = models.BooleanField(
+        verbose_name=_("is relevant"),
+        help_text=_(
+            "Indicates whether this child measurement was used in calculating "
+            "the parent heat flow value."
+        ),
+        default=False,
+    )
+
     # Managers
     # objects = HeatFlowManager()
 
@@ -278,7 +317,7 @@ class ProbeMetadata(django_models.Model):
     """Supplementary metadata for calcuations made with marine heat flow probes."""
 
     interval = models.OneToOneField(
-        "heat_flow.GeoDepthInterval",
+        "heat_flow.HeatFlowInterval",
         on_delete=models.CASCADE,
         related_name="probe_metadata",
         verbose_name=_("heat flow measurement"),

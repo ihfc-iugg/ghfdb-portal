@@ -8,9 +8,9 @@ readme = "README.md"
 homepage = "https://github.com/ihfc-iugg/ghfdb-portal"
 include = ["LICENSE", "README.md"]
 packages = [
-  { include = "heat_flow", from = "project" },
-  { include = "ghfdb", from = "project" },
-  { include = "review", from = "project" },
+    { include = "heat_flow", from = "project" },
+    { include = "ghfdb", from = "project" },
+    { include = "review", from = "project" },
 ]
 classifiers = [
     "Development Status :: 1 - Planning",
@@ -28,18 +28,23 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = ">=3.13,<4.0"
-fairdm = {git = "https://github.com/FAIR-DM/fairdm"}
-fairdm-geo = {git = "https://github.com/FAIR-DM/fairdm-geo"}
-fairdm-discussions = {git = "https://github.com/FAIR-DM/fairdm-discussions"}
-fairdm-rest-api = {git = "https://github.com/FAIR-DM/fairdm-rest-api"}
-kreuzberg = {extras = ["all"], version = "^4.2.10"}
+fairdm = { git = "https://github.com/FAIR-DM/fairdm" }
+fairdm-geo = { git = "https://github.com/FAIR-DM/fairdm-geo" }
+fairdm-discussions = { git = "https://github.com/FAIR-DM/fairdm-discussions" }
+kreuzberg = { extras = ["all"], version = "^4.2.10" }
+django-browser-reload = "^1.21.0"
 
 [tool.poetry.group.dev.dependencies]
-fairdm-dev-tools = {git = "https://github.com/FAIR-DM/dev-tools"}
+fairdm-dev-tools = { git = "https://github.com/FAIR-DM/dev-tools", extras = [
+    "test",
+    "dev",
+] }
 pypdf = "^6.5.0"
 
 [tool.poetry.group.docs.dependencies]
-fairdm-docs = {git = "https://github.com/FAIR-DM/fairdm-docs", extras = ["sphinx-book-theme"]}
+fairdm-docs = { git = "https://github.com/FAIR-DM/fairdm-docs", extras = [
+    "sphinx-book-theme",
+] }
 shot-scraper = "^1.8"
 
 [build-system]
@@ -71,7 +76,8 @@ select = [
     # mccabe
     "C90",
     # pycodestyle
-    "E", "W",
+    "E",
+    "W",
     # pyflakes
     "F",
     # pygrep-hooks
@@ -124,11 +130,11 @@ exclude = [
     "staticfiles/*",
     'fairdm/conf/*',
     "docs/",
-    "test.py"
+    "test.py",
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"**/tests/*" = ["S101","S105"]
+"**/tests/*" = ["S101", "S105"]
 
 [tool.ruff.format]
 docstring-code-format = true
@@ -136,25 +142,25 @@ docstring-code-line-length = 88
 line-ending = "lf"
 
 [tool.djlint]
-blank_line_after_tag="load,endpartialdef,endblock"
-close_void_tags=true
-custom_blocks="addtoblock"
-custom_html="django-formset,c-[\\w.-]+,swiper-container,swiper-slide"
-format_js=true
-format_css=true
-indent=2
-max_attribute_length=50
-max_blank_lines=0
-max_line_length=119
-ignore="H016,H030,H031,H021,D018,H037,H006"
-format_attribute_template_tags=false
+blank_line_after_tag = "load,endpartialdef,endblock"
+close_void_tags = true
+custom_blocks = "addtoblock"
+custom_html = "django-formset,c-[\\w.-]+,swiper-container,swiper-slide"
+format_js = true
+format_css = true
+indent = 2
+max_attribute_length = 50
+max_blank_lines = 0
+max_line_length = 119
+ignore = "H016,H030,H031,H021,D018,H037,H006"
+format_attribute_template_tags = false
 
 [tool.djlint.css]
-indent_size=2
+indent_size = 2
 
 
 [tool.djlint.js]
-indent_size=5
+indent_size = 5
 
 [tool.mypy]
 files = ["project"]
@@ -166,7 +172,7 @@ check_untyped_defs = false
 warn_return_any = true
 warn_unused_ignores = true
 show_error_codes = true
-exclude = ["docs/","migrations/","tests/settings.py", "test.py"]
+exclude = ["docs/", "migrations/", "tests/settings.py", "test.py"]
 mypy_path = "project/"
 plugins = ["mypy_django_plugin.main"]
 
@@ -177,12 +183,7 @@ django_settings_module = "tests.settings"
 DJANGO_SETTINGS_MODULE = "config.settings"
 pythonpath = ["project"]
 python_files = ["test_*.py", "*_test.py"]
-addopts = [
-    "--tb=short",
-    "--strict-markers",
-    "--reuse-db",
-    "--nomigrations",
-]
+addopts = ["--tb=short", "--strict-markers", "--reuse-db", "--nomigrations"]
 markers = [
     "heat_flow: Tests for the heat_flow app",
     "ghfdb: Tests for the ghfdb app",
@@ -191,21 +192,12 @@ markers = [
     "slow: Slow running tests",
 ]
 
-filterwarnings = [
-    "ignore",
-    "default:::laboratory",
-]
-env = [
-    "DJANGO_ENV=development",
-]
+filterwarnings = ["ignore", "default:::laboratory"]
+env = ["DJANGO_ENV=development"]
 
 [tool.coverage.report]
 skip_empty = true
-omit = [
-    "*site-packages*",
-    "*tests*",
-    "*.tox*",
-    ]
+omit = ["*site-packages*", "*tests*", "*.tox*"]
 show_missing = "true"
 
 
@@ -216,20 +208,10 @@ source = ["laboratory"]
 
 [tool.deptry]
 skip_misplaced_dev = "true"
-extend_exclude = [
-    "tasks.py",
-    "docs",
-    ".*tests",
-    ".*migrations",
-]
-ignore_transitive = [
-    "toml",
-    "sentry_sdk",
-]
+extend_exclude = ["tasks.py", "docs", ".*tests", ".*migrations"]
+ignore_transitive = ["toml", "sentry_sdk"]
 
-ignore_missing = [
-    "ghfdb",
-]
+ignore_missing = ["ghfdb"]
 
 [tool.tox]
 legacy_tox_ini = """

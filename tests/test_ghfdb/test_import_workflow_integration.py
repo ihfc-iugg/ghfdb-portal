@@ -11,8 +11,8 @@ Expected time: <30 seconds for all tests in this file
 import pytest
 from django.contrib.auth import get_user_model
 from fairdm.core.models import Dataset
-from ghfdb.models import HeatFlowSite
 from ghfdb.resources import GHFDBResource
+from heat_flow.models import HeatFlowSite
 from review.models import Review
 
 

@@ -10,7 +10,6 @@ LANGUAGES = [
 fairdm.setup(
     apps=[
         "heat_flow",
-        "ghfdb",
         "review",
         "fairdm_geo",
         # "fairdm_geo.geology.lithology",
@@ -19,9 +18,13 @@ fairdm.setup(
     ],
     addons=[
         "fairdm_discussions",
-        "fairdm_api",
     ],
 )
+
+# fairdm.setup() injects its own settings into this module's namespace via
+# inspect.stack(), which overwrites `_` (via socket.gethostbyname_ex unpacking).
+# Re-import here to ensure `_` is gettext_lazy for the rest of this file.
+from django.utils.translation import gettext_lazy as _  # noqa: E402
 
 EASY_ICONS = globals().get("EASY_ICONS", {})
 
