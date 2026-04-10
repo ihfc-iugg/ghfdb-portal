@@ -32,6 +32,7 @@ from ..utils import MScoreOptions, UScoreOptions, calculate_U_score
 class HeatFlowInterval(Interval, AbstractGeoDepthInterval):
     """Depth interval within a HeatFlowSite borehole over which a child heat flow measurement is calculated."""
 
+    # THIS MUST BE RENAMED TO "heat_flow_site"
     sample = models.ForeignKey(
         "sample.Sample",
         verbose_name=_("parent site"),
@@ -199,6 +200,7 @@ class HeatFlow(Measurement):
     #  a HeatFlowSite or a HeatFlowInterval? It is not clear.
     # IGSN field removed: IGSN belongs on Sample (HeatFlowSite/HeatFlowInterval), not on HeatFlow measurement (FR-010)
 
+    # Rename to "comment"
     c_comment = models.TextField(
         verbose_name=_("comment"),
         help_text=_("General comments on the child level."),
