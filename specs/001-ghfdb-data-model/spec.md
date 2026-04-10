@@ -75,7 +75,7 @@ All primary models (`HeatFlowSite`, `HeatFlowInterval`, `ParentHeatFlow`, `HeatF
 
 **Why this priority**: FairDM registration is the integration point between the domain model and the portal's infrastructure layer. Without it, registered models cannot be discovered or served by the portal. This is a Constitution Principle II requirement.
 
-**Independent Test**: Import `fairdm` and assert that `fairdm.registry.get_config(HeatFlowSite)` returns a non-`None` config object. Repeat for `HeatFlow`, `ParentHeatFlow`, and `HeatFlowInterval`. Run `python manage.py check` and assert zero errors.
+**Independent Test**: Import `fairdm` and assert that `fairdm.registry.get_config(HeatFlowSite)` returns a non-`None` config object. Repeat for all six registered models: `HeatFlowInterval`, `ParentHeatFlow`, `HeatFlow`, `ThermalGradient`, and `IntervalConductivity` (see FR-025, FR-030). Run `python manage.py check` and assert zero errors.
 
 **Acceptance Scenarios**:
 
@@ -107,11 +107,19 @@ Factory classes exist for all models in the `heat_flow` app so that tests can cr
 - A `HeatFlow` child with neither `thermal_gradient` nor `thermal_conductivity` — the system must allow incomplete records (in line with Constitution Principle I: incomplete records must not be blocked at entry time).
 - A `ParentHeatFlow` with zero children (`children.count() == 0`) — this is a valid state for a newly entered parent that has no child measurements yet.
 - A `HeatFlowCorrection` created with an unrecognised `correction_type` value — the field's `choices` constraint must reject it.
-- Multiple `ParentHeatFlow` records linked to the same `HeatFlowSite` — MUST be rejected; FR-009 enforces `unique=True` on `ParentHeatFlow.sample` (one per site, globally; not version-scoped).
+- Multiple `ParentHeatFlow` records linked to the same `HeatFlowSite` — MUST be rejected; FR-009 enforces a `UniqueConstraint` in `ParentHeatFlow.Meta.constraints` on the `sample` column (one per site, globally; not version-scoped).
 
 ---
 
 ## Clarifications
+
+### Session 2026-04-10 (Corrections Pass 2)
+
+- Q: Should `IGSN` be retained as a field on `HeatFlow`, or should it be handled through FairDM's Sample identifier relationship? → A: Remove `IGSN` from `HeatFlow`. IGSNs are persistent identifiers for physical rock or sediment samples, not for measurements. FairDM's `Sample` base class provides a generic identifier relationship that covers both `HeatFlowSite` and `HeatFlowInterval`. The GHFDB C49 field maps to those sample-level identifiers, not to the heat flow determination itself. FR-010 updated.
+- Q: Should the primary `value` field be non-nullable at DB level on ALL Measurement subclasses (not only ParentHeatFlow)? → A: Yes — the `value` field is the primary scientific datum on every Measurement subclass; a record with no value is semantically meaningless. `null=False` (no `null=True`) applies to `value` on HeatFlow.value, ThermalGradient.value, and IntervalConductivity.value. R3 updated to reflect this wider rule.
+- Q: Should only certain `StatusChoices` be valid for each `CorrectionTypeChoices` in `HeatFlowCorrection`? → A: Yes — some statuses are only semantically meaningful for specific correction types (e.g., `tilt_corrected`/`drift_corrected` apply only to IS/T probe-type corrections; environmental statuses only to P-flag corrections). A valid-combinations table must be documented in the data model and enforced via `ValidationError` in `HeatFlowCorrection.save()`.
+- Q: Given that the `sample` FK is declared in the fairdm package, can `unique=True` be added directly to the inherited field on ParentHeatFlow? → A: No — modifying a field declared in a parent package's models is not safe in Django. Use `UniqueConstraint` in `ParentHeatFlow.Meta.constraints` instead. The existing `save()`-level uniqueness check remains as an additional application-layer guard. FR-009 updated.
+- Q: Should `ThermalGradient` and `IntervalConductivity` be registered with the FairDM registry? → A: Yes — ALL Measurement and Sample subclasses must be registered with the FairDM registry. FR-025 is reversed: both `ThermalGradient` and `IntervalConductivity` require `@fairdm.register` configs in `config.py`. `ProbeMetadata` and `HeatFlowCorrection` remain unregistered (they are plain `Model` subclasses, not FairDM Measurement/Sample subclasses). Factory note (no formal Q): Keep factory classes minimal — one level deep, no excessive `SubFactory` chains. Build complex multi-model object graphs via pytest fixtures, following the fairdm package conventions.
 
 ### Session 2026-04-09
 
@@ -144,11 +152,11 @@ Factory classes exist for all models in the `heat_flow` app so that tests can cr
 - **FR-007**: The system MUST provide a `ParentHeatFlow` model that inherits from the FairDM `Measurement` base class, storing the aggregated surface heat flow value (mW/m²), a 1-sigma uncertainty, a heat production correction flag, a comment field, and a GHFDB membership flag.
 - **FR-008**: `ParentHeatFlow` MUST be linked to its `HeatFlowSite` via the FairDM `sample` FK (inherited from `Measurement`).
 - **FR-008a**: `ParentHeatFlow.save()` MUST raise `ValidationError` if `sample` is not an instance of `HeatFlowSite`.
-- **FR-009**: The system MUST prevent more than one `ParentHeatFlow` record per `HeatFlowSite`, regardless of dataset. This is enforced via `unique=True` on the `sample` FK field on `ParentHeatFlow` (one authoritative parent per site, globally).
+- **FR-009**: The system MUST prevent more than one `ParentHeatFlow` record per `HeatFlowSite`, regardless of dataset. This is enforced via a `UniqueConstraint` in `ParentHeatFlow.Meta.constraints` on the `sample` FK column (the `sample` field is declared in the fairdm package and cannot be modified with `unique=True` directly). The existing `save()`-level uniqueness check is retained as an additional application-layer guard.
 
 **Child Heat Flow**
 
-- **FR-010**: The system MUST provide a `HeatFlow` (child) model that inherits from the FairDM `Measurement` base class with `sample` FK targeting `HeatFlowInterval` (validated at `save()` to reject non-`HeatFlowInterval` objects). It stores: heat flow value (mW/m²) with uncertainty, calculation method (vocabulary, many-to-many), expedition/ship name, bottom water temperature, date acquired, IGSN, U-score, M-score, and a comment field.
+- **FR-010**: The system MUST provide a `HeatFlow` (child) model that inherits from the FairDM `Measurement` base class with `sample` FK targeting `HeatFlowInterval` (validated at `save()` to reject non-`HeatFlowInterval` objects). It stores: heat flow value (mW/m²) with uncertainty, calculation method (vocabulary, many-to-many), expedition/ship name, bottom water temperature, date acquired, U-score, M-score, and a comment field. **Note**: The `IGSN` field previously assigned to `HeatFlow` is removed; C49/IGSN is served by FairDM's Sample identifier relationship on `HeatFlowSite` and `HeatFlowInterval`.
 - **FR-010a**: `HeatFlow.save()` MUST raise `ValidationError` if `sample` is not an instance of `HeatFlowInterval`, consistent with FR-008a, FR-016a, and FR-018a.
 - **FR-011**: `HeatFlow` MUST have a nullable ForeignKey to `ParentHeatFlow` (on_delete=SET_NULL) with a related name of `children`.
 - **FR-012**: `HeatFlow` MUST have an `is_relevant` boolean field indicating whether this child was used in computing the parent value.
@@ -181,7 +189,7 @@ Factory classes exist for all models in the `heat_flow` app so that tests can cr
 
 - **FR-023**: `HeatFlowSite`, `HeatFlowInterval`, `ParentHeatFlow`, and `HeatFlow` MUST each be registered with the FairDM registry via `@fairdm.register` in `heat_flow/config.py`, using an `IHFCConfig` base that provides IHFC authority and citation metadata.
 - **FR-024**: Each registered model MUST declare a `fields` list (for form/detail view rendering) and be associated with a `filterset_class` and `table_class`.
-- **FR-025**: `ThermalGradient`, `IntervalConductivity`, `ProbeMetadata`, and `HeatFlowCorrection` are supporting models and do NOT require FairDM `@fairdm.register` entries in this spec (they are managed inline via their parent models).
+- **FR-025**: ALL `Measurement` subclasses (`HeatFlowSite`, `HeatFlowInterval`, `ParentHeatFlow`, `HeatFlow`, `ThermalGradient`, and `IntervalConductivity`) MUST be registered with the FairDM registry via `@fairdm.register`. `ProbeMetadata` and `HeatFlowCorrection` are plain `django.db.models.Model` subclasses (not FairDM `Measurement`/`Sample` subclasses) and do not require registration; they are managed inline via their parent models.
 
 **Migrations & System Integrity**
 
@@ -192,7 +200,7 @@ Factory classes exist for all models in the `heat_flow` app so that tests can cr
 
 - **FR-028**: A factory class MUST exist for each of the following models: `HeatFlowSite`, `HeatFlowInterval`, `ParentHeatFlow`, `HeatFlow`, `ThermalGradient`, `IntervalConductivity`, `ProbeMetadata`.
 - **FR-029**: Tests MUST verify model creation, field value persistence, all defined relationships (FK, one-to-one, M2M), and cascade/set-null deletion behaviour for each model.
-- **FR-030**: Tests for FairDM registration MUST verify that `fairdm.registry` returns a valid configuration for each of the four registered primary models.
+- **FR-030**: Tests for FairDM registration MUST verify that `fairdm.registry` returns a valid configuration for each of the six registered models: `HeatFlowSite`, `HeatFlowInterval`, `ParentHeatFlow`, `HeatFlow`, `ThermalGradient`, and `IntervalConductivity`.
 
 ---
 
@@ -224,7 +232,7 @@ Factory classes exist for all models in the `heat_flow` app so that tests can cr
 - **SC-002**: All migrations in the `heat_flow` app apply cleanly on a fresh database with no errors.
 - **SC-003**: The full site → interval → gradient/conductivity → child heat flow object graph can be created, persisted, and retrieved using only factory calls in a single `@pytest.mark.django_db` test.
 - **SC-004**: All defined deletion cascade and SET_NULL behaviours are verified by at least one test each (parent deleted → child `parent` field becomes NULL; interval deleted → probe metadata deleted).
-- **SC-005**: FairDM registry queries for `HeatFlowSite`, `HeatFlowInterval`, `ParentHeatFlow`, and `HeatFlow` each return a non-None config, confirmed by a passing test.
+- **SC-005**: FairDM registry queries for all six registered models (`HeatFlowSite`, `HeatFlowInterval`, `ParentHeatFlow`, `HeatFlow`, `ThermalGradient`, `IntervalConductivity`) each return a non-None config, confirmed by passing tests.
 - **SC-006**: The `heat_flow` test suite (models, factories, relations, registration) passes with zero failures.
 - **SC-007**: All eight model classes (`HeatFlowSite`, `HeatFlowInterval`, `ParentHeatFlow`, `HeatFlow`, `ThermalGradient`, `IntervalConductivity`, `ProbeMetadata`, `HeatFlowCorrection`) have at least one factory or direct-creation test.
 

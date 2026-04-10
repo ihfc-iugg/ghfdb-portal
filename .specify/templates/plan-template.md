@@ -17,21 +17,32 @@
   the iteration process.
 -->
 
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
+**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]
+**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
+**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
+**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]
 **Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]  
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
+**Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]
+**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]
+**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]
 **Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+Verify alignment with the [GHFDB Portal Constitution](.specify/memory/constitution.md) before proceeding:
+
+| Principle | Question | Status |
+|-----------|----------|--------|
+| I. FAIR-First | Does this feature improve or maintain FAIR characteristics? Are identifiers (DOI/ORCID/IGSN) preserved? | [ ] |
+| II. GHFDB Schema Fidelity | Does this touch GHFDB models? If so, is `docs/ghfdb_fields.md` updated? Are Fuchs et al. references in docstrings? | [ ] |
+| III. FairDM-First | Is this implemented via FairDM base classes and registry? Is custom re-implementation avoided? | [ ] |
+| IV. Open Science & Provenance | Does this respect the review/approval workflow? Is contributor attribution preserved? | [ ] |
+| V. Internationalisation | Are all new user-facing strings wrapped in `_()` / `gettext_lazy()`? Dates/numbers using locale utilities? | [ ] |
+| VI. Test-First Quality | Are tests written first (TDD)? Do schema-mapping or score calculations have pinned regression tests? | [ ] |
+| VII. Documentation | Is `docs/ghfdb_fields.md` current? Are new settings/APIs documented with examples? | [ ] |
+| VIII. Spec-Driven Workflow | Does this feature follow spec.md → plan.md → tasks.md workflow? Are users stories prioritised? | [ ] |
 
 ## Project Structure
 

@@ -1,409 +1,270 @@
 <!--
-SYNC IMPACT REPORT (Constitution Update)
-===========================================
-Version: 1.1.0
-Date: 2026-01-02
-Type: MINOR (add Test-Driven Development principle and Documentation Standards principle)
-
-PRINCIPLES ADDED:
-- VII. Test-Driven Development (new - pytest-based TDD mandate)
-- VIII. Documentation Standards (new - comprehensive documentation requirements for FairDM models)
-
-SECTIONS UPDATED:
-- Core Principles (added two new principles)
-- Technology Stack & Standards (expanded testing requirements to reference Principle VII)
-- Development Workflow (expanded documentation requirements to reference Principle VIII)
-
-TEMPLATE IMPACT:
-- .specify/templates/plan-template.md - Constitution Check updated to include TDD and documentation gates
-- .specify/templates/spec-template.md - no change required (already includes test scenarios)
-- .specify/templates/tasks-template.md - no change required (already includes test task examples)
-
-RUNTIME DOC IMPACT:
-- docs/guides/testing-standards.md - should be created to document pytest conventions and TDD workflow
-- docs/guides/documentation-standards.md - should be created to document FairDM registration requirements
-- CONTRIBUTING.md - should be updated to reference new principles VII and VIII
-
-DEFERRED ITEMS:
-None - all placeholders filled with project-specific values
-
-FOLLOW-UP ACTIONS:
-- Create docs/guides/testing-standards.md with pytest setup, fixtures, and TDD examples
-- Create docs/guides/documentation-standards.md with FairDM model registration and documentation patterns
-- Update CONTRIBUTING.md to emphasize test-first development and documentation expectations
-- Consider adding pre-commit hooks to verify test coverage thresholds
+Sync Impact Report
+- Version change: (new) → 1.0.0
+- Modified principles: N/A (initial ratification)
+- Added sections: All sections are new
+- Removed sections: N/A
+- Templates requiring updates:
+    - ✅ .specify/templates/constitution-template.md — source used to initialize this file
+    - ✅ .specify/templates/plan-template.md — "Constitution Check" gates verified against principles below
+    - ⚠ .specify/templates/spec-template.md — References should be updated to cite specific principle numbers
+    - ⚠ .specify/templates/tasks-template.md — Internationalisation and schema-mapping task types may warrant explicit examples
+- Follow-up TODOs:
+    - TODO(RATIFICATION_DATE): Confirm exact project inception/governance date with project lead if 2024-01-01 is incorrect
+    - TODO(GOVERNANCE_EXPANSION): When additional maintainers join, formalize stewardship committee and RFC process
+    - TODO(I18N_LOCALE_LIST): Enumerate priority translation locales once community survey is complete
 -->
 
-# Global Heat Flow Database Portal Constitution
+# Global Heat Flow Database Portal — Constitution
 
 ## Core Principles
 
-### I. Schema Fidelity to GHFDB Standards
-
-The portalâ€™s **canonical** data model **MUST** be a modern, normalized relational schema designed for correctness,
-maintainability, and usability.
-
-The IHFC GHFDB conceptual schema (as published in the references below) **MUST** be treated as an
-interchange/publishing format (â€œproductâ€) that the portal can reliably import from and export to:
-
-- Fuchs et al. (2021): *A new database structure for the IHFC Global Heat Flow Database*
-- Fuchs et al. (2023): *The Global Heat Flow Database: Update 2023*
-
-**Non-negotiable requirements:**
-
-- The portal database schema is authoritative for internal storage and MUST prioritize relational best practices (normalization, provenance, extensibility)
-- Import/export tooling MUST provide a deterministic mapping between the portal schema and the IHFC GHFDB schema (see Principle III)
-- â€œMandatoryâ€ (M) fields in the IHFC schema MUST NOT be blindly enforced as hard requirements for portal UI data entry when they would block reasonable workflows
-- The portal MUST support capturing incomplete records and MUST track completeness/state such that stricter requirements can be enforced at publish/export time
-- Quality scoring (U-score, M-score) and correction flags MUST implement the official evaluation scheme and MUST export to IHFC-compatible fields
-- Any material divergence from the IHFC schema MUST be documented (mapping docs + release notes) with rationale
-
-**Semantic obligations (what MUST be preserved even if implemented differently):**
-
-- The portal MUST preserve the scientific meaning of the GHFDB parent/child structure (site â†’ interval â†’ measurement), even if internal normalization differs
-- The portal MUST preserve the intended quality relevance of fields (U-score fields, M-score fields, perturbation/correction flags), even if internal storage differs
-- Administrative/review metadata (e.g., reviewer name, review date, reviewer comments) MUST be treated as privileged editorial data and MUST NOT be conflated with scientific measurement metadata
-
-**Persistent identifiers (PIDs) are first-class metadata:**
-
-- DOI MUST be supported end-to-end (capture, storage, and export) to link heat-flow records to primary literature where available
-- ORCID MUST be supported end-to-end for contributor/author identification where available
-- IGSN MUST be supported where applicable to link measurements to physical samples
-- ROR MUST be supported for research organization affiliations
-
-**Rationale:** The portalâ€™s job is to implement the community intent of the GHFDB in a maintainable, usable system.
-Treating the IHFC schema as an interchange â€œproductâ€ enables rigorous publication compatibility without inheriting
-spreadsheet-era constraints that harm UI workflows or long-term maintainability.
-
-### II. FairDM Framework Integration
-
-The portal **MUST** leverage the FairDM framework for all core data management, publishing, and community features. Custom implementations are **prohibited** unless FairDM explicitly lacks the capability.
-
-**Required FairDM components:**
-
-- `fairdm` core: Sample, Measurement, Dataset, Project models and admin
-- `fairdm-geo`: Geographic features (Point, Borehole), depth intervals
-- `fairdm-discussions`: User engagement, comments, follows
-- `fairdm-rest-api`: RESTful API for programmatic access
-
-**Integration principles:**
-
-- Extend FairDM base classes (e.g., `HeatFlowSite(Borehole)`, `SurfaceHeatFlow(Measurement)`)
-- Register models with FairDM using `@fairdm.register` decorators
-- Use FairDM admin mixins and table classes for consistent UI/UX
-- Contribute generic improvements back to FairDM repositories when feasible
-
-**Rationale:** FairDM provides battle-tested infrastructure for FAIR data principles, reducing maintenance burden and ensuring consistency with other FairDM-powered portals. Duplicating FairDM features would fragment development effort and create technical debt.
-
-### III. Conceptual vs. Relational Schema Transparency
-
-The portal **MUST** document and expose the mapping between the flat GHFDB conceptual schema
-(spreadsheet template / interchange format) and the underlying normalized relational database schema.
-
-**Documentation requirements:**
-
-- Maintain [docs/ghfdb_fields.md](docs/ghfdb_fields.md) with a complete mapping table showing:
-  - GHFDB field name â†’ Database table â†’ Django model â†’ Accessor path â†’ Declaring model
-- Provide user-facing guidance explaining why the schemas differ (normalization, foreign keys, FairDM abstractions)
-- Include Django ORM query examples for common GHFDB field access patterns
-
-**Template parsing obligations:**
-
-- GHFDB Excel template upload **MUST** parse the flat structure into the correct relational tables
-- Export functions **MUST** reconstruct the flat GHFDB format from relational data
-- Schema mismatches (e.g., fields not directly mappable) **MUST** be documented in release notes
-
-**Rationale:** Users expect the GHFDB spreadsheet structure but the portal requires a normalized relational database for data integrity and FairDM compatibility. Transparent documentation prevents confusion and enables advanced users to query the database directly.
-
-### IV. Open Science & Data Quality (NON-NEGOTIABLE)
-
-The portal **MUST** embody open science principles and enforce rigorous data quality standards.
-
-**Open Science mandates:**
-
-- All GHFDB releases publicly accessible at [portal.heatflow.world](https://portal.heatflow.world)
-- Provide an API suitable for metadata and data harvesting by external parties
-- Public dataset releases MUST be formally published and archived via GFZ Data Services with DOIs for permanent citation
-- Documentation and code are open-source (MIT license)
-
-**Data Quality requirements:**
-
-- Implement automated quality scoring per Fuchs et al. (2023) Section 3.4
-- Require metadata standards compliance before dataset publishing
-- Provide review workflows with version control for dataset amendments
-- Validate uploaded templates against schema constraints before ingestion
-
-**Validation and review workflow requirements (multi-level):**
-
-- New submissions MUST undergo multi-level validation, including database-level constraints, application-level validation, and manual/editorial review
-- Literature-derived data enrichment and quality control SHOULD follow a â€œfour-eyes principleâ€ (independent verification) where feasible
-
-**Terminology clarification:**
-
-- â€œLiterature reviewâ€ refers to the WHDB data assessment activity of extracting/curating data from publications
-- â€œPublication approval reviewâ€ refers to portal administrator approval required before any dataset becomes public
-
-**Rationale:** The portal is funded by public research funds (DFG grant 491795283) and serves the global scientific community. Open access, reproducibility, and data integrity are foundational to the project's mission and funding mandate.
-
-### V. Community-Driven Collaboration
-
-The portal **MUST** facilitate researcher engagement, collaboration, and knowledge sharing.
-
-**Community features:**
-
-- User accounts with ORCID integration for identity verification
-- Project creation to showcase past/present/future heat flow research
-- Dataset contributor management (personal and organizational)
-- Follow system for users and projects
-- Discussion forums and commenting on datasets/projects
-
-**Collaboration workflows:**
-
-- Early dataset creation encouraged (metadata-only) to signal intent and attract collaborators
-- Public issue tracker and discussion forum on GitHub for feature requests
-- Community polls to prioritize development roadmap
-- Transparent contribution guidelines and code of conduct
-
-**Rationale:** The GHFDB is a community-built resource spanning decades of research. The portal must lower barriers to contribution, recognize all contributors, and foster global collaboration among heat flow researchers.
-
-### VI. Provenance, Attribution & Review Governance (NON-NEGOTIABLE)
-
-The initial portal release is designed to support the WHDB data assessment workflow, where **reviewers**
-systematically analyze historic publications to extract data and metadata.
-
-The portal MUST support two distinct review processes with unambiguous provenance tracking:
-
-1. **Literature assessment review (curation)**: reviewers extract/curate data from a publication.
-2. **Publication approval review (editorial/admin)**: administrators decide whether a dataset can become public.
-
-**Non-negotiable provenance and attribution requirements:**
-
-- Datasets derived from literature MUST retain an accurate record of the original publication (bibliographic reference and DOI where available)
-- The portal MUST record original scientific contributors (authors) separately from portal contributors (reviewers/curators/editors)
-- The portal MUST record all participants in the assessment workflow (reviewers, collaborators) as contributors with appropriate roles
-- The portal MUST record administrative/editorial actions taken during publication approval (approver identity and timestamp at minimum)
-- Provenance metadata MUST be preserved across import/export and public publishing so that downstream users can attribute work correctly
-
-**Publication gating and role hierarchy requirements:**
-
-- No uploaded dataset MAY become public without explicit approval by authorized portal administrators
-- The portal MUST enforce a strict hierarchy of roles/permissions for administrative actions (e.g., not all staff can approve publication)
-- Permission to approve publication MUST be separable from permission to curate/submit a dataset for review
-- Role assignments and permission changes MUST be restricted to a small set of high-privilege administrators
-
-**Rationale:** Reviewers often do not own the underlying data they curate, but they provide essential scholarly labor.
-Accurate provenance preserves scientific attribution to original authors while crediting assessment contributors and ensuring
-that public releases meet administrative review standards.
-
-### VII. Test-Driven Development (NON-NEGOTIABLE)
-
-The portal **MUST** follow test-driven development (TDD) practices using pytest as the testing framework.
-
-**Test-first development requirements:**
-
-- New features and bug fixes MUST begin with a failing test that defines expected behavior
-- Tests MUST be written before implementation code (red-green-refactor cycle)
-- All tests MUST pass before code can be merged to main branch
-- Pull requests MUST include both test code and implementation code together
-
-**Testing framework and conventions:**
-
-- **Framework:** pytest (required) with appropriate plugins (pytest-django, pytest-cov, pytest-mock)
-- **Structure:** Organize tests to mirror application structure (`tests/test_ghfdb/`, `tests/test_heat_flow/`)
-- **Fixtures:** Use pytest fixtures for common test data; share fixtures via `conftest.py`
-- **Naming:** Test functions MUST start with `test_` and describe what they verify (e.g., `test_heat_flow_calculation_with_valid_inputs`)
-- **Coverage:** Aim for >80% code coverage; critical paths (data validation, calculations, exports) MUST have 100% coverage
-
-**Test categories:**
-
-- **Unit tests:** Test individual functions/methods in isolation using mocks for dependencies
-- **Integration tests:** Test interaction between components (models, services, database)
-- **Contract tests:** Verify API endpoints match published contracts
-- **End-to-end tests:** Test complete workflows (template upload â†’ validation â†’ export)
-
-**Quality gates:**
-
-- CI/CD pipeline MUST run full test suite on every commit
-- Test failures MUST block merges
-- Decreasing coverage MUST block merges
-- All Django model changes MUST include migration tests
-- All FairDM model registrations MUST include model validation tests
-
-**Rationale:** TDD ensures correctness, prevents regressions, and provides living documentation of system behavior. For a scientific data portal, rigorous testing is essential to maintain data integrity and user trust. pytest's fixture system and Django integration make it ideal for testing FairDM-based applications.
-
-### VIII. Documentation Standards (NON-NEGOTIABLE)
-
-The portal **MUST** maintain comprehensive documentation for all specifications, features, and data models.
-
-**Specification documentation requirements:**
-
-- Every feature MUST have a specification document in `/specs/[###-feature-name]/spec.md` following the spec template
-- Specifications MUST include user stories with acceptance criteria written in Given-When-Then format
-- Specifications MUST be written before implementation begins
-- Specification updates MUST be committed alongside implementation changes
-
-**Data model documentation requirements:**
-
-- Every Django model MUST have a comprehensive docstring explaining its purpose and scientific context
-- Every model field MUST have a `help_text` parameter describing its meaning and constraints
-- Complex models MUST have a data model diagram in `/specs/[###-feature-name]/data-model.md`
-- Model relationships (ForeignKey, ManyToMany) MUST document the semantic meaning of the relationship
-
-**FairDM registration documentation requirements:**
-
-- Every model registered with FairDM (`@fairdm.register`) MUST document:
-  - Which FairDM base class it extends and why
-  - What FairDM features it uses (admin mixins, table classes, API endpoints)
-  - Any FairDM configuration or customization applied
-- FairDM model registrations MUST include inline comments explaining non-obvious configuration choices
-- Custom FairDM admin classes MUST document what UI/UX behaviors they provide
-
-**API and contract documentation:**
-
-- Every API endpoint MUST have an OpenAPI/Swagger spec in `/specs/[###-feature-name]/contracts/`
-- API documentation MUST include example requests and responses
-- Breaking API changes MUST be documented in release notes with migration guidance
-
-**User-facing documentation:**
-
-- New features MUST include updates to `/docs/` with user guides and screenshots where appropriate
-- GHFDB schema changes MUST update `/docs/ghfdb_fields.md` with field mapping tables
-- Template parser changes MUST update `/docs/guides/importing-data.md`
-
-**Code documentation:**
-
-- Complex algorithms MUST include inline comments explaining the approach and any scientific/mathematical basis
-- Non-obvious design decisions MUST be documented in code comments or architecture decision records (ADRs)
-- Public functions and classes MUST have docstrings following PEP 257 conventions
-
-**Rationale:** Comprehensive documentation is essential for maintainability, onboarding new contributors, and ensuring scientific reproducibility. FairDM's framework nature makes clear registration documentation critical for understanding which features come from the framework versus custom implementations. For a long-term research infrastructure, documentation is as important as the code itself.
-
-## Technology Stack & Standards
-
-**Required Technologies:**
-
-- **Language:** Python â‰¥3.13
-- **Framework:** Django 5.0+ with FairDM extension ecosystem
-- **Database:** PostgreSQL (production); SQLite (development/testing)
-- **Deployment:** Docker containers, hosted on GFZ Potsdam infrastructure
-- **Documentation:** Sphinx with sphinx-book-theme
-- **Package Management:** Poetry 1.1.0+
-
-**Production architecture (baseline expectations):**
-
-- PostgreSQL SHOULD be paired with PostGIS for geospatial operations
-- Redis SHOULD be used for caching and message brokering
-- Celery SHOULD be used for asynchronous/background processing (e.g., emails, file processing)
-- MinIO (S3-compatible) SHOULD be used for secure object storage of user uploads
-- A reverse proxy/load balancer (e.g., Traefik) SHOULD route incoming traffic to services
-- Automated backups of database and media MUST run at regular intervals
-
-**Code Standards:**
-
-- **Linting:** Ruff with target-version py311, line-length 120
-- **Formatting:** Ruff auto-fix enabled
-- **Style:** Follow PEP 8; use Black-compatible formatting
-- **Type Hints:** Gradually adopt type annotations for new code
-
-**Testing Standards (see Principle VII):**
-
-- **Framework:** pytest with pytest-django, pytest-cov, pytest-mock
-- **Command:** `poetry run pytest` (run full suite)
-- **Coverage:** `poetry run pytest --cov=project --cov-report=html`
-- **Fixtures:** Centralize in `tests/conftest.py` and app-specific `conftest.py` files
-- **Naming:** `test_<function_name>_<scenario>` (e.g., `test_heat_flow_validation_with_missing_fields`)
-- **Test Data:** Use fixtures for sample GHFDB data; commit fixtures to `fixtures/` directory
-- **Mocking:** Prefer pytest-mock over unittest.mock for Django compatibility
-
-**Versioning:**
-
-- **Format:** CalVer (`YYYY.WW`) for portal releases
-- **Schema Migrations:** Django migrations with descriptive comments
-- **API Versioning:** Follow FairDM REST API versioning strategy
-
-## Development Workflow
-
-**Branching & Contributions:**
-
-- Development led by the World Heat Flow Database Project (WHFDB)
-- Community contributions (bug fixes) welcome; new features require maintainer approval
-- Fork repository â†’ Create feature branch â†’ Submit pull request
-- Branch naming: descriptive (e.g., `fix-template-parser`, `add-quality-filters`)
-
-**Testing Requirements (see Principle VII):**
-
-- **Test-first development:** Write failing tests before implementation (TDD)
-- **Coverage threshold:** Maintain >80% overall coverage; 100% for critical paths
-- **Test all layers:** Unit tests for functions/methods, integration tests for workflows, contract tests for APIs
-- **Run locally:** `poetry run pytest` before every commit
-- **CI enforcement:** All tests must pass; coverage must not decrease
-- **Django-specific:** Test models, views, forms, admin, management commands, and migrations
-- **FairDM-specific:** Test model registrations, admin customizations, and FairDM API integrations
-- **Critical workflows:** Template upload/export, quality scoring, and publication workflows require end-to-end tests
-
-**Code Review:**
-
-- All changes require pull request review
-- Reviewers verify:
-  - GHFDB interchange compatibility (import/export mapping and round-trip integrity)
-  - FairDM integration (no custom reimplementations)
-  - Documentation updates (especially for schema changes)
-  - Test coverage for new functionality
-- Maintainers hold final merge authority
-
-**Documentation (see Principle VIII):**
-
-- **Specifications:** Every feature requires `/specs/[###-feature-name]/spec.md` with user stories and acceptance criteria
-- **Data models:** Complex models require data model diagrams and relationship documentation
-- **FairDM registrations:** Document which FairDM base classes are used and why, plus any customizations
-- **Code documentation:** Docstrings for all public APIs (PEP 257), inline comments for complex logic
-- **User guides:** Update [docs/](docs/) for user-facing features with screenshots and examples
-- **Field mappings:** Schema changes require [docs/ghfdb_fields.md](docs/ghfdb_fields.md) updates
-- **API contracts:** API endpoints require OpenAPI specs in `/specs/[###-feature-name]/contracts/`
-- **Contributors:** Maintain [CONTRIBUTORS.md](CONTRIBUTORS.md) with all contributors
-- **Process:** Update [CONTRIBUTING.md](CONTRIBUTING.md) for process changes
+### I. FAIR-First Scientific Data
+
+The GHFDB Portal exists to make earth-science heat flow data Findable, Accessible, Interoperable, and Reusable for
+researchers, institutions, and the broader public, in compliance with FAIR data principles.
+
+- Every feature MUST be evaluated on how it improves — or at minimum does not weaken — the FAIR characteristics of
+  data, metadata, and APIs.
+- The portal MUST expose rich, machine-readable metadata for all primary entities (sites, intervals, measurements,
+  datasets, contributors, organisations) through both the UI and documented endpoints.
+- Persistent, globally recognised identifiers (DOIs for datasets/releases, ORCID for contributors, ROR for
+  organisations, IGSNs where applicable) MUST be first-class in the data model and surfaced in all public views.
+- Public read access to published releases MUST NOT require user registration or custom client code; data MUST be
+  discoverable and downloadable via standard web endpoints.
+- FAIR compliance is a NON-NEGOTIABLE design constraint: a minimally configured portal MUST be able to satisfy FAIR
+  expectations using core functionality without additional custom development.
+- Data provenance MUST be recorded and preserved; every record MUST trace to a contributor, submission, and, where
+  available, a citable publication following Fuchs et al. (2021, 2023).
+
+### II. GHFDB Schema Fidelity & Domain Integrity
+
+The portal maintains a canonical, normalised relational schema that faithfully represents the IHFC GHFDB conceptual
+model (Fuchs et al., 2021, 2023). The flat spreadsheet distributed by IHFC is an **import/export product**, not the
+source of truth.
+
+- The internal relational schema MUST capture the full parent/child conceptual hierarchy defined by the World Heat Flow
+  Database Project: site → interval → child measurement, with each IHFC-defined field mapped to an explicit Django
+  model field or documented computed accessor.
+- Any field listed in the official GHFDB specification (Fuchs et al.) MUST be represented in the Django models.
+  Additions beyond the IHFC specification MUST be explicitly justified and documented.
+- The field mapping table (`docs/ghfdb_fields.md`) is the authoritative record of how IHFC flat columns map to
+  relational model fields. It MUST be kept current whenever models change.
+- Schema changes that diverge from the IHFC specification require written justification cross-referenced to the mapping
+  documentation and, where the divergence is intentional and permanent, an amendment note in this constitution.
+- Scientific metadata (e.g., quality scores, uncertainty ranges, correction flags) MUST be stored at the correct level
+  of the hierarchy (site/interval/child) as defined by Fuchs et al. Neither up- nor down-casting of metadata is
+  permitted without documented scientific rationale.
+- Domain model integrity takes priority over implementation convenience; ORM patterns and query optimisations MUST NOT
+  distort the conceptual model.
+
+### III. FairDM-First Integration
+
+The GHFDB Portal is a domain-specific configuration of the FairDM framework, not a standalone Django project.
+Custom re-implementation of features already provided by FairDM MUST be avoided.
+
+- All primary scientific models (HeatFlowSite, HeatFlowInterval, ParentHeatFlow, HeatFlow and related measurements)
+  MUST extend the appropriate FairDM base classes (`Sample`, `Measurement`, etc.).
+- Models MUST be registered with the FairDM registry using `@fairdm.register`, exposing FAIR infrastructure (list
+  views, admin, filtering, tables, serialisers) without custom view plumbing.
+- FairDM-provided forms, tables, filters, serialisers, and admin integrations MUST be used as the default; custom
+  overrides are permitted only where GHFDB-specific requirements cannot be satisfied by configuration.
+- The FairDM ecosystem packages (`fairdm-geo`, `fairdm-discussions`, etc.) SHOULD be adopted for functionality they
+  provide rather than creating bespoke equivalents.
+- When FairDM changes its API or recommended patterns, all GHFDB code MUST be updated in the same pull request to
+  maintain clean integration.
+
+### IV. Open Science, Provenance & Review Governance
+
+The portal supports the World Heat Flow Database Project's commitment to open science, reproducible research, and
+rigorous data curation aligned with DFG grant requirements.
+
+- All published dataset releases MUST be publicly accessible without authentication, subject to an appropriate open
+  data licence (e.g., CC BY 4.0 or equivalent).
+- A governed review workflow MUST ensure that data is curated and admin-approved before publication; direct
+  contributor-to-public publication without review is PROHIBITED.
+- Contributor attribution MUST be maintained throughout the record lifecycle; deletions of contributor attribution
+  fields are PROHIBITED.
+- Data management practices MUST comply with DFG data management requirements (grant 491795283) and the IHFC's
+  community standards for data submission and citation.
+- Security and privacy controls MUST be applied to unpublished/in-review data so that unauthenticated users cannot
+  access records that have not been approved for public release.
+- The portal MUST support citation of datasets (e.g., via DataCite-compatible metadata) so that researchers can
+  receive credit for their contributions.
+
+### V. Internationalisation & Global Accessibility
+
+The Global Heat Flow Database serves an international scientific community. The portal MUST be designed to support
+multiple languages and accessible to users regardless of locale.
+
+- All user-facing strings in templates, views, models, and admin MUST be wrapped in Django's translation utilities
+  (`_()`, `gettext_lazy`, `ngettext`) to enable localisation.
+- No hard-coded natural-language strings (error messages, labels, help texts, button labels) are permitted outside of
+  translation wrappers — this rule has ZERO exceptions for user-visible strings.
+- Locale-sensitive formatting (dates, numbers, units) MUST use Django's `USE_I18N = True` / `USE_L10N = True`
+  settings and Django's format localisation utilities rather than hard-coded Python format strings.
+- All scientific units displayed in the UI MUST be labelled unambiguously; where SI and non-SI variants exist, the
+  canonical IHFC unit convention (as defined in Fuchs et al.) MUST be used with clear labelling.
+- New UI components, templates, and Cotton components MUST include i18n-ready strings from the moment they are
+  introduced; retrofitting i18n is costly and error-prone.
+- Translation files (`.po`/`.mo`) MUST be maintained in the repository; at minimum, English (`en`) is the baseline;
+  additional languages MAY be contributed by the community.
+- Accessibility (WCAG 2.1 AA) is treated alongside i18n as a non-optional quality dimension: regressions in keyboard
+  navigation, contrast ratios, or semantic HTML are treated as bugs.
+
+### VI. Test-First Quality & Sustainability (NON-NEGOTIABLE)
+
+The GHFDB Portal is long-lived scientific infrastructure. All behaviour changes MUST be driven by tests written first
+and must maintain high standards of reliability, type safety, and style.
+
+**Test-First Discipline**:
+
+- Tests MUST be written and observed failing before implementation work begins (Red → Green → Refactor).
+- All new or changed Python behaviour MUST have pytest coverage.
+- Django integration behaviour MUST have pytest-django coverage with appropriate test database strategies.
+- Scientific correctness tests (e.g., round-trip import/export, quality score calculations, schema mapping) MUST be
+  written as explicit regression tests with known inputs and expected outputs derived from Fuchs et al.
+- Pull requests MUST NOT be merged with failing tests, or without new/updated tests for behaviour changes.
+- The only acceptable exception is a docs-only change with no runtime behaviour impact.
+
+**Code Quality & Tooling**:
+
+- Type hints are REQUIRED for all new Python code. Mypy MUST report no new errors for changed files.
+- Ruff linting and formatting rules (as defined in `pyproject.toml`) MUST pass for all changed files.
+- Test organisation MUST mirror the `project/` source tree under `tests/` with `test_` prefixes at each level.
+- Fixture factories MUST use factory-boy and pytest fixtures for reusable, composable test data.
+- Performance tests MUST use deterministic guards (e.g., query-count assertions via `django_assert_num_queries`) rather
+  than wall-clock timing.
+- Coverage is a guide to find untested paths, not a merge gate. Tests MUST be meaningful, maintainable, and reliable.
+
+**Schema-Mapping Test Obligation**:
+
+- Any feature that adds or changes GHFDB field mappings MUST include an automated test verifying the mapping is correct
+  end-to-end (model → serialiser/export → flat row, and flat row → importer → model).
+- Quality score calculation functions MUST have unit tests with at least two example inputs (from Fuchs et al. where
+  available) and their expected outputs pinned as regression tests.
+
+### VII. Documentation Critical
+
+Documentation is part of the portal's scientific output and MUST be treated with the same rigour as code.
+
+- Every public model field, setting, API endpoint, and schema mapping MUST be documented with a reference to the
+  relevant IHFC specification section (Fuchs et al., 2021, 2023) where applicable.
+- The field mapping table (`docs/ghfdb_fields.md`) MUST be updated in the same pull request as any schema change.
+- New public settings, template blocks, and public APIs MUST include at least one minimal usage example in the docs.
+- Breaking changes MUST include migration guides with step-by-step upgrade instructions.
+- Documentation MUST be versioned alongside code releases.
+- Docstrings for GHFDB domain models SHOULD cite the relevant Fuchs et al. paper section and field name to maintain
+  a direct link between code and the authoritative scientific specification.
+
+### VIII. Spec-Driven Development Workflow
+
+All non-trivial changes MUST follow the spec-driven workflow documented in
+`docs/development/spec-driven-workflow.md`, producing discoverable, version-controlled design artefacts.
+
+- Non-trivial changes MUST start with a feature specification (`spec.md`) that articulates user stories, priorities,
+  and measurable success criteria in scientific and user-journey terms.
+- User stories MUST be independently testable slices of value, ordered by priority (P1, P2, P3, …).
+- Each feature MUST include an implementation plan (`plan.md`) recording technical context, chosen architecture, and
+  a "Constitution Check" section that explicitly notes alignment with the Core Principles above.
+- Tasks (`tasks.md`) MUST be grouped by user story to enable independent implementation, testing, and delivery.
+- **Django System Checks**: `python manage.py check` MUST pass between completing user stories or major
+  implementation phases. All system check errors MUST be fixed before proceeding.
+- **Validation Frequency**: For multi-phase implementations, run system checks after each phase; test FairDM
+  registry integration immediately after modifying models or configuration classes.
+- Documentation MUST be updated as features are implemented, not deferred to the end.
+
+---
+
+## Architecture & Stack Constraints
+
+- **Language & Runtime**: Python ≥ 3.13 targeting currently-supported CPython versions per `pyproject.toml`.
+- **Web Framework**: Django ≥ 5.0 is the foundational web framework. Alternatives are not permitted without a
+  governance-approved decision and migration strategy.
+- **Core Dependencies**:
+  - FairDM framework (+ `fairdm-geo`, `fairdm-discussions` ecosystem) as the portal backbone.
+  - PostgreSQL as the reference and recommended production database.
+  - Bootstrap 5 for the responsive, accessible default UI.
+  - HTMX and Alpine.js for small, targeted progressive enhancements.
+  - Celery + Redis for long-running tasks (import, export, quality score recalculation).
+  - Django REST Framework (via FairDM API layer) for programmatic access; generated APIs MUST honour FAIR metadata
+    and permission rules.
+- **Container-First Deployment**: Docker + docker-compose are the reference deployment strategy; 12-factor-style
+  environment variable configuration (via `django-environ`) is REQUIRED.
+- **Testing Stack**:
+  - pytest and pytest-django are the canonical testing stack.
+  - Test organisation: `project/heat_flow/models/foo.py` → `tests/test_heat_flow/test_models/test_foo.py`.
+  - Fixtures use factory-boy and pytest fixtures; test isolation uses transaction rollback.
+  - Static analysis: Ruff (lint + format), mypy, djlint (HTML templates).
+- **Internationalisation Settings**: `USE_I18N = True`, `USE_L10N = True`, and `LANGUAGE_CODE = "en"` are
+  non-negotiable defaults in all deployment configurations.
+- **Core MUST provide**:
+  - Normalised relational storage of all IHFC GHFDB fields per Fuchs et al.
+  - Import from and export to the IHFC flat spreadsheet format with round-trip integrity.
+  - FAIR-compliant metadata endpoints (DataCite-compatible, machine-readable).
+  - Contributor attribution and ORCID/ROR integration.
+  - Admin-governed data review and publication workflow.
+  - Multilingual UI foundation (i18n-wrapped strings, locale files for `en`).
+
+---
+
+## Development Workflow & Quality Gates
+
+This section governs how changes move from idea to deployed code within the GHFDB Portal project.
+
+- **Specification First**: Non-trivial changes MUST start with a `spec.md` aligned with Principle VIII.
+- **Planning & Constitution Check**: Each feature MUST include a `plan.md` with a "Constitution Check" section
+  confirming alignment with the Core Principles. Intentional violations MUST be recorded in the
+  "Complexity Tracking" table with written justification.
+- **Task Breakdown**: Tasks MUST be grouped by user story; shared foundational work MUST be explicit blocking tasks.
+- **Test-First**: Tests written and observed failing before implementation, per Principle VI.
+- **Implementation Validation Checkpoints**:
+  - Run `python manage.py check` after each phase; fix all errors before continuing.
+  - Run the full test suite (`poetry run pytest`) before marking any user story complete.
+  - Verify FairDM registry integrity after modifying models or `ModelConfig` classes.
+  - Update `docs/ghfdb_fields.md` immediately when any schema change is made.
+- **Documentation Currency**: Documentation is updated incrementally as capabilities are added, never deferred.
+  New public APIs, settings, and mappings MUST be documented before the feature is considered complete.
+- **Merge Gates**:
+  - All tests MUST pass.
+  - Ruff and mypy MUST report no new errors.
+  - `python manage.py check` MUST pass with zero errors.
+  - Field mapping documentation MUST be current.
+  - Relevant docstrings MUST reference Fuchs et al. where the field is IHFC-defined.
+- **Speckit Template Consistency**: Speckit templates in `.specify/templates/` MUST remain consistent with this
+  constitution. Divergence MUST be corrected in the same pull request as the constitutional amendment.
+
+---
 
 ## Governance
 
-**Authority & Precedence:**
+The constitution defines how the GHFDB Portal is evolved and how compliance is enforced.
 
-- This constitution supersedes informal practices and undocumented conventions
-- All pull requests, code reviews, and architectural decisions **MUST** verify compliance with core principles
-- The WHFDB Project maintainers hold final interpretation authority
+- **Scope**: This constitution applies to the `global-heat-flow-database` repository, all data models, APIs,
+  documentation, CI/CD pipelines, and reference deployment configurations maintained here.
+- **Authority**: Final authority for constitutional changes and major architectural decisions currently rests with the
+  original author acting as BDFL (Benevolent Dictator For Life), while preparing for a broader governance model as
+  the project matures within the IHFC community.
+- **Amendments & Versioning**:
+  - Amendments MUST be made via pull request clearly stating the intended change, rationale, and expected impact.
+  - Constitution versions follow semantic versioning:
+    - **MAJOR**: Backward-incompatible governance changes; removal or redefinition of existing principles.
+    - **MINOR**: Addition of new principles or sections; substantial expansion of existing guidance.
+    - **PATCH**: Clarifications, non-semantic wording, and typo fixes.
+  - Any change MUST update the version, Last Amended date, and Sync Impact Report at the top of this file.
+- **Compliance & Review**:
+  - Code review for core changes MUST consider alignment with the Core Principles and Architecture Constraints above.
+  - When violations are accepted for pragmatic reasons, they MUST be documented in the relevant `plan.md`
+    "Complexity Tracking" section and, where long-lived, reflected as a future constitutional amendment.
+  - The AI agent instructions file (`.github/instructions/copilot.instructions.md`) MUST be kept consistent with
+    this constitution; divergence is treated as a documentation bug.
+- **Transparency & Community Input**:
+  - Proposed constitutional changes SHOULD be discussed openly (via issues or discussions on the repository) before
+    being merged.
+  - Maintainers SHOULD provide clear, written rationale referencing this document when accepting or rejecting
+    significant contributions.
+  - As IHFC community members and institutional stakeholders engage more deeply with the project, a formal governance
+    structure (e.g., a steering committee aligned with the IHFC working group) SHOULD be established and documented
+    as an amendment to this section.
 
-**Amendment Process:**
-
-1. Propose amendment via GitHub discussion with rationale
-2. Maintainers review for alignment with project mission and DFG funding mandate
-3. Approved amendments increment version per semantic rules:
-   - **MAJOR:** Principle removal, redefinition, or backward-incompatible governance change
-   - **MINOR:** New principle added or materially expanded guidance
-   - **PATCH:** Clarifications, typo fixes, non-semantic refinements
-4. Update constitution file with new version, amendment date, and sync impact report
-5. Propagate changes to affected templates and documentation
-
-**Compliance Review:**
-
-- Quarterly review of recent PRs to verify constitutional adherence
-- Annual review of constitution relevance given GHFDB schema updates (Fuchs et al. revisions)
-- Major GHFDB schema changes (new publications) trigger constitution review
-
-**Role & Permission Governance:**
-
-- The portal MUST implement least-privilege permissions and role-based access control for reviewer and administrator capabilities
-- Publication approval authority MUST be limited to explicitly designated administrative roles
-- Administrative role hierarchy MUST be documented and reviewed periodically as part of compliance review
-
-**Funding & Institutional Alignment:**
-
-- This project is funded by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) under project number 491795283
-- Hosted and maintained by GFZ German Research Centre for Geosciences
-- Governed by the International Heat Flow Commission (IHFC-IUGG)
-- All development decisions must align with DFG grant objectives and open science requirements
-
-**Sustainability commitment:**
-
-- GFZ has committed to sustainably operate the research data infrastructure in-house beyond the initial grant period; architectural decisions MUST support long-term maintainability and institutional operation
-
-**Version**: 1.1.0 | **Ratified**: 2026-01-02 | **Last Amended**: 2026-01-02
-
+**Version**: 1.0.0 | **Ratified**: TODO(RATIFICATION_DATE): confirm project inception date | **Last Amended**: 2026-04-09

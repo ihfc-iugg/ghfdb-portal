@@ -25,21 +25,21 @@ description: "Task list template for feature implementation"
 - **Mobile**: `api/src/`, `ios/src/` or `android/src/`
 - Paths shown below assume single project - adjust based on plan.md structure
 
-<!-- 
+<!--
   ============================================================================
   IMPORTANT: The tasks below are SAMPLE TASKS for illustration purposes only.
-  
+
   The /speckit.tasks command MUST replace these with actual tasks based on:
   - User stories from spec.md (with their priorities P1, P2, P3...)
   - Feature requirements from plan.md
   - Entities from data-model.md
   - Endpoints from contracts/
-  
+
   Tasks MUST be organized by user story so each story can be:
   - Implemented independently
   - Tested independently
   - Delivered as an MVP increment
-  
+
   DO NOT keep these sample tasks in the generated tasks.md file.
   ============================================================================
 -->
@@ -51,6 +51,12 @@ description: "Task list template for feature implementation"
 - [ ] T001 Create project structure per implementation plan
 - [ ] T002 Initialize [language] project with [framework] dependencies
 - [ ] T003 [P] Configure linting and formatting tools
+
+### System Validation — Phase 1
+
+- [ ] T00X ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass before proceeding to Phase 2
+
+**Checkpoint — Setup Complete**: System checks pass. Proceed to Phase 2.
 
 ---
 
@@ -69,7 +75,12 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] T008 Configure error handling and logging infrastructure
 - [ ] T009 Setup environment configuration management
 
-**Checkpoint**: Foundation ready - user story implementation can now begin in parallel
+### System Validation — Phase 2
+
+- [ ] T00X ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass before proceeding
+- [ ] T00X ⚠️ CRITICAL: Run foundation tests: `poetry run pytest <test_paths_for_foundational_models> -v` — ALL tests MUST pass before proceeding to any user story
+
+**Checkpoint — Foundation Ready**: System checks pass and foundational tests are green. User story phases can now begin.
 
 ---
 
@@ -95,7 +106,12 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] T016 [US1] Add validation and error handling
 - [ ] T017 [US1] Add logging for user story 1 operations
 
-**Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
+### System Validation — Phase 3
+
+- [ ] T00X ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass before proceeding
+- [ ] T00X ⚠️ CRITICAL: Run User Story 1 tests: `poetry run pytest <test_paths_for_user_story_1> -v` — ALL tests MUST pass
+
+**Checkpoint — US1 Complete**: User Story 1 fully functional and independently testable.
 
 ---
 
@@ -117,7 +133,12 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] T022 [US2] Implement [endpoint/feature] in src/[location]/[file].py
 - [ ] T023 [US2] Integrate with User Story 1 components (if needed)
 
-**Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
+### System Validation — Phase 4
+
+- [ ] T00X ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass before proceeding
+- [ ] T00X ⚠️ CRITICAL: Run User Story 2 tests: `poetry run pytest <test_paths_for_user_story_2> -v` — ALL tests MUST pass
+
+**Checkpoint — US2 Complete**: User Stories 1 AND 2 both work independently.
 
 ---
 
@@ -138,11 +159,16 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] T027 [US3] Implement [Service] in src/services/[service].py
 - [ ] T028 [US3] Implement [endpoint/feature] in src/[location]/[file].py
 
-**Checkpoint**: All user stories should now be independently functional
+### System Validation — Phase 5
+
+- [ ] T00X ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass before proceeding
+- [ ] T00X ⚠️ CRITICAL: Run User Story 3 tests: `poetry run pytest <test_paths_for_user_story_3> -v` — ALL tests MUST pass
+
+**Checkpoint — US3 Complete**: All user stories should now be independently functional.
 
 ---
 
-[Add more user story phases as needed, following the same pattern]
+[Add more user story phases as needed, following the same pattern. Each phase MUST end with a System Validation section containing the two ⚠️ CRITICAL tasks.]
 
 ---
 
@@ -156,6 +182,13 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] TXXX [P] Additional unit tests (if requested) in tests/unit/
 - [ ] TXXX Security hardening
 - [ ] TXXX Run quickstart.md validation
+
+### System Validation — Final
+
+- [ ] TXXX ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass
+- [ ] TXXX ⚠️ CRITICAL: Run full test suite: `poetry run pytest <all_feature_test_paths> -v` — ALL tests MUST pass
+
+**Checkpoint — Feature Complete**: System checks pass and entire test suite is green.
 
 ---
 

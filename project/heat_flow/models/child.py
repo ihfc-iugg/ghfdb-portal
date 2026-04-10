@@ -13,6 +13,7 @@ References:
 
 from functools import cached_property
 
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator as MaxVal
 from django.core.validators import MinValueValidator as MinVal
 from django.db import models as django_models
@@ -31,6 +32,16 @@ from ..utils import MScoreOptions, UScoreOptions, calculate_U_score
 class HeatFlowInterval(Interval, AbstractGeoDepthInterval):
     """Depth interval within a HeatFlowSite borehole over which a child heat flow measurement is calculated."""
 
+    sample = models.ForeignKey(
+        "sample.Sample",
+        verbose_name=_("parent site"),
+        help_text=_("The heat flow site this depth interval belongs to."),
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="intervals",
+    )
+
     class Meta:
         verbose_name = _("Depth interval")
         verbose_name_plural = _("Depth intervals")
@@ -41,6 +52,14 @@ class HeatFlowInterval(Interval, AbstractGeoDepthInterval):
         bottom = getattr(self.bottom, "magnitude", self.bottom) if self.bottom is not None else "?"
         return f"{self.__class__.__name__}({top}-{bottom})"
 
+    def clean(self):
+        super().clean()
+        if self.top is not None and self.bottom is not None:
+            top = getattr(self.top, "magnitude", self.top)
+            bottom = getattr(self.bottom, "magnitude", self.bottom)
+            if top >= bottom:
+                raise ValidationError(_("Interval bottom depth must be greater than top depth."))
+
 
 class HeatFlowQuerySet(django_models.QuerySet):
     """Custom QuerySet for HeatFlow model with optimized queries."""
@@ -48,7 +67,7 @@ class HeatFlowQuerySet(django_models.QuerySet):
     def with_related_data(self):
         """Prefetch all related data for efficient queries."""
         return self.select_related(
-            "parent", "parent__sample", "thermal_gradient", "thermal_conductivity", "probe_metadata"
+            "parent", "parent__sample", "thermal_gradient", "thermal_conductivity", "sample__probe_metadata"
         ).prefetch_related(
             "method",
             "corrections",
@@ -61,11 +80,11 @@ class HeatFlowQuerySet(django_models.QuerySet):
 
     def probe_measurements(self):
         """Filter to probe measurements only."""
-        return self.filter(probe_metadata__isnull=False)
+        return self.filter(sample__probe_metadata__isnull=False)
 
     def borehole_measurements(self):
         """Filter to borehole measurements only."""
-        return self.filter(probe_metadata__isnull=True)
+        return self.filter(sample__probe_metadata__isnull=True)
 
     def high_quality(self):
         """Filter to high quality measurements (U1, U2, M1, M2)."""
@@ -157,37 +176,28 @@ class HeatFlow(Measurement):
         null=True,
         blank=True,
     )
-    thermal_gradient = models.OneToOneField(
+    thermal_gradient = models.ForeignKey(
         "heat_flow.ThermalGradient",
         verbose_name=_("temperature gradient"),
         help_text=_("Temperature gradient value used for heat-flow calculation."),
-        on_delete=models.CASCADE,
-        related_name="heat_flow_child",
+        on_delete=models.PROTECT,
+        related_name="heat_flow_children",
         null=True,
         blank=True,
     )
-    thermal_conductivity = models.OneToOneField(
+    thermal_conductivity = models.ForeignKey(
         "heat_flow.IntervalConductivity",
         verbose_name=_("thermal conductivity"),
         help_text=_("Thermal conductivity value used for heat-flow calculation."),
-        on_delete=models.CASCADE,
-        related_name="heat_flow_child",
+        on_delete=models.PROTECT,
+        related_name="heat_flow_children",
         null=True,
         blank=True,
     )
 
     # This field makes absolutely no sense as IGSN refers to a sample, not a measurement. But then would it belong to
-    #  a HeatFlowSite or a HeatFlowInterval? It is not clear. For now, we will keep it here on the HeatFlow child to
-    # appease the import process and the GHFDB schema.
-    IGSN = models.TextField(
-        verbose_name="IGSN",
-        help_text=_(
-            "International Generic Sample Numbers (IGSN, semicolon separated) for rock samples used for laboratory"
-            " measurements of thermal conductivity in the heat flow calculation."
-        ),
-        blank=True,
-        null=True,
-    )
+    #  a HeatFlowSite or a HeatFlowInterval? It is not clear.
+    # IGSN field removed: IGSN belongs on Sample (HeatFlowSite/HeatFlowInterval), not on HeatFlow measurement (FR-010)
 
     c_comment = models.TextField(
         verbose_name=_("comment"),
@@ -224,16 +234,11 @@ class HeatFlow(Measurement):
         blank=True,
         related_name="children",
         verbose_name=_("parent heat flow"),
-        help_text=_(
-            "The parent-level heat flow record this measurement contributes to."
-        ),
+        help_text=_("The parent-level heat flow record this measurement contributes to."),
     )
     is_relevant = models.BooleanField(
         verbose_name=_("is relevant"),
-        help_text=_(
-            "Indicates whether this child measurement was used in calculating "
-            "the parent heat flow value."
-        ),
+        help_text=_("Indicates whether this child measurement was used in calculating the parent heat flow value."),
         default=False,
     )
 
@@ -260,12 +265,17 @@ class HeatFlow(Measurement):
 
     @cached_property
     def is_probe(self):
-        """Check if the heat flow measurement is from a probe."""
-        return hasattr(self, 'probe_metadata') and self.probe_metadata is not None
+        """Check if the heat flow measurement was acquired using a marine probe."""
+        return self.sample is not None and hasattr(self.sample, "probe_metadata")
 
     @property
     def interval(self):
         return self.parent
+
+    def save(self, *args, **kwargs):
+        if self.sample_id and not isinstance(self.sample, HeatFlowInterval):
+            raise ValidationError(_("HeatFlow sample must be a HeatFlowInterval instance."))
+        super().save(*args, **kwargs)
 
     def get_U_score(self):
         """From Fuchs et al 2023 - Quality-assurance of heat-flow data: The new structure and evaluation scheme of the IHFC Global Heat Flow Database, Section 3.1. Uncertainty quantification (U-score).
@@ -302,8 +312,8 @@ class HeatFlow(Measurement):
 
         for correction in self.corrections.all():
             correction_type = correction.get_correction_type_display()
-            status = correction.get_status_display() if hasattr(correction.status, 'label') else str(correction.status)
-            if correction.status in ['present_corrected', 'present_uncorrected']:
+            status = correction.get_status_display() if hasattr(correction.status, "label") else str(correction.status)
+            if correction.status in ["present_corrected", "present_uncorrected"]:
                 effects.append(f"{correction_type} ({status})")
 
         return effects if effects else None
@@ -365,7 +375,7 @@ class ProbeMetadata(django_models.Model):
         db_table_comment = "Metadata for marine heat flow probe measurements"
 
     def __str__(self):
-        return f"Probe metadata for {self.heat_flow}"
+        return f"Probe metadata for {self.interval}"
 
 
 class HeatFlowCorrection(django_models.Model):
@@ -433,8 +443,55 @@ class HeatFlowCorrection(django_models.Model):
             models.Index(fields=["status"]),
         ]
 
+    # T056: Valid status values per correction type (FR-021)
+    VALID_STATUS_FOR_TYPE: dict[str, set[str]] = {
+        "IS": {
+            "present_corrected",
+            "present_not_corrected",
+            "not_recognized",
+            "not_considered",
+            "tilt_corrected",
+            "drift_corrected",
+            "-",
+        },
+        "T": {
+            "present_corrected",
+            "present_not_corrected",
+            "not_corrected",
+            "corrected",
+            "not_recognized",
+            "not_considered",
+            "-",
+        },
+    }
+    ENVIRONMENTAL_VALID: set[str] = {
+        "present_corrected",
+        "present_not_corrected",
+        "present_not_significant",
+        "not_recognized",
+        "considered_p",
+        "considered_t",
+        "considered_pt",
+        "not_considered",
+        "-",
+    }
+    # S, E, TOPO, PAL, SUR, CONV, HR → ENVIRONMENTAL_VALID
+    _ENVIRONMENTAL_TYPES: frozenset[str] = frozenset({"S", "E", "TOPO", "PAL", "SUR", "CONV", "HR"})
+
     def __str__(self):
         return f"{self.get_correction_type_display()} - {self.status}"
+
+    def save(self, *args, **kwargs):
+        valid: set[str] | None = None
+        if self.correction_type in self.VALID_STATUS_FOR_TYPE:
+            valid = self.VALID_STATUS_FOR_TYPE[self.correction_type]
+        elif self.correction_type in self._ENVIRONMENTAL_TYPES:
+            valid = self.ENVIRONMENTAL_VALID
+        if valid is not None and self.status not in valid:
+            raise ValidationError(
+                _(f"Status '{self.status}' is not valid for correction type '{self.correction_type}'.")
+            )
+        super().save(*args, **kwargs)
 
 
 class ThermalGradient(Measurement):
@@ -445,8 +502,6 @@ class ThermalGradient(Measurement):
         db_comment="Calculated or inferred temperature gradient.",
         verbose_name=_("thermal gradient"),
         help_text=_("Mean thermal gradient measured over a given length interval."),
-        null=True,
-        blank=True,
         validators=[MinVal(-(10**5)), MaxVal(10**5)],
     )
     uncertainty = models.DecimalQuantityField(
@@ -612,6 +667,11 @@ class ThermalGradient(Measurement):
         """Check if the thermal gradient has been corrected."""
         return self.corrected_value is not None
 
+    def save(self, *args, **kwargs):
+        if self.sample_id and not isinstance(self.sample, HeatFlowInterval):
+            raise ValidationError(_("ThermalGradient sample must be a HeatFlowInterval instance."))
+        super().save(*args, **kwargs)
+
 
 class IntervalConductivity(Measurement):
     value = models.DecimalQuantityField(
@@ -623,8 +683,6 @@ class IntervalConductivity(Measurement):
             "Mean conductivity in vertical direction representative for the interval of heat-flow determination. In"
             " best case, the value reflects the true in-situ conditions for the corresponding heat-flow interval."
         ),
-        null=True,
-        blank=True,
         validators=[MinVal(0), MaxVal(100)],
     )
     uncertainty = models.DecimalQuantityField(
@@ -708,7 +766,6 @@ class IntervalConductivity(Measurement):
         validators=[MinVal(0.0), MaxVal(1.1)],
     )
 
-
     class Meta:
         verbose_name = _("Thermal Conductivity")
         verbose_name_plural = _("Thermal Conductivities")
@@ -782,8 +839,6 @@ class IntervalConductivity(Measurement):
 
     def clean(self):
         """Validate thermal conductivity data."""
-        from django.core.exceptions import ValidationError
-
         super().clean()
 
         # Validate uncertainty relative to value
@@ -797,5 +852,6 @@ class IntervalConductivity(Measurement):
             )
 
     def save(self, *args, **kwargs):
-        """Save with data validation."""
+        if self.sample_id and not isinstance(self.sample, HeatFlowInterval):
+            raise ValidationError(_("IntervalConductivity sample must be a HeatFlowInterval instance."))
         super().save(*args, **kwargs)

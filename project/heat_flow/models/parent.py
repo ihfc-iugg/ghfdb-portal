@@ -181,8 +181,8 @@ class ParentHeatFlow(Measurement):
     )
 
     class Meta:
-        verbose_name = _("Heat Flow")
-        verbose_name_plural = _("Heat Flow")
+        verbose_name = _("Parent Heat Flow")
+        verbose_name_plural = _("Parent Heat Flow")
         db_table = "ghfdb_parentheatflow"
         db_table_comment = (
             "Heat flux at Earth's surface for a given HeatFlowSite. This table "
@@ -195,6 +195,8 @@ class ParentHeatFlow(Measurement):
 
     def save(self, *args, **kwargs):
         if self.sample_id:
+            if not isinstance(self.sample, HeatFlowSite):
+                raise ValidationError(_("ParentHeatFlow sample must be a HeatFlowSite instance."))
             existing = ParentHeatFlow.objects.filter(sample=self.sample).exclude(pk=self.pk)
             if existing.exists():
                 raise ValidationError(

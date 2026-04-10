@@ -8,6 +8,7 @@ from .models import (
     HeatFlowInterval,
     HeatFlowSite,
     IntervalConductivity,
+    ParentHeatFlow,
     ThermalGradient,
 )
 from .tables import HeatFlowIntervalTable, HeatFlowSiteTable, HeatFlowTable, ThermalGradientTable
@@ -179,4 +180,23 @@ class IntervalConductivityConfig(IHFCConfig):
         "source",
         "saturation",
         ("pT_conditions", "pT_function"),
+    ]
+
+
+@fairdm.register
+class ParentHeatFlowConfig(IHFCConfig):
+    """FairDM registry configuration for the aggregated, quality-controlled parent heat flow record."""
+
+    model = ParentHeatFlow
+    description = _(
+        "Parent heat flow represents the aggregated, quality-controlled surface heat flow value for a given "
+        "HeatFlowSite, derived from one or more child HeatFlow measurements. Each site has at most one "
+        "parent heat flow record, which inherits its quality score from the associated child measurements."
+    )
+    keywords = []
+    fields = [
+        ("value", "uncertainty"),
+        "corr_HP_flag",
+        "comment",
+        "is_ghfdb",
     ]
