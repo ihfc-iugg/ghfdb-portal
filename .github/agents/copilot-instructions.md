@@ -1,6 +1,6 @@
-﻿# global-heat-flow-database Development Guidelines
+# global-heat-flow-database Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-04-10
+Auto-generated from all feature plans. Last updated: 2026-04-13
 
 ## Active Technologies
 - Python 3.13 (as specified in pyproject.toml) + GitHub Actions (CI/CD platform), Poetry (dependency management), pytest with pytest-django/pytest-cov/pytest-mock (testing), Ruff (linting/formatting), mypy (type checking), Sphinx (documentation), Docker & docker-compose (containerization) (001-cicd-pipeline)
@@ -13,6 +13,8 @@ Auto-generated from all feature plans. Last updated: 2026-04-10
 - SQLite (development), PostgreSQL + PostGIS (production) (001-ghfdb-data-model)
 - Python ≥3.13 (CPython) + Django 5.0+, FairDM framework, django-import-export (via FairDM), django-pint (Quantity fields), research-vocabs (Concept/vocabulary fields), openpyxl (XLSX read/write), tablib, django-flex-menu (002-ghfdb-product-utilities)
 - PostgreSQL (production); SQLite (development/CI) (002-ghfdb-product-utilities)
+- Python ≥3.13 + Django 5.0+, FairDM framework, django-import-export ≥4.0.3 <5.0.0, research-vocabs, django-pint-field, openpyxl, tablib (002-ghfdb-product-utilities)
+- PostgreSQL (reference); SQLite for local dev (002-ghfdb-product-utilities)
 
 
 ## Project Structure
@@ -32,9 +34,9 @@ cd src; pytest; ruff check .
 Python (repository target is Python >=3.13): Follow standard conventions
 
 ## Recent Changes
+- 002-ghfdb-product-utilities: Added Python ≥3.13 + Django 5.0+, FairDM framework, django-import-export ≥4.0.3 <5.0.0, research-vocabs, django-pint-field, openpyxl, tablib
 - 002-ghfdb-product-utilities: Added Python ≥3.13 (CPython) + Django 5.0+, FairDM framework, django-import-export (via FairDM), django-pint (Quantity fields), research-vocabs (Concept/vocabulary fields), openpyxl (XLSX read/write), tablib, django-flex-menu
 - 001-ghfdb-data-model: Added Python ≥3.13 + Django 5.0+, FairDM (`fairdm`, `fairdm-geo`), `research_vocabs`, `django-pint` (via `fairdm.db.fields`), `django-polymorphic`, `factory_boy`
-- 002-data-model: Added Python ≥3.13 + Django 5.0+, FairDM ecosystem (fairdm, fairdm-geo, fairdm-discussions, fairdm-rest-api), django-pint (quantities), django-research-vocabs (ConceptField/ConceptManyToManyField)
 
 
 <!-- MANUAL ADDITIONS START -->
