@@ -244,6 +244,16 @@ class HeatFlow(Measurement):
         default=False,
     )
 
+    # GHFDB spreadsheet ID column — used as the stable key for import upsert.
+    # Corresponds to the "ID" column in the GHFDB spreadsheet schema (Fuchs et al., 2021).
+    local_id = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text=_("GHFDB spreadsheet ID column — used as the stable key for import upsert"),
+    )
+
     # Managers
     # objects = HeatFlowManager()
 

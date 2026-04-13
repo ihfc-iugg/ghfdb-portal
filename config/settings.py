@@ -73,6 +73,12 @@ AWS_S3_CLIENT_CONFIG = Config(
     request_checksum_calculation="when_required", response_checksum_validation="when_required"
 )
 
+if "INSTALLED_APPS" not in globals():
+    INSTALLED_APPS = []
+
+INSTALLED_APPS += [
+    "project.ghfdb",
+]
 
 # INSTALLED_APPS += [
 #     "django_model_info.apps.DjangoModelInfoConfig",

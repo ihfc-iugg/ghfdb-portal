@@ -179,6 +179,13 @@ class ParentHeatFlow(Measurement):
         help_text=_("Indicates whether the data entry is part of the Global Heat Flow Database (GHFDB) or not."),
         default=True,
     )
+    local_id = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text=_("GHFDB spreadsheet ID_parent column — used as the stable key for import upsert"),
+    )
 
     class Meta:
         verbose_name = _("Parent Heat Flow")

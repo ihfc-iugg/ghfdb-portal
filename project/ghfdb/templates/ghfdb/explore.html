@@ -1,12 +1,28 @@
-{% extends "fairdm/base.html" %}
-{% block content %}
-  <c-layouts.standard>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1" />
+    <title>GHFDB Explore</title>
+  </head>
+  <body style="margin:0">
     <iframe src="https://ihfc-iugg.github.io/HeatFlowMapping/"
-            frameborder="0"
+            width="100%"
+            height="100vh"
+            style="border:none"
             loading="lazy"
-            class="w-100 h-100 bg-dark"
+            onerror="this.style.display='none'; document.getElementById('map-error').style.display='block';"
             allowfullscreen
             webkitallowfullscreen
             mozallowfullscreen></iframe>
-  </c-layouts.standard>
-{% endblock content %}
+    <div id="map-error"
+         class="explore-fallback"
+         style="display:none;
+                margin:1rem;
+                padding:1rem;
+                border:1px solid #e5a1a1;
+                background:#fff4f4;
+                color:#7a1f1f">The interactive map is temporarily unavailable. Please try again later.</div>
+  </body>
+</html>

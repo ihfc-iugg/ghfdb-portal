@@ -32,7 +32,7 @@ A developer or data curator needs to query heat flow records in the exact flat s
 
 ### User Story 2 - Import GHFDB Spreadsheet into Heat Flow Data Model (Priority: P2)
 
-A data manager has a GHFDB-format XLSX or CSV file exported from the official IHFC spreadsheet template. They want to ingest it into the application's normalised heat_flow data model without manually mapping every column.
+A data manager has a GHFDB-format XLSX file exported from the official IHFC spreadsheet template. They want to ingest it into the application's normalised heat_flow data model without manually mapping every column.
 
 **Why this priority**: Ingesting official GHFDB releases is the primary data-loading workflow. The existing `resources.py` contains partial import logic; this story formalises and completes it as a first-class utility.
 
@@ -106,7 +106,8 @@ A portal visitor wants a quick visual overview of the global heat flow distribut
 ### Key Entities
 
 - **GHFDB (proxy)**: A read-oriented proxy over `HeatFlow` that presents heat-flow records in the flat GHFDB spreadsheet schema. Does not add database columns; adds custom manager (`GHFDBManager`) and queryset (`GHFDBQuerySet`) methods for efficient flat-data retrieval. `verbose_name = "GHFDB Entry"`, `verbose_name_plural = "GHFDB Entries"`.
-- **GHFDBImportResource**: The import resource class (extending the existing `resources.py` work) that maps GHFDB spreadsheet columns to the normalised heat_flow model graph.
+- **GHFDBParentImportResource**: The parent import resource that maps the 18 parent-level GHFDB spreadsheet columns to `HeatFlowSite` and `ParentHeatFlow` records, using `ParentWidget` for related-model creation and upsert via `local_id`.
+- **GHFDBChildImportResource**: The child import resource that maps the remaining GHFDB spreadsheet columns to `HeatFlow`, `ThermalGradient`, `IntervalConductivity`, `HeatFlowCorrection`, and `ProbeMetadata` records, using `IntervalWidget`, `GradientWidget`, and `ConductivityWidget` for sub-model handling and upsert via `HeatFlow.local_id`.
 - **GHFDBExportResource**: An export resource that serialises the normalised heat_flow model graph back into the flat GHFDB spreadsheet structure, handling unit stripping and vocabulary label rendering.
 - **GHFDBExploreView**: A `TemplateView` subclass that renders the map viewer page. The iframe URL (`https://ihfc-iugg.github.io/HeatFlowMapping/`) is hardcoded directly in the template; no Django setting is required.
 
@@ -135,7 +136,6 @@ A portal visitor wants a quick visual overview of the global heat flow distribut
 - The official GHFDB spreadsheet column schema is defined by the Fuchs et al. (2023) publication and the `ghfdb_colmeta.json` metadata file already present in the codebase; no new column definitions will be introduced as part of this feature.
 - The web-map viewer iframe URL (`https://ihfc-iugg.github.io/HeatFlowMapping/`) is hardcoded directly in the template; no Django setting is required.
 - Large file imports may be moved to background tasks in a future feature; synchronous (in-request) processing is acceptable for this feature for files up to a reasonable size limit (e.g., 50,000 rows / 20 MB).
-- The import utility will reuse and refactor the existing `resources.py` code rather than rewriting it from scratch.
 - Import and export are both accessible only via the Django admin site (django-import-export integration); no standalone portal UI or management commands are in scope for this feature.
 - Automated or scheduled release generation (e.g., publishing a versioned GHFDB XLSX on a cron schedule) is explicitly deferred to a future spec.
 - The proxy model does not introduce additional database tables or migrations.

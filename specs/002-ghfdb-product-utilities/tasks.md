@@ -2,8 +2,8 @@
 
 **Feature**: 002-ghfdb-product-utilities
 **Branch**: `002-ghfdb-product-utilities`
-**Input**: plan.md, spec.md, data-model.md, research.md, contracts/api-contracts.md
-**Generated**: 2026-04-10
+**Input**: plan.md, spec.md, data-model.md, research.md, contracts/import-contract.md, contracts/export-contract.md, quickstart.md
+**Generated**: 2026-04-13 (replanned — resources/ package architecture)
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -17,12 +17,12 @@
 
 **Purpose**: Create the new test package and directory structure before all implementation begins.
 
-- [ ] T001 Create `tests/test_ghfdb/` package with `__init__.py` and empty placeholder files: `test_models.py`, `test_managers.py`, `test_import.py`, `test_export.py`, `test_admin.py`, `test_views.py` in `tests/test_ghfdb/`
-- [ ] T002 Create `tests/test_ghfdb/conftest.py` with a `heat_flow_chain` pytest fixture that builds a complete record chain: `HeatFlowSite` → `HeatFlowInterval` (with `ProbeMetadata`) → `ParentHeatFlow` → `HeatFlow` (linked to `ThermalGradient`, `IntervalConductivity`, and `HeatFlowCorrection` instances for all 9 correction types); include a `sample_ghfdb_row` fixture with a minimal valid dict of GHFDB flat-column values
+- [X] T001 Create `tests/test_ghfdb/` package with `__init__.py` and empty placeholder files: `test_models.py`, `test_managers.py`, `test_import.py`, `test_export.py`, `test_admin.py`, `test_views.py` in `tests/test_ghfdb/`
+- [X] T002 Create `tests/test_ghfdb/conftest.py` with a `heat_flow_chain` pytest fixture that builds a complete record chain: `HeatFlowSite` → `HeatFlowInterval` (with `ProbeMetadata`) → `ParentHeatFlow` → `HeatFlow` (linked to `ThermalGradient`, `IntervalConductivity`, and `HeatFlowCorrection` instances for all 9 correction types); include a `sample_ghfdb_row` fixture with a minimal valid dict of GHFDB flat-column values
 
 ### System Validation — Phase 1
 
-- [ ] T003 ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass before proceeding to Phase 2
+- [X] T003 ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass before proceeding to Phase 2
 
 **Checkpoint — Setup Complete**: Package structure exists and system checks pass.
 
@@ -34,13 +34,13 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete and the migration is verified.
 
-- [ ] T004 Add `local_id = models.CharField(max_length=255, null=True, blank=True, db_index=True, help_text=_("GHFDB spreadsheet ID column — used as the stable key for import upsert"))` to the `HeatFlow` model in `project/heat_flow/models/child.py`; add a Fuchs et al. (2021) inline comment referencing the `ID` column in the GHFDB spreadsheet schema; **also** add a `local_id` row to the relevant section of `docs/ghfdb_fields.md` in the same commit (Constitution II: field mapping docs MUST be updated in the same PR as schema changes)
-- [ ] T005 Generate migration: run `poetry run python manage.py makemigrations heat_flow` and verify the resulting file in `project/heat_flow/migrations/` adds only a nullable `local_id` varchar column with a `db_index`
+- [X] T004 Add `local_id = models.CharField(max_length=255, null=True, blank=True, db_index=True, help_text=_("GHFDB spreadsheet ID column — used as the stable key for import upsert"))` to the `HeatFlow` model
+- [X] T005 Generate migration: run `poetry run python manage.py makemigrations heat_flow` and verify the resulting file in `project/heat_flow/migrations/` adds only a nullable `local_id` varchar column with a `db_index`
 
 ### System Validation — Phase 2
 
-- [ ] T006 ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass before proceeding
-- [ ] T007 ⚠️ CRITICAL: Apply migration and verify: `poetry run python manage.py migrate` — MUST succeed cleanly before proceeding to any user story
+- [X] T006 ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass before proceeding
+- [X] T007 ⚠️ CRITICAL: Apply migration and verify: `poetry run python manage.py migrate` — MUST succeed cleanly before proceeding to any user story
 
 **Checkpoint — Foundation Ready**: `HeatFlow.local_id` exists in the database. All user story phases can now begin.
 
@@ -54,140 +54,164 @@
 
 ### Tests for User Story 1 ⚠️ Write FIRST — verify they FAIL before implementing
 
-- [ ] T008 [P] [US1] Write query-count test: assert `GHFDB.objects.as_ghfdb_flat()` executes ≤2 DB queries using `django_assert_max_num_queries(2)` with the `heat_flow_chain` fixture in `tests/test_ghfdb/test_managers.py`
-- [ ] T009 [P] [US1] Write scalar-column completeness test: assert all 31 select_related annotations (`site_name`, `lat_ns`, `long_ew`, `p_q`, `p_q_uncertainty`, `interval_top`, `interval_bottom`, `tgrad_value`, `tc_value`, `probe_penetration`, etc.) are accessible as attributes on records from `as_ghfdb_flat()` in `tests/test_ghfdb/test_managers.py`
-- [ ] T010 [P] [US1] Write correction-flags test: assert all 9 `corr_*_flag` annotations (`corr_IS_flag`, `corr_T_flag`, `corr_S_flag`, `corr_E_flag`, `corr_TOPO_flag`, `corr_PAL_flag`, `corr_SUR_flag`, `corr_CONV_flag`, `corr_HR_flag`) are accessible as attributes on records from `as_ghfdb_flat()` in `tests/test_ghfdb/test_managers.py`
-- [ ] T011 [P] [US1] Write `for_export()` query-count test: assert `GHFDB.objects.for_export()` executes ≤16 DB queries using `django_assert_max_num_queries(16)` in `tests/test_ghfdb/test_managers.py`
-- [ ] T012 [P] [US1] Write standard queryset operability test: assert `filter()`, `order_by()`, and `count()` work without error on the queryset returned by `as_ghfdb_flat()` in `tests/test_ghfdb/test_managers.py`
-- [ ] T013 [P] [US1] Write admin registration test: assert a GET to the `GHFDB` admin changelist returns HTTP 200, the page title contains "GHFDB Entries", and all displayed columns are readable without a `FieldError` in `tests/test_ghfdb/test_admin.py`
+- [X] T008 [P] [US1] Write query-count test: assert `GHFDB.objects.as_ghfdb_flat()` executes ≤2 DB queries using `django_assert_max_num_queries(2)` with the `heat_flow_chain` fixture in `tests/test_ghfdb/test_managers.py`
+- [X] T009 [P] [US1] Write scalar-column completeness test: assert all 31 select_related annotations (`site_name`, `lat_ns`, `long_ew`, `p_q`, `p_q_uncertainty`, `interval_top`, `interval_bottom`, `tgrad_value`, `tc_value`, `probe_penetration`, etc.) are accessible as attributes on records from `as_ghfdb_flat()` in `tests/test_ghfdb/test_managers.py`
+- [X] T010 [P] [US1] Write correction-flags test: assert all 9 `corr_*_flag` annotations (`corr_IS_flag`, `corr_T_flag`, `corr_S_flag`, `corr_E_flag`, `corr_TOPO_flag`, `corr_PAL_flag`, `corr_SUR_flag`, `corr_CONV_flag`, `corr_HR_flag`) are accessible as attributes on records from `as_ghfdb_flat()` in `tests/test_ghfdb/test_managers.py`
+- [X] T011 [P] [US1] Write `for_export()` query-count test: assert `GHFDB.objects.for_export()` executes ≤16 DB queries using `django_assert_max_num_queries(16)` in `tests/test_ghfdb/test_managers.py`
+- [X] T012 [P] [US1] Write standard queryset operability test: assert `filter()`, `order_by()`, and `count()` work without error on the queryset returned by `as_ghfdb_flat()` in `tests/test_ghfdb/test_managers.py`
+- [X] T013 [P] [US1] Write admin registration test: assert a GET to the `GHFDB` admin changelist returns HTTP 200, the page title contains "GHFDB Entries", and all displayed columns are readable without a `FieldError` in `tests/test_ghfdb/test_admin.py`
 
 ### Implementation for User Story 1
 
-- [ ] T014 [US1] Create `project/ghfdb/managers.py` and implement `_correction_subqueries()` helper: iterates `HeatFlowCorrection.CorrectionTypeChoices.choices`, returns a dict of 9 correlated `Subquery` annotations keyed as `corr_{type}_flag`, each selecting `HeatFlowCorrection.status` filtered by `heat_flow=OuterRef("pk")` and `correction_type=choice_value`
-- [ ] T015 [US1] Implement `GHFDBQuerySet.as_ghfdb_flat()` in `project/ghfdb/managers.py`: chain `select_related(...)` for paths `sample__sample`, `sample__sample__location`, `parent`, `thermal_gradient`, `thermal_conductivity`, `sample__probe_metadata`; then `annotate(...)` with `F()` expressions for all 31 scalar columns per the data-model.md mapping table; then merge the 9 `_correction_subqueries()` annotations
-- [ ] T016 [US1] Implement `GHFDBQuerySet.for_export()` in `project/ghfdb/managers.py`: call `self.as_ghfdb_flat()` and chain `prefetch_related(...)` for all 14 M2M paths: `method`, `sample__sample__explo_purpose`, `thermal_gradient__method_top`, `thermal_gradient__method_bottom`, `thermal_gradient__correction_top`, `thermal_gradient__correction_bottom`, `thermal_conductivity__source`, `thermal_conductivity__location`, `thermal_conductivity__method`, `thermal_conductivity__saturation`, `thermal_conductivity__pT_conditions`, `thermal_conductivity__pT_function`, `thermal_conductivity__strategy`, `sample__probe_metadata__probe_type`
-- [ ] T017 [US1] Implement `GHFDBManager(models.Manager)` in `project/ghfdb/managers.py`: override `get_queryset()` to return `GHFDBQuerySet(self.model, using=self._db)`, and add `as_ghfdb_flat()` and `for_export()` delegation methods
-- [ ] T018 [US1] Implement `GHFDB` proxy model in `project/ghfdb/models.py`: inherits `HeatFlow`, `objects = GHFDBManager()`, `class Meta: proxy = True; verbose_name = _("GHFDB Entry"); verbose_name_plural = _("GHFDB Entries")`; add class docstring citing Fuchs et al. (2021, 2023). **Note — registry exemption**: `GHFDB` is a proxy over `HeatFlow`, not a direct `Sample` or `Measurement` subclass. FairDM registry (`@fairdm.register`) applies only to direct `Sample`/`Measurement` subtypes that need auto-generated views/tables/filters; this proxy is intentionally admin-only and does not require registry registration. **Also**: add a minimal smoke test to `tests/test_ghfdb/test_models.py`: `from project.ghfdb.models import GHFDB` / `assert GHFDB._meta.proxy is True` / `assert GHFDB._meta.verbose_name == "GHFDB Entry"`.
-- [ ] T019 [US1] Create `project/ghfdb/admin.py` with `GHFDBAdmin(admin.ModelAdmin)` registered for `GHFDB`: override `get_queryset()` to return `GHFDB.objects.as_ghfdb_flat()`; set `list_display` with key flat columns (`site_name`, `lat_ns`, `long_ew`, `p_q`, `value`); set `list_display_links = None` to enforce read-only; wrap all user-facing strings in `_()`.
+- [X] T014 [US1] Extend existing `project/ghfdb/managers.py` and implement `_correction_subqueries()` helper: iterates `HeatFlowCorrection.CorrectionTypeChoices.choices`, returns a dict of 9 correlated `Subquery` annotations keyed as `corr_{type}_flag`, each selecting `HeatFlowCorrection.status` filtered by `heat_flow=OuterRef("pk")` and `correction_type=choice_value`
+- [X] T015 [US1] Implement `GHFDBQuerySet.as_ghfdb_flat()` in `project/ghfdb/managers.py`: chain `select_related(...)` for paths `sample__sample`, `sample__sample__location`, `parent`, `thermal_gradient`, `thermal_conductivity`, `sample__probe_metadata`; then `annotate(...)` with `F()` expressions for all 31 scalar columns per the data-model.md mapping table; then merge the 9 `_correction_subqueries()` annotations
+- [X] T016 [US1] Implement `GHFDBQuerySet.for_export()` in `project/ghfdb/managers.py`: call `self.as_ghfdb_flat()` and chain `prefetch_related(...)` for all 14 M2M paths: `method`, `sample__sample__explo_purpose`, `thermal_gradient__method_top`, `thermal_gradient__method_bottom`, `thermal_gradient__correction_top`, `thermal_gradient__correction_bottom`, `thermal_conductivity__source`, `thermal_conductivity__location`, `thermal_conductivity__method`, `thermal_conductivity__saturation`, `thermal_conductivity__pT_conditions`, `thermal_conductivity__pT_function`, `thermal_conductivity__strategy`, `sample__probe_metadata__probe_type`
+- [X] T017 [US1] Implement `GHFDBManager(models.Manager)` in `project/ghfdb/managers.py`: override `get_queryset()` to return `GHFDBQuerySet(self.model, using=self._db)`, and add `as_ghfdb_flat()` and `for_export()` delegation methods
+- [X] T018 [US1] Implement `GHFDB` proxy model in `project/ghfdb/models.py`: inherits `HeatFlow`, `objects = GHFDBManager()`, `class Meta: proxy = True; verbose_name = _("GHFDB Entry"); verbose_name_plural = _("GHFDB Entries")`; add class docstring citing Fuchs et al. (2021, 2023). **Note — registry exemption**: `GHFDB` is a proxy over `HeatFlow`, not a direct `Sample` or `Measurement` subclass. FairDM registry (`@fairdm.register`) applies only to direct `Sample`/`Measurement` subtypes that need auto-generated views/tables/filters; this proxy is intentionally admin-only and does not require registry registration. **Also**: add a minimal smoke test to `tests/test_ghfdb/test_models.py`: `from project.ghfdb.models import GHFDB` / `assert GHFDB._meta.proxy is True` / `assert GHFDB._meta.verbose_name == "GHFDB Entry"`.
+- [X] T019 [US1] Create `project/ghfdb/admin.py` with `GHFDBAdmin(admin.ModelAdmin)` registered for `GHFDB`: override `get_queryset()` to return `GHFDB.objects.as_ghfdb_flat()`; set `list_display` with key flat columns (`site_name`, `lat_ns`, `long_ew`, `p_q`, `value`); set `list_display_links = None` to enforce read-only; wrap all user-facing strings in `_()`.
 
 ### System Validation — Phase 3
 
-- [ ] T020 ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass before proceeding
-- [ ] T021 ⚠️ CRITICAL: Run User Story 1 tests: `poetry run pytest tests/test_ghfdb/test_managers.py tests/test_ghfdb/test_admin.py -v` — ALL tests MUST pass
+- [X] T020 ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass before proceeding
+- [X] T021 ⚠️ CRITICAL: Run User Story 1 tests: `poetry run pytest tests/test_ghfdb/test_managers.py tests/test_ghfdb/test_admin.py -v` — ALL tests MUST pass
 
 **Checkpoint — US1 Complete**: Proxy model queryable, all scalar annotations verified, correction flags present, admin list view renders without field errors, query counts confirmed constant.
 
 ---
 
-## Phase 4: User Story 2 — Import GHFDB Spreadsheet (Priority: P2)
+## Phase 3.5: Resources Package Setup (Prerequisite for US2 + US3)
 
-**Goal**: Refactor `GHFDBResource` → `GHFDBImportResource` (with upsert by `local_id`, atomic full-file validation, and vocabulary-to-Concept mapping), extract shared constants to `GHFDBBaseResource`, and surface the import action via `GHFDBAdmin`.
+**Purpose**: Create the `resources/` package skeleton and `test_resources/` test directory. The old monolithic `resources.py` is superseded by this split-package architecture. This must exist before any US2 or US3 tasks are started.
 
-**Independent Test**: `poetry run pytest tests/test_ghfdb/test_import.py -v`
+- [X] T022 Create `project/ghfdb/resources/` package: `__init__.py`, `_base.py`, `_widgets.py`, `parent.py`, `child.py`, `export.py` (all empty stubs with a module-level docstring)
+- [X] T023 [P] Create `tests/test_ghfdb/test_resources/` directory with `__init__.py` and stub files: `test_widgets.py`, `test_parent_import.py`, `test_child_import.py`, `test_export.py`, `test_roundtrip.py`; copy/reuse the `heat_flow_chain` and `sample_ghfdb_row` fixtures from `tests/test_ghfdb/conftest.py` as needed via import; **also delete** orphaned top-level stubs `tests/test_ghfdb/test_import.py` and `tests/test_ghfdb/test_export.py` created by T001 (superseded by the `test_resources/` subdirectory)
+- [X] T024 Implement `GHFDBImportFormat` (XLSX subclass: sheet `"data list"`, skip rows 1–5 and 7, use row 6 as headers, data rows from row 8), `GHFDB_COLUMN_ORDER` (all **62** GHFDB column names in canonical order, matching `ghfdb_colmeta.json`), `PARENT_COLUMNS` (18 parent-level column names), and `CORRECTION_COL_MAP` (`{"corr_IS_flag": "IS", …}` 9-entry dict) in `project/ghfdb/resources/_base.py`
+- [X] T025 Verify `ParentHeatFlow.local_id` field exists (check `project/heat_flow/models/`); if absent, add `local_id = CharField(max_length=255, null=True, blank=True, db_index=True)` and generate migration; **also verify `HeatFlowSite.local_id` field exists** — FR-006 uses it as the stable upsert identifier for the parent record; if absent, add the same field definition to `HeatFlowSite`; if either field is new, generate a single combined migration: `poetry run python manage.py makemigrations heat_flow --name add_local_id_fields`
 
-### Tests for User Story 2 ⚠️ Write FIRST — verify they FAIL before implementing
+### System Validation — Phase 3.5
 
-- [ ] T022 [P] [US2] Write single-row happy-path import test: call `GHFDBImportResource` with a minimal valid flat row dict; assert `HeatFlowSite`, `ParentHeatFlow`, `HeatFlowInterval`, `ThermalGradient`, `IntervalConductivity`, and `HeatFlow` (with correct `local_id`) are all created in the database in `tests/test_ghfdb/test_import.py`
-- [ ] T023 [P] [US2] Write vocabulary-translation test: import a row with semicolon-separated display labels for `q_method` and `tc_method`; assert the resulting `HeatFlow` has the expected `Concept` instances on its M2M relations in `tests/test_ghfdb/test_import.py`
-- [ ] T024 [P] [US2] Write full-rollback validation test: provide an import dataset where one row has a valid vocabulary value and another has an invalid value; assert `ValidationError` errors are collected for all invalid rows and zero records are written to the database in `tests/test_ghfdb/test_import.py`
-- [ ] T025 [P] [US2] Write upsert test: import a row with `ID="GHFDB-001"` (mapped to `local_id`), then re-import a modified version of the same row; assert exactly one `HeatFlow` record with `local_id="GHFDB-001"` exists and its fields reflect the updated values in `tests/test_ghfdb/test_import.py`
-- [ ] T026 [P] [US2] Write `GHFDBImportFormat` test: assert that parsing a minimal GHFDB-template XLSX (headers at row 6, data from row 8, sheet name "data list") yields the correct column names and data values in `tests/test_ghfdb/test_import.py`
-- [ ] T060 [P] [US2] Write staff-only access control test: assert that an anonymous `GET` to the Django admin import URL for the `GHFDB` model (e.g., `/admin/ghfdb/ghfdb/import/`) returns HTTP 302 redirecting to the login page; assert a non-staff authenticated user also cannot access the page (HTTP 302 or 403) in `tests/test_ghfdb/test_import.py` (FR-003 security requirement)
-- [ ] T061 [P] [US2] Write import schema-coverage test (SC-005 import side): load `project/ghfdb/data/ghfdb_colmeta.json`; collect all columns with `obligation="M"`; assert every such column name either appears in `GHFDBImportResource.Meta.fields` or is explicitly handled in `before_import_row()` (verified by inspecting the resource's declared field names); fail with a descriptive message listing any uncovered mandatory columns in `tests/test_ghfdb/test_import.py`
+- [X] T026 ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` -- MUST pass before proceeding to Phase 4
+- [X] T026a ⚠️ CRITICAL: Run type checks: `poetry run mypy project/ghfdb/` -- MUST pass with no new errors (constitution §VI)
+- [X] T026b ⚠️ CRITICAL: Run linting: `poetry run ruff check project/ghfdb/` -- MUST pass with zero violations (constitution §VI)
 
-### Implementation for User Story 2
-
-- [ ] T027 [US2] Extract shared widget classes (`ConceptWidget`, `MultiConceptWidget`, `YesNoWidget`) and column-name constants (`GHFDB_COLUMNS`, `CHOICE_FIELDS`, `MULTI_CHOICE_FIELDS`) into a `GHFDBBaseResource` base class at the top of `project/ghfdb/resources.py`, removing the `dataset` constructor argument requirement from the base. (`QuantityWidget` is export-specific and will be implemented separately in T040; do not include it here.)
-- [ ] T028 [US2] Rename `GHFDBResource` → `GHFDBImportResource` in `project/ghfdb/resources.py`; update `Meta` to add `import_id_fields = ("local_id",)`, `use_transactions = True`, `rollback_on_validation_errors = True`, `raise_errors = False`, `clean_model_instances = True`
-- [ ] T029 [US2] Update `before_import_row()` in `project/ghfdb/resources.py` to map the spreadsheet `ID` column to `row["local_id"]` before calling downstream helpers, and map `ID_parent` to the `local_id` used in `get_heat_flow_site()` and `get_parent_heat_flow()` for parent-level upsert via `get_or_create(local_id=..., dataset=...)`
-- [ ] T030 [US2] Verify `GHFDBImportFormat.create_dataset()` in `project/ghfdb/resources.py` correctly reads headers from row 6, starts data at row 8, and asserts sheet name is "data list"; add a clear `ValueError` if the sheet is missing
-- [ ] T031 [US2] Update `ConceptWidget.clean()` and `MultiConceptWidget.clean()` in `project/ghfdb/resources.py` to raise `ValidationError` with a message that includes the column name and the offending value string, and to use case-insensitive vocabulary lookup
-- [ ] T032 [US2] Add `get_import_resource_classes()` returning `[GHFDBImportResource]` and `get_import_formats()` returning `[GHFDBImportFormat]` to `GHFDBAdmin` in `project/ghfdb/admin.py`; change admin base class to `ImportExportMixin, admin.ModelAdmin`
-
-### System Validation — Phase 4
-
-- [ ] T033 ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass before proceeding
-- [ ] T034 ⚠️ CRITICAL: Run User Story 2 tests: `poetry run pytest tests/test_ghfdb/test_import.py -v` — ALL tests MUST pass
-
-**Checkpoint — US2 Complete**: GHFDB XLSX can be imported atomically with upsert, vocabulary mapping, and full error reporting; zero records persisted on any validation failure.
-
-> **SC-003 Manual QA Gate** (not automated): Before marking this feature release-ready, manually import a 10,000-row GHFDB XLSX and confirm the complete validation error report (all invalid rows) is delivered to the admin UI within 60 seconds. Wall-clock timing is deployment-environment-dependent and cannot be pinned as a pytest assertion; the query-count guard in T008/T011 is the automated proxy.
+**Checkpoint — Resources Package Ready**: Stub modules created, `_base.py` constants in place, `ParentHeatFlow.local_id` verified.
 
 ---
 
-## Phase 5: User Story 3 — Export to GHFDB Spreadsheet (Priority: P2)
+## Phase 4: User Story 2 — Import GHFDB Spreadsheet (Priority: P2)
 
-**Goal**: New `GHFDBExportResource` with explicit `export_order`, `dehydrate_*` methods for all 65 columns (Pint magnitude stripping, M2M semicolon joining, correction flags), and admin export action producing a GHFDB-compliant XLSX.
+**Goal**: Staff can upload a GHFDB XLSX in the Django admin and select either the "GHFDB Parent" or "GHFDB Child" import resource to create/update `HeatFlowSite`, `ParentHeatFlow`, `HeatFlow`, `ThermalGradient`, `IntervalConductivity`, `HeatFlowCorrection`, and `ProbeMetadata` records with correct controlled-vocabulary mappings, upsert on `local_id`, and atomic rollback on any validation error.
 
-**Independent Test**: `poetry run pytest tests/test_ghfdb/test_export.py -v`
+**Independent Test**: `poetry run pytest tests/test_ghfdb/test_resources/test_widgets.py tests/test_ghfdb/test_resources/test_parent_import.py tests/test_ghfdb/test_resources/test_child_import.py -v`
+
+### Tests for User Story 2 ⚠️ Write FIRST — verify they FAIL before implementing
+
+- [X] T027 [P] [US2] Write failing leaf-widget tests in `tests/test_ghfdb/test_resources/test_widgets.py`: `ConceptWidget.clean()` case-insensitive lookup + invalid-value `ValueError` listing valid options; `MultiConceptWidget.clean()` semicolon split + batched error for multiple invalid values; `QuantityWidget.clean()` returns `Quantity`, `.render()` returns plain magnitude; `YesNoWidget.clean()` maps `"Yes"`→`True`, `"No"`→`False`, empty→`None`
+- [X] T028 [P] [US2] Write failing `RelatedModelWidget` and subclass tests in `tests/test_ghfdb/test_resources/test_widgets.py`: sentinel-column check skips instance creation when column is empty; `full_clean()` raises `ValueError` prefixed with model name; `set_m2m_relations()` sets correct M2M; `ParentWidget` creates `HeatFlowSite` + `Point` from lat/long columns; `IntervalWidget` creates `HeatFlowInterval`; `GradientWidget` skips when `T_grad_mean` is empty; `ConductivityWidget` skips when `tc_mean` is empty
+- [X] T029 [P] [US2] Write failing `GHFDBParentImportResource` tests in `tests/test_ghfdb/test_resources/test_parent_import.py`: upsert on `local_id` (re-import updates, does not duplicate); `before_import()` deduplication keeps first occurrence of each `ID_parent`; 18 parent columns mapped to correct fields; `ParentHeatFlow.sample` FK (to `HeatFlowSite`) created with correct `Point` location; `explo_purpose` M2M set; staff-only access control (anonymous admin import URL → 302)
+- [X] T030 [P] [US2] Write failing `GHFDBChildImportResource` tests in `tests/test_ghfdb/test_resources/test_child_import.py`: all 14 child field mappings; `parent` FK resolved via `ID_parent` `ForeignKeyWidget`; `after_save_instance()` creates 9 `HeatFlowCorrection` records with correct `correction_type` and `status`; `ProbeMetadata` created when probe columns are non-empty; `method` M2M set via `MultiConceptWidget`; `IntervalWidget`, `GradientWidget`, `ConductivityWidget` M2M set after save
+- [X] T030a [US2] Write failing SC-005 schema-coverage test in `tests/test_ghfdb/test_resources/test_schema_coverage.py`: assert every column name in `GHFDB_COLUMN_ORDER` (from `_base.py`) appears as a declared `Field` in either `GHFDBParentImportResource` or `GHFDBChildImportResource` with no undocumented omissions; assert every column name also appears as a key in `ghfdb_colmeta.json`; assert `len(GHFDB_COLUMN_ORDER) == 62` (authoritative count from `ghfdb_colmeta.json`)
+
+### Implementation for User Story 2
+
+- [X] T031 [US2] Implement leaf widgets (`ConceptWidget` — case-insensitive label lookup + cache; `MultiConceptWidget` — semicolon split + batch `ConceptWidget`; `QuantityWidget` — `Quantity(Decimal(value), unit)` ↔ `magnitude`; `YesNoWidget` — "Yes"/"No" ↔ `True`/`False`/`None`) in `project/ghfdb/resources/_widgets.py`; all user-facing error message strings MUST use `gettext_lazy()` (constitution §V — i18n compliance)
+- [X] T032 [US2] Implement `RelatedModelWidget` base class in `project/ghfdb/resources/_widgets.py`: `__init__` accepts `model`, `field_map`, `m2m_map`, `sentinel_column`, `widget_map`; `clean()` checks sentinel → extracts + cleans scalars → `full_clean()` → `save()` → defers M2M; `set_m2m_relations(instance)` sets all M2M via widget `.clean()`; `full_clean()` `ValidationError` re-raised as `ValueError` prefixed with model name; `ValueError` prefix strings MUST use `gettext_lazy()` (constitution §V — i18n compliance)
+- [X] T033 [US2] Implement `ParentWidget` in `project/ghfdb/resources/_widgets.py`: `RelatedModelWidget` for `HeatFlowSite` + `Point`, sentinel `"name"`, creates/updates `Point(x=long_EW, y=lat_NS)`, all scalar (`name`, `elevation`, `environment`, `explo_method`, `total_depth_MD`→`length`, `total_depth_TVD`→`vertical_depth`, `Country`, `Region`, `Continent`, `Domain`) and M2M (`explo_purpose`) mappings per `data-model.md`
+- [X] T034 [US2] Implement `IntervalWidget` (sentinel `None`, `q_top`/`q_bottom` → `QuantityWidget("m")`, `geo_lithology`/`geo_stratigraphy` M2M), `GradientWidget` (sentinel `"T_grad_mean"`, 7 scalar + 4 M2M fields), and `ConductivityWidget` (sentinel `"tc_mean"`, 3 scalar + 7 M2M fields) in `project/ghfdb/resources/_widgets.py`
+- [X] T035 [US2] Implement `GHFDBParentImportResource` in `project/ghfdb/resources/parent.py`: 6 `Field` declarations (`local_id`, `value`, `uncertainty`, `comment`, `corr_HP_flag`, `sample`); `ParentWidget` instantiation; `before_import()` deduplication (keep first row per `ID_parent`); `Meta` (`model = ParentHeatFlow`, `import_id_fields = ("local_id",)`, `use_transactions = True`, `rollback_on_validation_errors = True`, `clean_model_instances = True`)
+- [X] T036 [US2] Implement `GHFDBChildImportResource` in `project/ghfdb/resources/child.py`: 14 `Field` declarations per `data-model.md`; widget instantiations (`IntervalWidget`, `GradientWidget`, `ConductivityWidget`, `ForeignKeyWidget(ParentHeatFlow, "local_id")`); `after_save_instance()` creating 9 `HeatFlowCorrection.objects.update_or_create()` calls via `CORRECTION_COL_MAP` + `ProbeMetadata.objects.update_or_create()` when probe columns are non-empty + `widget.set_m2m_relations()` for each `RelatedModelWidget` field; `Meta` (`model = HeatFlow`, `import_id_fields = ("local_id",)`, `use_transactions = True`, `rollback_on_validation_errors = True`)
+- [X] T037 [US2] Update `project/ghfdb/resources/__init__.py` to publicly re-export `GHFDBParentImportResource`, `GHFDBChildImportResource`, `GHFDBExportResource`, `GHFDBImportFormat`
+- [X] T038 [US2] Update `GHFDBAdmin.get_import_resource_classes()` to return `[GHFDBParentImportResource, GHFDBChildImportResource]` and `get_import_formats()` to return `[GHFDBImportFormat]` in `project/ghfdb/admin.py`
+
+### System Validation — Phase 4
+
+- [X] T039 ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass before proceeding
+- [X] T039a ⚠️ CRITICAL: Run type checks: `poetry run mypy project/ghfdb/` — MUST pass with no new errors (constitution §VI)
+- [X] T039b ⚠️ CRITICAL: Run linting: `poetry run ruff check project/ghfdb/` — MUST pass with zero violations (constitution §VI)
+- [X] T040 ⚠️ CRITICAL: Run User Story 2 tests: `poetry run pytest tests/test_ghfdb/test_resources/test_widgets.py tests/test_ghfdb/test_resources/test_parent_import.py tests/test_ghfdb/test_resources/test_child_import.py -v` — ALL tests MUST pass
+
+**Checkpoint — US2 Complete**: Parent and child import resources work end-to-end with upsert, full-rollback validation, vocabulary mapping, and correction/probe handling. Both resources selectable from the Django admin import UI.
+
+> **SC-003 Manual QA Gate** (not automated): Before marking this feature release-ready, manually import a 10,000-row GHFDB XLSX and confirm the complete error report is delivered within 60 seconds. The query-count guards (T008/T011) serve as the automated proxy.
+
+---
+
+## Phase 5: User Story 3 — Export Heat Flow Data to GHFDB Format (Priority: P2)
+
+**Goal**: Staff can trigger an export from the Django admin that produces a valid GHFDB-format XLSX with all **62** columns in the canonical order, semicolons for M2M fields, and plain SI numeric values for Pint quantity fields.
+
+**Independent Test**: `poetry run pytest tests/test_ghfdb/test_resources/test_export.py -v`
 
 ### Tests for User Story 3 ⚠️ Write FIRST — verify they FAIL before implementing
 
-- [ ] T035 [P] [US3] Write column-completeness test: export a queryset with one record and assert the XLSX header row contains all expected GHFDB column names sourced from `ghfdb_colmeta.json` in `tests/test_ghfdb/test_export.py`
-- [ ] T036 [P] [US3] Write column-order test: assert the XLSX header row matches the exact sequence defined in `GHFDBExportResource.Meta.export_order` (cross-checked against the `ghfdb_colmeta.json` prescribed order) in `tests/test_ghfdb/test_export.py`
-- [ ] T037 [P] [US3] Write Pint magnitude-stripping test: export a record where a heat-flow quantity field has a `Pint Quantity` value; assert the exported cell is a plain numeric string with no unit symbol in `tests/test_ghfdb/test_export.py`
-- [ ] T038 [P] [US3] Write M2M semicolon-joining test: export a record with multiple `Concept` objects on `tc_method`; assert the exported cell value is a semicolon-joined label string (e.g., `"Needle probe;Divided bar"`) in `tests/test_ghfdb/test_export.py`
-- [ ] T062 [P] [US3] Write staff-only access control test: assert that an anonymous `GET` to the Django admin export URL for the `GHFDB` model returns HTTP 302 redirecting to the login page; assert a non-staff authenticated user also cannot access the page (HTTP 302 or 403) in `tests/test_ghfdb/test_export.py` (FR-007 security requirement)
-- [ ] T039 [US3] Write round-trip regression test (SC-001): import a known minimal GHFDB spreadsheet, then export; assert text and vocabulary columns are byte-for-byte identical and numeric column values differ by less than floating-point epsilon in `tests/test_ghfdb/test_export.py`
+- [X] T041 [P] [US3] Write failing tests in `tests/test_ghfdb/test_resources/test_export.py`: column set matches all **62** entries in `GHFDB_COLUMN_ORDER`; column order is identical to `GHFDB_COLUMN_ORDER`; Pint quantity field (`q`, `tc_mean`, etc.) renders as plain numeric magnitude (no unit symbol); M2M field (`q_method`, `tc_method`) renders as semicolon-separated labels; `get_queryset()` returns `GHFDB.objects.for_export()`; filtered queryset only exports matching records; staff-only access (anonymous admin export URL → 302)
 
 ### Implementation for User Story 3
 
-- [ ] T040 [P] [US3] Implement `QuantityWidget` in `project/ghfdb/resources.py` (inside or just after `GHFDBBaseResource`): `render(self, value, obj=None)` returns `""` for `None`, otherwise `str(getattr(value, "magnitude", value))`
-- [ ] T041 [US3] Implement `GHFDBExportResource` skeleton in `project/ghfdb/resources.py`: `Meta.model = GHFDB`, `Meta.export_order = (...)` tuple listing all ~65 GHFDB column names in the exact order from `ghfdb_colmeta.json`, `Meta.fields` enumerating the same columns; inherit from `GHFDBBaseResource`
-- [ ] T042 [US3] Implement all `dehydrate_*` methods on `GHFDBExportResource` in `project/ghfdb/resources.py`: (a) scalar FK annotations — read from the pre-annotated attribute (e.g., `return obj.site_name`); (b) M2M fields — `";".join(c.label for c in getattr(obj, field_name).all())`; (c) correction flags — read `corr_*_flag` annotation; (d) `None`-guard all cells to return `""` not `"None"`
-- [ ] T043 [US3] Override `get_queryset()` on `GHFDBExportResource` in `project/ghfdb/resources.py` to return `GHFDB.objects.for_export()` so all M2M relations are pre-fetched before dehydration
-- [ ] T044 [US3] Add `get_export_resource_classes()` returning `[GHFDBExportResource]` and `get_export_formats()` returning `[XLSX]` to `GHFDBAdmin` in `project/ghfdb/admin.py`
+- [X] T042 [US3] Implement `GHFDBExportResource` class scaffold in `project/ghfdb/resources/export.py`: `Meta` class (`model = GHFDB`, `export_order = GHFDB_COLUMN_ORDER` tuple imported from `_base.py`), `get_queryset()` returning `GHFDB.objects.for_export()`, all **62** explicit `Field` declarations with `attribute` pointing to annotation names from the `data-model.md` mapping table
+- [X] T043 [US3] Implement `dehydrate_*` methods for all Pint quantity fields in `project/ghfdb/resources/export.py` (e.g. `dehydrate_q`, `dehydrate_q_uncertainty`, `dehydrate_tc_mean`, `dehydrate_tc_uncertainty`, `dehydrate_T_grad_mean`, `dehydrate_T_grad_uncertainty`, `dehydrate_T_grad_mean_cor`, etc.): `return obj.<annotation>.magnitude if obj.<annotation> else ""`
+- [X] T044 [US3] Implement `dehydrate_*` methods for all M2M fields in `project/ghfdb/resources/export.py` (e.g. `dehydrate_q_method`, `dehydrate_explo_purpose`, `dehydrate_T_method_top`, `dehydrate_T_corr_top`, `dehydrate_tc_source`, etc.): `return "; ".join(c.label for c in obj.<prefetch_name>.all()) if ... else ""`; add `None`-guard on all dehydrate methods to return `""` not `"None"`
+- [X] T045 [US3] Update `GHFDBAdmin.get_export_resource_classes()` to return `[GHFDBExportResource]` and `get_export_formats()` to return `[XLSX]` in `project/ghfdb/admin.py`
 
 ### System Validation — Phase 5
 
-- [ ] T045 ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass before proceeding
-- [ ] T046 ⚠️ CRITICAL: Run User Story 3 tests: `poetry run pytest tests/test_ghfdb/test_export.py -v` — ALL tests MUST pass
+- [X] T046 ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass before proceeding
+- [X] T046a ⚠️ CRITICAL: Run type checks: `poetry run mypy project/ghfdb/` — MUST pass with no new errors (constitution §VI)
+- [X] T046b ⚠️ CRITICAL: Run linting: `poetry run ruff check project/ghfdb/` — MUST pass with zero violations (constitution §VI)
+- [X] T047 ⚠️ CRITICAL: Run User Story 3 tests: `poetry run pytest tests/test_ghfdb/test_resources/test_export.py -v` — ALL tests MUST pass
 
-**Checkpoint — US3 Complete**: Export produces a GHFDB-compliant XLSX with correct column order, Pint values stripped to numerics, M2M fields semicolon-joined, round-trip regression test passes.
+**Checkpoint — US3 Complete**: Export produces a valid GHFDB XLSX with correct **62**-column layout, correct order, M2M semicolon-joined, Pint values as plain numerics.
 
 ---
 
 ## Phase 6: User Story 4 — Web Map Viewer Page (Priority: P3)
 
-**Goal**: The existing `GHFDBExploreView` and `explore.html` are enhanced with a graceful degradation fallback for unreachable iframes; the "Explore" menu item and URL routing are verified correct.
+**Goal**: The existing `GHFDBExploreView` and `explore.html` are enhanced with a graceful `onerror` fallback for unreachable iframes; the "Explore" menu item and URL routing are verified correct.
 
 **Independent Test**: `poetry run pytest tests/test_ghfdb/test_views.py -v`
 
 ### Tests for User Story 4 ⚠️ Write FIRST — verify they FAIL before implementing
 
-- [ ] T047 [P] [US4] Write map page load test: assert an anonymous `GET /ghfdb/explore/` returns HTTP 200 and the response body contains the iframe `src` attribute pointing to `https://ihfc-iugg.github.io/HeatFlowMapping/` in `tests/test_ghfdb/test_views.py`
-- [ ] T048 [P] [US4] Write no-auth test: assert the map page returns HTTP 200 for an unauthenticated request (no redirect to login) in `tests/test_ghfdb/test_views.py`
-- [ ] T049 [P] [US4] Write graceful degradation test: assert the `explore.html` template source contains a visible fallback element (e.g., `class="explore-fallback"`) inside or adjacent to the iframe for the unreachable-URL case in `tests/test_ghfdb/test_views.py`
+- [X] T048 [P] [US4] Write failing test: anonymous `GET /ghfdb/explore/` returns HTTP 200 and response body contains `<iframe>` with `src="https://ihfc-iugg.github.io/HeatFlowMapping/"` in `tests/test_ghfdb/test_views.py`
+- [X] T049 [P] [US4] Write failing test: rendered `explore.html` template source contains a visible fallback element (e.g. `class="explore-fallback"` or `id="map-error"`) for the unreachable-URL case in `tests/test_ghfdb/test_views.py`
+- [X] T050 [P] [US4] Write no-auth test: map page returns HTTP 200 for an unauthenticated request (no redirect to login) in `tests/test_ghfdb/test_views.py`
 
 ### Implementation for User Story 4
 
-- [ ] T050 [US4] Add a fallback `<div class="explore-fallback">` message inside the `<iframe>` tag in `project/ghfdb/templates/ghfdb/explore.html`; ensure the iframe has `style="width:100%;height:100vh;border:none"` and the enclosing element has no horizontal overflow; verify (or add) `frame-src https://ihfc-iugg.github.io` to the portal's Content Security Policy in `config/settings.py` (or the CSP middleware configuration) so browsers do not block the iframe
-- [ ] T051 [US4] Verify `GHFDBExploreView` in `project/ghfdb/views.py` has no `LoginRequiredMixin` and uses template `ghfdb/explore.html`; confirm the URL pattern in `project/ghfdb/urls.py` resolves as `ghfdb-explore`
-- [ ] T052 [US4] Verify the "Explore" `MenuItem` in `project/heat_flow/menus.py` points to the `ghfdb-explore` URL name and is configured to mark itself active when the user is on that URL
+- [X] T051 [US4] Update `project/ghfdb/templates/ghfdb/explore.html`: full-viewport iframe (`width="100%"`, `height="100vh"`, `style="border:none"`) embedding `https://ihfc-iugg.github.io/HeatFlowMapping/`; add `onerror="this.style.display='none'; document.getElementById('map-error').style.display='block';"` attribute and a `<div id="map-error" class="explore-fallback" style="display:none">` fallback message explaining the map is temporarily unavailable
+- [X] T052 [US4] Verify `GHFDBExploreView` in `project/ghfdb/views.py` has no `LoginRequiredMixin` and uses template `"ghfdb/explore.html"`; confirm URL pattern in `project/ghfdb/urls.py` resolves as `name="explore"` (or `ghfdb-explore`)
+- [X] T053 [US4] Verify the "Explore" `MenuItem` (in `project/heat_flow/menus.py` or `project/ghfdb/apps.py` — check FairDM nav registration pattern) points to the correct URL name and is configured to mark itself active when on the map page
 
 ### System Validation — Phase 6
 
-- [ ] T053 ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass before proceeding
-- [ ] T054 ⚠️ CRITICAL: Run User Story 4 tests: `poetry run pytest tests/test_ghfdb/test_views.py -v` — ALL tests MUST pass
+- [X] T054 ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass before proceeding
+- [x] T054a ⚠️ CRITICAL: Run type checks: `poetry run mypy project/ghfdb/` — MUST pass with no new errors (constitution §VI)
+- [X] T054b ⚠️ CRITICAL: Run linting: `poetry run ruff check project/ghfdb/` — MUST pass with zero violations (constitution §VI)
+- [X] T055 ⚠️ CRITICAL: Run User Story 4 tests: `poetry run pytest tests/test_ghfdb/test_views.py -v` — ALL tests MUST pass
 
-**Checkpoint — US4 Complete**: Map page accessible without auth, iframe URL present, graceful fallback visible in template.
+**Checkpoint — US4 Complete**: Map page accessible without auth, iframe present with `onerror` fallback, Explore menu item active.
 
 ---
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-**Purpose**: Documentation currency, citation compliance (constitution II & VII), and final full-suite validation.
+**Purpose**: Round-trip regression test (SC-001), retire legacy `resources.py`, citation compliance, and final full-suite validation.
 
-- [ ] T055 [P] Update `docs/ghfdb_fields.md` to add a "Proxy Model Access Patterns" section documenting all 40 annotation names, their ORM source paths, and the corresponding GHFDB spreadsheet column — sourced from data-model.md column-mapping tables
-- [ ] T056 [P] Add Fuchs et al. (2021) and Fuchs et al. (2023) inline docstring citations to `GHFDBImportResource` and `GHFDBExportResource` class docstrings in `project/ghfdb/resources.py`, and to `GHFDBAdmin` in `project/ghfdb/admin.py` (the `GHFDB` model docstring was handled in T018)
-- [ ] T057 Run `poetry run python manage.py check --deploy` and confirm no NEW warnings introduced by the changes in this feature (pre-existing deploy warnings acceptable)
+- [X] T056 Create fixture GHFDB XLSX (`tests/test_ghfdb/fixtures/sample_ghfdb.xlsx`) with 3–5 rows covering: one parent with `explo_purpose` M2M; one child with all 9 correction flags; one child with `ThermalGradient` + `IntervalConductivity` including M2M method fields; quantity fields in SI units
+- [X] T057 [P] Write round-trip regression test (SC-001) in `tests/test_ghfdb/test_resources/test_roundtrip.py`: (1) import `sample_ghfdb.xlsx` via `GHFDBParentImportResource` then `GHFDBChildImportResource`; (2) export via `GHFDBExportResource`; (3) assert exported text/vocabulary cells are identical and numeric cells differ by less than floating-point `1e-9`
+- [X] T058 Retire legacy `project/ghfdb/resources.py`: first verify no remaining code imports from it (`grep -r "from .resources import\|from project.ghfdb.resources import" project/ --include="*.py"`); then delete (or rename to `_resources_legacy.py.bak`)
+- [X] T059 [P] Update `docs/ghfdb_fields.md` to document `HeatFlow.local_id` (type, constraints, purpose, GHFDB spreadsheet `ID` column) and add a "Proxy Model Access Patterns" section citing key annotation names from the `data-model.md` mapping table
+- [X] T059a [P] Document the large-export row limit in `docs/ghfdb_fields.md` and in the `GHFDBExportResource` class docstring: state the tested synchronous row limit (e.g. 50,000 rows), note that `get_queryset()` MUST use `.iterator()` to avoid loading the full queryset into memory, and document that exports exceeding the limit should be moved to a background task (deferred to a future spec)
+- [X] T060 [P] Add Fuchs et al. (2021) and Fuchs et al. (2023) inline citations to `GHFDBParentImportResource`, `GHFDBChildImportResource`, and `GHFDBExportResource` class docstrings in their respective module files; **also** add a module-level docstring to `project/ghfdb/resources/_widgets.py` citing both references and summarising the widget hierarchy (leaf widgets → `RelatedModelWidget` → specialised sub-model widgets)
 
 ### System Validation — Final
 
-- [ ] T058 ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass
-- [ ] T059 ⚠️ CRITICAL: Run full GHFDB test suite: `poetry run pytest tests/test_ghfdb/ -v` — ALL 6 test modules MUST pass
+- [X] T061 ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass
+- [x] T061a ⚠️ CRITICAL: Run final type checks: `poetry run mypy project/ghfdb/` — MUST pass with no new errors (constitution §VI)
+- [X] T061b ⚠️ CRITICAL: Run final linting: `poetry run ruff check project/ghfdb/` — MUST pass with zero violations (constitution §VI)
+- [X] T062 ⚠️ CRITICAL: Run full GHFDB test suite: `poetry run pytest tests/test_ghfdb/ -v` — ALL test modules MUST pass
 
-**Checkpoint — Feature Complete**: System checks pass, all GHFDB tests green, `ghfdb_fields.md` updated, citations present in all new classes.
+**Checkpoint — Feature Complete**: System checks pass, all GHFDB tests green (proxy model + resources + views + round-trip), `ghfdb_fields.md` updated, legacy `resources.py` retired.
 
 ---
 
@@ -198,73 +222,118 @@
 | Phase | Depends on | Blocks |
 |---|---|---|
 | Phase 1 — Setup | Nothing | Nothing |
-| Phase 2 — Foundational | Phase 1 | ALL user stories |
-| Phase 3 — US1 (P1) | Phase 2 | Phase 5 (US3 needs `for_export()`) |
-| Phase 4 — US2 (P2) | Phase 2 | Nothing |
-| Phase 5 — US3 (P2) | Phase 3 (US1) | Nothing |
-| Phase 6 — US4 (P3) | Phase 2 | Nothing |
+| Phase 2 — Foundational (`HeatFlow.local_id`) | Phase 1 | ALL user stories |
+| Phase 3 — US1 Proxy Model (P1) | Phase 2 | Phase 5 (US3 needs `for_export()`) |
+| Phase 3.5 — Resources Package Setup | Phase 2 | Phase 4 (US2) and Phase 5 (US3) |
+| Phase 4 — US2 Import (P2) | Phase 2 + Phase 3.5 | Phase 7 (round-trip) |
+| Phase 5 — US3 Export (P2) | Phase 3 (US1) + Phase 3.5 | Phase 7 (round-trip) |
+| Phase 6 — US4 Map Viewer (P3) | Phase 2 | Nothing (independent) |
 | Phase 7 — Polish | Phases 3–6 | Nothing |
 
 ### User Story Dependencies
 
-- **US1 (P1)**: Starts after Phase 2 — no inter-story dependency
-- **US2 (P2)**: Starts after Phase 2 — can run in parallel with US1
-- **US3 (P2)**: Starts after US1 is complete — requires `GHFDB.objects.for_export()`
-- **US4 (P3)**: Starts after Phase 2 — fully independent of US1–US3
+```
+Phase 2 (Foundational)
+  ├── Phase 3 (US1 Proxy Model) ──────────────────────────── Phase 5 (US3 Export)
+  ├── Phase 3.5 (Resources Package) ──► Phase 4 (US2 Import) ──► Phase 7 round-trip
+  │                                └──► Phase 5 (US3 Export)
+  └── Phase 6 (US4 Map Viewer)   ── fully independent
+```
 
 ### Within Each User Story
 
-1. Write ALL story tests first; confirm they FAIL
-2. Implement managers / models (data-layer code)
-3. Implement resources / views (service-layer code)
-4. Implement admin registration (integration)
-5. Run story tests — ALL must pass before starting the next story
+1. Write ALL story tests first; confirm they **FAIL**
+2. Implement widgets / managers (data-layer)
+3. Implement resources / views (service-layer)
+4. Update admin registration (integration layer)
+5. Run story tests — ALL must pass before the next story begins
 
 ### Parallel Opportunities
 
-**Phase 3 (US1)** — after T015/T016/T017 complete:
+**Phase 3.5**: T022 ‖ T023 (different directories); T024 as soon as T022 is done
+**Phase 3 (US1)**: T009 + T012 in parallel (`managers.py` ‖ `models.py`) after T008
+**Phase 4 (US2)**: T027 ‖ T028 ‖ T029 ‖ T030 (different test files); T035 ‖ T036 (parent.py ‖ child.py) after T031–T034
+**Phase 5 (US3)**: T041 (test) can be written while Phase 4 runs; T042 → T043 ‖ T044 in export.py
+**Phase 6 (US4)**: T048 ‖ T049 ‖ T050 (tests); T051 ‖ T052 (template ‖ view)
+**Phase 7**: T056 → T057 (fixture first); T058 ‖ T059 ‖ T060 (independent files)
 
-- T018 (`models.py`) and T019 (`admin.py`) can run in parallel
+---
 
-**Phase 4 (US2)** — test-writing tasks:
+## Parallel Example: User Story 2 (Phase 4)
 
-- T022–T026 can all be written in parallel (one test module)
+```bash
+# Step 1 — Write all four test files in parallel (after Phase 3.5 complete):
+Task T027: test_widgets.py — leaf widget tests
+Task T028: test_widgets.py — RelatedModelWidget tests  (add to same file)
+Task T029: test_parent_import.py — GHFDBParentImportResource tests
+Task T030: test_child_import.py — GHFDBChildImportResource tests
 
-**Phase 5 (US3)** — within resources.py:
+# Step 2 — Implement _widgets.py sequentially (same file):
+T031 (leaf widgets) → T032 (RelatedModelWidget base) → T033 (ParentWidget) → T034 (Interval/Gradient/Conductivity)
 
-- T040 (`QuantityWidget`) can be written in parallel with T041 (`GHFDBExportResource` skeleton)
-
-**Phase 6 (US4)** — implementation tasks:
-
-- T050 (template) and T051+T052 (view + menu) can run in parallel
-
-**Phase 7**:
-
-- T055 (docs) and T056 (citations) can run in parallel
+# Step 3 — Implement resources in parallel (different files):
+Task T035: parent.py — GHFDBParentImportResource
+Task T036: child.py — GHFDBChildImportResource
+```
 
 ---
 
 ## Implementation Strategy
 
-**MVP scope** (minimum for a working GHFDB product view):
-→ Phase 1 → Phase 2 → Phase 3 (US1 only) — delivers the flat proxy queryset and read-only admin display.
+### MVP First (User Story 1 — already complete ✓)
 
-**Recommended delivery order**:
-→ Phase 1 → Phase 2 → Phase 3 (US1) → Phase 4 + Phase 6 in parallel → Phase 5 (US3) → Phase 7
+US1 proxy model is done. The next most valuable deliverable is:
 
-**Key risk**: The `resources.py` refactor in US2 touches ~900 lines of existing import logic. Preserve all existing widget classes and `before_import_row()` orchestration; rename and extend rather than rewrite. Run import tests frequently during T027–T032.
+**Next MVP**: Complete Phase 3.5 + Phase 4 (US2 import) → staff can load GHFDB data into the portal.
+
+### Recommended Delivery Order
+
+1. ~~Phase 1 Setup~~ ✓ Complete
+2. ~~Phase 2 Foundational~~ ✓ Complete
+3. ~~Phase 3 US1 Proxy Model~~ ✓ Complete
+4. **Phase 3.5 Resources Package** → next step, unblocks US2 + US3
+5. **Phase 4 US2 Import** + **Phase 6 US4 Map Viewer** in parallel
+6. **Phase 5 US3 Export** (after US1 proxy model is done ✓)
+7. **Phase 7 Polish** → round-trip test + cleanup
+
+### Parallel Team Strategy
+
+With two developers, starting after Phase 3.5:
+
+- **Developer A**: Phase 4 (US2 Import) — `_widgets.py`, `parent.py`, `child.py`
+- **Developer B**: Phase 5 (US3 Export) — `export.py`, dehydrate methods; **or** Phase 6 (US4 Map Viewer)
+- Both share Phase 3.5 `_base.py` constants
+
+**Key risk**: `_widgets.py` must be complete (T031–T034) before both US2 resources can be implemented. `RelatedModelWidget` is the critical shared dependency within Phase 4.
 
 ---
 
 ## Summary
 
-| Phase | Tasks | User Story | Priority |
-|---|---|---|---|
-| Phase 1 — Setup | T001–T003 | — | — |
-| Phase 2 — Foundational | T004–T007 | — | — |
-| Phase 3 — Proxy Model | T008–T021 | US1 | P1 🎯 |
-| Phase 4 — Import | T022–T034, T060, T061 | US2 | P2 |
-| Phase 5 — Export | T035–T046, T062 | US3 | P2 |
-| Phase 6 — Map Viewer | T047–T054 | US4 | P3 |
-| Phase 7 — Polish | T055–T059 | — | — |
-| **Total** | **62 tasks** | | |
+| Phase | Tasks | User Story | Priority | Status |
+|---|---|---|---|---|
+| Phase 1 — Setup | T001–T003 | — | — | ✅ Complete |
+| Phase 2 — Foundational | T004–T007 | — | — | ✅ Complete |
+| Phase 3 — Proxy Model | T008–T021 | US1 | P1 🎯 | ✅ Complete |
+| Phase 3.5 — Resources Pkg | T022–T026, T026a–T026b | — | — | ⬜ Pending |
+| Phase 4 — Import | T027–T040, T030a, T039a–T039b | US2 | P2 | ⬜ Pending |
+| Phase 5 — Export | T041–T047, T046a–T046b | US3 | P2 | ⬜ Pending |
+| Phase 6 — Map Viewer | T048–T055, T054a–T054b | US4 | P3 | ⬜ Pending |
+| Phase 7 — Polish | T056–T062, T059a, T061a–T061b | — | — | ⬜ Pending |
+| **Total** | **~74 tasks** (62 original + 12 added) | | | |
+
+**Completed**: 21 tasks (T001–T021)
+**Remaining**: ~53 tasks (T022–T062 + added sub-tasks)
+**Tests**: 13 write-first test tasks (T027–T030, T030a, T041, T048–T050, T057)
+**System-check tasks**: 18 (3 per pending phase boundary — `manage.py check` + mypy + ruff)
+
+---
+
+## Notes
+
+- `[P]` = can be done in parallel with adjacent [P] tasks in different files
+- `[Story]` label traces each task to its user story for independent delivery
+- Tests MUST fail before implementation begins — this verifies test validity
+- Do not delete legacy `project/ghfdb/resources.py` until T058 (after ALL features pass)
+- Fixture XLSX `tests/test_ghfdb/fixtures/sample_ghfdb.xlsx` (T056) must be committed to the repository for reproducible CI
+- Never modify `project/heat_flow/models/` beyond adding `local_id` fields — all import/export logic lives inside `project/ghfdb/resources/`

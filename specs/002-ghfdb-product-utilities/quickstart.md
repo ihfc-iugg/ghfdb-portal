@@ -1,14 +1,35 @@
-# Quickstart: GHFDB Product Layer
+# Quickstart: GHFDB Import / Export
 
 **Feature**: 002-ghfdb-product-utilities
-**Date**: 2026-04-10
 
 ## What This Feature Adds
 
-1. **GHFDB proxy model** — query heat flow data in the flat GHFDB spreadsheet structure
-2. **GHFDB XLSX import** — ingest official GHFDB spreadsheets into the normalised data model (admin-only)
-3. **GHFDB XLSX export** — produce GHFDB-compliant spreadsheets from the database (admin-only)
-4. **Explore map page** — full-screen IHFC web-map viewer (already exists, minor refinements)
+1. **GHFDB proxy model** — query heat flow data in the flat GHFDB spreadsheet structure with no N+1 queries
+2. **GHFDB XLSX parent import** — ingest parent-level site records from official GHFDB spreadsheets (admin-only)
+3. **GHFDB XLSX child import** — ingest child measurements and all related sub-records (admin-only)
+4. **GHFDB XLSX export** — produce GHFDB-compliant spreadsheets from the normalised database (admin-only)
+5. **Explore map page** — full-screen IHFC web-map viewer (exists, minor iframe fallback refinement)
+
+## Prerequisites
+
+```bash
+poetry install            # Install all dependencies
+poetry run python manage.py migrate   # Apply migrations
+```
+
+## Module Layout
+
+After implementation, the import/export modules live under `project/ghfdb/resources/`:
+
+```
+project/ghfdb/resources/
+├── __init__.py          # Public API: GHFDBParentImportResource, GHFDBChildImportResource, GHFDBExportResource
+├── _base.py             # GHFDBImportFormat, BaseGHFDBResource, shared constants
+├── _widgets.py          # ConceptWidget, MultiConceptWidget, QuantityWidget, YesNoWidget, RelatedModelWidget subclasses
+├── parent.py            # GHFDBParentImportResource
+├── child.py             # GHFDBChildImportResource
+└── export.py            # GHFDBExportResource
+```
 
 ## Using the Proxy Model
 
@@ -23,10 +44,9 @@ german_hf = flat_qs.filter(site_country="Germany")
 
 # Access annotated fields directly
 for entry in german_hf[:5]:
-    print(f"Site: {entry.site_name}")
+    print(f"Parent: {entry.p_q} mW/m\u00b2  \u00b1{entry.p_q_uncertainty}")
+    print(f"  Child: {entry.value}  Site: {entry.site_name}")
     print(f"  Lat: {entry.lat_ns}, Lon: {entry.long_ew}")
-    print(f"  Parent HF: {entry.p_q} mW/m²")
-    print(f"  Child HF: {entry.value}")
     print(f"  T gradient: {entry.tgrad_value}")
     print(f"  Correction IS: {entry.corr_IS_flag}")
 
@@ -34,65 +54,81 @@ for entry in german_hf[:5]:
 export_qs = GHFDB.objects.for_export()
 ```
 
-## Importing Data via Django Admin
+Annotation names used above are defined in `data-model.md` under "Annotation Name Mapping".
 
-1. Log in as a staff user → navigate to **GHFDB Entries** in the admin
-2. Click **Import** button
-3. Select the target Dataset from the dropdown
-4. Upload the GHFDB XLSX file (must follow the IHFC template: headers at row 6, data from row 9, sheet named "data list")
-5. Review the preview — all rows are validated; any errors are listed with row number, column, and value
-6. If no errors: click **Confirm Import** to persist all records
-7. If errors: fix the spreadsheet and re-upload (no partial data is saved)
+## Admin Integration
 
-### Upsert Behaviour
+The `GHFDBAdmin` in `project/ghfdb/admin.py` exposes:
 
-If a record with the same `ID` (mapped to `local_id`) already exists, it is updated. Otherwise, a new record is created. Parent-level records (`HeatFlowSite`, `ParentHeatFlow`) are matched by their existing `local_id` fields.
+- **Import**: Two import actions — "Import Parent Records" and "Import Child Measurements" (via `ImportExportMixin` with multiple resources)
+- **Export**: One export action — "Export GHFDB Excel" producing the canonical GHFDB XLSX format
 
-## Exporting Data via Django Admin
+## Import Workflow
 
-1. Log in as a staff user → navigate to **GHFDB Entries** in the admin
-2. Select records (or use "Select all") → choose **Export** from the action dropdown
-3. Select XLSX format → click **Submit**
-4. Download the generated XLSX file
+### 1. Import Parent Records
 
-The output file:
+1. Navigate to **Admin → GHFDB → GHFDB entries**
+2. Click **Import** and select the **"Parent Import"** resource
+3. Upload the GHFDB XLSX file
+4. The parent import processes the `"data list"` sheet, deduplicating rows by `ID_parent`
+5. Preview shows one row per unique parent record with a diff of changed fields
+6. Confirm to create/update parent records, or cancel to discard
 
-- Contains all ~65 GHFDB columns in the correct order
-- Uses semicolons to separate multi-value fields
-- Strips unit symbols from quantity fields (plain SI numerics)
-- Writes dates in `YYYY-MM` format
+### 2. Import Child Measurements
 
-## Map Viewer
+1. After sites are imported, click **Import** again and select the **"Child Import"** resource
+2. Upload the **same** GHFDB XLSX file
+3. The child import processes every row, linking each child measurement to its parent via `ID_parent` → `ParentHeatFlow.local_id`
+4. For each row, the import creates/updates:
+   - `HeatFlowInterval` (depth interval)
+   - `HeatFlow` (the measurement itself)
+   - `ThermalGradient` (if `T_grad_mean` is non-empty)
+   - `IntervalConductivity` (if `tc_mean` is non-empty)
+   - `ProbeMetadata` (if any probe column is non-empty)
+   - `HeatFlowCorrection` records (for each `corr_*_flag` column)
+5. Preview shows all rows with a diff of changed fields
+6. Confirm to apply, or cancel to discard
 
-Navigate to `/explore/` or click **Explore** in the main navigation. The IHFC web-map viewer loads in a full-screen iframe.
+### Order Matters
 
-## Key Files
+**Always import parent records first.** The child import requires parent records to already exist (it looks up `ParentHeatFlow` by `local_id`). If a child row references a non-existent `ID_parent`, it will produce an error.
 
-| File | Purpose |
-|---|---|
-| `project/ghfdb/models.py` | `GHFDB` proxy model, `GHFDBRelease` |
-| `project/ghfdb/managers.py` | `GHFDBQuerySet`, `GHFDBManager` |
-| `project/ghfdb/resources.py` | `GHFDBImportResource`, `GHFDBExportResource`, widgets |
-| `project/ghfdb/admin.py` | Admin configuration with import/export actions |
-| `project/ghfdb/views.py` | `GHFDBExploreView` |
-| `project/heat_flow/models/child.py` | `HeatFlow.local_id` field (new) |
-| `docs/ghfdb_fields.md` | Field mapping documentation |
+## Export Workflow
+
+1. Navigate to **Admin → GHFDB → GHFDB entries**
+2. Optionally filter the queryset (search, list filters)
+3. Select entries (or select all)
+4. Choose **Export** from the action dropdown
+5. The export produces a single XLSX file with one row per child measurement, site data denormalised
 
 ## Running Tests
 
 ```bash
-# All GHFDB product layer tests
-poetry run pytest tests/test_ghfdb/ -v
+# Run all import/export tests
+poetry run pytest tests/test_ghfdb/test_resources/ -v
 
-# Only proxy model tests
-poetry run pytest tests/test_ghfdb/test_models.py -v
-
-# Only import round-trip tests
-poetry run pytest tests/test_ghfdb/test_import.py -v
-
-# Only export tests
-poetry run pytest tests/test_ghfdb/test_export.py -v
-
-# Query count guard tests
-poetry run pytest tests/test_ghfdb/test_managers.py -v
+# Run specific test files
+poetry run pytest tests/test_ghfdb/test_resources/test_widgets.py -v
+poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py -v
+poetry run pytest tests/test_ghfdb/test_resources/test_child_import.py -v
+poetry run pytest tests/test_ghfdb/test_resources/test_export.py -v
 ```
+
+### Test Data
+
+Test fixtures use a minimal GHFDB XLSX file with:
+
+- 3 unique parent records (3 distinct `ID_parent` values)
+- 5 child measurements (2 sites with 2 children, 1 site with 1 child)
+- Coverage of all widget types: concepts, quantities, yes/no, corrections, probe metadata
+
+## Key Design Decisions
+
+| Decision | Choice | Rationale |
+|---|---|---|
+| Import split | Parent resource + Child resource | Independently testable; cleaner error boundaries |
+| Related model creation | `RelatedModelWidget` subclasses | Leverages django-import-export's widget pipeline; errors flow naturally |
+| Concept fields | `ConceptWidget` / `MultiConceptWidget` | Clean mapping from label → vocabularies via research-vocabs |
+| Quantity fields | `QuantityWidget` | Strips/adds units transparently; stores magnitudes |
+| XLSX format | `GHFDBImportFormat` | Handles row-6 headers, skips metadata rows 1–5 |
+| Corrections | `after_save_instance()` | Structural limitation: corrections are a separate model, not FK/M2M on HeatFlow |

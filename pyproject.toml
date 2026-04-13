@@ -40,6 +40,7 @@ fairdm-dev-tools = { git = "https://github.com/FAIR-DM/dev-tools", extras = [
     "dev",
 ] }
 pypdf = "^6.5.0"
+ruff = "^0.15.10"
 
 [tool.poetry.group.docs.dependencies]
 fairdm-docs = { git = "https://github.com/FAIR-DM/fairdm-docs", extras = [
