@@ -18,14 +18,12 @@ References:
     - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
 """
 
-from decimal import Decimal, InvalidOperation
-
-from heat_flow.models import HeatFlow, ParentHeatFlow
+from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
 from import_export import fields
 from import_export.resources import ModelResource
 from import_export.widgets import ForeignKeyWidget
 
-from ._base import CORRECTION_COL_MAP
+from ._base import CORRECTION_COL_MAP, GHFDB_COLUMN_ORDER
 from ._widgets import (
     ConductivityWidget,
     GradientWidget,
@@ -152,10 +150,27 @@ class GHFDBChildImportResource(ModelResource):
             if col_name not in (dataset.headers or []):
                 dataset.append_col(["" for _ in range(len(dataset))], header=col_name)
 
-    def before_import_row(self, row, **kwargs):
-        """Inject effective IDs so no-ID template rows follow deterministic upsert."""
-        row["ID_parent"] = self._effective_parent_id(row)
-        row["ID"] = self._effective_child_id(row)
+    def get_or_init_instance(self, instance_loader, row):
+        """Return (instance, is_create) using natural-key lookup for no-ID child rows."""
+        child_id = str(row.get("ID") or "").strip()
+        if child_id:
+            return super().get_or_init_instance(instance_loader, row)
+        # For rows without ID: look up by natural key stored in local_id.
+        natural_key = self._child_natural_key(row)
+        if natural_key:
+            try:
+                instance = HeatFlow.objects.get(local_id=natural_key)
+            except HeatFlow.DoesNotExist:
+                pass
+            else:
+                return instance, False
+        return self.init_instance(row), True
+
+    def get_user_visible_fields(self):
+        """Return fields in GHFDB_COLUMN_ORDER so the confirm-page diff follows the template."""
+        visible = super().get_user_visible_fields()
+        order = {col: i for i, col in enumerate(GHFDB_COLUMN_ORDER)}
+        return sorted(visible, key=lambda f: order.get(f.column_name.lower(), len(GHFDB_COLUMN_ORDER)))
 
     def before_save_instance(self, instance, row, **kwargs):
         """
@@ -164,6 +179,16 @@ class GHFDBChildImportResource(ModelResource):
         """
         if not instance.dataset_id:
             instance.dataset = self._fairdm_dataset
+
+        # Resolve parent FK via location when ID_parent is absent (ForeignKeyWidget returned None).
+        if instance.parent is None and not str(row.get("ID_parent") or "").strip():
+            instance.parent = self._resolve_parent_by_location(row)
+
+        # Set stable natural key as local_id for no-ID rows.
+        if not str(row.get("ID") or "").strip():
+            natural_key = self._child_natural_key(row)
+            if natural_key:
+                instance.local_id = natural_key
 
         # Determine the parent HeatFlowSite for the interval
         parent_hf = instance.parent
@@ -303,40 +328,31 @@ class GHFDBChildImportResource(ModelResource):
             },
         )
 
-    def _effective_parent_id(self, row: dict) -> str:
-        """Return ID_parent, or a deterministic location key for no-ID template rows."""
-        explicit_id = str(row.get("ID_parent") or "").strip()
-        if explicit_id:
-            return explicit_id
-
-        lat = self._normalize_decimal(row.get("lat_NS"))
-        lon = self._normalize_decimal(row.get("long_EW"))
-        return f"AUTO_PARENT:{lat}:{lon}"
-
-    def _effective_child_id(self, row: dict) -> str:
-        """Return ID, or a deterministic natural-key ID for no-ID template rows."""
-        explicit_id = str(row.get("ID") or "").strip()
-        if explicit_id:
-            return explicit_id
-
-        lat = self._normalize_decimal(row.get("lat_NS"))
-        lon = self._normalize_decimal(row.get("long_EW"))
-        q_top = self._normalize_decimal(row.get("q_top"))
-        q_bottom = self._normalize_decimal(row.get("q_bottom"))
-        publication_reference = str(row.get("publication_reference") or "").strip().lower()
-        return f"AUTO_CHILD:{lat}:{lon}:{q_top}:{q_bottom}:{publication_reference}"
-
-    def _normalize_decimal(self, value) -> str:
-        """Normalize decimal-like values so equivalent numerics map to one key."""
-        raw = str(value or "").strip()
-        if not raw:
-            return ""
+    def _resolve_parent_by_location(self, row: dict):
+        """Look up the parent ParentHeatFlow via HeatFlowSite location when ID_parent is absent."""
+        lat = str(row.get("lat_NS") or "").strip()
+        lon = str(row.get("long_EW") or "").strip()
+        if not lat or not lon:
+            return None
         try:
-            dec = Decimal(raw)
-        except (InvalidOperation, ValueError):
-            return raw.lower()
-        normalized = dec.normalize()
-        return format(normalized, "f")
+            lat_f, lon_f = float(lat), float(lon)
+        except ValueError:
+            return None
+        site = HeatFlowSite.objects.filter(location__x=lon_f, location__y=lat_f).first()
+        if site is None:
+            return None
+        return ParentHeatFlow.objects.filter(sample=site).first()
+
+    def _child_natural_key(self, row: dict) -> str | None:
+        """Return a stable natural key for no-ID child rows (no synthetic prefix)."""
+        lat = str(row.get("lat_NS") or "").strip()
+        lon = str(row.get("long_EW") or "").strip()
+        if not lat or not lon:
+            return None
+        q_top = str(row.get("q_top") or "").strip()
+        q_bottom = str(row.get("q_bottom") or "").strip()
+        pub_ref = str(row.get("publication_reference") or "").strip().lower()
+        return f"{lat}:{lon}:{q_top}:{q_bottom}:{pub_ref}"
 
     # ------------------------------------------------------------------
     # Meta
