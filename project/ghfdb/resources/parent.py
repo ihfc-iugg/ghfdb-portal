@@ -15,6 +15,7 @@ References:
     - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
 """
 
+from decimal import Decimal, InvalidOperation
 from typing import cast
 
 from heat_flow.models import HeatFlowSite, ParentHeatFlow
@@ -72,8 +73,8 @@ class GHFDBParentImportResource(ModelResource):
     Continent = fields.Field(column_name="Continent")
     Domain = fields.Field(column_name="Domain")
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self._parent_widget = ParentWidget()
         self._fairdm_dataset = None
 
@@ -82,23 +83,34 @@ class GHFDBParentImportResource(ModelResource):
     # ------------------------------------------------------------------
 
     def before_import(self, dataset, **kwargs):
-        """Store the FairDM dataset and deduplicate rows by ID_parent."""
+        """Store the FairDM dataset and deduplicate rows by effective parent key."""
         from fairdm.core.models import Dataset as FairDataset
 
         self._fairdm_dataset = kwargs.get("fairdm_dataset") or FairDataset.objects.first()
 
-        # Keep only the first occurrence of each ID_parent
+        # Inject ID_parent column when the upload template omits it entirely.
+        # _check_import_id_fields() runs after before_import(), so adding the column
+        # here ensures header validation passes; before_import_row() fills each cell.
+        if "ID_parent" not in (dataset.headers or []):
+            dataset.append_col(["" for _ in range(len(dataset))], header="ID_parent")
+
+        # Keep only the first occurrence of each effective parent key.
+        # For template rows without ID_parent, use a deterministic location key.
         seen: set = set()
         rows_to_delete = []
         for i, row in enumerate(dataset.dict):
-            id_parent = row.get("ID_parent")
-            if id_parent in seen:
+            effective_id = self._effective_parent_id(row)
+            if effective_id in seen:
                 rows_to_delete.append(i)
-            else:
-                seen.add(id_parent)
+                continue
+            seen.add(effective_id)
 
         for i in reversed(rows_to_delete):
             del dataset[i]
+
+    def before_import_row(self, row, **kwargs):
+        """Inject effective parent ID so import_id_fields can upsert template rows."""
+        row["ID_parent"] = self._effective_parent_id(row)
 
     def before_save_instance(self, instance, row, **kwargs):
         """Save the HeatFlowSite (+ Point) and link it to the ParentHeatFlow."""
@@ -164,6 +176,28 @@ class GHFDBParentImportResource(ModelResource):
 
         site.save()
         return cast(HeatFlowSite, site)
+
+    def _effective_parent_id(self, row: dict) -> str:
+        """Return ID_parent, or a deterministic synthetic key for no-ID rows."""
+        explicit_id = str(row.get("ID_parent") or "").strip()
+        if explicit_id:
+            return explicit_id
+
+        lat = self._normalize_decimal(row.get("lat_NS"))
+        lon = self._normalize_decimal(row.get("long_EW"))
+        return f"AUTO_PARENT:{lat}:{lon}"
+
+    def _normalize_decimal(self, value) -> str:
+        """Normalize decimal-like values so equivalent numerics map to one key."""
+        raw = str(value or "").strip()
+        if not raw:
+            return ""
+        try:
+            dec = Decimal(raw)
+        except (InvalidOperation, ValueError):
+            return raw.lower()
+        normalized = dec.normalize()
+        return format(normalized, "f")
 
     # ------------------------------------------------------------------
     # Meta

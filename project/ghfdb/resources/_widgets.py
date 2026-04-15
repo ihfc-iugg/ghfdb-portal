@@ -46,6 +46,17 @@ def _validate_concept(values, vocabulary):
         )
 
 
+def normalize_vocab_token(raw: str) -> str:
+    """Strip surrounding square brackets and lowercase a vocabulary token (FR-016).
+
+    GHFDB upload templates wrap vocabulary cell values in square brackets,
+    e.g. '[Onshore (continental)]'. This helper normalises such tokens so they
+    match the lowercase vocabulary definitions stored in the database.
+    The caller should preserve the original raw value for error messages.
+    """
+    return raw.strip("[]").lower()
+
+
 # ---------------------------------------------------------------------------
 # Leaf Widgets
 # ---------------------------------------------------------------------------
@@ -67,9 +78,10 @@ class ConceptWidget(CharWidget):
 
     def clean(self, value, row=None, **kwargs):
         val = super().clean(value, row, **kwargs)
-        if not val or val.lower() == "unspecified":
+        if not val or normalize_vocab_token(val) == "unspecified":
             return None
-        result = self.label_to_key.get(val.lower()) or self.key_to_key.get(val.lower())
+        normalised = normalize_vocab_token(val)
+        result = self.label_to_key.get(normalised) or self.key_to_key.get(normalised)
         if result is None:
             raise ValueError(
                 _("Invalid value '%(val)s' for %(vocab)s vocabulary. Valid options are: %(opts)s")
@@ -93,16 +105,28 @@ class MultiConceptWidget(ManyToManyWidget):
     def clean(self, value, row=None, *args, **kwargs):
         if not value:
             return self.queryset.none()
-        values = [
-            v.strip().lower()
-            for v in str(value).split(self.separator)
-            if v.strip() and v.strip().lower() != "unspecified"
-        ]
-        if not values:
+        # Build (original, normalised) pairs; skip blank and "unspecified" tokens
+        pairs = []
+        for v in str(value).split(self.separator):
+            raw = v.strip()
+            if not raw:
+                continue
+            norm = normalize_vocab_token(raw)
+            if norm != "unspecified":
+                pairs.append((raw, norm))
+        if not pairs:
             return self.queryset.none()
-        _validate_concept(values, self._vocab_class)
+        # Validate using normalised forms; report original tokens in error messages
+        normalised = [norm for _, norm in pairs]
+        choices_set = set(_case_insensitive_qs(self._vocab_class, field="label").values_list("ilabel", flat=True))
+        invalid_originals = [orig for orig, norm in pairs if norm not in choices_set]
+        if invalid_originals:
+            raise ValueError(
+                _("The following values are not part of the %(vocab)s vocabulary: %(invalid)s")
+                % {"vocab": self._vocab_class.__name__, "invalid": invalid_originals}
+            )
         qs = _case_insensitive_qs(self._vocab_class, field="label")
-        return qs.filter(ilabel__in=values)
+        return qs.filter(ilabel__in=normalised)
 
 
 class YesNoWidget(BooleanWidget):

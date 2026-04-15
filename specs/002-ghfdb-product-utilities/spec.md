@@ -1,16 +1,21 @@
-# Feature Specification: GHFDB Product Layer
+# Feature Specification: GHFDB Flat Data Interface
 
 **Feature Branch**: `002-ghfdb-product-utilities`
 **Created**: 2026-04-10
-**Status**: Draft
+**Status**: Complete
+**Refined**: 2026-04-14 — Added explicit GHFDB Entry admin column order plus required search and filter fields for parent-level spreadsheet attributes.
+**Bugfix**: 2026-04-14 — [BUG-001] Added constrained-option behavior for `explo_purpose` admin filtering so list-filter choices are vocabulary-scoped.
 **References**: Fuchs et al. (2021); Fuchs et al. (2023); IHFC GHFDB v2024
-**Input**: User description: "GHFDB product layer: proxy model, round-trip spreadsheet utilities, and web map viewer"
+**Input**: User description: "GHFDB product layer: proxy model, flat query interface, and web map viewer"
+**Downstream**: Import/export pipeline is specified separately in `003-ghfdb-import-export`.
 
 ## Overview
 
-This feature treats the Global Heat Flow Database (GHFDB) as a first-class product within the application, distinct from the underlying `heat_flow` scientific data model. The `project/ghfdb` app becomes the home for all GHFDB-product-layer concerns: a flat proxy model that mirrors the GHFDB spreadsheet structure, round-trip import/export utilities (both staff-only via the Django admin) that convert between the flat spreadsheet format and the normalised heat_flow relational model, and a dedicated "Explore" page that embeds the GHFDB web-map viewer inside a full-screen iframe with a main-menu link for easy access.
+This feature establishes the GHFDB flat data interface within the `project/ghfdb` app: a `GHFDB` proxy model over `HeatFlow` with an optimised `GHFDBQuerySet` that returns all GHFDB columns as a flat annotated structure without N+1 queries, a read-oriented Django admin changelist labelled "GHFDB Entries", and a dedicated "Explore" page that embeds the GHFDB web-map viewer inside a full-screen iframe with a main-menu link for easy access.
 
-**Out of scope (deferred):** Scheduled or automated release generation; public/anonymous downloadable exports. Portal users browse data live via the portal UI. Automated release pipelines will be specified in a separate feature.
+**Downstream feature**: Round-trip import/export utilities (staff-only admin, XLSX, vocabulary normalisation) are specified in `003-ghfdb-import-export`. That spec depends on the `GHFDB` proxy model and `GHFDBManager.for_export()` queryset produced by this spec.
+
+**Out of scope (deferred):** Scheduled or automated release generation; public/anonymous downloadable exports.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -27,44 +32,16 @@ A developer or data curator needs to query heat flow records in the exact flat s
 1. **Given** the database contains a `HeatFlow` record with linked site, parent, thermal-gradient, and thermal-conductivity data, **When** the GHFDB proxy queryset's `as_ghfdb_flat()` method is called, **Then** each record is returned as a flat structure containing all required GHFDB spreadsheet columns with no additional queries per row.
 2. **Given** the proxy model is used in the Django ORM, **When** standard queryset operations (filter, order_by, count) are applied, **Then** they behave identically to the underlying `HeatFlow` model.
 3. **Given** the proxy model, **When** accessed from the Django admin, **Then** it appears as a separate, read-oriented admin view labelled "GHFDB Entries".
+4. **Given** the GHFDB Entry admin changelist, **When** a staff user views records, **Then** the displayed parent-level columns are in this exact order: `ID_parent`, `q`, `q_uncertainty`, `name`, `lat_NS`, `long_EW`, `elevation`, `environment`, `corr_HP_flag`, `total_depth_MD`, `total_depth_TVD`, `explo_method`, `explo_purpose`, `country`, `region`, `continent`, `domain`.
+5. **Given** the GHFDB Entry admin changelist, **When** a staff user uses search and filters, **Then** search is supported by `name` and `ID_parent`, list filters are available for `environment`, `corr_HP_flag`, `explo_method`, `explo_purpose`, `country`, `region`, `continent`, and `domain`, and `explo_purpose` filter choices are restricted to values accepted by the `HeatFlowSite.explo_purpose` vocabulary.
 
 ---
 
-### User Story 2 - Import GHFDB Spreadsheet into Heat Flow Data Model (Priority: P2)
+### Edge Cases
 
-A data manager has a GHFDB-format XLSX file exported from the official IHFC spreadsheet template. They want to ingest it into the application's normalised heat_flow data model without manually mapping every column.
-
-**Why this priority**: Ingesting official GHFDB releases is the primary data-loading workflow. The existing `resources.py` contains partial import logic; this story formalises and completes it as a first-class utility.
-
-**Independent Test**: Can be tested by providing a sample GHFDB spreadsheet and confirming that the resulting database records match the spreadsheet rows exactly, including controlled-vocabulary mappings and multi-value semicolon-separated fields.
-
-**Acceptance Scenarios**:
-
-1. **Given** a valid GHFDB XLSX file, **When** the import utility is run, **Then** `HeatFlow`, `HeatFlowSite`, `ParentHeatFlow`, `ThermalGradient`, and `IntervalConductivity` records are created with correct field mappings.
-2. **Given** a spreadsheet row containing semicolon-separated controlled-vocabulary values (e.g., `q_method`, `tc_method`), **When** the importer processes it, **Then** the values are correctly mapped to the corresponding `Concept` objects.
-3. **Given** a spreadsheet row with an invalid controlled-vocabulary value, **When** the importer processes it, **Then** a descriptive validation error is raised identifying the row number, column name, and invalid value.
-4. **Given** an import is run twice with the same file, **When** the importer detects existing records using the `ID` value (matched against `HeatFlow.local_id`) and `ID_parent` value (matched against the parent model's `local_id`), **Then** records are updated rather than duplicated.
-
----
-
-### User Story 3 - Export Heat Flow Data to GHFDB Spreadsheet Format (Priority: P2)
-
-A data manager wants to produce an official GHFDB-compliant spreadsheet (XLSX) from all or a filtered subset of the application's heat-flow data, for submission to the IHFC repository or for sharing with collaborators. The export is triggered from the Django admin site, accessible to staff only.
-
-**Why this priority**: Equal priority to import — the round-trip is only complete when export is working. The existing download view serves a static file; this story replaces it with a dynamically generated GHFDB-structured output.
-
-**Independent Test**: Can be tested by exporting a known dataset from the admin and comparing the resulting spreadsheet columns, headers, and values against the reference GHFDB template.
-
-**Acceptance Scenarios**:
-
-1. **Given** the application contains heat-flow records, **When** a staff user triggers the export action from the Django admin, **Then** a valid XLSX file is produced whose columns match the official GHFDB spreadsheet schema in the correct order.
-2. **Given** a queryset filtered by dataset or other criteria, **When** the export is triggered for that subset, **Then** only matching records appear in the output file.
-3. **Given** multi-value fields stored as many-to-many relations (e.g., `explo_purpose`, `tc_method`), **When** exported, **Then** they are serialised as semicolon-separated strings matching the GHFDB convention.
-4. **Given** Pint quantity fields (e.g., heat flow in mW/m²), **When** exported, **Then** values are written as plain numeric values in the correct SI units without unit symbols.
-
----
-
-### User Story 4 - Web Map Viewer Page with Main Menu Link (Priority: P3)
+- What happens when a `HeatFlowCorrection` for a specific type doesn't exist for a given `HeatFlow` record? The correction subquery annotation returns `None` for that field.
+- What happens when `thermal_gradient` or `thermal_conductivity` is `null` on a `HeatFlow` record? All related annotations return `None`; the queryset still returns the row without error.
+- What happens when the map viewer iframe URL is unreachable? The page must degrade gracefully, showing an informative message rather than a blank frame.
 
 A portal visitor wants a quick visual overview of the global heat flow distribution. They click a "Map" (or "Explore") link in the application's top navigation bar and see the GHFDB interactive web-map viewer embedded inside the portal page.
 
@@ -82,9 +59,8 @@ A portal visitor wants a quick visual overview of the global heat flow distribut
 
 ### Edge Cases
 
-- What happens when a GHFDB spreadsheet contains rows with missing mandatory fields (e.g., latitude, longitude, heat flow value)? The importer collects these as validation errors and rolls back the entire import, reporting all such rows together.
-- What happens when the same site name, latitude, and longitude match multiple existing records? The importer applies a fixed upsert strategy: if a record with the same `local_id` already exists it is updated; otherwise a new record is created. Skip and error-on-duplicate strategies are out of scope for this feature and deferred to a future spec.
-- What happens when exporting a very large dataset (tens of thousands of rows)? The export must stream the response rather than loading everything into memory, or clearly document the row limit before which a background-task approach is required.
+- What happens when a `HeatFlowCorrection` for a specific type doesn't exist for a given `HeatFlow` record? The correction subquery annotation returns `None` for that field.
+- What happens when `thermal_gradient` or `thermal_conductivity` is `null` on a `HeatFlow` record? All related annotations return `None`; the queryset still returns the row without error.
 - What happens when the map viewer iframe URL is unreachable? The page must degrade gracefully, showing an informative message rather than a blank frame.
 
 ## Requirements *(mandatory)*
@@ -93,21 +69,26 @@ A portal visitor wants a quick visual overview of the global heat flow distribut
 
 - **FR-001**: The system MUST provide a Django proxy model (`GHFDB`) backed by `HeatFlow` with a custom queryset that returns all GHFDB spreadsheet columns via an optimised single-query path (select_related and prefetch_related).
 - **FR-002**: The proxy model's queryset MUST expose a named method (e.g., `as_ghfdb_flat()`) that annotates or selects all columns required by the GHFDB output schema.
-- **FR-003**: The system MUST provide an import utility (building on existing `resources.py` logic) that accepts a GHFDB-format XLSX file (`.xlsx` only; CSV is not supported — see research decision R10) and populates `HeatFlow`, `HeatFlowSite`, `ParentHeatFlow`, `ThermalGradient`, and `IntervalConductivity` records. The import is triggered exclusively via the Django admin site using django-import-export's built-in admin action and is restricted to staff users.
+- **FR-003**: The system MUST provide an import utility (building on existing `resources.py` logic) that accepts a GHFDB-format XLSX file (`.xlsx` only; CSV is not supported — see research decision R10) and populates `HeatFlow`, `HeatFlowSite`, `ParentHeatFlow`, `ThermalGradient`, and `IntervalConductivity` records. The import is triggered exclusively via the Django admin site using django-import-export's built-in admin action and is restricted to staff users. The admin import view MUST render successfully for authenticated staff users, including resource-class selection hooks that remain compatible with the installed django-import-export version.
 - **FR-004**: The importer MUST correctly translate semicolon-separated controlled-vocabulary display labels in spreadsheet columns (such as `q_method`, `tc_method`, `explo_purpose`) to the corresponding `Concept` ORM objects stored in the database.
 - **FR-005**: The importer MUST validate all rows before persisting any data. If any row fails validation (including invalid controlled-vocabulary values, missing mandatory fields, or type errors), the entire import MUST be rolled back and the complete list of row-level errors (row number, column name, invalid value) returned to the user with no records written to the database.
-- **FR-006**: The importer MUST support an upsert strategy using the spreadsheet's `ID` column (mapped to `HeatFlow.local_id`) and `ID_parent` column (mapped to `ParentHeatFlow.local_id` / `HeatFlowSite.local_id`) as the stable identifiers: if a matching record exists it is updated; otherwise a new record is created.
+- **FR-006**: The importer MUST support a template-aware upsert strategy. When `ID` and `ID_parent` columns are present, they map to `HeatFlow.local_id` and `ParentHeatFlow.local_id` / `HeatFlowSite.local_id` respectively. When those columns are absent (standard individual-dataset upload template), parent upsert MUST use `lat_NS` + `long_EW`, and child upsert MUST use `lat_NS` + `long_EW` + `q_top` + `q_bottom` + `publication_reference`. The implementation MUST be header-validation-safe: `import_id_fields` MUST reference columns guaranteed to exist in the uploaded template path, and missing optional `ID` / `ID_parent` headers MUST NOT cause import rejection. In all cases, if a matching record exists it is updated; otherwise a new record is created.
 - **FR-007**: The system MUST provide an export utility that produces a valid GHFDB-format XLSX file from any `HeatFlow` queryset (or the full database). The export is triggered exclusively via the Django admin site using django-import-export's built-in admin action and is restricted to staff users.
 - **FR-008**: The export MUST write all GHFDB spreadsheet columns in the prescribed column order, using semicolons to join multi-value fields and writing Pint quantity values as plain unit-stripped numerics in SI units.
 - **FR-009**: The system MUST provide a URL-accessible view at `ghfdb/explore/` (or equivalent) that renders an HTML template embedding the GHFDB web-map viewer (`https://ihfc-iugg.github.io/HeatFlowMapping/`) inside a full-screen iframe. The URL is hardcoded in the template.
 - **FR-010**: A menu item labelled "Explore" (or equivalent) MUST be registered in the main application navigation bar pointing to the map viewer URL.
 - **FR-011**: The proxy model MUST be registerable with the Django admin (read-only mode is acceptable) so staff can inspect GHFDB-structured entries without modifying underlying normalised records.
+- **FR-012**: The GHFDB Entry Django admin changelist MUST display these parent-level GHFDB spreadsheet fields in this exact order: `ID_parent`, `q`, `q_uncertainty`, `name`, `lat_NS`, `long_EW`, `elevation`, `environment`, `corr_HP_flag`, `total_depth_MD`, `total_depth_TVD`, `explo_method`, `explo_purpose`, `country`, `region`, `continent`, `domain`.
+- **FR-013**: The GHFDB Entry Django admin changelist MUST support text search on `name` and `ID_parent`.
+- **FR-014**: The GHFDB Entry Django admin changelist MUST provide filters for `environment`, `corr_HP_flag`, `explo_method`, `explo_purpose`, `country`, `region`, `continent`, and `domain`.
+- **FR-015**: For concept-backed admin list filters, filter options MUST be constrained to vocabulary-accepted values for the target field. Specifically, the `explo_purpose` filter MUST only show values accepted by `HeatFlowSite.explo_purpose` and MUST NOT show unrelated `Concept` values.
+- **FR-016**: Before validating or mapping controlled-vocabulary spreadsheet values, the importer MUST normalise each token by removing surrounding square brackets (for example, `[Onshore (continental)]` -> `Onshore (continental)`) and converting the result to lowercase so standard GHFDB upload-template values remain compatible with lowercase vocabulary definitions.
 
 ### Key Entities
 
 - **GHFDB (proxy)**: A read-oriented proxy over `HeatFlow` that presents heat-flow records in the flat GHFDB spreadsheet schema. Does not add database columns; adds custom manager (`GHFDBManager`) and queryset (`GHFDBQuerySet`) methods for efficient flat-data retrieval. `verbose_name = "GHFDB Entry"`, `verbose_name_plural = "GHFDB Entries"`.
-- **GHFDBParentImportResource**: The parent import resource that maps the 18 parent-level GHFDB spreadsheet columns to `HeatFlowSite` and `ParentHeatFlow` records, using `ParentWidget` for related-model creation and upsert via `local_id`.
-- **GHFDBChildImportResource**: The child import resource that maps the remaining GHFDB spreadsheet columns to `HeatFlow`, `ThermalGradient`, `IntervalConductivity`, `HeatFlowCorrection`, and `ProbeMetadata` records, using `IntervalWidget`, `GradientWidget`, and `ConductivityWidget` for sub-model handling and upsert via `HeatFlow.local_id`.
+- **GHFDBParentImportResource**: The parent import resource that maps the 18 parent-level GHFDB spreadsheet columns to `HeatFlowSite` and `ParentHeatFlow` records, using `ParentWidget` for related-model creation and template-aware upsert (`ID_parent`/`local_id` when available, otherwise `lat_NS` + `long_EW`) while remaining safe when `ID_parent` is absent from file headers.
+- **GHFDBChildImportResource**: The child import resource that maps the remaining GHFDB spreadsheet columns to `HeatFlow`, `ThermalGradient`, `IntervalConductivity`, `HeatFlowCorrection`, and `ProbeMetadata` records, using `IntervalWidget`, `GradientWidget`, and `ConductivityWidget` for sub-model handling and template-aware upsert (`ID`/`local_id` when available, otherwise `lat_NS` + `long_EW` + `q_top` + `q_bottom` + `publication_reference`) while remaining safe when `ID`/`ID_parent` are absent from file headers.
 - **GHFDBExportResource**: An export resource that serialises the normalised heat_flow model graph back into the flat GHFDB spreadsheet structure, handling unit stripping and vocabulary label rendering.
 - **GHFDBExploreView**: A `TemplateView` subclass that renders the map viewer page. The iframe URL (`https://ihfc-iugg.github.io/HeatFlowMapping/`) is hardcoded directly in the template; no Django setting is required.
 
@@ -126,10 +107,16 @@ A portal visitor wants a quick visual overview of the global heat flow distribut
 ### Session 2026-04-10
 
 - Q: Where does a user trigger GHFDB spreadsheet import? → A: Django admin — import triggered from the admin site using django-import-export's built-in admin action (staff only).
-- Q: What is the stable identifier used to detect and upsert existing records during import? → A: The spreadsheet's `ID` column maps to `local_id` on the child `HeatFlow` model; `ID_parent` maps to `local_id` on the parent model (`ParentHeatFlow`/`HeatFlowSite`). Both fields are used together to identify and upsert entries.
+- Q: What is the stable identifier used to detect and upsert existing records during import? → A: The importer uses a template-aware identifier strategy: with official-release sheets, `ID`/`ID_parent` map to child/parent `local_id`; with standard individual-dataset uploads that omit these fields, parent rows use `lat_NS` + `long_EW` and child rows use `lat_NS` + `long_EW` + `q_top` + `q_bottom` + `publication_reference`.
 - Q: What is the rollback behaviour when a batch import contains some invalid rows? → A: Atomic — the entire file is validated first; if any row fails validation, nothing is saved and the complete error list is returned to the user.
 - Q: Where/how does export work — public download, admin action, or deferred? → A: Admin-only via django-import-export's admin export action (staff only), symmetric with import. Automated/scheduled release pipelines are deferred to a future spec.
 - Q: What is the default iframe URL for the map viewer, and should it be a configurable Django setting? → A: Hardcoded to `https://ihfc-iugg.github.io/HeatFlowMapping/` directly in the template. No Django setting required.
+
+### Session 2026-04-15
+
+- Q: What should happen if uploaded template headers omit `ID_parent` and `ID` entirely? → A: Import must still proceed through natural-key upsert paths without failing `import_id_fields` header validation; optional ID headers cannot be required for standard-upload imports.
+- Q: How should controlled-vocabulary values from standard templates be handled when values are wrapped in square brackets and/or use mixed case? → A: Normalise each token by removing `[` and `]` and converting to lowercase before vocabulary validation and Concept mapping.
+- Q: What is the exact row structure of the GHFDB upload template? → A: The template has 8 preamble rows before any data. Row 1 = ID, row 2 = Obligation, row 3 = Domain, row 4 = Quality Relevance, row 5 = Name, row 6 = Short Name (**column headers — used**), row 7 = Unit (skipped), row 8 = Allowed range of values (skipped). Data rows begin at row 9. `GHFDBImportFormat` MUST read headers from row 6 and start data iteration at `min_row=9`.
 
 ## Assumptions
 

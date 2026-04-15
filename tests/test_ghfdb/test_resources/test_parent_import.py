@@ -167,6 +167,95 @@ class TestGHFDBParentBeforeImportDedup:
         assert float(parent.value.magnitude) == pytest.approx(70.0)
 
 
+@pytest.mark.django_db
+class TestGHFDBParentTemplateNoIdRegression:
+    """T067/T029 regression coverage for template uploads without ID_parent."""
+
+    def test_no_id_parent_dedup_uses_lat_long_natural_key(self, dataset):
+        """Rows without ID_parent deduplicate by lat_NS + long_EW."""
+        from heat_flow.models import HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        row1 = dict(PARENT_ROW)
+        row1["ID_parent"] = ""
+        row2 = dict(PARENT_ROW)
+        row2["ID_parent"] = ""
+        row2["q"] = "99.9"  # would overwrite only if second row were imported
+
+        resource = GHFDBParentImportResource()
+        ds = make_dataset(row1, row2)
+        result = resource.import_data(ds, dry_run=False, raise_errors=False)
+
+        assert not result.has_errors(), result.invalid_rows
+        assert ParentHeatFlow.objects.count() == 1
+        assert HeatFlowSite.objects.count() == 1
+        parent = ParentHeatFlow.objects.first()
+        assert parent is not None
+        assert float(parent.value.magnitude) == pytest.approx(70.0)
+
+    def test_absent_id_parent_header_does_not_raise_header_error(self, dataset):
+        """Import succeeds when ID_parent column is entirely absent from headers."""
+        from heat_flow.models import HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
+        ds = make_dataset(row)
+        assert "ID_parent" not in ds.headers
+
+        result = GHFDBParentImportResource().import_data(ds, dry_run=False, raise_errors=False)
+
+        assert not result.has_errors(), result.invalid_rows
+        assert ParentHeatFlow.objects.count() == 1
+        assert HeatFlowSite.objects.count() == 1
+
+    def test_absent_id_parent_header_reimport_upserts(self, dataset):
+        """Re-import without ID_parent header updates records rather than duplicating."""
+        from heat_flow.models import ParentHeatFlow
+
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
+        GHFDBParentImportResource().import_data(make_dataset(row), dry_run=False, raise_errors=False)
+
+        row_update = dict(row)
+        row_update["q"] = "88.8"
+        result = GHFDBParentImportResource().import_data(make_dataset(row_update), dry_run=False, raise_errors=False)
+
+        assert not result.has_errors(), result.invalid_rows
+        assert ParentHeatFlow.objects.count() == 1
+        parent = ParentHeatFlow.objects.first()
+        assert parent is not None
+        assert float(parent.value.magnitude) == pytest.approx(88.8)
+
+    def test_no_id_parent_reimport_updates_existing_parent(self, dataset):
+        """Re-import without ID_parent upserts via lat_NS + long_EW key."""
+        from heat_flow.models import ParentHeatFlow
+
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        resource = GHFDBParentImportResource()
+        row = dict(PARENT_ROW)
+        row["ID_parent"] = ""
+
+        resource.import_data(make_dataset(row), dry_run=False, raise_errors=False)
+
+        row_update = dict(row)
+        row_update["q"] = "81.5"
+        result = resource.import_data(
+            make_dataset(row_update),
+            dry_run=False,
+            raise_errors=False,
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        assert ParentHeatFlow.objects.count() == 1
+        parent = ParentHeatFlow.objects.first()
+        assert parent is not None
+        assert float(parent.value.magnitude) == pytest.approx(81.5)
+
+
 class TestGHFDBParentImportResourceAccessControl:
     """T029 — Staff-only access control."""
 

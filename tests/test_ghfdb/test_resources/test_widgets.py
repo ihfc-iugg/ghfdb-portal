@@ -366,3 +366,76 @@ class TestConductivityWidget:
         result = widget.clean("2.5", row=row)
         assert result is not None
         assert isinstance(result, IntervalConductivity)
+
+
+# ---- T072: FR-016 Vocabulary normalisation regression tests ----------------
+
+
+class TestVocabNormalisation:
+    """T072 — FR-016: bracket-wrapped and mixed-case vocab tokens are normalised before matching."""
+
+    def test_normalize_vocab_token_strips_brackets(self):
+        """normalize_vocab_token() strips surrounding [ ] and lowercases the token."""
+        from project.ghfdb.resources._widgets import normalize_vocab_token
+
+        assert normalize_vocab_token("[Onshore (continental)]") == "onshore (continental)"
+        assert normalize_vocab_token("[OFFSHORE (MARINE)]") == "offshore (marine)"
+        # Plain tokens (no brackets) should pass through unchanged after lowercasing
+        assert normalize_vocab_token("onshore (continental)") == "onshore (continental)"
+        assert normalize_vocab_token("Onshore (continental)") == "onshore (continental)"
+
+    def test_concept_widget_accepts_bracketed_value(self, db):
+        """ConceptWidget.clean('[Onshore (continental)]') resolves without error (FR-016)."""
+        from heat_flow import vocabularies
+
+        from project.ghfdb.resources._widgets import ConceptWidget
+
+        widget = ConceptWidget(vocabulary=vocabularies.GeographicEnvironment)
+        result = widget.clean("[Onshore (continental)]", row={})
+        assert result is not None
+
+    def test_concept_widget_accepts_bracketed_uppercase(self, db):
+        """ConceptWidget.clean('[OFFSHORE (MARINE)]') resolves via bracket + case normalisation."""
+        from heat_flow import vocabularies
+
+        from project.ghfdb.resources._widgets import ConceptWidget
+
+        widget = ConceptWidget(vocabulary=vocabularies.GeographicEnvironment)
+        result = widget.clean("[OFFSHORE (MARINE)]", row={})
+        assert result is not None
+
+    def test_concept_widget_invalid_bracketed_reports_original(self, db):
+        """ValueError for an invalid bracketed token includes the original bracket-wrapped text."""
+        from heat_flow import vocabularies
+
+        from project.ghfdb.resources._widgets import ConceptWidget
+
+        widget = ConceptWidget(vocabulary=vocabularies.GeographicEnvironment)
+        with pytest.raises(ValueError) as exc_info:
+            widget.clean("[NOT_VALID]", row={})
+        # Original token (with brackets) must be visible in the error message
+        assert "[NOT_VALID]" in str(exc_info.value)
+
+    def test_multi_concept_widget_normalizes_bracketed_tokens(self, db):
+        """MultiConceptWidget normalises each bracket-wrapped semicolon-separated token (FR-016)."""
+        from heat_flow import vocabularies
+
+        from project.ghfdb.resources._widgets import MultiConceptWidget
+
+        # ExplorationPurpose is preloaded in the test DB; use it to verify bracket normalisation
+        widget = MultiConceptWidget(vocabulary=vocabularies.ExplorationPurpose)
+        result = widget.clean("[Geothermal]; [Research]", row={})
+        assert result is not None
+        assert result.count() >= 1
+
+    def test_multi_concept_widget_invalid_bracketed_reports_original(self, db):
+        """MultiConceptWidget error for invalid bracketed token includes the original text."""
+        from heat_flow import vocabularies
+
+        from project.ghfdb.resources._widgets import MultiConceptWidget
+
+        widget = MultiConceptWidget(vocabulary=vocabularies.ExplorationPurpose)
+        with pytest.raises(ValueError) as exc_info:
+            widget.clean("[COMPLETELY_INVALID]", row={})
+        # Original token (with brackets) must be visible — not the lowercased/stripped form
+        assert "[COMPLETELY_INVALID]" in str(exc_info.value)

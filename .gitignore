@@ -168,3 +168,10 @@ dmypy.json
 production copy.yml
 GHFDB.xlsx
 docs/_static/screenshots/auth.json
+
+# Universal OS/editor temp files
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+.idea/

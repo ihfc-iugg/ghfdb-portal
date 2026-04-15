@@ -33,6 +33,7 @@ fairdm-geo = { git = "https://github.com/FAIR-DM/fairdm-geo" }
 fairdm-discussions = { git = "https://github.com/FAIR-DM/fairdm-discussions" }
 kreuzberg = { extras = ["all"], version = "^4.2.10" }
 django-browser-reload = "^1.21.0"
+uncertainties = "^3.2.3"
 
 [tool.poetry.group.dev.dependencies]
 fairdm-dev-tools = { git = "https://github.com/FAIR-DM/dev-tools", extras = [

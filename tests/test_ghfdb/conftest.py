@@ -14,6 +14,19 @@ import pytest
 from fairdm.factories import DatasetFactory
 
 
+@pytest.fixture(autouse=True)
+def load_concepts(db):
+    """Ensure all vocabulary concepts are in the test DB before each test.
+
+    Mirrors the autouse fixture in test_resources/conftest.py so that
+    admin filter-choice tests (T063) also have vocabulary data available.
+    """
+    from research_vocabs.models import Concept
+
+    if not Concept.objects.exists():
+        Concept.preload()
+
+
 @pytest.fixture
 def dataset():
     """A minimal Dataset — infrastructure, not under test."""

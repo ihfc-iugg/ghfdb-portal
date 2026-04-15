@@ -18,6 +18,8 @@ References:
     - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
 """
 
+from decimal import Decimal, InvalidOperation
+
 from heat_flow.models import HeatFlow, ParentHeatFlow
 from import_export import fields
 from import_export.resources import ModelResource
@@ -126,8 +128,8 @@ class GHFDBChildImportResource(ModelResource):
     tc_strategy = fields.Field(column_name="tc_strategy")
     igsn = fields.Field(column_name="igsn")
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self._interval_widget = IntervalWidget()
         self._gradient_widget = GradientWidget()
         self._conductivity_widget = ConductivityWidget()
@@ -142,6 +144,18 @@ class GHFDBChildImportResource(ModelResource):
         from fairdm.core.models import Dataset as FairDataset
 
         self._fairdm_dataset = kwargs.get("fairdm_dataset") or FairDataset.objects.first()
+
+        # Inject optional ID / ID_parent columns when the upload template omits them.
+        # _check_import_id_fields() runs after before_import(), so injecting here
+        # ensures header validation passes; before_import_row() fills each cell.
+        for col_name in ("ID", "ID_parent"):
+            if col_name not in (dataset.headers or []):
+                dataset.append_col(["" for _ in range(len(dataset))], header=col_name)
+
+    def before_import_row(self, row, **kwargs):
+        """Inject effective IDs so no-ID template rows follow deterministic upsert."""
+        row["ID_parent"] = self._effective_parent_id(row)
+        row["ID"] = self._effective_child_id(row)
 
     def before_save_instance(self, instance, row, **kwargs):
         """
@@ -288,6 +302,41 @@ class GHFDBChildImportResource(ModelResource):
                 "tilt": _qty(probe_tilt, "°"),
             },
         )
+
+    def _effective_parent_id(self, row: dict) -> str:
+        """Return ID_parent, or a deterministic location key for no-ID template rows."""
+        explicit_id = str(row.get("ID_parent") or "").strip()
+        if explicit_id:
+            return explicit_id
+
+        lat = self._normalize_decimal(row.get("lat_NS"))
+        lon = self._normalize_decimal(row.get("long_EW"))
+        return f"AUTO_PARENT:{lat}:{lon}"
+
+    def _effective_child_id(self, row: dict) -> str:
+        """Return ID, or a deterministic natural-key ID for no-ID template rows."""
+        explicit_id = str(row.get("ID") or "").strip()
+        if explicit_id:
+            return explicit_id
+
+        lat = self._normalize_decimal(row.get("lat_NS"))
+        lon = self._normalize_decimal(row.get("long_EW"))
+        q_top = self._normalize_decimal(row.get("q_top"))
+        q_bottom = self._normalize_decimal(row.get("q_bottom"))
+        publication_reference = str(row.get("publication_reference") or "").strip().lower()
+        return f"AUTO_CHILD:{lat}:{lon}:{q_top}:{q_bottom}:{publication_reference}"
+
+    def _normalize_decimal(self, value) -> str:
+        """Normalize decimal-like values so equivalent numerics map to one key."""
+        raw = str(value or "").strip()
+        if not raw:
+            return ""
+        try:
+            dec = Decimal(raw)
+        except (InvalidOperation, ValueError):
+            return raw.lower()
+        normalized = dec.normalize()
+        return format(normalized, "f")
 
     # ------------------------------------------------------------------
     # Meta
