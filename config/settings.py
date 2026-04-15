@@ -9,6 +9,7 @@ LANGUAGES = [
 
 fairdm.setup(
     apps=[
+        "ghfdb",
         "heat_flow",
         "review",
         "fairdm_geo",
@@ -76,9 +77,6 @@ AWS_S3_CLIENT_CONFIG = Config(
 if "INSTALLED_APPS" not in globals():
     INSTALLED_APPS = []
 
-INSTALLED_APPS += [
-    "project.ghfdb",
-]
 
 # INSTALLED_APPS += [
 #     "django_model_info.apps.DjangoModelInfoConfig",
