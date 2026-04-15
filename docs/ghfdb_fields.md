@@ -58,6 +58,7 @@ It was previously named `SurfaceHeatFlow` in older versions of this codebase.
 | qc | C01 | heat\_flow\_heatflow | HeatFlow | value | HeatFlow |
 | qc\_uncertainty | C02 | heat\_flow\_heatflow | HeatFlow | uncertainty | HeatFlow |
 | q\_method | C03 | heat\_flow\_heatflow | HeatFlow | method | HeatFlow |
+| ID | — | heat\_flow\_heatflow | HeatFlow | local\_id | HeatFlow |
 | relevant\_child | C09 | heat\_flow\_heatflow | HeatFlow | is\_relevant | HeatFlow |
 | c\_comment | C10 | heat\_flow\_heatflow | HeatFlow | c\_comment | HeatFlow |
 | expedition | C20 | heat\_flow\_heatflow | HeatFlow | expedition | HeatFlow |
@@ -157,3 +158,37 @@ The following fields existed in older versions of the data model but have been r
 | probe\_type | C21 | HeatFlow.probe\_type | Same rationale as probe\_penetration | `ProbeMetadata.probe_type` (see above) |
 | relevant\_child | C09 | HeatFlow.relevant\_child | Renamed for clarity | `HeatFlow.is_relevant` |
 | corr\_IS\_flag through corr\_HR\_flag | C11–C19 | HeatFlow.corr\_\*\_flag (Boolean) | Booleans cannot encode correction severity/status; normalised to `HeatFlowCorrection` records | `HeatFlowCorrection(correction_type=<TYPE>).status` |
+
+## HeatFlow local_id
+
+`HeatFlow.local_id` is the stable upsert key for GHFDB child imports.
+
+- Type: `CharField(max_length=255)`
+- Constraints: `null=True`, `blank=True`, `db_index=True`
+- Source column: GHFDB spreadsheet `ID`
+- Import usage: `GHFDBChildImportResource.Meta.import_id_fields = ("local_id",)`
+
+For parent imports, the corresponding stable key is `ParentHeatFlow.local_id`, mapped from spreadsheet `ID_parent`.
+
+## Proxy Model Access Patterns
+
+The product-layer proxy model `GHFDB` exposes flattened spreadsheet-like columns through annotated queryset helpers.
+
+- Flat annotated queryset: `GHFDB.objects.as_ghfdb_flat()`
+- Export-ready queryset with prefetches: `GHFDB.objects.for_export()`
+
+Common annotation names used by admin/export:
+
+- Site/location: `site_name`, `lat_ns`, `long_ew`, `site_elevation`, `site_environment`
+- Parent values: `p_q`, `p_q_uncertainty`, `p_corr_hp_flag`, `p_comment`
+- Interval: `interval_top`, `interval_bottom`
+- Thermal gradient: `tgrad_value`, `tgrad_uncertainty`, `tgrad_corrected`, `tgrad_corrected_unc`
+- Conductivity: `tc_value`, `tc_uncertainty`, `tc_number`
+- Corrections: `corr_IS_flag`, `corr_T_flag`, `corr_S_flag`, `corr_E_flag`, `corr_TOPO_flag`, `corr_PAL_flag`, `corr_SUR_flag`, `corr_CONV_flag`, `corr_HR_flag`
+
+## Large Export Limits
+
+The synchronous XLSX export path is currently validated for up to approximately 50,000 rows.
+
+- `GHFDBExportResource.get_queryset()` should remain memory-conscious and avoid materializing full result sets eagerly.
+- For exports beyond the tested synchronous limit, move the job to a background task (deferred to a future specification).

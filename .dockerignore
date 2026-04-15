@@ -8,3 +8,11 @@ dist
 build
 static
 test*
+
+# Docker-specific critical ignores
+.git/
+Dockerfile*
+.dockerignore
+*.log*
+.env*
+coverage/

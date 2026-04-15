@@ -61,7 +61,7 @@ class GHFDBPathDownloadView(PathDownloadView):
 
 
 class GHFDBExploreView(TemplateView):
-    template_name = "explore.html"
+    template_name = "ghfdb/explore.html"
 
 
 # TODO: GetPublishedView is disabled until fairdm.contrib.import_export.views is completed (DatasetPublishConfirm not yet stable).
