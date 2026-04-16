@@ -77,7 +77,13 @@ class ConceptWidget(CharWidget):
         super().__init__(**kwargs)
 
     def clean(self, value, row=None, **kwargs):
-        val = super().clean(value, row, **kwargs)
+        try:
+            val = super().clean(value, row, **kwargs)
+        except AttributeError:
+            raise ValueError(
+                _("Column value %(val)r is not a text string; expected a vocabulary label for %(vocab)s.")
+                % {"val": value, "vocab": self.vocabulary.__name__}
+            ) from None
         if not val or normalize_vocab_token(val) == "unspecified":
             return None
         normalised = normalize_vocab_token(val)
@@ -222,7 +228,14 @@ class RelatedModelWidget(Widget):
     def clean(self, value, row=None, **kwargs):
         self._last_row = row
         if self.sentinel_column is not None:
-            sentinel_val = ((row or {}).get(self.sentinel_column) or "").strip()
+            raw_sentinel = (row or {}).get(self.sentinel_column)
+            try:
+                sentinel_val = (raw_sentinel or "").strip()
+            except AttributeError:
+                raise ValueError(
+                    _("Column '%(col)s' contains a non-text value %(val)r; expected a text string.")
+                    % {"col": self.sentinel_column, "val": raw_sentinel}
+                ) from None
             if not sentinel_val:
                 return None
 
@@ -300,8 +313,14 @@ class ParentWidget(RelatedModelWidget):
 
     def clean(self, value, row=None, **kwargs):
         self._last_row = row
-        if not ((row or {}).get("name") or "").strip():
-            return None
+        raw_name = (row or {}).get("name")
+        try:
+            if not (raw_name or "").strip():
+                return None
+        except AttributeError:
+            raise ValueError(
+                _("Column 'name' contains a non-text value %(val)r; expected a site name string.") % {"val": raw_name}
+            ) from None
 
         from fairdm.contrib.location.models import Point
 

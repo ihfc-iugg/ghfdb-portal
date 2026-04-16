@@ -439,3 +439,88 @@ class TestVocabNormalisation:
             widget.clean("[COMPLETELY_INVALID]", row={})
         # Original token (with brackets) must be visible — not the lowercased/stripped form
         assert "[COMPLETELY_INVALID]" in str(exc_info.value)
+
+
+# ---- T079: BUG-007 numeric cell value regression tests ---------------------
+
+
+class TestNumericCellInputGuards:
+    """T079 — BUG-007: numeric cell values produce descriptive ValueError, not AttributeError.
+
+    When openpyxl/tablib reads a spreadsheet cell as an integer or float (e.g. a
+    numeric column, or a formula result), widgets that call .strip() must catch the
+    resulting AttributeError and re-raise a descriptive ValueError naming the column
+    and the unexpected value so users can locate the offending cell.
+    """
+
+    def test_concept_widget_int_raises_valueerror_not_attributeerror(self, db):
+        """ConceptWidget.clean(42) raises ValueError with vocab name — not bare AttributeError."""
+        from heat_flow import vocabularies
+
+        from project.ghfdb.resources._widgets import ConceptWidget
+
+        widget = ConceptWidget(vocabulary=vocabularies.GeographicEnvironment)
+        with pytest.raises(ValueError) as exc_info:
+            widget.clean(42, row={})
+        error_msg = str(exc_info.value)
+        # Must mention the vocabulary class name so the user knows which field
+        assert "GeographicEnvironment" in error_msg
+        # Must mention the bad value
+        assert "42" in error_msg
+
+    def test_concept_widget_float_raises_valueerror_not_attributeerror(self, db):
+        """ConceptWidget.clean(3.14) raises ValueError — floats are also non-text."""
+        from heat_flow import vocabularies
+
+        from project.ghfdb.resources._widgets import ConceptWidget
+
+        widget = ConceptWidget(vocabulary=vocabularies.GeographicEnvironment)
+        with pytest.raises(ValueError) as exc_info:
+            widget.clean(3.14, row={})
+        error_msg = str(exc_info.value)
+        assert "GeographicEnvironment" in error_msg
+
+    def test_related_model_widget_numeric_sentinel_raises_valueerror(self, db):
+        """RelatedModelWidget with a numeric sentinel column value raises ValueError naming the column."""
+        from project.ghfdb.resources._widgets import GradientWidget
+
+        widget = GradientWidget()
+        # T_grad_mean is the sentinel column; pass an int (truthy, so strip() would be reached)
+        row = {
+            "T_grad_mean": 1,  # int — simulates openpyxl reading a numeric cell
+            "T_grad_uncertainty": "",
+        }
+        with pytest.raises(ValueError) as exc_info:
+            widget.clean("", row=row)
+        error_msg = str(exc_info.value)
+        # Must name the sentinel column
+        assert "T_grad_mean" in error_msg
+
+    def test_conductivity_widget_numeric_sentinel_raises_valueerror(self, db):
+        """ConductivityWidget with numeric tc_mean raises ValueError naming the column."""
+        from project.ghfdb.resources._widgets import ConductivityWidget
+
+        widget = ConductivityWidget()
+        row = {
+            "tc_mean": 2,  # int — simulates openpyxl reading a numeric cell
+            "tc_uncertainty": "",
+        }
+        with pytest.raises(ValueError) as exc_info:
+            widget.clean("", row=row)
+        error_msg = str(exc_info.value)
+        assert "tc_mean" in error_msg
+
+    def test_parent_widget_numeric_name_raises_valueerror(self, db):
+        """ParentWidget.clean() with an int in the 'name' column raises ValueError naming 'name'."""
+        from project.ghfdb.resources._widgets import ParentWidget
+
+        widget = ParentWidget()
+        row = {
+            "name": 1,  # int — simulates openpyxl reading a numeric cell
+            "lat_NS": "48.0",
+            "long_EW": "11.0",
+        }
+        with pytest.raises(ValueError) as exc_info:
+            widget.clean("", row=row)
+        error_msg = str(exc_info.value)
+        assert "name" in error_msg
