@@ -1,7 +1,7 @@
 # Implementation Plan: GHFDB Import/Export Pipeline
 
 **Branch**: `003-ghfdb-import-export` | **Date**: 2026-04-15 | **Spec**: [spec.md](spec.md)
-**Split from**: `002-ghfdb-product-utilities` plan.md (import/export sections)
+**Split from**: `002-ghfdb-proxy` plan.md (import/export sections)
 **Input**: Feature specification from `/specs/003-ghfdb-import-export/spec.md`
 **Propagated**: 2026-04-15 — Added controlled-vocabulary import normalization (FR-016): strip square brackets and lowercase before vocabulary matching.
 **Propagated**: 2026-04-14 — Updated from spec.md refinement
@@ -15,7 +15,7 @@
 **Bugfix**: 2026-04-16 — [BUG-008] Scoped BUG-007 sentinel guard: the `try/except AttributeError` guard in `RelatedModelWidget.clean()` MUST NOT fire for quantity-type sentinel columns (`T_grad_mean`, `tc_mean`). An `int` or `float` in those columns is valid input — `QuantityWidget` handles it downstream. The guard MUST only convert `AttributeError` → `ValueError` for text-type sentinels (e.g. `name` on `ParentWidget`). Implementation: use `isinstance(raw_sentinel, (int, float))` to short-circuit as "present" before the `.strip()` path.
 **Bugfix**: 2026-04-16 — [BUG-009] Corrected `IntervalWidget` M2M target field for `geo_stratigraphy`: the m2m_map key MUST be `"age"` (pointing to `HeatFlowInterval.age`, a `ConceptManyToManyField(vocabulary=GeologicalTimescale)`) rather than `"stratigraphy"` (which points to `HeatFlowInterval.stratigraphy`, a `ManyToManyField(to="stratigraphy.StratigraphicUnit")` holding a different model). Passing `research_vocabs.Concept` objects into the `stratigraphy` M2M causes `"Field 'id' expected a number"` at runtime.
 
-**Dependency**: This plan depends on `002-ghfdb-product-utilities` being complete. The `GHFDB` proxy model, `GHFDBManager.for_export()` queryset, and `local_id` fields on `HeatFlow`, `HeatFlowSite`, and `ParentHeatFlow` must exist before any task in this plan is started.
+**Dependency**: This plan depends on `002-ghfdb-proxy` being complete. The `GHFDB` proxy model, `GHFDBManager.for_export()` queryset, and `local_id` fields on `HeatFlow`, `HeatFlowSite`, and `ParentHeatFlow` must exist before any task in this plan is started.
 
 ## Summary
 
@@ -25,7 +25,7 @@ Upsert identifiers are template-aware: use `ID` / `ID_parent` when present in of
 
 All controlled-vocabulary tokens parsed from spreadsheet cells must be normalised — square brackets stripped and the result lowercased — before vocabulary validation and `Concept` lookup (FR-016).
 
-The export uses the `GHFDB` proxy model's `for_export()` queryset (from `002-ghfdb-product-utilities`) to produce a GHFDB-compliant XLSX with all 62 columns in canonical order, semicolons for M2M fields, and plain SI numeric values for Pint quantity fields.
+The export uses the `GHFDB` proxy model's `for_export()` queryset (from `002-ghfdb-proxy`) to produce a GHFDB-compliant XLSX with all 62 columns in canonical order, semicolons for M2M fields, and plain SI numeric values for Pint quantity fields.
 
 ## Technical Context
 

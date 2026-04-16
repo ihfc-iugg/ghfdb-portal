@@ -1,9 +1,9 @@
 # Quickstart: GHFDB Import / Export
 
 **Feature**: 003-ghfdb-import-export
-**Split from**: `002-ghfdb-product-utilities` quickstart.md — import/export sections
+**Split from**: `002-ghfdb-proxy` quickstart.md — import/export sections
 
-> **Prerequisite**: The `GHFDB` proxy model from `002-ghfdb-product-utilities` must be installed and migrated before running any import or export.
+> **Prerequisite**: The `GHFDB` proxy model from `002-ghfdb-proxy` must be installed and migrated before running any import or export.
 
 ## Module Layout
 

@@ -3,7 +3,7 @@
 **Feature**: 003-ghfdb-import-export
 **Branch**: `003-ghfdb-import-export`
 **Input**: plan.md, spec.md, data-model.md, research.md, contracts/import-contract.md, contracts/export-contract.md, quickstart.md
-**Split from**: `002-ghfdb-product-utilities` tasks.md (Phases 3.5–5 + relevant Phase 7 tasks)
+**Split from**: `002-ghfdb-proxy` tasks.md (Phases 3.5–5 + relevant Phase 7 tasks)
 **Propagated**: 2026-04-15 — Added controlled-vocabulary import normalization tasks (FR-016): T072 regression tests, T073 widget implementation, T074 validation gate.
 **Propagated**: 2026-04-14 — Updated from spec.md refinement
 **Bugfix**: 2026-04-14 — [BUG-002] Reopened admin import integration tasks and added import-page regression coverage for django-import-export hook compatibility.
@@ -16,7 +16,7 @@
 **Bugfix**: 2026-04-16 — [BUG-008] Reopened T028 (GradientWidget/ConductivityWidget numeric-sentinel tests must assert **success**, not ValueError); reopened T034 (sentinel check must treat int/float as present for quantity sentinels); reopened T079 (replace wrong error assertions for GradientWidget and ConductivityWidget with success assertions); reopened T080 (add `isinstance(raw_sentinel, (int, float))` bypass before the `.strip()` guard in `RelatedModelWidget.clean()`).
 **Bugfix**: 2026-04-16 — [BUG-009] Reopened T034 (`geo_stratigraphy` M2M key must be `"age"` not `"stratigraphy"` in `IntervalWidget.m2m_map`); added T081 (fix key in `_widgets.py`), T082 (regression test for non-empty `geo_stratigraphy`), T083 (critical validation gate).
 
-**Prerequisite**: `002-ghfdb-product-utilities` must be complete before any task in this spec begins — specifically `GHFDB` proxy model, `GHFDBManager.for_export()`, and `local_id` fields on `HeatFlow`, `HeatFlowSite`, and `ParentHeatFlow`.
+**Prerequisite**: `002-ghfdb-proxy` must be complete before any task in this spec begins — specifically `GHFDB` proxy model, `GHFDBManager.for_export()`, and `local_id` fields on `HeatFlow`, `HeatFlowSite`, and `ParentHeatFlow`.
 
 ## Format: `[ID] [P?] [Story] Description`
 

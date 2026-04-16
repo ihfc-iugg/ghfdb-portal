@@ -1,6 +1,6 @@
 # Import Contract: GHFDB Spreadsheet → Normalised Heat Flow Models
 
-**Feature**: 002-ghfdb-product-utilities
+**Feature**: 002-ghfdb-proxy
 **Date**: 2026-04-13
 **Direction**: Import (flat spreadsheet → relational database)
 

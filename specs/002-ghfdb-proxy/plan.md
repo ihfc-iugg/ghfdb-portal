@@ -1,7 +1,7 @@
 # Implementation Plan: GHFDB Flat Data Interface
 
-**Branch**: `002-ghfdb-product-utilities` | **Date**: 2026-04-13 | **Spec**: [spec.md](spec.md)
-**Input**: Feature specification from `/specs/002-ghfdb-product-utilities/spec.md`
+**Branch**: `002-ghfdb-proxy` | **Date**: 2026-04-13 | **Spec**: [spec.md](spec.md)
+**Input**: Feature specification from `/specs/002-ghfdb-proxy/spec.md`
 **Propagated**: 2026-04-14 -- Updated from spec.md refinement (admin column order + filter constraints)
 **Bugfix**: 2026-04-14 -- [BUG-001] Added constrained-option behavior for concept-backed admin filters (`explo_purpose`).
 **Downstream**: Import/export pipeline is planned and implemented in `003-ghfdb-import-export`.

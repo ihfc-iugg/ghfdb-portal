@@ -1,12 +1,12 @@
 # Quickstart: GHFDB Flat Data Interface
 
-**Feature**: 002-ghfdb-product-utilities
+**Feature**: 002-ghfdb-proxy
 
 ## What This Feature Adds
 
-1. **GHFDB proxy model** — query heat flow data in the flat GHFDB spreadsheet structure with no N+1 queries
-2. **GHFDB admin changelist** — read-only "GHFDB Entries" view with exact GHFDB column order, vocabulary-scoped filters, and `local_id` stable import key
-3. **Explore map page** — full-screen IHFC web-map viewer with `onerror` iframe fallback
+1. **GHFDB proxy model** ï¿½ query heat flow data in the flat GHFDB spreadsheet structure with no N+1 queries
+2. **GHFDB admin changelist** ï¿½ read-only "GHFDB Entries" view with exact GHFDB column order, vocabulary-scoped filters, and `local_id` stable import key
+3. **Explore map page** ï¿½ full-screen IHFC web-map viewer with `onerror` iframe fallback
 
 For import/export quickstart, see [003-ghfdb-import-export/quickstart.md](../003-ghfdb-import-export/quickstart.md).
 
@@ -30,13 +30,13 @@ german_hf = flat_qs.filter(site_country="Germany")
 
 # Access annotated fields directly
 for entry in german_hf[:5]:
-    print(f"Parent: {entry.p_q} mW/m²  ±{entry.p_q_uncertainty}")
+    print(f"Parent: {entry.p_q} mW/mï¿½  ï¿½{entry.p_q_uncertainty}")
     print(f"  Child: {entry.value}  Site: {entry.site_name}")
     print(f"  Lat: {entry.lat_ns}, Lon: {entry.long_ew}")
     print(f"  T gradient: {entry.tgrad_value}")
     print(f"  Correction IS: {entry.corr_IS_flag}")
 
-# For export (includes prefetched M2M data — consumed by 003-ghfdb-import-export)
+# For export (includes prefetched M2M data ï¿½ consumed by 003-ghfdb-import-export)
 export_qs = GHFDB.objects.for_export()
 ```
 

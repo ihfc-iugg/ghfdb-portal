@@ -1,9 +1,9 @@
 # Feature Specification: GHFDB Import/Export Pipeline
 
 **Feature Branch**: `003-ghfdb-import-export`
-**Created**: 2026-04-15 (split from `002-ghfdb-product-utilities`)
+**Created**: 2026-04-15 (split from `002-ghfdb-proxy`)
 **Status**: Complete
-**Dependency**: Requires `002-ghfdb-product-utilities` — GHFDB proxy model, `GHFDBManager.for_export()`, and `local_id` fields on `HeatFlow`, `HeatFlowSite`, and `ParentHeatFlow`.
+**Dependency**: Requires `002-ghfdb-proxy` — GHFDB proxy model, `GHFDBManager.for_export()`, and `local_id` fields on `HeatFlow`, `HeatFlowSite`, and `ParentHeatFlow`.
 **Refined**: 2026-04-15 — Added controlled-vocabulary import normalization for bracket-wrapped and mixed-case template values.
 **Bugfix**: 2026-04-14 — [BUG-002] Added admin import-route compatibility requirement for django-import-export hook methods.
 **Bugfix**: 2026-04-14 — [BUG-003] Updated import upsert identifiers for standard upload templates that omit `ID`/`ID_parent`.
@@ -15,7 +15,7 @@
 **Bugfix**: 2026-04-16 — [BUG-008] Scoped BUG-007 type-guard to **text-type sentinel columns only**: `RelatedModelWidget.clean()` sentinel check MUST treat a numeric (`int`/`float`) sentinel value as **present** and proceed rather than raising `ValueError`; the error-on-numeric guard applies only to widgets whose sentinel column holds vocabulary text (e.g. `name` on `ParentWidget`). Updated Acceptance Scenario 8 accordingly and added Scenario 9 for valid numeric quantity import.
 **Bugfix**: 2026-04-16 — [BUG-009] Clarified `geo_stratigraphy` target field: `IntervalWidget.m2m_map` MUST map `geo_stratigraphy` to `HeatFlowInterval.age` (a `ConceptManyToManyField(vocabulary=GeologicalTimescale)`) — NOT `HeatFlowInterval.stratigraphy`, which is a separate `ManyToManyField(to="stratigraphy.StratigraphicUnit")` and cannot accept `Concept` objects. Added Acceptance Scenario 10.
 **References**: Fuchs et al. (2021); Fuchs et al. (2023); IHFC GHFDB v2024
-**Split from**: `002-ghfdb-product-utilities` — User Stories 2 & 3
+**Split from**: `002-ghfdb-proxy` — User Stories 2 & 3
 
 ## Overview
 
@@ -23,7 +23,7 @@ This feature implements the GHFDB round-trip import/export pipeline within the `
 
 1. **Parent import resource** (`GHFDBParentImportResource`) — ingests parent-level site records from an official GHFDB XLSX spreadsheet into `HeatFlowSite`, `ParentHeatFlow`, and supporting models.
 2. **Child import resource** (`GHFDBChildImportResource`) — ingests child heat-flow measurements and all sub-records (`HeatFlow`, `HeatFlowInterval`, `ThermalGradient`, `IntervalConductivity`, `HeatFlowCorrection`, `ProbeMetadata`).
-3. **Export resource** (`GHFDBExportResource`) — serialises the normalised database back to the flat GHFDB spreadsheet format using the `GHFDB` proxy model's `for_export()` queryset (from `002-ghfdb-product-utilities`).
+3. **Export resource** (`GHFDBExportResource`) — serialises the normalised database back to the flat GHFDB spreadsheet format using the `GHFDB` proxy model's `for_export()` queryset (from `002-ghfdb-proxy`).
 
 All import/export actions are staff-only via the Django admin. Vocabulary tokens from spreadsheet cells are normalised (square brackets stripped, then lowercased) before matching database concepts (FR-016), ensuring standard GHFDB upload-template values such as `[Onshore (continental)]` are accepted.
 

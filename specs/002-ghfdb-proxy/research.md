@@ -1,6 +1,6 @@
 # Research: GHFDB Flat Data Interface
 
-**Feature**: 002-ghfdb-product-utilities
+**Feature**: 002-ghfdb-proxy
 **Date**: 2026-04-13
 **Status**: Complete
 
@@ -15,4 +15,4 @@ The proxy model design required no significant architecture decisions beyond sta
 
 ## Import/Export Architecture
 
-All R01–R07 architecture decisions concern the import/export pipeline and have been moved to `003-ghfdb-import-export/research.md`.
+All R01ï¿½R07 architecture decisions concern the import/export pipeline and have been moved to `003-ghfdb-import-export/research.md`.

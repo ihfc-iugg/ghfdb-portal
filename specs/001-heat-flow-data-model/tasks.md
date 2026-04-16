@@ -1,7 +1,7 @@
 # Tasks: GHFDB Normalized Relational Data Model
 
-**Input**: Design documents from `/specs/001-ghfdb-data-model/`
-**Feature Branch**: `001-ghfdb-data-model`
+**Input**: Design documents from `/specs/001-heat-flow-data-model/`
+**Feature Branch**: `001-heat-flow-data-model`
 **Generated**: 2026-04-09
 **Prerequisites**: plan.md ✅, spec.md ✅, research.md ✅, data-model.md ✅, quickstart.md ✅
 

@@ -1,6 +1,6 @@
 # Research: GHFDB Normalized Relational Data Model
 
-**Phase 0 Output** | **Feature**: 001-ghfdb-data-model | **Date**: 2026-04-09
+**Phase 0 Output** | **Feature**: 001-heat-flow-data-model | **Date**: 2026-04-09
 
 ---
 

@@ -1,6 +1,6 @@
 # Feature Specification: GHFDB Flat Data Interface
 
-**Feature Branch**: `002-ghfdb-product-utilities`
+**Feature Branch**: `002-ghfdb-proxy`
 **Created**: 2026-04-10
 **Status**: Complete
 **Refined**: 2026-04-14 — Added explicit GHFDB Entry admin column order plus required search and filter fields for parent-level spreadsheet attributes.

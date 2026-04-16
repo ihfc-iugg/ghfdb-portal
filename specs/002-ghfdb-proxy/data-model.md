@@ -1,6 +1,6 @@
 # Data Model: GHFDB Flat Data Interface
 
-**Feature**: 002-ghfdb-product-utilities
+**Feature**: 002-ghfdb-proxy
 **Date**: 2026-04-13
 **Prerequisites**: [research.md](research.md) complete
 
