@@ -229,15 +229,20 @@ class RelatedModelWidget(Widget):
         self._last_row = row
         if self.sentinel_column is not None:
             raw_sentinel = (row or {}).get(self.sentinel_column)
-            try:
-                sentinel_val = (raw_sentinel or "").strip()
-            except AttributeError:
-                raise ValueError(
-                    _("Column '%(col)s' contains a non-text value %(val)r; expected a text string.")
-                    % {"col": self.sentinel_column, "val": raw_sentinel}
-                ) from None
-            if not sentinel_val:
-                return None
+            # Numeric values (int/float) are valid for quantity-type sentinel columns
+            # (e.g. T_grad_mean, tc_mean) — treat as present and proceed.
+            if isinstance(raw_sentinel, int | float):
+                pass  # numeric sentinel → sub-record should be created
+            else:
+                try:
+                    sentinel_val = (raw_sentinel or "").strip()
+                except AttributeError:
+                    raise ValueError(
+                        _("Column '%(col)s' contains a non-text value %(val)r; expected a text string.")
+                        % {"col": self.sentinel_column, "val": raw_sentinel}
+                    ) from None
+                if not sentinel_val:
+                    return None
 
         model_kwargs = {}
         for model_field, row_col in self.scalar_map.items():
@@ -358,7 +363,7 @@ class IntervalWidget(RelatedModelWidget):
                     "geo_lithology",
                     MultiConceptWidget(SimpleLithology),
                 ),
-                "stratigraphy": (
+                "age": (
                     "geo_stratigraphy",
                     MultiConceptWidget(GeologicalTimescale),
                 ),

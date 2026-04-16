@@ -253,6 +253,39 @@ class TestGHFDBChildImportResourceImport:
         child = HeatFlow.objects.get(local_id="GHFDB-001")
         assert child.thermal_conductivity is None
 
+    def test_geo_stratigraphy_imports_to_age_field(self, dataset):
+        """BUG-009 regression: geo_stratigraphy='Holocene' must import without error
+        and store the matched Concept on HeatFlowInterval.age — not on
+        HeatFlowInterval.stratigraphy (which maps to stratigraphy.StratigraphicUnit).
+        """
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row = dict(CHILD_ROW)
+        row["geo_stratigraphy"] = "Holocene"
+
+        resource = GHFDBChildImportResource()
+        ds = make_dataset(row)
+        result = resource.import_data(ds, dry_run=False, raise_errors=False)
+
+        # Import must complete without row-level errors
+        assert not result.has_errors(), (
+            f"Import raised errors for geo_stratigraphy='Holocene': {result.invalid_rows}"
+        )
+
+        child = HeatFlow.objects.get(local_id="GHFDB-001")
+        interval = child.sample  # HeatFlowInterval
+        # age (ConceptManyToManyField) must be populated
+        assert interval.age.count() > 0, (
+            "HeatFlowInterval.age must be populated after importing geo_stratigraphy='Holocene'"
+        )
+        # stratigraphy (separate M2M → stratigraphy.StratigraphicUnit) must remain empty
+        assert interval.stratigraphy.count() == 0, (
+            "HeatFlowInterval.stratigraphy must NOT be populated by geo_stratigraphy import"
+        )
+
 
 @pytest.mark.django_db
 class TestGHFDBChildProbeMetadata:

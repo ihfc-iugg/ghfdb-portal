@@ -86,7 +86,7 @@ When the spreadsheet contains multiple rows with the same `ID_parent` value, onl
 | 11 | `q_top` | numeric | O | `HeatFlowInterval` | `top` | `QuantityWidget("m")` | Interval top depth. |
 | 12 | `q_bottom` | numeric | O | `HeatFlowInterval` | `bottom` | `QuantityWidget("m")` | Interval bottom depth. Must be > top. |
 | 13 | `geo_lithology` | concepts | O | `HeatFlowInterval` | `lithology` | `MultiConceptWidget(...)` | M2M. |
-| 14 | `geo_stratigraphy` | concepts | O | `HeatFlowInterval` | `stratigraphy` | `MultiConceptWidget(...)` | M2M. |
+| 14 | `geo_stratigraphy` | concepts | O | `HeatFlowInterval` | ~~`stratigraphy`~~ → `age` | `MultiConceptWidget(GeologicalTimescale)` | M2M. Target field is `age` (`ConceptManyToManyField(vocabulary=GeologicalTimescale)`). `stratigraphy` is a **distinct** `ManyToManyField(to="stratigraphy.StratigraphicUnit")` that cannot accept Concept objects (BUG-009). |
 
 ### Input → Output Mapping — ThermalGradient (via GradientWidget)
 

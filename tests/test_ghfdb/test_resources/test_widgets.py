@@ -290,9 +290,49 @@ class TestIntervalWidget:
         assert result is not None
         assert isinstance(result, HeatFlowInterval)
 
+    @pytest.mark.django_db
+    def test_geo_stratigraphy_stored_on_age_not_stratigraphy(self, dataset):
+        """BUG-009 regression: geo_stratigraphy → HeatFlowInterval.age (ConceptManyToManyField),
+        NOT HeatFlowInterval.stratigraphy (M2M to stratigraphy.StratigraphicUnit).
+
+        set_m2m_relations() must populate interval.age with the matched GeologicalTimescale
+        Concept object.  interval.stratigraphy must remain empty.
+        """
+        from heat_flow.models import HeatFlowInterval, HeatFlowSite
+
+        from project.ghfdb.resources._widgets import IntervalWidget
+
+        # Prepare a saved interval (set_m2m_relations requires instance.pk)
+        site = HeatFlowSite.objects.create(dataset=dataset, name="BUG009 Site")
+        interval = HeatFlowInterval.objects.create(
+            dataset=dataset,
+            sample=site,
+            name="BUG009 Interval",
+        )
+
+        widget = IntervalWidget()
+        row = {
+            "q_top": "0",
+            "q_bottom": "500",
+            "geo_lithology": "",
+            "geo_stratigraphy": "Holocene",
+        }
+        # clean() stores _last_row; set_m2m_relations() uses it to populate M2M
+        widget.clean(None, row=row)
+        # Must not raise "Field 'id' expected a number but got <gts2020: Holocene>"
+        widget.set_m2m_relations(interval)
+
+        interval.refresh_from_db()
+        # The Holocene concept must land on the 'age' ConceptManyToManyField
+        assert interval.age.count() > 0, "Expected HeatFlowInterval.age to be populated by geo_stratigraphy"
+        # The distinct stratigraphy M2M (→ stratigraphy.StratigraphicUnit) must remain untouched
+        assert interval.stratigraphy.count() == 0, (
+            "HeatFlowInterval.stratigraphy must NOT be populated by geo_stratigraphy import"
+        )
+
 
 class TestGradientWidget:
-    """T028 — GradientWidget skips when T_grad_mean is empty."""
+    """T028 — GradientWidget sentinel behaviour (BUG-008: numeric sentinel treated as present)."""
 
     @pytest.mark.django_db
     def test_skips_when_sentinel_empty(self):
@@ -329,9 +369,34 @@ class TestGradientWidget:
         assert result is not None
         assert isinstance(result, ThermalGradient)
 
+    @pytest.mark.django_db
+    def test_numeric_sentinel_treated_as_present(self, dataset):
+        """BUG-008: native int from openpyxl as T_grad_mean is treated as present."""
+        from heat_flow.models import ThermalGradient
+
+        from project.ghfdb.resources._widgets import GradientWidget
+
+        widget = GradientWidget()
+        row = {
+            "T_grad_mean": 25,  # int exactly as openpyxl would deliver it
+            "T_grad_uncertainty": "",
+            "T_grad_mean_cor": "",
+            "T_grad_uncertainty_cor": "",
+            "T_shutin_top": "",
+            "T_shutin_bottom": "",
+            "T_number": "",
+            "T_method_top": "",
+            "T_method_bottom": "",
+            "T_corr_top": "",
+            "T_corr_bottom": "",
+        }
+        result = widget.clean("", row=row)
+        assert result is not None
+        assert isinstance(result, ThermalGradient)
+
 
 class TestConductivityWidget:
-    """T028 — ConductivityWidget skips when tc_mean is empty."""
+    """T028 — ConductivityWidget sentinel behaviour (BUG-008: numeric sentinel treated as present)."""
 
     @pytest.mark.django_db
     def test_skips_when_sentinel_empty(self):
@@ -364,6 +429,30 @@ class TestConductivityWidget:
             "tc_number": "",
         }
         result = widget.clean("2.5", row=row)
+        assert result is not None
+        assert isinstance(result, IntervalConductivity)
+
+    @pytest.mark.django_db
+    def test_numeric_sentinel_treated_as_present(self, dataset):
+        """BUG-008: native float from openpyxl as tc_mean is treated as present."""
+        from heat_flow.models import IntervalConductivity
+
+        from project.ghfdb.resources._widgets import ConductivityWidget
+
+        widget = ConductivityWidget()
+        row = {
+            "tc_mean": 2.5,  # float exactly as openpyxl would deliver it
+            "tc_uncertainty": "",
+            "tc_source": "",
+            "tc_location": "",
+            "tc_method": "",
+            "tc_saturation": "",
+            "tc_pT_conditions": "",
+            "tc_pT_function": "",
+            "tc_strategy": "",
+            "tc_number": "",
+        }
+        result = widget.clean("", row=row)
         assert result is not None
         assert isinstance(result, IntervalConductivity)
 
@@ -441,16 +530,21 @@ class TestVocabNormalisation:
         assert "[COMPLETELY_INVALID]" in str(exc_info.value)
 
 
-# ---- T079: BUG-007 numeric cell value regression tests ---------------------
+# ---- T079: BUG-007/BUG-008 numeric cell value regression tests -------------
 
 
 class TestNumericCellInputGuards:
-    """T079 — BUG-007: numeric cell values produce descriptive ValueError, not AttributeError.
+    """T079 — BUG-007 / BUG-008: numeric cell value type-guard behaviour.
 
-    When openpyxl/tablib reads a spreadsheet cell as an integer or float (e.g. a
-    numeric column, or a formula result), widgets that call .strip() must catch the
-    resulting AttributeError and re-raise a descriptive ValueError naming the column
-    and the unexpected value so users can locate the offending cell.
+    BUG-007: widgets whose sentinel / value column expects TEXT must convert
+    AttributeError (from int.strip()) to a descriptive ValueError naming the
+    column and value — ConceptWidget (vocabulary columns) and ParentWidget
+    ('name' column) are affected.
+
+    BUG-008: widgets whose sentinel column expects a NUMERIC QUANTITY (e.g.
+    GradientWidget sentinel 'T_grad_mean', ConductivityWidget sentinel 'tc_mean')
+    MUST treat a native int/float as "present" and proceed to create the
+    sub-record.  They MUST NOT raise ValueError for a valid numeric sentinel.
     """
 
     def test_concept_widget_int_raises_valueerror_not_attributeerror(self, db):
@@ -480,35 +574,59 @@ class TestNumericCellInputGuards:
         error_msg = str(exc_info.value)
         assert "GeographicEnvironment" in error_msg
 
-    def test_related_model_widget_numeric_sentinel_raises_valueerror(self, db):
-        """RelatedModelWidget with a numeric sentinel column value raises ValueError naming the column."""
+    def test_gradient_widget_numeric_sentinel_succeeds(self, db):
+        """BUG-008: GradientWidget with a numeric T_grad_mean proceeds — returns ThermalGradient.
+
+        openpyxl delivers numeric cells as int/float.  T_grad_mean is a quantity
+        column: a native number is valid input and MUST NOT raise ValueError.
+        """
+        from heat_flow.models import ThermalGradient
+
         from project.ghfdb.resources._widgets import GradientWidget
 
         widget = GradientWidget()
-        # T_grad_mean is the sentinel column; pass an int (truthy, so strip() would be reached)
         row = {
-            "T_grad_mean": 1,  # int — simulates openpyxl reading a numeric cell
+            "T_grad_mean": 800,  # int — valid numeric quantity from openpyxl
             "T_grad_uncertainty": "",
+            "T_grad_mean_cor": "",
+            "T_grad_uncertainty_cor": "",
+            "T_shutin_top": "",
+            "T_shutin_bottom": "",
+            "T_number": "",
+            "T_method_top": "",
+            "T_method_bottom": "",
+            "T_corr_top": "",
+            "T_corr_bottom": "",
         }
-        with pytest.raises(ValueError) as exc_info:
-            widget.clean("", row=row)
-        error_msg = str(exc_info.value)
-        # Must name the sentinel column
-        assert "T_grad_mean" in error_msg
+        result = widget.clean("", row=row)
+        assert result is not None, "Expected ThermalGradient to be created for numeric T_grad_mean"
+        assert isinstance(result, ThermalGradient)
 
-    def test_conductivity_widget_numeric_sentinel_raises_valueerror(self, db):
-        """ConductivityWidget with numeric tc_mean raises ValueError naming the column."""
+    def test_conductivity_widget_numeric_sentinel_succeeds(self, db):
+        """BUG-008: ConductivityWidget with a numeric tc_mean proceeds — returns IntervalConductivity.
+
+        A float tc_mean from openpyxl is valid input and MUST NOT raise ValueError.
+        """
+        from heat_flow.models import IntervalConductivity
+
         from project.ghfdb.resources._widgets import ConductivityWidget
 
         widget = ConductivityWidget()
         row = {
-            "tc_mean": 2,  # int — simulates openpyxl reading a numeric cell
+            "tc_mean": 2.5,  # float — valid numeric quantity from openpyxl
             "tc_uncertainty": "",
+            "tc_source": "",
+            "tc_location": "",
+            "tc_method": "",
+            "tc_saturation": "",
+            "tc_pT_conditions": "",
+            "tc_pT_function": "",
+            "tc_strategy": "",
+            "tc_number": "",
         }
-        with pytest.raises(ValueError) as exc_info:
-            widget.clean("", row=row)
-        error_msg = str(exc_info.value)
-        assert "tc_mean" in error_msg
+        result = widget.clean("", row=row)
+        assert result is not None, "Expected IntervalConductivity to be created for numeric tc_mean"
+        assert isinstance(result, IntervalConductivity)
 
     def test_parent_widget_numeric_name_raises_valueerror(self, db):
         """ParentWidget.clean() with an int in the 'name' column raises ValueError naming 'name'."""

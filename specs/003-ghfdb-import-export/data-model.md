@@ -89,7 +89,7 @@ Error messages include the **original** pre-normalisation token text for user tr
 | Widget | Sentinel Column | Target Models | M2M Fields |
 |--------|----------------|---------------|-----------|
 | `ParentWidget` | `"name"` | `HeatFlowSite` + `Point` | `explo_purpose` |
-| `IntervalWidget` | None (always creates) | `HeatFlowInterval` | `geo_lithology`, `geo_stratigraphy` |
+| `IntervalWidget` | None (always creates) | `HeatFlowInterval` | `geo_lithology` → `lithology`; `geo_stratigraphy` → `age` (⚠️ NOT `stratigraphy` — see BUG-009) |
 | `GradientWidget` | `"T_grad_mean"` | `ThermalGradient` | `method_top`, `method_bottom`, `correction_top`, `correction_bottom` |
 | `ConductivityWidget` | `"tc_mean"` | `IntervalConductivity` | `source`, `location`, `method`, `saturation`, `pT_conditions`, `pT_function`, `strategy` |
 
