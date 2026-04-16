@@ -9,12 +9,12 @@ Auto-generated from all feature plans. Last updated: 2026-04-13
 - PostgreSQL (production) / SQLite (dev/test) (002-data-model)
 - Python ≥3.13 + Django 5.0+, FairDM ecosystem (fairdm, fairdm-geo, fairdm-discussions, fairdm-rest-api), django-pint (quantities), django-research-vocabs (ConceptField/ConceptManyToManyField) (002-data-model)
 - PostgreSQL (production), SQLite (development/testing), PostGIS for geospatial (002-data-model)
-- Python ≥3.13 + Django 5.0+, FairDM (`fairdm`, `fairdm-geo`), `research_vocabs`, `django-pint` (via `fairdm.db.fields`), `django-polymorphic`, `factory_boy` (001-ghfdb-data-model)
-- SQLite (development), PostgreSQL + PostGIS (production) (001-ghfdb-data-model)
-- Python ≥3.13 (CPython) + Django 5.0+, FairDM framework, django-import-export (via FairDM), django-pint (Quantity fields), research-vocabs (Concept/vocabulary fields), openpyxl (XLSX read/write), tablib, django-flex-menu (002-ghfdb-product-utilities)
-- PostgreSQL (production); SQLite (development/CI) (002-ghfdb-product-utilities)
-- Python ≥3.13 + Django 5.0+, FairDM framework, django-import-export ≥4.0.3 <5.0.0, research-vocabs, django-pint-field, openpyxl, tablib (002-ghfdb-product-utilities)
-- PostgreSQL (reference); SQLite for local dev (002-ghfdb-product-utilities)
+- Python ≥3.13 + Django 5.0+, FairDM (`fairdm`, `fairdm-geo`), `research_vocabs`, `django-pint` (via `fairdm.db.fields`), `django-polymorphic`, `factory_boy` (001-heat-flow-data-model)
+- SQLite (development), PostgreSQL + PostGIS (production) (001-heat-flow-data-model)
+- Python ≥3.13 (CPython) + Django 5.0+, FairDM framework, django-import-export (via FairDM), django-pint (Quantity fields), research-vocabs (Concept/vocabulary fields), openpyxl (XLSX read/write), tablib, django-flex-menu (002-ghfdb-proxy)
+- PostgreSQL (production); SQLite (development/CI) (002-ghfdb-proxy)
+- Python ≥3.13 + Django 5.0+, FairDM framework, django-import-export ≥4.0.3 <5.0.0, research-vocabs, django-pint-field, openpyxl, tablib (002-ghfdb-proxy)
+- PostgreSQL (reference); SQLite for local dev (002-ghfdb-proxy)
 
 
 ## Project Structure
@@ -34,9 +34,9 @@ cd src; pytest; ruff check .
 Python (repository target is Python >=3.13): Follow standard conventions
 
 ## Recent Changes
-- 002-ghfdb-product-utilities: Added Python ≥3.13 + Django 5.0+, FairDM framework, django-import-export ≥4.0.3 <5.0.0, research-vocabs, django-pint-field, openpyxl, tablib
-- 002-ghfdb-product-utilities: Added Python ≥3.13 (CPython) + Django 5.0+, FairDM framework, django-import-export (via FairDM), django-pint (Quantity fields), research-vocabs (Concept/vocabulary fields), openpyxl (XLSX read/write), tablib, django-flex-menu
-- 001-ghfdb-data-model: Added Python ≥3.13 + Django 5.0+, FairDM (`fairdm`, `fairdm-geo`), `research_vocabs`, `django-pint` (via `fairdm.db.fields`), `django-polymorphic`, `factory_boy`
+- 002-ghfdb-proxy: Added Python ≥3.13 + Django 5.0+, FairDM framework, django-import-export ≥4.0.3 <5.0.0, research-vocabs, django-pint-field, openpyxl, tablib
+- 002-ghfdb-proxy: Added Python ≥3.13 (CPython) + Django 5.0+, FairDM framework, django-import-export (via FairDM), django-pint (Quantity fields), research-vocabs (Concept/vocabulary fields), openpyxl (XLSX read/write), tablib, django-flex-menu
+- 001-heat-flow-data-model: Added Python ≥3.13 + Django 5.0+, FairDM (`fairdm`, `fairdm-geo`), `research_vocabs`, `django-pint` (via `fairdm.db.fields`), `django-polymorphic`, `factory_boy`
 
 
 <!-- MANUAL ADDITIONS START -->
