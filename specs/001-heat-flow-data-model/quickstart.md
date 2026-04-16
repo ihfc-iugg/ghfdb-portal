@@ -1,6 +1,6 @@
 # Quickstart: GHFDB Normalized Relational Data Model
 
-**Phase 1 Output** | **Feature**: 001-ghfdb-data-model
+**Phase 1 Output** | **Feature**: 001-heat-flow-data-model
 
 ---
 

@@ -1,7 +1,7 @@
 # Research: GHFDB Import/Export Architecture
 
 **Feature**: 003-ghfdb-import-export
-**Date**: 2026-04-13 (split from `002-ghfdb-product-utilities` research.md — 2026-04-15)
+**Date**: 2026-04-13 (split from `002-ghfdb-proxy` research.md — 2026-04-15)
 **Status**: Complete
 
 ## R01: Separate vs. Combined Import Resources
@@ -94,7 +94,7 @@ The standard individual-dataset upload template omits `ID` and `ID_parent` (thes
 
 ### Decision: **Single `GHFDBExportResource`** using `dehydrate_*` methods and the `for_export()` queryset
 
-Export is simpler than import. The `GHFDBQuerySet.for_export()` method (from `002-ghfdb-product-utilities`) already provides all annotations and prefetches. The export resource:
+Export is simpler than import. The `GHFDBQuerySet.for_export()` method (from `002-ghfdb-proxy`) already provides all annotations and prefetches. The export resource:
 
 1. Declares one `Field` per GHFDB column with attribute pointing to annotation name
 2. Uses `dehydrate_<field>()` for M2M fields (render labels joined with `"; "`)

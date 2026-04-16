@@ -1,7 +1,7 @@
 # Specification Quality Checklist: GHFDB Import/Export Pipeline
 
 **Purpose**: Validate specification completeness and quality
-**Created**: 2026-04-15 (split from `002-ghfdb-product-utilities`)
+**Created**: 2026-04-15 (split from `002-ghfdb-proxy`)
 **Feature**: [spec.md](../spec.md)
 
 ## Content Quality
@@ -32,4 +32,4 @@
 
 - Story 2 (import) and Story 3 (export) share equal P2 priority.
 - The import resource must always be implemented and validated before the export resource, since export depends on the same `GHFDB` proxy queryset path as import.
-- This spec depends on `002-ghfdb-product-utilities` being complete.
+- This spec depends on `002-ghfdb-proxy` being complete.

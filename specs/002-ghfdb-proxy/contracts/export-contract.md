@@ -1,6 +1,6 @@
 # Export Contract: Normalised Heat Flow Models → GHFDB Spreadsheet
 
-**Feature**: 002-ghfdb-product-utilities
+**Feature**: 002-ghfdb-proxy
 **Date**: 2026-04-13
 **Direction**: Export (relational database → flat spreadsheet)
 

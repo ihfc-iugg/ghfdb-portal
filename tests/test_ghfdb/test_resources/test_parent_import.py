@@ -266,3 +266,61 @@ class TestGHFDBParentImportResourceAccessControl:
         url = reverse("admin:ghfdb_ghfdb_import")
         response = client.get(url)
         assert response.status_code == 302
+
+
+@pytest.mark.django_db
+class TestGHFDBAutoParentKeyRegression:
+    """T075 — BUG-005 regression: AUTO_PARENT key must not appear in local_id after import."""
+
+    def test_no_auto_parent_in_local_id_after_no_id_import(self, dataset):
+        """No ParentHeatFlow.local_id should contain 'AUTO_PARENT:' after importing a row without ID_parent."""
+        from heat_flow.models import ParentHeatFlow
+
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
+        resource = GHFDBParentImportResource()
+        result = resource.import_data(make_dataset(row), dry_run=False, raise_errors=False)
+
+        assert not result.has_errors(), result.invalid_rows
+        for parent in ParentHeatFlow.objects.all():
+            assert "AUTO_PARENT:" not in (parent.local_id or ""), (
+                f"ParentHeatFlow.local_id contains synthetic key: {parent.local_id!r}"
+            )
+
+    def test_no_auto_parent_in_dry_run_id_parent_column(self, dataset):
+        """Dry-run result ID_parent column must show real local_id or empty, not AUTO_PARENT:."""
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
+        resource = GHFDBParentImportResource()
+        result = resource.import_data(make_dataset(row), dry_run=True, raise_errors=False)
+
+        assert not result.has_errors(), result.invalid_rows
+        for row_result in result.rows:
+            # diff is a list of (old, new) tuples for each visible field
+            for diff_entry in row_result.diff:
+                assert "AUTO_PARENT:" not in str(diff_entry), (
+                    f"Dry-run diff contains synthetic AUTO_PARENT key: {diff_entry!r}"
+                )
+
+
+class TestGHFDBParentColumnOrderRegression:
+    """T077 — BUG-006 regression: get_user_visible_fields() must follow PARENT_COLUMNS order."""
+
+    def test_get_user_visible_fields_follows_parent_columns_order(self):
+        """GHFDBParentImportResource.get_user_visible_fields() returns fields in PARENT_COLUMNS order."""
+        from project.ghfdb.resources import GHFDBParentImportResource
+        from project.ghfdb.resources._base import PARENT_COLUMNS
+
+        resource = GHFDBParentImportResource()
+        visible_fields = resource.get_user_visible_fields()
+        col_names = [f.column_name for f in visible_fields]
+
+        # Extract only those column_names that appear in PARENT_COLUMNS
+        ordered_present = [c for c in col_names if c in PARENT_COLUMNS]
+        # They must appear in the exact order defined by PARENT_COLUMNS
+        expected_order = [c for c in PARENT_COLUMNS if c in col_names]
+        assert ordered_present == expected_order, (
+            f"Column order mismatch.\nGot: {ordered_present}\nExpected: {expected_order}"
+        )

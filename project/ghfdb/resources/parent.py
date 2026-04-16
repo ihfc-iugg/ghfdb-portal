@@ -8,6 +8,7 @@ and creates/updates parent-level records:
   - ParentHeatFlow (value, uncertainty, comment, corr_HP_flag)
 
 Upsert key: ParentHeatFlow.local_id <- spreadsheet column ID_parent
+For rows without ID_parent, upsert key is the HeatFlowSite location (lat_NS / long_EW).
 
 References:
     - Fuchs et al. (2021). A new database structure for the IHFC Global Heat
@@ -15,7 +16,6 @@ References:
     - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
 """
 
-from decimal import Decimal, InvalidOperation
 from typing import cast
 
 from heat_flow.models import HeatFlowSite, ParentHeatFlow
@@ -31,6 +31,10 @@ class GHFDBParentImportResource(ModelResource):
 
     Parses the 18 PARENT_COLUMNS from the GHFDB spreadsheet and upserts
     ``ParentHeatFlow`` + ``HeatFlowSite`` records keyed on ``ID_parent``.
+    For rows without an explicit ``ID_parent``, the upsert key is the site
+    location (``lat_NS`` / ``long_EW``); ``ParentHeatFlow.local_id`` is left
+    empty for such template rows so that synthetic keys never appear in the
+    confirm-page diff view.
     """
 
     # Fields with direct model attribute mappings (field key == PARENT_COLUMNS entry)
@@ -90,27 +94,51 @@ class GHFDBParentImportResource(ModelResource):
 
         # Inject ID_parent column when the upload template omits it entirely.
         # _check_import_id_fields() runs after before_import(), so adding the column
-        # here ensures header validation passes; before_import_row() fills each cell.
+        # here ensures header validation passes.
         if "ID_parent" not in (dataset.headers or []):
             dataset.append_col(["" for _ in range(len(dataset))], header="ID_parent")
 
         # Keep only the first occurrence of each effective parent key.
-        # For template rows without ID_parent, use a deterministic location key.
+        # For rows without ID_parent, use a (lat_NS, long_EW) tuple as dedup key.
         seen: set = set()
         rows_to_delete = []
         for i, row in enumerate(dataset.dict):
-            effective_id = self._effective_parent_id(row)
-            if effective_id in seen:
+            id_parent = str(row.get("ID_parent") or "").strip()
+            if id_parent:
+                key: object = id_parent
+            else:
+                lat = str(row.get("lat_NS") or "").strip()
+                lon = str(row.get("long_EW") or "").strip()
+                key = (lat, lon)
+            if key in seen:
                 rows_to_delete.append(i)
                 continue
-            seen.add(effective_id)
+            seen.add(key)
 
         for i in reversed(rows_to_delete):
             del dataset[i]
 
-    def before_import_row(self, row, **kwargs):
-        """Inject effective parent ID so import_id_fields can upsert template rows."""
-        row["ID_parent"] = self._effective_parent_id(row)
+    def get_or_init_instance(self, instance_loader, row):
+        """Return (instance, is_create) using location-based lookup for no-ID rows."""
+        id_parent = str(row.get("ID_parent") or "").strip()
+        if id_parent:
+            return super().get_or_init_instance(instance_loader, row)
+
+        # For rows without ID_parent: look up via HeatFlowSite location.
+        lat = str(row.get("lat_NS") or "").strip()
+        lon = str(row.get("long_EW") or "").strip()
+        if lat and lon:
+            try:
+                lat_f = float(lat)
+                lon_f = float(lon)
+                site = HeatFlowSite.objects.filter(location__x=lon_f, location__y=lat_f).first()
+                if site is not None:
+                    parent_hf = ParentHeatFlow.objects.filter(sample=site).first()
+                    if parent_hf is not None:
+                        return parent_hf, False
+            except ValueError:
+                pass
+        return self.init_instance(row), True
 
     def before_save_instance(self, instance, row, **kwargs):
         """Save the HeatFlowSite (+ Point) and link it to the ParentHeatFlow."""
@@ -137,7 +165,7 @@ class GHFDBParentImportResource(ModelResource):
         # Parse the new site data from the row
         new_site = self._parent_widget.clean(row.get("name"), row=row)
 
-        # Use Sample.local_id (inherited) to upsert the site
+        # Use Sample.local_id (inherited) to upsert the site when ID_parent is present.
         if id_parent:
             try:
                 site = HeatFlowSite.objects.get(local_id=id_parent)
@@ -145,7 +173,15 @@ class GHFDBParentImportResource(ModelResource):
                 site = new_site or HeatFlowSite()
                 site.local_id = id_parent
         else:
-            site = new_site or HeatFlowSite()
+            # Template rows without ID_parent: look up by location before creating.
+            if new_site is not None and new_site.location is not None:
+                existing = HeatFlowSite.objects.filter(
+                    location__x=new_site.location.x,
+                    location__y=new_site.location.y,
+                ).first()
+                site = existing if existing is not None else new_site
+            else:
+                site = new_site or HeatFlowSite()
 
         # Apply field updates from the row data
         if new_site is not None:
@@ -177,28 +213,6 @@ class GHFDBParentImportResource(ModelResource):
         site.save()
         return cast(HeatFlowSite, site)
 
-    def _effective_parent_id(self, row: dict) -> str:
-        """Return ID_parent, or a deterministic synthetic key for no-ID rows."""
-        explicit_id = str(row.get("ID_parent") or "").strip()
-        if explicit_id:
-            return explicit_id
-
-        lat = self._normalize_decimal(row.get("lat_NS"))
-        lon = self._normalize_decimal(row.get("long_EW"))
-        return f"AUTO_PARENT:{lat}:{lon}"
-
-    def _normalize_decimal(self, value) -> str:
-        """Normalize decimal-like values so equivalent numerics map to one key."""
-        raw = str(value or "").strip()
-        if not raw:
-            return ""
-        try:
-            dec = Decimal(raw)
-        except (InvalidOperation, ValueError):
-            return raw.lower()
-        normalized = dec.normalize()
-        return format(normalized, "f")
-
     # ------------------------------------------------------------------
     # Meta
     # ------------------------------------------------------------------
@@ -212,13 +226,13 @@ class GHFDBParentImportResource(ModelResource):
             "ID_parent",
             "q",
             "q_uncertainty",
-            "p_comment",
-            "corr_HP_flag",
             "name",
             "lat_NS",
             "long_EW",
             "elevation",
             "environment",
+            "p_comment",
+            "corr_HP_flag",
             "total_depth_MD",
             "total_depth_TVD",
             "explo_method",

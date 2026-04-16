@@ -253,6 +253,39 @@ class TestGHFDBChildImportResourceImport:
         child = HeatFlow.objects.get(local_id="GHFDB-001")
         assert child.thermal_conductivity is None
 
+    def test_geo_stratigraphy_imports_to_age_field(self, dataset):
+        """BUG-009 regression: geo_stratigraphy='Holocene' must import without error
+        and store the matched Concept on HeatFlowInterval.age — not on
+        HeatFlowInterval.stratigraphy (which maps to stratigraphy.StratigraphicUnit).
+        """
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row = dict(CHILD_ROW)
+        row["geo_stratigraphy"] = "Holocene"
+
+        resource = GHFDBChildImportResource()
+        ds = make_dataset(row)
+        result = resource.import_data(ds, dry_run=False, raise_errors=False)
+
+        # Import must complete without row-level errors
+        assert not result.has_errors(), (
+            f"Import raised errors for geo_stratigraphy='Holocene': {result.invalid_rows}"
+        )
+
+        child = HeatFlow.objects.get(local_id="GHFDB-001")
+        interval = child.sample  # HeatFlowInterval
+        # age (ConceptManyToManyField) must be populated
+        assert interval.age.count() > 0, (
+            "HeatFlowInterval.age must be populated after importing geo_stratigraphy='Holocene'"
+        )
+        # stratigraphy (separate M2M → stratigraphy.StratigraphicUnit) must remain empty
+        assert interval.stratigraphy.count() == 0, (
+            "HeatFlowInterval.stratigraphy must NOT be populated by geo_stratigraphy import"
+        )
+
 
 @pytest.mark.django_db
 class TestGHFDBChildProbeMetadata:
@@ -439,3 +472,78 @@ class TestGHFDBChildAbsentHeaderRegression:
         child = HeatFlow.objects.first()
         assert child is not None
         assert float(child.value.magnitude) == pytest.approx(77.7)
+
+
+@pytest.mark.django_db
+class TestGHFDBAutoChildKeyRegression:
+    """T075 — BUG-005 regression: AUTO_CHILD key must not appear in HeatFlow.local_id after import."""
+
+    def test_no_auto_child_in_local_id_after_no_id_import(self, dataset):
+        """No HeatFlow.local_id should contain 'AUTO_CHILD:' after importing a row without ID."""
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import (
+            GHFDBChildImportResource,
+            GHFDBParentImportResource,
+        )
+
+        parent_row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
+        GHFDBParentImportResource().import_data(make_dataset(parent_row), dry_run=False, raise_errors=True)
+
+        child_row = {k: v for k, v in CHILD_ROW.items() if k not in ("ID", "ID_parent")}
+        child_row["lat_NS"] = "48.0"
+        child_row["long_EW"] = "11.0"
+        child_row["publication_reference"] = "Ref A"
+
+        result = GHFDBChildImportResource().import_data(make_dataset(child_row), dry_run=False, raise_errors=False)
+
+        assert not result.has_errors(), result.invalid_rows
+        for child in HeatFlow.objects.all():
+            assert "AUTO_CHILD:" not in (child.local_id or ""), (
+                f"HeatFlow.local_id contains synthetic key: {child.local_id!r}"
+            )
+
+    def test_no_auto_child_in_dry_run_id_column(self, dataset):
+        """Dry-run result ID column must show real local_id or natural key, not AUTO_CHILD:."""
+        from project.ghfdb.resources import (
+            GHFDBChildImportResource,
+            GHFDBParentImportResource,
+        )
+
+        parent_row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
+        GHFDBParentImportResource().import_data(make_dataset(parent_row), dry_run=False, raise_errors=True)
+
+        child_row = {k: v for k, v in CHILD_ROW.items() if k not in ("ID", "ID_parent")}
+        child_row["lat_NS"] = "48.0"
+        child_row["long_EW"] = "11.0"
+        child_row["publication_reference"] = "Ref A"
+
+        result = GHFDBChildImportResource().import_data(make_dataset(child_row), dry_run=True, raise_errors=False)
+
+        assert not result.has_errors(), result.invalid_rows
+        for row_result in result.rows:
+            for diff_entry in row_result.diff:
+                assert "AUTO_CHILD:" not in str(diff_entry), (
+                    f"Dry-run diff contains synthetic AUTO_CHILD key: {diff_entry!r}"
+                )
+
+
+class TestGHFDBChildColumnOrderRegression:
+    """T077 — BUG-006 regression: get_user_visible_fields() must follow GHFDB_COLUMN_ORDER."""
+
+    def test_get_user_visible_fields_follows_ghfdb_column_order(self):
+        """GHFDBChildImportResource.get_user_visible_fields() returns fields in GHFDB_COLUMN_ORDER order."""
+        from project.ghfdb.resources import GHFDBChildImportResource
+        from project.ghfdb.resources._base import GHFDB_COLUMN_ORDER
+
+        resource = GHFDBChildImportResource()
+        visible_fields = resource.get_user_visible_fields()
+        col_names_lower = [f.column_name.lower() for f in visible_fields]
+
+        # Extract only those column_names (lowercased) that appear in GHFDB_COLUMN_ORDER
+        ordered_present = [c for c in col_names_lower if c in GHFDB_COLUMN_ORDER]
+        # They must appear in the exact order defined by GHFDB_COLUMN_ORDER
+        expected_order = [c for c in GHFDB_COLUMN_ORDER if c in col_names_lower]
+        assert ordered_present == expected_order, (
+            f"Column order mismatch.\nGot: {ordered_present}\nExpected: {expected_order}"
+        )

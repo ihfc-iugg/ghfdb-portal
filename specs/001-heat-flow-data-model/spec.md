@@ -1,6 +1,6 @@
 # Feature Specification: GHFDB Normalized Relational Data Model
 
-**Feature Branch**: `001-ghfdb-data-model`
+**Feature Branch**: `001-heat-flow-data-model`
 **Created**: 2026-04-09
 **Status**: Draft
 **References**: Fuchs et al. (2021); Fuchs et al. (2023); Constitution Principles I, II, III

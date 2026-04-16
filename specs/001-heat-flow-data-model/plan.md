@@ -1,7 +1,7 @@
 # Implementation Plan: GHFDB Normalized Relational Data Model
 
-**Branch**: `001-ghfdb-data-model` | **Date**: 2026-04-09 | **Spec**: [spec.md](spec.md)
-**Input**: Feature specification from `/specs/001-ghfdb-data-model/spec.md`
+**Branch**: `001-heat-flow-data-model` | **Date**: 2026-04-09 | **Spec**: [spec.md](spec.md)
+**Input**: Feature specification from `/specs/001-heat-flow-data-model/spec.md`
 
 ## Summary
 

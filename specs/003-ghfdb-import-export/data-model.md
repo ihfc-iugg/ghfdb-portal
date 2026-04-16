@@ -1,12 +1,12 @@
 # Data Model: GHFDB Import/Export Resource Classes
 
 **Feature**: 003-ghfdb-import-export
-**Date**: 2026-04-13 (split from `002-ghfdb-product-utilities` data-model.md — 2026-04-15)
-**Prerequisites**: [research.md](research.md) complete; `002-ghfdb-product-utilities` proxy model complete
+**Date**: 2026-04-13 (split from `002-ghfdb-proxy` data-model.md — 2026-04-15)
+**Prerequisites**: [research.md](research.md) complete; `002-ghfdb-proxy` proxy model complete
 
 ## Overview
 
-This document defines the class hierarchy, field mappings, and data flow for the GHFDB import/export `resources/` package. The proxy model and queryset design lives in `002-ghfdb-product-utilities/data-model.md`. This document covers only the import/export layer.
+This document defines the class hierarchy, field mappings, and data flow for the GHFDB import/export `resources/` package. The proxy model and queryset design lives in `002-ghfdb-proxy/data-model.md`. This document covers only the import/export layer.
 
 ## Entity Relationship Summary
 
@@ -89,7 +89,7 @@ Error messages include the **original** pre-normalisation token text for user tr
 | Widget | Sentinel Column | Target Models | M2M Fields |
 |--------|----------------|---------------|-----------|
 | `ParentWidget` | `"name"` | `HeatFlowSite` + `Point` | `explo_purpose` |
-| `IntervalWidget` | None (always creates) | `HeatFlowInterval` | `geo_lithology`, `geo_stratigraphy` |
+| `IntervalWidget` | None (always creates) | `HeatFlowInterval` | `geo_lithology` → `lithology`; `geo_stratigraphy` → `age` (⚠️ NOT `stratigraphy` — see BUG-009) |
 | `GradientWidget` | `"T_grad_mean"` | `ThermalGradient` | `method_top`, `method_bottom`, `correction_top`, `correction_bottom` |
 | `ConductivityWidget` | `"tc_mean"` | `IntervalConductivity` | `source`, `location`, `method`, `saturation`, `pT_conditions`, `pT_function`, `strategy` |
 
@@ -142,7 +142,7 @@ Direct field mappings (14 fields):
 
 ## Module: `export.py` — `GHFDBExportResource`
 
-**Target model**: `GHFDB` (proxy, via `002-ghfdb-product-utilities`)
+**Target model**: `GHFDB` (proxy, via `002-ghfdb-proxy`)
 **`get_queryset()`**: Returns `GHFDB.objects.for_export()` (annotations + 14 prefetches)
 **`export_order`**: `GHFDB_COLUMN_ORDER` (62 columns, canonical order)
 
