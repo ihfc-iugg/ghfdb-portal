@@ -18,7 +18,7 @@ References:
 
 from typing import Any, cast
 
-from django.db.models import CharField, F, OuterRef, Subquery
+from django.db.models import CharField, Count, F, OuterRef, Q, Subquery
 from polymorphic.managers import PolymorphicManager, PolymorphicQuerySet
 
 
@@ -172,3 +172,54 @@ class GHFDBManager(PolymorphicManager):
     def for_export(self) -> GHFDBQuerySet:
         """Delegate to ``GHFDBQuerySet.for_export()``."""
         return self.get_queryset().for_export()
+
+
+class GHFDBParentQuerySet(PolymorphicQuerySet):
+    """QuerySet for the GHFDBParent proxy model with parent-level annotation helpers.
+
+    References:
+        - Fuchs et al. (2021). A new database structure for the IHFC Global Heat
+          Flow Database. Earth System Science Data.
+        - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
+    """
+
+    def with_child_counts(self) -> "GHFDBParentQuerySet":
+        """Annotate each parent record with child counts.
+
+        Adds:
+        - ``total_children`` — count of all linked ``HeatFlow`` children.
+        - ``relevant_children`` — count of children where ``is_relevant=True``.
+
+        Executes in a constant 1 DB query regardless of row count.
+        """
+        return cast(
+            "GHFDBParentQuerySet",
+            self.annotate(
+                total_children=Count("children"),
+                relevant_children=Count("children", filter=Q(children__is_relevant=True)),
+            ),
+        )
+
+    def with_children(self) -> "GHFDBParentQuerySet":
+        """Prefetch linked child ``HeatFlow`` records.
+
+        After calling this, accessing ``parent.children.all()`` will not fire
+        additional queries.  Executes in ~2 DB queries (1 main + 1 prefetch),
+        constant regardless of row count.
+        """
+        return cast("GHFDBParentQuerySet", self.prefetch_related("children"))
+
+
+class GHFDBParentManager(PolymorphicManager):
+    """Custom manager for the GHFDBParent proxy model."""
+
+    def get_queryset(self) -> GHFDBParentQuerySet:
+        return GHFDBParentQuerySet(self.model, using=self._db)
+
+    def with_child_counts(self) -> GHFDBParentQuerySet:
+        """Delegate to ``GHFDBParentQuerySet.with_child_counts()``."""
+        return self.get_queryset().with_child_counts()
+
+    def with_children(self) -> GHFDBParentQuerySet:
+        """Delegate to ``GHFDBParentQuerySet.with_children()``."""
+        return self.get_queryset().with_children()

@@ -149,3 +149,86 @@ def test_authenticated_staff_import_page_renders_http200(admin_client):
     assert response.status_code == 200, (
         f"Import page returned {response.status_code}; expected 200. Check get_import_resource_classes() signature."
     )
+
+
+# ---------------------------------------------------------------------------
+# Phase 3b: GHFDBParent admin tests (T070–T071)
+# ---------------------------------------------------------------------------
+
+PARENT_EXPECTED_LIST_DISPLAY = (
+    "get_id_parent",
+    "get_q",
+    "get_q_uncertainty",
+    "get_name",
+    "get_lat_ns",
+    "get_long_ew",
+    "get_elevation",
+    "get_environment",
+    "get_corr_hp_flag",
+    "get_total_depth_md",
+    "get_total_depth_tvd",
+    "get_explo_method",
+    "get_explo_purpose",
+    "get_country",
+    "get_region",
+    "get_continent",
+    "get_domain",
+    "total_children",
+    "relevant_children",
+)
+
+PARENT_EXPECTED_HEADERS = [
+    "ID_parent",
+    "q",
+    "q_uncertainty",
+    "name",
+    "lat_NS",
+    "long_EW",
+    "elevation",
+    "environment",
+    "corr_HP_flag",
+    "total_depth_MD",
+    "total_depth_TVD",
+    "explo_method",
+    "explo_purpose",
+    "country",
+    "region",
+    "continent",
+    "domain",
+]
+
+
+@pytest.mark.django_db
+def test_ghfdb_parent_admin_changelist(admin_client, heat_flow_chain):
+    """T070 (US1b): GHFDBParentAdmin changelist renders with correct columns."""
+    from project.ghfdb.models import GHFDBParent
+
+    url = reverse("admin:ghfdb_ghfdbparent_changelist")
+    response = admin_client.get(url)
+    assert response.status_code == 200
+
+    model_admin = admin.site._registry[GHFDBParent]
+    assert model_admin.list_display == PARENT_EXPECTED_LIST_DISPLAY
+
+    # Verify short_description headers for the non-computed display methods
+    display_methods = [m for m in PARENT_EXPECTED_LIST_DISPLAY if m not in ("total_children", "relevant_children")]
+    headers = [getattr(model_admin, name).short_description for name in display_methods]
+    assert headers == PARENT_EXPECTED_HEADERS
+
+    content = response.content.decode()
+    assert "GHFDB Parent Entries" in content
+
+
+@pytest.mark.django_db
+def test_ghfdb_parent_admin_import_resource_only(admin_client):
+    """T071 (US1b): GHFDBParentAdmin.get_import_resource_classes() returns only
+    GHFDBParentImportResource — no child or export resource attached."""
+    from project.ghfdb.models import GHFDBParent
+    from project.ghfdb.resources import GHFDBChildImportResource, GHFDBParentImportResource
+
+    model_admin = admin.site._registry[GHFDBParent]
+    resource_classes = model_admin.get_import_resource_classes(request=None)
+    assert resource_classes == [GHFDBParentImportResource], (
+        f"Expected [GHFDBParentImportResource], got {resource_classes}"
+    )
+    assert GHFDBChildImportResource not in resource_classes

@@ -17,7 +17,7 @@ from django.utils.translation import gettext_lazy as _
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import XLSX
 
-from .models import GHFDB, GHFDBRelease
+from .models import GHFDB, GHFDBParent, GHFDBRelease
 from .resources import (
     GHFDBChildImportResource,
     GHFDBExportResource,
@@ -209,6 +209,208 @@ class GHFDBAdmin(ImportExportMixin, admin.ModelAdmin):
         """Return the flat annotated queryset for the changelist."""
         return GHFDB.objects.as_ghfdb_flat().prefetch_related(
             "sample__heatflowinterval__sample__heatflowsite__explo_purpose"
+        )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+class ParentExplorePurposeListFilter(SimpleListFilter):
+    """Vocabulary-scoped list filter for HeatFlowSite.explo_purpose on GHFDBParent.
+
+    Same vocabulary scoping as ``ExplorePurposeListFilter`` but filters via the
+    parent-model FK path: ``sample__heatflowsite__explo_purpose``.
+    """
+
+    title = _("exploration purpose")
+    parameter_name = "explo_purpose"
+
+    def lookups(self, request, model_admin):
+        from heat_flow.vocabularies import ExplorationPurpose
+        from research_vocabs.models import Concept
+
+        concepts = Concept.get_for_vocabulary(ExplorationPurpose).order_by("label")
+        return [(c.pk, c.label) for c in concepts]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(sample__heatflowsite__explo_purpose__pk=self.value())
+        return queryset
+
+
+@admin.register(GHFDBParent)
+class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
+    """Read-only Django admin view for GHFDB parent entries with parent-level import.
+
+    Displays parent-level GHFDB spreadsheet columns plus computed child count
+    columns (``total_children``, ``relevant_children``). Only the
+    ``GHFDBParentImportResource`` is attached; no export resource or child import
+    resource is present (FR-011b).
+    """
+
+    list_display = (
+        "get_id_parent",
+        "get_q",
+        "get_q_uncertainty",
+        "get_name",
+        "get_lat_ns",
+        "get_long_ew",
+        "get_elevation",
+        "get_environment",
+        "get_corr_hp_flag",
+        "get_total_depth_md",
+        "get_total_depth_tvd",
+        "get_explo_method",
+        "get_explo_purpose",
+        "get_country",
+        "get_region",
+        "get_continent",
+        "get_domain",
+        "total_children",
+        "relevant_children",
+    )
+    search_fields = (
+        "sample__name",
+        "local_id",
+    )
+    list_filter = (
+        "sample__heatflowsite__environment",
+        "corr_HP_flag",
+        "sample__heatflowsite__explo_method",
+        ParentExplorePurposeListFilter,
+        "sample__heatflowsite__country",
+        "sample__heatflowsite__region",
+        "sample__heatflowsite__continent",
+        "sample__heatflowsite__domain",
+    )
+    list_display_links = None
+    ordering = ("local_id",)
+
+    def get_import_resource_classes(self, request):
+        return [GHFDBParentImportResource]
+
+    def get_import_formats(self):
+        return [GHFDBImportFormat]
+
+    @admin.display(description=_("ID_parent"), ordering="local_id")
+    def get_id_parent(self, obj):
+        return obj.local_id
+
+    @admin.display(description=_("q"), ordering="value")
+    def get_q(self, obj):
+        return getattr(obj, "value", None)
+
+    @admin.display(description=_("q_uncertainty"), ordering="uncertainty")
+    def get_q_uncertainty(self, obj):
+        return getattr(obj, "uncertainty", None)
+
+    @admin.display(description=_("name"), ordering="sample__name")
+    def get_name(self, obj):
+        site = getattr(obj, "sample", None)
+        return getattr(site, "name", None) if site else None
+
+    @admin.display(description=_("lat_NS"))
+    def get_lat_ns(self, obj):
+        site = getattr(obj, "sample", None)
+        loc = getattr(site, "location", None) if site else None
+        return getattr(loc, "y", None) if loc else None
+
+    @admin.display(description=_("long_EW"))
+    def get_long_ew(self, obj):
+        site = getattr(obj, "sample", None)
+        loc = getattr(site, "location", None) if site else None
+        return getattr(loc, "x", None) if loc else None
+
+    @admin.display(description=_("elevation"))
+    def get_elevation(self, obj):
+        site = getattr(obj, "sample", None)
+        hfs = getattr(site, "heatflowsite", None) if site else None
+        return getattr(hfs, "elevation", None) if hfs else None
+
+    @admin.display(description=_("environment"), ordering="sample__heatflowsite__environment")
+    def get_environment(self, obj):
+        site = getattr(obj, "sample", None)
+        hfs = getattr(site, "heatflowsite", None) if site else None
+        return getattr(hfs, "environment", None) if hfs else None
+
+    @admin.display(description=_("corr_HP_flag"), ordering="corr_HP_flag")
+    def get_corr_hp_flag(self, obj):
+        return getattr(obj, "corr_HP_flag", None)
+
+    @admin.display(description=_("total_depth_MD"))
+    def get_total_depth_md(self, obj):
+        site = getattr(obj, "sample", None)
+        hfs = getattr(site, "heatflowsite", None) if site else None
+        return getattr(hfs, "length", None) if hfs else None
+
+    @admin.display(description=_("total_depth_TVD"))
+    def get_total_depth_tvd(self, obj):
+        site = getattr(obj, "sample", None)
+        hfs = getattr(site, "heatflowsite", None) if site else None
+        return getattr(hfs, "vertical_depth", None) if hfs else None
+
+    @admin.display(description=_("explo_method"), ordering="sample__heatflowsite__explo_method")
+    def get_explo_method(self, obj):
+        site = getattr(obj, "sample", None)
+        hfs = getattr(site, "heatflowsite", None) if site else None
+        return getattr(hfs, "explo_method", None) if hfs else None
+
+    @admin.display(description=_("explo_purpose"))
+    def get_explo_purpose(self, obj):
+        site = getattr(obj, "sample", None)
+        hfs = getattr(site, "heatflowsite", None) if site else None
+        if not hfs:
+            return ""
+        concepts = hfs.explo_purpose.all()
+        return "; ".join(str(c) for c in concepts)
+
+    @admin.display(description=_("country"), ordering="sample__heatflowsite__country")
+    def get_country(self, obj):
+        site = getattr(obj, "sample", None)
+        hfs = getattr(site, "heatflowsite", None) if site else None
+        return getattr(hfs, "country", None) if hfs else None
+
+    @admin.display(description=_("region"), ordering="sample__heatflowsite__region")
+    def get_region(self, obj):
+        site = getattr(obj, "sample", None)
+        hfs = getattr(site, "heatflowsite", None) if site else None
+        return getattr(hfs, "region", None) if hfs else None
+
+    @admin.display(description=_("continent"), ordering="sample__heatflowsite__continent")
+    def get_continent(self, obj):
+        site = getattr(obj, "sample", None)
+        hfs = getattr(site, "heatflowsite", None) if site else None
+        return getattr(hfs, "continent", None) if hfs else None
+
+    @admin.display(description=_("domain"), ordering="sample__heatflowsite__domain")
+    def get_domain(self, obj):
+        site = getattr(obj, "sample", None)
+        hfs = getattr(site, "heatflowsite", None) if site else None
+        return getattr(hfs, "domain", None) if hfs else None
+
+    @admin.display(description=_("total_children"), ordering="total_children")
+    def total_children(self, obj):
+        return getattr(obj, "total_children", None)
+
+    @admin.display(description=_("relevant_children"), ordering="relevant_children")
+    def relevant_children(self, obj):
+        return getattr(obj, "relevant_children", None)
+
+    def get_queryset(self, request):
+        return (
+            GHFDBParent.objects.with_child_counts()
+            .select_related(
+                "sample",
+                "sample__location",
+                "sample__heatflowsite",
+            )
+            .prefetch_related("sample__heatflowsite__explo_purpose")
         )
 
     def has_add_permission(self, request):
