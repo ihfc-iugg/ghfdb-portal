@@ -5,7 +5,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("ghfdb", "0001_initial"),
         ("heat_flow", "0009_heatflow_local_id"),
@@ -16,8 +15,8 @@ class Migration(migrations.Migration):
             name="GHFDB",
             fields=[],
             options={
-                "verbose_name": "GHFDB Entry",
-                "verbose_name_plural": "GHFDB Entries",
+                "verbose_name": "GHFDB Child",
+                "verbose_name_plural": "GHFDB Children",
                 "proxy": True,
                 "indexes": [],
                 "constraints": [],

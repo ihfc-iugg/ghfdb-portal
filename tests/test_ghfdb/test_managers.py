@@ -32,8 +32,8 @@ def test_as_ghfdb_flat_scalar_columns(heat_flow_chain):
 
     expected_scalar_attrs = [
         "site_name",
-        "lat_ns",
-        "long_ew",
+        "lat_NS",
+        "long_EW",
         "site_elevation",
         "site_environment",
         "site_explo_method",
@@ -47,16 +47,16 @@ def test_as_ghfdb_flat_scalar_columns(heat_flow_chain):
         "p_q_uncertainty",
         "p_corr_hp_flag",
         "p_comment",
-        "interval_top",
-        "interval_bottom",
-        "tgrad_value",
-        "tgrad_uncertainty",
-        "tgrad_corrected",
-        "tgrad_corrected_unc",
-        "tgrad_shutin_top",
-        "tgrad_shutin_bottom",
-        "tgrad_number",
-        "tc_value",
+        "q_top",
+        "q_bottom",
+        "T_grad_mean",
+        "T_grad_uncertainty",
+        "T_grad_mean_cor",
+        "T_grad_uncertainty_cor",
+        "T_shutin_top",
+        "T_shutin_bottom",
+        "T_number",
+        "tc_mean",
         "tc_uncertainty",
         "tc_number",
         "probe_penetration",
@@ -125,3 +125,69 @@ def test_as_ghfdb_flat_queryset_operations(heat_flow_chain):
 
     ordered = list(qs.order_by("pk"))
     assert len(ordered) >= 1
+
+
+# ---------------------------------------------------------------------------
+# Phase 3b: GHFDBParent proxy queryset tests (T066–T069)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_parent_with_child_counts_max_queries(django_assert_max_num_queries, heat_flow_chain):
+    """
+    T066 (US1b): with_child_counts() must execute in a constant number of DB
+    queries with no N+1 per parent row.
+    """
+    from project.ghfdb.models import GHFDBParent
+
+    with django_assert_max_num_queries(3):
+        results = list(GHFDBParent.objects.with_child_counts())
+
+    assert len(results) >= 1
+
+
+@pytest.mark.django_db
+def test_parent_with_child_counts_correctness(heat_flow_chain):
+    """
+    T067 (US1b): total_children and relevant_children counts must be correct.
+
+    The heat_flow_chain fixture creates exactly 1 HeatFlow child; is_relevant
+    defaults to True on HeatFlow, so relevant_children should also be 1.
+    """
+    from project.ghfdb.models import GHFDBParent
+
+    heat_flow_chain.is_relevant = True
+    heat_flow_chain.save(update_fields=["is_relevant"])
+
+    parent = GHFDBParent.objects.with_child_counts().get(pk=heat_flow_chain.parent.pk)
+    assert parent.total_children == 1
+    assert parent.relevant_children == 1
+
+
+@pytest.mark.django_db
+def test_parent_with_children_no_extra_queries(django_assert_max_num_queries, heat_flow_chain):
+    """
+    T068 (US1b): with_children() must attach child HeatFlow objects accessible
+    without extra queries (prefetch_related).
+    """
+    from project.ghfdb.models import GHFDBParent
+
+    with django_assert_max_num_queries(3):
+        parents = list(GHFDBParent.objects.with_children())
+        for p in parents:
+            _ = list(p.children.all())  # must not fire extra queries due to prefetch
+
+    assert len(parents) >= 1
+
+
+@pytest.mark.django_db
+def test_parent_queryset_standard_operations(heat_flow_chain):
+    """
+    T069 (US1b): Standard queryset operations work on GHFDBParent.objects.all().
+    """
+    from project.ghfdb.models import GHFDBParent
+
+    qs = GHFDBParent.objects.all()
+    assert qs.count() >= 1
+    assert qs.filter(pk=heat_flow_chain.parent.pk).count() == 1
+    assert len(list(qs.order_by("pk"))) >= 1

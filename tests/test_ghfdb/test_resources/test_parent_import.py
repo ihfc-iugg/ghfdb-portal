@@ -324,3 +324,287 @@ class TestGHFDBParentColumnOrderRegression:
         assert ordered_present == expected_order, (
             f"Column order mismatch.\nGot: {ordered_present}\nExpected: {expected_order}"
         )
+
+
+# ---------------------------------------------------------------------------
+# Helpers for in-memory XLSX construction (T084, T085, T090)
+# ---------------------------------------------------------------------------
+
+
+def _build_simple_xlsx(headers: list, data_rows: list[list]) -> bytes:
+    """Build an in-memory XLSX with the *simple* GHFDB layout.
+
+    Layout:
+      Rows 1-5: Arbitrary metadata (skipped by GHFDBSimpleImportFormat)
+      Row 6:    Column headers
+      Row 7+:   Data rows
+
+    Args:
+        headers: List of column header strings for row 6.
+        data_rows: List of value lists, one per data row (row 7+).
+
+    Returns:
+        Raw bytes of the XLSX file.
+    """
+    from io import BytesIO
+
+    import openpyxl
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "data list"
+
+    for i in range(1, 6):
+        ws.cell(row=i, column=1, value=f"Metadata row {i}")
+
+    for col_idx, header in enumerate(headers, start=1):
+        ws.cell(row=6, column=col_idx, value=header)
+
+    for row_idx, row_values in enumerate(data_rows, start=7):
+        for col_idx, value in enumerate(row_values, start=1):
+            ws.cell(row=row_idx, column=col_idx, value=value)
+
+    buf = BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
+
+
+# ---------------------------------------------------------------------------
+# T084 — GHFDBSimpleImportFormat unit tests
+# ---------------------------------------------------------------------------
+
+
+class TestGHFDBSimpleImportFormat:
+    """T084 — Unit tests for GHFDBSimpleImportFormat."""
+
+    def test_get_title_returns_simple_label(self):
+        """get_title() returns 'GHFDB Simple Template'."""
+        from project.ghfdb.resources import GHFDBSimpleImportFormat
+
+        fmt = GHFDBSimpleImportFormat()
+        assert fmt.get_title() == "GHFDB Simple Template"
+
+    def test_official_format_get_title_returns_official_label(self):
+        """GHFDBImportFormat.get_title() returns 'GHFDB Official Template'."""
+        from project.ghfdb.resources import GHFDBImportFormat
+
+        fmt = GHFDBImportFormat()
+        assert fmt.get_title() == "GHFDB Official Template"
+
+    def test_create_dataset_returns_correct_row_count(self):
+        """create_dataset() with 2 data rows returns a Dataset with 2 rows."""
+        from project.ghfdb.resources import GHFDBSimpleImportFormat
+        from project.ghfdb.resources._base import PARENT_COLUMNS
+
+        xlsx_bytes = _build_simple_xlsx(
+            headers=PARENT_COLUMNS,
+            data_rows=[
+                [
+                    "GHFDB-P-001",
+                    "70.0",
+                    "",
+                    "Site A",
+                    "48.0",
+                    "11.0",
+                    "",
+                    "Onshore (continental)",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "Germany",
+                    "",
+                    "Europe",
+                    "",
+                ],
+                [
+                    "GHFDB-P-002",
+                    "80.0",
+                    "",
+                    "Site B",
+                    "49.0",
+                    "12.0",
+                    "",
+                    "Onshore (continental)",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "Germany",
+                    "",
+                    "Europe",
+                    "",
+                ],
+            ],
+        )
+
+        fmt = GHFDBSimpleImportFormat()
+        ds = fmt.create_dataset(xlsx_bytes)
+
+        assert len(ds) == 2
+
+    def test_create_dataset_uses_row6_as_headers(self):
+        """create_dataset() uses row 6 cell values as Dataset column headers."""
+        from project.ghfdb.resources import GHFDBSimpleImportFormat
+        from project.ghfdb.resources._base import PARENT_COLUMNS
+
+        xlsx_bytes = _build_simple_xlsx(
+            headers=PARENT_COLUMNS,
+            data_rows=[["GHFDB-P-001"] + [""] * (len(PARENT_COLUMNS) - 1)],
+        )
+
+        fmt = GHFDBSimpleImportFormat()
+        ds = fmt.create_dataset(xlsx_bytes)
+
+        assert list(ds.headers) == PARENT_COLUMNS
+
+    def test_create_dataset_excludes_metadata_rows(self):
+        """create_dataset() does not include metadata rows 1-5 as data rows."""
+        from project.ghfdb.resources import GHFDBSimpleImportFormat
+        from project.ghfdb.resources._base import PARENT_COLUMNS
+
+        xlsx_bytes = _build_simple_xlsx(
+            headers=PARENT_COLUMNS,
+            data_rows=[["GHFDB-P-001"] + [""] * (len(PARENT_COLUMNS) - 1)],
+        )
+
+        fmt = GHFDBSimpleImportFormat()
+        ds = fmt.create_dataset(xlsx_bytes)
+
+        # Metadata rows 1-5 contain "Metadata row N" text; no data row should contain it
+        flat_values = [str(v) for row in ds.dict for v in row.values() if v is not None]
+        assert not any("Metadata row" in v for v in flat_values), (
+            "Metadata row text found in dataset — metadata rows were not skipped"
+        )
+
+    def test_create_dataset_differs_from_official_format_on_offset_data(self):
+        """Simple format returns data from row 7; official format skips rows 7-8 and gets data from row 9."""
+        from io import BytesIO
+
+        import openpyxl
+
+        from project.ghfdb.resources import GHFDBImportFormat, GHFDBSimpleImportFormat
+        from project.ghfdb.resources._base import PARENT_COLUMNS
+
+        # Build official-style XLSX with unit row (7), range row (8), then data row (9)
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "data list"
+
+        for i in range(1, 6):
+            ws.cell(row=i, column=1, value=f"Metadata row {i}")
+        for col_idx, header in enumerate(PARENT_COLUMNS, start=1):
+            ws.cell(row=6, column=col_idx, value=header)
+        ws.cell(row=7, column=1, value="UNIT_ROW")
+        ws.cell(row=8, column=1, value="RANGE_ROW")
+        ws.cell(row=9, column=1, value="GHFDB-P-001")
+
+        buf = BytesIO()
+        wb.save(buf)
+        xlsx_bytes = buf.getvalue()
+
+        official_ds = GHFDBImportFormat().create_dataset(xlsx_bytes)
+        simple_ds = GHFDBSimpleImportFormat().create_dataset(xlsx_bytes)
+
+        # Official format: 1 row (row 9 only)
+        assert len(official_ds) == 1
+        assert official_ds[0][0] == "GHFDB-P-001"
+
+        # Simple format: 3 rows (rows 7, 8, 9 — including unit/range rows as data)
+        assert len(simple_ds) == 3
+        assert simple_ds[0][0] == "UNIT_ROW"
+
+
+# ---------------------------------------------------------------------------
+# T085 — Admin format-selection tests
+# ---------------------------------------------------------------------------
+
+
+class TestAdminGetImportFormats:
+    """T085 — Admin classes expose both import format classes."""
+
+    def test_child_admin_get_import_formats_returns_two_classes(self):
+        """GHFDBChildAdmin.get_import_formats() returns [GHFDBImportFormat, GHFDBSimpleImportFormat]."""
+        from django.contrib.admin import AdminSite
+
+        from project.ghfdb.admin import GHFDBChildAdmin
+        from project.ghfdb.models import GHFDB
+        from project.ghfdb.resources import GHFDBImportFormat, GHFDBSimpleImportFormat
+
+        site_admin = GHFDBChildAdmin(GHFDB, AdminSite())
+        formats = site_admin.get_import_formats()
+
+        assert len(formats) == 2
+        assert formats[0] is GHFDBImportFormat
+        assert formats[1] is GHFDBSimpleImportFormat
+
+    def test_parent_admin_get_import_formats_returns_two_classes(self):
+        """GHFDBParentAdmin.get_import_formats() returns [GHFDBImportFormat, GHFDBSimpleImportFormat]."""
+        from django.contrib.admin import AdminSite
+
+        from project.ghfdb.admin import GHFDBParentAdmin
+        from project.ghfdb.models import GHFDBParent
+        from project.ghfdb.resources import GHFDBImportFormat, GHFDBSimpleImportFormat
+
+        site_admin = GHFDBParentAdmin(GHFDBParent, AdminSite())
+        formats = site_admin.get_import_formats()
+
+        assert len(formats) == 2
+        assert formats[0] is GHFDBImportFormat
+        assert formats[1] is GHFDBSimpleImportFormat
+
+    def test_child_admin_format_titles(self):
+        """Both format classes returned by GHFDBChildAdmin have the correct get_title() values."""
+        from django.contrib.admin import AdminSite
+
+        from project.ghfdb.admin import GHFDBChildAdmin
+        from project.ghfdb.models import GHFDB
+
+        site_admin = GHFDBChildAdmin(GHFDB, AdminSite())
+        formats = site_admin.get_import_formats()
+
+        assert formats[0]().get_title() == "GHFDB Official Template"
+        assert formats[1]().get_title() == "GHFDB Simple Template"
+
+    def test_parent_admin_format_titles(self):
+        """Both format classes returned by GHFDBParentAdmin have the correct get_title() values."""
+        from django.contrib.admin import AdminSite
+
+        from project.ghfdb.admin import GHFDBParentAdmin
+        from project.ghfdb.models import GHFDBParent
+
+        site_admin = GHFDBParentAdmin(GHFDBParent, AdminSite())
+        formats = site_admin.get_import_formats()
+
+        assert formats[0]().get_title() == "GHFDB Official Template"
+        assert formats[1]().get_title() == "GHFDB Simple Template"
+
+    @pytest.mark.django_db
+    def test_child_admin_import_page_shows_both_format_titles(self, admin_client):
+        """GET admin import page for GHFDB child contains both format option texts."""
+        from django.urls import reverse
+
+        url = reverse("admin:ghfdb_ghfdb_import")
+        response = admin_client.get(url)
+
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "GHFDB Official Template" in content
+        assert "GHFDB Simple Template" in content
+
+    @pytest.mark.django_db
+    def test_parent_admin_import_page_shows_both_format_titles(self, admin_client):
+        """GET admin import page for GHFDBParent contains both format option texts."""
+        from django.urls import reverse
+
+        url = reverse("admin:ghfdb_ghfdbparent_import")
+        response = admin_client.get(url)
+
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "GHFDB Official Template" in content
+        assert "GHFDB Simple Template" in content

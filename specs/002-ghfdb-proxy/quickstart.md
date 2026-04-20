@@ -4,9 +4,10 @@
 
 ## What This Feature Adds
 
-1. **GHFDB proxy model** � query heat flow data in the flat GHFDB spreadsheet structure with no N+1 queries
-2. **GHFDB admin changelist** � read-only "GHFDB Entries" view with exact GHFDB column order, vocabulary-scoped filters, and `local_id` stable import key
-3. **Explore map page** � full-screen IHFC web-map viewer with `onerror` iframe fallback
+1. **GHFDBChild proxy model** � query child heat flow data in the flat GHFDB spreadsheet structure with no N+1 queries
+2. **GHFDBParent proxy model** � query parent-level heat flow data with annotated child counts and prefetched children
+3. **GHFDB admin changelists** � read-only "GHFDB Children" and "GHFDB Parents" views with exact GHFDB column order and vocabulary-scoped filters
+4. **Explore map page** � full-screen IHFC web-map viewer with `onerror` iframe fallback
 
 For import/export quickstart, see [003-ghfdb-import-export/quickstart.md](../003-ghfdb-import-export/quickstart.md).
 
@@ -20,10 +21,10 @@ poetry run python manage.py migrate
 ## Using the Proxy Model
 
 ```python
-from ghfdb.models import GHFDB
+from ghfdb.models import GHFDBChild, GHFDBParent
 
 # Get all records as flat GHFDB rows (optimised, no N+1)
-flat_qs = GHFDB.objects.as_ghfdb_flat()
+flat_qs = GHFDBChild.objects.as_ghfdb_flat()
 
 # Filter by country
 german_hf = flat_qs.filter(site_country="Germany")
@@ -37,7 +38,12 @@ for entry in german_hf[:5]:
     print(f"  Correction IS: {entry.corr_IS_flag}")
 
 # For export (includes prefetched M2M data � consumed by 003-ghfdb-import-export)
-export_qs = GHFDB.objects.for_export()
+export_qs = GHFDBChild.objects.for_export()
+
+# Parent-level summary queries
+parent_qs = GHFDBParent.objects.with_child_counts()
+for parent in parent_qs[:5]:
+    print(parent.local_id, parent.total_children, parent.relevant_children)
 ```
 
 Annotation names are defined in `data-model.md` under "Annotation Name Mapping".

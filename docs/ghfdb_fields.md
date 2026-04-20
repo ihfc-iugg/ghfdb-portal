@@ -172,10 +172,17 @@ For parent imports, the corresponding stable key is `ParentHeatFlow.local_id`, m
 
 ## Proxy Model Access Patterns
 
-The product-layer proxy model `GHFDB` exposes flattened spreadsheet-like columns through annotated queryset helpers.
+The product layer now uses two proxy models:
 
-- Flat annotated queryset: `GHFDB.objects.as_ghfdb_flat()`
-- Export-ready queryset with prefetches: `GHFDB.objects.for_export()`
+- `GHFDBChild` (proxy over `HeatFlow`) for child-row flat/export workflows
+- `GHFDBParent` (proxy over `ParentHeatFlow`) for parent-level summary workflows
+
+### GHFDBChild
+
+`GHFDBChild` exposes flattened spreadsheet-like child columns through annotated queryset helpers.
+
+- Flat annotated queryset: `GHFDBChild.objects.as_ghfdb_flat()`
+- Export-ready queryset with prefetches: `GHFDBChild.objects.for_export()`
 
 Common annotation names used by admin/export:
 
@@ -185,6 +192,20 @@ Common annotation names used by admin/export:
 - Thermal gradient: `tgrad_value`, `tgrad_uncertainty`, `tgrad_corrected`, `tgrad_corrected_unc`
 - Conductivity: `tc_value`, `tc_uncertainty`, `tc_number`
 - Corrections: `corr_IS_flag`, `corr_T_flag`, `corr_S_flag`, `corr_E_flag`, `corr_TOPO_flag`, `corr_PAL_flag`, `corr_SUR_flag`, `corr_CONV_flag`, `corr_HR_flag`
+
+### GHFDBParent
+
+`GHFDBParent` provides parent-level helpers for child aggregation and parent-scoped admin workflows.
+
+- Parent queryset with computed child counts: `GHFDBParent.objects.with_child_counts()`
+  - Adds `total_children`: all linked `HeatFlow` children
+  - Adds `relevant_children`: linked children where `is_relevant=True`
+- Parent queryset with prefetched children: `GHFDBParent.objects.with_children()`
+
+Admin registration split:
+
+- `GHFDBChildAdmin` (model: `GHFDBChild`) has `GHFDBChildImportResource` and `GHFDBExportResource`
+- `GHFDBParentAdmin` (model: `GHFDBParent`) has `GHFDBParentImportResource` only
 
 ## Large Export Limits
 

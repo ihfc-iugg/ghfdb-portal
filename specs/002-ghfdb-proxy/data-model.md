@@ -15,8 +15,8 @@ This document defines the proxy model design, queryset API, annotation names, an
 | Attribute | Value |
 |---|---|
 | **Extends** | `HeatFlow` (proxy, no new table) |
-| **`verbose_name`** | `"GHFDB Entry"` |
-| **`verbose_name_plural`** | `"GHFDB Entries"` |
+| **`verbose_name`** | `"GHFDB Child"` |
+| **`verbose_name_plural`** | `"GHFDB Children"` |
 | **`objects`** | `GHFDBManager` (provides `as_ghfdb_flat()` and `for_export()`) |
 
 ### HeatFlow — New Field: `local_id`

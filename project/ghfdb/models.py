@@ -2,9 +2,9 @@
 
 from django.utils.translation import gettext_lazy as _
 from fairdm.db import models
-from heat_flow.models import HeatFlow
+from heat_flow.models import HeatFlow, ParentHeatFlow
 
-from .managers import GHFDBManager
+from .managers import GHFDBManager, GHFDBParentManager
 
 
 class GHFDBRelease(models.Model):
@@ -55,8 +55,32 @@ class GHFDB(HeatFlow):
 
     class Meta:
         proxy = True
-        verbose_name = _("GHFDB Entry")
-        verbose_name_plural = _("GHFDB Entries")
+        verbose_name = _("GHFDB Child")
+        verbose_name_plural = _("GHFDB Children")
 
-    def __str__(self) -> str:
-        return f"GHFDB Entry #{self.pk}"
+
+class GHFDBParent(ParentHeatFlow):
+    """Proxy model over ``ParentHeatFlow`` providing a parent-site view of the
+    Global Heat Flow Database.
+
+    Provides a custom manager (``GHFDBParentManager``) with:
+    - ``with_child_counts()`` — annotates ``total_children`` and
+        ``relevant_children`` per parent record (1 query, constant).
+    - ``with_children()`` — prefetches linked child ``HeatFlow`` records
+        (~2 queries, constant).
+
+    This proxy is intentionally read-only and registered as a Django admin view
+    only. It does not participate in the FairDM sample/measurement registry.
+
+    References:
+            - Fuchs et al. (2021). A new database structure for the IHFC Global Heat
+                Flow Database. Earth System Science Data.
+            - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
+    """
+
+    objects = GHFDBParentManager()
+
+    class Meta:
+        proxy = True
+        verbose_name = _("GHFDB Parent")
+        verbose_name_plural = _("GHFDB Parents")
