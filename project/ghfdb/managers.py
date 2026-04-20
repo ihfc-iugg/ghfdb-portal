@@ -88,10 +88,16 @@ class GHFDBQuerySet(PolymorphicQuerySet):
         )
 
         scalar_annotations = {
+            # Child-level identifiers / values
+            "id_parent": F("parent__local_id"),
+            "qc": F("value"),
+            "qc_uncertainty": F("uncertainty"),
+            "relevant_child": F("is_relevant"),
+            "q_date": F("date_acquired"),
             # Site-level scalars (from HeatFlowSite via interval → site)
             "site_name": F("sample__heatflowinterval__sample__name"),
-            "lat_ns": F("sample__heatflowinterval__sample__location__y"),
-            "long_ew": F("sample__heatflowinterval__sample__location__x"),
+            "lat_NS": F("sample__heatflowinterval__sample__location__y"),
+            "long_EW": F("sample__heatflowinterval__sample__location__x"),
             "site_elevation": F("sample__heatflowinterval__sample__heatflowsite__elevation"),
             "site_environment": F("sample__heatflowinterval__sample__heatflowsite__environment"),
             "site_explo_method": F("sample__heatflowinterval__sample__heatflowsite__explo_method"),
@@ -107,18 +113,18 @@ class GHFDBQuerySet(PolymorphicQuerySet):
             "p_corr_hp_flag": F("parent__corr_HP_flag"),
             "p_comment": F("parent__comment"),
             # Depth interval scalars (via HeatFlowInterval MTI accessor)
-            "interval_top": F("sample__heatflowinterval__top"),
-            "interval_bottom": F("sample__heatflowinterval__bottom"),
-            # Thermal gradient scalars
-            "tgrad_value": F("thermal_gradient__value"),
-            "tgrad_uncertainty": F("thermal_gradient__uncertainty"),
-            "tgrad_corrected": F("thermal_gradient__corrected_value"),
-            "tgrad_corrected_unc": F("thermal_gradient__corrected_uncertainty"),
-            "tgrad_shutin_top": F("thermal_gradient__shutin_top"),
-            "tgrad_shutin_bottom": F("thermal_gradient__shutin_bottom"),
-            "tgrad_number": F("thermal_gradient__number"),
+            "q_top": F("sample__heatflowinterval__top"),
+            "q_bottom": F("sample__heatflowinterval__bottom"),
+            # Thermal gradient scalars (GHFDB column names)
+            "T_grad_mean": F("thermal_gradient__value"),
+            "T_grad_uncertainty": F("thermal_gradient__uncertainty"),
+            "T_grad_mean_cor": F("thermal_gradient__corrected_value"),
+            "T_grad_uncertainty_cor": F("thermal_gradient__corrected_uncertainty"),
+            "T_shutin_top": F("thermal_gradient__shutin_top"),
+            "T_shutin_bottom": F("thermal_gradient__shutin_bottom"),
+            "T_number": F("thermal_gradient__number"),
             # Thermal conductivity scalars
-            "tc_value": F("thermal_conductivity__value"),
+            "tc_mean": F("thermal_conductivity__value"),
             "tc_uncertainty": F("thermal_conductivity__uncertainty"),
             "tc_number": F("thermal_conductivity__number"),
             # Probe metadata scalars (via HeatFlowInterval MTI accessor)

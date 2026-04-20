@@ -50,6 +50,69 @@ class ExplorePurposeListFilter(SimpleListFilter):
         return queryset
 
 
+class EnvironmentListFilter(SimpleListFilter):
+    """Vocabulary-scoped list filter for HeatFlowSite.environment on GHFDBChild (BUG-004).
+
+    Restricts filter choices to values defined in the ``GeographicEnvironment``
+    vocabulary so the sidebar shows human-readable labels instead of raw stored
+    concept keys (FR-014, FR-015).
+    """
+
+    title = _("environment")
+    parameter_name = "environment"
+
+    def lookups(self, request, model_admin):
+        from heat_flow.vocabularies import GeographicEnvironment
+
+        return GeographicEnvironment().choices
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(sample__heatflowinterval__sample__heatflowsite__environment=self.value())
+        return queryset
+
+
+class ChildExplorationMethodListFilter(SimpleListFilter):
+    """Vocabulary-scoped list filter for HeatFlowSite.explo_method on GHFDBChild (BUG-004).
+
+    Restricts filter choices to values defined in the ``ExplorationMethod``
+    vocabulary so the sidebar shows human-readable labels instead of raw stored
+    concept keys (FR-014, FR-015).
+    """
+
+    title = _("exploration method")
+    parameter_name = "explo_method"
+
+    def lookups(self, request, model_admin):
+        from heat_flow.vocabularies import ExplorationMethod
+
+        return ExplorationMethod().choices
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(sample__heatflowinterval__sample__heatflowsite__explo_method=self.value())
+        return queryset
+
+
+def _scalar(attr, description=None, orderable=True):
+    """Create a display callable for a queryset scalar annotation.
+
+    Each annotation name in ``list_display`` must correspond to either a model
+    field or a callable on the admin class.  This factory returns a function
+    that reads *attr* from the annotated queryset row, sets ``short_description``
+    to *description* (defaults to *attr*), and registers *attr* as the sort key
+    unless *orderable* is False (e.g. for subquery-backed annotations).
+    """
+
+    def method(self, obj):
+        return getattr(obj, attr, None)
+
+    method.short_description = description or attr
+    if orderable:
+        method.admin_order_field = attr
+    return method
+
+
 @admin.register(GHFDBRelease)
 class GHFDBReleaseAdmin(admin.ModelAdmin):
     list_display = ("version", "release_date", "description")
@@ -57,7 +120,7 @@ class GHFDBReleaseAdmin(admin.ModelAdmin):
 
 
 @admin.register(GHFDB)
-class GHFDBAdmin(ImportExportMixin, admin.ModelAdmin):
+class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
     """Read-only Django admin view for GHFDB flat entries with XLSX import action.
 
     The changelist uses ``GHFDBQuerySet.as_ghfdb_flat()`` so all annotated
@@ -75,32 +138,70 @@ class GHFDBAdmin(ImportExportMixin, admin.ModelAdmin):
     """
 
     list_display = (
+        "local_id",
         "get_id_parent",
-        "get_q",
-        "get_q_uncertainty",
-        "get_name",
-        "get_lat_ns",
-        "get_long_ew",
-        "get_elevation",
-        "get_environment",
-        "get_corr_hp_flag",
-        "get_total_depth_md",
-        "get_total_depth_tvd",
-        "get_explo_method",
-        "get_explo_purpose",
-        "get_country",
-        "get_region",
-        "get_continent",
-        "get_domain",
+        "site_name",
+        "lat_NS",
+        "long_EW",
+        "qc",
+        "qc_uncertainty",
+        "get_q_method",
+        "q_top",
+        "q_bottom",
+        "probe_penetration",
+        "get_publication_reference",
+        "get_data_reference",
+        "relevant_child",
+        "c_comment",
+        "corr_IS_flag",
+        "corr_T_flag",
+        "corr_S_flag",
+        "corr_E_flag",
+        "corr_TOPO_flag",
+        "corr_PAL_flag",
+        "corr_SUR_flag",
+        "corr_CONV_flag",
+        "corr_HR_flag",
+        "expedition",
+        "get_probe_type",
+        "probe_length",
+        "probe_tilt",
+        "water_temperature",
+        "get_geo_lithology",
+        "get_geo_stratigraphy",
+        "T_grad_mean",
+        "T_grad_uncertainty",
+        "T_grad_mean_cor",
+        "T_grad_uncertainty_cor",
+        "get_t_method_top",
+        "get_t_method_bottom",
+        "T_shutin_top",
+        "T_shutin_bottom",
+        "get_t_corr_top",
+        "get_t_corr_bottom",
+        "T_number",
+        "q_date",
+        "tc_mean",
+        "tc_uncertainty",
+        "get_tc_source",
+        "get_tc_location",
+        "get_tc_method",
+        "get_tc_saturation",
+        "get_tc_p_t_conditions",
+        "get_tc_p_t_fuction",
+        "tc_number",
+        "get_tc_strategy",
+        "get_ref_isgn",
     )
     search_fields = (
         "sample__heatflowinterval__sample__name",
         "parent__local_id",
+        "local_id",
     )
     list_filter = (
-        "sample__heatflowinterval__sample__heatflowsite__environment",
+        EnvironmentListFilter,
         "parent__corr_HP_flag",
-        "sample__heatflowinterval__sample__heatflowsite__explo_method",
+        ChildExplorationMethodListFilter,
         ExplorePurposeListFilter,
         "sample__heatflowinterval__sample__heatflowsite__country",
         "sample__heatflowinterval__sample__heatflowsite__region",
@@ -110,10 +211,17 @@ class GHFDBAdmin(ImportExportMixin, admin.ModelAdmin):
     list_display_links = None  # enforce read-only (no edit links)
     ordering = ("parent__local_id", "local_id")
 
+    @staticmethod
+    def _interval(obj):
+        sample = getattr(obj, "sample", None)
+        if sample is None:
+            return None
+        return getattr(sample, "heatflowinterval", None)
+
     # --- Import configuration -------------------------------------------------------
 
     def get_import_resource_classes(self, request):
-        return [GHFDBParentImportResource, GHFDBChildImportResource]
+        return [GHFDBChildImportResource]
 
     def get_import_formats(self):
         return [GHFDBImportFormat]
@@ -134,81 +242,181 @@ class GHFDBAdmin(ImportExportMixin, admin.ModelAdmin):
     def get_id_parent(self, obj):
         return getattr(obj.parent, "local_id", None)
 
-    @admin.display(description=_("q"), ordering="p_q")
-    def get_q(self, obj):
-        return getattr(obj, "p_q", None)
+    # --- Scalar annotation display methods ---
+    # Generated via _scalar(); no explicit def needed — the factory sets
+    # short_description and admin_order_field on the returned callable.
 
-    @admin.display(description=_("q_uncertainty"), ordering="p_q_uncertainty")
-    def get_q_uncertainty(self, obj):
-        return getattr(obj, "p_q_uncertainty", None)
+    site_name = _scalar("site_name", description="name")
+    lat_NS = _scalar("lat_NS")
+    long_EW = _scalar("long_EW")
+    qc = _scalar("qc")
+    qc_uncertainty = _scalar("qc_uncertainty")
+    q_top = _scalar("q_top")
+    q_bottom = _scalar("q_bottom")
+    probe_penetration = _scalar("probe_penetration")
+    relevant_child = _scalar("relevant_child")
+    corr_IS_flag = _scalar("corr_IS_flag", orderable=False)
+    corr_T_flag = _scalar("corr_T_flag", orderable=False)
+    corr_S_flag = _scalar("corr_S_flag", orderable=False)
+    corr_E_flag = _scalar("corr_E_flag", orderable=False)
+    corr_TOPO_flag = _scalar("corr_TOPO_flag", orderable=False)
+    corr_PAL_flag = _scalar("corr_PAL_flag", orderable=False)
+    corr_SUR_flag = _scalar("corr_SUR_flag", orderable=False)
+    corr_CONV_flag = _scalar("corr_CONV_flag", orderable=False)
+    corr_HR_flag = _scalar("corr_HR_flag", orderable=False)
+    probe_length = _scalar("probe_length")
+    probe_tilt = _scalar("probe_tilt")
+    T_grad_mean = _scalar("T_grad_mean")
+    T_grad_uncertainty = _scalar("T_grad_uncertainty")
+    T_grad_mean_cor = _scalar("T_grad_mean_cor")
+    T_grad_uncertainty_cor = _scalar("T_grad_uncertainty_cor")
+    T_shutin_top = _scalar("T_shutin_top")
+    T_shutin_bottom = _scalar("T_shutin_bottom")
+    T_number = _scalar("T_number")
+    q_date = _scalar("q_date")
+    tc_mean = _scalar("tc_mean")
+    tc_uncertainty = _scalar("tc_uncertainty")
+    tc_number = _scalar("tc_number")
 
-    @admin.display(description=_("name"), ordering="site_name")
-    def get_name(self, obj):
-        return getattr(obj, "site_name", None)
+    @admin.display(description=_("q_method"))
+    def get_q_method(self, obj):
+        return "; ".join(str(c) for c in obj.method.all())
 
-    @admin.display(description=_("lat_NS"), ordering="lat_ns")
-    def get_lat_ns(self, obj):
-        return getattr(obj, "lat_ns", None)
-
-    @admin.display(description=_("long_EW"), ordering="long_ew")
-    def get_long_ew(self, obj):
-        return getattr(obj, "long_ew", None)
-
-    @admin.display(description=_("elevation"), ordering="site_elevation")
-    def get_elevation(self, obj):
-        return getattr(obj, "site_elevation", None)
-
-    @admin.display(description=_("environment"), ordering="site_environment")
-    def get_environment(self, obj):
-        return getattr(obj, "site_environment", None)
-
-    @admin.display(description=_("corr_HP_flag"), ordering="p_corr_hp_flag")
-    def get_corr_hp_flag(self, obj):
-        return getattr(obj, "p_corr_hp_flag", None)
-
-    @admin.display(description=_("total_depth_MD"), ordering="total_depth_md")
-    def get_total_depth_md(self, obj):
-        return getattr(obj, "total_depth_md", None)
-
-    @admin.display(description=_("total_depth_TVD"), ordering="total_depth_tvd")
-    def get_total_depth_tvd(self, obj):
-        return getattr(obj, "total_depth_tvd", None)
-
-    @admin.display(description=_("explo_method"), ordering="site_explo_method")
-    def get_explo_method(self, obj):
-        return getattr(obj, "site_explo_method", None)
-
-    @admin.display(description=_("explo_purpose"))
-    def get_explo_purpose(self, obj):
-        site = getattr(getattr(obj, "sample", None), "heatflowinterval", None)
-        if not site or not getattr(site, "sample", None):
+    @admin.display(description=_("publication_reference"))
+    def get_publication_reference(self, obj):
+        references = getattr(obj, "publication_references", None)
+        if references is None:
             return ""
-        heat_flow_site = getattr(site.sample, "heatflowsite", None)
-        if not heat_flow_site:
+        return "; ".join(str(r) for r in references.all())
+
+    @admin.display(description=_("data_reference"))
+    def get_data_reference(self, obj):
+        references = getattr(obj, "data_references", None)
+        if references is None:
             return ""
-        concepts = heat_flow_site.explo_purpose.all()
-        return "; ".join(str(concept) for concept in concepts)
+        return "; ".join(str(r) for r in references.all())
 
-    @admin.display(description=_("country"), ordering="site_country")
-    def get_country(self, obj):
-        return getattr(obj, "site_country", None)
+    @admin.display(description=_("probe_type"))
+    def get_probe_type(self, obj):
+        interval = self._interval(obj)
+        if interval is None or not hasattr(interval, "probe_metadata"):
+            return ""
+        return "; ".join(str(c) for c in interval.probe_metadata.probe_type.all())
 
-    @admin.display(description=_("region"), ordering="site_region")
-    def get_region(self, obj):
-        return getattr(obj, "site_region", None)
+    @admin.display(description=_("geo_lithology"))
+    def get_geo_lithology(self, obj):
+        interval = self._interval(obj)
+        if interval is None:
+            return ""
+        return "; ".join(str(c) for c in interval.lithology.all())
 
-    @admin.display(description=_("continent"), ordering="site_continent")
-    def get_continent(self, obj):
-        return getattr(obj, "site_continent", None)
+    @admin.display(description=_("geo_stratigraphy"))
+    def get_geo_stratigraphy(self, obj):
+        interval = self._interval(obj)
+        if interval is None:
+            return ""
+        return "; ".join(str(c) for c in interval.stratigraphy.all())
 
-    @admin.display(description=_("domain"), ordering="site_domain")
-    def get_domain(self, obj):
-        return getattr(obj, "site_domain", None)
+    @admin.display(description=_("T_method_top"))
+    def get_t_method_top(self, obj):
+        gradient = getattr(obj, "thermal_gradient", None)
+        if gradient is None:
+            return ""
+        return "; ".join(str(c) for c in gradient.method_top.all())
+
+    @admin.display(description=_("T_method_bottom"))
+    def get_t_method_bottom(self, obj):
+        gradient = getattr(obj, "thermal_gradient", None)
+        if gradient is None:
+            return ""
+        return "; ".join(str(c) for c in gradient.method_bottom.all())
+
+    @admin.display(description=_("T_corr_top"))
+    def get_t_corr_top(self, obj):
+        gradient = getattr(obj, "thermal_gradient", None)
+        if gradient is None:
+            return ""
+        return "; ".join(str(c) for c in gradient.correction_top.all())
+
+    @admin.display(description=_("T_corr_bottom"))
+    def get_t_corr_bottom(self, obj):
+        gradient = getattr(obj, "thermal_gradient", None)
+        if gradient is None:
+            return ""
+        return "; ".join(str(c) for c in gradient.correction_bottom.all())
+
+    @admin.display(description=_("tc_source"))
+    def get_tc_source(self, obj):
+        conductivity = getattr(obj, "thermal_conductivity", None)
+        if conductivity is None:
+            return ""
+        return "; ".join(str(c) for c in conductivity.source.all())
+
+    @admin.display(description=_("tc_location"))
+    def get_tc_location(self, obj):
+        conductivity = getattr(obj, "thermal_conductivity", None)
+        if conductivity is None:
+            return ""
+        return "; ".join(str(c) for c in conductivity.location.all())
+
+    @admin.display(description=_("tc_method"))
+    def get_tc_method(self, obj):
+        conductivity = getattr(obj, "thermal_conductivity", None)
+        if conductivity is None:
+            return ""
+        return "; ".join(str(c) for c in conductivity.method.all())
+
+    @admin.display(description=_("tc_saturation"))
+    def get_tc_saturation(self, obj):
+        conductivity = getattr(obj, "thermal_conductivity", None)
+        if conductivity is None:
+            return ""
+        return "; ".join(str(c) for c in conductivity.saturation.all())
+
+    @admin.display(description=_("tc_pT_conditions"))
+    def get_tc_p_t_conditions(self, obj):
+        conductivity = getattr(obj, "thermal_conductivity", None)
+        if conductivity is None:
+            return ""
+        return "; ".join(str(c) for c in conductivity.pT_conditions.all())
+
+    @admin.display(description=_("tc_pT_fuction"))
+    def get_tc_p_t_fuction(self, obj):
+        conductivity = getattr(obj, "thermal_conductivity", None)
+        if conductivity is None:
+            return ""
+        return "; ".join(str(c) for c in conductivity.pT_function.all())
+
+    @admin.display(description=_("tc_strategy"))
+    def get_tc_strategy(self, obj):
+        conductivity = getattr(obj, "thermal_conductivity", None)
+        if conductivity is None:
+            return ""
+        return "; ".join(str(c) for c in conductivity.strategy.all())
+
+    @admin.display(description=_("Ref_ISGN"))
+    def get_ref_isgn(self, obj):
+        return ""
 
     def get_queryset(self, request):
         """Return the flat annotated queryset for the changelist."""
         return GHFDB.objects.as_ghfdb_flat().prefetch_related(
-            "sample__heatflowinterval__sample__heatflowsite__explo_purpose"
+            "method",
+            "sample__heatflowinterval__sample__heatflowsite__explo_purpose",
+            "sample__heatflowinterval__lithology",
+            "sample__heatflowinterval__stratigraphy",
+            "sample__heatflowinterval__probe_metadata__probe_type",
+            "thermal_gradient__method_top",
+            "thermal_gradient__method_bottom",
+            "thermal_gradient__correction_top",
+            "thermal_gradient__correction_bottom",
+            "thermal_conductivity__source",
+            "thermal_conductivity__location",
+            "thermal_conductivity__method",
+            "thermal_conductivity__saturation",
+            "thermal_conductivity__pT_conditions",
+            "thermal_conductivity__pT_function",
+            "thermal_conductivity__strategy",
         )
 
     def has_add_permission(self, request):
@@ -244,9 +452,53 @@ class ParentExplorePurposeListFilter(SimpleListFilter):
         return queryset
 
 
+class ParentEnvironmentListFilter(SimpleListFilter):
+    """Vocabulary-scoped list filter for HeatFlowSite.environment on GHFDBParent (BUG-004).
+
+    Same vocabulary scoping as ``EnvironmentListFilter`` but filters via the
+    shorter parent-model path: ``sample__heatflowsite__environment`` (FR-014,
+    FR-015).
+    """
+
+    title = _("environment")
+    parameter_name = "environment"
+
+    def lookups(self, request, model_admin):
+        from heat_flow.vocabularies import GeographicEnvironment
+
+        return GeographicEnvironment().choices
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(sample__heatflowsite__environment=self.value())
+        return queryset
+
+
+class ParentExplorationMethodListFilter(SimpleListFilter):
+    """Vocabulary-scoped list filter for HeatFlowSite.explo_method on GHFDBParent (BUG-004).
+
+    Same vocabulary scoping as ``ChildExplorationMethodListFilter`` but filters
+    via the shorter parent-model path: ``sample__heatflowsite__explo_method``
+    (FR-014, FR-015).
+    """
+
+    title = _("exploration method")
+    parameter_name = "explo_method"
+
+    def lookups(self, request, model_admin):
+        from heat_flow.vocabularies import ExplorationMethod
+
+        return ExplorationMethod().choices
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(sample__heatflowsite__explo_method=self.value())
+        return queryset
+
+
 @admin.register(GHFDBParent)
 class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
-    """Read-only Django admin view for GHFDB parent entries with parent-level import.
+    """Read-only Django admin view for GHFDB Parents with parent-level import.
 
     Displays parent-level GHFDB spreadsheet columns plus computed child count
     columns (``total_children``, ``relevant_children``). Only the
@@ -280,9 +532,9 @@ class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
         "local_id",
     )
     list_filter = (
-        "sample__heatflowsite__environment",
+        ParentEnvironmentListFilter,
         "corr_HP_flag",
-        "sample__heatflowsite__explo_method",
+        ParentExplorationMethodListFilter,
         ParentExplorePurposeListFilter,
         "sample__heatflowsite__country",
         "sample__heatflowsite__region",

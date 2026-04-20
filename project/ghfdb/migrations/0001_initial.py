@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = []
@@ -42,9 +41,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "version",
-                    models.CharField(
-                        max_length=50, unique=True, verbose_name="Version"
-                    ),
+                    models.CharField(max_length=50, unique=True, verbose_name="Version"),
                 ),
                 ("release_date", models.DateField(verbose_name="Release Date")),
                 (
@@ -53,9 +50,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "file",
-                    models.FileField(
-                        upload_to="ghfdb/releases/", verbose_name="Release File"
-                    ),
+                    models.FileField(upload_to="ghfdb/releases/", verbose_name="Release File"),
                 ),
             ],
             options={

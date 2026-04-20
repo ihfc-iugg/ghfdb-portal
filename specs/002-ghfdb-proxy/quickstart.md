@@ -6,7 +6,7 @@
 
 1. **GHFDBChild proxy model** � query child heat flow data in the flat GHFDB spreadsheet structure with no N+1 queries
 2. **GHFDBParent proxy model** � query parent-level heat flow data with annotated child counts and prefetched children
-3. **GHFDB admin changelists** � read-only "GHFDB Entries" and "GHFDB Parent Entries" views with exact GHFDB column order and vocabulary-scoped filters
+3. **GHFDB admin changelists** � read-only "GHFDB Children" and "GHFDB Parents" views with exact GHFDB column order and vocabulary-scoped filters
 4. **Explore map page** � full-screen IHFC web-map viewer with `onerror` iframe fallback
 
 For import/export quickstart, see [003-ghfdb-import-export/quickstart.md](../003-ghfdb-import-export/quickstart.md).

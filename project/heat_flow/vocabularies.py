@@ -1312,5 +1312,3 @@ class GenericFlagChoices(VocabularyBuilder):
                 ],
             ),
         }
-
-

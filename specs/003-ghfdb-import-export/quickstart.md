@@ -21,7 +21,7 @@ project/ghfdb/resources/
 
 ### 1. Import Parent Records
 
-1. Navigate to **Admin → GHFDB → GHFDB entries**
+1. Navigate to **Admin → GHFDB → GHFDB Children**
 2. Click **Import** and select the **"Parent Import"** resource
 3. Upload the GHFDB XLSX file
 4. The parent import processes the `"data list"` sheet, deduplicating rows by `ID_parent` (or by `lat_NS`/`long_EW` for standard templates that omit `ID_parent`)
@@ -53,7 +53,7 @@ project/ghfdb/resources/
 
 ## Export Workflow
 
-1. Navigate to **Admin → GHFDB → GHFDB entries**
+1. Navigate to **Admin → GHFDB → GHFDB Children**
 2. Optionally filter the queryset (search, list filters)
 3. Select records (or select all)
 4. Choose **Export** from the action dropdown and select XLSX format

@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("heat_flow", "0002_alter_heatflow_date_acquired_and_more"),
     ]

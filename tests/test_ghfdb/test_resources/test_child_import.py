@@ -271,9 +271,7 @@ class TestGHFDBChildImportResourceImport:
         result = resource.import_data(ds, dry_run=False, raise_errors=False)
 
         # Import must complete without row-level errors
-        assert not result.has_errors(), (
-            f"Import raised errors for geo_stratigraphy='Holocene': {result.invalid_rows}"
-        )
+        assert not result.has_errors(), f"Import raised errors for geo_stratigraphy='Holocene': {result.invalid_rows}"
 
         child = HeatFlow.objects.get(local_id="GHFDB-001")
         interval = child.sample  # HeatFlowInterval

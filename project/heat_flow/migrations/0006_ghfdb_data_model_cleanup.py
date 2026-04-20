@@ -8,7 +8,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("heat_flow", "0005_ghfdbrelease_heatflowcorrection_parentheatflow_and_more"),
     ]
