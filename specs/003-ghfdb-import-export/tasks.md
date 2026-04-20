@@ -4,6 +4,7 @@
 **Branch**: `003-ghfdb-import-export`
 **Input**: plan.md, spec.md, data-model.md, research.md, contracts/import-contract.md, contracts/export-contract.md, quickstart.md
 **Split from**: `002-ghfdb-proxy` tasks.md (Phases 3.5–5 + relevant Phase 7 tasks)
+**Propagated**: 2026-04-20 — Added Phase 4a with second import format tasks (T084–T090): `GHFDBSimpleImportFormat` implementation, admin format-selection requirement, and round-trip coverage (Acceptance Scenarios 11–12).
 **Propagated**: 2026-04-15 — Added controlled-vocabulary import normalization tasks (FR-016): T072 regression tests, T073 widget implementation, T074 validation gate.
 **Propagated**: 2026-04-14 — Updated from spec.md refinement
 **Bugfix**: 2026-04-14 — [BUG-002] Reopened admin import integration tasks and added import-page regression coverage for django-import-export hook compatibility.
@@ -103,6 +104,36 @@
 
 ---
 
+## Phase 4a: Second Import Format — Simple Template (US2)
+
+**Purpose**: Add `GHFDBSimpleImportFormat` for XLSX files with 5 metadata rows, headers at row 6, and data from row 7 (no unit-label or allowed-range skip rows). Expose both format classes in the admin import page so staff can select the correct layout before uploading.
+
+**Depends on**: Phase 4 complete
+
+### Tests for Phase 4a ⚠️ Write FIRST — verify they FAIL before implementing
+
+- [X] T084 [P] [US2] Write failing `GHFDBSimpleImportFormat` unit tests in `tests/test_ghfdb/test_resources/test_parent_import.py`: use `openpyxl` to build an in-memory workbook whose sheet `"data list"` has rows 1–5 as arbitrary metadata text, row 6 as column headers matching the first few entries of `GHFDB_COLUMN_ORDER`, and rows 7–8 as genuine data rows; call `GHFDBSimpleImportFormat().create_dataset(stream)` and assert (a) the returned `tablib.Dataset` has exactly 2 data rows, (b) no metadata-row content (e.g. the text `"metadata"`) appears as a data cell value, and (c) column headers match row 6 of the workbook
+- [X] T085 [P] [US2] Write failing admin format-selection tests in `tests/test_ghfdb/test_resources/test_parent_import.py`: instantiate `GHFDBAdmin(GHFDB, AdminSite())` and assert `get_import_formats()` returns a list of exactly 2 items; assert the first item's `get_title()` (or class name) is `"GHFDB Official Template"` and the second is `"GHFDB Simple Template"`; assert `GET /admin/ghfdb/ghfdb/import/` for a staff user returns HTTP 200 and the response body contains both format title strings
+
+### Implementation for Phase 4a
+
+- [X] T086 [US2] Implement `GHFDBSimpleImportFormat` in `project/ghfdb/resources/_base.py`: subclass `GHFDBImportFormat`; override `create_dataset()` replacing `ws.iter_rows(min_row=9)` with `ws.iter_rows(min_row=7)` (skip only the 5 metadata rows, not rows 7–8); override `get_title()` to return `"GHFDB Simple Template"`; also add `get_title()` to the existing `GHFDBImportFormat` returning `"GHFDB Official Template"` so both formats appear with distinct human-readable labels in the admin dropdown
+- [X] T087 [US2] Update `GHFDBAdmin.get_import_formats()` in `project/ghfdb/admin.py` to return `[GHFDBImportFormat, GHFDBSimpleImportFormat]`; add `GHFDBSimpleImportFormat` to the import from `project/ghfdb/resources`
+- [X] T088 [US2] Update `project/ghfdb/resources/__init__.py` to add `GHFDBSimpleImportFormat` to the public re-exports alongside `GHFDBImportFormat`
+
+### System Validation — Phase 4a
+
+- [X] T089 ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass before proceeding
+- [X] T089a ⚠️ CRITICAL [US2] Re-run `poetry run pytest tests/test_ghfdb/test_resources/ -v` — all existing Phase 4 tests MUST remain green and new format-selection and simple-template tests (T084, T085) MUST also pass
+
+### Round-trip Coverage — Phase 4a
+
+- [X] T090 [P] [US2] Update `tests/test_ghfdb/test_resources/test_roundtrip.py` (SC-001): add a second round-trip pass using the simple-template layout — create an in-memory XLSX with 5 metadata rows, headers at row 6, and the same data rows as `sample_ghfdb.xlsx` starting at row 7; import via `GHFDBParentImportResource` then `GHFDBChildImportResource` with a `GHFDBSimpleImportFormat` stream; assert the same records are created and that an export through `GHFDBExportResource` produces output identical to the official-template round-trip
+
+**Checkpoint — Phase 4a Complete**: `GHFDBSimpleImportFormat` verified; admin import page presents both named format options; all format-selection and simple-template round-trip tests pass.
+
+---
+
 ## Phase 5: User Story 3 — Export Heat Flow Data to GHFDB Format (Priority: P2)
 
 **Goal**: Staff can trigger an export from the Django admin that produces a valid GHFDB-format XLSX with all **62** columns in the canonical order, semicolons for M2M fields, and plain SI numeric values for Pint quantity fields.
@@ -158,6 +189,7 @@
 |---|---|---|
 | Prerequisite: 002 complete | Nothing | Everything in this spec |
 | Phase 3.5 — Resources Package Setup | 002 complete | Phase 4 (US2) and Phase 5 (US3) |
-| Phase 4 — US2 Import (P2) | Phase 3.5 | Phase 6 (round-trip) |
+| Phase 4 — US2 Import (P2) | Phase 3.5 | Phase 4a, Phase 6 (round-trip) |
+| Phase 4a — Second Import Format (US2) | Phase 4 | Phase 6 (round-trip) |
 | Phase 5 — US3 Export (P2) | Phase 3.5 + 002 (`for_export()`) | Phase 6 (round-trip) |
-| Phase 6 — Polish & Round-trip | Phase 4 + Phase 5 | Nothing |
+| Phase 6 — Polish & Round-trip | Phase 4 + Phase 4a + Phase 5 | Nothing |

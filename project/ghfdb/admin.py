@@ -23,6 +23,7 @@ from .resources import (
     GHFDBExportResource,
     GHFDBImportFormat,
     GHFDBParentImportResource,
+    GHFDBSimpleImportFormat,
 )
 
 
@@ -224,7 +225,7 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
         return [GHFDBChildImportResource]
 
     def get_import_formats(self):
-        return [GHFDBImportFormat]
+        return [GHFDBImportFormat, GHFDBSimpleImportFormat]
 
     # --- Export configuration ---------------------------------------------------
 
@@ -548,7 +549,7 @@ class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
         return [GHFDBParentImportResource]
 
     def get_import_formats(self):
-        return [GHFDBImportFormat]
+        return [GHFDBImportFormat, GHFDBSimpleImportFormat]
 
     @admin.display(description=_("ID_parent"), ordering="local_id")
     def get_id_parent(self, obj):
