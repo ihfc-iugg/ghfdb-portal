@@ -55,8 +55,8 @@ class GHFDB(HeatFlow):
 
     class Meta:
         proxy = True
-        verbose_name = _("GHFDB Entry")
-        verbose_name_plural = _("GHFDB Entries")
+        verbose_name = _("GHFDB Child")
+        verbose_name_plural = _("GHFDB Children")
 
 
 class GHFDBParent(ParentHeatFlow):
@@ -82,5 +82,5 @@ class GHFDBParent(ParentHeatFlow):
 
     class Meta:
         proxy = True
-        verbose_name = _("GHFDB Parent Entry")
-        verbose_name_plural = _("GHFDB Parent Entries")
+        verbose_name = _("GHFDB Parent")
+        verbose_name_plural = _("GHFDB Parents")

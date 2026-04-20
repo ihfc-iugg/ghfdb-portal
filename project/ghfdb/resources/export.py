@@ -94,8 +94,8 @@ class GHFDBExportResource(ModelResource):
 
     # Site-level scalar fields
     name = fields.Field(attribute="site_name")
-    lat_ns = fields.Field(attribute="lat_ns")
-    long_ew = fields.Field(attribute="long_ew")
+    lat_ns = fields.Field(attribute="lat_NS")
+    long_ew = fields.Field(attribute="long_EW")
     elevation = fields.Field(attribute="site_elevation")
     environment = fields.Field(attribute="site_environment")
     p_comment = fields.Field(attribute="p_comment")
@@ -117,8 +117,8 @@ class GHFDBExportResource(ModelResource):
     q_method = fields.Field(attribute=None)
 
     # Depth interval scalars
-    q_top = fields.Field(attribute="interval_top")
-    q_bottom = fields.Field(attribute="interval_bottom")
+    q_top = fields.Field(attribute="q_top")
+    q_bottom = fields.Field(attribute="q_bottom")
 
     # Probe metadata scalars
     probe_penetration = fields.Field(attribute="probe_penetration")
@@ -157,24 +157,24 @@ class GHFDBExportResource(ModelResource):
     # -----------------------------------------------------------------------
     # Thermal gradient scalars and M2M
     # -----------------------------------------------------------------------
-    t_grad_mean = fields.Field(attribute="tgrad_value")
-    t_grad_uncertainty = fields.Field(attribute="tgrad_uncertainty")
-    t_grad_mean_cor = fields.Field(attribute="tgrad_corrected")
-    t_grad_uncertainty_cor = fields.Field(attribute="tgrad_corrected_unc")
+    t_grad_mean = fields.Field(attribute="T_grad_mean")
+    t_grad_uncertainty = fields.Field(attribute="T_grad_uncertainty")
+    t_grad_mean_cor = fields.Field(attribute="T_grad_mean_cor")
+    t_grad_uncertainty_cor = fields.Field(attribute="T_grad_uncertainty_cor")
     t_method_top = fields.Field(attribute=None)
     t_method_bottom = fields.Field(attribute=None)
-    t_shutin_top = fields.Field(attribute="tgrad_shutin_top")
-    t_shutin_bottom = fields.Field(attribute="tgrad_shutin_bottom")
+    t_shutin_top = fields.Field(attribute="T_shutin_top")
+    t_shutin_bottom = fields.Field(attribute="T_shutin_bottom")
     t_corr_top = fields.Field(attribute=None)
     t_corr_bottom = fields.Field(attribute=None)
-    t_number = fields.Field(attribute="tgrad_number")
+    t_number = fields.Field(attribute="T_number")
 
     q_date = fields.Field(attribute="date_acquired")
 
     # -----------------------------------------------------------------------
     # Thermal conductivity scalars and M2M
     # -----------------------------------------------------------------------
-    tc_mean = fields.Field(attribute="tc_value")
+    tc_mean = fields.Field(attribute="tc_mean")
     tc_uncertainty = fields.Field(attribute="tc_uncertainty")  # annotation name matches
     tc_source = fields.Field(attribute=None)
     tc_location = fields.Field(attribute=None)
@@ -214,10 +214,10 @@ class GHFDBExportResource(ModelResource):
         return _mag(getattr(obj, "uncertainty", None))
 
     def dehydrate_q_top(self, obj) -> float | str:
-        return _mag(getattr(obj, "interval_top", None))
+        return _mag(getattr(obj, "q_top", None))
 
     def dehydrate_q_bottom(self, obj) -> float | str:
-        return _mag(getattr(obj, "interval_bottom", None))
+        return _mag(getattr(obj, "q_bottom", None))
 
     def dehydrate_probe_penetration(self, obj) -> float | str:
         return _mag(getattr(obj, "probe_penetration", None))
@@ -232,25 +232,25 @@ class GHFDBExportResource(ModelResource):
         return _mag(getattr(obj, "water_temperature", None))
 
     def dehydrate_t_grad_mean(self, obj) -> float | str:
-        return _mag(getattr(obj, "tgrad_value", None))
+        return _mag(getattr(obj, "T_grad_mean", None))
 
     def dehydrate_t_grad_uncertainty(self, obj) -> float | str:
-        return _mag(getattr(obj, "tgrad_uncertainty", None))
+        return _mag(getattr(obj, "T_grad_uncertainty", None))
 
     def dehydrate_t_grad_mean_cor(self, obj) -> float | str:
-        return _mag(getattr(obj, "tgrad_corrected", None))
+        return _mag(getattr(obj, "T_grad_mean_cor", None))
 
     def dehydrate_t_grad_uncertainty_cor(self, obj) -> float | str:
-        return _mag(getattr(obj, "tgrad_corrected_unc", None))
+        return _mag(getattr(obj, "T_grad_uncertainty_cor", None))
 
     def dehydrate_t_shutin_top(self, obj) -> float | str:
-        return _mag(getattr(obj, "tgrad_shutin_top", None))
+        return _mag(getattr(obj, "T_shutin_top", None))
 
     def dehydrate_t_shutin_bottom(self, obj) -> float | str:
-        return _mag(getattr(obj, "tgrad_shutin_bottom", None))
+        return _mag(getattr(obj, "T_shutin_bottom", None))
 
     def dehydrate_tc_mean(self, obj) -> float | str:
-        return _mag(getattr(obj, "tc_value", None))
+        return _mag(getattr(obj, "tc_mean", None))
 
     def dehydrate_tc_uncertainty(self, obj) -> float | str:
         return _mag(getattr(obj, "tc_uncertainty", None))

@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("heat_flow", "0007_add_interval_site_fk"),
     ]

@@ -5,6 +5,9 @@
 **Propagated**: 2026-04-14 -- Updated from spec.md refinement (admin column order + filter constraints)
 **Propagated**: 2026-04-17 -- Updated from spec.md refinement (two proxy models: GHFDBChild + GHFDBParent; split admin registrations; resource-to-admin assignment)
 **Bugfix**: 2026-04-14 -- [BUG-001] Added constrained-option behavior for concept-backed admin filters (`explo_purpose`).
+**Bugfix**: 2026-04-17 -- [BUG-002] Corrected the `GHFDBChild` admin contract to use child-level changelist columns with parent/site identifiers retained only as contextual fields.
+**Bugfix**: 2026-04-17 -- [BUG-003] Added guardrails for child-admin queryset optimization so only valid ORM relation paths are used in changelist prefetches.
+**Bugfix**: 2026-04-20 -- [BUG-004] Extended vocabulary-scoped filters to `environment` and `explo_method` on both admins; fixed `_interval()` fallback to return `None`.
 **Downstream**: Import/export pipeline is planned and implemented in `003-ghfdb-import-export`.
 
 ## Summary
@@ -14,7 +17,7 @@ This plan covers:
 1. **Two GHFDB proxy models** -- `GHFDBChild` extends `HeatFlow` (proxy, no new table), `objects = GHFDBChildManager()`; `GHFDBParent` extends `ParentHeatFlow` (proxy, no new table), `objects = GHFDBParentManager()`. Both admin-only (not registered with FairDM registry).
 2. **`GHFDBChildQuerySet`** -- `as_ghfdb_flat()` (31 `F()`-annotated scalars + 9 correction-flag subqueries; <=2 DB queries, constant) and `for_export()` (`as_ghfdb_flat()` + 14 `prefetch_related` paths; ~16 queries, constant). `for_export()` is consumed by the downstream `003-ghfdb-import-export` spec.
 3. **`GHFDBParentQuerySet`** -- `with_child_counts()` (annotates `total_children` and `relevant_children` counts), `with_children()` (prefetches linked child `HeatFlow` records). Constant query count.
-4. **Two Django admin changelists** -- Read-only `GHFDBChildAdmin` (labelled "GHFDB Entries") with exact child-level display order, vocabulary-scoped `explo_purpose` list filter (BUG-001), search by `name`/`ID_parent`, and `GHFDBChildImportResource` + `GHFDBExportResource` attached. Read-only `GHFDBParentAdmin` (labelled "GHFDB Parent Entries") with parent-level display order plus `total_children`/`relevant_children` computed columns, same filter/search set, and `GHFDBParentImportResource` attached.
+4. **Two Django admin changelists** -- Read-only `GHFDBChildAdmin` (labelled "GHFDB Children") with BUG-002 child-level display order: `local_id`, `ID_parent`, `name`, `lat_NS`, `long_EW`, followed by child measurement, correction, probe, gradient, conductivity, and reference fields; vocabulary-scoped custom `SimpleListFilter` classes for `environment` (`GeographicEnvironment`), `explo_method` (`ExplorationMethod`), and `explo_purpose` (`ExplorationPurpose`) on the child admin (BUG-001, BUG-004); analogous parent-path filter classes for the parent admin; search by `name`/`ID_parent`; `_interval()` helper returns `None` on missing MTI accessor (BUG-004); `GHFDBChildImportResource` + `GHFDBExportResource` attached. Read-only `GHFDBParentAdmin` (labelled "GHFDB Parents") with parent-level display order plus `total_children`/`relevant_children` computed columns, same vocabulary-scoped filter/search set, and `GHFDBParentImportResource` attached.
 5. **Explore map page** -- `GHFDBExploreView` serving `explore.html`: full-viewport iframe embedding the IHFC web-map viewer, `onerror` fallback, no auth required, menu link active.
 6. **`HeatFlow.local_id` migration** -- Nullable `CharField` added to `HeatFlow` (also `HeatFlowSite.local_id` and `ParentHeatFlow.local_id`) as stable import upsert keys for the downstream import spec.
 
@@ -23,7 +26,7 @@ This plan covers:
 - **Language**: Python >=3.13
 - **Dependencies**: Django 5.0+, FairDM, django-pint-field
 - **Performance**: `GHFDBChildQuerySet.as_ghfdb_flat()` <=2 queries (constant); `for_export()` ~16 queries (constant); `GHFDBParentQuerySet.with_child_counts()` 1 query (constant); `with_children()` ~2 queries (constant); no N+1 per row
-- **Constraints**: Both proxies admin-only (no FairDM registry); `explo_purpose` list-filter choices vocabulary-scoped (not generic); `local_id` fields nullable, indexed; import/export resources attached to their respective admin only
+- **Constraints**: Both proxies admin-only (no FairDM registry); all concept-backed list-filter choices vocabulary-scoped via custom `SimpleListFilter` classes — `environment` scoped to `GeographicEnvironment`, `explo_method` to `ExplorationMethod`, `explo_purpose` to `ExplorationPurpose` (BUG-001, BUG-004); `_interval()` returns `None` on missing MTI (BUG-004); `local_id` fields nullable, indexed; import/export resources attached to their respective admin only
 
 ## Constitution Check
 

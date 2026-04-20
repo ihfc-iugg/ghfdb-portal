@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("heat_flow", "0003_heatflow_m_score_heatflow_u_score_and_more"),
         ("measurement", "0003_alter_measurement_options"),
@@ -31,39 +30,27 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="heatflow",
-            index=models.Index(
-                fields=["relevant_child"], name="heat_flow_h_relevan_4eb3f8_idx"
-            ),
+            index=models.Index(fields=["relevant_child"], name="heat_flow_h_relevan_4eb3f8_idx"),
         ),
         migrations.AddIndex(
             model_name="heatflow",
-            index=models.Index(
-                fields=["U_score"], name="heat_flow_h_U_score_6332e9_idx"
-            ),
+            index=models.Index(fields=["U_score"], name="heat_flow_h_U_score_6332e9_idx"),
         ),
         migrations.AddIndex(
             model_name="heatflow",
-            index=models.Index(
-                fields=["M_score"], name="heat_flow_h_M_score_0437ab_idx"
-            ),
+            index=models.Index(fields=["M_score"], name="heat_flow_h_M_score_0437ab_idx"),
         ),
         migrations.AddIndex(
             model_name="heatflowsite",
-            index=models.Index(
-                fields=["country"], name="heat_flow_h_country_f7a8a0_idx"
-            ),
+            index=models.Index(fields=["country"], name="heat_flow_h_country_f7a8a0_idx"),
         ),
         migrations.AddIndex(
             model_name="heatflowsite",
-            index=models.Index(
-                fields=["continent"], name="heat_flow_h_contine_e87180_idx"
-            ),
+            index=models.Index(fields=["continent"], name="heat_flow_h_contine_e87180_idx"),
         ),
         migrations.AddIndex(
             model_name="heatflowsite",
-            index=models.Index(
-                fields=["environment"], name="heat_flow_h_environ_2e87f6_idx"
-            ),
+            index=models.Index(fields=["environment"], name="heat_flow_h_environ_2e87f6_idx"),
         ),
         migrations.AddIndex(
             model_name="intervalconductivity",
@@ -71,15 +58,11 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="surfaceheatflow",
-            index=models.Index(
-                fields=["is_ghfdb"], name="heat_flow_s_is_ghfd_cfae5c_idx"
-            ),
+            index=models.Index(fields=["is_ghfdb"], name="heat_flow_s_is_ghfd_cfae5c_idx"),
         ),
         migrations.AddIndex(
             model_name="surfaceheatflow",
-            index=models.Index(
-                fields=["corr_HP_flag"], name="heat_flow_s_corr_HP_48836a_idx"
-            ),
+            index=models.Index(fields=["corr_HP_flag"], name="heat_flow_s_corr_HP_48836a_idx"),
         ),
         migrations.AddIndex(
             model_name="thermalgradient",
@@ -92,9 +75,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="thermalgradient",
             constraint=models.CheckConstraint(
-                condition=models.Q(
-                    ("number__gt", 0), ("number__isnull", True), _connector="OR"
-                ),
+                condition=models.Q(("number__gt", 0), ("number__isnull", True), _connector="OR"),
                 name="positive_temperature_recordings",
             ),
         ),

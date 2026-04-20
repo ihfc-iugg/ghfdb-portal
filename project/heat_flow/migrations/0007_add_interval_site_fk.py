@@ -6,7 +6,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("heat_flow", "0006_ghfdb_data_model_cleanup"),
         ("sample", "0005_alter_sample_options_alter_samplerelation_options_and_more"),

@@ -189,15 +189,15 @@ Examples:
 
     # Generate output
     if args.summary_only:
-        output = f"""# PDF Summary: {data['filename']}
+        output = f"""# PDF Summary: {data["filename"]}
 
-- **Pages**: {data['num_pages']}
-- **Words**: {data['total_words']:,}
-- **Estimated Tokens**: ~{int(data['estimated_tokens']):,}
-- **Title**: {data['metadata']['title']}
-- **Author**: {data['metadata']['author']}
+- **Pages**: {data["num_pages"]}
+- **Words**: {data["total_words"]:,}
+- **Estimated Tokens**: ~{int(data["estimated_tokens"]):,}
+- **Title**: {data["metadata"]["title"]}
+- **Author**: {data["metadata"]["author"]}
 
-Use `python utils/parse_pdf.py {data['path']}` to extract full content.
+Use `python utils/parse_pdf.py {data["path"]}` to extract full content.
 """
     else:
         output = format_as_markdown(data)
