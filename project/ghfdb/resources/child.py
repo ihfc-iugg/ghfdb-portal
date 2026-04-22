@@ -10,7 +10,7 @@ and creates/updates child-level records:
   - ProbeMetadata (optional, created in after_save_instance)
   - HeatFlowCorrection x 9 (created in after_save_instance via CORRECTION_COL_MAP)
 
-Upsert key: HeatFlow.local_id <- spreadsheet column ID
+Upsert key: HeatFlow.ghfdb_id <- spreadsheet column ID
 
 References:
     - Fuchs et al. (2021). A new database structure for the IHFC Global Heat
@@ -19,7 +19,7 @@ References:
 """
 
 from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
-from import_export import fields
+from import_export import fields, widgets
 from import_export.resources import ModelResource
 from import_export.widgets import ForeignKeyWidget
 
@@ -44,7 +44,7 @@ class GHFDBChildImportResource(ModelResource):
     are created or updated in ``before_save_instance`` / ``after_save_instance``.
     """
 
-    local_id = fields.Field(attribute="local_id", column_name="ID")
+    ghfdb_id = fields.Field(attribute="ghfdb_id", column_name="ID", widget=widgets.IntegerWidget())
     qc = fields.Field(
         attribute="value",
         column_name="qc",
@@ -58,7 +58,7 @@ class GHFDBChildImportResource(ModelResource):
     parent = fields.Field(
         attribute="parent",
         column_name="ID_parent",
-        widget=ForeignKeyWidget(ParentHeatFlow, field="local_id"),
+        widget=ForeignKeyWidget(ParentHeatFlow, field="ghfdb_id"),
     )
     relevant_child = fields.Field(
         attribute="is_relevant",
@@ -155,11 +155,11 @@ class GHFDBChildImportResource(ModelResource):
         child_id = str(row.get("ID") or "").strip()
         if child_id:
             return super().get_or_init_instance(instance_loader, row)
-        # For rows without ID: look up by natural key stored in local_id.
+        # For rows without ID: look up by natural key stored in name field.
         natural_key = self._child_natural_key(row)
         if natural_key:
             try:
-                instance = HeatFlow.objects.get(local_id=natural_key)
+                instance = HeatFlow.objects.get(name=natural_key)
             except HeatFlow.DoesNotExist:
                 pass
             else:
@@ -184,11 +184,11 @@ class GHFDBChildImportResource(ModelResource):
         if instance.parent is None and not str(row.get("ID_parent") or "").strip():
             instance.parent = self._resolve_parent_by_location(row)
 
-        # Set stable natural key as local_id for no-ID rows.
+        # Set stable natural key as name for no-ID rows.
         if not str(row.get("ID") or "").strip():
             natural_key = self._child_natural_key(row)
             if natural_key:
-                instance.local_id = natural_key
+                instance.name = natural_key
 
         # Determine the parent HeatFlowSite for the interval
         parent_hf = instance.parent
@@ -360,11 +360,11 @@ class GHFDBChildImportResource(ModelResource):
 
     class Meta:
         model = HeatFlow
-        import_id_fields = ("local_id",)
+        import_id_fields = ("ghfdb_id",)
         use_transactions = True
         rollback_on_validation_errors = True
         fields = (
-            "local_id",
+            "ghfdb_id",
             "qc",
             "qc_uncertainty",
             "parent",

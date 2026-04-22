@@ -1,7 +1,7 @@
 # Import Contract: GHFDB Spreadsheet → Normalised Heat Flow Models
 
 **Feature**: 002-ghfdb-proxy
-**Date**: 2026-04-13
+**Date**: 2026-04-22
 **Direction**: Import (flat spreadsheet → relational database)
 
 ## Overview
@@ -29,7 +29,7 @@ Both resources read the same XLSX file. The parent import deduplicates by `ID_pa
 
 | # | Spreadsheet Column | Type | Required | Target Model | Target Field | Widget | Notes |
 |---|---|---|---|---|---|---|---|
-| 1 | `ID_parent` | string | **M** | `ParentHeatFlow` | `local_id` | `CharWidget` | Upsert key. Must be unique per site. |
+| 1 | `ID_parent` | integer | **M** | `ParentHeatFlow` | `ghfdb_id` | `IntegerWidget` | Upsert key. Empty string converts to `None`. |
 | 2 | `q` | numeric | **M** | `ParentHeatFlow` | `value` | `QuantityWidget("mW/m²")` | Parent heat flow density. Validated ±10⁶. |
 | 3 | `q_uncertainty` | numeric | O | `ParentHeatFlow` | `uncertainty` | `QuantityWidget("mW/m²")` | 1σ uncertainty. |
 | 4 | `name` | string | **M** | `HeatFlowSite` | `name` | `CharWidget` | Site name. Via `ParentWidget`. |
@@ -56,7 +56,7 @@ When the spreadsheet contains multiple rows with the same `ID_parent` value, onl
 
 ### Upsert Behaviour
 
-- **Lookup**: `ParentHeatFlow.objects.filter(local_id=row["ID_parent"])`
+- **Lookup**: `ParentHeatFlow.objects.filter(ghfdb_id=row["ID_parent"])`
 - **If found**: Update all mapped fields
 - **If not found**: Create new `ParentHeatFlow` + `HeatFlowSite` + `Point`
 
@@ -68,7 +68,7 @@ When the spreadsheet contains multiple rows with the same `ID_parent` value, onl
 
 | # | Spreadsheet Column | Type | Required | Target Model | Target Field | Widget | Notes |
 |---|---|---|---|---|---|---|---|
-| 1 | `ID` | string | **M** | `HeatFlow` | `local_id` | `CharWidget` | Upsert key. Unique per child measurement. |
+| 1 | `ID` | integer | **M** | `HeatFlow` | `ghfdb_id` | `IntegerWidget` | Upsert key. Empty string converts to `None`. Rows with no ID use `name` as natural key. |
 | 2 | `qc` | numeric | **M** | `HeatFlow` | `value` | `QuantityWidget("mW/m²")` | Child heat flow density. |
 | 3 | `qc_uncertainty` | numeric | O | `HeatFlow` | `uncertainty` | `QuantityWidget("mW/m²")` | 1σ uncertainty. |
 | 4 | `q_method` | concepts | O | `HeatFlow` | `method` | `MultiConceptWidget(HeatFlowMethod)` | Semicolon-separated. M2M. |
@@ -77,7 +77,7 @@ When the spreadsheet contains multiple rows with the same `ID_parent` value, onl
 | 7 | `water_temperature` | numeric | O | `HeatFlow` | `water_temperature` | `QuantityWidget("°C")` | Seafloor temperature. |
 | 8 | `c_comment` | string | O | `HeatFlow` | `c_comment` | `CharWidget` | Child-level comments. |
 | 9 | `relevant_child` | yes/no | O | `HeatFlow` | `is_relevant` | `YesNoWidget` | Used in parent calculation? |
-| 10 | `ID_parent` | string | **M** | `HeatFlow` | `parent` | `ForeignKeyWidget(ParentHeatFlow, "local_id")` | FK lookup. Site must exist. |
+| 10 | `ID_parent` | integer | **M** | `HeatFlow` | `parent` | `ForeignKeyWidget(ParentHeatFlow, "ghfdb_id")` | FK lookup by `ghfdb_id`. Parent must exist. |
 
 ### Input → Output Mapping — HeatFlowInterval (via IntervalWidget)
 

@@ -89,7 +89,7 @@ class GHFDBQuerySet(PolymorphicQuerySet):
 
         scalar_annotations = {
             # Child-level identifiers / values
-            "id_parent": F("parent__local_id"),
+            "id_parent": F("parent__ghfdb_id"),
             "qc": F("value"),
             "qc_uncertainty": F("uncertainty"),
             "relevant_child": F("is_relevant"),
@@ -166,10 +166,14 @@ class GHFDBQuerySet(PolymorphicQuerySet):
 
 
 class GHFDBManager(PolymorphicManager):
-    """Custom manager for the GHFDB proxy model."""
+    """Custom manager for the GHFDB proxy model.
+
+    Default queryset is scoped to records where ``ghfdb_id`` is set
+    (FR-001b) — i.e. only published GHFDB entries are visible.
+    """
 
     def get_queryset(self) -> GHFDBQuerySet:
-        return GHFDBQuerySet(self.model, using=self._db)
+        return GHFDBQuerySet(self.model, using=self._db).filter(ghfdb_id__isnull=False)
 
     def as_ghfdb_flat(self) -> GHFDBQuerySet:
         """Delegate to ``GHFDBQuerySet.as_ghfdb_flat()``."""
@@ -217,10 +221,14 @@ class GHFDBParentQuerySet(PolymorphicQuerySet):
 
 
 class GHFDBParentManager(PolymorphicManager):
-    """Custom manager for the GHFDBParent proxy model."""
+    """Custom manager for the GHFDBParent proxy model.
+
+    Default queryset is scoped to records where ``ghfdb_id`` is set
+    (FR-001b) — i.e. only published GHFDB parent entries are visible.
+    """
 
     def get_queryset(self) -> GHFDBParentQuerySet:
-        return GHFDBParentQuerySet(self.model, using=self._db)
+        return GHFDBParentQuerySet(self.model, using=self._db).filter(ghfdb_id__isnull=False)
 
     def with_child_counts(self) -> GHFDBParentQuerySet:
         """Delegate to ``GHFDBParentQuerySet.with_child_counts()``."""

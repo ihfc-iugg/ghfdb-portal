@@ -191,3 +191,59 @@ def test_parent_queryset_standard_operations(heat_flow_chain):
     assert qs.count() >= 1
     assert qs.filter(pk=heat_flow_chain.parent.pk).count() == 1
     assert len(list(qs.order_by("pk"))) >= 1
+
+
+# ---------------------------------------------------------------------------
+# Phase 8: Queryset scoping tests (T094) — FR-001b
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_ghfdb_child_manager_excludes_null_ghfdb_id(heat_flow_chain):
+    """T094: GHFDB.objects (default manager) excludes records with ghfdb_id=None (FR-001b)."""
+    from heat_flow.models import HeatFlow
+
+    from project.ghfdb.models import GHFDB
+
+    # Create a non-GHFDB HeatFlow record (ghfdb_id left as None)
+    non_ghfdb = HeatFlow.objects.create(
+        dataset=heat_flow_chain.dataset,
+        sample=heat_flow_chain.sample,
+        name="Non-GHFDB Child",
+        value=50.0,
+        parent=heat_flow_chain.parent,
+    )
+    assert non_ghfdb.ghfdb_id is None
+
+    ghfdb_pks = set(GHFDB.objects.values_list("pk", flat=True))
+    assert heat_flow_chain.pk in ghfdb_pks, "Published GHFDB child must appear in default queryset"
+    assert non_ghfdb.pk not in ghfdb_pks, "Non-GHFDB child (ghfdb_id=None) must be excluded"
+
+
+@pytest.mark.django_db
+def test_ghfdb_parent_manager_excludes_null_ghfdb_id(heat_flow_chain):
+    """T094: GHFDBParent.objects (default manager) excludes parents with ghfdb_id=None (FR-001b)."""
+    # Create a distinct site (one parent-per-site constraint prevents reusing the chain site)
+    from heat_flow.models import HeatFlowSite, ParentHeatFlow
+
+    from project.ghfdb.models import GHFDBParent
+
+    other_site = HeatFlowSite.objects.create(
+        dataset=heat_flow_chain.dataset,
+        name="Non-GHFDB Site",
+        country="Germany",
+        continent="Europe",
+        environment="onshore_continental",
+    )
+    # Create a non-GHFDB parent (ghfdb_id left as None)
+    non_ghfdb_parent = ParentHeatFlow.objects.create(
+        dataset=heat_flow_chain.dataset,
+        sample=other_site,
+        name="Non-GHFDB Parent",
+        value=55.0,
+    )
+    assert non_ghfdb_parent.ghfdb_id is None
+
+    ghfdb_parent_pks = set(GHFDBParent.objects.values_list("pk", flat=True))
+    assert heat_flow_chain.parent.pk in ghfdb_parent_pks, "Published GHFDB parent must appear in default queryset"
+    assert non_ghfdb_parent.pk not in ghfdb_parent_pks, "Non-GHFDB parent (ghfdb_id=None) must be excluded"

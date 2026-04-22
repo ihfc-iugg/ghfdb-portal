@@ -7,7 +7,7 @@ and creates/updates parent-level records:
   - Point (geographic coordinates from lat_NS / long_EW)
   - ParentHeatFlow (value, uncertainty, comment, corr_HP_flag)
 
-Upsert key: ParentHeatFlow.local_id <- spreadsheet column ID_parent
+Upsert key: ParentHeatFlow.ghfdb_id <- spreadsheet column ID_parent
 For rows without ID_parent, upsert key is the HeatFlowSite location (lat_NS / long_EW).
 
 References:
@@ -19,7 +19,7 @@ References:
 from typing import cast
 
 from heat_flow.models import HeatFlowSite, ParentHeatFlow
-from import_export import fields
+from import_export import fields, widgets
 from import_export.resources import ModelResource
 
 from ._widgets import ParentWidget, QuantityWidget, YesNoWidget
@@ -32,13 +32,13 @@ class GHFDBParentImportResource(ModelResource):
     Parses the 18 PARENT_COLUMNS from the GHFDB spreadsheet and upserts
     ``ParentHeatFlow`` + ``HeatFlowSite`` records keyed on ``ID_parent``.
     For rows without an explicit ``ID_parent``, the upsert key is the site
-    location (``lat_NS`` / ``long_EW``); ``ParentHeatFlow.local_id`` is left
+    location (``lat_NS`` / ``long_EW``); ``ParentHeatFlow.ghfdb_id`` is left
     empty for such template rows so that synthetic keys never appear in the
     confirm-page diff view.
     """
 
     # Fields with direct model attribute mappings (field key == PARENT_COLUMNS entry)
-    ID_parent = fields.Field(attribute="local_id", column_name="ID_parent")
+    ID_parent = fields.Field(attribute="ghfdb_id", column_name="ID_parent", widget=widgets.IntegerWidget())
     q = fields.Field(
         attribute="value",
         column_name="q",

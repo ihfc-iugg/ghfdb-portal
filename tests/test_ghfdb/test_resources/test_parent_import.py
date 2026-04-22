@@ -2,7 +2,7 @@
 Tests for GHFDBParentImportResource.
 
 Covers:
-- Upsert on local_id (re-import updates, does not duplicate)
+- Upsert on ghfdb_id (re-import updates, does not duplicate)
 - before_import() deduplication keeps first occurrence of each ID_parent
 - 18 parent columns mapped to correct fields
 - ParentHeatFlow.sample FK (to HeatFlowSite) created with correct Point location
@@ -21,7 +21,7 @@ User = get_user_model()
 # ---------------------------------------------------------------------------
 
 PARENT_ROW = {
-    "ID_parent": "GHFDB-P-001",
+    "ID_parent": "1",
     "q": "70.0",
     "q_uncertainty": "5.0",
     "name": "Test Site Alpha",
@@ -71,10 +71,10 @@ class TestGHFDBParentImportResourceImport:
         result = resource.import_data(ds, dry_run=False, raise_errors=False)
 
         assert not result.has_errors(), result.invalid_rows
-        assert ParentHeatFlow.objects.filter(local_id="GHFDB-P-001").exists()
+        assert ParentHeatFlow.objects.filter(ghfdb_id=1).exists()
         assert HeatFlowSite.objects.filter(name="Test Site Alpha").exists()
 
-    def test_upsert_on_local_id_does_not_duplicate(self, dataset):
+    def test_upsert_on_ghfdb_id_does_not_duplicate(self, dataset):
         """Re-importing the same ID_parent updates, does not create a second record."""
         from heat_flow.models import ParentHeatFlow
 
@@ -85,7 +85,7 @@ class TestGHFDBParentImportResourceImport:
         resource.import_data(ds, dry_run=False, raise_errors=False)
         resource.import_data(ds, dry_run=False, raise_errors=False)
 
-        assert ParentHeatFlow.objects.filter(local_id="GHFDB-P-001").count() == 1
+        assert ParentHeatFlow.objects.filter(ghfdb_id=1).count() == 1
 
     def test_upsert_updates_existing_record(self, dataset):
         """Re-importing with changed q value updates the existing ParentHeatFlow."""
@@ -102,7 +102,7 @@ class TestGHFDBParentImportResourceImport:
         ds2 = make_dataset(updated)
         resource.import_data(ds2, dry_run=False, raise_errors=False)
 
-        parent = ParentHeatFlow.objects.get(local_id="GHFDB-P-001")
+        parent = ParentHeatFlow.objects.get(ghfdb_id=1)
         assert float(parent.value.magnitude) == pytest.approx(80.0)
 
     def test_site_has_correct_point_location(self, dataset):
@@ -161,8 +161,8 @@ class TestGHFDBParentBeforeImportDedup:
         ds = make_dataset(row1, row2)
         resource.import_data(ds, dry_run=False, raise_errors=False)
 
-        assert ParentHeatFlow.objects.filter(local_id="GHFDB-P-001").count() == 1
-        parent = ParentHeatFlow.objects.get(local_id="GHFDB-P-001")
+        assert ParentHeatFlow.objects.filter(ghfdb_id=1).count() == 1
+        parent = ParentHeatFlow.objects.get(ghfdb_id=1)
         # First row's value should be used
         assert float(parent.value.magnitude) == pytest.approx(70.0)
 
@@ -270,10 +270,10 @@ class TestGHFDBParentImportResourceAccessControl:
 
 @pytest.mark.django_db
 class TestGHFDBAutoParentKeyRegression:
-    """T075 — BUG-005 regression: AUTO_PARENT key must not appear in local_id after import."""
+    """T075 — BUG-005 regression: synthetic key must not pollute ParentHeatFlow fields after no-ID import."""
 
-    def test_no_auto_parent_in_local_id_after_no_id_import(self, dataset):
-        """No ParentHeatFlow.local_id should contain 'AUTO_PARENT:' after importing a row without ID_parent."""
+    def test_no_auto_parent_in_ghfdb_id_after_no_id_import(self, dataset):
+        """No ParentHeatFlow.ghfdb_id should contain a synthetic string key after importing a row without ID_parent."""
         from heat_flow.models import ParentHeatFlow
 
         from project.ghfdb.resources import GHFDBParentImportResource
@@ -284,12 +284,13 @@ class TestGHFDBAutoParentKeyRegression:
 
         assert not result.has_errors(), result.invalid_rows
         for parent in ParentHeatFlow.objects.all():
-            assert "AUTO_PARENT:" not in (parent.local_id or ""), (
-                f"ParentHeatFlow.local_id contains synthetic key: {parent.local_id!r}"
+            # ghfdb_id is a PositiveIntegerField; None is expected for no-ID rows
+            assert parent.ghfdb_id is None or isinstance(parent.ghfdb_id, int), (
+                f"ParentHeatFlow.ghfdb_id has unexpected type: {parent.ghfdb_id!r}"
             )
 
     def test_no_auto_parent_in_dry_run_id_parent_column(self, dataset):
-        """Dry-run result ID_parent column must show real local_id or empty, not AUTO_PARENT:."""
+        """Dry-run result ID_parent column must show real ghfdb_id or empty, not AUTO_PARENT:."""
         from project.ghfdb.resources import GHFDBParentImportResource
 
         row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}

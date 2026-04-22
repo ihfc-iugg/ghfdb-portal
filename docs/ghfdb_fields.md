@@ -159,16 +159,20 @@ The following fields existed in older versions of the data model but have been r
 | relevant\_child | C09 | HeatFlow.relevant\_child | Renamed for clarity | `HeatFlow.is_relevant` |
 | corr\_IS\_flag through corr\_HR\_flag | C11–C19 | HeatFlow.corr\_\*\_flag (Boolean) | Booleans cannot encode correction severity/status; normalised to `HeatFlowCorrection` records | `HeatFlowCorrection(correction_type=<TYPE>).status` |
 
-## HeatFlow local_id
+## HeatFlow ghfdb_id
 
-`HeatFlow.local_id` is the stable upsert key for GHFDB child imports.
+`HeatFlow.ghfdb_id` is the stable upsert key for GHFDB child imports.
 
-- Type: `CharField(max_length=255)`
+- Type: `PositiveIntegerField`
 - Constraints: `null=True`, `blank=True`, `db_index=True`
 - Source column: GHFDB spreadsheet `ID`
-- Import usage: `GHFDBChildImportResource.Meta.import_id_fields = ("local_id",)`
+- Import usage: `GHFDBChildImportResource.Meta.import_id_fields = ("ghfdb_id",)`
 
-For parent imports, the corresponding stable key is `ParentHeatFlow.local_id`, mapped from spreadsheet `ID_parent`.
+> **Note:** The GHFDB spreadsheet uses string-format IDs (e.g. `R24-001588`). Parsing these
+> strings into the stored integer is handled by the import resource layer (see import/export spec).
+
+For parent imports, the corresponding stable key is `ParentHeatFlow.ghfdb_id`, mapped from
+spreadsheet `ID_parent` (e.g. `R24-P000004`).
 
 ## Proxy Model Access Patterns
 

@@ -196,11 +196,6 @@ class HeatFlow(Measurement):
         blank=True,
     )
 
-    # This field makes absolutely no sense as IGSN refers to a sample, not a measurement. But then would it belong to
-    #  a HeatFlowSite or a HeatFlowInterval? It is not clear.
-    # IGSN field removed: IGSN belongs on Sample (HeatFlowSite/HeatFlowInterval), not on HeatFlow measurement (FR-010)
-
-    # Rename to "comment"
     c_comment = models.TextField(
         verbose_name=_("comment"),
         help_text=_("General comments on the child level."),
@@ -261,17 +256,6 @@ class HeatFlow(Measurement):
         editable=False,
         db_index=True,
     )
-
-    # NO LONGER USING local_id as the stable key for upsert, since we have ghdfb_id for that purpose. We can add it back if we find a use for it, but for now it's just adding complexity and potential confusion.
-    # GHFDB spreadsheet ID column — used as the stable key for import upsert.
-    # Corresponds to the "ID" column in the GHFDB spreadsheet schema (Fuchs et al., 2021).
-    # local_id = models.CharField(
-    #     max_length=255,
-    #     null=True,
-    #     blank=True,
-    #     db_index=True,
-    #     help_text=_("GHFDB spreadsheet ID column — used as the stable key for import upsert"),
-    # )
 
     # Managers
     # objects = HeatFlowManager()

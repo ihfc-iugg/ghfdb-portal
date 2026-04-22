@@ -3,6 +3,7 @@
 **Feature**: 002-ghfdb-proxy
 **Date**: 2026-04-13
 **Prerequisites**: [research.md](research.md) complete
+**Propagated**: 2026-04-22 — Updated from spec.md refinement: `local_id` and `is_ghfdb` removed from `HeatFlow` and `ParentHeatFlow`; replaced by `ghfdb_id` (PositiveIntegerField) and `quality` (CharField). GHFDB membership is now `ghfdb_id__isnull=False`. Proxy model table and field tables updated.
 
 ## Overview
 
@@ -10,22 +11,38 @@ This document defines the proxy model design, queryset API, annotation names, an
 
 ## Proxy Model & Queryset Design
 
-### GHFDB Proxy Model
+### GHFDBChild Proxy Model
 
 | Attribute | Value |
 |---|---|
 | **Extends** | `HeatFlow` (proxy, no new table) |
 | **`verbose_name`** | `"GHFDB Child"` |
 | **`verbose_name_plural`** | `"GHFDB Children"` |
-| **`objects`** | `GHFDBManager` (provides `as_ghfdb_flat()` and `for_export()`) |
+| **`objects`** | `GHFDBChildManager` (provides `as_ghfdb_flat()`, `for_export()`; default queryset scoped to `ghfdb_id__isnull=False` per FR-001b) |
 
-### HeatFlow — New Field: `local_id`
+### GHFDBParent Proxy Model
+
+| Attribute | Value |
+|---|---|
+| **Extends** | `ParentHeatFlow` (proxy, no new table) |
+| **`verbose_name`** | `"GHFDB Parent"` |
+| **`verbose_name_plural`** | `"GHFDB Parents"` |
+| **`objects`** | `GHFDBParentManager` (provides `with_child_counts()`, `with_children()`; default queryset scoped to `ghfdb_id__isnull=False` per FR-001b) |
+
+### HeatFlow — Fields Added by `001-heat-flow-data-model` Branch
+
+> These fields exist as direct model columns on **both** `HeatFlow` and `ParentHeatFlow`. No annotation or migration is needed within this feature; the migration was delivered by the `001-heat-flow-data-model` branch.
 
 | Field | Type | Constraints | Purpose |
 |---|---|---|---|
-| `local_id` | `CharField(max_length=255)` | `null=True`, `blank=True`, `db_index=True` | Stores the GHFDB spreadsheet `ID` column; enables `import_id_fields = ("local_id",)` for upsert |
+| `ghfdb_id` | `PositiveIntegerField` | `null=True`, `blank=True`, `db_index=True` | Stable GHFDB row/site identifier. Non-null value indicates the record is part of the published GHFDB. Used as `import_id_fields` upsert key in `003-ghfdb-import-export`. |
+| `quality` | `CharField` | `null=True`, `blank=True` | Composite quality assessment string per Fuchs et al. (2023) (e.g. `"Ux.Mx.-------"`). Exposed directly in both child and parent admin changelists. |
 
-**Migration required**: Yes — adds a nullable varchar column to the `heat_flow_heatflow` table.
+~~### HeatFlow — New Field: `local_id`~~ **[REMOVED 2026-04-22]**
+
+~~`local_id` CharField has been removed. `ghfdb_id` (PositiveIntegerField) replaces it as the stable GHFDB identifier and import upsert key.~~
+
+~~**Migration required**: Yes — adds a nullable varchar column to the `heat_flow_heatflow` table.~~
 
 ### GHFDBQuerySet Methods
 
@@ -35,6 +52,8 @@ This document defines the proxy model design, queryset API, annotation names, an
 | `for_export()` | ~16 (constant) | `as_ghfdb_flat()` + prefetch_related for all ~15 M2M relations |
 
 ### Annotation Name Mapping (used by `as_ghfdb_flat()`)
+
+> **Direct model fields (not annotations)**: `ghfdb_id` and `quality` are native columns on `HeatFlow` and `ParentHeatFlow`; they do not need to be annotated by `as_ghfdb_flat()` and are accessed directly (e.g. `obj.ghfdb_id`, `obj.quality`). They correspond to GHFDB columns `id` (child/parent identifier) and `quality` respectively.
 
 #### Scalar Annotations (folded into main SELECT with JOINs)
 

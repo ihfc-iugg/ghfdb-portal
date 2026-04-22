@@ -92,6 +92,7 @@ def heat_flow_chain(dataset):
         sample=site,
         name="Test Parent",
         value=70.0,
+        ghfdb_id=1,
     )
 
     child = HeatFlow.objects.create(
@@ -102,6 +103,7 @@ def heat_flow_chain(dataset):
         parent=parent,
         thermal_gradient=gradient,
         thermal_conductivity=conductivity,
+        ghfdb_id=1,
     )
 
     # Create all 9 HeatFlowCorrection instances
@@ -123,8 +125,8 @@ def sample_ghfdb_row():
     Column names match the official GHFDB spreadsheet headers.
     """
     return {
-        "ID": "GHFDB-001",
-        "ID_parent": "GHFDB-P-001",
+        "ID": "1",
+        "ID_parent": "1",
         "name": "test_site",
         "lat_NS": "48.0",
         "long_EW": "11.0",

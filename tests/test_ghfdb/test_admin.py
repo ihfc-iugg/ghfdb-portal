@@ -15,7 +15,7 @@ from project.ghfdb.admin import (
 from project.ghfdb.models import GHFDB
 
 EXPECTED_LIST_DISPLAY = (
-    "local_id",
+    "ghfdb_id",
     "get_id_parent",
     "site_name",
     "lat_NS",
@@ -68,13 +68,14 @@ EXPECTED_LIST_DISPLAY = (
     "get_tc_p_t_fuction",
     "tc_number",
     "get_tc_strategy",
+    "get_quality",
     "get_ref_isgn",
 )
 
 EXPECTED_SEARCH_FIELDS = (
     "sample__heatflowinterval__sample__name",
-    "parent__local_id",
-    "local_id",
+    "parent__ghfdb_id",
+    "ghfdb_id",
 )
 
 EXPECTED_LIST_FILTER = (
@@ -112,17 +113,17 @@ def test_ghfdb_admin_changelist_refined_configuration(admin_client, heat_flow_ch
 
 @pytest.mark.django_db
 def test_ghfdb_admin_search_by_name_and_id_parent(admin_client, heat_flow_chain):
-    """T013: Search works using parent ID and site name mapped fields."""
+    """T013: Search works using parent ghfdb_id and site name mapped fields."""
     entry = heat_flow_chain
-    entry.parent.local_id = "PARENT-SEARCH-001"
-    entry.parent.save(update_fields=["local_id"])
+    entry.parent.ghfdb_id = 99999
+    entry.parent.save(update_fields=["ghfdb_id"])
 
     url = reverse("admin:ghfdb_ghfdb_changelist")
 
     response_by_name = admin_client.get(url, {"q": entry.sample.heatflowinterval.sample.name})
     assert response_by_name.status_code == 200
 
-    response_by_parent_id = admin_client.get(url, {"q": entry.parent.local_id})
+    response_by_parent_id = admin_client.get(url, {"q": str(entry.parent.ghfdb_id)})
     assert response_by_parent_id.status_code == 200
 
 
@@ -294,11 +295,13 @@ PARENT_EXPECTED_LIST_DISPLAY = (
     "get_long_ew",
     "get_elevation",
     "get_environment",
+    "get_p_comment",
     "get_corr_hp_flag",
     "get_total_depth_md",
     "get_total_depth_tvd",
     "get_explo_method",
     "get_explo_purpose",
+    "get_quality",
     "get_country",
     "get_region",
     "get_continent",
@@ -316,11 +319,13 @@ PARENT_EXPECTED_HEADERS = [
     "long_EW",
     "elevation",
     "environment",
+    "p_comment",
     "corr_HP_flag",
     "total_depth_MD",
     "total_depth_TVD",
     "explo_method",
     "explo_purpose",
+    "quality",
     "country",
     "region",
     "continent",

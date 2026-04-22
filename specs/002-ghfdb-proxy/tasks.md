@@ -6,6 +6,7 @@
 **Generated**: 2026-04-13
 **Propagated**: 2026-04-14 — Updated from spec.md refinement (admin column order + filter constraints)
 **Propagated**: 2026-04-17 — Updated from spec.md refinement (two proxy models: GHFDBChild + GHFDBParent; split admin registrations; resource-to-admin assignment)
+**Propagated**: 2026-04-22 — Updated from spec.md refinement: `ghfdb_id`/`quality` added; `local_id`/`is_ghfdb` removed; FR-001b manager default queryset scoping; child and parent admin column orders updated; Phase 2 local_id tasks superseded; Phase 8 added.
 **Bugfix**: 2026-04-14 � [BUG-001] Reopened admin filter tasks and added vocabulary-scoping tasks for `explo_purpose` list-filter choices.
 **Bugfix**: 2026-04-17 — [BUG-002] Reopened child-admin tasks and added child-field coverage work so `GHFDBChild` no longer uses the parent changelist contract.
 **Bugfix**: 2026-04-17 — [BUG-003] Reopened child-admin validation tasks after invalid `prefetch_related()` relation paths caused changelist runtime errors.
@@ -35,27 +36,27 @@
 
 ---
 
-## Phase 2: Foundational (Blocking Prerequisite � `HeatFlow.local_id`)
+## Phase 2: ~~Foundational (Blocking Prerequisite — `HeatFlow.local_id`)~~ [SUPERSEDED by 2026-04-22]
 
-**Purpose**: Add the `local_id` field to `HeatFlow` and generate its migration. This field serves as the stable import upsert key consumed by the downstream `003-ghfdb-import-export` spec.
+**Purpose**: ~~Add the `local_id` field to `HeatFlow` and generate its migration.~~ (superseded) This phase is now complete via a different migration in the `001-heat-flow-data-model` branch: `ghfdb_id` (PositiveIntegerField, nullable) and `quality` (CharField, nullable) were added to both `HeatFlow` and `ParentHeatFlow`; `local_id` and `is_ghfdb` were removed. The database is already migrated. Phase 2 tasks below are struck through; the new work is in Phase 8.
 
-**?? CRITICAL**: No user story work can begin until this phase is complete and the migration is verified.
+**⚠️ CRITICAL**: ~~No user story work can begin until this phase is complete and the migration is verified.~~ (done)
 
-- [X] T004 Add `local_id = models.CharField(max_length=255, null=True, blank=True, db_index=True, help_text=_("GHFDB spreadsheet ID column � used as the stable key for import upsert"))` to the `HeatFlow` model
-- [X] T005 Generate migration: run `poetry run python manage.py makemigrations heat_flow` and verify the resulting file in `project/heat_flow/migrations/` adds only a nullable `local_id` varchar column with a `db_index`
+- ~~[X] T004 Add `local_id = models.CharField(max_length=255, null=True, blank=True, db_index=True, help_text=_("GHFDB spreadsheet ID column — used as the stable key for import upsert"))` to the `HeatFlow` model~~ **[SUPERSEDED]** — `ghfdb_id` (PositiveIntegerField) now serves this role. Added in `001-heat-flow-data-model` branch.
+- ~~[X] T005 Generate migration: run `poetry run python manage.py makemigrations heat_flow` and verify the resulting file in `project/heat_flow/migrations/` adds only a nullable `local_id` varchar column with a `db_index`~~ **[SUPERSEDED]** — Migration generated and applied via `001-heat-flow-data-model` branch for `ghfdb_id`/`quality`.
 
 ### System Validation � Phase 2
 
 - [X] T006 ?? CRITICAL: Run Django system checks: `poetry run python manage.py check` � MUST pass before proceeding
 - [X] T007 ?? CRITICAL: Apply migration and verify: `poetry run python manage.py migrate` � MUST succeed cleanly before proceeding to any user story
 
-**Checkpoint � Foundation Ready**: `HeatFlow.local_id` exists in the database.
+**Checkpoint — ~~Foundation Ready: `HeatFlow.local_id` exists in the database~~** [SUPERSEDED] — `ghfdb_id` and `quality` already exist on both `HeatFlow` and `ParentHeatFlow` following merge of `001-heat-flow-data-model`.
 
 ---
 
 ## Phase 3: User Story 1 — GHFDBChild Proxy Model (Priority: P1) ⚠️ MVP
 
-**Goal**: A `GHFDBChild` proxy model over `HeatFlow` with a `GHFDBChildQuerySet` returning all **40 scalar + correction-flag columns** via `as_ghfdb_flat()` (31 `F()`-annotated scalars + 9 correction-flag subqueries; =2 DB queries, constant) and the full **65 GHFDB columns** via `for_export()` (~16 queries, constant), registered as a read-only Django admin view labelled "GHFDB Children" with the BUG-002 child-level changelist order: `local_id`, `ID_parent`, `name`, `lat_NS`, `long_EW`, then the required child measurement, correction, probe, gradient, conductivity, and reference fields. `GHFDBChildImportResource` and `GHFDBExportResource` attached to this admin only.
+**Goal**: A `GHFDBChild` proxy model over `HeatFlow` with a `GHFDBChildQuerySet` returning all **40 scalar + correction-flag columns** via `as_ghfdb_flat()` (31 `F()`-annotated scalars + 9 correction-flag subqueries; <=2 DB queries, constant) and the full **65 GHFDB columns** via `for_export()` (~16 queries, constant), registered as a read-only Django admin view labelled "GHFDB Children" with the 2026-04-22 child-level changelist order: `ghfdb_id`, `ID_parent`, `name`, `lat_NS`, `long_EW`, then the required child measurement, correction, probe, gradient, conductivity, and reference fields, with `quality` before `Ref_ISGN` (~~`local_id`~~ removed). `GHFDBChildImportResource` and `GHFDBExportResource` attached to this admin only.
 
 **Independent Test**: `poetry run pytest tests/test_ghfdb/test_managers.py tests/test_ghfdb/test_admin.py -v`
 
@@ -66,7 +67,7 @@
 - [X] T010 [P] [US1] Write correction-flags test: assert all 9 `corr_*_flag` annotations (`corr_IS_flag`, `corr_T_flag`, `corr_S_flag`, `corr_E_flag`, `corr_TOPO_flag`, `corr_PAL_flag`, `corr_SUR_flag`, `corr_CONV_flag`, `corr_HR_flag`) are accessible as attributes on records from `as_ghfdb_flat()` in `tests/test_ghfdb/test_managers.py`
 - [X] T011 [P] [US1] Write `for_export()` query-count test: assert `GHFDBChild.objects.for_export()` executes =16 DB queries using `django_assert_max_num_queries(16)` in `tests/test_ghfdb/test_managers.py`
 - [X] T012 [P] [US1] Write standard queryset operability test: assert `filter()`, `order_by()`, and `count()` work without error on the queryset returned by `as_ghfdb_flat()` in `tests/test_ghfdb/test_managers.py`
-- [X] T013 ⚠️ Reopened [P] [US1] Refine admin registration tests in `tests/test_ghfdb/test_admin.py`: assert changelist HTTP 200, title "GHFDB Children", exact ordered child-level columns (`local_id`, `ID_parent`, `name`, `lat_NS`, `long_EW`, `qc`, `qc_uncertainty`, `q_method`, `q_top`, `q_bottom`, `probe_penetration`, `publication_reference`, `data_reference`, `relevant_child`, `c_comment`, `corr_IS_flag`, `corr_T_flag`, `corr_S_flag`, `corr_E_flag`, `corr_TOPO_flag`, `corr_PAL_flag`, `corr_SUR_flag`, `corr_CONV_flag`, `corr_HR_flag`, `expedition`, `probe_type`, `probe_length`, `probe_tilt`, `water_temperature`, `geo_lithology`, `geo_stratigraphy`, `T_grad_mean`, `T_grad_uncertainty`, `T_grad_mean_cor`, `T_grad_uncertainty_cor`, `T_method_top`, `T_method_bottom`, `T_shutin_top`, `T_shutin_bottom`, `T_corr_top`, `T_corr_bottom`, `T_number`, `q_date`, `tc_mean`, `tc_uncertainty`, `tc_source`, `tc_location`, `tc_method`, `tc_saturation`, `tc_pT_conditions`, `tc_pT_fuction`, `tc_number`, `tc_strategy`, `Ref_ISGN`), search fields for `name` and `ID_parent`, and list filters for `environment`, `corr_HP_flag`, `explo_method`, `explo_purpose`, `country`, `region`, `continent`, and `domain` (reopened — BUG-002)
+- [X] T013 ⚠️ Reopened [P] [US1] Refine admin registration tests in `tests/test_ghfdb/test_admin.py`: assert changelist HTTP 200, title "GHFDB Children", exact ordered child-level columns (~~`local_id`~~ [superseded 2026-04-22] `ghfdb_id`, `ID_parent`, `name`, `lat_NS`, `long_EW`, `qc`, `qc_uncertainty`, `q_method`, `q_top`, `q_bottom`, `probe_penetration`, `publication_reference`, `data_reference`, `relevant_child`, `c_comment`, `corr_IS_flag`, `corr_T_flag`, `corr_S_flag`, `corr_E_flag`, `corr_TOPO_flag`, `corr_PAL_flag`, `corr_SUR_flag`, `corr_CONV_flag`, `corr_HR_flag`, `expedition`, `probe_type`, `probe_length`, `probe_tilt`, `water_temperature`, `geo_lithology`, `geo_stratigraphy`, `T_grad_mean`, `T_grad_uncertainty`, `T_grad_mean_cor`, `T_grad_uncertainty_cor`, `T_method_top`, `T_method_bottom`, `T_shutin_top`, `T_shutin_bottom`, `T_corr_top`, `T_corr_bottom`, `T_number`, `q_date`, `tc_mean`, `tc_uncertainty`, `tc_source`, `tc_location`, `tc_method`, `tc_saturation`, `tc_pT_conditions`, `tc_pT_fuction`, `tc_number`, `tc_strategy`, `quality`, `Ref_ISGN`), search fields for `name` and `ID_parent`, and list filters for `environment`, `corr_HP_flag`, `explo_method`, `explo_purpose`, `country`, `region`, `continent`, and `domain` (reopened — BUG-002; column list updated 2026-04-22)
 - [X] T063 [P] [US1] Add a failing regression test in `tests/test_ghfdb/test_admin.py` verifying that `explo_purpose` list-filter choices are restricted to values accepted by `HeatFlowSite.explo_purpose` and exclude unrelated generic `Concept` values
 
 ### Implementation for User Story 1
@@ -76,7 +77,7 @@
 - [X] T016 [US1] Implement `GHFDBChildQuerySet.for_export()` in `project/ghfdb/managers.py`: call `self.as_ghfdb_flat()` and chain `prefetch_related(...)` for all 14 M2M paths: `method`, `sample__sample__explo_purpose`, `thermal_gradient__method_top`, `thermal_gradient__method_bottom`, `thermal_gradient__correction_top`, `thermal_gradient__correction_bottom`, `thermal_conductivity__source`, `thermal_conductivity__location`, `thermal_conductivity__method`, `thermal_conductivity__saturation`, `thermal_conductivity__pT_conditions`, `thermal_conductivity__pT_function`, `thermal_conductivity__strategy`, `sample__probe_metadata__probe_type`
 - [X] T017 [US1] Implement `GHFDBChildManager(models.Manager)` in `project/ghfdb/managers.py`: override `get_queryset()` to return `GHFDBChildQuerySet(self.model, using=self._db)`, and add `as_ghfdb_flat()` and `for_export()` delegation methods
 - [X] T018 [US1] Implement `GHFDBChild` proxy model in `project/ghfdb/models.py`: inherits `HeatFlow`, `objects = GHFDBChildManager()`, `class Meta: proxy = True; verbose_name = _("GHFDB Child"); verbose_name_plural = _("GHFDB Children")`; add class docstring citing Fuchs et al. (2021, 2023). **Note � registry exemption**: `GHFDBChild` is a proxy over `HeatFlow`, not a direct `Sample` or `Measurement` subclass. FairDM registry (`@fairdm.register`) applies only to direct `Sample`/`Measurement` subtypes that need auto-generated views/tables/filters; this proxy is intentionally admin-only and does not require registry registration. **Also**: add a minimal smoke test to `tests/test_ghfdb/test_models.py`: `from project.ghfdb.models import GHFDBChild` / `assert GHFDBChild._meta.proxy is True` / `assert GHFDBChild._meta.verbose_name == "GHFDB Child"`.
-- [X] T019 ⚠️ Reopened [US1] Update `project/ghfdb/admin.py` `GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin)`: keep `get_queryset()` returning `GHFDBChild.objects.as_ghfdb_flat()`. Attach `GHFDBChildImportResource` and `GHFDBExportResource` exclusively to this admin (FR-011b), set `list_display` to the BUG-002 child-level order (`local_id`, `ID_parent`, `name`, `lat_NS`, `long_EW`, `qc`, `qc_uncertainty`, `q_method`, `q_top`, `q_bottom`, `probe_penetration`, `publication_reference`, `data_reference`, `relevant_child`, `c_comment`, `corr_IS_flag`, `corr_T_flag`, `corr_S_flag`, `corr_E_flag`, `corr_TOPO_flag`, `corr_PAL_flag`, `corr_SUR_flag`, `corr_CONV_flag`, `corr_HR_flag`, `expedition`, `probe_type`, `probe_length`, `probe_tilt`, `water_temperature`, `geo_lithology`, `geo_stratigraphy`, `T_grad_mean`, `T_grad_uncertainty`, `T_grad_mean_cor`, `T_grad_uncertainty_cor`, `T_method_top`, `T_method_bottom`, `T_shutin_top`, `T_shutin_bottom`, `T_corr_top`, `T_corr_bottom`, `T_number`, `q_date`, `tc_mean`, `tc_uncertainty`, `tc_source`, `tc_location`, `tc_method`, `tc_saturation`, `tc_pT_conditions`, `tc_pT_fuction`, `tc_number`, `tc_strategy`, `Ref_ISGN`), use vocabulary-scoped custom `SimpleListFilter` classes for `environment`, `explo_method`, and `explo_purpose` in `list_filter` (BUG-004), keep `list_display_links = None` for read-only, and wrap user-facing strings in `_()` (reopened — BUG-003, reopened — BUG-004)
+- [X] T019 ⚠️ Reopened [US1] Update `project/ghfdb/admin.py` `GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin)`: keep `get_queryset()` returning `GHFDBChild.objects.as_ghfdb_flat()`. Attach `GHFDBChildImportResource` and `GHFDBExportResource` exclusively to this admin (FR-011b), set `list_display` to the 2026-04-22 updated child-level order (~~`local_id`~~ [removed] `ghfdb_id`, `ID_parent`, `name`, `lat_NS`, `long_EW`, `qc`, `qc_uncertainty`, `q_method`, `q_top`, `q_bottom`, `probe_penetration`, `publication_reference`, `data_reference`, `relevant_child`, `c_comment`, `corr_IS_flag`, `corr_T_flag`, `corr_S_flag`, `corr_E_flag`, `corr_TOPO_flag`, `corr_PAL_flag`, `corr_SUR_flag`, `corr_CONV_flag`, `corr_HR_flag`, `expedition`, `probe_type`, `probe_length`, `probe_tilt`, `water_temperature`, `geo_lithology`, `geo_stratigraphy`, `T_grad_mean`, `T_grad_uncertainty`, `T_grad_mean_cor`, `T_grad_uncertainty_cor`, `T_method_top`, `T_method_bottom`, `T_shutin_top`, `T_shutin_bottom`, `T_corr_top`, `T_corr_bottom`, `T_number`, `q_date`, `tc_mean`, `tc_uncertainty`, `tc_source`, `tc_location`, `tc_method`, `tc_saturation`, `tc_pT_conditions`, `tc_pT_fuction`, `tc_number`, `tc_strategy`, `quality`, `Ref_ISGN`), use vocabulary-scoped custom `SimpleListFilter` classes for `environment`, `explo_method`, and `explo_purpose` in `list_filter` (BUG-004), keep `list_display_links = None` for read-only, and wrap user-facing strings in `_()` (reopened — BUG-003, reopened — BUG-004; `list_display` updated 2026-04-22)
 - [X] T064 ⚠️ Reopened [US1] Implement constrained admin list filter classes (`SimpleListFilter`) for all concept-backed fields in `project/ghfdb/admin.py`: `ExplorePurposeListFilter` scoped to `ExplorationPurpose` (BUG-001), plus `EnvironmentListFilter` scoped to `GeographicEnvironment` and `ChildExplorationMethodListFilter` scoped to `ExplorationMethod` for the child admin (reopened — BUG-004)
 - [X] T079 [US1] Extend `project/ghfdb/managers.py` `GHFDBChildQuerySet.as_ghfdb_flat()` (and any supporting admin helpers) so the BUG-002 child-admin columns are available efficiently for changelist rendering, including child identifiers, child heat-flow values, references, probe metadata, gradient fields, conductivity fields, and `Ref_ISGN`
 
@@ -117,7 +118,7 @@
 - [X] T067 [P] [US1b] Write count-correctness test: given a `ParentHeatFlow` with N children, assert `total_children == N` and `relevant_children` matches expected threshold-filtered count in `tests/test_ghfdb/test_managers.py`
 - [X] T068 [P] [US1b] Write `with_children()` test: assert parent records include prefetched child `HeatFlow` objects accessible without extra queries in `tests/test_ghfdb/test_managers.py`
 - [X] T069 [P] [US1b] Write standard queryset operability test: assert `filter()`, `order_by()`, and `count()` work on `GHFDBParent.objects.all()` in `tests/test_ghfdb/test_managers.py`
-- [X] T070 [P] [US1b] Write admin registration tests in `tests/test_ghfdb/test_admin.py`: assert `GHFDBParentAdmin` changelist HTTP 200, title "GHFDB Parents", exact ordered columns (`ID_parent`, `q`, `q_uncertainty`, `name`, `lat_NS`, `long_EW`, `elevation`, `environment`, `corr_HP_flag`, `total_depth_MD`, `total_depth_TVD`, `explo_method`, `explo_purpose`, `country`, `region`, `continent`, `domain`, `total_children`, `relevant_children`), search fields for `name` and `ID_parent`, same list filters as `GHFDBChildAdmin` including vocabulary-scoped `explo_purpose`
+- [X] T070 [P] [US1b] Write admin registration tests in `tests/test_ghfdb/test_admin.py`: assert `GHFDBParentAdmin` changelist HTTP 200, title "GHFDB Parents", exact ordered columns (~~`ID_parent`, `q`, `q_uncertainty`, `name`, `lat_NS`, `long_EW`, `elevation`, `environment`, `corr_HP_flag`, `total_depth_MD`, `total_depth_TVD`, `explo_method`, `explo_purpose`, `country`, `region`, `continent`, `domain`, `total_children`, `relevant_children`~~ [superseded 2026-04-22] `ghfdb_id`, `q`, `q_uncertainty`, `name`, `lat_NS`, `long_EW`, `elevation`, `environment`, `p_comment`, `corr_HP_flag`, `total_depth_MD`, `total_depth_TVD`, `explo_method`, `explo_purpose`, `quality`, `country`, `region`, `continent`, `domain`, `total_children`, `relevant_children`), search fields for `name` and `ID_parent`, same list filters as `GHFDBChildAdmin` including vocabulary-scoped `explo_purpose`
 - [X] T071 [P] [US1b] Write admin import resource test: assert `GHFDBParentAdmin.get_import_resource_classes()` returns `[GHFDBParentImportResource]` only (not `GHFDBChildImportResource` or `GHFDBExportResource`) in `tests/test_ghfdb/test_admin.py`
 
 ### Implementation for User Story 1b
@@ -125,7 +126,7 @@
 - [X] T072 [US1b] Implement `GHFDBParentQuerySet` in `project/ghfdb/managers.py`: add `with_child_counts()` method that annotates `total_children = Count("children")` (or equivalent FK reverse name) and `relevant_children = Count("children", filter=Q(...))` with an appropriate quality/relevance threshold; add `with_children()` method that calls `prefetch_related("children")` (or equivalent) to attach child `HeatFlow` records
 - [X] T073 [US1b] Implement `GHFDBParentManager` in `project/ghfdb/managers.py`: override `get_queryset()` to return `GHFDBParentQuerySet(self.model, using=self._db)`, add `with_child_counts()` and `with_children()` delegation methods
 - [X] T074 [US1b] Implement `GHFDBParent` proxy model in `project/ghfdb/models.py`: inherits `ParentHeatFlow`, `objects = GHFDBParentManager()`, `class Meta: proxy = True; verbose_name = _("GHFDB Parent"); verbose_name_plural = _("GHFDB Parents")`; add class docstring. Add smoke test to `tests/test_ghfdb/test_models.py`: `assert GHFDBParent._meta.proxy is True` / `assert GHFDBParent._meta.verbose_name == "GHFDB Parent"`
-- [X] T075 [US1b] Implement `GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin)` in `project/ghfdb/admin.py`: register for `GHFDBParent`, `get_queryset()` returns `GHFDBParent.objects.with_child_counts()`, `list_display` = parent-level GHFDB column order + `total_children` + `relevant_children` as computed columns, `search_fields` for `name` and `local_id`, `list_filter` same set as `GHFDBChildAdmin` (including `ExplorePurposeListFilter`), `list_display_links = None`, read-only permissions. Attach `GHFDBParentImportResource` exclusively (FR-011b) — no export resource or child import resource.
+- [X] T075 [US1b] Implement `GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin)` in `project/ghfdb/admin.py`: register for `GHFDBParent`, `get_queryset()` returns `GHFDBParent.objects.with_child_counts()`, `list_display` = 2026-04-22 parent-level GHFDB column order (`ghfdb_id`, `q`, `q_uncertainty`, `name`, `lat_NS`, `long_EW`, `elevation`, `environment`, `p_comment`, `corr_HP_flag`, `total_depth_MD`, `total_depth_TVD`, `explo_method`, `explo_purpose`, `quality`, `country`, `region`, `continent`, `domain`) + `total_children` + `relevant_children` as computed columns (~~`search_fields` for `name` and `local_id`~~ [superseded] `search_fields` for `name` and `ghfdb_id`), `list_filter` same set as `GHFDBChildAdmin` (including `ExplorePurposeListFilter`), `list_display_links = None`, read-only permissions. Attach `GHFDBParentImportResource` exclusively (FR-011b) — no export resource or child import resource.
 
 ### System Validation — Phase 3b
 
@@ -169,8 +170,8 @@
 
 **Purpose**: Documentation update and full-suite validation.
 
-- [X] T059 [P] Update `docs/ghfdb_fields.md` to document `HeatFlow.local_id` (type, constraints, purpose, GHFDB spreadsheet `ID` column) and add a "Proxy Model Access Patterns" section citing key annotation names from the `data-model.md` mapping table
-- [X] T078 [P] Update `docs/ghfdb_fields.md` to document the `GHFDBParent` proxy model, its queryset methods (`with_child_counts()`, `with_children()`), and admin registration
+- [X] T059 [P] Update `docs/ghfdb_fields.md` to ~~document `HeatFlow.local_id` (type, constraints, purpose, GHFDB spreadsheet `ID` column)~~ [superseded 2026-04-22 — `local_id` removed; document `HeatFlow.ghfdb_id` (PositiveIntegerField, nullable, indexed, stable GHFDB row identifier) and `HeatFlow.quality` (CharField, nullable, composite quality string per Fuchs et al. 2023) instead] and add a "Proxy Model Access Patterns" section citing key annotation names from the `data-model.md` mapping table
+- [X] T078 [P] Update `docs/ghfdb_fields.md` to document the `GHFDBParent` proxy model, its queryset methods (`with_child_counts()`, `with_children()`), admin registration, and the ~~`ParentHeatFlow.local_id`~~ [superseded 2026-04-22] `ParentHeatFlow.ghfdb_id` and `ParentHeatFlow.quality` fields
 
 ### System Validation — Final
 
@@ -183,6 +184,40 @@
 
 ---
 
+## Phase 8: Data Model Update — `ghfdb_id` / `quality` Alignment (2026-04-22)
+
+**Purpose**: Apply spec.md 2026-04-22 refinement in code. The underlying models already have `ghfdb_id` and `quality` (from `001-heat-flow-data-model` branch); this phase updates managers, admin column lists, tests, and documentation to match.
+
+**Depends on**: All previous phases (code already exists)
+**Independent Test**: `poetry run pytest tests/test_ghfdb/ -v`
+
+### FR-001b — Manager Default Queryset Scoping
+
+- [X] T092 [US1] Update `GHFDBChildManager.get_queryset()` in `project/ghfdb/managers.py` to filter `ghfdb_id__isnull=False` so only published GHFDB child records are returned by default (FR-001b)
+- [X] T093 [US1b] Update `GHFDBParentManager.get_queryset()` in `project/ghfdb/managers.py` to filter `ghfdb_id__isnull=False` so only published GHFDB parent records are returned by default (FR-001b)
+- [X] T094 [P] Add tests in `tests/test_ghfdb/test_managers.py`: assert `GHFDBChild.objects.count()` excludes records where `ghfdb_id` is null; assert `GHFDBParent.objects.count()` excludes records where `ghfdb_id` is null
+
+### Child Admin Column Update
+
+- [X] T095 [US1] Update `GHFDBChildAdmin.list_display` in `project/ghfdb/admin.py`: replace leading ~~`local_id`~~ with `ghfdb_id`; append `quality` before `Ref_ISGN` (FR-012, 2026-04-22 order)
+- [X] T096 [P] Update test T013 assertion in `tests/test_ghfdb/test_admin.py`: replace `local_id` with `ghfdb_id` as first display column and add `quality` before `Ref_ISGN` in the expected `list_display` tuple
+
+### Parent Admin Column Update
+
+- [X] T097 [US1b] Update `GHFDBParentAdmin.list_display` in `project/ghfdb/admin.py` to the 2026-04-22 column order: `ghfdb_id`, `q`, `q_uncertainty`, `name`, `lat_NS`, `long_EW`, `elevation`, `environment`, `p_comment`, `corr_HP_flag`, `total_depth_MD`, `total_depth_TVD`, `explo_method`, `explo_purpose`, `quality`, `country`, `region`, `continent`, `domain`, `total_children`, `relevant_children`; update `search_fields` from ~~`local_id`~~ to `ghfdb_id` (FR-012b, 2026-04-22)
+- [X] T098 [P] Update test T070 assertion in `tests/test_ghfdb/test_admin.py`: replace old parent column order with new 2026-04-22 order (see FR-012b in spec.md)
+- [X] T099 [P] Add display method `ghfdb_id` (and `p_comment`, `quality` if not already present) to `GHFDBParentAdmin` in `project/ghfdb/admin.py` so they resolve from `ParentHeatFlow` fields correctly
+
+### System Validation — Phase 8
+
+- [X] T100 ⚠️ CRITICAL: Run `poetry run python manage.py check` — MUST pass
+- [X] T101 ⚠️ CRITICAL: Run full test suite: `poetry run pytest tests/test_ghfdb/ -v` — ALL tests MUST pass with updated column assertions
+- [X] T102 [P] Update `docs/ghfdb_fields.md` to replace ~~`local_id` / `is_ghfdb`~~ references with `ghfdb_id` and `quality` for both `HeatFlow` and `ParentHeatFlow`
+
+**Checkpoint — Phase 8 Complete**: Both manager default querysets scope to `ghfdb_id__isnull=False`; child and parent admin `list_display` match spec FR-012/FR-012b 2026-04-22 column order; all existing tests updated and passing; docs reflect model changes.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -190,8 +225,9 @@
 | Phase | Depends on | Blocks |
 |---|---|---|
 | Phase 1 � Setup | Nothing | Nothing |
-| Phase 2 — Foundational (`HeatFlow.local_id`) | Phase 1 | Phase 3 (US1), Phase 3b (US1b), Phase 6 (US4) |
-| Phase 3 — US1 GHFDBChild Proxy (P1) | Phase 2 | `003-ghfdb-import-export` Phase 5 (US3 export needs `for_export()`) |
-| Phase 3b — US1b GHFDBParent Proxy (P1) | Phase 2 | `003-ghfdb-import-export` (parent import resource needs `GHFDBParent` admin) |
-| Phase 6 — US4 Map Viewer (P3) | Phase 2 | Nothing (independent) |
+| ~~Phase 2 — Foundational (`HeatFlow.local_id`)~~ [SUPERSEDED] | Phase 1 | ~~Phase 3, Phase 3b, Phase 6~~ (unblocked; migration done via `001` branch) |
+| Phase 3 — US1 GHFDBChild Proxy (P1) | Phase 1 | `003-ghfdb-import-export` Phase 5 (US3 export needs `for_export()`) |
+| Phase 3b — US1b GHFDBParent Proxy (P1) | Phase 1 | `003-ghfdb-import-export` (parent import resource needs `GHFDBParent` admin) |
+| Phase 6 — US4 Map Viewer (P3) | Phase 1 | Nothing (independent) |
 | Phase 7 — Polish | Phase 3 + Phase 3b + Phase 6 | Nothing |
+| Phase 8 — `ghfdb_id`/`quality` Alignment (2026-04-22) | Phase 3 + Phase 3b | `003-ghfdb-import-export` (upsert key change to `ghfdb_id`) |

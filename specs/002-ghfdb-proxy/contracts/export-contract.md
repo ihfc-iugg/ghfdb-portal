@@ -1,7 +1,7 @@
 # Export Contract: Normalised Heat Flow Models → GHFDB Spreadsheet
 
 **Feature**: 002-ghfdb-proxy
-**Date**: 2026-04-13
+**Date**: 2026-04-22
 **Direction**: Export (relational database → flat spreadsheet)
 
 ## Overview
@@ -28,8 +28,8 @@ This means the queryset is already flat — the resource simply maps annotation 
 
 | # | Spreadsheet Column | Source Expression | Widget | Notes |
 |---|---|---|---|---|
-| 1 | `ID` | `local_id` | `CharWidget` | Child measurement ID |
-| 2 | `ID_parent` | `parent__local_id` (annotated) | `CharWidget` | Site/parent ID |
+| 1 | `ID` | `ghfdb_id` | `IntegerWidget` | Child measurement ID |
+| 2 | `ID_parent` | `parent__ghfdb_id` (annotated) | `IntegerWidget` | Site/parent ID |
 | 3 | `q` | `parent__value` (annotated) | `QuantityWidget("mW/m²")` | Parent heat flow density |
 | 4 | `q_uncertainty` | `parent__uncertainty` (annotated) | `QuantityWidget("mW/m²")` | |
 | 5 | `qc` | `value` | `QuantityWidget("mW/m²")` | Child heat flow density |
@@ -108,7 +108,7 @@ This means the queryset is already flat — the resource simply maps annotation 
 
 ## Ordering
 
-Export rows are ordered by `parent__local_id` (ascending), then `local_id` (ascending), grouping children under their parent site for readability.
+Export rows are ordered by `parent__ghfdb_id` (ascending), then `ghfdb_id` (ascending), grouping children under their parent site for readability.
 
 ## Filtering
 

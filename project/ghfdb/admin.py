@@ -192,6 +192,7 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
         "get_tc_p_t_fuction",
         "tc_number",
         "get_tc_strategy",
+        "get_quality",
         "get_ref_isgn",
     )
     search_fields = (
@@ -395,6 +396,10 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
             return ""
         return "; ".join(str(c) for c in conductivity.strategy.all())
 
+    @admin.display(description=_("quality"), ordering="quality")
+    def get_quality(self, obj):
+        return getattr(obj, "quality", None)
+
     @admin.display(description=_("Ref_ISGN"))
     def get_ref_isgn(self, obj):
         return ""
@@ -516,11 +521,13 @@ class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
         "get_long_ew",
         "get_elevation",
         "get_environment",
+        "get_p_comment",
         "get_corr_hp_flag",
         "get_total_depth_md",
         "get_total_depth_tvd",
         "get_explo_method",
         "get_explo_purpose",
+        "get_quality",
         "get_country",
         "get_region",
         "get_continent",
@@ -592,6 +599,10 @@ class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
         hfs = getattr(site, "heatflowsite", None) if site else None
         return getattr(hfs, "environment", None) if hfs else None
 
+    @admin.display(description=_("p_comment"), ordering="comment")
+    def get_p_comment(self, obj):
+        return getattr(obj, "comment", None)
+
     @admin.display(description=_("corr_HP_flag"), ordering="corr_HP_flag")
     def get_corr_hp_flag(self, obj):
         return getattr(obj, "corr_HP_flag", None)
@@ -622,6 +633,10 @@ class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
             return ""
         concepts = hfs.explo_purpose.all()
         return "; ".join(str(c) for c in concepts)
+
+    @admin.display(description=_("quality"), ordering="quality")
+    def get_quality(self, obj):
+        return getattr(obj, "quality", None)
 
     @admin.display(description=_("country"), ordering="sample__heatflowsite__country")
     def get_country(self, obj):
