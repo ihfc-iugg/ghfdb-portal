@@ -2,8 +2,11 @@
 
 **Feature Branch**: `001-heat-flow-data-model`
 **Created**: 2026-04-09
-**Status**: Draft
+**Status**: Refined
 **References**: Fuchs et al. (2021); Fuchs et al. (2023); Constitution Principles I, II, III
+
+**Refined**: 2026-04-22 — `ParentHeatFlow` and `HeatFlow` field changes: added `ghfdb_id` (nullable integer, spreadsheet reference) and `quality` (13-char code string); removed `is_ghfdb` flag (membership now determined by `ghfdb_id IS NOT NULL`); removed `local_id` field from both models (its function is assumed by `ghfdb_id`).
+**Refined**: 2026-04-22 (2) — Corrected: `ghfdb_id` field type is `PositiveIntegerField` (not `BigIntegerField`); GHFDB spreadsheet row IDs are non-negative integers that fit comfortably in a positive int range.
 
 ## Overview
 
@@ -149,14 +152,14 @@ Factory classes exist for all models in the `heat_flow` app so that tests can cr
 
 **Parent Heat Flow**
 
-- **FR-007**: The system MUST provide a `ParentHeatFlow` model that inherits from the FairDM `Measurement` base class, storing the aggregated surface heat flow value (mW/m²), a 1-sigma uncertainty, a heat production correction flag, a comment field, and a GHFDB membership flag.
+- **FR-007**: The system MUST provide a `ParentHeatFlow` model that inherits from the FairDM `Measurement` base class, storing the aggregated surface heat flow value (mW/m²), a 1-sigma uncertainty, a heat production correction flag, a comment field, a nullable `ghfdb_id` (`PositiveIntegerField`) — the original GHFDB spreadsheet identifier, used for traceability and import upsert — and a `quality` CharField (max_length=13) storing a 13-character quality code string. GHFDB membership is determined by `ghfdb_id IS NOT NULL`; there is no separate boolean flag. ~~`is_ghfdb` (GHFDB membership flag) and `local_id` (stable upsert key) have been removed — their function is assumed by `ghfdb_id`.~~
 - **FR-008**: `ParentHeatFlow` MUST be linked to its `HeatFlowSite` via the FairDM `sample` FK (inherited from `Measurement`).
 - **FR-008a**: `ParentHeatFlow.save()` MUST raise `ValidationError` if `sample` is not an instance of `HeatFlowSite`.
 - **FR-009**: The system MUST prevent more than one `ParentHeatFlow` record per `HeatFlowSite`, regardless of dataset. This is enforced via a `UniqueConstraint` in `ParentHeatFlow.Meta.constraints` on the `sample` FK column (the `sample` field is declared in the fairdm package and cannot be modified with `unique=True` directly). The existing `save()`-level uniqueness check is retained as an additional application-layer guard.
 
 **Child Heat Flow**
 
-- **FR-010**: The system MUST provide a `HeatFlow` (child) model that inherits from the FairDM `Measurement` base class with `sample` FK targeting `HeatFlowInterval` (validated at `save()` to reject non-`HeatFlowInterval` objects). It stores: heat flow value (mW/m²) with uncertainty, calculation method (vocabulary, many-to-many), expedition/ship name, bottom water temperature, date acquired, U-score, M-score, and a comment field. **Note**: The `IGSN` field previously assigned to `HeatFlow` is removed; C49/IGSN is served by FairDM's Sample identifier relationship on `HeatFlowSite` and `HeatFlowInterval`.
+- **FR-010**: The system MUST provide a `HeatFlow` (child) model that inherits from the FairDM `Measurement` base class with `sample` FK targeting `HeatFlowInterval` (validated at `save()` to reject non-`HeatFlowInterval` objects). It stores: heat flow value (mW/m²) with uncertainty, calculation method (vocabulary, many-to-many), expedition/ship name, bottom water temperature, date acquired, U-score, M-score, a comment field, a nullable `ghfdb_id` (`PositiveIntegerField`) — the original GHFDB spreadsheet child identifier, used for traceability and import upsert — and a `quality` CharField (max_length=13) storing a 13-character quality code string. **Note**: The `IGSN` field previously assigned to `HeatFlow` is removed; C49/IGSN is served by FairDM's Sample identifier relationship on `HeatFlowSite` and `HeatFlowInterval`. ~~`local_id` has been removed — its function is assumed by `ghfdb_id`.~~
 - **FR-010a**: `HeatFlow.save()` MUST raise `ValidationError` if `sample` is not an instance of `HeatFlowInterval`, consistent with FR-008a, FR-016a, and FR-018a.
 - **FR-011**: `HeatFlow` MUST have a nullable ForeignKey to `ParentHeatFlow` (on_delete=SET_NULL) with a related name of `children`.
 - **FR-012**: `HeatFlow` MUST have an `is_relevant` boolean field indicating whether this child was used in computing the parent value.
@@ -210,9 +213,9 @@ Factory classes exist for all models in the `heat_flow` app so that tests can cr
 
 - **HeatFlowInterval**: A depth-stratified section within a borehole over which a child heat flow determination is made. Inherits FairDM `Sample` + `fairdm-geo` `Interval` + `GeoDepthInterval`. Multiple intervals may exist for one site.
 
-- **ParentHeatFlow**: The aggregated, quality-controlled surface heat flow for a site. Inherits FairDM `Measurement`. One-to-many with `HeatFlowSite` (via `sample` FK). The authoritative published value.
+- **ParentHeatFlow**: The aggregated, quality-controlled surface heat flow for a site. Inherits FairDM `Measurement`. One-to-many with `HeatFlowSite` (via `sample` FK). The authoritative published value. Carries a nullable `ghfdb_id` integer (GHFDB spreadsheet reference, used to correlate database entries to spreadsheet releases; `IS NOT NULL` implies GHFDB membership) and a `quality` CharField (13-char quality code). ~~`is_ghfdb` boolean flag and `local_id` have been removed.~~
 
-- **HeatFlow** (child): A single interval-level heat flow determination computed from one `ThermalGradient` and one `IntervalConductivity`. Inherits FairDM `Measurement`; `sample` FK targets `HeatFlowInterval` (validated at `save()`). References a `ParentHeatFlow` via nullable FK. Links to `ThermalGradient` and `IntervalConductivity` via nullable ForeignKeys (not OneToOne) to allow reuse of existing records across multiple determinations and recalculations. Carries U-score and M-score quality fields.
+- **HeatFlow** (child): A single interval-level heat flow determination computed from one `ThermalGradient` and one `IntervalConductivity`. Inherits FairDM `Measurement`; `sample` FK targets `HeatFlowInterval` (validated at `save()`). References a `ParentHeatFlow` via nullable FK. Links to `ThermalGradient` and `IntervalConductivity` via nullable ForeignKeys (not OneToOne) to allow reuse of existing records across multiple determinations and recalculations. Carries U-score and M-score quality fields, a nullable `ghfdb_id` integer (GHFDB child spreadsheet reference), and a `quality` CharField (13-char quality code). ~~`local_id` has been removed; its function is assumed by `ghfdb_id`.~~
 
 - **ThermalGradient**: Temperature gradient measurement over a `HeatFlowInterval`. Inherits FairDM `Measurement`; links to `HeatFlowInterval` via the `sample` FK (validated at `save()` to reject non-`HeatFlowInterval` objects). Stores raw and corrected gradients (K/km), measurement methods, shut-in times. Linked one-to-one to a `HeatFlow` child.
 

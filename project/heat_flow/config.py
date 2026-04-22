@@ -198,5 +198,6 @@ class ParentHeatFlowConfig(IHFCConfig):
         ("value", "uncertainty"),
         "corr_HP_flag",
         "comment",
-        "is_ghfdb",
+        "ghfdb_id",
+        "quality",
     ]

@@ -1,6 +1,7 @@
 # Research: GHFDB Normalized Relational Data Model
 
 **Phase 0 Output** | **Feature**: 001-heat-flow-data-model | **Date**: 2026-04-09
+**Propagated**: 2026-04-22 — Updated ParentHeatFlow config fields list to reflect `ghfdb_id`/`quality` replacing `is_ghfdb`.
 
 ---
 
@@ -204,7 +205,7 @@ def save(self, *args, **kwargs):
 
 **Config approach**: Keep registrations basic. Each registered model provides `fields`, `description`, and inherits IHFC authority/citation from `IHFCConfig`. `filterset_class` and `table_class` can be specified where they already exist.
 
-**ParentHeatFlow config will include**: `model`, `description`, `fields` (value, uncertainty, corr_HP_flag, comment, is_ghfdb), `authority`, `citation` (inherited from IHFCConfig).
+**ParentHeatFlow config will include**: `model`, `description`, `fields` (value, uncertainty, corr_HP_flag, comment, ghfdb_id, quality), `authority`, `citation` (inherited from IHFCConfig). ~~`is_ghfdb` removed from fields list (2026-04-22 refinement).~~
 
 **ThermalGradient and IntervalConductivity configs** will initially use minimal `fields` lists (value, uncertainty, and key method/quality fields).
 

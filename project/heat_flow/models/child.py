@@ -228,6 +228,15 @@ class HeatFlow(Measurement):
         ),
         default=MScoreOptions.Mx,
     )
+    quality = models.CharField(
+        max_length=13,
+        verbose_name=_("quality score"),
+        help_text=_(
+            "Overall quality assessment of the heat-flow value, based on a combination of U-score and M-score, as well as expert judgment on the reliability of the data."
+        ),
+        null=True,
+        blank=True,
+    )
 
     parent = models.ForeignKey(
         "heat_flow.ParentHeatFlow",
@@ -244,15 +253,25 @@ class HeatFlow(Measurement):
         default=False,
     )
 
-    # GHFDB spreadsheet ID column — used as the stable key for import upsert.
-    # Corresponds to the "ID" column in the GHFDB spreadsheet schema (Fuchs et al., 2021).
-    local_id = models.CharField(
-        max_length=255,
+    ghfdb_id = models.PositiveIntegerField(
+        verbose_name=_("ID Child"),
+        help_text=_("The original unique identifier for this record in the GHFDB schema, used for traceability."),
         null=True,
         blank=True,
+        editable=False,
         db_index=True,
-        help_text=_("GHFDB spreadsheet ID column — used as the stable key for import upsert"),
     )
+
+    # NO LONGER USING local_id as the stable key for upsert, since we have ghdfb_id for that purpose. We can add it back if we find a use for it, but for now it's just adding complexity and potential confusion.
+    # GHFDB spreadsheet ID column — used as the stable key for import upsert.
+    # Corresponds to the "ID" column in the GHFDB spreadsheet schema (Fuchs et al., 2021).
+    # local_id = models.CharField(
+    #     max_length=255,
+    #     null=True,
+    #     blank=True,
+    #     db_index=True,
+    #     help_text=_("GHFDB spreadsheet ID column — used as the stable key for import upsert"),
+    # )
 
     # Managers
     # objects = HeatFlowManager()

@@ -1,0 +1,17 @@
+{
+    "id": "000001",
+    "q": 77,
+    "q_uncertainty": 3.2,
+    "name": "Geschahse",
+    "lat_NS": 48.2088888888889,
+    "long_EW": 8.09583333333333,
+    "elevation": "[Unspecified]",
+    "environment": "[onshore (continental)]",
+    "p_comment": "gradT topography correction: analytical 1D-Bullard method (Bullard, 1940), numerical 2D-finite difference correction;erosion correction",
+    "corr_HP_flag": "[No]",
+    "total_depth_MD": null,
+    "total_depth_TVD": null,
+    "explo_method": "[Drilling]",
+    "explo_purpose": "[Mapping]",
+    "quality": "Ux.Mx.-------"
+}

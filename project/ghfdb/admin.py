@@ -139,7 +139,7 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
     """
 
     list_display = (
-        "local_id",
+        "ghfdb_id",
         "get_id_parent",
         "site_name",
         "lat_NS",
@@ -196,8 +196,8 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
     )
     search_fields = (
         "sample__heatflowinterval__sample__name",
-        "parent__local_id",
-        "local_id",
+        "parent__ghfdb_id",
+        "ghfdb_id",
     )
     list_filter = (
         EnvironmentListFilter,
@@ -210,7 +210,7 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
         "sample__heatflowinterval__sample__heatflowsite__domain",
     )
     list_display_links = None  # enforce read-only (no edit links)
-    ordering = ("parent__local_id", "local_id")
+    ordering = ("parent__ghfdb_id", "ghfdb_id")
 
     @staticmethod
     def _interval(obj):
@@ -239,9 +239,9 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
         """Pass through resource kwargs; dataset defaults to None for format detection."""
         return super().get_import_resource_kwargs(request, **kwargs)
 
-    @admin.display(description=_("ID_parent"), ordering="parent__local_id")
+    @admin.display(description=_("ID_parent"), ordering="parent__ghfdb_id")
     def get_id_parent(self, obj):
-        return getattr(obj.parent, "local_id", None)
+        return getattr(obj.parent, "ghfdb_id", None)
 
     # --- Scalar annotation display methods ---
     # Generated via _scalar(); no explicit def needed — the factory sets
@@ -530,7 +530,7 @@ class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
     )
     search_fields = (
         "sample__name",
-        "local_id",
+        "ghfdb_id",
     )
     list_filter = (
         ParentEnvironmentListFilter,
@@ -543,7 +543,7 @@ class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
         "sample__heatflowsite__domain",
     )
     list_display_links = None
-    ordering = ("local_id",)
+    ordering = ("ghfdb_id",)
 
     def get_import_resource_classes(self, request):
         return [GHFDBParentImportResource]
@@ -551,9 +551,9 @@ class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
     def get_import_formats(self):
         return [GHFDBImportFormat, GHFDBSimpleImportFormat]
 
-    @admin.display(description=_("ID_parent"), ordering="local_id")
+    @admin.display(description=_("ID_parent"), ordering="ghfdb_id")
     def get_id_parent(self, obj):
-        return obj.local_id
+        return obj.ghfdb_id
 
     @admin.display(description=_("q"), ordering="value")
     def get_q(self, obj):

@@ -60,7 +60,7 @@ class ThermalGradientFactory(MeasurementFactory):
     uncertainty = LazyAttribute(lambda o: o.value * random.uniform(0.05, 0.25))  # noqa: S311
     corrected_value = LazyAttribute(lambda _: round(random.gauss(mu=25, sigma=10), 2))
     corrected_uncertainty = LazyAttribute(
-        lambda o: o.corrected_value * random.uniform(0.05, 0.25) if o.corrected_value else None
+        lambda o: o.corrected_value * random.uniform(0.05, 0.25) if o.corrected_value else None  # noqa: S311
     )
     # method_top = FuzzyChoice(vocabularies.TemperatureMethod.choices)  # ConceptManyToManyField
     # method_bottom = FuzzyChoice(vocabularies.TemperatureMethod.choices)  # ConceptManyToManyField
@@ -99,7 +99,6 @@ class ParentHeatFlowFactory(MeasurementFactory):
         model = ParentHeatFlow
 
     value = LazyAttribute(lambda _: round(random.gauss(mu=50, sigma=20), 2))
-    is_ghfdb = True
 
 
 class ProbeMetadataFactory(factory.django.DjangoModelFactory):

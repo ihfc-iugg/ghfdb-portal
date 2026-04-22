@@ -3,6 +3,7 @@
 **Input**: Design documents from `/specs/001-heat-flow-data-model/`
 **Feature Branch**: `001-heat-flow-data-model`
 **Generated**: 2026-04-09
+**Propagated**: 2026-04-22 — `ghfdb_id`/`quality` added to `ParentHeatFlow` and `HeatFlow`; `is_ghfdb`/`local_id` removed. Amendment tasks T062–T067 added. T044 and T050 annotated with required corrections.
 **Prerequisites**: plan.md ✅, spec.md ✅, research.md ✅, data-model.md ✅, quickstart.md ✅
 
 ## Format: `[ID] [P?] [Story?] Description`
@@ -194,7 +195,7 @@
 - [x] T044 [US4] In `project/heat_flow/config.py` — add `ParentHeatFlow` to the existing imports block; create `@fairdm.register` decorated `ParentHeatFlowConfig(IHFCConfig)` with:
   - `model = ParentHeatFlow`
   - `description` (descriptive string in `_()`)
-  - `fields = ["value", "uncertainty", "corr_HP_flag", "comment", "is_ghfdb"]`
+  - `fields = ["value", "uncertainty", "corr_HP_flag", "comment",` ~~`"is_ghfdb"`~~ `"ghfdb_id", "quality"]` ← **⚠️ Correction required — see T064**: original implementation used `"is_ghfdb"` which no longer exists on the model; must be replaced with `"ghfdb_id"` and `"quality"`
   - Inherits `authority` and `citation` from `IHFCConfig` (FR-023 / FR-024 / R8)
   - **FR-024 also requires `filterset_class` and `table_class`**: verify whether FairDM auto-generates these from `fields`; if not, create `ParentHeatFlowFilterSet` in `project/heat_flow/filters.py` and `ParentHeatFlowTable` in `project/heat_flow/tables.py` following the existing patterns for `HeatFlowFilterSet`/`HeatFlowTable`; confirm by asserting `config.filterset_class is not None` in T042 (M1)
 
@@ -251,7 +252,7 @@
 - [x] T050 [US5] In `project/heat_flow/factories.py` — create `ParentHeatFlowFactory(MeasurementFactory)`:
   - `model = ParentHeatFlow`
   - `value = LazyAttribute(lambda _: round(random.gauss(mu=50, sigma=20), 2))`
-  - `is_ghfdb = True`
+  - ~~`is_ghfdb = True`~~ **⚠️ Correction required — see T065**: `is_ghfdb` field no longer exists; this line must be removed; `ghfdb_id` is nullable so no factory default is needed; `quality` is nullable so no default is needed either
   - **Set `sample = None` explicitly** to override any default sample SubFactory from `MeasurementFactory`; `save()` type validation is guarded by `if self.sample_id` so a null sample is valid and skips type checking entirely (A1)
   - **Note**: If `MeasurementFactory` requires a non-nullable `dataset` FK, check fairdm factory conventions and add `dataset = SubFactory(DatasetFactory)` at depth-1 only if required — do not add a `sample` SubFactory (A4)
   - Minimal scalar-only fields; no M2M or second-level SubFactory (R10)
@@ -376,8 +377,26 @@ This alone satisfies SC-003 and provides the foundation for all other stories.
 
 ### Format Validation Summary
 
-- Total tasks: **61** (T001–T061)
-- Tasks with `[P]` (parallelizable): 34 (T053 has no `[P]` marker)
-- Tasks with Story labels: 37 (US1: T012–T025, T053; US2: T026–T034; US3: T035–T041; US4: T042–T048; US5: T049–T052, T054–T055)
-- System validation checkpoints: 10 (2 per phase)
+- Total tasks: **68** (T001–T061 + T062–T067 amendment tasks added 2026-04-22)
+- Tasks with `[P]` (parallelizable): 34 + 3 new
+- Tasks with Story labels: 37
+- System validation checkpoints: 10 + 1 (amendment checkpoint)
 - All tasks follow format: `- [ ] TXXX [P?] [USn?] Description with file path` ✅
+
+---
+
+## Phase 9: Amendment Tasks — 2026-04-22 Spec Refinement
+
+**Purpose**: Address discrepancies between the 2026-04-22 spec.md refinement and already-completed implementation tasks. The field `is_ghfdb` was removed from both `ParentHeatFlow` and `HeatFlow`; `local_id` was removed; `ghfdb_id` (PositiveIntegerField, nullable) and `quality` (CharField(13), nullable) were added to both models. Existing completed tasks (T044, T050) require correction, and a field-name typo (`ghdfb_id` → `ghfdb_id`) must be fixed.
+
+- [x] T062 [P] In `project/heat_flow/models/parent.py` and `project/heat_flow/models/child.py` — rename field `ghdfb_id` → `ghfdb_id` in both `ParentHeatFlow` and `HeatFlow` (the existing implementation has a typo: "ghdfb" instead of "ghfdb"); also confirm and leave `null=True, blank=True, editable=False, db_index=True` on both; this rename will require a migration (see T066)
+
+- [x] T063 [P] In `project/heat_flow/models/parent.py` and `project/heat_flow/models/child.py` — add `null=True, blank=True` to the `quality = models.CharField(max_length=13, ...)` field definition on both `ParentHeatFlow` and `HeatFlow`; `quality` is a GHFDB-derived code and will be absent for non-GHFDB entries — it must be nullable to avoid forcing a placeholder value; this change requires a migration (see T066)
+
+- [x] T064 In `project/heat_flow/config.py` — update `ParentHeatFlowConfig.fields`: replace `"is_ghfdb"` with `"ghfdb_id"` and `"quality"` (correction of T044 implementation which used the removed field name); result: `fields = [("value", "uncertainty"), "corr_HP_flag", "comment", "ghfdb_id", "quality"]`
+
+- [x] T065 In `project/heat_flow/factories.py` — remove `is_ghfdb = True` from `ParentHeatFlowFactory` (correction of T050 implementation; `is_ghfdb` no longer exists on the model); `ghfdb_id` and `quality` are now nullable so no factory defaults are required for them; also consider adding `quality = None` explicitly to make intent clear
+
+- [x] T066 In `project/heat_flow/migrations/` — create migration for the changes from T062 and T063: rename `ghdfb_id` → `ghfdb_id` on both models and make `quality` nullable; run `poetry run python manage.py makemigrations heat_flow --name ghfdb_id_rename_and_quality_nullable`; verify the migration uses `RenameField` for the rename (not drop+add) to preserve existing data
+
+- [x] T067 ⚠️ CRITICAL: System validation after amendment tasks — `poetry run python manage.py check` must pass with zero errors; `poetry run python manage.py migrate` must apply cleanly; `poetry run pytest tests/test_heat_flow/ -v` must pass all previously-passing tests (changes are backward-compatible: field rename and nullability addition should not break existing test assertions)

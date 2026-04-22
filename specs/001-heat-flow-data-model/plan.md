@@ -2,10 +2,13 @@
 
 **Branch**: `001-heat-flow-data-model` | **Date**: 2026-04-09 | **Spec**: [spec.md](spec.md)
 **Input**: Feature specification from `/specs/001-heat-flow-data-model/spec.md`
+**Propagated**: 2026-04-22 — Updated from spec.md refinement (added `ghfdb_id`/`quality` fields; removed `is_ghfdb`/`local_id`)
 
 ## Summary
 
 Define and implement the normalized relational data model for the GHFDB portal, capturing the full IHFC parent/child hierarchy (site → interval → child measurement) as Django models that extend FairDM `Sample` and `Measurement` base classes. Register primary models with the FairDM registry, create factory-boy factories for all models, and write comprehensive tests for persistence, relationships, constraints, and registration. All fields use plain-language names; GHFDB-mandatory fields are nullable at the DB level (enforced programmatically at export/validation time). Round-trip import/export and quality-score algorithms are deferred.
+
+Both `ParentHeatFlow` and `HeatFlow` carry `ghfdb_id` (nullable `PositiveIntegerField`) for traceability to the GHFDB spreadsheet release and `quality` (nullable `CharField(13)`) for the 13-character quality code string. GHFDB membership is determined by `ghfdb_id IS NOT NULL`; no boolean membership flag is used.
 
 ## Technical Context
 

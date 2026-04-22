@@ -146,13 +146,16 @@ Also:
 | `uncertainty` | QuantityField | mW/m² | ✓ | 0–10⁶ | P02 | 1σ uncertainty |
 | `corr_HP_flag` | BooleanField | — | ✓ | — | P09 | Heat production correction flag |
 | `comment` | TextField | — | ✓ | — | P08 | General comments |
-| `is_ghfdb` | BooleanField | — | — | — | — | GHFDB membership flag, default True |
+| `ghfdb_id` | PositiveIntegerField| — | ✓ | — | — | Nullable spreadsheet reference integer; correlates DB entries to GHFDB spreadsheet release; `IS NOT NULL` implies GHFDB membership |
+| `quality` | CharField(13) | — | ✓ | — | — | 13-character quality code string,  nullable for non-GHFDB entries |
+| ~~`is_ghfdb`~~ | ~~BooleanField~~ | — | — | — | — | ~~Removed — membership now determined by `ghfdb_id IS NOT NULL`~~ |
+| ~~`local_id`~~ | ~~CharField(255)~~ | — | — | — | — | ~~Removed — function assumed by `ghfdb_id`~~ |
 
 **Meta**:
 
 - `verbose_name`: "Heat Flow" (singular & plural)
 - `db_table`: "ghfdb_parentheatflow"
-- Indexes: `is_ghfdb`, `corr_HP_flag`
+- Indexes: `ghfdb_id`, `corr_HP_flag`
 
 **Constraints**:
 
@@ -207,6 +210,10 @@ A `ParentHeatFlow` aggregates multiple `HeatFlow` children. Each child has an `i
 | `is_relevant` | BooleanField | — | — | — | C09 | Used in parent computation? default False |
 | `thermal_gradient` | FK → ThermalGradient | — | ✓ | — | — | **Changed from OneToOne to FK (FR-013)** |
 | `thermal_conductivity` | FK → IntervalConductivity | — | ✓ | — | — | **Changed from OneToOne to FK (FR-013)** |
+| *Own fields — GHFDB Reference* |
+| `ghfdb_id` | PositiveIntegerField| — | ✓ | — | — | Nullable spreadsheet reference integer; correlates DB child entries to GHFDB spreadsheet release |
+| `quality` | CharField(13) | — | — | — | — | 13-character quality code string |
+| ~~`local_id`~~ | ~~CharField(255)~~ | — | — | — | — | ~~Removed — function assumed by `ghfdb_id`~~ |
 
 **Meta**:
 
@@ -221,6 +228,7 @@ A `ParentHeatFlow` aggregates multiple `HeatFlow` children. Each child has an `i
 
 - `corr_S_flag`, `corr_E_flag`, `corr_TOPO_flag`, `corr_PAL_flag`, `corr_SUR_flag`, `corr_CONV_flag`, `corr_HR_flag` → replaced by `HeatFlowCorrection` records
 - `probe_penetration`, `probe_length`, `probe_tilt` → belong on `ProbeMetadata`
+- ~~`local_id`~~ → removed; function assumed by `ghfdb_id`
 
 **Methods to KEEP but defer implementation**:
 
@@ -587,7 +595,8 @@ class ParentHeatFlowConfig(IHFCConfig):
         ("value", "uncertainty"),
         "corr_HP_flag",
         "comment",
-        "is_ghfdb",
+        "ghfdb_id",
+        "quality",
     ]
 ```
 

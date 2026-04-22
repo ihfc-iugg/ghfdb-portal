@@ -174,18 +174,37 @@ class ParentHeatFlow(Measurement):
         null=True,
     )
 
-    is_ghfdb = models.BooleanField(
-        verbose_name=_("GHFDB flag"),
-        help_text=_("Indicates whether the data entry is part of the Global Heat Flow Database (GHFDB) or not."),
-        default=True,
-    )
-    local_id = models.CharField(
-        max_length=255,
+    ghfdb_id = models.PositiveIntegerField(
+        verbose_name=_("ID Parent"),
+        help_text=_("The original unique identifier for this record in the GHFDB schema, used for traceability."),
         null=True,
         blank=True,
+        editable=False,
         db_index=True,
-        help_text=_("GHFDB spreadsheet ID_parent column — used as the stable key for import upsert"),
     )
+    quality = models.CharField(
+        max_length=13,
+        verbose_name=_("quality score"),
+        help_text=_(
+            "Overall quality assessment of the heat-flow value, based on a combination of U-score and M-score, as well as expert judgment on the reliability of the data."
+        ),
+        null=True,
+        blank=True,
+    )
+    # WE ARE NOW GOING TO DETERMINE IF SOMETHING HAS MEMBERSHIP IN THE GHFDB BASED ON WHETHER IT HAS A NON-NULL ghdfb_id, RATHER THAN A BOOLEAN FLAG.
+    # is_ghfdb = models.BooleanField(
+    #     verbose_name=_("GHFDB flag"),
+    #     help_text=_("Indicates whether the data entry is part of the Global Heat Flow Database (GHFDB) or not."),
+    #     default=True,
+    # )
+    # NO LONGER USING local_id as the stable key for upsert, since we have ghdfb_id for that purpose. We can add it back if we find a use for it, but for now it's just adding complexity and potential confusion.
+    # local_id = models.CharField(
+    #     max_length=255,
+    #     null=True,
+    #     blank=True,
+    #     db_index=True,
+    #     help_text=_("GHFDB spreadsheet ID_parent column — used as the stable key for import upsert"),
+    # )
 
     class Meta:
         verbose_name = _("Parent Heat Flow")
@@ -196,7 +215,7 @@ class ParentHeatFlow(Measurement):
             "roughly correlates to the parent level of the GHFDB schema."
         )
         indexes = [
-            models.Index(fields=["is_ghfdb"]),
+            models.Index(fields=["ghfdb_id"]),
             models.Index(fields=["corr_HP_flag"]),
         ]
 
