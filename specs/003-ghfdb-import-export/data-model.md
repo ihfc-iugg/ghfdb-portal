@@ -39,7 +39,7 @@ GHFDB Spreadsheet (flat, ~62 columns per row)
                                                               └── ProbeMetadata (1:1 on interval)
 ```
 
-## Module: `_base.py` — Shared Constants & Format
+## Module: `formats.py` — Shared Constants & Format
 
 ### `GHFDBImportFormat`
 
@@ -55,13 +55,17 @@ Custom XLSX reader for the GHFDB spreadsheet template:
 
 Sheet name: `"data list"`
 
-### Column Order Constants
+### Column Order Constants (Canonical — single source of truth)
 
-- **`GHFDB_COLUMN_ORDER`**: Ordered list of all 62 GHFDB spreadsheet column names in canonical order (Fuchs et al. 2023), sourced from `ghfdb_colmeta.json`
-- **`PARENT_COLUMNS`**: 18 parent-level column names processed by `GHFDBParentImportResource`
+All four lists live in `project/ghfdb/constants.py` and are **canonical**: they define the GHFDB flat spreadsheet column structure IN ORDER, exactly matching the official IHFC XLSX template. All import/export resources and queryset annotations MUST align to these names.
+
+- **`PARENT_COLUMNS`**: Ordered list of parent-level spreadsheet column names (site + aggregated heat flow).
+- **`CHILD_COLUMNS`**: Ordered list of child-level (interval) spreadsheet column names.
+- **`META_FIELDS`**: Trailing metadata/quality columns appended after child columns.
+- **`GHFDB_COLUMN_ORDER`**: Full canonical column sequence = `PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS`. Column names use the exact case from the official IHFC template (e.g. `lat_NS`, `long_EW`, `corr_HP_flag`, `T_grad_mean`). The old hardcoded 62-column tuple has been replaced by this derived list.
 - **`CORRECTION_COL_MAP`**: `{"corr_IS_flag": "IS", "corr_T_flag": "T", ...}` — 9-entry dict mapping correction-flag column names to `HeatFlowCorrection.correction_type` values
 
-## Module: `_widgets.py` — Widget Hierarchy
+## Module: `widgets.py` — Widget Hierarchy
 
 ### Leaf Widgets
 

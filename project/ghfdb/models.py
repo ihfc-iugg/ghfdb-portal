@@ -4,7 +4,8 @@ from django.utils.translation import gettext_lazy as _
 from fairdm.db import models
 from heat_flow.models import HeatFlow, ParentHeatFlow
 
-from .managers import GHFDBManager, GHFDBParentManager
+from .constants import PARENT_COLUMNS
+from .managers import GHFDBChildManager, GHFDBParentManager
 
 
 class GHFDBRelease(models.Model):
@@ -38,7 +39,7 @@ class GHFDB(HeatFlow):
     """Proxy model over ``HeatFlow`` providing a flat read-oriented view of the
     Global Heat Flow Database.
 
-    Provides a custom manager (``GHFDBManager``) with two key methods:
+    Provides a custom manager (``GHFDBChildManager``) with two key methods:
     - ``as_ghfdb_flat()`` — annotates all scalar GHFDB columns (≤2 queries).
     - ``for_export()`` — additionally pre-fetches all M2M relations (~16 queries).
 
@@ -51,7 +52,7 @@ class GHFDB(HeatFlow):
         - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
     """
 
-    objects = GHFDBManager()
+    objects = GHFDBChildManager()
 
     class Meta:
         proxy = True
@@ -84,3 +85,7 @@ class GHFDBParent(ParentHeatFlow):
         proxy = True
         verbose_name = _("GHFDB Parent")
         verbose_name_plural = _("GHFDB Parents")
+
+    def as_dict(self):
+        """Returns a dictionary representation of the parent record"""
+        return {f: getattr(self, f) for f in PARENT_COLUMNS}

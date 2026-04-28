@@ -22,7 +22,7 @@ from heat_flow.models import HeatFlowSite, ParentHeatFlow
 from import_export import fields, widgets
 from import_export.resources import ModelResource
 
-from ._widgets import ParentWidget, QuantityWidget, YesNoWidget
+from .widgets import ParentWidget, QuantityWidget, YesNoWidget
 
 
 class GHFDBParentImportResource(ModelResource):

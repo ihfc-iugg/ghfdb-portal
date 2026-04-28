@@ -44,7 +44,7 @@ This document defines the proxy model design, queryset API, annotation names, an
 
 ~~**Migration required**: Yes — adds a nullable varchar column to the `heat_flow_heatflow` table.~~
 
-### GHFDBQuerySet Methods
+### GHFDBChildQuerySet Methods
 
 | Method | DB Queries | Purpose |
 |---|---|---|

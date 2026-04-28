@@ -529,17 +529,97 @@ class TestGHFDBChildColumnOrderRegression:
 
     def test_get_user_visible_fields_follows_ghfdb_column_order(self):
         """GHFDBChildImportResource.get_user_visible_fields() returns fields in GHFDB_COLUMN_ORDER order."""
+        from project.ghfdb.constants import GHFDB_COLUMN_ORDER
         from project.ghfdb.resources import GHFDBChildImportResource
-        from project.ghfdb.resources._base import GHFDB_COLUMN_ORDER
 
         resource = GHFDBChildImportResource()
         visible_fields = resource.get_user_visible_fields()
         col_names_lower = [f.column_name.lower() for f in visible_fields]
 
-        # Extract only those column_names (lowercased) that appear in GHFDB_COLUMN_ORDER
-        ordered_present = [c for c in col_names_lower if c in GHFDB_COLUMN_ORDER]
+        # Extract only those column_names (lowercased) that appear in GHFDB_COLUMN_ORDER (lowercased)
+        ghfdb_order_lower = [c.lower() for c in GHFDB_COLUMN_ORDER]
+        ordered_present = [c for c in col_names_lower if c in ghfdb_order_lower]
         # They must appear in the exact order defined by GHFDB_COLUMN_ORDER
-        expected_order = [c for c in GHFDB_COLUMN_ORDER if c in col_names_lower]
+        expected_order = [c for c in ghfdb_order_lower if c in col_names_lower]
         assert ordered_present == expected_order, (
             f"Column order mismatch.\nGot: {ordered_present}\nExpected: {expected_order}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# T093 — BUG-010: case-sensitive column-name ordering regression
+# ---------------------------------------------------------------------------
+
+
+class TestBUG010ColumnOrderCaseSensitivity:
+    """T093 — BUG-010: get_user_visible_fields() must lowercase both dict keys and column_name.
+
+    With the old code ``order = {col: i for i, col in enumerate(GHFDB_COLUMN_ORDER)}``,
+    mixed-case keys like 'T_grad_mean' or 'lat_NS' are stored as-is. When the lookup
+    uses ``order.get(f.column_name.lower(), len(GHFDB_COLUMN_ORDER))``, the lowercased
+    't_grad_mean' / 'lat_ns' never match the mixed-case keys, so those fields are
+    sorted to the end. The fix (T098) lowercases both sides.
+
+    These tests FAIL until T098 is implemented.
+    """
+
+    def test_mixed_case_columns_not_sorted_to_end(self):
+        """Fields with mixed-case column_name (T_grad_mean, lat_NS) must not accumulate
+        at the tail of get_user_visible_fields() — they must appear in GHFDB_COLUMN_ORDER
+        relative order, before later columns in the same order (BUG-010)."""
+        from project.ghfdb.constants import GHFDB_COLUMN_ORDER
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        resource = GHFDBChildImportResource()
+        visible = resource.get_user_visible_fields()
+        col_names = [f.column_name for f in visible]
+
+        # Build canonical position mapping (lowercase → canonical index)
+        canonical = {col.lower(): i for i, col in enumerate(GHFDB_COLUMN_ORDER)}
+
+        # Check that mixed-case fields appear in GHFDB_COLUMN_ORDER relative order
+        # by verifying each comes before tc_strategy (which is near the end of CHILD_COLUMNS)
+        late_sentinel = "tc_strategy"
+        if late_sentinel not in col_names:
+            pytest.skip(f"Sentinel column '{late_sentinel}' not in visible fields; skipping order check")
+
+        sentinel_idx = col_names.index(late_sentinel)
+        for mixed_case_col in ("T_grad_mean", "corr_IS_flag", "T_number"):
+            if mixed_case_col not in col_names:
+                continue
+            idx = col_names.index(mixed_case_col)
+            can_mixed = canonical.get(mixed_case_col.lower(), len(GHFDB_COLUMN_ORDER))
+            can_sentinel = canonical.get(late_sentinel.lower(), len(GHFDB_COLUMN_ORDER))
+            if can_mixed < can_sentinel:
+                assert idx < sentinel_idx, (
+                    f"Field '{mixed_case_col}' is at position {idx} but sentinel '{late_sentinel}' "
+                    f"is at {sentinel_idx}. Mixed-case field must come before '{late_sentinel}' "
+                    f"according to GHFDB_COLUMN_ORDER (BUG-010 T098)."
+                )
+
+    def test_t_grad_mean_not_last(self):
+        """T_grad_mean must not be sorted to the end of get_user_visible_fields() (BUG-010).
+
+        With the old bug, mixed-case columns sorted to position len(GHFDB_COLUMN_ORDER) (the
+        fallback value), landing at the very tail of the list.  After T098, T_grad_mean must
+        appear before tc_strategy (a later child column that IS correctly sorted).
+        """
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        resource = GHFDBChildImportResource()
+        visible = resource.get_user_visible_fields()
+        col_names = [f.column_name for f in visible]
+
+        if "T_grad_mean" not in col_names:
+            pytest.skip("T_grad_mean field not present in visible fields")
+
+        late_sentinel = "tc_strategy"
+        if late_sentinel not in col_names:
+            pytest.skip(f"Sentinel column '{late_sentinel}' not in visible fields")
+
+        idx = col_names.index("T_grad_mean")
+        sentinel_idx = col_names.index(late_sentinel)
+        assert idx < sentinel_idx, (
+            f"'T_grad_mean' sorted to position {idx} (after sentinel '{late_sentinel}' at {sentinel_idx}). "
+            f"Lookup dict must lowercase keys: {{col.lower(): i for i, col in enumerate(GHFDB_COLUMN_ORDER)}} (BUG-010)"
         )

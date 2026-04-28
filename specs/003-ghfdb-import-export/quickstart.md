@@ -10,8 +10,8 @@
 ```
 project/ghfdb/resources/
 ├── __init__.py          # Public API: GHFDBParentImportResource, GHFDBChildImportResource, GHFDBExportResource, GHFDBImportFormat
-├── _base.py             # GHFDBImportFormat, GHFDB_COLUMN_ORDER, PARENT_COLUMNS, CORRECTION_COL_MAP
-├── _widgets.py          # ConceptWidget, MultiConceptWidget, QuantityWidget, YesNoWidget, RelatedModelWidget subclasses
+├── formats.py             # GHFDBImportFormat, GHFDB_COLUMN_ORDER, PARENT_COLUMNS, CORRECTION_COL_MAP
+├── widgets.py          # ConceptWidget, MultiConceptWidget, QuantityWidget, YesNoWidget, RelatedModelWidget subclasses
 ├── parent.py            # GHFDBParentImportResource
 ├── child.py             # GHFDBChildImportResource
 └── export.py            # GHFDBExportResource
@@ -66,7 +66,7 @@ project/ghfdb/resources/
 poetry run pytest tests/test_ghfdb/test_resources/ -v
 
 # Individual test modules
-poetry run pytest tests/test_ghfdb/test_resources/test_widgets.py -v
+poetry run pytest tests/test_ghfdb/test_resources/testwidgets.py -v
 poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py -v
 poetry run pytest tests/test_ghfdb/test_resources/test_child_import.py -v
 poetry run pytest tests/test_ghfdb/test_resources/test_export.py -v

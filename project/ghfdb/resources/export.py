@@ -18,7 +18,7 @@ References:
 from import_export import fields
 from import_export.resources import ModelResource
 
-from ._base import GHFDB_COLUMN_ORDER
+from ..constants import GHFDB_COLUMN_ORDER
 
 # ---------------------------------------------------------------------------
 # Rendering helpers
@@ -89,20 +89,20 @@ class GHFDBExportResource(ModelResource):
     # -----------------------------------------------------------------------
     # Parent-level scalar fields
     # -----------------------------------------------------------------------
-    q = fields.Field(attribute="p_q")
-    q_uncertainty = fields.Field(attribute="p_q_uncertainty")
+    q = fields.Field(attribute="q")
+    q_uncertainty = fields.Field(attribute="q_uncertainty")
 
     # Site-level scalar fields
-    name = fields.Field(attribute="site_name")
+    name = fields.Field(attribute="site_name")  # annotation key avoids model field conflict
     lat_ns = fields.Field(attribute="lat_NS")
     long_ew = fields.Field(attribute="long_EW")
-    elevation = fields.Field(attribute="site_elevation")
-    environment = fields.Field(attribute="site_environment")
+    elevation = fields.Field(attribute="elevation")
+    environment = fields.Field(attribute="environment")
     p_comment = fields.Field(attribute="p_comment")
-    corr_hp_flag = fields.Field(attribute="p_corr_hp_flag")
-    total_depth_md = fields.Field(attribute="total_depth_md")
-    total_depth_tvd = fields.Field(attribute="total_depth_tvd")
-    explo_method = fields.Field(attribute="site_explo_method")
+    corr_hp_flag = fields.Field(attribute="corr_HP_flag")
+    total_depth_md = fields.Field(attribute="total_depth_MD")
+    total_depth_tvd = fields.Field(attribute="total_depth_TVD")
+    explo_method = fields.Field(attribute="explo_method")
 
     # Site-level M2M
     explo_purpose = fields.Field(attribute=None)
@@ -193,19 +193,19 @@ class GHFDBExportResource(ModelResource):
     # -----------------------------------------------------------------------
 
     def dehydrate_q(self, obj) -> float | str:
-        return _mag(getattr(obj, "p_q", None))
+        return _mag(getattr(obj, "q", None))
 
     def dehydrate_q_uncertainty(self, obj) -> float | str:
-        return _mag(getattr(obj, "p_q_uncertainty", None))
+        return _mag(getattr(obj, "q_uncertainty", None))
 
     def dehydrate_elevation(self, obj) -> float | str:
-        return _mag(getattr(obj, "site_elevation", None))
+        return _mag(getattr(obj, "elevation", None))
 
     def dehydrate_total_depth_md(self, obj) -> float | str:
-        return _mag(getattr(obj, "total_depth_md", None))
+        return _mag(getattr(obj, "total_depth_MD", None))
 
     def dehydrate_total_depth_tvd(self, obj) -> float | str:
-        return _mag(getattr(obj, "total_depth_tvd", None))
+        return _mag(getattr(obj, "total_depth_TVD", None))
 
     def dehydrate_qc(self, obj) -> float | str:
         return _mag(getattr(obj, "value", None))
@@ -399,7 +399,9 @@ class GHFDBExportResource(ModelResource):
         from ..models import GHFDB as _GHFDB
 
         model = _GHFDB
-        # Restrict auto-discovery to exactly the 62 GHFDB columns; all columns are
-        # declared explicitly above so auto-discovery produces no additional fields.
-        fields = GHFDB_COLUMN_ORDER
+        # All GHFDB columns are declared explicitly above; no whitelist restriction.
+        # export_order controls the column sequence using GHFDB_COLUMN_ORDER names.
+        # Note: django-import-export matches export_order entries against Python
+        # attribute names (lowercase); canonical-case names like "T_grad_mean" may
+        # not sort perfectly for mixed-case fields until those are renamed (follow-up).
         export_order = GHFDB_COLUMN_ORDER

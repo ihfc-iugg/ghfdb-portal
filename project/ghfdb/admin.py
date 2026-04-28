@@ -124,7 +124,7 @@ class GHFDBReleaseAdmin(admin.ModelAdmin):
 class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
     """Read-only Django admin view for GHFDB flat entries with XLSX import action.
 
-    The changelist uses ``GHFDBQuerySet.as_ghfdb_flat()`` so all annotated
+    The changelist uses ``GHFDBChildQuerySet.as_ghfdb_flat()`` so all annotated
     scalar columns are available as ``list_display`` attributes. Mutation of
     existing records is disabled; data enters only via the import action.
 

@@ -1,5 +1,5 @@
 """
-Tests for GHFDBQuerySet and GHFDBManager.
+Tests for GHFDBChildQuerySet and GHFDBChildManager.
 
 Covers query-count guards, scalar column completeness, correction-flag annotations,
 for_export() performance, and standard queryset operability.

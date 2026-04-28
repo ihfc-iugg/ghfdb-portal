@@ -23,8 +23,8 @@ from import_export import fields, widgets
 from import_export.resources import ModelResource
 from import_export.widgets import ForeignKeyWidget
 
-from ._base import CORRECTION_COL_MAP, GHFDB_COLUMN_ORDER
-from ._widgets import (
+from ..constants import CORRECTION_COL_MAP, GHFDB_COLUMN_ORDER
+from .widgets import (
     ConductivityWidget,
     GradientWidget,
     IntervalWidget,
@@ -169,7 +169,7 @@ class GHFDBChildImportResource(ModelResource):
     def get_user_visible_fields(self):
         """Return fields in GHFDB_COLUMN_ORDER so the confirm-page diff follows the template."""
         visible = super().get_user_visible_fields()
-        order = {col: i for i, col in enumerate(GHFDB_COLUMN_ORDER)}
+        order = {col.lower(): i for i, col in enumerate(GHFDB_COLUMN_ORDER)}
         return sorted(visible, key=lambda f: order.get(f.column_name.lower(), len(GHFDB_COLUMN_ORDER)))
 
     def before_save_instance(self, instance, row, **kwargs):

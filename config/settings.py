@@ -35,19 +35,19 @@ if "default" not in EASY_ICONS:
 if "icons" not in EASY_ICONS["default"]:
     EASY_ICONS["default"]["icons"] = {}
 
-EASY_ICONS["default"]["icons"].update(
-    {
-        "geology": "fas fa-mountain",
-        "lithology": "fas fa-layer-group",
-        "stratigraphy": "fas fa-layer-group",
-        "geologic_time": "fas fa-clock",
-        "location": "fas fa-map-marker-alt",
-        "map": "fas fa-map-location-dot",
-        "heat_flow": "fas fa-fire",
-        "review": "fas fa-highlighter",
-        "submit_review": "fa-solid fa-clipboard-check",
-    }
-)
+# EASY_ICONS["default"]["icons"].update(
+#     {
+#         "geology": "bi bi-triangle",
+#         "lithology": "bi bi-layers",
+#         "stratigraphy": "bi bi-layers",
+#         "geologic_time": "bi bi-clock-history",
+#         "location": "bi bi-geo-alt",
+#         "map": "bi bi-map",
+#         "heat_flow": "bi bi-fire",
+#         "review": "bi bi-pencil-square",
+#         "submit_review": "bi bi-clipboard-check",
+#     }
+# )
 
 DJANGO_SETUP_TOOLS = globals().get("DJANGO_SETUP_TOOLS", {})
 

@@ -14,8 +14,7 @@ Covers:
 """
 
 import pytest
-
-from project.ghfdb.resources._base import GHFDB_COLUMN_ORDER
+from project.ghfdb.constants import GHFDB_COLUMN_ORDER
 
 # ---------------------------------------------------------------------------
 # T041: Resource class structure tests
@@ -23,10 +22,10 @@ from project.ghfdb.resources._base import GHFDB_COLUMN_ORDER
 
 
 class TestGHFDBExportResourceDeclaration:
-    """GHFDBExportResource declares exactly the 62 GHFDB columns."""
+    """GHFDBExportResource declares the GHFDB columns."""
 
     def test_all_62_columns_declared(self):
-        """GHFDBExportResource has a Field for each of the 62 GHFDB_COLUMN_ORDER entries."""
+        """GHFDBExportResource has a Field for each of the GHFDB_COLUMN_ORDER entries."""
         from project.ghfdb.resources.export import GHFDBExportResource
 
         resource = GHFDBExportResource()
@@ -47,7 +46,7 @@ class TestGHFDBExportResourceDeclaration:
         """Meta.export_order must equal GHFDB_COLUMN_ORDER exactly."""
         from project.ghfdb.resources.export import GHFDBExportResource
 
-        assert tuple(GHFDBExportResource.Meta.export_order) == GHFDB_COLUMN_ORDER
+        assert list(GHFDBExportResource.Meta.export_order) == list(GHFDB_COLUMN_ORDER)
 
 
 # ---------------------------------------------------------------------------
@@ -60,13 +59,13 @@ class TestGHFDBExportQueryset:
 
     @pytest.mark.django_db
     def test_get_queryset_returns_ghfdb_querytype(self):
-        """get_queryset() returns a GHFDBQuerySet."""
-        from project.ghfdb.managers import GHFDBQuerySet
+        """get_queryset() returns a GHFDBChildQuerySet."""
+        from project.ghfdb.managers import GHFDBChildQuerySet
         from project.ghfdb.resources.export import GHFDBExportResource
 
         resource = GHFDBExportResource()
         qs = resource.get_queryset()
-        assert isinstance(qs, GHFDBQuerySet)
+        assert isinstance(qs, GHFDBChildQuerySet)
 
     @pytest.mark.django_db
     def test_filtered_queryset_exports_only_matching_records(self, heat_flow_chain):
@@ -212,3 +211,104 @@ class TestGHFDBExportAccessControl:
         url = reverse("admin:ghfdb_ghfdb_export")
         response = client.get(url)
         assert response.status_code == 302
+
+
+# ---------------------------------------------------------------------------
+# T094 — BUG-010: Export attribute= values must match canonical annotation keys
+# ---------------------------------------------------------------------------
+
+
+class TestBUG010ExportAttributeValues:
+    """T094 — GHFDBExportResource field attribute= values must match renamed annotation keys (BUG-010).
+
+    After T096 renames the annotation keys in GHFDBChildQuerySet.as_ghfdb_flat(),
+    the export resource's attribute= values must use the new key names.
+
+    These tests FAIL until T099 is implemented.
+    """
+
+    def test_q_attribute_is_canonical(self):
+        """Field 'q' attribute must be 'q', not stale 'p_q' (BUG-010)."""
+        from project.ghfdb.resources.export import GHFDBExportResource
+
+        resource = GHFDBExportResource()
+        assert resource.fields["q"].attribute == "q", (
+            f"Field 'q' has attribute '{resource.fields['q'].attribute}', expected 'q' (BUG-010 T099)"
+        )
+
+    def test_q_uncertainty_attribute_is_canonical(self):
+        """Field 'q_uncertainty' attribute must be 'q_uncertainty', not 'p_q_uncertainty' (BUG-010)."""
+        from project.ghfdb.resources.export import GHFDBExportResource
+
+        resource = GHFDBExportResource()
+        assert resource.fields["q_uncertainty"].attribute == "q_uncertainty", (
+            f"Field 'q_uncertainty' has stale attribute (BUG-010 T099)"
+        )
+
+    def test_name_attribute_reads_site_name_annotation(self):
+        """Field 'name' must read from 'site_name' annotation (model-field conflict workaround, BUG-010).
+
+        'name' cannot be used as the annotate() key because Measurement base class
+        already has a 'name' field.  The export resource field named 'name' reads
+        from the 'site_name' annotation instead.
+        """
+        from project.ghfdb.resources.export import GHFDBExportResource
+
+        resource = GHFDBExportResource()
+        assert resource.fields["name"].attribute == "site_name", (
+            f"Field 'name' has attribute '{resource.fields['name'].attribute}', expected 'site_name' (BUG-010 T099)"
+        )
+
+    def test_elevation_attribute_is_canonical(self):
+        """Field 'elevation' attribute must be 'elevation', not 'site_elevation' (BUG-010)."""
+        from project.ghfdb.resources.export import GHFDBExportResource
+
+        resource = GHFDBExportResource()
+        assert resource.fields["elevation"].attribute == "elevation", (
+            f"Field 'elevation' has attribute '{resource.fields['elevation'].attribute}', expected 'elevation' (BUG-010)"
+        )
+
+    def test_environment_attribute_is_canonical(self):
+        """Field 'environment' attribute must be 'environment', not 'site_environment' (BUG-010)."""
+        from project.ghfdb.resources.export import GHFDBExportResource
+
+        resource = GHFDBExportResource()
+        assert resource.fields["environment"].attribute == "environment", (
+            f"Field 'environment' has stale attribute (BUG-010 T099)"
+        )
+
+    def test_corr_hp_flag_attribute_is_canonical(self):
+        """Field 'corr_hp_flag' attribute must be 'corr_HP_flag', not 'p_corr_hp_flag' (BUG-010)."""
+        from project.ghfdb.resources.export import GHFDBExportResource
+
+        resource = GHFDBExportResource()
+        assert resource.fields["corr_hp_flag"].attribute == "corr_HP_flag", (
+            f"Field 'corr_hp_flag' has attribute '{resource.fields['corr_hp_flag'].attribute}', expected 'corr_HP_flag' (BUG-010)"
+        )
+
+    def test_total_depth_md_attribute_is_canonical(self):
+        """Field 'total_depth_md' attribute must be 'total_depth_MD', not lowercase 'total_depth_md' (BUG-010)."""
+        from project.ghfdb.resources.export import GHFDBExportResource
+
+        resource = GHFDBExportResource()
+        assert resource.fields["total_depth_md"].attribute == "total_depth_MD", (
+            f"Field 'total_depth_md' has attribute '{resource.fields['total_depth_md'].attribute}', expected 'total_depth_MD' (BUG-010)"
+        )
+
+    def test_total_depth_tvd_attribute_is_canonical(self):
+        """Field 'total_depth_tvd' attribute must be 'total_depth_TVD', not lowercase 'total_depth_tvd' (BUG-010)."""
+        from project.ghfdb.resources.export import GHFDBExportResource
+
+        resource = GHFDBExportResource()
+        assert resource.fields["total_depth_tvd"].attribute == "total_depth_TVD", (
+            f"Field 'total_depth_tvd' has attribute '{resource.fields['total_depth_tvd'].attribute}', expected 'total_depth_TVD' (BUG-010)"
+        )
+
+    def test_explo_method_attribute_is_canonical(self):
+        """Field 'explo_method' attribute must be 'explo_method', not 'site_explo_method' (BUG-010)."""
+        from project.ghfdb.resources.export import GHFDBExportResource
+
+        resource = GHFDBExportResource()
+        assert resource.fields["explo_method"].attribute == "explo_method", (
+            f"Field 'explo_method' has attribute '{resource.fields['explo_method'].attribute}', expected 'explo_method' (BUG-010)"
+        )

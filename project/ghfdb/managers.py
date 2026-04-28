@@ -1,7 +1,7 @@
 """
 GHFDB proxy queryset and manager.
 
-Provides ``GHFDBQuerySet`` with two key methods:
+Provides ``GHFDBChildQuerySet`` with two key methods:
 
 * ``as_ghfdb_flat()`` — annotates all 31 scalar columns via ``select_related``
   and ``F()`` expressions, plus 9 correction-flag subqueries; ≤2 DB queries,
@@ -46,10 +46,10 @@ def _correction_subqueries() -> dict[str, Subquery]:
     return annotations
 
 
-class GHFDBQuerySet(PolymorphicQuerySet):
+class GHFDBChildQuerySet(PolymorphicQuerySet):
     """QuerySet for the GHFDB proxy model with flat-row annotation helpers."""
 
-    def as_ghfdb_flat(self) -> "GHFDBQuerySet":
+    def as_ghfdb_flat(self) -> "GHFDBChildQuerySet":
         """
         Annotate the queryset with all 31 scalar GHFDB columns and 9
         correction-flag subqueries.
@@ -89,28 +89,30 @@ class GHFDBQuerySet(PolymorphicQuerySet):
 
         scalar_annotations = {
             # Child-level identifiers / values
-            "id_parent": F("parent__ghfdb_id"),
+            "ID_parent": F("parent__ghfdb_id"),
             "qc": F("value"),
             "qc_uncertainty": F("uncertainty"),
             "relevant_child": F("is_relevant"),
             "q_date": F("date_acquired"),
             # Site-level scalars (from HeatFlowSite via interval → site)
+            # NOTE: 'name' conflicts with a Measurement base-class field; use
+            # 'site_name' as the annotation key and export it via column_name.
             "site_name": F("sample__heatflowinterval__sample__name"),
             "lat_NS": F("sample__heatflowinterval__sample__location__y"),
             "long_EW": F("sample__heatflowinterval__sample__location__x"),
-            "site_elevation": F("sample__heatflowinterval__sample__heatflowsite__elevation"),
-            "site_environment": F("sample__heatflowinterval__sample__heatflowsite__environment"),
-            "site_explo_method": F("sample__heatflowinterval__sample__heatflowsite__explo_method"),
+            "elevation": F("sample__heatflowinterval__sample__heatflowsite__elevation"),
+            "environment": F("sample__heatflowinterval__sample__heatflowsite__environment"),
+            "explo_method": F("sample__heatflowinterval__sample__heatflowsite__explo_method"),
             "site_country": F("sample__heatflowinterval__sample__heatflowsite__country"),
             "site_region": F("sample__heatflowinterval__sample__heatflowsite__region"),
             "site_continent": F("sample__heatflowinterval__sample__heatflowsite__continent"),
             "site_domain": F("sample__heatflowinterval__sample__heatflowsite__domain"),
-            "total_depth_md": F("sample__heatflowinterval__sample__heatflowsite__length"),
-            "total_depth_tvd": F("sample__heatflowinterval__sample__heatflowsite__vertical_depth"),
+            "total_depth_MD": F("sample__heatflowinterval__sample__heatflowsite__length"),
+            "total_depth_TVD": F("sample__heatflowinterval__sample__heatflowsite__vertical_depth"),
             # Parent heat flow scalars
-            "p_q": F("parent__value"),
-            "p_q_uncertainty": F("parent__uncertainty"),
-            "p_corr_hp_flag": F("parent__corr_HP_flag"),
+            "q": F("parent__value"),
+            "q_uncertainty": F("parent__uncertainty"),
+            "corr_HP_flag": F("parent__corr_HP_flag"),
             "p_comment": F("parent__comment"),
             # Depth interval scalars (via HeatFlowInterval MTI accessor)
             "q_top": F("sample__heatflowinterval__top"),
@@ -135,9 +137,9 @@ class GHFDBQuerySet(PolymorphicQuerySet):
 
         qs = qs.annotate(**scalar_annotations)
         qs = qs.annotate(**_correction_subqueries())
-        return cast("GHFDBQuerySet", qs)
+        return cast("GHFDBChildQuerySet", qs)
 
-    def for_export(self) -> "GHFDBQuerySet":
+    def for_export(self) -> "GHFDBChildQuerySet":
         """
         Return a queryset ready for XLSX export: flat scalar annotations plus
         all 14 M2M relations pre-fetched.
@@ -162,25 +164,25 @@ class GHFDBQuerySet(PolymorphicQuerySet):
             "thermal_conductivity__strategy",
             "sample__heatflowinterval__probe_metadata__probe_type",
         )
-        return cast("GHFDBQuerySet", qs)
+        return cast("GHFDBChildQuerySet", qs)
 
 
-class GHFDBManager(PolymorphicManager):
+class GHFDBChildManager(PolymorphicManager):
     """Custom manager for the GHFDB proxy model.
 
     Default queryset is scoped to records where ``ghfdb_id`` is set
     (FR-001b) — i.e. only published GHFDB entries are visible.
     """
 
-    def get_queryset(self) -> GHFDBQuerySet:
-        return GHFDBQuerySet(self.model, using=self._db).filter(ghfdb_id__isnull=False)
+    def get_queryset(self) -> GHFDBChildQuerySet:
+        return GHFDBChildQuerySet(self.model, using=self._db).filter(ghfdb_id__isnull=False)
 
-    def as_ghfdb_flat(self) -> GHFDBQuerySet:
-        """Delegate to ``GHFDBQuerySet.as_ghfdb_flat()``."""
+    def as_ghfdb_flat(self) -> GHFDBChildQuerySet:
+        """Delegate to ``GHFDBChildQuerySet.as_ghfdb_flat()``."""
         return self.get_queryset().as_ghfdb_flat()
 
-    def for_export(self) -> GHFDBQuerySet:
-        """Delegate to ``GHFDBQuerySet.for_export()``."""
+    def for_export(self) -> GHFDBChildQuerySet:
+        """Delegate to ``GHFDBChildQuerySet.for_export()``."""
         return self.get_queryset().for_export()
 
 
@@ -219,6 +221,43 @@ class GHFDBParentQuerySet(PolymorphicQuerySet):
         """
         return cast("GHFDBParentQuerySet", self.prefetch_related("children"))
 
+    def as_ghfdb_flat(self) -> "GHFDBParentQuerySet":
+        """Annotate parent queryset with all scalar PARENT_COLUMNS fields.
+
+        Annotation keys use canonical PARENT_COLUMNS names (e.g. ``'q'``,
+        ``'lat_NS'``, ``'total_depth_MD'``).  The M2M field
+        ``explo_purpose`` is excluded; callers must prefetch it separately.
+
+        Executes ≤2 DB queries (main + optional content-type lookup),
+        constant regardless of row count.
+        """
+        qs = self.select_related(
+            "sample",
+            "sample__location",
+            "sample__heatflowsite",
+        )
+        scalar_annotations = {
+            "ID_parent": F("ghfdb_id"),
+            "q": F("value"),
+            "q_uncertainty": F("uncertainty"),
+            "p_comment": F("comment"),
+            # NOTE: corr_HP_flag is a direct model field on HeatFlowParent;
+            # it is accessible as obj.corr_HP_flag without annotation.
+            # NOTE: 'name' conflicts with a Measurement base-class field; use
+            # 'site_name' as the annotation key.
+            "site_name": F("sample__name"),
+            "lat_NS": F("sample__location__y"),
+            "long_EW": F("sample__location__x"),
+            "elevation": F("sample__heatflowsite__elevation"),
+            "environment": F("sample__heatflowsite__environment"),
+            "explo_method": F("sample__heatflowsite__explo_method"),
+            "explo_purpose": F("sample__heatflowsite__explo_purpose"),
+            "total_depth_MD": F("sample__heatflowsite__length"),
+            "total_depth_TVD": F("sample__heatflowsite__vertical_depth"),
+            "quality_parent": F("quality"),
+        }
+        return cast("GHFDBParentQuerySet", qs.annotate(**scalar_annotations))
+
 
 class GHFDBParentManager(PolymorphicManager):
     """Custom manager for the GHFDBParent proxy model.
@@ -237,3 +276,7 @@ class GHFDBParentManager(PolymorphicManager):
     def with_children(self) -> GHFDBParentQuerySet:
         """Delegate to ``GHFDBParentQuerySet.with_children()``."""
         return self.get_queryset().with_children()
+
+    def as_ghfdb_flat(self) -> GHFDBParentQuerySet:
+        """Delegate to ``GHFDBParentQuerySet.as_ghfdb_flat()``."""
+        return self.get_queryset().as_ghfdb_flat()

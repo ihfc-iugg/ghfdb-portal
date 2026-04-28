@@ -6,6 +6,14 @@ AppMenu.insert(
     MenuItem(
         name=_("Explore"),
         view_name="ghfdb-explore",
+        extra_context={"icon": "map"},
     ),
     position=0,
 )
+#     MenuItem(
+#     name=_("Datasets"),
+#     view_name="dataset-list",
+#     extra_context={
+#         "icon": "dataset",
+#     },
+# ),

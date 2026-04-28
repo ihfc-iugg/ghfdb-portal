@@ -17,7 +17,7 @@ The `GHFDBExportResource` produces a single flat XLSX where each row represents 
 
 ## Data Source
 
-Export uses the `GHFDB` proxy model with the `GHFDBManager.for_export()` queryset, which:
+Export uses the `GHFDB` proxy model with the `GHFDBChildManager.for_export()` queryset, which:
 
 1. Calls `as_ghfdb_flat()` to produce scalar annotations for all parent-level and child-level fields
 2. Adds `prefetch_related()` for all M2M paths (14 M2M relationships)

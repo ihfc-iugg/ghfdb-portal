@@ -312,7 +312,7 @@ class TestGHFDBParentColumnOrderRegression:
     def test_get_user_visible_fields_follows_parent_columns_order(self):
         """GHFDBParentImportResource.get_user_visible_fields() returns fields in PARENT_COLUMNS order."""
         from project.ghfdb.resources import GHFDBParentImportResource
-        from project.ghfdb.resources._base import PARENT_COLUMNS
+        from project.ghfdb.resources.formats import PARENT_COLUMNS
 
         resource = GHFDBParentImportResource()
         visible_fields = resource.get_user_visible_fields()
@@ -395,7 +395,7 @@ class TestGHFDBSimpleImportFormat:
     def test_create_dataset_returns_correct_row_count(self):
         """create_dataset() with 2 data rows returns a Dataset with 2 rows."""
         from project.ghfdb.resources import GHFDBSimpleImportFormat
-        from project.ghfdb.resources._base import PARENT_COLUMNS
+        from project.ghfdb.resources.formats import PARENT_COLUMNS
 
         xlsx_bytes = _build_simple_xlsx(
             headers=PARENT_COLUMNS,
@@ -451,7 +451,7 @@ class TestGHFDBSimpleImportFormat:
     def test_create_dataset_uses_row6_as_headers(self):
         """create_dataset() uses row 6 cell values as Dataset column headers."""
         from project.ghfdb.resources import GHFDBSimpleImportFormat
-        from project.ghfdb.resources._base import PARENT_COLUMNS
+        from project.ghfdb.resources.formats import PARENT_COLUMNS
 
         xlsx_bytes = _build_simple_xlsx(
             headers=PARENT_COLUMNS,
@@ -466,7 +466,7 @@ class TestGHFDBSimpleImportFormat:
     def test_create_dataset_excludes_metadata_rows(self):
         """create_dataset() does not include metadata rows 1-5 as data rows."""
         from project.ghfdb.resources import GHFDBSimpleImportFormat
-        from project.ghfdb.resources._base import PARENT_COLUMNS
+        from project.ghfdb.resources.formats import PARENT_COLUMNS
 
         xlsx_bytes = _build_simple_xlsx(
             headers=PARENT_COLUMNS,
@@ -489,7 +489,7 @@ class TestGHFDBSimpleImportFormat:
         import openpyxl
 
         from project.ghfdb.resources import GHFDBImportFormat, GHFDBSimpleImportFormat
-        from project.ghfdb.resources._base import PARENT_COLUMNS
+        from project.ghfdb.resources.formats import PARENT_COLUMNS
 
         # Build official-style XLSX with unit row (7), range row (8), then data row (9)
         wb = openpyxl.Workbook()
