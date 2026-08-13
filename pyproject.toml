@@ -105,6 +105,12 @@ ignore = [
     "C901",
     # Use of mark_safe
     "S308",
+    # Ambiguous unicode in docstrings and comments. Prose here legitimately uses
+    # en dashes, and the domain uses characters such as µ, ° and ± throughout.
+    # The rule cannot tell correct typography from a homoglyph typo, and every
+    # one of the 54 findings it raised was correct typography.
+    "RUF002",
+    "RUF003",
 ]
 exclude = [
     ".bzr",

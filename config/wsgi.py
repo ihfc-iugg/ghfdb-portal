@@ -1,4 +1,3 @@
-# ruff: noqa
 """
 WSGI config for test_cookiecutter project.
 
@@ -17,7 +16,6 @@ framework.
 
 import os
 import sys
-from pathlib import Path
 
 from django.core.wsgi import get_wsgi_application
 

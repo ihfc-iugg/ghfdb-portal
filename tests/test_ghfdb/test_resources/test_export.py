@@ -14,6 +14,7 @@ Covers:
 """
 
 import pytest
+
 from project.ghfdb.constants import GHFDB_COLUMN_ORDER
 
 # ---------------------------------------------------------------------------
@@ -242,7 +243,7 @@ class TestBUG010ExportAttributeValues:
 
         resource = GHFDBExportResource()
         assert resource.fields["q_uncertainty"].attribute == "q_uncertainty", (
-            f"Field 'q_uncertainty' has stale attribute (BUG-010 T099)"
+            "Field 'q_uncertainty' has stale attribute (BUG-010 T099)"
         )
 
     def test_name_attribute_reads_site_name_annotation(self):
@@ -274,7 +275,7 @@ class TestBUG010ExportAttributeValues:
 
         resource = GHFDBExportResource()
         assert resource.fields["environment"].attribute == "environment", (
-            f"Field 'environment' has stale attribute (BUG-010 T099)"
+            "Field 'environment' has stale attribute (BUG-010 T099)"
         )
 
     def test_corr_hp_flag_attribute_is_canonical(self):

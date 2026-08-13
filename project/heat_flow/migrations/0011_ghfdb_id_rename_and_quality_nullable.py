@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("heat_flow", "0010_add_local_id_fields"),
         ("measurement", "0007_alter_measurementdate_type_and_more"),
@@ -75,8 +74,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="parentheatflow",
-            index=models.Index(
-                fields=["ghfdb_id"], name="ghfdb_paren_ghfdb_i_6b75a3_idx"
-            ),
+            index=models.Index(fields=["ghfdb_id"], name="ghfdb_paren_ghfdb_i_6b75a3_idx"),
         ),
     ]

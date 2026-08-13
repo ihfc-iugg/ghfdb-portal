@@ -1,80 +1,67 @@
-# Config for Dependabot updates. See Documentation here:
-# https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
-
+# Dependabot configuration.
+#
+# Each ecosystem groups every update under a single "*" pattern, so one update
+# cycle produces one pull request rather than one per package. Ungrouped
+# configuration is what let ten pull requests accumulate here unmerged.
+#
+# The previous configuration pointed at eight Dockerfiles under `compose/` and a
+# `requirements.txt`, none of which exist in this repository. Every Dependabot
+# run failed as a result.
 version: 2
 updates:
-  # Update GitHub actions in workflows
+  # Python dependencies (Poetry)
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      python-dependencies:
+        patterns:
+          - "*"
+
+  # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
-    # Check for updates to GitHub Actions every weekday
     schedule:
       interval: "monthly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
 
-  # Enable version updates for Docker
-  # We need to specify each Dockerfile in a separate entry because Dependabot doesn't
-  # support wildcards or recursively checking subdirectories. Check this issue for updates:
-  # https://github.com/dependabot/dependabot-core/issues/2178
+  # Container image (root Dockerfile; Dependabot does not read docker-compose.yml)
   - package-ecosystem: "docker"
-    # Look for a `Dockerfile` in the `compose/local/django` directory
-    directory: "compose/local/django/"
-    # Check for updates to GitHub Actions every weekday
-    schedule:
-      interval: "monthly"
-
-  # Enable version updates for Docker
-  - package-ecosystem: "docker"
-    # Look for a `Dockerfile` in the `compose/local/docs` directory
-    directory: "compose/local/docs/"
-    # Check for updates to GitHub Actions every weekday
-    schedule:
-      interval: "monthly"
-
-  # Enable version updates for Docker
-  - package-ecosystem: "docker"
-    # Look for a `Dockerfile` in the `compose/local/node` directory
-    directory: "compose/local/node/"
-    # Check for updates to GitHub Actions every weekday
-    schedule:
-      interval: "monthly"
-
-  # Enable version updates for Docker
-  - package-ecosystem: "docker"
-    # Look for a `Dockerfile` in the `compose/production/aws` directory
-    directory: "compose/production/aws/"
-    # Check for updates to GitHub Actions every weekday
-    schedule:
-      interval: "monthly"
-
-  # Enable version updates for Docker
-  - package-ecosystem: "docker"
-    # Look for a `Dockerfile` in the `compose/production/django` directory
-    directory: "compose/production/django/"
-    # Check for updates to GitHub Actions every weekday
-    schedule:
-      interval: "daily"
-
-  # Enable version updates for Docker
-  - package-ecosystem: "docker"
-    # Look for a `Dockerfile` in the `compose/production/postgres` directory
-    directory: "compose/production/postgres/"
-    # Check for updates to GitHub Actions every weekday
-    schedule:
-      interval: "monthly"
-
-  # Enable version updates for Docker
-  - package-ecosystem: "docker"
-    # Look for a `Dockerfile` in the `compose/production/traefik` directory
-    directory: "compose/production/traefik/"
-    # Check for updates to GitHub Actions every weekday
-    schedule:
-      interval: "monthly"
-
-
-  # Enable version updates for Python/Pip - Production
-  - package-ecosystem: "pip"
-    # Look for a `requirements.txt` in the `root` directory
-    # also 'setup.cfg', 'runtime.txt' and 'requirements/*.txt'
     directory: "/"
-    # Check for updates to GitHub Actions every weekday
     schedule:
       interval: "monthly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      docker:
+        patterns:
+          - "*"

@@ -12,7 +12,7 @@ os.environ.setdefault("DJANGO_ENV", "development")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 os.environ.setdefault("DJANGO_SECURE", "False")
 
-from docs.conf import *
+from docs.conf import *  # noqa: E402  (must follow the DJANGO_* environment setup above)
 
 autodoc2_packages = ["heat_flow"]
 

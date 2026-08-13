@@ -269,7 +269,7 @@ class HeatFlow(Measurement):
             models.Index(fields=["U_score"]),
             models.Index(fields=["M_score"]),
         ]
-        constraints = [
+        constraints: list[models.BaseConstraint] = [
             # Note: Constraints with Quantity fields are commented out due to SQLite compatibility issues
             # The validators on the fields themselves provide the same validation
             # models.CheckConstraint(
@@ -640,7 +640,7 @@ class ThermalGradient(Measurement):
             models.Index(fields=["score"]),
             models.Index(fields=["number"]),
         ]
-        constraints = [
+        constraints: list[models.BaseConstraint] = [
             # Note: Constraints with Quantity fields are commented out due to SQLite compatibility issues
             # The validators on the fields themselves provide the same validation
             # models.CheckConstraint(
@@ -790,7 +790,7 @@ class IntervalConductivity(Measurement):
         indexes = [
             models.Index(fields=["number"]),
         ]
-        constraints = [
+        constraints: list[models.BaseConstraint] = [
             # Note: Constraints with Quantity fields are commented out due to SQLite compatibility issues
             # The validators on the fields themselves provide the same validation
             # models.CheckConstraint(
