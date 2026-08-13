@@ -5,7 +5,7 @@ It exists to make it easy to pick the next piece of work and convert it into a c
 
 These candidates are derived from:
 
-- The portal constitution (see [.specify/memory/constitution.md](../../.specify/memory/constitution.md))
+- The portal constitution (see [memory/constitution.md](memory/constitution.md))
 - Existing user workflow docs (e.g., [docs/guides/reviewing.md](../guides/reviewing.md), [docs/guides/importing-data.md](../guides/importing-data.md))
 - The required “canonical model + IHFC interchange product” approach (Constitution Principles I + III)
 - Non-negotiable provenance + dual-review governance (Constitution Principle VI)

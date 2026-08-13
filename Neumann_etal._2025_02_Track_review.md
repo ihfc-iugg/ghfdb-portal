@@ -1,7 +1,7 @@
 # Review: Neumann_etal._2025_02_Track.docx (terminology + consistency)
 
-Reviewer: Samuel Jennings (via Copilot)  
-Date: 2026-02-03  
+Reviewer: Samuel Jennings (via Copilot)
+Date: 2026-02-03
 Scope requested by authors: terminology consistency and clarity around “database” meaning, plus targeted technical/language checks. **No ERD feedback included** (explicitly deferred).
 
 ## 1) High-priority issue: “database” refers to two different things

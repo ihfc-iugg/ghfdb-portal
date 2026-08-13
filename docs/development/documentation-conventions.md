@@ -26,7 +26,7 @@ Contributors to the codebase, including developers extending the portal, system 
 
 Project governance material defining principles, roles, and responsibilities.
 
-- **Location**: `docs/constitution/` and `.specify/memory/constitution.md`
+- **Location**: `docs/constitution/` and `memory/constitution.md`
 - **Examples**: Constitution, licensing, data policies
 - **Style**: Clear, authoritative, policy-oriented
 

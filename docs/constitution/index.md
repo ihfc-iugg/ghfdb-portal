@@ -7,9 +7,9 @@ This section contains the governance framework and constitutional principles for
 The project constitution defines the core principles, constraints, and governance rules that guide development of the portal.
 
 :::{seealso}
-**Canonical Constitution**: [.specify/memory/constitution.md](../../.specify/memory/constitution.md)
+**Canonical Constitution**: [memory/constitution.md](../../memory/constitution.md)
 
-The constitution is maintained in the `.specify/memory/` directory as the single source of truth for project governance.
+The constitution is maintained at `memory/constitution.md` as the single source of truth for project governance.
 :::
 
 ### Core Principles
@@ -24,7 +24,7 @@ The constitution establishes seven foundational principles:
 6. **Provenance, Attribution & Review Governance**
 7. **Spec-Driven Development**
 
-For the complete text with detailed explanations and constraints, see the [canonical constitution](../../.specify/memory/constitution.md).
+For the complete text with detailed explanations and constraints, see the [canonical constitution](../../memory/constitution.md).
 
 ## Reference Documents
 
