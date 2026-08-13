@@ -11,7 +11,7 @@ The Global Heat Flow Database (GHFDB) organizes heat flow information using a hi
 The data model comprises **ten primary entities** organized into three conceptual groups:
 
 1. **Parent-Related Entities** — Site-level metadata and aggregated heat flow values
-2. **Child-Related Entities** — Interval-level measurements and derived heat flow determinations  
+2. **Child-Related Entities** — Interval-level measurements and derived heat flow determinations
 3. **Relational Infrastructure** — Junction tables connecting parent and child records
 
 A **spatial reference entity** (Point) supports geographic positioning across both groups.
@@ -97,7 +97,7 @@ A derived entity representing interval-level heat flow density calculated from t
 - **Heat Flow Value**: Calculated heat flow density (mW/m²) with propagated uncertainty
 - **Calculation Method**: Approach used (Fourier, Bullard plot for variable conductivity, etc.)
 - **Acquisition Context**: Date acquired, expedition/cruise/vessel name, bottom water temperature (for marine settings)
-- **Quality Assessment**: 
+- **Quality Assessment**:
   - U-score: Numerical uncertainty quality (U1=excellent, U2=good, U3=ok, U4=poor, Ux=unknown)
   - M-score: Methodological quality (M1=excellent, M2=good, M3=ok, M4=poor, Mx=unknown)
 - **Comments**: Textual annotations
@@ -169,7 +169,7 @@ The GHFDB data model supports the following conceptual workflow:
 
 2. **Interval Definition**: The site is subdivided into GeoDepthIntervals, each characterized by geological properties (lithology, age, stratigraphy).
 
-3. **Measurement Acquisition**: 
+3. **Measurement Acquisition**:
    - Temperature profiles yield ThermalGradient values per interval.
    - Rock samples or logs provide IntervalConductivity estimates.
    - Marine measurements optionally include ProbeMetadata.

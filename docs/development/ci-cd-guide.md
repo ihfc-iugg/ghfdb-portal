@@ -34,7 +34,7 @@ When you open or update a pull request, the **PR Validation** workflow automatic
   - Coverage report uploaded to Codecov with `pr-tests` flag
 
 - **Documentation** (conditional, ~2 minutes)
-  - Only runs if documentation files are modified (`docs/`, `specs/`, `.specify/`)
+  - Only runs if documentation files are modified (`docs/`, `pyproject.toml`)
   - Sphinx build with warnings as errors (`-W` flag)
   - Linkcheck validation for external links (GitHub, project domain)
   - Fails on any broken links or invalid documentation syntax

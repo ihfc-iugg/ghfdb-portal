@@ -13,7 +13,6 @@ as_ghfdb_flat()) are implemented.
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # T092 — GHFDBChildQuerySet.as_ghfdb_flat() canonical key tests
 # ---------------------------------------------------------------------------

@@ -14,9 +14,9 @@ References:
     - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
 """
 
-from .formats import GHFDBImportFormat, GHFDBSimpleImportFormat
 from .child import GHFDBChildImportResource
 from .export import GHFDBExportResource
+from .formats import GHFDBImportFormat, GHFDBSimpleImportFormat
 from .parent import GHFDBParentImportResource
 
 __all__ = [

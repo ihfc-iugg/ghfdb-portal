@@ -146,16 +146,32 @@ class TestBUG010CanonicalConstants:
         """Mixed-case canonical column names must appear with correct case (BUG-010)."""
         from project.ghfdb.constants import GHFDB_COLUMN_ORDER
 
-        for col in ("lat_NS", "long_EW", "T_grad_mean", "corr_HP_flag", "corr_IS_flag", "total_depth_MD", "total_depth_TVD", "T_number", "Ref_IGSN"):
-            assert col in GHFDB_COLUMN_ORDER, (
-                f"'{col}' not found in GHFDB_COLUMN_ORDER — check case (BUG-010)"
-            )
+        for col in (
+            "lat_NS",
+            "long_EW",
+            "T_grad_mean",
+            "corr_HP_flag",
+            "corr_IS_flag",
+            "total_depth_MD",
+            "total_depth_TVD",
+            "T_number",
+            "Ref_IGSN",
+        ):
+            assert col in GHFDB_COLUMN_ORDER, f"'{col}' not found in GHFDB_COLUMN_ORDER — check case (BUG-010)"
 
     def test_stale_lowercase_names_absent(self):
         """Old lowercase column names from the stale tuple must not be in GHFDB_COLUMN_ORDER (BUG-010)."""
         from project.ghfdb.constants import GHFDB_COLUMN_ORDER
 
-        stale = ("lat_ns", "long_ew", "t_grad_mean", "corr_hp_flag", "corr_is_flag", "total_depth_md", "total_depth_tvd")
+        stale = (
+            "lat_ns",
+            "long_ew",
+            "t_grad_mean",
+            "corr_hp_flag",
+            "corr_is_flag",
+            "total_depth_md",
+            "total_depth_tvd",
+        )
         found = [c for c in stale if c in GHFDB_COLUMN_ORDER]
         assert not found, f"Stale lowercase names still in GHFDB_COLUMN_ORDER: {found} (BUG-010)"
 

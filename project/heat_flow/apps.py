@@ -21,5 +21,5 @@ class HeatFlowSchemaConfig(AppConfig):
     #     text="Fuchs, S., et al. (2021). A new database structure for the IHFC Global Heat Flow Database. International Journal of Terrestrial Heat Flow and Applications, 4(1), pp.1-14.",
     #     doi="https://doi.org/10.31214/ijthfa.v4i1.62",
     # )
-    keywords = []
+    keywords: list[str] = []
     repository_url = "https://github.com/ihfc-iugg/ghfdb-portal"

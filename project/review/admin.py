@@ -56,6 +56,7 @@ class ReviewAdmin(admin.ModelAdmin):
             title = title[:30] + "..." if len(title) > 30 else title
         return format_html('<a href="{}">{}</a>', url, title or "No title")
 
+    @admin.display(description="Reviewers")
     def _reviewers(self, obj):
         """Display reviewers as a comma-separated list."""
         links = []
@@ -63,5 +64,3 @@ class ReviewAdmin(admin.ModelAdmin):
             url = reviewer.get_absolute_url()
             links.append(f'<a href="{url}">{reviewer}</a>')
         return mark_safe(", ".join(links))
-
-    _reviewers.short_description = "Reviewers"

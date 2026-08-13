@@ -11,7 +11,7 @@ digraph GHFDB_ERD {
     // ============================================================
     // GRAPH SETTINGS
     // ============================================================
-    
+
     rankdir=LR;                // Left-to-right layout
     splines=polyline;          // Polyline edge routing
     nodesep=0.4;               // Node separation
@@ -20,23 +20,23 @@ digraph GHFDB_ERD {
     margin="0,0";              // Margin
     compound=true;             // Allow edges between clusters
     newrank=true;              // Use new ranking algorithm
-    
+
     // Graph title
     labelloc="t";
     label="Global Heat Flow Database\nEntity Relationship Diagram";
     fontname="Arial Bold";
     fontsize=14;
-    
+
     // ============================================================
     // DEFAULT STYLES
     // ============================================================
-    
+
     node [
         shape=plaintext,
         fontname="Arial",
         fontsize=9
     ];
-    
+
     edge [
         fontname="Arial",
         fontsize=8,
@@ -45,11 +45,11 @@ digraph GHFDB_ERD {
         arrowhead=crow,
         arrowtail=none
     ];
-    
+
     // ============================================================
     // PARENT-RELATED ENTITIES (GHFDB APP)
     // ============================================================
-    
+
     subgraph cluster_parent {
         label="Parent-Related Entities";
         fontsize=12;
@@ -59,7 +59,7 @@ digraph GHFDB_ERD {
         fillcolor="#E8F8E8";
         penwidth=2;
         margin=15;
-        
+
         // HeatFlowSite - Blue entity
         HeatFlowSite [label=<
             <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#4A90E2">
@@ -79,7 +79,7 @@ digraph GHFDB_ERD {
                 <TR><TD ALIGN="LEFT" BGCOLOR="white">domain: string</TD><TD ALIGN="LEFT" BGCOLOR="white">Geological domain</TD></TR>
             </TABLE>
         >];
-        
+
         // ParentHeatFlow - Green entity
         ParentHeatFlow [label=<
             <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#50C878">
@@ -92,15 +92,15 @@ digraph GHFDB_ERD {
                 <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">comment: text</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">General comments</TD></TR>
             </TABLE>
         >];
-        
+
         // Vertical ordering within parent cluster
         HeatFlowSite -> ParentHeatFlow [style=invis, weight=100];
     }
-    
+
     // ============================================================
     // SPATIAL REFERENCE (OUTSIDE CLUSTERS)
     // ============================================================
-    
+
     Point [label=<
         <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#4A90E2">
             <TR><TD COLSPAN="2" BGCOLOR="#2E5C8A"><FONT COLOR="white"><B>Point</B></FONT></TD></TR>
@@ -110,14 +110,14 @@ digraph GHFDB_ERD {
             <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">crs: string</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Coordinate reference system</TD></TR>
         </TABLE>
     >];
-    
+
     // Position Point below HeatFlowSite
     {rank=same; Point;}
-    
+
     // ============================================================
     // BRIDGE ENTITY (CENTER)
     // ============================================================
-    
+
     ParentChildRelation [label=<
         <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#9370DB">
             <TR><TD COLSPAN="2" BGCOLOR="#6A5ACD"><FONT COLOR="white"><B>ParentChildRelation</B></FONT></TD></TR>
@@ -127,11 +127,11 @@ digraph GHFDB_ERD {
             <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">is_relevant: boolean</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Used in parent calculation</TD></TR>
         </TABLE>
     >];
-    
+
     // ============================================================
     // CHILD-RELATED ENTITIES (HEAT_FLOW APP)
     // ============================================================
-    
+
     subgraph cluster_child {
         label="Child-Related Entities";
         fontsize=12;
@@ -141,7 +141,7 @@ digraph GHFDB_ERD {
         fillcolor="#FFF4E8";
         penwidth=2;
         margin=15;
-        
+
         // GeoDepthInterval - Blue entity
         GeoDepthInterval [label=<
             <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#4A90E2">
@@ -158,7 +158,7 @@ digraph GHFDB_ERD {
                 <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">notes: string</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Additional notes</TD></TR>
             </TABLE>
         >];
-        
+
         // ThermalGradient - Orange entity
         ThermalGradient [label=<
             <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#FFB347">
@@ -179,7 +179,7 @@ digraph GHFDB_ERD {
                 <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">score: float</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Quality score (0.0-1.0)</TD></TR>
             </TABLE>
         >];
-        
+
         // IntervalConductivity - Orange entity
         IntervalConductivity [label=<
             <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#FFB347">
@@ -199,7 +199,7 @@ digraph GHFDB_ERD {
                 <TR><TD ALIGN="LEFT" BGCOLOR="white">number: int</TD><TD ALIGN="LEFT" BGCOLOR="white">Number of measurements</TD></TR>
             </TABLE>
         >];
-        
+
         // HeatFlow - Orange entity
         HeatFlow [label=<
             <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#FFB347">
@@ -218,7 +218,7 @@ digraph GHFDB_ERD {
                 <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">c_comment: text</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">General comments</TD></TR>
             </TABLE>
         >];
-        
+
         // ProbeMetadata - Blue entity
         ProbeMetadata [label=<
             <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#4A90E2">
@@ -231,7 +231,7 @@ digraph GHFDB_ERD {
                 <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">tilt: quantity</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Tilt angle of probe</TD></TR>
             </TABLE>
         >];
-        
+
         // HeatFlowCorrection - Orange entity
         HeatFlowCorrection [label=<
             <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#FFB347">
@@ -242,75 +242,75 @@ digraph GHFDB_ERD {
                 <TR><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">status: string</TD><TD ALIGN="LEFT" BGCOLOR="#F7F7F7">Correction status (present/corrected/uncorrected)</TD></TR>
             </TABLE>
         >];
-        
+
         // Vertical positioning within child cluster
         {rank=same; ThermalGradient; IntervalConductivity;}
         {rank=same; ProbeMetadata; HeatFlowCorrection;}
     }
-    
+
     // ============================================================
     // RELATIONSHIPS
     // ============================================================
-    
+
     // Spatial reference
     Point -> HeatFlowSite [
         xlabel="location",
         dir=back,
         constraint=true
     ];
-    
+
     // Parent cluster relationships
     HeatFlowSite -> ParentHeatFlow [
         xlabel="has",
         constraint=true
     ];
-    
+
     // Cross-cluster: Site to Child entities
     HeatFlowSite -> GeoDepthInterval [
         xlabel="contains",
         constraint=false,
         weight=2
     ];
-    
+
     // Bridge relationships
     ParentHeatFlow -> ParentChildRelation [
         xlabel="parent of",
         constraint=false
     ];
-    
+
     HeatFlow -> ParentChildRelation [
         xlabel="child of",
         constraint=false,
         dir=back
     ];
-    
+
     // Child cluster measurement flow
     GeoDepthInterval -> ThermalGradient [
         xlabel="measured in",
         constraint=true
     ];
-    
+
     GeoDepthInterval -> IntervalConductivity [
         xlabel="measured in",
         constraint=true
     ];
-    
+
     ThermalGradient -> HeatFlow [
         xlabel="calculates",
         constraint=true
     ];
-    
+
     IntervalConductivity -> HeatFlow [
         xlabel="calculates",
         constraint=true
     ];
-    
+
     // Metadata relationships
     GeoDepthInterval -> ProbeMetadata [
         xlabel="metadata",
         constraint=true
     ];
-    
+
     HeatFlow -> HeatFlowCorrection [
         xlabel="corrections",
         constraint=true

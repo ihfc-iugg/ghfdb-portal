@@ -4,9 +4,8 @@ This directory stores source documents that informed the Global Heat Flow Databa
 
 ## Purpose
 
-These documents provide context for the constitutional principles and governance structure defined in [.specify/memory/constitution.md](../../../.specify/memory/constitution.md). They are kept outside the `.specify/` directory to:
+These documents provide context for the constitutional principles and governance structure defined in [memory/constitution.md](../../../memory/constitution.md). They are kept alongside the rest of the documentation to:
 
-- Avoid conflicts with SpecKit upgrades (which may overwrite `.specify/` contents)
 - Maintain version control for large PDFs and Excel files
 - Provide a stable, referenceable archive for project stakeholders
 
@@ -45,7 +44,7 @@ For a comprehensive overview of the WHDB project based on these reference docume
 
 ## Linking from Constitution
 
-From [.specify/memory/constitution.md](../../../.specify/memory/constitution.md), reference these documents using relative Markdown links:
+From [memory/constitution.md](../../../memory/constitution.md), reference these documents using relative Markdown links:
 
 ```markdown
 See the [DFG Project Description](../../../docs/constitution/references/WHDB%20-%20Project%20Description.pdf) for funding objectives.

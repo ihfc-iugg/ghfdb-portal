@@ -194,8 +194,11 @@ jobs:
     name: Template Validation (djlint)
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # Only run if template files are modified
-    if: contains(github.event.pull_request.changed_files, 'templates/')
+    # This job previously carried
+    #   if: contains(github.event.pull_request.changed_files, 'templates/')
+    # `changed_files` is the *count* of changed files, an integer, so the
+    # expression was never true and the job never ran. djlint takes seconds, so
+    # it now runs on every pull request rather than guessing at a path filter.
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

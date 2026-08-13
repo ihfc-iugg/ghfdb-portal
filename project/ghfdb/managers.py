@@ -175,7 +175,8 @@ class GHFDBChildManager(PolymorphicManager):
     """
 
     def get_queryset(self) -> GHFDBChildQuerySet:
-        return GHFDBChildQuerySet(self.model, using=self._db).filter(ghfdb_id__isnull=False)
+        # cast: PolymorphicQuerySet is untyped, so .filter() erases to Any.
+        return cast(GHFDBChildQuerySet, GHFDBChildQuerySet(self.model, using=self._db).filter(ghfdb_id__isnull=False))
 
     def as_ghfdb_flat(self) -> GHFDBChildQuerySet:
         """Delegate to ``GHFDBChildQuerySet.as_ghfdb_flat()``."""
@@ -267,7 +268,8 @@ class GHFDBParentManager(PolymorphicManager):
     """
 
     def get_queryset(self) -> GHFDBParentQuerySet:
-        return GHFDBParentQuerySet(self.model, using=self._db).filter(ghfdb_id__isnull=False)
+        # cast: PolymorphicQuerySet is untyped, so .filter() erases to Any.
+        return cast(GHFDBParentQuerySet, GHFDBParentQuerySet(self.model, using=self._db).filter(ghfdb_id__isnull=False))
 
     def with_child_counts(self) -> GHFDBParentQuerySet:
         """Delegate to ``GHFDBParentQuerySet.with_child_counts()``."""
