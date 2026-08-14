@@ -19,7 +19,7 @@ on:
 
 jobs:
   call-build:
-    uses: django-mvp/shared/.github/workflows/build.yml@v0.3.2
+    uses: django-mvp/shared/.github/workflows/build.yml@v0.3.3
     with:
       source-dir: project
       python-version: '3.13'
