@@ -1,0 +1,25 @@
+name: Tag Release
+
+# Step 2 of the release flow: once a release pull request merges, notice that
+# the project version has no matching tag and cut the tag plus GitHub Release
+# from the merge commit. No-ops when the tag already exists or when the version
+# has no CHANGELOG section, so only versions that Prepare Release actually
+# prepared get tagged.
+#
+# RELEASE_TOKEN matters here beyond permissions: a release created with the
+# default GITHUB_TOKEN fires no `release` event, so Publish would never run and
+# no image would be built.
+
+on:
+  push:
+    branches: [main]
+    paths: [pyproject.toml]
+
+permissions:
+  contents: write
+
+jobs:
+  call-tag-release:
+    uses: django-mvp/shared/.github/workflows/tag-release.yml@v0.3.2
+    secrets:
+      RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}

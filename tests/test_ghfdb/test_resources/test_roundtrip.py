@@ -40,7 +40,9 @@ def test_roundtrip_import_then_export_preserves_values(dataset):
         GHFDBParentImportResource,
     )
 
-    fixture_path = Path(__file__).resolve().parents[1] / "fixtures" / "sample_ghfdb.xlsx"
+    fixture_path = (
+        Path(__file__).resolve().parents[1] / "fixtures" / "sample_ghfdb.xlsx"
+    )
     fixture_bytes = fixture_path.read_bytes()
 
     # Parse twice because parent import mutates its Dataset during deduplication.
@@ -188,7 +190,9 @@ def test_roundtrip_import_then_export_preserves_values(dataset):
         actual = by_comment[comment]
 
         for col, exp in expected_row["text"].items():
-            assert _norm_empty(actual[col]) == _norm_empty(exp), f"Mismatch in '{col}' for row '{comment}'"
+            assert _norm_empty(actual[col]) == _norm_empty(exp), (
+                f"Mismatch in '{col}' for row '{comment}'"
+            )
 
         for col, exp in expected_row["numeric"].items():
             _assert_float_close(actual[col], exp)
@@ -212,13 +216,17 @@ def _build_simple_xlsx_from_official(official_xlsx_bytes: bytes) -> bytes:
     Returns:
         Raw bytes of the equivalent simple-layout XLSX.
     """
-    wb_in = openpyxl.load_workbook(BytesIO(official_xlsx_bytes), read_only=True, data_only=True)
+    wb_in = openpyxl.load_workbook(
+        BytesIO(official_xlsx_bytes), read_only=True, data_only=True
+    )
     ws_in = wb_in["data list"]
 
     # Read all rows (1-indexed); official has headers at row 6, unit at 7, range at 8
     all_rows = list(ws_in.iter_rows(values_only=True))
     # Rows 1-6 (0-indexed 0-5) stay; rows 7-8 (0-indexed 6-7) are dropped; data is 8+ (0-indexed)
-    kept_rows = all_rows[:6] + all_rows[8:]  # keep metadata+header, skip units/ranges, keep data
+    kept_rows = (
+        all_rows[:6] + all_rows[8:]
+    )  # keep metadata+header, skip units/ranges, keep data
     wb_in.close()
 
     wb_out = openpyxl.Workbook()
@@ -251,7 +259,9 @@ def test_roundtrip_simple_format_import_then_export_preserves_values(dataset):
         GHFDBSimpleImportFormat,
     )
 
-    fixture_path = Path(__file__).resolve().parents[1] / "fixtures" / "sample_ghfdb.xlsx"
+    fixture_path = (
+        Path(__file__).resolve().parents[1] / "fixtures" / "sample_ghfdb.xlsx"
+    )
     official_bytes = fixture_path.read_bytes()
     simple_bytes = _build_simple_xlsx_from_official(official_bytes)
 
@@ -355,7 +365,9 @@ def test_roundtrip_simple_format_import_then_export_preserves_values(dataset):
         actual = by_comment[comment]
 
         for col, exp in expected_row["text"].items():
-            assert _norm_empty(actual[col]) == _norm_empty(exp), f"[simple] Mismatch in '{col}' for row '{comment}'"
+            assert _norm_empty(actual[col]) == _norm_empty(exp), (
+                f"[simple] Mismatch in '{col}' for row '{comment}'"
+            )
 
         for col, exp in expected_row["numeric"].items():
             _assert_float_close(actual[col], exp)

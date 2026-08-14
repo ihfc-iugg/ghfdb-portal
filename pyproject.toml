@@ -1,29 +1,38 @@
-[tool.poetry]
+[project]
 name = "global-heat-flow-database"
-version = "2025.21"
 description = "Code base for the IHFC's Global Heat Flow Database web application"
-authors = ["Sam <samuel.scott.jennings@gmail.com>"]
 license = "MIT"
 readme = "README.md"
-homepage = "https://github.com/ihfc-iugg/ghfdb-portal"
+authors = [{ name = "Sam Jennings", email = "samuel.scott.jennings@gmail.com" }]
+requires-python = ">=3.13,<4.0"
+# Version stays in [tool.poetry] because that is what the release flow bumps.
+# Dependencies stay there too: several are git references, which are clearer in
+# Poetry's form than as PEP 508 direct references.
+dynamic = ["version", "dependencies"]
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Framework :: Django :: 5.2",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3.13",
+]
+
+[project.urls]
+Homepage = "https://github.com/ihfc-iugg/ghfdb-portal"
+"World Heat Flow Database Project" = "https://heatflow.world"
+IHFC = "http://ihfc-iugg.org"
+
+[tool.poetry]
+# Source of truth for the release flow: tag-release cuts v<version> when no
+# matching tag exists on a main push touching this file.
+version = "2025.21"
+requires-poetry = ">=2.0,<3.0"
 include = ["LICENSE", "README.md"]
 packages = [
     { include = "heat_flow", from = "project" },
     { include = "ghfdb", from = "project" },
     { include = "review", from = "project" },
 ]
-classifiers = [
-    "Development Status :: 1 - Planning",
-    "Framework :: Django :: 5.0",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Natural Language :: English",
-    "Programming Language :: Python :: 3.13",
-]
-
-[tool.poetry.urls]
-"World Heat Flow Database Project" = "https://heatflow.world"
-"IHFC" = "http://ihfc-iugg.org"
 
 [tool.poetry.dependencies]
 python = ">=3.13,<4.0"
@@ -49,7 +58,7 @@ fairdm-docs = { git = "https://github.com/FAIR-DM/fairdm-docs", extras = [
 ] }
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core (>=2.0,<3.0)"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
@@ -148,6 +157,10 @@ ignore = [
 "tests/**" = ["S101", "S105", "S106", "RUF002", "RUF003"]
 # Demo/dev settings carry an intentional non-secret placeholder SECRET_KEY.
 "**/demo/settings.py" = ["S105"]
+# fairdm.setup() injects its settings into this module's namespace at runtime,
+# so names it defines (MVP_CONFIG, EASY_ICONS, INSTALLED_APPS, ALLOWED_HOSTS)
+# have no visible binding here. Every F821 in this file is that pattern.
+"config/settings.py" = ["F821"]
 
 [tool.ruff.format]
 docstring-code-format = true

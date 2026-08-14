@@ -11,7 +11,12 @@ from .models import (
     ParentHeatFlow,
     ThermalGradient,
 )
-from .tables import HeatFlowIntervalTable, HeatFlowSiteTable, HeatFlowTable, ThermalGradientTable
+from .tables import (
+    HeatFlowIntervalTable,
+    HeatFlowSiteTable,
+    HeatFlowTable,
+    ThermalGradientTable,
+)
 
 
 class IHFCConfig(ModelConfiguration):
@@ -120,7 +125,13 @@ class ThermalGradientConfig(IHFCConfig):
     model = ThermalGradient
     primary_data_fields = ["mean"]
     # method_top, method_bottom, correction_top, correction_bottom are M2M and cannot be in list_display
-    admin_list_display = ["value", "uncertainty", "corrected_value", "corrected_uncertainty", "number"]
+    admin_list_display = [
+        "value",
+        "uncertainty",
+        "corrected_value",
+        "corrected_uncertainty",
+        "number",
+    ]
     description = _(
         "Geothermal gradient refers to the rate of temperature change over a given length interval (typically a depth interval). It reflects how heat flows from the Earth's hot interior toward its cooler surface, driven by conduction, convection, and sometimes advection. Thermal gradient is measured in Kelvin per kilometer (K/km) and varies depending on local geological conditions, such as rock composition and tectonic activity. In regions with high geothermal activity, the thermal gradient is larger, whereas stable cratons tend to have lower gradients. Understanding geothermal gradients helps geoscientists study Earth's geothermal energy potential and processes like plate tectonics and mantle convection."
     )

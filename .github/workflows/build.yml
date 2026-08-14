@@ -1,0 +1,26 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'project/**'
+      - 'config/**'
+      - 'pyproject.toml'
+      - 'poetry.lock'
+      - '.pre-commit-config.yaml'
+      - '.github/workflows/build.yml'
+  # No paths filter on pull_request: these checks are ruleset-required, and a
+  # path-filtered required check never reports on out-of-scope PRs, blocking merge.
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+jobs:
+  call-build:
+    uses: django-mvp/shared/.github/workflows/build.yml@v0.3.2
+    with:
+      source-dir: project
+      python-version: '3.13'
+    secrets: inherit

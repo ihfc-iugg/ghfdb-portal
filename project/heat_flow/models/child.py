@@ -50,7 +50,11 @@ class HeatFlowInterval(Interval, AbstractGeoDepthInterval):
     def __str__(self):
         """String representation of the depth interval."""
         top = getattr(self.top, "magnitude", self.top) if self.top is not None else "?"
-        bottom = getattr(self.bottom, "magnitude", self.bottom) if self.bottom is not None else "?"
+        bottom = (
+            getattr(self.bottom, "magnitude", self.bottom)
+            if self.bottom is not None
+            else "?"
+        )
         return f"{self.__class__.__name__}({top}-{bottom})"
 
     def clean(self):
@@ -59,7 +63,9 @@ class HeatFlowInterval(Interval, AbstractGeoDepthInterval):
             top = getattr(self.top, "magnitude", self.top)
             bottom = getattr(self.bottom, "magnitude", self.bottom)
             if top >= bottom:
-                raise ValidationError(_("Interval bottom depth must be greater than top depth."))
+                raise ValidationError(
+                    _("Interval bottom depth must be greater than top depth.")
+                )
 
 
 class HeatFlowQuerySet(django_models.QuerySet):
@@ -68,7 +74,11 @@ class HeatFlowQuerySet(django_models.QuerySet):
     def with_related_data(self):
         """Prefetch all related data for efficient queries."""
         return self.select_related(
-            "parent", "parent__sample", "thermal_gradient", "thermal_conductivity", "sample__probe_metadata"
+            "parent",
+            "parent__sample",
+            "thermal_gradient",
+            "thermal_conductivity",
+            "sample__probe_metadata",
         ).prefetch_related(
             "method",
             "corrections",
@@ -90,7 +100,8 @@ class HeatFlowQuerySet(django_models.QuerySet):
     def high_quality(self):
         """Filter to high quality measurements (U1, U2, M1, M2)."""
         return self.filter(
-            U_score__in=[UScoreOptions.U1, UScoreOptions.U2], M_score__in=[MScoreOptions.M1, MScoreOptions.M2]
+            U_score__in=[UScoreOptions.U1, UScoreOptions.U2],
+            M_score__in=[MScoreOptions.M1, MScoreOptions.M2],
         )
 
 
@@ -143,7 +154,9 @@ class HeatFlow(Measurement):
     method = ConceptManyToManyField(
         vocabulary=vocabularies.HeatFlowMethod,
         verbose_name=_("method"),
-        help_text=_("Principal method of heat-flow calculation from temperature and thermal conductivity data."),
+        help_text=_(
+            "Principal method of heat-flow calculation from temperature and thermal conductivity data."
+        ),
         blank=True,
     )
     expedition = models.CharField(
@@ -240,17 +253,23 @@ class HeatFlow(Measurement):
         blank=True,
         related_name="children",
         verbose_name=_("parent heat flow"),
-        help_text=_("The parent-level heat flow record this measurement contributes to."),
+        help_text=_(
+            "The parent-level heat flow record this measurement contributes to."
+        ),
     )
     is_relevant = models.BooleanField(
         verbose_name=_("is relevant"),
-        help_text=_("Indicates whether this child measurement was used in calculating the parent heat flow value."),
+        help_text=_(
+            "Indicates whether this child measurement was used in calculating the parent heat flow value."
+        ),
         default=False,
     )
 
     ghfdb_id = models.PositiveIntegerField(
         verbose_name=_("ID Child"),
-        help_text=_("The original unique identifier for this record in the GHFDB schema, used for traceability."),
+        help_text=_(
+            "The original unique identifier for this record in the GHFDB schema, used for traceability."
+        ),
         null=True,
         blank=True,
         editable=False,
@@ -289,7 +308,9 @@ class HeatFlow(Measurement):
 
     def save(self, *args, **kwargs):
         if self.sample_id and not isinstance(self.sample, HeatFlowInterval):
-            raise ValidationError(_("HeatFlow sample must be a HeatFlowInterval instance."))
+            raise ValidationError(
+                _("HeatFlow sample must be a HeatFlowInterval instance.")
+            )
         super().save(*args, **kwargs)
 
     def get_U_score(self):
@@ -327,7 +348,11 @@ class HeatFlow(Measurement):
 
         for correction in self.corrections.all():
             correction_type = correction.get_correction_type_display()
-            status = correction.get_status_display() if hasattr(correction.status, "label") else str(correction.status)
+            status = (
+                correction.get_status_display()
+                if hasattr(correction.status, "label")
+                else str(correction.status)
+            )
             if correction.status in ["present_corrected", "present_uncorrected"]:
                 effects.append(f"{correction_type} ({status})")
 
@@ -410,7 +435,10 @@ class HeatFlowCorrection(django_models.Model):
     class StatusChoices(models.TextChoices):
         PRESENT_CORRECTED = "present_corrected", _("Present and corrected")
         PRESENT_NOT_CORRECTED = "present_not_corrected", _("Present and not corrected")
-        PRESENT_NOT_SIGNIFICANT = "present_not_significant", _("Present not significant")
+        PRESENT_NOT_SIGNIFICANT = (
+            "present_not_significant",
+            _("Present not significant"),
+        )
         NOT_RECOGNIZED = "not_recognized", _("not recognized")
         CONSIDERED_P = "considered_p", _("Considered - p")
         CONSIDERED_T = "considered_t", _("Considered - t")
@@ -491,7 +519,9 @@ class HeatFlowCorrection(django_models.Model):
         "-",
     }
     # S, E, TOPO, PAL, SUR, CONV, HR → ENVIRONMENTAL_VALID
-    _ENVIRONMENTAL_TYPES: frozenset[str] = frozenset({"S", "E", "TOPO", "PAL", "SUR", "CONV", "HR"})
+    _ENVIRONMENTAL_TYPES: frozenset[str] = frozenset(
+        {"S", "E", "TOPO", "PAL", "SUR", "CONV", "HR"}
+    )
 
     def __str__(self):
         return f"{self.get_correction_type_display()} - {self.status}"
@@ -504,7 +534,9 @@ class HeatFlowCorrection(django_models.Model):
             valid = self.ENVIRONMENTAL_VALID
         if valid is not None and self.status not in valid:
             raise ValidationError(
-                _(f"Status '{self.status}' is not valid for correction type '{self.correction_type}'.")
+                _(
+                    f"Status '{self.status}' is not valid for correction type '{self.correction_type}'."
+                )
             )
         super().save(*args, **kwargs)
 
@@ -540,7 +572,9 @@ class ThermalGradient(Measurement):
         decimal_places=2,
         db_comment="Mean corrected temperature gradient.",
         verbose_name=_("corrected gradient"),
-        help_text=_("Mean temperature gradient corrected for borehole and environmental effects."),
+        help_text=_(
+            "Mean temperature gradient corrected for borehole and environmental effects."
+        ),
         blank=True,
         null=True,
         validators=[MinVal(-(10**5)), MaxVal(10**5)],
@@ -563,13 +597,17 @@ class ThermalGradient(Measurement):
     method_top = ConceptManyToManyField(
         vocabulary=vocabularies.TemperatureMethod,
         verbose_name=_("method (top)"),
-        help_text=_("Method used for temperature determination at the top of the heat-flow determination interval."),
+        help_text=_(
+            "Method used for temperature determination at the top of the heat-flow determination interval."
+        ),
         blank=True,
     )
     method_bottom = ConceptManyToManyField(
         vocabulary=vocabularies.TemperatureMethod,
         verbose_name=_("method (bottom)"),
-        help_text=_("Method used for temperature determination at the bottom of the heat-flow determination interval."),
+        help_text=_(
+            "Method used for temperature determination at the bottom of the heat-flow determination interval."
+        ),
         blank=True,
     )
     shutin_top = models.PositiveIntegerQuantityField(
@@ -635,7 +673,9 @@ class ThermalGradient(Measurement):
     class Meta:
         verbose_name = _("Thermal Gradient")
         verbose_name_plural = _("Thermal Gradients")
-        db_table_comment = "temperature gradient data related to child heat flow measurements"
+        db_table_comment = (
+            "temperature gradient data related to child heat flow measurements"
+        )
         indexes = [
             models.Index(fields=["score"]),
             models.Index(fields=["number"]),
@@ -648,7 +688,8 @@ class ThermalGradient(Measurement):
             #     name="non_negative_corrected_gradient_uncertainty",
             # ),
             models.CheckConstraint(
-                condition=models.Q(number__gt=0) | models.Q(number__isnull=True), name="positive_temperature_recordings"
+                condition=models.Q(number__gt=0) | models.Q(number__isnull=True),
+                name="positive_temperature_recordings",
             ),
         ]
 
@@ -684,7 +725,9 @@ class ThermalGradient(Measurement):
 
     def save(self, *args, **kwargs):
         if self.sample_id and not isinstance(self.sample, HeatFlowInterval):
-            raise ValidationError(_("ThermalGradient sample must be a HeatFlowInterval instance."))
+            raise ValidationError(
+                _("ThermalGradient sample must be a HeatFlowInterval instance.")
+            )
         super().save(*args, **kwargs)
 
 
@@ -705,7 +748,9 @@ class IntervalConductivity(Measurement):
         max_digits=4,
         decimal_places=2,
         verbose_name=_("uncertainty"),
-        help_text=_("Uncertainty (one standard deviation) of mean thermal conductivity."),
+        help_text=_(
+            "Uncertainty (one standard deviation) of mean thermal conductivity."
+        ),
         validators=[MinVal(0), MaxVal(100)],
         blank=True,
         null=True,
@@ -713,7 +758,9 @@ class IntervalConductivity(Measurement):
     source = ConceptManyToManyField(
         vocabulary=vocabularies.ConductivitySource,
         verbose_name=_("source"),
-        help_text=_("Nature of the samples from which the mean thermal conductivity was determined."),
+        help_text=_(
+            "Nature of the samples from which the mean thermal conductivity was determined."
+        ),
         blank=True,
     )
     location = ConceptManyToManyField(
@@ -731,7 +778,9 @@ class IntervalConductivity(Measurement):
     saturation = ConceptManyToManyField(
         vocabulary=vocabularies.ConductivitySaturation,
         verbose_name=_("saturation state"),
-        help_text=_("Saturation state of the studied rock interval studied for thermal conductivity."),
+        help_text=_(
+            "Saturation state of the studied rock interval studied for thermal conductivity."
+        ),
         blank=True,
     )
     pT_conditions = ConceptManyToManyField(
@@ -784,9 +833,7 @@ class IntervalConductivity(Measurement):
     class Meta:
         verbose_name = _("Thermal Conductivity")
         verbose_name_plural = _("Thermal Conductivities")
-        db_table_comment = (
-            "Thermal conductivity determined over a given length interval (as opposed to discrete thermal conductivity)"
-        )
+        db_table_comment = "Thermal conductivity determined over a given length interval (as opposed to discrete thermal conductivity)"
         indexes = [
             models.Index(fields=["number"]),
         ]
@@ -858,15 +905,21 @@ class IntervalConductivity(Measurement):
 
         # Validate uncertainty relative to value
         if self.value and self.uncertainty and self.uncertainty > self.value:
-            raise ValidationError(_("Uncertainty cannot be greater than the conductivity value."))
+            raise ValidationError(
+                _("Uncertainty cannot be greater than the conductivity value.")
+            )
 
         # Validate reasonable conductivity range
         if self.value and (self.value < 0.1 or self.value > 50):
             raise ValidationError(
-                _("Thermal conductivity value seems unrealistic (should be between 0.1 and 50 W/mK).")
+                _(
+                    "Thermal conductivity value seems unrealistic (should be between 0.1 and 50 W/mK)."
+                )
             )
 
     def save(self, *args, **kwargs):
         if self.sample_id and not isinstance(self.sample, HeatFlowInterval):
-            raise ValidationError(_("IntervalConductivity sample must be a HeatFlowInterval instance."))
+            raise ValidationError(
+                _("IntervalConductivity sample must be a HeatFlowInterval instance.")
+            )
         super().save(*args, **kwargs)

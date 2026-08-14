@@ -5,14 +5,18 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 
 sys.path.append(str(BASE_DIR / "project"))
-sys.path.insert(0, os.path.abspath("../extensions"))
 # sys.path.append(os.path.join(os.path.dirname(__file__), "project"))
 
 os.environ.setdefault("DJANGO_ENV", "development")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 os.environ.setdefault("DJANGO_SECURE", "False")
 
-from docs.conf import *  # noqa: E402  (must follow the DJANGO_* environment setup above)
+# fairdm-docs 0.3.0 made its Django integration opt-in. Without this it never
+# calls django.setup(), and the model-documentation extension fails on
+# "Apps aren't loaded yet".
+os.environ.setdefault("FAIRDM_DOCS_DJANGO", "true")
+
+from fairdm_docs.conf import *  # noqa: E402  (must follow the DJANGO_* environment setup above)
 
 autodoc2_packages = ["heat_flow"]
 
@@ -34,12 +38,11 @@ html_theme_options["path_to_docs"] = "docs"
 extensions.remove("autodoc2")
 extensions += [
     "sphinx_design",
-    "docs.extensions.auto_django_model",
+    # fairdm-docs 0.3.0 renamed its package from `docs` to `fairdm_docs` and
+    # this extension from `auto_django_model` to `autodoc_models`.
+    "fairdm_docs.extensions.autodoc_models",
     # "sphinx_tippy",
     "sphinx_exec_code",
-    # "test",
-    # "docs.extensions.modelinfo",
-    # "extensions.mycustomdirective",
 ]
 
 myst_allow_raw_html = True

@@ -57,7 +57,9 @@ def test_parent_heat_flow_factory_save():
 
     parent = ParentHeatFlowFactory()
     assert parent.pk is not None
-    assert parent.sample_id is not None  # SubFactory(HeatFlowSiteFactory) provides a valid site
+    assert (
+        parent.sample_id is not None
+    )  # SubFactory(HeatFlowSiteFactory) provides a valid site
 
 
 @pytest.mark.django_db

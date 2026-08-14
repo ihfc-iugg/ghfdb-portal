@@ -133,7 +133,9 @@ def test_as_ghfdb_flat_queryset_operations(heat_flow_chain):
 
 
 @pytest.mark.django_db
-def test_parent_with_child_counts_max_queries(django_assert_max_num_queries, heat_flow_chain):
+def test_parent_with_child_counts_max_queries(
+    django_assert_max_num_queries, heat_flow_chain
+):
     """
     T066 (US1b): with_child_counts() must execute in a constant number of DB
     queries with no N+1 per parent row.
@@ -165,7 +167,9 @@ def test_parent_with_child_counts_correctness(heat_flow_chain):
 
 
 @pytest.mark.django_db
-def test_parent_with_children_no_extra_queries(django_assert_max_num_queries, heat_flow_chain):
+def test_parent_with_children_no_extra_queries(
+    django_assert_max_num_queries, heat_flow_chain
+):
     """
     T068 (US1b): with_children() must attach child HeatFlow objects accessible
     without extra queries (prefetch_related).
@@ -216,8 +220,12 @@ def test_ghfdb_child_manager_excludes_null_ghfdb_id(heat_flow_chain):
     assert non_ghfdb.ghfdb_id is None
 
     ghfdb_pks = set(GHFDB.objects.values_list("pk", flat=True))
-    assert heat_flow_chain.pk in ghfdb_pks, "Published GHFDB child must appear in default queryset"
-    assert non_ghfdb.pk not in ghfdb_pks, "Non-GHFDB child (ghfdb_id=None) must be excluded"
+    assert heat_flow_chain.pk in ghfdb_pks, (
+        "Published GHFDB child must appear in default queryset"
+    )
+    assert non_ghfdb.pk not in ghfdb_pks, (
+        "Non-GHFDB child (ghfdb_id=None) must be excluded"
+    )
 
 
 @pytest.mark.django_db
@@ -245,5 +253,9 @@ def test_ghfdb_parent_manager_excludes_null_ghfdb_id(heat_flow_chain):
     assert non_ghfdb_parent.ghfdb_id is None
 
     ghfdb_parent_pks = set(GHFDBParent.objects.values_list("pk", flat=True))
-    assert heat_flow_chain.parent.pk in ghfdb_parent_pks, "Published GHFDB parent must appear in default queryset"
-    assert non_ghfdb_parent.pk not in ghfdb_parent_pks, "Non-GHFDB parent (ghfdb_id=None) must be excluded"
+    assert heat_flow_chain.parent.pk in ghfdb_parent_pks, (
+        "Published GHFDB parent must appear in default queryset"
+    )
+    assert non_ghfdb_parent.pk not in ghfdb_parent_pks, (
+        "Non-GHFDB parent (ghfdb_id=None) must be excluded"
+    )

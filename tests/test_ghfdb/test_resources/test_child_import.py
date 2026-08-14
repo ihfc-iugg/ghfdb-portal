@@ -271,7 +271,9 @@ class TestGHFDBChildImportResourceImport:
         result = resource.import_data(ds, dry_run=False, raise_errors=False)
 
         # Import must complete without row-level errors
-        assert not result.has_errors(), f"Import raised errors for geo_stratigraphy='Holocene': {result.invalid_rows}"
+        assert not result.has_errors(), (
+            f"Import raised errors for geo_stratigraphy='Holocene': {result.invalid_rows}"
+        )
 
         child = HeatFlow.objects.get(ghfdb_id=1)
         interval = child.sample  # HeatFlowInterval
@@ -425,7 +427,9 @@ class TestGHFDBChildAbsentHeaderRegression:
         )
 
         parent_row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
-        GHFDBParentImportResource().import_data(make_dataset(parent_row), dry_run=False, raise_errors=True)
+        GHFDBParentImportResource().import_data(
+            make_dataset(parent_row), dry_run=False, raise_errors=True
+        )
 
         child_row = {k: v for k, v in CHILD_ROW.items() if k not in ("ID", "ID_parent")}
         child_row["lat_NS"] = "48.0"
@@ -435,7 +439,9 @@ class TestGHFDBChildAbsentHeaderRegression:
         assert "ID" not in ds.headers
         assert "ID_parent" not in ds.headers
 
-        result = GHFDBChildImportResource().import_data(ds, dry_run=False, raise_errors=False)
+        result = GHFDBChildImportResource().import_data(
+            ds, dry_run=False, raise_errors=False
+        )
 
         assert not result.has_errors(), result.invalid_rows
         assert HeatFlow.objects.count() == 1
@@ -450,14 +456,18 @@ class TestGHFDBChildAbsentHeaderRegression:
         )
 
         parent_row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
-        GHFDBParentImportResource().import_data(make_dataset(parent_row), dry_run=False, raise_errors=True)
+        GHFDBParentImportResource().import_data(
+            make_dataset(parent_row), dry_run=False, raise_errors=True
+        )
 
         child_row = {k: v for k, v in CHILD_ROW.items() if k not in ("ID", "ID_parent")}
         child_row["lat_NS"] = "48.0"
         child_row["long_EW"] = "11.0"
         child_row["publication_reference"] = "Ref A"
 
-        GHFDBChildImportResource().import_data(make_dataset(child_row), dry_run=False, raise_errors=False)
+        GHFDBChildImportResource().import_data(
+            make_dataset(child_row), dry_run=False, raise_errors=False
+        )
 
         child_row_update = dict(child_row)
         child_row_update["qc"] = "77.7"
@@ -486,18 +496,24 @@ class TestGHFDBAutoChildKeyRegression:
         )
 
         parent_row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
-        GHFDBParentImportResource().import_data(make_dataset(parent_row), dry_run=False, raise_errors=True)
+        GHFDBParentImportResource().import_data(
+            make_dataset(parent_row), dry_run=False, raise_errors=True
+        )
 
         child_row = {k: v for k, v in CHILD_ROW.items() if k not in ("ID", "ID_parent")}
         child_row["lat_NS"] = "48.0"
         child_row["long_EW"] = "11.0"
         child_row["publication_reference"] = "Ref A"
 
-        result = GHFDBChildImportResource().import_data(make_dataset(child_row), dry_run=False, raise_errors=False)
+        result = GHFDBChildImportResource().import_data(
+            make_dataset(child_row), dry_run=False, raise_errors=False
+        )
 
         assert not result.has_errors(), result.invalid_rows
         for child in HeatFlow.objects.all():
-            assert "AUTO_CHILD:" not in (child.name or ""), f"HeatFlow.name contains synthetic key: {child.name!r}"
+            assert "AUTO_CHILD:" not in (child.name or ""), (
+                f"HeatFlow.name contains synthetic key: {child.name!r}"
+            )
 
     def test_no_auto_child_in_dry_run_id_column(self, dataset):
         """Dry-run result ID column must show real ghfdb_id or natural key, not AUTO_CHILD:."""
@@ -507,14 +523,18 @@ class TestGHFDBAutoChildKeyRegression:
         )
 
         parent_row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
-        GHFDBParentImportResource().import_data(make_dataset(parent_row), dry_run=False, raise_errors=True)
+        GHFDBParentImportResource().import_data(
+            make_dataset(parent_row), dry_run=False, raise_errors=True
+        )
 
         child_row = {k: v for k, v in CHILD_ROW.items() if k not in ("ID", "ID_parent")}
         child_row["lat_NS"] = "48.0"
         child_row["long_EW"] = "11.0"
         child_row["publication_reference"] = "Ref A"
 
-        result = GHFDBChildImportResource().import_data(make_dataset(child_row), dry_run=True, raise_errors=False)
+        result = GHFDBChildImportResource().import_data(
+            make_dataset(child_row), dry_run=True, raise_errors=False
+        )
 
         assert not result.has_errors(), result.invalid_rows
         for row_result in result.rows:
@@ -581,7 +601,9 @@ class TestBUG010ColumnOrderCaseSensitivity:
         # by verifying each comes before tc_strategy (which is near the end of CHILD_COLUMNS)
         late_sentinel = "tc_strategy"
         if late_sentinel not in col_names:
-            pytest.skip(f"Sentinel column '{late_sentinel}' not in visible fields; skipping order check")
+            pytest.skip(
+                f"Sentinel column '{late_sentinel}' not in visible fields; skipping order check"
+            )
 
         sentinel_idx = col_names.index(late_sentinel)
         for mixed_case_col in ("T_grad_mean", "corr_IS_flag", "T_number"):

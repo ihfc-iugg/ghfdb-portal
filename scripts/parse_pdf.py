@@ -61,8 +61,13 @@ def extract_pdf_text(pdf_path: Path) -> dict:
                 total_chars += len(text)
                 total_words += len(text.split())
         except Exception as e:
-            print(f"Warning: Could not extract text from page {page_num}: {e}", file=sys.stderr)
-            pages.append({"number": page_num, "text": f"[Error extracting page {page_num}]"})
+            print(
+                f"Warning: Could not extract text from page {page_num}: {e}",
+                file=sys.stderr,
+            )
+            pages.append(
+                {"number": page_num, "text": f"[Error extracting page {page_num}]"}
+            )
 
     return {
         "filename": pdf_path.name,
@@ -163,7 +168,12 @@ Examples:
         """,
     )
     parser.add_argument("pdf_file", type=Path, help="Path to PDF file to parse")
-    parser.add_argument("output_file", type=Path, nargs="?", help="Optional output file (default: stdout)")
+    parser.add_argument(
+        "output_file",
+        type=Path,
+        nargs="?",
+        help="Optional output file (default: stdout)",
+    )
     parser.add_argument(
         "--summary-only",
         action="store_true",
@@ -177,7 +187,10 @@ Examples:
         sys.exit(1)
 
     if args.pdf_file.suffix.lower() != ".pdf":
-        print(f"Warning: File does not have .pdf extension: {args.pdf_file}", file=sys.stderr)
+        print(
+            f"Warning: File does not have .pdf extension: {args.pdf_file}",
+            file=sys.stderr,
+        )
 
     # Extract content
     print(f"Extracting content from: {args.pdf_file}", file=sys.stderr)
@@ -210,7 +223,9 @@ Use `python utils/parse_pdf.py {data["path"]}` to extract full content.
         # Ensure UTF-8 output on Windows
         import io
 
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+        sys.stdout = io.TextIOWrapper(
+            sys.stdout.buffer, encoding="utf-8", errors="replace"
+        )
         print(output)
 
 

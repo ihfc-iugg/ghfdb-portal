@@ -195,7 +195,9 @@ class GeographicEnvironment(VocabularyBuilder):
         namespace = BASE_NAMESPACE + name + "/"
         scheme_attrs = {
             "skos:prefLabel": _("geographic environments"),
-            "skos:definition": _("Basic geographic environments where heat-flow measurements are performed."),
+            "skos:definition": _(
+                "Basic geographic environments where heat-flow measurements are performed."
+            ),
         }
 
         collections = {
@@ -271,7 +273,9 @@ class ExplorationMethod(VocabularyBuilder):
         namespace = BASE_NAMESPACE + name + "/"
         scheme_attrs = {
             "skos:prefLabel": _("exploration methods"),
-            "skos:definition": _("General means by which the rock was accessed by temperature sensors."),
+            "skos:definition": _(
+                "General means by which the rock was accessed by temperature sensors."
+            ),
         }
 
 
@@ -359,11 +363,15 @@ class TemperatureMethod(VocabularyBuilder):
     )
     cLOG = Concept(
         prefLabel=_("cLOG"),
-        definition=_("Continuous temperature logging in a perturbed borehole, corrected for perturbations."),
+        definition=_(
+            "Continuous temperature logging in a perturbed borehole, corrected for perturbations."
+        ),
     )
     DTSeq = Concept(
         prefLabel=_("DTSeq"),
-        definition=_("Distributed Temperature Sensing (DTS) in equilibrium conditions."),
+        definition=_(
+            "Distributed Temperature Sensing (DTS) in equilibrium conditions."
+        ),
     )
     DTSpert = Concept(
         prefLabel=_("DTSpert"),
@@ -371,7 +379,9 @@ class TemperatureMethod(VocabularyBuilder):
     )
     cDTS = Concept(
         prefLabel=_("cDTS"),
-        definition=_("Distributed Temperature Sensing (DTS) in perturbed conditions, corrected for perturbations."),
+        definition=_(
+            "Distributed Temperature Sensing (DTS) in perturbed conditions, corrected for perturbations."
+        ),
     )
     BHT = Concept(
         prefLabel=_("BHT"),
@@ -391,11 +401,15 @@ class TemperatureMethod(VocabularyBuilder):
     )
     RTDeq = Concept(
         prefLabel=_("RTDeq"),
-        definition=_("Resistance Temperature Detector (RTD) measurement in equilibrium conditions."),
+        definition=_(
+            "Resistance Temperature Detector (RTD) measurement in equilibrium conditions."
+        ),
     )
     RTDpert = Concept(
         prefLabel=_("RTDpert"),
-        definition=_("Resistance Temperature Detector (RTD) measurement in perturbed conditions."),
+        definition=_(
+            "Resistance Temperature Detector (RTD) measurement in perturbed conditions."
+        ),
     )
     cRTD = Concept(
         prefLabel=_("cRTD"),
@@ -449,7 +463,9 @@ class TemperatureMethod(VocabularyBuilder):
     )
     other = Concept(
         prefLabel=_("Other"),
-        definition=_("Other temperature determination method (must be specified in comments)."),
+        definition=_(
+            "Other temperature determination method (must be specified in comments)."
+        ),
     )
 
     class Meta:
@@ -458,7 +474,9 @@ class TemperatureMethod(VocabularyBuilder):
         prefix = "ghfdb"
         scheme_attrs = {
             "skos:prefLabel": _("Temperature determination method"),
-            "skos:definition": _("Methods used to determine temperature for the purpose of deriving heat flow."),
+            "skos:definition": _(
+                "Methods used to determine temperature for the purpose of deriving heat flow."
+            ),
         }
 
 
@@ -511,7 +529,9 @@ class TemperatureCorrection(VocabularyBuilder):
         prefix = "ghfdb"
         scheme_attrs = {
             "skos:prefLabel": _("Temperature correction methods"),
-            "skos:definition": _("Methods used to correct temperature data for the purpose of heat flow measurements."),
+            "skos:definition": _(
+                "Methods used to correct temperature data for the purpose of heat flow measurements."
+            ),
         }
 
 
@@ -770,7 +790,9 @@ class ConductivitySaturation(VocabularyBuilder):
 
     saturatedInSitu = Concept(
         prefLabel=_("Saturated measured in-situ"),
-        definition=_("Insitu saturated measured (measurements with probe sensing / marine measurements)"),
+        definition=_(
+            "Insitu saturated measured (measurements with probe sensing / marine measurements)"
+        ),
     )
 
     recovered = Concept(
@@ -782,7 +804,9 @@ class ConductivitySaturation(VocabularyBuilder):
 
     saturatedMeasured = Concept(
         prefLabel=_("Saturated measured"),
-        definition=_("Saturated measured (rocks have been technically saturated completely before measurement)."),
+        definition=_(
+            "Saturated measured (rocks have been technically saturated completely before measurement)."
+        ),
     )
 
     saturatedCalculated = Concept(
@@ -877,12 +901,16 @@ class ConductivityPTConditions(VocabularyBuilder):
         prefix = "ghfdb"
         scheme_attrs = {
             "skos:prefLabel": _("Conductivity measurement conditions"),
-            "skos:definition": _("Conditions under which the thermal conductivity was measured."),
+            "skos:definition": _(
+                "Conditions under which the thermal conductivity was measured."
+            ),
         }
         collections = {
             "recorded": Collection(
                 prefLabel=_("Recorded"),
-                definition=_("Determinations under true conditions at target depths (e.g. sensing in boreholes)"),
+                definition=_(
+                    "Determinations under true conditions at target depths (e.g. sensing in boreholes)"
+                ),
                 members=[
                     "recordedAmbient",
                 ],
@@ -911,7 +939,9 @@ class ConductivityPTConditions(VocabularyBuilder):
             ),
             "actual": Collection(
                 prefLabel=_("Actual"),
-                definition=_("The condition at the respective depth of the heat-flow interval."),
+                definition=_(
+                    "The condition at the respective depth of the heat-flow interval."
+                ),
                 members=[
                     "actualInSitu",
                 ],

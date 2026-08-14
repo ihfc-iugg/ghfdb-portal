@@ -101,14 +101,26 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
             "lat_NS": F("sample__heatflowinterval__sample__location__y"),
             "long_EW": F("sample__heatflowinterval__sample__location__x"),
             "elevation": F("sample__heatflowinterval__sample__heatflowsite__elevation"),
-            "environment": F("sample__heatflowinterval__sample__heatflowsite__environment"),
-            "explo_method": F("sample__heatflowinterval__sample__heatflowsite__explo_method"),
-            "site_country": F("sample__heatflowinterval__sample__heatflowsite__country"),
+            "environment": F(
+                "sample__heatflowinterval__sample__heatflowsite__environment"
+            ),
+            "explo_method": F(
+                "sample__heatflowinterval__sample__heatflowsite__explo_method"
+            ),
+            "site_country": F(
+                "sample__heatflowinterval__sample__heatflowsite__country"
+            ),
             "site_region": F("sample__heatflowinterval__sample__heatflowsite__region"),
-            "site_continent": F("sample__heatflowinterval__sample__heatflowsite__continent"),
+            "site_continent": F(
+                "sample__heatflowinterval__sample__heatflowsite__continent"
+            ),
             "site_domain": F("sample__heatflowinterval__sample__heatflowsite__domain"),
-            "total_depth_MD": F("sample__heatflowinterval__sample__heatflowsite__length"),
-            "total_depth_TVD": F("sample__heatflowinterval__sample__heatflowsite__vertical_depth"),
+            "total_depth_MD": F(
+                "sample__heatflowinterval__sample__heatflowsite__length"
+            ),
+            "total_depth_TVD": F(
+                "sample__heatflowinterval__sample__heatflowsite__vertical_depth"
+            ),
             # Parent heat flow scalars
             "q": F("parent__value"),
             "q_uncertainty": F("parent__uncertainty"),
@@ -130,7 +142,9 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
             "tc_uncertainty": F("thermal_conductivity__uncertainty"),
             "tc_number": F("thermal_conductivity__number"),
             # Probe metadata scalars (via HeatFlowInterval MTI accessor)
-            "probe_penetration": F("sample__heatflowinterval__probe_metadata__penetration"),
+            "probe_penetration": F(
+                "sample__heatflowinterval__probe_metadata__penetration"
+            ),
             "probe_length": F("sample__heatflowinterval__probe_metadata__length"),
             "probe_tilt": F("sample__heatflowinterval__probe_metadata__tilt"),
         }
@@ -176,7 +190,12 @@ class GHFDBChildManager(PolymorphicManager):
 
     def get_queryset(self) -> GHFDBChildQuerySet:
         # cast: PolymorphicQuerySet is untyped, so .filter() erases to Any.
-        return cast(GHFDBChildQuerySet, GHFDBChildQuerySet(self.model, using=self._db).filter(ghfdb_id__isnull=False))
+        return cast(
+            GHFDBChildQuerySet,
+            GHFDBChildQuerySet(self.model, using=self._db).filter(
+                ghfdb_id__isnull=False
+            ),
+        )
 
     def as_ghfdb_flat(self) -> GHFDBChildQuerySet:
         """Delegate to ``GHFDBChildQuerySet.as_ghfdb_flat()``."""
@@ -209,7 +228,9 @@ class GHFDBParentQuerySet(PolymorphicQuerySet):
             "GHFDBParentQuerySet",
             self.annotate(
                 total_children=Count("children"),
-                relevant_children=Count("children", filter=Q(children__is_relevant=True)),
+                relevant_children=Count(
+                    "children", filter=Q(children__is_relevant=True)
+                ),
             ),
         )
 
@@ -269,7 +290,12 @@ class GHFDBParentManager(PolymorphicManager):
 
     def get_queryset(self) -> GHFDBParentQuerySet:
         # cast: PolymorphicQuerySet is untyped, so .filter() erases to Any.
-        return cast(GHFDBParentQuerySet, GHFDBParentQuerySet(self.model, using=self._db).filter(ghfdb_id__isnull=False))
+        return cast(
+            GHFDBParentQuerySet,
+            GHFDBParentQuerySet(self.model, using=self._db).filter(
+                ghfdb_id__isnull=False
+            ),
+        )
 
     def with_child_counts(self) -> GHFDBParentQuerySet:
         """Delegate to ``GHFDBParentQuerySet.with_child_counts()``."""

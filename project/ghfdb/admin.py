@@ -47,7 +47,9 @@ class ExplorePurposeListFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value():
-            return queryset.filter(sample__heatflowinterval__sample__heatflowsite__explo_purpose__pk=self.value())
+            return queryset.filter(
+                sample__heatflowinterval__sample__heatflowsite__explo_purpose__pk=self.value()
+            )
         return queryset
 
 
@@ -69,7 +71,9 @@ class EnvironmentListFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value():
-            return queryset.filter(sample__heatflowinterval__sample__heatflowsite__environment=self.value())
+            return queryset.filter(
+                sample__heatflowinterval__sample__heatflowsite__environment=self.value()
+            )
         return queryset
 
 
@@ -91,7 +95,9 @@ class ChildExplorationMethodListFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value():
-            return queryset.filter(sample__heatflowinterval__sample__heatflowsite__explo_method=self.value())
+            return queryset.filter(
+                sample__heatflowinterval__sample__heatflowsite__explo_method=self.value()
+            )
         return queryset
 
 
@@ -593,7 +599,9 @@ class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
         hfs = getattr(site, "heatflowsite", None) if site else None
         return getattr(hfs, "elevation", None) if hfs else None
 
-    @admin.display(description=_("environment"), ordering="sample__heatflowsite__environment")
+    @admin.display(
+        description=_("environment"), ordering="sample__heatflowsite__environment"
+    )
     def get_environment(self, obj):
         site = getattr(obj, "sample", None)
         hfs = getattr(site, "heatflowsite", None) if site else None
@@ -619,7 +627,9 @@ class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
         hfs = getattr(site, "heatflowsite", None) if site else None
         return getattr(hfs, "vertical_depth", None) if hfs else None
 
-    @admin.display(description=_("explo_method"), ordering="sample__heatflowsite__explo_method")
+    @admin.display(
+        description=_("explo_method"), ordering="sample__heatflowsite__explo_method"
+    )
     def get_explo_method(self, obj):
         site = getattr(obj, "sample", None)
         hfs = getattr(site, "heatflowsite", None) if site else None
@@ -650,7 +660,9 @@ class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
         hfs = getattr(site, "heatflowsite", None) if site else None
         return getattr(hfs, "region", None) if hfs else None
 
-    @admin.display(description=_("continent"), ordering="sample__heatflowsite__continent")
+    @admin.display(
+        description=_("continent"), ordering="sample__heatflowsite__continent"
+    )
     def get_continent(self, obj):
         site = getattr(obj, "sample", None)
         hfs = getattr(site, "heatflowsite", None) if site else None

@@ -1,35 +1,64 @@
+# ---------------------------------------------------------------------------
+# Stage 1 — build: install production dependencies into an isolated venv
+# ---------------------------------------------------------------------------
+FROM python:3.13-slim AS builder
 
-FROM python:3.11-slim-bullseye as builder
-# ARG POETRY_VERSION=2.1
-ENV POETRY_VERSION=1.8.0
-ENV BUNDLE_VERSION=1.5.0
-ENV DJANGO_ENV=production
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
+ARG POETRY_VERSION=2.3.4
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
 
-RUN apt-get update && apt-get install --no-install-suggests --no-install-recommends && \
-    pip install poetry==${POETRY_VERSION} && \
-    poetry self add poetry-plugin-bundle@${BUNDLE_VERSION}
+# build-essential and libpq-dev for packages with C extensions; git because
+# fairdm, fairdm-geo and fairdm-discussions are all VCS dependencies.
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    build-essential \
+    libpq-dev \
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY . ./
-# COPY project ./project
+RUN pip install --no-cache-dir "poetry==${POETRY_VERSION}" && \
+    poetry self add poetry-plugin-bundle
 
-RUN poetry bundle venv $(test "$DJANGO_ENV" == production && echo "--only=main") /venv
+WORKDIR /build
+COPY pyproject.toml poetry.lock README.md ./
+COPY project/ ./project/
 
-# Second stage: Copy application and dependencies to final image
-FROM ghcr.io/fair-dm/fairdm:latest AS run-stage
-ARG DJANGO_ENV=production
+RUN poetry bundle venv --only=main /venv
 
-ENV DJANGO_ENV=production
-ENV DJANGO_SETTINGS_MODULE=config.settings
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYDEVD_DISABLE_FILE_VALIDATION=1
+# ---------------------------------------------------------------------------
+# Stage 2 — runtime: minimal image with app code and bundled venv
+# ---------------------------------------------------------------------------
+FROM python:3.13-slim AS runtime
 
-COPY --from=builder --chown=django:django /venv /venv
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYDEVD_DISABLE_FILE_VALIDATION=1 \
+    DJANGO_ENV=production \
+    DJANGO_SETTINGS_MODULE=config.settings \
+    PATH="/venv/bin:$PATH"
 
-# copy application code to WORKDIR
+# libpq5 for psycopg2. GDAL, GEOS and PROJ are GeoDjango's runtime libraries:
+# fairdm.contrib.location uses django.contrib.gis, which loads them by name at
+# import time and fails hard when they are absent.
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    libpq5 \
+    gdal-bin \
+    libgeos-c1v5 \
+    proj-bin \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --gid 1000 django \
+    && useradd --uid 1000 --gid django --shell /bin/bash --create-home django
+
+COPY --from=builder /venv /venv
+
+WORKDIR /app
 COPY --chown=django:django . /app
+RUN mkdir -p /app/static /app/media && chown -R django:django /app/static /app/media
 
-# RUN DJANGO_ENV="development" \
-    # python manage.py compilemessages
+USER django
+
+EXPOSE 5000
+
+# Port 5000 is what the traefik labels in docker-compose.yml route to.
+# collectstatic and compress run at start because they need the runtime
+# environment injected by Compose, not the values present at build time.
+CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --noinput && python manage.py compress && exec gunicorn config.wsgi:application --bind 0.0.0.0:5000 --workers 4"]

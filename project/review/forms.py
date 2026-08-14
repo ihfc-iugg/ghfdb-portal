@@ -35,7 +35,9 @@ class ReviewForm(ModelForm):
         queryset=LiteratureItem.objects.all(),
         required=True,
         label=_("Literature"),
-        help_text=_("The current review is associated with the selected literature item. This cannot be changed."),
+        help_text=_(
+            "The current review is associated with the selected literature item. This cannot be changed."
+        ),
         widget=Select2Widget,
         disabled=True,
     )

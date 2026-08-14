@@ -37,11 +37,15 @@ def _case_insensitive_qs(vocabulary, field="label"):
 
 def _validate_concept(values, vocabulary):
     """Raise ValueError if any value is not in the vocabulary's labels (case-insensitive)."""
-    choices = _case_insensitive_qs(vocabulary, field="label").values_list("ilabel", flat=True)
+    choices = _case_insensitive_qs(vocabulary, field="label").values_list(
+        "ilabel", flat=True
+    )
     invalid = [v for v in values if v not in choices]
     if invalid:
         raise ValueError(
-            _("The following values are not part of the %(vocab)s vocabulary: %(invalid)s")
+            _(
+                "The following values are not part of the %(vocab)s vocabulary: %(invalid)s"
+            )
             % {"vocab": vocabulary.__name__, "invalid": invalid}
         )
 
@@ -81,7 +85,9 @@ class ConceptWidget(CharWidget):
             val = super().clean(value, row, **kwargs)
         except AttributeError:
             raise ValueError(
-                _("Column value %(val)r is not a text string; expected a vocabulary label for %(vocab)s.")
+                _(
+                    "Column value %(val)r is not a text string; expected a vocabulary label for %(vocab)s."
+                )
                 % {"val": value, "vocab": self.vocabulary.__name__}
             ) from None
         if not val or normalize_vocab_token(val) == "unspecified":
@@ -90,7 +96,9 @@ class ConceptWidget(CharWidget):
         result = self.label_to_key.get(normalised) or self.key_to_key.get(normalised)
         if result is None:
             raise ValueError(
-                _("Invalid value '%(val)s' for %(vocab)s vocabulary. Valid options are: %(opts)s")
+                _(
+                    "Invalid value '%(val)s' for %(vocab)s vocabulary. Valid options are: %(opts)s"
+                )
                 % {
                     "val": val,
                     "vocab": self.vocabulary.__name__,
@@ -104,7 +112,9 @@ class MultiConceptWidget(ManyToManyWidget):
     """Maps semicolon-separated concept labels to a research_vocabs Concept QuerySet."""
 
     def __init__(self, vocabulary, separator=";", **kwargs):
-        self._vocab_class = vocabulary if isinstance(vocabulary, type) else type(vocabulary)
+        self._vocab_class = (
+            vocabulary if isinstance(vocabulary, type) else type(vocabulary)
+        )
         super().__init__(Concept, separator=separator, field="label", **kwargs)
         self.queryset = Concept.get_for_vocabulary(self._vocab_class)
 
@@ -124,11 +134,17 @@ class MultiConceptWidget(ManyToManyWidget):
             return self.queryset.none()
         # Validate using normalised forms; report original tokens in error messages
         normalised = [norm for _, norm in pairs]
-        choices_set = set(_case_insensitive_qs(self._vocab_class, field="label").values_list("ilabel", flat=True))
+        choices_set = set(
+            _case_insensitive_qs(self._vocab_class, field="label").values_list(
+                "ilabel", flat=True
+            )
+        )
         invalid_originals = [orig for orig, norm in pairs if norm not in choices_set]
         if invalid_originals:
             raise ValueError(
-                _("The following values are not part of the %(vocab)s vocabulary: %(invalid)s")
+                _(
+                    "The following values are not part of the %(vocab)s vocabulary: %(invalid)s"
+                )
                 % {"vocab": self._vocab_class.__name__, "invalid": invalid_originals}
             )
         qs = _case_insensitive_qs(self._vocab_class, field="label")
@@ -181,7 +197,8 @@ class QuantityWidget(Widget):
             return ureg.Quantity(float(value), self.unit)
         except (ValueError, TypeError) as exc:
             raise ValueError(
-                _("Invalid quantity value '%(value)s': %(err)s") % {"value": value, "err": str(exc)}
+                _("Invalid quantity value '%(value)s': %(err)s")
+                % {"value": value, "err": str(exc)}
             ) from exc
 
     def render(self, value, obj=None):
@@ -238,7 +255,9 @@ class RelatedModelWidget(Widget):
                     sentinel_val = (raw_sentinel or "").strip()
                 except AttributeError:
                     raise ValueError(
-                        _("Column '%(col)s' contains a non-text value %(val)r; expected a text string.")
+                        _(
+                            "Column '%(col)s' contains a non-text value %(val)r; expected a text string."
+                        )
                         % {"col": self.sentinel_column, "val": raw_sentinel}
                     ) from None
                 if not sentinel_val:
@@ -252,7 +271,10 @@ class RelatedModelWidget(Widget):
                 try:
                     model_kwargs[model_field] = col_widget.clean(raw, row=row)
                 except (ValueError, ValidationError) as exc:
-                    raise ValueError(_("%(model)s: %(err)s") % {"model": self.model.__name__, "err": str(exc)}) from exc
+                    raise ValueError(
+                        _("%(model)s: %(err)s")
+                        % {"model": self.model.__name__, "err": str(exc)}
+                    ) from exc
             else:
                 model_kwargs[model_field] = raw or None
 
@@ -308,8 +330,12 @@ class ParentWidget(RelatedModelWidget):
                 ),
             },
             widget_map={
-                "environment": ConceptWidget(vocabulary=vocabularies.GeographicEnvironment),
-                "explo_method": ConceptWidget(vocabulary=vocabularies.ExplorationMethod),
+                "environment": ConceptWidget(
+                    vocabulary=vocabularies.GeographicEnvironment
+                ),
+                "explo_method": ConceptWidget(
+                    vocabulary=vocabularies.ExplorationMethod
+                ),
                 "elevation": QuantityWidget("m"),
                 "total_depth_MD": QuantityWidget("m"),
                 "total_depth_TVD": QuantityWidget("m"),
@@ -324,7 +350,10 @@ class ParentWidget(RelatedModelWidget):
                 return None
         except AttributeError:
             raise ValueError(
-                _("Column 'name' contains a non-text value %(val)r; expected a site name string.") % {"val": raw_name}
+                _(
+                    "Column 'name' contains a non-text value %(val)r; expected a site name string."
+                )
+                % {"val": raw_name}
             ) from None
 
         from fairdm.contrib.location.models import Point

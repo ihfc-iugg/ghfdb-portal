@@ -93,7 +93,11 @@ EXPECTED_LIST_FILTER = (
 @pytest.mark.django_db
 def test_ghfdb_admin_changelist_refined_configuration(admin_client, heat_flow_chain):
     """T013: Changelist renders and exposes refined ordered columns/search/filters."""
-    from project.ghfdb.resources import GHFDBChildImportResource, GHFDBExportResource, GHFDBParentImportResource
+    from project.ghfdb.resources import (
+        GHFDBChildImportResource,
+        GHFDBExportResource,
+        GHFDBParentImportResource,
+    )
 
     url = reverse("admin:ghfdb_ghfdb_changelist")
     response = admin_client.get(url)
@@ -103,9 +107,15 @@ def test_ghfdb_admin_changelist_refined_configuration(admin_client, heat_flow_ch
     assert model_admin.list_display == EXPECTED_LIST_DISPLAY
     assert model_admin.search_fields == EXPECTED_SEARCH_FIELDS
     assert model_admin.list_filter == EXPECTED_LIST_FILTER
-    assert model_admin.get_import_resource_classes(request=None) == [GHFDBChildImportResource]
-    assert GHFDBParentImportResource not in model_admin.get_import_resource_classes(request=None)
-    assert model_admin.get_export_resource_classes(request=None) == [GHFDBExportResource]
+    assert model_admin.get_import_resource_classes(request=None) == [
+        GHFDBChildImportResource
+    ]
+    assert GHFDBParentImportResource not in model_admin.get_import_resource_classes(
+        request=None
+    )
+    assert model_admin.get_export_resource_classes(request=None) == [
+        GHFDBExportResource
+    ]
 
     content = response.content.decode()
     assert "GHFDB Children" in content
@@ -120,7 +130,9 @@ def test_ghfdb_admin_search_by_name_and_id_parent(admin_client, heat_flow_chain)
 
     url = reverse("admin:ghfdb_ghfdb_changelist")
 
-    response_by_name = admin_client.get(url, {"q": entry.sample.heatflowinterval.sample.name})
+    response_by_name = admin_client.get(
+        url, {"q": entry.sample.heatflowinterval.sample.name}
+    )
     assert response_by_name.status_code == 200
 
     response_by_parent_id = admin_client.get(url, {"q": str(entry.parent.ghfdb_id)})
@@ -128,7 +140,9 @@ def test_ghfdb_admin_search_by_name_and_id_parent(admin_client, heat_flow_chain)
 
 
 @pytest.mark.django_db
-def test_explo_purpose_filter_choices_are_vocabulary_scoped(admin_client, heat_flow_chain):
+def test_explo_purpose_filter_choices_are_vocabulary_scoped(
+    admin_client, heat_flow_chain
+):
     """T063: explo_purpose list filter choices are restricted to ExplorationPurpose vocabulary.
 
     Verifies that ExplorePurposeListFilter.lookups() only returns concepts belonging to the
@@ -145,11 +159,15 @@ def test_explo_purpose_filter_choices_are_vocabulary_scoped(admin_client, heat_f
     )
 
     # Instantiate filter and collect lookup choices
-    f = ExplorePurposeListFilter(request=None, params={}, model=GHFDB, model_admin=model_admin)
+    f = ExplorePurposeListFilter(
+        request=None, params={}, model=GHFDB, model_admin=model_admin
+    )
     lookup_pks = {pk for pk, _label in f.lookups(None, model_admin)}
 
     # Vocabulary-scoped concepts
-    vocab_pks = set(Concept.get_for_vocabulary(ExplorationPurpose).values_list("pk", flat=True))
+    vocab_pks = set(
+        Concept.get_for_vocabulary(ExplorationPurpose).values_list("pk", flat=True)
+    )
 
     # All lookup pks must belong to the ExplorationPurpose vocabulary
     assert lookup_pks, "lookups() must return at least one choice"
@@ -161,7 +179,9 @@ def test_explo_purpose_filter_choices_are_vocabulary_scoped(admin_client, heat_f
     all_concept_pks = set(Concept.objects.values_list("pk", flat=True))
     non_vocab_pks = all_concept_pks - vocab_pks
     overlap = lookup_pks & non_vocab_pks
-    assert not overlap, f"Filter choices include {len(overlap)} non-ExplorationPurpose concept(s)"
+    assert not overlap, (
+        f"Filter choices include {len(overlap)} non-ExplorationPurpose concept(s)"
+    )
 
 
 @pytest.mark.django_db
@@ -175,9 +195,13 @@ def test_environment_filter_choices_are_vocabulary_scoped(admin_client):
     from heat_flow.vocabularies import GeographicEnvironment
 
     model_admin = admin.site._registry[GHFDB]
-    assert EnvironmentListFilter in model_admin.list_filter, "EnvironmentListFilter must be present in list_filter"
+    assert EnvironmentListFilter in model_admin.list_filter, (
+        "EnvironmentListFilter must be present in list_filter"
+    )
 
-    f = EnvironmentListFilter(request=None, params={}, model=GHFDB, model_admin=model_admin)
+    f = EnvironmentListFilter(
+        request=None, params={}, model=GHFDB, model_admin=model_admin
+    )
     lookup_values = {value for value, _label in f.lookups(None, model_admin)}
     vocab_values = {value for value, _label in GeographicEnvironment().choices}
 
@@ -203,7 +227,9 @@ def test_explo_method_filter_choices_are_vocabulary_scoped(admin_client):
         "ChildExplorationMethodListFilter must be present in list_filter"
     )
 
-    f = ChildExplorationMethodListFilter(request=None, params={}, model=GHFDB, model_admin=model_admin)
+    f = ChildExplorationMethodListFilter(
+        request=None, params={}, model=GHFDB, model_admin=model_admin
+    )
     lookup_values = {value for value, _label in f.lookups(None, model_admin)}
     vocab_values = {value for value, _label in ExplorationMethod().choices}
 
@@ -226,7 +252,9 @@ def test_parent_environment_filter_choices_are_vocabulary_scoped(admin_client):
         "ParentEnvironmentListFilter must be present in GHFDBParentAdmin.list_filter"
     )
 
-    f = ParentEnvironmentListFilter(request=None, params={}, model=GHFDBParent, model_admin=model_admin)
+    f = ParentEnvironmentListFilter(
+        request=None, params={}, model=GHFDBParent, model_admin=model_admin
+    )
     lookup_values = {value for value, _label in f.lookups(None, model_admin)}
     vocab_values = {value for value, _label in GeographicEnvironment().choices}
 
@@ -246,7 +274,9 @@ def test_parent_explo_method_filter_choices_are_vocabulary_scoped(admin_client):
         "ParentExplorationMethodListFilter must be present in GHFDBParentAdmin.list_filter"
     )
 
-    f = ParentExplorationMethodListFilter(request=None, params={}, model=GHFDBParent, model_admin=model_admin)
+    f = ParentExplorationMethodListFilter(
+        request=None, params={}, model=GHFDBParent, model_admin=model_admin
+    )
     lookup_values = {value for value, _label in f.lookups(None, model_admin)}
     vocab_values = {value for value, _label in ExplorationMethod().choices}
 
@@ -270,7 +300,9 @@ def test_authenticated_staff_import_page_renders_http200(admin_client):
 
 
 @pytest.mark.django_db
-def test_ghfdb_admin_queryset_evaluates_without_invalid_prefetch(admin_user, heat_flow_chain):
+def test_ghfdb_admin_queryset_evaluates_without_invalid_prefetch(
+    admin_user, heat_flow_chain
+):
     """T080 (BUG-003): Child admin queryset evaluates without invalid prefetch paths."""
     request = RequestFactory().get(reverse("admin:ghfdb_ghfdb_changelist"))
     request.user = admin_user
@@ -346,7 +378,11 @@ def test_ghfdb_parent_admin_changelist(admin_client, heat_flow_chain):
     assert model_admin.list_display == PARENT_EXPECTED_LIST_DISPLAY
 
     # Verify short_description headers for the non-computed display methods
-    display_methods = [m for m in PARENT_EXPECTED_LIST_DISPLAY if m not in ("total_children", "relevant_children")]
+    display_methods = [
+        m
+        for m in PARENT_EXPECTED_LIST_DISPLAY
+        if m not in ("total_children", "relevant_children")
+    ]
     headers = [getattr(model_admin, name).short_description for name in display_methods]
     assert headers == PARENT_EXPECTED_HEADERS
 
@@ -359,7 +395,10 @@ def test_ghfdb_parent_admin_import_resource_only(admin_client):
     """T071 (US1b): GHFDBParentAdmin.get_import_resource_classes() returns only
     GHFDBParentImportResource — no child or export resource attached."""
     from project.ghfdb.models import GHFDBParent
-    from project.ghfdb.resources import GHFDBChildImportResource, GHFDBParentImportResource
+    from project.ghfdb.resources import (
+        GHFDBChildImportResource,
+        GHFDBParentImportResource,
+    )
 
     model_admin = admin.site._registry[GHFDBParent]
     resource_classes = model_admin.get_import_resource_classes(request=None)

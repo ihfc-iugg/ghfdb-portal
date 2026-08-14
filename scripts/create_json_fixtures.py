@@ -75,12 +75,20 @@ def create_review_submission_fixture():
         {
             "model": "dataset.datasetdate",
             "pk": 100,
-            "fields": {"type": "Submitted", "value": submission_date.strftime("%Y-%m-%d"), "related": 100},
+            "fields": {
+                "type": "Submitted",
+                "value": submission_date.strftime("%Y-%m-%d"),
+                "related": 100,
+            },
         },
         {
             "model": "dataset.datasetdate",
             "pk": 101,
-            "fields": {"type": "CollectionStart", "value": "2025-01-15", "related": 100},
+            "fields": {
+                "type": "CollectionStart",
+                "value": "2025-01-15",
+                "related": 100,
+            },
         },
         {
             "model": "dataset.datasetdate",
@@ -171,17 +179,29 @@ def create_admin_approval_fixture():
         {
             "model": "dataset.datasetdate",
             "pk": 200,
-            "fields": {"type": "Submitted", "value": submission_date.strftime("%Y-%m-%d"), "related": 200},
+            "fields": {
+                "type": "Submitted",
+                "value": submission_date.strftime("%Y-%m-%d"),
+                "related": 200,
+            },
         },
         {
             "model": "dataset.datasetdate",
             "pk": 201,
-            "fields": {"type": "Available", "value": review_complete.strftime("%Y-%m-%d"), "related": 200},
+            "fields": {
+                "type": "Available",
+                "value": review_complete.strftime("%Y-%m-%d"),
+                "related": 200,
+            },
         },
         {
             "model": "dataset.datasetdate",
             "pk": 202,
-            "fields": {"type": "CollectionStart", "value": "2024-09-01", "related": 200},
+            "fields": {
+                "type": "CollectionStart",
+                "value": "2024-09-01",
+                "related": 200,
+            },
         },
         {
             "model": "dataset.datasetdate",

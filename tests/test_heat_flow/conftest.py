@@ -85,7 +85,9 @@ def parent_fixture(dataset, site_fixture):
 
 
 @pytest.fixture
-def child_fixture(dataset, interval_fixture, parent_fixture, gradient_fixture, conductivity_fixture):
+def child_fixture(
+    dataset, interval_fixture, parent_fixture, gradient_fixture, conductivity_fixture
+):
     """A HeatFlow child with all sub-measurement FKs set."""
     from heat_flow.models import HeatFlow
 
