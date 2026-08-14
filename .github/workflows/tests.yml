@@ -20,7 +20,7 @@ on:
 
 jobs:
   call-tests:
-    uses: django-mvp/shared/.github/workflows/tests.yml@v0.3.2
+    uses: django-mvp/shared/.github/workflows/tests.yml@v0.3.3
     with:
       coverage-package: project
       # This is a deployed application, not a library, so it runs on exactly one

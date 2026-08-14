@@ -13,7 +13,7 @@ jobs:
     if: github.actor == 'dependabot[bot]'
     steps:
       - name: Auto-merge Dependabot PR
-        uses: django-mvp/shared/.github/actions/auto-merge-dependabot@v0.3.2
+        uses: django-mvp/shared/.github/actions/auto-merge-dependabot@v0.3.3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           pr-url: ${{ github.event.pull_request.html_url }}
