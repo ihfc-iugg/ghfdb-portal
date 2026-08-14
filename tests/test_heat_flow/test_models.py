@@ -86,7 +86,9 @@ def test_interval_links_to_site(dataset, site_fixture):
 
 
 @pytest.mark.django_db
-def test_sub_measurements_on_interval(dataset, interval_fixture, gradient_fixture, conductivity_fixture):
+def test_sub_measurements_on_interval(
+    dataset, interval_fixture, gradient_fixture, conductivity_fixture
+):
     """
     T015 – ThermalGradient and IntervalConductivity link to interval and appear
     in interval.measurements; Pint Quantity attributes present on value and depth
@@ -189,7 +191,9 @@ def test_thermal_gradient_save_rejects_wrong_sample(site_fixture, gradient_fixtu
 
 
 @pytest.mark.django_db
-def test_interval_conductivity_save_rejects_wrong_sample(site_fixture, conductivity_fixture):
+def test_interval_conductivity_save_rejects_wrong_sample(
+    site_fixture, conductivity_fixture
+):
     """
     T018 – IntervalConductivity.save() raises ValidationError when sample is a
     HeatFlowSite (FR-018a).
@@ -208,7 +212,9 @@ def test_value_non_nullable_thermal_gradient(dataset, interval_fixture):
     from heat_flow.models import ThermalGradient
 
     with pytest.raises((IntegrityError, ValidationError)):
-        ThermalGradient.objects.create(dataset=dataset, sample=interval_fixture, name="No Value")
+        ThermalGradient.objects.create(
+            dataset=dataset, sample=interval_fixture, name="No Value"
+        )
 
 
 @pytest.mark.django_db
@@ -220,11 +226,15 @@ def test_value_non_nullable_interval_conductivity(dataset, interval_fixture):
     from heat_flow.models import IntervalConductivity
 
     with pytest.raises((IntegrityError, ValidationError)):
-        IntervalConductivity.objects.create(dataset=dataset, sample=interval_fixture, name="No Value")
+        IntervalConductivity.objects.create(
+            dataset=dataset, sample=interval_fixture, name="No Value"
+        )
 
 
 @pytest.mark.django_db
-def test_multiple_heatflow_can_share_gradient(dataset, interval_fixture, gradient_fixture, parent_fixture):
+def test_multiple_heatflow_can_share_gradient(
+    dataset, interval_fixture, gradient_fixture, parent_fixture
+):
     """
     T020 – Two HeatFlow children may reference the same ThermalGradient FK
     without IntegrityError (FR-013 / R5).
@@ -318,15 +328,32 @@ def test_parent_children_aggregation(dataset, site_fixture, interval_fixture):
     """
     from heat_flow.models import HeatFlow, ParentHeatFlow
 
-    parent = ParentHeatFlow.objects.create(dataset=dataset, sample=site_fixture, name="P", value=70.0)
-    HeatFlow.objects.create(
-        dataset=dataset, sample=interval_fixture, name="C1", value=65.0, parent=parent, is_relevant=True
+    parent = ParentHeatFlow.objects.create(
+        dataset=dataset, sample=site_fixture, name="P", value=70.0
     )
     HeatFlow.objects.create(
-        dataset=dataset, sample=interval_fixture, name="C2", value=68.0, parent=parent, is_relevant=True
+        dataset=dataset,
+        sample=interval_fixture,
+        name="C1",
+        value=65.0,
+        parent=parent,
+        is_relevant=True,
     )
     HeatFlow.objects.create(
-        dataset=dataset, sample=interval_fixture, name="C3", value=72.0, parent=parent, is_relevant=False
+        dataset=dataset,
+        sample=interval_fixture,
+        name="C2",
+        value=68.0,
+        parent=parent,
+        is_relevant=True,
+    )
+    HeatFlow.objects.create(
+        dataset=dataset,
+        sample=interval_fixture,
+        name="C3",
+        value=72.0,
+        parent=parent,
+        is_relevant=False,
     )
 
     assert parent.children.count() == 3
@@ -341,8 +368,12 @@ def test_parent_delete_sets_child_null(dataset, site_fixture, interval_fixture):
     """
     from heat_flow.models import HeatFlow, ParentHeatFlow
 
-    parent = ParentHeatFlow.objects.create(dataset=dataset, sample=site_fixture, name="P", value=70.0)
-    child = HeatFlow.objects.create(dataset=dataset, sample=interval_fixture, name="C", value=65.0, parent=parent)
+    parent = ParentHeatFlow.objects.create(
+        dataset=dataset, sample=site_fixture, name="P", value=70.0
+    )
+    child = HeatFlow.objects.create(
+        dataset=dataset, sample=interval_fixture, name="C", value=65.0, parent=parent
+    )
     child_pk = child.pk
 
     parent.delete()
@@ -359,9 +390,13 @@ def test_unique_parent_per_site_app_level(dataset, site_fixture):
     """
     from heat_flow.models import ParentHeatFlow
 
-    ParentHeatFlow.objects.create(dataset=dataset, sample=site_fixture, name="First", value=70.0)
+    ParentHeatFlow.objects.create(
+        dataset=dataset, sample=site_fixture, name="First", value=70.0
+    )
     with pytest.raises(ValidationError):
-        second = ParentHeatFlow(dataset=dataset, sample=site_fixture, name="Second", value=75.0)
+        second = ParentHeatFlow(
+            dataset=dataset, sample=site_fixture, name="Second", value=75.0
+        )
         second.save()
 
 
@@ -376,7 +411,9 @@ def test_unique_parent_per_site_db_level(dataset, site_fixture):
     This test is marked xfail to document the architectural limitation.
     """
     # App-level enforcement is validated in test_unique_parent_per_site_app_level
-    pytest.skip("DB-level UniqueConstraint not viable with polymorphic MTI + SQLite (column lives on base table)")
+    pytest.skip(
+        "DB-level UniqueConstraint not viable with polymorphic MTI + SQLite (column lives on base table)"
+    )
 
 
 @pytest.mark.django_db
@@ -386,7 +423,9 @@ def test_parent_with_zero_children_is_valid(dataset, site_fixture):
     """
     from heat_flow.models import ParentHeatFlow
 
-    parent = ParentHeatFlow.objects.create(dataset=dataset, sample=site_fixture, name="Childless", value=70.0)
+    parent = ParentHeatFlow.objects.create(
+        dataset=dataset, sample=site_fixture, name="Childless", value=70.0
+    )
     assert parent.children.count() == 0
 
 
@@ -446,7 +485,9 @@ def test_interval_without_probe_raises(dataset, site_fixture):
 
 
 @pytest.mark.django_db
-def test_probe_metadata_cascade_on_interval_delete(dataset, site_fixture, interval_fixture):
+def test_probe_metadata_cascade_on_interval_delete(
+    dataset, site_fixture, interval_fixture
+):
     """
     T037 – Deleting the interval also deletes its ProbeMetadata (CASCADE;
     US3 scenario 3, SC-004).
@@ -460,7 +501,9 @@ def test_probe_metadata_cascade_on_interval_delete(dataset, site_fixture, interv
 
 
 @pytest.mark.django_db
-def test_heat_flow_is_probe_property(dataset, site_fixture, interval_fixture, child_fixture):
+def test_heat_flow_is_probe_property(
+    dataset, site_fixture, interval_fixture, child_fixture
+):
     """
     T038 – HeatFlow.is_probe is True when the linked interval has probe
     metadata; False otherwise (US3 independent test).
@@ -502,7 +545,9 @@ def test_correction_valid_status_accepted(child_fixture):
     """
     from heat_flow.models import HeatFlowCorrection
 
-    corr = HeatFlowCorrection(heat_flow=child_fixture, correction_type="IS", status="tilt_corrected")
+    corr = HeatFlowCorrection(
+        heat_flow=child_fixture, correction_type="IS", status="tilt_corrected"
+    )
     corr.save()  # must not raise
     assert corr.pk is not None
 
@@ -518,13 +563,21 @@ def test_correction_invalid_status_rejected(child_fixture):
     from heat_flow.models import HeatFlowCorrection
 
     with pytest.raises(ValidationError):
-        HeatFlowCorrection(heat_flow=child_fixture, correction_type="IS", status="considered_p").save()
+        HeatFlowCorrection(
+            heat_flow=child_fixture, correction_type="IS", status="considered_p"
+        ).save()
 
     with pytest.raises(ValidationError):
-        HeatFlowCorrection(heat_flow=child_fixture, correction_type="S", status="tilt_corrected").save()
+        HeatFlowCorrection(
+            heat_flow=child_fixture, correction_type="S", status="tilt_corrected"
+        ).save()
 
     with pytest.raises(ValidationError):
-        HeatFlowCorrection(heat_flow=child_fixture, correction_type="T", status="present_not_significant").save()
+        HeatFlowCorrection(
+            heat_flow=child_fixture,
+            correction_type="T",
+            status="present_not_significant",
+        ).save()
 
 
 @pytest.mark.django_db
@@ -535,7 +588,9 @@ def test_correction_unspecified_always_valid(child_fixture):
     from heat_flow.models import HeatFlowCorrection
 
     for ct in ["IS", "T", "S", "E", "TOPO", "PAL", "SUR", "CONV", "HR"]:
-        corr = HeatFlowCorrection(heat_flow=child_fixture, correction_type=ct, status="-")
+        corr = HeatFlowCorrection(
+            heat_flow=child_fixture, correction_type=ct, status="-"
+        )
         corr.save()  # must not raise
 
 
@@ -547,6 +602,8 @@ def test_correction_invalid_type_rejected(child_fixture):
     """
     from heat_flow.models import HeatFlowCorrection
 
-    corr = HeatFlowCorrection(heat_flow=child_fixture, correction_type="INVALID_TYPE", status="-")
+    corr = HeatFlowCorrection(
+        heat_flow=child_fixture, correction_type="INVALID_TYPE", status="-"
+    )
     with pytest.raises(ValidationError):
         corr.full_clean()

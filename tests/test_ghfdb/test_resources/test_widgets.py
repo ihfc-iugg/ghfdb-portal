@@ -62,7 +62,10 @@ class TestConceptWidget:
         with pytest.raises(ValueError) as exc_info:
             widget.clean("not_a_real_environment", row={})
         error_msg = str(exc_info.value)
-        assert "not_a_real_environment" in error_msg.lower() or "invalid" in error_msg.lower()
+        assert (
+            "not_a_real_environment" in error_msg.lower()
+            or "invalid" in error_msg.lower()
+        )
 
 
 class TestMultiConceptWidget:
@@ -205,7 +208,11 @@ class TestRelatedModelWidget:
             widget.clean("not_a_number", row=row)
         # Error should be prefixed with model name
         error_msg = str(exc_info.value)
-        assert "ThermalGradient" in error_msg or "gradient" in error_msg.lower() or "invalid" in error_msg.lower()
+        assert (
+            "ThermalGradient" in error_msg
+            or "gradient" in error_msg.lower()
+            or "invalid" in error_msg.lower()
+        )
 
     def test_set_m2m_relations_sets_m2m(self, db, dataset):
         """set_m2m_relations() sets M2M relationships on the related model."""
@@ -324,7 +331,9 @@ class TestIntervalWidget:
 
         interval.refresh_from_db()
         # The Holocene concept must land on the 'age' ConceptManyToManyField
-        assert interval.age.count() > 0, "Expected HeatFlowInterval.age to be populated by geo_stratigraphy"
+        assert interval.age.count() > 0, (
+            "Expected HeatFlowInterval.age to be populated by geo_stratigraphy"
+        )
         # The distinct stratigraphy M2M (→ stratigraphy.StratigraphicUnit) must remain untouched
         assert interval.stratigraphy.count() == 0, (
             "HeatFlowInterval.stratigraphy must NOT be populated by geo_stratigraphy import"
@@ -467,7 +476,9 @@ class TestVocabNormalisation:
         """normalize_vocab_token() strips surrounding [ ] and lowercases the token."""
         from project.ghfdb.resources.widgets import normalize_vocab_token
 
-        assert normalize_vocab_token("[Onshore (continental)]") == "onshore (continental)"
+        assert (
+            normalize_vocab_token("[Onshore (continental)]") == "onshore (continental)"
+        )
         assert normalize_vocab_token("[OFFSHORE (MARINE)]") == "offshore (marine)"
         # Plain tokens (no brackets) should pass through unchanged after lowercasing
         assert normalize_vocab_token("onshore (continental)") == "onshore (continental)"
@@ -599,7 +610,9 @@ class TestNumericCellInputGuards:
             "T_corr_bottom": "",
         }
         result = widget.clean("", row=row)
-        assert result is not None, "Expected ThermalGradient to be created for numeric T_grad_mean"
+        assert result is not None, (
+            "Expected ThermalGradient to be created for numeric T_grad_mean"
+        )
         assert isinstance(result, ThermalGradient)
 
     def test_conductivity_widget_numeric_sentinel_succeeds(self, db):
@@ -625,7 +638,9 @@ class TestNumericCellInputGuards:
             "tc_number": "",
         }
         result = widget.clean("", row=row)
-        assert result is not None, "Expected IntervalConductivity to be created for numeric tc_mean"
+        assert result is not None, (
+            "Expected IntervalConductivity to be created for numeric tc_mean"
+        )
         assert isinstance(result, IntervalConductivity)
 
     def test_parent_widget_numeric_name_raises_valueerror(self, db):

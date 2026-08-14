@@ -40,7 +40,7 @@ class HeatFlowFactory(MeasurementFactory):
 
     sample = factory.SubFactory(HeatFlowIntervalFactory)
     value = LazyAttribute(lambda _: round(random.gauss(mu=50, sigma=30), 2))
-    uncertainty = LazyAttribute(lambda o: o.value * random.uniform(0.05, 0.25))  # noqa: S311
+    uncertainty = LazyAttribute(lambda o: o.value * random.uniform(0.05, 0.25))
 
     # metadata fields
     # method = FuzzyChoice(HeatFlow.method_vocab.choices)  # ConceptManyToManyField
@@ -57,10 +57,14 @@ class ThermalGradientFactory(MeasurementFactory):
     sample = factory.SubFactory(HeatFlowIntervalFactory)
 
     value = LazyAttribute(lambda _: round(random.gauss(mu=25, sigma=10), 2))
-    uncertainty = LazyAttribute(lambda o: o.value * random.uniform(0.05, 0.25))  # noqa: S311
+    uncertainty = LazyAttribute(lambda o: o.value * random.uniform(0.05, 0.25))
     corrected_value = LazyAttribute(lambda _: round(random.gauss(mu=25, sigma=10), 2))
     corrected_uncertainty = LazyAttribute(
-        lambda o: o.corrected_value * random.uniform(0.05, 0.25) if o.corrected_value else None  # noqa: S311
+        lambda o: (
+            o.corrected_value * random.uniform(0.05, 0.25)
+            if o.corrected_value
+            else None
+        )
     )
     # method_top = FuzzyChoice(vocabularies.TemperatureMethod.choices)  # ConceptManyToManyField
     # method_bottom = FuzzyChoice(vocabularies.TemperatureMethod.choices)  # ConceptManyToManyField
@@ -79,7 +83,7 @@ class IntervalConductivityFactory(MeasurementFactory):
     sample = factory.SubFactory(HeatFlowIntervalFactory)
 
     value = LazyAttribute(lambda _: round(random.gauss(mu=2.5, sigma=1.0), 2))
-    uncertainty = LazyAttribute(lambda o: o.value * random.uniform(0.05, 0.25))  # noqa: S311
+    uncertainty = LazyAttribute(lambda o: o.value * random.uniform(0.05, 0.25))
     # source = FuzzyChoice(vocabularies.ConductivitySource.choices)  # ConceptManyToManyField
     # location = FuzzyChoice(vocabularies.ConductivityLocation.choices)  # ConceptManyToManyField
     # method = FuzzyChoice(vocabularies.ConductivityMethod.choices)  # ConceptManyToManyField

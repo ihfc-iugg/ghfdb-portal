@@ -13,7 +13,9 @@ class RelatedPersonFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         # Get only Person instances linked to at least one MyModel instance
-        linked_people = Person.objects.real().filter(heat_flow_reviews__isnull=False).distinct()
+        linked_people = (
+            Person.objects.real().filter(heat_flow_reviews__isnull=False).distinct()
+        )
         return [(person.id, str(person)) for person in linked_people]
 
     def queryset(self, request, queryset):
@@ -40,7 +42,12 @@ class ReviewAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         """Optimize queryset for admin."""
-        return super().get_queryset(request).select_related("dataset", "literature").prefetch_related("reviewers")
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("dataset", "literature")
+            .prefetch_related("reviewers")
+        )
 
     @admin.display(description="Dataset")
     def dataset_link(self, obj):

@@ -218,7 +218,9 @@ class ProbeQualityCalculator:
         corrected = (
             hasattr(self.heat_flow, "corr_T_flag")
             and self.heat_flow.corr_T_flag.exists()
-            and any("tilt" in str(flag).lower() for flag in self.heat_flow.corr_T_flag.all())
+            and any(
+                "tilt" in str(flag).lower() for flag in self.heat_flow.corr_T_flag.all()
+            )
         )
 
         if tilt is None and not corrected:
@@ -523,11 +525,19 @@ def calculate_parent_quality(parent_heat_flow):
         relevant_children = children
 
     # Get quality for all relevant children
-    child_qualities = [calculate_heat_flow_quality(child) for child in relevant_children]
+    child_qualities = [
+        calculate_heat_flow_quality(child) for child in relevant_children
+    ]
 
     # Inherit the worst quality (highest number/letter)
-    worst_u = max((q["u_score"] for q in child_qualities), key=lambda x: ["U1", "U2", "U3", "U4", "Ux"].index(x))
-    worst_m = max((q["m_score"] for q in child_qualities), key=lambda x: ["M1", "M2", "M3", "M4", "Mx"].index(x))
+    worst_u = max(
+        (q["u_score"] for q in child_qualities),
+        key=lambda x: ["U1", "U2", "U3", "U4", "Ux"].index(x),
+    )
+    worst_m = max(
+        (q["m_score"] for q in child_qualities),
+        key=lambda x: ["M1", "M2", "M3", "M4", "Mx"].index(x),
+    )
 
     # For P-flags, combine all flags (show worst case for each position)
     combined_flags = list("-------")

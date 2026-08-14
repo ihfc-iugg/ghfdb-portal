@@ -204,7 +204,9 @@ class TestGHFDBParentTemplateNoIdRegression:
         ds = make_dataset(row)
         assert "ID_parent" not in ds.headers
 
-        result = GHFDBParentImportResource().import_data(ds, dry_run=False, raise_errors=False)
+        result = GHFDBParentImportResource().import_data(
+            ds, dry_run=False, raise_errors=False
+        )
 
         assert not result.has_errors(), result.invalid_rows
         assert ParentHeatFlow.objects.count() == 1
@@ -217,11 +219,15 @@ class TestGHFDBParentTemplateNoIdRegression:
         from project.ghfdb.resources import GHFDBParentImportResource
 
         row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
-        GHFDBParentImportResource().import_data(make_dataset(row), dry_run=False, raise_errors=False)
+        GHFDBParentImportResource().import_data(
+            make_dataset(row), dry_run=False, raise_errors=False
+        )
 
         row_update = dict(row)
         row_update["q"] = "88.8"
-        result = GHFDBParentImportResource().import_data(make_dataset(row_update), dry_run=False, raise_errors=False)
+        result = GHFDBParentImportResource().import_data(
+            make_dataset(row_update), dry_run=False, raise_errors=False
+        )
 
         assert not result.has_errors(), result.invalid_rows
         assert ParentHeatFlow.objects.count() == 1
@@ -280,7 +286,9 @@ class TestGHFDBAutoParentKeyRegression:
 
         row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
         resource = GHFDBParentImportResource()
-        result = resource.import_data(make_dataset(row), dry_run=False, raise_errors=False)
+        result = resource.import_data(
+            make_dataset(row), dry_run=False, raise_errors=False
+        )
 
         assert not result.has_errors(), result.invalid_rows
         for parent in ParentHeatFlow.objects.all():
@@ -295,7 +303,9 @@ class TestGHFDBAutoParentKeyRegression:
 
         row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
         resource = GHFDBParentImportResource()
-        result = resource.import_data(make_dataset(row), dry_run=True, raise_errors=False)
+        result = resource.import_data(
+            make_dataset(row), dry_run=True, raise_errors=False
+        )
 
         assert not result.has_errors(), result.invalid_rows
         for row_result in result.rows:

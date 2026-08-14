@@ -47,7 +47,9 @@ def _labels(qs) -> str:
         return ""
     try:
         return "; ".join(getattr(c, "label", str(c)) for c in qs)
-    except Exception:  # pragma: no cover — defensive guard for unexpected queryset types
+    except (
+        Exception
+    ):  # pragma: no cover — defensive guard for unexpected queryset types
         return ""
 
 
@@ -93,7 +95,9 @@ class GHFDBExportResource(ModelResource):
     q_uncertainty = fields.Field(attribute="q_uncertainty")
 
     # Site-level scalar fields
-    name = fields.Field(attribute="site_name")  # annotation key avoids model field conflict
+    name = fields.Field(
+        attribute="site_name"
+    )  # annotation key avoids model field conflict
     lat_ns = fields.Field(attribute="lat_NS")
     long_ew = fields.Field(attribute="long_EW")
     elevation = fields.Field(attribute="elevation")

@@ -33,7 +33,12 @@ class TestSchemaColumnOrder:
     def test_column_order_has_expected_entries(self):
         """GHFDB_COLUMN_ORDER must contain all canonical entries (BUG-010: was 62 with the old lowercase
         tuple; now derived from PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS)."""
-        from project.ghfdb.constants import CHILD_COLUMNS, GHFDB_COLUMN_ORDER, META_FIELDS, PARENT_COLUMNS
+        from project.ghfdb.constants import (
+            CHILD_COLUMNS,
+            GHFDB_COLUMN_ORDER,
+            META_FIELDS,
+            PARENT_COLUMNS,
+        )
 
         expected_count = len(PARENT_COLUMNS) + len(CHILD_COLUMNS) + len(META_FIELDS)
         assert len(GHFDB_COLUMN_ORDER) == expected_count, (
@@ -59,11 +64,15 @@ class TestSchemaColumnOrder:
 
         # ghfdb_colmeta.json uses lowercase keys; compare case-insensitively
         colmeta_lower = {k.lower() for k in colmeta}
-        missing = [col for col in GHFDB_COLUMN_ORDER if col.lower() not in colmeta_lower]
+        missing = [
+            col for col in GHFDB_COLUMN_ORDER if col.lower() not in colmeta_lower
+        ]
         # Only fail if ALL missing — some new canonical columns (quality_parent, Quality_Code_Child
         # etc.) are intentional additions not yet in ghfdb_colmeta.json
         if len(missing) > len(GHFDB_COLUMN_ORDER) - 62:
-            assert not missing, f"Too many columns missing from ghfdb_colmeta.json: {missing}"
+            assert not missing, (
+                f"Too many columns missing from ghfdb_colmeta.json: {missing}"
+            )
 
 
 class TestParentResourceFieldCoverage:
@@ -80,7 +89,9 @@ class TestParentResourceFieldCoverage:
         # PARENT_COLUMNS includes "ID_parent" as the local_id column
         expected = set(PARENT_COLUMNS)
         missing = expected - declared_fields
-        assert not missing, f"GHFDBParentImportResource missing fields for parent columns: {missing}"
+        assert not missing, (
+            f"GHFDBParentImportResource missing fields for parent columns: {missing}"
+        )
 
 
 class TestChildResourceFieldCoverage:
@@ -99,7 +110,9 @@ class TestChildResourceFieldCoverage:
         child_columns = [col for col in GHFDB_COLUMN_ORDER if col not in parent_only]
 
         missing = set(child_columns) - declared_fields
-        assert not missing, f"GHFDBChildImportResource missing fields for columns: {missing}"
+        assert not missing, (
+            f"GHFDBChildImportResource missing fields for columns: {missing}"
+        )
 
 
 class TestCombinedColumnCoverage:
@@ -108,14 +121,19 @@ class TestCombinedColumnCoverage:
     def test_all_columns_covered_by_parent_or_child(self):
         """Every column in GHFDB_COLUMN_ORDER is a field in parent or child resource."""
         from project.ghfdb.constants import GHFDB_COLUMN_ORDER
-        from project.ghfdb.resources import GHFDBChildImportResource, GHFDBParentImportResource
+        from project.ghfdb.resources import (
+            GHFDBChildImportResource,
+            GHFDBParentImportResource,
+        )
 
         parent_fields = set(GHFDBParentImportResource().fields.keys())
         child_fields = set(GHFDBChildImportResource().fields.keys())
         all_covered = parent_fields | child_fields
 
         missing = [col for col in GHFDB_COLUMN_ORDER if col not in all_covered]
-        assert not missing, f"Columns in GHFDB_COLUMN_ORDER not covered by any resource: {missing}"
+        assert not missing, (
+            f"Columns in GHFDB_COLUMN_ORDER not covered by any resource: {missing}"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -136,7 +154,12 @@ class TestBUG010CanonicalConstants:
 
     def test_column_order_equals_derived_combination(self):
         """GHFDB_COLUMN_ORDER must equal PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS (BUG-010)."""
-        from project.ghfdb.constants import CHILD_COLUMNS, GHFDB_COLUMN_ORDER, META_FIELDS, PARENT_COLUMNS
+        from project.ghfdb.constants import (
+            CHILD_COLUMNS,
+            GHFDB_COLUMN_ORDER,
+            META_FIELDS,
+            PARENT_COLUMNS,
+        )
 
         assert GHFDB_COLUMN_ORDER == PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS, (
             "GHFDB_COLUMN_ORDER is not equal to PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS"
@@ -157,7 +180,9 @@ class TestBUG010CanonicalConstants:
             "T_number",
             "Ref_IGSN",
         ):
-            assert col in GHFDB_COLUMN_ORDER, f"'{col}' not found in GHFDB_COLUMN_ORDER — check case (BUG-010)"
+            assert col in GHFDB_COLUMN_ORDER, (
+                f"'{col}' not found in GHFDB_COLUMN_ORDER — check case (BUG-010)"
+            )
 
     def test_stale_lowercase_names_absent(self):
         """Old lowercase column names from the stale tuple must not be in GHFDB_COLUMN_ORDER (BUG-010)."""
@@ -173,7 +198,9 @@ class TestBUG010CanonicalConstants:
             "total_depth_tvd",
         )
         found = [c for c in stale if c in GHFDB_COLUMN_ORDER]
-        assert not found, f"Stale lowercase names still in GHFDB_COLUMN_ORDER: {found} (BUG-010)"
+        assert not found, (
+            f"Stale lowercase names still in GHFDB_COLUMN_ORDER: {found} (BUG-010)"
+        )
 
     def test_no_stale_tuple_definition_in_source(self):
         """The old GHFDB_COLUMN_ORDER: tuple[str, ...] = (...) must be removed from constants.py (BUG-010).

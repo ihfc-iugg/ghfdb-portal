@@ -131,7 +131,9 @@ class TestGHFDBExportQuantityFields:
         dataset = resource.export(qs)
         row = dataset.dict[0]
         qc_val = row["qc"]
-        assert not hasattr(qc_val, "magnitude"), f"Expected plain number, got Quantity: {qc_val!r}"
+        assert not hasattr(qc_val, "magnitude"), (
+            f"Expected plain number, got Quantity: {qc_val!r}"
+        )
         assert qc_val is not None and str(qc_val) != ""
 
     @pytest.mark.django_db
@@ -145,7 +147,9 @@ class TestGHFDBExportQuantityFields:
         dataset = resource.export(qs)
         row = dataset.dict[0]
         grad_val = row["t_grad_mean"]
-        assert not hasattr(grad_val, "magnitude"), f"Expected plain number, got Quantity: {grad_val!r}"
+        assert not hasattr(grad_val, "magnitude"), (
+            f"Expected plain number, got Quantity: {grad_val!r}"
+        )
         assert grad_val is not None and str(grad_val) != ""
 
     @pytest.mark.django_db
@@ -159,7 +163,9 @@ class TestGHFDBExportQuantityFields:
         dataset = resource.export(qs)
         row = dataset.dict[0]
         tc_val = row["tc_mean"]
-        assert not hasattr(tc_val, "magnitude"), f"Expected plain number, got Quantity: {tc_val!r}"
+        assert not hasattr(tc_val, "magnitude"), (
+            f"Expected plain number, got Quantity: {tc_val!r}"
+        )
         assert tc_val is not None and str(tc_val) != ""
 
 

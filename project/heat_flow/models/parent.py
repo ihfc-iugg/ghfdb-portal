@@ -37,7 +37,9 @@ class HeatFlowSite(GenericHole, AbstractGeoDepthInterval, GenericEarthSample):
         vocabulary=ElevationDatum,
         default="MSL",
         verbose_name=_("elevation datum"),
-        help_text=_("The reference point for the elevation measurement, such as Mean Sea Level (MSL)."),
+        help_text=_(
+            "The reference point for the elevation measurement, such as Mean Sea Level (MSL)."
+        ),
     )
     elevation = QuantityField(
         base_units="m",
@@ -45,13 +47,17 @@ class HeatFlowSite(GenericHole, AbstractGeoDepthInterval, GenericEarthSample):
         null=True,
         blank=True,
         verbose_name=_("elevation"),
-        help_text=_("The site elevation in meters with reference to the specified elevation datum."),
+        help_text=_(
+            "The site elevation in meters with reference to the specified elevation datum."
+        ),
     )
 
     environment = ConceptField(
         vocabulary=vocabularies.GeographicEnvironment,
         verbose_name=_("basic geographical environment"),
-        help_text=_("Describes the general geographical setting of the heat-flow site (not the applied methodology)."),
+        help_text=_(
+            "Describes the general geographical setting of the heat-flow site (not the applied methodology)."
+        ),
         default="unspecified",
     )
     explo_method = ConceptField(
@@ -67,7 +73,9 @@ class HeatFlowSite(GenericHole, AbstractGeoDepthInterval, GenericEarthSample):
     explo_purpose = ConceptManyToManyField(
         vocabulary=vocabularies.ExplorationPurpose,
         verbose_name=_("exploration purpose"),
-        help_text=_("Main purpose of the reconnaissance target providing access for the temperature sensors."),
+        help_text=_(
+            "Main purpose of the reconnaissance target providing access for the temperature sensors."
+        ),
         blank=True,
     )
 
@@ -176,7 +184,9 @@ class ParentHeatFlow(Measurement):
 
     ghfdb_id = models.PositiveIntegerField(
         verbose_name=_("ID Parent"),
-        help_text=_("The original unique identifier for this record in the GHFDB schema, used for traceability."),
+        help_text=_(
+            "The original unique identifier for this record in the GHFDB schema, used for traceability."
+        ),
         null=True,
         blank=True,
         editable=False,
@@ -208,8 +218,12 @@ class ParentHeatFlow(Measurement):
     def save(self, *args, **kwargs):
         if self.sample_id:
             if not isinstance(self.sample, HeatFlowSite):
-                raise ValidationError(_("ParentHeatFlow sample must be a HeatFlowSite instance."))
-            existing = ParentHeatFlow.objects.filter(sample=self.sample).exclude(pk=self.pk)
+                raise ValidationError(
+                    _("ParentHeatFlow sample must be a HeatFlowSite instance.")
+                )
+            existing = ParentHeatFlow.objects.filter(sample=self.sample).exclude(
+                pk=self.pk
+            )
             if existing.exists():
                 raise ValidationError(
                     f"A ParentHeatFlow already exists for site {self.sample}. Only one parent per site is allowed."

@@ -38,7 +38,9 @@ class GHFDBParentImportResource(ModelResource):
     """
 
     # Fields with direct model attribute mappings (field key == PARENT_COLUMNS entry)
-    ID_parent = fields.Field(attribute="ghfdb_id", column_name="ID_parent", widget=widgets.IntegerWidget())
+    ID_parent = fields.Field(
+        attribute="ghfdb_id", column_name="ID_parent", widget=widgets.IntegerWidget()
+    )
     q = fields.Field(
         attribute="value",
         column_name="q",
@@ -90,7 +92,9 @@ class GHFDBParentImportResource(ModelResource):
         """Store the FairDM dataset and deduplicate rows by effective parent key."""
         from fairdm.core.models import Dataset as FairDataset
 
-        self._fairdm_dataset = kwargs.get("fairdm_dataset") or FairDataset.objects.first()
+        self._fairdm_dataset = (
+            kwargs.get("fairdm_dataset") or FairDataset.objects.first()
+        )
 
         # Inject ID_parent column when the upload template omits it entirely.
         # _check_import_id_fields() runs after before_import(), so adding the column
@@ -131,7 +135,9 @@ class GHFDBParentImportResource(ModelResource):
             try:
                 lat_f = float(lat)
                 lon_f = float(lon)
-                site = HeatFlowSite.objects.filter(location__x=lon_f, location__y=lat_f).first()
+                site = HeatFlowSite.objects.filter(
+                    location__x=lon_f, location__y=lat_f
+                ).first()
                 if site is not None:
                     parent_hf = ParentHeatFlow.objects.filter(sample=site).first()
                     if parent_hf is not None:

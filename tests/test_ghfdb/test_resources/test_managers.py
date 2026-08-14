@@ -29,7 +29,9 @@ class TestGHFDBChildQuerySetAnnotationKeys:
         qs = GHFDB.objects.none().as_ghfdb_flat()
         annotations = qs.query.annotations
         assert "q" in annotations, "Canonical annotation 'q' missing (BUG-010 T096)"
-        assert "p_q" not in annotations, "Stale annotation 'p_q' still present (BUG-010 T096)"
+        assert "p_q" not in annotations, (
+            "Stale annotation 'p_q' still present (BUG-010 T096)"
+        )
 
     @pytest.mark.django_db
     def test_canonical_parent_uncertainty_key(self):
@@ -38,8 +40,12 @@ class TestGHFDBChildQuerySetAnnotationKeys:
 
         qs = GHFDB.objects.none().as_ghfdb_flat()
         annotations = qs.query.annotations
-        assert "q_uncertainty" in annotations, "Canonical annotation 'q_uncertainty' missing (BUG-010)"
-        assert "p_q_uncertainty" not in annotations, "Stale annotation 'p_q_uncertainty' still present (BUG-010)"
+        assert "q_uncertainty" in annotations, (
+            "Canonical annotation 'q_uncertainty' missing (BUG-010)"
+        )
+        assert "p_q_uncertainty" not in annotations, (
+            "Stale annotation 'p_q_uncertainty' still present (BUG-010)"
+        )
 
     @pytest.mark.django_db
     def test_site_name_annotation_present(self):
@@ -52,7 +58,9 @@ class TestGHFDBChildQuerySetAnnotationKeys:
 
         qs = GHFDB.objects.none().as_ghfdb_flat()
         annotations = qs.query.annotations
-        assert "site_name" in annotations, "Annotation 'site_name' missing — site name not accessible (BUG-010 T096)"
+        assert "site_name" in annotations, (
+            "Annotation 'site_name' missing — site name not accessible (BUG-010 T096)"
+        )
 
     @pytest.mark.django_db
     def test_canonical_elevation_key(self):
@@ -61,8 +69,12 @@ class TestGHFDBChildQuerySetAnnotationKeys:
 
         qs = GHFDB.objects.none().as_ghfdb_flat()
         annotations = qs.query.annotations
-        assert "elevation" in annotations, "Canonical annotation 'elevation' missing (BUG-010)"
-        assert "site_elevation" not in annotations, "Stale annotation 'site_elevation' still present (BUG-010)"
+        assert "elevation" in annotations, (
+            "Canonical annotation 'elevation' missing (BUG-010)"
+        )
+        assert "site_elevation" not in annotations, (
+            "Stale annotation 'site_elevation' still present (BUG-010)"
+        )
 
     @pytest.mark.django_db
     def test_canonical_corr_hp_flag_key(self):
@@ -71,8 +83,12 @@ class TestGHFDBChildQuerySetAnnotationKeys:
 
         qs = GHFDB.objects.none().as_ghfdb_flat()
         annotations = qs.query.annotations
-        assert "corr_HP_flag" in annotations, "Canonical annotation 'corr_HP_flag' missing (BUG-010)"
-        assert "p_corr_hp_flag" not in annotations, "Stale annotation 'p_corr_hp_flag' still present (BUG-010)"
+        assert "corr_HP_flag" in annotations, (
+            "Canonical annotation 'corr_HP_flag' missing (BUG-010)"
+        )
+        assert "p_corr_hp_flag" not in annotations, (
+            "Stale annotation 'p_corr_hp_flag' still present (BUG-010)"
+        )
 
     @pytest.mark.django_db
     def test_canonical_total_depth_md_key(self):
@@ -81,8 +97,12 @@ class TestGHFDBChildQuerySetAnnotationKeys:
 
         qs = GHFDB.objects.none().as_ghfdb_flat()
         annotations = qs.query.annotations
-        assert "total_depth_MD" in annotations, "Canonical annotation 'total_depth_MD' missing (BUG-010)"
-        assert "total_depth_md" not in annotations, "Stale annotation 'total_depth_md' still present (BUG-010)"
+        assert "total_depth_MD" in annotations, (
+            "Canonical annotation 'total_depth_MD' missing (BUG-010)"
+        )
+        assert "total_depth_md" not in annotations, (
+            "Stale annotation 'total_depth_md' still present (BUG-010)"
+        )
 
     @pytest.mark.django_db
     def test_canonical_total_depth_tvd_key(self):
@@ -91,8 +111,12 @@ class TestGHFDBChildQuerySetAnnotationKeys:
 
         qs = GHFDB.objects.none().as_ghfdb_flat()
         annotations = qs.query.annotations
-        assert "total_depth_TVD" in annotations, "Canonical annotation 'total_depth_TVD' missing (BUG-010)"
-        assert "total_depth_tvd" not in annotations, "Stale annotation 'total_depth_tvd' still present (BUG-010)"
+        assert "total_depth_TVD" in annotations, (
+            "Canonical annotation 'total_depth_TVD' missing (BUG-010)"
+        )
+        assert "total_depth_tvd" not in annotations, (
+            "Stale annotation 'total_depth_tvd' still present (BUG-010)"
+        )
 
     @pytest.mark.django_db
     def test_canonical_id_parent_key(self):
@@ -101,8 +125,12 @@ class TestGHFDBChildQuerySetAnnotationKeys:
 
         qs = GHFDB.objects.none().as_ghfdb_flat()
         annotations = qs.query.annotations
-        assert "ID_parent" in annotations, "Canonical annotation 'ID_parent' missing (BUG-010)"
-        assert "id_parent" not in annotations, "Stale annotation 'id_parent' still present (BUG-010)"
+        assert "ID_parent" in annotations, (
+            "Canonical annotation 'ID_parent' missing (BUG-010)"
+        )
+        assert "id_parent" not in annotations, (
+            "Stale annotation 'id_parent' still present (BUG-010)"
+        )
 
     @pytest.mark.django_db
     def test_canonical_explo_method_key(self):
@@ -111,8 +139,12 @@ class TestGHFDBChildQuerySetAnnotationKeys:
 
         qs = GHFDB.objects.none().as_ghfdb_flat()
         annotations = qs.query.annotations
-        assert "explo_method" in annotations, "Canonical annotation 'explo_method' missing (BUG-010)"
-        assert "site_explo_method" not in annotations, "Stale annotation 'site_explo_method' still present (BUG-010)"
+        assert "explo_method" in annotations, (
+            "Canonical annotation 'explo_method' missing (BUG-010)"
+        )
+        assert "site_explo_method" not in annotations, (
+            "Stale annotation 'site_explo_method' still present (BUG-010)"
+        )
 
     @pytest.mark.django_db
     def test_lat_ns_and_long_ew_preserved(self):
@@ -160,14 +192,23 @@ class TestGHFDBParentQuerySetFlatMethod:
         from project.ghfdb.models import GHFDBParent
 
         if not hasattr(GHFDBParentQuerySet, "as_ghfdb_flat"):
-            pytest.skip("GHFDBParentQuerySet.as_ghfdb_flat() not yet implemented (T097)")
+            pytest.skip(
+                "GHFDBParentQuerySet.as_ghfdb_flat() not yet implemented (T097)"
+            )
 
         qs = GHFDBParent.objects.none().as_ghfdb_flat()
         annotations = qs.query.annotations
         # 'name' cannot be used as annotation key (conflicts with Measurement base field);
         # the workaround annotation is 'site_name'.
         # 'corr_HP_flag' is a direct model field on HeatFlowParent; no annotation needed.
-        for key in ("q", "q_uncertainty", "site_name", "lat_NS", "long_EW", "elevation"):
+        for key in (
+            "q",
+            "q_uncertainty",
+            "site_name",
+            "lat_NS",
+            "long_EW",
+            "elevation",
+        ):
             assert key in annotations, (
                 f"GHFDBParentQuerySet.as_ghfdb_flat() missing canonical annotation '{key}' (BUG-010)"
             )

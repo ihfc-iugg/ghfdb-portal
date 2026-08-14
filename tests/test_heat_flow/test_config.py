@@ -27,7 +27,14 @@ def _get_all_models():
         ThermalGradient,
     )
 
-    return [HeatFlowSite, HeatFlowInterval, ParentHeatFlow, HeatFlow, ThermalGradient, IntervalConductivity]
+    return [
+        HeatFlowSite,
+        HeatFlowInterval,
+        ParentHeatFlow,
+        HeatFlow,
+        ThermalGradient,
+        IntervalConductivity,
+    ]
 
 
 def test_all_six_models_registered():
@@ -36,7 +43,9 @@ def test_all_six_models_registered():
     Fails before T044 (ParentHeatFlow not yet registered).
     """
     for model in _get_all_models():
-        assert fairdm.registry.is_registered(model), f"{model.__name__} is not registered with the FairDM registry"
+        assert fairdm.registry.is_registered(model), (
+            f"{model.__name__} is not registered with the FairDM registry"
+        )
 
 
 def test_registry_config_has_fields():

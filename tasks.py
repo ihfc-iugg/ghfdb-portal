@@ -19,7 +19,9 @@ def check(c):
     """
     Check the consistency of the project using various tools
     """
-    print("🚀 Checking Poetry lock file consistency with 'pyproject.toml': Running poetry lock --check")
+    print(
+        "🚀 Checking Poetry lock file consistency with 'pyproject.toml': Running poetry lock --check"
+    )
     c.run("poetry lock --check")
 
     print("🚀 Linting code: Running pre-commit")
@@ -105,7 +107,9 @@ def dumpdata(c):
 
 @task
 def loaddata(c):
-    c.run("docker compose -f local.yml run django python manage.py loaddata core --app fairdm")
+    c.run(
+        "docker compose -f local.yml run django python manage.py loaddata core --app fairdm"
+    )
 
 
 @task

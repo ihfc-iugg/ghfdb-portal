@@ -44,7 +44,9 @@ class GHFDBChildImportResource(ModelResource):
     are created or updated in ``before_save_instance`` / ``after_save_instance``.
     """
 
-    ghfdb_id = fields.Field(attribute="ghfdb_id", column_name="ID", widget=widgets.IntegerWidget())
+    ghfdb_id = fields.Field(
+        attribute="ghfdb_id", column_name="ID", widget=widgets.IntegerWidget()
+    )
     qc = fields.Field(
         attribute="value",
         column_name="qc",
@@ -67,7 +69,9 @@ class GHFDBChildImportResource(ModelResource):
         default="",
     )
     c_comment = fields.Field(attribute="c_comment", column_name="c_comment", default="")
-    expedition = fields.Field(attribute="expedition", column_name="expedition", default="")
+    expedition = fields.Field(
+        attribute="expedition", column_name="expedition", default=""
+    )
     water_temperature = fields.Field(
         attribute="water_temperature",
         column_name="water_temperature",
@@ -141,7 +145,9 @@ class GHFDBChildImportResource(ModelResource):
         """Store the FairDM dataset reference for use during row processing."""
         from fairdm.core.models import Dataset as FairDataset
 
-        self._fairdm_dataset = kwargs.get("fairdm_dataset") or FairDataset.objects.first()
+        self._fairdm_dataset = (
+            kwargs.get("fairdm_dataset") or FairDataset.objects.first()
+        )
 
         # Inject optional ID / ID_parent columns when the upload template omits them.
         # _check_import_id_fields() runs after before_import(), so injecting here
@@ -170,7 +176,10 @@ class GHFDBChildImportResource(ModelResource):
         """Return fields in GHFDB_COLUMN_ORDER so the confirm-page diff follows the template."""
         visible = super().get_user_visible_fields()
         order = {col.lower(): i for i, col in enumerate(GHFDB_COLUMN_ORDER)}
-        return sorted(visible, key=lambda f: order.get(f.column_name.lower(), len(GHFDB_COLUMN_ORDER)))
+        return sorted(
+            visible,
+            key=lambda f: order.get(f.column_name.lower(), len(GHFDB_COLUMN_ORDER)),
+        )
 
     def before_save_instance(self, instance, row, **kwargs):
         """
@@ -218,7 +227,9 @@ class GHFDBChildImportResource(ModelResource):
             if instance.thermal_gradient and instance.thermal_gradient.pk:
                 self._gradient_widget.set_m2m_relations(instance.thermal_gradient)
             if instance.thermal_conductivity and instance.thermal_conductivity.pk:
-                self._conductivity_widget.set_m2m_relations(instance.thermal_conductivity)
+                self._conductivity_widget.set_m2m_relations(
+                    instance.thermal_conductivity
+                )
 
         # HeatFlow M2M: q_method
         from heat_flow import vocabularies
