@@ -36,14 +36,11 @@ ENV PYTHONUNBUFFERED=1 \
     DJANGO_SETTINGS_MODULE=config.settings \
     PATH="/venv/bin:$PATH"
 
-# libpq5 for psycopg2. GDAL, GEOS and PROJ are GeoDjango's runtime libraries:
-# fairdm.contrib.location uses django.contrib.gis, which loads them by name at
-# import time and fails hard when they are absent.
+# libpq5 for psycopg2. No geospatial libraries: FairDM has deprecated its
+# geospatial functionality, and fairdm.contrib.location.Point is now a plain
+# model with decimal x/y and a CRS string, so nothing loads GDAL, GEOS or PROJ.
 RUN apt-get update && apt-get install --no-install-recommends -y \
     libpq5 \
-    gdal-bin \
-    libgeos-c1v5 \
-    proj-bin \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid 1000 django \
     && useradd --uid 1000 --gid django --shell /bin/bash --create-home django
