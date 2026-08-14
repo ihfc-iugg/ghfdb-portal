@@ -2,12 +2,11 @@ import json
 from pathlib import Path
 
 from django.contrib.staticfiles import finders
-from django.views.generic import TemplateView
+from django.utils.translation import gettext as _
 from django_downloadview import PathDownloadView
 from drf_spectacular.utils import extend_schema
-
-# from fairdm.contrib.import_export.views import DataExportView, DataImportView, DatasetPublishConfirm  # TODO: not yet complete in fairdm
 from fairdm.contrib.plugins.utils import check_has_edit_permission
+from fairdm.views import FairDMTemplateView
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -43,9 +42,14 @@ class GHFDBMetaDataAPIView(APIView):
                 data = json.load(f)
             return Response(data)
         except FileNotFoundError:
-            return Response({"error": "File not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "File not found."}, status=status.HTTP_404_NOT_FOUND
+            )
         except json.JSONDecodeError:
-            return Response({"error": "Invalid JSON file."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"error": "Invalid JSON file."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class GHFDBPathDownloadView(PathDownloadView):
@@ -60,8 +64,9 @@ class GHFDBPathDownloadView(PathDownloadView):
 # TODO: GHFDBExport is disabled until fairdm.contrib.import_export.views is completed (DataExportView not yet stable).
 
 
-class GHFDBExploreView(TemplateView):
+class GHFDBExploreView(FairDMTemplateView):
     template_name = "ghfdb/explore.html"
+    page_title = _("GHFDB Map Viewer")
 
 
 # TODO: GetPublishedView is disabled until fairdm.contrib.import_export.views is completed (DatasetPublishConfirm not yet stable).

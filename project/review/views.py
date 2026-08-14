@@ -6,15 +6,13 @@ from django.db import transaction
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext as _
-from django.views.generic.edit import UpdateView
 from django_select2.forms import Select2Widget
 from fairdm import plugins
 from fairdm.contrib.contributors.models import Person
-from fairdm.contrib.contributors.views.person import ContributorListView
 from fairdm.core.models import Dataset
 from fairdm.utils.filters import LiteratureFilterset
 from fairdm.utils.permissions import assign_all_model_perms
-from fairdm.views import FairDMCreateView, FairDMListView, FairDMModelFormMixin
+from fairdm.views import FairDMCreateView, FairDMListView, FairDMUpdateView
 from ghfdb.views import can_publish_dataset
 from literature.models import LiteratureItem
 
@@ -79,7 +77,9 @@ class ReviewListView(SelectRelatedMixin, FairDMListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["current_user_is_reviewer"] = self.request.user.groups.filter(name="Reviewers").exists()
+        context["current_user_is_reviewer"] = self.request.user.groups.filter(
+            name="Reviewers"
+        ).exists()
         return context
 
 
@@ -143,7 +143,7 @@ class ReviewCreateView(GroupRequiredMixin, FairDMCreateView):
 
 
 @plugins.register(Dataset)
-class ReviewSubmitView(plugins.Plugin, FairDMModelFormMixin, UpdateView):
+class ReviewSubmitView(plugins.Plugin, FairDMUpdateView):
     """
     TODO:
      - Run checks for essential metadata before allowing submission.
@@ -186,7 +186,8 @@ class ReviewSubmitView(plugins.Plugin, FairDMModelFormMixin, UpdateView):
     def form_valid(self, form):
         response = super().form_valid(form)
         self.messages.success(
-            _("Your review of %(title)s has been submitted.") % {"title": self.object.literature.title},
+            _("Your review of %(title)s has been submitted.")
+            % {"title": self.object.literature.title},
         )
         # TODO: Implement logic to notify Data Administrators or other relevant parties
         return response
@@ -195,7 +196,7 @@ class ReviewSubmitView(plugins.Plugin, FairDMModelFormMixin, UpdateView):
         return self.object.dataset.get_absolute_url()
 
 
-class ReviewerListView(ContributorListView):
+class ReviewerListView(FairDMListView):
     title = _("Reviewers")
     model = Person
     heading_config = {

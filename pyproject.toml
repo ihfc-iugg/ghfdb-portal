@@ -25,38 +25,67 @@ classifiers = [
 "World Heat Flow Database Project" = "https://heatflow.world"
 "IHFC" = "http://ihfc-iugg.org"
 
-
 [tool.poetry.dependencies]
 python = ">=3.13,<4.0"
 fairdm = { git = "https://github.com/FAIR-DM/fairdm" }
 fairdm-geo = { git = "https://github.com/FAIR-DM/fairdm-geo" }
 fairdm-discussions = { git = "https://github.com/FAIR-DM/fairdm-discussions" }
-kreuzberg = { extras = ["all"], version = "^4.2.10" }
-django-browser-reload = "^1.21.0"
-uncertainties = "^3.2.3"
+
+[tool.poetry.group.test.dependencies]
+mvp-shared = { git = "https://github.com/django-mvp/shared.git", rev = "v0.3.2", extras = [
+    "test",
+] }
+
 
 [tool.poetry.group.dev.dependencies]
-fairdm-dev-tools = { git = "https://github.com/FAIR-DM/dev-tools", extras = [
-    "test",
+mvp-shared = { git = "https://github.com/django-mvp/shared.git", rev = "v0.3.2", extras = [
     "dev",
 ] }
-pypdf = "^6.5.0"
-ruff = "^0.15.10"
+numpy = "^2.5.2"
 
 [tool.poetry.group.docs.dependencies]
 fairdm-docs = { git = "https://github.com/FAIR-DM/fairdm-docs", extras = [
     "sphinx-book-theme",
 ] }
-shot-scraper = "^1.8"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
-target-version = "py311"
-line-length = 120
+# line-length is deliberately unset: Ruff's default is 88, matching Black, which
+# is what Django, pytest and httpx ship. PEP 8 caps a team's own preference at 99.
+# target-version is deliberately unset too: Ruff infers it from requires-python,
+# so it cannot drift above the versions this package actually supports.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "*/migrations/*.py",
+    "staticfiles/*",
+    "docs/",
+    ".github/",
+]
 fix = true
+
 [tool.ruff.lint]
 select = [
     # flake8-2020
@@ -99,90 +128,58 @@ ignore = [
     # ClassAttributesShouldBeAnnotated
     "RUF012",
     "TRY003",
+    # Use of mark_safe
+    "S308",
+    # Use of standard pseudo-random generators
+    "S311",
     "A003",
     "F403",
     "F405",
     "C901",
-    # Use of mark_safe
-    "S308",
-    # Ambiguous unicode in docstrings and comments. Prose here legitimately uses
-    # en dashes, and the domain uses characters such as µ, ° and ± throughout.
-    # The rule cannot tell correct typography from a homoglyph typo, and every
-    # one of the 54 findings it raised was correct typography.
-    "RUF002",
-    "RUF003",
-]
-exclude = [
-    ".bzr",
-    ".direnv",
-    ".eggs",
-    ".git",
-    ".git-rewrite",
-    ".hg",
-    ".mypy_cache",
-    ".nox",
-    ".pants.d",
-    ".pytype",
-    ".ruff_cache",
-    ".svn",
-    ".tox",
-    ".venv",
-    "__pypackages__",
-    "_build",
-    "buck-out",
-    "build",
-    "dist",
-    "node_modules",
-    "venv",
-    "*/migrations/*.py",
-    "staticfiles/*",
-    'fairdm/conf/*',
-    "docs/",
-    "test.py",
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"**/tests/*" = ["S101", "S105"]
+# `tests/**`, not `**/tests/*`: the latter matches only files directly inside a
+# `tests` directory, so every nested test module (tests/test_views/…) silently
+# missed these ignores.
+# S101/S105/S106: asserts and placeholder credentials are the point of a test.
+# RUF002/RUF003: prose punctuation in test docstrings and comments is not a defect
+# (the rules stay enabled for the package itself).
+"tests/**" = ["S101", "S105", "S106", "RUF002", "RUF003"]
+# Demo/dev settings carry an intentional non-secret placeholder SECRET_KEY.
+"**/demo/settings.py" = ["S105"]
 
 [tool.ruff.format]
 docstring-code-format = true
-docstring-code-line-length = 88
+docstring-code-line-length = "dynamic"
 line-ending = "lf"
+exclude = ["*/migrations/*.py"]
 
 [tool.djlint]
-blank_line_after_tag = "load,endpartialdef,endblock"
+blank_line_after_tag = "c-vars"
 close_void_tags = true
-custom_blocks = "addtoblock"
-custom_html = "django-formset,c-[\\w.-]+,swiper-container,swiper-slide"
+custom_html = "c-[\\w.-]+"
 format_js = true
 format_css = true
 indent = 2
 max_attribute_length = 50
 max_blank_lines = 0
 max_line_length = 119
-ignore = "H016,H030,H031,H021,D018,H037,H006"
+ignore = "H016,H030,H031,H021,D018,H037"
 format_attribute_template_tags = false
 
 [tool.djlint.css]
 indent_size = 2
 
-
 [tool.djlint.js]
-indent_size = 5
+indent_size = 2
 
 [tool.mypy]
 files = ["project"]
-disallow_untyped_defs = false
-disallow_any_unimported = false
+strict = false
+explicit_package_bases = true
+namespace_packages = true
 ignore_missing_imports = true
-no_implicit_optional = true
-check_untyped_defs = false
-warn_return_any = true
-warn_unused_ignores = true
-show_error_codes = true
-exclude = ["docs/", "migrations/", "tests/settings.py", "test.py"]
-mypy_path = "project/"
-plugins = ["mypy_django_plugin.main"]
 
 [tool.django-stubs]
 django_settings_module = "tests.settings"

@@ -1,4 +1,5 @@
-from fairdm.core.filters import MeasurementFilter, SampleFilter
+from fairdm.core.measurement.filters import MeasurementFilter
+from fairdm.core.sample.filters import SampleFilter
 
 from .models import HeatFlow, HeatFlowSite
 
