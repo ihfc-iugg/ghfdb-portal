@@ -1,0 +1,30 @@
+name: Deploy Docs
+
+# Publishes the Sphinx documentation to GitHub Pages, replacing the Read the
+# Docs build.
+#
+# Currently dispatch-only, for two reasons.
+#
+# 1. The Sphinx build does not yet succeed. fairdm-docs 0.3.0's `autodoc_models`
+#    extension reads `registry.samples` as a sequence of dicts, while current
+#    FairDM's registry yields model classes, so generation fails with
+#    "type 'HeatFlowSite' is not subscriptable". Tracked upstream.
+#
+# 2. The shared workflow runs `invoke docs` and then uploads `./docs` as the
+#    Pages artifact. That is the source tree. This project's `invoke docs` builds
+#    into `docs/_build`, so as written the deploy would publish raw markdown
+#    rather than the rendered site. The shared workflow needs an artifact-path
+#    input before it fits a Sphinx project; no repo consumes it yet.
+#
+# Add the push trigger below once both are resolved and a build is green.
+#
+#   push:
+#     branches: [main]
+#     paths: ['docs/**', 'project/**', 'pyproject.toml', '.github/workflows/docs.yml']
+on:
+  workflow_dispatch:
+
+jobs:
+  call-docs:
+    uses: django-mvp/shared/.github/workflows/docs.yml@v0.3.2
+    secrets: inherit

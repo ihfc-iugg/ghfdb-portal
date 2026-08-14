@@ -1,0 +1,32 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'project/**'
+      - 'config/**'
+      - 'tests/**'
+      - 'templates/**'
+      - 'pyproject.toml'
+      - 'poetry.lock'
+      - '.github/workflows/tests.yml'
+  # No paths filter on pull_request: these checks are ruleset-required, and a
+  # path-filtered required check never reports on out-of-scope PRs, blocking merge.
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+jobs:
+  call-tests:
+    uses: django-mvp/shared/.github/workflows/tests.yml@v0.3.2
+    with:
+      coverage-package: project
+      # This is a deployed application, not a library, so it runs on exactly one
+      # combination — whatever is deployed. A support matrix would test versions
+      # nothing runs on.
+      python-versions: '["3.13"]'
+      django-versions: '["5.2"]'
+      poetry-install-args: '--with test'
+    secrets: inherit

@@ -1,0 +1,95 @@
+name: Prepare Release
+
+# Step 1 of the release flow: open the release pull request (version bump plus
+# CHANGELOG section). Merging that pull request is the release decision; Tag
+# Release then cuts the tag and GitHub Release from the merge commit, and
+# Publish builds the container image from the tag.
+#
+# Unlike the family workflow, the version is not chosen at trigger time. This
+# project versions by calendar — <year>.<month>.<release> — so the next version
+# is a function of today's date and the tags that already exist, and computing
+# it here removes the chance of picking the wrong one by hand.
+#
+#   first release in a month   2026.8.1
+#   later the same month       2026.8.2
+#   first release next month   2026.9.1
+#
+# `version` is offered as an override for the case where the computed value is
+# wrong (a backfill, a correction). Leave it empty for normal releases.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Override the computed version (leave empty to use <year>.<month>.<next>)'
+        type: string
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  compute-version:
+    name: Compute next version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.compute.outputs.version }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+        with:
+          # Tags are the input to the calculation, so the full history is needed.
+          fetch-depth: 0
+
+      - name: Compute the next calendar version
+        id: compute
+        env:
+          OVERRIDE: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "$OVERRIDE" ]; then
+            VERSION="$OVERRIDE"
+            echo "Using the supplied override: $VERSION"
+          else
+            YEAR="$(date -u +%Y)"
+            # %-m gives 8 rather than 08. A zero-padded month would produce
+            # versions like 2026.08.1, which normalises to 2026.8.1 on the way
+            # into Python packaging metadata and would then never match its tag.
+            MONTH="$(date -u +%-m)"
+
+            # Highest release number already used this month, across tags and
+            # not just the current version, so a reverted or abandoned bump
+            # cannot hand out a number twice.
+            LAST="$(git tag --list "v${YEAR}.${MONTH}.*" \
+              | sed -E "s/^v${YEAR}\.${MONTH}\.//" \
+              | grep -E '^[0-9]+$' \
+              | sort -n \
+              | tail -1 || true)"
+
+            NEXT=$(( ${LAST:-0} + 1 ))
+            VERSION="${YEAR}.${MONTH}.${NEXT}"
+            echo "Latest tag this month: ${LAST:-none}"
+            echo "Computed version: $VERSION"
+          fi
+
+          if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+            echo "::error::Tag v$VERSION already exists — nothing to prepare."
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+  call-prepare-release:
+    name: Open release PR
+    needs: compute-version
+    uses: django-mvp/shared/.github/workflows/prepare-release.yml@v0.3.2
+    with:
+      # The shared workflow passes this straight to `poetry version`, which
+      # accepts an explicit version as readily as a bump level.
+      bump: ${{ needs.compute-version.outputs.version }}
+    secrets:
+      RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
