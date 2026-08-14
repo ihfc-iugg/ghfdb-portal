@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------
 # Stage 1 — build: install production dependencies into an isolated venv
 # ---------------------------------------------------------------------------
-FROM python:3.13-slim AS builder
+FROM python:3.14-slim AS builder
 
 ARG POETRY_VERSION=2.3.4
 ENV PYTHONUNBUFFERED=1 \
@@ -27,7 +27,7 @@ RUN poetry bundle venv --only=main /venv
 # ---------------------------------------------------------------------------
 # Stage 2 — runtime: minimal image with app code and bundled venv
 # ---------------------------------------------------------------------------
-FROM python:3.13-slim AS runtime
+FROM python:3.14-slim AS runtime
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
