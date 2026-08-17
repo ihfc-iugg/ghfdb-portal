@@ -1,14 +1,18 @@
 <!--
 Sync Impact Report
-- Version change: (new) → 1.0.0
-- Modified principles: N/A (initial ratification)
-- Added sections: All sections are new
+- Version change: 1.0.0 → 1.1.0
+- Modified principles: none redefined; Governance "Scope" corrected to name the `ihfc-iugg/ghfdb-portal`
+  repository
+- Added sections:
+    - Principle IX. Simplicity & Maintainability
+    - Principle X. Fidelity to the WHDB Project Mission & DFG Funding
 - Removed sections: N/A
-- Templates requiring updates:
-    - ✅ .specify/templates/constitution-template.md — source used to initialize this file
-    - ✅ .specify/templates/plan-template.md — "Constitution Check" gates verified against principles below
-    - ⚠ .specify/templates/spec-template.md — References should be updated to cite specific principle numbers
-    - ⚠ .specify/templates/tasks-template.md — Internationalisation and schema-mapping task types may warrant explicit examples
+- Consistency notes:
+    - docs/constitution/index.md rewritten as a landing page; it no longer restates the principles, so the two
+      copies cannot diverge again. See docs/adr/0008-one-constitution-one-glossary.md.
+    - Two governance clauses repointed from the removed vendored toolchain to the files that replaced it:
+      docs/development/spec-driven-workflow.md, and AGENTS.md / CONTEXT.md / docs/agents/.
+    - Domain vocabulary now lives in CONTEXT.md at the repository root.
 - Follow-up TODOs:
     - TODO(RATIFICATION_DATE): Confirm exact project inception/governance date with project lead if 2024-01-01 is incorrect
     - TODO(GOVERNANCE_EXPANSION): When additional maintainers join, formalize stewardship committee and RFC process
@@ -174,6 +178,46 @@ All non-trivial changes MUST follow the spec-driven workflow documented in
   registry integration immediately after modifying models or configuration classes.
 - Documentation MUST be updated as features are implemented, not deferred to the end.
 
+### IX. Simplicity & Maintainability
+
+The portal is maintained by a small team over a long horizon. The simplest implementation that satisfies the
+requirement is the correct one, and added complexity MUST be justified rather than assumed.
+
+- Configuration of existing FairDM and Django behaviour MUST be preferred over new code. A custom implementation
+  requires a written reason why configuration cannot serve.
+- Abstractions MUST be introduced in response to a present requirement. Speculative generality, unused extension
+  points, and indirection added for hypothetical future needs are PROHIBITED.
+- New runtime dependencies MUST be justified in the pull request that introduces them, stating what they replace and
+  what removing them later would cost.
+- Code MUST be readable by a scientist-developer joining the project without prior context: descriptive names, short
+  functions, and comments that explain scientific intent rather than restating the code.
+- Dead code, commented-out blocks, and unreachable branches MUST be deleted rather than left in place. Version
+  control is the archive.
+- Where a change adds complexity that cannot be avoided, the reason MUST be recorded in the relevant `plan.md`
+  "Complexity Tracking" section.
+- Simplicity MUST NOT be bought at the expense of Principles I, II, or VI. Reducing effort by weakening FAIR
+  compliance, schema fidelity, or test coverage is not simplification.
+
+### X. Fidelity to the WHDB Project Mission & DFG Funding
+
+The portal is a deliverable of the World Heat Flow Database Project and is built with public research funding from
+the DFG (grant 491795283). Work on the portal MUST serve that mission and the scope the project was funded to
+deliver.
+
+- Every feature MUST be traceable to the mission of the WHDB Project: a quality-assured, openly available global
+  heat flow database serving the international research community.
+- The proposals, project descriptions, and reports held in `docs/constitution/references/` are the record of what
+  the project committed to deliver. Proposed work outside that commitment MUST state its case before implementation
+  begins.
+- Obligations attached to the grant MUST be treated as requirements rather than aspirations. The two that bear
+  directly on the code are open access to published data releases and a current, accurate data management plan.
+- Funding acknowledgement and accurate attribution of the institutional partners (IHFC, GFZ, and contributing
+  institutions) MUST appear in public-facing project information and in dataset citation metadata.
+- The portal MUST remain usable and maintainable beyond the funded period. Decisions that trade long-term
+  stewardship for short-term delivery MUST be documented and revisited.
+- Where funded scope and a community request conflict, funded scope takes precedence until project governance
+  records a change. The request SHOULD be captured as a future work item rather than dropped or absorbed silently.
+
 ---
 
 ## Architecture & Stack Constraints
@@ -231,8 +275,8 @@ This section governs how changes move from idea to deployed code within the GHFD
   - `python manage.py check` MUST pass with zero errors.
   - Field mapping documentation MUST be current.
   - Relevant docstrings MUST reference Fuchs et al. where the field is IHFC-defined.
-- **Speckit Template Consistency**: Speckit templates in `.specify/templates/` MUST remain consistent with this
-  constitution. Divergence MUST be corrected in the same pull request as the constitutional amendment.
+- **Workflow Documentation Consistency**: `docs/development/spec-driven-workflow.md` MUST remain consistent with
+  this constitution. Divergence MUST be corrected in the same pull request as the constitutional amendment.
 
 ---
 
@@ -240,7 +284,7 @@ This section governs how changes move from idea to deployed code within the GHFD
 
 The constitution defines how the GHFDB Portal is evolved and how compliance is enforced.
 
-- **Scope**: This constitution applies to the `global-heat-flow-database` repository, all data models, APIs,
+- **Scope**: This constitution applies to the `ihfc-iugg/ghfdb-portal` repository, all data models, APIs,
   documentation, CI/CD pipelines, and reference deployment configurations maintained here.
 - **Authority**: Final authority for constitutional changes and major architectural decisions currently rests with the
   original author acting as BDFL (Benevolent Dictator For Life), while preparing for a broader governance model as
@@ -256,8 +300,8 @@ The constitution defines how the GHFDB Portal is evolved and how compliance is e
   - Code review for core changes MUST consider alignment with the Core Principles and Architecture Constraints above.
   - When violations are accepted for pragmatic reasons, they MUST be documented in the relevant `plan.md`
     "Complexity Tracking" section and, where long-lived, reflected as a future constitutional amendment.
-  - The AI agent instructions file (`.github/instructions/copilot.instructions.md`) MUST be kept consistent with
-    this constitution; divergence is treated as a documentation bug.
+  - `AGENTS.md`, `CONTEXT.md`, and the guidance in `docs/agents/` MUST be kept consistent with this constitution.
+    Divergence is treated as a documentation bug.
 - **Transparency & Community Input**:
   - Proposed constitutional changes SHOULD be discussed openly (via issues or discussions on the repository) before
     being merged.
@@ -267,4 +311,4 @@ The constitution defines how the GHFDB Portal is evolved and how compliance is e
     structure (e.g., a steering committee aligned with the IHFC working group) SHOULD be established and documented
     as an amendment to this section.
 
-**Version**: 1.0.0 | **Ratified**: TODO(RATIFICATION_DATE): confirm project inception date | **Last Amended**: 2026-04-09
+**Version**: 1.1.0 | **Ratified**: TODO(RATIFICATION_DATE): confirm project inception date | **Last Amended**: 2026-08-17
