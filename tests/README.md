@@ -1,225 +1,76 @@
-# Tests Directory Structure
+# Tests
 
-This directory contains all tests for the Global Heat Flow Database project, organized into three layers: unit tests, integration tests, and contract tests.
+Tests mirror the source tree. A test module sits at the path its subject sits at under `project/`, with `test_` prefixed at each level, so `project/ghfdb/resources/export.py` is tested by `tests/test_ghfdb/test_resources/test_export.py`.
 
-## Test Layers
-
-### Unit Tests (Fast, Isolated)
-
-- **Purpose**: Test individual functions, methods, and classes in isolation
-- **Location**: `tests/test_<app_name>/test_<module>.py` (e.g., `tests/test_heat_flow/test_models.py`)
-- **Characteristics**: No database access (unless marked `@pytest.mark.django_db`), no external services, fast execution (<5 seconds per module)
-- **Run with**: `pytest` (default - runs unit tests only)
-
-### Integration Tests (Full Stack)
-
-- **Purpose**: Test complete workflows and component interactions
-- **Location**: `tests/test_<app_name>/test_<workflow>_integration.py` (e.g., `tests/test_ghfdb/test_import_workflow_integration.py`)
-- **Characteristics**: Full Django stack, database, fixtures, test complete data lifecycle
-- **Marker**: `@pytest.mark.integration`
-- **Run with**: `pytest -m integration`
-
-### Contract Tests (API Validation)
-
-- **Purpose**: Validate API response schemas and backward compatibility
-- **Location**: `tests/contracts/test_<api_area>_contract.py` (e.g., `tests/contracts/test_public_api_contract.py`)
-- **Characteristics**: Validate response structure, field types, error formats
-- **Marker**: `@pytest.mark.contract`
-- **Run with**: `pytest -m contract`
-
-## Directory Structure
+## Layout
 
 ```
 tests/
-├── __init__.py                 # Main tests package
-├── conftest.py                 # Shared pytest fixtures
-├── README.md                   # This file
+├── conftest.py                 # settings shared by the whole suite
+├── fixtures/                   # sample spreadsheets and JSON, see fixtures/README.md
 │
-├── test_heat_flow/            # Unit tests for heat_flow app
-│   ├── __init__.py
-│   ├── test_factories.py      # Factory tests
-│   ├── test_models.py         # Model tests
-│   ├── test_views.py          # View tests
-│   └── test_validation.py     # Validation logic tests
+├── test_ghfdb/                 # project/ghfdb/
+│   ├── conftest.py
+│   ├── test_admin.py
+│   ├── test_managers.py
+│   ├── test_models.py
+│   ├── test_views.py
+│   └── test_resources/         # project/ghfdb/resources/
+│       ├── conftest.py
+│       ├── test_child_import.py
+│       ├── test_export.py
+│       ├── test_managers.py
+│       ├── test_parent_import.py
+│       ├── test_roundtrip.py
+│       ├── test_schema_coverage.py
+│       └── test_widgets.py
 │
-├── test_ghfdb/                # Tests for ghfdb app
-│   ├── __init__.py
-│   ├── test_importer.py       # Import functionality tests
-│   ├── test_models.py         # Model tests
-│   ├── test_views.py          # View tests
-│   ├── test_import_workflow_integration.py    # Integration tests
-│   ├── test_schema_mapping.py                 # Schema mapping validation
-│   ├── test_round_trip_integrity.py           # Export-import integrity
-│   └── data/                  # Test data files
-│       ├── importer_fail.xlsx
-│       ├── importer_fail_single_row.xlsx
-│       ├── importer_success.xlsx
-│       ├── minimal_ghfdb_import.xlsx
-│       ├── invalid_ghfdb_import.xlsx
-│       └── round_trip_reference.xlsx
-│
-├── test_review/               # Tests for review app
-│   ├── __init__.py
-│   ├── test_models.py         # Model tests
-│   └── test_review_workflow_integration.py    # Review workflow integration tests
-│
-└── contracts/                 # Contract tests
-    ├── __init__.py
-    └── test_public_api_contract.py    # Public API schema validation
+└── test_heat_flow/             # project/heat_flow/
+    ├── conftest.py
+    ├── test_config.py
+    ├── test_factories.py
+    └── test_models.py
 ```
 
-## Running Tests
+`project/review/` has no tests yet.
 
-### Run unit tests (default - fast feedback)
+## Conventions
+
+**Group tests in classes.** Related tests live together in a `Test<Subject>` class named for what they exercise, not as loose module-level functions. A test that spans two functions belongs in the module of its subject, as another class.
+
+**Name tests for their outcome.** `test_<action>_<condition>_<expected_result>` — `test_zero_thickness_interval_rejected` rather than `test_interval_validation`. The name should say what broke without opening the file.
+
+**Fixtures live in `conftest.py`,** at the narrowest level that serves them. Construction shared by one app's tests goes in that app's `conftest.py`, not repeated in each module.
+
+**Fixtures for the models under test use direct ORM calls, deliberately.** Factories fill fields with generated values, which hides whether a field was required and masks the validation paths several of these tests exist to exercise. Factories are used for supporting objects that are infrastructure rather than subject — `DatasetFactory` is the usual one. `project/heat_flow/factories.py` holds the app's own factories, subclassing FairDM's `SampleFactory` and `MeasurementFactory`.
+
+## Running them
 
 ```bash
-pytest
-# or explicitly
-pytest -m "not integration and not contract and not slow"
+pytest                                   # everything
+pytest tests/test_heat_flow/             # one app
+pytest tests/test_heat_flow/test_models.py::TestHeatFlowInterval
+pytest --cov --cov-report=html           # with coverage
 ```
 
-### Run integration tests
+`--reuse-db` and `--nomigrations` are on by default, so the first run builds the test database and later runs reuse it. Pass `--create-db` after a migration change.
 
-```bash
-pytest -m integration
-```
+## Markers
 
-### Run contract tests
+| Marker | For |
+|---|---|
+| `heat_flow`, `ghfdb`, `review` | the app a test belongs to |
+| `integration` | needs the full stack rather than one unit |
+| `slow` | takes more than a few seconds |
 
-```bash
-pytest -m contract
-```
+Select with `pytest -m heat_flow` or exclude with `pytest -m "not slow"`.
 
-### Run all tests
+## Test data
 
-```bash
-pytest -m ""
-```
+Shared spreadsheets and JSON live in `fixtures/`, described in `fixtures/README.md`. Anything used by a single module belongs beside that module rather than in the shared directory.
 
-### Run specific test files
+## Adding tests
 
-```bash
-# Unit tests only
-pytest tests/test_heat_flow/test_models.py -v
+Write the test first and watch it fail before writing the code that passes it. Put it in the module that mirrors its subject, in a class named for that subject, and give it a name that states the expected outcome. If a fixture would be useful to more than one module, move it up to the nearest `conftest.py`.
 
-# Integration tests only
-pytest tests/test_ghfdb/test_import_workflow_integration.py -v
-```
-
-### Run with coverage
-
-```bash
-# Unit tests with coverage
-pytest --cov=project --cov-report=term --cov-report=html
-
-# All tests with coverage
-pytest -m "" --cov=project --cov-report=term --cov-report=html
-```
-
-### Run tests marked as slow
-
-```bash
-pytest -m slow
-```
-
-## Test Markers
-
-Tests can be marked with decorators to categorize them:
-
-- **`@pytest.mark.integration`**: Integration tests requiring full Django stack and database
-- **`@pytest.mark.contract`**: Contract tests validating API response schemas
-- **`@pytest.mark.slow`**: Tests taking >5 seconds (excluded from default run)
-- **`@pytest.mark.external`**: Tests requiring external services (skip when unavailable)
-- **`@pytest.mark.django_db`**: Tests requiring database access (use on unit tests only when necessary)
-
-Example:
-
-```python
-@pytest.mark.integration
-@pytest.mark.django_db
-def test_import_workflow_happy_path():
-    # Test implementation
-    pass
-```
-
-## Test Naming Conventions
-
-### File Names
-
-- Unit tests: `test_<module>.py` (e.g., `test_models.py`, `test_views.py`)
-- Integration tests: `test_<workflow>_integration.py` (e.g., `test_import_workflow_integration.py`)
-- Contract tests: `test_<api_area>_contract.py` (e.g., `test_public_api_contract.py`)
-
-### Test Function Names
-
-Follow the pattern: `test_<action>_<condition>_<expected_result>`
-
-Examples:
-
-- `test_import_invalid_template_raises_validation_error`
-- `test_validate_coordinates_negative_latitude_fails`
-- `test_calculate_u_score_with_known_values_returns_expected_score`
-
-### Test Class Names
-
-When grouping related tests: `class Test<FeatureName>`
-
-Example:
-
-```python
-class TestQualityScoreCalculation:
-    def test_u_score_calculation_reference_case(self):
-        pass
-
-    def test_m_score_calculation_reference_case(self):
-        pass
-```
-
-### Fixture Names
-
-Use lowercase with underscores describing what they provide:
-
-```python
-@pytest.fixture
-def minimal_dataset():
-    return Dataset.objects.create(name="Minimal Test Dataset")
-
-@pytest.fixture
-def invalid_coordinates():
-    return {"latitude": 95, "longitude": 200}  # Invalid values
-```
-
-## Test Data Files
-
-Test data files are organized within each app's test directory under a `data/` subdirectory. This keeps test data close to the tests that use it while maintaining organization.
-
-### Available Fixtures
-
-See `fixtures/README.md` for descriptions of shared fixture datasets:
-
-- `fixtures/minimal_ghfdb_import.xlsx`: 5 heat flow sites with complete mandatory fields (happy path)
-- `fixtures/invalid_ghfdb_import.xlsx`: 5 validation error cases
-- `fixtures/review_submission_dataset.json`: Dataset in "pending review" state
-- `fixtures/admin_approval_dataset.json`: Dataset in "reviewed" state
-- `fixtures/round_trip_reference.xlsx`: 10 sites covering all GHFDB field types
-
-## Adding New Tests
-
-When adding new tests:
-
-1. **Choose the right layer**: Unit (fast, isolated), Integration (workflow), or Contract (API)
-2. **Place in appropriate directory**: `tests/test_<app>/` or `tests/contracts/`
-3. **Follow naming conventions**: `test_*.py`, `test_<action>_<condition>_<expected_result>`
-4. **Add appropriate markers**: `@pytest.mark.integration`, `@pytest.mark.contract`, etc.
-5. **Use descriptive names**: Test names should clearly describe what is being tested
-6. **Include docstrings**: Explain test purpose and acceptance criteria
-7. **Use fixtures**: Load test data from conftest.py or local fixtures
-8. **Follow TDD**: Write tests FIRST (ensure they fail), then implement
-
-## Documentation
-
-For detailed testing conventions, patterns, and examples, see:
-
-- `docs/guides/testing-standards.md`: Complete testing guide with patterns and examples
-- `fixtures/README.md`: Fixture dataset documentation and update process
-- `.specify/memory/constitution.md`: Constitution Principle VII (Test-Driven Development)
+The project's engineering standards are in `memory/constitution.md`. Note that `docs/constitution/` is unrelated — that is governance and published reference material.
