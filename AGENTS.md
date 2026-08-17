@@ -55,19 +55,33 @@ GHFDB structure itself is defined in published literature held under
 
 Required status checks (exact names, as they report on a pull request):
 
-- `Linting & Formatting`
-- `Type Checking`
-- `Documentation Build`
-- `Template Validation (djlint)`
-- `Secrets Scanning`
+- `call-build / Code Quality`
+- `call-build / Security Scan`
+- `call-build / Build Package`
+- `call-tests / Test Python 3.13, Django 5.2`
 
-`Unit Tests & Coverage` runs on every pull request but is **not** required while the GHFDB column
-coverage gap is open, because it is red on `main` for a reason that predates any current work.
-It becomes required as soon as the suite is green.
+The `call-build` and `call-tests` prefixes come from the job names in `build.yml` and `tests.yml`.
+Branch protection has to name the prefixed context — the bare job name matches nothing.
 
-CI is repo-native rather than calling the shared family workflows: `pr-validation.yml` on pull
-requests, `main-integration.yml` on pushes to `main` (full PostgreSQL suite, Docker image build,
-staging deploy), `production-deploy.yml`, `docs-validation.yml`, and a monthly `nightly-checks.yml`.
+CI calls the shared workflows from `django-mvp/shared`, pinned to a tag, rather than maintaining
+its own copies:
+
+| Workflow | Runs |
+|---|---|
+| `build.yml` | code quality, security scan, package build, on every pull request |
+| `tests.yml` | the suite, on every pull request |
+| `docs.yml` | the Sphinx build, on demand |
+| `publish.yml` | the release image |
+| `prepare-release.yml` / `tag-release.yml` | the version-bump and tagging flow |
+| `auto-merge-dependabot.yml` | dependency updates, gated on the required checks |
+| `production-deploy.yml` | manual production deployment |
+
+Code Quality runs `pre-commit run --all-files`, so ruff, mypy, deptry and djlint all come from the
+Poetry environment and their versions follow the single `mvp-shared` pin in `pyproject.toml`.
+
+Coverage is reported to Codecov with a 90% project floor and 85% on changed lines. Neither is a
+required check. Project coverage is below the floor today, so that status reads red — it is a
+target to climb to, not a description of where the project is.
 
 ## Development workflow
 

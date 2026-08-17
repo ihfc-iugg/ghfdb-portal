@@ -1,18 +1,16 @@
-# Badge color changes from red to green between 70% and 100%
-# PR pipeline fails if codecov falls with 1%
-
+# Family coverage gating — materialized into each repo at onboarding.
+# 100% is brittle (it fails a PR over a single defensive branch or unreachable
+# guard). These are floors with headroom, not a ratchet.
+#   project — overall coverage floor for the package.
+#   patch   — coverage required of the lines changed in a PR (new code).
+# The 1% threshold absorbs rounding and small, justified dips.
 coverage:
-  range: 70..100
-  round: down
-  precision: 1
   status:
     project:
       default:
-        target: auto
+        target: 90%
         threshold: 1%
-
-# Ignoring Paths
-# --------------
-# which folders/files to ignore
-# ignore:
-  # - "foo/bar.py"
+    patch:
+      default:
+        target: 85%
+        threshold: 1%
