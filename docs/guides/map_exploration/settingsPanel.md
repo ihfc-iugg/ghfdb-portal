@@ -4,7 +4,7 @@ The visualization can be adapted to the user's needs via the settings panel.
 
 ## Base Maps
 
-Change the base map here. if you have any suggestions for further free background maps, please share them [here](https://github.com/WorldHeatFlowDatabase/HeatFlowMapping/issues)
+Change the base map here. if you have any suggestions for further free background maps, please share them [here](https://github.com/ihfc-iugg/HeatFlowMapping/issues)
 
 <img src="/_static/_mapping/base-maps.PNG" alt="Base maps options" width="50%"/> 
 

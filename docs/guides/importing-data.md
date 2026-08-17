@@ -44,7 +44,7 @@ When a validation error occurs, the system will return a clear error message ide
 
 Once you have corrected the error in your Excel file, you can re-upload it using the same process. There is no penalty for failed attempts, and you can upload revised files as many times as needed.
 
-If the error message seems incorrect or unclear, or if you believe the problem may be a bug, please report it by opening an issue in the [GitHub repository](https://github.com/heatflow-portal/issues) or by contacting the portal administrators directly.
+If the error message seems incorrect or unclear, or if you believe the problem may be a bug, please report it by opening an issue in the [issue tracker](https://github.com/ihfc-iugg/ghfdb-portal/issues) or by contacting the portal administrators directly.
 
 * * *
 

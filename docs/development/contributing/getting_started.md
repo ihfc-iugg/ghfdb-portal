@@ -9,7 +9,7 @@ This guide outlines the steps to contribute to this application. By following th
 ## Prerequisites
 
 ```{important}
-Please review the contributor [Code of Conduct](code_of_conduct.md) before contributing to this project.
+Please review the contributor [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/) before contributing to this project.
 ```
 
 Before you begin, ensure that you have the following installed on your local machine:
@@ -20,7 +20,7 @@ Before you begin, ensure that you have the following installed on your local mac
 
 ## Step 1: Fork the Repository and Clone it to Your Local Machine
 
-1. Click on the "Fork" button at the top right corner of the [repository page](https://github.com/WorldHeatFlowDatabase/world-heat-flow-database).
+1. Click on the "Fork" button at the top right corner of the [repository page](https://github.com/ihfc-iugg/ghfdb-portal).
 2. After forking, you'll be redirected to your forked repository. Copy the URL of your forked repository.
 3. Open a terminal or command prompt.
 4. Change to the directory where you want to clone the repository.
@@ -37,7 +37,7 @@ Before you begin, ensure that you have the following installed on your local mac
 1. Change to the cloned repository's directory:
 
    ```shell
-   cd world-heat-flow-database
+   cd ghfdb-portal
    ```
 
 2. Run the following command to set up a virtual environment using Poetry:
