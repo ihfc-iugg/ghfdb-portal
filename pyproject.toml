@@ -41,13 +41,13 @@ fairdm-geo = { git = "https://github.com/FAIR-DM/fairdm-geo" }
 fairdm-discussions = { git = "https://github.com/FAIR-DM/fairdm-discussions" }
 
 [tool.poetry.group.test.dependencies]
-mvp-shared = { git = "https://github.com/django-mvp/shared.git", rev = "v0.3.2", extras = [
+mvp-shared = { git = "https://github.com/django-mvp/shared.git", rev = "v0.3.3", extras = [
     "test",
 ] }
 
 
 [tool.poetry.group.dev.dependencies]
-mvp-shared = { git = "https://github.com/django-mvp/shared.git", rev = "v0.3.2", extras = [
+mvp-shared = { git = "https://github.com/django-mvp/shared.git", rev = "v0.3.3", extras = [
     "dev",
 ] }
 numpy = "^2.5.2"
@@ -195,7 +195,7 @@ namespace_packages = true
 ignore_missing_imports = true
 
 [tool.django-stubs]
-django_settings_module = "tests.settings"
+django_settings_module = "config.settings"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
@@ -210,7 +210,7 @@ markers = [
     "slow: Slow running tests",
 ]
 
-filterwarnings = ["ignore", "default:::laboratory"]
+filterwarnings = ["ignore"]
 env = ["DJANGO_ENV=development"]
 
 [tool.coverage.report]
@@ -221,32 +221,17 @@ show_missing = "true"
 
 [tool.coverage.run]
 branch = "true"
-source = ["laboratory"]
+source = ["project"]
 
 
 [tool.deptry]
-skip_misplaced_dev = "true"
-extend_exclude = ["tasks.py", "docs", ".*tests", ".*migrations"]
-ignore_transitive = ["toml", "sentry_sdk"]
-
-ignore_missing = ["ghfdb"]
-
-[tool.tox]
-legacy_tox_ini = """
-[tox]
-skipsdist = true
-envlist = py310, py311
-
-[gh-actions]
-python =
-    3.10: py310
-    3.11: py311
-
-[testenv]
-passenv = PYTHON_VERSION
-allowlist_externals = poetry
-commands =
-    poetry install -v --without docs
-    pytest --doctest-modules tests --cov --cov-config=pyproject.toml --cov-report=xml
-    mypy
-"""
+extend_exclude = ["tasks.py", "docs", ".*tests", ".*migrations", "scripts"]
+known_first_party = ["ghfdb", "heat_flow", "review"]
+# DEP003 (transitive import) is off by design. This project builds on FairDM,
+# which owns the Django pin and the rest of the stack; re-declaring django,
+# django-filters, martor and the others here would create a second, competing
+# source of truth for versions FairDM is responsible for.
+ignore = ["DEP003"]
+# Django apps referenced only as strings in INSTALLED_APPS are invisible to
+# static analysis. fairdm_discussions is added in config/settings.py.
+per_rule_ignores = { DEP002 = ["fairdm-discussions"] }

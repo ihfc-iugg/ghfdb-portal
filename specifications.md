@@ -497,5 +497,3 @@ Touches: Constitution (Testing Requirements), IV, VI
 - Edge-case fixture coverage (partial data, conflicting vocab, multi-source joins).
 - Performance/CI constraints (target runtimes, what runs on PR vs nightly).
 - How to incrementally implement and maintain this suite.
-
-
