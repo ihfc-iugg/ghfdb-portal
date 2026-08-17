@@ -75,9 +75,11 @@ When you open a pull request, automated checks will run to validate your changes
 
 - **Linting & Formatting**: Code must pass Ruff linting and formatting checks
 - **Type Checking**: Code must pass mypy type checking
-- **Unit Tests**: Fast unit tests run with 80% coverage minimum
+- **Unit Tests**: The suite runs on Python 3.13 / Django 5.2, and Codecov reports against a 90% project floor and 85% on the lines you changed
 - **Documentation**: If you modify docs, Sphinx builds must succeed
-- **Secrets Scanning**: Gitleaks scans for accidentally committed credentials
+- **Security**: bandit reports insecure code patterns and pip-audit reports known vulnerabilities in dependencies
+
+Secret scanning is not a CI check. GitHub scans this repository for credentials directly, and push protection will reject a push that contains one before it reaches a pull request. See [Secret scanning blocked my push](docs/development/ci-cd-guide.md#secret-scanning-blocked-my-push) if that happens to you.
 
 See [docs/development/ci-cd-guide.md](docs/development/ci-cd-guide.md) for details on what runs on PRs and how to run these checks locally before pushing.
 
