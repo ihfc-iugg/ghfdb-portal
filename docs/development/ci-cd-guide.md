@@ -44,10 +44,16 @@ When you open or update a pull request, the **PR Validation** workflow automatic
   - djlint validation with project configuration
   - Checks Django template syntax and formatting
 
-- **Secrets Scanning** (~1 minute)
-  - Gitleaks scan for accidentally committed credentials
-  - Scans all files in the PR diff
-  - Fails if any secrets patterns are detected
+- **Security Scan** (~2 minutes)
+  - bandit reports insecure code patterns in `project/`
+  - pip-audit reports known vulnerabilities in the installed dependencies
+  - Both upload a report as an artifact. Findings do not fail the build, but a
+    scanner that produces no report does
+
+Secret scanning is deliberately **not** a job here. GitHub scans the repository
+itself, which covers the whole history rather than one pull request's diff, and
+push protection rejects a credential before it is ever pushed. See
+[Secret scanning blocked my push](#secret-scanning-blocked-my-push).
 
 ### Expected Feedback Time
 
@@ -320,19 +326,26 @@ export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/ghfdb_test
 poetry run pytest
 ```
 
-### Secrets scanning blocking PR
+### Secret scanning blocked my push
 
-**Problem**: Gitleaks detected a potential secret
+**Problem**: `git push` is rejected with a message naming a secret type and the
+file and line it was found on. This is GitHub push protection, not a CI check,
+so it happens before any pull request exists.
 
 **Solution**:
 
-1. **If it's a real secret**: Remove it immediately, rotate the credential
-2. **If it's a false positive**: Add to `.gitleaksignore`:
+1. **If it is a real credential**, treat it as compromised even though the push
+   was blocked, because it has been on your machine and in your shell history.
+   Rotate it at the provider, take it out of the code, and read it from an
+   environment variable instead. Then amend or rebase the commit that contained
+   it. Pushing a later commit that removes it is not enough, because the earlier
+   commit still carries it.
+2. **If it is not a real credential** — a fixture, an example in a docstring —
+   the block message links to a form for allowing that specific push. Say which
+   it is and why. There is no ignore file to edit.
 
-```text
-# .gitleaksignore
-some-file.py:12  # False positive: example API key in docstring
-```
+Alerts for anything already in the history appear under **Security → Secret
+scanning** in the repository, and only maintainers can see them.
 
 ### Staging deployment failed
 
