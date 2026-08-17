@@ -215,7 +215,13 @@ env = ["DJANGO_ENV=development"]
 
 [tool.coverage.report]
 skip_empty = true
-omit = ["*site-packages*", "*tests*", "*.tox*"]
+omit = [
+    "*site-packages*",
+    "*tests*",
+    "*.tox*",
+    "*/migrations/*",
+    "*/__pycache__/*",
+]
 show_missing = "true"
 
 
