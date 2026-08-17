@@ -227,11 +227,37 @@ source = ["project"]
 [tool.deptry]
 extend_exclude = ["tasks.py", "docs", ".*tests", ".*migrations", "scripts"]
 known_first_party = ["ghfdb", "heat_flow", "review"]
-# DEP003 (transitive import) is off by design. This project builds on FairDM,
-# which owns the Django pin and the rest of the stack; re-declaring django,
-# django-filters, martor and the others here would create a second, competing
-# source of truth for versions FairDM is responsible for.
-ignore = ["DEP003"]
-# Django apps referenced only as strings in INSTALLED_APPS are invisible to
+
+# DEP003 lists the modules this project imports through FairDM rather than
+# declaring itself. FairDM owns the Django pin and the rest of that stack, so
+# re-declaring them here would create a second, competing source of truth for
+# versions it is responsible for. Listed one by one rather than switching the
+# rule off, so an import of something FairDM does not supply still fails.
+#
+# DEP002: Django apps named only as strings in INSTALLED_APPS are invisible to
 # static analysis. fairdm_discussions is added in config/settings.py.
-per_rule_ignores = { DEP002 = ["fairdm-discussions"] }
+[tool.deptry.per_rule_ignores]
+DEP002 = ["fairdm-discussions"]
+DEP003 = [
+    "botocore",
+    "braces",
+    "django",
+    "django_addanother",
+    "django_downloadview",
+    "django_filters",
+    "django_select2",
+    "django_tables2",
+    "drf_spectacular",
+    "factory",
+    "flex_menu",
+    "import_export",
+    "literature",
+    "martor",
+    "openpyxl",
+    "partial_date",
+    "polymorphic",
+    "quantityfield",
+    "research_vocabs",
+    "rest_framework",
+    "tablib",
+]
