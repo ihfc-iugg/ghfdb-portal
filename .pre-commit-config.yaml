@@ -1,54 +1,89 @@
+# Family-standard pre-commit configuration.
+#
+# The Python tools (ruff, mypy, deptry, djlint) run as *local* hooks inside the
+# Poetry env, so their versions come from the mvp-shared[dev] bundle — one
+# version source, instead of per-repo `rev:` pins that drift under autoupdate.
+# It also means `poetry run <tool>` behaves identically to the hook.
+#
+# black and pyupgrade are deliberately absent: `ruff format` is a drop-in black
+# replacement, and ruff's UP rules cover pyupgrade (already selected in
+# `[tool.ruff.lint]`).
+
 exclude: "^docs/|/migrations/|^tests/"
 default_stages: [pre-commit]
 
 repos:
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
+      - id: end-of-file-fixer
       - id: check-yaml
-      # - id: check-added-large-files
-        # args: [--maxkb=100]
-      - id: check-merge-conflict
+      - id: check-toml
       - id: check-json
+      - id: check-ast
+      - id: check-merge-conflict
       - id: check-case-conflict
       - id: check-symlinks
       - id: check-executables-have-shebangs
       - id: fix-byte-order-marker
-      - id: check-ast
-      - id: check-toml
-      # - id: check-vcs-permalinks
 
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v3.9.0
+  - repo: https://github.com/python-poetry/poetry
+    rev: '2.3.4'
     hooks:
-      - id: pyupgrade
-        args: [--py311-plus]
+      - id: poetry-check
+      - id: poetry-lock
+        stages: [manual]  # Only run manually, not in CI
 
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.3.2
+  # Local hooks that use the Poetry environment
+  - repo: local
     hooks:
       - id: ruff
+        name: ruff (lint)
+        entry: poetry run ruff check --fix
+        language: system
+        types: [python]
+        require_serial: true
       - id: ruff-format
-
-  - repo: https://github.com/djlint/djLint
-    rev: v1.36.4
-    hooks:
+        name: ruff (format)
+        entry: poetry run ruff format
+        language: system
+        types: [python]
+        require_serial: true
+      - id: mypy
+        name: mypy
+        entry: poetry run mypy
+        language: system
+        # Without require_serial, pre-commit splits the file list into parallel
+        # batches, and concurrent mypy processes race on the shared .mypy_cache —
+        # INTERNAL ERROR on a cold cache. One serial invocation is also what
+        # mirrors-mypy ships.
+        require_serial: true
+        types: [python]
+        files: ^project/
       - id: djlint-reformat-django
+        name: djlint (reformat)
+        entry: poetry run djlint --reformat --profile=django
+        language: system
+        types: [html]
+        require_serial: true
       - id: djlint-django
+        name: djlint (lint)
+        entry: poetry run djlint --profile=django
+        language: system
+        types: [html]
+        require_serial: true
+      - id: deptry
+        name: deptry
+        entry: poetry run deptry .
+        language: system
+        pass_filenames: false
+        always_run: true
 
-  # - repo: https://github.com/python-poetry/poetry
-  #   rev: '1.5.1'
-  #   hooks:
-  #     - id: poetry-check
-  #     - id: poetry-lock
-  #     - id: poetry-export
-  #       args: ["-o", "requirements.txt", "--with=dev", "--without-hashes"]
-
-
-# sets up .pre-commit-ci.yaml to ensure pre-commit dependencies stay up to date
+# pre-commit.ci runs only the env-independent hooks; the local Poetry-env hooks
+# run in this repo's own CI (the shared build workflow's Code Quality job).
 ci:
-  autoupdate_schedule: weekly
-  skip: []
+  autoupdate_schedule: monthly
+  skip: [poetry-lock, ruff, ruff-format, mypy, djlint-reformat-django, djlint-django, deptry]
   submodules: false

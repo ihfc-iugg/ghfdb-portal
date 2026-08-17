@@ -3986,7 +3986,7 @@ files = [
 
 [[package]]
 name = "mvp-shared"
-version = "0.3.2"
+version = "0.3.3"
 description = "Shared development, docs and testing tools for the django-mvp org"
 optional = false
 python-versions = ">=3.12,<4"
@@ -4030,8 +4030,8 @@ test = ["beautifulsoup4 (>=4.15.0,<5.0.0)", "coverage (>=7.15.4,<8.0.0)", "djang
 [package.source]
 type = "git"
 url = "https://github.com/django-mvp/shared.git"
-reference = "v0.3.2"
-resolved_reference = "d0420a09475f9da53f51d5ee89c615fc8bcc1e74"
+reference = "v0.3.3"
+resolved_reference = "ac41005aabb043f80fc8cce21b6f274cf60c858d"
 
 [[package]]
 name = "mypy"
@@ -7468,4 +7468,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<4.0"
-content-hash = "72878b3de860f47995c9fc8b783c5aa1292aa7d68cf743b6f55da8dda21020d3"
+content-hash = "81334ad3232758c8692bdae1b09b1aa0a59fc9936cd87eab8a9756fcca10ad91"
