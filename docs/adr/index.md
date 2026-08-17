@@ -20,6 +20,7 @@ The domain vocabulary these records use is defined in `CONTEXT.md` at the reposi
 | [0006](0006-a-site-is-its-coordinates.md) | A heat flow site is identified by its coordinates |
 | [0007](0007-the-portal-database-holds-current-state.md) | The portal database holds current state; releases are artefacts |
 | [0008](0008-one-constitution-one-glossary.md) | One constitution, one glossary, each with a single home |
+| [0009](0009-the-project-is-mit-licensed.md) | The project is MIT licensed |
 
 :::{toctree}
 :hidden:
