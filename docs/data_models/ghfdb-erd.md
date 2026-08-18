@@ -455,4 +455,4 @@ These vocabularies ensure data consistency and enable standardized filtering and
 
 - [FairDM Core Data Model](../core-data-model.md) - Understanding Sample and Measurement base classes
 - [FairDM Registry](../../developer-guide/registry.md) - Model registration and configuration
-- [GHFDB Specification](../../specifications-ghfdb.md) - Detailed field specifications
+- [GHFDB Specification](../development/specifications.md) - Detailed field specifications
