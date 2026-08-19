@@ -1976,14 +1976,14 @@ Django = ">=3.2"
 
 [[package]]
 name = "django-mvp"
-version = "0.17.0"
+version = "0.19.1"
 description = "MVP framework for Django - scaffold production-ready applications with sophisticated layouts and UI patterns designed for data-centric applications."
 optional = false
 python-versions = "<4.0,>=3.12"
 groups = ["main"]
 files = [
-    {file = "django_mvp-0.17.0-py3-none-any.whl", hash = "sha256:80de9f5be536813c4a8339041ba81d080bc3980240cf3cca2a157effe1ca792c"},
-    {file = "django_mvp-0.17.0.tar.gz", hash = "sha256:3311f99e6cad95e979b55fc7f936b4157186d236f03d178a66c13f9d441a9a7c"},
+    {file = "django_mvp-0.19.1-py3-none-any.whl", hash = "sha256:d21df16a771be9eaed1e2ad08ee815013ed93523987aec304d4cf55800a93127"},
+    {file = "django_mvp-0.19.1.tar.gz", hash = "sha256:3ba67909f4209ba8832d5468ef7af91808e1e74434c237f22109c15a5441f846"},
 ]
 
 [package.dependencies]
@@ -2726,7 +2726,7 @@ django-lifecycle = ">=1.2.4,<2.0.0"
 django-literature = {git = "https://github.com/SamuelJennings/django-literature"}
 django-meta = ">=2.1.0,<3.0.0"
 django-model-utils = ">=4.3.1,<5.0.0"
-django-mvp = ">=0.17.0,<0.18.0"
+django-mvp = ">=0.19.1,<0.20.0"
 django-orbit = {version = ">=0.12.0,<0.13.0", extras = ["mcp"]}
 django-ordered-model = ">=3.7.4,<4.0.0"
 django-parler = ">=2.3,<3.0"
@@ -2771,7 +2771,7 @@ gis = ["djangorestframework-gis (>=1.2.1,<2.0.0)"]
 type = "git"
 url = "https://github.com/FAIR-DM/fairdm"
 reference = "HEAD"
-resolved_reference = "4953771014e44315fcdd1882da8a52d3af1789cc"
+resolved_reference = "1c455e6a5707c5958046e8b7731608f11017d421"
 
 [[package]]
 name = "fairdm-discussions"

@@ -145,8 +145,12 @@ class GHFDBChildImportResource(ModelResource):
         """Store the FairDM dataset reference for use during row processing."""
         from fairdm.core.models import Dataset as FairDataset
 
+        # all_objects, not objects: the default manager hides private datasets, and an
+        # import run by a curator has to reach the dataset it is filling regardless of
+        # who can read it. Narrowing here does not protect anything — it only leaves
+        # the target unresolved and fails later on a null column.
         self._fairdm_dataset = (
-            kwargs.get("fairdm_dataset") or FairDataset.objects.first()
+            kwargs.get("fairdm_dataset") or FairDataset.all_objects.first()
         )
 
         # Inject optional ID / ID_parent columns when the upload template omits them.
