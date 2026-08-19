@@ -34,6 +34,6 @@ as an external one.
 
 ## Local development
 
-The production stack is not the way to run the portal while working on it.
-Use `poetry install` and `python manage.py runserver`, with `stack.development.env`
-in the repository root supplying the development environment.
+Don't use this stack to work on the portal. Run `poetry install` and then
+`python manage.py runserver`. The development environment comes from
+`stack.development.env` in the repository root.

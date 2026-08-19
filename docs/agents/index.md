@@ -1,8 +1,8 @@
 # Working on the Repository
 
-Reference material for anyone — person or coding assistant — making changes to
-this codebase. It records the conventions this repository actually follows, so
-that a change arrives in the shape maintainers expect.
+Reference material for anyone making changes to this codebase, whether a person
+or a coding assistant. It records the conventions this repository actually
+follows, so that a change arrives in the shape maintainers expect.
 
 - [Issue tracker](issue-tracker.md) — how issues, discussions and pull requests
   are used here, and the `gh` commands for each.
