@@ -21,6 +21,7 @@ This document describes the FAIR data infrastructure set up to manage and grow t
 about
 whdb_project
 features
+ROADMAP
 data_models/index
 ghfdb_fields
 acknowledgements
@@ -57,7 +58,6 @@ development/contributing/index
 development/documentation-conventions
 development/feature-documentation-checklist
 development/spec-driven-workflow
-development/roadmap
 guides/testing-standards
 agents/index
 adr/index
