@@ -47,9 +47,9 @@ updates:
         patterns:
           - "*"
 
-  # Container image (root Dockerfile; Dependabot does not read docker-compose.yml)
+  # Container image (deploy/Dockerfile; Dependabot does not read Compose files)
   - package-ecosystem: "docker"
-    directory: "/"
+    directory: "/deploy"
     schedule:
       interval: "monthly"
       day: "monday"
@@ -61,6 +61,11 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    # The Python version in the image is a deliberate choice, tied to the
+    # version the test matrix runs and the version the dependencies support.
+    # Moving it is a migration, not a dependency bump, so it is made by hand.
+    ignore:
+      - dependency-name: "python"
     groups:
       docker:
         patterns:

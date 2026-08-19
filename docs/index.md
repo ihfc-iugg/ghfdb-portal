@@ -6,8 +6,8 @@ sd_hide_title: true
 
 ![World Heat Flow Database Project](/_static/logo.svg)
 
-[![Package](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/docker-build-and-publish.yml/badge.svg?branch=)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/docker-build-and-publish.yml)
-![Read The Docs](https://readthedocs.org/projects/heatflowworld/badge/?version=latest&style=flat)
+[![Build](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/build.yml/badge.svg)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/build.yml)
+[![Tests](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/tests.yml/badge.svg)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/tests.yml)
 ![GitHub](https://img.shields.io/github/license/ihfc-iugg/ghfdb-portal)
 ![GitHub last commit](https://img.shields.io/github/last-commit/ihfc-iugg/ghfdb-portal)
 
@@ -46,6 +46,8 @@ development/documentation-conventions
 development/feature-documentation-checklist
 development/spec-driven-workflow
 development/roadmap
+guides/testing-standards
+agents/index
 adr/index
 :::
 

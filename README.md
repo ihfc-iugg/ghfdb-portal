@@ -1,9 +1,7 @@
 # portal.heatflow.world
 
-![Github Docs](https://readthedocs.org/projects/heatflowworld/badge/?version=latest&style=flat)
-[![PR Validation](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/pr-validation.yml/badge.svg)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/pr-validation.yml)
-[![Main Integration](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/main-integration.yml/badge.svg)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/main-integration.yml)
-[![Docs Validation](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/docs-validation.yml/badge.svg)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/docs-validation.yml)
+[![Build](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/build.yml/badge.svg)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/build.yml)
+[![Tests](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/tests.yml/badge.svg)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/ihfc-iugg/ghfdb-portal/branch/main/graph/badge.svg)](https://codecov.io/gh/ihfc-iugg/ghfdb-portal)
 ![GitHub](https://img.shields.io/github/license/ihfc-iugg/ghfdb-portal)
 ![GitHub last commit](https://img.shields.io/github/last-commit/ihfc-iugg/ghfdb-portal)
@@ -22,7 +20,7 @@ There are currently two polls open in the discussion forum to determine what fea
 
 This codebase is maintained by the [German Research Centre for Geosciences (GFZ)](https://www.gfz-potsdam.de/en/) as part of the [World Heat Flow Database Project](https://www.heatflow.world). This project is funded by the [Deutsche Forschungsgemeinschaft (DFG)](https://www.dfg.de) under the project number [491795283](https://gepris-extern.dfg.de/gepris/projekt/491795283).
 
-We extend our gratitude to all individuals, organizations, and institutions who have contributed to and supported this project. For a complete list of contributors, see [CONTRIBUTORS.md](./CONTRIBUTORS.md).
+We extend our gratitude to all individuals, organizations, and institutions who have contributed to and supported this project. For a complete list of contributors, see the [acknowledgements](https://heatflowworld.readthedocs.io/en/latest/acknowledgements.html) page.
 
 ## Supporting Organizations
 

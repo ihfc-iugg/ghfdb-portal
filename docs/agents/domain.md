@@ -1,7 +1,7 @@
 # Domain Docs
 
-How the engineering skills should consume this repo's domain documentation when exploring the
-codebase.
+Which of this repository's domain documents to read when exploring the codebase, and in what
+order.
 
 ## Before exploring, read these
 

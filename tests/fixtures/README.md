@@ -237,26 +237,19 @@ assert dataset.review.end_date == datetime(2025, 6, 15).date()
 
 ---
 
-## Fixture Creation Scripts
+## The fixture files
 
-Test fixtures are generated using automated scripts to ensure consistency:
+Every fixture is committed to the repository, and the committed file is the
+reference. Edit it directly when it needs to change.
 
-### scripts/create_test_fixtures.py
-
-Creates all Excel (`.xlsx`) fixtures:
+Excel (`.xlsx`) fixtures:
 - `minimal_ghfdb_import.xlsx`
 - `invalid_ghfdb_import.xlsx`
 - `round_trip_reference.xlsx`
 
-**Run**: `poetry run python scripts/create_test_fixtures.py`
-
-### scripts/create_json_fixtures.py
-
-Creates all Django JSON fixtures:
+Django JSON fixtures:
 - `review_submission_dataset.json`
 - `admin_approval_dataset.json`
-
-**Run**: `poetry run python scripts/create_json_fixtures.py`
 
 ---
 
@@ -326,15 +319,6 @@ All test fixtures are synthetic data created specifically for testing purposes. 
 3. **New controlled vocabularies**: Include examples in round-trip fixture
 4. **Workflow changes**: Update JSON fixtures to reflect new dataset/review states
 
-### Regenerating Fixtures
-
-To regenerate all fixtures after updates to creation scripts:
-
-```bash
-poetry run python scripts/create_test_fixtures.py
-poetry run python scripts/create_json_fixtures.py
-```
-
 ### Fixture Versioning
 
 Fixtures should be versioned alongside the GHFDB template version they represent:
@@ -346,7 +330,7 @@ Fixtures should be versioned alongside the GHFDB template version they represent
 
 ## Related Documentation
 
-- [Test Organization Guide](../tests/README.md)
-- [GHFDB Field Mapping](../docs/ghfdb_fields.md)
-- [Testing Standards Guide](../docs/guides/testing-standards.md) (to be created)
-- [Contributing Guide](../CONTRIBUTING.md)
+- [Test Organization Guide](../README.md)
+- [GHFDB Field Mapping](../../docs/ghfdb_fields.md)
+- [Testing Standards Guide](../../docs/guides/testing-standards.md)
+- [Contributing](../../docs/development/contributing/index.md)

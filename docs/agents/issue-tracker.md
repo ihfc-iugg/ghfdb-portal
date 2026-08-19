@@ -18,8 +18,8 @@ Infer the repo from `git remote -v` — `gh` does this automatically when run in
 **PRs as a request surface: no.**
 
 The portal accepts community bug reports through issues and gathers feature input through GitHub
-Discussions, not through unsolicited pull requests. `CONTRIBUTING.md` asks contributors to discuss
-new features with the maintainers before starting work.
+Discussions, not through unsolicited pull requests. The contributing guide asks contributors to
+discuss new features with the maintainers before starting work.
 
 GitHub shares one number space across issues and PRs, so a bare `#42` may be either — resolve with
 `gh pr view 42` and fall back to `gh issue view 42`.
@@ -30,10 +30,7 @@ This repo uses GitHub Discussions for feature prioritisation, including standing
 and map-viewer priorities. Discussions are a source of user demand, not a work queue: a discussion
 that turns into committed work gets an issue.
 
-## When a skill says "publish to the issue tracker"
+## Vocabulary
 
-Create a GitHub issue.
-
-## When a skill says "fetch the relevant ticket"
-
-Run `gh issue view <number> --comments`.
+A written process that says "publish to the issue tracker" means create a GitHub issue. One that
+says "fetch the relevant ticket" means run `gh issue view <number> --comments`.
