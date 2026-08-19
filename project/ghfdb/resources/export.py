@@ -7,7 +7,7 @@ model back to the flat GHFDB spreadsheet format with:
   - Semicolon-joined labels for M2M fields
   - Plain SI numeric magnitudes for Pint quantity fields
 
-Data source: GHFDB.objects.for_export() (annotated + prefetched queryset)
+Data source: GHFDBChild.objects.for_export() (annotated + prefetched queryset)
 
 References:
     - Fuchs et al. (2021). A new database structure for the IHFC Global Heat
@@ -74,7 +74,7 @@ class GHFDBExportResource(ModelResource):
         dataset = resource.export(qs)        # filtered subset
 
         Tested row limit: up to 50 000 rows without memory issues when combined
-        with ``GHFDB.objects.for_export()``.
+        with ``GHFDBChild.objects.for_export()``.
 
         Large-export guidance:
         - Keep queryset usage streaming-friendly (use ``.iterator()`` in custom
@@ -265,7 +265,7 @@ class GHFDBExportResource(ModelResource):
 
     def dehydrate_explo_purpose(self, obj) -> str:
         try:
-            qs = obj.sample.heatflowinterval.sample.heatflowsite.explo_purpose.all()
+            qs = obj.sample.heatflowinterval.site.explo_purpose.all()
             return _labels(qs)
         except AttributeError:
             return ""
@@ -391,18 +391,18 @@ class GHFDBExportResource(ModelResource):
     # -----------------------------------------------------------------------
 
     def get_queryset(self):
-        from ..models import GHFDB
+        from ..models import GHFDBChild
 
-        return GHFDB.objects.for_export()
+        return GHFDBChild.objects.for_export()
 
     # -----------------------------------------------------------------------
     # Meta
     # -----------------------------------------------------------------------
 
     class Meta:
-        from ..models import GHFDB as _GHFDB
+        from ..models import GHFDBChild as _GHFDBChild
 
-        model = _GHFDB
+        model = _GHFDBChild
         # All GHFDB columns are declared explicitly above; no whitelist restriction.
         # export_order controls the column sequence using GHFDB_COLUMN_ORDER names.
         # Note: django-import-export matches export_order entries against Python

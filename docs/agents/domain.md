@@ -38,7 +38,7 @@ The engineering constitution is the single file `memory/constitution.md`.
 ├── docs/constitution/      ← project governance and published reference material
 ├── config/                 ← Django settings, URLs, WSGI
 ├── project/heat_flow/      ← the heat-flow data model
-├── project/ghfdb/          ← the GHFDB import, export and proxy layer
+├── project/ghfdb/          ← import, export, and the GHFDBChild/GHFDBParent proxies
 ├── project/review/         ← the submission review workflow
 ├── templates/              ← Django templates
 ├── tests/                  ← mirrors project/

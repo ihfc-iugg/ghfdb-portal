@@ -172,8 +172,7 @@ def test_calculate_u_score_poor_quality():
 import pytest
 from django.core.management import call_command
 from fairdm.core.models import Dataset
-from ghfdb.resources import GHFDBResource
-from ghfdb.views import GHFDBImportFormat
+from ghfdb.resources import GHFDBChildImportResource, GHFDBImportFormat
 
 @pytest.mark.integration
 def test_import_minimal_dataset_creates_heat_flow_sites(
@@ -184,12 +183,12 @@ def test_import_minimal_dataset_creates_heat_flow_sites(
     with django_db_blocker.unblock():
         # Arrange
         dataset = Dataset.objects.create(name="Integration Test Dataset")
-        resource = GHFDBResource(dataset)
+        resource = GHFDBChildImportResource()
         input_format = GHFDBImportFormat(encoding="utf-8-sig")
         input_data = input_format.create_dataset(minimal_ghfdb_import_data)
 
         # Act
-        result = resource.import_data(input_data, raise_errors=True)
+        result = resource.import_data(input_data, raise_errors=True, fairdm_dataset=dataset)
 
         # Assert
         assert not result.has_errors()
@@ -242,7 +241,7 @@ def test_dataset_api_response_schema(client, admin_approval_dataset):
 ```
 tests/
 ├── test_ghfdb/
-│   ├── test_resources.py          # GHFDBResource unit tests
+│   ├── test_resources.py          # GHFDBChildImportResource unit tests
 │   ├── test_validation.py         # Validation function unit tests
 │   └── test_import_format.py      # Import format parser tests
 ├── test_heat_flow/
@@ -404,11 +403,11 @@ def test_import_workflow_with_minimal_fixture(
     ghfdb_dataset               # Empty dataset fixture
 ):
     """Import minimal fixture and validate created objects."""
-    resource = GHFDBResource(ghfdb_dataset)
+    resource = GHFDBChildImportResource()
     input_format = GHFDBImportFormat(encoding="utf-8-sig")
     input_data = input_format.create_dataset(minimal_ghfdb_import_data)
 
-    result = resource.import_data(input_data)
+    result = resource.import_data(input_data, fairdm_dataset=dataset)
 
     assert not result.has_errors()
     assert HeatFlowSite.objects.count() == 5
@@ -438,8 +437,8 @@ original_sites = list(HeatFlowSite.objects.values('name', 'lat', 'lon'))
 
 # Export and re-import
 export_data = resource.export()
-reimport_resource = GHFDBResource(new_dataset)
-reimport_resource.import_data(export_data)
+reimport_resource = GHFDBChildImportResource()
+reimport_resource.import_data(export_data, fairdm_dataset=new_dataset)
 
 # Verify preservation
 reimported_sites = list(HeatFlowSite.objects.filter(dataset=new_dataset).values('name', 'lat', 'lon'))
@@ -473,10 +472,10 @@ def test_full_workflow_import_to_export():
     dataset = Dataset.objects.create(name="E2E Test Dataset")
 
     # Act 1: Import data
-    resource = GHFDBResource(dataset)
+    resource = GHFDBChildImportResource()
     input_format = GHFDBImportFormat(encoding="utf-8-sig")
     input_data = input_format.create_dataset(minimal_ghfdb_import_data)
-    import_result = resource.import_data(input_data)
+    import_result = resource.import_data(input_data, fairdm_dataset=dataset)
 
     # Assert 1: Import successful
     assert not import_result.has_errors()
@@ -589,7 +588,7 @@ def test_export_without_approval_fails():
     )
 
     # Act: Attempt export
-    resource = GHFDBResource(dataset)
+    resource = GHFDBChildImportResource()
     export_data = resource.export()
 
     # Assert: Export blocked or returns empty

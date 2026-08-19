@@ -24,9 +24,9 @@ class TestGHFDBChildQuerySetAnnotationKeys:
     @pytest.mark.django_db
     def test_canonical_parent_value_key(self):
         """Annotation key for parent heat flow value must be 'q', not 'p_q' (BUG-010)."""
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
 
-        qs = GHFDB.objects.none().as_ghfdb_flat()
+        qs = GHFDBChild.objects.none().as_ghfdb_flat()
         annotations = qs.query.annotations
         assert "q" in annotations, "Canonical annotation 'q' missing (BUG-010 T096)"
         assert "p_q" not in annotations, (
@@ -36,9 +36,9 @@ class TestGHFDBChildQuerySetAnnotationKeys:
     @pytest.mark.django_db
     def test_canonical_parent_uncertainty_key(self):
         """Annotation key for parent uncertainty must be 'q_uncertainty', not 'p_q_uncertainty' (BUG-010)."""
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
 
-        qs = GHFDB.objects.none().as_ghfdb_flat()
+        qs = GHFDBChild.objects.none().as_ghfdb_flat()
         annotations = qs.query.annotations
         assert "q_uncertainty" in annotations, (
             "Canonical annotation 'q_uncertainty' missing (BUG-010)"
@@ -54,9 +54,9 @@ class TestGHFDBChildQuerySetAnnotationKeys:
         'name' cannot be used as annotation key because it conflicts with the
         Measurement base-class field; 'site_name' is the designated workaround.
         """
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
 
-        qs = GHFDB.objects.none().as_ghfdb_flat()
+        qs = GHFDBChild.objects.none().as_ghfdb_flat()
         annotations = qs.query.annotations
         assert "site_name" in annotations, (
             "Annotation 'site_name' missing — site name not accessible (BUG-010 T096)"
@@ -65,9 +65,9 @@ class TestGHFDBChildQuerySetAnnotationKeys:
     @pytest.mark.django_db
     def test_canonical_elevation_key(self):
         """Annotation key for elevation must be 'elevation', not 'site_elevation' (BUG-010)."""
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
 
-        qs = GHFDB.objects.none().as_ghfdb_flat()
+        qs = GHFDBChild.objects.none().as_ghfdb_flat()
         annotations = qs.query.annotations
         assert "elevation" in annotations, (
             "Canonical annotation 'elevation' missing (BUG-010)"
@@ -79,9 +79,9 @@ class TestGHFDBChildQuerySetAnnotationKeys:
     @pytest.mark.django_db
     def test_canonical_corr_hp_flag_key(self):
         """Annotation key for HP correction flag must be 'corr_HP_flag', not 'p_corr_hp_flag' (BUG-010)."""
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
 
-        qs = GHFDB.objects.none().as_ghfdb_flat()
+        qs = GHFDBChild.objects.none().as_ghfdb_flat()
         annotations = qs.query.annotations
         assert "corr_HP_flag" in annotations, (
             "Canonical annotation 'corr_HP_flag' missing (BUG-010)"
@@ -93,9 +93,9 @@ class TestGHFDBChildQuerySetAnnotationKeys:
     @pytest.mark.django_db
     def test_canonical_total_depth_md_key(self):
         """Annotation key for total depth MD must be 'total_depth_MD', not 'total_depth_md' (BUG-010)."""
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
 
-        qs = GHFDB.objects.none().as_ghfdb_flat()
+        qs = GHFDBChild.objects.none().as_ghfdb_flat()
         annotations = qs.query.annotations
         assert "total_depth_MD" in annotations, (
             "Canonical annotation 'total_depth_MD' missing (BUG-010)"
@@ -107,9 +107,9 @@ class TestGHFDBChildQuerySetAnnotationKeys:
     @pytest.mark.django_db
     def test_canonical_total_depth_tvd_key(self):
         """Annotation key for total depth TVD must be 'total_depth_TVD', not 'total_depth_tvd' (BUG-010)."""
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
 
-        qs = GHFDB.objects.none().as_ghfdb_flat()
+        qs = GHFDBChild.objects.none().as_ghfdb_flat()
         annotations = qs.query.annotations
         assert "total_depth_TVD" in annotations, (
             "Canonical annotation 'total_depth_TVD' missing (BUG-010)"
@@ -121,9 +121,9 @@ class TestGHFDBChildQuerySetAnnotationKeys:
     @pytest.mark.django_db
     def test_canonical_id_parent_key(self):
         """Annotation key for ID_parent must be 'ID_parent', not 'id_parent' (BUG-010)."""
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
 
-        qs = GHFDB.objects.none().as_ghfdb_flat()
+        qs = GHFDBChild.objects.none().as_ghfdb_flat()
         annotations = qs.query.annotations
         assert "ID_parent" in annotations, (
             "Canonical annotation 'ID_parent' missing (BUG-010)"
@@ -135,9 +135,9 @@ class TestGHFDBChildQuerySetAnnotationKeys:
     @pytest.mark.django_db
     def test_canonical_explo_method_key(self):
         """Annotation key for explo_method must be 'explo_method', not 'site_explo_method' (BUG-010)."""
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
 
-        qs = GHFDB.objects.none().as_ghfdb_flat()
+        qs = GHFDBChild.objects.none().as_ghfdb_flat()
         annotations = qs.query.annotations
         assert "explo_method" in annotations, (
             "Canonical annotation 'explo_method' missing (BUG-010)"
@@ -149,9 +149,9 @@ class TestGHFDBChildQuerySetAnnotationKeys:
     @pytest.mark.django_db
     def test_lat_ns_and_long_ew_preserved(self):
         """lat_NS and long_EW annotation keys must be preserved (already canonical) (BUG-010)."""
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
 
-        qs = GHFDB.objects.none().as_ghfdb_flat()
+        qs = GHFDBChild.objects.none().as_ghfdb_flat()
         annotations = qs.query.annotations
         assert "lat_NS" in annotations, "Annotation 'lat_NS' must be preserved"
         assert "long_EW" in annotations, "Annotation 'long_EW' must be preserved"

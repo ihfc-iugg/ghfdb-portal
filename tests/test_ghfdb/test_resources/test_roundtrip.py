@@ -32,7 +32,7 @@ def test_roundtrip_import_then_export_preserves_values(dataset):
     2) Export using GHFDBExportResource
     3) Verify text/vocabulary equality and numeric closeness
     """
-    from project.ghfdb.models import GHFDB
+    from project.ghfdb.models import GHFDBChild
     from project.ghfdb.resources import (
         GHFDBChildImportResource,
         GHFDBExportResource,
@@ -69,7 +69,7 @@ def test_roundtrip_import_then_export_preserves_values(dataset):
     assert not child_result.has_errors(), child_result.invalid_rows
 
     export_resource = GHFDBExportResource()
-    export_qs = GHFDB.objects.for_export().order_by("ghfdb_id")
+    export_qs = GHFDBChild.objects.for_export().order_by("ghfdb_id")
     exported_rows = list(export_resource.export(export_qs).dict)
 
     assert len(exported_rows) == 3
@@ -251,7 +251,7 @@ def test_roundtrip_simple_format_import_then_export_preserves_values(dataset):
     3) Export using GHFDBExportResource
     4) Verify identical text/vocabulary equality and numeric closeness as official format test
     """
-    from project.ghfdb.models import GHFDB
+    from project.ghfdb.models import GHFDBChild
     from project.ghfdb.resources import (
         GHFDBChildImportResource,
         GHFDBExportResource,
@@ -288,7 +288,7 @@ def test_roundtrip_simple_format_import_then_export_preserves_values(dataset):
     assert not child_result.has_errors(), child_result.invalid_rows
 
     export_resource = GHFDBExportResource()
-    export_qs = GHFDB.objects.for_export().order_by("ghfdb_id")
+    export_qs = GHFDBChild.objects.for_export().order_by("ghfdb_id")
     exported_rows = list(export_resource.export(export_qs).dict)
 
     assert len(exported_rows) == 3

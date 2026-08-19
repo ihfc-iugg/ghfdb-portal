@@ -47,7 +47,7 @@ def _correction_subqueries() -> dict[str, Subquery]:
 
 
 class GHFDBChildQuerySet(PolymorphicQuerySet):
-    """QuerySet for the GHFDB proxy model with flat-row annotation helpers."""
+    """QuerySet for the ``GHFDBChild`` proxy model with flat-row annotation helpers."""
 
     def as_ghfdb_flat(self) -> "GHFDBChildQuerySet":
         """
@@ -70,17 +70,16 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
 
             F("sample__heatflowinterval__top")
 
-        Similarly, to reach the parent ``HeatFlowSite`` the path traverses
-        the ``HeatFlowInterval.sample`` FK *through* the MTI accessor::
+        Similarly, to reach the ``HeatFlowSite`` the path continues through
+        the ``HeatFlowInterval.site`` FK::
 
-            F("sample__heatflowinterval__sample__heatflowsite__elevation")
+            F("sample__heatflowinterval__site__elevation")
         """
         qs = self.select_related(
             "sample",
             "sample__heatflowinterval",
-            "sample__heatflowinterval__sample",
-            "sample__heatflowinterval__sample__location",
-            "sample__heatflowinterval__sample__heatflowsite",
+            "sample__heatflowinterval__site",
+            "sample__heatflowinterval__site__location",
             "sample__heatflowinterval__probe_metadata",
             "parent",
             "thermal_gradient",
@@ -97,30 +96,18 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
             # Site-level scalars (from HeatFlowSite via interval → site)
             # NOTE: 'name' conflicts with a Measurement base-class field; use
             # 'site_name' as the annotation key and export it via column_name.
-            "site_name": F("sample__heatflowinterval__sample__name"),
-            "lat_NS": F("sample__heatflowinterval__sample__location__y"),
-            "long_EW": F("sample__heatflowinterval__sample__location__x"),
-            "elevation": F("sample__heatflowinterval__sample__heatflowsite__elevation"),
-            "environment": F(
-                "sample__heatflowinterval__sample__heatflowsite__environment"
-            ),
-            "explo_method": F(
-                "sample__heatflowinterval__sample__heatflowsite__explo_method"
-            ),
-            "site_country": F(
-                "sample__heatflowinterval__sample__heatflowsite__country"
-            ),
-            "site_region": F("sample__heatflowinterval__sample__heatflowsite__region"),
-            "site_continent": F(
-                "sample__heatflowinterval__sample__heatflowsite__continent"
-            ),
-            "site_domain": F("sample__heatflowinterval__sample__heatflowsite__domain"),
-            "total_depth_MD": F(
-                "sample__heatflowinterval__sample__heatflowsite__length"
-            ),
-            "total_depth_TVD": F(
-                "sample__heatflowinterval__sample__heatflowsite__vertical_depth"
-            ),
+            "site_name": F("sample__heatflowinterval__site__name"),
+            "lat_NS": F("sample__heatflowinterval__site__location__y"),
+            "long_EW": F("sample__heatflowinterval__site__location__x"),
+            "elevation": F("sample__heatflowinterval__site__elevation"),
+            "environment": F("sample__heatflowinterval__site__environment"),
+            "explo_method": F("sample__heatflowinterval__site__explo_method"),
+            "site_country": F("sample__heatflowinterval__site__country"),
+            "site_region": F("sample__heatflowinterval__site__region"),
+            "site_continent": F("sample__heatflowinterval__site__continent"),
+            "site_domain": F("sample__heatflowinterval__site__domain"),
+            "total_depth_MD": F("sample__heatflowinterval__site__length"),
+            "total_depth_TVD": F("sample__heatflowinterval__site__vertical_depth"),
             # Parent heat flow scalars
             "q": F("parent__value"),
             "q_uncertainty": F("parent__uncertainty"),
@@ -164,7 +151,7 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
         """
         qs = self.as_ghfdb_flat().prefetch_related(
             "method",
-            "sample__heatflowinterval__sample__heatflowsite__explo_purpose",
+            "sample__heatflowinterval__site__explo_purpose",
             "thermal_gradient__method_top",
             "thermal_gradient__method_bottom",
             "thermal_gradient__correction_top",
@@ -182,7 +169,7 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
 
 
 class GHFDBChildManager(PolymorphicManager):
-    """Custom manager for the GHFDB proxy model.
+    """Custom manager for the ``GHFDBChild`` proxy model.
 
     Default queryset is scoped to records where ``ghfdb_id`` is set
     (FR-001b) — i.e. only published GHFDB entries are visible.
@@ -282,7 +269,7 @@ class GHFDBParentQuerySet(PolymorphicQuerySet):
 
 
 class GHFDBParentManager(PolymorphicManager):
-    """Custom manager for the GHFDBParent proxy model.
+    """Custom manager for the ``GHFDBParent`` proxy model.
 
     Default queryset is scoped to records where ``ghfdb_id`` is set
     (FR-001b) — i.e. only published GHFDB parent entries are visible.

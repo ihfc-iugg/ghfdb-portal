@@ -31,15 +31,15 @@ It was previously named `SurfaceHeatFlow` in older versions of this codebase.
 
 | GHFDB Name | GHFDB Ref | Database Table | Accessed From | Accessor | Declared By |
 | --- | --- | --- | --- | --- | --- |
-| q | P01 | ghfdb\_parentheatflow | ParentHeatFlow | value | ParentHeatFlow |
-| q\_uncertainty | P02 | ghfdb\_parentheatflow | ParentHeatFlow | uncertainty | ParentHeatFlow |
+| q | P01 | heat\_flow\_parentheatflow | ParentHeatFlow | value | ParentHeatFlow |
+| q\_uncertainty | P02 | heat\_flow\_parentheatflow | ParentHeatFlow | uncertainty | ParentHeatFlow |
 | name | P03 | fairdm\_sample | HeatFlowSite | name | fairdm.core.Sample |
 | lat\_NS | P04 | fairdm\_point | HeatFlowSite | location.y | fairdm.location.Point |
 | long\_EW | P05 | fairdm\_point | HeatFlowSite | location.x | fairdm.location.Point |
 | elevation | P06 | heat\_flow\_heatflowsite | HeatFlowSite | elevation | HeatFlowSite |
 | environment | P07 | heat\_flow\_heatflowsite | HeatFlowSite | environment | HeatFlowSite |
-| p\_comment | P08 | ghfdb\_parentheatflow | ParentHeatFlow | comment | ParentHeatFlow |
-| corr\_HP\_flag | P09 | ghfdb\_parentheatflow | ParentHeatFlow | corr\_HP\_flag | ParentHeatFlow |
+| p\_comment | P08 | heat\_flow\_parentheatflow | ParentHeatFlow | comment | ParentHeatFlow |
+| corr\_HP\_flag | P09 | heat\_flow\_parentheatflow | ParentHeatFlow | corr\_HP\_flag | ParentHeatFlow |
 | total\_depth\_MD | P10 | heat\_flow\_heatflowsite | HeatFlowSite | length | fairdm\_geo.GenericHole |
 | total\_depth\_TVD | P11 | heat\_flow\_heatflowsite | HeatFlowSite | vertical\_depth | fairdm\_geo.GeoDepthInterval |
 | explo\_method | P12 | heat\_flow\_heatflowsite | HeatFlowSite | explo\_method | HeatFlowSite |
@@ -66,6 +66,10 @@ It was previously named `SurfaceHeatFlow` in older versions of this codebase.
 | q\_date | C38 | heat\_flow\_heatflow | HeatFlow | date\_acquired | HeatFlow |
 
 #### HeatFlowInterval (depth interval within the borehole)
+
+An interval belongs to a site through `HeatFlowInterval.site`, a foreign key to `HeatFlowSite`.
+The site's own fields are reached from a child heat flow as
+`sample__heatflowinterval__site__<field>`.
 
 | GHFDB Name | GHFDB Ref | Database Table | Accessed From | Accessor | Declared By |
 | --- | --- | --- | --- | --- | --- |
@@ -188,13 +192,21 @@ The product layer now uses two proxy models:
 - Flat annotated queryset: `GHFDBChild.objects.as_ghfdb_flat()`
 - Export-ready queryset with prefetches: `GHFDBChild.objects.for_export()`
 
-Common annotation names used by admin/export:
+The annotation names are the published column names wherever that is possible, so a flat row can
+be read with the spreadsheet in hand. `site_name` is the one that cannot be: `name` is already a
+field on the measurement, so the annotation would shadow it. The four geographic columns carry the
+same prefix for consistency with it, and the export resource maps each back to its published name:
 
-- Site/location: `site_name`, `lat_ns`, `long_ew`, `site_elevation`, `site_environment`
-- Parent values: `p_q`, `p_q_uncertainty`, `p_corr_hp_flag`, `p_comment`
-- Interval: `interval_top`, `interval_bottom`
-- Thermal gradient: `tgrad_value`, `tgrad_uncertainty`, `tgrad_corrected`, `tgrad_corrected_unc`
-- Conductivity: `tc_value`, `tc_uncertainty`, `tc_number`
+- Child values: `qc`, `qc_uncertainty`, `relevant_child`, `q_date`, `ID_parent`
+- Site and location: `site_name`, `lat_NS`, `long_EW`, `elevation`, `environment`,
+  `explo_method`, `site_country`, `site_region`, `site_continent`, `site_domain`,
+  `total_depth_MD`, `total_depth_TVD`
+- Parent values: `q`, `q_uncertainty`, `corr_HP_flag`, `p_comment`
+- Interval: `q_top`, `q_bottom`
+- Thermal gradient: `T_grad_mean`, `T_grad_uncertainty`, `T_grad_mean_cor`,
+  `T_grad_uncertainty_cor`, `T_shutin_top`, `T_shutin_bottom`, `T_number`
+- Conductivity: `tc_mean`, `tc_uncertainty`, `tc_number`
+- Probe: `probe_penetration`, `probe_length`, `probe_tilt`
 - Corrections: `corr_IS_flag`, `corr_T_flag`, `corr_S_flag`, `corr_E_flag`, `corr_TOPO_flag`, `corr_PAL_flag`, `corr_SUR_flag`, `corr_CONV_flag`, `corr_HR_flag`
 
 ### GHFDBParent

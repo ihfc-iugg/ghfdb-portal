@@ -1,8 +1,8 @@
 """
 GHFDB admin registration.
 
-Registers the GHFDB proxy model with read-only changelist and XLSX import
-action (US2).  Import is driven by ``GHFDBImportResource`` and
+Registers the ``GHFDBChild`` proxy model with read-only changelist and XLSX import
+action (US2).  Import is driven by ``GHFDBChildImportResource`` and
 ``GHFDBImportFormat``.
 
 References:
@@ -17,7 +17,7 @@ from django.utils.translation import gettext_lazy as _
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import XLSX
 
-from .models import GHFDB, GHFDBParent, GHFDBRelease
+from .models import GHFDBChild, GHFDBParent, GHFDBRelease
 from .resources import (
     GHFDBChildImportResource,
     GHFDBExportResource,
@@ -48,7 +48,7 @@ class ExplorePurposeListFilter(SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value():
             return queryset.filter(
-                sample__heatflowinterval__sample__heatflowsite__explo_purpose__pk=self.value()
+                sample__heatflowinterval__site__explo_purpose__pk=self.value()
             )
         return queryset
 
@@ -72,7 +72,7 @@ class EnvironmentListFilter(SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value():
             return queryset.filter(
-                sample__heatflowinterval__sample__heatflowsite__environment=self.value()
+                sample__heatflowinterval__site__environment=self.value()
             )
         return queryset
 
@@ -96,7 +96,7 @@ class ChildExplorationMethodListFilter(SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value():
             return queryset.filter(
-                sample__heatflowinterval__sample__heatflowsite__explo_method=self.value()
+                sample__heatflowinterval__site__explo_method=self.value()
             )
         return queryset
 
@@ -126,7 +126,7 @@ class GHFDBReleaseAdmin(admin.ModelAdmin):
     ordering = ("-release_date",)
 
 
-@admin.register(GHFDB)
+@admin.register(GHFDBChild)
 class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
     """Read-only Django admin view for GHFDB flat entries with XLSX import action.
 
@@ -202,7 +202,7 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
         "get_ref_isgn",
     )
     search_fields = (
-        "sample__heatflowinterval__sample__name",
+        "sample__heatflowinterval__site__name",
         "parent__ghfdb_id",
         "ghfdb_id",
     )
@@ -211,10 +211,10 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
         "parent__corr_HP_flag",
         ChildExplorationMethodListFilter,
         ExplorePurposeListFilter,
-        "sample__heatflowinterval__sample__heatflowsite__country",
-        "sample__heatflowinterval__sample__heatflowsite__region",
-        "sample__heatflowinterval__sample__heatflowsite__continent",
-        "sample__heatflowinterval__sample__heatflowsite__domain",
+        "sample__heatflowinterval__site__country",
+        "sample__heatflowinterval__site__region",
+        "sample__heatflowinterval__site__continent",
+        "sample__heatflowinterval__site__domain",
     )
     list_display_links = None  # enforce read-only (no edit links)
     ordering = ("parent__ghfdb_id", "ghfdb_id")
@@ -412,9 +412,9 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def get_queryset(self, request):
         """Return the flat annotated queryset for the changelist."""
-        return GHFDB.objects.as_ghfdb_flat().prefetch_related(
+        return GHFDBChild.objects.as_ghfdb_flat().prefetch_related(
             "method",
-            "sample__heatflowinterval__sample__heatflowsite__explo_purpose",
+            "sample__heatflowinterval__site__explo_purpose",
             "sample__heatflowinterval__lithology",
             "sample__heatflowinterval__stratigraphy",
             "sample__heatflowinterval__probe_metadata__probe_type",

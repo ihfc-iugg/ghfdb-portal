@@ -32,10 +32,9 @@ from ..utils import MScoreOptions, UScoreOptions, calculate_U_score
 class HeatFlowInterval(Interval, AbstractGeoDepthInterval):
     """Depth interval within a HeatFlowSite borehole over which a child heat flow measurement is calculated."""
 
-    # THIS MUST BE RENAMED TO "heat_flow_site"
-    sample = models.ForeignKey(
-        "sample.Sample",
-        verbose_name=_("parent site"),
+    site = models.ForeignKey(
+        "heat_flow.HeatFlowSite",
+        verbose_name=_("site"),
         help_text=_("The heat flow site this depth interval belongs to."),
         on_delete=models.CASCADE,
         null=True,

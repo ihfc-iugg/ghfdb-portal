@@ -60,7 +60,7 @@ erDiagram
     
     GeoDepthInterval {
         int id PK "Primary key"
-        int sample_id FK "Parent heat flow site"
+        int site_id FK "The heat flow site the interval belongs to"
         quantity top "Top depth of interval"
         quantity bottom "Bottom depth of interval"
         quantity vertical_depth "Vertical depth"

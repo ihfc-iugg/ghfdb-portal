@@ -39,6 +39,18 @@ guides/publishing
 
 :::{toctree}
 :maxdepth: 1
+:caption: Project notes
+
+project/phase1
+project/phase1-progress
+project/phase2
+project/phase2-progress
+project/data-immutability-problem
+project/parent-child-conversion-problem
+:::
+
+:::{toctree}
+:maxdepth: 1
 :caption: Development
 
 development/contributing/index

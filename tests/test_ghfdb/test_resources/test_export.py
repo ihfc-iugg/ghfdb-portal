@@ -8,7 +8,7 @@ Covers:
 - Column order is identical to GHFDB_COLUMN_ORDER
 - Pint quantity fields render as plain numeric magnitude (no unit symbol)
 - M2M fields render as semicolon-separated labels
-- get_queryset() returns GHFDB.objects.for_export()
+- get_queryset() returns GHFDBChild.objects.for_export()
 - Filtered queryset exports only matching records
 - Staff-only access (anonymous admin export URL → 302)
 """
@@ -70,7 +70,7 @@ class TestGHFDBExportResourceDeclaration:
 
 
 class TestGHFDBExportQueryset:
-    """get_queryset() returns a GHFDB.objects.for_export() queryset."""
+    """get_queryset() returns a GHFDBChild.objects.for_export() queryset."""
 
     @pytest.mark.django_db
     def test_get_queryset_returns_ghfdb_querytype(self):
@@ -85,11 +85,11 @@ class TestGHFDBExportQueryset:
     @pytest.mark.django_db
     def test_filtered_queryset_exports_only_matching_records(self, heat_flow_chain):
         """A filtered queryset exports only the matching records."""
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
         from project.ghfdb.resources.export import GHFDBExportResource
 
         resource = GHFDBExportResource()
-        qs = GHFDB.objects.for_export().filter(pk=heat_flow_chain.pk)
+        qs = GHFDBChild.objects.for_export().filter(pk=heat_flow_chain.pk)
         dataset = resource.export(qs)
         assert len(dataset) == 1
 
@@ -103,11 +103,11 @@ class TestGHFDBExportQueryset:
     @pytest.mark.django_db
     def test_empty_queryset_exports_headers_only(self):
         """An empty queryset exports headers but no data rows."""
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
         from project.ghfdb.resources.export import GHFDBExportResource
 
         resource = GHFDBExportResource()
-        qs = GHFDB.objects.none()
+        qs = GHFDBChild.objects.none()
         dataset = resource.export(qs)
         assert len(dataset) == 0
         assert list(dataset.headers) == list(GHFDB_COLUMN_ORDER)
@@ -131,11 +131,11 @@ class TestGHFDBExportColumnOrder:
     @pytest.mark.django_db
     def test_exported_headers_match_column_order(self, heat_flow_chain):
         """Exported dataset column headers appear in exact GHFDB_COLUMN_ORDER sequence."""
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
         from project.ghfdb.resources.export import GHFDBExportResource
 
         resource = GHFDBExportResource()
-        qs = GHFDB.objects.for_export().filter(pk=heat_flow_chain.pk)
+        qs = GHFDBChild.objects.for_export().filter(pk=heat_flow_chain.pk)
         dataset = resource.export(qs)
         assert list(dataset.headers) == list(GHFDB_COLUMN_ORDER)
 
@@ -151,11 +151,11 @@ class TestGHFDBExportQuantityFields:
     @pytest.mark.django_db
     def test_qc_renders_as_plain_number(self, heat_flow_chain):
         """Exported 'qc' value is a plain number (no Pint Quantity object)."""
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
         from project.ghfdb.resources.export import GHFDBExportResource
 
         resource = GHFDBExportResource()
-        qs = GHFDB.objects.for_export().filter(pk=heat_flow_chain.pk)
+        qs = GHFDBChild.objects.for_export().filter(pk=heat_flow_chain.pk)
         dataset = resource.export(qs)
         row = dataset.dict[0]
         qc_val = row["qc"]
@@ -167,11 +167,11 @@ class TestGHFDBExportQuantityFields:
     @pytest.mark.django_db
     def test_t_grad_mean_renders_as_plain_number(self, heat_flow_chain):
         """Exported 't_grad_mean' value is a plain number."""
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
         from project.ghfdb.resources.export import GHFDBExportResource
 
         resource = GHFDBExportResource()
-        qs = GHFDB.objects.for_export().filter(pk=heat_flow_chain.pk)
+        qs = GHFDBChild.objects.for_export().filter(pk=heat_flow_chain.pk)
         dataset = resource.export(qs)
         row = dataset.dict[0]
         grad_val = row["t_grad_mean"]
@@ -183,11 +183,11 @@ class TestGHFDBExportQuantityFields:
     @pytest.mark.django_db
     def test_tc_mean_renders_as_plain_number(self, heat_flow_chain):
         """Exported 'tc_mean' value is a plain number."""
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
         from project.ghfdb.resources.export import GHFDBExportResource
 
         resource = GHFDBExportResource()
-        qs = GHFDB.objects.for_export().filter(pk=heat_flow_chain.pk)
+        qs = GHFDBChild.objects.for_export().filter(pk=heat_flow_chain.pk)
         dataset = resource.export(qs)
         row = dataset.dict[0]
         tc_val = row["tc_mean"]
@@ -208,11 +208,11 @@ class TestGHFDBExportM2MFields:
     @pytest.mark.django_db
     def test_empty_q_method_renders_as_empty_string(self, heat_flow_chain):
         """Exported 'q_method' renders as '' when no methods are set."""
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
         from project.ghfdb.resources.export import GHFDBExportResource
 
         resource = GHFDBExportResource()
-        qs = GHFDB.objects.for_export().filter(pk=heat_flow_chain.pk)
+        qs = GHFDBChild.objects.for_export().filter(pk=heat_flow_chain.pk)
         dataset = resource.export(qs)
         row = dataset.dict[0]
         assert row["q_method"] in ("", None)
@@ -220,11 +220,11 @@ class TestGHFDBExportM2MFields:
     @pytest.mark.django_db
     def test_empty_t_method_top_renders_as_empty_string(self, heat_flow_chain):
         """Exported 't_method_top' renders as '' when no methods are set."""
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
         from project.ghfdb.resources.export import GHFDBExportResource
 
         resource = GHFDBExportResource()
-        qs = GHFDB.objects.for_export().filter(pk=heat_flow_chain.pk)
+        qs = GHFDBChild.objects.for_export().filter(pk=heat_flow_chain.pk)
         dataset = resource.export(qs)
         row = dataset.dict[0]
         assert row["t_method_top"] in ("", None)
@@ -243,7 +243,7 @@ class TestGHFDBExportAccessControl:
         """Anonymous GET to the GHFDB admin export URL returns a 302 redirect."""
         from django.urls import reverse
 
-        url = reverse("admin:ghfdb_ghfdb_export")
+        url = reverse("admin:ghfdb_ghfdbchild_export")
         response = client.get(url)
         assert response.status_code == 302
 

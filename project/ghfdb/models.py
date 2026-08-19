@@ -35,7 +35,7 @@ class GHFDBRelease(models.Model):
         ordering = ["-release_date"]
 
 
-class GHFDB(HeatFlow):
+class GHFDBChild(HeatFlow):
     """Proxy model over ``HeatFlow`` providing a flat read-oriented view of the
     Global Heat Flow Database.
 

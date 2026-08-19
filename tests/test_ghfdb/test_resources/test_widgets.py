@@ -223,7 +223,7 @@ class TestRelatedModelWidget:
         site = HeatFlowSite.objects.create(dataset=dataset, name="Test")
         interval = HeatFlowInterval.objects.create(
             dataset=dataset,
-            sample=site,
+            site=site,
             name="Test Interval",
         )
         widget = IntervalWidget()
@@ -313,7 +313,7 @@ class TestIntervalWidget:
         site = HeatFlowSite.objects.create(dataset=dataset, name="BUG009 Site")
         interval = HeatFlowInterval.objects.create(
             dataset=dataset,
-            sample=site,
+            site=site,
             name="BUG009 Interval",
         )
 

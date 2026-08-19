@@ -7,7 +7,10 @@ from django.db import migrations
 class Migration(migrations.Migration):
     dependencies = [
         ("ghfdb", "0001_initial"),
-        ("heat_flow", "0009_heatflow_local_id"),
+        # The proxy needs HeatFlow to exist and nothing more. This pointed at
+        # 0009 because that was the latest migration when it was generated; 0011
+        # has since reversed 0009's only effect.
+        ("heat_flow", "0001_initial"),
     ]
 
     operations = [

@@ -62,7 +62,7 @@ def heat_flow_chain(dataset):
 
     interval = HeatFlowInterval.objects.create(
         dataset=dataset,
-        sample=site,
+        site=site,
         name="Test Interval",
         top=0,
         bottom=500,
