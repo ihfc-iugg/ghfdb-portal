@@ -49,12 +49,6 @@ development/roadmap
 adr/index
 :::
 
-:::{toctree}
-:maxdepth: 1
-:caption: Data Models
-
-data_models/ghfdb-erd
-:::
 <!-- development/translations -->
 <!-- apidocs/heat_flow/heat_flow -->
 <!-- development/contributing -->
