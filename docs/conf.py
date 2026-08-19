@@ -38,9 +38,14 @@ html_theme_options["path_to_docs"] = "docs"
 extensions.remove("autodoc2")
 extensions += [
     "sphinx_design",
-    # fairdm-docs 0.3.0 renamed its package from `docs` to `fairdm_docs` and
-    # this extension from `auto_django_model` to `autodoc_models`.
-    "fairdm_docs.extensions.autodoc_models",
+    # fairdm_docs.extensions.autodoc_models is deliberately not enabled. It reads
+    # the FairDM registry as a sequence of dicts, while the registry yields model
+    # classes, so its build hook raises "type 'HeatFlowSite' is not subscriptable"
+    # and the whole build fails. Its directive is broken independently: the field
+    # template calls `hasattr`, which is not a Jinja global, so every model would
+    # render as an error box even with the hook fixed. fairdm-docs comments the
+    # extension out of its own default list for the same reason. The data model
+    # pages under docs/data_models/ are written by hand instead.
     # "sphinx_tippy",
     "sphinx_exec_code",
 ]
@@ -57,26 +62,6 @@ myst_html_meta = {
 autodoc2_parse_docstrings = True
 
 autodoc2_docstring_parser_regexes = [("myst", r".*choices*")]
-
-
-autodjango_model_extra = {"about": ""}
-
-autodjango_model_apps = [
-    "heat_flow",
-]
-
-autodjango_model_config = {
-    "global": {
-        "exclude": ["id", "created"],  # exclude fields from any model
-    },
-    "heat_flow": {
-        "exclude": ["id", "created"],  # exclude fields from any model in heat_flow app
-    },
-    "heat_flow.HeatFlowSite": {
-        "exclude": ["id", "created"],  # exclude fields from the HeatFlowSite model
-        # "include": ["name", "location"],  # include only these fields from the HeatFlowSite model
-    },
-}
 
 tippy_skip_anchor_classes = ("headerlink", "sd-stretched-link", "sd-rounded-pill")
 tippy_anchor_parent_selector = "article.bd-article"
