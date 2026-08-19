@@ -30,10 +30,7 @@ This repo uses GitHub Discussions for feature prioritisation, including standing
 and map-viewer priorities. Discussions are a source of user demand, not a work queue: a discussion
 that turns into committed work gets an issue.
 
-## When a skill says "publish to the issue tracker"
+## Vocabulary
 
-Create a GitHub issue.
-
-## When a skill says "fetch the relevant ticket"
-
-Run `gh issue view <number> --comments`.
+A written process that says "publish to the issue tracker" means create a GitHub issue. One that
+says "fetch the relevant ticket" means run `gh issue view <number> --comments`.

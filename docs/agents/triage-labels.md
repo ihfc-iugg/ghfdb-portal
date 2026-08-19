@@ -1,8 +1,8 @@
 # Triage Labels
 
-The engineering skills speak in terms of canonical roles. This file maps each role to the label
-string actually used in this repo's issue tracker. Where a skill mentions a role, use the label
-string from the right-hand column.
+Automated workflows and written processes refer to issues by a canonical role. This file maps each
+role to the label string this repository's tracker actually uses. Where a process names a role, use
+the label string from the right-hand column.
 
 ## Triage roles
 

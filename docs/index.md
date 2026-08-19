@@ -46,6 +46,8 @@ development/documentation-conventions
 development/feature-documentation-checklist
 development/spec-driven-workflow
 development/roadmap
+guides/testing-standards
+agents/index
 adr/index
 :::
 
