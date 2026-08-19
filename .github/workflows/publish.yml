@@ -6,7 +6,7 @@ name: Publish
 # The build is gated behind the release flow rather than running on every push
 # to main: an image is produced for a version that Prepare Release prepared and
 # Tag Release tagged, so every image in the registry corresponds to a release.
-# `deployment/docker-compose.yml` pulls ghcr.io/ihfc-iugg/ghfdb-portal:latest.
+# `deploy/docker-compose.yml` pulls ghcr.io/ihfc-iugg/ghfdb-portal:latest.
 #
 # The build is inlined rather than calling a shared workflow. The family has no
 # container workflow to converge on, and the only existing one lives in a
@@ -23,7 +23,7 @@ on:
     types: [published]
   pull_request:
     paths:
-      - 'deployment/Dockerfile'
+      - 'deploy/Dockerfile'
       - 'pyproject.toml'
       - 'poetry.lock'
       - '.github/workflows/publish.yml'
@@ -86,7 +86,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: deployment/Dockerfile
+          file: deploy/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.tags.outputs.tags }}
           labels: |

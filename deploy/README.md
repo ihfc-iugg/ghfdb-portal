@@ -10,10 +10,10 @@ Everything needed to run the portal in production lives in this directory.
 ## How a change reaches the server
 
 1. A release is prepared and tagged, and the Publish workflow builds the image
-   from `deployment/Dockerfile` and pushes it to
+   from `deploy/Dockerfile` and pushes it to
    `ghcr.io/ihfc-iugg/ghfdb-portal`, tagged with the version and with `latest`.
 2. The stack runs on infrastructure operated by GFZ, from
-   `deployment/docker-compose.yml`. The Django service carries the Watchtower
+   `deploy/docker-compose.yml`. The Django service carries the Watchtower
    label, so a new `latest` is pulled and the container replaced without anyone
    logging in.
 3. The container runs migrations, collects static files and compresses assets

@@ -47,9 +47,9 @@ updates:
         patterns:
           - "*"
 
-  # Container image (deployment/Dockerfile; Dependabot does not read Compose files)
+  # Container image (deploy/Dockerfile; Dependabot does not read Compose files)
   - package-ecosystem: "docker"
-    directory: "/deployment"
+    directory: "/deploy"
     schedule:
       interval: "monthly"
       day: "monday"

@@ -76,7 +76,7 @@ its own copies:
 | `auto-merge-dependabot.yml` | dependency updates, gated on the required checks |
 
 There is no deployment workflow. The image published by `publish.yml` is picked up on the server
-by Watchtower, and `deployment/README.md` describes the path a release takes from a tag to the
+by Watchtower, and `deploy/README.md` describes the path a release takes from a tag to the
 running site.
 
 Code Quality runs `pre-commit run --all-files`, so ruff, mypy, deptry and djlint all come from the
