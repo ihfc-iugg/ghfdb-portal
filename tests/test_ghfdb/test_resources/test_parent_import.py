@@ -654,3 +654,26 @@ class TestAdminGetImportFormats:
         content = response.content.decode()
         assert "GHFDB Official Template" in content
         assert "GHFDB Simple Template" in content
+
+
+@pytest.mark.django_db
+class TestGHFDBParentPrivateDatasetRegression:
+    """The parent import must find its target dataset even when that dataset is private."""
+
+    def test_import_attaches_records_to_a_private_dataset(self, dataset):
+        """A row imports into the only dataset available, whether or not it is public."""
+        from fairdm.utils.choices import Visibility
+
+        from heat_flow.models import HeatFlowSite, ParentHeatFlow
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        assert dataset.visibility == Visibility.PRIVATE
+
+        resource = GHFDBParentImportResource()
+        result = resource.import_data(make_dataset(PARENT_ROW), dry_run=False, raise_errors=False)
+
+        assert not result.has_errors(), [
+            (line, [str(e.error) for e in errors]) for line, errors in result.row_errors()
+        ]
+        assert ParentHeatFlow.objects.get(ghfdb_id=1).dataset == dataset
+        assert HeatFlowSite.objects.get(name="Test Site Alpha").dataset == dataset

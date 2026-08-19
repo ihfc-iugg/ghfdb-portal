@@ -645,3 +645,26 @@ class TestBUG010ColumnOrderCaseSensitivity:
             f"'T_grad_mean' sorted to position {idx} (after sentinel '{late_sentinel}' at {sentinel_idx}). "
             f"Lookup dict must lowercase keys: {{col.lower(): i for i, col in enumerate(GHFDB_COLUMN_ORDER)}} (BUG-010)"
         )
+
+
+@pytest.mark.django_db
+class TestGHFDBChildPrivateDatasetRegression:
+    """The child import must find its target dataset even when that dataset is private."""
+
+    def test_import_attaches_records_to_a_private_dataset(self, dataset):
+        """A row imports into the only dataset available, whether or not it is public."""
+        from fairdm.utils.choices import Visibility
+
+        from heat_flow.models import HeatFlow
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        assert dataset.visibility == Visibility.PRIVATE
+        import_parents(dataset)
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(make_dataset(CHILD_ROW), dry_run=False, raise_errors=False)
+
+        assert not result.has_errors(), [
+            (line, [str(e.error) for e in errors]) for line, errors in result.row_errors()
+        ]
+        assert HeatFlow.objects.get(ghfdb_id=1).dataset == dataset
