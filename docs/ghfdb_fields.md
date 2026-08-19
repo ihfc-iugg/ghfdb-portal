@@ -192,9 +192,10 @@ The product layer now uses two proxy models:
 - Flat annotated queryset: `GHFDBChild.objects.as_ghfdb_flat()`
 - Export-ready queryset with prefetches: `GHFDBChild.objects.for_export()`
 
-The annotation names are the published column names, so a flat row can be read with the
-spreadsheet in hand. Two exceptions carry a `site_` prefix because the bare name would collide
-with a field the measurement already has:
+The annotation names are the published column names wherever that is possible, so a flat row can
+be read with the spreadsheet in hand. `site_name` is the one that cannot be: `name` is already a
+field on the measurement, so the annotation would shadow it. The four geographic columns carry the
+same prefix for consistency with it, and the export resource maps each back to its published name:
 
 - Child values: `qc`, `qc_uncertainty`, `relevant_child`, `q_date`, `ID_parent`
 - Site and location: `site_name`, `lat_NS`, `long_EW`, `elevation`, `environment`,

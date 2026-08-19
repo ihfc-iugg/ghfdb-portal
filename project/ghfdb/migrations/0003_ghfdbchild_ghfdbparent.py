@@ -20,14 +20,14 @@ RENAMED_PERMISSIONS = {
 
 
 def rename_permissions(apps, schema_editor):
-    _move_permissions(apps, RENAMED_PERMISSIONS)
+    move_permissions(apps, RENAMED_PERMISSIONS)
 
 
 def restore_permissions(apps, schema_editor):
-    _move_permissions(apps, {new: old for old, new in RENAMED_PERMISSIONS.items()})
+    move_permissions(apps, {new: old for old, new in RENAMED_PERMISSIONS.items()})
 
 
-def _move_permissions(apps, mapping):
+def move_permissions(apps, mapping):
     """Repoint permission codenames on the proxy's content type."""
     ContentType = apps.get_model("contenttypes", "ContentType")
     Permission = apps.get_model("auth", "Permission")

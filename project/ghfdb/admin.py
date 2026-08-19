@@ -2,7 +2,7 @@
 GHFDB admin registration.
 
 Registers the ``GHFDBChild`` proxy model with read-only changelist and XLSX import
-action (US2).  Import is driven by ``GHFDBImportResource`` and
+action (US2).  Import is driven by ``GHFDBChildImportResource`` and
 ``GHFDBImportFormat``.
 
 References:
