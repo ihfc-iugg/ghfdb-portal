@@ -1418,8 +1418,9 @@ def legacy_import_function():
 
 - [Test Organization Guide](../../tests/README.md)
 - [Test Fixtures Reference](../../tests/fixtures/README.md)
-- [Contributing Guidelines](../../CONTRIBUTING.md)
+- [Contributing](../development/contributing/index.md)
 
 ---
 
-**Questions?** See the [Testing FAQ](../testing-faq.md) or ask in `#testing` Slack channel.
+**Questions?** Open a thread in the
+[discussion forum](https://github.com/ihfc-iugg/ghfdb-portal/discussions).

@@ -1,1 +1,4 @@
+# Normalise line endings to LF in the repository, whatever a contributor's
+# platform or `core.autocrlf` setting happens to be. Without this, a commit
+# from Windows can store CRLF and show every line of a file as changed.
 * text=auto
