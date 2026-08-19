@@ -12,7 +12,6 @@ test*
 # Docker-specific critical ignores
 .git/
 Dockerfile*
-deployment/
 .dockerignore
 *.log*
 .env*
