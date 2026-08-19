@@ -25,6 +25,16 @@ Releases before that used `<year>.<release>` and are recorded in the
   tag, the GitHub release and the container image.
 - The container image no longer builds on `ghcr.io/fair-dm/fairdm`, which is no
   longer published. Both stages now build from `python:3.13-slim`.
+- The portal now runs on the current FairDM. Sample status values are reset by
+  the framework's own migration, because the vocabulary behind that field was
+  replaced and no old term maps onto a new one. The portal has never set or
+  displayed it.
+
+### Fixed
+
+- Spreadsheet imports no longer fail when every dataset on the portal is
+  private. The importer looks up the dataset it should fill, and that lookup had
+  started skipping private ones.
 
 ### Removed
 
