@@ -18,10 +18,10 @@ class TestGHFDBChildQuerySet:
         """
         T008: as_ghfdb_flat() must execute ≤2 DB queries, constant regardless of row count.
         """
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
 
         with django_assert_max_num_queries(2):
-            results = list(GHFDB.objects.as_ghfdb_flat())
+            results = list(GHFDBChild.objects.as_ghfdb_flat())
 
         assert len(results) >= 1
 
@@ -37,7 +37,7 @@ class TestGHFDBChildQuerySet:
         """
         T009: All 31 scalar annotations must be accessible as attributes on queryset records.
         """
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
 
         expected_scalar_attrs = [
             "site_name",
@@ -73,7 +73,7 @@ class TestGHFDBChildQuerySet:
             "probe_tilt",
         ]
 
-        record = GHFDB.objects.as_ghfdb_flat().get(pk=heat_flow_chain.pk)
+        record = GHFDBChild.objects.as_ghfdb_flat().get(pk=heat_flow_chain.pk)
 
         for attr in expected_scalar_attrs:
             assert hasattr(record, attr), f"Missing scalar annotation: {attr}"
@@ -83,7 +83,7 @@ class TestGHFDBChildQuerySet:
         """
         T010: All 9 corr_*_flag annotations must be accessible as attributes on queryset records.
         """
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
 
         correction_flag_attrs = [
             "corr_IS_flag",
@@ -97,7 +97,7 @@ class TestGHFDBChildQuerySet:
             "corr_HR_flag",
         ]
 
-        record = GHFDB.objects.as_ghfdb_flat().get(pk=heat_flow_chain.pk)
+        record = GHFDBChild.objects.as_ghfdb_flat().get(pk=heat_flow_chain.pk)
 
         for attr in correction_flag_attrs:
             assert hasattr(record, attr), f"Missing correction flag annotation: {attr}"
@@ -107,10 +107,10 @@ class TestGHFDBChildQuerySet:
         """
         T011: for_export() must execute ≤16 DB queries, constant regardless of row count.
         """
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
 
         with django_assert_max_num_queries(16):
-            results = list(GHFDB.objects.for_export())
+            results = list(GHFDBChild.objects.for_export())
 
         assert len(results) >= 1
 
@@ -119,9 +119,9 @@ class TestGHFDBChildQuerySet:
         """
         T012: Standard queryset operations (filter, order_by, count) must work without error.
         """
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
 
-        qs = GHFDB.objects.as_ghfdb_flat()
+        qs = GHFDBChild.objects.as_ghfdb_flat()
 
         count = qs.count()
         assert count >= 1
@@ -213,10 +213,10 @@ class TestGHFDBManagerScoping:
 
     @pytest.mark.django_db
     def test_ghfdb_child_manager_excludes_null_ghfdb_id(self, heat_flow_chain):
-        """T094: GHFDB.objects (default manager) excludes records with ghfdb_id=None (FR-001b)."""
+        """T094: GHFDBChild.objects (default manager) excludes records with ghfdb_id=None (FR-001b)."""
         from heat_flow.models import HeatFlow
 
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
 
         # Create a non-GHFDB HeatFlow record (ghfdb_id left as None)
         non_ghfdb = HeatFlow.objects.create(
@@ -228,7 +228,7 @@ class TestGHFDBManagerScoping:
         )
         assert non_ghfdb.ghfdb_id is None
 
-        ghfdb_pks = set(GHFDB.objects.values_list("pk", flat=True))
+        ghfdb_pks = set(GHFDBChild.objects.values_list("pk", flat=True))
         assert heat_flow_chain.pk in ghfdb_pks, (
             "Published GHFDB child must appear in default queryset"
         )

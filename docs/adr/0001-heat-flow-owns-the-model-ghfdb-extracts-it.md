@@ -28,9 +28,10 @@ the GHFDB structure, expressed relationally. Keeping a boundary between them mea
 fiction that nothing consumed, at the cost of a junction table and an extra join on every export
 query.
 
-The migration was begun and abandoned partway. Its residue is still visible: `ParentHeatFlow` lives
-in `heat_flow` but its database table is named `ghfdb_parentheatflow`, for the application it was
-going to move to.
+The migration was begun and abandoned partway, and its residue outlived it. `ParentHeatFlow` lives
+in `heat_flow`, but its database table carried the name `ghfdb_parentheatflow` for the application
+it was going to move to. That override was dropped in August 2026 and the table now takes the
+default `heat_flow_parentheatflow`.
 
 ## Revisit if
 

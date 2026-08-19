@@ -28,7 +28,7 @@ class HeatFlowSiteFactory(SampleFactory):
 
 
 class HeatFlowIntervalFactory(SampleFactory):
-    sample = factory.SubFactory(HeatFlowSiteFactory)
+    site = factory.SubFactory(HeatFlowSiteFactory)
 
     class Meta:
         model = HeatFlowInterval

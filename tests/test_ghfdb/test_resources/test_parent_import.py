@@ -269,7 +269,7 @@ class TestGHFDBParentImportResourceAccessControl:
         """Anonymous access to admin import URL redirects (302)."""
         from django.urls import reverse
 
-        url = reverse("admin:ghfdb_ghfdb_import")
+        url = reverse("admin:ghfdb_ghfdbchild_import")
         response = client.get(url)
         assert response.status_code == 302
 
@@ -578,10 +578,10 @@ class TestAdminGetImportFormats:
         from django.contrib.admin import AdminSite
 
         from project.ghfdb.admin import GHFDBChildAdmin
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
         from project.ghfdb.resources import GHFDBImportFormat, GHFDBSimpleImportFormat
 
-        site_admin = GHFDBChildAdmin(GHFDB, AdminSite())
+        site_admin = GHFDBChildAdmin(GHFDBChild, AdminSite())
         formats = site_admin.get_import_formats()
 
         assert len(formats) == 2
@@ -608,9 +608,9 @@ class TestAdminGetImportFormats:
         from django.contrib.admin import AdminSite
 
         from project.ghfdb.admin import GHFDBChildAdmin
-        from project.ghfdb.models import GHFDB
+        from project.ghfdb.models import GHFDBChild
 
-        site_admin = GHFDBChildAdmin(GHFDB, AdminSite())
+        site_admin = GHFDBChildAdmin(GHFDBChild, AdminSite())
         formats = site_admin.get_import_formats()
 
         assert formats[0]().get_title() == "GHFDB Official Template"
@@ -634,7 +634,7 @@ class TestAdminGetImportFormats:
         """GET admin import page for GHFDB child contains both format option texts."""
         from django.urls import reverse
 
-        url = reverse("admin:ghfdb_ghfdb_import")
+        url = reverse("admin:ghfdb_ghfdbchild_import")
         response = admin_client.get(url)
 
         assert response.status_code == 200

@@ -201,7 +201,7 @@ class GHFDBChildImportResource(ModelResource):
 
         # Determine the parent HeatFlowSite for the interval
         parent_hf = instance.parent
-        heat_flow_site = parent_hf.sample if parent_hf else None
+        heat_flow_site = parent_hf.site if parent_hf else None
 
         # --- HeatFlowInterval ---
         interval = self._build_interval(row, heat_flow_site)
@@ -255,7 +255,7 @@ class GHFDBChildImportResource(ModelResource):
             interval_unsaved = HeatFlowInterval()
 
         interval_unsaved.dataset = self._fairdm_dataset
-        interval_unsaved.sample = heat_flow_site
+        interval_unsaved.site = heat_flow_site
         interval_unsaved.save()
         return interval_unsaved
 

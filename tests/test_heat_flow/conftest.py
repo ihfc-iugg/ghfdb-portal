@@ -38,7 +38,7 @@ def interval_fixture(dataset, site_fixture):
 
     return HeatFlowInterval.objects.create(
         dataset=dataset,
-        sample=site_fixture,
+        site=site_fixture,
         name="Test Interval",
         top=0,
         bottom=500,

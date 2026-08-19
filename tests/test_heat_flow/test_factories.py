@@ -41,12 +41,12 @@ class TestHeatFlowFactories:
 
     @pytest.mark.django_db
     def test_heat_flow_interval_factory_save(self):
-        """T049 – HeatFlowIntervalFactory smoke test; sample FK populated via SubFactory."""
+        """T049 – HeatFlowIntervalFactory smoke test; site FK populated via SubFactory."""
         from heat_flow.factories import HeatFlowIntervalFactory
 
         interval = HeatFlowIntervalFactory()
         assert interval.pk is not None
-        assert interval.sample_id is not None
+        assert interval.site_id is not None
 
     @pytest.mark.django_db
     def test_parent_heat_flow_factory_save(self):

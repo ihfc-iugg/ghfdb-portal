@@ -62,23 +62,37 @@ class TestHeatFlowSite:
 
 
 class TestHeatFlowInterval:
+    def test_site_fk_is_named_site_and_targets_heat_flow_site(self):
+        """
+        The interval-to-site link is called ``site`` and is typed against
+        ``HeatFlowSite``, not the polymorphic ``Sample`` root.  "Parent" and
+        "child" are reserved for the relationship between measurements, so no
+        part of this field may borrow either word.
+        """
+        from heat_flow.models import HeatFlowInterval, HeatFlowSite
+
+        field = HeatFlowInterval._meta.get_field("site")
+        assert field.related_model is HeatFlowSite
+        assert field.remote_field.related_name == "intervals"
+        assert "parent" not in str(field.verbose_name).lower()
+
     @pytest.mark.django_db
     def test_interval_links_to_site(self, dataset, site_fixture):
         """
-        T014 – HeatFlowInterval.sample FK resolves to site; reverse 'intervals'
+        T014 – HeatFlowInterval.site FK resolves to site; reverse 'intervals'
         accessor works (US1 scenario 2, A9).
         """
         from heat_flow.models import HeatFlowInterval
 
         interval = HeatFlowInterval.objects.create(
             dataset=dataset,
-            sample=site_fixture,
+            site=site_fixture,
             name="Depth Interval",
             top=0,
             bottom=500,
         )
         loaded = HeatFlowInterval.objects.get(pk=interval.pk)
-        assert loaded.sample == site_fixture
+        assert loaded.site == site_fixture
         assert site_fixture.intervals.filter(pk=interval.pk).exists()
 
     @pytest.mark.django_db
@@ -116,7 +130,7 @@ class TestHeatFlowInterval:
 
         interval = HeatFlowInterval(
             dataset=dataset,
-            sample=site_fixture,
+            site=site_fixture,
             name="Zero Thickness",
             top=100,
             bottom=100,
@@ -133,7 +147,7 @@ class TestHeatFlowInterval:
 
         interval = HeatFlowInterval(
             dataset=dataset,
-            sample=site_fixture,
+            site=site_fixture,
             name="Valid Interval",
             top=0,
             bottom=500,
@@ -255,7 +269,7 @@ class TestHeatFlow:
         # A child whose interval has NO probe metadata
         other_interval = HeatFlowInterval.objects.create(
             dataset=dataset,
-            sample=site_fixture,
+            site=site_fixture,
             name="No Probe",
             top=600,
             bottom=900,
@@ -413,6 +427,16 @@ class TestIntervalConductivity:
 
 
 class TestParentHeatFlow:
+    def test_table_name_follows_the_owning_application(self):
+        """
+        ``ParentHeatFlow`` lives in ``heat_flow``, so its table is named for
+        ``heat_flow``.  The old ``ghfdb_`` name came from a move into the
+        ``ghfdb`` application that was abandoned (docs/adr/0001).
+        """
+        from heat_flow.models import ParentHeatFlow
+
+        assert ParentHeatFlow._meta.db_table == "heat_flow_parentheatflow"
+
     @pytest.mark.django_db
     def test_parent_children_aggregation(self, dataset, site_fixture, interval_fixture):
         """
@@ -495,7 +519,7 @@ class TestParentHeatFlow:
         """
         T028 – DB-level unique enforcement requires a UniqueConstraint on `sample`.
         NOTE: This constraint cannot be added to ParentHeatFlow.Meta because `sample_id`
-        is a column on the base `measurement` table (MTI), not on `ghfdb_parentheatflow`.
+        is a column on the base `measurement` table (MTI), not on `heat_flow_parentheatflow`.
         SQLite treats the reference as an expression and raises OperationalError on table
         creation.  Uniqueness is enforced at app level by ParentHeatFlow.save() instead.
         This test is marked xfail to document the architectural limitation.
@@ -562,7 +586,7 @@ class TestProbeMetadata:
 
         fresh_interval = HeatFlowInterval.objects.create(
             dataset=dataset,
-            sample=site_fixture,
+            site=site_fixture,
             name="No Probe Interval",
             top=600,
             bottom=900,

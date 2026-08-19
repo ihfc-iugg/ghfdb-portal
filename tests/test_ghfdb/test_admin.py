@@ -12,7 +12,7 @@ from project.ghfdb.admin import (
     ParentEnvironmentListFilter,
     ParentExplorationMethodListFilter,
 )
-from project.ghfdb.models import GHFDB
+from project.ghfdb.models import GHFDBChild
 
 EXPECTED_LIST_DISPLAY = (
     "ghfdb_id",
@@ -73,7 +73,7 @@ EXPECTED_LIST_DISPLAY = (
 )
 
 EXPECTED_SEARCH_FIELDS = (
-    "sample__heatflowinterval__sample__name",
+    "sample__heatflowinterval__site__name",
     "parent__ghfdb_id",
     "ghfdb_id",
 )
@@ -83,10 +83,10 @@ EXPECTED_LIST_FILTER = (
     "parent__corr_HP_flag",
     ChildExplorationMethodListFilter,
     ExplorePurposeListFilter,
-    "sample__heatflowinterval__sample__heatflowsite__country",
-    "sample__heatflowinterval__sample__heatflowsite__region",
-    "sample__heatflowinterval__sample__heatflowsite__continent",
-    "sample__heatflowinterval__sample__heatflowsite__domain",
+    "sample__heatflowinterval__site__country",
+    "sample__heatflowinterval__site__region",
+    "sample__heatflowinterval__site__continent",
+    "sample__heatflowinterval__site__domain",
 )
 
 
@@ -102,11 +102,11 @@ class TestGHFDBAdminChangelist:
             GHFDBParentImportResource,
         )
 
-        url = reverse("admin:ghfdb_ghfdb_changelist")
+        url = reverse("admin:ghfdb_ghfdbchild_changelist")
         response = admin_client.get(url)
         assert response.status_code == 200
 
-        model_admin = admin.site._registry[GHFDB]
+        model_admin = admin.site._registry[GHFDBChild]
         assert model_admin.list_display == EXPECTED_LIST_DISPLAY
         assert model_admin.search_fields == EXPECTED_SEARCH_FIELDS
         assert model_admin.list_filter == EXPECTED_LIST_FILTER
@@ -130,10 +130,10 @@ class TestGHFDBAdminChangelist:
         entry.parent.ghfdb_id = 99999
         entry.parent.save(update_fields=["ghfdb_id"])
 
-        url = reverse("admin:ghfdb_ghfdb_changelist")
+        url = reverse("admin:ghfdb_ghfdbchild_changelist")
 
         response_by_name = admin_client.get(
-            url, {"q": entry.sample.heatflowinterval.sample.name}
+            url, {"q": entry.sample.heatflowinterval.site.name}
         )
         assert response_by_name.status_code == 200
 
@@ -148,7 +148,7 @@ class TestGHFDBAdminChangelist:
         overrides use request-aware method signatures compatible with v4.x so the
         import page renders without a server error.
         """
-        url = reverse("admin:ghfdb_ghfdb_import")
+        url = reverse("admin:ghfdb_ghfdbchild_import")
         response = admin_client.get(url)
         assert response.status_code == 200, (
             f"Import page returned {response.status_code}; expected 200. Check get_import_resource_classes() signature."
@@ -159,10 +159,10 @@ class TestGHFDBAdminChangelist:
         self, admin_user, heat_flow_chain
     ):
         """T080 (BUG-003): Child admin queryset evaluates without invalid prefetch paths."""
-        request = RequestFactory().get(reverse("admin:ghfdb_ghfdb_changelist"))
+        request = RequestFactory().get(reverse("admin:ghfdb_ghfdbchild_changelist"))
         request.user = admin_user
 
-        model_admin = admin.site._registry[GHFDB]
+        model_admin = admin.site._registry[GHFDBChild]
         queryset = model_admin.get_queryset(request)
 
         rows = list(queryset)
@@ -184,7 +184,7 @@ class TestGHFDBAdminListFilters:
         from heat_flow.vocabularies import ExplorationPurpose
         from research_vocabs.models import Concept
 
-        model_admin = admin.site._registry[GHFDB]
+        model_admin = admin.site._registry[GHFDBChild]
 
         # Confirm the filter class appears in list_filter (not raw string)
         assert ExplorePurposeListFilter in model_admin.list_filter, (
@@ -193,7 +193,7 @@ class TestGHFDBAdminListFilters:
 
         # Instantiate filter and collect lookup choices
         f = ExplorePurposeListFilter(
-            request=None, params={}, model=GHFDB, model_admin=model_admin
+            request=None, params={}, model=GHFDBChild, model_admin=model_admin
         )
         lookup_pks = {pk for pk, _label in f.lookups(None, model_admin)}
 
@@ -226,13 +226,13 @@ class TestGHFDBAdminListFilters:
         """
         from heat_flow.vocabularies import GeographicEnvironment
 
-        model_admin = admin.site._registry[GHFDB]
+        model_admin = admin.site._registry[GHFDBChild]
         assert EnvironmentListFilter in model_admin.list_filter, (
             "EnvironmentListFilter must be present in list_filter"
         )
 
         f = EnvironmentListFilter(
-            request=None, params={}, model=GHFDB, model_admin=model_admin
+            request=None, params={}, model=GHFDBChild, model_admin=model_admin
         )
         lookup_values = {value for value, _label in f.lookups(None, model_admin)}
         vocab_values = {value for value, _label in GeographicEnvironment().choices}
@@ -253,13 +253,13 @@ class TestGHFDBAdminListFilters:
         """
         from heat_flow.vocabularies import ExplorationMethod
 
-        model_admin = admin.site._registry[GHFDB]
+        model_admin = admin.site._registry[GHFDBChild]
         assert ChildExplorationMethodListFilter in model_admin.list_filter, (
             "ChildExplorationMethodListFilter must be present in list_filter"
         )
 
         f = ChildExplorationMethodListFilter(
-            request=None, params={}, model=GHFDB, model_admin=model_admin
+            request=None, params={}, model=GHFDBChild, model_admin=model_admin
         )
         lookup_values = {value for value, _label in f.lookups(None, model_admin)}
         vocab_values = {value for value, _label in ExplorationMethod().choices}

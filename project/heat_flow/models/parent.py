@@ -205,7 +205,6 @@ class ParentHeatFlow(Measurement):
     class Meta:
         verbose_name = _("Parent Heat Flow")
         verbose_name_plural = _("Parent Heat Flow")
-        db_table = "ghfdb_parentheatflow"
         db_table_comment = (
             "Heat flux at Earth's surface for a given HeatFlowSite. This table "
             "roughly correlates to the parent level of the GHFDB schema."
