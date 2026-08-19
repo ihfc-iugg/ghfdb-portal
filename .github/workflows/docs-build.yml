@@ -1,0 +1,48 @@
+name: Docs
+
+# Builds the Sphinx documentation on every pull request, so a change that breaks
+# the build is caught at review rather than at the next deploy.
+#
+# This is a build check only. Publishing to GitHub Pages is Deploy Docs, which
+# stays dispatch-only until the shared workflow can be told where the rendered
+# site is written.
+#
+# The build imports the Django project, because the documentation configuration
+# calls django.setup(). It needs no database and no secrets.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'project/**'
+      - 'pyproject.toml'
+      - 'poetry.lock'
+      - '.github/workflows/docs-build.yml'
+  # No paths filter on pull_request, matching Build and Tests: a path-filtered
+  # required check never reports on an out-of-scope pull request, which blocks
+  # merge. Filter this only while the check is not ruleset-required.
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-docs:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Poetry env
+        uses: django-mvp/shared/.github/actions/setup-poetry@v0.3.3
+        with:
+          python-version: '3.13'
+
+      - name: Build documentation
+        run: poetry run invoke docs
