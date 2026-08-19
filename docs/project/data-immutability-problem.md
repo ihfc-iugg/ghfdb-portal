@@ -10,7 +10,7 @@
 
 Once a dataset is published with a DOI, **it becomes immutable** - it cannot be modified. This is a fundamental requirement for scientific integrity, citation stability, and DOI permanence.
 
-**However:** The GHFDB Data Assessment Team needs to reprocess, recalculate, and improve heat flow data to create a quality-assessed, standardized database product.
+**However:** the assessment team needs to reprocess, recalculate, and improve heat flow data to create a quality-assessed, standardized database product.
 
 ---
 
@@ -18,7 +18,7 @@ Once a dataset is published with a DOI, **it becomes immutable** - it cannot be 
 
 **Key principle:** Reprocessing creates **new datasets** with proper provenance, not modifications to existing datasets.
 
-### When GHFDB needs to reprocess data
+### When the assessment team needs to reprocess data
 
 1. **Original dataset remains immutable** (preserved with its DOI)
 2. **New derived dataset is created** that records:
@@ -37,13 +37,13 @@ Original Dataset (2020, Dr. Smith)
 ├─ Status: Published, immutable
 └─ Cannot be modified
 
-           ↓ GHFDB Team reprocesses (2024)
+           ↓ the assessment team reprocesses (2024)
 
-Derived Dataset (2024, GHFDB Data Assessment Team)
+Derived Dataset (2024, assessment team)
 ├─ DOI: 10.xxxx/ghfdb-2024-015
 ├─ Heat Flow: 72.8 mW/m² (recalculated)
 ├─ Derived from: 10.xxxx/ghfdb-2020-001
-├─ Reprocessed by: GHFDB Team
+├─ Reprocessed by: the assessment team
 ├─ Reason: Updated thermal conductivity model
 ├─ Method: [Detailed methodology]
 ├─ Status: Published, immutable
@@ -79,7 +79,7 @@ Derived Dataset (2024, GHFDB Data Assessment Team)
 
 ### Question 1: Dataset Versioning Workflow
 
-**When GHFDB needs to reprocess existing data:**
+**When the assessment team needs to reprocess existing data:**
 
 > What is the workflow for creating a derived/reprocessed dataset?
 

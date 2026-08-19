@@ -20,24 +20,27 @@ from django.test import override_settings
 PROJECT_APPS = ["heat_flow", "ghfdb", "review"]
 
 
-@pytest.mark.django_db
-# The suite runs with --nomigrations, which points every app at a stub module.
-# Restore the real ones so the comparison has something to compare against.
-@override_settings(MIGRATION_MODULES={})
-def test_no_unrecorded_model_changes():
-    """Every model change in the portal's applications has a migration."""
-    out = StringIO()
-    try:
-        call_command(
-            "makemigrations",
-            *PROJECT_APPS,
-            check=True,
-            dry_run=True,
-            verbosity=1,
-            stdout=out,
-        )
-    except SystemExit:
-        pytest.fail(
-            "Model changes have no migration. Run "
-            f"`python manage.py makemigrations {' '.join(PROJECT_APPS)}`.\n{out.getvalue()}"
-        )
+class TestMigrationState:
+    @pytest.mark.django_db
+    # The suite runs with --nomigrations, which points every app at a stub
+    # module. Restore the real ones so the comparison has something to
+    # compare against.
+    @override_settings(MIGRATION_MODULES={})
+    def test_no_unrecorded_model_changes(self):
+        """Every model change in the portal's applications has a migration."""
+        out = StringIO()
+        try:
+            call_command(
+                "makemigrations",
+                *PROJECT_APPS,
+                check=True,
+                dry_run=True,
+                verbosity=1,
+                stdout=out,
+            )
+        except SystemExit:
+            pytest.fail(
+                "Model changes have no migration. Run "
+                f"`python manage.py makemigrations {' '.join(PROJECT_APPS)}`."
+                f"\n{out.getvalue()}"
+            )
