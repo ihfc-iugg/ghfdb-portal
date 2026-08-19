@@ -35,7 +35,17 @@ Never write "the database" unqualified. Never use "the GHFDB" to mean the portal
 **Project** with no qualifier is the FairDM model, a user's own grouping of their datasets. When
 both appear near each other, qualify both.
 
-## The two applications
+So is "front end", and the two things it names are built by different teams in different
+languages.
+
+| Term | Meaning |
+|---|---|
+| **portal front end** | The server-rendered Django and FairDM templates in this repository. |
+| **map viewer** | The separate Vue application built at TU Dresden for exploring the data on a map. It carries no data of its own and reads the portal's API and published releases. It is embedded through a Django template view, and is currently an iframe pointing at an externally hosted build. |
+
+Never call the map viewer "the front end".
+
+## The three applications
 
 The portal has three applications of its own. The split between the first two is the most important
 structural fact in the codebase.
@@ -241,8 +251,15 @@ principle but are out of scope.
 
 Today this work is done outside the portal, on spreadsheets: a reviewer reads a paper, fills in a
 per-publication spreadsheet by hand, and that spreadsheet is later merged into the aggregate. Every
-hop in that chain loses information and none of it is traceable. **Moving this activity inside the
-portal is the reason the portal exists**, and it is what the `review` app is building toward.
+hop in that chain loses information and none of it is traceable.
+
+Moving the activity inside the portal is what the `review` app is building toward, but it is a
+long-term want rather than a near-term priority. An earlier version of this file called it the
+reason the portal exists. That overstated it, and anyone planning work from that sentence would
+have ranked it far too high. It is [G13](GOALS.md), and it is aspirational.
+
+What the portal needs first is the data. Getting the full published database in, and giving new
+datasets a dependable route to follow it, come well before this.
 
 Avoid "literature review", which to a researcher means a survey article.
 
