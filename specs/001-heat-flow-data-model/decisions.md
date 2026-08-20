@@ -181,6 +181,15 @@ declares nothing the registry ignores, and that a component class is supplied on
 generated one will not serve. The acceptance scenario that would have caught this — comparing
 declared attributes against those the registry reads — is now part of the story.
 
+**One correction, made after review.** The first implementation gathered the authority and citation
+into the metadata in an `__init__` override, keeping them as separate class attributes alongside it.
+That was unnecessary machinery: `metadata` is an ordinary declarative attribute on
+`ModelConfiguration`, so declaring a `ModelMetadata` on the base directly does the same job and is
+inherited by every subclass. Sam caught it as the shape of a framework workaround, and it was worse
+than that — it was a workaround for something the framework already supports. Removing it took out
+24 lines and, because those four names are no longer declared anywhere, let the test that compares
+declared attributes against the recognised set drop its one exemption. Nothing is now exempt.
+
 
 ### D9 — One task the design review asked to delete is kept
 

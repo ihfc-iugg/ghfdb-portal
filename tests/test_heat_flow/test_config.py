@@ -89,11 +89,11 @@ class TestHeatFlowRegistryConfig:
             assert config.metadata.authority is not None, (
                 f"{model.__name__} metadata carries no authority"
             )
-            assert config.metadata.authority.name == IHFCConfig.authority.name
+            assert config.metadata.authority.name == IHFCConfig.metadata.authority.name
             assert config.metadata.citation is not None, (
                 f"{model.__name__} metadata carries no citation"
             )
-            assert config.metadata.citation.text == IHFCConfig.citation.text
+            assert config.metadata.citation.text == IHFCConfig.metadata.citation.text
 
     def test_filterset_and_table_classes_are_usable(self):
         """
@@ -118,11 +118,6 @@ class TestHeatFlowRegistryConfig:
         set, so the class of defect is closed rather than today's three instances.
         """
         recognised = _recognised_attribute_names()
-        # IHFCConfig's own contract (T073): consumed by its __init__ to build the
-        # `metadata` the registry reads. Not dead, even though the registry never
-        # reads a configuration's `authority`/`citation`/`keywords`/`repository_url`
-        # directly.
-        recognised |= {"authority", "citation", "repository_url", "keywords"}
 
         for model in _get_all_models():
             config_cls = type(fairdm.registry.get_for_model(model))

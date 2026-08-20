@@ -25,43 +25,26 @@ from .tables import (
 
 
 class IHFCConfig(ModelConfiguration):
-    """Base metadata/configuration for all models in the GHFDB database.
+    """Base configuration for every model in the GHFDB database.
 
-    `authority`, `citation`, `repository_url` and `keywords` are this app's own
-    contract, not the registry's: `ModelConfiguration` reads none of them directly
-    (fairdm/registry/config.py:195-245). They are gathered into the `metadata` the
-    registry does read (`:78`, `:203`) in `__init__` below, so every subclass
-    describes and credits itself without repeating the commission's authority and
-    citation on each one (FR-030).
+    The commission's authority and citation are declared once here, as the
+    `metadata` the registry reads, and inherited by every subclass so that each
+    model describes and credits itself (FR-030).  Each model's own description
+    stays on the model's own configuration, which the registry reads directly.
     """
 
-    authority = Authority(
-        name=_("International Heat Flow Commission"),
-        short_name="IHFC",
-        website="https://ihfc-iugg.org",
+    metadata = ModelMetadata(
+        authority=Authority(
+            name=_("International Heat Flow Commission"),
+            short_name="IHFC",
+            website="https://ihfc-iugg.org",
+        ),
+        citation=Citation(
+            text="Fuchs, S., et al. (2021). A new database structure for the IHFC Global Heat Flow Database. International Journal of Terrestrial Heat Flow and Applications, 4(1), pp.1-14.",
+            doi="https://doi.org/10.31214/ijthfa.v4i1.62",
+        ),
+        repository_url="https://github.com/ihfc-iugg/ghfdb-portal",
     )
-    citation = Citation(
-        text="Fuchs, S., et al. (2021). A new database structure for the IHFC Global Heat Flow Database. International Journal of Terrestrial Heat Flow and Applications, 4(1), pp.1-14.",
-        doi="https://doi.org/10.31214/ijthfa.v4i1.62",
-    )
-    repository_url = "https://github.com/ihfc-iugg/ghfdb-portal"
-    keywords: list[str] = []
-
-    def __init__(self, *args, **kwargs):
-        # `metadata` is overridable per instance (fairdm/registry/config.py:237), and an
-        # explicit one must win over the base's.  Testing the attribute after
-        # construction would not tell us: the base assigns a default, so it is never
-        # None by the time we could look.
-        supplied = kwargs.get("metadata")
-        super().__init__(*args, **kwargs)
-        if supplied is None:
-            self.metadata = ModelMetadata(
-                description=self.description,
-                authority=self.authority,
-                citation=self.citation,
-                keywords=list(self.keywords),
-                repository_url=self.repository_url,
-            )
 
 
 @fairdm.register
@@ -70,7 +53,6 @@ class HeatFlowSiteConfig(IHFCConfig):
     description = _(
         "A heat flow site is a specific geological location where measurements of subsurface temperature gradients and thermal conductivity are conducted to determine the heat flow, or the rate of heat transfer from the Earth's interior to its surface."
     )
-    keywords: list[str] = []
     filterset_class = HeatFlowSiteFilter
     table_class = HeatFlowSiteTable
     # resource_class = SampleWithLocationResource
@@ -97,7 +79,6 @@ class HeatFlowIntervalConfig(IHFCConfig):
     description = _(
         "A heat flow depth interval is a vertical depth interval within the Earth's subsurface, defined by top and bottom depth measurements, over which temperature measurements are taken to determine the terrestrial heat flow at a given location. This interval is used to assess the rate at which heat is conducted from the Earth's interior to the surface. The depth interval is characterized by its vertical extent, which allows for the analysis of temperature gradients and the calculation of heat flux. This data is crucial for understanding geothermal gradients, heat transfer processes, and the thermal structure of the Earth's crust at that location."
     )
-    keywords: list[str] = []
     # lithology, age, stratigraphy are M2M and cannot be in list_display
     admin_list_display = ["top", "bottom", "vertical_depth", "vertical_datum"]
     table_class = HeatFlowIntervalTable
@@ -118,7 +99,6 @@ class HeatFlowConfig(IHFCConfig):
     description = _(
         "A child heat flow measurement refers to the heat flow data obtained from a specific, typically vertical, depth interval within a larger dataset, such as that from a borehole. These measurements represent localized heat flow at particular depths, capturing the rate at which heat is conducted through the Earth at that specific interval. By averaging these child measurements across several depth intervals, scientists can determine the overall surface heat flow for the area. Child heat flow measurements are essential for capturing variations in thermal conductivity and temperature gradients within the subsurface, allowing for a more accurate assessment of the Earth's heat flow at the surface."
     )
-    keywords: list[str] = []
     # method is M2M and cannot be in list_display
     admin_list_display = ["value", "uncertainty", "expedition"]
     table_class = HeatFlowTable
@@ -147,7 +127,6 @@ class ThermalGradientConfig(IHFCConfig):
         "Geothermal gradient refers to the rate of temperature change over a given length interval (typically a depth interval). It reflects how heat flows from the Earth's hot interior toward its cooler surface, driven by conduction, convection, and sometimes advection. Thermal gradient is measured in Kelvin per kilometer (K/km) and varies depending on local geological conditions, such as rock composition and tectonic activity. In regions with high geothermal activity, the thermal gradient is larger, whereas stable cratons tend to have lower gradients. Understanding geothermal gradients helps geoscientists study Earth's geothermal energy potential and processes like plate tectonics and mantle convection."
     )
     table_class = ThermalGradientTable
-    keywords: list[str] = []
     fields = [
         ("value", "uncertainty"),
         ("corrected_value", "corrected_uncertainty"),
@@ -166,7 +145,6 @@ class IntervalConductivityConfig(IHFCConfig):
     description = _(
         "Thermal conductivity is a measure of a material's ability to conduct heat. In the Earth's subsurface, thermal conductivity values are crucial for understanding how heat is transferred through rocks and sediments. Interval thermal conductivity refers to the thermal conductivity values measured over a specific length interval in the Earth's crust or mantle, typically vertical. These values help geoscientists calculate heat flow rates, assess geothermal energy potential, and model temperature distributions in the subsurface. By analyzing interval thermal conductivity data, researchers can better understand the thermal properties of rocks and sediments at different depths, aiding in the study of Earth's thermal structure and geodynamic processes."
     )
-    keywords: list[str] = []
     fields = [
         ("value", "uncertainty"),
         ("method", "strategy"),
@@ -186,7 +164,6 @@ class ParentHeatFlowConfig(IHFCConfig):
         "HeatFlowSite, derived from one or more child HeatFlow measurements. Each site has at most one "
         "parent heat flow record, which inherits its quality score from the associated child measurements."
     )
-    keywords: list[str] = []
     fields = [
         ("value", "uncertainty"),
         "corr_HP_flag",
