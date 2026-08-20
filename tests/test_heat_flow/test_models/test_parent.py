@@ -14,8 +14,9 @@ class TestHeatFlowSite:
     @pytest.mark.django_db
     def test_heat_flow_site_persistence(self, dataset):
         """
-        T013 – HeatFlowSite can be saved and reloaded with all scalar fields intact,
-        including an optional location FK (FR-002, FR-003, SC-003).
+        T005 – HeatFlowSite persists every field FR-001 lists and reads back
+        with correct values and types, including an optional location FK
+        (FR-001, FR-002, FR-003, SC-003).
         """
         from fairdm.contrib.location.models import Point
         from heat_flow.models import HeatFlowSite
@@ -25,21 +26,47 @@ class TestHeatFlowSite:
             dataset=dataset,
             name="Schwarzwald Site",
             country="Germany",
+            region="Baden-Württemberg",
             continent="Europe",
+            domain="Rhine Graben",
+            type="land",
             environment="onshore_continental",
             explo_method="drilling",
             location=point,
+            elevation=350.0,
+            elevation_datum="NAVD88",
+            azimuth=90.0,
+            inclination=85.0,
+            length=1200.0,
         )
         site_db = HeatFlowSite.objects.get(pk=site.pk)
 
         assert site_db.name == "Schwarzwald Site"
         assert site_db.country == "Germany"
+        assert site_db.region == "Baden-Württemberg"
         assert site_db.continent == "Europe"
+        assert site_db.domain == "Rhine Graben"
+        assert str(site_db.type) == "land"
         assert str(site_db.environment) == "onshore_continental"
         assert str(site_db.explo_method) == "drilling"
         assert site_db.location is not None
         assert site_db.location.x == Decimal("8.500000")
         assert site_db.location.y == Decimal("47.400000")
+
+        assert hasattr(site_db.elevation, "magnitude")
+        assert float(site_db.elevation.magnitude) == pytest.approx(350.0)
+        assert str(site_db.elevation_datum) == "NAVD88"
+
+        assert hasattr(site_db.azimuth, "magnitude")
+        assert float(site_db.azimuth.magnitude) == pytest.approx(90.0)
+        assert hasattr(site_db.inclination, "magnitude")
+        assert float(site_db.inclination.magnitude) == pytest.approx(85.0)
+
+        # "borehole depth" (FR-001) is the inherited GenericHole.length field,
+        # exposed under that name via the total_depth_MD property.
+        assert hasattr(site_db.length, "magnitude")
+        assert float(site_db.length.magnitude) == pytest.approx(1200.0)
+        assert float(site_db.total_depth_MD.magnitude) == pytest.approx(1200.0)
 
     @pytest.mark.django_db
     def test_heat_flow_site_explo_purpose_m2m(self, dataset):
@@ -257,21 +284,6 @@ class TestParentHeatFlow:
             second.save()
 
     @pytest.mark.django_db
-    def test_unique_parent_per_site_db_level(self, dataset, site_fixture):
-        """
-        T028 – DB-level unique enforcement requires a UniqueConstraint on `sample`.
-        NOTE: This constraint cannot be added to ParentHeatFlow.Meta because `sample_id`
-        is a column on the base `measurement` table (MTI), not on `heat_flow_parentheatflow`.
-        SQLite treats the reference as an expression and raises OperationalError on table
-        creation.  Uniqueness is enforced at app level by ParentHeatFlow.save() instead.
-        This test is marked xfail to document the architectural limitation.
-        """
-        # App-level enforcement is validated in test_unique_parent_per_site_app_level
-        pytest.skip(
-            "DB-level UniqueConstraint not viable with polymorphic MTI + SQLite (column lives on base table)"
-        )
-
-    @pytest.mark.django_db
     def test_parent_with_zero_children_is_valid(self, dataset, site_fixture):
         """
         T028 – A ParentHeatFlow with no children is valid (edge case from spec).
@@ -282,6 +294,38 @@ class TestParentHeatFlow:
             dataset=dataset, sample=site_fixture, name="Childless", value=70.0
         )
         assert parent.children.count() == 0
+
+    @pytest.mark.django_db
+    def test_parent_persists_uncertainty_flag_comment_id_and_quality(
+        self, dataset, site_fixture
+    ):
+        """
+        T054 – A ParentHeatFlow persists its uncertainty, its heat production
+        correction flag, its comment, its published identifier (ghfdb_id) and
+        its quality code (FR-010).
+        """
+        from heat_flow.models import ParentHeatFlow
+
+        parent = ParentHeatFlow.objects.create(
+            dataset=dataset,
+            sample=site_fixture,
+            name="Full Parent",
+            value=70.0,
+            uncertainty=5.0,
+            corr_HP_flag=True,
+            comment="A representative surface value.",
+            ghfdb_id=12345,
+            quality="A1B2C3D4E5F6G",
+        )
+
+        reloaded = ParentHeatFlow.objects.get(pk=parent.pk)
+
+        assert hasattr(reloaded.uncertainty, "magnitude")
+        assert float(reloaded.uncertainty.magnitude) == pytest.approx(5.0)
+        assert reloaded.corr_HP_flag is True
+        assert reloaded.comment == "A representative surface value."
+        assert reloaded.ghfdb_id == 12345
+        assert reloaded.quality == "A1B2C3D4E5F6G"
 
     @pytest.mark.django_db
     def test_parent_save_rejects_wrong_sample(

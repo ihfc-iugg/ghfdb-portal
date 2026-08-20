@@ -333,6 +333,45 @@ class TestGHFDBParentImportSiteIdentity:
         assert parent.sample_id == existing_site.pk
 
 
+@pytest.mark.django_db
+class TestGHFDBParentImportRefusesSecondParent:
+    """T051 — US-3: a second parent for a site is refused through the import
+    path, not only through the model (FR-012, SC-005)."""
+
+    def test_second_parent_at_the_same_site_is_refused_on_import(self, dataset):
+        """
+        Importing a row whose coordinates resolve to a site that already has
+        a ParentHeatFlow is refused: the row is reported as invalid and no
+        second ParentHeatFlow is created for that site.
+        """
+        from heat_flow.models import HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        resource = GHFDBParentImportResource()
+        first_result = resource.import_data(
+            make_dataset(PARENT_ROW), dry_run=False, raise_errors=False
+        )
+        assert not first_result.has_errors(), first_result.invalid_rows
+        assert ParentHeatFlow.objects.filter(ghfdb_id=1).exists()
+
+        # Same coordinates as PARENT_ROW (lat_NS=48.0, long_EW=11.0), a
+        # different, previously unseen ID_parent.
+        second_row = dict(PARENT_ROW)
+        second_row["ID_parent"] = "2"
+        second_row["q"] = "99.0"
+
+        second_result = GHFDBParentImportResource().import_data(
+            make_dataset(second_row), dry_run=False, raise_errors=False
+        )
+
+        assert second_result.has_validation_errors()
+        assert HeatFlowSite.objects.filter(name="Test Site Alpha").count() == 1
+        site = HeatFlowSite.objects.get(name="Test Site Alpha")
+        assert ParentHeatFlow.objects.filter(sample=site).count() == 1
+        assert not ParentHeatFlow.objects.filter(ghfdb_id=2).exists()
+
+
 class TestGHFDBParentImportResourceAccessControl:
     """T029 — Staff-only access control."""
 
@@ -734,8 +773,8 @@ class TestGHFDBParentPrivateDatasetRegression:
     def test_import_attaches_records_to_a_private_dataset(self, dataset):
         """A row imports into the only dataset available, whether or not it is public."""
         from fairdm.utils.choices import Visibility
-
         from heat_flow.models import HeatFlowSite, ParentHeatFlow
+
         from project.ghfdb.resources import GHFDBParentImportResource
 
         assert dataset.visibility == Visibility.PRIVATE

@@ -101,6 +101,22 @@ class TestHeatFlowInterval:
         )
         interval.full_clean()  # must not raise
 
+    @pytest.mark.django_db
+    def test_deleting_a_site_deletes_its_intervals(
+        self, dataset, site_fixture, interval_fixture
+    ):
+        """
+        T029 – Deleting a HeatFlowSite deletes its HeatFlowInterval records
+        (FR-007, site FK is on_delete=CASCADE).
+        """
+        from heat_flow.models import HeatFlowInterval
+
+        interval_pk = interval_fixture.pk
+
+        site_fixture.delete()
+
+        assert not HeatFlowInterval.objects.filter(pk=interval_pk).exists()
+
 class TestHeatFlow:
     @pytest.mark.django_db
     def test_heat_flow_child_relationships(
@@ -175,6 +191,79 @@ class TestHeatFlow:
         assert hf1.pk is not None
         assert hf2.pk is not None
         assert gradient_fixture.heat_flow_children.count() == 2
+
+    @pytest.mark.django_db
+    def test_multiple_heatflow_can_share_conductivity(
+        self, dataset, interval_fixture, conductivity_fixture, parent_fixture
+    ):
+        """
+        T022 – Two HeatFlow children may reference the same
+        IntervalConductivity FK without IntegrityError (FR-017), the
+        conductivity half of T022 alongside the gradient case above.
+        """
+        from heat_flow.models import HeatFlow
+
+        hf1 = HeatFlow.objects.create(
+            dataset=dataset,
+            sample=interval_fixture,
+            name="Child A",
+            value=60.0,
+            thermal_conductivity=conductivity_fixture,
+        )
+        hf2 = HeatFlow.objects.create(
+            dataset=dataset,
+            sample=interval_fixture,
+            name="Child B",
+            value=65.0,
+            thermal_conductivity=conductivity_fixture,
+        )
+        assert hf1.pk is not None
+        assert hf2.pk is not None
+        assert conductivity_fixture.heat_flow_children.count() == 2
+
+    @pytest.mark.django_db
+    def test_gradient_referenced_by_a_child_cannot_be_deleted(
+        self, dataset, interval_fixture, gradient_fixture
+    ):
+        """
+        T023 – A ThermalGradient referenced by a HeatFlow child is protected
+        from deletion (FR-017, on_delete=PROTECT).
+        """
+        from django.db.models import ProtectedError
+        from heat_flow.models import HeatFlow
+
+        HeatFlow.objects.create(
+            dataset=dataset,
+            sample=interval_fixture,
+            name="Protects gradient",
+            value=60.0,
+            thermal_gradient=gradient_fixture,
+        )
+
+        with pytest.raises(ProtectedError):
+            gradient_fixture.delete()
+
+    @pytest.mark.django_db
+    def test_conductivity_referenced_by_a_child_cannot_be_deleted(
+        self, dataset, interval_fixture, conductivity_fixture
+    ):
+        """
+        T023 – An IntervalConductivity referenced by a HeatFlow child is
+        protected from deletion (FR-017, on_delete=PROTECT).
+        """
+        from django.db.models import ProtectedError
+        from heat_flow.models import HeatFlow
+
+        HeatFlow.objects.create(
+            dataset=dataset,
+            sample=interval_fixture,
+            name="Protects conductivity",
+            value=60.0,
+            thermal_conductivity=conductivity_fixture,
+        )
+
+        with pytest.raises(ProtectedError):
+            conductivity_fixture.delete()
 
     @pytest.mark.django_db
     def test_heat_flow_allows_null_gradient_and_conductivity(
@@ -303,6 +392,25 @@ class TestHeatFlowCorrection:
             corr.save()  # must not raise
 
     @pytest.mark.django_db
+    def test_second_correction_of_the_same_type_rejected(self, child_fixture):
+        """
+        T026 – A second HeatFlowCorrection of the same correction_type on one
+        child is rejected: Meta.unique_together = ("heat_flow", "correction_type")
+        (FR-027).
+        """
+        from heat_flow.models import HeatFlowCorrection
+
+        HeatFlowCorrection.objects.create(
+            heat_flow=child_fixture, correction_type="IS", status="present_corrected"
+        )
+        with pytest.raises(IntegrityError):
+            HeatFlowCorrection.objects.create(
+                heat_flow=child_fixture,
+                correction_type="IS",
+                status="not_considered",
+            )
+
+    @pytest.mark.django_db
     def test_correction_invalid_type_rejected(self, child_fixture):
         """
         T057 – A correction with an unrecognised correction_type is rejected by Django's
@@ -342,6 +450,59 @@ class TestThermalGradient:
                 dataset=dataset, sample=interval_fixture, name="No Value"
             )
 
+    @pytest.mark.django_db
+    def test_gradient_corrected_value_methods_shutin_and_count_persist(
+        self, dataset, interval_fixture
+    ):
+        """
+        T017 – A gradient's corrected value, its top and bottom temperature
+        methods, its shut-in times and its recording count persist and read
+        back (FR-019).
+        """
+        from heat_flow import vocabularies
+        from heat_flow.models import ThermalGradient
+        from research_vocabs.models import Concept
+
+        gradient = ThermalGradient.objects.create(
+            dataset=dataset,
+            sample=interval_fixture,
+            name="Gradient with corrections",
+            value=25.0,
+            corrected_value=27.5,
+            corrected_uncertainty=1.2,
+            shutin_top=10,
+            shutin_bottom=15,
+            number=8,
+        )
+        top_method = Concept.get_for_vocabulary(vocabularies.TemperatureMethod).first()
+        bottom_method = (
+            Concept.get_for_vocabulary(vocabularies.TemperatureMethod).exclude(
+                pk=top_method.pk
+            )
+            or Concept.get_for_vocabulary(vocabularies.TemperatureMethod)
+        ).first()
+        gradient.method_top.add(top_method)
+        gradient.method_bottom.add(bottom_method)
+
+        reloaded = ThermalGradient.objects.get(pk=gradient.pk)
+
+        assert hasattr(reloaded.corrected_value, "magnitude")
+        assert float(reloaded.corrected_value.magnitude) == pytest.approx(27.5)
+        assert hasattr(reloaded.corrected_uncertainty, "magnitude")
+        assert float(reloaded.corrected_uncertainty.magnitude) == pytest.approx(1.2)
+
+        assert list(reloaded.method_top.values_list("pk", flat=True)) == [top_method.pk]
+        assert list(reloaded.method_bottom.values_list("pk", flat=True)) == [
+            bottom_method.pk
+        ]
+
+        assert hasattr(reloaded.shutin_top, "magnitude")
+        assert float(reloaded.shutin_top.magnitude) == pytest.approx(10)
+        assert hasattr(reloaded.shutin_bottom, "magnitude")
+        assert float(reloaded.shutin_bottom.magnitude) == pytest.approx(15)
+
+        assert reloaded.number == 8
+
 class TestIntervalConductivity:
     @pytest.mark.django_db
     def test_interval_conductivity_save_rejects_wrong_sample(
@@ -368,6 +529,52 @@ class TestIntervalConductivity:
                 dataset=dataset, sample=interval_fixture, name="No Value"
             )
 
+    @pytest.mark.django_db
+    def test_conductivity_vocabulary_fields_count_and_score_persist(
+        self, dataset, interval_fixture
+    ):
+        """
+        T018 – A conductivity's vocabulary fields, its determination count
+        and its score persist and read back (FR-021).
+        """
+        from heat_flow import vocabularies
+        from heat_flow.models import IntervalConductivity
+        from research_vocabs.models import Concept
+
+        conductivity = IntervalConductivity.objects.create(
+            dataset=dataset,
+            sample=interval_fixture,
+            name="Conductivity with vocab fields",
+            value=2.5,
+            number=12,
+            score=0.9,
+        )
+
+        vocab_fields = {
+            "source": vocabularies.ConductivitySource,
+            "location": vocabularies.ConductivityLocation,
+            "method": vocabularies.ConductivityMethod,
+            "saturation": vocabularies.ConductivitySaturation,
+            "pT_conditions": vocabularies.ConductivityPTConditions,
+            "pT_function": vocabularies.ConductivityPTFunction,
+            "strategy": vocabularies.ConductivityStrategy,
+        }
+        expected_pks = {}
+        for field_name, vocabulary in vocab_fields.items():
+            concept = Concept.get_for_vocabulary(vocabulary).first()
+            getattr(conductivity, field_name).add(concept)
+            expected_pks[field_name] = concept.pk
+
+        reloaded = IntervalConductivity.objects.get(pk=conductivity.pk)
+
+        for field_name, expected_pk in expected_pks.items():
+            assert list(getattr(reloaded, field_name).values_list("pk", flat=True)) == [
+                expected_pk
+            ]
+
+        assert reloaded.number == 12
+        assert reloaded.score == pytest.approx(0.9)
+
 class TestProbeMetadata:
     @pytest.mark.django_db
     def test_probe_metadata_linked_to_interval(
@@ -389,6 +596,30 @@ class TestProbeMetadata:
         assert float(reloaded.probe_metadata.penetration.magnitude) == pytest.approx(3.5)
         assert float(reloaded.probe_metadata.length.magnitude) == pytest.approx(5.0)
         assert float(reloaded.probe_metadata.tilt.magnitude) == pytest.approx(2.0)
+
+    @pytest.mark.django_db
+    def test_probe_metadata_accepts_several_probe_type_concepts(
+        self, dataset, interval_fixture
+    ):
+        """
+        T059 – ProbeMetadata.probe_type accepts several probe type concepts
+        and reads them back (FR-023, many-to-many vocabulary field).
+        """
+        from heat_flow import vocabularies
+        from heat_flow.models import ProbeMetadata
+        from research_vocabs.models import Concept
+
+        probe = ProbeMetadata.objects.create(interval=interval_fixture, penetration=3.5)
+        concepts = list(
+            Concept.get_for_vocabulary(vocabularies.ProbeType)[:2]
+        )
+        assert len(concepts) == 2, "fixture requires at least two probe type concepts"
+        probe.probe_type.set(concepts)
+
+        reloaded = ProbeMetadata.objects.get(pk=probe.pk)
+        assert set(reloaded.probe_type.values_list("pk", flat=True)) == {
+            c.pk for c in concepts
+        }
 
     @pytest.mark.django_db
     def test_interval_without_probe_raises(self, dataset, site_fixture):
@@ -422,3 +653,56 @@ class TestProbeMetadata:
         probe_pk = probe.pk
         interval_fixture.delete()
         assert not ProbeMetadata.objects.filter(pk=probe_pk).exists()
+
+
+class TestCorrectionStatusDocumentation:
+    """The documented status table must match the one the code enforces.
+
+    FR-028 requires the valid combinations to be documented.  Documenting them
+    without a check is how the field map two sections above went stale, so the
+    table is read back out of the documentation and compared with the source of
+    truth rather than trusted.
+    """
+
+    DOC = "docs/ghfdb_fields.md"
+    HEADING = "##### Valid status per disturbance type"
+
+    def _documented_statuses(self):
+        """Map each disturbance type in the documented table to its statuses."""
+        import re
+        from pathlib import Path
+
+        text = Path(__file__).resolve().parents[3].joinpath(self.DOC).read_text()
+        section = text.split(self.HEADING, 1)[1]
+        documented = {}
+        for line in section.splitlines():
+            if not line.startswith("|") or line.startswith("| ---"):
+                continue
+            cells = [c.strip() for c in line.strip("|").split("|")]
+            if len(cells) != 2 or cells[0] == "Disturbance type":
+                continue
+            types = re.findall(r"\b([A-Z]{1,4})\b(?=\s*\()", cells[0])
+            statuses = {
+                s.strip().replace("\\", "").replace("unspecified (`-`)", "-")
+                for s in cells[1].split(",")
+            }
+            for code in types:
+                documented[code] = statuses
+        return documented
+
+    def test_documented_statuses_match_the_enforced_ones(self):
+        from heat_flow.models import HeatFlowCorrection
+
+        documented = self._documented_statuses()
+        assert documented, "No documented status table found under the heading."
+
+        for code, _label in HeatFlowCorrection.CorrectionTypeChoices.choices:
+            enforced = HeatFlowCorrection.VALID_STATUS_FOR_TYPE.get(code)
+            if enforced is None:
+                enforced = HeatFlowCorrection.ENVIRONMENTAL_VALID
+            assert code in documented, f"{code} is enforced and not documented."
+            assert documented[code] == set(enforced), (
+                f"Documented statuses for {code} do not match the code.\n"
+                f"  documented: {sorted(documented[code])}\n"
+                f"  enforced:   {sorted(enforced)}"
+            )

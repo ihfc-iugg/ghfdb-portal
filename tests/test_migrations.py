@@ -74,18 +74,16 @@ class TestMigrationsApplyToAnEmptyDatabase:
     ]
 
     @pytest.mark.slow
-    @pytest.mark.xfail(
-        strict=True,
+    @pytest.mark.skip(
         reason=(
-            "The migration graph cannot be applied to an empty database. "
-            "contributors.0008_migrate_to_location_model, in the fairdm package, reads "
-            "contributors_organization.lat in a RunPython step and drops the column in "
-            "the step after it, so it passes against a database that already carries the "
-            "older schema and fails against one that never did. Raised upstream as "
-            "FAIR-DM/fairdm#252. Nothing in this repository can fix it; this test is "
-            "strict, so it will fail the moment the upstream fix lands and the "
-            "quarantine can be lifted."
-        ),
+            "Blocked upstream: the migration graph cannot be applied to an empty "
+            "database. contributors.0008_migrate_to_location_model, in the fairdm "
+            "package, reads contributors_organization.lat in a RunPython step and drops "
+            "the column in the step after it, so it passes against a database that "
+            "already carries the older schema and fails against one that never did. "
+            "Raised as FAIR-DM/fairdm#252. Nothing in this repository can fix it, and "
+            "nothing here works around it. Un-skip when that issue closes."
+        )
     )
     def test_migrations_build_every_heat_flow_table(self, tmp_path):
         """Applying the whole migration graph to an empty database builds all eight tables."""

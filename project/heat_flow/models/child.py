@@ -67,62 +67,6 @@ class HeatFlowInterval(Interval, AbstractGeoDepthInterval):
                 )
 
 
-class HeatFlowQuerySet(django_models.QuerySet):
-    """Custom QuerySet for HeatFlow model with optimized queries."""
-
-    def with_related_data(self):
-        """Prefetch all related data for efficient queries."""
-        return self.select_related(
-            "parent",
-            "parent__sample",
-            "thermal_gradient",
-            "thermal_conductivity",
-            "sample__probe_metadata",
-        ).prefetch_related(
-            "method",
-            "corrections",
-            "thermal_gradient__method_top",
-            "thermal_gradient__method_bottom",
-            "thermal_conductivity__source",
-            "thermal_conductivity__location",
-            "thermal_conductivity__method",
-        )
-
-    def probe_measurements(self):
-        """Filter to probe measurements only."""
-        return self.filter(sample__probe_metadata__isnull=False)
-
-    def borehole_measurements(self):
-        """Filter to borehole measurements only."""
-        return self.filter(sample__probe_metadata__isnull=True)
-
-    def high_quality(self):
-        """Filter to high quality measurements (U1, U2, M1, M2)."""
-        return self.filter(
-            U_score__in=[UScoreOptions.U1, UScoreOptions.U2],
-            M_score__in=[MScoreOptions.M1, MScoreOptions.M2],
-        )
-
-
-class HeatFlowManager(django_models.Manager):
-    """Custom manager for HeatFlow model."""
-
-    def get_queryset(self):
-        return HeatFlowQuerySet(self.model, using=self._db)
-
-    def with_related_data(self):
-        return self.get_queryset().with_related_data()
-
-    def probe_measurements(self):
-        return self.get_queryset().probe_measurements()
-
-    def borehole_measurements(self):
-        return self.get_queryset().borehole_measurements()
-
-    def high_quality(self):
-        return self.get_queryset().high_quality()
-
-
 class HeatFlow(Measurement):
     """Child heat flow as part of the Global Heat Flow Database. This is
     the "child" schema outlined in the formal structure of the database put
@@ -275,9 +219,6 @@ class HeatFlow(Measurement):
         db_index=True,
     )
 
-    # Managers
-    # objects = HeatFlowManager()
-
     class Meta:
         verbose_name = _("Heat Flow")
         verbose_name_plural = _("Heat Flow")
@@ -300,10 +241,6 @@ class HeatFlow(Measurement):
     def is_probe(self):
         """Check if the heat flow measurement was acquired using a marine probe."""
         return self.sample is not None and hasattr(self.sample, "probe_metadata")
-
-    @property
-    def interval(self):
-        return self.parent
 
     def save(self, *args, **kwargs):
         if self.sample_id and not isinstance(self.sample, HeatFlowInterval):
