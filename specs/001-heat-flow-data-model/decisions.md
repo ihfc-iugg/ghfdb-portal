@@ -136,3 +136,37 @@ extension is configured for it, so the existing diagram reaches readers as sourc
   children, carrying the contribution flag. ADR-0001 records that design as begun and abandoned. The
   figure is a manuscript artefact rather than a stale copy of the documentation diagram, so it is
   left untouched by this feature and raised separately.
+
+## Amended after the specification was approved
+
+### D8 — Registration is configured where the registry reads, not by supplying classes
+
+Raised by research during planning, after the specification had been agreed. Recorded here rather
+than settled quietly, because it changes what US-5 asks for.
+
+**As approved**, the specification required every registered configuration to declare a filter set
+class and a table class. That is the wrong requirement, in both directions.
+
+**It asks for too much.** The registry generates a filter set and a table for any configuration
+that supplies none, from the configuration's own field list and falling back to the model's default
+fields (`fairdm/registry/config.py:435`, `fairdm/registry/factories.py`). Requiring a hand-written
+class for every model would replace working generated components with code to maintain, against
+constitution principle IX, which asks for configuration over new code.
+
+**It asks for the wrong thing.** `ModelConfiguration` recognises a fixed set of attributes: a field
+list, a per-component field list, a per-component class, and a `metadata` dataclass holding the
+description, authority, keywords, repository link and citation (`fairdm/registry/config.py:78`,
+`:203`, `:111`). Anything else set on a configuration is simply set, never read, and looks
+deliberate to the next reader.
+
+Four attributes in this app's configurations are in that position, `filterset_options` among them.
+The consequence that matters is the shared base: it exists to give every model the commission's
+authority and citation, and it declares both as bare class attributes rather than as the metadata
+the registry reads. So every model in the app is registered without the credit the base was written
+to supply, and the tests pass because they only ever asserted that a configuration exists and that
+its field list is non-empty.
+
+**Ruled**: the requirement becomes that the metadata reaches the registry, that a configuration
+declares nothing the registry ignores, and that a component class is supplied only where the
+generated one will not serve. The acceptance scenario that would have caught this — comparing
+declared attributes against those the registry reads — is now part of the story.

@@ -160,20 +160,26 @@ framework by declaring a configuration, and a portal user can browse and filter 
 model the app defines.
 
 **Why this priority**: registration is the join between the domain model and the portal's
-infrastructure, and it is a constitution principle III requirement. A model registered without a
-filter set or a table is registered in name only — it appears, and it cannot be searched or listed
-usefully.
+infrastructure, and it is a constitution principle III requirement. The failure mode here is not a
+missing configuration but a configuration that looks complete and is not read — an attribute under
+a name the registry does not recognise is set, ignored, and indistinguishable from a working one by
+inspection.
 
-**Independent Test**: query the registry for each registered model and assert it returns a
-configuration that declares a field list, a filter set class and a table class.
+**Independent Test**: query the registry for each registered model, assert it carries the
+commission's authority and citation and resolves to a usable filter set and table, and assert that
+no configuration in the app declares an attribute the registry does not read.
 
 **Acceptance Scenarios**:
 
 1. **Given** the app is loaded, **When** the registry is queried for each of the six models
    extending `Sample` or `Measurement`, **Then** each returns a valid configuration.
-2. **Given** a registered configuration, **When** it is inspected, **Then** it declares a field
-   list, a filter set class and a table class.
-3. **Given** all registrations in place, **When** the framework's system checks run, **Then** they
+2. **Given** a registered configuration, **When** its metadata is read, **Then** it carries the
+   commission's authority and its citation.
+3. **Given** a registered configuration, **When** its filter set and table are resolved, **Then**
+   each yields a usable class, whether supplied or generated.
+4. **Given** every configuration in this app, **When** its declared attributes are compared against
+   those the registry reads, **Then** none is declared that the registry ignores.
+5. **Given** all registrations in place, **When** the framework's system checks run, **Then** they
    report no errors and no warnings.
 
 ---
@@ -395,37 +401,45 @@ map's test and confirm it fails when a column is removed from the map.
 **Registration**
 
 - **FR-029**: Every model in this app extending `Sample` or `Measurement` MUST be registered with
-  the framework's registry, using a shared base carrying the commission's authority and citation
-  metadata. Models that extend neither — probe metadata and corrections — are managed through their
-  parents and are not registered.
-- **FR-030**: Each registered configuration MUST declare a field list, a filter set class and a
-  table class.
+  the framework's registry, using a shared base carrying the commission's authority and citation.
+  Models that extend neither — probe metadata and corrections — are managed through their parents
+  and are not registered.
+- **FR-030**: The authority, citation, keywords and repository link MUST be declared where the
+  registry reads them, so that a registered model describes and credits itself. Declaring them
+  under names the registry does not read leaves a model uncredited while appearing configured.
+- **FR-031**: Each registered configuration MUST declare a field list, and MUST declare only
+  attributes the registry reads. Where a configuration needs a filter set or a table that differs
+  from the generated one, it MUST supply a class rather than options the registry ignores.
+  Configuration that names nothing real is worse than no configuration, because it reads as
+  deliberate.
+- **FR-032**: A configuration MUST NOT supply a component class where the generated one serves,
+  per constitution principle IX.
 
 **Migrations and system integrity**
 
-- **FR-031**: Every model change MUST be captured in a migration within this app, and those
-  migrations MUST apply cleanly to an empty database.
-- **FR-032**: The framework's system checks MUST report no errors and no warnings.
+- **FR-033**: Every model change MUST be captured in a migration within this app, and those
+  migrations MUST apply cleanly to an empty database, proven by a test that applies them.
+- **FR-034**: The framework's system checks MUST report no errors and no warnings.
 
 **Test data and coverage**
 
-- **FR-033**: A factory MUST exist for every model this app defines.
-- **FR-034**: Factories MUST populate controlled-vocabulary fields with concepts drawn from each
+- **FR-035**: A factory MUST exist for every model this app defines.
+- **FR-036**: Factories MUST populate controlled-vocabulary fields with concepts drawn from each
   field's own vocabulary, rather than leaving them empty.
-- **FR-035**: Tests MUST cover, for every model, creation and persistence of its fields, every
+- **FR-037**: Tests MUST cover, for every model, creation and persistence of its fields, every
   relationship it declares including many-to-many relationships, and every deletion behaviour.
 
 **Documentation**
 
-- **FR-036**: The field map MUST record, for every column of the published spreadsheet, the model
+- **FR-038**: The field map MUST record, for every column of the published spreadsheet, the model
   that expresses it, the field or documented accessor that holds it, and the model that declares
   that field.
-- **FR-037**: An automated test MUST assert that the field map covers every column in the canonical
+- **FR-039**: An automated test MUST assert that the field map covers every column in the canonical
   column definitions and that each mapping names a field or documented accessor that exists.
-- **FR-038**: The documentation MUST carry an entity relationship diagram covering every model this
+- **FR-040**: The documentation MUST carry an entity relationship diagram covering every model this
   app defines, its relationships and their cardinalities, written in Mermaid and rendering as a
   diagram in the built documentation.
-- **FR-039**: The Mermaid diagram MUST be the only maintained diagram source. The Graphviz sources,
+- **FR-041**: The Mermaid diagram MUST be the only maintained diagram source. The Graphviz sources,
   the generation script, the installation instructions and the images generated from them MUST be
   removed.
 
@@ -464,8 +478,10 @@ map's test and confirm it fails when a column is removed from the map.
   clearing a child's link when the published value is deleted, deleting probe metadata with its
   interval, deleting an interval with its site, and refusing to delete a gradient or conductivity a
   determination still references.
-- **SC-007**: The registry returns a configuration declaring a field list, a filter set class and a
-  table class for each of the six registered models.
+- **SC-007**: The registry returns a configuration for each of the six registered models, each one
+  carrying the commission's authority and citation and a field list, and each resolving to a usable
+  filter set and table.
+- **SC-007a**: No configuration in this app declares an attribute the registry does not read.
 - **SC-008**: Every model this app defines has a factory, and every controlled-vocabulary field is
   populated by the factory of the model that declares it.
 - **SC-009**: Every column in the canonical published column definitions appears in the field map,
