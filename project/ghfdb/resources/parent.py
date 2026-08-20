@@ -191,6 +191,13 @@ class GHFDBParentImportResource(ModelResource):
 
         if existing_by_location is not None:
             site = existing_by_location
+            # Record the row's identifier on a site that has none, so that a later
+            # row carrying that identifier and no coordinates still resolves here
+            # rather than creating a duplicate. Never overwrite one already set:
+            # coordinates decide identity, and a disagreeing identifier is the
+            # row's problem, not this site's.
+            if id_parent and not site.local_id:
+                site.local_id = id_parent
         elif id_parent:
             # Use Sample.local_id (inherited) to upsert the site when the row's
             # coordinates did not resolve one and ID_parent is present.

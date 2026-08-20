@@ -787,3 +787,45 @@ class TestGHFDBParentPrivateDatasetRegression:
         ]
         assert ParentHeatFlow.objects.get(ghfdb_id=1).dataset == dataset
         assert HeatFlowSite.objects.get(name="Test Site Alpha").dataset == dataset
+
+
+class TestGHFDBParentImportRecordsIdentifierOnMatchedSite:
+    """A site matched by coordinates keeps the row's identifier for later lookups.
+
+    Coordinates decide identity, so a row matching an existing site by coordinates
+    binds to it.  If that site carries no identifier of its own, the row's is
+    recorded: a later row carrying the same identifier and no coordinates would
+    otherwise fail its lookup and create a duplicate.
+    """
+
+    @pytest.mark.django_db
+    def test_identifier_is_recorded_on_a_site_matched_by_coordinates(self, dataset):
+        """The site must pre-exist without an identifier, or the import takes the
+        other branch and this passes whether or not the behaviour is there."""
+        from decimal import Decimal
+
+        from fairdm.contrib.location.models import Point
+        from heat_flow.models import HeatFlowSite
+
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        point, _ = Point.objects.get_or_create(
+            x=Decimal(PARENT_ROW["long_EW"]), y=Decimal(PARENT_ROW["lat_NS"])
+        )
+        existing = HeatFlowSite.objects.create(
+            dataset=dataset, name="Entered by hand", location=point
+        )
+        assert not existing.local_id
+
+        result = GHFDBParentImportResource().import_data(
+            make_dataset(PARENT_ROW), dry_run=False, raise_errors=False
+        )
+        assert not result.has_errors(), result.invalid_rows
+
+        # One site, not two: the row resolved to the one already there.
+        assert HeatFlowSite.objects.filter(location=point).count() == 1
+        existing.refresh_from_db()
+        assert existing.local_id == PARENT_ROW["ID_parent"], (
+            "The row's identifier was not recorded on the site it resolved to, so a "
+            "later row carrying it without coordinates would create a duplicate."
+        )
