@@ -799,7 +799,7 @@
       "priority": "P5",
       "issue": 170,
       "worktree": null,
-      "status": "todo",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
@@ -808,7 +808,7 @@
           "attempts": 1,
           "evidence": {
             "code": [
-              "project/heat_flow/config.py:37"
+              "project/heat_flow/config.py:60"
             ],
             "tests": [
               "tests/test_heat_flow/test_config.py::TestHeatFlowRegistryConfig::test_all_six_models_registered"
@@ -821,7 +821,7 @@
           "attempts": 1,
           "evidence": {
             "code": [
-              "project/heat_flow/config.py:47"
+              "project/heat_flow/config.py:70"
             ],
             "tests": [
               "tests/test_heat_flow/test_config.py::TestHeatFlowRegistryConfig::test_registry_config_has_fields"
@@ -830,18 +830,42 @@
         },
         {
           "id": "T068",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/config.py:50"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_config.py::TestHeatFlowRegistryConfig::test_metadata_carries_authority_and_citation"
+            ]
+          }
         },
         {
           "id": "T069",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/config.py:28"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_config.py::TestHeatFlowRegistryConfig::test_filterset_and_table_classes_are_usable"
+            ]
+          }
         },
         {
           "id": "T070",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/config.py:28"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_config.py::TestHeatFlowRegistryConfig::test_no_configuration_declares_an_unread_attribute"
+            ]
+          }
         },
         {
           "id": "T071",
@@ -849,7 +873,7 @@
           "attempts": 1,
           "evidence": {
             "code": [
-              "project/heat_flow/config.py:22"
+              "project/heat_flow/config.py:28"
             ],
             "tests": [
               "tests/test_heat_flow/test_config.py::TestHeatFlowRegistryConfig::test_system_checks_pass"
@@ -858,23 +882,55 @@
         },
         {
           "id": "T072",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/config.py:28"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_config.py::TestHeatFlowRegistryConfig::test_probe_metadata_and_correction_are_not_registered"
+            ]
+          }
         },
         {
           "id": "T073",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/config.py:44"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_config.py::TestHeatFlowRegistryConfig::test_metadata_carries_authority_and_citation"
+            ]
+          }
         },
         {
           "id": "T074",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/config.py:82"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_config.py::TestHeatFlowRegistryConfig::test_no_configuration_declares_an_unread_attribute"
+            ]
+          }
         },
         {
           "id": "T075",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/tables.py:143"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_config.py::TestHeatFlowRegistryConfig::test_filterset_and_table_classes_are_usable"
+            ]
+          }
         }
       ]
     },
