@@ -169,29 +169,38 @@ class GHFDBParentImportResource(ModelResource):
     # ------------------------------------------------------------------
 
     def _get_or_create_site(self, id_parent: str, row: dict) -> HeatFlowSite:
-        """Return the HeatFlowSite for this parent row, creating it if needed."""
+        """Return the HeatFlowSite for this parent row, creating it if needed.
+
+        Coordinates identify the site (R1, FR-004): the row's location is
+        looked up first, whether or not the row carries an ``ID_parent``.
+        ``ID_parent`` is consulted only when the coordinates do not already
+        resolve to an existing site, so the two lookups cannot disagree and
+        a row cannot create a second site at an occupied coordinate pair.
+        """
         from fairdm.contrib.location.models import Point
 
         # Parse the new site data from the row
         new_site = self._parent_widget.clean(row.get("name"), row=row)
 
-        # Use Sample.local_id (inherited) to upsert the site when ID_parent is present.
-        if id_parent:
+        existing_by_location = None
+        if new_site is not None and new_site.location is not None:
+            existing_by_location = HeatFlowSite.objects.filter(
+                location__x=new_site.location.x,
+                location__y=new_site.location.y,
+            ).first()
+
+        if existing_by_location is not None:
+            site = existing_by_location
+        elif id_parent:
+            # Use Sample.local_id (inherited) to upsert the site when the row's
+            # coordinates did not resolve one and ID_parent is present.
             try:
                 site = HeatFlowSite.objects.get(local_id=id_parent)
             except HeatFlowSite.DoesNotExist:
                 site = new_site or HeatFlowSite()
                 site.local_id = id_parent
         else:
-            # Template rows without ID_parent: look up by location before creating.
-            if new_site is not None and new_site.location is not None:
-                existing = HeatFlowSite.objects.filter(
-                    location__x=new_site.location.x,
-                    location__y=new_site.location.y,
-                ).first()
-                site = existing if existing is not None else new_site
-            else:
-                site = new_site or HeatFlowSite()
+            site = new_site or HeatFlowSite()
 
         # Apply field updates from the row data
         if new_site is not None:

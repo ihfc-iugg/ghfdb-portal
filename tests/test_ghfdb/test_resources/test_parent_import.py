@@ -262,6 +262,77 @@ class TestGHFDBParentTemplateNoIdRegression:
         assert float(parent.value.magnitude) == pytest.approx(81.5)
 
 
+@pytest.mark.django_db
+class TestGHFDBParentImportSiteIdentity:
+    """T043/T044 — coordinates, not ID_parent, identify the site (FR-004, R1)."""
+
+    def test_import_resolves_to_existing_site_by_coordinates(self, dataset):
+        """
+        T043 – Importing a row whose coordinates match an existing site
+        resolves to that site rather than creating a second one, even
+        though the row carries an ID_parent the site has never seen.
+        """
+        from fairdm.contrib.location.models import Point
+        from heat_flow.models import HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        point = Point.objects.create(x=11.0, y=48.0)
+        existing_site = HeatFlowSite.objects.create(
+            dataset=dataset, name="Pre-existing Site", location=point
+        )
+
+        resource = GHFDBParentImportResource()
+        ds = make_dataset(PARENT_ROW)  # lat_NS=48.0, long_EW=11.0, ID_parent=1
+        result = resource.import_data(ds, dry_run=False, raise_errors=False)
+
+        assert not result.has_errors(), result.invalid_rows
+        assert not result.has_validation_errors(), [
+            row.error_dict for row in result.invalid_rows
+        ]
+        assert HeatFlowSite.objects.count() == 1
+        parent = ParentHeatFlow.objects.get(ghfdb_id=1)
+        assert parent.sample_id == existing_site.pk
+
+    def test_import_with_disagreeing_id_parent_does_not_duplicate_site(self, dataset):
+        """
+        T044 – A row that carries a site identifier (ID_parent) the site has
+        never seen, while its coordinates belong to a different existing
+        site, resolves to the site the coordinates identify rather than
+        creating a duplicate at that occupied pair.
+        """
+        from fairdm.contrib.location.models import Point
+        from heat_flow.models import HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        # A site already exists at (48.0, 11.0), under a different local_id
+        # than the one the incoming row will carry.
+        point = Point.objects.create(x=11.0, y=48.0)
+        existing_site = HeatFlowSite.objects.create(
+            dataset=dataset,
+            name="Existing Site",
+            local_id="other-id",
+            location=point,
+        )
+
+        row = dict(PARENT_ROW)
+        row["ID_parent"] = "2"  # unseen, and disagrees with local_id "other-id"
+
+        resource = GHFDBParentImportResource()
+        result = resource.import_data(
+            make_dataset(row), dry_run=False, raise_errors=False
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        assert not result.has_validation_errors(), [
+            row.error_dict for row in result.invalid_rows
+        ]
+        assert HeatFlowSite.objects.count() == 1
+        parent = ParentHeatFlow.objects.get(ghfdb_id=2)
+        assert parent.sample_id == existing_site.pk
+
+
 class TestGHFDBParentImportResourceAccessControl:
     """T029 — Staff-only access control."""
 

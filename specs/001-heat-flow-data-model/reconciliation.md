@@ -53,9 +53,10 @@ non-empty — neither question can fail on a configuration that is silently igno
 
 ## Open tasks by reason
 
-**Never built (25)** — T036, T038–T046, T051, T070, T074, T075, T078, T079, T081, T082–T089.
+**Never built (25)** — T036, T038–T041, T043–T046, T051, T070, T074, T075, T078, T079, T081,
+T082–T089, T090.
 
-**Built, untested (13)** — T017, T018, T022, T023, T026, T029, T037, T054, T057, T059, T065, T069,
+**Built, untested (13)** — T001, T005, T017, T018, T022, T023, T026, T029, T037, T054, T059, T069,
 T072.
 
 T037 deserves its own note: the migrations exist, and nothing anywhere applies them. The suite runs
@@ -63,7 +64,7 @@ with `--nomigrations`, and the one migration test checks only that no model chan
 "Migrations apply cleanly to an empty database" has never been true or false in this repository,
 because it has never been asked.
 
-**Partially built (2)** — T056, the one-published-value-per-site guarantee, holds through the model
+**Partially built (2)** — T056, the one-parent-per-site guarantee, holds through the model
 and is unproven through the import path. T080, factories, exist for seven of the eight models;
 corrections have none.
 

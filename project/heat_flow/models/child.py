@@ -17,7 +17,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator as MaxVal
 from django.core.validators import MinValueValidator as MinVal
 from django.db import models as django_models
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from fairdm.core.models import Measurement
 from fairdm.db import models
 from fairdm_geo.core.models import GeoDepthInterval as AbstractGeoDepthInterval

@@ -93,6 +93,9 @@ Blocking. Every story depends on these.
   itself.
 - **T040** Two sites without a location are both accepted.
 - **T041** Two sites at coordinate pairs a few metres apart are both accepted.
+- **T042** One point record per coordinate pair. The enforcement is written against `location`, not
+  against coordinate values, and that is only equivalent to FR-004 because the framework holds one
+  point row per pair. This pins the assumption the mechanism rests on.
 - **T043** Importing a row whose coordinates match an existing site resolves to that site rather
   than creating a second.
 - **T044** Importing a row that carries a site identifier and coordinates belonging to a different

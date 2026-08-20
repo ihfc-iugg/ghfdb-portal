@@ -461,48 +461,127 @@
       "priority": "P2",
       "issue": 143,
       "worktree": null,
-      "status": "todo",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
           "id": "T038",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/parent.py:132"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models/test_parent.py::TestHeatFlowSiteLocationUniqueness::test_second_site_at_an_occupied_pair_is_refused"
+            ]
+          }
         },
         {
           "id": "T039",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/parent.py:143"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models/test_parent.py::TestHeatFlowSiteLocationUniqueness::test_saving_an_existing_site_again_is_accepted"
+            ]
+          }
         },
         {
           "id": "T040",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/parent.py:138"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models/test_parent.py::TestHeatFlowSiteLocationUniqueness::test_two_sites_with_no_location_are_both_accepted"
+            ]
+          }
         },
         {
           "id": "T041",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/parent.py:132"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models/test_parent.py::TestHeatFlowSiteLocationUniqueness::test_two_sites_a_few_metres_apart_are_both_accepted"
+            ]
+          }
+        },
+        {
+          "id": "T042",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/parent.py:132"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models/test_parent.py::TestHeatFlowSiteLocationUniqueness::test_one_point_row_per_coordinate_pair"
+            ]
+          }
         },
         {
           "id": "T043",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/parent.py:171"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportSiteIdentity::test_import_resolves_to_existing_site_by_coordinates"
+            ]
+          }
         },
         {
           "id": "T044",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/parent.py:171"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportSiteIdentity::test_import_with_disagreeing_id_parent_does_not_duplicate_site"
+            ]
+          }
         },
         {
           "id": "T045",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/parent.py:151",
+              "project/heat_flow/models/parent.py:158"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models/test_parent.py::TestHeatFlowSiteLocationUniqueness::test_second_site_at_an_occupied_pair_is_refused",
+              "tests/test_heat_flow/test_models/test_parent.py::TestHeatFlowSiteLocationUniqueness::test_second_site_at_an_occupied_pair_is_refused_by_clean"
+            ]
+          }
         },
         {
           "id": "T046",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/parent.py:171"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportSiteIdentity::test_import_with_disagreeing_id_parent_does_not_duplicate_site"
+            ]
+          }
         }
       ]
     },

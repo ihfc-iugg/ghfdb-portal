@@ -180,3 +180,20 @@ its field list is non-empty.
 declares nothing the registry ignores, and that a component class is supplied only where the
 generated one will not serve. The acceptance scenario that would have caught this — comparing
 declared attributes against those the registry reads — is now part of the story.
+
+
+### D9 — One task the design review asked to delete is kept
+
+The review found T042, "a coordinate pair resolves to one point record", to be a test of the
+framework rather than of this feature: it restates a `unique_together` belonging to another package,
+and no requirement here asks for it. That reasoning is right as far as it goes, and it misses why
+the task is there.
+
+FR-004 says one site per coordinate pair. The enforcement does not compare coordinates — it requires
+`location` to be unique among sites, which is a different statement. The two are equivalent only
+because the framework holds exactly one point record per pair. If that ever stops being true, the
+rule keeps passing its own tests while quietly ceasing to mean what the requirement says.
+
+So the task is kept, with that as its stated purpose: it is a guard on the assumption the mechanism
+rests on, not a test of someone else's schema. Reinstated rather than argued, because the cost is
+one short test and the failure it catches is silent.

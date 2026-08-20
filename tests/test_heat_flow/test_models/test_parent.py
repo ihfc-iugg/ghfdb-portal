@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import pytest
 from django.core.exceptions import ValidationError
+from fairdm.contrib.location.models import Point
 
 
 class TestHeatFlowSite:
@@ -55,6 +56,117 @@ class TestHeatFlowSite:
 
         reloaded = HeatFlowSite.objects.get(pk=site.pk)
         assert reloaded.explo_purpose.count() == 1
+
+
+class TestHeatFlowSiteLocationUniqueness:
+    """FR-004, FR-005, US-2 — a site is identified by its coordinate pair."""
+
+    @pytest.mark.django_db
+    def test_second_site_at_an_occupied_pair_is_refused(self, dataset):
+        """
+        T038 – A second HeatFlowSite saved at a coordinate pair another site
+        already holds is refused via save(), and the error names the pair.
+        """
+        from heat_flow.models import HeatFlowSite
+
+        point = Point.objects.create(x=Decimal("8.5"), y=Decimal("47.4"))
+        HeatFlowSite.objects.create(dataset=dataset, name="First", location=point)
+
+        with pytest.raises(ValidationError) as excinfo:
+            second = HeatFlowSite(dataset=dataset, name="Second", location=point)
+            second.save()
+
+        message = str(excinfo.value)
+        assert "8.5" in message
+        assert "47.4" in message
+
+    @pytest.mark.django_db
+    def test_second_site_at_an_occupied_pair_is_refused_by_clean(self, dataset):
+        """
+        T045 – The rule also fires from clean(), so the admin reports a
+        duplicate as a field error rather than a server error.
+        """
+        from heat_flow.models import HeatFlowSite
+
+        point = Point.objects.create(x=Decimal("8.5"), y=Decimal("47.4"))
+        HeatFlowSite.objects.create(dataset=dataset, name="First", location=point)
+
+        second = HeatFlowSite(dataset=dataset, name="Second", location=point)
+        with pytest.raises(ValidationError):
+            second.clean()
+
+    @pytest.mark.django_db
+    def test_one_point_row_per_coordinate_pair(self):
+        """
+        T042 – The rule is written against ``location``, not against coordinate
+        values, and that is only equivalent to "one site per coordinate pair"
+        because the framework holds one Point row per pair.  This pins that
+        assumption: if it ever stops holding, the site rule silently stops
+        meaning what FR-004 says, and this is the test that would go red.
+        """
+        first, created = Point.objects.get_or_create(
+            x=Decimal("8.5"), y=Decimal("47.4")
+        )
+        assert created
+
+        second, created_again = Point.objects.get_or_create(
+            x=Decimal("8.5"), y=Decimal("47.4")
+        )
+        assert not created_again
+        assert second.pk == first.pk
+
+    @pytest.mark.django_db
+    def test_saving_an_existing_site_again_is_accepted(self, dataset):
+        """
+        T039 – Saving an already-stored site again does not trip the
+        uniqueness rule against itself.
+        """
+        from heat_flow.models import HeatFlowSite
+
+        point = Point.objects.create(x=Decimal("8.5"), y=Decimal("47.4"))
+        site = HeatFlowSite.objects.create(
+            dataset=dataset, name="Existing", location=point
+        )
+
+        site.name = "Existing, renamed"
+        site.save()
+
+        site.refresh_from_db()
+        assert site.name == "Existing, renamed"
+
+    @pytest.mark.django_db
+    def test_two_sites_with_no_location_are_both_accepted(self, dataset):
+        """
+        T040 – The rule binds only where a location is set: two sites
+        without coordinates are both accepted.
+        """
+        from heat_flow.models import HeatFlowSite
+
+        first = HeatFlowSite.objects.create(dataset=dataset, name="No Location A")
+        second = HeatFlowSite.objects.create(dataset=dataset, name="No Location B")
+
+        assert HeatFlowSite.objects.filter(pk__in=[first.pk, second.pk]).count() == 2
+
+    @pytest.mark.django_db
+    def test_two_sites_a_few_metres_apart_are_both_accepted(self, dataset):
+        """
+        T041 – Coordinates are taken exactly as supplied: two distinct pairs
+        a few metres apart are two sites, not one.
+        """
+        from heat_flow.models import HeatFlowSite
+
+        point_a = Point.objects.create(x=Decimal("8.500000"), y=Decimal("47.400000"))
+        point_b = Point.objects.create(x=Decimal("8.500010"), y=Decimal("47.400010"))
+
+        first = HeatFlowSite.objects.create(
+            dataset=dataset, name="Near A", location=point_a
+        )
+        second = HeatFlowSite.objects.create(
+            dataset=dataset, name="Near B", location=point_b
+        )
+
+        assert HeatFlowSite.objects.filter(pk__in=[first.pk, second.pk]).count() == 2
+
 
 class TestParentHeatFlow:
     def test_table_name_follows_the_owning_application(self):
