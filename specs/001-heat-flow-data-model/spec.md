@@ -24,10 +24,9 @@ spreadsheet. That shape suits data entry and suits nothing else: one row carries
 interval geometry, two independent measurements and a derived result, so the same site is restated
 on every row that mentions it and no field can be constrained without constraining all of them.
 
-The portal stores the science instead. A site is fixed by its coordinate pair and holds at most one
-aggregated published value. Within that site are the depth intervals over which measurements were
+The portal stores the science instead. A site is fixed by its coordinate pair and holds at most one parent value. Within that site are the depth intervals over which measurements were
 made. Over each interval sit a thermal gradient and a thermal conductivity, and from that pair a
-child heat flow determination is computed and the corrections applied to it are recorded. Every
+child is computed and the corrections applied to it are recorded. Every
 model extends the framework's `Sample` or `Measurement` base class and is registered with its
 registry, so list views, filtering, tables and admin come from configuration rather than custom
 view code.
@@ -42,8 +41,8 @@ reader follow a published column back to the field that expresses it.
 ### User Story 1 — A complete heat flow record can be stored and read back (Priority: P1)
 
 A curator or a developer builds a full record through the ORM — a site, an interval within it, a
-thermal gradient and a thermal conductivity over that interval, the child determination computed
-from them, the corrections applied to it, and the site's aggregated value — then reads every part
+thermal gradient and a thermal conductivity over that interval, the child computed
+from them, the corrections applied to it, and the site's parent — then reads every part
 of it back with values, units and relationships intact.
 
 **Why this priority**: nothing else in the portal has anything to work on until this holds. Import,
@@ -61,12 +60,12 @@ forward and reverse relationship resolves.
    quantities carrying units.
 3. **Given** a stored interval, **When** a thermal gradient and a thermal conductivity are created
    over it, **Then** both resolve to the interval and appear among its measurements.
-4. **Given** a stored gradient and conductivity, **When** a child determination is created
-   referencing both and linked to the site's aggregated value, **Then** every forward and reverse
+4. **Given** a stored gradient and conductivity, **When** a child is created
+   referencing both and linked to the site's parent, **Then** every forward and reverse
    relationship resolves.
-5. **Given** a stored child determination, **When** corrections are attached to it, **Then** each
-   is reachable from the determination and its type and status are validated.
-6. **Given** a child determination with neither a gradient nor a conductivity, **When** it is
+5. **Given** a stored child, **When** corrections are attached to it, **Then** each
+   is reachable from the child and its type and status are validated.
+6. **Given** a child with neither a gradient nor a conductivity, **When** it is
    saved, **Then** it is accepted — an incomplete record must not be blocked at entry.
 
 ---
@@ -79,8 +78,8 @@ across two records.
 
 **Why this priority**: coordinates are the only identifier every contributor supplies and the only
 one that means the same thing across a century of publications (ADR-0006). A duplicated site is not
-a cosmetic problem — it silently divides the measurements at one location, and the aggregated value
-each half produces is computed from part of the evidence.
+a cosmetic problem — it silently divides the measurements at one location, and the parent value chosen for
+each half rests on part of the evidence.
 
 **Independent Test**: create a site at a coordinate pair, attempt a second at the same pair, assert
 the second is refused and the first is untouched.
@@ -101,30 +100,30 @@ the second is refused and the first is untouched.
 
 ---
 
-### User Story 3 — One published value per site, aggregated from its children (Priority: P3)
+### User Story 3 — One parent per site, designated from its children (Priority: P3)
 
-A curator associates several child determinations with the site's single published value and
-records which of them the published value was computed from.
+A curator links several children to the site's single parent and records which of them the
+parent value was taken from.
 
 **Why this priority**: the parent and child split is the database's central scientific claim — a
-quality-controlled surface value synthesised from potentially many interval measurements. A site
-carrying two published values has no defensible answer to which one is the database's.
+quality-controlled surface value a curator designates from potentially many interval measurements.
+A site carrying two parents has no defensible answer to which one is the database's.
 
-**Independent Test**: link three children to one site's value, two marked as contributing and one
+**Independent Test**: link three children to one site's parent, two marked as contributing and one
 not, then assert the reverse relation returns all three and the filter returns two. Separately,
-attempt a second published value for the same site and assert it is refused.
+attempt a second parent for the same site and assert it is refused.
 
 **Acceptance Scenarios**:
 
-1. **Given** a site's published value, **When** several child determinations are linked to it,
+1. **Given** a site's parent, **When** several children are linked to it,
    **Then** all of them are returned by its reverse relation.
 2. **Given** children with mixed contribution flags, **When** the relation is filtered on that
    flag, **Then** only the contributing children are returned.
-3. **Given** a site's published value with children, **When** it is deleted, **Then** each child
+3. **Given** a site's parent with children, **When** it is deleted, **Then** each child
    survives with its link cleared — cascading deletion of scientific measurements is prohibited.
-4. **Given** a site that already has a published value, **When** a second is saved against it,
+4. **Given** a site that already has a parent, **When** a second is saved against it,
    **Then** it is refused, on every write path in the project including the import path.
-5. **Given** a site's published value with no children, **When** it is read, **Then** it is a valid
+5. **Given** a site's parent with no children, **When** it is read, **Then** it is a valid
    record — a newly entered value with no children yet is an ordinary state.
 
 ---
@@ -138,7 +137,7 @@ type, its length, how far it penetrated and how far it tilted.
 metadata a marine record cannot be quality-assessed or told apart from a borehole record.
 
 **Independent Test**: attach probe metadata to an interval, assert it resolves from the interval
-and that a child determination over that interval reports itself as a probe measurement.
+and that a child over that interval reports itself as a probe measurement.
 
 **Acceptance Scenarios**:
 
@@ -148,7 +147,7 @@ and that a child determination over that interval reports itself as a probe meas
    framework raises its does-not-exist error, marking the interval as non-marine.
 3. **Given** an interval carrying probe metadata, **When** the interval is deleted, **Then** the
    probe metadata is deleted with it.
-4. **Given** a child determination over an interval carrying probe metadata, **When** it is asked
+4. **Given** a child over an interval carrying probe metadata, **When** it is asked
    whether it is a probe measurement, **Then** it answers yes, and no otherwise.
 
 ---
@@ -241,9 +240,9 @@ map's test and confirm it fails when a column is removed from the map.
 ### Edge Cases
 
 - An interval whose top and bottom are equal, or inverted — validation rejects it.
-- A child determination with neither gradient nor conductivity — accepted, per constitution
+- A child with neither gradient nor conductivity — accepted, per constitution
   principle I: incomplete records are not blocked at entry.
-- A site's published value with no children — a valid state.
+- A site's parent with no children — a valid state.
 - A correction whose status is not meaningful for its type, such as a tilt correction on an erosion
   disturbance — rejected on save.
 - A second correction of the same type on one determination — rejected; the type is what
@@ -321,22 +320,22 @@ map's test and confirm it fails when a column is removed from the map.
 - **FR-009**: An interval whose top depth is not less than its bottom depth MUST be rejected by
   validation.
 
-**Published site value**
+**Parent**
 
 - **FR-010**: The system MUST provide a `ParentHeatFlow` model extending the framework's
-  `Measurement` base class, storing the aggregated surface heat flow value in mW/m², its one-sigma
+  `Measurement` base class, storing the representative surface heat flow value for the site in mW/m², its one-sigma
   uncertainty, a heat production correction flag, a comment, a nullable `ghfdb_id` recording the
   record's identifier in the published spreadsheet, and a `quality` code of up to thirteen
   characters. Membership of the published database is expressed by `ghfdb_id` being set; there is
   no separate flag.
-- **FR-011**: A published site value MUST link to its site through the inherited `sample` foreign
+- **FR-011**: A parent heat flow value MUST link to its site through the inherited `sample` foreign
   key, and MUST reject a sample that is not a `HeatFlowSite`.
 - **FR-012**: The system MUST hold at most one `ParentHeatFlow` per site. Enforcement is
   application-level for the reason given in FR-004, and MUST hold on every write path in the
   project, including the import path.
 - **FR-013**: The `quality` field MUST be storage only. The portal computes the code it holds and
-  that computed value is authoritative, so a code arriving in an imported file is not stored
-  (ADR-0004). The computation itself is out of scope for this feature.
+  that computed value is authoritative (ADR-0004). The computation itself, and the rule that a code
+  arriving in an imported file is not stored, are out of scope for this feature.
 
 **Child determination**
 
@@ -346,11 +345,11 @@ map's test and confirm it fails when a column is removed from the map.
   field, expedition or vessel name, bottom water temperature, date acquired, a numerical
   uncertainty score, a methodological quality score, a comment, a nullable `ghfdb_id` and a
   `quality` code of up to thirteen characters.
-- **FR-015**: A child determination MUST link to its site's published value through a nullable
+- **FR-015**: A child MUST link to its parent through a nullable
   foreign key that clears rather than cascades on deletion, reachable in reverse as that value's
   children.
-- **FR-016**: A child determination MUST record whether it contributed to the published value.
-- **FR-017**: A child determination MUST link to its thermal gradient and its thermal conductivity
+- **FR-016**: A child MUST record whether it contributed to the parent.
+- **FR-017**: A child MUST link to its thermal gradient and its thermal conductivity
   through nullable foreign keys rather than one-to-one relationships, so that several
   determinations may share one gradient or one conductivity. Neither may be deleted while a
   determination references it.
@@ -386,12 +385,12 @@ map's test and confirm it fails when a column is removed from the map.
   interval, storing probe type as a many-to-many vocabulary field, probe length, penetration depth
   and tilt angle.
 - **FR-024**: Deleting an interval MUST delete its probe metadata.
-- **FR-025**: A child determination MUST report whether it was acquired by marine probe, which is
+- **FR-025**: A child MUST report whether it was acquired by marine probe, which is
   true when its interval carries probe metadata.
 
 **Corrections**
 
-- **FR-026**: The system MUST provide a `HeatFlowCorrection` model linked to a child determination,
+- **FR-026**: The system MUST provide a `HeatFlowCorrection` model linked to a child,
   recording a disturbance type drawn from a fixed set and the status of that disturbance and its
   correction.
 - **FR-027**: A determination MUST accept several corrections, at most one per disturbance type.
@@ -450,10 +449,11 @@ map's test and confirm it fails when a column is removed from the map.
   context and the geological properties of the site-level interval.
 - **HeatFlowInterval** — a depth-stratified section within a site over which measurements were
   made. A site may have many.
-- **ParentHeatFlow** — the aggregated, quality-controlled surface heat flow for a site, and the
-  value the published database carries. One per site at most.
+- **ParentHeatFlow** — the representative, quality-controlled surface heat flow for a site, and
+  the value the published database carries. Designated by a curator rather than computed, and one
+  per site at most.
 - **HeatFlow** — a single interval-level determination, computed from one thermal gradient and one
-  thermal conductivity, contributing or not contributing to its site's published value.
+  thermal conductivity, contributing or not contributing to its parent.
 - **ThermalGradient** — the temperature gradient measured over an interval, as measured and as
   corrected, with the methods and shut-in times behind it.
 - **IntervalConductivity** — the mean thermal conductivity over an interval, with the source,
@@ -468,14 +468,14 @@ map's test and confirm it fails when a column is removed from the map.
 - **SC-001**: The framework's system checks report no errors and no warnings.
 - **SC-002**: Every migration in this app applies cleanly to an empty database.
 - **SC-003**: The complete graph, from site through interval and its two measurements to the child
-  determination and the site's published value, can be built from factory calls alone in a single
+  determination and the site's parent, can be built from factory calls alone in a single
   test.
 - **SC-004**: A second site at an occupied coordinate pair is refused, and the refusal is proven
   through the import path as well as through the model.
-- **SC-005**: A second published value for a site is refused, and the refusal is proven through the
+- **SC-005**: A second parent for a site is refused, and the refusal is proven through the
   import path as well as through the model.
 - **SC-006**: Every deletion behaviour this feature defines is proven by at least one test:
-  clearing a child's link when the published value is deleted, deleting probe metadata with its
+  clearing a child's link when the parent is deleted, deleting probe metadata with its
   interval, deleting an interval with its site, and refusing to delete a gradient or conductivity a
   determination still references.
 - **SC-007**: The registry returns a configuration for each of the six registered models, each one

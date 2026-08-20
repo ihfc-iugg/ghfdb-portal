@@ -21,12 +21,21 @@ Blocking. Every story depends on these.
   geographic environment, exploration method, exploration purpose, heat flow method, temperature
   method, temperature correction, probe type, and the seven conductivity vocabularies.
 - **T004** App configuration and settings registration.
+- **T090** Split `tests/test_heat_flow/test_models.py` so the test tree mirrors the source tree,
+  per constitution principle VI and the layout rule in the architecture constraints: one module
+  per source module. Four stories add tests to this file, and in separate worktrees they would
+  collide on it.
+- **T037** Migrations for every model this feature defines, applying cleanly to an empty database,
+  proven by a test that restores the real migration modules and runs them. The suite runs with
+  `--nomigrations`, so nothing applies them today; the existing migration test checks only that no
+  model change is unrecorded. Use the idiom already at `tests/test_migrations.py:28`.
 
 ## Phase 2 — US-1: A complete heat flow record can be stored and read back (P1)
 
 ### Tests
 
-- **T005** A site persists every scalar field and reads back with correct values and types.
+- **T005** A site persists every field FR-001 lists and reads back with correct values and types.
+  The existing test asserts five of them.
 - **T006** A site's exploration purpose accepts several concepts and reads them back.
 - **T007** A site persists and reads back its location as a coordinate pair.
 - **T008** An interval resolves to its site, and the site lists it among its intervals.
@@ -41,14 +50,14 @@ Blocking. Every story depends on these.
 - **T016** A conductivity's value is required at the database layer.
 - **T017** A gradient's corrected value, methods, shut-in times and recording count persist.
 - **T018** A conductivity's vocabulary fields, determination count and score persist.
-- **T019** A child determination resolves to its interval, its gradient, its conductivity and its
-  site's published value, and each reverse relation resolves.
-- **T020** A child determination rejects a sample that is not an interval.
-- **T021** A child determination with neither gradient nor conductivity is accepted.
-- **T022** Several child determinations may reference one gradient, and one conductivity.
+- **T019** A child resolves to its interval, its gradient, its conductivity and its
+  site's parent, and each reverse relation resolves.
+- **T020** A child rejects a sample that is not an interval.
+- **T021** A child with neither gradient nor conductivity is accepted.
+- **T022** Several children may reference one gradient, and one conductivity.
 - **T023** A gradient referenced by a determination cannot be deleted, and neither can a
   conductivity.
-- **T024** A child determination's uncertainty and methodological scores default to their
+- **T024** A child's uncertainty and methodological scores default to their
   not-determined values.
 - **T025** Corrections attach to a determination and are reachable from it.
 - **T026** A second correction of the same type on one determination is rejected.
@@ -65,12 +74,14 @@ Blocking. Every story depends on these.
 - **T032** `ThermalGradient`, extending the measurement base, with its sample type guard.
 - **T033** `IntervalConductivity`, extending the measurement base, with its sample type guard.
 - **T034** `HeatFlow`, extending the measurement base, with its sample type guard, its links to
-  gradient and conductivity, and its score fields.
+  gradient and conductivity, and its score fields. Delete `HeatFlowQuerySet`, `HeatFlowManager`,
+  the commented-out manager assignment beneath them and the `interval` accessor, which returns a
+  parent rather than an interval. All are unreferenced, and both the reserved-word rule and
+  constitution principle IX apply. None is part of the deferred scoring interface.
 - **T035** `HeatFlowCorrection`, with its type and status sets, its one-per-type constraint and its
   combination validation.
 - **T036** The valid status combinations per disturbance type, documented in the data model
   documentation.
-- **T037** Migrations for every model above, applying cleanly to an empty database.
 
 ## Phase 3 — US-2: A site is its coordinates (P2)
 
@@ -82,8 +93,6 @@ Blocking. Every story depends on these.
   itself.
 - **T040** Two sites without a location are both accepted.
 - **T041** Two sites at coordinate pairs a few metres apart are both accepted.
-- **T042** A coordinate pair resolves to one point record, however many sites reference it over
-  time.
 - **T043** Importing a row whose coordinates match an existing site resolves to that site rather
   than creating a second.
 - **T044** Importing a row that carries a site identifier and coordinates belonging to a different
@@ -92,29 +101,33 @@ Blocking. Every story depends on these.
 ### Implementation
 
 - **T045** Coordinate uniqueness enforcement for sites, at the application layer, binding only
-  where a location is set.
+  where a location is set. In `save()`, which is the guarantee, and in `clean()`, so that a
+  duplicate entered through the admin is a field error rather than a server error. Messages wrapped
+  in `gettext_lazy`, and the module's eager `gettext` import corrected — every label on these
+  models is currently frozen at import, against constitution principle V.
 - **T046** One notion of site identity in the import path, reconciling the identifier lookup and
   the coordinate lookup so they cannot disagree.
 
-## Phase 4 — US-3: One published value per site (P3)
+## Phase 4 — US-3: One parent per site (P3)
 
 ### Tests
 
-- **T047** A site's published value returns all its children.
+- **T047** A site's parent returns all its children.
 - **T048** Filtering those children on the contribution flag returns only the contributing ones.
-- **T049** Deleting a published value leaves its children in place with their link cleared.
-- **T050** A second published value for a site is refused when saved through the model.
-- **T051** A second published value for a site is refused through the import path.
-- **T052** A published value with no children is a valid record.
-- **T053** A published value rejects a sample that is not a site.
-- **T054** A published value persists its uncertainty, correction flag, comment, published
+- **T049** Deleting a parent leaves its children in place with their link cleared.
+- **T050** A second parent for a site is refused when saved through the model.
+- **T051** A second parent for a site is refused through the import path.
+- **T052** A parent with no children is a valid record.
+- **T053** A parent rejects a sample that is not a site.
+- **T054** A parent persists its uncertainty, correction flag, comment, published
   identifier and quality code.
 
 ### Implementation
 
 - **T055** `ParentHeatFlow`, extending the measurement base, with every field FR-010 lists.
-- **T056** The one-per-site guarantee, at the application layer, on every write path.
-- **T057** Migrations for the published value model.
+- **T056** The one-per-site guarantee, at the application layer, on every write path. Wrap its
+  existing message in `gettext_lazy` while touching the line, and delete the skipped test that
+  documented the database constraint as impossible — its replacement already exists.
 
 ## Phase 5 — US-4: Marine measurements carry their instrument metadata (P4)
 
@@ -131,8 +144,7 @@ Blocking. Every story depends on these.
 ### Implementation
 
 - **T063** `ProbeMetadata`, one-to-one with an interval, with its probe fields.
-- **T064** The probe-measurement accessor on the child determination.
-- **T065** Migration for probe metadata.
+- **T064** The probe-measurement accessor on the child.
 
 ## Phase 6 — US-5: Every model is served by the framework (P5)
 
@@ -145,15 +157,17 @@ Blocking. Every story depends on these.
 - **T069** Each configuration resolves to a usable filter set class and a usable table class,
   whether supplied or generated.
 - **T070** No configuration in this app declares an attribute the registry does not read.
-- **T071** The framework's system checks report no errors and no warnings.
+- **T071** The framework's system checks report no errors and no warnings. The existing test calls
+  `check` at its default failure level, which ignores warnings that FR-034 and SC-001 both name.
 - **T072** Models extending neither base are absent from the registry.
 
 ### Implementation
 
 - **T073** The shared configuration base, declaring the commission's authority, citation, keywords
   and repository link as the metadata the registry reads.
-- **T074** Every configuration's declarations moved onto attributes the registry reads, and any
-  that name nothing removed.
+- **T074** Every configuration's declarations moved onto attributes the registry reads, and the
+  three that name nothing removed: `filterset_options`, `fieldsets` and `primary_data_fields`.
+  `admin_list_display` and the class-level `description` are read by the registry and stay.
 - **T075** A supplied filter set or table only where the generated one will not serve, with the
   reason recorded.
 
@@ -165,7 +179,7 @@ Blocking. Every story depends on these.
 - **T077** Every factory creates whatever related records its model requires.
 - **T078** Each factory populates its model's controlled-vocabulary fields with concepts drawn from
   each field's own vocabulary.
-- **T079** The complete graph, site through to published value, is buildable from factory calls
+- **T079** The complete graph, site through to parent, is buildable from factory calls
   alone in one test.
 
 ### Implementation
@@ -178,8 +192,9 @@ Blocking. Every story depends on these.
 ### Tests
 
 - **T082** Every column in the canonical published column definitions appears in the field map.
-- **T083** Every mapping in the field map names a model that exists and a field or documented
-  accessor that resolves on it.
+- **T083** Every mapping in the field map names a model that exists, a field or documented accessor
+  that resolves on it, and a declaring model that actually declares it. Without the last, the row
+  already known to be stale still passes, because the field it names survives on a base class.
 - **T084** A column present in the definitions and absent from the map fails the test, naming the
   column.
 - **T085** The built documentation renders the entity relationship diagram as a diagram rather than
@@ -191,8 +206,11 @@ Blocking. Every story depends on these.
 - **T087** The diagram renderer configured so Mermaid renders in the built documentation.
 - **T088** The entity relationship diagram rewritten against the current model, covering every
   model this app defines, its relationships and their cardinalities.
-- **T089** The Graphviz sources, the generation script, the installation instructions and the
-  images generated from them removed, and the documentation index reconciled.
+- **T089** Remove `ghfdb-erd.dot`, `ghfdb-erd copy.dot`, `ghfdb-erd-regenerated.dot`,
+  `generate_erd.py`, `README-graphviz.md`, `install_graphviz.ps1`, `ghfdb-erd.pdf`,
+  `ghfdb-erd.png`, `ghfdb-erd.svg` and `ghfdb-erd-new.pdf`, and reconcile the documentation index.
+  `ghfdb-erd-manuscript.pdf`, `ghfdb-erd-manuscript.svg` and `ghfdb-erd-caption.md` are a
+  publication artefact and are not touched here.
 
 ## Convergence gates
 

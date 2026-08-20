@@ -3,7 +3,7 @@
 `tasks.md` was written from `spec.md` as though the repository were empty. This file records what
 walking that list against the code proved was already there.
 
-**47 of 89 tasks are satisfied. 42 are open.**
+**45 of 87 tasks are satisfied. 42 are open.**
 
 A task counts as satisfied only where both a code citation and a passing test that covers it exist.
 Code with no test does not close a task — the task stays open and the remaining work is the test.
@@ -14,17 +14,17 @@ The original `tasks.md` recorded 67 of 67 complete. Those ticks were not consult
 
 | Story | Satisfied | Open |
 |---|---|---|
-| US-1 — a complete record stores and reads back | 29 | 8 |
-| US-2 — a site is its coordinates | 0 | 9 |
-| US-3 — one published value per site | 7 | 4 |
-| US-4 — marine instrument metadata | 6 | 2 |
+| US-1 — a complete record stores and reads back | 27 | 11 |
+| US-2 — a site is its coordinates | 0 | 8 |
+| US-3 — one parent per site | 7 | 3 |
+| US-4 — marine instrument metadata | 6 | 1 |
 | US-5 — every model served by the framework | 3 | 7 |
 | US-6 — test data for every model | 2 | 4 |
 | US-7 — a published column reaches its field | 0 | 8 |
 
 ## What that says about the feature
 
-The models are genuinely built and genuinely tested. Twenty-nine of US-1's thirty-seven tasks are
+The models are genuinely built and genuinely tested. Twenty-seven of US-1's thirty-eight tasks are
 satisfied, and the tests behind them are real: they assert on persisted values, reject wrong sample
 types, and cover the deletion behaviours. This is not a feature that was claimed and not written.
 
@@ -38,7 +38,7 @@ untested and the diagram never rendered.
 **Behaviour built and never exercised.** Thirteen tasks describe something the code does, with no
 test that would notice if it stopped. The pattern is that the primary path is tested and its
 neighbours are not: several determinations sharing one gradient is tested, sharing one conductivity
-is not. The child's link to its published value clearing on deletion is tested, the interval's
+is not. The child's link to its parent clearing on deletion is tested, the interval's
 deletion cascading from its site is not. The correction type and status combinations are validated
 and tested, the one-correction-per-type constraint beside them is not.
 
@@ -68,6 +68,22 @@ and is unproven through the import path. T080, factories, exist for seven of the
 corrections have none.
 
 **Built differently, and ruled wrong (2)** — T068 and T073, the registry metadata described above.
+
+## Two tasks the design review reopened
+
+The reconciliation closed both and was wrong about both, which is what the review exists to catch.
+
+**T001** was closed citing `pyproject.toml:200` and, as its test, a directory rather than a test
+node — the only such citation in the ledger. That configuration is the one setting `--nomigrations`,
+so the evidence offered for "a test database that applies every migration" is the line that stops it
+happening. Reopened, and its remaining work merged into T037.
+
+**T005** was closed on a test asserting five of the fourteen fields FR-001 lists. "Every field is
+persisted and reads back" was recorded as proven while eight fields would regress unnoticed.
+Reopened, naming them.
+
+Both are the same error: reading the evidence as confirming the task rather than asking what the
+task claims and whether the evidence reaches it.
 
 ## Things this reconciliation deliberately did not open
 

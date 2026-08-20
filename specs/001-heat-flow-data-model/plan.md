@@ -6,8 +6,9 @@
 ## Context
 
 This is an audit of a feature built in April 2026, not new construction. The models exist and are
-largely tested. `reconciliation.md` records the split: 47 of 89 tasks satisfied with a code citation
-and a passing test, 42 open.
+largely tested. `reconciliation.md` records the split: 45 of 87 tasks satisfied with a code citation
+and a passing test, 42 open. Two of those closures were reopened by the design review, which is
+recorded there.
 
 The plan covers the 42. It does not rebuild what reconciled.
 
@@ -22,15 +23,17 @@ The plan covers the 42. It does not rebuild what reconciled.
 
 ## Approach, by story
 
-### US-2 — a site is its coordinates (9 tasks, nothing built)
+### US-2 — a site is its coordinates (8 tasks, nothing built)
 
 Enforce in `save()` and in `clean()`, per R1. `save()` is the guarantee and covers
 `objects.create()` and the factories, neither of which calls `full_clean()`. `clean()` is what turns
 a duplicate entered through the admin into a field error rather than a server error. The rule binds
 only where a location is set, and never constrains a site against itself.
 
-This mirrors the published value's one-per-site guard in the same package, so the two rules read
-alike.
+The `save()` half mirrors the parent's one-per-site guard in the same package. The `clean()` half
+does not: that guard has none, and adding one would change behaviour this feature was not asked to
+change. So the two rules are alike in their guarantee and differ in how the admin reports a breach,
+and that asymmetry is deliberate rather than an oversight.
 
 The import's two notions of site identity are reconciled in the same story: it resolves by borrowed
 identifier when a row carries one and by coordinates otherwise, so the paths can disagree and the
@@ -40,10 +43,11 @@ first contradicts the rule.
 so the cost of finding a violation is a test failure rather than a migration. The import tests are
 the place a regression would surface, and the story requires one.
 
-### US-5 — registration (7 tasks, two of them wrong rather than missing)
+### US-5 — registration (7 open, two of them wrong rather than missing)
 
 Move the authority, citation, keywords and repository link onto the `ModelMetadata` object the
-registry reads, and delete the four attributes it ignores. Verified at runtime that every model
+registry reads, and delete the three attributes it ignores — taking care not to remove
+`admin_list_display` or the class-level `description`, which look equally unfamiliar and are read. Verified at runtime that every model
 currently registers with `authority=None` and `citation=None`.
 
 Supply a component class only where the generated one will not serve, per constitution principle IX
@@ -73,7 +77,7 @@ file that is valid and never rendered.
 **Not touched**: the manuscript figure and its caption, which depict a junction table the code does
 not have. That is a publication artefact rather than a stale copy of this diagram, and it is #147.
 
-### US-1, US-3, US-4 — closing test gaps (14 tasks)
+### US-1, US-3, US-4 — closing test gaps
 
 Mostly tests for behaviour that exists. The pattern across all three is that a primary path is
 tested and its neighbour is not: sharing a gradient is tested and sharing a conductivity is not,
@@ -102,7 +106,11 @@ by the framework's polymorphic inheritance rather than chosen, and both are reco
 
 ## Sequence
 
-US-2 and US-5 first: both are behaviour changes rather than test additions, and both touch files the
+The test module split comes first, in the foundational phase. Four stories add tests to
+`tests/test_heat_flow/test_models.py`, and in separate worktrees they would collide on it. The
+constitution already requires the mirrored layout it moves to.
+
+US-2 and US-5 next: both are behaviour changes rather than test additions, and both touch files the
 other stories' tests read.
 
 US-6 next, because vocabulary coverage in the factories is what several US-1 test gaps need.

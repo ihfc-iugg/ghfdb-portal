@@ -28,16 +28,8 @@
       "tasks": [
         {
           "id": "T001",
-          "status": "done",
-          "attempts": 1,
-          "evidence": {
-            "code": [
-              "pyproject.toml:200"
-            ],
-            "tests": [
-              "tests/test_heat_flow"
-            ]
-          }
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T002",
@@ -80,16 +72,8 @@
         },
         {
           "id": "T005",
-          "status": "done",
-          "attempts": 1,
-          "evidence": {
-            "code": [
-              "project/heat_flow/models/parent.py:26"
-            ],
-            "tests": [
-              "tests/test_heat_flow/test_models.py::TestHeatFlowSite::test_heat_flow_site_persistence"
-            ]
-          }
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T006",
@@ -443,6 +427,11 @@
           "id": "T037",
           "status": "todo",
           "attempts": 0
+        },
+        {
+          "id": "T090",
+          "status": "todo",
+          "attempts": 0
         }
       ]
     },
@@ -471,11 +460,6 @@
         },
         {
           "id": "T041",
-          "status": "todo",
-          "attempts": 0
-        },
-        {
-          "id": "T042",
           "status": "todo",
           "attempts": 0
         },
@@ -614,11 +598,6 @@
           "id": "T056",
           "status": "todo",
           "attempts": 0
-        },
-        {
-          "id": "T057",
-          "status": "todo",
-          "attempts": 0
         }
       ]
     },
@@ -712,11 +691,6 @@
               "tests/test_heat_flow/test_models.py::TestHeatFlow::test_heat_flow_is_probe_property"
             ]
           }
-        },
-        {
-          "id": "T065",
-          "status": "todo",
-          "attempts": 0
         }
       ]
     },

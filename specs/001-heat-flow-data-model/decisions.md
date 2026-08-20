@@ -27,18 +27,18 @@ scope.
 **Code**: `heat_flow/quality.py` implements the full 2023 scheme — numerical uncertainty and
 methodological quality calculators for probe and borehole measurements, perturbation flags, and
 assembly of the composite code. Nothing outside that module calls its entry points.
-`HeatFlow.get_quality()` returns nothing, and the published value's own accessor delegates to it,
+`HeatFlow.get_quality()` returns nothing, and the parent's own accessor delegates to it,
 so the composite code is never computed for any record. No test exercises the module.
 
 **Ruled**: the original reading stands. This feature owns the stored fields. Calculation belongs to
 the roadmap's quality items and is specified separately.
 
-The scoring methods on the models — the two score accessors on the child determination, the two
+The scoring methods on the models — the two score accessors on the child, the two
 `calculate_score()` methods on the gradient and conductivity, and the accessor on the published
 value — are a deferred interface awaiting that work, not dead code. They are left exactly as they
 stand and the rewritten specification says nothing about them.
 
-### D2 — One published value per site is guaranteed by the application, not the database
+### D2 — One parent per site is guaranteed by the application, not the database
 
 **Original**: FR-009 required a `UniqueConstraint` in the model's `Meta` on the sample column.
 
@@ -131,8 +131,15 @@ extension is configured for it, so the existing diagram reaches readers as sourc
 - **The composite quality code is never computed for any record.** Covered by D1 and belongs to the
   roadmap's quality items. Recorded here because the roadmap marks that work delivered and awaiting
   verification, and this is what verification will find.
+- **The import attaches every record to an arbitrary dataset.** Both import resources fall back to
+  the first `Dataset` row when no dataset is passed, bypassing the default manager deliberately, and
+  no caller anywhere passes one — so the fallback is always taken, and it can write into a dataset a
+  contributor has kept private. Constitution principle I requires every record to trace to a
+  contributor and a submission. Found by the design review's security lens. It belongs to
+  `003-ghfdb-import-export`, whose resources own dataset resolution, and this specification scopes
+  the import path out except as proof of two rules.
 - **A publication figure describes a schema the code does not have.** The manuscript diagram and its
-  caption in the data model documentation depict a junction table between published values and their
+  caption in the data model documentation depict a junction table between parents and their
   children, carrying the contribution flag. ADR-0001 records that design as begun and abandoned. The
   figure is a manuscript artefact rather than a stale copy of the documentation diagram, so it is
   left untouched by this feature and raised separately.
@@ -159,11 +166,14 @@ description, authority, keywords, repository link and citation (`fairdm/registry
 `:203`, `:111`). Anything else set on a configuration is simply set, never read, and looks
 deliberate to the next reader.
 
-Four attributes in this app's configurations are in that position, `filterset_options` among them.
-The consequence that matters is the shared base: it exists to give every model the commission's
+Three attributes in this app's configurations are in that position: `filterset_options`, `fieldsets`
+and `primary_data_fields`. A fourth, `admin_list_display`, looks just as unfamiliar and is read — it
+is the admin component's field list, and removing it would quietly change four changelists, which is
+the same class of defect in the other direction. The consequence that matters is the shared base: it exists to give every model the commission's
 authority and citation, and it declares both as bare class attributes rather than as the metadata
 the registry reads. So every model in the app is registered without the credit the base was written
-to supply, and the tests pass because they only ever asserted that a configuration exists and that
+to supply. The per-model `description` is unaffected — that name the registry does read.
+Registration proceeds, and the tests pass because they only ever asserted that a configuration exists and that
 its field list is non-empty.
 
 **Ruled**: the requirement becomes that the metadata reaches the registry, that a configuration

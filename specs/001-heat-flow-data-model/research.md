@@ -40,7 +40,7 @@ without calling `clean()`.
 
 **Decision**: enforce in `save()`, and also in `clean()`.
 
-`save()` is the guarantee. It is the pattern already used one file away for the published value's
+`save()` is the guarantee. It is the pattern already used one file away for the parent's
 one-per-site rule (`project/heat_flow/models/parent.py:217`), so the two rules read alike, and it
 covers `objects.create()` and the factories.
 
@@ -112,8 +112,8 @@ Both carry opt-in `descriptions` and `dates` hooks that do nothing unless passed
 
 ## R4 — What the registry actually reads
 
-**Question**: four configuration attributes in this app are not in the framework's vocabulary. What
-is the real contract?
+**Question**: several configuration attributes in this app are not in the framework's vocabulary.
+Which, exactly, and what is the real contract?
 
 **Findings**
 
@@ -138,11 +138,14 @@ maintainer='', maintainer_email='')`.
 
 **Consequences for the plan**
 
-- The shared base's authority, citation and repository link reach nothing. Neither does any model's
-  description, each of which is a carefully written paragraph.
-- `filterset_options` on four configurations is inert; those models get a generated filter set from
+- The shared base's authority, citation and repository link reach nothing. `description` is a
+  recognised attribute and is read as the configuration's own; only `ModelMetadata.description` is
+  empty. Do not delete the class-level descriptions.
+- Exactly three attributes are inert: `filterset_options` (on three configurations), `fieldsets`
+  (on one) and `primary_data_fields` (on four). Those models get a generated filter set from
   `fields` instead. The supported spellings are `filterset_fields` or `filterset_class`.
-- `fieldsets` and `primary_data_fields` are inert for the same reason.
+- `admin_list_display` looks equally unfamiliar and is **not** inert — it is the admin component's
+  field list (`fairdm/registry/config.py:120`). Deleting it would silently change four changelists.
 - Requiring a hand-written filter set and table per model, as the approved specification did, would
   replace working generated components with code to maintain. Recorded as D8 and the specification
   amended.
