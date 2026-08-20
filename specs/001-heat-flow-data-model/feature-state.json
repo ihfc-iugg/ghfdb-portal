@@ -1,0 +1,1205 @@
+{
+  "feature": "001-heat-flow-data-model",
+  "branch": "001-heat-flow-data-model",
+  "repo": "ihfc-iugg/ghfdb-portal",
+  "state": "IMPLEMENT",
+  "gates": {
+    "spec": {
+      "approved_by": "sam",
+      "at": "2026-08-20T00:00:00Z"
+    },
+    "plan": {
+      "approved_by": null,
+      "at": null
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    }
+  },
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 167,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "blocked",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "blocked on FAIR-DM/fairdm#252, with T037: the 'applies every migration' half cannot hold until the upstream migration graph runs on an empty database"
+            ]
+          }
+        },
+        {
+          "id": "T002",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "tests/test_heat_flow/conftest.py:14"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestHeatFlow::test_heat_flow_child_relationships"
+            ]
+          }
+        },
+        {
+          "id": "T003",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/vocabularies.py:1"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py::TestGHFDBAdminListFilters::test_explo_purpose_filter_choices_are_vocabulary_scoped"
+            ]
+          }
+        },
+        {
+          "id": "T004",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/apps.py:1"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_config.py::TestHeatFlowRegistryConfig::test_system_checks_pass"
+            ]
+          }
+        },
+        {
+          "id": "T005",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/parent.py:26"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models/test_parent.py::TestHeatFlowSite::test_heat_flow_site_persistence"
+            ]
+          }
+        },
+        {
+          "id": "T006",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/parent.py:73"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestHeatFlowSite::test_heat_flow_site_explo_purpose_m2m"
+            ]
+          }
+        },
+        {
+          "id": "T007",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/parent.py:26"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestHeatFlowSite::test_heat_flow_site_persistence"
+            ]
+          }
+        },
+        {
+          "id": "T008",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:35"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestHeatFlowInterval::test_interval_links_to_site"
+            ]
+          }
+        },
+        {
+          "id": "T009",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:32"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestHeatFlowInterval::test_sub_measurements_on_interval"
+            ]
+          }
+        },
+        {
+          "id": "T010",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:59"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestHeatFlowInterval::test_zero_thickness_interval_rejected"
+            ]
+          }
+        },
+        {
+          "id": "T011",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:59"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestHeatFlowInterval::test_valid_interval_passes_clean"
+            ]
+          }
+        },
+        {
+          "id": "T012",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:543"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestHeatFlowInterval::test_sub_measurements_on_interval"
+            ]
+          }
+        },
+        {
+          "id": "T013",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:725"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestThermalGradient::test_thermal_gradient_save_rejects_wrong_sample"
+            ]
+          }
+        },
+        {
+          "id": "T014",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:919"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestIntervalConductivity::test_interval_conductivity_save_rejects_wrong_sample"
+            ]
+          }
+        },
+        {
+          "id": "T015",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:544"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestThermalGradient::test_value_non_nullable_thermal_gradient"
+            ]
+          }
+        },
+        {
+          "id": "T016",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:734"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestIntervalConductivity::test_value_non_nullable_interval_conductivity"
+            ]
+          }
+        },
+        {
+          "id": "T017",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:568"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models/test_child.py::TestThermalGradient::test_gradient_corrected_value_methods_shutin_and_count_persist"
+            ]
+          }
+        },
+        {
+          "id": "T018",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:757"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models/test_child.py::TestIntervalConductivity::test_conductivity_vocabulary_fields_count_and_score_persist"
+            ]
+          }
+        },
+        {
+          "id": "T019",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:126"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestHeatFlow::test_heat_flow_child_relationships"
+            ]
+          }
+        },
+        {
+          "id": "T020",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:308"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestHeatFlow::test_heat_flow_save_rejects_wrong_sample"
+            ]
+          }
+        },
+        {
+          "id": "T021",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:192"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestHeatFlow::test_heat_flow_allows_null_gradient_and_conductivity"
+            ]
+          }
+        },
+        {
+          "id": "T022",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:201"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models/test_child.py::TestHeatFlow::test_multiple_heatflow_can_share_conductivity"
+            ]
+          }
+        },
+        {
+          "id": "T023",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:196"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models/test_child.py::TestHeatFlow::test_gradient_referenced_by_a_child_cannot_be_deleted",
+              "tests/test_heat_flow/test_models/test_child.py::TestHeatFlow::test_conductivity_referenced_by_a_child_cannot_be_deleted"
+            ]
+          }
+        },
+        {
+          "id": "T024",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:218"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestHeatFlow::test_heat_flow_child_relationships"
+            ]
+          }
+        },
+        {
+          "id": "T025",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:452"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestHeatFlowCorrection::test_heat_flow_corrections"
+            ]
+          }
+        },
+        {
+          "id": "T026",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:482"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models/test_child.py::TestHeatFlowCorrection::test_second_correction_of_the_same_type_rejected"
+            ]
+          }
+        },
+        {
+          "id": "T027",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:528"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestHeatFlowCorrection::test_correction_invalid_status_rejected",
+              "tests/test_heat_flow/test_models.py::TestHeatFlowCorrection::test_correction_valid_status_accepted"
+            ]
+          }
+        },
+        {
+          "id": "T028",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:458"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestHeatFlowCorrection::test_correction_invalid_type_rejected"
+            ]
+          }
+        },
+        {
+          "id": "T029",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:39"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models/test_child.py::TestHeatFlowInterval::test_deleting_a_site_deletes_its_intervals"
+            ]
+          }
+        },
+        {
+          "id": "T030",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/parent.py:26"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestHeatFlowSite::test_heat_flow_site_persistence"
+            ]
+          }
+        },
+        {
+          "id": "T031",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:32"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestHeatFlowInterval::test_interval_links_to_site"
+            ]
+          }
+        },
+        {
+          "id": "T032",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:543"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestThermalGradient::test_thermal_gradient_save_rejects_wrong_sample"
+            ]
+          }
+        },
+        {
+          "id": "T033",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:733"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestIntervalConductivity::test_interval_conductivity_save_rejects_wrong_sample"
+            ]
+          }
+        },
+        {
+          "id": "T034",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:126"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestHeatFlow::test_heat_flow_child_relationships"
+            ],
+            "commands": [
+              "unreachable HeatFlowQuerySet/HeatFlowManager and the interval accessor deleted (56 lines)"
+            ]
+          }
+        },
+        {
+          "id": "T035",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:420"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestHeatFlowCorrection::test_heat_flow_corrections"
+            ]
+          }
+        },
+        {
+          "id": "T036",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "docs/ghfdb_fields.md:98"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models/test_child.py::TestCorrectionStatusDocumentation::test_documented_statuses_match_the_enforced_ones"
+            ]
+          }
+        },
+        {
+          "id": "T037",
+          "status": "blocked",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "tests/test_migrations.py:50",
+              "config/settings.py:120"
+            ],
+            "tests": [
+              "tests/test_migrations.py::TestMigrationsApplyToAnEmptyDatabase::test_migrations_build_every_heat_flow_table"
+            ],
+            "commands": [
+              "blocked on FAIR-DM/fairdm#252 - contributors.0008 cannot run on an empty database"
+            ]
+          }
+        },
+        {
+          "id": "T090",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "tests/test_heat_flow/test_models/test_parent.py:1",
+              "tests/test_heat_flow/test_models/test_child.py:1"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_heat_flow -q -> 38 passed, 1 skipped"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P2",
+      "issue": 143,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T038",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/parent.py:132"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models/test_parent.py::TestHeatFlowSiteLocationUniqueness::test_second_site_at_an_occupied_pair_is_refused"
+            ]
+          }
+        },
+        {
+          "id": "T039",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/parent.py:143"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models/test_parent.py::TestHeatFlowSiteLocationUniqueness::test_saving_an_existing_site_again_is_accepted"
+            ]
+          }
+        },
+        {
+          "id": "T040",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/parent.py:138"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models/test_parent.py::TestHeatFlowSiteLocationUniqueness::test_two_sites_with_no_location_are_both_accepted"
+            ]
+          }
+        },
+        {
+          "id": "T041",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/parent.py:132"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models/test_parent.py::TestHeatFlowSiteLocationUniqueness::test_two_sites_a_few_metres_apart_are_both_accepted"
+            ]
+          }
+        },
+        {
+          "id": "T042",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/parent.py:132"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models/test_parent.py::TestHeatFlowSiteLocationUniqueness::test_one_point_row_per_coordinate_pair"
+            ]
+          }
+        },
+        {
+          "id": "T043",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/parent.py:171"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportSiteIdentity::test_import_resolves_to_existing_site_by_coordinates"
+            ]
+          }
+        },
+        {
+          "id": "T044",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/parent.py:171"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportSiteIdentity::test_import_with_disagreeing_id_parent_does_not_duplicate_site"
+            ]
+          }
+        },
+        {
+          "id": "T045",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/parent.py:151",
+              "project/heat_flow/models/parent.py:158"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models/test_parent.py::TestHeatFlowSiteLocationUniqueness::test_second_site_at_an_occupied_pair_is_refused",
+              "tests/test_heat_flow/test_models/test_parent.py::TestHeatFlowSiteLocationUniqueness::test_second_site_at_an_occupied_pair_is_refused_by_clean"
+            ]
+          }
+        },
+        {
+          "id": "T046",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/parent.py:171"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportSiteIdentity::test_import_with_disagreeing_id_parent_does_not_duplicate_site"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P3",
+      "issue": 168,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T047",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:248"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestParentHeatFlow::test_parent_children_aggregation"
+            ]
+          }
+        },
+        {
+          "id": "T048",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:259"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestParentHeatFlow::test_parent_children_aggregation"
+            ]
+          }
+        },
+        {
+          "id": "T049",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:250"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestParentHeatFlow::test_parent_delete_sets_child_null"
+            ]
+          }
+        },
+        {
+          "id": "T050",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/parent.py:223"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestParentHeatFlow::test_unique_parent_per_site_app_level"
+            ]
+          }
+        },
+        {
+          "id": "T051",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/parent.py:247"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportRefusesSecondParent::test_second_parent_at_the_same_site_is_refused_on_import"
+            ]
+          }
+        },
+        {
+          "id": "T052",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/parent.py:140"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestParentHeatFlow::test_parent_with_zero_children_is_valid"
+            ]
+          }
+        },
+        {
+          "id": "T053",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/parent.py:218"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestParentHeatFlow::test_parent_save_rejects_wrong_sample"
+            ]
+          }
+        },
+        {
+          "id": "T054",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/parent.py:189"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models/test_parent.py::TestParentHeatFlow::test_parent_persists_uncertainty_flag_comment_id_and_quality"
+            ]
+          }
+        },
+        {
+          "id": "T055",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/parent.py:140"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestParentHeatFlow::test_parent_children_aggregation"
+            ]
+          }
+        },
+        {
+          "id": "T056",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/parent.py:241"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models/test_parent.py::TestParentHeatFlow::test_unique_parent_per_site_app_level"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US4",
+      "priority": "P4",
+      "issue": 169,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T058",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:365"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestProbeMetadata::test_probe_metadata_linked_to_interval"
+            ]
+          }
+        },
+        {
+          "id": "T059",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:384"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models/test_child.py::TestProbeMetadata::test_probe_metadata_accepts_several_probe_type_concepts"
+            ]
+          }
+        },
+        {
+          "id": "T060",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:368"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestProbeMetadata::test_interval_without_probe_raises"
+            ]
+          }
+        },
+        {
+          "id": "T061",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:370"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestProbeMetadata::test_probe_metadata_cascade_on_interval_delete"
+            ]
+          }
+        },
+        {
+          "id": "T062",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:299"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestHeatFlow::test_heat_flow_is_probe_property"
+            ]
+          }
+        },
+        {
+          "id": "T063",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:365"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestProbeMetadata::test_probe_metadata_linked_to_interval"
+            ]
+          }
+        },
+        {
+          "id": "T064",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/models/child.py:299"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_models.py::TestHeatFlow::test_heat_flow_is_probe_property"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US5",
+      "priority": "P5",
+      "issue": 170,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T066",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/config.py:60"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_config.py::TestHeatFlowRegistryConfig::test_all_six_models_registered"
+            ]
+          }
+        },
+        {
+          "id": "T067",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/config.py:70"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_config.py::TestHeatFlowRegistryConfig::test_registry_config_has_fields"
+            ]
+          }
+        },
+        {
+          "id": "T068",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/config.py:50"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_config.py::TestHeatFlowRegistryConfig::test_metadata_carries_authority_and_citation"
+            ]
+          }
+        },
+        {
+          "id": "T069",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/config.py:28"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_config.py::TestHeatFlowRegistryConfig::test_filterset_and_table_classes_are_usable"
+            ]
+          }
+        },
+        {
+          "id": "T070",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/config.py:28"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_config.py::TestHeatFlowRegistryConfig::test_no_configuration_declares_an_unread_attribute"
+            ]
+          }
+        },
+        {
+          "id": "T071",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/config.py:28"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_config.py::TestHeatFlowRegistryConfig::test_system_checks_pass"
+            ]
+          }
+        },
+        {
+          "id": "T072",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/config.py:28"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_config.py::TestHeatFlowRegistryConfig::test_probe_metadata_and_correction_are_not_registered"
+            ]
+          }
+        },
+        {
+          "id": "T073",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/config.py:44"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_config.py::TestHeatFlowRegistryConfig::test_metadata_carries_authority_and_citation"
+            ]
+          }
+        },
+        {
+          "id": "T074",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/config.py:82"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_config.py::TestHeatFlowRegistryConfig::test_no_configuration_declares_an_unread_attribute"
+            ]
+          }
+        },
+        {
+          "id": "T075",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/tables.py:143"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_config.py::TestHeatFlowRegistryConfig::test_filterset_and_table_classes_are_usable"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US6",
+      "priority": "P6",
+      "issue": 171,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T076",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/factories.py:20"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_factories.py::TestHeatFlowFactories::test_all_factories_produce_saved_instances"
+            ]
+          }
+        },
+        {
+          "id": "T077",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/factories.py:31"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_factories.py::TestFactoriesCreateRequiredRelations::test_heat_flow_correction_factory_creates_its_heat_flow"
+            ]
+          }
+        },
+        {
+          "id": "T078",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/factories.py:20"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_factories.py::TestFactoryVocabularyPopulation::test_interval_conductivity_concepts_belong_to_their_vocabularies",
+              "tests/test_heat_flow/test_factories.py::TestFactoryVocabularyPopulation::test_heat_flow_site_explo_purpose_concepts_belong_to_exploration_purpose_vocabulary"
+            ]
+          }
+        },
+        {
+          "id": "T079",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/factories.py:20"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_factories.py::TestCompleteFactoryGraph::test_site_through_parent_graph_resolves_via_factories_alone"
+            ]
+          }
+        },
+        {
+          "id": "T080",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/factories.py:20"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_factories.py::TestHeatFlowFactories::test_heat_flow_correction_factory_save"
+            ]
+          }
+        },
+        {
+          "id": "T081",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "tests/test_heat_flow/conftest.py:1",
+              "project/heat_flow/factories.py:20"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_factories.py::TestFactoryVocabularyPopulation::test_probe_metadata_probe_type_concepts_belong_to_probe_type_vocabulary"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US7",
+      "priority": "P7",
+      "issue": 172,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T082",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T083",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T084",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T085",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T086",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T087",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T088",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T089",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 0,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 0,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 0,
+      "max": 1
+    },
+    "tokens": {
+      "used": 0,
+      "max": 2000000
+    }
+  },
+  "pr": {
+    "number": 173,
+    "draft": true
+  }
+}

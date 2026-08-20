@@ -11,7 +11,7 @@ Reference: Fuchs et al. (2021), Fuchs et al. (2023)
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator as MaxVal
 from django.core.validators import MinValueValidator as MinVal
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from fairdm.core.models import Measurement
 from fairdm.db import models
 from fairdm.db.models import QuantityField
@@ -129,9 +129,33 @@ class HeatFlowSite(GenericHole, AbstractGeoDepthInterval, GenericEarthSample):
             models.Index(fields=["environment"]),
         ]
 
+    def _check_location_uniqueness(self):
+        """Refuse a location already held by another HeatFlowSite (FR-004, FR-005).
+
+        Binds only where ``location`` is set, and never rejects a site
+        against itself.
+        """
+        if self.location_id:
+            existing = HeatFlowSite.objects.filter(location=self.location).exclude(
+                pk=self.pk
+            )
+            if existing.exists():
+                raise ValidationError(
+                    _(
+                        "A HeatFlowSite already exists at coordinate pair "
+                        "(%(x)s, %(y)s)."
+                    )
+                    % {"x": self.location.x, "y": self.location.y}
+                )
+
+    def clean(self):
+        super().clean()
+        self._check_location_uniqueness()
+
     def save(self, *args, **kwargs):
         if not self.top:
             self.top = 0
+        self._check_location_uniqueness()
         # TODO: Implement automatic geographic field population from coordinates when GIS is enabled
         # This would populate country, region, continent, domain from location coordinates
         super().save(*args, **kwargs)
@@ -225,7 +249,11 @@ class ParentHeatFlow(Measurement):
             )
             if existing.exists():
                 raise ValidationError(
-                    f"A ParentHeatFlow already exists for site {self.sample}. Only one parent per site is allowed."
+                    _(
+                        "A ParentHeatFlow already exists for site %(site)s. "
+                        "Only one parent per site is allowed."
+                    )
+                    % {"site": self.sample}
                 )
         super().save(*args, **kwargs)
 

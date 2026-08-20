@@ -1,255 +1,204 @@
-# Research: GHFDB Normalized Relational Data Model
+# Research — 001 heat flow data model
 
-**Phase 0 Output** | **Feature**: 001-heat-flow-data-model | **Date**: 2026-04-09
-**Propagated**: 2026-04-22 — Updated ParentHeatFlow config fields list to reflect `ghfdb_id`/`quality` replacing `is_ghfdb`.
+What had to be established before the open tasks could be planned. Every claim below was checked
+against the installed framework source or verified at runtime, and cites where.
 
----
+Framework paths are relative to the installed `fairdm`, `research_vocabs` and `fairdm_geo` packages.
 
-## R1: FairDM Base Class Inheritance Patterns
+## R1 — How to enforce one site per coordinate pair
 
-**Decision**: All primary models inherit from FairDM base classes as designed.
+**Question**: the specification requires the rule to hold on every write path. Where does it go?
 
-**Rationale**: FairDM's `Sample` and `Measurement` classes provide FAIR metadata infrastructure (DOI, contributor attribution, dataset linking, polymorphic querysets). Inheriting from these classes gives the GHFDB portal access to all framework features (admin, registry, API, filtering, tables) with zero custom view code. The `fairdm-geo` extensions (`GenericHole`, `GenericEarthSample`, `Interval`, `GeoDepthInterval`) add domain-specific borehole and geological fields.
+**Findings**
 
-**Inheritance map**:
+`Point` already constrains its coordinates: `unique_together = ("x", "y")`
+(`fairdm/contrib/location/models.py:40`). A coordinate pair therefore resolves to exactly one point
+record, and the framework's own `PointFactory` uses `django_get_or_create = ("x", "y")`
+(`fairdm/factories/core.py:730`). The import already calls `get_or_create` on the pair
+(`project/ghfdb/resources/parent.py:212`).
 
-| Model | Base Classes | Notes |
-|-------|-------------|-------|
-| HeatFlowSite | GenericHole → GenericEarthSample → Sample | Also mixes in `GeoDepthInterval` for site-level geology |
-| HeatFlowInterval | Interval → Sample, GeoDepthInterval | Depth interval within a borehole |
-| ParentHeatFlow | Measurement | `sample` FK → HeatFlowSite |
-| HeatFlow | Measurement | `sample` FK → HeatFlowInterval |
-| ThermalGradient | Measurement | `sample` FK → HeatFlowInterval |
-| IntervalConductivity | Measurement | `sample` FK → HeatFlowInterval |
-| ProbeMetadata | django.db.models.Model | OneToOne → HeatFlowInterval (not a Measurement) |
-| HeatFlowCorrection | django.db.models.Model | FK → HeatFlow (not a Measurement) |
+So the rule reduces to `location` being unique among sites, and does **not** require reasoning about
+coordinate values.
 
-**Alternatives considered**:
+`location` is declared once, on `Sample`, nullable, `on_delete=PROTECT`
+(`fairdm/core/sample/models.py:111`). Because it lives on the polymorphic base table, a
+`UniqueConstraint` in `HeatFlowSite.Meta` is not declarable — the same obstacle as the published
+value's one-per-site rule, recorded as D2 in `decisions.md`.
 
-- Making ProbeMetadata a Measurement → rejected; probe metadata is instrument context, not an independent scientific measurement.
-- Making HeatFlowCorrection a Measurement → rejected; corrections are flags/statuses, not measured quantities.
+`HeatFlowSite.objects.filter(...)` is correctly scoped to `HeatFlowSite` rows. `Sample` declares
+`objects = PolymorphicManager.from_queryset(SampleQuerySet)()`
+(`fairdm/core/sample/models.py:134`), and a polymorphic manager on a child model queries that
+child's own table. So the uniqueness lookup does not need a type filter.
 
----
+**The decisive finding**: neither base class calls `full_clean()` from `save()`, and Django never
+does automatically. A rule implemented only in `clean()` is bypassed by `Model.objects.create()`,
+by a bare `save()`, and by every factory. The framework treats this as a known hazard and works
+around it in two places — `VocabularyGuardedSave` overrides `save()`
+(`fairdm/core/measurement/models.py:189`), and `Sample` carries a `pre_save` signal
+(`fairdm/core/sample/models.py:305`) — precisely because a manager's `create()` reaches the database
+without calling `clean()`.
 
-## R2: Field Naming Convention
+**Decision**: enforce in `save()`, and also in `clean()`.
 
-**Decision**: Use plain-language field names on Django models; do NOT mirror GHFDB short names (e.g., `T_grad_mean_meas`).
+`save()` is the guarantee. It is the pattern already used one file away for the parent's
+one-per-site rule (`project/heat_flow/models/parent.py:217`), so the two rules read alike, and it
+covers `objects.create()` and the factories.
 
-**Rationale**: The user explicitly requested plain-language names for readability. The GHFDB short names are cryptic and conflict with Python naming conventions. The field mapping between Django model fields and GHFDB CSV columns will be handled by the import/export layer (deferred to a later spec). Current models already follow this pattern (e.g., `value`, `uncertainty`, `corrected_value`, `corrected_uncertainty`).
+`clean()` is what makes the failure legible. Forms and the admin call `full_clean()` before saving,
+so without it a curator entering a duplicate site through the admin gets a server error rather than
+a field error.
 
-**Naming examples**:
+Neither fires on `bulk_create` or a queryset `update()`. Neither does a `pre_save` signal, so that
+alternative buys nothing here, and the project contains no bulk write path — checked, and recorded
+as D2.
 
-| GHFDB Short Name | Current Django Field | Notes |
-|-----------------|---------------------|-------|
-| q / qc | `value` | On ParentHeatFlow / HeatFlow |
-| q_unc / qc_unc | `uncertainty` | On ParentHeatFlow / HeatFlow |
-| T_grad_mean_meas | `value` | On ThermalGradient |
-| T_grad_unc_meas | `uncertainty` | On ThermalGradient |
-| T_grad_mean_cor | `corrected_value` | On ThermalGradient |
-| tc_mean | `value` | On IntervalConductivity |
-| tc_unc | `uncertainty` | On IntervalConductivity |
-| corr_HP_flag | `corr_HP_flag` | Exception — retained for domain familiarity |
-| T_shutin_top | `shutin_top` | On ThermalGradient |
-| hf_pen | `penetration` | On ProbeMetadata |
+**Also to resolve**: the import has two notions of site identity. `_get_or_create_site`
+(`project/ghfdb/resources/parent.py:171`) looks a site up by borrowed identifier when the row
+carries one and by coordinates when it does not, so the two paths can disagree and the first
+contradicts the rule. Issue #143 raised this alongside the constraint, and the story carries it.
 
-**Alternatives considered**:
+## R2 — Controlled vocabulary fields in factories
 
-- Using GHFDB short names directly → rejected per user instruction; harms readability and violates Python naming conventions.
-- Fully verbose names (e.g., `mean_thermal_conductivity_value`) → rejected; existing models already use compact plain-language (e.g., `value`, `uncertainty`).
+**Question**: every vocabulary declaration in `factories.py` is commented out. What does it take to
+populate them?
 
----
+**Findings**
 
-## R3: GHFDB Mandatory Fields — DB Nullability Strategy
+Two field types, and they behave differently.
 
-**Decision**: GHFDB-mandatory *auxiliary* fields are nullable at the DB level (`null=True, blank=True`). The **primary `value` field on every Measurement subclass is non-nullable** (`null=False`). Enforcement of auxiliary mandatory fields happens at the application/export boundary only.
+`ConceptField` stores a plain string — it subclasses `CharField`
+(`research_vocabs/fields.py:151`). `FuzzyChoice(Model.<field>_vocab.values)` is correct and is
+already in use (`project/heat_flow/factories.py:21`).
 
-**Rationale**: Per user instruction, the GHFDB marks many fields as "Mandatory" (M) in the field reference, but the portal must accept incomplete records during data entry and curation. Blocking saves on missing context fields would prevent incremental data entry, break import of historical records, and conflict with Constitution Principle I (FAIR-First: incomplete records must not be blocked at entry time). However, the primary `value` field on each Measurement subclass represents the core scientific datum — a Measurement record without its primary measured value is semantically meaningless and must not exist. Non-nullability is therefore applied uniformly to all `value` fields across the model hierarchy. Validation of other mandatory fields will occur at export time (deferred to the import/export spec).
+`ConceptManyToManyField` is a real many-to-many to `research_vocabs.Concept`
+(`research_vocabs/fields.py:169`), so it needs database rows. `Concept` has a non-nullable foreign
+key to `Vocabulary` and `unique_together = ("vocabulary", "name")`
+(`research_vocabs/models.py:126`), so the concepts must exist before a factory can attach them.
 
-**Applies to**:
+`<field>_vocab` is set on the model class by the field's `contribute_to_class`
+(`research_vocabs/fields.py:87` for the scalar field, `:200` for the related ones) and is the
+instantiated vocabulary, whose `.values` is the list of concept names (`research_vocabs/core.py:182`
+with `:259`).
 
-| Model | Field | Null behaviour | Rationale |
-|-------|-------|----------------|----------|
-| ParentHeatFlow | `value` | **NOT NULL** | Primary measured heat flow — existing behaviour retained |
-| HeatFlow | `value` | **NOT NULL** | Primary child heat flow value |
-| ThermalGradient | `value` | **NOT NULL** | Primary gradient measurement |
-| IntervalConductivity | `value` | **NOT NULL** | Primary conductivity measurement |
-| All models | all other GHFDB-mandatory fields | nullable | Allow incomplete data entry |
+`Concept.preload()` creates the vocabulary and its concepts from the registry
+(`research_vocabs/models.py:139`), and `Concept.get_for_vocabulary()` scopes a queryset to one
+vocabulary, accepting the vocabulary class (`research_vocabs/models.py:166`).
 
-**Alternatives considered**:
+**The reason the declarations are commented out** is visible in the test layout rather than the
+factories. `tests/test_ghfdb/conftest.py:17` carries an autouse fixture calling `Concept.preload()`.
+`tests/test_heat_flow/conftest.py` carries no equivalent, so no concept row exists in any
+`heat_flow` test, and any factory attaching one would fail. The one test that does exercise a
+vocabulary many-to-many builds its vocabulary and concept by hand
+(`tests/test_heat_flow/test_models.py:48`).
 
-- Enforcing NOT NULL for ALL GHFDB-mandatory fields → rejected; would block incomplete data entry.
-- Using default sentinel values (e.g., 0.0) for missing mandatory fields → rejected; corrupts data semantics.
-- Nullable `value` on ThermalGradient/IntervalConductivity (previous position) → rejected; a Measurement without its primary datum is semantically meaningless.
+**Decision**: preload concepts for the `heat_flow` tests the same way the extraction tests already
+do, then set many-to-many fields through `post_generation` hooks — a many-to-many cannot be
+assigned before the row exists. Note `RelatedConceptMixin` forces `related_name="+"`
+(`research_vocabs/fields.py:190`), so there is no reverse accessor from a concept.
 
----
+No working example of a concept many-to-many factory exists in any of the three packages to copy
+from. The nearest idiom is `fairdm/core/abstract.py:83`, which filters concepts by vocabulary name
+and calls `.set()`.
 
-## R4: Correction Flags — HeatFlowCorrection Model vs. Individual Fields
+## R3 — What the factory bases provide
 
-**Decision**: Correction flags (C11–C19) are stored as `HeatFlowCorrection` records (one per disturbance type per `HeatFlow`), NOT as individual boolean fields on the `HeatFlow` model.
+`SampleFactory` and `MeasurementFactory` are abstract and live in `fairdm/factories/core.py:476`
+and `:610`. Both supply `name` and a `dataset` via sub-factory. `SampleFactory` also supplies
+`local_id`, `status` and a null `location`. **`MeasurementFactory` supplies no `sample`**, and
+`Measurement.sample` is non-nullable (`fairdm/core/measurement/models.py:70`), so every measurement
+factory must supply one — which the app's factories already do.
 
-**Rationale**: The existing implementation already uses a separate `HeatFlowCorrection` model with `correction_type` and `status` fields, plus `unique_together = [("heat_flow", "correction_type")]`. This normalized design:
+Both carry opt-in `descriptions` and `dates` hooks that do nothing unless passed a count.
 
-- Avoids 9+ boolean columns on HeatFlow
-- Allows each correction type to carry a status (present-corrected, present-uncorrected, not recognized, etc.) and a comment
-- Maps cleanly to the GHFDB C11–C19 flag structure during import/export
-- Makes adding future correction types trivial
+## R4 — What the registry actually reads
 
-**Current observation**: The existing `HeatFlowCorrection.CorrectionTypeChoices` already covers: IS, T, S, E, TOPO, PAL, SUR, CONV, HR — matching C11–C19 precisely. The `StatusChoices` map to the GHFDB flag values.
+**Question**: several configuration attributes in this app are not in the framework's vocabulary.
+Which, exactly, and what is the real contract?
 
-**Important**: Not all `StatusChoices` are semantically valid for all `CorrectionTypeChoices`. The valid combinations must be documented and enforced via `ValidationError` in `HeatFlowCorrection.save()`. The following table documents the intended mapping (to be confirmed against Fuchs et al. 2021/2023 during implementation):
+**Findings**
 
-| CorrectionType | Valid StatusChoices |
-|----------------|--------------------|
-| IS (in-situ conditions, probe) | present_corrected, present_not_corrected, not_recognized, not_considered, tilt_corrected, drift_corrected, unspecified |
-| T (temperature) | present_corrected, present_not_corrected, not_corrected, corrected, not_recognized, not_considered, unspecified |
-| S, E, TOPO, PAL, SUR, CONV, HR (environmental) | present_corrected, present_not_corrected, present_not_significant, not_recognized, considered_p, considered_t, considered_pt, not_considered, unspecified |
+`ModelConfiguration` recognises a fixed set: `model`, `metadata`, `fields`, `exclude`, a
+per-component field list and a per-component class for each of six components, `display_name` and
+`description` (`fairdm/registry/config.py:195`–`:245`). The component table is at `:111`.
 
-**Enforcement**: `HeatFlowCorrection.save()` must raise `ValidationError` when a `status` is assigned that is not in the valid set for the given `correction_type`. The `VALID_STATUS_FOR_TYPE` mapping should be defined as a class-level constant.
+Anything else set on a configuration is set and never read. `ModelConfiguration` has no metaclass
+and no `__init_subclass__`, and `_OVERRIDABLE` guards only keyword arguments to `__init__`.
 
-**Important note**: The existing `HeatFlow` model still has individual `corr_*_flag` ConceptField/ConceptManyToMany fields from an older design. These will need to be removed in this spec and replaced by the `HeatFlowCorrection` relation. The factory also references these fields. This cleanup is part of the implementation work.
+The description, authority, keywords, repository link and citation belong on `ModelMetadata`
+(`fairdm/registry/config.py:78`), assigned to `metadata` (`:203`).
 
-**Alternatives considered**:
+Components are generated when none is supplied — `_component_class`
+(`fairdm/registry/config.py:435`) falls back to a factory, resolving fields from the component's own
+list, then `fields`, then the model's defaults (`:418`). Supplying both a class and a field list for
+one component is refused (`:291`).
 
-- Individual boolean fields on HeatFlow → rejected; already migrated to HeatFlowCorrection model in current codebase.
-- Allowing all statuses for all correction types (no validation) → rejected; produces data that cannot be correctly mapped back to the GHFDB flat format during export.
+**Verified at runtime**, not only read: every one of the six registered models returns
+`ModelMetadata(description='', authority=None, keywords=[], repository_url='', citation=None,
+maintainer='', maintainer_email='')`.
 
----
+**Consequences for the plan**
 
-## R5: HeatFlow → ThermalGradient / IntervalConductivity Link Type
+- The shared base's authority, citation and repository link reach nothing. `description` is a
+  recognised attribute and is read as the configuration's own; only `ModelMetadata.description` is
+  empty. Do not delete the class-level descriptions.
+- Exactly three attributes are inert: `filterset_options` (on three configurations), `fieldsets`
+  (on one) and `primary_data_fields` (on four). Those models get a generated filter set from
+  `fields` instead. The supported spellings are `filterset_fields` or `filterset_class`.
+- `admin_list_display` looks equally unfamiliar and is **not** inert — it is the admin component's
+  field list (`fairdm/registry/config.py:120`). Deleting it would silently change four changelists.
+- Requiring a hand-written filter set and table per model, as the approved specification did, would
+  replace working generated components with code to maintain. Recorded as D8 and the specification
+  amended.
+- `ThermalConductivityTable` is defined at `project/heat_flow/tables.py:143` and referenced by
+  nothing.
 
-**Decision**: Use nullable ForeignKey (not OneToOne) from HeatFlow to ThermalGradient and IntervalConductivity.
+## R5 — Rendering the diagram
 
-**Rationale**: Per spec clarification (FR-013), the relationship must allow:
+**Question**: what does it take for the diagram to reach a reader as a diagram?
 
-1. Multiple `HeatFlow` records to reference the same `ThermalGradient` or `IntervalConductivity` (reuse of existing measurement data)
-2. Recalculation scenarios where a new child determination is computed from existing gradient/conductivity data
-3. Nullable links for incomplete records
+**Findings**
 
-**Current state**: The existing `child.py` uses `OneToOneField` for both. This MUST be changed to `ForeignKey` per FR-013.
+No Mermaid extension is configured. The project's `docs/conf.py:39` adds `sphinx_design` and
+`sphinx_exec_code` to the framework's default list (`fairdm_docs/conf.py:378`), which carries
+`myst_parser` and no Mermaid renderer. MyST alone emits a highlighted code block.
 
-**Migration impact**: Changing OneToOne to FK requires a migration. Since the data model is still in development, this is a safe change.
+**Verified by building the documentation**: the existing 458-line diagram renders as
+`<div class="highlight-mermaid">` — syntax-highlighted source, not a diagram.
 
-**Alternatives considered**:
+**The build itself is not broken.** Issue #124 reports `ModuleNotFoundError: No module named 'docs'`;
+that no longer reproduces, having been fixed in `dc78c63`. A full build succeeds with 71 warnings.
+What remains of #124 is the workflow condition that has never let the build run in CI, which is a
+workflow file and outside this feature.
 
-- Keeping OneToOneField → rejected; spec explicitly requires FK for reuse/recalculation scenarios.
-- M2M relationship → rejected; a single HeatFlow determination uses one gradient and one conductivity value; M2M is semantically incorrect.
+Graphviz is not installed, so the `.dot` sources beside the diagram cannot be rebuilt and the
+committed images generated from them are frozen against a schema that has since changed.
 
----
+**Decision**: add `sphinxcontrib-mermaid` to the documentation dependencies and the extension list.
+The rendering test asserts against built output rather than source, since the failure being guarded
+against is precisely a source file that is valid and never rendered.
 
-## R6: ParentHeatFlow Uniqueness Constraint
+## R6 — Checking the field map against the code
 
-**Decision**: Enforce one `ParentHeatFlow` per `HeatFlowSite` globally via a `UniqueConstraint` in `ParentHeatFlow.Meta.constraints` targeting the `sample_id` column.
+**Question**: what is the map checked against, and how?
 
-**Rationale**: Per spec clarification, duplicate `ParentHeatFlow` records cannot exist at the same `HeatFlowSite` regardless of dataset. The `sample` FK on `ParentHeatFlow` inherits from FairDM's `Measurement` base class and **cannot be modified with `unique=True` directly** — that field is declared in the fairdm package, and overriding inherited FK fields in a Django subclass model is not supported and would likely break the ORM. Instead, a `UniqueConstraint` in `Meta.constraints` targets the underlying `sample_id` DB column directly, providing the same database-level enforcement without modifying the inherited field declaration.
+**Findings**
 
-**Implementation**:
+`project/ghfdb/constants.py` defines `PARENT_COLUMNS`, `CHILD_COLUMNS` and `META_FIELDS`, with
+`GHFDB_COLUMN_ORDER` derived as their concatenation. Tests already pin that derivation and its
+casing, and they pass.
 
-```python
-class Meta(Measurement.Meta):
-    constraints = [
-        models.UniqueConstraint(fields=["sample"], name="unique_parent_per_site"),
-    ]
-```
+`docs/ghfdb_fields.md` is a set of pipe tables keyed by published column name, carrying the
+database table, the model it is reached from, the accessor and the model that declares it. Names are
+markdown-escaped, so a parser must unescape before comparing.
 
-**Current state**: The existing `ParentHeatFlow.save()` method already has a manual check that raises `ValidationError` if another `ParentHeatFlow` exists for the same sample. The `UniqueConstraint` in Meta provides DB-level enforcement in addition to this existing app-layer guard.
+The map is already stale in at least one row: `ID` maps to `local_id` on the child, and that field
+was replaced by `ghfdb_id` in migration `0011`.
 
-**Alternatives considered**:
+**This is a different mapping from the one issue #122 covers.** That issue is about published
+columns against import and export *resource* fields, and about a metadata file's vocabulary. This
+map is published columns against *model* fields. The two do not depend on each other, and this
+feature does not touch the resources.
 
-- `unique=True` on the inherited `sample` FK field → rejected; the `sample` field is declared in the fairdm package and cannot be safely overridden in a subclass model.
-- Save-only enforcement (no DB constraint) → rejected; DB-level unique constraint is more robust and prevents race conditions.
-- Scoping uniqueness to dataset → rejected; user explicitly said "regardless of dataset."
-
----
-
-## R7: save()-Level Type Validation for Measurement Models
-
-**Decision**: All four Measurement subclasses enforce their expected `sample` type in `save()` via `ValidationError`.
-
-**Rationale**: Per spec clarifications (FR-008a, FR-010a, FR-016a, FR-018a), each measurement must validate that its `sample` FK points to the correct Sample subclass:
-
-| Model | Expected sample type |
-|-------|---------------------|
-| ParentHeatFlow | HeatFlowSite |
-| HeatFlow | HeatFlowInterval |
-| ThermalGradient | HeatFlowInterval |
-| IntervalConductivity | HeatFlowInterval |
-
-This is application-level enforcement; the database FK constraint points to the polymorphic `Sample` table (since FairDM uses `django-polymorphic`), so a `ThermalGradient` could technically be linked to a `HeatFlowSite` at the DB level. The `save()` check prevents this.
-
-**Pattern**:
-
-```python
-def save(self, *args, **kwargs):
-    if self.sample_id and not isinstance(self.sample, HeatFlowInterval):
-        raise ValidationError(_("Sample must be a HeatFlowInterval instance."))
-    super().save(*args, **kwargs)
-```
-
-**Alternatives considered**:
-
-- Relying on DB FK constraints alone → rejected; polymorphic FK targets `Sample` base table, not the specific subclass.
-- Using `clean()` instead of `save()` → rejected; save() is called on all code paths, clean() is only called by forms/admin.
-
----
-
-## R8: FairDM Registry Configuration — Scope for This Spec
-
-**Decision**: Register ALL six FairDM Sample and Measurement subclasses — `HeatFlowSite`, `HeatFlowInterval`, `ParentHeatFlow`, `HeatFlow`, `ThermalGradient`, and `IntervalConductivity` — with the FairDM registry. `ProbeMetadata` and `HeatFlowCorrection` are plain `django.db.models.Model` subclasses and do not require registration.
-
-**Rationale**: ALL FairDM `Sample` and `Measurement` subclasses must be registered with the FairDM registry — this is a framework requirement, not an optional feature. The FairDM registry drives admin, filtering, table views, API endpoint generation, and FAIR metadata exposure for every registered model. Omitting `ThermalGradient` and `IntervalConductivity` would mean those models are invisible to the portal's data management layer, breaking normal curation workflows. The existing `config.py` already registers `HeatFlowSite`, `HeatFlowInterval`, `HeatFlow`, and `ThermalGradient`. This spec:
-
-- Adds `ParentHeatFlow` registration (currently missing)
-- Adds `IntervalConductivity` registration (currently missing)
-- Retains `ThermalGradient` registration (previously proposed for removal — **this proposal is reversed**)
-- Updates `HeatFlow` config to remove old `corr_*_flag` fields from its `fields` list
-
-**Config approach**: Keep registrations basic. Each registered model provides `fields`, `description`, and inherits IHFC authority/citation from `IHFCConfig`. `filterset_class` and `table_class` can be specified where they already exist.
-
-**ParentHeatFlow config will include**: `model`, `description`, `fields` (value, uncertainty, corr_HP_flag, comment, ghfdb_id, quality), `authority`, `citation` (inherited from IHFCConfig). ~~`is_ghfdb` removed from fields list (2026-04-22 refinement).~~
-
-**ThermalGradient and IntervalConductivity configs** will initially use minimal `fields` lists (value, uncertainty, and key method/quality fields).
-
-**Alternatives considered**:
-
-- Registering only 4 primary models, excluding ThermalGradient and IntervalConductivity → rejected; all FairDM Measurement/Sample subclasses must be registered.
-- Skipping ParentHeatFlow → rejected per FR-023; it's a primary model that must be registered.
-
----
-
-## R9: ProbeMetadata FK Target — HeatFlowInterval
-
-**Decision**: `ProbeMetadata` links via OneToOne to `HeatFlowInterval`, not to `HeatFlow`.
-
-**Rationale**: The existing code already has `ProbeMetadata.interval = OneToOneField("heat_flow.HeatFlowInterval")`. This is correct: probe metadata describes the instrument deployment in a depth interval, not the heat flow calculation derived from it. The `HeatFlow.is_probe` cached property can check whether the related interval has probe metadata.
-
-**Current issue**: The existing `HeatFlow` model has inline probe fields (`probe_penetration`, `probe_length`, `probe_tilt`, `water_temperature`) that duplicate `ProbeMetadata`. These fields need to be cleaned up — `probe_penetration`, `probe_length`, `probe_tilt` should only exist on `ProbeMetadata`. `water_temperature` may stay on `HeatFlow` as it's a measurement context field (C24), not strictly probe metadata.
-
-**Alternatives considered**:
-
-- Linking ProbeMetadata to HeatFlow → rejected; probe metadata is about the physical instrument at a location, not about a specific heat flow calculation.
-
----
-
-## R10: Existing Factory Compatibility
-
-**Decision**: Update existing factories and create new ones (`ParentHeatFlowFactory`, `ProbeMetadataFactory`) to match the updated model structure. Keep all factory classes **minimal and flat** — no excessive `SubFactory` chains. Build complex multi-model object graphs (e.g., site → interval → gradient + conductivity → child heat flow + parent) using **pytest fixtures**, following the fairdm package conventions.
-
-**Rationale**: Factory classes should set sensible defaults for a model's own fields and create the minimum required related objects. Deep `SubFactory` chains that auto-create entire model hierarchies are fragile, hard to debug, and couple factories to database schema in ways that make isolated unit tests brittle. Complex object graphs are better expressed as explicit pytest fixtures where the construction sequence is readable and controllable. This pattern is already used in the fairdm package's test suite and is the expected convention for portal tests.
-
-**Factory guidelines**:
-
-- Each factory provides defaults for the model's own scalar/choice fields.
-- A factory MAY include one level of `SubFactory` where the FK is non-nullable and a related object is truly required (e.g., `HeatFlowIntervalFactory.sample = SubFactory(HeatFlowSiteFactory)`).
-- A factory MUST NOT auto-create M2M records or second-level related objects through `SubFactory`.
-- Multi-model fixture construction belongs in `conftest.py` pytest fixtures, not in factory `Meta` or `@factory.post_generation` hooks.
-
-**Changes required**:
-
-- `HeatFlowFactory`: Remove references to `corr_S_flag`, `corr_E_flag`, etc. (fields being removed from `HeatFlow`); remove `probe_penetration`, `probe_length`, `probe_tilt` (moving to `ProbeMetadata`).
-- `ParentHeatFlowFactory`: Create new (currently missing).
-- `ProbeMetadataFactory`: Create new (currently missing).
-
-**Alternatives considered**:
-
-- Deep factory chains that auto-build the full site → interval → child graph → rejected; produces fragile tests and obscures object construction intent.
-- Leaving factories unchanged → rejected; factories must match the updated model structure.
+**Decision**: parse the map's tables, assert every canonical column appears, and resolve each
+mapping's model and accessor against the real model. Fourteen tests in the extraction suite are
+quarantined as strict expected failures pointing at #122; nothing here touches them.

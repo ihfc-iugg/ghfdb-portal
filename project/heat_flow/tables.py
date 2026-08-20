@@ -2,7 +2,7 @@ import django_tables2 as tables
 from django.utils.translation import gettext_lazy as _
 from fairdm.contrib.collections.tables import MeasurementTable, SampleTable
 
-from heat_flow.models.child import IntervalConductivity, ThermalGradient
+from heat_flow.models.child import ThermalGradient
 
 from .models import HeatFlow, HeatFlowInterval, HeatFlowSite
 
@@ -115,36 +115,6 @@ class ThermalGradientTable(IntervalMixin, MeasurementTable):
     class Meta:
         model = ThermalGradient
         exclude = ["latitude", "longitude"]
-        fields = [
-            "id",
-            "dataset",
-            "location",
-            "sample",
-            # "sample_type",
-            "sample__heatflowinterval__top",
-            "sample__heatflowinterval__bottom",
-            # "sample__top",
-            # "sample__bottom",
-            # "depth_top",
-            "value",
-            "uncertainty",
-            "corrected_value",
-            "corrected_uncertainty",
-            "method_top",
-            "method_bottom",
-            "shutin_top",
-            "shutin_bottom",
-            "correction_top",
-            "correction_bottom",
-            "number",
-        ]
-
-
-class ThermalConductivityTable(IntervalMixin, MeasurementTable):
-    # depth_top = tables.Column(verbose_name=_("Top depth"), empty_values=())
-
-    class Meta:
-        model = IntervalConductivity
         fields = [
             "id",
             "dataset",

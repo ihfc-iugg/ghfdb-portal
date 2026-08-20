@@ -11,6 +11,20 @@ import pytest
 from fairdm.factories import DatasetFactory
 
 
+@pytest.fixture(autouse=True)
+def load_concepts(db):
+    """Ensure all vocabulary concepts are in the test DB before each test.
+
+    Mirrors the autouse fixture in test_ghfdb/conftest.py (T081) so that
+    factories attaching ConceptManyToManyField relations have concept rows
+    to attach.
+    """
+    from research_vocabs.models import Concept
+
+    if not Concept.objects.exists():
+        Concept.preload()
+
+
 @pytest.fixture
 def dataset():
     """A minimal Dataset – infrastructure, not under test."""

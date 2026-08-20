@@ -1,263 +1,522 @@
-# Feature Specification: GHFDB Normalized Relational Data Model
+# Feature Specification: Heat flow held as a normalised relational model
 
 **Feature Branch**: `001-heat-flow-data-model`
-**Created**: 2026-04-09
-**Status**: Refined
-**References**: Fuchs et al. (2021); Fuchs et al. (2023); Constitution Principles I, II, III
 
-**Refined**: 2026-04-22 — `ParentHeatFlow` and `HeatFlow` field changes: added `ghfdb_id` (nullable integer, spreadsheet reference) and `quality` (13-char code string); removed `is_ghfdb` flag (membership now determined by `ghfdb_id IS NOT NULL`); removed `local_id` field from both models (its function is assumed by `ghfdb_id`).
-**Refined**: 2026-04-22 (2) — Corrected: `ghfdb_id` field type is `PositiveIntegerField` (not `BigIntegerField`); GHFDB spreadsheet row IDs are non-negative integers that fit comfortably in a positive int range.
+**Created**: 2026-04-09
+
+**Rewritten**: 2026-08-20 — audited against the implementation and rewritten in place. The
+adjudications behind every change are recorded in [decisions.md](decisions.md).
+
+**Status**: Draft
+
+**Goals**: G1 — heat flow data held as a normalised relational model, designed for the science
+rather than for the spreadsheet
+
+**Roadmap**: R1
+
+**References**: Fuchs et al. (2021); Fuchs et al. (2023); constitution principles I, II, III, VI,
+VII; ADR-0001, ADR-0004, ADR-0006, ADR-0007
 
 ## Overview
 
-The Global Heat Flow Database (GHFDB) distributes data as a flat spreadsheet schema defined by the International Heat Flow Commission (IHFC). Internally, the portal must store that data in a normalized relational schema that:
+The International Heat Flow Commission distributes the Global Heat Flow Database as a flat
+spreadsheet. That shape suits data entry and suits nothing else: one row carries site metadata,
+interval geometry, two independent measurements and a derived result, so the same site is restated
+on every row that mentions it and no field can be constrained without constraining all of them.
 
-1. Faithfully represents the **parent/child conceptual hierarchy** defined by the World Heat Flow Database (WHDB) Project — site → interval → measurement cascade.
-2. Conforms to the **FairDM `Sample`/`Measurement` base-class architecture** so the portal inherits FAIR data infrastructure without custom reimplementation.
-3. Is fully testable at the field, relationship, constraint, and factory level.
+The portal stores the science instead. A site is fixed by its coordinate pair and holds at most one parent value. Within that site are the depth intervals over which measurements were
+made. Over each interval sit a thermal gradient and a thermal conductivity, and from that pair a
+child is computed and the corrections applied to it are recorded. Every
+model extends the framework's `Sample` or `Measurement` base class and is registered with its
+registry, so list views, filtering, tables and admin come from configuration rather than custom
+view code.
 
-Round-trip import/export between the portal schema and the GHFDB spreadsheet format is explicitly **deferred** to a later feature spec. Quality score *calculations* (U-score, M-score algorithms) are also **deferred**, though the score *fields* (as stored values) are within scope.
-
----
+The flat spreadsheet is an import and export product, not the source of truth. Translating between
+the two is specified separately in `002-ghfdb-proxy` and `003-ghfdb-import-export`. What belongs
+here is the model those features read from and write to, and the documentation that lets an outside
+reader follow a published column back to the field that expresses it.
 
 ## User Scenarios & Testing
 
-### User Story 1 — Site and Measurement Data Can Be Stored and Retrieved (Priority: P1)
+### User Story 1 — A complete heat flow record can be stored and read back (Priority: P1)
 
-A portal developer or data curator creates heat flow records from scratch using the Django ORM and can persist and retrieve a complete site → interval → child hierarchy with all scientifically meaningful fields intact.
+A curator or a developer builds a full record through the ORM — a site, an interval within it, a
+thermal gradient and a thermal conductivity over that interval, the child computed
+from them, the corrections applied to it, and the site's parent — then reads every part
+of it back with values, units and relationships intact.
 
-**Why this priority**: This is the foundational capability. All other stories, features, and workflows depend on a correctly modeled, persistable data structure. Without this, nothing else works.
+**Why this priority**: nothing else in the portal has anything to work on until this holds. Import,
+export, the API and the map viewer all read this graph.
 
-**Independent Test**: A test that creates one `HeatFlowSite`, one `ParentHeatFlow` linked to that site, one `HeatFlowInterval` linked to the site, one `HeatFlow` child with associated `ThermalGradient` and `IntervalConductivity` (with `parent` FK pointing to the `ParentHeatFlow`), and then reads them back from the database asserting all field values are correct — this alone delivers a working persistence layer for the complete site → interval → (gradient + conductivity) → child heat flow + parent heat flow graph.
+**Independent Test**: create the whole graph in one test and assert every field value and every
+forward and reverse relationship resolves.
 
 **Acceptance Scenarios**:
 
-1. **Given** a clean database, **When** a `HeatFlowSite` is created with geographic and exploration metadata fields, **Then** it is persisted and all fields are retrievable with correct values and types.
-2. **Given** a persisted `HeatFlowSite`, **When** a `HeatFlowInterval` is created referencing that site as its sample, **Then** the interval is linked to the site and its depth/geological fields are retrievable.
-3. **Given** a persisted `HeatFlowInterval`, **When** a `ThermalGradient` and an `IntervalConductivity` are created linked to that interval, **Then** both sub-measurements are retrievable via the interval's reverse relations.
-4. **Given** persisted `ThermalGradient` and `IntervalConductivity`, **When** a `HeatFlow` child record is created referencing both via nullable ForeignKey relations and linked to a `ParentHeatFlow`, **Then** all forward and reverse relationships resolve correctly.
-5. **Given** a persisted `HeatFlow` child, **When** `HeatFlowCorrection` records are attached (one per disturbance type), **Then** all corrections are retrievable via the child's reverse relation and the `correction_type` / `status` choices are validated.
+1. **Given** an empty database, **When** a site is created with its geographic and exploration
+   metadata, **Then** every field is persisted and reads back with its correct value and type.
+2. **Given** a stored site, **When** an interval is created against it, **Then** the interval
+   resolves to its site, the site lists it among its intervals, and the depth fields read back as
+   quantities carrying units.
+3. **Given** a stored interval, **When** a thermal gradient and a thermal conductivity are created
+   over it, **Then** both resolve to the interval and appear among its measurements.
+4. **Given** a stored gradient and conductivity, **When** a child is created
+   referencing both and linked to the site's parent, **Then** every forward and reverse
+   relationship resolves.
+5. **Given** a stored child, **When** corrections are attached to it, **Then** each
+   is reachable from the child and its type and status are validated.
+6. **Given** a child with neither a gradient nor a conductivity, **When** it is
+   saved, **Then** it is accepted — an incomplete record must not be blocked at entry.
 
 ---
 
-### User Story 2 — Parent-Child Aggregation Relationship Is Correctly Modeled (Priority: P2)
+### User Story 2 — A site is its coordinates (Priority: P2)
 
-A curator can associate multiple child `HeatFlow` determinations with a single `ParentHeatFlow` record and flag which children were used in computing the parent value.
+A curator adding a site at a coordinate pair the database already holds is refused, and told which
+site already occupies it, rather than creating a duplicate that splits one location's measurements
+across two records.
 
-**Why this priority**: The parent/child aggregation structure is the GHFDB's core scientific claim — a quality-controlled surface heat flow value synthesised from potentially many interval measurements. Modelling this correctly is required by Constitution Principle I.
+**Why this priority**: coordinates are the only identifier every contributor supplies and the only
+one that means the same thing across a century of publications (ADR-0006). A duplicated site is not
+a cosmetic problem — it silently divides the measurements at one location, and the parent value chosen for
+each half rests on part of the evidence.
 
-**Independent Test**: Create one `ParentHeatFlow` linked to three `HeatFlow` children (two marked `is_relevant=True`, one `is_relevant=False`). Verify the `children` reverse queryset returns all three, and filtering by `is_relevant` returns only the two relevant ones.
+**Independent Test**: create a site at a coordinate pair, attempt a second at the same pair, assert
+the second is refused and the first is untouched.
 
 **Acceptance Scenarios**:
 
-1. **Given** a `ParentHeatFlow`, **When** multiple `HeatFlow` children are linked to it via the `parent` ForeignKey, **Then** `parent.children.all()` returns all linked children.
-2. **Given** children with mixed `is_relevant` flags, **When** filtering `parent.children.filter(is_relevant=True)`, **Then** only children marked relevant are returned.
-3. **Given** a `ParentHeatFlow` is deleted, **When** querying its formerly linked children, **Then** each child's `parent` field is set to `NULL` (not deleted — cascading deletion of scientific measurements is prohibited).
+1. **Given** a site at a coordinate pair, **When** a second site is saved at the same pair,
+   **Then** it is refused with an error naming the coordinate pair.
+2. **Given** a site at a coordinate pair, **When** that same site is saved again, **Then** it is
+   accepted — the rule constrains other sites, not the record itself.
+3. **Given** two sites without coordinates, **When** both are saved, **Then** both are accepted —
+   the rule binds only where a location is set.
+4. **Given** a site at a coordinate pair, **When** a file is imported carrying a different site
+   identifier at that same pair, **Then** the import resolves to the existing site rather than
+   creating a second one.
+5. **Given** two coordinate pairs a few metres apart, **When** both are saved, **Then** both are
+   accepted — coordinates are taken exactly as supplied, with no rounding, tolerance or merging.
 
 ---
 
-### User Story 3 — Marine Probe Measurements Have Supplementary Metadata (Priority: P3)
+### User Story 3 — One parent per site, designated from its children (Priority: P3)
 
-A data curator can attach probe instrument metadata to any `HeatFlowInterval` that represents a marine measurement, capturing probe type, length, penetration, and tilt.
+A curator links several children to the site's single parent and records which of them the
+parent value was taken from.
 
-**Why this priority**: Marine heat flow data constitutes a significant proportion of the GHFDB. Probe metadata is required to contextualise marine child measurements and distinguish them from borehole measurements. Without it, marine records cannot be fully curated.
+**Why this priority**: the parent and child split is the database's central scientific claim — a
+quality-controlled surface value a curator designates from potentially many interval measurements.
+A site carrying two parents has no defensible answer to which one is the database's.
 
-**Independent Test**: Create a `HeatFlowInterval` with an attached `ProbeMetadata` record and assert that `interval.probe_metadata` resolves correctly and that `is_probe` returns `True` on the linked `HeatFlow` record.
+**Independent Test**: link three children to one site's parent, two marked as contributing and one
+not, then assert the reverse relation returns all three and the filter returns two. Separately,
+attempt a second parent for the same site and assert it is refused.
 
 **Acceptance Scenarios**:
 
-1. **Given** a `HeatFlowInterval`, **When** a `ProbeMetadata` record is created referencing it, **Then** `interval.probe_metadata` resolves to the probe record and all probe fields (type, length, penetration, tilt) are retrievable.
-2. **Given** a `HeatFlowInterval` with no linked probe metadata, **When** `probe_metadata` is accessed, **Then** a `RelatedObjectDoesNotExist` error is raised (or `None` if the accessor is wrapped), indicating a non-marine interval.
-3. **Given** a probe metadata record, **When** the associated interval is deleted, **Then** the `ProbeMetadata` record is also deleted (CASCADE).
+1. **Given** a site's parent, **When** several children are linked to it,
+   **Then** all of them are returned by its reverse relation.
+2. **Given** children with mixed contribution flags, **When** the relation is filtered on that
+   flag, **Then** only the contributing children are returned.
+3. **Given** a site's parent with children, **When** it is deleted, **Then** each child
+   survives with its link cleared — cascading deletion of scientific measurements is prohibited.
+4. **Given** a site that already has a parent, **When** a second is saved against it,
+   **Then** it is refused, on every write path in the project including the import path.
+5. **Given** a site's parent with no children, **When** it is read, **Then** it is a valid
+   record — a newly entered value with no children yet is an ordinary state.
 
 ---
 
-### User Story 4 — All Models Are Registered with FairDM (Priority: P4)
+### User Story 4 — Marine measurements carry their instrument metadata (Priority: P4)
 
-All primary models (`HeatFlowSite`, `HeatFlowInterval`, `ParentHeatFlow`, `HeatFlow`) are registered with the FairDM registry using `@fairdm.register` so that the framework can provide FAIR data infrastructure (metadata, list views, admin, filtering, tables) without custom view code.
+A curator attaches probe metadata to an interval measured by marine probe, recording the probe
+type, its length, how far it penetrated and how far it tilted.
 
-**Why this priority**: FairDM registration is the integration point between the domain model and the portal's infrastructure layer. Without it, registered models cannot be discovered or served by the portal. This is a Constitution Principle II requirement.
+**Why this priority**: marine data is a substantial part of the database, and without instrument
+metadata a marine record cannot be quality-assessed or told apart from a borehole record.
 
-**Independent Test**: Import `fairdm` and assert that `fairdm.registry.get_config(HeatFlowSite)` returns a non-`None` config object. Repeat for all six registered models: `HeatFlowInterval`, `ParentHeatFlow`, `HeatFlow`, `ThermalGradient`, and `IntervalConductivity` (see FR-025, FR-030). Run `python manage.py check` and assert zero errors.
+**Independent Test**: attach probe metadata to an interval, assert it resolves from the interval
+and that a child over that interval reports itself as a probe measurement.
 
 **Acceptance Scenarios**:
 
-1. **Given** the portal application is started, **When** `fairdm.registry` is queried for `HeatFlowSite`, `HeatFlowInterval`, `ParentHeatFlow`, and `HeatFlow`, **Then** a valid `ModelConfiguration` is returned for each.
-2. **Given** registered models, **When** `python manage.py check` is executed, **Then** it exits with zero errors and zero warnings.
-3. **Given** the FairDM registry has configurations for all four primary models, **When** the admin site is loaded, **Then** all four models appear in the admin panel without error.
+1. **Given** an interval, **When** probe metadata is created against it, **Then** it resolves from
+   the interval and every probe field reads back as a quantity carrying units.
+2. **Given** an interval with no probe metadata, **When** the relation is accessed, **Then** the
+   framework raises its does-not-exist error, marking the interval as non-marine.
+3. **Given** an interval carrying probe metadata, **When** the interval is deleted, **Then** the
+   probe metadata is deleted with it.
+4. **Given** a child over an interval carrying probe metadata, **When** it is asked
+   whether it is a probe measurement, **Then** it answers yes, and no otherwise.
 
 ---
 
-### User Story 5 — Test Factories Produce Valid Model Instances (Priority: P5)
+### User Story 5 — Every model is served by the framework, without custom view code (Priority: P5)
 
-Factory classes exist for all models in the `heat_flow` app so that tests can create realistic data fixtures with a single line of code.
+A developer adding a model to this app gets its list view, filtering, table and admin from the
+framework by declaring a configuration, and a portal user can browse and filter every scientific
+model the app defines.
 
-**Why this priority**: Without factories, every test must manually construct a full object graph (site → interval → gradient → conductivity → heat flow), creating brittle, verbose test code. Factories are a prerequisite for efficient test coverage of all later features.
+**Why this priority**: registration is the join between the domain model and the portal's
+infrastructure, and it is a constitution principle III requirement. The failure mode here is not a
+missing configuration but a configuration that looks complete and is not read — an attribute under
+a name the registry does not recognise is set, ignored, and indistinguishable from a working one by
+inspection.
 
-**Independent Test**: Call `HeatFlowSiteFactory()`, `HeatFlowIntervalFactory()`, `HeatFlowFactory()`, `ThermalGradientFactory()`, `IntervalConductivityFactory()`, and `ProbeMetadataFactory()` in a `@pytest.mark.django_db` test and assert that each call produces a saved instance with a non-null PK.
+**Independent Test**: query the registry for each registered model, assert it carries the
+commission's authority and citation and resolves to a usable filter set and table, and assert that
+no configuration in the app declares an attribute the registry does not read.
 
 **Acceptance Scenarios**:
 
-1. **Given** a test database, **When** `HeatFlowSiteFactory()` is called, **Then** a saved `HeatFlowSite` instance is returned with valid geographic and exploration fields.
-2. **Given** a test database, **When** `HeatFlowFactory()` is called, **Then** a complete child heat flow record is returned, linked to a `HeatFlowInterval` and a `ParentHeatFlow`.
-3. **Given** factories for all sub-measurement types, **When** any factory is called in isolation, **Then** it creates any required related objects automatically (no manual parent setup required by the test).
+1. **Given** the app is loaded, **When** the registry is queried for each of the six models
+   extending `Sample` or `Measurement`, **Then** each returns a valid configuration.
+2. **Given** a registered configuration, **When** its metadata is read, **Then** it carries the
+   commission's authority and its citation.
+3. **Given** a registered configuration, **When** its filter set and table are resolved, **Then**
+   each yields a usable class, whether supplied or generated.
+4. **Given** every configuration in this app, **When** its declared attributes are compared against
+   those the registry reads, **Then** none is declared that the registry ignores.
+5. **Given** all registrations in place, **When** the framework's system checks run, **Then** they
+   report no errors and no warnings.
+
+---
+
+### User Story 6 — Every model has test data, including its vocabulary fields (Priority: P6)
+
+A developer writing a test for any part of this app builds the data it needs from a factory in one
+line, and the data it produces includes the controlled-vocabulary fields rather than leaving them
+empty.
+
+**Why this priority**: without factories every test assembles the whole graph by hand, which is how
+test suites become too expensive to extend. Vocabulary fields matter specifically because they are
+the ones the flat format's controlled terms map onto — a factory that leaves them empty means no
+test in the repository ever exercises the fields the import and export features depend on.
+
+**Independent Test**: call every factory in a database test and assert each returns a saved
+instance whose vocabulary fields are populated.
+
+**Acceptance Scenarios**:
+
+1. **Given** a test database, **When** any factory is called with no arguments, **Then** it returns
+   a saved instance and creates whatever related records it needs.
+2. **Given** a factory for a model with vocabulary fields, **When** it is called, **Then** those
+   fields are populated with concepts drawn from the field's own vocabulary.
+3. **Given** any relationship defined in this app, **When** the test suite runs, **Then** at least
+   one test exercises it, including the many-to-many relationships and the deletion behaviours.
+
+---
+
+### User Story 7 — A reader can follow a published column to the field that holds it (Priority: P7)
+
+Someone outside the project — a data user, a reviewer, a contributor to the published database —
+opens the portal's documentation and finds every column of the published spreadsheet mapped to the
+model and field expressing it, alongside a diagram of the models and their relationships. Both
+render in the built documentation.
+
+**Why this priority**: the whole justification for a normalised model is that it represents the
+science better than the flat format does. That claim is only inspectable if the correspondence
+between the two is written down. Constitution principle VII already requires the field map to be
+current with every schema change, and today nothing checks that it is.
+
+**Independent Test**: build the documentation and confirm the diagram renders as a diagram; run the
+map's test and confirm it fails when a column is removed from the map.
+
+**Acceptance Scenarios**:
+
+1. **Given** the published column definitions, **When** the field map is checked against them,
+   **Then** every column appears in the map and names a field or documented accessor that exists on
+   the model it cites.
+2. **Given** a column added to the published definitions but not to the map, **When** the test
+   suite runs, **Then** it fails and names the missing column.
+3. **Given** the documentation is built, **When** the data model page is opened, **Then** the
+   entity relationship diagram renders as a diagram rather than as source text.
+4. **Given** the diagram, **When** it is compared with the models, **Then** it shows every model
+   this app defines, the relationships between them and their cardinalities.
 
 ---
 
 ### Edge Cases
 
-- A `HeatFlowInterval` with `top == bottom` (zero-thickness interval) — field-level validation should reject this.
-- A `HeatFlow` child with neither `thermal_gradient` nor `thermal_conductivity` — the system must allow incomplete records (in line with Constitution Principle I: incomplete records must not be blocked at entry time).
-- A `ParentHeatFlow` with zero children (`children.count() == 0`) — this is a valid state for a newly entered parent that has no child measurements yet.
-- A `HeatFlowCorrection` created with an unrecognised `correction_type` value — the field's `choices` constraint must reject it.
-- Multiple `ParentHeatFlow` records linked to the same `HeatFlowSite` — MUST be rejected; FR-009 enforces a `UniqueConstraint` in `ParentHeatFlow.Meta.constraints` on the `sample` column (one per site, globally; not version-scoped).
-
----
+- An interval whose top and bottom are equal, or inverted — validation rejects it.
+- A child with neither gradient nor conductivity — accepted, per constitution
+  principle I: incomplete records are not blocked at entry.
+- A site's parent with no children — a valid state.
+- A correction whose status is not meaningful for its type, such as a tilt correction on an erosion
+  disturbance — rejected on save.
+- A second correction of the same type on one determination — rejected; the type is what
+  distinguishes them.
+- Two sites at coordinate pairs a few metres apart — both accepted. They are two sites.
+- A site with no coordinates at all — accepted, and it constrains no other site.
 
 ## Clarifications
 
-### Session 2026-04-10 (Corrections Pass 2)
+### Session 2026-08-20 (audit against the implementation)
 
-- Q: Should `IGSN` be retained as a field on `HeatFlow`, or should it be handled through FairDM's Sample identifier relationship? → A: Remove `IGSN` from `HeatFlow`. IGSNs are persistent identifiers for physical rock or sediment samples, not for measurements. FairDM's `Sample` base class provides a generic identifier relationship that covers both `HeatFlowSite` and `HeatFlowInterval`. The GHFDB C49 field maps to those sample-level identifiers, not to the heat flow determination itself. FR-010 updated.
-- Q: Should the primary `value` field be non-nullable at DB level on ALL Measurement subclasses (not only ParentHeatFlow)? → A: Yes — the `value` field is the primary scientific datum on every Measurement subclass; a record with no value is semantically meaningless. `null=False` (no `null=True`) applies to `value` on HeatFlow.value, ThermalGradient.value, and IntervalConductivity.value. R3 updated to reflect this wider rule.
-- Q: Should only certain `StatusChoices` be valid for each `CorrectionTypeChoices` in `HeatFlowCorrection`? → A: Yes — some statuses are only semantically meaningful for specific correction types (e.g., `tilt_corrected`/`drift_corrected` apply only to IS/T probe-type corrections; environmental statuses only to P-flag corrections). A valid-combinations table must be documented in the data model and enforced via `ValidationError` in `HeatFlowCorrection.save()`.
-- Q: Given that the `sample` FK is declared in the fairdm package, can `unique=True` be added directly to the inherited field on ParentHeatFlow? → A: No — modifying a field declared in a parent package's models is not safe in Django. Use `UniqueConstraint` in `ParentHeatFlow.Meta.constraints` instead. The existing `save()`-level uniqueness check remains as an additional application-layer guard. FR-009 updated.
-- Q: Should `ThermalGradient` and `IntervalConductivity` be registered with the FairDM registry? → A: Yes — ALL Measurement and Sample subclasses must be registered with the FairDM registry. FR-025 is reversed: both `ThermalGradient` and `IntervalConductivity` require `@fairdm.register` configs in `config.py`. `ProbeMetadata` and `HeatFlowCorrection` remain unregistered (they are plain `Model` subclasses, not FairDM Measurement/Sample subclasses). Factory note (no formal Q): Keep factory classes minimal — one level deep, no excessive `SubFactory` chains. Build complex multi-model object graphs via pytest fixtures, following the fairdm package conventions.
-
-### Session 2026-04-09
-
-- Q: How should US1's Independent Test be updated to cover `ParentHeatFlow`? → A: Add `ParentHeatFlow` to US1's Independent Test — create one linked to `HeatFlowSite` and set it as the child's `parent`; US2 stays focused on aggregation semantics.
-- Q: How should `ThermalGradient` and `IntervalConductivity` link to `HeatFlowInterval`? → A: Both inherit from FairDM `Measurement` and link via the inherited `sample` FK; a `save()`-level validation must enforce that only a `HeatFlowInterval` instance is assigned to `sample`.
-- Q: What does `HeatFlow.sample` target? → A: `HeatFlow.sample` → `HeatFlowInterval`; and `HeatFlow`'s links to `ThermalGradient`/`IntervalConductivity` MUST be ForeignKeys (nullable, not OneToOne) to allow reuse of existing records across multiple child determinations and future recalculations.
-- Q: What does `HeatFlow.sample` target, and what relationship type links `HeatFlow` to `ThermalGradient`/`IntervalConductivity`? → A: `HeatFlow.sample` → `HeatFlowInterval`; links to `ThermalGradient` and `IntervalConductivity` are nullable ForeignKeys (not OneToOne) to allow reuse of existing records and recalculation of child heat flow from existing data.
-- Q: Should `save()`-level `ValidationError` enforcement of the correct `sample` type be applied to all four measurement models? → A: Yes — apply `save()`-level `ValidationError` to all four (`HeatFlow`, `ParentHeatFlow`, `ThermalGradient`, `IntervalConductivity`) for consistent enforcement across all code paths.
-
----
+- Q: Does this feature own `heat_flow/quality.py` and the score calculation it contains? → A: No.
+  This feature owns the stored score fields. Calculation is deferred and belongs to the roadmap's
+  quality items, which are specified separately. The scoring methods on the models are a deferred
+  interface, not dead code, and are left as they stand.
+- Q: FR-009 of the original specification required a database `UniqueConstraint` for one published
+  value per site, which cannot be declared: `Measurement` is polymorphic, so the `sample` column
+  lives on the base measurement table rather than on the model. Database guarantee or application
+  guarantee? → A: Application guarantee. The requirement is rewritten to demand enforcement in
+  `save()` across every write path, tested through the import path, and the constraint is dropped.
+  A partial index on the base table would have to hard-code a content type id in an immutable
+  predicate and would work only on PostgreSQL, and there is no bulk write path in the project for
+  it to catch.
+- Q: The original specification linked an interval to its site through the inherited `sample`
+  foreign key, and the code uses an explicit `site` foreign key. Which was intended? → A: The code.
+  ADR-0001 records the reasoning, and a test pins the field's name and forbids "parent" and "child"
+  in its naming, those words being reserved for the relationship between measurements.
+- Q: The original specification presented the `quality` field alongside `ghfdb_id` as
+  spreadsheet-derived. ADR-0004 makes the portal's computed code authoritative and rejects imported
+  codes. Which holds? → A: ADR-0004. The field remains as storage, and its provenance is the
+  portal's own computation.
+- Q: ADR-0006 identifies a site by its coordinate pair, and nothing in the model expresses it.
+  Document the rule, or enforce it? → A: Enforce it. One site per coordinate pair is a hard
+  requirement for the research team and must hold within the application, not only in the import
+  path.
+- Q: Does the documentation requirement include a maintained diagram? → A: Yes. A diagram in
+  Mermaid, rendering in the built documentation, superseding the Graphviz sources and generated
+  images alongside it.
 
 ## Requirements
 
 ### Functional Requirements
 
-**Site & Geographic Context**
+**Site**
 
-- **FR-001**: The system MUST provide a `HeatFlowSite` model that inherits from the FairDM `Sample` base class (via `fairdm-geo` geographic and borehole abstractions) and stores site-level metadata including name, country, region, continent, geological domain, environment type, exploration method, exploration purpose, site type, elevation, azimuth, inclination, and borehole depth.
-- **FR-002**: `HeatFlowSite` MUST support a geographic location via a point geometry field inherited from the FairDM/fairdm-geo base class.
-- **FR-003**: Exploration purpose on `HeatFlowSite` MUST be a many-to-many vocabulary concept field (multiple purposes may apply).
+- **FR-001**: The system MUST provide a `HeatFlowSite` model extending the framework's `Sample`
+  base class through the geographic and borehole abstractions, storing site name, country, region,
+  continent, geological domain, site type, environment, exploration method, exploration purpose,
+  elevation, elevation datum, azimuth, inclination and borehole depth.
+- **FR-002**: A site MUST carry its geographic location as a point relationship provided by the
+  framework, storing longitude and latitude.
+- **FR-003**: Exploration purpose MUST be a many-to-many vocabulary field — several purposes may
+  apply to one site.
+- **FR-004**: The system MUST refuse a `HeatFlowSite` whose location is a coordinate pair already
+  held by another site. The rule applies only where a location is set, does not constrain a site
+  against itself, and MUST hold on every write path in the project, including the import path.
+  Enforcement is application-level: the framework declares `location` on the polymorphic `Sample`
+  base, so the column lives on the base table and a model-level database constraint is not
+  declarable.
+- **FR-005**: Coordinates MUST be stored exactly as supplied. The system MUST perform no rounding,
+  no tolerance matching and no merging of sites that are near each other without being identical
+  (ADR-0006).
 
-**Depth Interval**
+**Interval**
 
-- **FR-004**: The system MUST provide a `HeatFlowInterval` model that inherits from both the FairDM `Sample` base class and the `fairdm-geo` `GeoDepthInterval` abstract, storing top depth, bottom depth, vertical depth, lithology, geologic age, and stratigraphic unit.
-- **FR-005**: `HeatFlowInterval` MUST be linked to its parent `HeatFlowSite` via the FairDM `sample` foreign key relationship.
-- **FR-006**: The interval depth fields MUST use physical quantity fields (with units) rather than bare numeric fields.
+- **FR-006**: The system MUST provide a `HeatFlowInterval` model extending the framework's `Sample`
+  base class through the interval and depth-interval abstractions, storing top depth, bottom depth,
+  vertical depth, lithology, geological age and stratigraphic unit.
+- **FR-007**: An interval MUST link to its site through an explicit `site` foreign key, reachable
+  in reverse as the site's intervals, and deleted with its site. Neither "parent" nor "child" may
+  appear in the field's name or its labels — both words are reserved for the relationship between
+  measurements (ADR-0001).
+- **FR-008**: Interval depth fields MUST be physical quantity fields carrying units, not bare
+  numbers.
+- **FR-009**: An interval whose top depth is not less than its bottom depth MUST be rejected by
+  validation.
 
-**Parent Heat Flow**
+**Parent**
 
-- **FR-007**: The system MUST provide a `ParentHeatFlow` model that inherits from the FairDM `Measurement` base class, storing the aggregated surface heat flow value (mW/m²), a 1-sigma uncertainty, a heat production correction flag, a comment field, a nullable `ghfdb_id` (`PositiveIntegerField`) — the original GHFDB spreadsheet identifier, used for traceability and import upsert — and a `quality` CharField (max_length=13) storing a 13-character quality code string. GHFDB membership is determined by `ghfdb_id IS NOT NULL`; there is no separate boolean flag. ~~`is_ghfdb` (GHFDB membership flag) and `local_id` (stable upsert key) have been removed — their function is assumed by `ghfdb_id`.~~
-- **FR-008**: `ParentHeatFlow` MUST be linked to its `HeatFlowSite` via the FairDM `sample` FK (inherited from `Measurement`).
-- **FR-008a**: `ParentHeatFlow.save()` MUST raise `ValidationError` if `sample` is not an instance of `HeatFlowSite`.
-- **FR-009**: The system MUST prevent more than one `ParentHeatFlow` record per `HeatFlowSite`, regardless of dataset. This is enforced via a `UniqueConstraint` in `ParentHeatFlow.Meta.constraints` on the `sample` FK column (the `sample` field is declared in the fairdm package and cannot be modified with `unique=True` directly). The existing `save()`-level uniqueness check is retained as an additional application-layer guard.
+- **FR-010**: The system MUST provide a `ParentHeatFlow` model extending the framework's
+  `Measurement` base class, storing the representative surface heat flow value for the site in mW/m², its one-sigma
+  uncertainty, a heat production correction flag, a comment, a nullable `ghfdb_id` recording the
+  record's identifier in the published spreadsheet, and a `quality` code of up to thirteen
+  characters. Membership of the published database is expressed by `ghfdb_id` being set; there is
+  no separate flag.
+- **FR-011**: A parent heat flow value MUST link to its site through the inherited `sample` foreign
+  key, and MUST reject a sample that is not a `HeatFlowSite`.
+- **FR-012**: The system MUST hold at most one `ParentHeatFlow` per site. Enforcement is
+  application-level for the reason given in FR-004, and MUST hold on every write path in the
+  project, including the import path.
+- **FR-013**: The `quality` field MUST be storage only. The portal computes the code it holds and
+  that computed value is authoritative (ADR-0004). The computation itself, and the rule that a code
+  arriving in an imported file is not stored, are out of scope for this feature.
 
-**Child Heat Flow**
+**Child determination**
 
-- **FR-010**: The system MUST provide a `HeatFlow` (child) model that inherits from the FairDM `Measurement` base class with `sample` FK targeting `HeatFlowInterval` (validated at `save()` to reject non-`HeatFlowInterval` objects). It stores: heat flow value (mW/m²) with uncertainty, calculation method (vocabulary, many-to-many), expedition/ship name, bottom water temperature, date acquired, U-score, M-score, a comment field, a nullable `ghfdb_id` (`PositiveIntegerField`) — the original GHFDB spreadsheet child identifier, used for traceability and import upsert — and a `quality` CharField (max_length=13) storing a 13-character quality code string. **Note**: The `IGSN` field previously assigned to `HeatFlow` is removed; C49/IGSN is served by FairDM's Sample identifier relationship on `HeatFlowSite` and `HeatFlowInterval`. ~~`local_id` has been removed — its function is assumed by `ghfdb_id`.~~
-- **FR-010a**: `HeatFlow.save()` MUST raise `ValidationError` if `sample` is not an instance of `HeatFlowInterval`, consistent with FR-008a, FR-016a, and FR-018a.
-- **FR-011**: `HeatFlow` MUST have a nullable ForeignKey to `ParentHeatFlow` (on_delete=SET_NULL) with a related name of `children`.
-- **FR-012**: `HeatFlow` MUST have an `is_relevant` boolean field indicating whether this child was used in computing the parent value.
-- **FR-013**: `HeatFlow` MUST have nullable ForeignKey relationships (not OneToOne) to `ThermalGradient` and `IntervalConductivity`, enabling multiple `HeatFlow` records to reference the same gradient or conductivity measurement for reuse and recalculation scenarios.
-- **FR-014**: U-score and M-score fields on `HeatFlow` MUST use enumerated choice fields with values U1/U2/U3/U4/Ux and M1/M2/M3/M4/Mx respectively, defaulting to Ux/Mx (unknown).
+- **FR-014**: The system MUST provide a `HeatFlow` model extending the framework's `Measurement`
+  base class, whose `sample` targets a `HeatFlowInterval` and rejects anything else, storing the
+  heat flow value in mW/m² with its uncertainty, calculation method as a many-to-many vocabulary
+  field, expedition or vessel name, bottom water temperature, date acquired, a numerical
+  uncertainty score, a methodological quality score, a comment, a nullable `ghfdb_id` and a
+  `quality` code of up to thirteen characters.
+- **FR-015**: A child MUST link to its parent through a nullable
+  foreign key that clears rather than cascades on deletion, reachable in reverse as that value's
+  children.
+- **FR-016**: A child MUST record whether it contributed to the parent.
+- **FR-017**: A child MUST link to its thermal gradient and its thermal conductivity
+  through nullable foreign keys rather than one-to-one relationships, so that several
+  determinations may share one gradient or one conductivity. Neither may be deleted while a
+  determination references it.
+- **FR-018**: The numerical uncertainty and methodological quality scores MUST be enumerated choice
+  fields taking U1 to U4 and M1 to M4 respectively, each with an additional value for not
+  determined, which is the default.
 
-**Thermal Gradient**
+**Thermal gradient**
 
-- **FR-015**: The system MUST provide a `ThermalGradient` model storing: raw gradient (K/km) with uncertainty, corrected gradient (K/km) with uncertainty, temperature acquisition methods at top and bottom boundaries (vocabulary, many-to-many), shut-in times at top and bottom (hours), correction method, and a quality score.
-- **FR-016**: `ThermalGradient` MUST inherit from the FairDM `Measurement` base class and link to a `HeatFlowInterval` via the inherited `sample` FK.
-- **FR-016a**: `ThermalGradient.save()` MUST raise `ValidationError` if `sample` is not an instance of `HeatFlowInterval` (app-level enforcement; does not rely solely on the DB constraint).
+- **FR-019**: The system MUST provide a `ThermalGradient` model extending the framework's
+  `Measurement` base class, storing the measured gradient in K/km with its uncertainty, the
+  corrected gradient with its uncertainty, temperature determination methods at the interval top
+  and bottom as many-to-many vocabulary fields, shut-in times at top and bottom, correction methods
+  at top and bottom as many-to-many vocabulary fields, the number of temperature recordings behind
+  the mean, and a score.
+- **FR-020**: A thermal gradient MUST link to its interval through the inherited `sample` foreign
+  key, and MUST reject a sample that is not a `HeatFlowInterval`.
 
-**Interval Thermal Conductivity**
+**Thermal conductivity**
 
-- **FR-017**: The system MUST provide an `IntervalConductivity` model storing: mean thermal conductivity (W/mK) with uncertainty, sample source type (vocabulary), data location (vocabulary), determination method (vocabulary), saturation state (vocabulary), pressure-temperature correction method, averaging methodology, number of measurements, and a quality score.
-- **FR-018**: `IntervalConductivity` MUST inherit from the FairDM `Measurement` base class and link to a `HeatFlowInterval` via the inherited `sample` FK.
-- **FR-018a**: `IntervalConductivity.save()` MUST raise `ValidationError` if `sample` is not an instance of `HeatFlowInterval` (app-level enforcement; mirrors FR-016a).
+- **FR-021**: The system MUST provide an `IntervalConductivity` model extending the framework's
+  `Measurement` base class, storing the mean conductivity in W/mK with its uncertainty, and, as
+  many-to-many vocabulary fields, the sample source, the data location, the determination method,
+  the saturation state, the pressure and temperature conditions, the pressure and temperature
+  correction function and the averaging strategy, together with the number of determinations behind
+  the mean and a score.
+- **FR-022**: A thermal conductivity MUST link to its interval through the inherited `sample`
+  foreign key, and MUST reject a sample that is not a `HeatFlowInterval`.
 
-**Probe Metadata**
+**Probe metadata**
 
-- **FR-019**: The system MUST provide a `ProbeMetadata` model with a one-to-one relationship to `HeatFlowInterval`, storing probe type (vocabulary, many-to-many), probe length (m), probe penetration depth (m), and tilt angle (degrees).
-- **FR-020**: Deleting a `HeatFlowInterval` MUST cascade-delete its associated `ProbeMetadata`.
+- **FR-023**: The system MUST provide a `ProbeMetadata` model in a one-to-one relationship with an
+  interval, storing probe type as a many-to-many vocabulary field, probe length, penetration depth
+  and tilt angle.
+- **FR-024**: Deleting an interval MUST delete its probe metadata.
+- **FR-025**: A child MUST report whether it was acquired by marine probe, which is
+  true when its interval carries probe metadata.
 
-**Heat Flow Corrections**
+**Corrections**
 
-- **FR-021**: The system MUST provide a `HeatFlowCorrection` model with a ForeignKey to `HeatFlow`, a `correction_type` choice field (IS, T, S, E, TOPO, PAL, SUR, CONV, HR), and a `status` choice field indicating whether the disturbance is present-corrected, present-uncorrected, not recognised, not considered, etc.
-- **FR-022**: Multiple `HeatFlowCorrection` records MAY be associated with a single `HeatFlow` determination (one per disturbance type).
+- **FR-026**: The system MUST provide a `HeatFlowCorrection` model linked to a child,
+  recording a disturbance type drawn from a fixed set and the status of that disturbance and its
+  correction.
+- **FR-027**: A determination MUST accept several corrections, at most one per disturbance type.
+- **FR-028**: A status that is not meaningful for its disturbance type MUST be rejected when the
+  correction is saved. The valid combinations MUST be documented in the data model documentation.
 
-**FairDM Registration**
+**Registration**
 
-- **FR-023**: `HeatFlowSite`, `HeatFlowInterval`, `ParentHeatFlow`, and `HeatFlow` MUST each be registered with the FairDM registry via `@fairdm.register` in `heat_flow/config.py`, using an `IHFCConfig` base that provides IHFC authority and citation metadata.
-- **FR-024**: Each registered model MUST declare a `fields` list (for form/detail view rendering) and be associated with a `filterset_class` and `table_class`.
-- **FR-025**: ALL `Measurement` subclasses (`HeatFlowSite`, `HeatFlowInterval`, `ParentHeatFlow`, `HeatFlow`, `ThermalGradient`, and `IntervalConductivity`) MUST be registered with the FairDM registry via `@fairdm.register`. `ProbeMetadata` and `HeatFlowCorrection` are plain `django.db.models.Model` subclasses (not FairDM `Measurement`/`Sample` subclasses) and do not require registration; they are managed inline via their parent models.
+- **FR-029**: Every model in this app extending `Sample` or `Measurement` MUST be registered with
+  the framework's registry, using a shared base carrying the commission's authority and citation.
+  Models that extend neither — probe metadata and corrections — are managed through their parents
+  and are not registered.
+- **FR-030**: The authority, citation, keywords and repository link MUST be declared where the
+  registry reads them, so that a registered model describes and credits itself. Declaring them
+  under names the registry does not read leaves a model uncredited while appearing configured.
+- **FR-031**: Each registered configuration MUST declare a field list, and MUST declare only
+  attributes the registry reads. Where a configuration needs a filter set or a table that differs
+  from the generated one, it MUST supply a class rather than options the registry ignores.
+  Configuration that names nothing real is worse than no configuration, because it reads as
+  deliberate.
+- **FR-032**: A configuration MUST NOT supply a component class where the generated one serves,
+  per constitution principle IX.
 
-**Migrations & System Integrity**
+**Migrations and system integrity**
 
-- **FR-026**: All model changes MUST be captured in Django migrations within the `heat_flow` app.
-- **FR-027**: Running `python manage.py check` MUST produce zero errors and zero warnings after all models and registrations are in place.
+- **FR-033**: Every model change MUST be captured in a migration within this app, and those
+  migrations MUST apply cleanly to an empty database, proven by a test that applies them.
+- **FR-034**: The framework's system checks MUST report no errors and no warnings.
 
-**Testing & Factories**
+**Test data and coverage**
 
-- **FR-028**: A factory class MUST exist for each of the following models: `HeatFlowSite`, `HeatFlowInterval`, `ParentHeatFlow`, `HeatFlow`, `ThermalGradient`, `IntervalConductivity`, `ProbeMetadata`.
-- **FR-029**: Tests MUST verify model creation, field value persistence, all defined relationships (FK, one-to-one, M2M), and cascade/set-null deletion behaviour for each model.
-- **FR-030**: Tests for FairDM registration MUST verify that `fairdm.registry` returns a valid configuration for each of the six registered models: `HeatFlowSite`, `HeatFlowInterval`, `ParentHeatFlow`, `HeatFlow`, `ThermalGradient`, and `IntervalConductivity`.
+- **FR-035**: A factory MUST exist for every model this app defines.
+- **FR-036**: Factories MUST populate controlled-vocabulary fields with concepts drawn from each
+  field's own vocabulary, rather than leaving them empty.
+- **FR-037**: Tests MUST cover, for every model, creation and persistence of its fields, every
+  relationship it declares including many-to-many relationships, and every deletion behaviour.
 
----
+**Documentation**
+
+- **FR-038**: The field map MUST record, for every column of the published spreadsheet, the model
+  that expresses it, the field or documented accessor that holds it, and the model that declares
+  that field.
+- **FR-039**: An automated test MUST assert that the field map covers every column in the canonical
+  column definitions and that each mapping names a field or documented accessor that exists.
+- **FR-040**: The documentation MUST carry an entity relationship diagram covering every model this
+  app defines, its relationships and their cardinalities, written in Mermaid and rendering as a
+  diagram in the built documentation.
+- **FR-041**: The Mermaid diagram MUST be the only maintained diagram source. The Graphviz sources,
+  the generation script, the installation instructions and the images generated from them MUST be
+  removed.
 
 ### Key Entities
 
-- **HeatFlowSite**: The geographic measurement location (a borehole or probe site). Inherits FairDM `Sample` + `fairdm-geo` `GenericHole` + `GeoDepthInterval`. Stores site identity, geographic context (country, region, continent, domain), borehole geometry (azimuth, inclination, depth), exploration context, and geological properties (lithology, age, stratigraphy) of the site-level interval.
-
-- **HeatFlowInterval**: A depth-stratified section within a borehole over which a child heat flow determination is made. Inherits FairDM `Sample` + `fairdm-geo` `Interval` + `GeoDepthInterval`. Multiple intervals may exist for one site.
-
-- **ParentHeatFlow**: The aggregated, quality-controlled surface heat flow for a site. Inherits FairDM `Measurement`. One-to-many with `HeatFlowSite` (via `sample` FK). The authoritative published value. Carries a nullable `ghfdb_id` integer (GHFDB spreadsheet reference, used to correlate database entries to spreadsheet releases; `IS NOT NULL` implies GHFDB membership) and a `quality` CharField (13-char quality code). ~~`is_ghfdb` boolean flag and `local_id` have been removed.~~
-
-- **HeatFlow** (child): A single interval-level heat flow determination computed from one `ThermalGradient` and one `IntervalConductivity`. Inherits FairDM `Measurement`; `sample` FK targets `HeatFlowInterval` (validated at `save()`). References a `ParentHeatFlow` via nullable FK. Links to `ThermalGradient` and `IntervalConductivity` via nullable ForeignKeys (not OneToOne) to allow reuse of existing records across multiple determinations and recalculations. Carries U-score and M-score quality fields, a nullable `ghfdb_id` integer (GHFDB child spreadsheet reference), and a `quality` CharField (13-char quality code). ~~`local_id` has been removed; its function is assumed by `ghfdb_id`.~~
-
-- **ThermalGradient**: Temperature gradient measurement over a `HeatFlowInterval`. Inherits FairDM `Measurement`; links to `HeatFlowInterval` via the `sample` FK (validated at `save()` to reject non-`HeatFlowInterval` objects). Stores raw and corrected gradients (K/km), measurement methods, shut-in times. Linked one-to-one to a `HeatFlow` child.
-
-- **IntervalConductivity**: Mean thermal conductivity (W/mK) over a `HeatFlowInterval`. Inherits FairDM `Measurement`; links to `HeatFlowInterval` via the `sample` FK (validated at `save()` to reject non-`HeatFlowInterval` objects; mirrors `ThermalGradient`). Stores conductivity value, measurement method, source type, saturation, and P-T correction details. Linked one-to-one to a `HeatFlow` child.
-
-- **ProbeMetadata**: Instrument parameters for marine probe deployments. One-to-one with `HeatFlowInterval`. Stores probe type, length, penetration, and tilt.
-
-- **HeatFlowCorrection**: A record of a single environmental or methodological disturbance and its correction status. Many-to-one to `HeatFlow`. One record per disturbance type per heat flow determination.
-
----
+- **HeatFlowSite** — the location where heat flow was measured, a borehole or a probe site,
+  identified by its coordinate pair. Holds geographic context, borehole geometry, exploration
+  context and the geological properties of the site-level interval.
+- **HeatFlowInterval** — a depth-stratified section within a site over which measurements were
+  made. A site may have many.
+- **ParentHeatFlow** — the representative, quality-controlled surface heat flow for a site, and
+  the value the published database carries. Designated by a curator rather than computed, and one
+  per site at most.
+- **HeatFlow** — a single interval-level determination, computed from one thermal gradient and one
+  thermal conductivity, contributing or not contributing to its parent.
+- **ThermalGradient** — the temperature gradient measured over an interval, as measured and as
+  corrected, with the methods and shut-in times behind it.
+- **IntervalConductivity** — the mean thermal conductivity over an interval, with the source,
+  method, saturation and pressure and temperature conditions behind it.
+- **ProbeMetadata** — the instrument parameters of a marine probe deployment. One per interval at
+  most.
+- **HeatFlowCorrection** — one disturbance affecting a determination and the status of its
+  correction. One per disturbance type per determination.
 
 ## Success Criteria
 
-### Measurable Outcomes
-
-- **SC-001**: `python manage.py check` returns zero errors and zero warnings with all heat_flow models and FairDM registrations in place.
-- **SC-002**: All migrations in the `heat_flow` app apply cleanly on a fresh database with no errors.
-- **SC-003**: The full site → interval → gradient/conductivity → child heat flow object graph can be created, persisted, and retrieved using only factory calls in a single `@pytest.mark.django_db` test.
-- **SC-004**: All defined deletion cascade and SET_NULL behaviours are verified by at least one test each (parent deleted → child `parent` field becomes NULL; interval deleted → probe metadata deleted).
-- **SC-005**: FairDM registry queries for all six registered models (`HeatFlowSite`, `HeatFlowInterval`, `ParentHeatFlow`, `HeatFlow`, `ThermalGradient`, `IntervalConductivity`) each return a non-None config, confirmed by passing tests.
-- **SC-006**: The `heat_flow` test suite (models, factories, relations, registration) passes with zero failures.
-- **SC-007**: All eight model classes (`HeatFlowSite`, `HeatFlowInterval`, `ParentHeatFlow`, `HeatFlow`, `ThermalGradient`, `IntervalConductivity`, `ProbeMetadata`, `HeatFlowCorrection`) have at least one factory or direct-creation test.
-
----
+- **SC-001**: The framework's system checks report no errors and no warnings.
+- **SC-002**: Every migration in this app applies cleanly to an empty database.
+- **SC-003**: The complete graph, from site through interval and its two measurements to the child
+  determination and the site's parent, can be built from factory calls alone in a single
+  test.
+- **SC-004**: A second site at an occupied coordinate pair is refused, and the refusal is proven
+  through the import path as well as through the model.
+- **SC-005**: A second parent for a site is refused, and the refusal is proven through the
+  import path as well as through the model.
+- **SC-006**: Every deletion behaviour this feature defines is proven by at least one test:
+  clearing a child's link when the parent is deleted, deleting probe metadata with its
+  interval, deleting an interval with its site, and refusing to delete a gradient or conductivity a
+  determination still references.
+- **SC-007**: The registry returns a configuration for each of the six registered models, each one
+  carrying the commission's authority and citation and a field list, and each resolving to a usable
+  filter set and table.
+- **SC-007a**: No configuration in this app declares an attribute the registry does not read.
+- **SC-008**: Every model this app defines has a factory, and every controlled-vocabulary field is
+  populated by the factory of the model that declares it.
+- **SC-009**: Every column in the canonical published column definitions appears in the field map,
+  proven by a test that fails when one is missing.
+- **SC-010**: The entity relationship diagram renders as a diagram in the built documentation, and
+  no Graphviz source, generation script or generated image remains beside it.
+- **SC-011**: The test suite passes with no failures.
 
 ## Out of Scope
 
-- Round-trip import/export between the portal schema and the GHFDB flat spreadsheet format (deferred).
-- U-score and M-score *calculation algorithms* (`get_U_score()`, `get_M_score()` logic) — deferred to a dedicated quality-scoring spec. Score *fields* (as stored values) remain in scope.
-- Admin UI customisation beyond basic FairDM registration (inline formsets, custom admin actions, etc.) — deferred.
-- REST API endpoints or serializers for these models — deferred to the API spec.
-- Spatial/GIS query functionality (e.g., PostGIS geometry operations) — deferred.
-
----
+- Quality score calculation, and the scoring interface already present on the models. Both belong
+  to the roadmap's quality items and are specified separately. The stored score fields are in
+  scope; what fills them is not.
+- Translation between this model and the flat published format, in either direction —
+  `002-ghfdb-proxy` and `003-ghfdb-import-export` own that. This feature is referenced from the
+  import path only to prove that its rules hold there.
+- Conceptual and narrative data model documentation beyond the field map and the diagram.
+- REST endpoints and serialisers for these models.
+- Spatial and geometric query functionality.
+- Admin customisation beyond what registration provides.
+- Any release or version dimension on the stored data (ADR-0007).
 
 ## Assumptions
 
-- `fairdm-geo` provides `GenericHole`, `GenericEarthSample`, `Interval`, and `GeoDepthInterval` abstract base classes that `HeatFlowSite` and `HeatFlowInterval` inherit from. These base classes are assumed stable and already installed.
-- FairDM `Sample` and `Measurement` base classes provide the `sample` ForeignKey relationship pattern used to link measurements to their parent samples (i.e., linking `HeatFlow` → `HeatFlowInterval`, `ParentHeatFlow` → `HeatFlowSite`).
-- Physical quantity fields (e.g., `QuantityField`, `DecimalQuantityField`) from `fairdm.db.models` are used for all mW/m², K/km, W/mK, and metre measurements to ensure unit-safe storage.
-- `research_vocabs` `ConceptField` and `ConceptManyToManyField` are used for all vocabulary-backed fields (environment, exploration method, probe type, etc.) and are already installed.
-- The `heat_flow` app's `vocabularies.py` module already defines the required vocabulary classes and is the canonical source for all GHFDB-specific controlled terms.
-- The portal runs SQLite in development and PostgreSQL in production; model constraints that are incompatible with SQLite (e.g., `CheckConstraint` on `QuantityField`) may be noted but are not hard-required in migrations for this spec.
-- Factories use `factory_boy` following existing patterns in `heat_flow/factories.py`; no new factory library is introduced.
-- The existing `heat_flow/config.py` `IHFCConfig` base class and `@fairdm.register` pattern are the correct integration points and will be used as-is or extended (not replaced).
+- The framework's `Sample` and `Measurement` base classes, its polymorphic behaviour and its
+  point location model are stable and installed. `Point` already constrains its coordinate pair to
+  be unique, so a coordinate pair resolves to exactly one point record.
+- The geographic package provides the borehole, earth sample, interval and depth-interval
+  abstractions that the site and interval models extend.
+- Physical quantity fields from the framework are used for every value carrying units.
+- The vocabulary package's concept fields are used for every controlled-term field, and this app's
+  vocabulary module is the canonical source of the database's own controlled terms.
+- The canonical published column definitions in the extraction app are the authority the field map
+  is checked against.
+- The portal runs SQLite in development and PostgreSQL in production, so a constraint that only one
+  of them can express is not available to this feature.
+- Factories use `factory_boy`, one level deep, with multi-model graphs assembled by fixtures rather
+  than by chained sub-factories.

@@ -262,6 +262,116 @@ class TestGHFDBParentTemplateNoIdRegression:
         assert float(parent.value.magnitude) == pytest.approx(81.5)
 
 
+@pytest.mark.django_db
+class TestGHFDBParentImportSiteIdentity:
+    """T043/T044 — coordinates, not ID_parent, identify the site (FR-004, R1)."""
+
+    def test_import_resolves_to_existing_site_by_coordinates(self, dataset):
+        """
+        T043 – Importing a row whose coordinates match an existing site
+        resolves to that site rather than creating a second one, even
+        though the row carries an ID_parent the site has never seen.
+        """
+        from fairdm.contrib.location.models import Point
+        from heat_flow.models import HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        point = Point.objects.create(x=11.0, y=48.0)
+        existing_site = HeatFlowSite.objects.create(
+            dataset=dataset, name="Pre-existing Site", location=point
+        )
+
+        resource = GHFDBParentImportResource()
+        ds = make_dataset(PARENT_ROW)  # lat_NS=48.0, long_EW=11.0, ID_parent=1
+        result = resource.import_data(ds, dry_run=False, raise_errors=False)
+
+        assert not result.has_errors(), result.invalid_rows
+        assert not result.has_validation_errors(), [
+            row.error_dict for row in result.invalid_rows
+        ]
+        assert HeatFlowSite.objects.count() == 1
+        parent = ParentHeatFlow.objects.get(ghfdb_id=1)
+        assert parent.sample_id == existing_site.pk
+
+    def test_import_with_disagreeing_id_parent_does_not_duplicate_site(self, dataset):
+        """
+        T044 – A row that carries a site identifier (ID_parent) the site has
+        never seen, while its coordinates belong to a different existing
+        site, resolves to the site the coordinates identify rather than
+        creating a duplicate at that occupied pair.
+        """
+        from fairdm.contrib.location.models import Point
+        from heat_flow.models import HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        # A site already exists at (48.0, 11.0), under a different local_id
+        # than the one the incoming row will carry.
+        point = Point.objects.create(x=11.0, y=48.0)
+        existing_site = HeatFlowSite.objects.create(
+            dataset=dataset,
+            name="Existing Site",
+            local_id="other-id",
+            location=point,
+        )
+
+        row = dict(PARENT_ROW)
+        row["ID_parent"] = "2"  # unseen, and disagrees with local_id "other-id"
+
+        resource = GHFDBParentImportResource()
+        result = resource.import_data(
+            make_dataset(row), dry_run=False, raise_errors=False
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        assert not result.has_validation_errors(), [
+            row.error_dict for row in result.invalid_rows
+        ]
+        assert HeatFlowSite.objects.count() == 1
+        parent = ParentHeatFlow.objects.get(ghfdb_id=2)
+        assert parent.sample_id == existing_site.pk
+
+
+@pytest.mark.django_db
+class TestGHFDBParentImportRefusesSecondParent:
+    """T051 — US-3: a second parent for a site is refused through the import
+    path, not only through the model (FR-012, SC-005)."""
+
+    def test_second_parent_at_the_same_site_is_refused_on_import(self, dataset):
+        """
+        Importing a row whose coordinates resolve to a site that already has
+        a ParentHeatFlow is refused: the row is reported as invalid and no
+        second ParentHeatFlow is created for that site.
+        """
+        from heat_flow.models import HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        resource = GHFDBParentImportResource()
+        first_result = resource.import_data(
+            make_dataset(PARENT_ROW), dry_run=False, raise_errors=False
+        )
+        assert not first_result.has_errors(), first_result.invalid_rows
+        assert ParentHeatFlow.objects.filter(ghfdb_id=1).exists()
+
+        # Same coordinates as PARENT_ROW (lat_NS=48.0, long_EW=11.0), a
+        # different, previously unseen ID_parent.
+        second_row = dict(PARENT_ROW)
+        second_row["ID_parent"] = "2"
+        second_row["q"] = "99.0"
+
+        second_result = GHFDBParentImportResource().import_data(
+            make_dataset(second_row), dry_run=False, raise_errors=False
+        )
+
+        assert second_result.has_validation_errors()
+        assert HeatFlowSite.objects.filter(name="Test Site Alpha").count() == 1
+        site = HeatFlowSite.objects.get(name="Test Site Alpha")
+        assert ParentHeatFlow.objects.filter(sample=site).count() == 1
+        assert not ParentHeatFlow.objects.filter(ghfdb_id=2).exists()
+
+
 class TestGHFDBParentImportResourceAccessControl:
     """T029 — Staff-only access control."""
 
@@ -319,13 +429,16 @@ class TestGHFDBAutoParentKeyRegression:
 class TestGHFDBParentColumnOrderRegression:
     """T077 — BUG-006 regression: get_user_visible_fields() must follow PARENT_COLUMNS order."""
 
-    @pytest.mark.xfail(strict=True, reason=(
-        "Half-landed GHFDB canonical column work: the constants moved to the "
-        "published spreadsheet casing, but ghfdb_colmeta.json, the resource "
-        "field declarations and one manager annotation key did not follow. "
-        "Needs debugging, and a decision on the published column vocabulary, "
-        "before it can pass. See issue #122."
-    ))
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "Half-landed GHFDB canonical column work: the constants moved to the "
+            "published spreadsheet casing, but ghfdb_colmeta.json, the resource "
+            "field declarations and one manager annotation key did not follow. "
+            "Needs debugging, and a decision on the published column vocabulary, "
+            "before it can pass. See issue #122."
+        ),
+    )
     def test_get_user_visible_fields_follows_parent_columns_order(self):
         """GHFDBParentImportResource.get_user_visible_fields() returns fields in PARENT_COLUMNS order."""
         from project.ghfdb.resources import GHFDBParentImportResource
@@ -409,13 +522,16 @@ class TestGHFDBSimpleImportFormat:
         fmt = GHFDBImportFormat()
         assert fmt.get_title() == "GHFDB Official Template"
 
-    @pytest.mark.xfail(strict=True, reason=(
-        "Half-landed GHFDB canonical column work: the constants moved to the "
-        "published spreadsheet casing, but ghfdb_colmeta.json, the resource "
-        "field declarations and one manager annotation key did not follow. "
-        "Needs debugging, and a decision on the published column vocabulary, "
-        "before it can pass. See issue #122."
-    ))
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "Half-landed GHFDB canonical column work: the constants moved to the "
+            "published spreadsheet casing, but ghfdb_colmeta.json, the resource "
+            "field declarations and one manager annotation key did not follow. "
+            "Needs debugging, and a decision on the published column vocabulary, "
+            "before it can pass. See issue #122."
+        ),
+    )
     def test_create_dataset_returns_correct_row_count(self):
         """create_dataset() with 2 data rows returns a Dataset with 2 rows."""
         from project.ghfdb.resources import GHFDBSimpleImportFormat
@@ -472,13 +588,16 @@ class TestGHFDBSimpleImportFormat:
 
         assert len(ds) == 2
 
-    @pytest.mark.xfail(strict=True, reason=(
-        "Half-landed GHFDB canonical column work: the constants moved to the "
-        "published spreadsheet casing, but ghfdb_colmeta.json, the resource "
-        "field declarations and one manager annotation key did not follow. "
-        "Needs debugging, and a decision on the published column vocabulary, "
-        "before it can pass. See issue #122."
-    ))
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "Half-landed GHFDB canonical column work: the constants moved to the "
+            "published spreadsheet casing, but ghfdb_colmeta.json, the resource "
+            "field declarations and one manager annotation key did not follow. "
+            "Needs debugging, and a decision on the published column vocabulary, "
+            "before it can pass. See issue #122."
+        ),
+    )
     def test_create_dataset_uses_row6_as_headers(self):
         """create_dataset() uses row 6 cell values as Dataset column headers."""
         from project.ghfdb.resources import GHFDBSimpleImportFormat
@@ -494,13 +613,16 @@ class TestGHFDBSimpleImportFormat:
 
         assert list(ds.headers) == PARENT_COLUMNS
 
-    @pytest.mark.xfail(strict=True, reason=(
-        "Half-landed GHFDB canonical column work: the constants moved to the "
-        "published spreadsheet casing, but ghfdb_colmeta.json, the resource "
-        "field declarations and one manager annotation key did not follow. "
-        "Needs debugging, and a decision on the published column vocabulary, "
-        "before it can pass. See issue #122."
-    ))
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "Half-landed GHFDB canonical column work: the constants moved to the "
+            "published spreadsheet casing, but ghfdb_colmeta.json, the resource "
+            "field declarations and one manager annotation key did not follow. "
+            "Needs debugging, and a decision on the published column vocabulary, "
+            "before it can pass. See issue #122."
+        ),
+    )
     def test_create_dataset_excludes_metadata_rows(self):
         """create_dataset() does not include metadata rows 1-5 as data rows."""
         from project.ghfdb.resources import GHFDBSimpleImportFormat
@@ -520,13 +642,16 @@ class TestGHFDBSimpleImportFormat:
             "Metadata row text found in dataset — metadata rows were not skipped"
         )
 
-    @pytest.mark.xfail(strict=True, reason=(
-        "Half-landed GHFDB canonical column work: the constants moved to the "
-        "published spreadsheet casing, but ghfdb_colmeta.json, the resource "
-        "field declarations and one manager annotation key did not follow. "
-        "Needs debugging, and a decision on the published column vocabulary, "
-        "before it can pass. See issue #122."
-    ))
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "Half-landed GHFDB canonical column work: the constants moved to the "
+            "published spreadsheet casing, but ghfdb_colmeta.json, the resource "
+            "field declarations and one manager annotation key did not follow. "
+            "Needs debugging, and a decision on the published column vocabulary, "
+            "before it can pass. See issue #122."
+        ),
+    )
     def test_create_dataset_differs_from_official_format_on_offset_data(self):
         """Simple format returns data from row 7; official format skips rows 7-8 and gets data from row 9."""
         from io import BytesIO
@@ -663,17 +788,62 @@ class TestGHFDBParentPrivateDatasetRegression:
     def test_import_attaches_records_to_a_private_dataset(self, dataset):
         """A row imports into the only dataset available, whether or not it is public."""
         from fairdm.utils.choices import Visibility
-
         from heat_flow.models import HeatFlowSite, ParentHeatFlow
+
         from project.ghfdb.resources import GHFDBParentImportResource
 
         assert dataset.visibility == Visibility.PRIVATE
 
         resource = GHFDBParentImportResource()
-        result = resource.import_data(make_dataset(PARENT_ROW), dry_run=False, raise_errors=False)
+        result = resource.import_data(
+            make_dataset(PARENT_ROW), dry_run=False, raise_errors=False
+        )
 
         assert not result.has_errors(), [
-            (line, [str(e.error) for e in errors]) for line, errors in result.row_errors()
+            (line, [str(e.error) for e in errors])
+            for line, errors in result.row_errors()
         ]
         assert ParentHeatFlow.objects.get(ghfdb_id=1).dataset == dataset
         assert HeatFlowSite.objects.get(name="Test Site Alpha").dataset == dataset
+
+
+class TestGHFDBParentImportRecordsIdentifierOnMatchedSite:
+    """A site matched by coordinates keeps the row's identifier for later lookups.
+
+    Coordinates decide identity, so a row matching an existing site by coordinates
+    binds to it.  If that site carries no identifier of its own, the row's is
+    recorded: a later row carrying the same identifier and no coordinates would
+    otherwise fail its lookup and create a duplicate.
+    """
+
+    @pytest.mark.django_db
+    def test_identifier_is_recorded_on_a_site_matched_by_coordinates(self, dataset):
+        """The site must pre-exist without an identifier, or the import takes the
+        other branch and this passes whether or not the behaviour is there."""
+        from decimal import Decimal
+
+        from fairdm.contrib.location.models import Point
+        from heat_flow.models import HeatFlowSite
+
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        point, _ = Point.objects.get_or_create(
+            x=Decimal(PARENT_ROW["long_EW"]), y=Decimal(PARENT_ROW["lat_NS"])
+        )
+        existing = HeatFlowSite.objects.create(
+            dataset=dataset, name="Entered by hand", location=point
+        )
+        assert not existing.local_id
+
+        result = GHFDBParentImportResource().import_data(
+            make_dataset(PARENT_ROW), dry_run=False, raise_errors=False
+        )
+        assert not result.has_errors(), result.invalid_rows
+
+        # One site, not two: the row resolved to the one already there.
+        assert HeatFlowSite.objects.filter(location=point).count() == 1
+        existing.refresh_from_db()
+        assert existing.local_id == PARENT_ROW["ID_parent"], (
+            "The row's identifier was not recorded on the site it resolved to, so a "
+            "later row carrying it without coordinates would create a duplicate."
+        )

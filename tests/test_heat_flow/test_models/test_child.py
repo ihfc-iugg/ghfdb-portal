@@ -1,64 +1,11 @@
-"""
-Tests for heat_flow models – User Stories US1, US2, US3.
+"""Tests for the depth interval, the child heat flow and its sub-measurements.
 
-US1: Site and measurement data can be stored and retrieved (T013–T020, T053).
-US2: Parent–child aggregation relationship is correctly modelled (T026–T029).
-US3: Marine probe measurements have supplementary metadata (T035–T038).
+Mirrors ``project/heat_flow/models/child.py``.
 """
-
-from decimal import Decimal
 
 import pytest
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
-
-
-class TestHeatFlowSite:
-    @pytest.mark.django_db
-    def test_heat_flow_site_persistence(self, dataset):
-        """
-        T013 – HeatFlowSite can be saved and reloaded with all scalar fields intact,
-        including an optional location FK (FR-002, FR-003, SC-003).
-        """
-        from fairdm.contrib.location.models import Point
-        from heat_flow.models import HeatFlowSite
-
-        point = Point.objects.create(x=Decimal("8.5"), y=Decimal("47.4"))
-        site = HeatFlowSite.objects.create(
-            dataset=dataset,
-            name="Schwarzwald Site",
-            country="Germany",
-            continent="Europe",
-            environment="onshore_continental",
-            explo_method="drilling",
-            location=point,
-        )
-        site_db = HeatFlowSite.objects.get(pk=site.pk)
-
-        assert site_db.name == "Schwarzwald Site"
-        assert site_db.country == "Germany"
-        assert site_db.continent == "Europe"
-        assert str(site_db.environment) == "onshore_continental"
-        assert str(site_db.explo_method) == "drilling"
-        assert site_db.location is not None
-        assert site_db.location.x == Decimal("8.500000")
-        assert site_db.location.y == Decimal("47.400000")
-
-    @pytest.mark.django_db
-    def test_heat_flow_site_explo_purpose_m2m(self, dataset):
-        """
-        T013 – explo_purpose M2M relationship can be added and reloaded (FR-003, H2).
-        """
-        from heat_flow.models import HeatFlowSite
-        from research_vocabs.models import Concept, Vocabulary
-
-        site = HeatFlowSite.objects.create(dataset=dataset, name="M2M Site")
-        vocab, _ = Vocabulary.objects.get_or_create(name="exploration-purpose")
-        concept, _ = Concept.objects.get_or_create(vocabulary=vocab, name="research")
-        site.explo_purpose.add(concept)
-
-        reloaded = HeatFlowSite.objects.get(pk=site.pk)
-        assert reloaded.explo_purpose.count() == 1
 
 
 class TestHeatFlowInterval:
@@ -154,6 +101,22 @@ class TestHeatFlowInterval:
         )
         interval.full_clean()  # must not raise
 
+    @pytest.mark.django_db
+    def test_deleting_a_site_deletes_its_intervals(
+        self, dataset, site_fixture, interval_fixture
+    ):
+        """
+        T029 – Deleting a HeatFlowSite deletes its HeatFlowInterval records
+        (FR-007, site FK is on_delete=CASCADE).
+        """
+        from heat_flow.models import HeatFlowInterval
+
+        interval_pk = interval_fixture.pk
+
+        site_fixture.delete()
+
+        assert not HeatFlowInterval.objects.filter(pk=interval_pk).exists()
+
 
 class TestHeatFlow:
     @pytest.mark.django_db
@@ -229,6 +192,79 @@ class TestHeatFlow:
         assert hf1.pk is not None
         assert hf2.pk is not None
         assert gradient_fixture.heat_flow_children.count() == 2
+
+    @pytest.mark.django_db
+    def test_multiple_heatflow_can_share_conductivity(
+        self, dataset, interval_fixture, conductivity_fixture, parent_fixture
+    ):
+        """
+        T022 – Two HeatFlow children may reference the same
+        IntervalConductivity FK without IntegrityError (FR-017), the
+        conductivity half of T022 alongside the gradient case above.
+        """
+        from heat_flow.models import HeatFlow
+
+        hf1 = HeatFlow.objects.create(
+            dataset=dataset,
+            sample=interval_fixture,
+            name="Child A",
+            value=60.0,
+            thermal_conductivity=conductivity_fixture,
+        )
+        hf2 = HeatFlow.objects.create(
+            dataset=dataset,
+            sample=interval_fixture,
+            name="Child B",
+            value=65.0,
+            thermal_conductivity=conductivity_fixture,
+        )
+        assert hf1.pk is not None
+        assert hf2.pk is not None
+        assert conductivity_fixture.heat_flow_children.count() == 2
+
+    @pytest.mark.django_db
+    def test_gradient_referenced_by_a_child_cannot_be_deleted(
+        self, dataset, interval_fixture, gradient_fixture
+    ):
+        """
+        T023 – A ThermalGradient referenced by a HeatFlow child is protected
+        from deletion (FR-017, on_delete=PROTECT).
+        """
+        from django.db.models import ProtectedError
+        from heat_flow.models import HeatFlow
+
+        HeatFlow.objects.create(
+            dataset=dataset,
+            sample=interval_fixture,
+            name="Protects gradient",
+            value=60.0,
+            thermal_gradient=gradient_fixture,
+        )
+
+        with pytest.raises(ProtectedError):
+            gradient_fixture.delete()
+
+    @pytest.mark.django_db
+    def test_conductivity_referenced_by_a_child_cannot_be_deleted(
+        self, dataset, interval_fixture, conductivity_fixture
+    ):
+        """
+        T023 – An IntervalConductivity referenced by a HeatFlow child is
+        protected from deletion (FR-017, on_delete=PROTECT).
+        """
+        from django.db.models import ProtectedError
+        from heat_flow.models import HeatFlow
+
+        HeatFlow.objects.create(
+            dataset=dataset,
+            sample=interval_fixture,
+            name="Protects conductivity",
+            value=60.0,
+            thermal_conductivity=conductivity_fixture,
+        )
+
+        with pytest.raises(ProtectedError):
+            conductivity_fixture.delete()
 
     @pytest.mark.django_db
     def test_heat_flow_allows_null_gradient_and_conductivity(
@@ -358,6 +394,25 @@ class TestHeatFlowCorrection:
             corr.save()  # must not raise
 
     @pytest.mark.django_db
+    def test_second_correction_of_the_same_type_rejected(self, child_fixture):
+        """
+        T026 – A second HeatFlowCorrection of the same correction_type on one
+        child is rejected: Meta.unique_together = ("heat_flow", "correction_type")
+        (FR-027).
+        """
+        from heat_flow.models import HeatFlowCorrection
+
+        HeatFlowCorrection.objects.create(
+            heat_flow=child_fixture, correction_type="IS", status="present_corrected"
+        )
+        with pytest.raises(IntegrityError):
+            HeatFlowCorrection.objects.create(
+                heat_flow=child_fixture,
+                correction_type="IS",
+                status="not_considered",
+            )
+
+    @pytest.mark.django_db
     def test_correction_invalid_type_rejected(self, child_fixture):
         """
         T057 – A correction with an unrecognised correction_type is rejected by Django's
@@ -398,6 +453,59 @@ class TestThermalGradient:
                 dataset=dataset, sample=interval_fixture, name="No Value"
             )
 
+    @pytest.mark.django_db
+    def test_gradient_corrected_value_methods_shutin_and_count_persist(
+        self, dataset, interval_fixture
+    ):
+        """
+        T017 – A gradient's corrected value, its top and bottom temperature
+        methods, its shut-in times and its recording count persist and read
+        back (FR-019).
+        """
+        from heat_flow import vocabularies
+        from heat_flow.models import ThermalGradient
+        from research_vocabs.models import Concept
+
+        gradient = ThermalGradient.objects.create(
+            dataset=dataset,
+            sample=interval_fixture,
+            name="Gradient with corrections",
+            value=25.0,
+            corrected_value=27.5,
+            corrected_uncertainty=1.2,
+            shutin_top=10,
+            shutin_bottom=15,
+            number=8,
+        )
+        top_method = Concept.get_for_vocabulary(vocabularies.TemperatureMethod).first()
+        bottom_method = (
+            Concept.get_for_vocabulary(vocabularies.TemperatureMethod).exclude(
+                pk=top_method.pk
+            )
+            or Concept.get_for_vocabulary(vocabularies.TemperatureMethod)
+        ).first()
+        gradient.method_top.add(top_method)
+        gradient.method_bottom.add(bottom_method)
+
+        reloaded = ThermalGradient.objects.get(pk=gradient.pk)
+
+        assert hasattr(reloaded.corrected_value, "magnitude")
+        assert float(reloaded.corrected_value.magnitude) == pytest.approx(27.5)
+        assert hasattr(reloaded.corrected_uncertainty, "magnitude")
+        assert float(reloaded.corrected_uncertainty.magnitude) == pytest.approx(1.2)
+
+        assert list(reloaded.method_top.values_list("pk", flat=True)) == [top_method.pk]
+        assert list(reloaded.method_bottom.values_list("pk", flat=True)) == [
+            bottom_method.pk
+        ]
+
+        assert hasattr(reloaded.shutin_top, "magnitude")
+        assert float(reloaded.shutin_top.magnitude) == pytest.approx(10)
+        assert hasattr(reloaded.shutin_bottom, "magnitude")
+        assert float(reloaded.shutin_bottom.magnitude) == pytest.approx(15)
+
+        assert reloaded.number == 8
+
 
 class TestIntervalConductivity:
     @pytest.mark.django_db
@@ -425,133 +533,51 @@ class TestIntervalConductivity:
                 dataset=dataset, sample=interval_fixture, name="No Value"
             )
 
-
-class TestParentHeatFlow:
-    def test_table_name_follows_the_owning_application(self):
-        """
-        ``ParentHeatFlow`` lives in ``heat_flow``, so its table is named for
-        ``heat_flow``.  The old ``ghfdb_`` name came from a move into the
-        ``ghfdb`` application that was abandoned (docs/adr/0001).
-        """
-        from heat_flow.models import ParentHeatFlow
-
-        assert ParentHeatFlow._meta.db_table == "heat_flow_parentheatflow"
-
     @pytest.mark.django_db
-    def test_parent_children_aggregation(self, dataset, site_fixture, interval_fixture):
-        """
-        T026 – ParentHeatFlow.children reverse relation returns correct counts;
-        is_relevant filter works (US2 scenarios 1–2).
-        """
-        from heat_flow.models import HeatFlow, ParentHeatFlow
-
-        parent = ParentHeatFlow.objects.create(
-            dataset=dataset, sample=site_fixture, name="P", value=70.0
-        )
-        HeatFlow.objects.create(
-            dataset=dataset,
-            sample=interval_fixture,
-            name="C1",
-            value=65.0,
-            parent=parent,
-            is_relevant=True,
-        )
-        HeatFlow.objects.create(
-            dataset=dataset,
-            sample=interval_fixture,
-            name="C2",
-            value=68.0,
-            parent=parent,
-            is_relevant=True,
-        )
-        HeatFlow.objects.create(
-            dataset=dataset,
-            sample=interval_fixture,
-            name="C3",
-            value=72.0,
-            parent=parent,
-            is_relevant=False,
-        )
-
-        assert parent.children.count() == 3
-        assert parent.children.filter(is_relevant=True).count() == 2
-
-    @pytest.mark.django_db
-    def test_parent_delete_sets_child_null(self, dataset, site_fixture, interval_fixture):
-        """
-        T027 – Deleting a ParentHeatFlow sets child.parent_id to NULL via SET_NULL
-        (US2 scenario 3, SC-004).
-        """
-        from heat_flow.models import HeatFlow, ParentHeatFlow
-
-        parent = ParentHeatFlow.objects.create(
-            dataset=dataset, sample=site_fixture, name="P", value=70.0
-        )
-        child = HeatFlow.objects.create(
-            dataset=dataset, sample=interval_fixture, name="C", value=65.0, parent=parent
-        )
-        child_pk = child.pk
-
-        parent.delete()
-
-        reloaded = HeatFlow.objects.get(pk=child_pk)
-        assert reloaded.parent_id is None
-
-    @pytest.mark.django_db
-    def test_unique_parent_per_site_app_level(self, dataset, site_fixture):
-        """
-        T028 – Creating a second ParentHeatFlow for the same HeatFlowSite via
-        .save() raises ValidationError from the app-layer uniqueness guard (H1).
-        """
-        from heat_flow.models import ParentHeatFlow
-
-        ParentHeatFlow.objects.create(
-            dataset=dataset, sample=site_fixture, name="First", value=70.0
-        )
-        with pytest.raises(ValidationError):
-            second = ParentHeatFlow(
-                dataset=dataset, sample=site_fixture, name="Second", value=75.0
-            )
-            second.save()
-
-    @pytest.mark.django_db
-    def test_unique_parent_per_site_db_level(self, dataset, site_fixture):
-        """
-        T028 – DB-level unique enforcement requires a UniqueConstraint on `sample`.
-        NOTE: This constraint cannot be added to ParentHeatFlow.Meta because `sample_id`
-        is a column on the base `measurement` table (MTI), not on `heat_flow_parentheatflow`.
-        SQLite treats the reference as an expression and raises OperationalError on table
-        creation.  Uniqueness is enforced at app level by ParentHeatFlow.save() instead.
-        This test is marked xfail to document the architectural limitation.
-        """
-        # App-level enforcement is validated in test_unique_parent_per_site_app_level
-        pytest.skip(
-            "DB-level UniqueConstraint not viable with polymorphic MTI + SQLite (column lives on base table)"
-        )
-
-    @pytest.mark.django_db
-    def test_parent_with_zero_children_is_valid(self, dataset, site_fixture):
-        """
-        T028 – A ParentHeatFlow with no children is valid (edge case from spec).
-        """
-        from heat_flow.models import ParentHeatFlow
-
-        parent = ParentHeatFlow.objects.create(
-            dataset=dataset, sample=site_fixture, name="Childless", value=70.0
-        )
-        assert parent.children.count() == 0
-
-    @pytest.mark.django_db
-    def test_parent_save_rejects_wrong_sample(
-        self, dataset, interval_fixture, parent_fixture
+    def test_conductivity_vocabulary_fields_count_and_score_persist(
+        self, dataset, interval_fixture
     ):
         """
-        T029 – ParentHeatFlow.save() raises ValidationError when sample is a
-        HeatFlowInterval rather than HeatFlowSite (FR-008a).
+        T018 – A conductivity's vocabulary fields, its determination count
+        and its score persist and read back (FR-021).
         """
-        with pytest.raises(ValidationError):
-            parent_fixture.sample = interval_fixture
-            parent_fixture.save()
+        from heat_flow import vocabularies
+        from heat_flow.models import IntervalConductivity
+        from research_vocabs.models import Concept
+
+        conductivity = IntervalConductivity.objects.create(
+            dataset=dataset,
+            sample=interval_fixture,
+            name="Conductivity with vocab fields",
+            value=2.5,
+            number=12,
+            score=0.9,
+        )
+
+        vocab_fields = {
+            "source": vocabularies.ConductivitySource,
+            "location": vocabularies.ConductivityLocation,
+            "method": vocabularies.ConductivityMethod,
+            "saturation": vocabularies.ConductivitySaturation,
+            "pT_conditions": vocabularies.ConductivityPTConditions,
+            "pT_function": vocabularies.ConductivityPTFunction,
+            "strategy": vocabularies.ConductivityStrategy,
+        }
+        expected_pks = {}
+        for field_name, vocabulary in vocab_fields.items():
+            concept = Concept.get_for_vocabulary(vocabulary).first()
+            getattr(conductivity, field_name).add(concept)
+            expected_pks[field_name] = concept.pk
+
+        reloaded = IntervalConductivity.objects.get(pk=conductivity.pk)
+
+        for field_name, expected_pk in expected_pks.items():
+            assert list(getattr(reloaded, field_name).values_list("pk", flat=True)) == [
+                expected_pk
+            ]
+
+        assert reloaded.number == 12
+        assert reloaded.score == pytest.approx(0.9)
 
 
 class TestProbeMetadata:
@@ -572,9 +598,33 @@ class TestProbeMetadata:
             tilt=2.0,
         )
         reloaded = type(interval_fixture).objects.get(pk=interval_fixture.pk)
-        assert float(reloaded.probe_metadata.penetration.magnitude) == pytest.approx(3.5)
+        assert float(reloaded.probe_metadata.penetration.magnitude) == pytest.approx(
+            3.5
+        )
         assert float(reloaded.probe_metadata.length.magnitude) == pytest.approx(5.0)
         assert float(reloaded.probe_metadata.tilt.magnitude) == pytest.approx(2.0)
+
+    @pytest.mark.django_db
+    def test_probe_metadata_accepts_several_probe_type_concepts(
+        self, dataset, interval_fixture
+    ):
+        """
+        T059 – ProbeMetadata.probe_type accepts several probe type concepts
+        and reads them back (FR-023, many-to-many vocabulary field).
+        """
+        from heat_flow import vocabularies
+        from heat_flow.models import ProbeMetadata
+        from research_vocabs.models import Concept
+
+        probe = ProbeMetadata.objects.create(interval=interval_fixture, penetration=3.5)
+        concepts = list(Concept.get_for_vocabulary(vocabularies.ProbeType)[:2])
+        assert len(concepts) == 2, "fixture requires at least two probe type concepts"
+        probe.probe_type.set(concepts)
+
+        reloaded = ProbeMetadata.objects.get(pk=probe.pk)
+        assert set(reloaded.probe_type.values_list("pk", flat=True)) == {
+            c.pk for c in concepts
+        }
 
     @pytest.mark.django_db
     def test_interval_without_probe_raises(self, dataset, site_fixture):
@@ -608,3 +658,56 @@ class TestProbeMetadata:
         probe_pk = probe.pk
         interval_fixture.delete()
         assert not ProbeMetadata.objects.filter(pk=probe_pk).exists()
+
+
+class TestCorrectionStatusDocumentation:
+    """The documented status table must match the one the code enforces.
+
+    FR-028 requires the valid combinations to be documented.  Documenting them
+    without a check is how the field map two sections above went stale, so the
+    table is read back out of the documentation and compared with the source of
+    truth rather than trusted.
+    """
+
+    DOC = "docs/ghfdb_fields.md"
+    HEADING = "##### Valid status per disturbance type"
+
+    def _documented_statuses(self):
+        """Map each disturbance type in the documented table to its statuses."""
+        import re
+        from pathlib import Path
+
+        text = Path(__file__).resolve().parents[3].joinpath(self.DOC).read_text()
+        section = text.split(self.HEADING, 1)[1]
+        documented = {}
+        for line in section.splitlines():
+            if not line.startswith("|") or line.startswith("| ---"):
+                continue
+            cells = [c.strip() for c in line.strip("|").split("|")]
+            if len(cells) != 2 or cells[0] == "Disturbance type":
+                continue
+            types = re.findall(r"\b([A-Z]{1,4})\b(?=\s*\()", cells[0])
+            statuses = {
+                s.strip().replace("\\", "").replace("unspecified (`-`)", "-")
+                for s in cells[1].split(",")
+            }
+            for code in types:
+                documented[code] = statuses
+        return documented
+
+    def test_documented_statuses_match_the_enforced_ones(self):
+        from heat_flow.models import HeatFlowCorrection
+
+        documented = self._documented_statuses()
+        assert documented, "No documented status table found under the heading."
+
+        for code, _label in HeatFlowCorrection.CorrectionTypeChoices.choices:
+            enforced = HeatFlowCorrection.VALID_STATUS_FOR_TYPE.get(code)
+            if enforced is None:
+                enforced = HeatFlowCorrection.ENVIRONMENTAL_VALID
+            assert code in documented, f"{code} is enforced and not documented."
+            assert documented[code] == set(enforced), (
+                f"Documented statuses for {code} do not match the code.\n"
+                f"  documented: {sorted(documented[code])}\n"
+                f"  enforced:   {sorted(enforced)}"
+            )

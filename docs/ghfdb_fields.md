@@ -95,6 +95,20 @@ Each flag is a separate `HeatFlowCorrection` record accessed via `heat_flow.corr
 | corr\_CONV\_flag | C18 | heat\_flow\_heatflowcorrection | HeatFlowCorrection | status (type=CONV) | HeatFlowCorrection |
 | corr\_HR\_flag | C19 | heat\_flow\_heatflowcorrection | HeatFlowCorrection | status (type=HR) | HeatFlowCorrection |
 
+##### Valid status per disturbance type (FR-028)
+
+A status that is not meaningful for its disturbance type is rejected when the correction is saved.
+The valid combinations, derived from `HeatFlowCorrection.VALID_STATUS_FOR_TYPE` and
+`HeatFlowCorrection.ENVIRONMENTAL_VALID` in `project/heat_flow/models/child.py`, are:
+
+| Disturbance type | Valid statuses |
+| --- | --- |
+| IS (In-situ conditions) | present\_corrected, present\_not\_corrected, not\_recognized, not\_considered, tilt\_corrected, drift\_corrected, unspecified (`-`) |
+| T (Temperature) | present\_corrected, present\_not\_corrected, not\_corrected, corrected, not\_recognized, not\_considered, unspecified (`-`) |
+| S (Sedimentation/Subsidence), E (Erosion), TOPO (Topographic), PAL (Paleoclimatic), SUR (Surface/Climatic), CONV (Convection), HR (Heat Refraction) | present\_corrected, present\_not\_corrected, present\_not\_significant, not\_recognized, considered\_p, considered\_t, considered\_pt, not\_considered, unspecified (`-`) |
+
+The unspecified status (`-`) is valid for every disturbance type.
+
 #### ProbeMetadata (marine probe instrument parameters — C06, C21–C23)
 
 Probe instrument fields were previously stored directly on `HeatFlow`. They are now on a
