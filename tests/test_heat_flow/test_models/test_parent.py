@@ -246,7 +246,9 @@ class TestParentHeatFlow:
         assert parent.children.filter(is_relevant=True).count() == 2
 
     @pytest.mark.django_db
-    def test_parent_delete_sets_child_null(self, dataset, site_fixture, interval_fixture):
+    def test_parent_delete_sets_child_null(
+        self, dataset, site_fixture, interval_fixture
+    ):
         """
         T027 – Deleting a ParentHeatFlow sets child.parent_id to NULL via SET_NULL
         (US2 scenario 3, SC-004).
@@ -257,7 +259,11 @@ class TestParentHeatFlow:
             dataset=dataset, sample=site_fixture, name="P", value=70.0
         )
         child = HeatFlow.objects.create(
-            dataset=dataset, sample=interval_fixture, name="C", value=65.0, parent=parent
+            dataset=dataset,
+            sample=interval_fixture,
+            name="C",
+            value=65.0,
+            parent=parent,
         )
         child_pk = child.pk
 

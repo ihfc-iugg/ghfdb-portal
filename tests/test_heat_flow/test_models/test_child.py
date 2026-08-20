@@ -117,6 +117,7 @@ class TestHeatFlowInterval:
 
         assert not HeatFlowInterval.objects.filter(pk=interval_pk).exists()
 
+
 class TestHeatFlow:
     @pytest.mark.django_db
     def test_heat_flow_child_relationships(
@@ -317,6 +318,7 @@ class TestHeatFlow:
         )
         assert other_child.is_probe is False
 
+
 class TestHeatFlowCorrection:
     @pytest.mark.django_db
     def test_heat_flow_corrections(self, dataset, interval_fixture, child_fixture):
@@ -424,6 +426,7 @@ class TestHeatFlowCorrection:
         with pytest.raises(ValidationError):
             corr.full_clean()
 
+
 class TestThermalGradient:
     @pytest.mark.django_db
     def test_thermal_gradient_save_rejects_wrong_sample(
@@ -503,6 +506,7 @@ class TestThermalGradient:
 
         assert reloaded.number == 8
 
+
 class TestIntervalConductivity:
     @pytest.mark.django_db
     def test_interval_conductivity_save_rejects_wrong_sample(
@@ -575,6 +579,7 @@ class TestIntervalConductivity:
         assert reloaded.number == 12
         assert reloaded.score == pytest.approx(0.9)
 
+
 class TestProbeMetadata:
     @pytest.mark.django_db
     def test_probe_metadata_linked_to_interval(
@@ -593,7 +598,9 @@ class TestProbeMetadata:
             tilt=2.0,
         )
         reloaded = type(interval_fixture).objects.get(pk=interval_fixture.pk)
-        assert float(reloaded.probe_metadata.penetration.magnitude) == pytest.approx(3.5)
+        assert float(reloaded.probe_metadata.penetration.magnitude) == pytest.approx(
+            3.5
+        )
         assert float(reloaded.probe_metadata.length.magnitude) == pytest.approx(5.0)
         assert float(reloaded.probe_metadata.tilt.magnitude) == pytest.approx(2.0)
 
@@ -610,9 +617,7 @@ class TestProbeMetadata:
         from research_vocabs.models import Concept
 
         probe = ProbeMetadata.objects.create(interval=interval_fixture, penetration=3.5)
-        concepts = list(
-            Concept.get_for_vocabulary(vocabularies.ProbeType)[:2]
-        )
+        concepts = list(Concept.get_for_vocabulary(vocabularies.ProbeType)[:2])
         assert len(concepts) == 2, "fixture requires at least two probe type concepts"
         probe.probe_type.set(concepts)
 

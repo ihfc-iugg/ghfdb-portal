@@ -82,7 +82,7 @@ CSRF_TRUSTED_ORIGINS = [
 # `migrate` run.  Inert unless MIGRATION_CHECK_DATABASE is set, which only
 # tests/test_migrations.py does.
 if os.environ.get("MIGRATION_CHECK_DATABASE"):
-    DATABASES["migration_check"] = {  # noqa: F405
+    DATABASES["migration_check"] = {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": os.environ["MIGRATION_CHECK_DATABASE"],
     }
