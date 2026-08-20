@@ -1,3 +1,5 @@
+import os
+
 import fairdm
 
 fairdm.setup(
@@ -72,3 +74,15 @@ EASY_ICONS["svg"]["icons"]["ihfc"] = "ihfc.svg"
 CSRF_TRUSTED_ORIGINS = [
     f"https://{domain}" for domain in globals().get("ALLOWED_HOSTS", [])
 ]
+
+
+# A second connection, defined only when the environment names a file for it, so that a
+# test can migrate into an empty database without touching the developer's own.  The
+# development settings hard-wire the SQLite path, so there is no other way to redirect a
+# `migrate` run.  Inert unless MIGRATION_CHECK_DATABASE is set, which only
+# tests/test_migrations.py does.
+if os.environ.get("MIGRATION_CHECK_DATABASE"):
+    DATABASES["migration_check"] = {  # noqa: F405
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.environ["MIGRATION_CHECK_DATABASE"],
+    }

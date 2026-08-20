@@ -2,7 +2,7 @@
   "feature": "001-heat-flow-data-model",
   "branch": "001-heat-flow-data-model",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "DESIGN_REVIEW",
+  "state": "IMPLEMENT",
   "gates": {
     "spec": {
       "approved_by": "sam",
@@ -425,13 +425,34 @@
         },
         {
           "id": "T037",
-          "status": "todo",
-          "attempts": 0
+          "status": "blocked",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "tests/test_migrations.py:50",
+              "config/settings.py:120"
+            ],
+            "tests": [
+              "tests/test_migrations.py::TestMigrationsApplyToAnEmptyDatabase::test_migrations_build_every_heat_flow_table"
+            ],
+            "commands": [
+              "blocked on FAIR-DM/fairdm#252 - contributors.0008 cannot run on an empty database"
+            ]
+          }
         },
         {
           "id": "T090",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "tests/test_heat_flow/test_models/test_parent.py:1",
+              "tests/test_heat_flow/test_models/test_child.py:1"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_heat_flow -q -> 38 passed, 1 skipped"
+            ]
+          }
         }
       ]
     },
