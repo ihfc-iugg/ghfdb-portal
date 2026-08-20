@@ -939,7 +939,7 @@
       "priority": "P6",
       "issue": 171,
       "worktree": null,
-      "status": "todo",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
@@ -964,31 +964,63 @@
               "project/heat_flow/factories.py:31"
             ],
             "tests": [
-              "tests/test_heat_flow/test_factories.py::TestHeatFlowFactories::test_heat_flow_interval_factory_save",
-              "tests/test_heat_flow/test_factories.py::TestHeatFlowFactories::test_parent_heat_flow_factory_save",
-              "tests/test_heat_flow/test_factories.py::TestHeatFlowFactories::test_probe_metadata_factory_save"
+              "tests/test_heat_flow/test_factories.py::TestFactoriesCreateRequiredRelations::test_heat_flow_correction_factory_creates_its_heat_flow"
             ]
           }
         },
         {
           "id": "T078",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/factories.py:20"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_factories.py::TestFactoryVocabularyPopulation::test_interval_conductivity_concepts_belong_to_their_vocabularies",
+              "tests/test_heat_flow/test_factories.py::TestFactoryVocabularyPopulation::test_heat_flow_site_explo_purpose_concepts_belong_to_exploration_purpose_vocabulary"
+            ]
+          }
         },
         {
           "id": "T079",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/factories.py:20"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_factories.py::TestCompleteFactoryGraph::test_site_through_parent_graph_resolves_via_factories_alone"
+            ]
+          }
         },
         {
           "id": "T080",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/heat_flow/factories.py:20"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_factories.py::TestHeatFlowFactories::test_heat_flow_correction_factory_save"
+            ]
+          }
         },
         {
           "id": "T081",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "tests/test_heat_flow/conftest.py:1",
+              "project/heat_flow/factories.py:20"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_factories.py::TestFactoryVocabularyPopulation::test_probe_metadata_probe_type_concepts_belong_to_probe_type_vocabulary"
+            ]
+          }
         }
       ]
     },

@@ -5,9 +5,13 @@ from factory.declarations import LazyAttribute
 from factory.faker import Faker
 from factory.fuzzy import FuzzyChoice
 from fairdm.factories import MeasurementFactory, SampleFactory
+from research_vocabs.models import Concept
+
+from heat_flow import vocabularies
 
 from .models import (
     HeatFlow,
+    HeatFlowCorrection,
     HeatFlowInterval,
     HeatFlowSite,
     IntervalConductivity,
@@ -17,14 +21,31 @@ from .models import (
 )
 
 
+def attach_random_concept(instance, field_name, vocabulary):
+    """Attach one concept drawn from *vocabulary* to *instance*'s *field_name*
+    many-to-many field (R2, FR-036). Requires ``Concept.preload()`` to have run
+    for the vocabulary's concepts to exist.
+    """
+    concepts = list(Concept.get_for_vocabulary(vocabulary))
+    getattr(instance, field_name).set([random.choice(concepts)])
+
+
 class HeatFlowSiteFactory(SampleFactory):
     environment = FuzzyChoice(HeatFlowSite.environment_vocab.values)
     explo_method = FuzzyChoice(HeatFlowSite.explo_method_vocab.values)
-    # Skip explo_purpose for now since it's a many-to-many field
-    # explo_purpose = FuzzyChoice(get_vocabulary_choices(vocabularies.ExplorationPurpose))
 
     class Meta:
         model = HeatFlowSite
+
+    @factory.post_generation
+    def explo_purpose(obj, create, extracted, **kwargs):
+        """Attach an exploration-purpose concept (ConceptManyToManyField; FR-036)."""
+        if not create:
+            return
+        if extracted is not None:
+            obj.explo_purpose.set(extracted)
+            return
+        attach_random_concept(obj, "explo_purpose", vocabularies.ExplorationPurpose)
 
 
 class HeatFlowIntervalFactory(SampleFactory):
@@ -41,13 +62,17 @@ class HeatFlowFactory(MeasurementFactory):
     sample = factory.SubFactory(HeatFlowIntervalFactory)
     value = LazyAttribute(lambda _: round(random.gauss(mu=50, sigma=30), 2))
     uncertainty = LazyAttribute(lambda o: o.value * random.uniform(0.05, 0.25))
-
-    # metadata fields
-    # method = FuzzyChoice(HeatFlow.method_vocab.choices)  # ConceptManyToManyField
     expedition = Faker("text", max_nb_chars=100)
 
-    # temperature_gradient = factory.SubFactory("heat_flow.factories.TemperatureGradientFactory")
-    # thermal_conductivity = factory.SubFactory("heat_flow.factories.ChildConductivityFactory")
+    @factory.post_generation
+    def method(obj, create, extracted, **kwargs):
+        """Attach a heat-flow-method concept (ConceptManyToManyField; FR-036)."""
+        if not create:
+            return
+        if extracted is not None:
+            obj.method.set(extracted)
+            return
+        attach_random_concept(obj, "method", vocabularies.HeatFlowMethod)
 
 
 class ThermalGradientFactory(MeasurementFactory):
@@ -66,14 +91,52 @@ class ThermalGradientFactory(MeasurementFactory):
             else None
         )
     )
-    # method_top = FuzzyChoice(vocabularies.TemperatureMethod.choices)  # ConceptManyToManyField
-    # method_bottom = FuzzyChoice(vocabularies.TemperatureMethod.choices)  # ConceptManyToManyField
     shutin_top = Faker("pyint", min_value=0, max_value=10000)
     shutin_bottom = Faker("pyint", min_value=0, max_value=10000)
-    # correction_top = FuzzyChoice(vocabularies.TemperatureCorrection.choices)  # ConceptManyToManyField
-    # correction_bottom = FuzzyChoice(vocabularies.TemperatureCorrection.choices)  # ConceptManyToManyField
     number = Faker("pyint", min_value=1, max_value=100)
     score = Faker("pyfloat", min_value=0.0, max_value=1.0)
+
+    @factory.post_generation
+    def method_top(obj, create, extracted, **kwargs):
+        """Attach a temperature-method concept for the interval top (FR-036)."""
+        if not create:
+            return
+        if extracted is not None:
+            obj.method_top.set(extracted)
+            return
+        attach_random_concept(obj, "method_top", vocabularies.TemperatureMethod)
+
+    @factory.post_generation
+    def method_bottom(obj, create, extracted, **kwargs):
+        """Attach a temperature-method concept for the interval bottom (FR-036)."""
+        if not create:
+            return
+        if extracted is not None:
+            obj.method_bottom.set(extracted)
+            return
+        attach_random_concept(obj, "method_bottom", vocabularies.TemperatureMethod)
+
+    @factory.post_generation
+    def correction_top(obj, create, extracted, **kwargs):
+        """Attach a temperature-correction concept for the interval top (FR-036)."""
+        if not create:
+            return
+        if extracted is not None:
+            obj.correction_top.set(extracted)
+            return
+        attach_random_concept(obj, "correction_top", vocabularies.TemperatureCorrection)
+
+    @factory.post_generation
+    def correction_bottom(obj, create, extracted, **kwargs):
+        """Attach a temperature-correction concept for the interval bottom (FR-036)."""
+        if not create:
+            return
+        if extracted is not None:
+            obj.correction_bottom.set(extracted)
+            return
+        attach_random_concept(
+            obj, "correction_bottom", vocabularies.TemperatureCorrection
+        )
 
 
 class IntervalConductivityFactory(MeasurementFactory):
@@ -84,14 +147,79 @@ class IntervalConductivityFactory(MeasurementFactory):
 
     value = LazyAttribute(lambda _: round(random.gauss(mu=2.5, sigma=1.0), 2))
     uncertainty = LazyAttribute(lambda o: o.value * random.uniform(0.05, 0.25))
-    # source = FuzzyChoice(vocabularies.ConductivitySource.choices)  # ConceptManyToManyField
-    # location = FuzzyChoice(vocabularies.ConductivityLocation.choices)  # ConceptManyToManyField
-    # method = FuzzyChoice(vocabularies.ConductivityMethod.choices)  # ConceptManyToManyField
-    # saturation = FuzzyChoice(vocabularies.ConductivitySaturation.choices)  # ConceptManyToManyField
-    # pT_conditions = FuzzyChoice(vocabularies.ConductivityPTConditions.choices)  # ConceptManyToManyField
-    # pT_function = FuzzyChoice(vocabularies.ConductivityPTFunction.choices)  # ConceptManyToManyField
-    # strategy = FuzzyChoice(vocabularies.ConductivityStrategy.choices)  # ConceptManyToManyField
     number = Faker("pyint", min_value=1, max_value=10000)
+
+    @factory.post_generation
+    def source(obj, create, extracted, **kwargs):
+        """Attach a conductivity-source concept (FR-036)."""
+        if not create:
+            return
+        if extracted is not None:
+            obj.source.set(extracted)
+            return
+        attach_random_concept(obj, "source", vocabularies.ConductivitySource)
+
+    @factory.post_generation
+    def location(obj, create, extracted, **kwargs):
+        """Attach a conductivity-location concept (FR-036)."""
+        if not create:
+            return
+        if extracted is not None:
+            obj.location.set(extracted)
+            return
+        attach_random_concept(obj, "location", vocabularies.ConductivityLocation)
+
+    @factory.post_generation
+    def method(obj, create, extracted, **kwargs):
+        """Attach a conductivity-method concept (FR-036)."""
+        if not create:
+            return
+        if extracted is not None:
+            obj.method.set(extracted)
+            return
+        attach_random_concept(obj, "method", vocabularies.ConductivityMethod)
+
+    @factory.post_generation
+    def saturation(obj, create, extracted, **kwargs):
+        """Attach a conductivity-saturation concept (FR-036)."""
+        if not create:
+            return
+        if extracted is not None:
+            obj.saturation.set(extracted)
+            return
+        attach_random_concept(obj, "saturation", vocabularies.ConductivitySaturation)
+
+    @factory.post_generation
+    def pT_conditions(obj, create, extracted, **kwargs):
+        """Attach a conductivity pT-conditions concept (FR-036)."""
+        if not create:
+            return
+        if extracted is not None:
+            obj.pT_conditions.set(extracted)
+            return
+        attach_random_concept(
+            obj, "pT_conditions", vocabularies.ConductivityPTConditions
+        )
+
+    @factory.post_generation
+    def pT_function(obj, create, extracted, **kwargs):
+        """Attach a conductivity pT-function concept (FR-036)."""
+        if not create:
+            return
+        if extracted is not None:
+            obj.pT_function.set(extracted)
+            return
+        attach_random_concept(obj, "pT_function", vocabularies.ConductivityPTFunction)
+
+    @factory.post_generation
+    def strategy(obj, create, extracted, **kwargs):
+        """Attach a conductivity-strategy concept (FR-036)."""
+        if not create:
+            return
+        if extracted is not None:
+            obj.strategy.set(extracted)
+            return
+        attach_random_concept(obj, "strategy", vocabularies.ConductivityStrategy)
 
 
 class ParentHeatFlowFactory(MeasurementFactory):
@@ -115,3 +243,27 @@ class ProbeMetadataFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = ProbeMetadata
+
+    @factory.post_generation
+    def probe_type(obj, create, extracted, **kwargs):
+        """Attach a probe-type concept (ConceptManyToManyField; FR-036)."""
+        if not create:
+            return
+        if extracted is not None:
+            obj.probe_type.set(extracted)
+            return
+        attach_random_concept(obj, "probe_type", vocabularies.ProbeType)
+
+
+class HeatFlowCorrectionFactory(factory.django.DjangoModelFactory):
+    """Factory for HeatFlowCorrection (T080).  heat_flow SubFactory is the only
+    relation the model requires; correction_type/status are plain choice
+    fields, not vocabulary fields.
+    """
+
+    heat_flow = factory.SubFactory(HeatFlowFactory)
+    correction_type = HeatFlowCorrection.CorrectionTypeChoices.IS
+    status = HeatFlowCorrection.StatusChoices.UNSPECIFIED
+
+    class Meta:
+        model = HeatFlowCorrection
