@@ -26,5 +26,5 @@ on:
 
 jobs:
   call-docs:
-    uses: django-mvp/shared/.github/workflows/docs.yml@v0.3.3
+    uses: django-mvp/shared/.github/workflows/docs.yml@v0.4.0
     secrets: inherit
