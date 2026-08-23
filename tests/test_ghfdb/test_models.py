@@ -78,3 +78,8 @@ class TestFixtures:
         second_batch = published_chains(4)
         assert len(second_batch) == 4
         assert HeatFlow.objects.count() == 6
+
+    def test_unpublished_chain_has_no_published_identifier(self, unpublished_chain):
+        """T006: neither level carries a published identifier (SC-005)."""
+        assert unpublished_chain.ghfdb_id is None
+        assert unpublished_chain.parent.ghfdb_id is None

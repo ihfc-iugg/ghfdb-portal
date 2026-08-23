@@ -105,8 +105,9 @@
         },
         {
           "id": "T006",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": "unpublished_chain fixture added to conftest.py; TestFixtures::test_unpublished_chain_has_no_published_identifier added; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 7 passed"
         },
         {
           "id": "T007",

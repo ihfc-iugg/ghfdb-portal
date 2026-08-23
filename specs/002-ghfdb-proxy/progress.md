@@ -99,3 +99,17 @@ so two calls in the same test produce duplicate `ghfdb_id` values across the two
 batches. Neither model enforces uniqueness on that field (index only, no unique
 constraint), and nothing in this phase's tests depends on cross-batch uniqueness, so
 this is a note rather than a defect.
+
+## 2026-08-24T00:38:00Z · Implementer foundations · T006
+
+Did: Added the `unpublished_chain` fixture — the same graph as `published_chain`
+with `published=False`, so `ghfdb_id` is unset on both parent and child. Added
+`TestFixtures::test_unpublished_chain_has_no_published_identifier`.
+
+Verified: RED observed directly — ran the new test before the fixture existed, got a
+fixture-not-found error. After implementing, `poetry run pytest
+tests/test_ghfdb/test_models.py -q` -> `7 passed`.
+
+Next: T007, the four partial-chain fixtures.
+
+Watch: nothing.

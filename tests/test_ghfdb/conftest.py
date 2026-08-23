@@ -354,3 +354,12 @@ def published_chains(dataset):
         ]
 
     return build
+
+
+@pytest.fixture
+def unpublished_chain(dataset):
+    """One complete chain with no published identifier at either level.
+
+    This is what SC-005 is proven against (T006).
+    """
+    return build_published_chain(dataset, published=False)
