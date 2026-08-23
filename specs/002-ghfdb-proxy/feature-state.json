@@ -99,8 +99,9 @@
         },
         {
           "id": "T005",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": "published_chains counted fixture added to conftest.py; TestFixtures::test_published_chains_builds_the_number_asked_for added, calling it at 2 and 4; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 6 passed"
         },
         {
           "id": "T006",

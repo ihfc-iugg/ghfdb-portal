@@ -336,3 +336,21 @@ def build_published_chain(dataset, *, published=True, ghfdb_id=1, **child_kwargs
 def published_chain(dataset):
     """One complete record chain with the published identifier set (T004)."""
     return build_published_chain(dataset)
+
+
+@pytest.fixture
+def published_chains(dataset):
+    """Callable building *n* complete, published record chains (T005, R2).
+
+    Every query-constancy test takes this at two sizes rather than one, per
+    R2's decision — a bound satisfied at one row is satisfied by a linear
+    query plan as well as by a constant one.
+    """
+
+    def build(count):
+        return [
+            build_published_chain(dataset, ghfdb_id=index)
+            for index in range(1, count + 1)
+        ]
+
+    return build

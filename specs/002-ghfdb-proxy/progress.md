@@ -79,3 +79,23 @@ Watch: `build_child` and `build_published_chain` take keyword arguments
 (`include_gradient`, `missing_correction`, `is_relevant`, ...) that T005-T008's
 fixtures will reuse rather than duplicate — this is scaffolding those tasks depend on,
 not scope creep for T004 alone.
+
+## 2026-08-24T00:32:00Z · Implementer foundations · T005
+
+Did: Added the `published_chains` counted fixture (R2) — a callable building *n*
+complete, published chains via `build_published_chain`. Added
+`TestFixtures::test_published_chains_builds_the_number_asked_for`, calling it at 2
+and at 4 within one test and asserting the cumulative `HeatFlow` row count at each
+size.
+
+Verified: RED observed directly — ran the new test before the fixture existed, got a
+fixture-not-found error. After implementing, `poetry run pytest
+tests/test_ghfdb/test_models.py -q` -> `6 passed`.
+
+Next: T006, the `unpublished_chain` fixture.
+
+Watch: each call to `published_chains(n)` numbers its own chains' `ghfdb_id` from 1,
+so two calls in the same test produce duplicate `ghfdb_id` values across the two
+batches. Neither model enforces uniqueness on that field (index only, no unique
+constraint), and nothing in this phase's tests depends on cross-batch uniqueness, so
+this is a note rather than a defect.

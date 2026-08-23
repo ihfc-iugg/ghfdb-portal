@@ -65,3 +65,16 @@ class TestFixtures:
         assert child.corrections.count() == 9
         assert parent.ghfdb_id is not None
         assert child.ghfdb_id is not None
+
+    def test_published_chains_builds_the_number_asked_for(self, published_chains):
+        """T005: the callable builds exactly as many chains as it is asked
+        for, at two different sizes (R2)."""
+        from heat_flow.models import HeatFlow
+
+        first_batch = published_chains(2)
+        assert len(first_batch) == 2
+        assert HeatFlow.objects.count() == 2
+
+        second_batch = published_chains(4)
+        assert len(second_batch) == 4
+        assert HeatFlow.objects.count() == 6
