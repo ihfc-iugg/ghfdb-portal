@@ -45,3 +45,7 @@ class TestFixtures:
             assert Concept.get_for_vocabulary(vocabulary).exists(), (
                 f"no concepts preloaded for {vocabulary.__name__}"
             )
+
+    def test_dataset_fixture_is_saved(self, dataset):
+        """T003: ``dataset`` wraps ``DatasetFactory`` and is persisted."""
+        assert dataset.pk is not None

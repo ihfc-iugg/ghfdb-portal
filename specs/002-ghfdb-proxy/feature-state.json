@@ -87,8 +87,9 @@
         },
         {
           "id": "T003",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": "TestFixtures::test_dataset_fixture_is_saved added to test_models.py; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 4 passed"
         },
         {
           "id": "T004",

@@ -46,3 +46,16 @@ Watch: this is an upstream gap in `research_vocabs`, not something to fix in tha
 package from here. Any other `ConceptField` (non-M2M) vocabulary anywhere in the
 project has the same silent gap; only the three this feature's fixtures touch are
 closed here.
+
+## 2026-08-24T00:15:00Z · Implementer foundations · T003
+
+Did: Added `TestFixtures::test_dataset_fixture_is_saved`, asserting the pre-existing
+`dataset` fixture (wraps `DatasetFactory`) returns a saved instance.
+
+Verified: RED observed directly — temporarily renamed the `dataset` fixture in
+`conftest.py`, ran the new test, got a fixture-not-found error, restored the name.
+`poetry run pytest tests/test_ghfdb/test_models.py -q` -> `4 passed`.
+
+Next: T004, the `published_chain` fixture.
+
+Watch: nothing.
