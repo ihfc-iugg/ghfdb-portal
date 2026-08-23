@@ -504,6 +504,42 @@ class TestChildFlattening:
         assert not unaccounted, f"unexplained annotation keys: {sorted(unaccounted)}"
 
 
+class TestGHFDBParentManager:
+    """``GHFDBParentManager``'s default scoping (T045).
+
+    T044 is closed already: ``TestGHFDBManagerScoping::
+    test_ghfdb_parent_manager_excludes_null_ghfdb_id`` below proves an
+    unpublished site is absent from ``GHFDBParent.objects`` and present on
+    ``ParentHeatFlow.objects``.
+    """
+
+    @pytest.mark.django_db
+    def test_scope_survives_filtering_ordering_counting_slicing_and_chaining(
+        self, published_chain, unpublished_chain
+    ):
+        """T045 (FR-002, FR-003, SC-005): the published-only restriction
+        holds after each operation, and after two chained together."""
+        from project.ghfdb.models import GHFDBParent
+
+        unpublished_pk = unpublished_chain.parent.pk
+
+        assert unpublished_pk not in set(
+            GHFDBParent.objects.filter(pk__gt=0).values_list("pk", flat=True)
+        )
+        assert unpublished_pk not in set(
+            GHFDBParent.objects.order_by("pk").values_list("pk", flat=True)
+        )
+        assert GHFDBParent.objects.count() == 1
+        assert unpublished_pk not in {
+            record.pk for record in GHFDBParent.objects.all()[:10]
+        }
+        assert unpublished_pk not in set(
+            GHFDBParent.objects.filter(pk__gt=0)
+            .order_by("pk")
+            .values_list("pk", flat=True)
+        )
+
+
 # ---------------------------------------------------------------------------
 # Phase 3b: GHFDBParent proxy queryset tests (T066–T069)
 # ---------------------------------------------------------------------------

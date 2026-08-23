@@ -95,6 +95,34 @@ class TestGHFDBChildProxyMigrations:
         assert rename_operations[0].new_name == "GHFDBChild"
 
 
+class TestGHFDBParentProxyMigrations:
+    """T057 (FR-001): the migration recording ``GHFDBParent`` is a bare
+    proxy ``CreateModel`` and no other operation. A proxy adds no table, so
+    an ``AddField`` or ``AlterField`` naming ``GHFDBParent`` would be the
+    defect."""
+
+    def test_the_create_model_is_a_bare_proxy(self):
+        import importlib
+
+        from django.db import migrations
+
+        module = importlib.import_module(
+            "project.ghfdb.migrations.0003_ghfdbchild_ghfdbparent"
+        )
+        operations = module.Migration.operations
+
+        create_model_operations = [
+            operation
+            for operation in operations
+            if isinstance(operation, migrations.CreateModel)
+            and operation.name == "GHFDBParent"
+        ]
+        assert len(create_model_operations) == 1
+        operation = create_model_operations[0]
+        assert operation.fields == []
+        assert operation.options.get("proxy") is True
+
+
 class TestMigrationsApplyToAnEmptyDatabase:
     """The migrations must actually run, not merely exist.
 
