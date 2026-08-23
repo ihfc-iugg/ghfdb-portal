@@ -580,6 +580,18 @@ class TestParentFlattening:
                 accessor = self.COLLIDING_PARENT_COLUMNS.get(column, column)
                 getattr(record, accessor)
 
+    @pytest.mark.django_db
+    def test_query_count_is_equal_at_two_row_counts(
+        self, constant_query_count, published_chains
+    ):
+        """T047 (FR-008, SC-003)."""
+        from project.ghfdb.models import GHFDBParent
+
+        def call():
+            list(GHFDBParent.objects.as_ghfdb_flat())
+
+        constant_query_count(published_chains, call)
+
 
 # ---------------------------------------------------------------------------
 # Phase 3b: GHFDBParent proxy queryset tests (T066–T069)
