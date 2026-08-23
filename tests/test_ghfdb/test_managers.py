@@ -540,6 +540,47 @@ class TestGHFDBParentManager:
         )
 
 
+class TestParentFlattening:
+    """``GHFDBParentQuerySet.as_ghfdb_flat()``'s scalar annotation set
+    (T046-T049, T059)."""
+
+    # The one published PARENT_COLUMNS entry reached only through a
+    # many-to-many relation. T059 excludes it from the annotations because
+    # annotating a many-valued column with F() returns one row per value;
+    # T062 prefetches it alongside the determinations instead.
+    MANY_VALUED_PARENT_COLUMNS = frozenset({"explo_purpose"})
+
+    # FR-011: the published ``name`` column collides with a field the
+    # framework's base class declares, so it is annotated under a distinct
+    # key. Every other PARENT_COLUMNS entry keeps its published name.
+    COLLIDING_PARENT_COLUMNS = {"name": "site_name"}
+
+    @pytest.mark.django_db
+    def test_every_scalar_published_parent_column_resolves_on_every_row(
+        self, sites_by_contribution
+    ):
+        """T046 (FR-008), T059: every PARENT_COLUMNS entry other than the
+        one many-valued column is readable, without error, on every row —
+        and the row count matches the number of sites rather than exploding
+        on the site carrying two exploration purposes."""
+        from project.ghfdb.constants import PARENT_COLUMNS
+        from project.ghfdb.models import GHFDBParent
+
+        scalar_columns = [
+            column
+            for column in PARENT_COLUMNS
+            if column not in self.MANY_VALUED_PARENT_COLUMNS
+        ]
+
+        records = list(GHFDBParent.objects.as_ghfdb_flat())
+        assert len(records) == len(sites_by_contribution)
+
+        for record in records:
+            for column in scalar_columns:
+                accessor = self.COLLIDING_PARENT_COLUMNS.get(column, column)
+                getattr(record, accessor)
+
+
 # ---------------------------------------------------------------------------
 # Phase 3b: GHFDBParent proxy queryset tests (T066–T069)
 # ---------------------------------------------------------------------------

@@ -271,7 +271,6 @@ class GHFDBParentQuerySet(PolymorphicQuerySet):
             "elevation": F("sample__heatflowsite__elevation"),
             "environment": F("sample__heatflowsite__environment"),
             "explo_method": F("sample__heatflowsite__explo_method"),
-            "explo_purpose": F("sample__heatflowsite__explo_purpose"),
             "total_depth_MD": F("sample__heatflowsite__length"),
             "total_depth_TVD": F("sample__heatflowsite__vertical_depth"),
             "quality_parent": F("quality"),
