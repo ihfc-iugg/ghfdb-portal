@@ -206,3 +206,133 @@ def sample_ghfdb_row():
         "Reviewer_name": "Test Reviewer",
         "publication_reference": "test_ref_2024",
     }
+
+
+# ---------------------------------------------------------------------------
+# Phase 1 foundations (T004-T010) for 002-ghfdb-proxy.
+#
+# Distinct from ``heat_flow_chain`` above, which the pre-existing test suite
+# still depends on and which this run leaves alone. These fixtures use the
+# naming ``tasks.md`` specifies, and are built by direct ORM calls, per
+# ``tests/README.md``.
+# ---------------------------------------------------------------------------
+
+
+def build_site_and_parent(dataset, *, name="Test Site", published=True, ghfdb_id=1):
+    """Create a ``HeatFlowSite`` and its ``ParentHeatFlow``.
+
+    Returns the parent; the site is reachable as ``parent.sample``. Shared by
+    every fixture below, so the published, unpublished and multi-site
+    variants build the same graph rather than each repeating it.
+    """
+    from heat_flow.models import HeatFlowSite, ParentHeatFlow
+
+    site = HeatFlowSite.objects.create(
+        dataset=dataset,
+        name=name,
+        country="Germany",
+        continent="Europe",
+        environment="onshore_continental",
+    )
+    return ParentHeatFlow.objects.create(
+        dataset=dataset,
+        sample=site,
+        name=f"{name} Parent",
+        value=70.0,
+        ghfdb_id=ghfdb_id if published else None,
+    )
+
+
+def build_child(
+    dataset,
+    parent,
+    *,
+    name="Test Child",
+    published=True,
+    include_gradient=True,
+    include_conductivity=True,
+    include_probe_metadata=True,
+    missing_correction=None,
+    is_relevant=False,
+    ghfdb_id=1,
+):
+    """Create one child ``HeatFlow`` under *parent*, with its interval, its
+    sub-measurements and all nine corrections.
+
+    Each keyword omits exactly the one piece it names, so the partial-chain
+    fixtures reuse this builder rather than each writing their own graph.
+    """
+    from heat_flow.models import (
+        HeatFlow,
+        HeatFlowCorrection,
+        HeatFlowInterval,
+        IntervalConductivity,
+        ProbeMetadata,
+        ThermalGradient,
+    )
+
+    interval = HeatFlowInterval.objects.create(
+        dataset=dataset,
+        site=parent.sample,
+        name=f"{name} Interval",
+        top=0,
+        bottom=500,
+    )
+
+    if include_probe_metadata:
+        ProbeMetadata.objects.create(interval=interval, penetration=3.5)
+
+    gradient = None
+    if include_gradient:
+        gradient = ThermalGradient.objects.create(
+            dataset=dataset,
+            sample=interval,
+            name=f"{name} Gradient",
+            value=25.0,
+        )
+
+    conductivity = None
+    if include_conductivity:
+        conductivity = IntervalConductivity.objects.create(
+            dataset=dataset,
+            sample=interval,
+            name=f"{name} Conductivity",
+            value=2.5,
+        )
+
+    child = HeatFlow.objects.create(
+        dataset=dataset,
+        sample=interval,
+        name=name,
+        value=70.0,
+        parent=parent,
+        thermal_gradient=gradient,
+        thermal_conductivity=conductivity,
+        is_relevant=is_relevant,
+        ghfdb_id=ghfdb_id if published else None,
+    )
+
+    for correction_type in HeatFlowCorrection.CorrectionTypeChoices.values:
+        if correction_type == missing_correction:
+            continue
+        HeatFlowCorrection.objects.create(
+            heat_flow=child,
+            correction_type=correction_type,
+            status=HeatFlowCorrection.StatusChoices.UNSPECIFIED,
+        )
+
+    return child
+
+
+def build_published_chain(dataset, *, published=True, ghfdb_id=1, **child_kwargs):
+    """Build one complete site -> parent -> child chain (T004)."""
+    parent = build_site_and_parent(dataset, published=published, ghfdb_id=ghfdb_id)
+    return build_child(
+        dataset, parent, published=published, ghfdb_id=ghfdb_id, **child_kwargs
+    )
+
+
+@pytest.fixture
+def published_chain(dataset):
+    """One complete record chain with the published identifier set (T004)."""
+    return build_published_chain(dataset)

@@ -93,8 +93,9 @@
         },
         {
           "id": "T004",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": "build_site_and_parent/build_child/build_published_chain helpers and published_chain fixture added to conftest.py; TestFixtures::test_published_chain_is_complete added; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 5 passed"
         },
         {
           "id": "T005",

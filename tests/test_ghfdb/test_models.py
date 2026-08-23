@@ -49,3 +49,19 @@ class TestFixtures:
     def test_dataset_fixture_is_saved(self, dataset):
         """T003: ``dataset`` wraps ``DatasetFactory`` and is persisted."""
         assert dataset.pk is not None
+
+    def test_published_chain_is_complete(self, published_chain):
+        """T004: every relationship the chain names resolves, and both
+        published identifiers are set."""
+        child = published_chain
+        parent = child.parent
+        interval = child.sample
+        site = interval.site
+
+        assert site is not None
+        assert hasattr(interval, "probe_metadata")
+        assert child.thermal_gradient is not None
+        assert child.thermal_conductivity is not None
+        assert child.corrections.count() == 9
+        assert parent.ghfdb_id is not None
+        assert child.ghfdb_id is not None

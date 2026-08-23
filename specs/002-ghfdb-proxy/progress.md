@@ -59,3 +59,23 @@ Verified: RED observed directly — temporarily renamed the `dataset` fixture in
 Next: T004, the `published_chain` fixture.
 
 Watch: nothing.
+
+## 2026-08-24T00:25:00Z · Implementer foundations · T004
+
+Did: Added `build_site_and_parent`, `build_child` and `build_published_chain` helpers
+plus the `published_chain` fixture to `conftest.py` — one complete site -> interval ->
+parent -> child chain, all nine correction types, direct ORM calls per
+`tests/README.md`, published identifier (`ghfdb_id`) set on both parent and child.
+Added `TestFixtures::test_published_chain_is_complete`, walking every relationship the
+task names.
+
+Verified: RED observed directly — ran the new test before the fixture existed, got a
+fixture-not-found error. After implementing, `poetry run pytest
+tests/test_ghfdb/test_models.py -q` -> `5 passed`.
+
+Next: T005, the `published_chains` counted fixture (R2).
+
+Watch: `build_child` and `build_published_chain` take keyword arguments
+(`include_gradient`, `missing_correction`, `is_relevant`, ...) that T005-T008's
+fixtures will reuse rather than duplicate — this is scaffolding those tasks depend on,
+not scope creep for T004 alone.
