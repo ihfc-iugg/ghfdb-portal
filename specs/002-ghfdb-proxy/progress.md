@@ -355,3 +355,176 @@ chunk.
 
 Watch: the tree-wide xfailed count should now read 13, not 14 (D6's correction).
 Confirm at the story's full-suite run.
+
+## 2026-08-23T23:40:00Z · Implementer US-2 · T042, T043, T122
+
+Did: Added `TestGHFDBParentModel` to `test_models.py`, mirroring `TestGHFDBChildModel`'s
+shape for the child proxy: `test_proxy_adds_no_table` (proxy Meta, shared table with
+`ParentHeatFlow`, no local fields) and `test_meta_carries_translated_verbose_names`
+(both verbose names are `Promise` instances and name the site view, not
+`ParentHeatFlow`'s own name). Both proved green immediately — `GHFDBParent`'s Meta was
+already built (`project/ghfdb/models.py`). Also added `test_no_dictionary_accessor`
+(T122, D7): asserted red first (`as_dict` was present and would raise on every
+annotation-only column), then removed `GHFDBParent.as_dict()` and the now-unused
+`PARENT_COLUMNS` import from `models.py`.
+
+Verified: `poetry run pytest tests/test_ghfdb/test_models.py::TestGHFDBParentModel -q`
+before the removal -> `1 failed, 2 passed` (test_no_dictionary_accessor failed with
+`assert not True`, the right reason). After removing `as_dict()` -> `3 passed`.
+
+Next: T045, T057 (both citable against existing code).
+
+Watch: nothing.
+
+## 2026-08-23T23:45:00Z · Implementer US-2 · T045, T057
+
+Did: Added `TestGHFDBParentManager::test_scope_survives_filtering_ordering_counting_slicing_and_chaining`
+to `test_managers.py` (T045), mirroring T014's shape for the site proxy, and
+`TestGHFDBParentProxyMigrations::test_the_create_model_is_a_bare_proxy` to
+`test_migrations.py` (T057), asserting the `GHFDBParent` `CreateModel` operation in
+`0003_ghfdbchild_ghfdbparent.py` declares no fields and `proxy: True`. Both closed
+already per reconciliation.md's Phase 3 table (`managers.py:278`, migration recorded)
+— no production change.
+
+Verified: `poetry run pytest tests/test_ghfdb/test_managers.py::TestGHFDBParentManager
+tests/test_migrations.py::TestGHFDBParentProxyMigrations -q` -> `2 passed`, first run.
+
+Next: T046 (TestParentFlattening), which also carries T059's correction.
+
+Watch: nothing.
+
+## 2026-08-23T23:52:00Z · Implementer US-2 · T046, T059
+
+Did: Added `TestParentFlattening::test_every_scalar_published_parent_column_resolves_on_every_row`,
+built over `sites_by_contribution` rather than `published_chains`, specifically so the
+row count assertion (`len(records) == len(sites_by_contribution)`, i.e. 4) catches the
+defect the reconciliation and D9 flag: `as_ghfdb_flat()` annotated `explo_purpose` with
+`F()`, and that column is a many-to-many field, so the site carrying two exploration
+purposes came back as two rows. Ran red first — `assert 5 == 4` — confirming the
+duplication measured in the design review. Removed the `"explo_purpose": F(...)`
+annotation from `GHFDBParentQuerySet.as_ghfdb_flat()` in `managers.py` (T059); the
+method's own docstring already claimed the exclusion, the code did not.
+
+Verified: red — `poetry run pytest
+tests/test_ghfdb/test_managers.py::TestParentFlattening -q` -> `1 failed`,
+`AssertionError: assert 5 == 4`. Green after the fix — same command -> `1 passed`.
+Wider file scope: `poetry run pytest tests/test_ghfdb/test_managers.py -q` ->
+`35 passed`.
+
+Next: T047 (query count), T048/T049 (annotation naming).
+
+Watch: nothing.
+
+## 2026-08-23T23:58:00Z · Implementer US-2 · T047
+
+Did: Added `TestParentFlattening::test_query_count_is_equal_at_two_row_counts`, through
+the `constant_query_count` helper at 2 and 4 chains.
+
+Verified: `poetry run pytest
+tests/test_ghfdb/test_managers.py::TestParentFlattening -q` -> `2 passed`, first run —
+`as_ghfdb_flat()`'s `select_related` spine already makes the count constant.
+
+Next: T048, T049.
+
+Watch: nothing.
+
+## 2026-08-24T00:03:00Z · Implementer US-2 · T048, T049
+
+Did: Added `test_the_colliding_site_name_is_annotated_distinctly` (T048): asserts
+`ParentHeatFlow` declares `name` (so the collision is real, not assumed) and that the
+row's `site_name` annotation equals the site's actual `name`. Added
+`test_a_column_that_does_not_collide_keeps_its_published_name` (T049): sets a real
+elevation value on the site and reads it back as `record.elevation` (not a prefixed
+key), unlike the earlier defect the design review recorded — a `.none()`-based test on
+the wrong (child) model that never read a value off a row.
+
+Verified: `poetry run pytest
+tests/test_ghfdb/test_managers.py::TestParentFlattening -q` -> `4 passed`, first run —
+both annotation names were already correct in `managers.py`.
+
+Next: T050, T051 (TestParentCounts).
+
+Watch: nothing.
+
+## 2026-08-24T00:08:00Z · Implementer US-2 · T050, T051
+
+Did: Added `TestParentCounts` with
+`test_counts_are_correct_for_all_some_and_no_contributing_determinations` (T050),
+covering three of the four `sites_by_contribution` shapes against
+`with_child_counts()`, and `test_a_site_with_no_determinations_counts_zero_rather_than_empty`
+(T051), asserting the fourth shape's counts are `0`, not `None`. The existing test this
+story inherited (`TestGHFDBParentQuerySet::test_parent_with_child_counts_correctness`)
+covers only one site with one contributing determination — SC-004's other three shapes
+were genuinely untested before this.
+
+Verified: `poetry run pytest tests/test_ghfdb/test_managers.py::TestParentCounts -q`
+-> `2 passed`, first run — `Count()` aggregation already returns `0` rather than
+`None` for a site with no children.
+
+Next: T052 (query count).
+
+Watch: nothing.
+
+## 2026-08-24T00:12:00Z · Implementer US-2 · T052
+
+Did: Added `TestParentCounts::test_query_count_is_equal_at_two_row_counts`, through
+`constant_query_count` at 2 and 4 chains.
+
+Verified: `poetry run pytest tests/test_ghfdb/test_managers.py::TestParentCounts -q`
+-> `3 passed`, first run.
+
+Next: T053, T054 (TestParentChildAttachment).
+
+Watch: nothing.
+
+## 2026-08-24T00:16:00Z · Implementer US-2 · T053, T054
+
+Did: Added `TestParentChildAttachment` with
+`test_reading_each_sites_determinations_costs_no_query_per_site` (T053, evaluates
+`with_children()` at 2 chains then reads every site's `children.all()` inside
+`django_assert_num_queries(0)`) and `test_query_count_is_equal_at_two_row_counts`
+(T054).
+
+Verified: `poetry run pytest
+tests/test_ghfdb/test_managers.py::TestParentChildAttachment -q` -> `2 passed`, first
+run — `with_children()`'s existing `prefetch_related("children")` already satisfies
+both.
+
+Next: T055 (TestParentPublishedColumns), which also carries T062's prefetch.
+
+Watch: nothing.
+
+## 2026-08-24T00:30:00Z · Implementer US-2 · T055; T062 blocked (D11)
+
+Did: Added `TestParentPublishedColumns::test_every_published_parent_column_resolves_on_the_complete_row`,
+read after `as_ghfdb_flat()` and `with_children()` together (R3), over the
+`sites_by_contribution` site carrying two exploration purposes, so a reintroduced
+`F()` duplication is caught here too. Tried satisfying T062 in full: added
+`"sample__heatflowsite__explo_purpose"` to `with_children()`'s `prefetch_related()`
+alongside `"children"`, and wrapped the T055 test's column loop in
+`django_assert_num_queries(0)`. That combination passed in isolation, but running the
+wider class broke a pre-existing test not authored in this story:
+`TestGHFDBParentQuerySet::test_parent_with_children_no_extra_queries`
+(`django_assert_max_num_queries(3)`) — measured 7 queries, because `sample` is a
+polymorphic FK and prefetching the M2M through its MTI chain to `HeatFlowSite` costs
+four further queries, not one. Reverted the `explo_purpose` prefetch and the
+zero-query assertion in T055's test; the rest of T055 (every column resolves, no row
+duplication) does not depend on the prefetch and stays green. Recorded the conflict as
+D11 in `decisions.md`, following D10's precedent from the previous story exactly:
+implementer does not edit a pre-existing test, blocks the task, and documents both
+sides of the conflict for the resolution above this level.
+
+Verified: red — `poetry run pytest
+tests/test_ghfdb/test_managers.py::TestGHFDBParentQuerySet::test_parent_with_children_no_extra_queries -q`
+after adding the prefetch -> `1 failed`, `Expected to perform 3 queries or less but 7
+were done`. After reverting -> `poetry run pytest tests/test_ghfdb/test_managers.py -q`
+-> `44 passed`. attempts_used: 1 (single try-fails-revert cycle; the conflict is
+structural, matching D10's shape, not a bug to iterate on).
+
+Next: none — T042-T059, T061 (this story's slice) are complete except T062's blocked
+`explo_purpose`-prefetch half.
+
+Watch: whoever resolves D10 for `003-ghfdb-import-export`'s carried-over conflict
+should resolve D11 the same pass — both ask the same question of
+`django_assert_max_num_queries`-style pre-existing tests versus the T010
+constant-query-count methodology this feature standardises on.
