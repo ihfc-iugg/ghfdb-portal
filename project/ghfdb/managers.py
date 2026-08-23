@@ -3,9 +3,10 @@ GHFDB proxy queryset and manager.
 
 Provides ``GHFDBChildQuerySet`` with two key methods:
 
-* ``as_ghfdb_flat()`` — annotates all 31 scalar columns via ``select_related``
-  and ``F()`` expressions, plus 9 correction-flag subqueries; ≤2 DB queries,
-  constant regardless of row count.
+* ``as_ghfdb_flat()`` — annotates all 40 scalar columns (via
+  ``select_related`` and ``F()`` expressions, plus three constant-``Value()``
+  columns nothing resolves), plus 9 correction-flag subqueries; ≤2 DB
+  queries, constant regardless of row count.
 
 * ``for_export()`` — calls ``as_ghfdb_flat()`` and chains
   ``prefetch_related()`` for all 14 M2M paths; ~16 DB queries, constant.

@@ -205,6 +205,11 @@ class TestChildExportQuerySet:
 
         constant_query_count(published_chains, call)
 
+    # T026 (many-valued columns read without further queries) is blocked.
+    # See specs/002-ghfdb-proxy/progress.md and decisions.md for the
+    # reason: it requires for_export() to prefetch two more relations,
+    # which breaks a pre-existing, un-owned test's hardcoded query bound.
+
     @pytest.mark.django_db
     def test_columns_nothing_resolves_are_present_and_empty(self, published_chain):
         """T027 (FR-006): Ref_IGSN, publication_reference and
