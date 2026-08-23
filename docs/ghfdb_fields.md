@@ -87,7 +87,7 @@ The site's own fields are reached from a child heat flow as
 
 `geo_stratigraphy` carries terms from the geological timescale, which is what `age` holds.
 `HeatFlowInterval` also has a `stratigraphy` field, but that one relates to named stratigraphic
-units and is not where this column lands — the importer writes the column to `age`.
+units and is not where this column lands. The importer writes the column to `age`.
 
 `Ref_IGSN` is a sample identifier rather than a property of the measurement, so it is held on the
 interval through the generic identifier relationship FairDM gives every sample. The site carries

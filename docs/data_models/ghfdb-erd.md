@@ -18,7 +18,7 @@ For the mapping between the columns of the published spreadsheet and these model
 
 ## Key Concepts
 
-### Data hierarchy
+### Data Hierarchy
 
 The GHFDB implements a two-level structure:
 
@@ -28,7 +28,7 @@ The GHFDB implements a two-level structure:
 
 A child does not point at its site directly. It hangs off a depth interval, and the interval belongs to the site, so a child reaches its site as `sample.heatflowinterval.site`.
 
-### Quality scoring
+### Quality Scoring
 
 The database implements a quality assurance scheme with two indicators:
 
@@ -255,14 +255,14 @@ erDiagram
 
 A geographical location where heat flow data has been collected. It extends FairDM's borehole and earth sample models, which themselves extend `Sample`.
 
-**Key features**
+**Key Features**
 
 - Reaches its geographic coordinates through `Sample.location`, a foreign key to `Point`
 - Tracks both measured depth (`length`) and true vertical depth (`vertical_depth`)
 - Categorises the setting through the geographic environment vocabulary
 - Carries country, region, continent and domain, each indexed for filtering
 
-**Rules**
+**Business Rules**
 
 - A site refuses a coordinate pair already held by another site, checked on both `clean()` and `save()`
 - A site may have many depth intervals
@@ -272,14 +272,14 @@ A geographical location where heat flow data has been collected. It extends Fair
 
 A depth interval within a site's borehole, over which a child determination applies. Like the site it extends `Sample`, so it can carry its own identifiers and be measured directly.
 
-**Key features**
+**Key Features**
 
 - Belongs to a site through the `site` foreign key, and the relation is nullable
 - Tracks top and bottom depth, vertical depth and vertical datum
 - Carries the geological vocabularies: lithology, age and stratigraphic unit
 - Is the sample that thermal gradient, thermal conductivity and child heat flow measurements point at
 
-**Rules**
+**Business Rules**
 
 - Bottom depth must be at or below top depth, in a downward-positive direction
 
@@ -287,23 +287,23 @@ A depth interval within a site's borehole, over which a child determination appl
 
 The aggregated surface heat flow for a site: the parent level of the published schema. It was named `SurfaceHeatFlow` in older versions of this codebase.
 
-**Key features**
+**Key Features**
 
 - Reaches its site through `Measurement.sample`, and exposes it as the `site` property
 - Stores the representative value after all corrections
 - `corr_HP_flag` records whether the heat production of the overburden was considered
 - `ghfdb_id` is the published parent identifier and the key imports upsert on
 
-**Rules**
+**Business Rules**
 
-- Its sample must be a `HeatFlowSite`, and only one parent may exist per site — both raise on `save()`
+- Its sample must be a `HeatFlowSite`, and only one parent may exist per site. Both are raised on `save()`
 - Quality is inherited from the children: one child passes its own score up, several pass the poorest of the relevant ones
 
 ### HeatFlow
 
 An individual heat flow determination over a depth interval: the child level of the published schema.
 
-**Key features**
+**Key Features**
 
 - Calculated from a thermal gradient and a thermal conductivity, each an optional foreign key
 - Points at its parent through the nullable `parent` foreign key, and `is_relevant` records whether it was used in the parent's value
@@ -311,7 +311,7 @@ An individual heat flow determination over a depth interval: the child level of 
 - `ghfdb_id` is the published child identifier and the key imports upsert on
 - A determination is treated as a marine probe measurement when its interval carries probe metadata
 
-**Rules**
+**Business Rules**
 
 - Its sample must be a `HeatFlowInterval`, raised on `save()`
 - Each child belongs to at most one parent, through a plain foreign key rather than a junction table
@@ -320,13 +320,13 @@ An individual heat flow determination over a depth interval: the child level of 
 
 Instrument parameters for a marine heat flow probe.
 
-**Key features**
+**Key Features**
 
 - One record per interval, through a one-to-one foreign key to `HeatFlowInterval`
 - Records penetration depth, probe type, length and tilt
 - Every field but the interval is optional, so partial records are accepted
 
-**Rules**
+**Business Rules**
 
 - Deleted with its interval
 
@@ -334,7 +334,7 @@ Instrument parameters for a marine heat flow probe.
 
 One disturbance considered for one child measurement. Corrections are records rather than boolean flags on the measurement, because a boolean cannot express whether a disturbance was recognised, considered or corrected.
 
-**Correction types**
+**Correction Types**
 
 - **IS**: in-situ pressure and temperature conditions
 - **T**: temperature corrections
@@ -346,7 +346,7 @@ One disturbance considered for one child measurement. Corrections are records ra
 - **CONV**: convection effects
 - **HR**: heat refraction effects
 
-**Rules**
+**Business Rules**
 
 - At most one record of each type per measurement, enforced by a unique constraint on the pair
 - A status that is not meaningful for its type is refused on `save()`. The valid combinations are listed in [GHFDB Fields](../ghfdb_fields.md)
@@ -357,14 +357,14 @@ One disturbance considered for one child measurement. Corrections are records ra
 
 A temperature gradient measured over a depth interval.
 
-**Key features**
+**Key Features**
 
 - Reaches its interval through `Measurement.sample`
 - Stores both the measured and the corrected gradient, each with an uncertainty
 - Records the temperature method, shut-in time and correction method at the top and bottom of the interval
 - `score` is the methodological score used in the child's M-score, indexed alongside `number`
 
-**Rules**
+**Business Rules**
 
 - Its sample must be a `HeatFlowInterval`, raised on `save()`
 - The number of temperature recordings must be positive where it is given, enforced by a check constraint
@@ -373,13 +373,13 @@ A temperature gradient measured over a depth interval.
 
 The mean thermal conductivity over a depth interval.
 
-**Key features**
+**Key Features**
 
 - Reaches its interval through `Measurement.sample`
 - Records the sample source, the location the value came from, the determination method, the saturation state and the pressure-temperature conditions
 - `score` is computed from those properties following Fuchs et al. (2023) and lands between 0.2 and 1.2
 
-**Rules**
+**Business Rules**
 
 - Its sample must be a `HeatFlowInterval`, raised on `save()`
 - Uncertainty may not exceed the value itself
@@ -389,13 +389,13 @@ The mean thermal conductivity over a depth interval.
 
 The editorial record of a dataset being reviewed before publication.
 
-**Key features**
+**Key Features**
 
 - One review per dataset and per literature item, both one-to-one
 - Names the people who carried it out through the `reviewers` relation, so a review may have several
 - Tracks start and completion dates as partial dates, and a status of open, pending or complete
 
-**Rules**
+**Business Rules**
 
 - A start date later than the completion date is refused on `save()`
 
@@ -405,7 +405,7 @@ A published release of the database: its version, date, description and the file
 
 ## Data Flow
 
-### Creating a heat flow measurement
+### Creating a Heat Flow Measurement
 
 ```mermaid
 flowchart TD
@@ -420,7 +420,7 @@ flowchart TD
     H --> I[Include in a GHFDBRelease]
 ```
 
-### Quality score inheritance
+### Quality Score Inheritance
 
 The parent heat flow quality is determined by:
 
