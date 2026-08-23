@@ -114,3 +114,29 @@ class TestFixtures:
         assert missing.thermal_gradient is not None
         assert missing.thermal_conductivity is not None
         assert hasattr(missing.sample, "probe_metadata")
+
+    def test_sites_by_contribution_covers_the_four_shapes(self, sites_by_contribution):
+        """T008: the four contribution shapes SC-004 names, and one site
+        carrying two exploration purposes so the many-valued parent column
+        is exercised."""
+        all_contributing = sites_by_contribution["all_contributing"]
+        some_contributing = sites_by_contribution["some_contributing"]
+        none_contributing = sites_by_contribution["none_contributing"]
+        no_determinations = sites_by_contribution["no_determinations"]
+
+        assert all_contributing.children.count() == 2
+        assert all_contributing.children.filter(is_relevant=True).count() == 2
+
+        assert some_contributing.children.count() == 2
+        assert some_contributing.children.filter(is_relevant=True).count() == 1
+
+        assert none_contributing.children.count() == 2
+        assert none_contributing.children.filter(is_relevant=True).count() == 0
+
+        assert no_determinations.children.count() == 0
+
+        purpose_counts = {
+            parent.sample.explo_purpose.count()
+            for parent in sites_by_contribution.values()
+        }
+        assert 2 in purpose_counts

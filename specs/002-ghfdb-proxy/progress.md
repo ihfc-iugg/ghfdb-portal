@@ -130,3 +130,20 @@ tests/test_ghfdb/test_models.py -q` -> `8 passed`.
 Next: T008, the `sites_by_contribution` fixture.
 
 Watch: nothing.
+
+## 2026-08-24T00:58:00Z · Implementer foundations · T008
+
+Did: Added the `sites_by_contribution` fixture, building four sites with
+`build_site_and_parent`/`build_child`: all children `is_relevant=True`, some,
+none, and one site with zero children. The `all_contributing` site's
+`HeatFlowSite.explo_purpose` (a `ConceptManyToManyField`) is set to two
+`ExplorationPurpose` concepts, exercising the one many-valued parent column SC-004
+calls out. Added `TestFixtures::test_sites_by_contribution_covers_the_four_shapes`.
+
+Verified: RED observed directly — ran the new test before the fixture existed, got a
+fixture-not-found error. After implementing, it passed first try; `poetry run pytest
+tests/test_ghfdb/test_models.py -q` -> `9 passed`.
+
+Next: T009, the `staff_client` fixture.
+
+Watch: nothing.

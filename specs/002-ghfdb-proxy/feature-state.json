@@ -117,8 +117,9 @@
         },
         {
           "id": "T008",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": "sites_by_contribution fixture added to conftest.py, building four sites (all/some/none/no determinations), one carrying two exploration purposes; TestFixtures::test_sites_by_contribution_covers_the_four_shapes added; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 9 passed"
         },
         {
           "id": "T009",

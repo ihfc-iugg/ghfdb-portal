@@ -392,3 +392,46 @@ def chain_missing_correction(dataset):
         return build_published_chain(dataset, missing_correction=correction_type)
 
     return build
+
+
+@pytest.fixture
+def sites_by_contribution(dataset):
+    """Four sites covering SC-004's contribution shapes (T008).
+
+    Returns a dict keyed by shape name: every determination contributing,
+    some, none, and one site with no determinations at all. The
+    ``all_contributing`` site also carries two exploration purposes, so the
+    one many-valued parent column is exercised — without it nothing would
+    notice a site rendering twice.
+    """
+    from research_vocabs.models import Concept
+
+    from heat_flow.vocabularies import ExplorationPurpose
+
+    purposes = list(Concept.get_for_vocabulary(ExplorationPurpose)[:2])
+
+    def make_site(name, relevance_flags, ghfdb_id):
+        parent = build_site_and_parent(dataset, name=name, ghfdb_id=ghfdb_id)
+        for offset, is_relevant in enumerate(relevance_flags, start=1):
+            build_child(
+                dataset,
+                parent,
+                is_relevant=is_relevant,
+                ghfdb_id=ghfdb_id * 10 + offset,
+                name=f"{name} child {offset}",
+            )
+        return parent
+
+    all_contributing = make_site("All contributing", [True, True], ghfdb_id=1)
+    all_contributing.sample.explo_purpose.set(purposes)
+
+    some_contributing = make_site("Some contributing", [True, False], ghfdb_id=2)
+    none_contributing = make_site("None contributing", [False, False], ghfdb_id=3)
+    no_determinations = make_site("No determinations", [], ghfdb_id=4)
+
+    return {
+        "all_contributing": all_contributing,
+        "some_contributing": some_contributing,
+        "none_contributing": none_contributing,
+        "no_determinations": no_determinations,
+    }
