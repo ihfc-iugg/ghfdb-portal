@@ -592,6 +592,41 @@ class TestParentFlattening:
 
         constant_query_count(published_chains, call)
 
+    @pytest.mark.django_db
+    def test_the_colliding_site_name_is_annotated_distinctly(self, published_chain):
+        """T048 (FR-011): the published ``name`` column is annotated under a
+        distinct name because the framework's base class declares ``name``,
+        and the published name is restored at the surface that presents
+        it."""
+        from heat_flow.models import ParentHeatFlow
+
+        from project.ghfdb.models import GHFDBParent
+
+        parent = published_chain.parent
+        record = GHFDBParent.objects.as_ghfdb_flat().get(pk=parent.pk)
+
+        assert hasattr(ParentHeatFlow, "name")
+        assert record.site_name == parent.sample.name
+
+    @pytest.mark.django_db
+    def test_a_column_that_does_not_collide_keeps_its_published_name(
+        self, published_chain
+    ):
+        """T049 (FR-011): elevation is annotated as ``elevation``, not under
+        a prefix. D6 settles this, and the rule is only readable if a
+        non-colliding case is pinned alongside a colliding one."""
+        from project.ghfdb.models import GHFDBParent
+
+        site = published_chain.parent.sample
+        site.elevation = 123.0
+        site.save(update_fields=["elevation"])
+
+        record = GHFDBParent.objects.as_ghfdb_flat().get(
+            pk=published_chain.parent.pk
+        )
+
+        assert getattr(record.elevation, "magnitude", record.elevation) == 123.0
+
 
 # ---------------------------------------------------------------------------
 # Phase 3b: GHFDBParent proxy queryset tests (T066–T069)
