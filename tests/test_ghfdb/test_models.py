@@ -148,3 +148,38 @@ class TestFixtures:
 
         response = staff_client.get(reverse("admin:index"))
         assert response.status_code == 200
+
+
+class TestConstantQueryCount:
+    """T010: the query-constancy gate (R2), proven against the defect it
+    exists to catch rather than only against the passing case."""
+
+    def test_a_linear_callable_is_rejected(self, constant_query_count, db):
+        """A callable whose query count grows with row count must fail the
+        gate."""
+        from django.contrib.contenttypes.models import ContentType
+
+        state = {"rows": 0}
+
+        def build(count):
+            state["rows"] = count
+
+        def call():
+            for _ in range(state["rows"]):
+                ContentType.objects.count()
+
+        with pytest.raises(pytest.fail.Exception):
+            constant_query_count(build, call)
+
+    def test_a_constant_callable_is_accepted(self, constant_query_count, db):
+        """A callable whose query count does not depend on row count must
+        pass the gate."""
+        from django.contrib.contenttypes.models import ContentType
+
+        def build(count):
+            pass
+
+        def call():
+            ContentType.objects.count()
+
+        constant_query_count(build, call)

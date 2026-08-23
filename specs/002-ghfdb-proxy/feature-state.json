@@ -129,8 +129,9 @@
         },
         {
           "id": "T010",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": "constant_query_count fixture added to conftest.py; TestConstantQueryCount (linear-rejected, constant-accepted) added; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 12 passed"
         },
         {
           "id": "T011",

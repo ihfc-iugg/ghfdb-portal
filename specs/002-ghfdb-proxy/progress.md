@@ -169,3 +169,24 @@ first positional argument, not `username` — so the fixture uses `email=`, not
 Next: T010, the `constant_query_count` gate.
 
 Watch: nothing.
+
+## 2026-08-24T01:15:00Z · Implementer foundations · T010
+
+Did: Added the `constant_query_count` fixture — runs `build(low)`, captures the query
+count `call()` issues via `CaptureQueriesContext`, runs `build(high)`, then asserts
+`call()` issues the same count again through `django_assert_num_queries`, comparing
+the two counts to each other rather than to a literal (R2). Added
+`TestConstantQueryCount` with two cases: a callable whose query count scales with a
+mutable row count (must be rejected) and one that always issues one query (must be
+accepted).
+
+Verified: RED observed directly — ran both new tests before the fixture existed, got
+fixture-not-found errors for both. After implementing, both passed first try — the
+linear case raises inside `django_assert_num_queries`, caught by
+`pytest.raises(pytest.fail.Exception)`, and the constant case passes clean.
+`poetry run pytest tests/test_ghfdb/test_models.py -q` -> `12 passed`.
+
+Next: none — T001-T010 (Phase 1 foundations) are complete. US-1 (T011+) is out of
+this story's scope.
+
+Watch: nothing.

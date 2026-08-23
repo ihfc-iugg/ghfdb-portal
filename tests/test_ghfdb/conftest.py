@@ -461,3 +461,28 @@ def staff_client(client, db):
     user.user_permissions.set(permissions)
     client.force_login(user)
     return client
+
+
+@pytest.fixture
+def constant_query_count(django_assert_num_queries):
+    """Assert a callable's query count does not grow with row count (R2, T010).
+
+    Runs *build(low)* then measures *call*'s query count, runs *build(high)*
+    and asserts *call* issues the same count again — the two counts are
+    compared to each other, never to a literal, which is what distinguishes
+    a constant query plan from a linear one satisfied at a single row count.
+    """
+
+    def assert_constant(build, call, low=2, high=4):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        build(low)
+        with CaptureQueriesContext(connection) as baseline:
+            call()
+
+        build(high)
+        with django_assert_num_queries(len(baseline.captured_queries)):
+            call()
+
+    return assert_constant
