@@ -135,6 +135,73 @@ class TestGHFDBChildQuerySet:
         assert len(ordered) >= 1
 
 
+class TestGHFDBChildManager:
+    """``GHFDBChildManager``'s default scoping (T013–T015)."""
+
+    @pytest.mark.django_db
+    def test_determination_without_a_published_identifier_is_absent(
+        self, unpublished_chain
+    ):
+        """T013 (FR-002, SC-005): the unpublished chain's determination is
+        absent from ``GHFDBChild.objects``, and present on ``HeatFlow.objects``
+        so the fixture is proven to exist."""
+        from heat_flow.models import HeatFlow
+        from project.ghfdb.models import GHFDBChild
+
+        assert HeatFlow.objects.filter(pk=unpublished_chain.pk).exists()
+        assert not GHFDBChild.objects.filter(pk=unpublished_chain.pk).exists()
+
+    @pytest.mark.django_db
+    def test_scope_survives_filtering_ordering_counting_slicing_and_chaining(
+        self, published_chain, unpublished_chain
+    ):
+        """T014 (FR-002, FR-003, SC-005): the published-only restriction
+        holds after each operation, and after two chained together. R6
+        records that the manager alone proves less than it appears to."""
+        from project.ghfdb.models import GHFDBChild
+
+        unpublished_pk = unpublished_chain.pk
+
+        assert unpublished_pk not in set(
+            GHFDBChild.objects.filter(pk__gt=0).values_list("pk", flat=True)
+        )
+        assert unpublished_pk not in set(
+            GHFDBChild.objects.order_by("pk").values_list("pk", flat=True)
+        )
+        assert GHFDBChild.objects.count() == 1
+        assert unpublished_pk not in {
+            record.pk for record in GHFDBChild.objects.all()[:10]
+        }
+        assert unpublished_pk not in set(
+            GHFDBChild.objects.filter(pk__gt=0)
+            .order_by("pk")
+            .values_list("pk", flat=True)
+        )
+
+    @pytest.mark.django_db
+    def test_ordinary_operations_match_the_model_it_stands_in_for(
+        self, published_chain, unpublished_chain
+    ):
+        """T015 (FR-003): filtering, ordering, counting and slicing through
+        the proxy return what the same operations return on ``HeatFlow``
+        restricted to published rows."""
+        from heat_flow.models import HeatFlow
+        from project.ghfdb.models import GHFDBChild
+
+        reference = HeatFlow.objects.filter(ghfdb_id__isnull=False)
+
+        assert GHFDBChild.objects.count() == reference.count()
+        assert set(GHFDBChild.objects.values_list("pk", flat=True)) == set(
+            reference.values_list("pk", flat=True)
+        )
+        assert list(GHFDBChild.objects.order_by("pk").values_list("pk", flat=True)) == list(
+            reference.order_by("pk").values_list("pk", flat=True)
+        )
+        assert list(
+            GHFDBChild.objects.order_by("pk")[:1].values_list("pk", flat=True)
+        ) == list(reference.order_by("pk")[:1].values_list("pk", flat=True))
+
+
 # ---------------------------------------------------------------------------
 # Phase 3b: GHFDBParent proxy queryset tests (T066–T069)
 # ---------------------------------------------------------------------------
