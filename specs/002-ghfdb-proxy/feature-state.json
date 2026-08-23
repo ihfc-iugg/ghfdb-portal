@@ -484,13 +484,29 @@
       "tasks": [
         {
           "id": "T042",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/models.py:63"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_models.py::TestGHFDBParentModel::test_proxy_adds_no_table"
+            ]
+          }
         },
         {
           "id": "T043",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/models.py:63"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_models.py::TestGHFDBParentModel::test_meta_carries_translated_verbose_names"
+            ]
+          }
         },
         {
           "id": "T044",
@@ -507,93 +523,241 @@
         },
         {
           "id": "T045",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:278"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestGHFDBParentManager::test_scope_survives_filtering_ordering_counting_slicing_and_chaining"
+            ]
+          }
         },
         {
           "id": "T046",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:244"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestParentFlattening::test_every_scalar_published_parent_column_resolves_on_every_row"
+            ]
+          }
         },
         {
           "id": "T047",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:244"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestParentFlattening::test_query_count_is_equal_at_two_row_counts"
+            ]
+          }
         },
         {
           "id": "T048",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:265"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestParentFlattening::test_the_colliding_site_name_is_annotated_distinctly"
+            ]
+          }
         },
         {
           "id": "T049",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:268"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestParentFlattening::test_a_column_that_does_not_collide_keeps_its_published_name"
+            ]
+          }
         },
         {
           "id": "T050",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:216"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestParentCounts::test_counts_are_correct_for_all_some_and_no_contributing_determinations"
+            ]
+          }
         },
         {
           "id": "T051",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:216"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestParentCounts::test_a_site_with_no_determinations_counts_zero_rather_than_empty"
+            ]
+          }
         },
         {
           "id": "T052",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:216"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestParentCounts::test_query_count_is_equal_at_two_row_counts"
+            ]
+          }
         },
         {
           "id": "T053",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:235"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestParentChildAttachment::test_reading_each_sites_determinations_costs_no_query_per_site"
+            ]
+          }
         },
         {
           "id": "T054",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:235"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestParentChildAttachment::test_query_count_is_equal_at_two_row_counts"
+            ]
+          }
         },
         {
           "id": "T055",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:244",
+              "project/ghfdb/managers.py:235"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestParentPublishedColumns::test_every_published_parent_column_resolves_on_the_complete_row"
+            ]
+          }
         },
         {
           "id": "T056",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/models.py:63"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_models.py::TestGHFDBParentModel::test_proxy_adds_no_table"
+            ]
+          }
         },
         {
           "id": "T057",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/migrations/0003_ghfdbchild_ghfdbparent.py"
+            ],
+            "tests": [
+              "tests/test_migrations.py::TestGHFDBParentProxyMigrations::test_the_create_model_is_a_bare_proxy"
+            ]
+          }
         },
         {
           "id": "T058",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:278",
+              "project/ghfdb/managers.py:289"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestGHFDBParentManager::test_scope_survives_filtering_ordering_counting_slicing_and_chaining"
+            ]
+          }
         },
         {
           "id": "T059",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:244"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestParentFlattening::test_every_scalar_published_parent_column_resolves_on_every_row"
+            ]
+          }
         },
         {
           "id": "T061",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:216"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestParentCounts::test_counts_are_correct_for_all_some_and_no_contributing_determinations"
+            ]
+          }
         },
         {
           "id": "T062",
-          "status": "todo",
-          "attempts": 0
+          "status": "blocked",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:235"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestParentChildAttachment::test_reading_each_sites_determinations_costs_no_query_per_site",
+              "tests/test_ghfdb/test_managers.py::TestParentChildAttachment::test_query_count_is_equal_at_two_row_counts"
+            ],
+            "blocked": "decisions.md D11: the explo_purpose prefetch conflicts with the pre-existing TestGHFDBParentQuerySet::test_parent_with_children_no_extra_queries (django_assert_max_num_queries(3)); the children-attachment half T062 also covers (T053, T054) is done."
+          }
         },
         {
           "id": "T122",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/models.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_models.py::TestGHFDBParentModel::test_no_dictionary_accessor"
+            ]
+          }
         }
       ]
     },
