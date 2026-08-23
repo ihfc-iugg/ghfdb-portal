@@ -672,6 +672,18 @@ class TestParentCounts:
         assert record.total_children is not None
         assert record.relevant_children is not None
 
+    @pytest.mark.django_db
+    def test_query_count_is_equal_at_two_row_counts(
+        self, constant_query_count, published_chains
+    ):
+        """T052 (FR-009, SC-003)."""
+        from project.ghfdb.models import GHFDBParent
+
+        def call():
+            list(GHFDBParent.objects.with_child_counts())
+
+        constant_query_count(published_chains, call)
+
 
 # ---------------------------------------------------------------------------
 # Phase 3b: GHFDBParent proxy queryset tests (T066–T069)
