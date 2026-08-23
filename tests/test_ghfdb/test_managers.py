@@ -137,6 +137,86 @@ class TestGHFDBChildQuerySet:
         assert len(ordered) >= 1
 
 
+class TestChildExportQuerySet:
+    """``for_export()``'s complete row (T024, T025, T027, T041).
+
+    R3: seventeen published child columns are many-valued and cannot be
+    annotated, so the complete row is read after ``for_export()`` rather
+    than after ``as_ghfdb_flat()`` alone.
+    """
+
+    # Accessors for the CHILD_COLUMNS reachable only through a many-to-many
+    # relation, whose accessor differs from the published column name for
+    # most of them. No canonical column-to-accessor mapping exists yet
+    # (that is 003-ghfdb-import-export's columns.py); this is test-only
+    # scaffolding, not a copy of a list constants.py already holds.
+    MANY_VALUED_CHILD_ACCESSORS = {
+        "q_method": lambda row: row.method.all(),
+        "probe_type": (
+            lambda row: row.sample.heatflowinterval.probe_metadata.probe_type.all()
+        ),
+        "geo_lithology": lambda row: row.sample.heatflowinterval.lithology.all(),
+        "geo_stratigraphy": lambda row: row.sample.heatflowinterval.stratigraphy.all(),
+        "T_method_top": lambda row: row.thermal_gradient.method_top.all(),
+        "T_method_bottom": lambda row: row.thermal_gradient.method_bottom.all(),
+        "T_corr_top": lambda row: row.thermal_gradient.correction_top.all(),
+        "T_corr_bottom": lambda row: row.thermal_gradient.correction_bottom.all(),
+        "tc_source": lambda row: row.thermal_conductivity.source.all(),
+        "tc_location": lambda row: row.thermal_conductivity.location.all(),
+        "tc_method": lambda row: row.thermal_conductivity.method.all(),
+        "tc_saturation": lambda row: row.thermal_conductivity.saturation.all(),
+        "tc_pT_conditions": lambda row: row.thermal_conductivity.pT_conditions.all(),
+        "tc_pT_function": lambda row: row.thermal_conductivity.pT_function.all(),
+        "tc_strategy": lambda row: row.thermal_conductivity.strategy.all(),
+    }
+
+    NOTHING_RESOLVES_CHILD_COLUMNS = frozenset(
+        {"Ref_IGSN", "publication_reference", "data_reference"}
+    )
+
+    @pytest.mark.django_db
+    def test_every_published_child_column_resolves_on_the_complete_row(
+        self, published_chain
+    ):
+        """T024 (SC-001): every CHILD_COLUMNS entry — scalar, many-valued
+        and the three that resolve to nothing — is readable on the row
+        after ``for_export()``."""
+        from project.ghfdb.constants import CHILD_COLUMNS
+        from project.ghfdb.models import GHFDBChild
+
+        record = GHFDBChild.objects.for_export().get(pk=published_chain.pk)
+
+        for column in CHILD_COLUMNS:
+            accessor = self.MANY_VALUED_CHILD_ACCESSORS.get(column)
+            if accessor is not None:
+                accessor(record)
+            else:
+                getattr(record, column)
+
+    @pytest.mark.django_db
+    def test_query_count_is_equal_at_two_row_counts(
+        self, constant_query_count, published_chains
+    ):
+        """T025 (FR-007, SC-003)."""
+        from project.ghfdb.models import GHFDBChild
+
+        def call():
+            list(GHFDBChild.objects.for_export())
+
+        constant_query_count(published_chains, call)
+
+    @pytest.mark.django_db
+    def test_columns_nothing_resolves_are_present_and_empty(self, published_chain):
+        """T027 (FR-006): Ref_IGSN, publication_reference and
+        data_reference are on the row and empty, per R4 and D3."""
+        from project.ghfdb.models import GHFDBChild
+
+        record = GHFDBChild.objects.for_export().get(pk=published_chain.pk)
+
+        for column in self.NOTHING_RESOLVES_CHILD_COLUMNS:
+            assert getattr(record, column) == ""
+
+
 class TestGHFDBChildManager:
     """``GHFDBChildManager``'s default scoping (T013–T015)."""
 

@@ -18,7 +18,7 @@ References:
 
 from typing import Any, cast
 
-from django.db.models import CharField, Count, F, OuterRef, Q, Subquery
+from django.db.models import CharField, Count, F, OuterRef, Q, Subquery, Value
 from polymorphic.managers import PolymorphicManager, PolymorphicQuerySet
 
 
@@ -135,6 +135,13 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
             ),
             "probe_length": F("sample__heatflowinterval__probe_metadata__length"),
             "probe_tilt": F("sample__heatflowinterval__probe_metadata__tilt"),
+            # Columns nothing resolves (R4, D3): HeatFlow has no reference
+            # relationship at all, and no field for an IGSN. Explicitly
+            # empty rather than a defensive getattr, so a reader cannot
+            # mistake a guard for a working accessor.
+            "Ref_IGSN": Value("", output_field=CharField()),
+            "publication_reference": Value("", output_field=CharField()),
+            "data_reference": Value("", output_field=CharField()),
         }
 
         qs = qs.annotate(**scalar_annotations)
