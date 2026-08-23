@@ -14,19 +14,24 @@ Baseline the reconciliation was measured against: `poetry run pytest tests/test_
 
 ## The split
 
+Revised after the design review, which challenged every closure. Three of the six survived.
+
 | | Tasks |
 |---|---|
-| Closed — code cited and a passing test that covers it | **6** |
-| Open — built, but the test does not reach the task's claim | **41** |
-| Open — never built | **74** |
-| **Total** | **121** |
+| Closed — code cited and a passing test that covers it | **3** |
+| Open — built, but the test does not reach the task's claim | **37** |
+| Open — never built | **76** |
+| **Total** | **116** |
+
+The total moved from 121 because the review collapsed seven tasks that decomposed a single
+dictionary literal into per-block dispatches, and added two the audit had missed.
 
 The shape of that split is the finding. Most of this feature's production code exists and works.
 What is missing is a test suite that would notice if it stopped working, and one structural change —
 the published-column mapping — that nothing in the repository has any form of.
 
-Two open tasks are defects rather than absences, and both were found by writing the list greenfield
-rather than by reading the code:
+Five open tasks are defects rather than absences. Two were found by writing the list greenfield
+rather than by reading the code, and three more by the design review that challenged it:
 
 - **The site changelist exposes an export it was specified not to have.** FR-021 gives the export
   resource to the determination changelist and to nothing else. `GHFDBParentAdmin` inherits
@@ -35,6 +40,26 @@ rather than by reading the code:
   generated resource. The test that was meant to prove the requirement asserts the import classes
   and stops (`tests/test_ghfdb/test_admin.py:399`), so it passes over the half that is wrong. T109,
   T110 and T119.
+- **The site flattening method returns one row per exploration purpose.** `explo_purpose` is a
+  many-to-many field on the site, and the parent queryset annotates it with `F()`
+  (`project/ghfdb/managers.py:263`), contradicting its own docstring five lines above. Measured: a
+  site carrying two exploration purposes comes back as two rows, and chaining the counts onto it does
+  not collapse them. Nothing catches it today because the method has no caller, and T115 gives it
+  one. T059 now excludes the column and T062 prefetches it instead, which is what R3 already says
+  many-valued columns get.
+- **Four changelist headings are already wrong, for a reason the plan would have reproduced.** Django
+  resolves a `list_display` entry against the model's fields before the admin's attributes, and reads
+  `short_description` only when no field matches. So a column named after a model field takes the
+  field's `verbose_name`: `expedition` renders as "expedition/platform/ship", `c_comment` as
+  "comment", `water_temperature` as "bottom water temperature", and the leading identifier as "ID
+  Child". All four measured. The mapping would have inherited the fault, because it binds callables
+  under published names. T077 now requires the entries to be named differently from the columns they
+  render, and T070, T079 and T099 assert rendered headings rather than entry names.
+- **The import route writes without consulting any read-only guarantee.** Both registrations declare
+  no add, no change and no delete, and both inherit an import action that `django-import-export`
+  grants to any staff user whenever `IMPORT_EXPORT_IMPORT_PERMISSION_CODE` is unset — verified unset
+  in this project. T085 and T105 prove read-only by asserting three hooks the import path never
+  reaches. T123 covers it.
 - **The search test cannot fail.** `test_ghfdb_admin_search_by_name_and_id_parent`
   (`tests/test_ghfdb/test_admin.py:127`) issues two search requests and asserts `status_code == 200`
   on each. A search matching nothing returns 200. Neither assertion can distinguish working search
@@ -46,15 +71,27 @@ rather than by reading the code:
 |---|---|---|
 | T013 — the determination manager hides unpublished rows | `project/ghfdb/managers.py:178` | `tests/test_ghfdb/test_managers.py:215` |
 | T044 — the site manager hides unpublished rows | `project/ghfdb/managers.py:278` | `tests/test_ghfdb/test_managers.py:240` |
-| T049 — a column that does not collide keeps its published name | `project/ghfdb/managers.py:102` | `tests/test_ghfdb/test_resources/test_managers.py:74` |
-| T078 — the determination changelist renders for a staff user | `project/ghfdb/admin.py:129` | `tests/test_ghfdb/test_admin.py:97` |
 | T089 — it carries the determination import resource and the export resource | `project/ghfdb/admin.py:231` | `tests/test_ghfdb/test_admin.py:110` |
-| T098 — the site changelist renders for a staff user | `project/ghfdb/admin.py:511` | `tests/test_ghfdb/test_admin.py:375` |
 
 Both scoping closures are genuine: each builds an unpublished record, proves it exists through the
-underlying model's own manager, and asserts it is absent from the proxy's. T049 is the one closure
-that settles a disagreement — it pins `elevation` under its published name, which is the side D6
-rules correct.
+underlying model's own manager, and asserts it is absent from the proxy's. T089's test covers the
+import attachment and the export attachment, which is the whole of what the task claims.
+
+### Three closures the design review reversed
+
+The reconciliation lens exists because this stage is the one most likely to be wrong and its error
+is silent. It found three, and all three stand.
+
+- **T049 was closed on the wrong model.** It is a parent-flattening task, and both citations were
+  child-side: `managers.py:102` is the determination queryset's elevation annotation, and the cited
+  test asserts a key on `GHFDBChild.objects.none()`. The same test class is disqualified as
+  insufficient for T016 a few rows below, for exactly the reason that should have disqualified it
+  here — it checks that a key exists, never that a value resolves on a row.
+- **T078 and T098 were closed on a superuser**, while T009 is held open on the grounds that a
+  superuser is not the staff user the tasks name. The same evidence cannot be sufficient in one row
+  and insufficient in another. A superuser bypasses view-permission checks entirely, so neither test
+  can detect a registration unreachable for the audience the specification names. The remaining work
+  on each is one line once T009's fixture exists.
 
 ## Open — built, but the test does not reach the task's claim
 
@@ -65,7 +102,7 @@ will force.
 
 | Task | Built at | What remains |
 |---|---|---|
-| T002 vocabulary preload | `tests/test_ghfdb/conftest.py:17` | nothing asserts the fixture's contract; every other test depends on it silently |
+| T002 vocabulary preload | `tests/test_ghfdb/conftest.py:17` | nothing asserts the fixture's contract, and every other test depends on it silently |
 | T003 dataset fixture | `tests/test_ghfdb/conftest.py:30` | the same |
 | T004 one complete chain | `tests/test_ghfdb/conftest.py:36` | the fixture builds the full graph with both published identifiers set; no test asserts it is complete, so a silently truncated fixture would weaken every test that takes it |
 | T009 staff client | pytest-django's `admin_client`, used throughout | a superuser is not the staff user with view permission the task names, so no test proves the changelists are reachable on view permission alone |
@@ -74,7 +111,7 @@ will force.
 
 | Task | Built at | What remains |
 |---|---|---|
-| T011 the proxy adds no table | `project/ghfdb/models.py:57` | `tests/test_ghfdb/test_models.py:11` asserts `Meta.proxy`; it does not assert the table is `HeatFlow`'s or that no local field is declared |
+| T011 the proxy adds no table | `project/ghfdb/models.py:57` | `tests/test_ghfdb/test_models.py:11` asserts `Meta.proxy`, and does not assert the table is `HeatFlow`'s or that no local field is declared |
 | T012 translated verbose names | `project/ghfdb/models.py:59` | the names are asserted as strings; the lazy wrapper is not |
 | T014 scoping survives chaining | `project/ghfdb/managers.py:178` | proven on the manager only. R6 records why that proves less than it looks |
 | T015 ordinary operations match the model | `project/ghfdb/managers.py:49` | `test_managers.py:118` covers count, filter and order_by; slicing is absent, and nothing compares the result against `HeatFlow` restricted to published rows |
@@ -87,7 +124,7 @@ will force.
 | T024 every column resolves on the complete row | `project/ghfdb/managers.py:143` | nothing reads the seventeen many-valued columns off an export row |
 | T025 export query count equal at two row counts | `project/ghfdb/managers.py:152` | `test_managers.py:106` bounds at sixteen queries on one chain |
 | T026 many-valued columns read without further queries | `project/ghfdb/managers.py:152` | the sixteen-query bound covers evaluation, not the zero-query read after it |
-| T031–T038 the annotation blocks | `project/ghfdb/managers.py:78–141` | each block exists. They close when T016, T017 and T018 do |
+| T031, T032 the spine and the scalar annotation set | `project/ghfdb/managers.py:78`, `:89` | both exist. They close when T016, T017 and T018 do. The review collapsed the seven per-block tasks into T032, because they decomposed one dictionary literal into seven dispatches that would have collided on it |
 | T040 the export queryset | `project/ghfdb/managers.py:143` | closes when T024, T025 and T026 do |
 
 T027, T039 and T041 are not in this group. See "never built".
@@ -96,6 +133,7 @@ T027, T039 and T041 are not in this group. See "never built".
 
 | Task | Built at | What remains |
 |---|---|---|
+| T049 a non-colliding parent column keeps its published name | `project/ghfdb/managers.py:260` | nothing reads the value off a row. The only parent-side key assertion is also `.none()`-based and sits behind a dead conditional skip (`tests/test_ghfdb/test_resources/test_managers.py:189`) |
 | T042 the proxy adds no table | `project/ghfdb/models.py:84` | as T011 |
 | T043 translated verbose names | `project/ghfdb/models.py:86` | as T012 |
 | T045 scoping survives chaining | `project/ghfdb/managers.py:278` | as T014 |
@@ -107,12 +145,14 @@ T027, T039 and T041 are not in this group. See "never built".
 | T053 attachment costs no query per site | `project/ghfdb/managers.py:231` | `test_managers.py:177` bounds evaluation and iteration together at three queries on one site. A per-site query would not breach that bound at one site |
 | T054 attachment query equal at two row counts | `project/ghfdb/managers.py:231` | as T053 |
 | T055 every parent column on the complete row | `project/ghfdb/managers.py:233` | the one many-valued parent column is never read off a row |
-| T059–T062 the parent blocks and methods | `project/ghfdb/managers.py:196–268` | each exists. They close when the tests above do |
+| T059, T061, T062 the parent annotation set and its two methods | `project/ghfdb/managers.py:248`, `:216`, `:231` | each exists. They close when the tests above do. T060 folded into T059, and T059 now excludes `explo_purpose` — see the defects above |
 
 ### Phase 4 — the changelists
 
 | Task | Built at | What remains |
 |---|---|---|
+| T078 the determination changelist renders for a staff user | `project/ghfdb/admin.py:129` | the test takes a superuser, so nothing proves the page is reachable on view permission alone |
+| T098 the site changelist renders for a staff user | `project/ghfdb/admin.py:511` | as T078. Its test additionally asserts the heading `quality`, which D2 rules must read `quality_parent`, so the run edits the test it was closed on |
 | T079 published columns in canonical order | `project/ghfdb/admin.py:147` | `test_admin.py:17` asserts against a literal copy of the list, which is the third copy. The current order also disagrees with `constants.py` on three names and on the order of the last two (D2) |
 | T080 four orientation columns and no fifth | `project/ghfdb/admin.py:147` | the leading columns are right; nothing asserts there is no fifth |
 | T081 site values not restated per row | `project/ghfdb/admin.py:147` | true of the code, asserted nowhere |
@@ -181,6 +221,9 @@ is the mechanical way FR-020 is discharged for the display, filter and search de
 
 **Resource exclusivity — T110, and the corrected T109 and T119.** The site changelist's export path
 is live and specified not to be, as recorded in the split above.
+
+**Two tasks the audit missed, added by the review — T122, T123.** D7 rules that
+`GHFDBParent.as_dict()` is removed and no task did it. And the import route named above.
 
 **Migrations — T029, T057.** Both proxies are recorded
 (`project/ghfdb/migrations/0002_ghfdb.py`, `0003_ghfdbchild_ghfdbparent.py`), and `tests/

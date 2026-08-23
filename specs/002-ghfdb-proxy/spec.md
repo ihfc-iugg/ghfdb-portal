@@ -40,7 +40,7 @@ database are visible at all.
 Both are registered as read-only admin changelists. Those changelists are how the assessment team
 reads the database, and they are built for people who know the published file. The columns carry
 the published names and appear in the published order, so a curator can find a record and read it
-without translating between two vocabularies. Search and filters scoped to their vocabularies make
+without translating between two sets of column names. Search and filters scoped to their vocabularies make
 that workable across the whole database, not just the page on screen.
 
 The proxies are also the surface the import and export resources attach to. Those resources, and
@@ -123,7 +123,7 @@ grow with the number of sites.
 
 A member of the assessment team opens the portal's administrative interface to check a record. They
 know the published file's column names and the order they come in, and they should not have to
-learn a second vocabulary to read the same data here.
+learn a second set of names to read the same data here.
 
 **Why this priority**: it is what makes the stored model usable by the people who maintain the
 database, and a changelist in an unfamiliar order costs their time on every visit rather than once.

@@ -171,3 +171,26 @@ domain. The final reading dropped them, while FR-014 continued to require filter
 specification now says so: the published parent columns come first in published order, then the
 geography, then the two counts. A filter the user cannot see the value of is worth less than one
 they can.
+
+### D9 — What the design review reversed
+
+The reconciliation was reviewed by an independent reviewer whose brief was to assume every closure
+was wrong. Three of six were.
+
+**T049** was closed on the determination queryset's elevation annotation and its test, for a task
+about the site queryset. The test asserts a key on an empty queryset, and the same test class is
+rejected as insufficient for a neighbouring task a few rows below in the same file.
+
+**T078 and T098** were closed on tests taking a superuser client, while a third task was held open
+on the grounds that a superuser is not the staff user the tasks name.
+
+**Ruled**: all three reopened. The pattern in both is the same and worth naming, because it is what
+the fourth lens exists to catch: evidence was accepted in one row on grounds that had already been
+rejected in another. Consistency within the reconciliation is the check, and it is one a reader can
+apply without re-deriving the verdicts.
+
+The review also found three defects the reconciliation had not: a many-valued column annotated with
+`F()` that duplicates rows, four changelist headings Django never reads because the entries are
+named after model fields, and an import route that writes without consulting any of the three
+read-only hooks the tests assert. Each is recorded in `reconciliation.md` with its measurement, and
+each has a task.

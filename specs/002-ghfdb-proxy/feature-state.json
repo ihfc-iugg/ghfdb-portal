@@ -17,6 +17,16 @@
       "state": "PLAN",
       "at": "2026-08-23T21:30:00Z",
       "note": "tasks written greenfield, then reconciled"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-08-23T22:10:00Z",
+      "note": "four lenses; three of six closures reversed"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-08-23T22:40:00Z",
+      "note": "review applied: 7 tasks collapsed, 2 added, 3 closures reopened"
     }
   ],
   "gates": {
@@ -31,6 +41,27 @@
     "merge": {
       "approved_by": null,
       "at": null
+    },
+    "design_review": {
+      "approved_by": "design-panel",
+      "at": "2026-08-23T22:10:00Z",
+      "self_resolved": [
+        "RECON-001 high: T049 closed on the child queryset for a parent task - reopened",
+        "RECON-002 medium: T078 and T098 closed on a superuser while T009 held open for it - both reopened",
+        "ARCH-001 high: headings unreachable for columns named after model fields - T077 rebound, T070/T079/T099 assert rendered headings",
+        "SPEC-001 high: explo_purpose annotated with F() over an M2M duplicates rows - T059 excludes it, T062 prefetches it",
+        "SPEC-002 medium: T081 contradicted T080 - reworded to an equality against the orientation set",
+        "SEC-001 medium: import route writes without consulting the read-only hooks - added T123",
+        "ARCH-002 medium: seven tasks decomposed one dict literal - collapsed into T032 and T059",
+        "ARCH-003 medium: T120/T121 depend on US-1 - dependency recorded in the plan's sequencing rather than split into a lane with no issue",
+        "ARCH-004 medium: US-1 and US-2 share five files - sequencing corrected",
+        "ARCH-005 low: the filter generalisation spans two lookup modes - T095 takes the mode",
+        "RECON-003 low: D7's as_dict removal had no task - added T122",
+        "SPEC-003 medium: plan.md lacked the constitution's required Constitution Check - added",
+        "SPEC-004 low: T080 miscounted the coordinate columns - corrected",
+        "SEC-002 low: R6 was wrong about _base_manager - corrected in research.md",
+        "SPEC-005 low: spec.md used 'vocabulary' for column names, against CONTEXT.md - two words corrected"
+      ]
     }
   },
   "stories": [
@@ -211,36 +242,6 @@
           "attempts": 0
         },
         {
-          "id": "T033",
-          "status": "todo",
-          "attempts": 0
-        },
-        {
-          "id": "T034",
-          "status": "todo",
-          "attempts": 0
-        },
-        {
-          "id": "T035",
-          "status": "todo",
-          "attempts": 0
-        },
-        {
-          "id": "T036",
-          "status": "todo",
-          "attempts": 0
-        },
-        {
-          "id": "T037",
-          "status": "todo",
-          "attempts": 0
-        },
-        {
-          "id": "T038",
-          "status": "todo",
-          "attempts": 0
-        },
-        {
           "id": "T039",
           "status": "todo",
           "attempts": 0
@@ -310,16 +311,8 @@
         },
         {
           "id": "T049",
-          "status": "done",
-          "attempts": 0,
-          "evidence": {
-            "code": [
-              "project/ghfdb/managers.py:102"
-            ],
-            "tests": [
-              "tests/test_ghfdb/test_resources/test_managers.py::TestGHFDBChildQuerySetAnnotationKeys::test_canonical_elevation_key"
-            ]
-          }
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T050",
@@ -372,17 +365,17 @@
           "attempts": 0
         },
         {
-          "id": "T060",
-          "status": "todo",
-          "attempts": 0
-        },
-        {
           "id": "T061",
           "status": "todo",
           "attempts": 0
         },
         {
           "id": "T062",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T122",
           "status": "todo",
           "attempts": 0
         }
@@ -473,16 +466,8 @@
         },
         {
           "id": "T078",
-          "status": "done",
-          "attempts": 0,
-          "evidence": {
-            "code": [
-              "project/ghfdb/admin.py:129"
-            ],
-            "tests": [
-              "tests/test_ghfdb/test_admin.py::TestGHFDBAdminChangelist::test_ghfdb_admin_changelist_refined_configuration"
-            ]
-          }
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T079",
@@ -590,16 +575,8 @@
         },
         {
           "id": "T098",
-          "status": "done",
-          "attempts": 0,
-          "evidence": {
-            "code": [
-              "project/ghfdb/admin.py:511"
-            ],
-            "tests": [
-              "tests/test_ghfdb/test_admin.py::TestGHFDBParentAdmin::test_ghfdb_parent_admin_changelist"
-            ]
-          }
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T099",
@@ -707,6 +684,11 @@
           "attempts": 0
         },
         {
+          "id": "T123",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
           "id": "T120",
           "status": "todo",
           "attempts": 0
@@ -729,7 +711,7 @@
       "max": 1
     },
     "design_review_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 1
     },
     "tokens": {

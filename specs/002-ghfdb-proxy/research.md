@@ -26,16 +26,27 @@ The published columns fall into four groups, and the group decides the callable:
 1. **Queryset annotations** — 34 of the child columns and 14 of the parent's. Read the attribute off
    the row. This is what the existing `_scalar()` factory does (`admin.py:104`).
 2. **Fields on the proxy itself** — `ghfdb_id`, `expedition`, `c_comment`, `water_temperature`,
-   `quality`. Three of these already carry the published name. `quality` does not: the published
-   columns are `quality_child` and `quality_parent` (`constants.py:64,123`), so it needs a callable
-   to set the heading even though the value is a plain attribute read.
+   `quality`, and `corr_HP_flag` on the parent. Four of them are named exactly as the published file
+   names them, which sounds like the easy case and is the trap below. `quality` is not: the published
+   columns are `quality_child` and `quality_parent` (`constants.py:64,123`). Every one of them needs
+   a callable, even where the value is a plain attribute read.
 3. **Many-valued relationships** — 17 child columns, 1 parent column. Join the related labels. The
    rows must be prefetched or this is the N+1 the feature exists to avoid.
 4. **Columns nothing resolves** — see R4.
 
+**The trap in group two**, found by the design review and confirmed by measurement. Django resolves a
+`list_display` entry against the model's fields *before* the admin's attributes, and reads
+`short_description` only when no field matches. A callable bound under a published name that is also
+a field name is therefore ignored, and the field's `verbose_name` is shown instead. Four headings on
+the current changelists are wrong for exactly this reason: `expedition` renders as
+"expedition/platform/ship", `c_comment` as "comment", `water_temperature` as "bottom water
+temperature", and the leading identifier as "ID Child".
+
 **Decision**: one mapping from published column name to its group and accessor, and a factory that
 turns that mapping into the display callables and the `list_display` tuple, ordered by
-`CHILD_COLUMNS` and `PARENT_COLUMNS`.
+`CHILD_COLUMNS` and `PARENT_COLUMNS`. The callables are bound under names that are *not* model field
+names, and every heading assertion reads the heading Django renders rather than the
+`short_description` the callable carries — because the two can disagree, silently, and did.
 
 The mapping is the only place a published column appears in the admin. The order is not restated at
 all — it is `constants.py`'s list order. A column added to the canonical definitions and missing
@@ -88,9 +99,18 @@ existing code has the same split — `as_ghfdb_flat()` annotates, `for_export()`
 the prefetches (`managers.py:143`) — and the export resource reads the second
 (`resources/export.py:396`).
 
+The parent has one many-valued published column, `explo_purpose`, and the same rule binds it. It is
+currently annotated with `F()` (`project/ghfdb/managers.py:263`), against the method's own docstring
+five lines above. Measured: a site carrying two exploration purposes comes back as two rows, because
+`F()` across a many-to-many produces a join on the through table. Nothing notices today because the
+method has no caller. Giving it one, which the site changelist does, would put duplicate rows on
+screen.
+
 **Decision**: SC-001 and SC-002 are proven against the complete row, which means after FR-007's
 method for the child and after FR-010's for the parent. FR-004 and FR-008 are proven separately
-against the scalar set alone.
+against the scalar set alone. `explo_purpose` is excluded from the parent annotations and prefetched
+alongside the determinations, which is what this section already prescribes for every other
+many-valued column.
 
 This is a reading of the specification rather than a change to it, and it is recorded here because
 a reader could take SC-001 to mean the annotating method alone, and would then write a test that
@@ -165,14 +185,15 @@ SC-005 requires it proven on a chained queryset and on the changelists.
 Both managers apply the filter in `get_queryset()` (`managers.py:182,283`), so it holds for anything
 derived from the default manager. Two routes bypass it.
 
-`Model._base_manager` is used by Django internally for related-object lookups and by the admin for
-`get_object()`. It is not the default manager, so it is unfiltered. This matters for the admin's
-detail and delete views, which the changelists do not expose (FR-012), but it means a scoping test
-that only exercises `objects` proves less than it appears to.
+`Model._base_manager` is used by Django internally for related-object lookups, and it is unfiltered.
+So a scoping test that only exercises `objects` proves less than it appears to.
 
-`_default_manager` is what the admin changelist uses, and the admin's own `get_queryset()` overrides
-it explicitly in both admins, so the scoping there is inherited from the manager call the override
-makes rather than from Django. A future edit to either override could drop it silently.
+The admin is not one of those routes, contrary to what this section first recorded. `ModelAdmin.get_object()`
+opens with `self.get_queryset(request)` — the admin's own override — not `_base_manager`. And the
+detail view *is* reachable: with change permission denied but view permission granted, the change
+form renders read-only. Both facts point the same way. Scoping on every admin route holds only
+because both overrides go through the scoped manager (`project/ghfdb/admin.py:415,686`), and a
+future edit to either could drop it silently with nothing to catch it.
 
 **Decision**: SC-005 is proven at three points — the manager, a chained queryset, and each
 changelist's rendered rows — rather than at the manager alone. The changelist assertion is what

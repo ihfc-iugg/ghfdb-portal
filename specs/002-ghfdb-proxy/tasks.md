@@ -31,7 +31,8 @@ Blocking. Every story depends on these. They serve US-1, US-2 and US-3 alike.
 
 - [ ] **T001** *foundations* — The test tree mirroring `project/ghfdb/`: `tests/test_ghfdb/` holding
   `conftest.py`, `test_models.py`, `test_managers.py`, `test_columns.py` and `test_admin.py`, each
-  carrying the `ghfdb` marker.
+  carrying the `ghfdb` marker. `test_views.py` and `test_resources/` are also present in the package
+  and belong to other features; they are left alone.
   **Test**: `pytest tests/test_ghfdb --collect-only` names all five modules. Before: collection
   errors with "file or directory not found".
 
@@ -74,8 +75,10 @@ Blocking. Every story depends on these. They serve US-1, US-2 and US-3 alike.
 - [ ] **T008** *foundations* — `sites_by_contribution` fixture building four sites: one whose
   determinations all contributed to the representative value, one where only some did, one where
   none did, and one holding no determinations at all. SC-004 names exactly these four.
-  **Test**: `TestFixtures::test_sites_by_contribution_covers_the_four_shapes` asserts the four
-  child populations. Before: fixture not found.
+  At least one of the four carries two exploration purposes, so that the one many-valued parent
+  column is exercised — without it nothing would notice a site rendering twice.
+  **Test**: `TestFixtures::test_sites_by_contribution_covers_the_four_shapes` asserts the four child
+  populations and that one site has two exploration purposes. Before: fixture not found.
 
 - [ ] **T009** *foundations* — `staff_client` fixture: a logged-in staff user holding view
   permission on both proxies and nothing more.
@@ -192,31 +195,12 @@ Discharges FR-001 to FR-007 and FR-011 for the child, and SC-001, SC-003, SC-005
   the parent, the gradient and the conductivity. This is the task that makes the count constant.
   Proves T018. Before: the count at four chains exceeds the count at two.
 
-- [ ] **T032** *US-1 · FR-004* — The interval block of `as_ghfdb_flat()`: `q_top` and `q_bottom`
-  from the interval's depth range. Proves part of T016. Before: `AttributeError` reading `q_top` off
-  a row.
-
-- [ ] **T033** *US-1 · FR-004* — The determination's own block: `qc`, `qc_uncertainty`,
-  `relevant_child`, `q_date`, `expedition`, `c_comment`, `water_temperature` and `quality_child`.
-  Proves part of T016.
-
-- [ ] **T034** *US-1 · FR-004* — The gradient block: `T_grad_mean`, `T_grad_uncertainty`,
-  `T_grad_mean_cor`, `T_grad_uncertainty_cor`, `T_shutin_top`, `T_shutin_bottom` and `T_number`.
-  Proves part of T016.
-
-- [ ] **T035** *US-1 · FR-004* — The conductivity block: `tc_mean`, `tc_uncertainty` and
-  `tc_number`. Proves part of T016.
-
-- [ ] **T036** *US-1 · FR-004* — The probe block reached through the interval: `probe_penetration`,
-  `probe_length` and `probe_tilt`. Proves part of T016.
-
-- [ ] **T037** *US-1 · FR-004* — The parent block restated on the child row: the site's published
-  identifier, its representative value, that value's uncertainty and its heat production correction
-  flag. Proves T017.
-
-- [ ] **T038** *US-1 · FR-004, FR-006* — The correction block: one column per entry of
-  `CORRECTION_COL_MAP`, built by iterating that mapping rather than writing nine annotations out, and
-  costing a fixed number of queries. Proves part of T016 and T022.
+- [ ] **T032** *US-1 · FR-004* — The scalar annotation set of `as_ghfdb_flat()`: the interval's
+  depth range, the determination's own values, the gradient, the conductivity, the probe metadata
+  reached through the interval, the site block restated per row, and one column per entry of
+  `CORRECTION_COL_MAP` built by iterating that mapping rather than writing nine annotations out.
+  One dictionary, so one task. Proves T016, T017 and part of T022. Before: `AttributeError` reading
+  `q_top` off a row.
 
 - [ ] **T039** *US-1 · FR-006* — Absent-relationship behaviour across every annotation above: a
   missing relationship yields an empty column, never a dropped row and never an exception. Proves
@@ -308,14 +292,14 @@ Discharges FR-001 to FR-003 and FR-008 to FR-011 for the parent, and SC-002 to S
   to sites whose published identifier is set, assigned as the proxy's default manager. Proves T044
   and T045.
 
-- [ ] **T059** *US-2 · FR-008, FR-011* — The site block of the parent `as_ghfdb_flat()`: the site
-  name under its distinct annotation name, latitude, longitude, elevation, environment, both total
-  depths and the exploration method. Proves T046 in part, and T048 and T049. Before:
-  `AttributeError` reading `lat_NS` off a row.
-
-- [ ] **T060** *US-2 · FR-008* — The representative-value block: the published identifier, the value,
-  its uncertainty, the parent comment, the heat production correction flag and the quality code under
-  its published parent name. Proves the rest of T046.
+- [ ] **T059** *US-2 · FR-008, FR-011* — The scalar annotation set of the parent
+  `as_ghfdb_flat()`: the site name under its distinct annotation name, latitude, longitude,
+  elevation, environment, both total depths, the exploration method, the published identifier, the
+  value, its uncertainty, the site comment, the heat production correction flag and the quality code
+  under its published parent name. **`explo_purpose` is excluded**: it is a many-to-many field, and
+  annotating it with `F()` makes the queryset return one row per site-and-purpose pair. Verified —
+  a site carrying two exploration purposes currently returns two rows. Proves T046, T048 and T049.
+  Before: `AttributeError` reading `lat_NS` off a row.
 
 - [ ] **T061** *US-2 · FR-009* — `with_counts()`, annotating the number of determinations a site
   holds and the number that contributed, by aggregation rather than per row, and yielding zero rather
@@ -323,8 +307,17 @@ Discharges FR-001 to FR-003 and FR-008 to FR-011 for the parent, and SC-002 to S
   the empty site reads `None`.
 
 - [ ] **T062** *US-2 · FR-010* — `with_children()`, attaching each site's determinations so reading
-  them costs no query per site. Proves T053, T054 and T055. Before: iterating the children issues one
-  query per site.
+  them costs no query per site, and prefetching the site's exploration purposes — the one many-valued
+  parent column, which T059 excludes from the annotations for the reason recorded there. Proves T053,
+  T054 and T055. Before: iterating the children issues one query per site, and the exploration
+  purpose column either duplicates rows or costs a query each.
+
+- [ ] **T122** *US-2 · D7* — Remove `GHFDBParent.as_dict()` and the `PARENT_COLUMNS` import it is
+  the only user of. It has no caller, and it raises on every published column that exists only as an
+  annotation, so it cannot work as written. `decisions.md` D7 rules it out and no other task removed
+  it.
+  **Test**: `TestGHFDBParentModel::test_no_dictionary_accessor` asserts the attribute is absent, and
+  the suite passes with it gone. Before: the attribute resolves and raises when called.
 
 ---
 
@@ -368,8 +361,10 @@ column name appears in the admin, and the order is never restated.
   `TestPublishedColumns::test_a_column_nothing_resolves_renders_empty` — R1 group four and R4.
 
 - [ ] **T070** *US-3 · FR-013, FR-015* —
-  `TestPublishedColumns::test_list_display_order_is_the_canonical_order`: the built tuple equals the
-  order `constants.py` gives, asserted against that module rather than a copy of it.
+  `TestPublishedColumns::test_headings_are_the_canonical_order`: the *headings* the built tuple
+  produces equal the order `constants.py` gives, asserted against that module rather than a copy of
+  it. Headings rather than entry names, because T077 requires the entries to be named differently
+  from the columns they render.
 
 ### Implementation — the published-column mapping
 
@@ -396,8 +391,14 @@ column name appears in the admin, and the order is never restated.
   Proves T064 and T070. Before: the unmapped column passes silently and fails later at `admin.E108`.
 
 - [ ] **T077** *US-3 · FR-013, FR-015* — `short_description` set from the published name verbatim on
-  every callable the factory produces. Proves T065. Before: the heading is the framework's
-  title-cased guess.
+  every callable the factory produces, and **every callable bound under a name that is not a field on
+  the model**. Django resolves a `list_display` entry against the model's fields before the admin's
+  attributes and reads `short_description` only when no field matches, so a callable bound under a
+  published name that is also a field name is silently ignored and the field's `verbose_name` is
+  shown instead. Measured on the current changelists: `expedition` renders as
+  "expedition/platform/ship", `c_comment` as "comment", `water_temperature` as "bottom water
+  temperature", and the leading identifier as "ID Child". Four headings are wrong today for exactly
+  this reason. Proves T065. Before: the heading is the field's `verbose_name`.
 
 ### Tests — the determination changelist
 
@@ -405,19 +406,22 @@ column name appears in the admin, and the order is never restated.
   `TestGHFDBChildAdmin::test_changelist_renders_for_a_staff_user` (US-3 acceptance scenario 1).
 
 - [ ] **T079** *US-3 · FR-013, SC-007* —
-  `TestGHFDBChildAdmin::test_published_child_columns_appear_in_the_canonical_order`: the tail of
-  `list_display` equals `CHILD_COLUMNS`, and the rendered headings match, both read from
-  `constants.py` and never from a literal in the test.
+  `TestGHFDBChildAdmin::test_published_child_columns_appear_in_the_canonical_order`: the headings
+  Django renders for the tail of `list_display` equal `CHILD_COLUMNS`, read from `constants.py` and
+  never from a literal in the test. Asserted through the rendered headings rather than by reading
+  `short_description` off the callables, since T077 records that the two can disagree.
 
 - [ ] **T080** *US-3 · FR-014* —
   `TestGHFDBChildAdmin::test_the_leading_columns_are_the_four_orientation_columns_and_nothing_else`:
   the record's published identifier, the site's published identifier, the site name and the site's
-  coordinates, in that order, and no fifth (US-3 acceptance scenario 2).
+  two coordinate columns, in that order, and no sixth (US-3 acceptance scenario 2).
 
 - [ ] **T081** *US-3 · FR-014* —
-  `TestGHFDBChildAdmin::test_site_values_are_not_restated_on_every_row`: no published parent column
-  appears in `list_display`. The familiarity being protected is the child block's, per the
-  2026-08-23 clarification.
+  `TestGHFDBChildAdmin::test_site_values_are_not_restated_on_every_row`: the intersection of
+  `list_display` with the published parent columns is exactly the orientation columns T080 names,
+  and nothing further. Those four are themselves published parent columns, so this is an equality
+  against that set rather than an absence. The familiarity being protected is the child block's, per
+  the 2026-08-23 clarification.
 
 - [ ] **T082** *US-3 · FR-016* —
   `TestGHFDBChildAdmin::test_search_matches_site_name_and_published_site_identifier`, exercised
@@ -435,7 +439,9 @@ column name appears in the admin, and the order is never restated.
 
 - [ ] **T085** *US-3 · FR-012, SC-008* —
   `TestGHFDBChildAdmin::test_there_is_no_route_to_add_change_or_delete`: the three permission hooks
-  return false, the rendered page carries no add link, and no row links into a form.
+  return false, the rendered page carries no add link, and no row links into a form. Those three
+  hooks are not the whole surface — the import route writes without consulting any of them, and
+  T123 covers it.
 
 - [ ] **T086** *US-3 · FR-002, SC-005* —
   `TestGHFDBChildAdmin::test_an_unpublished_determination_is_absent_from_the_rendered_rows`. R6
@@ -479,10 +485,15 @@ column name appears in the admin, and the order is never restated.
 - [ ] **T094** *US-3 · FR-017* — The plain filters on this admin: heat production correction flag,
   country, region, continent and geological domain. Proves T083 in part.
 
-- [ ] **T095** *US-3 · FR-018* — A vocabulary-scoped filter class taking a vocabulary and a lookup
-  path and offering that vocabulary's terms by label. Six callers across the two changelists, so the
-  generalisation has earned itself. Proves T084 in part. Before: the filter offers every stored key
-  present in the table, including terms of other vocabularies.
+- [ ] **T095** *US-3 · FR-018* — A vocabulary-scoped filter class taking a vocabulary, a lookup path
+  and the **lookup mode**, offering that vocabulary's terms by label. Two modes are needed, not one.
+  Environment and exploration method are single-valued concept fields, whose choices come from the
+  vocabulary and match on the stored value. Exploration purpose is many-valued, whose choices come
+  from the concept rows and match on their primary key. Six callers across the two changelists, so
+  one class with two modes is earned. If the two shapes will not read clearly in one class, two
+  classes of three callers each is the alternative and is equally acceptable. Proves T084 in part.
+  Before: the filter offers every stored key present in the table, including terms of other
+  vocabularies.
 
 - [ ] **T096** *US-3 · FR-018, FR-020, SC-009* — The three vocabulary filters wired onto this admin
   at their paths from the determination. Proves T084 and the rest of T083.
@@ -497,8 +508,8 @@ column name appears in the admin, and the order is never restated.
   `TestGHFDBParentAdmin::test_changelist_renders_for_a_staff_user` (US-3 acceptance scenario 3).
 
 - [ ] **T099** *US-3 · FR-015, SC-007* —
-  `TestGHFDBParentAdmin::test_published_parent_columns_appear_in_the_canonical_order`, read from
-  `PARENT_COLUMNS`.
+  `TestGHFDBParentAdmin::test_published_parent_columns_appear_in_the_canonical_order`: the rendered
+  headings, read from `PARENT_COLUMNS`, asserted as T079 asserts them.
 
 - [ ] **T100** *US-3 · FR-015* —
   `TestGHFDBParentAdmin::test_the_geography_follows_the_published_block`: country, region, continent
@@ -519,7 +530,8 @@ column name appears in the admin, and the order is never restated.
   requires this proven on both changelists, not once.
 
 - [ ] **T105** *US-3 · FR-012, SC-008* —
-  `TestGHFDBParentAdmin::test_there_is_no_route_to_add_change_or_delete`.
+  `TestGHFDBParentAdmin::test_there_is_no_route_to_add_change_or_delete`, as T085, with the same
+  note about the import route and T123.
 
 - [ ] **T106** *US-3 · FR-002, SC-005* —
   `TestGHFDBParentAdmin::test_an_unpublished_site_is_absent_from_the_rendered_rows`.
@@ -568,6 +580,16 @@ column name appears in the admin, and the order is never restated.
   resource. Proves T109 and T110. Before: the attachment is absent, or the export resource is present
   on both changelists.
 
+- [ ] **T123** *US-3 · FR-012* — Gate the import route on both changelists behind the model's add
+  permission at the user level. `django-import-export` grants import to any staff user whenever
+  `IMPORT_EXPORT_IMPORT_PERMISSION_CODE` is unset, and it is unset in this project — verified. So
+  both registrations, which declare no add, no change and no delete, carry a route that writes
+  records and that a user holding only view permission can reach. Override it on these two
+  registrations rather than in project settings, so the change reaches nothing else.
+  **Test**: `TestImportPermission`, on both changelists — a staff user with view permission only is
+  refused the import URL, and one holding the model's add permission is not. Before: the
+  view-permission-only user reaches the import page and can write.
+
 ---
 
 ## Phase 5 — Feature-wide
@@ -598,3 +620,11 @@ feature exits on, checked once the stories are done.
 - The branch's migrations are squashed to one change set, and they apply cleanly to an empty
   database. Neither may touch data.
 - No column list, in code or in a test, is a copy of one `constants.py` already holds.
+- Every comment and docstring in a file this run touches describes what the file now does. Four are
+  known wrong today and are corrected in passing rather than given tasks: `constants.py`'s header
+  and its two per-list comments miscount their own lists, `managers.py`'s module docstring says "31
+  scalar columns" where the dictionary holds 34, `managers.py`'s parent flattening docstring says
+  `explo_purpose` is excluded where the code annotates it, and `admin.py`'s docstrings cite
+  requirement numbers and defect handles from the superseded specification.
+- No name introduced by this run carries a leading underscore. The display factory this run replaces
+  is called `_scalar`; its replacement is not.
