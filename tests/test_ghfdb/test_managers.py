@@ -628,6 +628,51 @@ class TestParentFlattening:
         assert getattr(record.elevation, "magnitude", record.elevation) == 123.0
 
 
+class TestParentCounts:
+    """``with_child_counts()``'s determination counts (T050-T052)."""
+
+    @pytest.mark.django_db
+    def test_counts_are_correct_for_all_some_and_no_contributing_determinations(
+        self, sites_by_contribution
+    ):
+        """T050 (FR-009, SC-004): the counts are correct across the four
+        contribution shapes SC-004 names."""
+        from project.ghfdb.models import GHFDBParent
+
+        records = {
+            record.pk: record for record in GHFDBParent.objects.with_child_counts()
+        }
+
+        all_contributing = sites_by_contribution["all_contributing"]
+        some_contributing = sites_by_contribution["some_contributing"]
+        none_contributing = sites_by_contribution["none_contributing"]
+
+        assert records[all_contributing.pk].total_children == 2
+        assert records[all_contributing.pk].relevant_children == 2
+
+        assert records[some_contributing.pk].total_children == 2
+        assert records[some_contributing.pk].relevant_children == 1
+
+        assert records[none_contributing.pk].total_children == 2
+        assert records[none_contributing.pk].relevant_children == 0
+
+    @pytest.mark.django_db
+    def test_a_site_with_no_determinations_counts_zero_rather_than_empty(
+        self, sites_by_contribution
+    ):
+        """T051 (FR-009, SC-004): the distinction between a count of zero
+        and a null is the assertion."""
+        from project.ghfdb.models import GHFDBParent
+
+        no_determinations = sites_by_contribution["no_determinations"]
+        record = GHFDBParent.objects.with_child_counts().get(pk=no_determinations.pk)
+
+        assert record.total_children == 0
+        assert record.relevant_children == 0
+        assert record.total_children is not None
+        assert record.relevant_children is not None
+
+
 # ---------------------------------------------------------------------------
 # Phase 3b: GHFDBParent proxy queryset tests (T066–T069)
 # ---------------------------------------------------------------------------
