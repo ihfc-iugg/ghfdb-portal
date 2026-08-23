@@ -111,8 +111,9 @@
         },
         {
           "id": "T007",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": "chain_without_gradient/chain_without_conductivity/chain_without_probe_metadata/chain_missing_correction fixtures added to conftest.py; TestFixtures::test_partial_chains_omit_only_what_they_name added; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 8 passed"
         },
         {
           "id": "T008",

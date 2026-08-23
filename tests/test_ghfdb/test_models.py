@@ -83,3 +83,34 @@ class TestFixtures:
         """T006: neither level carries a published identifier (SC-005)."""
         assert unpublished_chain.ghfdb_id is None
         assert unpublished_chain.parent.ghfdb_id is None
+
+    def test_partial_chains_omit_only_what_they_name(
+        self,
+        chain_without_gradient,
+        chain_without_conductivity,
+        chain_without_probe_metadata,
+        chain_missing_correction,
+    ):
+        """T007: each partial-chain fixture omits exactly the one piece it
+        names, and every other relationship still resolves."""
+        assert chain_without_gradient.thermal_gradient is None
+        assert chain_without_gradient.thermal_conductivity is not None
+        assert hasattr(chain_without_gradient.sample, "probe_metadata")
+        assert chain_without_gradient.corrections.count() == 9
+
+        assert chain_without_conductivity.thermal_conductivity is None
+        assert chain_without_conductivity.thermal_gradient is not None
+        assert hasattr(chain_without_conductivity.sample, "probe_metadata")
+        assert chain_without_conductivity.corrections.count() == 9
+
+        assert not hasattr(chain_without_probe_metadata.sample, "probe_metadata")
+        assert chain_without_probe_metadata.thermal_gradient is not None
+        assert chain_without_probe_metadata.thermal_conductivity is not None
+        assert chain_without_probe_metadata.corrections.count() == 9
+
+        missing = chain_missing_correction("IS")
+        assert not missing.corrections.filter(correction_type="IS").exists()
+        assert missing.corrections.count() == 8
+        assert missing.thermal_gradient is not None
+        assert missing.thermal_conductivity is not None
+        assert hasattr(missing.sample, "probe_metadata")

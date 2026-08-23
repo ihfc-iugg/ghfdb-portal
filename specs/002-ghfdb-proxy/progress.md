@@ -113,3 +113,20 @@ tests/test_ghfdb/test_models.py -q` -> `7 passed`.
 Next: T007, the four partial-chain fixtures.
 
 Watch: nothing.
+
+## 2026-08-24T00:48:00Z · Implementer foundations · T007
+
+Did: Added `chain_without_gradient`, `chain_without_conductivity`,
+`chain_without_probe_metadata` and `chain_missing_correction` (a callable taking a
+correction type), each reusing `build_published_chain`'s existing keyword arguments to
+omit exactly the one piece it names. Added
+`TestFixtures::test_partial_chains_omit_only_what_they_name`, asserting the named
+absence and that every other relationship still resolves, for all four.
+
+Verified: RED observed directly — ran the new test before the fixtures existed, got a
+fixture-not-found error. After implementing, `poetry run pytest
+tests/test_ghfdb/test_models.py -q` -> `8 passed`.
+
+Next: T008, the `sites_by_contribution` fixture.
+
+Watch: nothing.

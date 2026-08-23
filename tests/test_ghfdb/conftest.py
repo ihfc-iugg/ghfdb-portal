@@ -363,3 +363,32 @@ def unpublished_chain(dataset):
     This is what SC-005 is proven against (T006).
     """
     return build_published_chain(dataset, published=False)
+
+
+@pytest.fixture
+def chain_without_gradient(dataset):
+    """A published chain missing only its thermal gradient (T007)."""
+    return build_published_chain(dataset, include_gradient=False)
+
+
+@pytest.fixture
+def chain_without_conductivity(dataset):
+    """A published chain missing only its interval conductivity (T007)."""
+    return build_published_chain(dataset, include_conductivity=False)
+
+
+@pytest.fixture
+def chain_without_probe_metadata(dataset):
+    """A published chain missing only its probe metadata (T007)."""
+    return build_published_chain(dataset, include_probe_metadata=False)
+
+
+@pytest.fixture
+def chain_missing_correction(dataset):
+    """Callable building a published chain missing one named correction type
+    (T007)."""
+
+    def build(correction_type):
+        return build_published_chain(dataset, missing_correction=correction_type)
+
+    return build
