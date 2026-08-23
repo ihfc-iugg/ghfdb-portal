@@ -20,3 +20,29 @@ Next: T002, the autouse vocabulary-concept fixture's own contract test.
 
 Watch: `test_columns.py` collects zero tests until the mapping-module tasks (T063+)
 land test classes in it. That is expected, not a defect in this task.
+
+## 2026-08-24T00:05:00Z · Implementer foundations · T002
+
+Did: Added `TestFixtures::test_vocabulary_concepts_are_present` to `test_models.py`,
+asserting `Concept.get_for_vocabulary(...)` is non-empty for `GeographicEnvironment`,
+`ExplorationMethod` and `ExplorationPurpose`. Found the test genuinely failing against
+the pre-existing `load_concepts` fixture: `Concept.preload()` only preloads
+vocabularies present in `research_vocabs`' `vocab_registry`, and registration there is
+a side effect of `RelatedConceptMixin.__init__` (used by `ConceptManyToManyField`,
+e.g. `explo_purpose`) — but `BaseConceptField.__init__` (the single-valued
+`ConceptField`, used by `environment` and `explo_method`) has its own
+`registry.register(self.scheme)` call commented out upstream. Fixed by having
+`load_concepts` register `GeographicEnvironment` and `ExplorationMethod` explicitly
+before calling `Concept.preload()`.
+
+Verified: RED observed directly — with the registration fix reverted (temporary
+one-line probe, reverted immediately after), the test failed with
+`AssertionError: no concepts preloaded for GeographicEnvironment`. After the fix,
+`poetry run pytest tests/test_ghfdb/test_models.py -q` -> `3 passed`.
+
+Next: T003, the `dataset` fixture's own contract test.
+
+Watch: this is an upstream gap in `research_vocabs`, not something to fix in that
+package from here. Any other `ConceptField` (non-M2M) vocabulary anywhere in the
+project has the same silent gap; only the three this feature's fixtures touch are
+closed here.

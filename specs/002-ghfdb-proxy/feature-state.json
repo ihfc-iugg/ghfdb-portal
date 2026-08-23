@@ -81,8 +81,9 @@
         },
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": "TestFixtures::test_vocabulary_concepts_are_present added to test_models.py; load_concepts fixed to register GeographicEnvironment/ExplorationMethod (upstream ConceptField registration gap); `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 3 passed"
         },
         {
           "id": "T003",
