@@ -123,8 +123,9 @@
         },
         {
           "id": "T009",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": "staff_client fixture added to conftest.py (Person.USERNAME_FIELD=email, no username field); TestFixtures::test_staff_client_reaches_the_admin_index added; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 10 passed"
         },
         {
           "id": "T010",

@@ -147,3 +147,25 @@ tests/test_ghfdb/test_models.py -q` -> `9 passed`.
 Next: T009, the `staff_client` fixture.
 
 Watch: nothing.
+
+## 2026-08-24T01:05:00Z · Implementer foundations · T009
+
+Did: Added the `staff_client` fixture — a staff `Person` holding only
+`ghfdb.view_ghfdbchild` and `ghfdb.view_ghfdbparent` (both proxy models get their
+own content type and permissions, confirmed via
+`ContentType.objects.get_for_model(GHFDBChild, for_concrete_model=False)`), logged in
+via `client.force_login`. Added
+`TestFixtures::test_staff_client_reaches_the_admin_index`.
+
+Verified: RED observed directly — ran the new test before the fixture existed, got a
+fixture-not-found error. Before writing the fixture, confirmed by inspecting
+`fairdm.contrib.contributors.models.Person` that `USERNAME_FIELD = "email"` and
+`username = None` (no such field exists), and that
+`fairdm.contrib.contributors.managers.UserManager.create_user` takes `email` as its
+first positional argument, not `username` — so the fixture uses `email=`, not
+`username=`. It passed first try; `poetry run pytest tests/test_ghfdb/test_models.py
+-q` -> `10 passed`.
+
+Next: T010, the `constant_query_count` gate.
+
+Watch: nothing.

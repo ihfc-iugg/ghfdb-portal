@@ -435,3 +435,29 @@ def sites_by_contribution(dataset):
         "none_contributing": none_contributing,
         "no_determinations": no_determinations,
     }
+
+
+@pytest.fixture
+def staff_client(client, db):
+    """A logged-in staff user holding view permission on both GHFDB proxies
+    and nothing more (T009).
+
+    ``Person`` (the project's user model) uses ``email`` as
+    ``USERNAME_FIELD`` and has no ``username`` field at all, so
+    ``create_user`` takes ``email`` rather than ``username``.
+    """
+    from django.contrib.auth import get_user_model
+    from django.contrib.auth.models import Permission
+
+    user = get_user_model().objects.create_user(
+        email="ghfdb-staff-viewer@example.com",
+        password="ghfdb-staff-viewer-password",
+        is_staff=True,
+    )
+    permissions = Permission.objects.filter(
+        content_type__app_label="ghfdb",
+        codename__in=["view_ghfdbchild", "view_ghfdbparent"],
+    )
+    user.user_permissions.set(permissions)
+    client.force_login(user)
+    return client

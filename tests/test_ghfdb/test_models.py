@@ -140,3 +140,11 @@ class TestFixtures:
             for parent in sites_by_contribution.values()
         }
         assert 2 in purpose_counts
+
+    def test_staff_client_reaches_the_admin_index(self, staff_client):
+        """T009: the staff client holds enough permission to reach the admin
+        index."""
+        from django.urls import reverse
+
+        response = staff_client.get(reverse("admin:index"))
+        assert response.status_code == 200
