@@ -140,136 +140,330 @@
         },
         {
           "id": "T011",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/models.py:57-60 (already built)"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_models.py::TestGHFDBChildModel::test_proxy_adds_no_table"
+            ]
+          }
         },
         {
           "id": "T012",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/models.py:57-60 (already built)"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_models.py::TestGHFDBChildModel::test_meta_carries_translated_verbose_names"
+            ]
+          }
         },
         {
           "id": "T013",
           "status": "done",
-          "attempts": 0,
+          "attempts": 1,
           "evidence": {
             "code": [
-              "project/ghfdb/managers.py:178"
+              "project/ghfdb/managers.py:178 (already built)"
             ],
             "tests": [
+              "tests/test_ghfdb/test_managers.py::TestGHFDBChildManager::test_determination_without_a_published_identifier_is_absent",
               "tests/test_ghfdb/test_managers.py::TestGHFDBManagerScoping::test_ghfdb_child_manager_excludes_null_ghfdb_id"
             ]
           }
         },
         {
           "id": "T014",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:178 (already built)"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestGHFDBChildManager::test_scope_survives_filtering_ordering_counting_slicing_and_chaining"
+            ]
+          }
         },
         {
           "id": "T015",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:178 (already built)"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestGHFDBChildManager::test_ordinary_operations_match_the_model_it_stands_in_for"
+            ]
+          }
         },
         {
           "id": "T016",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:96 (added quality_child: F(\"quality\"))"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestChildFlattening::test_every_scalar_published_child_column_resolves_on_every_row"
+            ]
+          }
         },
         {
           "id": "T017",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:89 (already built)"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestChildFlattening::test_the_sites_representative_value_is_restated_on_every_row"
+            ]
+          }
         },
         {
           "id": "T018",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:78 (already built)"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestChildFlattening::test_query_count_is_equal_at_two_row_counts"
+            ]
+          }
         },
         {
           "id": "T019",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:89 (already built; nullable FK LEFT JOIN)"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestChildFlattening::test_a_row_without_a_gradient_is_returned_with_those_columns_empty"
+            ]
+          }
         },
         {
           "id": "T020",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:89 (already built; nullable FK LEFT JOIN)"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestChildFlattening::test_a_row_without_a_conductivity_is_returned_with_those_columns_empty"
+            ]
+          }
         },
         {
           "id": "T021",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:89 (already built; nullable FK LEFT JOIN)"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestChildFlattening::test_a_row_without_probe_metadata_is_returned_with_those_columns_empty"
+            ]
+          }
         },
         {
           "id": "T022",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:25 (already built)"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestChildFlattening::test_a_missing_correction_leaves_only_its_own_column_empty (parametrised over all nine CORRECTION_COL_MAP entries)"
+            ]
+          }
         },
         {
           "id": "T023",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:89 (already built)"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestChildFlattening::test_annotations_carry_their_published_names"
+            ]
+          }
         },
         {
           "id": "T024",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:151 (already built)"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestChildExportQuerySet::test_every_published_child_column_resolves_on_the_complete_row"
+            ]
+          }
         },
         {
           "id": "T025",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:151 (already built)"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestChildExportQuerySet::test_query_count_is_equal_at_two_row_counts"
+            ]
+          }
         },
         {
           "id": "T026",
-          "status": "todo",
-          "attempts": 0
+          "status": "blocked",
+          "attempts": 1,
+          "evidence": {
+            "code": [],
+            "tests": [],
+            "note": "Requires for_export() to prefetch sample__heatflowinterval__lithology and ...stratigraphy (FR-007/T040) so geo_lithology/geo_stratigraphy read at zero further queries. Adding both prefetches pushes for_export()'s query count from 16 to 17, breaking the pre-existing, un-owned tests/test_ghfdb/test_managers.py::TestGHFDBChildQuerySet::test_for_export_max_queries (django_assert_max_num_queries(16)), which this run is prohibited from modifying. Tried the addition, confirmed the break, reverted. See specs/002-ghfdb-proxy/decisions.md and progress.md."
+          }
         },
         {
           "id": "T027",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:96-99 (added Ref_IGSN/publication_reference/data_reference: Value(\"\"))"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestChildExportQuerySet::test_columns_nothing_resolves_are_present_and_empty"
+            ]
+          }
         },
         {
           "id": "T028",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/models.py:38-60 (already built)"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_models.py::TestGHFDBChildModel (T011, T012)"
+            ]
+          }
         },
         {
           "id": "T029",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/migrations/0002_ghfdb.py (already built)",
+              "project/ghfdb/migrations/0003_ghfdbchild_ghfdbparent.py (already built)"
+            ],
+            "tests": [
+              "tests/test_migrations.py::TestGHFDBChildProxyMigrations::test_the_initial_migration_is_a_bare_proxy_create_model",
+              "tests/test_migrations.py::TestGHFDBChildProxyMigrations::test_the_rename_migration_touches_no_table"
+            ]
+          }
         },
         {
           "id": "T030",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:171-193 (already built)"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestGHFDBChildManager (T013-T015)"
+            ]
+          }
         },
         {
           "id": "T031",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:78-87 (already built)"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestChildFlattening::test_query_count_is_equal_at_two_row_counts (T018)"
+            ]
+          }
         },
         {
           "id": "T032",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:89-146 (scalar annotation dict; added quality_child and the three nothing-resolves columns)"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestChildFlattening (T016, T017, T022)"
+            ]
+          }
         },
         {
           "id": "T039",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:89 (already built; nullable-FK select_related produces a LEFT OUTER JOIN)"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestChildFlattening (T019-T022)"
+            ]
+          }
         },
         {
           "id": "T040",
-          "status": "todo",
-          "attempts": 0
+          "status": "blocked",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:151-175 (12 of 14 M2M paths already built; lithology/stratigraphy missing)"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestChildExportQuerySet::test_every_published_child_column_resolves_on_the_complete_row",
+              "tests/test_ghfdb/test_managers.py::TestChildExportQuerySet::test_query_count_is_equal_at_two_row_counts"
+            ],
+            "note": "Same conflict as T026: lithology/stratigraphy prefetches would push the query count past the pre-existing test's hardcoded ceiling."
+          }
         },
         {
           "id": "T041",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:96-99 (added Ref_IGSN/publication_reference/data_reference: Value(\"\", output_field=CharField()))"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestChildExportQuerySet::test_columns_nothing_resolves_are_present_and_empty"
+            ]
+          }
         }
       ]
     },

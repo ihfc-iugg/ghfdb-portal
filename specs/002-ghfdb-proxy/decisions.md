@@ -194,3 +194,38 @@ The review also found three defects the reconciliation had not: a many-valued co
 named after model fields, and an import route that writes without consulting any of the three
 read-only hooks the tests assert. Each is recorded in `reconciliation.md` with its measurement, and
 each has a task.
+
+### D10 — T026 is blocked: the export queryset's missing lithology/stratigraphy prefetches conflict with a pre-existing query-count test
+
+**Original**: T040 (FR-007) names lithology and stratigraphy among the many-valued columns
+`for_export()` must chain into its prefetches, alongside method, exploration purpose, the
+gradient's methods and corrections, the conductivity's descriptive vocabularies and probe type.
+T026 requires every many-valued column readable at zero further queries once the row is evaluated.
+
+**Code**: `for_export()` prefetches 14 M2M paths, matching its own docstring, but two published
+`CHILD_COLUMNS` — `geo_lithology` and `geo_stratigraphy`, reached via
+`sample__heatflowinterval__lithology` and `...stratigraphy` — are not among them. Both resolve on a
+row (T024 passes), but each costs one query per row to read, since neither is prefetched.
+`project/ghfdb/admin.py`'s own `get_queryset()` independently prefetches both paths, which is
+independent evidence the manager is missing them rather than the columns being intentionally
+excluded.
+
+**Tried**: added both prefetches to `for_export()`. `test_many_valued_columns_read_without_further_queries`
+(T026) then passed. Running the wider class turned up a break:
+`tests/test_ghfdb/test_managers.py::TestGHFDBChildQuerySet::test_for_export_max_queries` — a
+pre-existing test, not authored in this story, asserting `django_assert_max_num_queries(16)` —
+failed with 17 queries measured. Reverted the two prefetches.
+
+**Ruled**: blocked, not fixed. The Implementer's brief prohibits modifying a pre-existing test not
+authored in this story; the two tests' requirements are in direct, provable conflict (16 as a
+ceiling vs. 18 as the correct count once FR-007 is satisfied), and resolving it requires a decision
+about `test_for_export_max_queries` — retire it in favour of the T025 constant-query-count test,
+which already supersedes its methodology (a bound proven at two row counts rather than asserted
+once against a literal), or raise its ceiling to 18 — that only Sam or a future convergence pass can
+make. T026 and the lithology/stratigraphy chunk of T040 stay open; the rest of both is done.
+
+**Revisit if**: `test_for_export_max_queries` is retired or its bound is raised. At that point the
+two prefetches (`sample__heatflowinterval__lithology`, `sample__heatflowinterval__stratigraphy`)
+are a two-line addition to `for_export()`'s existing `prefetch_related()` call, and
+`test_many_valued_columns_read_without_further_queries` (already written, not committed — see
+`progress.md`'s 2026-08-23T22:45:00Z entry for its body) can be restored.
