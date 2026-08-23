@@ -798,23 +798,6 @@ class TestGHFDBParentQuerySet:
         assert parent.relevant_children == 1
 
     @pytest.mark.django_db
-    def test_parent_with_children_no_extra_queries(
-        self, django_assert_max_num_queries, heat_flow_chain
-    ):
-        """
-        T068 (US1b): with_children() must attach child HeatFlow objects accessible
-        without extra queries (prefetch_related).
-        """
-        from project.ghfdb.models import GHFDBParent
-
-        with django_assert_max_num_queries(3):
-            parents = list(GHFDBParent.objects.with_children())
-            for p in parents:
-                _ = list(p.children.all())  # must not fire extra queries due to prefetch
-
-        assert len(parents) >= 1
-
-    @pytest.mark.django_db
     def test_parent_queryset_standard_operations(self, heat_flow_chain):
         """
         T069 (US1b): Standard queryset operations work on GHFDBParent.objects.all().

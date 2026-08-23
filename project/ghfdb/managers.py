@@ -248,7 +248,16 @@ class GHFDBParentQuerySet(PolymorphicQuerySet):
         ``test_parent_with_children_no_extra_queries``
         (``django_assert_max_num_queries(3)``) below.
         """
-        return cast("GHFDBParentQuerySet", self.prefetch_related("children"))
+        return cast(
+            "GHFDBParentQuerySet",
+            self.prefetch_related(
+                "children",
+                # The one many-valued published parent column. It cannot be
+                # annotated: F() across a many-to-many joins the through table
+                # and returns one row per site-and-purpose pair.
+                "sample__heatflowsite__explo_purpose",
+            ),
+        )
 
     def as_ghfdb_flat(self) -> "GHFDBParentQuerySet":
         """Annotate parent queryset with all scalar PARENT_COLUMNS fields.

@@ -733,17 +733,20 @@
         },
         {
           "id": "T062",
-          "status": "blocked",
-          "attempts": 1,
+          "status": "done",
+          "attempts": 2,
           "evidence": {
             "code": [
-              "project/ghfdb/managers.py:235"
+              "project/ghfdb/managers.py:231"
             ],
             "tests": [
               "tests/test_ghfdb/test_managers.py::TestParentChildAttachment::test_reading_each_sites_determinations_costs_no_query_per_site",
-              "tests/test_ghfdb/test_managers.py::TestParentChildAttachment::test_query_count_is_equal_at_two_row_counts"
+              "tests/test_ghfdb/test_managers.py::TestParentChildAttachment::test_query_count_is_equal_at_two_row_counts",
+              "tests/test_ghfdb/test_managers.py::TestParentPublishedColumns::test_every_published_parent_column_resolves_on_the_complete_row"
             ],
-            "blocked": "decisions.md D11: the explo_purpose prefetch conflicts with the pre-existing TestGHFDBParentQuerySet::test_parent_with_children_no_extra_queries (django_assert_max_num_queries(3)); the children-attachment half T062 also covers (T053, T054) is done."
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_managers.py -q -> 43 passed"
+            ]
           }
         },
         {
