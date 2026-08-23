@@ -238,6 +238,15 @@ class GHFDBParentQuerySet(PolymorphicQuerySet):
         After calling this, accessing ``parent.children.all()`` will not fire
         additional queries.  Executes in ~2 DB queries (1 main + 1 prefetch),
         constant regardless of row count.
+
+        T062 (FR-010) also asks this method to prefetch
+        ``sample__heatflowsite__explo_purpose`` — the one many-valued
+        published parent column, excluded from ``as_ghfdb_flat()``'s
+        annotations for the reason recorded there. Blocked: see D11 in
+        ``decisions.md``. Prefetching through the polymorphic MTI chain
+        costs four further queries, which breaks the pre-existing
+        ``test_parent_with_children_no_extra_queries``
+        (``django_assert_max_num_queries(3)``) below.
         """
         return cast("GHFDBParentQuerySet", self.prefetch_related("children"))
 

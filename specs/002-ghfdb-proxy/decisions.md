@@ -253,3 +253,38 @@ the same knowledge was written twice.
 **Revisit if** a caller needs the export queryset's absolute query count bounded rather than its
 growth. Nothing does today.
 
+### D11 — T062 is blocked: prefetching the site's exploration purposes conflicts with a pre-existing query-count test
+
+**Original**: T062 (FR-010) asks `with_children()` to prefetch
+`sample__heatflowsite__explo_purpose` alongside `children`, so the one many-valued published
+parent column — excluded from `as_ghfdb_flat()`'s annotations by T059 — costs no query when read
+off an attached row.
+
+**Code**: `with_children()` prefetches `children` alone, at three queries (main, content-type
+lookup, children).
+
+**Tried**: added `sample__heatflowsite__explo_purpose` to the same `prefetch_related()` call.
+`TestParentPublishedColumns::test_every_published_parent_column_resolves_on_the_complete_row`
+(T055) passed with the added assertion that reading the column costs no further query. Running the
+wider class turned up a break:
+`tests/test_ghfdb/test_managers.py::TestGHFDBParentQuerySet::test_parent_with_children_no_extra_queries`
+— a pre-existing test, not authored in this story, asserting `django_assert_max_num_queries(3)` —
+failed with 7 queries measured. `sample` is a polymorphic FK to the `Sample` base model, and
+prefetching through it to `HeatFlowSite`'s M2M costs four further queries to resolve the MTI chain,
+not one. Reverted the addition.
+
+**Ruled**: blocked, not fixed, per the same prohibition D10 records: modifying a pre-existing test
+not authored in this story is out of scope, and the two tests' requirements are in direct, provable
+conflict (3 as a ceiling vs. 7 as the correct count once FR-010 is satisfied for both many-valued
+columns `with_children()` now needs to carry). T062's `explo_purpose` prefetch stays open; the
+`children` prefetch it already carried, and everything T053 and T054 assert about it, is unaffected
+and closed. T055's test still passes — it asserts the column resolves and does not duplicate rows,
+which does not require the prefetch, only T059's correction.
+
+**Revisit if**: `test_parent_with_children_no_extra_queries` is retired in favour of
+`TestParentChildAttachment::test_query_count_is_equal_at_two_row_counts`, which already supersedes
+its methodology, or its ceiling is raised to 7. At that point
+`"sample__heatflowsite__explo_purpose"` is a one-line addition to `with_children()`'s
+`prefetch_related()` call, and `test_every_published_parent_column_resolves_on_the_complete_row`
+can regain its zero-further-query assertion for `explo_purpose`.
+

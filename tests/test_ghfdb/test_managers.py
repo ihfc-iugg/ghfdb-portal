@@ -719,6 +719,44 @@ class TestParentChildAttachment:
         constant_query_count(published_chains, call)
 
 
+class TestParentPublishedColumns:
+    """The complete published parent row (T055)."""
+
+    @pytest.mark.django_db
+    def test_every_published_parent_column_resolves_on_the_complete_row(
+        self, sites_by_contribution
+    ):
+        """T055 (SC-002): every PARENT_COLUMNS entry — scalar and the one
+        many-valued column — is readable on the row after flattening and
+        attachment together (R3), since the many-valued column cannot be
+        annotated. Read on the site carrying two exploration purposes, so a
+        reintroduced ``F()`` annotation that duplicates rows is caught.
+
+        This does not assert a zero further-query cost for
+        ``explo_purpose``: D11 records that the matching prefetch T062 also
+        asks for is blocked by a pre-existing test in direct, provable
+        conflict with it.
+        """
+        from project.ghfdb.constants import PARENT_COLUMNS
+        from project.ghfdb.models import GHFDBParent
+
+        collision = TestParentFlattening.COLLIDING_PARENT_COLUMNS
+        all_contributing = sites_by_contribution["all_contributing"]
+
+        record = (
+            GHFDBParent.objects.as_ghfdb_flat()
+            .with_children()
+            .get(pk=all_contributing.pk)
+        )
+
+        for column in PARENT_COLUMNS:
+            if column == "explo_purpose":
+                purposes = list(record.sample.heatflowsite.explo_purpose.all())
+                assert len(purposes) == 2
+            else:
+                getattr(record, collision.get(column, column))
+
+
 # ---------------------------------------------------------------------------
 # Phase 3b: GHFDBParent proxy queryset tests (T066–T069)
 # ---------------------------------------------------------------------------
