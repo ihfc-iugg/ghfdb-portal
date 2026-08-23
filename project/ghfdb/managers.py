@@ -93,6 +93,7 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
             "qc_uncertainty": F("uncertainty"),
             "relevant_child": F("is_relevant"),
             "q_date": F("date_acquired"),
+            "quality_child": F("quality"),
             # Site-level scalars (from HeatFlowSite via interval → site)
             # NOTE: 'name' conflicts with a Measurement base-class field; use
             # 'site_name' as the annotation key and export it via column_name.

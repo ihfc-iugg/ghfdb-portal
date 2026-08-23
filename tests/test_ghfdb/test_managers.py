@@ -9,6 +9,8 @@ Tests are written first (TDD); they will FAIL until the implementation is in pla
 
 import pytest
 
+from project.ghfdb.constants import CORRECTION_COL_MAP
+
 pytestmark = pytest.mark.ghfdb
 
 
@@ -200,6 +202,213 @@ class TestGHFDBChildManager:
         assert list(
             GHFDBChild.objects.order_by("pk")[:1].values_list("pk", flat=True)
         ) == list(reference.order_by("pk")[:1].values_list("pk", flat=True))
+
+
+class TestChildFlattening:
+    """``as_ghfdb_flat()``'s scalar annotation set (T016–T023, T032)."""
+
+    # Published CHILD_COLUMNS reached only through a many-to-many relation
+    # (verified against the model graph). Not read from constants.py: that
+    # module holds the flat column list, not this classification of it.
+    MANY_VALUED_CHILD_COLUMNS = frozenset(
+        {
+            "q_method",
+            "probe_type",
+            "geo_lithology",
+            "geo_stratigraphy",
+            "T_method_top",
+            "T_method_bottom",
+            "T_corr_top",
+            "T_corr_bottom",
+            "tc_source",
+            "tc_location",
+            "tc_method",
+            "tc_saturation",
+            "tc_pT_conditions",
+            "tc_pT_function",
+            "tc_strategy",
+        }
+    )
+
+    # Published CHILD_COLUMNS with no data behind them at all (R4, D3).
+    NOTHING_RESOLVES_CHILD_COLUMNS = frozenset(
+        {"Ref_IGSN", "publication_reference", "data_reference"}
+    )
+
+    @pytest.mark.django_db
+    def test_every_scalar_published_child_column_resolves_on_every_row(
+        self, published_chains
+    ):
+        """T016 (FR-004): every CHILD_COLUMNS entry that is neither
+        many-valued nor one of the three that resolve to nothing is
+        readable, without error, on every row."""
+        from project.ghfdb.constants import CHILD_COLUMNS
+        from project.ghfdb.models import GHFDBChild
+
+        scalar_columns = [
+            column
+            for column in CHILD_COLUMNS
+            if column not in self.MANY_VALUED_CHILD_COLUMNS
+            and column not in self.NOTHING_RESOLVES_CHILD_COLUMNS
+        ]
+        published_chains(2)
+
+        for record in GHFDBChild.objects.as_ghfdb_flat():
+            for column in scalar_columns:
+                getattr(record, column)
+
+    @pytest.mark.django_db
+    def test_the_sites_representative_value_is_restated_on_every_row(
+        self, published_chain
+    ):
+        """T017 (FR-004): the parent/site block reaches the child row,
+        because the published file restates it per row."""
+        from project.ghfdb.models import GHFDBChild
+
+        site = published_chain.sample.site
+        parent = published_chain.parent
+        record = GHFDBChild.objects.as_ghfdb_flat().get(pk=published_chain.pk)
+
+        assert record.site_name == site.name
+        assert record.site_country == site.country
+        assert record.site_continent == site.continent
+        # The annotation reads the raw stored value; the descriptor on the
+        # model instance resolves it to a Concept, so compare their string
+        # forms rather than the objects themselves.
+        assert str(record.environment) == str(site.environment)
+        assert record.ID_parent == parent.ghfdb_id
+        # QuantityField wraps the annotated value in a Quantity; compare
+        # magnitudes rather than the object forms.
+        assert getattr(record.q, "magnitude", record.q) == parent.value
+
+    @pytest.mark.django_db
+    def test_query_count_is_equal_at_two_row_counts(
+        self, constant_query_count, published_chains
+    ):
+        """T018 (FR-005, SC-003), through the T010 helper."""
+        from project.ghfdb.models import GHFDBChild
+
+        def call():
+            list(GHFDBChild.objects.as_ghfdb_flat())
+
+        constant_query_count(published_chains, call)
+
+    @pytest.mark.django_db
+    def test_a_row_without_a_gradient_is_returned_with_those_columns_empty(
+        self, chain_without_gradient
+    ):
+        """T019 (FR-006, SC-006): a missing gradient empties its own
+        columns without dropping the row or raising."""
+        from project.ghfdb.models import GHFDBChild
+
+        record = GHFDBChild.objects.as_ghfdb_flat().get(pk=chain_without_gradient.pk)
+
+        assert record.T_grad_mean is None
+        assert record.T_grad_uncertainty is None
+        assert record.T_grad_mean_cor is None
+        assert record.T_grad_uncertainty_cor is None
+        assert record.T_shutin_top is None
+        assert record.T_shutin_bottom is None
+        assert record.T_number is None
+
+    @pytest.mark.django_db
+    def test_a_row_without_a_conductivity_is_returned_with_those_columns_empty(
+        self, chain_without_conductivity
+    ):
+        """T020 (FR-006, SC-006)."""
+        from project.ghfdb.models import GHFDBChild
+
+        record = GHFDBChild.objects.as_ghfdb_flat().get(
+            pk=chain_without_conductivity.pk
+        )
+
+        assert record.tc_mean is None
+        assert record.tc_uncertainty is None
+        assert record.tc_number is None
+
+    @pytest.mark.django_db
+    def test_a_row_without_probe_metadata_is_returned_with_those_columns_empty(
+        self, chain_without_probe_metadata
+    ):
+        """T021 (FR-006, SC-006)."""
+        from project.ghfdb.models import GHFDBChild
+
+        record = GHFDBChild.objects.as_ghfdb_flat().get(
+            pk=chain_without_probe_metadata.pk
+        )
+
+        assert record.probe_penetration is None
+        assert record.probe_length is None
+        assert record.probe_tilt is None
+
+    @pytest.mark.django_db
+    @pytest.mark.parametrize("column_name", list(CORRECTION_COL_MAP))
+    def test_a_missing_correction_leaves_only_its_own_column_empty(
+        self, chain_missing_correction, column_name
+    ):
+        """T022 (FR-006, SC-006), parametrised over the nine correction
+        types: SC-006 requires each one proven independently."""
+        from project.ghfdb.models import GHFDBChild
+
+        correction_type = CORRECTION_COL_MAP[column_name]
+        child = chain_missing_correction(correction_type)
+        record = GHFDBChild.objects.as_ghfdb_flat().get(pk=child.pk)
+
+        assert getattr(record, column_name) is None
+        for other_column, other_type in CORRECTION_COL_MAP.items():
+            if other_type == correction_type:
+                continue
+            assert getattr(record, other_column) is not None
+
+    @pytest.mark.django_db
+    def test_annotations_carry_their_published_names(self):
+        """T023 (FR-011): every annotation key equals its published column
+        name, except a declared collision list, and each name on that list
+        is checked to be a field the framework's base class actually
+        declares. Without the second half the list is an escape hatch
+        rather than a rule."""
+        from heat_flow.models import HeatFlow
+        from project.ghfdb.constants import CHILD_COLUMNS, PARENT_COLUMNS
+        from project.ghfdb.models import GHFDBChild
+
+        published_names = set(CHILD_COLUMNS) | set(PARENT_COLUMNS)
+        annotation_keys = set(
+            GHFDBChild.objects.as_ghfdb_flat().query.annotations.keys()
+        )
+
+        # FR-011: an annotation is prefixed only when the published name
+        # collides with a field the base class (Measurement, via HeatFlow)
+        # already declares.
+        collision_list = {"site_name": "name"}
+        for annotation_key, published_name in collision_list.items():
+            assert annotation_key in annotation_keys
+            assert published_name not in annotation_keys, (
+                f"{published_name!r} is meant to collide and be renamed to "
+                f"{annotation_key!r}, but both keys are present"
+            )
+            assert hasattr(HeatFlow, published_name), (
+                f"{annotation_key!r} is on the collision list for "
+                f"{published_name!r}, but HeatFlow does not declare that "
+                "field"
+            )
+
+        # Annotations with no published-column counterpart at all: the
+        # site geography columns D8 keeps outside the published shape,
+        # added here only to support admin filtering.
+        internal_only_annotations = {
+            "site_country",
+            "site_region",
+            "site_continent",
+            "site_domain",
+        }
+
+        unaccounted = (
+            annotation_keys
+            - published_names
+            - set(collision_list)
+            - internal_only_annotations
+        )
+        assert not unaccounted, f"unexplained annotation keys: {sorted(unaccounted)}"
 
 
 # ---------------------------------------------------------------------------
