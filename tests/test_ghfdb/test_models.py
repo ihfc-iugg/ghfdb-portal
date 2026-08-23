@@ -60,6 +60,46 @@ class TestGHFDBChildModel:
         assert str(verbose_name) != str(HeatFlow._meta.verbose_name)
 
 
+class TestGHFDBParentModel:
+    """The ``GHFDBParent`` proxy's ``Meta`` configuration (T042, T043)."""
+
+    def test_proxy_adds_no_table(self):
+        """T042: the proxy shares ``ParentHeatFlow``'s table and declares no
+        local field of its own."""
+        from heat_flow.models import ParentHeatFlow
+
+        from project.ghfdb.models import GHFDBParent
+
+        assert GHFDBParent._meta.proxy is True
+        assert GHFDBParent._meta.db_table == ParentHeatFlow._meta.db_table
+        assert GHFDBParent._meta.local_fields == []
+
+    def test_meta_carries_translated_verbose_names(self):
+        """T043: both verbose names are lazy translations that name the
+        published site view rather than repeating ``ParentHeatFlow``'s own
+        name."""
+        from django.utils.functional import Promise
+        from heat_flow.models import ParentHeatFlow
+
+        from project.ghfdb.models import GHFDBParent
+
+        verbose_name = GHFDBParent._meta.verbose_name
+        verbose_name_plural = GHFDBParent._meta.verbose_name_plural
+
+        assert isinstance(verbose_name, Promise)
+        assert isinstance(verbose_name_plural, Promise)
+        assert str(verbose_name) == "GHFDB Parent"
+        assert str(verbose_name_plural) == "GHFDB Parents"
+        assert str(verbose_name) != str(ParentHeatFlow._meta.verbose_name)
+
+    def test_no_dictionary_accessor(self):
+        """T122 (D7): ``as_dict()`` has no caller and raises on every
+        published column that exists only as an annotation. Removed."""
+        from project.ghfdb.models import GHFDBParent
+
+        assert not hasattr(GHFDBParent, "as_dict")
+
+
 class TestFixtures:
     """The Phase 1 fixture contracts every later phase is held to (T002-T010)."""
 
