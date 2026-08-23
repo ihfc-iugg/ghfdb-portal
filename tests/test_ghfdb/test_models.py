@@ -27,6 +27,37 @@ class TestGHFDBProxyModels:
         assert str(GHFDBParent._meta.verbose_name_plural) == "GHFDB Parents"
 
 
+class TestGHFDBChildModel:
+    """The ``GHFDBChild`` proxy's ``Meta`` configuration (T011, T012)."""
+
+    def test_proxy_adds_no_table(self):
+        """T011: the proxy shares ``HeatFlow``'s table and declares no
+        local field of its own."""
+        from heat_flow.models import HeatFlow
+        from project.ghfdb.models import GHFDBChild
+
+        assert GHFDBChild._meta.proxy is True
+        assert GHFDBChild._meta.db_table == HeatFlow._meta.db_table
+        assert GHFDBChild._meta.local_fields == []
+
+    def test_meta_carries_translated_verbose_names(self):
+        """T012: both verbose names are lazy translations that name the
+        published determination view rather than repeating ``HeatFlow``'s
+        own name."""
+        from django.utils.functional import Promise
+        from heat_flow.models import HeatFlow
+        from project.ghfdb.models import GHFDBChild
+
+        verbose_name = GHFDBChild._meta.verbose_name
+        verbose_name_plural = GHFDBChild._meta.verbose_name_plural
+
+        assert isinstance(verbose_name, Promise)
+        assert isinstance(verbose_name_plural, Promise)
+        assert str(verbose_name) == "GHFDB Child"
+        assert str(verbose_name_plural) == "GHFDB Children"
+        assert str(verbose_name) != str(HeatFlow._meta.verbose_name)
+
+
 class TestFixtures:
     """The Phase 1 fixture contracts every later phase is held to (T002-T010)."""
 
