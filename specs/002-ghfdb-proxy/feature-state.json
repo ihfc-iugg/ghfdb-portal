@@ -75,8 +75,9 @@
       "tasks": [
         {
           "id": "T001",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": "tests/test_ghfdb/test_columns.py created; ghfdb marker added to test_models.py, test_managers.py, test_admin.py; `poetry run pytest tests/test_ghfdb/test_columns.py --collect-only` clean (was `ERROR: file or directory not found`); `poetry run pytest tests/test_ghfdb/test_models.py tests/test_ghfdb/test_managers.py tests/test_ghfdb/test_admin.py tests/test_ghfdb/test_columns.py -q` -> 23 passed, 1 xfailed"
         },
         {
           "id": "T002",

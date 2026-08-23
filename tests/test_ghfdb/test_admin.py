@@ -14,6 +14,8 @@ from project.ghfdb.admin import (
 )
 from project.ghfdb.models import GHFDBChild
 
+pytestmark = pytest.mark.ghfdb
+
 EXPECTED_LIST_DISPLAY = (
     "ghfdb_id",
     "get_id_parent",

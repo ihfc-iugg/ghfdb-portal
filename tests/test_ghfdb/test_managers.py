@@ -9,6 +9,8 @@ Tests are written first (TDD); they will FAIL until the implementation is in pla
 
 import pytest
 
+pytestmark = pytest.mark.ghfdb
+
 
 class TestGHFDBChildQuerySet:
     """GHFDBChildQuerySet.as_ghfdb_flat() and for_export() behaviour."""

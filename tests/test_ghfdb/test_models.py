@@ -2,6 +2,10 @@
 Smoke tests for the GHFDB proxy model.
 """
 
+import pytest
+
+pytestmark = pytest.mark.ghfdb
+
 
 class TestGHFDBProxyModels:
     """GHFDB proxy models must expose the correct Meta configuration."""
