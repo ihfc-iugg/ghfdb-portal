@@ -29,17 +29,22 @@ class TestGHFDBChildQuerySet:
 
         assert len(results) >= 1
 
-    @pytest.mark.xfail(strict=True, reason=(
-        "Half-landed GHFDB canonical column work: the constants moved to the "
-        "published spreadsheet casing, but ghfdb_colmeta.json, the resource "
-        "field declarations and one manager annotation key did not follow. "
-        "Needs debugging, and a decision on the published column vocabulary, "
-        "before it can pass. See issue #122."
-    ))
     @pytest.mark.django_db
     def test_as_ghfdb_flat_scalar_columns(self, heat_flow_chain):
         """
-        T009: All 31 scalar annotations must be accessible as attributes on queryset records.
+        T009: All scalar annotations must be accessible as attributes on
+        queryset records.
+
+        Corrected under D6: the published name is correct and this list was
+        wrong. ``elevation`` is not prefixed because it does not collide
+        with any field the base class declares; only ``name`` does, so only
+        ``site_name`` is prefixed for that reason. ``site_country``,
+        ``site_region``, ``site_continent`` and ``site_domain`` keep their
+        prefix because they are not published columns at all (D8) — they
+        are portal additions for admin filtering. The remaining renames
+        (``q``, ``q_uncertainty``, ``corr_HP_flag``, ``total_depth_MD``,
+        ``total_depth_TVD``) were simply stale, predating the constants
+        module's move to the published spreadsheet casing.
         """
         from project.ghfdb.models import GHFDBChild
 
@@ -47,18 +52,18 @@ class TestGHFDBChildQuerySet:
             "site_name",
             "lat_NS",
             "long_EW",
-            "site_elevation",
-            "site_environment",
-            "site_explo_method",
+            "elevation",
+            "environment",
+            "explo_method",
             "site_country",
             "site_region",
             "site_continent",
             "site_domain",
-            "total_depth_md",
-            "total_depth_tvd",
-            "p_q",
-            "p_q_uncertainty",
-            "p_corr_hp_flag",
+            "total_depth_MD",
+            "total_depth_TVD",
+            "q",
+            "q_uncertainty",
+            "corr_HP_flag",
             "p_comment",
             "q_top",
             "q_bottom",
