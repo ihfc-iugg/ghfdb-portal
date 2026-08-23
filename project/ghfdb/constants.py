@@ -3,9 +3,9 @@ Shared constants for the GHFDB app.
 
 Defines the canonical GHFDB spreadsheet column structure as four lists:
 
-- PARENT_COLUMNS: 15 parent-level column names (from PARENT level of GHFDB template row 6)
-- CHILD_COLUMNS: 50 child-level column names (from CHILD level of GHFDB template row 6)
-- META_FIELDS: 4 meta columns (quality codes / cross-level references)
+- PARENT_COLUMNS: parent-level column names (from PARENT level of GHFDB template row 6)
+- CHILD_COLUMNS: child-level column names (from CHILD level of GHFDB template row 6)
+- META_FIELDS: meta columns (quality codes / cross-level references)
 - GHFDB_COLUMN_ORDER: Canonical full-column order (= PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS)
 - CORRECTION_COL_MAP: Mapping of correction-flag columns to CorrectionTypeChoices values
 
@@ -20,7 +20,7 @@ References:
 
 # ---------------------------------------------------------------------------
 # CORRECTION_COL_MAP
-# Maps the 9 GHFDB correction-flag spreadsheet column headers to the
+# Maps the GHFDB correction-flag spreadsheet column headers to the
 # corresponding HeatFlowCorrection.CorrectionTypeChoices value.
 # Keys use actual spreadsheet header names; values are TextChoices values.
 # ---------------------------------------------------------------------------
@@ -39,7 +39,7 @@ CORRECTION_COL_MAP: dict[str, str] = {
 
 # ---------------------------------------------------------------------------
 # PARENT_COLUMNS
-# The 18 spreadsheet column names that belong to the parent level.
+# The spreadsheet column names that belong to the parent level.
 # Used by GHFDBParentImportResource.before_import() to deduplicate rows and
 # extract unique parent records from the flat GHFDB XLSX.
 # Note: Uses actual spreadsheet header names (case-sensitive as in row 6 of
@@ -65,7 +65,7 @@ PARENT_COLUMNS: list[str] = [
 
 # ---------------------------------------------------------------------------
 # CHILD_COLUMNS
-# The 44 spreadsheet column names that belong to the child level.
+# The spreadsheet column names that belong to the child level.
 # Used by GHFDBChildImportResource to extract child records from the flat
 # GHFDB XLSX.
 # Note: Uses actual spreadsheet header names (case-sensitive as in row 6 of

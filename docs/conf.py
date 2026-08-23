@@ -48,10 +48,19 @@ extensions += [
     # pages under docs/data_models/ are written by hand instead.
     # "sphinx_tippy",
     "sphinx_exec_code",
+    # Without this, MyST emits every ```mermaid block as a highlighted code block and
+    # the build reports nothing wrong, so a diagram reaches readers as source text.
+    "sphinxcontrib.mermaid",
 ]
 
 myst_allow_raw_html = True
 myst_title_to_header = False
+
+# Hand ```mermaid fences to the Mermaid directive. Without this MyST treats them as
+# code blocks whatever extensions are loaded, and the diagrams reach readers as source
+# text. The plain fence is kept rather than the directive syntax so the same source
+# also renders on GitHub.
+myst_fence_as_directive = ["mermaid"]
 
 myst_html_meta = {
     "description lang=en": "Documentation and guides for the Heatflow.world web portal.",

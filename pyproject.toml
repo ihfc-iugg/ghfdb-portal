@@ -56,6 +56,12 @@ numpy = "^2.5.2"
 fairdm-docs = { git = "https://github.com/FAIR-DM/fairdm-docs", extras = [
     "sphinx-book-theme",
 ] }
+sphinxcontrib-mermaid = "^1.0"
+
+[tool.forge.conformance]
+# The subject of these tests is docs/ghfdb_fields.md and the built documentation,
+# not a Python module, so there is nothing under project/ for them to mirror.
+non-mirror-paths = ["tests/test_docs/"]
 
 [build-system]
 requires = ["poetry-core (>=2.0,<3.0)"]
