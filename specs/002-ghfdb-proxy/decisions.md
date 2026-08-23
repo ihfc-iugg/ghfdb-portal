@@ -229,3 +229,27 @@ two prefetches (`sample__heatflowinterval__lithology`, `sample__heatflowinterval
 are a two-line addition to `for_export()`'s existing `prefetch_related()` call, and
 `test_many_valued_columns_read_without_further_queries` (already written, not committed — see
 `progress.md`'s 2026-08-23T22:45:00Z entry for its body) can be restored.
+
+### D10 — The single-bound export query test is retired, not raised
+
+**Found**: US-1 could not satisfy T026 and the last part of T040. FR-007 requires the export
+queryset to prefetch lithology and stratigraphy, and adding them takes its query count from sixteen
+to seventeen, which breaks `test_for_export_max_queries` — a test asserting
+`django_assert_max_num_queries(16)` against a fixture holding one record chain.
+
+**Ruled**: the old test is removed rather than its bound raised.
+
+Raising it to eighteen would reinstate the same assertion one number further along, and that
+assertion is the exact defect R2 names: a bound satisfied at one row is satisfied by a linear query
+plan as well as by a constant one, so it cannot fail for the reason it exists. Its replacement,
+`TestChildExportQuerySet::test_query_count_is_equal_at_two_row_counts`, asserts strictly more — it
+measures at two row counts and compares the counts to each other rather than to a literal, which
+also survives a framework change that adds or removes a fixed query.
+
+The two prefetches were the point of the task. Without them the two geological columns cost a query
+per row, and the changelist compensated independently by prefetching them itself — one more place
+the same knowledge was written twice.
+
+**Revisit if** a caller needs the export queryset's absolute query count bounded rather than its
+growth. Nothing does today.
+

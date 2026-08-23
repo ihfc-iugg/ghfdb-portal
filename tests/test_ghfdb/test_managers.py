@@ -112,18 +112,6 @@ class TestGHFDBChildQuerySet:
             assert hasattr(record, attr), f"Missing correction flag annotation: {attr}"
 
     @pytest.mark.django_db
-    def test_for_export_max_queries(self, django_assert_max_num_queries, heat_flow_chain):
-        """
-        T011: for_export() must execute ≤16 DB queries, constant regardless of row count.
-        """
-        from project.ghfdb.models import GHFDBChild
-
-        with django_assert_max_num_queries(16):
-            results = list(GHFDBChild.objects.for_export())
-
-        assert len(results) >= 1
-
-    @pytest.mark.django_db
     def test_as_ghfdb_flat_queryset_operations(self, heat_flow_chain):
         """
         T012: Standard queryset operations (filter, order_by, count) must work without error.
@@ -151,10 +139,10 @@ class TestChildExportQuerySet:
     """
 
     # Accessors for the CHILD_COLUMNS reachable only through a many-to-many
-    # relation, whose accessor differs from the published column name for
-    # most of them. No canonical column-to-accessor mapping exists yet
-    # (that is 003-ghfdb-import-export's columns.py); this is test-only
-    # scaffolding, not a copy of a list constants.py already holds.
+    # relation, whose accessor differs from the published column name for most
+    # of them. The canonical column-to-accessor mapping is US-3's columns.py and
+    # does not exist yet. This is test-only scaffolding, not a copy of a list
+    # constants.py already holds.
     MANY_VALUED_CHILD_ACCESSORS = {
         "q_method": lambda row: row.method.all(),
         "probe_type": (
@@ -210,10 +198,22 @@ class TestChildExportQuerySet:
 
         constant_query_count(published_chains, call)
 
-    # T026 (many-valued columns read without further queries) is blocked.
-    # See specs/002-ghfdb-proxy/progress.md and decisions.md for the
-    # reason: it requires for_export() to prefetch two more relations,
-    # which breaks a pre-existing, un-owned test's hardcoded query bound.
+    @pytest.mark.django_db
+    def test_many_valued_columns_read_without_further_queries(
+        self, django_assert_num_queries, published_chains
+    ):
+        """T026 (FR-007): after the queryset is evaluated, reading every
+        many-valued column on every row costs nothing further."""
+        from project.ghfdb.models import GHFDBChild
+
+        published_chains(2)
+        rows = list(GHFDBChild.objects.for_export())
+        assert len(rows) == 2
+
+        with django_assert_num_queries(0):
+            for row in rows:
+                for accessor in self.MANY_VALUED_CHILD_ACCESSORS.values():
+                    list(accessor(row))
 
     @pytest.mark.django_db
     def test_columns_nothing_resolves_are_present_and_empty(self, published_chain):

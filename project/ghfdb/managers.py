@@ -173,6 +173,8 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
             "thermal_conductivity__pT_function",
             "thermal_conductivity__strategy",
             "sample__heatflowinterval__probe_metadata__probe_type",
+            "sample__heatflowinterval__lithology",
+            "sample__heatflowinterval__stratigraphy",
         )
         return cast("GHFDBChildQuerySet", qs)
 

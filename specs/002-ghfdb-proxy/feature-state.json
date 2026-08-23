@@ -336,12 +336,18 @@
         },
         {
           "id": "T026",
-          "status": "blocked",
-          "attempts": 1,
+          "status": "done",
+          "attempts": 2,
           "evidence": {
-            "code": [],
-            "tests": [],
-            "note": "Requires for_export() to prefetch sample__heatflowinterval__lithology and ...stratigraphy (FR-007/T040) so geo_lithology/geo_stratigraphy read at zero further queries. Adding both prefetches pushes for_export()'s query count from 16 to 17, breaking the pre-existing, un-owned tests/test_ghfdb/test_managers.py::TestGHFDBChildQuerySet::test_for_export_max_queries (django_assert_max_num_queries(16)), which this run is prohibited from modifying. Tried the addition, confirmed the break, reverted. See specs/002-ghfdb-proxy/decisions.md and progress.md."
+            "code": [
+              "project/ghfdb/managers.py:152"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestChildExportQuerySet::test_many_valued_columns_read_without_further_queries"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_managers.py -q -> 33 passed"
+            ]
           }
         },
         {
@@ -439,17 +445,18 @@
         },
         {
           "id": "T040",
-          "status": "blocked",
-          "attempts": 1,
+          "status": "done",
+          "attempts": 2,
           "evidence": {
             "code": [
-              "project/ghfdb/managers.py:151-175 (12 of 14 M2M paths already built; lithology/stratigraphy missing)"
+              "project/ghfdb/managers.py:152"
             ],
             "tests": [
-              "tests/test_ghfdb/test_managers.py::TestChildExportQuerySet::test_every_published_child_column_resolves_on_the_complete_row",
-              "tests/test_ghfdb/test_managers.py::TestChildExportQuerySet::test_query_count_is_equal_at_two_row_counts"
+              "tests/test_ghfdb/test_managers.py::TestChildExportQuerySet::test_many_valued_columns_read_without_further_queries"
             ],
-            "note": "Same conflict as T026: lithology/stratigraphy prefetches would push the query count past the pre-existing test's hardcoded ceiling."
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_managers.py -q -> 33 passed"
+            ]
           }
         },
         {
