@@ -2,7 +2,7 @@
   "feature": "002-ghfdb-proxy",
   "branch": "002-ghfdb-proxy",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "PLAN",
+  "state": "IMPLEMENT",
   "state_history": [
     {
       "state": "SPECIFY",
@@ -27,6 +27,11 @@
       "state": "PLAN",
       "at": "2026-08-23T22:40:00Z",
       "note": "review applied: 7 tasks collapsed, 2 added, 3 closures reopened"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-08-23T21:34:34Z",
+      "note": "design review applied; 113 open tasks, fixtures first"
     }
   ],
   "gates": {
