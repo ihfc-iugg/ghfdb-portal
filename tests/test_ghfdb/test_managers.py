@@ -685,6 +685,40 @@ class TestParentCounts:
         constant_query_count(published_chains, call)
 
 
+class TestParentChildAttachment:
+    """``with_children()``'s determination attachment (T053, T054)."""
+
+    @pytest.mark.django_db
+    def test_reading_each_sites_determinations_costs_no_query_per_site(
+        self, django_assert_num_queries, published_chains
+    ):
+        """T053 (FR-010): iterating every site's determinations after
+        evaluation costs no query per site."""
+        from project.ghfdb.models import GHFDBParent
+
+        published_chains(2)
+        records = list(GHFDBParent.objects.with_children())
+        assert len(records) == 2
+
+        with django_assert_num_queries(0):
+            for record in records:
+                list(record.children.all())
+
+    @pytest.mark.django_db
+    def test_query_count_is_equal_at_two_row_counts(
+        self, constant_query_count, published_chains
+    ):
+        """T054 (FR-010, SC-003)."""
+        from project.ghfdb.models import GHFDBParent
+
+        def call():
+            records = list(GHFDBParent.objects.with_children())
+            for record in records:
+                list(record.children.all())
+
+        constant_query_count(published_chains, call)
+
+
 # ---------------------------------------------------------------------------
 # Phase 3b: GHFDBParent proxy queryset tests (T066–T069)
 # ---------------------------------------------------------------------------
