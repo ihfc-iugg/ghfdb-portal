@@ -1,62 +1,177 @@
-# Implementation Plan: GHFDB Flat Data Interface
+# Implementation Plan — 002 the published structure read from the model
 
-**Branch**: `002-ghfdb-proxy` | **Date**: 2026-04-13 | **Spec**: [spec.md](spec.md)
-**Input**: Feature specification from `/specs/002-ghfdb-proxy/spec.md`
-**Propagated**: 2026-04-14 -- Updated from spec.md refinement (admin column order + filter constraints)
-**Propagated**: 2026-04-17 -- Updated from spec.md refinement (two proxy models: GHFDBChild + GHFDBParent; split admin registrations; resource-to-admin assignment)
-**Propagated**: 2026-04-22 -- Updated from spec.md refinement: `ghfdb_id`/`quality` added to both models; `local_id`/`is_ghfdb` removed; FR-001b (manager default queryset scoping); child and parent admin column orders updated to match child.json/parent.json API schema
-**Bugfix**: 2026-04-14 -- [BUG-001] Added constrained-option behavior for concept-backed admin filters (`explo_purpose`).
-**Bugfix**: 2026-04-17 -- [BUG-002] Corrected the `GHFDBChild` admin contract to use child-level changelist columns with parent/site identifiers retained only as contextual fields.
-**Bugfix**: 2026-04-17 -- [BUG-003] Added guardrails for child-admin queryset optimization so only valid ORM relation paths are used in changelist prefetches.
-**Bugfix**: 2026-04-20 -- [BUG-004] Extended vocabulary-scoped filters to `environment` and `explo_method` on both admins; fixed `_interval()` fallback to return `None`.
-**Downstream**: Import/export pipeline is planned and implemented in `003-ghfdb-import-export`.
+**Branch**: `002-ghfdb-proxy` · **Specification**: [spec.md](spec.md) ·
+**Research**: [research.md](research.md) · **Reconciliation**: [reconciliation.md](reconciliation.md) ·
+**Decisions**: [decisions.md](decisions.md)
 
-## Summary
+## Context
 
-This plan covers:
+This is an audit of a feature built in April 2026, not new construction. Both proxies, both
+managers, all five queryset methods and both changelists exist and work. `reconciliation.md` records
+the split: 6 of 121 tasks satisfied with a code citation and a passing test, 115 open.
 
-1. **Two GHFDB proxy models** -- `GHFDBChild` extends `HeatFlow` (proxy, no new table), `objects = GHFDBChildManager()`; `GHFDBParent` extends `ParentHeatFlow` (proxy, no new table), `objects = GHFDBParentManager()`. Both admin-only (not registered with FairDM registry).
-2. **`GHFDBChildQuerySet`** -- `as_ghfdb_flat()` (31 `F()`-annotated scalars + 9 correction-flag subqueries; <=2 DB queries, constant) and `for_export()` (`as_ghfdb_flat()` + 14 `prefetch_related` paths; ~16 queries, constant). `for_export()` is consumed by the downstream `003-ghfdb-import-export` spec.
-3. **`GHFDBParentQuerySet`** -- `with_child_counts()` (annotates `total_children` and `relevant_children` counts), `with_children()` (prefetches linked child `HeatFlow` records). Constant query count.
-4. **Two Django admin changelists** -- Read-only `GHFDBChildAdmin` (labelled "GHFDB Children") with 2026-04-22 child-level display order: `ghfdb_id`, `ID_parent`, `name`, `lat_NS`, `long_EW`, followed by child measurement, correction, probe, gradient, conductivity, and reference fields, with `quality` inserted before `Ref_ISGN` (~~`local_id`~~ removed); vocabulary-scoped custom `SimpleListFilter` classes for `environment` (`GeographicEnvironment`), `explo_method` (`ExplorationMethod`), and `explo_purpose` (`ExplorationPurpose`) on the child admin (BUG-001, BUG-004); analogous parent-path filter classes for the parent admin; search by `name`/`ID_parent`; `_interval()` helper returns `None` on missing MTI accessor (BUG-004); `GHFDBChildImportResource` + `GHFDBExportResource` attached. Read-only `GHFDBParentAdmin` (labelled "GHFDB Parents") with 2026-04-22 parent-level display order: `ghfdb_id`, `q`, `q_uncertainty`, `name`, `lat_NS`, `long_EW`, `elevation`, `environment`, `p_comment`, `corr_HP_flag`, `total_depth_MD`, `total_depth_TVD`, `explo_method`, `explo_purpose`, `quality`, `country`, `region`, `continent`, `domain`, `total_children`, `relevant_children` (~~`ID_parent`~~ as lead removed; `p_comment` and `quality` added); same vocabulary-scoped filter/search set; `GHFDBParentImportResource` attached.
-5. **Explore map page** -- `GHFDBExploreView` serving `explore.html`: full-viewport iframe embedding the IHFC web-map viewer, `onerror` fallback, no auth required, menu link active.
-6. ~~**`HeatFlow.local_id` migration** -- Nullable `CharField` added to `HeatFlow` (also `HeatFlowSite.local_id` and `ParentHeatFlow.local_id`) as stable import upsert keys for the downstream import spec.~~ (superseded by 2026-04-22) **`ghfdb_id` + `quality` fields** -- `ghfdb_id` (PositiveIntegerField, nullable, db_index) and `quality` (CharField, nullable) have been added to both `HeatFlow` and `ParentHeatFlow` via the `001-heat-flow-data-model` branch migration. `local_id` and `is_ghfdb` have been removed. No further migration is required within this feature. **FR-001b**: Both `GHFDBChildManager` and `GHFDBParentManager` MUST scope their default querysets to `ghfdb_id__isnull=False` to exclude unassigned records automatically.
+The plan covers the 115. It does not rebuild what reconciled, and it does not rebuild working code
+whose only fault is that nothing tests it.
 
-## Technical Context
+**The split's shape is the plan's shape.** Forty-one of the open tasks have their production code
+already written and cited — the work there is a test, and in a handful of cases a small correction
+the test forces. Seventy-four are genuinely absent, and more than half of those are one structural
+change and the fixtures that make the rest provable.
 
-- **Language**: Python >=3.13
-- **Dependencies**: Django 5.0+, FairDM, django-pint-field
-- **Performance**: `GHFDBChildQuerySet.as_ghfdb_flat()` <=2 queries (constant); `for_export()` ~16 queries (constant); `GHFDBParentQuerySet.with_child_counts()` 1 query (constant); `with_children()` ~2 queries (constant); no N+1 per row
-- **Constraints**: Both proxies admin-only (no FairDM registry); all concept-backed list-filter choices vocabulary-scoped via custom `SimpleListFilter` classes — `environment` scoped to `GeographicEnvironment`, `explo_method` to `ExplorationMethod`, `explo_purpose` to `ExplorationPurpose` (BUG-001, BUG-004); `_interval()` returns `None` on missing MTI (BUG-004); ~~`local_id` fields nullable, indexed~~ (removed — superseded by `ghfdb_id` PositiveIntegerField on `HeatFlow` and `ParentHeatFlow`); both manager default querysets MUST scope to `ghfdb_id__isnull=False` (FR-001b); import/export resources attached to their respective admin only
+## Technical context
 
-## Constitution Check
+- Python 3.13, Django ≥ 5.0, the FairDM framework with `fairdm-geo` and `research_vocabs`.
+- `django-import-export` 4.x for the resource attachment points. The resources themselves are
+  `003-ghfdb-import-export`'s and are not touched.
+- `pytest` with `pytest-django`, Ruff and mypy, Sphinx with MyST.
+- SQLite in development, PostgreSQL in production.
+- The `ghfdb` suite is 154 passing tests in 208 seconds, and the chain fixture dominates that. Suite
+  runtime is the main cost this plan can accidentally multiply — see US-1 below.
 
-| Principle | Status |
-|-----------|--------|
-| I. FAIR-First | **PASS** -- `ghfdb_id` (stable PositiveIntegerField GHFDB identifier, replaces former `local_id` CharField) preserved. Proxy models enable FAIR-compliant flat access without schema divergence. |}
-| II. GHFDB Schema Fidelity | **PASS** -- All GHFDB column names preserved as annotation names. Mapping in `data-model.md`. Fuchs et al. proxy model docstring citations. |
-| III. FairDM-First | **PASS** -- `GHFDBChild` extends `HeatFlow` (FairDM `Measurement`); `GHFDBParent` extends `ParentHeatFlow` (FairDM `Measurement`). Neither registered (admin-only; no auto-generated views needed). |
-| V. Internationalisation | **PASS** -- Admin verbose names and labels use `gettext_lazy()`. |
-| VI. Test-First Quality | **PASS** -- Query-count tests and admin tests written first (TDD). Correction-flag annotations have pinned regression tests. Parent count annotation tests added. |
+## The one structural change
 
-## Project Structure
+Everything in US-3 turns on a published-column mapping that does not exist in any form.
 
-### Source Code
+Today a published column name appears in four places: `constants.py`, each changelist's
+`list_display`, and a literal copy inside the changelist's own test. Three of the names have already
+drifted apart across those copies (D2), and the drift went unnoticed because the test compares one
+copy against another rather than either against the canonical definitions.
 
-```
-project/ghfdb/
-+-- models.py            # GHFDBChild proxy (GHFDBChildManager) + GHFDBParent proxy (GHFDBParentManager)
-+-- managers.py          # GHFDBChildQuerySet: as_ghfdb_flat(), for_export(); GHFDBParentQuerySet: with_child_counts(), with_children()
-+-- admin.py             # GHFDBChildAdmin (child import + export) + GHFDBParentAdmin (parent import) — both read-only
-+-- views.py             # GHFDBExploreView
-+-- urls.py              # explore/ URL routing
-+-- templates/ghfdb/
-    +-- explore.html     # Full-viewport iframe + onerror fallback
+The mapping is one entry per published column, naming which of R1's four groups it belongs to and
+how its value is reached. A builder turns a canonical column list into display callables in that
+list's order and refuses, at import time, a column the mapping does not hold. After it, the order is
+never restated: the changelists ask for `CHILD_COLUMNS` and `PARENT_COLUMNS`, and a column added to
+the canonical definitions and not to the mapping is a startup failure rather than a silently missing
+column.
 
-tests/test_ghfdb/
-+-- conftest.py          # heat_flow_chain fixture, sample_ghfdb_row fixture
-+-- test_models.py       # Proxy model smoke tests (both GHFDBChild and GHFDBParent)
-+-- test_managers.py     # Query-count tests, annotation completeness, correction flags, parent count annotations
-+-- test_admin.py        # Changelist HTTP 200, column order, filters, search (both admins)
-+-- test_views.py        # Map page: HTTP 200, iframe, no auth required
-```
+That refusal is what SC-007 means by a test that fails when the canonical definitions change and the
+changelist does not, and T064 proves the gate against the defect rather than only against the
+passing case.
+
+**Deliberately not extended to the resources.** They declare the same names a third and fourth time
+and would be served by the same mapping (R1). That is `003-ghfdb-import-export`'s work. The mapping
+is written so it can be adopted there unchanged, and this run does not touch those files.
+
+## Approach, by story
+
+### US-1 — determinations read in the published shape (41 tasks, 1 closed)
+
+Almost entirely test work. The annotation blocks, the export queryset and the correction subqueries
+are written and correct; what is missing is any test that would notice if they stopped being.
+
+Four things drive it:
+
+- **Fixtures first.** The counted chain fixture, the unpublished chain, and the four partial chains.
+  Nothing in the story can be proven without them, and their absence is why the existing tests
+  assert `hasattr` rather than values.
+- **Constancy measured at two row counts, through one helper.** R2 settles the shape: build *n*,
+  count, build more, count again, assert the two counts are equal to each other rather than to a
+  literal. The helper is itself gated — T010 requires it proven against a deliberately linear
+  callable, because a helper that cannot fail is worse than no helper.
+- **The complete row, not the annotated one.** R3 records that seventeen published child columns are
+  many-valued and cannot be annotated, so SC-001 is proven after the export method rather than after
+  the flattening one. A reader who takes SC-001 to mean the flattening method alone writes a test
+  that cannot pass.
+- **The `xfail` comes off.** `test_as_ghfdb_flat_scalar_columns` expects a prefixed elevation key.
+  D6 rules the published name correct and the test wrong, so the assertion is corrected rather than
+  the queryset. FR-011 states the rule the prefixes follow, so the collision list stops being an
+  escape hatch: each name on it is checked to be a field the base class actually declares.
+
+**Risk: suite runtime.** Every constancy test builds chains twice, and the chain fixture is the
+expensive thing in this suite. The mitigation is in R2's decision — the correctness tests take the
+cheap single chain, only the constancy tests take the counted one, and the counted one runs at two
+and four rather than at two and two hundred. Four rows prove the same property as two hundred and
+cost one hundred and ninety-six fewer.
+
+### US-2 — sites read in the published shape (21 tasks, 1 closed)
+
+The same shape, plus one method brought into use.
+
+The parent flattening method has no caller. R5 records what stands in its place: fifteen display
+methods on the site changelist that walk `sample → heatflowsite → field` per column, guarded by
+nested `getattr` calls. It is not an N+1 — the changelist does `select_related` on those paths — but
+it is the same data reached twice as expensively as it needs to be, in fifteen near-identical
+methods, and it is why the flattening method is untested.
+
+Wiring the changelist to read the flattening method deletes all fifteen, makes the method reachable
+and testable, and makes both changelists the same shape, which is what lets one mapping serve both.
+That wiring is US-3's task; US-2's is that the method annotates every published parent column and
+does so at a constant query cost.
+
+The counts need the four contribution shapes SC-004 names — all contributing, some, none, and a site
+with no determinations at all. The existing test covers one site with one contributing
+determination, which is the case least likely to be wrong. The distinction between a count of zero
+and a null is its own assertion.
+
+### US-3 — the assessment team reads the database in the terms they know (59 tasks, 4 closed)
+
+The mapping and the builder come first, then both registrations are rebuilt on them.
+
+After that the two changelists differ only in their column list, their lookup paths and the four
+geography columns the site changelist adds. Six near-identical filter classes collapse to one taking
+a vocabulary and a lookup path — six callers, which is what earns the generalisation. The read-only
+guarantees stay written out on each class rather than shared through a base: two classes is not
+enough to justify an abstraction whose only purpose is to avoid repeating three one-line methods.
+
+Three findings in this story are defects rather than absences.
+
+**The site changelist exposes an export it was specified not to have.** FR-021 gives the export
+resource to the determination changelist and to nothing else. `GHFDBParentAdmin` inherits
+`ImportExportMixin` and overrides only the import side, so the framework's default export path is
+live on it with a generated resource — which would emit the site model's own fields, not the
+published structure. The test that was meant to prove the requirement asserts the import classes and
+stops, so it passes over the half that is wrong. The fix is to close the export path on that
+registration, and T110 asserts exclusivity in both directions rather than in one.
+
+**The search test cannot fail.** Both of its assertions are `status_code == 200`, and a search
+matching nothing returns 200. Both changelists get a search test that asserts the row is found and
+that a non-matching query returns none.
+
+**Exploration purpose is unproven on the site changelist.** The filter class exists; nothing
+exercises it. SC-009 requires each vocabulary filter proven on both changelists, and this is the one
+gap in that grid.
+
+**Risk: the column corrections are visible to users.** Three headings change — `tc_pT_fuction` to
+`tc_pT_function`, `Ref_ISGN` to `Ref_IGSN`, and `quality` to `quality_child` and `quality_parent` —
+and the last two columns of the determination changelist swap order. That is a deliberate,
+adjudicated change (D2) and it is exactly the kind of change the people who read these changelists
+notice. It belongs in the pull request's description in the terms they use, not only in a decision
+record.
+
+### Feature-wide (2 tasks)
+
+`SC-011` is a statement about the suite, so it needs an assertion about the suite. Fourteen tests
+under `tests/test_ghfdb/` are expected to fail. Thirteen belong to `003-ghfdb-import-export` and
+stay, by D5. The fourteenth is this feature's and comes off. So the assertion covers this feature's
+own modules and names the exclusion, rather than asserting across the package and being wrong about
+what it owns. One conditional skip that can no longer fire comes out at the same time.
+
+Documentation covers the query surface the feature presents: the two proxies, the scoping rule, the
+five queryset methods and the two changelists.
+
+## Sequencing
+
+The fixtures block everything, and the mapping blocks US-3. Beyond that the three stories are
+independent: US-1 and US-2 touch the queryset module, US-3 touches the admin, and only the site
+changelist's queryset spans both.
+
+1. **Fixtures** — T001 to T010. Blocking for all three stories.
+2. **US-1 and US-2 in parallel** — different queryset classes, no shared edit.
+3. **The mapping** — T063 to T077. Depends on nothing above, so it can run alongside step 2.
+4. **Both changelists** — depends on the mapping, and the site changelist's queryset depends on
+   US-2's flattening method being proven.
+5. **Feature-wide** — last, because the suite-health assertion is only meaningful once the run's own
+   `xfail` has come off.
+
+## Convergence
+
+- The full suite passes, run once, at the end. The expected count is 154 passing plus what this run
+  adds, 13 expected-to-fail, and none of the 13 in this feature's own modules.
+- Lint, formatting and type checks pass on every changed file, at CI's scope rather than the
+  pre-commit gate's.
+- `manage.py check` reports no errors and no warnings with both registrations live.
+- Migrations squashed to one change set on the branch, applying cleanly to an empty database, with
+  no operation that touches data.
+- No column list, in code or in a test, is a copy of one `constants.py` already holds. This is the
+  condition the whole run exists to establish, so it is checked at the end as well as asserted in
+  the suite.

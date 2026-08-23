@@ -1,0 +1,744 @@
+{
+  "feature": "002-ghfdb-proxy",
+  "branch": "002-ghfdb-proxy",
+  "repo": "ihfc-iugg/ghfdb-portal",
+  "state": "PLAN",
+  "state_history": [
+    {
+      "state": "SPECIFY",
+      "at": "2026-08-23T19:30:00Z",
+      "note": "spec audit: rewritten in place"
+    },
+    {
+      "state": "GATE_SPEC",
+      "at": "2026-08-23T21:00:00Z"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-08-23T21:30:00Z",
+      "note": "tasks written greenfield, then reconciled"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "sam",
+      "at": "2026-08-23T21:05:00Z"
+    },
+    "plan": {
+      "approved_by": null,
+      "at": null
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    }
+  },
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 179,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T002",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T003",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T004",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T005",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T006",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T007",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T008",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T009",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T010",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T011",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T012",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T013",
+          "status": "done",
+          "attempts": 0,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:178"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestGHFDBManagerScoping::test_ghfdb_child_manager_excludes_null_ghfdb_id"
+            ]
+          }
+        },
+        {
+          "id": "T014",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T015",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T016",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T017",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T018",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T019",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T020",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T021",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T022",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T023",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T024",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T025",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T026",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T027",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T028",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T029",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T030",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T031",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T032",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T033",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T034",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T035",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T036",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T037",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T038",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T039",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T040",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T041",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P1",
+      "issue": 180,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T042",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T043",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T044",
+          "status": "done",
+          "attempts": 0,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:278"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_managers.py::TestGHFDBManagerScoping::test_ghfdb_parent_manager_excludes_null_ghfdb_id"
+            ]
+          }
+        },
+        {
+          "id": "T045",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T046",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T047",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T048",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T049",
+          "status": "done",
+          "attempts": 0,
+          "evidence": {
+            "code": [
+              "project/ghfdb/managers.py:102"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_managers.py::TestGHFDBChildQuerySetAnnotationKeys::test_canonical_elevation_key"
+            ]
+          }
+        },
+        {
+          "id": "T050",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T051",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T052",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T053",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T054",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T055",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T056",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T057",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T058",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T059",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T060",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T061",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T062",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P2",
+      "issue": 181,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T063",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T064",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T065",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T066",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T067",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T068",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T069",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T070",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T071",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T072",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T073",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T074",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T075",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T076",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T077",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T078",
+          "status": "done",
+          "attempts": 0,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py:129"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py::TestGHFDBAdminChangelist::test_ghfdb_admin_changelist_refined_configuration"
+            ]
+          }
+        },
+        {
+          "id": "T079",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T080",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T081",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T082",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T083",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T084",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T085",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T086",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T087",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T088",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T089",
+          "status": "done",
+          "attempts": 0,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py:231",
+              "project/ghfdb/admin.py:239"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py::TestGHFDBAdminChangelist::test_ghfdb_admin_changelist_refined_configuration"
+            ]
+          }
+        },
+        {
+          "id": "T090",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T091",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T092",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T093",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T094",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T095",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T096",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T097",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T098",
+          "status": "done",
+          "attempts": 0,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py:511"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py::TestGHFDBParentAdmin::test_ghfdb_parent_admin_changelist"
+            ]
+          }
+        },
+        {
+          "id": "T099",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T100",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T101",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T102",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T103",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T104",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T105",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T106",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T107",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T108",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T109",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T110",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T111",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T112",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T113",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T114",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T115",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T116",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T117",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T118",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T119",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T120",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T121",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 0,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 0,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 0,
+      "max": 1
+    },
+    "tokens": {
+      "used": 0,
+      "max": 2000000
+    }
+  },
+  "pr": {
+    "number": 182,
+    "draft": true
+  }
+}
