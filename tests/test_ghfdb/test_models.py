@@ -34,6 +34,7 @@ class TestGHFDBChildModel:
         """T011: the proxy shares ``HeatFlow``'s table and declares no
         local field of its own."""
         from heat_flow.models import HeatFlow
+
         from project.ghfdb.models import GHFDBChild
 
         assert GHFDBChild._meta.proxy is True
@@ -46,6 +47,7 @@ class TestGHFDBChildModel:
         own name."""
         from django.utils.functional import Promise
         from heat_flow.models import HeatFlow
+
         from project.ghfdb.models import GHFDBChild
 
         verbose_name = GHFDBChild._meta.verbose_name

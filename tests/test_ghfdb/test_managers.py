@@ -238,6 +238,7 @@ class TestGHFDBChildManager:
         absent from ``GHFDBChild.objects``, and present on ``HeatFlow.objects``
         so the fixture is proven to exist."""
         from heat_flow.models import HeatFlow
+
         from project.ghfdb.models import GHFDBChild
 
         assert HeatFlow.objects.filter(pk=unpublished_chain.pk).exists()
@@ -278,6 +279,7 @@ class TestGHFDBChildManager:
         the proxy return what the same operations return on ``HeatFlow``
         restricted to published rows."""
         from heat_flow.models import HeatFlow
+
         from project.ghfdb.models import GHFDBChild
 
         reference = HeatFlow.objects.filter(ghfdb_id__isnull=False)
@@ -458,6 +460,7 @@ class TestChildFlattening:
         declares. Without the second half the list is an escape hatch
         rather than a rule."""
         from heat_flow.models import HeatFlow
+
         from project.ghfdb.constants import CHILD_COLUMNS, PARENT_COLUMNS
         from project.ghfdb.models import GHFDBChild
 
