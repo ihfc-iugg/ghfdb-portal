@@ -226,6 +226,27 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
         return False
 
 
+def geography_display(field_name):
+    """Build a ``GHFDBParentAdmin`` display method for one geography field,
+    read directly off ``obj.sample.heatflowsite`` (D15).
+
+    The site changelist's own queryset ``select_related``s both ``sample``
+    and ``sample__heatflowsite`` (``GHFDBParentQuerySet.as_ghfdb_flat()``),
+    so no accessor built here can fail to resolve, and a defensive
+    ``getattr`` guard would be exactly the kind of accessor a reader could
+    mistake for a working one when it never triggers — R4's concern,
+    applied to a relationship walk rather than a missing field.
+    """
+
+    @admin.display(
+        description=_(field_name), ordering=f"sample__heatflowsite__{field_name}"
+    )
+    def display(self, obj):
+        return getattr(obj.sample.heatflowsite, field_name)
+
+    return display
+
+
 class ParentExplorePurposeListFilter(VocabularyListFilter):
     """Exploration-purpose filter for the site changelist, scoped to the
     ``ExplorationPurpose`` vocabulary (FR-018). Many-valued, so it matches
@@ -343,31 +364,10 @@ class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
         codename = get_permission_codename("add", opts)
         return request.user.has_perm(f"{opts.app_label}.{codename}")
 
-    @admin.display(description=_("country"), ordering="sample__heatflowsite__country")
-    def get_country(self, obj):
-        site = getattr(obj, "sample", None)
-        hfs = getattr(site, "heatflowsite", None) if site else None
-        return getattr(hfs, "country", None) if hfs else None
-
-    @admin.display(description=_("region"), ordering="sample__heatflowsite__region")
-    def get_region(self, obj):
-        site = getattr(obj, "sample", None)
-        hfs = getattr(site, "heatflowsite", None) if site else None
-        return getattr(hfs, "region", None) if hfs else None
-
-    @admin.display(
-        description=_("continent"), ordering="sample__heatflowsite__continent"
-    )
-    def get_continent(self, obj):
-        site = getattr(obj, "sample", None)
-        hfs = getattr(site, "heatflowsite", None) if site else None
-        return getattr(hfs, "continent", None) if hfs else None
-
-    @admin.display(description=_("domain"), ordering="sample__heatflowsite__domain")
-    def get_domain(self, obj):
-        site = getattr(obj, "sample", None)
-        hfs = getattr(site, "heatflowsite", None) if site else None
-        return getattr(hfs, "domain", None) if hfs else None
+    get_country = geography_display("country")
+    get_region = geography_display("region")
+    get_continent = geography_display("continent")
+    get_domain = geography_display("domain")
 
     @admin.display(description=_("total_children"), ordering="total_children")
     def total_children(self, obj):
