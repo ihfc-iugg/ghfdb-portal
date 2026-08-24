@@ -411,3 +411,110 @@ class TestGHFDBParentAdmin:
             f"Expected [GHFDBParentImportResource], got {resource_classes}"
         )
         assert GHFDBChildImportResource not in resource_classes
+
+
+def _build_simple_parent_xlsx(rows):
+    """Build a minimal single-row GHFDB Simple Template XLSX for the parent resource."""
+    from io import BytesIO
+
+    import openpyxl
+
+    from project.ghfdb.constants import PARENT_COLUMNS
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "data list"
+
+    for i in range(1, 6):
+        ws.cell(row=i, column=1, value=f"Metadata row {i}")
+    for col_idx, header in enumerate(PARENT_COLUMNS, start=1):
+        ws.cell(row=6, column=col_idx, value=header)
+    for row_idx, row in enumerate(rows, start=7):
+        for col_idx, header in enumerate(PARENT_COLUMNS, start=1):
+            ws.cell(row=row_idx, column=col_idx, value=row.get(header, ""))
+
+    buf = BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
+
+
+@pytest.mark.django_db
+class TestGHFDBParentAdminImportRequiresDataset:
+    """Issue #174 regression: the admin import route requires a target dataset."""
+
+    ROW = {
+        "ID_parent": "1",
+        "q": "70.0",
+        "q_uncertainty": "5.0",
+        "name": "Admin Import Site",
+        "lat_NS": "48.0",
+        "long_EW": "11.0",
+        "elevation": "500",
+        "environment": "Onshore (continental)",
+        "corr_HP_flag": "No",
+        "Country": "Germany",
+        "Continent": "Europe",
+    }
+
+    def test_import_without_dataset_selected_shows_validation_error(self, admin_client):
+        """Posting the import form with no dataset chosen re-renders it with a
+        field error and creates no records — it does not fall back to guessing."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from django.urls import reverse
+
+        from heat_flow.models import HeatFlowSite
+
+        xlsx = _build_simple_parent_xlsx([self.ROW])
+        url = reverse("admin:ghfdb_ghfdbparent_import")
+        response = admin_client.post(
+            url,
+            {
+                "import_file": SimpleUploadedFile("import.xlsx", xlsx),
+                "format": "1",  # GHFDBSimpleImportFormat
+                "resource": "0",
+            },
+        )
+
+        assert response.status_code == 200
+        assert "dataset" in response.context["form"].errors
+        assert not HeatFlowSite.objects.exists()
+
+    def test_import_with_dataset_selected_attaches_records_to_it(self, admin_client, dataset):
+        """Posting the import form with a dataset chosen imports into it, through
+        both the initial and confirm steps of the admin import action."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from django.urls import reverse
+
+        from heat_flow.models import HeatFlowSite, ParentHeatFlow
+
+        xlsx = _build_simple_parent_xlsx([self.ROW])
+        import_url = reverse("admin:ghfdb_ghfdbparent_import")
+        response = admin_client.post(
+            import_url,
+            {
+                "import_file": SimpleUploadedFile("import.xlsx", xlsx),
+                "format": "1",  # GHFDBSimpleImportFormat
+                "resource": "0",
+                "dataset": dataset.pk,
+            },
+        )
+        assert response.status_code == 200
+        confirm_form = response.context["confirm_form"]
+        assert not confirm_form.errors
+        assert confirm_form.initial["dataset"] == dataset.pk
+
+        process_url = reverse("admin:ghfdb_ghfdbparent_process_import")
+        confirm_response = admin_client.post(
+            process_url,
+            {
+                "import_file_name": confirm_form.initial["import_file_name"],
+                "original_file_name": confirm_form.initial["original_file_name"],
+                "format": confirm_form.initial["format"],
+                "resource": confirm_form.initial["resource"],
+                "dataset": confirm_form.initial["dataset"],
+            },
+        )
+
+        assert confirm_response.status_code == 302
+        assert ParentHeatFlow.objects.get(ghfdb_id=1).dataset == dataset
+        assert HeatFlowSite.objects.get(name="Admin Import Site").dataset == dataset
