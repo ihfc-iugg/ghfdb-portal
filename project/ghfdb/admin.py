@@ -17,8 +17,8 @@ from django.contrib.admin import SimpleListFilter
 from django.utils.translation import gettext_lazy as _
 from fairdm.core.models import Dataset
 from import_export.admin import ImportExportMixin
-from import_export.forms import ConfirmImportForm, ImportForm
 from import_export.formats.base_formats import XLSX
+from import_export.forms import ConfirmImportForm, ImportForm
 
 from .models import GHFDBChild, GHFDBParent, GHFDBRelease
 from .resources import (
