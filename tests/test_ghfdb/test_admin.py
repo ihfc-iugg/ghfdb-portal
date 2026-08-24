@@ -423,3 +423,18 @@ class TestGHFDBChildAdmin:
             "long_EW",
         ]
         assert headings[offset + 5] == CHILD_COLUMNS[0]
+
+    def test_site_values_are_not_restated_on_every_row(self):
+        """T081: the intersection of ``list_display`` with the published
+        parent columns is exactly the four orientation columns T080 names,
+        and nothing further — the familiarity being protected is the child
+        block's, per the 2026-08-23 clarification."""
+        model_admin = admin.site._registry[GHFDBChild]
+        headings = set()
+        for item in model_admin.list_display:
+            if callable(item):
+                headings.add(str(item.short_description))
+            else:
+                headings.add(str(item))
+
+        assert headings & set(PARENT_COLUMNS) == {"ID_parent", "name", "lat_NS", "long_EW"}
