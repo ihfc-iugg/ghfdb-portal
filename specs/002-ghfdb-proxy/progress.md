@@ -597,3 +597,60 @@ first time in this feature, is polluted by `orbit`'s global audit logging and
 a first-request singleton cost (D12). Any future admin-changelist-level
 query-count test needs the same `override_settings(ORBIT={"ENABLED": False})`
 plus one warm-up call, not the bare fixture.
+
+## 2026-08-24T08:00:00Z · Implementer child-admin · T090-T097
+
+**Did**: rebuilt `GHFDBChildAdmin` on the mapping (T090). `list_display` is now
+`("ghfdb_id",)` plus four `ColumnDisplay.build(...)` calls for the orientation
+columns (`ID_parent`, `name`, `lat_NS`, `long_EW` — all published parent
+columns the child queryset already restates per row) followed by
+`ColumnDisplay.list_display_for(CHILD_COLUMNS)`. Deleted the `_scalar`
+factory, the `_interval` static helper, `get_id_parent`, the thirty
+`_scalar`-generated attributes, and all seventeen hand-written `get_*` display
+methods for many-valued and empty columns — every one of them is now covered
+by the mapping. `get_queryset()` reads `GHFDBChild.objects.for_export()`
+rather than restating its own copy of the fifteen-entry prefetch list (T092)
+— `for_export()` already carried the identical set, so this is a pure
+de-duplication, not a behaviour change. Read-only guarantees (T091), the
+plain filters (T094), the vocabulary filters' wiring (T096) and the
+import/export resource attachment (T097) needed no code change — each was
+already correct and is now proven by a real test rather than only by
+inspection.
+
+Introduced `VocabularyListFilter` (T095): one `SimpleListFilter` base taking
+a lookup path and one of two modes — `FIELD` for a single-valued
+`ConceptField` matching on the stored value, `CONCEPT` for a many-valued
+field matching on the concept row's primary key. `EnvironmentListFilter`,
+`ChildExplorationMethodListFilter` and `ExplorePurposeListFilter` are now
+three-line subclasses of it, same names, same `lookups()`/`queryset()`
+behaviour as before — verified against the pre-existing
+`TestGHFDBAdminListFilters` tests, which import and instantiate those classes
+directly and still pass unchanged. `GHFDBParentAdmin` and its own three
+filter classes (`Parent*ListFilter`) are untouched, per this dispatch's
+scope; a later dispatch wiring the site changelist onto this same base is
+what earns the class's "six callers" framing in `tasks.md`.
+
+Corrected the module docstring and `GHFDBChildAdmin`'s and the three filter
+classes' docstrings, which cited `US2`, `BUG-001` and `BUG-004` — defect
+handles and a requirement number from the superseded specification.
+
+Two tasks (T093) needed a decision rather than a change: `search_fields`
+already carries the two names T093 asks for, plus the determination's own
+`ghfdb_id`, which this dispatch left in place rather than narrow — see D13.
+
+**Verified**: `poetry run pytest tests/test_ghfdb/test_admin.py -q` →
+`23 passed`. `poetry run ruff check project/ghfdb/admin.py` → All checks
+passed (one `RUF005` fixed along the way: iterable unpacking instead of
+tuple concatenation for `list_display`). `poetry run ruff format --check
+project/ghfdb/admin.py` → already formatted.
+
+**Next**: none — T078-T097 (this dispatch's whole scope) are complete. T098
+onward (the site changelist, `GHFDBParentAdmin`) is a later dispatch's.
+
+**Watch**: `admin.py` lost roughly 230 lines in this pass — the `_scalar`
+factory, `_interval`, and the eighteen hand-written display methods it and
+the many-valued columns needed. Nothing was added back except the four
+`ColumnDisplay.build(...)` calls and the `VocabularyListFilter` base (about
+30 lines). The next dispatch touching `GHFDBParentAdmin` will find the same
+shape of duplication waiting there (`get_*` methods R5 already names) and the
+same `VocabularyListFilter` ready to take its three filter classes.
