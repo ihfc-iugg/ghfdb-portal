@@ -1,0 +1,228 @@
+# Decisions — 003 a published release read into the portal
+
+The specification in this directory was written in April 2026 and rewritten in place on 2026-08-24
+after an audit against the code. This file records what the audit found and how each disagreement
+was settled, so the rewrite can be read against the original rather than replacing it silently.
+
+Git history holds the original text. Nothing here is a substitute for reading it.
+
+## How the audit ran
+
+Every requirement in the original specification was checked against the implementation and sorted
+into four groups: still true, drifted, absent, and behaviour the code has that the specification
+never mentioned. The task list is then rewritten as though no code existed and reconciled against
+the codebase afterwards, so that what the feature is missing is measured against what it should
+have been rather than against what was built.
+
+The original `tasks.md` recorded 79 of 79 tasks complete. That is a claim the file makes about
+itself, and it was not treated as evidence of anything.
+
+The original had **no requirements section and no success criteria section at all**. It cited a
+requirement, `FR-016`, that appears nowhere in the document. Above its overview sat nineteen lines
+of dated amendment stamps carrying nine defect reports, each written into the specification instead
+of into an issue, several of them amending an earlier amendment. The rewrite carries the final
+reading only, and the defect stamps are gone — see D12.
+
+## Settled
+
+### D1 — The round trip is split, and this specification is the reading half
+
+**Original**: one specification covering import and export together, on the reasoning that "the
+round-trip is only complete when export is working".
+
+**Code**: import works in outline against a format nobody publishes. Export produces values but
+cannot produce a file a curator could submit — a third of the published columns emit under the
+wrong header or not at all, which the repository's own suite records as expected failures under
+issue #122.
+
+**Ruled**: split. Import is what the portal needs now, and every open question on this subject is
+on the export side. #122 asks which spelling of the published column vocabulary is canonical, and
+nothing about reading a file depends on the answer. Export becomes `004` and takes #122 with it.
+
+The cost was weighed and is small. Export is the only honest check on whether an import was
+faithful, but its failure is in headers, ordering and completeness rather than in values, so the
+existing round-trip check keeps working while export waits.
+
+**Consequence**: R3 splits into two roadmap items, and R5's deliverable "confirmation that a release
+exported after the import carries the same data as the release that went in" moves to `004`, since
+it cannot be demonstrated without a working export.
+
+### D2 — The release import and the contributor upload are separate specifications
+
+**Original**: silent on the distinction. It described "a GHFDB-format XLSX file exported from the
+official IHFC spreadsheet template" as one thing.
+
+**Code**: two import formats exist, both reading a spreadsheet with headers on row six. Neither can
+read a published release, which is a comma-separated file with headers on row one.
+
+**Ruled**: separate. They share most of their reading — the same vocabulary handling, the same
+model, the same reporting — but they are different files with different layouts, and only one of
+them matters now. The release import is this specification. The contributor upload becomes `005`
+under R6, and inherits the reading this one builds.
+
+### D3 — The specification is replaced in place, keeping its number
+
+**Original**: `003-ghfdb-import-export`.
+
+**Ruled**: rewritten in the same directory, renamed `003-ghfdb-release-import` because the old name
+describes a scope this no longer has. The epic already raised for it is reused rather than a second
+one opened for the same subject. A second copy on disk would be a second thing for a reader to find
+and believe.
+
+### D4 — One dataset for each publication reference
+
+**Original**: silent. The original importer had no concept of a dataset at all.
+
+**Ruled**: each distinct publication reference becomes one dataset, titled from the title of the
+bibliographic record it resolves to. This is not new doctrine — `CONTEXT.md` already states that one
+publication is always one dataset — but nothing in the reading path implemented it.
+
+The current release carries 1,586 distinct publication references across its rows, none of them
+empty, the largest covering 16,046 rows and 134 appearing exactly once.
+
+### D5 — A missing bibliographic record is created; an ambiguous one is refused
+
+**Original**: silent.
+
+**Ruled**: where a publication reference matches no bibliographic record, one is created carrying
+the citation key. The portal's bibliographic records require only a citation key and a type, so a
+record holding nothing else is valid and can be completed later by whoever assesses it.
+
+Where a reference matches more than one record, the rows carrying it are refused. Citation keys are
+explicitly not unique in the portal's own records, so a match of two is a real possibility, and
+choosing between them would attach a determination to a publication on a guess.
+
+### D6 — A site reported by two publications belongs to the earlier one
+
+**Original**: silent. The original had no dataset concept, so the question could not arise.
+
+**Evidence**: 4,817 of the release's 71,934 sites carry determinations cited to more than one
+publication. Site identity itself is unambiguous — every site has exactly one pair of coordinates.
+
+**Ruled**: the site belongs to the dataset of the earliest publication year among its determinations.
+Its determinations do not move; each stays with the dataset of the publication that reported it.
+This matches how the framework describes the relationship, as the dataset a sample first appeared
+in.
+
+Ownership is compared as each import runs and reassigned when an earlier publication arrives later,
+rather than resolved from the whole file in advance. The comparison then holds however the work is
+divided, which resolving in advance would not.
+
+### D7 — Misspelled published column names are refused, without exception
+
+**Original**: silent on the header check. The importer's own concern was the opposite — suppressing
+errors about columns that were *absent*.
+
+**Code**: no check exists. The published names the portal treats as correct are held in one module,
+and the misspelled forms appear nowhere in the reading path.
+
+**Finding**: the published 2024 release carries both misspelled names in its header, and neither
+correct spelling appears in it. Read literally, the standing rule refuses the exact file this
+feature exists to read.
+
+**Ruled**: the rule holds, unchanged and without an exception. The import refuses the file before
+reading any data row, and the refusal is covered by tests that assert it. Correcting an outdated
+header is part of preparing a file for import, alongside dividing it — the operator's step, not the
+portal's.
+
+This is settled and closed. Perpetuating a spelling error because a file contains it is what would
+make the error permanent, which is what ADR-0003 exists to prevent.
+
+### D8 — The import is administrative, and the confirm step is the check
+
+**Original**: "All import/export actions are staff-only via the Django admin."
+
+**Ruled**: unchanged, and for a better reason than the original gave. The administrative import
+already validates every row, writes nothing, and reports failures with the row and the field
+attached — which is exactly the checking this specification requires. A separate command would
+rebuild that machinery, and a curator correcting a file would need shell access to use it. One
+reading path also serves both this feature and the contributor upload that follows.
+
+A command was considered and rejected. The argument for it was the size of a release file, and
+size is explicitly not this feature's concern.
+
+### D9 — Nothing is written unless the whole file passes
+
+**Original**: "The importer collects these as validation errors and rolls back the entire import,
+reporting all such rows together." Stated only as an edge case, for missing mandatory fields.
+
+**Ruled**: promoted from an edge case to the feature's central guarantee, and widened to every kind
+of failure rather than missing values alone.
+
+The reasoning offered during the audit — that the file profiles clean, so a refusal probably
+indicates a fault in the reader — was rejected. A profile only measures the checks somebody thought
+to run. A refused row means the data is probably wrong, the file is corrected at source, and a
+seeding is dry-run before it is run for real.
+
+### D10 — Identity is the published identifiers
+
+**Original**: the published identifiers map to `local_id` on the determination and on the parent.
+
+**Code**: they map to `ghfdb_id` instead. `local_id` is written only on the site, and the natural
+key computed when the identifier columns are absent is stored in the determination's *name*.
+
+**Ruled**: the published identifiers are the identity, and the field holding them is the one named
+for them. `002` settled that this field is the record's own published identifier and is not itself
+a published column. Storing a computed key in a name field is not identity, and it goes.
+
+The fallback that computed a key from coordinates when the identifier columns were absent goes with
+it. A release always carries both identifiers, and the contributor template — which does not — is a
+different specification.
+
+### D11 — A vocabulary failure is never silent
+
+**Original**: "a descriptive validation error is raised identifying the row number, column name, and
+invalid value."
+
+**Code**: two failures against that. The error names the value and the vocabulary but neither the
+row nor, for most columns, the column. And for every many-valued column — the lithology, the
+stratigraphy, each temperature method, each conductivity column, the exploration purpose — the
+error is caught and discarded, so a row carrying an unrecognised term imports clean with the
+relationship left empty.
+
+**Ruled**: the original is right and the code is wrong, on both counts. Most of the vocabulary
+surface of a release is many-valued, so discarding those errors discards most of the checking this
+feature exists to do.
+
+### D12 — Defect reports leave the specification
+
+**Original**: nine defect reports written into the header as dated amendment stamps, several
+amending an earlier stamp, one narrowing the scope of the stamp above it.
+
+**Ruled**: none survive. A specification says what the feature must do. A defect says what the code
+did wrong on a particular day, which belongs in an issue and then in the history. Where a stamp
+carried a genuine requirement it is now stated plainly among the requirements, and where it recorded
+a fix to something the rewrite no longer describes, it is gone.
+
+Two are worth naming for the reader of the original. The stamps about the synthetic keys that were
+never to reach a curator's screen describe a mechanism the code no longer has — the keys are not
+generated, so they cannot leak. The stamp requiring the published column vocabulary to be adopted
+throughout was half-carried-out, and what remains of it is `004`'s.
+
+### D13 — What the file supplies and the portal does not keep
+
+**Original**: silent. The original described a spreadsheet the portal had never actually read.
+
+**Ruled**: a release carries columns beyond the determination and site columns — the identifiers,
+the publication year, a computed quality code, geography, and the assessment team's own columns.
+Each is either read, or recognised and not stored, and the specification says which.
+
+The quality code is recognised and discarded, by standing constraint: the portal computes quality
+from what it holds and does not ingest supplied codes. The assessment columns are recognised and
+discarded because recording assessment in the portal is aspirational and no field waits for them.
+Neither may cause a file to be refused, since both are part of the format.
+
+### D14 — Rows are never dropped, and names are never judged
+
+**Original**: silent on both.
+
+**Code**: two behaviours nothing asked for. Rows sharing a site are deleted from the file as it is
+read, with no count and no notice, so the confirmation a curator sees cannot match the file they
+uploaded. And a site whose name is a number is refused, while a site whose name is empty produces a
+site with neither name nor location.
+
+**Ruled**: both go. Every data row is either imported or reported as refused, and nothing else may
+happen to it. A site's name is a label, not a key — 11,513 sites in the current release are named
+`?` and 10,898 are named with a number — so a name is stored as given and never causes a refusal.
+Where two rows genuinely disagree about a site they share, that is reported rather than resolved,
+per the standing constraint that the portal does not guess at supplied data.
