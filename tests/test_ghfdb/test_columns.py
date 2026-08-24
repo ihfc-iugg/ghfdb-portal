@@ -80,18 +80,41 @@ class TestPublishedColumns:
 
     @pytest.mark.django_db
     def test_a_many_valued_column_joins_its_labels_and_issues_no_query_when_prefetched(
-        self, django_assert_num_queries, published_chain
+        self, django_assert_num_queries, sites_by_contribution
     ):
-        """T068: R1 group three, and the N+1 this feature exists to avoid."""
-        from project.ghfdb.models import GHFDBChild
+        """T068: R1 group three, and the N+1 this feature exists to avoid.
 
-        display = ColumnDisplay.build("q_method")
-        row = GHFDBChild.objects.for_export().get(pk=published_chain.pk)
+        Asserted against a literal read straight off the fixture's own
+        many-to-many manager, not against the same "; ".join(...) expression
+        re-derived through the callable under test — the previous version of
+        this test compared ``ColumnDisplay.many_valued`` to itself and could
+        not fail no matter what it returned. ``sites_by_contribution``'s
+        ``all_contributing`` site carries two exploration purposes, so the
+        expected value is genuinely populated rather than the empty string
+        both sides would produce if the callable's body were replaced with
+        ``return ""``.
+
+        The zero-query assertion covers materialising the prefetched
+        relationship itself, which is the N+1 ``with_children()`` exists to
+        avoid. It does not wrap ``Concept.__str__`` — that reads a further
+        FK (``vocabulary``) the M2M prefetch does not select-related, a cost
+        that belongs to ``research_vocabs`` rather than to this mapping.
+        """
+        from project.ghfdb.models import GHFDBParent
+
+        site = sites_by_contribution["all_contributing"]
+        purposes = list(site.sample.explo_purpose.all())
+        assert len(purposes) == 2
+        expected = "; ".join(str(purpose) for purpose in purposes)
+
+        row = GHFDBParent.objects.as_ghfdb_flat().with_children().get(pk=site.pk)
 
         with django_assert_num_queries(0):
-            rendered = display(row)
+            members = list(row.sample.heatflowsite.explo_purpose.all())
+        assert len(members) == 2
 
-        assert rendered == "; ".join(str(item) for item in row.method.all())
+        display = ColumnDisplay.build("explo_purpose")
+        assert display(row) == expected
 
     def test_a_many_valued_column_renders_empty_when_the_path_breaks(self):
         """T068: a missing relationship anywhere along the path renders empty
