@@ -194,10 +194,6 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
     def get_export_formats(self):
         return [XLSX]
 
-    def get_import_resource_kwargs(self, request, **kwargs):
-        """Pass through resource kwargs; dataset defaults to None for format detection."""
-        return super().get_import_resource_kwargs(request, **kwargs)
-
     def has_import_permission(self, request):
         """Gate the import route on the model's add permission at the user
         level (T123): the framework's own hook is a no-op whenever
