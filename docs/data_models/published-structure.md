@@ -1,10 +1,15 @@
 # Reading the published structure
 
-The portal stores heat flow as a normalised relational graph: a site, the depth intervals within it,
-the gradient and conductivity measured over each interval, the heat flow determined from that pair,
-and the representative value for the site as a whole. The database the commission publishes is a
-flat file, one row per determination, with the site's own values restated on every row that
-mentions it.
+The portal stores heat flow as a normalised relational graph:
+
+- a site
+- the depth intervals within it
+- the gradient and conductivity measured over each interval
+- the heat flow determined from that pair
+- the representative value for the site as a whole
+
+The database the commission publishes is a flat file, one row per determination, with the site's
+own values restated on every row that mentions it.
 
 This page covers the reading direction between the two. For the fields themselves, see
 [GHFDB Fields](../ghfdb_fields.md). For the entities and their relationships, see the
@@ -61,7 +66,7 @@ holds for each correction type independently.
 
 Calls `as_ghfdb_flat()` and attaches the many-valued columns — calculation method, exploration
 purpose, the gradient's methods and corrections, the conductivity's descriptive vocabularies,
-lithology, stratigraphy and probe type. Seventeen published child columns are many-to-many
+lithology, stratigraphy and probe type. Fifteen published child columns are many-to-many
 relationships and cannot be annotated, so **a complete published row is only available after this
 method**, not after `as_ghfdb_flat()` alone.
 
@@ -98,7 +103,7 @@ column is called and where it sits.
 Two names differ from the file the commission distributes. The portal uses `tc_pT_function` and
 `Ref_IGSN`, and rejects a file whose header carries the misspelled `tc_pT_fuction` or `Ref_ISGN` as
 an outdated template. The reasoning is in
-[ADR 0003](../adr/0003-misspelled-published-columns-are-corrected-and-rejected.md); the wider rule
+[ADR 0003](../adr/0003-misspelled-published-columns-are-corrected-and-rejected.md). The wider rule
 that published names are preserved exactly, casing included, is
 [ADR 0002](../adr/0002-published-column-names-are-preserved-exactly.md).
 
