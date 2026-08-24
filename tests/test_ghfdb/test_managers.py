@@ -1,11 +1,11 @@
-"""
-Tests for GHFDBChildQuerySet and GHFDBChildManager.
+"""Tests for the two proxy querysets and their managers.
 
-Covers query-count guards, scalar column completeness, correction-flag annotations,
-for_export() performance, and standard queryset operability.
-
-Tests are written first (TDD); they will FAIL until the implementation is in place.
+Covers the membership scoping, the flattened published columns on each side,
+the many-valued columns the flattening cannot carry, the query cost measured at
+two row counts rather than one, and the page documenting all of it.
 """
+
+import pathlib
 
 import pytest
 
@@ -874,3 +874,41 @@ class TestGHFDBManagerScoping:
         assert non_ghfdb_parent.pk not in ghfdb_parent_pks, (
             "Non-GHFDB parent (ghfdb_id=None) must be excluded"
         )
+
+
+PUBLISHED_STRUCTURE_PAGE = (
+    pathlib.Path(__file__).parents[2] / "docs" / "data_models" / "published-structure.md"
+)
+
+
+class TestPublishedStructurePage:
+    def test_the_page_exists_and_is_in_the_navigation(self):
+        assert PUBLISHED_STRUCTURE_PAGE.exists()
+        index = (PUBLISHED_STRUCTURE_PAGE.parent / "index.md").read_text()
+        assert "published-structure" in index
+
+    def test_it_names_every_public_queryset_method_this_feature_defines(self):
+        """Read from the modules, so a method added or renamed without a
+        documentation change fails here."""
+        import inspect
+
+        from project.ghfdb.managers import GHFDBChildQuerySet, GHFDBParentQuerySet
+
+        page = PUBLISHED_STRUCTURE_PAGE.read_text()
+        for queryset in (GHFDBChildQuerySet, GHFDBParentQuerySet):
+            for name, member in inspect.getmembers(queryset, inspect.isfunction):
+                if name.startswith("_") or member.__module__ != queryset.__module__:
+                    continue
+                assert f"{name}()" in page, f"{queryset.__name__}.{name}() undocumented"
+
+    def test_it_names_the_two_corrected_column_spellings(self):
+        """The page is where a curator finds out why the header they know is
+        not the header they see."""
+        page = PUBLISHED_STRUCTURE_PAGE.read_text()
+        for corrected in ("tc_pT_function", "Ref_IGSN"):
+            assert corrected in page
+
+    def test_it_names_the_columns_that_are_always_empty(self):
+        page = PUBLISHED_STRUCTURE_PAGE.read_text()
+        for empty in ("Ref_IGSN", "publication_reference", "data_reference"):
+            assert empty in page

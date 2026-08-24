@@ -1703,7 +1703,7 @@
               "docs/data_models/index.md:16"
             ],
             "tests": [
-              "tests/test_ghfdb/test_docs.py::TestPublishedStructurePage"
+              "tests/test_ghfdb/test_managers.py::TestPublishedStructurePage"
             ],
             "commands": [
               "poetry run pytest tests/test_ghfdb/test_docs.py -q -> 4 passed"

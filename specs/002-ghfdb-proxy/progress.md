@@ -781,9 +781,11 @@ the column authority and the two changelists, at `docs/data_models/published-str
 Its test reads the method names off the queryset classes, so a method added or
 renamed without a documentation change fails rather than drifting.
 
-The docs test lives in this feature's own test tree rather than under a
-`tests/test_docs/` package, because that package arrives in another open pull
-request and creating it here would collide.
+The docs assertions live in `test_managers.py` as another `Test*` class, next to
+the methods the page describes. They started life in a `tests/test_docs/`
+package, which collides with another open pull request that creates it, and then
+as their own module, which the conformance gate refused because it mirrors no
+source module. The gate is right: a cross-cutting test belongs with its subject.
 
 **Verified**: `poetry run pytest tests/test_ghfdb -q` → 250 passed, 13 xfailed.
 `poetry run pytest tests/ --ignore=tests/test_ghfdb -q` → 76 passed, 1 skipped.
