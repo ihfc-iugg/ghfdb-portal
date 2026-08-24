@@ -510,6 +510,27 @@ class TestGHFDBParentAdmin:
         assert published_chain.parent in result_list
         assert unpublished_chain.parent not in result_list
 
+    @pytest.mark.django_db
+    def test_query_count_is_equal_at_two_row_counts(
+        self, staff_client, published_chains, constant_query_count
+    ):
+        """T107 (FR-019, SC-003), measured on the rendered changelist.
+
+        Follows D12: the framework's ``orbit`` audit-log watcher costs
+        roughly three queries per rendered row, which is not this
+        changelist's own cost, so it is disabled for the duration of the
+        comparison, exactly as the determination changelist's equivalent
+        test disables it — see that test's docstring for the measurement.
+        """
+        url = reverse("admin:ghfdb_ghfdbparent_changelist")
+
+        def call():
+            staff_client.get(url)
+
+        with override_settings(ORBIT={"ENABLED": False}):
+            call()
+            constant_query_count(published_chains, call)
+
 
 # ---------------------------------------------------------------------------
 # US-3: the determination changelist (T078-T089).
