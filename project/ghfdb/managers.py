@@ -9,7 +9,8 @@ Provides ``GHFDBChildQuerySet`` with two key methods:
   queries, constant regardless of row count.
 
 * ``for_export()`` — calls ``as_ghfdb_flat()`` and chains
-  ``prefetch_related()`` for all 14 M2M paths; ~16 DB queries, constant.
+  ``prefetch_related()`` for all 16 M2M paths; 18 DB queries, constant
+  (measured: 1 main query, 16 prefetch queries, 1 content-type lookup).
 
 References:
     - Fuchs et al. (2021). A new database structure for the IHFC Global Heat
@@ -52,7 +53,7 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
 
     def as_ghfdb_flat(self) -> "GHFDBChildQuerySet":
         """
-        Annotate the queryset with all 31 scalar GHFDB columns and 9
+        Annotate the queryset with all 40 scalar GHFDB columns and 9
         correction-flag subqueries.
 
         Executes ≤2 DB queries total (main query + optional content-type
@@ -152,10 +153,10 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
     def for_export(self) -> "GHFDBChildQuerySet":
         """
         Return a queryset ready for XLSX export: flat scalar annotations plus
-        all 14 M2M relations pre-fetched.
+        all 16 M2M relations pre-fetched.
 
-        Executes ~16 DB queries total (1 main + 14 prefetch-related queries,
-        one per M2M relation, plus optional content-type lookup), all constant
+        Executes 18 DB queries total (1 main + 16 prefetch-related queries,
+        one per M2M relation, plus 1 content-type lookup), all constant
         regardless of row count.
         """
         qs = self.as_ghfdb_flat().prefetch_related(
@@ -233,20 +234,17 @@ class GHFDBParentQuerySet(PolymorphicQuerySet):
         )
 
     def with_children(self) -> "GHFDBParentQuerySet":
-        """Prefetch linked child ``HeatFlow`` records.
+        """Prefetch linked child ``HeatFlow`` records, and the site's
+        exploration purposes (T062, FR-010) — the one many-valued published
+        parent column, excluded from ``as_ghfdb_flat()``'s annotations for
+        the reason recorded there.
 
-        After calling this, accessing ``parent.children.all()`` will not fire
-        additional queries.  Executes in ~2 DB queries (1 main + 1 prefetch),
-        constant regardless of row count.
-
-        T062 (FR-010) also asks this method to prefetch
-        ``sample__heatflowsite__explo_purpose`` — the one many-valued
-        published parent column, excluded from ``as_ghfdb_flat()``'s
-        annotations for the reason recorded there. Blocked: see D11 in
-        ``decisions.md``. Prefetching through the polymorphic MTI chain
-        costs four further queries, which breaks the pre-existing
-        ``test_parent_with_children_no_extra_queries``
-        (``django_assert_max_num_queries(3)``) below.
+        After calling this, accessing ``parent.children.all()`` and
+        ``parent.sample.heatflowsite.explo_purpose.all()`` will not fire
+        additional queries. A fixed cost that does not grow with row count,
+        not the ``~2`` this docstring used to claim: measured at 7 queries
+        for one site, through the polymorphic inheritance chain the second
+        prefetch walks.
         """
         return cast(
             "GHFDBParentQuerySet",
