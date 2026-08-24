@@ -24,10 +24,23 @@ References:
     - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
 """
 
-from collections.abc import Callable, Iterable
-from typing import NamedTuple
+from collections.abc import Iterable
+from typing import Any, NamedTuple, Protocol, cast
 
 from .constants import CORRECTION_COL_MAP
+
+
+class DisplayCallable(Protocol):
+    """What Django asks of a ``list_display`` entry that is a callable.
+
+    ``short_description`` is the column heading. ``admin_order_field`` is the
+    sort key, and is absent on a column there is nothing to sort by.
+    """
+
+    short_description: str
+    admin_order_field: str
+
+    def __call__(self, obj: Any) -> Any: ...
 
 
 class ColumnEntry(NamedTuple):
@@ -167,25 +180,25 @@ class ColumnDisplay:
     UNSORTABLE = frozenset(CORRECTION_COL_MAP)
 
     @staticmethod
-    def annotation(accessor: str) -> Callable:
+    def annotation(accessor: str) -> DisplayCallable:
         """A callable reading *accessor* straight off an annotated row."""
 
         def display(obj):
             return getattr(obj, accessor, None)
 
-        return display
+        return cast(DisplayCallable, display)
 
     @staticmethod
-    def field(accessor: str) -> Callable:
+    def field(accessor: str) -> DisplayCallable:
         """A callable reading *accessor* straight off the proxy model."""
 
         def display(obj):
             return getattr(obj, accessor, None)
 
-        return display
+        return cast(DisplayCallable, display)
 
     @staticmethod
-    def many_valued(path: str) -> Callable:
+    def many_valued(path: str) -> DisplayCallable:
         """A callable joining the labels of the related rows reached by
         *path*, a dot-separated attribute path from the row.
 
@@ -202,10 +215,10 @@ class ColumnDisplay:
                     return ""
             return "; ".join(str(item) for item in target.all())
 
-        return display
+        return cast(DisplayCallable, display)
 
     @staticmethod
-    def empty(accessor: str | None = None) -> Callable:
+    def empty(accessor: str | None = None) -> DisplayCallable:
         """A callable for a column nothing resolves (R4, D3): always ''.
 
         Takes and ignores an accessor so :meth:`build` can call every
@@ -215,10 +228,10 @@ class ColumnDisplay:
         def display(obj):
             return ""
 
-        return display
+        return cast(DisplayCallable, display)
 
     @staticmethod
-    def build(name: str) -> Callable:
+    def build(name: str) -> DisplayCallable:
         """Return the display callable for the published column *name*.
 
         Raises ``ValueError`` naming *name* if ``PublishedColumns`` holds no
@@ -244,10 +257,10 @@ class ColumnDisplay:
         sortable = entry.group in (PublishedColumns.ANNOTATION, PublishedColumns.FIELD)
         if sortable and name not in ColumnDisplay.UNSORTABLE:
             display.admin_order_field = accessor
-        return display
+        return cast(DisplayCallable, display)
 
     @staticmethod
-    def list_display_for(columns: Iterable[str]) -> tuple[Callable, ...]:
+    def list_display_for(columns: Iterable[str]) -> tuple[DisplayCallable, ...]:
         """Return *columns* as display callables, in that order.
 
         Refuses — at call time, which for a caller building ``list_display``
