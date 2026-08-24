@@ -1288,118 +1288,394 @@
         },
         {
           "id": "T098",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
+            ],
+            "commit": "80c9ad5"
+          }
         },
         {
           "id": "T099",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
+            ],
+            "commit": "2cf1f35"
+          }
         },
         {
           "id": "T100",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
+            ],
+            "commit": "ce9963c"
+          }
         },
         {
           "id": "T101",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
+            ],
+            "commit": "2c50279"
+          }
         },
         {
           "id": "T102",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
+            ],
+            "commit": "1cb4f7b"
+          }
         },
         {
           "id": "T103",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
+            ],
+            "commit": "8073cb6"
+          }
         },
         {
           "id": "T104",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
+            ],
+            "commit": "74bdaa5"
+          }
         },
         {
           "id": "T105",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
+            ],
+            "commit": "6bc400e"
+          }
         },
         {
           "id": "T106",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
+            ],
+            "commit": "bcf38a3"
+          }
         },
         {
           "id": "T107",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
+            ],
+            "commit": "3fefe9d"
+          }
         },
         {
           "id": "T108",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
+            ],
+            "commit": "42e009f"
+          }
         },
         {
           "id": "T109",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
+            ],
+            "commit": "d90363d"
+          }
         },
         {
           "id": "T110",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
+            ],
+            "commit": "c5ffa2e"
+          }
         },
         {
           "id": "T111",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
+            ],
+            "commit": "084f828"
+          }
         },
         {
           "id": "T112",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
+            ],
+            "commit": "c8638df"
+          }
         },
         {
           "id": "T113",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
+            ],
+            "commit": "c8638df"
+          }
         },
         {
           "id": "T114",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
+            ],
+            "commit": "c8638df"
+          }
         },
         {
           "id": "T115",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
+            ],
+            "commit": "c8638df"
+          }
         },
         {
           "id": "T116",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
+            ],
+            "commit": "c8638df"
+          }
         },
         {
           "id": "T117",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
+            ],
+            "commit": "c8638df"
+          }
         },
         {
           "id": "T118",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
+            ],
+            "commit": "e48375b"
+          }
         },
         {
           "id": "T119",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
+            ],
+            "commit": "442cf60"
+          }
         },
         {
           "id": "T123",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
+            ],
+            "commit": "780bf5a"
+          }
         },
         {
           "id": "T120",
