@@ -457,3 +457,40 @@ class TestGHFDBChildAdmin:
 
         response = staff_client.get(url, {"q": "no-such-site-name-anywhere"})
         assert response.context["cl"].result_count == 0
+
+    @pytest.mark.django_db
+    def test_the_eight_filters_are_offered(self, staff_client, published_chain):
+        """T083 (FR-017): environment, heat production correction flag,
+        exploration method, exploration purpose, country, region, continent
+        and geological domain, each producing matching rows when applied."""
+        from heat_flow.vocabularies import ExplorationMethod, ExplorationPurpose
+        from research_vocabs.models import Concept
+
+        model_admin = admin.site._registry[GHFDBChild]
+        assert len(model_admin.list_filter) == 8
+
+        site = published_chain.sample.heatflowinterval.site
+        explo_method_value = ExplorationMethod().choices[0][0]
+        purpose = Concept.get_for_vocabulary(ExplorationPurpose).first()
+        site.explo_method = explo_method_value
+        site.region = "Bavaria"
+        site.domain = "Continental"
+        site.save()
+        site.explo_purpose.set([purpose])
+        published_chain.parent.corr_HP_flag = True
+        published_chain.parent.save()
+
+        url = reverse("admin:ghfdb_ghfdbchild_changelist")
+        filters = {
+            "environment": str(site.environment),
+            "parent__corr_HP_flag__exact": "1",
+            "explo_method": explo_method_value,
+            "explo_purpose": purpose.pk,
+            "sample__heatflowinterval__site__country": site.country,
+            "sample__heatflowinterval__site__region": site.region,
+            "sample__heatflowinterval__site__continent": site.continent,
+            "sample__heatflowinterval__site__domain": site.domain,
+        }
+        for param, value in filters.items():
+            response = staff_client.get(url, {param: value})
+            assert response.context["cl"].result_count == 1, param
