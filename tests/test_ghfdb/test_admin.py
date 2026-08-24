@@ -395,6 +395,46 @@ class TestGHFDBParentAdmin:
         response = staff_client.get(url, {"q": "no-such-site-name-anywhere"})
         assert response.context["cl"].result_count == 0
 
+    @pytest.mark.django_db
+    def test_the_eight_filters_are_offered(self, staff_client, published_chain):
+        """T103 (FR-017): environment, heat production correction flag,
+        exploration method, exploration purpose, country, region, continent
+        and geological domain, each producing matching rows when applied."""
+        from heat_flow.vocabularies import ExplorationMethod, ExplorationPurpose
+        from research_vocabs.models import Concept
+
+        from project.ghfdb.models import GHFDBParent
+
+        model_admin = admin.site._registry[GHFDBParent]
+        assert len(model_admin.list_filter) == 8
+
+        parent = published_chain.parent
+        site = parent.sample
+        explo_method_value = ExplorationMethod().choices[0][0]
+        purpose = Concept.get_for_vocabulary(ExplorationPurpose).first()
+        site.explo_method = explo_method_value
+        site.region = "Bavaria"
+        site.domain = "Continental"
+        site.save()
+        site.explo_purpose.set([purpose])
+        parent.corr_HP_flag = True
+        parent.save()
+
+        url = reverse("admin:ghfdb_ghfdbparent_changelist")
+        filters = {
+            "environment": str(site.environment),
+            "corr_HP_flag__exact": "1",
+            "explo_method": explo_method_value,
+            "explo_purpose": purpose.pk,
+            "sample__heatflowsite__country": site.country,
+            "sample__heatflowsite__region": site.region,
+            "sample__heatflowsite__continent": site.continent,
+            "sample__heatflowsite__domain": site.domain,
+        }
+        for param, value in filters.items():
+            response = staff_client.get(url, {param: value})
+            assert response.context["cl"].result_count == 1, param
+
 
 # ---------------------------------------------------------------------------
 # US-3: the determination changelist (T078-T089).
