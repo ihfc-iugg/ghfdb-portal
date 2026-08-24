@@ -17,6 +17,8 @@ from django.utils.translation import gettext_lazy as _
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import XLSX
 
+from .columns import ColumnDisplay
+from .constants import CHILD_COLUMNS
 from .models import GHFDBChild, GHFDBParent, GHFDBRelease
 from .resources import (
     GHFDBChildImportResource,
@@ -101,25 +103,6 @@ class ChildExplorationMethodListFilter(SimpleListFilter):
         return queryset
 
 
-def _scalar(attr, description=None, orderable=True):
-    """Create a display callable for a queryset scalar annotation.
-
-    Each annotation name in ``list_display`` must correspond to either a model
-    field or a callable on the admin class.  This factory returns a function
-    that reads *attr* from the annotated queryset row, sets ``short_description``
-    to *description* (defaults to *attr*), and registers *attr* as the sort key
-    unless *orderable* is False (e.g. for subquery-backed annotations).
-    """
-
-    def method(self, obj):
-        return getattr(obj, attr, None)
-
-    method.short_description = description or attr
-    if orderable:
-        method.admin_order_field = attr
-    return method
-
-
 @admin.register(GHFDBRelease)
 class GHFDBReleaseAdmin(admin.ModelAdmin):
     list_display = ("version", "release_date", "description")
@@ -128,15 +111,13 @@ class GHFDBReleaseAdmin(admin.ModelAdmin):
 
 @admin.register(GHFDBChild)
 class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
-    """Read-only Django admin view for GHFDB flat entries with XLSX import action.
+    """Read-only changelist for the published determination view (US-3).
 
-    The changelist uses ``GHFDBChildQuerySet.as_ghfdb_flat()`` so all annotated
-    scalar columns are available as ``list_display`` attributes. Mutation of
-    existing records is disabled; data enters only via the import action.
-
-    Admin column ordering is intentionally aligned to parent-level GHFDB
-    spreadsheet fields (FR-012) and includes explicit search/filter fields
-    (FR-013, FR-014).
+    Columns come entirely from ``project/ghfdb/columns.py``'s published-column
+    mapping (see ``list_display`` below), so a column added to
+    ``constants.CHILD_COLUMNS`` and not to that mapping is a startup failure
+    rather than a silently missing column. Mutation of existing records is
+    disabled; data enters only via the import action.
 
     References:
         - Fuchs et al. (2021). A new database structure for the IHFC Global
@@ -144,62 +125,22 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
         - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
     """
 
+    # The four orientation columns the assessment team reads a row by — the
+    # determination's own published identifier, the site's published
+    # identifier, the site name and the site's two coordinate columns (D1) —
+    # followed by the canonical child block. Built from `ColumnDisplay`, the
+    # same mapping the tail is built from: `ID_parent`, `name`, `lat_NS` and
+    # `long_EW` are all published parent columns already restated as
+    # annotations on this proxy's own queryset (T081). No column list is
+    # written out here beyond these four names and `ghfdb_id` itself, which
+    # is not a published column.
     list_display = (
         "ghfdb_id",
-        "get_id_parent",
-        "site_name",
-        "lat_NS",
-        "long_EW",
-        "qc",
-        "qc_uncertainty",
-        "get_q_method",
-        "q_top",
-        "q_bottom",
-        "probe_penetration",
-        "get_publication_reference",
-        "get_data_reference",
-        "relevant_child",
-        "c_comment",
-        "corr_IS_flag",
-        "corr_T_flag",
-        "corr_S_flag",
-        "corr_E_flag",
-        "corr_TOPO_flag",
-        "corr_PAL_flag",
-        "corr_SUR_flag",
-        "corr_CONV_flag",
-        "corr_HR_flag",
-        "expedition",
-        "get_probe_type",
-        "probe_length",
-        "probe_tilt",
-        "water_temperature",
-        "get_geo_lithology",
-        "get_geo_stratigraphy",
-        "T_grad_mean",
-        "T_grad_uncertainty",
-        "T_grad_mean_cor",
-        "T_grad_uncertainty_cor",
-        "get_t_method_top",
-        "get_t_method_bottom",
-        "T_shutin_top",
-        "T_shutin_bottom",
-        "get_t_corr_top",
-        "get_t_corr_bottom",
-        "T_number",
-        "q_date",
-        "tc_mean",
-        "tc_uncertainty",
-        "get_tc_source",
-        "get_tc_location",
-        "get_tc_method",
-        "get_tc_saturation",
-        "get_tc_p_t_conditions",
-        "get_tc_p_t_fuction",
-        "tc_number",
-        "get_tc_strategy",
-        "get_quality",
-        "get_ref_isgn",
+        ColumnDisplay.build("ID_parent"),
+        ColumnDisplay.build("name"),
+        ColumnDisplay.build("lat_NS"),
+        ColumnDisplay.build("long_EW"),
+        *ColumnDisplay.list_display_for(CHILD_COLUMNS),
     )
     search_fields = (
         "sample__heatflowinterval__site__name",
@@ -218,13 +159,6 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
     )
     list_display_links = None  # enforce read-only (no edit links)
     ordering = ("parent__ghfdb_id", "ghfdb_id")
-
-    @staticmethod
-    def _interval(obj):
-        sample = getattr(obj, "sample", None)
-        if sample is None:
-            return None
-        return getattr(sample, "heatflowinterval", None)
 
     # --- Import configuration -------------------------------------------------------
 
@@ -245,170 +179,6 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
     def get_import_resource_kwargs(self, request, **kwargs):
         """Pass through resource kwargs; dataset defaults to None for format detection."""
         return super().get_import_resource_kwargs(request, **kwargs)
-
-    @admin.display(description=_("ID_parent"), ordering="parent__ghfdb_id")
-    def get_id_parent(self, obj):
-        return getattr(obj.parent, "ghfdb_id", None)
-
-    # --- Scalar annotation display methods ---
-    # Generated via _scalar(); no explicit def needed — the factory sets
-    # short_description and admin_order_field on the returned callable.
-
-    site_name = _scalar("site_name", description="name")
-    lat_NS = _scalar("lat_NS")
-    long_EW = _scalar("long_EW")
-    qc = _scalar("qc")
-    qc_uncertainty = _scalar("qc_uncertainty")
-    q_top = _scalar("q_top")
-    q_bottom = _scalar("q_bottom")
-    probe_penetration = _scalar("probe_penetration")
-    relevant_child = _scalar("relevant_child")
-    corr_IS_flag = _scalar("corr_IS_flag", orderable=False)
-    corr_T_flag = _scalar("corr_T_flag", orderable=False)
-    corr_S_flag = _scalar("corr_S_flag", orderable=False)
-    corr_E_flag = _scalar("corr_E_flag", orderable=False)
-    corr_TOPO_flag = _scalar("corr_TOPO_flag", orderable=False)
-    corr_PAL_flag = _scalar("corr_PAL_flag", orderable=False)
-    corr_SUR_flag = _scalar("corr_SUR_flag", orderable=False)
-    corr_CONV_flag = _scalar("corr_CONV_flag", orderable=False)
-    corr_HR_flag = _scalar("corr_HR_flag", orderable=False)
-    probe_length = _scalar("probe_length")
-    probe_tilt = _scalar("probe_tilt")
-    T_grad_mean = _scalar("T_grad_mean")
-    T_grad_uncertainty = _scalar("T_grad_uncertainty")
-    T_grad_mean_cor = _scalar("T_grad_mean_cor")
-    T_grad_uncertainty_cor = _scalar("T_grad_uncertainty_cor")
-    T_shutin_top = _scalar("T_shutin_top")
-    T_shutin_bottom = _scalar("T_shutin_bottom")
-    T_number = _scalar("T_number")
-    q_date = _scalar("q_date")
-    tc_mean = _scalar("tc_mean")
-    tc_uncertainty = _scalar("tc_uncertainty")
-    tc_number = _scalar("tc_number")
-
-    @admin.display(description=_("q_method"))
-    def get_q_method(self, obj):
-        return "; ".join(str(c) for c in obj.method.all())
-
-    @admin.display(description=_("publication_reference"))
-    def get_publication_reference(self, obj):
-        references = getattr(obj, "publication_references", None)
-        if references is None:
-            return ""
-        return "; ".join(str(r) for r in references.all())
-
-    @admin.display(description=_("data_reference"))
-    def get_data_reference(self, obj):
-        references = getattr(obj, "data_references", None)
-        if references is None:
-            return ""
-        return "; ".join(str(r) for r in references.all())
-
-    @admin.display(description=_("probe_type"))
-    def get_probe_type(self, obj):
-        interval = self._interval(obj)
-        if interval is None or not hasattr(interval, "probe_metadata"):
-            return ""
-        return "; ".join(str(c) for c in interval.probe_metadata.probe_type.all())
-
-    @admin.display(description=_("geo_lithology"))
-    def get_geo_lithology(self, obj):
-        interval = self._interval(obj)
-        if interval is None:
-            return ""
-        return "; ".join(str(c) for c in interval.lithology.all())
-
-    @admin.display(description=_("geo_stratigraphy"))
-    def get_geo_stratigraphy(self, obj):
-        interval = self._interval(obj)
-        if interval is None:
-            return ""
-        return "; ".join(str(c) for c in interval.stratigraphy.all())
-
-    @admin.display(description=_("T_method_top"))
-    def get_t_method_top(self, obj):
-        gradient = getattr(obj, "thermal_gradient", None)
-        if gradient is None:
-            return ""
-        return "; ".join(str(c) for c in gradient.method_top.all())
-
-    @admin.display(description=_("T_method_bottom"))
-    def get_t_method_bottom(self, obj):
-        gradient = getattr(obj, "thermal_gradient", None)
-        if gradient is None:
-            return ""
-        return "; ".join(str(c) for c in gradient.method_bottom.all())
-
-    @admin.display(description=_("T_corr_top"))
-    def get_t_corr_top(self, obj):
-        gradient = getattr(obj, "thermal_gradient", None)
-        if gradient is None:
-            return ""
-        return "; ".join(str(c) for c in gradient.correction_top.all())
-
-    @admin.display(description=_("T_corr_bottom"))
-    def get_t_corr_bottom(self, obj):
-        gradient = getattr(obj, "thermal_gradient", None)
-        if gradient is None:
-            return ""
-        return "; ".join(str(c) for c in gradient.correction_bottom.all())
-
-    @admin.display(description=_("tc_source"))
-    def get_tc_source(self, obj):
-        conductivity = getattr(obj, "thermal_conductivity", None)
-        if conductivity is None:
-            return ""
-        return "; ".join(str(c) for c in conductivity.source.all())
-
-    @admin.display(description=_("tc_location"))
-    def get_tc_location(self, obj):
-        conductivity = getattr(obj, "thermal_conductivity", None)
-        if conductivity is None:
-            return ""
-        return "; ".join(str(c) for c in conductivity.location.all())
-
-    @admin.display(description=_("tc_method"))
-    def get_tc_method(self, obj):
-        conductivity = getattr(obj, "thermal_conductivity", None)
-        if conductivity is None:
-            return ""
-        return "; ".join(str(c) for c in conductivity.method.all())
-
-    @admin.display(description=_("tc_saturation"))
-    def get_tc_saturation(self, obj):
-        conductivity = getattr(obj, "thermal_conductivity", None)
-        if conductivity is None:
-            return ""
-        return "; ".join(str(c) for c in conductivity.saturation.all())
-
-    @admin.display(description=_("tc_pT_conditions"))
-    def get_tc_p_t_conditions(self, obj):
-        conductivity = getattr(obj, "thermal_conductivity", None)
-        if conductivity is None:
-            return ""
-        return "; ".join(str(c) for c in conductivity.pT_conditions.all())
-
-    @admin.display(description=_("tc_pT_fuction"))
-    def get_tc_p_t_fuction(self, obj):
-        conductivity = getattr(obj, "thermal_conductivity", None)
-        if conductivity is None:
-            return ""
-        return "; ".join(str(c) for c in conductivity.pT_function.all())
-
-    @admin.display(description=_("tc_strategy"))
-    def get_tc_strategy(self, obj):
-        conductivity = getattr(obj, "thermal_conductivity", None)
-        if conductivity is None:
-            return ""
-        return "; ".join(str(c) for c in conductivity.strategy.all())
-
-    @admin.display(description=_("quality"), ordering="quality")
-    def get_quality(self, obj):
-        return getattr(obj, "quality", None)
-
-    @admin.display(description=_("Ref_ISGN"))
-    def get_ref_isgn(self, obj):
-        return ""
 
     def get_queryset(self, request):
         """Return the flat annotated queryset for the changelist."""
