@@ -398,3 +398,28 @@ class TestGHFDBChildAdmin:
         response = staff_client.get(url)
         headings = [str(header["text"]) for header in result_headers(response.context["cl"])]
         assert headings[-len(CHILD_COLUMNS) :] == list(CHILD_COLUMNS)
+
+    @pytest.mark.django_db
+    def test_the_leading_columns_are_the_four_orientation_columns_and_nothing_else(
+        self, staff_client, published_chain
+    ):
+        """T080 (US-3 acceptance scenario 2): the record's published
+        identifier, the site's published identifier, the site name and the
+        site's two coordinate columns, in that order, and no sixth."""
+        url = reverse("admin:ghfdb_ghfdbchild_changelist")
+        response = staff_client.get(url)
+        cl = response.context["cl"]
+        headings = [str(header["text"]) for header in result_headers(cl)]
+        # result_headers() prepends an action-checkbox column when the admin
+        # offers any bulk action; slice from the offset rather than assuming
+        # position 0, so this test does not depend on that unrelated detail.
+        offset = len(headings) - len(cl.model_admin.list_display)
+
+        assert headings[offset : offset + 5] == [
+            label_for_field("ghfdb_id", GHFDBChild),
+            "ID_parent",
+            "name",
+            "lat_NS",
+            "long_EW",
+        ]
+        assert headings[offset + 5] == CHILD_COLUMNS[0]
