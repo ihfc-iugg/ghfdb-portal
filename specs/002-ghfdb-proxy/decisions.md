@@ -302,3 +302,23 @@ already complete before this dispatch touched it.
 case the `override_settings` block here can be replaced with that. Any other admin-changelist-level
 query-count test elsewhere in this codebase will hit the same two confounds and can use the same
 pattern.
+
+### D13 — GHFDBChildAdmin.search_fields keeps its own ghfdb_id, not narrowed to T093's two names
+
+**Found**: T093 asks for `search_fields` on the site name and the site's published identifier, by
+paths that exist from the determination — two names. The pre-existing `search_fields` already
+carries both, plus a third: the determination's own `ghfdb_id`. A pre-existing test
+(`TestGHFDBAdminChangelist::test_ghfdb_admin_changelist_refined_configuration`) asserts
+`model_admin.search_fields == EXPECTED_SEARCH_FIELDS`, a three-entry tuple including that third
+field, and this dispatch's brief authorises touching only one assertion in that test — the one
+`EXPECTED_LIST_DISPLAY` fed (T079) — not this one.
+
+**Ruled**: `search_fields` is left exactly as it was. T093's requirement is a minimum, not an
+exclusive list — the two names it asks for are present and proven by
+`TestGHFDBChildAdmin::test_search_matches_site_name_and_published_site_identifier` (T082) — and
+removing the third field would have bought nothing this story needs while breaking a test outside
+this dispatch's authorised edit.
+
+**Revisit if** a future story is explicitly asked to narrow the determination changelist's search to
+only the site name and the site's published identifier — that would be the point to also correct
+`EXPECTED_SEARCH_FIELDS`.
