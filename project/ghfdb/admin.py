@@ -1,9 +1,12 @@
 """
 GHFDB admin registration.
 
-Registers the ``GHFDBChild`` proxy model with read-only changelist and XLSX import
-action (US2).  Import is driven by ``GHFDBChildImportResource`` and
-``GHFDBImportFormat``.
+Registers the ``GHFDBChild`` and ``GHFDBParent`` proxy models as read-only
+changelists reading the published Global Heat Flow Database structure
+(US-3), each with an XLSX import action. The determination changelist's
+columns are built from ``project/ghfdb/columns.py``'s published-column
+mapping rather than restated here — see that module's docstring and
+``specs/002-ghfdb-proxy/decisions.md`` D1 and D2.
 
 References:
     - Fuchs et al. (2021). A new database structure for the IHFC Global Heat
@@ -29,78 +32,91 @@ from .resources import (
 )
 
 
-class ExplorePurposeListFilter(SimpleListFilter):
-    """Vocabulary-scoped list filter for HeatFlowSite.explo_purpose (BUG-001).
+class VocabularyListFilter(SimpleListFilter):
+    """A ``SimpleListFilter`` scoped to one controlled vocabulary (FR-018).
 
-    Restricts filter choices to ``Concept`` objects belonging to the
-    ``ExplorationPurpose`` vocabulary, preventing unrelated generic concepts
-    from appearing in the admin sidebar (FR-013).
+    Parametrised by subclass on the vocabulary, the lookup path from the
+    changelist's model to the filtered field, and the lookup mode. Two modes
+    are needed: ``FIELD``, for a single-valued ``ConceptField`` whose choices
+    come from the vocabulary and match on the stored value, and ``CONCEPT``,
+    for a many-valued field whose choices come from the concept rows and
+    match on their primary key. Both the determination and the site
+    changelist filter on environment, exploration method and exploration
+    purpose, so one class carries the shape six near-identical ones would
+    otherwise repeat.
     """
+
+    FIELD = "field"
+    CONCEPT = "concept"
+
+    lookup_path: str = ""
+    mode: str = FIELD
+
+    def get_vocabulary(self):
+        """Return the vocabulary class this filter scopes to.
+
+        Overridden per subclass with a lazy import, so importing this module
+        does not import every controlled vocabulary.
+        """
+        raise NotImplementedError
+
+    def lookups(self, request, model_admin):
+        vocabulary = self.get_vocabulary()
+        if self.mode == self.CONCEPT:
+            from research_vocabs.models import Concept
+
+            concepts = Concept.get_for_vocabulary(vocabulary).order_by("label")
+            return [(concept.pk, concept.label) for concept in concepts]
+        return vocabulary().choices
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(**{self.lookup_path: self.value()})
+        return queryset
+
+
+class ExplorePurposeListFilter(VocabularyListFilter):
+    """Exploration-purpose filter for the determination changelist, scoped to
+    the ``ExplorationPurpose`` vocabulary (FR-018). Many-valued, so it
+    matches on the concept row's primary key rather than a stored value."""
 
     title = _("exploration purpose")
     parameter_name = "explo_purpose"
+    mode = VocabularyListFilter.CONCEPT
+    lookup_path = "sample__heatflowinterval__site__explo_purpose__pk"
 
-    def lookups(self, request, model_admin):
+    def get_vocabulary(self):
         from heat_flow.vocabularies import ExplorationPurpose
-        from research_vocabs.models import Concept
 
-        concepts = Concept.get_for_vocabulary(ExplorationPurpose).order_by("label")
-        return [(c.pk, c.label) for c in concepts]
-
-    def queryset(self, request, queryset):
-        if self.value():
-            return queryset.filter(
-                sample__heatflowinterval__site__explo_purpose__pk=self.value()
-            )
-        return queryset
+        return ExplorationPurpose
 
 
-class EnvironmentListFilter(SimpleListFilter):
-    """Vocabulary-scoped list filter for HeatFlowSite.environment on GHFDBChild (BUG-004).
-
-    Restricts filter choices to values defined in the ``GeographicEnvironment``
-    vocabulary so the sidebar shows human-readable labels instead of raw stored
-    concept keys (FR-014, FR-015).
-    """
+class EnvironmentListFilter(VocabularyListFilter):
+    """Environment filter for the determination changelist, scoped to the
+    ``GeographicEnvironment`` vocabulary (FR-018)."""
 
     title = _("environment")
     parameter_name = "environment"
+    lookup_path = "sample__heatflowinterval__site__environment"
 
-    def lookups(self, request, model_admin):
+    def get_vocabulary(self):
         from heat_flow.vocabularies import GeographicEnvironment
 
-        return GeographicEnvironment().choices
-
-    def queryset(self, request, queryset):
-        if self.value():
-            return queryset.filter(
-                sample__heatflowinterval__site__environment=self.value()
-            )
-        return queryset
+        return GeographicEnvironment
 
 
-class ChildExplorationMethodListFilter(SimpleListFilter):
-    """Vocabulary-scoped list filter for HeatFlowSite.explo_method on GHFDBChild (BUG-004).
-
-    Restricts filter choices to values defined in the ``ExplorationMethod``
-    vocabulary so the sidebar shows human-readable labels instead of raw stored
-    concept keys (FR-014, FR-015).
-    """
+class ChildExplorationMethodListFilter(VocabularyListFilter):
+    """Exploration-method filter for the determination changelist, scoped to
+    the ``ExplorationMethod`` vocabulary (FR-018)."""
 
     title = _("exploration method")
     parameter_name = "explo_method"
+    lookup_path = "sample__heatflowinterval__site__explo_method"
 
-    def lookups(self, request, model_admin):
+    def get_vocabulary(self):
         from heat_flow.vocabularies import ExplorationMethod
 
-        return ExplorationMethod().choices
-
-    def queryset(self, request, queryset):
-        if self.value():
-            return queryset.filter(
-                sample__heatflowinterval__site__explo_method=self.value()
-            )
-        return queryset
+        return ExplorationMethod
 
 
 @admin.register(GHFDBRelease)
