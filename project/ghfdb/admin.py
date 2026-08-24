@@ -181,25 +181,10 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
         return super().get_import_resource_kwargs(request, **kwargs)
 
     def get_queryset(self, request):
-        """Return the flat annotated queryset for the changelist."""
-        return GHFDBChild.objects.as_ghfdb_flat().prefetch_related(
-            "method",
-            "sample__heatflowinterval__site__explo_purpose",
-            "sample__heatflowinterval__lithology",
-            "sample__heatflowinterval__stratigraphy",
-            "sample__heatflowinterval__probe_metadata__probe_type",
-            "thermal_gradient__method_top",
-            "thermal_gradient__method_bottom",
-            "thermal_gradient__correction_top",
-            "thermal_gradient__correction_bottom",
-            "thermal_conductivity__source",
-            "thermal_conductivity__location",
-            "thermal_conductivity__method",
-            "thermal_conductivity__saturation",
-            "thermal_conductivity__pT_conditions",
-            "thermal_conductivity__pT_function",
-            "thermal_conductivity__strategy",
-        )
+        """Return the published determinations as complete rows: scoped to
+        published records by the manager, and ready for every many-valued
+        column without a query per row (FR-002, FR-019)."""
+        return GHFDBChild.objects.for_export()
 
     def has_add_permission(self, request):
         return False
