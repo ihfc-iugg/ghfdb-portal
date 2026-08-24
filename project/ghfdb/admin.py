@@ -356,15 +356,11 @@ class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
         return getattr(obj, "relevant_children", None)
 
     def get_queryset(self, request):
-        return (
-            GHFDBParent.objects.with_child_counts()
-            .select_related(
-                "sample",
-                "sample__location",
-                "sample__heatflowsite",
-            )
-            .prefetch_related("sample__heatflowsite__explo_purpose")
-        )
+        """Return the published sites as complete rows: scoped to published
+        records by the manager, flattened onto every published column, and
+        carrying the determination counts and the attached children without
+        a query per site (FR-002, FR-019)."""
+        return GHFDBParent.objects.as_ghfdb_flat().with_child_counts().with_children()
 
     def has_add_permission(self, request):
         return False
