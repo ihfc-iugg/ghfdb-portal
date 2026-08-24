@@ -359,6 +359,22 @@ class TestGHFDBParentAdmin:
             "domain",
         ]
 
+    @pytest.mark.django_db
+    def test_the_two_determination_counts_come_last(
+        self, staff_client, published_chain
+    ):
+        """T101: the two determination-count columns render last, and
+        render their values."""
+        url = reverse("admin:ghfdb_ghfdbparent_changelist")
+        response = staff_client.get(url)
+        cl = response.context["cl"]
+        headings = [str(header["text"]) for header in result_headers(cl)]
+        assert headings[-2:] == ["total_children", "relevant_children"]
+
+        row = list(cl.result_list)[0]
+        assert row.total_children == 1
+        assert row.relevant_children == 0
+
 
 # ---------------------------------------------------------------------------
 # US-3: the determination changelist (T078-T089).
