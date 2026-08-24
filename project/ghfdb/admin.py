@@ -3,9 +3,10 @@ GHFDB admin registration.
 
 Registers the ``GHFDBChild`` and ``GHFDBParent`` proxy models as read-only
 changelists reading the published Global Heat Flow Database structure
-(US-3), each with an XLSX import action. The determination changelist's
-columns are built from ``project/ghfdb/columns.py``'s published-column
-mapping rather than restated here — see that module's docstring and
+(US-3), each with an XLSX import action gated on the model's add permission.
+Both changelists' published columns are built from
+``project/ghfdb/columns.py``'s published-column mapping rather than
+restated here — see that module's docstring and
 ``specs/002-ghfdb-proxy/decisions.md`` D1 and D2.
 
 References:
