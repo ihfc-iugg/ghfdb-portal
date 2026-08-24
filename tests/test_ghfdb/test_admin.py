@@ -499,6 +499,17 @@ class TestGHFDBParentAdmin:
         )
         assert change_url not in content
 
+    @pytest.mark.django_db
+    def test_an_unpublished_site_is_absent_from_the_rendered_rows(
+        self, staff_client, published_chain, unpublished_chain
+    ):
+        """T106 (FR-002, SC-005)."""
+        url = reverse("admin:ghfdb_ghfdbparent_changelist")
+        response = staff_client.get(url)
+        result_list = list(response.context["cl"].result_list)
+        assert published_chain.parent in result_list
+        assert unpublished_chain.parent not in result_list
+
 
 # ---------------------------------------------------------------------------
 # US-3: the determination changelist (T078-T089).
