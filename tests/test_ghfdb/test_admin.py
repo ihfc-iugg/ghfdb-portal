@@ -42,7 +42,9 @@ class TestGHFDBAdminChangelist:
     """GHFDBAdmin changelist rendering, search, import page and queryset."""
 
     @pytest.mark.django_db
-    def test_ghfdb_admin_changelist_refined_configuration(self, admin_client, heat_flow_chain):
+    def test_ghfdb_admin_changelist_refined_configuration(
+        self, admin_client, heat_flow_chain
+    ):
         """T013: Changelist renders and exposes refined ordered columns/search/filters."""
         from project.ghfdb.resources import (
             GHFDBChildImportResource,
@@ -57,7 +59,9 @@ class TestGHFDBAdminChangelist:
         # T079: the tail of list_display is read from constants.py, never
         # restated as a literal here — that restatement is what let three of
         # the published names drift from the canonical definitions (D1, D2).
-        headings = [str(header["text"]) for header in result_headers(response.context["cl"])]
+        headings = [
+            str(header["text"]) for header in result_headers(response.context["cl"])
+        ]
         assert headings[-len(CHILD_COLUMNS) :] == list(CHILD_COLUMNS)
 
         model_admin = admin.site._registry[GHFDBChild]
@@ -396,7 +400,9 @@ class TestGHFDBChildAdmin:
         and never from a literal here."""
         url = reverse("admin:ghfdb_ghfdbchild_changelist")
         response = staff_client.get(url)
-        headings = [str(header["text"]) for header in result_headers(response.context["cl"])]
+        headings = [
+            str(header["text"]) for header in result_headers(response.context["cl"])
+        ]
         assert headings[-len(CHILD_COLUMNS) :] == list(CHILD_COLUMNS)
 
     @pytest.mark.django_db
@@ -437,7 +443,12 @@ class TestGHFDBChildAdmin:
             else:
                 headings.add(str(item))
 
-        assert headings & set(PARENT_COLUMNS) == {"ID_parent", "name", "lat_NS", "long_EW"}
+        assert headings & set(PARENT_COLUMNS) == {
+            "ID_parent",
+            "name",
+            "lat_NS",
+            "long_EW",
+        }
 
     @pytest.mark.django_db
     def test_search_matches_site_name_and_published_site_identifier(
@@ -534,7 +545,9 @@ class TestGHFDBChildAdmin:
         assert purpose_choices == expected_purposes
 
     @pytest.mark.django_db
-    def test_there_is_no_route_to_add_change_or_delete(self, staff_client, published_chain):
+    def test_there_is_no_route_to_add_change_or_delete(
+        self, staff_client, published_chain
+    ):
         """T085 (FR-012, SC-008): the three permission hooks refuse, and the
         rendered page carries no add link and no per-row change link. The
         import route is a separate surface, covered by T123, out of this
@@ -605,7 +618,10 @@ class TestGHFDBChildAdmin:
 
     def test_it_carries_the_determination_import_resource_and_the_export_resource(self):
         """T089 (FR-021, SC-010): both the import and the export attachment."""
-        from project.ghfdb.resources import GHFDBChildImportResource, GHFDBExportResource
+        from project.ghfdb.resources import (
+            GHFDBChildImportResource,
+            GHFDBExportResource,
+        )
 
         model_admin = admin.site._registry[GHFDBChild]
         assert model_admin.get_import_resource_classes(request=None) == [
