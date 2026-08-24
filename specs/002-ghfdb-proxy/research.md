@@ -71,9 +71,9 @@ one row is satisfied by a linear query plan as well as by a constant one, so the
 fail for the reason it exists.
 
 Two row counts and an equality between them is what distinguishes the two. `django_assert_num_queries`
-gives the exact count, so the shape is: build *n* chains, count; build more, count again; assert the
-two counts are equal. Comparing counts to each other rather than to a literal also survives a
-framework change that adds or removes a fixed query, which a hard-coded bound does not.
+gives the exact count, so the shape is: build *n* chains and count, build more and count again,
+then assert the two counts are equal. Comparing counts to each other and not to a literal also
+survives a framework change that adds or removes a fixed query, which a hard-coded bound does not.
 
 **Cost**. The `ghfdb` suite takes 208 seconds for 154 tests, and the chain fixture dominates it —
 it creates a site, an interval, probe metadata, a gradient, a conductivity, a parent, a child and
@@ -82,7 +82,7 @@ main risk to suite runtime in this work.
 
 **Decision**: one session-independent fixture that builds a configurable number of chains, and one
 that builds a small fixed number for the correctness tests. Constancy tests take the counted
-fixture at two sizes; every other test takes the cheap one. Sizes stay small — the difference
+fixture at two sizes. Every other test takes the cheap one. Sizes stay small — the difference
 between two and four rows proves the same thing as the difference between two and two hundred, and
 costs two chains rather than a hundred and ninety-eight.
 

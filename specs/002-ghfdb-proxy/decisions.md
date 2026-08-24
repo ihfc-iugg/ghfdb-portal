@@ -21,8 +21,8 @@ The task list was then rewritten as though no code existed, and reconciled again
 afterwards, so that what the feature is missing is measured against what it should have been
 rather than against what was built.
 
-The original `tasks.md` recorded 74 of 74 tasks complete. That is a claim made by the run that
-wrote it and was not treated as evidence of anything.
+The original `tasks.md` recorded 74 of 74 tasks complete. That is a claim the file makes about
+itself, and it was not treated as evidence of anything.
 
 The original specification was amended in place four times for defects and twice for design
 changes, each time by striking the superseded text through and appending the replacement to the
@@ -184,16 +184,18 @@ rejected as insufficient for a neighbouring task a few rows below in the same fi
 **T078 and T098** were closed on tests taking a superuser client, while a third task was held open
 on the grounds that a superuser is not the staff user the tasks name.
 
-**Ruled**: all three reopened. The pattern in both is the same and worth naming, because it is what
-the fourth lens exists to catch: evidence was accepted in one row on grounds that had already been
-rejected in another. Consistency within the reconciliation is the check, and it is one a reader can
-apply without re-deriving the verdicts.
+**Ruled**: all three reopened. The pattern in both is the same and worth naming, because it is the
+kind of error a review pass exists to catch: evidence was accepted in one row on grounds that had
+already been rejected in another. Consistency within the reconciliation is the check, and it is one
+a reader can apply without re-deriving the verdicts.
 
-The review also found three defects the reconciliation had not: a many-valued column annotated with
-`F()` that duplicates rows, four changelist headings Django never reads because the entries are
-named after model fields, and an import route that writes without consulting any of the three
-read-only hooks the tests assert. Each is recorded in `reconciliation.md` with its measurement, and
-each has a task.
+The review also found three defects the reconciliation had not:
+
+- a many-valued column annotated with `F()` that duplicates rows
+- four changelist headings Django never reads, because the entries are named after model fields
+- an import route that writes without consulting any of the three read-only hooks the tests assert
+
+Each is recorded in `reconciliation.md` with its measurement, and each has a task.
 
 ### D10 — T026 is blocked: the export queryset's missing lithology/stratigraphy prefetches conflict with a pre-existing query-count test
 
@@ -216,13 +218,14 @@ excluded.
 pre-existing test, not authored in this story, asserting `django_assert_max_num_queries(16)` —
 failed with 17 queries measured. Reverted the two prefetches.
 
-**Ruled**: blocked, not fixed. The Implementer's brief prohibits modifying a pre-existing test not
-authored in this story; the two tests' requirements are in direct, provable conflict (16 as a
-ceiling vs. 18 as the correct count once FR-007 is satisfied), and resolving it requires a decision
-about `test_for_export_max_queries` — retire it in favour of the T025 constant-query-count test,
-which already supersedes its methodology (a bound proven at two row counts rather than asserted
-once against a literal), or raise its ceiling to 18 — that only Sam or a future convergence pass can
-make. T026 and the lithology/stratigraphy chunk of T040 stay open; the rest of both is done.
+**Ruled**: blocked, not fixed. This story's brief prohibits modifying a pre-existing test it did
+not author. The two tests' requirements are in direct, provable conflict: 16 as a ceiling against
+18 as the correct count once FR-007 is satisfied. Resolving that takes a decision about
+`test_for_export_max_queries` that only the maintainer or a later pass over the branch can make —
+either retire it in favour of the T025 constant-query-count test, which already supersedes its
+methodology (a bound proven at two row counts, not asserted once against a literal), or raise its
+ceiling to 18. T026 and the lithology/stratigraphy chunk of T040 stay open. The rest of both is
+done.
 
 **Revisit if**: `test_for_export_max_queries` is retired or its bound is raised. At that point the
 two prefetches (`sample__heatflowinterval__lithology`, `sample__heatflowinterval__stratigraphy`)
@@ -267,8 +270,8 @@ old test cannot make and its replacement can. `TestParentChildAttachment::test_q
 measures at two site counts and compares them to each other, so it fails if the cost is per-site and
 passes if it is fixed, whatever the fixed number happens to be.
 
-Both blocks were raised correctly rather than worked around: an implementer that had edited the test
-in its own way would have left the same weak assertion in place one number further along.
+Both blocks were raised rather than worked around, and that was the right call. Editing the test
+instead would have left the same weak assertion in place, one number further along.
 
 **Revisit if** a caller needs the attachment's absolute query count bounded rather than its growth.
 Nothing does today.
@@ -307,14 +310,14 @@ paths that exist from the determination — two names. The pre-existing `search_
 carries both, plus a third: the determination's own `ghfdb_id`. A pre-existing test
 (`TestGHFDBAdminChangelist::test_ghfdb_admin_changelist_refined_configuration`) asserts
 `model_admin.search_fields == EXPECTED_SEARCH_FIELDS`, a three-entry tuple including that third
-field, and this dispatch's brief authorises touching only one assertion in that test — the one
+field, and this story's brief authorises touching only one assertion in that test — the one
 `EXPECTED_LIST_DISPLAY` fed (T079) — not this one.
 
 **Ruled**: `search_fields` is left exactly as it was. T093's requirement is a minimum, not an
 exclusive list — the two names it asks for are present and proven by
 `TestGHFDBChildAdmin::test_search_matches_site_name_and_published_site_identifier` (T082) — and
 removing the third field would have bought nothing this story needs while breaking a test outside
-this dispatch's authorised edit.
+what this story was authorised to edit.
 
 **Revisit if** a future story is explicitly asked to narrow the determination changelist's search to
 only the site name and the site's published identifier — that would be the point to also correct
@@ -341,7 +344,7 @@ directly (not only through the test suite): `row.ID_parent == 1`, `row.q == "70.
 annotation, without a matching key in `as_ghfdb_flat()`'s `scalar_annotations` — the same
 silent-blank failure mode applies, and `getattr(obj, accessor, None)`'s permissiveness is why a
 value-level test (not just a heading-level one) is worth adding for a future column. F5 adds that
-proof for the columns this dispatch touches; a future column would still need its own.
+proof for the columns this story touches. A future column would still need its own.
 
 ### D15 — Geography columns read `obj.sample.heatflowsite.<field>`, not `obj.sample.<field>`
 
@@ -364,7 +367,7 @@ never triggers (R4's concern, applied to a relationship walk rather than a missi
 
 **Revisit if** a site is ever legitimately published without a `HeatFlowSite` row under its `sample` —
 the domain model does not currently allow this (every `HeatFlowSite.objects.create()` writes both
-tables), so this is not a defensive posture this dispatch adopts speculatively.
+tables), so this is not a defensive posture worth adopting here on speculation.
 
 ### D16 — The leading `ghfdb_id` column keeps its field heading, "ID Child"
 
@@ -385,8 +388,8 @@ identifier, prepended to the determination changelist for orientation (T080's fo
 block), the same role `HeatFlow.ghfdb_id`'s own `verbose_name` already names it for. The trap this
 module exists to avoid is a *published* name losing to a field's `verbose_name` — `expedition` reading
 as "expedition/platform/ship" is wrong because the published file calls that column `expedition`.
-`ghfdb_id` has no published name to lose to anything; the field's `verbose_name`, "ID Child", *is* the
-name, chosen by whoever wrote `heat_flow/models/child.py`, and it is accurate — this is the child
+`ghfdb_id` has no published name to lose to anything. The field's `verbose_name`, "ID Child", *is*
+the name, chosen by whoever wrote `heat_flow/models/child.py`, and it is accurate. This is the child
 record's own identifier, as `ghfdb_id`'s sibling on the parent side, `verbose_name="ID Parent"`,
 independently confirms for the analogous column on the site changelist.
 

@@ -2,7 +2,7 @@
   "feature": "002-ghfdb-proxy",
   "branch": "002-ghfdb-proxy",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "IMPLEMENT",
+  "state": "REVIEW",
   "state_history": [
     {
       "state": "SPECIFY",
@@ -32,6 +32,16 @@
       "state": "IMPLEMENT",
       "at": "2026-08-23T21:34:34Z",
       "note": "design review applied; 113 open tasks, fixtures first"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-08-24T12:18:56Z",
+      "note": "116 tasks closed, suite green"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-08-24T12:18:57Z",
+      "note": "one reviewer, 14 findings, all applied"
     }
   ],
   "gates": {
@@ -82,72 +92,112 @@
           "id": "T001",
           "status": "done",
           "attempts": 1,
-          "evidence": "tests/test_ghfdb/test_columns.py created; ghfdb marker added to test_models.py, test_managers.py, test_admin.py; `poetry run pytest tests/test_ghfdb/test_columns.py --collect-only` clean (was `ERROR: file or directory not found`); `poetry run pytest tests/test_ghfdb/test_models.py tests/test_ghfdb/test_managers.py tests/test_ghfdb/test_admin.py tests/test_ghfdb/test_columns.py -q` -> 23 passed, 1 xfailed"
+          "evidence": {
+            "commands": [
+              "tests/test_ghfdb/test_columns.py created; ghfdb marker added to test_models.py, test_managers.py, test_admin.py; `poetry run pytest tests/test_ghfdb/test_columns.py --collect-only` clean (was `ERROR: file or directory not found`); `poetry run pytest tests/test_ghfdb/test_models.py tests/test_ghfdb/test_managers.py tests/test_ghfdb/test_admin.py tests/test_ghfdb/test_columns.py -q` -> 23 passed, 1 xfailed"
+            ]
+          }
         },
         {
           "id": "T002",
           "status": "done",
           "attempts": 1,
-          "evidence": "TestFixtures::test_vocabulary_concepts_are_present added to test_models.py; load_concepts fixed to register GeographicEnvironment/ExplorationMethod (upstream ConceptField registration gap); `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 3 passed"
+          "evidence": {
+            "commands": [
+              "TestFixtures::test_vocabulary_concepts_are_present added to test_models.py; load_concepts fixed to register GeographicEnvironment/ExplorationMethod (upstream ConceptField registration gap); `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 3 passed"
+            ]
+          }
         },
         {
           "id": "T003",
           "status": "done",
           "attempts": 1,
-          "evidence": "TestFixtures::test_dataset_fixture_is_saved added to test_models.py; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 4 passed"
+          "evidence": {
+            "commands": [
+              "TestFixtures::test_dataset_fixture_is_saved added to test_models.py; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 4 passed"
+            ]
+          }
         },
         {
           "id": "T004",
           "status": "done",
           "attempts": 1,
-          "evidence": "build_site_and_parent/build_child/build_published_chain helpers and published_chain fixture added to conftest.py; TestFixtures::test_published_chain_is_complete added; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 5 passed"
+          "evidence": {
+            "commands": [
+              "build_site_and_parent/build_child/build_published_chain helpers and published_chain fixture added to conftest.py; TestFixtures::test_published_chain_is_complete added; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 5 passed"
+            ]
+          }
         },
         {
           "id": "T005",
           "status": "done",
           "attempts": 1,
-          "evidence": "published_chains counted fixture added to conftest.py; TestFixtures::test_published_chains_builds_the_number_asked_for added, calling it at 2 and 4; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 6 passed"
+          "evidence": {
+            "commands": [
+              "published_chains counted fixture added to conftest.py; TestFixtures::test_published_chains_builds_the_number_asked_for added, calling it at 2 and 4; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 6 passed"
+            ]
+          }
         },
         {
           "id": "T006",
           "status": "done",
           "attempts": 1,
-          "evidence": "unpublished_chain fixture added to conftest.py; TestFixtures::test_unpublished_chain_has_no_published_identifier added; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 7 passed"
+          "evidence": {
+            "commands": [
+              "unpublished_chain fixture added to conftest.py; TestFixtures::test_unpublished_chain_has_no_published_identifier added; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 7 passed"
+            ]
+          }
         },
         {
           "id": "T007",
           "status": "done",
           "attempts": 1,
-          "evidence": "chain_without_gradient/chain_without_conductivity/chain_without_probe_metadata/chain_missing_correction fixtures added to conftest.py; TestFixtures::test_partial_chains_omit_only_what_they_name added; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 8 passed"
+          "evidence": {
+            "commands": [
+              "chain_without_gradient/chain_without_conductivity/chain_without_probe_metadata/chain_missing_correction fixtures added to conftest.py; TestFixtures::test_partial_chains_omit_only_what_they_name added; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 8 passed"
+            ]
+          }
         },
         {
           "id": "T008",
           "status": "done",
           "attempts": 1,
-          "evidence": "sites_by_contribution fixture added to conftest.py, building four sites (all/some/none/no determinations), one carrying two exploration purposes; TestFixtures::test_sites_by_contribution_covers_the_four_shapes added; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 9 passed"
+          "evidence": {
+            "commands": [
+              "sites_by_contribution fixture added to conftest.py, building four sites (all/some/none/no determinations), one carrying two exploration purposes; TestFixtures::test_sites_by_contribution_covers_the_four_shapes added; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 9 passed"
+            ]
+          }
         },
         {
           "id": "T009",
           "status": "done",
           "attempts": 1,
-          "evidence": "staff_client fixture added to conftest.py (Person.USERNAME_FIELD=email, no username field); TestFixtures::test_staff_client_reaches_the_admin_index added; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 10 passed"
+          "evidence": {
+            "commands": [
+              "staff_client fixture added to conftest.py (Person.USERNAME_FIELD=email, no username field); TestFixtures::test_staff_client_reaches_the_admin_index added; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 10 passed"
+            ]
+          }
         },
         {
           "id": "T010",
           "status": "done",
           "attempts": 1,
-          "evidence": "constant_query_count fixture added to conftest.py; TestConstantQueryCount (linear-rejected, constant-accepted) added; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 12 passed"
+          "evidence": {
+            "commands": [
+              "constant_query_count fixture added to conftest.py; TestConstantQueryCount (linear-rejected, constant-accepted) added; `poetry run pytest tests/test_ghfdb/test_models.py -q` -> 12 passed"
+            ]
+          }
         },
         {
           "id": "T011",
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/models.py:57-60 (already built)"
-            ],
             "tests": [
               "tests/test_ghfdb/test_models.py::TestGHFDBChildModel::test_proxy_adds_no_table"
+            ],
+            "commands": [
+              "project/ghfdb/models.py:57-60 (already built)"
             ]
           }
         },
@@ -156,11 +206,11 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/models.py:57-60 (already built)"
-            ],
             "tests": [
               "tests/test_ghfdb/test_models.py::TestGHFDBChildModel::test_meta_carries_translated_verbose_names"
+            ],
+            "commands": [
+              "project/ghfdb/models.py:57-60 (already built)"
             ]
           }
         },
@@ -169,12 +219,12 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/managers.py:178 (already built)"
-            ],
             "tests": [
               "tests/test_ghfdb/test_managers.py::TestGHFDBChildManager::test_determination_without_a_published_identifier_is_absent",
               "tests/test_ghfdb/test_managers.py::TestGHFDBManagerScoping::test_ghfdb_child_manager_excludes_null_ghfdb_id"
+            ],
+            "commands": [
+              "project/ghfdb/managers.py:178 (already built)"
             ]
           }
         },
@@ -183,11 +233,11 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/managers.py:178 (already built)"
-            ],
             "tests": [
               "tests/test_ghfdb/test_managers.py::TestGHFDBChildManager::test_scope_survives_filtering_ordering_counting_slicing_and_chaining"
+            ],
+            "commands": [
+              "project/ghfdb/managers.py:178 (already built)"
             ]
           }
         },
@@ -196,11 +246,11 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/managers.py:178 (already built)"
-            ],
             "tests": [
               "tests/test_ghfdb/test_managers.py::TestGHFDBChildManager::test_ordinary_operations_match_the_model_it_stands_in_for"
+            ],
+            "commands": [
+              "project/ghfdb/managers.py:178 (already built)"
             ]
           }
         },
@@ -209,11 +259,11 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/managers.py:96 (added quality_child: F(\"quality\"))"
-            ],
             "tests": [
               "tests/test_ghfdb/test_managers.py::TestChildFlattening::test_every_scalar_published_child_column_resolves_on_every_row"
+            ],
+            "commands": [
+              "project/ghfdb/managers.py:96 (added quality_child: F(\"quality\"))"
             ]
           }
         },
@@ -222,11 +272,11 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/managers.py:89 (already built)"
-            ],
             "tests": [
               "tests/test_ghfdb/test_managers.py::TestChildFlattening::test_the_sites_representative_value_is_restated_on_every_row"
+            ],
+            "commands": [
+              "project/ghfdb/managers.py:89 (already built)"
             ]
           }
         },
@@ -235,11 +285,11 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/managers.py:78 (already built)"
-            ],
             "tests": [
               "tests/test_ghfdb/test_managers.py::TestChildFlattening::test_query_count_is_equal_at_two_row_counts"
+            ],
+            "commands": [
+              "project/ghfdb/managers.py:78 (already built)"
             ]
           }
         },
@@ -248,11 +298,11 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/managers.py:89 (already built; nullable FK LEFT JOIN)"
-            ],
             "tests": [
               "tests/test_ghfdb/test_managers.py::TestChildFlattening::test_a_row_without_a_gradient_is_returned_with_those_columns_empty"
+            ],
+            "commands": [
+              "project/ghfdb/managers.py:89 (already built; nullable FK LEFT JOIN)"
             ]
           }
         },
@@ -261,11 +311,11 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/managers.py:89 (already built; nullable FK LEFT JOIN)"
-            ],
             "tests": [
               "tests/test_ghfdb/test_managers.py::TestChildFlattening::test_a_row_without_a_conductivity_is_returned_with_those_columns_empty"
+            ],
+            "commands": [
+              "project/ghfdb/managers.py:89 (already built; nullable FK LEFT JOIN)"
             ]
           }
         },
@@ -274,11 +324,11 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/managers.py:89 (already built; nullable FK LEFT JOIN)"
-            ],
             "tests": [
               "tests/test_ghfdb/test_managers.py::TestChildFlattening::test_a_row_without_probe_metadata_is_returned_with_those_columns_empty"
+            ],
+            "commands": [
+              "project/ghfdb/managers.py:89 (already built; nullable FK LEFT JOIN)"
             ]
           }
         },
@@ -287,11 +337,11 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/managers.py:25 (already built)"
-            ],
             "tests": [
               "tests/test_ghfdb/test_managers.py::TestChildFlattening::test_a_missing_correction_leaves_only_its_own_column_empty (parametrised over all nine CORRECTION_COL_MAP entries)"
+            ],
+            "commands": [
+              "project/ghfdb/managers.py:25 (already built)"
             ]
           }
         },
@@ -300,11 +350,11 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/managers.py:89 (already built)"
-            ],
             "tests": [
               "tests/test_ghfdb/test_managers.py::TestChildFlattening::test_annotations_carry_their_published_names"
+            ],
+            "commands": [
+              "project/ghfdb/managers.py:89 (already built)"
             ]
           }
         },
@@ -313,11 +363,11 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/managers.py:151 (already built)"
-            ],
             "tests": [
               "tests/test_ghfdb/test_managers.py::TestChildExportQuerySet::test_every_published_child_column_resolves_on_the_complete_row"
+            ],
+            "commands": [
+              "project/ghfdb/managers.py:151 (already built)"
             ]
           }
         },
@@ -326,11 +376,11 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/managers.py:151 (already built)"
-            ],
             "tests": [
               "tests/test_ghfdb/test_managers.py::TestChildExportQuerySet::test_query_count_is_equal_at_two_row_counts"
+            ],
+            "commands": [
+              "project/ghfdb/managers.py:151 (already built)"
             ]
           }
         },
@@ -355,11 +405,11 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/managers.py:96-99 (added Ref_IGSN/publication_reference/data_reference: Value(\"\"))"
-            ],
             "tests": [
               "tests/test_ghfdb/test_managers.py::TestChildExportQuerySet::test_columns_nothing_resolves_are_present_and_empty"
+            ],
+            "commands": [
+              "project/ghfdb/managers.py:96-99 (added Ref_IGSN/publication_reference/data_reference: Value(\"\"))"
             ]
           }
         },
@@ -368,11 +418,11 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/models.py:38-60 (already built)"
-            ],
             "tests": [
               "tests/test_ghfdb/test_models.py::TestGHFDBChildModel (T011, T012)"
+            ],
+            "commands": [
+              "project/ghfdb/models.py:38-60 (already built)"
             ]
           }
         },
@@ -381,13 +431,13 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/migrations/0002_ghfdb.py (already built)",
-              "project/ghfdb/migrations/0003_ghfdbchild_ghfdbparent.py (already built)"
-            ],
             "tests": [
               "tests/test_migrations.py::TestGHFDBChildProxyMigrations::test_the_initial_migration_is_a_bare_proxy_create_model",
               "tests/test_migrations.py::TestGHFDBChildProxyMigrations::test_the_rename_migration_touches_no_table"
+            ],
+            "commands": [
+              "project/ghfdb/migrations/0002_ghfdb.py (already built)",
+              "project/ghfdb/migrations/0003_ghfdbchild_ghfdbparent.py (already built)"
             ]
           }
         },
@@ -396,11 +446,11 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/managers.py:171-193 (already built)"
-            ],
             "tests": [
               "tests/test_ghfdb/test_managers.py::TestGHFDBChildManager (T013-T015)"
+            ],
+            "commands": [
+              "project/ghfdb/managers.py:171-193 (already built)"
             ]
           }
         },
@@ -409,11 +459,11 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/managers.py:78-87 (already built)"
-            ],
             "tests": [
               "tests/test_ghfdb/test_managers.py::TestChildFlattening::test_query_count_is_equal_at_two_row_counts (T018)"
+            ],
+            "commands": [
+              "project/ghfdb/managers.py:78-87 (already built)"
             ]
           }
         },
@@ -422,11 +472,11 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/managers.py:89-146 (scalar annotation dict; added quality_child and the three nothing-resolves columns)"
-            ],
             "tests": [
               "tests/test_ghfdb/test_managers.py::TestChildFlattening (T016, T017, T022)"
+            ],
+            "commands": [
+              "project/ghfdb/managers.py:89-146 (scalar annotation dict; added quality_child and the three nothing-resolves columns)"
             ]
           }
         },
@@ -435,11 +485,11 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/managers.py:89 (already built; nullable-FK select_related produces a LEFT OUTER JOIN)"
-            ],
             "tests": [
               "tests/test_ghfdb/test_managers.py::TestChildFlattening (T019-T022)"
+            ],
+            "commands": [
+              "project/ghfdb/managers.py:89 (already built; nullable-FK select_related produces a LEFT OUTER JOIN)"
             ]
           }
         },
@@ -464,11 +514,11 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/managers.py:96-99 (added Ref_IGSN/publication_reference/data_reference: Value(\"\", output_field=CharField()))"
-            ],
             "tests": [
               "tests/test_ghfdb/test_managers.py::TestChildExportQuerySet::test_columns_nothing_resolves_are_present_and_empty"
+            ],
+            "commands": [
+              "project/ghfdb/managers.py:96-99 (added Ref_IGSN/publication_reference/data_reference: Value(\"\", output_field=CharField()))"
             ]
           }
         }
@@ -683,11 +733,11 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/migrations/0003_ghfdbchild_ghfdbparent.py"
-            ],
             "tests": [
               "tests/test_migrations.py::TestGHFDBParentProxyMigrations::test_the_create_model_is_a_bare_proxy"
+            ],
+            "commands": [
+              "project/ghfdb/migrations/0003_ghfdbchild_ghfdbparent.py"
             ]
           }
         },
@@ -754,11 +804,11 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/models.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_models.py::TestGHFDBParentModel::test_no_dictionary_accessor"
+            ],
+            "commands": [
+              "project/ghfdb/models.py"
             ]
           }
         }
@@ -1045,14 +1095,12 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "tests/test_ghfdb/test_admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py::TestGHFDBChildAdmin::test_published_child_columns_appear_in_the_canonical_order"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -k test_published_child_columns_appear_in_the_canonical_order -q -> 1 passed (RED before T090)"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -k test_published_child_columns_appear_in_the_canonical_order -q -> 1 passed (RED before T090)",
+              "tests/test_ghfdb/test_admin.py"
             ]
           }
         },
@@ -1291,16 +1339,14 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
-            ],
-            "commit": "80c9ad5"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed",
+              "project/ghfdb/admin.py",
+              "commit: 80c9ad5"
+            ]
           }
         },
         {
@@ -1308,16 +1354,14 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
-            ],
-            "commit": "2cf1f35"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed",
+              "project/ghfdb/admin.py",
+              "commit: 2cf1f35"
+            ]
           }
         },
         {
@@ -1325,16 +1369,14 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
-            ],
-            "commit": "ce9963c"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed",
+              "project/ghfdb/admin.py",
+              "commit: ce9963c"
+            ]
           }
         },
         {
@@ -1342,16 +1384,14 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
-            ],
-            "commit": "2c50279"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed",
+              "project/ghfdb/admin.py",
+              "commit: 2c50279"
+            ]
           }
         },
         {
@@ -1359,16 +1399,14 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
-            ],
-            "commit": "1cb4f7b"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed",
+              "project/ghfdb/admin.py",
+              "commit: 1cb4f7b"
+            ]
           }
         },
         {
@@ -1376,16 +1414,14 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
-            ],
-            "commit": "8073cb6"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed",
+              "project/ghfdb/admin.py",
+              "commit: 8073cb6"
+            ]
           }
         },
         {
@@ -1393,16 +1429,14 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
-            ],
-            "commit": "74bdaa5"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed",
+              "project/ghfdb/admin.py",
+              "commit: 74bdaa5"
+            ]
           }
         },
         {
@@ -1410,16 +1444,14 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
-            ],
-            "commit": "6bc400e"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed",
+              "project/ghfdb/admin.py",
+              "commit: 6bc400e"
+            ]
           }
         },
         {
@@ -1427,16 +1459,14 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
-            ],
-            "commit": "bcf38a3"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed",
+              "project/ghfdb/admin.py",
+              "commit: bcf38a3"
+            ]
           }
         },
         {
@@ -1444,16 +1474,14 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
-            ],
-            "commit": "3fefe9d"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed",
+              "project/ghfdb/admin.py",
+              "commit: 3fefe9d"
+            ]
           }
         },
         {
@@ -1461,16 +1489,14 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
-            ],
-            "commit": "42e009f"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed",
+              "project/ghfdb/admin.py",
+              "commit: 42e009f"
+            ]
           }
         },
         {
@@ -1478,16 +1504,14 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
-            ],
-            "commit": "d90363d"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed",
+              "project/ghfdb/admin.py",
+              "commit: d90363d"
+            ]
           }
         },
         {
@@ -1495,16 +1519,14 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
-            ],
-            "commit": "c5ffa2e"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed",
+              "project/ghfdb/admin.py",
+              "commit: c5ffa2e"
+            ]
           }
         },
         {
@@ -1512,16 +1534,14 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
-            ],
-            "commit": "084f828"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed",
+              "project/ghfdb/admin.py",
+              "commit: 084f828"
+            ]
           }
         },
         {
@@ -1529,16 +1549,14 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
-            ],
-            "commit": "c8638df"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed",
+              "project/ghfdb/admin.py",
+              "commit: c8638df"
+            ]
           }
         },
         {
@@ -1546,16 +1564,14 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
-            ],
-            "commit": "c8638df"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed",
+              "project/ghfdb/admin.py",
+              "commit: c8638df"
+            ]
           }
         },
         {
@@ -1563,16 +1579,14 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
-            ],
-            "commit": "c8638df"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed",
+              "project/ghfdb/admin.py",
+              "commit: c8638df"
+            ]
           }
         },
         {
@@ -1580,16 +1594,14 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
-            ],
-            "commit": "c8638df"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed",
+              "project/ghfdb/admin.py",
+              "commit: c8638df"
+            ]
           }
         },
         {
@@ -1597,16 +1609,14 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
-            ],
-            "commit": "c8638df"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed",
+              "project/ghfdb/admin.py",
+              "commit: c8638df"
+            ]
           }
         },
         {
@@ -1614,16 +1624,14 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
-            ],
-            "commit": "c8638df"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed",
+              "project/ghfdb/admin.py",
+              "commit: c8638df"
+            ]
           }
         },
         {
@@ -1631,16 +1639,14 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
-            ],
-            "commit": "e48375b"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed",
+              "project/ghfdb/admin.py",
+              "commit: e48375b"
+            ]
           }
         },
         {
@@ -1648,16 +1654,14 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
-            ],
-            "commit": "442cf60"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed",
+              "project/ghfdb/admin.py",
+              "commit: 442cf60"
+            ]
           }
         },
         {
@@ -1665,16 +1669,14 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [
-              "project/ghfdb/admin.py"
-            ],
             "tests": [
               "tests/test_ghfdb/test_admin.py"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed"
-            ],
-            "commit": "780bf5a"
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q -> 40 passed",
+              "project/ghfdb/admin.py",
+              "commit: 780bf5a"
+            ]
           }
         },
         {

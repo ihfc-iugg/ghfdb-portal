@@ -40,8 +40,8 @@ database are visible at all.
 Both are registered as read-only admin changelists. Those changelists are how the assessment team
 reads the database, and they are built for people who know the published file. The columns carry
 the published names and appear in the published order, so a curator can find a record and read it
-without translating between two sets of column names. Search and filters scoped to their vocabularies make
-that workable across the whole database, not just the page on screen.
+without translating between two sets of column names. Search and filters scoped to their
+vocabularies make that workable across the whole database, not just the page on screen.
 
 The proxies are also the surface the import and export resources attach to. Those resources, and
 the writing direction generally, are specified in `003-ghfdb-import-export`. What belongs here is

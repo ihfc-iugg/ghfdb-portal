@@ -39,13 +39,13 @@ Everything in US-3 turns on a published-column mapping that does not exist in an
 Today a published column name appears in four places: `constants.py`, each changelist's
 `list_display`, and a literal copy inside the changelist's own test. Three of the names have already
 drifted apart across those copies (D2), and the drift went unnoticed because the test compares one
-copy against another rather than either against the canonical definitions.
+copy against another, never either one against the canonical definitions.
 
 The mapping is one entry per published column, naming which of R1's four groups it belongs to and
 how its value is reached. A builder turns a canonical column list into display callables in that
 list's order and refuses, at import time, a column the mapping does not hold. After it, the order is
 never restated: the changelists ask for `CHILD_COLUMNS` and `PARENT_COLUMNS`, and a column added to
-the canonical definitions and not to the mapping is a startup failure rather than a silently missing
+the canonical definitions and not to the mapping is a startup failure, not a silently missing
 column.
 
 That refusal is what SC-007 means by a test that fails when the canonical definitions change and the
@@ -58,25 +58,25 @@ passing case.
 obvious design — silently loses the heading for every column that shares a name with a model field.
 Four headings are wrong today for exactly that reason, and a mapping written the obvious way would
 have inherited the fault while looking correct. So the callables are bound under names that are not
-field names, and every heading assertion reads what Django renders rather than what the callable
+field names, and every heading assertion reads what Django renders, not what the callable
 carries.
 
 **Deliberately not extended to the resources.** They declare the same names a third and fourth time
 and would be served by the same mapping (R1). That is `003-ghfdb-import-export`'s work. The mapping
-is written so it can be adopted there unchanged, and this run does not touch those files.
+is written so it can be adopted there unchanged, and this work does not touch those files.
 
 ## Approach, by story
 
 ### US-1 — determinations read in the published shape (35 tasks, 1 closed)
 
 Almost entirely test work. The annotation blocks, the export queryset and the correction subqueries
-are written and correct; what is missing is any test that would notice if they stopped being.
+are written and correct. What is missing is any test that would notice if they stopped being.
 
 Four things drive it:
 
 - **Fixtures first.** The counted chain fixture, the unpublished chain, and the four partial chains.
   Nothing in the story can be proven without them, and their absence is why the existing tests
-  assert `hasattr` rather than values.
+  assert `hasattr` instead of values.
 - **Constancy measured at two row counts, through one helper.** R2 settles the shape: build *n*,
   count, build more, count again, assert the two counts are equal to each other rather than to a
   literal. The helper is itself gated — T010 requires it proven against a deliberately linear
@@ -93,7 +93,7 @@ Four things drive it:
 **Risk: suite runtime.** Every constancy test builds chains twice, and the chain fixture is the
 expensive thing in this suite. The mitigation is in R2's decision — the correctness tests take the
 cheap single chain, only the constancy tests take the counted one, and the counted one runs at two
-and four rather than at two and two hundred. Four rows prove the same property as two hundred and
+and four, not at two and two hundred. Four rows prove the same property as two hundred and
 cost one hundred and ninety-six fewer.
 
 ### US-2 — sites read in the published shape (21 tasks, none closed)
@@ -108,7 +108,7 @@ methods, and it is why the flattening method is untested.
 
 Wiring the changelist to read the flattening method deletes all fifteen, makes the method reachable
 and testable, and makes both changelists the same shape, which is what lets one mapping serve both.
-That wiring is US-3's task; US-2's is that the method annotates every published parent column and
+That wiring is US-3's task. US-2's is that the method annotates every published parent column and
 does so at a constant query cost.
 
 One correction lands here rather than in US-3, because it is a queryset defect. The parent
@@ -142,7 +142,7 @@ resource to the determination changelist and to nothing else. `GHFDBParentAdmin`
 live on it with a generated resource — which would emit the site model's own fields, not the
 published structure. The test that was meant to prove the requirement asserts the import classes and
 stops, so it passes over the half that is wrong. The fix is to close the export path on that
-registration, and T110 asserts exclusivity in both directions rather than in one.
+registration, and T110 asserts exclusivity in both directions, not just one.
 
 **The search test cannot fail.** Both of its assertions are `status_code == 200`, and a search
 matching nothing returns 200. Both changelists get a search test that asserts the row is found and
@@ -168,7 +168,7 @@ adjudicated change (D2) and it is exactly the kind of change the people who read
 notice. It belongs in the pull request's description in the terms they use, not only in a decision
 record.
 
-### Feature-wide (2 tasks, carried in the US-3 lane)
+### Feature-wide (2 tasks, carried with US-3)
 
 `SC-011` is a statement about the suite, so it needs an assertion about the suite. Fourteen tests
 under `tests/test_ghfdb/` are expected to fail. Thirteen belong to `003-ghfdb-import-export` and
@@ -196,8 +196,8 @@ changelist's queryset spans both.
    US-2's flattening method being proven and its `explo_purpose` correction landed.
 5. **T120 and T121** — last, after every other task in every story. T120 asserts that no test in
    this feature's modules is expected to fail, and the `xfail` it waits on is US-1's to remove. Both
-   are carried in the US-3 lane because the ledger has no lane of its own for them, so the dependency
-   lives here rather than in the ledger: do not start them early.
+   are carried with US-3 because the task list gives them no home of their own, so the dependency is
+   recorded here instead of there: do not start them early.
 
 ## Constitution check
 
@@ -210,7 +210,7 @@ Required by principle VIII. The articles this plan bears on, and where it stands
   registrations and the proxies stay proxies. Aligned.
 - **VI, tests before implementation.** Every implementation task names the test that proves it and
   the assertion that fails first. The one task that is itself a gate, the constant-query-count
-  helper, is proven against a deliberately linear callable rather than only against a passing one.
+  helper, is proven against a deliberately linear callable, not only against a passing one.
 - **VII, documentation.** T121 covers the query surface. Aligned.
 - **IX, simplicity.** Two additions need the argument and both have it. The published-column mapping
   replaces four hand-maintained copies of one list, three of which have already drifted apart, and it
@@ -227,13 +227,13 @@ No intentional violation, so there is no complexity-tracking entry.
 
 ## Convergence
 
-- The full suite passes, run once, at the end. The expected count is 154 passing plus what this run
-  adds, 13 expected-to-fail, and none of the 13 in this feature's own modules.
+- The full suite passes, run once, at the end. The expected count is 154 passing plus what this
+  work adds, 13 expected-to-fail, and none of the 13 in this feature's own modules.
 - Lint, formatting and type checks pass on every changed file, at CI's scope rather than the
   pre-commit gate's.
 - `manage.py check` reports no errors and no warnings with both registrations live.
 - Migrations squashed to one change set on the branch, applying cleanly to an empty database, with
   no operation that touches data.
 - No column list, in code or in a test, is a copy of one `constants.py` already holds. This is the
-  condition the whole run exists to establish, so it is checked at the end as well as asserted in
+  condition all of this work exists to establish, so it is checked at the end as well as asserted in
   the suite.

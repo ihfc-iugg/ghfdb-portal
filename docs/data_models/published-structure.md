@@ -30,7 +30,7 @@ Neither adds a table, a column or a migration that touches data.
 Membership of the published database is expressed by the published identifier being set, and by
 nothing else. Both managers restrict every queryset they produce to records whose `ghfdb_id` is
 not null, so a record that has never been published cannot be reached through either proxy by any
-route — including the administrative changelists.
+route, including the administrative changelists.
 
 Reach the unpublished records through the underlying model instead:
 
@@ -50,9 +50,17 @@ Five methods, available on both the queryset and its manager.
 
 ### `GHFDBChild.objects.as_ghfdb_flat()`
 
-Annotates every scalar published child column onto each row, sourced from the site, the interval,
-the gradient, the conductivity, the probe metadata, the site's representative value and the
-corrections. Each annotation carries its published name.
+Annotates every scalar published child column onto each row. The values come from:
+
+- the site
+- the interval
+- the gradient
+- the conductivity
+- the probe metadata
+- the site's representative value
+- the corrections
+
+Each annotation carries its published name.
 
 ```python
 row = GHFDBChild.objects.as_ghfdb_flat().first()
@@ -64,11 +72,18 @@ holds for each correction type independently.
 
 ### `GHFDBChild.objects.for_export()`
 
-Calls `as_ghfdb_flat()` and attaches the many-valued columns — calculation method, exploration
-purpose, the gradient's methods and corrections, the conductivity's descriptive vocabularies,
-lithology, stratigraphy and probe type. Fifteen published child columns are many-to-many
-relationships and cannot be annotated, so **a complete published row is only available after this
-method**, not after `as_ghfdb_flat()` alone.
+Calls `as_ghfdb_flat()` and attaches the many-valued columns:
+
+- calculation method
+- exploration purpose
+- the gradient's methods and corrections
+- the conductivity's descriptive vocabularies
+- lithology
+- stratigraphy
+- probe type
+
+Fifteen published child columns are many-to-many relationships and cannot be annotated, so a
+complete published row is only available after this method, not after `as_ghfdb_flat()` alone.
 
 ### `GHFDBParent.objects.as_ghfdb_flat()`
 
@@ -108,7 +123,7 @@ that published names are preserved exactly, casing included, is
 [ADR 0002](../adr/0002-published-column-names-are-preserved-exactly.md).
 
 Three published columns are present and always empty. `Ref_IGSN` has no field behind it by
-decision — the portal holds no sample numbers, and identifiers belong on the framework's sample
+decision. The portal holds no sample numbers, and identifiers belong on the framework's sample
 model rather than in a dedicated heat flow field. `publication_reference` and `data_reference` wait
 on the work that attaches literature to each record.
 
@@ -116,7 +131,7 @@ on the work that attaches literature to each record.
 
 Both proxies are registered as read-only changelists: no add, no change, no delete, and no link
 from a row into an editable form. They are how the data assessment team reads the database, and
-they are built for people who know the published file — the columns carry the published names and
+they are built for people who know the published file. The columns carry the published names and
 appear in the published order, so a record can be found and read without translating between two
 sets of names.
 
@@ -124,14 +139,23 @@ Neither changelist writes out a column list. Both ask `ghfdb/columns.py` for the
 belonging to a canonical list, in that list's order. A column added to the canonical definitions and
 not to that mapping is refused by name when the application starts, rather than rendering blank.
 
-Search covers the site name and the published site identifier. Filters cover environment,
-the heat production correction flag, exploration method, exploration purpose, country, region,
-continent and geological domain. The three backed by controlled vocabularies offer only the terms
-of their own vocabulary, shown as labels rather than as stored keys.
+Search covers the site name and the published site identifier. Filters cover:
+
+- environment
+- the heat production correction flag
+- exploration method
+- exploration purpose
+- country
+- region
+- continent
+- geological domain
+
+The three backed by controlled vocabularies offer only the terms of their own vocabulary, shown as
+labels and not as stored keys.
 
 ### Importing
 
 Both changelists carry an import action, and only the determination changelist carries an export.
-Import requires the model's add permission — view permission alone is not enough, because import
+Import requires the model's add permission. View permission alone is not enough, because import
 writes. The resources themselves are documented with the
 [import and export pipeline](../guides/importing-data.md).
