@@ -602,3 +602,15 @@ class TestGHFDBChildAdmin:
         model_admin = admin.site._registry[GHFDBChild]
         errors = ModelAdminChecks().check(model_admin)
         assert errors == []
+
+    def test_it_carries_the_determination_import_resource_and_the_export_resource(self):
+        """T089 (FR-021, SC-010): both the import and the export attachment."""
+        from project.ghfdb.resources import GHFDBChildImportResource, GHFDBExportResource
+
+        model_admin = admin.site._registry[GHFDBChild]
+        assert model_admin.get_import_resource_classes(request=None) == [
+            GHFDBChildImportResource
+        ]
+        assert model_admin.get_export_resource_classes(request=None) == [
+            GHFDBExportResource
+        ]
