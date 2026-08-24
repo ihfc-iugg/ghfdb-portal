@@ -65,25 +65,28 @@ class ColumnEntry(NamedTuple):
 class PublishedColumns:
     """One entry per published column name: its group and its accessor.
 
-    Three groups, per R1:
+    Two groups, per R1:
 
-    * ``SCALAR`` — a single value read straight off the row: either a
-      queryset annotation, already keyed under the published name by
+    * ``SCALAR`` — a single value read straight off the row: a queryset
+      annotation, already keyed under the published name by
       ``project/ghfdb/managers.py``, or a field on the proxy model itself.
       Both are read identically here — ``getattr(obj, accessor, None)`` does
       not care which one put the value on the row — so this mapping does not
-      carry the distinction as two groups (F10). Some published columns
-      arrive one way, some the other; that is a fact about ``managers.py``,
-      not about how this mapping reads them.
+      carry the distinction as two groups (F10). This also covers the three
+      columns nothing resolves (``Ref_IGSN``, ``publication_reference``,
+      ``data_reference``, R4, D3) and the two quality columns
+      (``quality_child``, ``quality_parent``): each is a plain
+      ``Value("")`` or ``F("quality")`` annotation in ``managers.py``, kept
+      under its own published name, so this mapping reads it exactly like
+      any other scalar rather than deciding a second time what it resolves
+      to (F12).
     * ``MANY_VALUED`` — the value is a related manager, reached by a
       dot-separated attribute path from the row, and rendered as its
       members' labels joined with "; ".
-    * ``EMPTY`` — nothing resolves the column (R4, D3); it renders as "".
     """
 
     SCALAR = "scalar"
     MANY_VALUED = "many_valued"
-    EMPTY = "empty"
 
     ENTRIES: dict[str, ColumnEntry] = {
         # --- child: scalar columns -------------------------------------------
@@ -121,7 +124,7 @@ class PublishedColumns:
         "c_comment": ColumnEntry(SCALAR),
         "expedition": ColumnEntry(SCALAR),
         "water_temperature": ColumnEntry(SCALAR),
-        "quality_child": ColumnEntry(SCALAR, "quality"),
+        "quality_child": ColumnEntry(SCALAR),
         # --- child: many-valued relationships -------------------------------
         "q_method": ColumnEntry(MANY_VALUED, "method"),
         "probe_type": ColumnEntry(
@@ -145,9 +148,12 @@ class PublishedColumns:
         "tc_pT_function": ColumnEntry(MANY_VALUED, "thermal_conductivity.pT_function"),
         "tc_strategy": ColumnEntry(MANY_VALUED, "thermal_conductivity.strategy"),
         # --- child: columns nothing resolves (R4, D3) -----------------------
-        "publication_reference": ColumnEntry(EMPTY),
-        "data_reference": ColumnEntry(EMPTY),
-        "Ref_IGSN": ColumnEntry(EMPTY),
+        # Value("") annotations in managers.py, kept under their own
+        # published names — this mapping reads them like any other scalar
+        # rather than hardcoding a second, competing "always empty" (F12).
+        "publication_reference": ColumnEntry(SCALAR),
+        "data_reference": ColumnEntry(SCALAR),
+        "Ref_IGSN": ColumnEntry(SCALAR),
         # --- parent: scalar columns ----------------------------------------------
         # Most of these are queryset annotations GHFDBParentQuerySet.as_ghfdb_flat()
         # keys under the published name; the published ``name`` is annotated as
@@ -167,7 +173,7 @@ class PublishedColumns:
         "explo_method": ColumnEntry(SCALAR),
         # --- parent: fields on the proxy itself (also SCALAR — see class docstring) --
         "corr_HP_flag": ColumnEntry(SCALAR),
-        "quality_parent": ColumnEntry(SCALAR, "quality"),
+        "quality_parent": ColumnEntry(SCALAR),
         # --- parent: many-valued relationships ------------------------------------
         "explo_purpose": ColumnEntry(MANY_VALUED, "sample.heatflowsite.explo_purpose"),
     }
@@ -221,19 +227,6 @@ class ColumnDisplay:
         return cast(DisplayCallable, display)
 
     @staticmethod
-    def empty(accessor: str | None = None) -> DisplayCallable:
-        """A callable for a column nothing resolves (R4, D3): always ''.
-
-        Takes and ignores an accessor so :meth:`build` can call every
-        group's builder the same way.
-        """
-
-        def display(obj):
-            return ""
-
-        return cast(DisplayCallable, display)
-
-    @staticmethod
     def build(name: str) -> DisplayCallable:
         """Return the display callable for the published column *name*.
 
@@ -247,15 +240,14 @@ class ColumnDisplay:
         builders = {
             PublishedColumns.SCALAR: ColumnDisplay.scalar,
             PublishedColumns.MANY_VALUED: ColumnDisplay.many_valued,
-            PublishedColumns.EMPTY: ColumnDisplay.empty,
         }
         accessor = entry.accessor or name
         # Typed loosely until the two attributes below are set, then cast to
         # the narrower ``DisplayCallable`` on return: ``admin_order_field``
         # is deliberately not part of that protocol (F11), since it is never
-        # present on the many-valued or empty groups' callables, so
-        # assigning it through the protocol type would be a claim the
-        # protocol itself does not make.
+        # present on a many-valued column's callable, so assigning it
+        # through the protocol type would be a claim the protocol itself
+        # does not make.
         display: Any = builders[entry.group](accessor)
         display.short_description = name
 

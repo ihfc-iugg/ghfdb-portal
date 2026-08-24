@@ -65,18 +65,27 @@ class TestPublishedColumns:
 
         assert ColumnDisplay.build("qc")(Row()) == 42.0
 
-    def test_a_field_column_reads_the_field_and_can_override_its_heading(self):
-        """T067: R1 group two, which is what lets one ``quality`` field appear
-        as ``quality_child`` on one changelist and ``quality_parent`` on the
-        other."""
+    def test_quality_child_and_quality_parent_each_read_their_own_annotation(self):
+        """T067, revised under F12: ``quality_child`` and ``quality_parent``
+        both trace back to the one ``quality`` field, but each is annotated
+        under its own published name in ``managers.py`` (``F("quality")``
+        keyed as ``quality_child`` on the child side, ``quality_parent`` on
+        the parent side), and this mapping now reads each annotation
+        directly rather than bypassing it to read a shared ``quality``
+        accessor — the bypass was F12's finding: the annotations existed
+        and nothing consumed them."""
 
         class Row:
-            quality = "AAAA"
+            quality_child = "AAAA"
+            quality_parent = "BBBB"
 
-        for published in ("quality_child", "quality_parent"):
-            display = ColumnDisplay.build(published)
-            assert display(Row()) == "AAAA"
-            assert display.short_description == published
+        child_display = ColumnDisplay.build("quality_child")
+        parent_display = ColumnDisplay.build("quality_parent")
+
+        assert child_display(Row()) == "AAAA"
+        assert child_display.short_description == "quality_child"
+        assert parent_display(Row()) == "BBBB"
+        assert parent_display.short_description == "quality_parent"
 
     @pytest.mark.django_db
     def test_a_many_valued_column_joins_its_labels_and_issues_no_query_when_prefetched(
@@ -125,12 +134,18 @@ class TestPublishedColumns:
 
         assert ColumnDisplay.build("T_method_top")(Row()) == ""
 
-    def test_a_column_nothing_resolves_renders_empty(self):
-        """T069: R1 group four and R4. Three columns are present and empty by
-        decision, not by omission."""
+    def test_the_columns_nothing_resolves_read_the_annotation_managers_py_sets(self):
+        """T069, revised under F12: ``Ref_IGSN``, ``publication_reference``
+        and ``data_reference`` are present and empty by decision (R4, D3),
+        but that decision is made once, by the ``Value("")`` annotations in
+        ``managers.py`` — this mapping no longer hardcodes a second,
+        competing empty default and just reads the row like any other
+        scalar column."""
 
         class Row:
-            pass
+            Ref_IGSN = ""
+            publication_reference = ""
+            data_reference = ""
 
         for name in ("Ref_IGSN", "publication_reference", "data_reference"):
             assert ColumnDisplay.build(name)(Row()) == ""
@@ -154,9 +169,16 @@ class TestPublishedColumns:
         the specification never asked for.
         """
         assert ColumnDisplay.build("qc").admin_order_field == "qc"
-        assert ColumnDisplay.build("quality_child").admin_order_field == "quality"
+        # F12: quality_child now reads its own annotation key rather than a
+        # shared "quality" accessor, so it sorts on its own key too.
+        assert ColumnDisplay.build("quality_child").admin_order_field == "quality_child"
+        # F12: Ref_IGSN moved from the (now-removed) EMPTY group into SCALAR,
+        # so it is sortable like any other scalar column — sorting on a
+        # column that is always "" is harmless, and the mapping no longer
+        # special-cases it.
+        assert ColumnDisplay.build("Ref_IGSN").admin_order_field == "Ref_IGSN"
 
-        for unsortable in ("q_method", "Ref_IGSN", "corr_IS_flag"):
+        for unsortable in ("q_method", "corr_IS_flag"):
             assert not hasattr(ColumnDisplay.build(unsortable), "admin_order_field")
 
 
