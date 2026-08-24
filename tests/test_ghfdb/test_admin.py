@@ -531,6 +531,18 @@ class TestGHFDBParentAdmin:
             call()
             constant_query_count(published_chains, call)
 
+    def test_every_declared_path_resolves_on_the_model(self):
+        """T108 (FR-020): Django's own admin checks report nothing for this
+        registration, covering the display, filter and search declarations
+        together."""
+        from django.contrib.admin.checks import ModelAdminChecks
+
+        from project.ghfdb.models import GHFDBParent
+
+        model_admin = admin.site._registry[GHFDBParent]
+        errors = ModelAdminChecks().check(model_admin)
+        assert errors == []
+
 
 # ---------------------------------------------------------------------------
 # US-3: the determination changelist (T078-T089).
