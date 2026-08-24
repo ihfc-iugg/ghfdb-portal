@@ -837,3 +837,73 @@ class TestResourceAttachment:
         parent_export = set(parent_admin.get_export_resource_classes(request=None))
         assert not (child_export & parent_export)
         assert parent_export == set()
+
+
+class TestImportPermission:
+    """T123 (FR-012): ``django-import-export`` grants the import route to
+    any staff user while ``IMPORT_EXPORT_IMPORT_PERMISSION_CODE`` is unset —
+    verified unset in this project — so both registrations, which declare no
+    add, no change and no delete, otherwise carry a route that writes
+    records and that a user holding only view permission can reach. Gated on
+    both registrations behind the model's add permission at the user
+    level."""
+
+    @pytest.mark.django_db
+    def test_view_only_staff_is_refused_the_determination_import_page(
+        self, staff_client
+    ):
+        url = reverse("admin:ghfdb_ghfdbchild_import")
+        response = staff_client.get(url)
+        assert response.status_code == 403
+
+    @pytest.mark.django_db
+    def test_staff_holding_add_permission_reaches_the_determination_import_page(
+        self, client, db
+    ):
+        from django.contrib.auth import get_user_model
+        from django.contrib.auth.models import Permission
+
+        user = get_user_model().objects.create_user(
+            email="ghfdb-child-importer@example.com",
+            password="ghfdb-child-importer-password",
+            is_staff=True,
+        )
+        permissions = Permission.objects.filter(
+            content_type__app_label="ghfdb",
+            codename__in=["view_ghfdbchild", "add_ghfdbchild"],
+        )
+        user.user_permissions.set(permissions)
+        client.force_login(user)
+
+        url = reverse("admin:ghfdb_ghfdbchild_import")
+        response = client.get(url)
+        assert response.status_code == 200
+
+    @pytest.mark.django_db
+    def test_view_only_staff_is_refused_the_site_import_page(self, staff_client):
+        url = reverse("admin:ghfdb_ghfdbparent_import")
+        response = staff_client.get(url)
+        assert response.status_code == 403
+
+    @pytest.mark.django_db
+    def test_staff_holding_add_permission_reaches_the_site_import_page(
+        self, client, db
+    ):
+        from django.contrib.auth import get_user_model
+        from django.contrib.auth.models import Permission
+
+        user = get_user_model().objects.create_user(
+            email="ghfdb-parent-importer@example.com",
+            password="ghfdb-parent-importer-password",
+            is_staff=True,
+        )
+        permissions = Permission.objects.filter(
+            content_type__app_label="ghfdb",
+            codename__in=["view_ghfdbparent", "add_ghfdbparent"],
+        )
+        user.user_permissions.set(permissions)
+        client.force_login(user)
+
+        url = reverse("admin:ghfdb_ghfdbparent_import")
+        response = client.get(url)
+        assert response.status_code == 200
