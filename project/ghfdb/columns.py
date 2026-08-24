@@ -33,12 +33,17 @@ from .constants import CORRECTION_COL_MAP
 class DisplayCallable(Protocol):
     """What Django asks of a ``list_display`` entry that is a callable.
 
-    ``short_description`` is the column heading. ``admin_order_field`` is the
-    sort key, and is absent on a column there is nothing to sort by.
+    ``short_description`` is the column heading, and every callable
+    ``ColumnDisplay.build`` returns carries it. ``admin_order_field`` — the
+    sort key — is deliberately not part of this protocol (F11): it is set
+    only on a sortable scalar column's callable, so declaring it here as
+    always present would claim an attribute the many-valued and empty
+    builders never set, exactly what the ``hasattr`` check in
+    ``test_a_scalar_column_stays_sortable_and_a_many_valued_one_does_not``
+    depends on being false.
     """
 
     short_description: str
-    admin_order_field: str
 
     def __call__(self, obj: Any) -> Any: ...
 
@@ -245,7 +250,13 @@ class ColumnDisplay:
             PublishedColumns.EMPTY: ColumnDisplay.empty,
         }
         accessor = entry.accessor or name
-        display = builders[entry.group](accessor)
+        # Typed loosely until the two attributes below are set, then cast to
+        # the narrower ``DisplayCallable`` on return: ``admin_order_field``
+        # is deliberately not part of that protocol (F11), since it is never
+        # present on the many-valued or empty groups' callables, so
+        # assigning it through the protocol type would be a claim the
+        # protocol itself does not make.
+        display: Any = builders[entry.group](accessor)
         display.short_description = name
 
         # A scalar column stays sortable. The changelist is read at database
