@@ -20,64 +20,6 @@ from project.ghfdb.models import GHFDBChild
 
 pytestmark = pytest.mark.ghfdb
 
-EXPECTED_LIST_DISPLAY = (
-    "ghfdb_id",
-    "get_id_parent",
-    "site_name",
-    "lat_NS",
-    "long_EW",
-    "qc",
-    "qc_uncertainty",
-    "get_q_method",
-    "q_top",
-    "q_bottom",
-    "probe_penetration",
-    "get_publication_reference",
-    "get_data_reference",
-    "relevant_child",
-    "c_comment",
-    "corr_IS_flag",
-    "corr_T_flag",
-    "corr_S_flag",
-    "corr_E_flag",
-    "corr_TOPO_flag",
-    "corr_PAL_flag",
-    "corr_SUR_flag",
-    "corr_CONV_flag",
-    "corr_HR_flag",
-    "expedition",
-    "get_probe_type",
-    "probe_length",
-    "probe_tilt",
-    "water_temperature",
-    "get_geo_lithology",
-    "get_geo_stratigraphy",
-    "T_grad_mean",
-    "T_grad_uncertainty",
-    "T_grad_mean_cor",
-    "T_grad_uncertainty_cor",
-    "get_t_method_top",
-    "get_t_method_bottom",
-    "T_shutin_top",
-    "T_shutin_bottom",
-    "get_t_corr_top",
-    "get_t_corr_bottom",
-    "T_number",
-    "q_date",
-    "tc_mean",
-    "tc_uncertainty",
-    "get_tc_source",
-    "get_tc_location",
-    "get_tc_method",
-    "get_tc_saturation",
-    "get_tc_p_t_conditions",
-    "get_tc_p_t_fuction",
-    "tc_number",
-    "get_tc_strategy",
-    "get_quality",
-    "get_ref_isgn",
-)
-
 EXPECTED_SEARCH_FIELDS = (
     "sample__heatflowinterval__site__name",
     "parent__ghfdb_id",
@@ -112,8 +54,13 @@ class TestGHFDBAdminChangelist:
         response = admin_client.get(url)
         assert response.status_code == 200
 
+        # T079: the tail of list_display is read from constants.py, never
+        # restated as a literal here — that restatement is what let three of
+        # the published names drift from the canonical definitions (D1, D2).
+        headings = [str(header["text"]) for header in result_headers(response.context["cl"])]
+        assert headings[-len(CHILD_COLUMNS) :] == list(CHILD_COLUMNS)
+
         model_admin = admin.site._registry[GHFDBChild]
-        assert model_admin.list_display == EXPECTED_LIST_DISPLAY
         assert model_admin.search_fields == EXPECTED_SEARCH_FIELDS
         assert model_admin.list_filter == EXPECTED_LIST_FILTER
         assert model_admin.get_import_resource_classes(request=None) == [
@@ -439,3 +386,15 @@ class TestGHFDBChildAdmin:
         url = reverse("admin:ghfdb_ghfdbchild_changelist")
         response = staff_client.get(url)
         assert response.status_code == 200
+
+    @pytest.mark.django_db
+    def test_published_child_columns_appear_in_the_canonical_order(
+        self, staff_client, published_chain
+    ):
+        """T079 (SC-007): the headings Django renders for the tail of
+        ``list_display`` equal ``CHILD_COLUMNS``, read from ``constants.py``
+        and never from a literal here."""
+        url = reverse("admin:ghfdb_ghfdbchild_changelist")
+        response = staff_client.get(url)
+        headings = [str(header["text"]) for header in result_headers(response.context["cl"])]
+        assert headings[-len(CHILD_COLUMNS) :] == list(CHILD_COLUMNS)
