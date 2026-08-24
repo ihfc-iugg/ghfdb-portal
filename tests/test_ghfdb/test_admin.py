@@ -552,3 +552,15 @@ class TestGHFDBChildAdmin:
         assert reverse("admin:ghfdb_ghfdbchild_add") not in content
         change_url = reverse("admin:ghfdb_ghfdbchild_change", args=[published_chain.pk])
         assert change_url not in content
+
+    @pytest.mark.django_db
+    def test_an_unpublished_determination_is_absent_from_the_rendered_rows(
+        self, staff_client, published_chain, unpublished_chain
+    ):
+        """T086 (FR-002, SC-005): the assertion R6 records as catching an
+        override that stopped going through the scoped manager."""
+        url = reverse("admin:ghfdb_ghfdbchild_changelist")
+        response = staff_client.get(url)
+        result_list = list(response.context["cl"].result_list)
+        assert published_chain in result_list
+        assert unpublished_chain not in result_list
