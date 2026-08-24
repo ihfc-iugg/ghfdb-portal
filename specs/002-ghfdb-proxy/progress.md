@@ -654,3 +654,109 @@ the many-valued columns needed. Nothing was added back except the four
 30 lines). The next dispatch touching `GHFDBParentAdmin` will find the same
 shape of duplication waiting there (`get_*` methods R5 already names) and the
 same `VocabularyListFilter` ready to take its three filter classes.
+
+## 2026-08-24T10:50:00Z · Implementer site-admin · T098-T110
+
+**Did**: wrote the thirteen tests for the site changelist, in
+`TestGHFDBParentAdmin` (extending the pre-existing class rather than adding a
+second one of the same name) plus a new `TestResourceAttachment` class for
+T110. Discharged T099's own cleanup — removed `PARENT_EXPECTED_LIST_DISPLAY`
+and `PARENT_EXPECTED_HEADERS`, the two literal copies of the site column list
+`test_ghfdb_parent_admin_changelist` compared against, and simplified that
+test to the rendering and verbose-name checks the two assertions reading
+those literals leave behind. That is the only pre-existing test touched;
+every other one, including the sibling `test_ghfdb_parent_admin_import_resource_only`,
+is untouched.
+
+Nine of the thirteen (T098, T100-T108) passed on first run against the *old*
+`admin.py` — genuine coverage, not tautological, matching the pattern the
+determination-changelist dispatch recorded for its own tests: each exercises
+a real path (rendering, geography order, counts, search, filters, vocabulary
+scoping, permission hooks, absent-unpublished-row, query count, admin
+checks) that prior work already got right. T099 fails for the right reason:
+the trailing published column renders as `quality` rather than the canonical
+`quality_parent` (D2). T109 and T110 fail for the right reason: the site
+changelist inherits `ImportExportMixin` and overrides only the import side,
+so `get_export_resource_classes()` returns a generated resource
+(`GHFDBParentResource`) rather than the empty list FR-021 requires.
+
+**Verified**: `poetry run pytest tests/test_ghfdb/test_admin.py -q` →
+`5 failed, 35 passed` — T099, T109, T110 and both `TestImportPermission`
+(T123) view-only cases, everything else green. Each test's exact command and
+result is in its own commit.
+
+**Next**: T111-T119, rebuilding `GHFDBParentAdmin` on `ColumnDisplay` to turn
+T099 green, closing the export path for T109/T110, and reusing
+`VocabularyListFilter` for the three site filter classes (T118). T123 gates
+the import route on both registrations.
+
+**Watch**: the query-count test (T107) and the changelist-renders test (T098)
+both passed immediately against the pre-refactor admin, but that does not
+mean the queryset was correct — see D14, found while implementing T115.
+
+## 2026-08-24T11:20:00Z · Implementer site-admin · T111-T119, T123
+
+**Did**: rebuilt `GHFDBParentAdmin` on the mapping. `list_display` is now
+`ColumnDisplay.list_display_for(PARENT_COLUMNS)` (T111) followed by the four
+geography columns (T112) and the two count columns (T113) — both already
+correct and needing no code change, now proven by T100 and T101 rather than
+only by inspection. Deleted the fifteen `get_*` display methods the mapping
+now covers: `get_id_parent`, `get_q`, `get_q_uncertainty`, `get_name`,
+`get_lat_ns`, `get_long_ew`, `get_elevation`, `get_environment`,
+`get_p_comment`, `get_corr_hp_flag`, `get_total_depth_md`,
+`get_total_depth_tvd`, `get_explo_method`, `get_explo_purpose` and
+`get_quality`.
+
+`get_queryset()` now reads
+`GHFDBParent.objects.as_ghfdb_flat().with_child_counts().with_children()`
+(T115) rather than restating `with_child_counts()`'s own
+`select_related`/`prefetch_related` by hand. This is not a pure
+de-duplication — see D14: the pre-refactor `get_queryset()` never called
+`as_ghfdb_flat()`, so none of the fifteen now-mapping-built columns had a
+matching annotation on the row, and every one of them rendered blank on the
+actual changelist page. Nothing in T098-T101 caught it because heading
+assertions don't read cell values and `ColumnDisplay`'s callables default to
+`None` on a missing attribute rather than raising. Verified directly, not
+only through the suite: `row.ID_parent`, `row.q` and `row.site_name` were all
+absent before this change and resolve correctly after it.
+
+Read-only guarantees (T114) and search (T116) and the plain filters (T117)
+needed no code change — each was already correct and is now proven by a real
+test. Refactored the three bespoke `Parent*ListFilter` classes onto
+`VocabularyListFilter` (T118), same names, same `lookups()`/`queryset()`
+behaviour — verified against the pre-existing `TestGHFDBParentAdminListFilters`
+tests, which instantiate those classes directly and still pass unchanged, and
+against T104 (new), which proves the previously-untested exploration-purpose
+filter — plan.md named this as the one gap in SC-009's grid. `get_country`,
+`get_region`, `get_continent` and `get_domain` (T112, unchanged) read
+`obj.sample.heatflowsite.<field>`, not `obj.sample.<field>` — see D15 for why
+the extra hop is required rather than dead code.
+
+`get_export_resource_classes()` now returns `[]` (T119), closing the export
+path FR-021 requires closed on this registration. Corrected the class
+docstring, which cited `FR-011b`, a requirement number from the superseded
+specification, and the module docstring, which described only the
+determination changelist's columns as mapping-built.
+
+`has_import_permission()` is now defined on both `GHFDBChildAdmin` and
+`GHFDBParentAdmin` (T123), checking the model's add permission at the user
+level directly rather than relying on `django-import-export`'s own hook,
+which is a no-op whenever `IMPORT_EXPORT_IMPORT_PERMISSION_CODE` is unset —
+verified unset in this project. This is the one task authorised to touch
+`GHFDBChildAdmin`.
+
+**Verified**: `poetry run pytest tests/test_ghfdb/test_admin.py -q` →
+`40 passed`. `poetry run ruff check project/ghfdb/admin.py` → All checks
+passed. `poetry run ruff format --check project/ghfdb/admin.py` → already
+formatted.
+
+**Next**: none — T098-T119, T123 (this dispatch's whole scope) are complete.
+
+**Watch**: `admin.py` lost roughly 100 lines net in the `list_display`
+rebuild (T111) and a further ~23 in the filter refactor (T118), offset by
+the geography-column comments, the two new permission-hook methods and the
+corrected docstrings. D14 is worth re-reading before extending
+`PublishedColumns.ENTRIES` with a future `ANNOTATION`-group column: a missing
+matching key in `as_ghfdb_flat()`'s `scalar_annotations` fails silently
+(blank cell), not loudly, and no task in this dispatch closes that gap with a
+value-level test.

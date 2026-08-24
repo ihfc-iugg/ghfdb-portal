@@ -319,3 +319,47 @@ this dispatch's authorised edit.
 **Revisit if** a future story is explicitly asked to narrow the determination changelist's search to
 only the site name and the site's published identifier — that would be the point to also correct
 `EXPECTED_SEARCH_FIELDS`.
+
+### D14 — The site changelist's queryset never called `as_ghfdb_flat()`, so every published column rendered blank
+
+**Found**: while implementing T115, before changing `get_queryset()`, a direct check on the
+pre-existing queryset (`GHFDBParent.objects.with_child_counts().select_related(...)`) showed
+`row.ID_parent`, `row.q` and `row.site_name` all absent. None of T098-T101 caught this: T099-T101
+assert rendered *headings*, which come from each callable's `short_description` and are independent
+of the queryset, and `ColumnDisplay.annotation()`/`.field()` read with `getattr(obj, accessor,
+None)`, so a missing annotation renders as an empty cell rather than raising. The changelist returned
+200 and showed the right column order and headings while every published-column cell was blank.
+
+**Ruled**: this is exactly the defect T115 exists to fix, and it is a real functional defect, not
+just a missing test — `get_queryset()` now chains `as_ghfdb_flat().with_child_counts().with_children()`
+so every annotation the mapping's `ANNOTATION`-group entries expect is present on the row. Verified
+directly (not only through the test suite): `row.ID_parent == 1`, `row.q == "70.00 mW/m²"`,
+`row.site_name == "Test Site"` after the change, all missing before it.
+
+**Revisit if** a future column is added to `PublishedColumns.ENTRIES` as an `ANNOTATION` without a
+matching key in `as_ghfdb_flat()`'s `scalar_annotations` — the same silent-blank failure mode applies,
+and `getattr(obj, accessor, None)`'s permissiveness is why a value-level test (not just a heading-level
+one) is worth adding for a future column, though none is required by this dispatch's task list.
+
+### D15 — Geography columns read `obj.sample.heatflowsite.<field>`, not `obj.sample.<field>`
+
+**Found**: `ParentHeatFlow.sample` is a forward FK to the polymorphic base `Sample`. Accessed on an
+instance fetched without `select_related`, that FK descriptor returns the correctly downcast
+`HeatFlowSite` subtype (confirmed: `type(fetched.sample) is HeatFlowSite`), because `Sample`'s default
+manager auto-downcasts on `.get()`. But `as_ghfdb_flat()`'s `select_related("sample",
+"sample__heatflowsite")` builds `row.sample` as the **base** `Sample` instance from the joined SQL
+columns and populates the reverse one-to-one accessor `row.sample.heatflowsite` separately — measured:
+`row.sample.country` raises `AttributeError: 'Sample' object has no attribute 'country'`, while
+`row.sample.heatflowsite.country` resolves at zero extra queries.
+
+**Ruled**: the four geography display methods (`get_country`, `get_region`, `get_continent`,
+`get_domain`) read `obj.sample.heatflowsite.<field>`, matching the pre-existing code's own accessor
+path (it was not dead code, despite reading that way on first glance). No defensive `getattr` guard is
+added around it — the query already assumes this path resolves (the elevation and environment
+annotations traverse the identical `sample__heatflowsite__*` path with an `F()` expression), so a
+guard here would be exactly the kind of accessor a reader could mistake for a working one when it
+never triggers (R4's concern, applied to a relationship walk rather than a missing field).
+
+**Revisit if** a site is ever legitimately published without a `HeatFlowSite` row under its `sample` —
+the domain model does not currently allow this (every `HeatFlowSite.objects.create()` writes both
+tables), so this is not a defensive posture this dispatch adopts speculatively.
