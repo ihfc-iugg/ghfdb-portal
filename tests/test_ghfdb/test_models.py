@@ -275,19 +275,52 @@ class TestSuiteHealth:
     OTHER_FEATURES = ("test_resources",)
 
     @staticmethod
-    def marks(path):
-        """Every `pytest.mark.<name>` decorator in *path*, as a set of names."""
+    def mark_names(expr):
+        """Every `pytest.mark.<name>` attribute reachable from *expr*.
+
+        *expr* is either one decorator-shaped node (`pytest.mark.xfail` or
+        `pytest.mark.xfail(...)`) or a list/tuple of them — a module-level
+        `pytestmark` assignment may be either shape.
+        """
         import ast
 
-        found = set()
-        for node in ast.walk(ast.parse(path.read_text())):
-            if not isinstance(node, ast.FunctionDef | ast.ClassDef):
-                continue
-            for decorator in node.decorator_list:
-                target = decorator.func if isinstance(decorator, ast.Call) else decorator
-                if isinstance(target, ast.Attribute):
-                    found.add(target.attr)
+        if isinstance(expr, ast.List | ast.Tuple):
+            found: set[str] = set()
+            for element in expr.elts:
+                found |= TestSuiteHealth.mark_names(element)
+            return found
+        target = expr.func if isinstance(expr, ast.Call) else expr
+        if isinstance(target, ast.Attribute):
+            return {target.attr}
+        return set()
+
+    @classmethod
+    def marks_in_source(cls, source):
+        """Every `pytest.mark.<name>` in *source*, as a set of names.
+
+        Walks two shapes: a decorator on a function or class, and a
+        module-level `pytestmark = pytest.mark.<name>(...)` assignment —
+        every module in this suite carries its marker the second way, so a
+        gate that only walked decorator lists would never see it (F8).
+        """
+        import ast
+
+        found: set[str] = set()
+        for node in ast.walk(ast.parse(source)):
+            if isinstance(node, ast.FunctionDef | ast.ClassDef):
+                for decorator in node.decorator_list:
+                    found |= cls.mark_names(decorator)
+            elif isinstance(node, ast.Assign) and any(
+                isinstance(target, ast.Name) and target.id == "pytestmark"
+                for target in node.targets
+            ):
+                found |= cls.mark_names(node.value)
         return found
+
+    @classmethod
+    def marks(cls, path):
+        """Every `pytest.mark.<name>` in *path*, as a set of names."""
+        return cls.marks_in_source(path.read_text())
 
     def modules(self):
         root = pathlib.Path(__file__).parent
@@ -304,9 +337,24 @@ class TestSuiteHealth:
         assert offenders == []
 
     def test_no_test_in_this_feature_is_unconditionally_skipped(self):
-        """T120: a skip that can never fire reads as coverage and is not."""
-        offenders = [path.name for path in self.modules() if "skip" in self.marks(path)]
+        """T120: a skip that can never fire reads as coverage and is not —
+        checked against both spellings, ``skip`` and the conditional
+        ``skipif``, either of which reads as coverage while proving nothing
+        if it can never fire (F8)."""
+        offenders = [
+            path.name for path in self.modules() if self.marks(path) & {"skip", "skipif"}
+        ]
         assert offenders == []
+
+    def test_the_gate_catches_a_module_level_expected_failure(self):
+        """F8: proves the gate against the exact defect it exists to catch.
+        ``marks()`` used to walk decorator lists only, so a module-level
+        ``pytestmark = pytest.mark.xfail(...)`` — the shape every module in
+        this suite actually uses for its own marker — slipped past it
+        silently. A gate with no proof against its own defect is what T010
+        exists to avoid."""
+        source = "import pytest\n\npytestmark = pytest.mark.xfail(reason='x')\n"
+        assert "xfail" in self.marks_in_source(source)
 
     def test_the_named_exclusion_is_real(self):
         """The exclusion above is honest only if it names something that
