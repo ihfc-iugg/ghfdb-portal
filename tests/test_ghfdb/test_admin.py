@@ -438,3 +438,22 @@ class TestGHFDBChildAdmin:
                 headings.add(str(item))
 
         assert headings & set(PARENT_COLUMNS) == {"ID_parent", "name", "lat_NS", "long_EW"}
+
+    @pytest.mark.django_db
+    def test_search_matches_site_name_and_published_site_identifier(
+        self, staff_client, published_chain
+    ):
+        """T082 (FR-016): exercised through the rendered changelist with a
+        query string, not against the search attribute — a search matching
+        nothing must return no rows, not just a 200 status."""
+        url = reverse("admin:ghfdb_ghfdbchild_changelist")
+        site_name = published_chain.sample.heatflowinterval.site.name
+
+        response = staff_client.get(url, {"q": site_name})
+        assert response.context["cl"].result_count == 1
+
+        response = staff_client.get(url, {"q": str(published_chain.parent.ghfdb_id)})
+        assert response.context["cl"].result_count == 1
+
+        response = staff_client.get(url, {"q": "no-such-site-name-anywhere"})
+        assert response.context["cl"].result_count == 0
