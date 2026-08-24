@@ -16,6 +16,7 @@ References:
 
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
+from django.contrib.auth import get_permission_codename
 from django.utils.translation import gettext_lazy as _
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import XLSX
@@ -196,6 +197,18 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
         """Pass through resource kwargs; dataset defaults to None for format detection."""
         return super().get_import_resource_kwargs(request, **kwargs)
 
+    def has_import_permission(self, request):
+        """Gate the import route on the model's add permission at the user
+        level (T123): the framework's own hook is a no-op whenever
+        ``IMPORT_EXPORT_IMPORT_PERMISSION_CODE`` is unset, which it is in
+        this project, so a user holding only view permission could
+        otherwise reach a route that writes through a changelist declared
+        read-only.
+        """
+        opts = self.opts
+        codename = get_permission_codename("add", opts)
+        return request.user.has_perm(f"{opts.app_label}.{codename}")
+
     def get_queryset(self, request):
         """Return the published determinations as complete rows: scoped to
         published records by the manager, and ready for every many-valued
@@ -316,6 +329,18 @@ class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
         emit the site model's own fields rather than the published
         structure (T119)."""
         return []
+
+    def has_import_permission(self, request):
+        """Gate the import route on the model's add permission at the user
+        level (T123): the framework's own hook is a no-op whenever
+        ``IMPORT_EXPORT_IMPORT_PERMISSION_CODE`` is unset, which it is in
+        this project, so a user holding only view permission could
+        otherwise reach a route that writes through a changelist declared
+        read-only.
+        """
+        opts = self.opts
+        codename = get_permission_codename("add", opts)
+        return request.user.has_perm(f"{opts.app_label}.{codename}")
 
     @admin.display(description=_("country"), ordering="sample__heatflowsite__country")
     def get_country(self, obj):
