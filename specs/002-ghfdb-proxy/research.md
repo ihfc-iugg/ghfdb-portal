@@ -30,7 +30,7 @@ The published columns fall into four groups, and the group decides the callable:
    names them, which sounds like the easy case and is the trap below. `quality` is not: the published
    columns are `quality_child` and `quality_parent` (`constants.py:64,123`). Every one of them needs
    a callable, even where the value is a plain attribute read.
-3. **Many-valued relationships** — 17 child columns, 1 parent column. Join the related labels. The
+3. **Many-valued relationships** — 15 child columns, 1 parent column. Join the related labels. The
    rows must be prefetched or this is the N+1 the feature exists to avoid.
 4. **Columns nothing resolves** — see R4.
 
@@ -89,7 +89,7 @@ costs two chains rather than a hundred and ninety-eight.
 ## R3 — What "every published column resolves" means for many-valued columns
 
 **Question**: SC-001 requires every published child column to resolve on every row of the flattened
-queryset. Seventeen of those columns are many-to-many relationships, which cannot be annotated.
+queryset. Fifteen of those columns are many-to-many relationships, which cannot be annotated.
 
 **Findings**
 

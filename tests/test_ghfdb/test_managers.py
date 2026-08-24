@@ -57,7 +57,7 @@ class TestGHFDBChildQuerySet:
 class TestChildExportQuerySet:
     """``for_export()``'s complete row (T024, T025, T027, T041).
 
-    R3: seventeen published child columns are many-valued and cannot be
+    R3: fifteen published child columns are many-valued and cannot be
     annotated, so the complete row is read after ``for_export()`` rather
     than after ``as_ghfdb_flat()`` alone.
     """

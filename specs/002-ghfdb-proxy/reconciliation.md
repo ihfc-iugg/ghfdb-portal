@@ -121,7 +121,7 @@ will force.
 | T019–T021 absent gradient, conductivity, probe metadata | `project/ghfdb/managers.py:89` | no partial-chain fixture exists, so no test covers a missing relationship at all |
 | T022 a missing correction empties only its own column | `project/ghfdb/managers.py:25` | `test_managers.py:82` asserts `hasattr` for all nine flags on a chain that has all nine corrections. It never removes one, and never reads a value |
 | T023 annotations carry published names | `project/ghfdb/managers.py:89` | ten of thirty-four keys are pinned. Nothing checks that each name on the collision list is a field the base class actually declares, so the list is an escape hatch rather than a rule |
-| T024 every column resolves on the complete row | `project/ghfdb/managers.py:143` | nothing reads the seventeen many-valued columns off an export row |
+| T024 every column resolves on the complete row | `project/ghfdb/managers.py:143` | nothing reads the fifteen many-valued columns off an export row |
 | T025 export query count equal at two row counts | `project/ghfdb/managers.py:152` | `test_managers.py:106` bounds at sixteen queries on one chain |
 | T026 many-valued columns read without further queries | `project/ghfdb/managers.py:152` | the sixteen-query bound covers evaluation, not the zero-query read after it |
 | T031, T032 the spine and the scalar annotation set | `project/ghfdb/managers.py:78`, `:89` | both exist. They close when T016, T017 and T018 do. The review collapsed the seven per-block tasks into T032, because they decomposed one dictionary literal into seven dispatches that would have collided on it |

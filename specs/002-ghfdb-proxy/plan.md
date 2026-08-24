@@ -81,7 +81,7 @@ Four things drive it:
   count, build more, count again, assert the two counts are equal to each other rather than to a
   literal. The helper is itself gated — T010 requires it proven against a deliberately linear
   callable, because a helper that cannot fail is worse than no helper.
-- **The complete row, not the annotated one.** R3 records that seventeen published child columns are
+- **The complete row, not the annotated one.** R3 records that fifteen published child columns are
   many-valued and cannot be annotated, so SC-001 is proven after the export method rather than after
   the flattening one. A reader who takes SC-001 to mean the flattening method alone writes a test
   that cannot pass.

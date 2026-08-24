@@ -158,7 +158,7 @@ Discharges FR-001 to FR-007 and FR-011 for the child, and SC-001, SC-003, SC-005
 
 - [ ] **T024** *US-1 · SC-001* —
   `TestChildExportQuerySet::test_every_published_child_column_resolves_on_the_complete_row`: read
-  after the export method, per R3, since seventeen of the columns are many-valued and cannot be
+  after the export method, per R3, since fifteen of the columns are many-valued and cannot be
   annotated. The column list is `CHILD_COLUMNS` itself.
 
 - [ ] **T025** *US-1 · FR-007, SC-003* —
