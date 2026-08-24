@@ -494,3 +494,41 @@ class TestGHFDBChildAdmin:
         for param, value in filters.items():
             response = staff_client.get(url, {param: value})
             assert response.context["cl"].result_count == 1, param
+
+    @pytest.mark.django_db
+    def test_each_vocabulary_filter_offers_exactly_its_own_terms_as_labels(self):
+        """T084 (FR-018, SC-009): every term of its own vocabulary is
+        offered, no term of another vocabulary is, and the choice text is the
+        label rather than the stored key."""
+        from heat_flow.vocabularies import (
+            ExplorationMethod,
+            ExplorationPurpose,
+            GeographicEnvironment,
+        )
+        from research_vocabs.models import Concept
+
+        model_admin = admin.site._registry[GHFDBChild]
+
+        environment_filter = EnvironmentListFilter(
+            request=None, params={}, model=GHFDBChild, model_admin=model_admin
+        )
+        assert dict(environment_filter.lookups(None, model_admin)) == dict(
+            GeographicEnvironment().choices
+        )
+
+        method_filter = ChildExplorationMethodListFilter(
+            request=None, params={}, model=GHFDBChild, model_admin=model_admin
+        )
+        assert dict(method_filter.lookups(None, model_admin)) == dict(
+            ExplorationMethod().choices
+        )
+
+        purpose_filter = ExplorePurposeListFilter(
+            request=None, params={}, model=GHFDBChild, model_admin=model_admin
+        )
+        purpose_choices = dict(purpose_filter.lookups(None, model_admin))
+        expected_purposes = {
+            concept.pk: concept.label
+            for concept in Concept.get_for_vocabulary(ExplorationPurpose)
+        }
+        assert purpose_choices == expected_purposes
