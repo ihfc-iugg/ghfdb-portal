@@ -1,8 +1,4 @@
-# Spec-Driven Development Workflow
-
-This document describes the spec-driven development workflow used for feature development in this project. The workflow emphasizes planning, documentation, and constitutional alignment before implementation.
-
-## Overview
+# Spec-Driven Development
 
 The spec-driven workflow breaks feature development into discrete phases, each producing specific artifacts that guide implementation and facilitate review. This approach ensures features are well-planned, aligned with project governance, and properly documented before code is written.
 
