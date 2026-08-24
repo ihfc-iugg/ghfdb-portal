@@ -279,6 +279,7 @@ class TestGHFDBParentAdminListFilters:
 # Phase 3b: GHFDBParent admin tests (T070–T071)
 # ---------------------------------------------------------------------------
 
+
 class TestGHFDBParentAdmin:
     """The site changelist: its columns, its scoping, its search and
     filters, and the read-only guarantees around it (US-3). Column-order
@@ -372,7 +373,7 @@ class TestGHFDBParentAdmin:
         headings = [str(header["text"]) for header in result_headers(cl)]
         assert headings[-2:] == ["total_children", "relevant_children"]
 
-        row = list(cl.result_list)[0]
+        row = next(iter(cl.result_list))
         assert row.total_children == 1
         assert row.relevant_children == 0
 
