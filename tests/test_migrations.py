@@ -47,6 +47,82 @@ class TestMigrationState:
             )
 
 
+class TestGHFDBChildProxyMigrations:
+    """T029 (FR-001): the migrations recording ``GHFDBChild`` touch no table.
+
+    A proxy model adds no table, so an ``AddField``, ``AlterField`` or
+    ``RemoveField`` operation in either migration would be the defect.
+    Scoped to the operations that concern ``GHFDBChild`` — the
+    ``GHFDBParent`` ``CreateModel`` carried in the same file as the rename
+    belongs to a different story.
+    """
+
+    def test_the_initial_migration_is_a_bare_proxy_create_model(self):
+        import importlib
+
+        from django.db import migrations
+
+        module = importlib.import_module("project.ghfdb.migrations.0002_ghfdb")
+        operations = module.Migration.operations
+
+        assert len(operations) == 1
+        operation = operations[0]
+        assert isinstance(operation, migrations.CreateModel)
+        assert operation.name == "GHFDB"
+        assert operation.fields == []
+        assert operation.options.get("proxy") is True
+
+    def test_the_rename_migration_touches_no_table(self):
+        import importlib
+
+        from django.db import migrations
+
+        module = importlib.import_module(
+            "project.ghfdb.migrations.0003_ghfdbchild_ghfdbparent"
+        )
+        operations = module.Migration.operations
+
+        forbidden = (migrations.AddField, migrations.AlterField, migrations.RemoveField)
+        assert not any(isinstance(operation, forbidden) for operation in operations)
+
+        rename_operations = [
+            operation
+            for operation in operations
+            if isinstance(operation, migrations.RenameModel)
+        ]
+        assert len(rename_operations) == 1
+        assert rename_operations[0].old_name == "GHFDB"
+        assert rename_operations[0].new_name == "GHFDBChild"
+
+
+class TestGHFDBParentProxyMigrations:
+    """T057 (FR-001): the migration recording ``GHFDBParent`` is a bare
+    proxy ``CreateModel`` and no other operation. A proxy adds no table, so
+    an ``AddField`` or ``AlterField`` naming ``GHFDBParent`` would be the
+    defect."""
+
+    def test_the_create_model_is_a_bare_proxy(self):
+        import importlib
+
+        from django.db import migrations
+
+        module = importlib.import_module(
+            "project.ghfdb.migrations.0003_ghfdbchild_ghfdbparent"
+        )
+        operations = module.Migration.operations
+
+        create_model_operations = [
+            operation
+            for operation in operations
+            if isinstance(operation, migrations.CreateModel)
+            and operation.name == "GHFDBParent"
+        ]
+        assert len(create_model_operations) == 1
+        operation = create_model_operations[0]
+        assert operation.fields == []
+        assert operation.options.get("proxy") is True
+
+
 class TestMigrationsApplyToAnEmptyDatabase:
     """The migrations must actually run, not merely exist.
 

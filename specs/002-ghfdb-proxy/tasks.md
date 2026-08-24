@@ -1,233 +1,630 @@
-# Tasks: GHFDB Flat Data Interface
+# Tasks — 002 the published structure read from the model
 
-**Feature**: 002-ghfdb-proxy
-**Branch**: `002-ghfdb-proxy`
-**Input**: plan.md, spec.md, data-model.md, quickstart.md
-**Generated**: 2026-04-13
-**Propagated**: 2026-04-14 — Updated from spec.md refinement (admin column order + filter constraints)
-**Propagated**: 2026-04-17 — Updated from spec.md refinement (two proxy models: GHFDBChild + GHFDBParent; split admin registrations; resource-to-admin assignment)
-**Propagated**: 2026-04-22 — Updated from spec.md refinement: `ghfdb_id`/`quality` added; `local_id`/`is_ghfdb` removed; FR-001b manager default queryset scoping; child and parent admin column orders updated; Phase 2 local_id tasks superseded; Phase 8 added.
-**Bugfix**: 2026-04-14 � [BUG-001] Reopened admin filter tasks and added vocabulary-scoping tasks for `explo_purpose` list-filter choices.
-**Bugfix**: 2026-04-17 — [BUG-002] Reopened child-admin tasks and added child-field coverage work so `GHFDBChild` no longer uses the parent changelist contract.
-**Bugfix**: 2026-04-17 — [BUG-003] Reopened child-admin validation tasks after invalid `prefetch_related()` relation paths caused changelist runtime errors.
-**Bugfix**: 2026-04-20 — [BUG-004] Reopened vocabulary-scoping tasks; added filter classes for `environment`/`explo_method` on both admins; fixed `_interval()` fallback; added regression tests.
-**Downstream**: Import/export pipeline tasks (T022-T071) have been moved to `003-ghfdb-import-export/tasks.md`.
+Written from `spec.md`, `research.md` and `decisions.md` as though the repository held no
+implementation of this feature. Nothing here was derived by reading the proxy models, the managers,
+the admin, the resources or the existing tests. `constants.py` was read, because it is the canonical
+data definition this feature treats as its authority, not an implementation of it.
 
-## Format: `[ID] [P?] [Story] Description`
+Writing the list this way is deliberate. A task list written by reading the implementation can only
+describe the implementation, which is how a specification audit turns into a rubber stamp. The
+difference between this list and what the repository holds is the measurement the exercise exists to
+produce.
 
-- **[P]**: Parallelizable (different files, no dependency on an incomplete task)
-- **[US1/4]**: Mapped user story
-- All tasks include an exact file path
+Tests come before the implementation they cover, per constitution principle VI. Every task is one
+increment — one class, one method, one test class. Every implementation task names the test that
+proves it and the assertion that fails before it exists.
 
----
+Nothing here is done. Every box is unchecked, including for behaviour the repository may already
+have.
 
-## Phase 1: Setup (Shared Infrastructure)
-
-**Purpose**: Create the new test package and directory structure before all implementation begins.
-
-- [X] T001 Create `tests/test_ghfdb/` package with `__init__.py` and empty placeholder files: `test_models.py`, `test_managers.py`, `test_admin.py`, `test_views.py` in `tests/test_ghfdb/`
-- [X] T002 Create `tests/test_ghfdb/conftest.py` with a `heat_flow_chain` pytest fixture that builds a complete record chain: `HeatFlowSite` ? `HeatFlowInterval` (with `ProbeMetadata`) ? `ParentHeatFlow` ? `HeatFlow` (linked to `ThermalGradient`, `IntervalConductivity`, and `HeatFlowCorrection` instances for all 9 correction types); include a `sample_ghfdb_row` fixture with a minimal valid dict of GHFDB flat-column values
-
-### System Validation � Phase 1
-
-- [X] T003 ?? CRITICAL: Run Django system checks: `poetry run python manage.py check` � MUST pass before proceeding to Phase 2
-
-**Checkpoint � Setup Complete**: Package structure exists and system checks pass.
+**Names used below.** `GHFDBChild` and `GHFDBParent` in `project/ghfdb/models.py`,
+`GHFDBChildQuerySet` / `GHFDBChildManager` / `GHFDBParentQuerySet` / `GHFDBParentManager` in
+`project/ghfdb/managers.py`, the published-column mapping in `project/ghfdb/columns.py`, and the two
+registrations in `project/ghfdb/admin.py`. Tests mirror that tree under `tests/test_ghfdb/`, per
+`tests/README.md`.
 
 ---
 
-## Phase 2: ~~Foundational (Blocking Prerequisite — `HeatFlow.local_id`)~~ [SUPERSEDED by 2026-04-22]
+## Phase 1 — Foundations
 
-**Purpose**: ~~Add the `local_id` field to `HeatFlow` and generate its migration.~~ (superseded) This phase is now complete via a different migration in the `001-heat-flow-data-model` branch: `ghfdb_id` (PositiveIntegerField, nullable) and `quality` (CharField, nullable) were added to both `HeatFlow` and `ParentHeatFlow`; `local_id` and `is_ghfdb` were removed. The database is already migrated. Phase 2 tasks below are struck through; the new work is in Phase 8.
+Blocking. Every story depends on these. They serve US-1, US-2 and US-3 alike.
 
-**⚠️ CRITICAL**: ~~No user story work can begin until this phase is complete and the migration is verified.~~ (done)
+- [ ] **T001** *foundations* — The test tree mirroring `project/ghfdb/`: `tests/test_ghfdb/` holding
+  `conftest.py`, `test_models.py`, `test_managers.py`, `test_columns.py` and `test_admin.py`, each
+  carrying the `ghfdb` marker. `test_views.py` and `test_resources/` are also present in the package
+  and belong to other features; they are left alone.
+  **Test**: `pytest tests/test_ghfdb --collect-only` names all five modules. Before: collection
+  errors with "file or directory not found".
 
-- ~~[X] T004 Add `local_id = models.CharField(max_length=255, null=True, blank=True, db_index=True, help_text=_("GHFDB spreadsheet ID column — used as the stable key for import upsert"))` to the `HeatFlow` model~~ **[SUPERSEDED]** — `ghfdb_id` (PositiveIntegerField) now serves this role. Added in `001-heat-flow-data-model` branch.
-- ~~[X] T005 Generate migration: run `poetry run python manage.py makemigrations heat_flow` and verify the resulting file in `project/heat_flow/migrations/` adds only a nullable `local_id` varchar column with a `db_index`~~ **[SUPERSEDED]** — Migration generated and applied via `001-heat-flow-data-model` branch for `ghfdb_id`/`quality`.
+- [ ] **T002** *foundations* — Autouse fixture preloading the controlled-vocabulary concepts into
+  the test database, matching the idiom in `tests/test_heat_flow/conftest.py`. Every vocabulary this
+  feature filters on needs concept rows to exist.
+  **Test**: `TestFixtures::test_vocabulary_concepts_are_present` asserts concepts exist for
+  `GeographicEnvironment`, `ExplorationMethod` and `ExplorationPurpose`. Before: each query returns
+  nothing.
 
-### System Validation � Phase 2
+- [ ] **T003** *foundations* — `dataset` fixture wrapping `DatasetFactory`. Infrastructure, not
+  subject, so a factory is correct here per `tests/README.md`.
+  **Test**: `TestFixtures::test_dataset_fixture_is_saved` asserts a primary key. Before: fixture
+  not found.
 
-- [X] T006 ?? CRITICAL: Run Django system checks: `poetry run python manage.py check` � MUST pass before proceeding
-- [X] T007 ?? CRITICAL: Apply migration and verify: `poetry run python manage.py migrate` � MUST succeed cleanly before proceeding to any user story
+- [ ] **T004** *foundations* — `published_chain` fixture building one complete record chain by
+  direct ORM calls: site, interval, probe metadata, thermal gradient, interval conductivity, parent
+  heat flow, child heat flow, and one correction of each of the nine types, with the published
+  identifier set on both the parent and the child.
+  **Test**: `TestFixtures::test_published_chain_is_complete` walks each relationship and asserts
+  both published identifiers are set. Before: fixture not found.
 
-**Checkpoint — ~~Foundation Ready: `HeatFlow.local_id` exists in the database~~** [SUPERSEDED] — `ghfdb_id` and `quality` already exist on both `HeatFlow` and `ParentHeatFlow` following merge of `001-heat-flow-data-model`.
+- [ ] **T005** *foundations* — `published_chains` counted fixture, per R2: a callable fixture that
+  builds *n* complete chains and returns them. This is the fixture every query-constancy test takes,
+  at two sizes.
+  **Test**: `TestFixtures::test_published_chains_builds_the_number_asked_for` calls it at 2 and at 4
+  and asserts the row counts. Before: fixture not found.
 
----
+- [ ] **T006** *foundations* — `unpublished_chain` fixture: the same graph with the published
+  identifier unset on both the parent and the child. This is what SC-005 is proven against.
+  **Test**: `TestFixtures::test_unpublished_chain_has_no_published_identifier` asserts both are
+  `None`. Before: fixture not found.
 
-## Phase 3: User Story 1 — GHFDBChild Proxy Model (Priority: P1) ⚠️ MVP
+- [ ] **T007** *foundations* — Partial-chain fixtures: `chain_without_gradient`,
+  `chain_without_conductivity`, `chain_without_probe_metadata`, and `chain_missing_correction` taking
+  a correction type and omitting only that one.
+  **Test**: `TestFixtures::test_partial_chains_omit_only_what_they_name` asserts the named
+  relationship is absent and every other one still resolves. Before: fixtures not found.
 
-**Goal**: A `GHFDBChild` proxy model over `HeatFlow` with a `GHFDBChildQuerySet` returning all **40 scalar + correction-flag columns** via `as_ghfdb_flat()` (31 `F()`-annotated scalars + 9 correction-flag subqueries; <=2 DB queries, constant) and the full **65 GHFDB columns** via `for_export()` (~16 queries, constant), registered as a read-only Django admin view labelled "GHFDB Children" with the 2026-04-22 child-level changelist order: `ghfdb_id`, `ID_parent`, `name`, `lat_NS`, `long_EW`, then the required child measurement, correction, probe, gradient, conductivity, and reference fields, with `quality` before `Ref_ISGN` (~~`local_id`~~ removed). `GHFDBChildImportResource` and `GHFDBExportResource` attached to this admin only.
+- [ ] **T008** *foundations* — `sites_by_contribution` fixture building four sites: one whose
+  determinations all contributed to the representative value, one where only some did, one where
+  none did, and one holding no determinations at all. SC-004 names exactly these four.
+  At least one of the four carries two exploration purposes, so that the one many-valued parent
+  column is exercised — without it nothing would notice a site rendering twice.
+  **Test**: `TestFixtures::test_sites_by_contribution_covers_the_four_shapes` asserts the four child
+  populations and that one site has two exploration purposes. Before: fixture not found.
 
-**Independent Test**: `poetry run pytest tests/test_ghfdb/test_managers.py tests/test_ghfdb/test_admin.py -v`
+- [ ] **T009** *foundations* — `staff_client` fixture: a logged-in staff user holding view
+  permission on both proxies and nothing more.
+  **Test**: `TestFixtures::test_staff_client_reaches_the_admin_index` asserts a 200. Before:
+  fixture not found.
 
-### Tests for User Story 1 ?? Write FIRST � verify they FAIL before implementing
-
-- [X] T008 [P] [US1] Write query-count test: assert `GHFDBChild.objects.as_ghfdb_flat()` executes =2 DB queries using `django_assert_max_num_queries(2)` with the `heat_flow_chain` fixture in `tests/test_ghfdb/test_managers.py`
-- [X] T009 [P] [US1] Write scalar-column completeness test: assert all 31 select_related annotations (`site_name`, `lat_ns`, `long_ew`, `p_q`, `p_q_uncertainty`, `interval_top`, `interval_bottom`, `tgrad_value`, `tc_value`, `probe_penetration`, etc.) are accessible as attributes on records from `as_ghfdb_flat()` in `tests/test_ghfdb/test_managers.py`
-- [X] T010 [P] [US1] Write correction-flags test: assert all 9 `corr_*_flag` annotations (`corr_IS_flag`, `corr_T_flag`, `corr_S_flag`, `corr_E_flag`, `corr_TOPO_flag`, `corr_PAL_flag`, `corr_SUR_flag`, `corr_CONV_flag`, `corr_HR_flag`) are accessible as attributes on records from `as_ghfdb_flat()` in `tests/test_ghfdb/test_managers.py`
-- [X] T011 [P] [US1] Write `for_export()` query-count test: assert `GHFDBChild.objects.for_export()` executes =16 DB queries using `django_assert_max_num_queries(16)` in `tests/test_ghfdb/test_managers.py`
-- [X] T012 [P] [US1] Write standard queryset operability test: assert `filter()`, `order_by()`, and `count()` work without error on the queryset returned by `as_ghfdb_flat()` in `tests/test_ghfdb/test_managers.py`
-- [X] T013 ⚠️ Reopened [P] [US1] Refine admin registration tests in `tests/test_ghfdb/test_admin.py`: assert changelist HTTP 200, title "GHFDB Children", exact ordered child-level columns (~~`local_id`~~ [superseded 2026-04-22] `ghfdb_id`, `ID_parent`, `name`, `lat_NS`, `long_EW`, `qc`, `qc_uncertainty`, `q_method`, `q_top`, `q_bottom`, `probe_penetration`, `publication_reference`, `data_reference`, `relevant_child`, `c_comment`, `corr_IS_flag`, `corr_T_flag`, `corr_S_flag`, `corr_E_flag`, `corr_TOPO_flag`, `corr_PAL_flag`, `corr_SUR_flag`, `corr_CONV_flag`, `corr_HR_flag`, `expedition`, `probe_type`, `probe_length`, `probe_tilt`, `water_temperature`, `geo_lithology`, `geo_stratigraphy`, `T_grad_mean`, `T_grad_uncertainty`, `T_grad_mean_cor`, `T_grad_uncertainty_cor`, `T_method_top`, `T_method_bottom`, `T_shutin_top`, `T_shutin_bottom`, `T_corr_top`, `T_corr_bottom`, `T_number`, `q_date`, `tc_mean`, `tc_uncertainty`, `tc_source`, `tc_location`, `tc_method`, `tc_saturation`, `tc_pT_conditions`, `tc_pT_fuction`, `tc_number`, `tc_strategy`, `quality`, `Ref_ISGN`), search fields for `name` and `ID_parent`, and list filters for `environment`, `corr_HP_flag`, `explo_method`, `explo_purpose`, `country`, `region`, `continent`, and `domain` (reopened — BUG-002; column list updated 2026-04-22)
-- [X] T063 [P] [US1] Add a failing regression test in `tests/test_ghfdb/test_admin.py` verifying that `explo_purpose` list-filter choices are restricted to values accepted by `HeatFlowSite.explo_purpose` and exclude unrelated generic `Concept` values
-
-### Implementation for User Story 1
-
-- [X] T014 [US1] Extend existing `project/ghfdb/managers.py` and implement `_correction_subqueries()` helper: iterates `HeatFlowCorrection.CorrectionTypeChoices.choices`, returns a dict of 9 correlated `Subquery` annotations keyed as `corr_{type}_flag`, each selecting `HeatFlowCorrection.status` filtered by `heat_flow=OuterRef("pk")` and `correction_type=choice_value`
-- [X] T015 [US1] Implement `GHFDBChildQuerySet.as_ghfdb_flat()` in `project/ghfdb/managers.py`: chain `select_related(...)` for paths `sample__sample`, `sample__sample__location`, `parent`, `thermal_gradient`, `thermal_conductivity`, `sample__probe_metadata`; then `annotate(...)` with `F()` expressions for all 31 scalar columns per the data-model.md mapping table; then merge the 9 `_correction_subqueries()` annotations
-- [X] T016 [US1] Implement `GHFDBChildQuerySet.for_export()` in `project/ghfdb/managers.py`: call `self.as_ghfdb_flat()` and chain `prefetch_related(...)` for all 14 M2M paths: `method`, `sample__sample__explo_purpose`, `thermal_gradient__method_top`, `thermal_gradient__method_bottom`, `thermal_gradient__correction_top`, `thermal_gradient__correction_bottom`, `thermal_conductivity__source`, `thermal_conductivity__location`, `thermal_conductivity__method`, `thermal_conductivity__saturation`, `thermal_conductivity__pT_conditions`, `thermal_conductivity__pT_function`, `thermal_conductivity__strategy`, `sample__probe_metadata__probe_type`
-- [X] T017 [US1] Implement `GHFDBChildManager(models.Manager)` in `project/ghfdb/managers.py`: override `get_queryset()` to return `GHFDBChildQuerySet(self.model, using=self._db)`, and add `as_ghfdb_flat()` and `for_export()` delegation methods
-- [X] T018 [US1] Implement `GHFDBChild` proxy model in `project/ghfdb/models.py`: inherits `HeatFlow`, `objects = GHFDBChildManager()`, `class Meta: proxy = True; verbose_name = _("GHFDB Child"); verbose_name_plural = _("GHFDB Children")`; add class docstring citing Fuchs et al. (2021, 2023). **Note � registry exemption**: `GHFDBChild` is a proxy over `HeatFlow`, not a direct `Sample` or `Measurement` subclass. FairDM registry (`@fairdm.register`) applies only to direct `Sample`/`Measurement` subtypes that need auto-generated views/tables/filters; this proxy is intentionally admin-only and does not require registry registration. **Also**: add a minimal smoke test to `tests/test_ghfdb/test_models.py`: `from project.ghfdb.models import GHFDBChild` / `assert GHFDBChild._meta.proxy is True` / `assert GHFDBChild._meta.verbose_name == "GHFDB Child"`.
-- [X] T019 ⚠️ Reopened [US1] Update `project/ghfdb/admin.py` `GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin)`: keep `get_queryset()` returning `GHFDBChild.objects.as_ghfdb_flat()`. Attach `GHFDBChildImportResource` and `GHFDBExportResource` exclusively to this admin (FR-011b), set `list_display` to the 2026-04-22 updated child-level order (~~`local_id`~~ [removed] `ghfdb_id`, `ID_parent`, `name`, `lat_NS`, `long_EW`, `qc`, `qc_uncertainty`, `q_method`, `q_top`, `q_bottom`, `probe_penetration`, `publication_reference`, `data_reference`, `relevant_child`, `c_comment`, `corr_IS_flag`, `corr_T_flag`, `corr_S_flag`, `corr_E_flag`, `corr_TOPO_flag`, `corr_PAL_flag`, `corr_SUR_flag`, `corr_CONV_flag`, `corr_HR_flag`, `expedition`, `probe_type`, `probe_length`, `probe_tilt`, `water_temperature`, `geo_lithology`, `geo_stratigraphy`, `T_grad_mean`, `T_grad_uncertainty`, `T_grad_mean_cor`, `T_grad_uncertainty_cor`, `T_method_top`, `T_method_bottom`, `T_shutin_top`, `T_shutin_bottom`, `T_corr_top`, `T_corr_bottom`, `T_number`, `q_date`, `tc_mean`, `tc_uncertainty`, `tc_source`, `tc_location`, `tc_method`, `tc_saturation`, `tc_pT_conditions`, `tc_pT_fuction`, `tc_number`, `tc_strategy`, `quality`, `Ref_ISGN`), use vocabulary-scoped custom `SimpleListFilter` classes for `environment`, `explo_method`, and `explo_purpose` in `list_filter` (BUG-004), keep `list_display_links = None` for read-only, and wrap user-facing strings in `_()` (reopened — BUG-003, reopened — BUG-004; `list_display` updated 2026-04-22)
-- [X] T064 ⚠️ Reopened [US1] Implement constrained admin list filter classes (`SimpleListFilter`) for all concept-backed fields in `project/ghfdb/admin.py`: `ExplorePurposeListFilter` scoped to `ExplorationPurpose` (BUG-001), plus `EnvironmentListFilter` scoped to `GeographicEnvironment` and `ChildExplorationMethodListFilter` scoped to `ExplorationMethod` for the child admin (reopened — BUG-004)
-- [X] T079 [US1] Extend `project/ghfdb/managers.py` `GHFDBChildQuerySet.as_ghfdb_flat()` (and any supporting admin helpers) so the BUG-002 child-admin columns are available efficiently for changelist rendering, including child identifiers, child heat-flow values, references, probe metadata, gradient fields, conductivity fields, and `Ref_ISGN`
-
-### System Validation � Phase 3
-
-- [X] T020 ?? CRITICAL: Run Django system checks: `poetry run python manage.py check` � MUST pass before proceeding
-- [X] T021 ⚠️ Reopened CRITICAL: Re-run User Story 1 tests after admin refinement: `poetry run pytest tests/test_ghfdb/test_managers.py tests/test_ghfdb/test_admin.py -v` — ALL tests MUST pass including the BUG-002 child-admin column-order assertions and BUG-003 changelist queryset evaluation checks (reopened — BUG-003)
-
-- [X] T080 [P] [US1] Add regression test in `tests/test_ghfdb/test_admin.py` that forces `GHFDBChildAdmin.get_queryset()` evaluation and asserts no invalid `prefetch_related()` relation-path error is raised (BUG-003)
-- [X] T081 [US1] Remove invalid child-admin queryset optimization paths in `project/ghfdb/admin.py` (notably `publication_references`/`data_references` when absent on `HeatFlow`) and keep only valid ORM relations (BUG-003)
-- [X] T082 ⚠️ CRITICAL [US1] Re-run `poetry run pytest tests/test_ghfdb/test_admin.py -v` after BUG-003 fix and confirm child changelist responds HTTP 200 without queryset relation-path failures
-- [X] T065 ⚠️ Reopened CRITICAL [US1] Re-run `poetry run pytest tests/test_ghfdb/test_admin.py -v` and confirm all concept-backed filter choices (`environment`, `explo_method`, `explo_purpose`) are vocabulary-scoped before closing BUG-001 and BUG-004 (reopened — BUG-004)
-
-- [X] T083 [US1] Add `EnvironmentListFilter(SimpleListFilter)` in `project/ghfdb/admin.py` scoped to `GeographicEnvironment` vocabulary, filtering via `sample__heatflowinterval__sample__heatflowsite__environment` (BUG-004)
-- [X] T084 [US1] Add `ChildExplorationMethodListFilter(SimpleListFilter)` in `project/ghfdb/admin.py` scoped to `ExplorationMethod` vocabulary, filtering via `sample__heatflowinterval__sample__heatflowsite__explo_method` (BUG-004)
-- [X] T085 [US1] Replace raw `environment` and `explo_method` string paths in `GHFDBChildAdmin.list_filter` with `EnvironmentListFilter` and `ChildExplorationMethodListFilter` (BUG-004)
-- [X] T086 [US1] Fix `GHFDBChildAdmin._interval()` fallback: change `getattr(sample, "heatflowinterval", sample)` to `getattr(sample, "heatflowinterval", None)` so callers receive `None` instead of a wrong-type `Sample` object (BUG-004, FR-015b)
-- [X] T087 [US1] Add `ParentEnvironmentListFilter(SimpleListFilter)` in `project/ghfdb/admin.py` scoped to `GeographicEnvironment` vocabulary, filtering via `sample__heatflowsite__environment` (BUG-004)
-- [X] T088 [US1] Add `ParentExplorationMethodListFilter(SimpleListFilter)` in `project/ghfdb/admin.py` scoped to `ExplorationMethod` vocabulary, filtering via `sample__heatflowsite__explo_method` (BUG-004)
-- [X] T089 [US1] Replace raw `environment` and `explo_method` string paths in `GHFDBParentAdmin.list_filter` with `ParentEnvironmentListFilter` and `ParentExplorationMethodListFilter` (BUG-004)
-- [X] T090 [P] [US1] Add regression tests in `tests/test_ghfdb/test_admin.py`: `test_environment_filter_choices_are_vocabulary_scoped`, `test_explo_method_filter_choices_are_vocabulary_scoped`, `test_parent_environment_filter_choices_are_vocabulary_scoped`, `test_parent_explo_method_filter_choices_are_vocabulary_scoped` — each asserts filter `lookups()` returns exactly the vocabulary-defined choices (BUG-004)
-- [X] T091 ⚠️ CRITICAL [US1] Re-run `poetry run pytest tests/test_ghfdb/test_admin.py -v` after BUG-004 fixes and confirm all 11 tests pass including the 4 new vocabulary-scope tests
-
-**Checkpoint — US1 Complete**: Child proxy model queryable, all scalar annotations verified, correction flags present, child-admin list view renders with the BUG-002 child-oriented column order, search/filter controls, all concept-backed filters vocabulary-scoped (BUG-001, BUG-004), `_interval()` returns `None` on missing MTI (BUG-004), query counts confirmed constant. `GHFDBChildImportResource` + `GHFDBExportResource` attached to this admin only.
-
----
-
-## Phase 3b: User Story 1b — GHFDBParent Proxy Model (Priority: P1) ✨ NEW
-
-**Goal**: A `GHFDBParent` proxy model over `ParentHeatFlow` with a `GHFDBParentQuerySet` that supports parent-level queries with `with_child_counts()` (annotates `total_children` and `relevant_children`) and `with_children()` (prefetches linked child records). Registered as a read-only Django admin view labelled "GHFDB Parents" with parent-level spreadsheet column order plus computed child-count columns. `GHFDBParentImportResource` attached to this admin only.
-
-**Depends on**: Phase 2 (HeatFlow.local_id)
-**Independent Test**: `poetry run pytest tests/test_ghfdb/test_managers.py tests/test_ghfdb/test_admin.py -v`
-
-### Tests for User Story 1b ⚠️ Write FIRST — verify they FAIL before implementing
-
-- [X] T066 [P] [US1b] Write query-count test: assert `GHFDBParent.objects.with_child_counts()` executes in a constant number of DB queries (no N+1) in `tests/test_ghfdb/test_managers.py`
-- [X] T067 [P] [US1b] Write count-correctness test: given a `ParentHeatFlow` with N children, assert `total_children == N` and `relevant_children` matches expected threshold-filtered count in `tests/test_ghfdb/test_managers.py`
-- [X] T068 [P] [US1b] Write `with_children()` test: assert parent records include prefetched child `HeatFlow` objects accessible without extra queries in `tests/test_ghfdb/test_managers.py`
-- [X] T069 [P] [US1b] Write standard queryset operability test: assert `filter()`, `order_by()`, and `count()` work on `GHFDBParent.objects.all()` in `tests/test_ghfdb/test_managers.py`
-- [X] T070 [P] [US1b] Write admin registration tests in `tests/test_ghfdb/test_admin.py`: assert `GHFDBParentAdmin` changelist HTTP 200, title "GHFDB Parents", exact ordered columns (~~`ID_parent`, `q`, `q_uncertainty`, `name`, `lat_NS`, `long_EW`, `elevation`, `environment`, `corr_HP_flag`, `total_depth_MD`, `total_depth_TVD`, `explo_method`, `explo_purpose`, `country`, `region`, `continent`, `domain`, `total_children`, `relevant_children`~~ [superseded 2026-04-22] `ghfdb_id`, `q`, `q_uncertainty`, `name`, `lat_NS`, `long_EW`, `elevation`, `environment`, `p_comment`, `corr_HP_flag`, `total_depth_MD`, `total_depth_TVD`, `explo_method`, `explo_purpose`, `quality`, `country`, `region`, `continent`, `domain`, `total_children`, `relevant_children`), search fields for `name` and `ID_parent`, same list filters as `GHFDBChildAdmin` including vocabulary-scoped `explo_purpose`
-- [X] T071 [P] [US1b] Write admin import resource test: assert `GHFDBParentAdmin.get_import_resource_classes()` returns `[GHFDBParentImportResource]` only (not `GHFDBChildImportResource` or `GHFDBExportResource`) in `tests/test_ghfdb/test_admin.py`
-
-### Implementation for User Story 1b
-
-- [X] T072 [US1b] Implement `GHFDBParentQuerySet` in `project/ghfdb/managers.py`: add `with_child_counts()` method that annotates `total_children = Count("children")` (or equivalent FK reverse name) and `relevant_children = Count("children", filter=Q(...))` with an appropriate quality/relevance threshold; add `with_children()` method that calls `prefetch_related("children")` (or equivalent) to attach child `HeatFlow` records
-- [X] T073 [US1b] Implement `GHFDBParentManager` in `project/ghfdb/managers.py`: override `get_queryset()` to return `GHFDBParentQuerySet(self.model, using=self._db)`, add `with_child_counts()` and `with_children()` delegation methods
-- [X] T074 [US1b] Implement `GHFDBParent` proxy model in `project/ghfdb/models.py`: inherits `ParentHeatFlow`, `objects = GHFDBParentManager()`, `class Meta: proxy = True; verbose_name = _("GHFDB Parent"); verbose_name_plural = _("GHFDB Parents")`; add class docstring. Add smoke test to `tests/test_ghfdb/test_models.py`: `assert GHFDBParent._meta.proxy is True` / `assert GHFDBParent._meta.verbose_name == "GHFDB Parent"`
-- [X] T075 [US1b] Implement `GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin)` in `project/ghfdb/admin.py`: register for `GHFDBParent`, `get_queryset()` returns `GHFDBParent.objects.with_child_counts()`, `list_display` = 2026-04-22 parent-level GHFDB column order (`ghfdb_id`, `q`, `q_uncertainty`, `name`, `lat_NS`, `long_EW`, `elevation`, `environment`, `p_comment`, `corr_HP_flag`, `total_depth_MD`, `total_depth_TVD`, `explo_method`, `explo_purpose`, `quality`, `country`, `region`, `continent`, `domain`) + `total_children` + `relevant_children` as computed columns (~~`search_fields` for `name` and `local_id`~~ [superseded] `search_fields` for `name` and `ghfdb_id`), `list_filter` same set as `GHFDBChildAdmin` (including `ExplorePurposeListFilter`), `list_display_links = None`, read-only permissions. Attach `GHFDBParentImportResource` exclusively (FR-011b) — no export resource or child import resource.
-
-### System Validation — Phase 3b
-
-- [X] T076 ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass before proceeding
-- [X] T077 ⚠️ CRITICAL: Run User Story 1b tests: `poetry run pytest tests/test_ghfdb/test_managers.py tests/test_ghfdb/test_admin.py -v` — ALL new parent-proxy tests MUST pass
-
-**Checkpoint — US1b Complete**: Parent proxy model queryable with child count annotations and prefetchable children; admin list view renders with correct column order + computed columns; `GHFDBParentImportResource` attached exclusively to this admin.
+- [ ] **T010** *foundations* — `constant_query_count` helper fixture, per R2: it runs a callable at
+  two row counts under `django_assert_num_queries` and asserts the two counts are equal to each
+  other rather than to a literal. Six query-constancy claims and both changelists call it, so the
+  abstraction has its callers.
+  **Test**: `TestConstantQueryCount` holds two cases — a deliberately linear callable that the
+  helper must reject, and a constant one it must accept. The gate is proven against the defect it
+  exists to catch, not only against the passing case. Before: helper not found.
 
 ---
 
-## Phase 6: User Story 4 � Web Map Viewer Page (Priority: P3)
+## Phase 2 — US-1: Determinations read in the published shape (P1)
 
-**Goal**: The existing `GHFDBExploreView` and `explore.html` are enhanced with a graceful `onerror` fallback for unreachable iframes; the "Explore" menu item and URL routing are verified correct.
+Discharges FR-001 to FR-007 and FR-011 for the child, and SC-001, SC-003, SC-005, SC-006.
 
-**Independent Test**: `poetry run pytest tests/test_ghfdb/test_views.py -v`
+### Tests
 
-### Tests for User Story 4 ?? Write FIRST � verify they FAIL before implementing
+- [ ] **T011** *US-1 · FR-001* — `TestGHFDBChildModel::test_proxy_adds_no_table`: `Meta.proxy` is
+  true, the database table is the one `HeatFlow` uses, and the proxy declares no local fields.
 
-- [X] T048 [P] [US4] Write failing test: anonymous `GET /ghfdb/explore/` returns HTTP 200 and response body contains `<iframe>` with `src="https://ihfc-iugg.github.io/HeatFlowMapping/"` in `tests/test_ghfdb/test_views.py`
-- [X] T049 [P] [US4] Write failing test: rendered `explore.html` template source contains a visible fallback element (e.g. `class="explore-fallback"` or `id="map-error"`) for the unreachable-URL case in `tests/test_ghfdb/test_views.py`
-- [X] T050 [P] [US4] Write no-auth test: map page returns HTTP 200 for an unauthenticated request (no redirect to login) in `tests/test_ghfdb/test_views.py`
+- [ ] **T012** *US-1 · FR-001* — `TestGHFDBChildModel::test_meta_carries_translated_verbose_names`:
+  both verbose names are set, wrapped in `gettext_lazy`, and name the published determination view
+  rather than repeating the model's own name.
 
-### Implementation for User Story 4
+- [ ] **T013** *US-1 · FR-002, SC-005* —
+  `TestGHFDBChildManager::test_determination_without_a_published_identifier_is_absent`: the
+  unpublished chain's determination is not returned by the default manager, and is returned by
+  `HeatFlow.objects` so the fixture is proven to exist.
 
-- [X] T051 [US4] Update `project/ghfdb/templates/ghfdb/explore.html`: full-viewport iframe (`width="100%"`, `height="100vh"`, `style="border:none"`) embedding `https://ihfc-iugg.github.io/HeatFlowMapping/`; add `onerror="this.style.display='none'; document.getElementById('map-error').style.display='block';"` attribute and a `<div id="map-error" class="explore-fallback" style="display:none">` fallback message explaining the map is temporarily unavailable
-- [X] T052 [US4] Verify `GHFDBExploreView` in `project/ghfdb/views.py` has no `LoginRequiredMixin` and uses template `"ghfdb/explore.html"`; confirm URL pattern in `project/ghfdb/urls.py` resolves as `name="explore"` (or `ghfdb-explore`)
-- [X] T053 [US4] Verify the "Explore" `MenuItem` (in `project/heat_flow/menus.py` or `project/ghfdb/apps.py` � check FairDM nav registration pattern) points to the correct URL name and is configured to mark itself active when on the map page
+- [ ] **T014** *US-1 · FR-002, FR-003, SC-005* —
+  `TestGHFDBChildManager::test_scope_survives_filtering_ordering_counting_slicing_and_chaining`: the
+  restriction holds after each operation and after two of them chained. R6 records that a test
+  exercising the manager alone proves less than it appears to.
 
-### System Validation � Phase 6
+- [ ] **T015** *US-1 · FR-003* —
+  `TestGHFDBChildManager::test_ordinary_operations_match_the_model_it_stands_in_for`: filtering,
+  ordering, counting and slicing through the proxy return what the same operations return on
+  `HeatFlow` restricted to published rows.
 
-- [X] T054 ?? CRITICAL: Run Django system checks: `poetry run python manage.py check` � MUST pass before proceeding
-- [x] T054a ?? CRITICAL: Run type checks: `poetry run mypy project/ghfdb/` � MUST pass with no new errors
-- [X] T054b ?? CRITICAL: Run linting: `poetry run ruff check project/ghfdb/` � MUST pass with zero violations
-- [X] T055 ?? CRITICAL: Run User Story 4 tests: `poetry run pytest tests/test_ghfdb/test_views.py -v` � ALL tests MUST pass
+- [ ] **T016** *US-1 · FR-004* —
+  `TestChildFlattening::test_every_scalar_published_child_column_resolves_on_every_row`: the column
+  names come from `CHILD_COLUMNS` less the many-valued set and less the three that resolve to
+  nothing, both read from the mapping module rather than written out as a literal.
 
-**Checkpoint � US4 Complete**: Map page accessible without auth, iframe present with `onerror` fallback, Explore menu item active.
+- [ ] **T017** *US-1 · FR-004* —
+  `TestChildFlattening::test_the_sites_representative_value_is_restated_on_every_row`: the parent
+  block reaches each child row, because the published file restates it per row.
+
+- [ ] **T018** *US-1 · FR-005, SC-003* —
+  `TestChildFlattening::test_query_count_is_equal_at_two_row_counts`, through the T010 helper at 2
+  and 4 chains.
+
+- [ ] **T019** *US-1 · FR-006, SC-006* —
+  `TestChildFlattening::test_a_row_without_a_gradient_is_returned_with_those_columns_empty`.
+
+- [ ] **T020** *US-1 · FR-006, SC-006* —
+  `TestChildFlattening::test_a_row_without_a_conductivity_is_returned_with_those_columns_empty`.
+
+- [ ] **T021** *US-1 · FR-006, SC-006* —
+  `TestChildFlattening::test_a_row_without_probe_metadata_is_returned_with_those_columns_empty`.
+
+- [ ] **T022** *US-1 · FR-006, SC-006* —
+  `TestChildFlattening::test_a_missing_correction_leaves_only_its_own_column_empty`, parametrised
+  over the nine entries of `CORRECTION_COL_MAP`. SC-006 requires each correction type proven
+  independently, so nine cases rather than one.
+
+- [ ] **T023** *US-1 · FR-011* —
+  `TestChildFlattening::test_annotations_carry_their_published_names`: every annotation key equals
+  its published column name, except those on a declared collision list, and each name on that list
+  is checked to be a field the framework's base class actually declares. Without the second half the
+  list is an escape hatch rather than a rule.
+
+- [ ] **T024** *US-1 · SC-001* —
+  `TestChildExportQuerySet::test_every_published_child_column_resolves_on_the_complete_row`: read
+  after the export method, per R3, since fifteen of the columns are many-valued and cannot be
+  annotated. The column list is `CHILD_COLUMNS` itself.
+
+- [ ] **T025** *US-1 · FR-007, SC-003* —
+  `TestChildExportQuerySet::test_query_count_is_equal_at_two_row_counts`.
+
+- [ ] **T026** *US-1 · FR-007* —
+  `TestChildExportQuerySet::test_many_valued_columns_read_without_further_queries`: reading each
+  many-valued column on every row inside `django_assert_num_queries(0)` after the queryset is
+  evaluated.
+
+- [ ] **T027** *US-1 · FR-006* —
+  `TestChildExportQuerySet::test_columns_nothing_resolves_are_present_and_empty`: `Ref_IGSN`,
+  `publication_reference` and `data_reference` are on the row and empty, per R4 and D3.
+
+### Implementation
+
+- [ ] **T028** *US-1 · FR-001* — `GHFDBChild`, a proxy over `HeatFlow`, with its `Meta` and its
+  translated verbose names. Proves T011 and T012. Before: `ImportError` on the name.
+
+- [ ] **T029** *US-1 · FR-001* — The migration recording `GHFDBChild`'s existence and its
+  permissions, and no other operation. A proxy adds no table, so any `AddField` or `AlterField` in
+  this migration is the defect.
+  **Test**: `tests/test_migrations.py` — `makemigrations --check` is clean, and the new migration's
+  operations are asserted to be a proxy `CreateModel` alone. Before: "Your models have changes that
+  are not yet reflected in a migration".
+
+- [ ] **T030** *US-1 · FR-002, FR-003* — `GHFDBChildQuerySet` and `GHFDBChildManager`, the manager's
+  `get_queryset()` restricting to rows whose published identifier is set, assigned as the proxy's
+  default manager. Proves T013, T014 and T015. Before: the unpublished determination is among the
+  results.
+
+- [ ] **T031** *US-1 · FR-004, FR-005* — `as_ghfdb_flat()` opening with the `select_related` spine
+  the annotations below need: the interval through the inheritance accessor, the interval's site,
+  the parent, the gradient and the conductivity. This is the task that makes the count constant.
+  Proves T018. Before: the count at four chains exceeds the count at two.
+
+- [ ] **T032** *US-1 · FR-004* — The scalar annotation set of `as_ghfdb_flat()`: the interval's
+  depth range, the determination's own values, the gradient, the conductivity, the probe metadata
+  reached through the interval, the site block restated per row, and one column per entry of
+  `CORRECTION_COL_MAP` built by iterating that mapping rather than writing nine annotations out.
+  One dictionary, so one task. Proves T016, T017 and part of T022. Before: `AttributeError` reading
+  `q_top` off a row.
+
+- [ ] **T039** *US-1 · FR-006* — Absent-relationship behaviour across every annotation above: a
+  missing relationship yields an empty column, never a dropped row and never an exception. Proves
+  T019, T020, T021 and T022. Before: the row is absent from the result, or evaluation raises.
+
+- [ ] **T040** *US-1 · FR-007* — `for_export()`, calling `as_ghfdb_flat()` and chaining the
+  prefetches for the many-valued columns FR-007 names: calculation method, exploration purpose, the
+  gradient's methods and corrections, the conductivity's descriptive vocabularies, lithology,
+  stratigraphy and probe type. Proves T024, T025 and T026. Before: reading a many-valued column
+  issues a query per row.
+
+- [ ] **T041** *US-1 · FR-006* — The three columns nothing resolves — `Ref_IGSN`,
+  `publication_reference` and `data_reference` — treated as explicitly empty rather than guarded with
+  a defensive attribute lookup, so a reader cannot mistake a guard for a working accessor (R4). The
+  same task raises the two reference columns as a gap against the roadmap item that attaches
+  literature to records, since they are waiting rather than settled. Proves T027. Before:
+  `AttributeError` reading `publication_reference` off a row.
 
 ---
 
-## Phase 7: Polish & Final Validation
+## Phase 3 — US-2: Sites read in the published shape, with their determination counts (P1)
 
-**Purpose**: Documentation update and full-suite validation.
+Discharges FR-001 to FR-003 and FR-008 to FR-011 for the parent, and SC-002 to SC-005.
 
-- [X] T059 [P] Update `docs/ghfdb_fields.md` to ~~document `HeatFlow.local_id` (type, constraints, purpose, GHFDB spreadsheet `ID` column)~~ [superseded 2026-04-22 — `local_id` removed; document `HeatFlow.ghfdb_id` (PositiveIntegerField, nullable, indexed, stable GHFDB row identifier) and `HeatFlow.quality` (CharField, nullable, composite quality string per Fuchs et al. 2023) instead] and add a "Proxy Model Access Patterns" section citing key annotation names from the `data-model.md` mapping table
-- [X] T078 [P] Update `docs/ghfdb_fields.md` to document the `GHFDBParent` proxy model, its queryset methods (`with_child_counts()`, `with_children()`), admin registration, and the ~~`ParentHeatFlow.local_id`~~ [superseded 2026-04-22] `ParentHeatFlow.ghfdb_id` and `ParentHeatFlow.quality` fields
+### Tests
 
-### System Validation — Final
+- [ ] **T042** *US-2 · FR-001* — `TestGHFDBParentModel::test_proxy_adds_no_table`: `Meta.proxy` is
+  true, the table is `ParentHeatFlow`'s, and no local field is declared.
 
-- [X] T061 ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass
-- [x] T061a ⚠️ CRITICAL: Run final type checks: `poetry run mypy project/ghfdb/` — MUST pass with no new errors
-- [X] T061b ⚠️ CRITICAL: Run final linting: `poetry run ruff check project/ghfdb/` — MUST pass with zero violations
-- [X] T062 ⚠️ Reopened CRITICAL: Run full GHFDB proxy model test suite: `poetry run pytest tests/test_ghfdb/ -v` — ALL test modules MUST pass (including new GHFDBParent tests) (reopened — BUG-002)
+- [ ] **T043** *US-2 · FR-001* — `TestGHFDBParentModel::test_meta_carries_translated_verbose_names`.
 
-**Checkpoint — Feature Complete**: System checks pass, all GHFDB proxy model + admin + views tests green (both GHFDBChild and GHFDBParent), `ghfdb_fields.md` updated.
+- [ ] **T044** *US-2 · FR-002, SC-005* —
+  `TestGHFDBParentManager::test_site_without_a_published_identifier_is_absent`.
+
+- [ ] **T045** *US-2 · FR-002, FR-003, SC-005* —
+  `TestGHFDBParentManager::test_scope_survives_filtering_ordering_counting_slicing_and_chaining`.
+
+- [ ] **T046** *US-2 · FR-008* —
+  `TestParentFlattening::test_every_scalar_published_parent_column_resolves_on_every_row`, with the
+  column names taken from `PARENT_COLUMNS` less the one many-valued column.
+
+- [ ] **T047** *US-2 · FR-008, SC-003* —
+  `TestParentFlattening::test_query_count_is_equal_at_two_row_counts`.
+
+- [ ] **T048** *US-2 · FR-011* —
+  `TestParentFlattening::test_the_colliding_site_name_is_annotated_distinctly`: the published `name`
+  column is annotated under a distinct name because the framework's base class declares `name`, and
+  the published name is restored at the surface that presents it.
+
+- [ ] **T049** *US-2 · FR-011* —
+  `TestParentFlattening::test_a_column_that_does_not_collide_keeps_its_published_name`: elevation is
+  annotated as `elevation`, not under a prefix. D6 settles this, and the rule is only readable if a
+  non-colliding case is pinned alongside a colliding one.
+
+- [ ] **T050** *US-2 · FR-009, SC-004* —
+  `TestParentCounts::test_counts_are_correct_for_all_some_and_no_contributing_determinations`, over
+  the `sites_by_contribution` fixture.
+
+- [ ] **T051** *US-2 · FR-009, SC-004* —
+  `TestParentCounts::test_a_site_with_no_determinations_counts_zero_rather_than_empty`. The
+  distinction between zero and null is the assertion.
+
+- [ ] **T052** *US-2 · FR-009, SC-003* —
+  `TestParentCounts::test_query_count_is_equal_at_two_row_counts`.
+
+- [ ] **T053** *US-2 · FR-010* —
+  `TestParentChildAttachment::test_reading_each_sites_determinations_costs_no_query_per_site`:
+  iterate every site's determinations inside `django_assert_num_queries(0)` after evaluation.
+
+- [ ] **T054** *US-2 · FR-010, SC-003* —
+  `TestParentChildAttachment::test_query_count_is_equal_at_two_row_counts`.
+
+- [ ] **T055** *US-2 · SC-002* —
+  `TestParentPublishedColumns::test_every_published_parent_column_resolves_on_the_complete_row`, read
+  after flattening and attachment together, per R3, so that the one many-valued parent column is
+  included. The column list is `PARENT_COLUMNS` itself.
+
+### Implementation
+
+- [ ] **T056** *US-2 · FR-001* — `GHFDBParent`, a proxy over `ParentHeatFlow`, with its `Meta`.
+  Proves T042 and T043. Before: `ImportError` on the name.
+
+- [ ] **T057** *US-2 · FR-001* — The migration recording `GHFDBParent`'s existence and its
+  permissions, and no other operation.
+  **Test**: `tests/test_migrations.py`, as T029. Before: `makemigrations --check` reports an
+  unrecorded model.
+
+- [ ] **T058** *US-2 · FR-002, FR-003* — `GHFDBParentQuerySet` and `GHFDBParentManager`, restricting
+  to sites whose published identifier is set, assigned as the proxy's default manager. Proves T044
+  and T045.
+
+- [ ] **T059** *US-2 · FR-008, FR-011* — The scalar annotation set of the parent
+  `as_ghfdb_flat()`: the site name under its distinct annotation name, latitude, longitude,
+  elevation, environment, both total depths, the exploration method, the published identifier, the
+  value, its uncertainty, the site comment, the heat production correction flag and the quality code
+  under its published parent name. **`explo_purpose` is excluded**: it is a many-to-many field, and
+  annotating it with `F()` makes the queryset return one row per site-and-purpose pair. Verified —
+  a site carrying two exploration purposes currently returns two rows. Proves T046, T048 and T049.
+  Before: `AttributeError` reading `lat_NS` off a row.
+
+- [ ] **T061** *US-2 · FR-009* — `with_counts()`, annotating the number of determinations a site
+  holds and the number that contributed, by aggregation rather than per row, and yielding zero rather
+  than null for a site holding none. Proves T050, T051 and T052. Before: the counts are absent, and
+  the empty site reads `None`.
+
+- [ ] **T062** *US-2 · FR-010* — `with_children()`, attaching each site's determinations so reading
+  them costs no query per site, and prefetching the site's exploration purposes — the one many-valued
+  parent column, which T059 excludes from the annotations for the reason recorded there. Proves T053,
+  T054 and T055. Before: iterating the children issues one query per site, and the exploration
+  purpose column either duplicates rows or costs a query each.
+
+- [ ] **T122** *US-2 · D7* — Remove `GHFDBParent.as_dict()` and the `PARENT_COLUMNS` import it is
+  the only user of. It has no caller, and it raises on every published column that exists only as an
+  annotation, so it cannot work as written. `decisions.md` D7 rules it out and no other task removed
+  it.
+  **Test**: `TestGHFDBParentModel::test_no_dictionary_accessor` asserts the attribute is absent, and
+  the suite passes with it gone. Before: the attribute resolves and raises when called.
 
 ---
 
-## Phase 8: Data Model Update — `ghfdb_id` / `quality` Alignment (2026-04-22)
+## Phase 4 — US-3: The assessment team reads the database in the terms they know (P2)
 
-**Purpose**: Apply spec.md 2026-04-22 refinement in code. The underlying models already have `ghfdb_id` and `quality` (from `001-heat-flow-data-model` branch); this phase updates managers, admin column lists, tests, and documentation to match.
+Discharges FR-012 to FR-021, and SC-003, SC-005, SC-007 to SC-010.
 
-**Depends on**: All previous phases (code already exists)
-**Independent Test**: `poetry run pytest tests/test_ghfdb/ -v`
+### Tests — the published-column mapping
 
-### FR-001b — Manager Default Queryset Scoping
+Per R1, one mapping from published column name to its group and accessor, and a factory that turns
+it into display callables and the `list_display` tuple. The mapping is the only place a published
+column name appears in the admin, and the order is never restated.
 
-- [X] T092 [US1] Update `GHFDBChildManager.get_queryset()` in `project/ghfdb/managers.py` to filter `ghfdb_id__isnull=False` so only published GHFDB child records are returned by default (FR-001b)
-- [X] T093 [US1b] Update `GHFDBParentManager.get_queryset()` in `project/ghfdb/managers.py` to filter `ghfdb_id__isnull=False` so only published GHFDB parent records are returned by default (FR-001b)
-- [X] T094 [P] Add tests in `tests/test_ghfdb/test_managers.py`: assert `GHFDBChild.objects.count()` excludes records where `ghfdb_id` is null; assert `GHFDBParent.objects.count()` excludes records where `ghfdb_id` is null
+- [ ] **T063** *US-3 · FR-013, FR-015* —
+  `TestPublishedColumns::test_every_published_column_has_an_entry`, over `CHILD_COLUMNS` and
+  `PARENT_COLUMNS` read from `constants.py`.
 
-### Child Admin Column Update
+- [ ] **T064** *US-3 · FR-013, FR-015, SC-007* —
+  `TestPublishedColumns::test_a_column_the_map_does_not_cover_is_refused_and_named`: reinstate the
+  defect by asking the builder for a column list carrying a name the map does not hold, and assert it
+  raises with that name in the message. This is the assertion SC-007 means by "fails when the
+  canonical definitions change and the changelist does not".
 
-- [X] T095 [US1] Update `GHFDBChildAdmin.list_display` in `project/ghfdb/admin.py`: replace leading ~~`local_id`~~ with `ghfdb_id`; append `quality` before `Ref_ISGN` (FR-012, 2026-04-22 order)
-- [X] T096 [P] Update test T013 assertion in `tests/test_ghfdb/test_admin.py`: replace `local_id` with `ghfdb_id` as first display column and add `quality` before `Ref_ISGN` in the expected `list_display` tuple
+- [ ] **T065** *US-3 · FR-013, FR-015* —
+  `TestPublishedColumns::test_each_heading_is_the_published_name_verbatim`, case included, and
+  covering the four names D2 settles: `tc_pT_function`, `Ref_IGSN`, `quality_child` and
+  `quality_parent`.
 
-### Parent Admin Column Update
+- [ ] **T066** *US-3 · FR-013* —
+  `TestPublishedColumns::test_an_annotation_column_reads_the_annotation_off_the_row` — R1 group one.
 
-- [X] T097 [US1b] Update `GHFDBParentAdmin.list_display` in `project/ghfdb/admin.py` to the 2026-04-22 column order: `ghfdb_id`, `q`, `q_uncertainty`, `name`, `lat_NS`, `long_EW`, `elevation`, `environment`, `p_comment`, `corr_HP_flag`, `total_depth_MD`, `total_depth_TVD`, `explo_method`, `explo_purpose`, `quality`, `country`, `region`, `continent`, `domain`, `total_children`, `relevant_children`; update `search_fields` from ~~`local_id`~~ to `ghfdb_id` (FR-012b, 2026-04-22)
-- [X] T098 [P] Update test T070 assertion in `tests/test_ghfdb/test_admin.py`: replace old parent column order with new 2026-04-22 order (see FR-012b in spec.md)
-- [X] T099 [P] Add display method `ghfdb_id` (and `p_comment`, `quality` if not already present) to `GHFDBParentAdmin` in `project/ghfdb/admin.py` so they resolve from `ParentHeatFlow` fields correctly
+- [ ] **T067** *US-3 · FR-013, FR-015* —
+  `TestPublishedColumns::test_a_field_column_reads_the_field_and_can_override_its_heading` — R1 group
+  two, which is what lets `quality` appear as `quality_child` and `quality_parent`.
 
-### System Validation — Phase 8
+- [ ] **T068** *US-3 · FR-013, FR-019* —
+  `TestPublishedColumns::test_a_many_valued_column_joins_its_labels_and_issues_no_query_when_prefetched`
+  — R1 group three, and the N+1 this feature exists to avoid.
 
-- [X] T100 ⚠️ CRITICAL: Run `poetry run python manage.py check` — MUST pass
-- [X] T101 ⚠️ CRITICAL: Run full test suite: `poetry run pytest tests/test_ghfdb/ -v` — ALL tests MUST pass with updated column assertions
-- [X] T102 [P] Update `docs/ghfdb_fields.md` to replace ~~`local_id` / `is_ghfdb`~~ references with `ghfdb_id` and `quality` for both `HeatFlow` and `ParentHeatFlow`
+- [ ] **T069** *US-3 · FR-013* —
+  `TestPublishedColumns::test_a_column_nothing_resolves_renders_empty` — R1 group four and R4.
 
-**Checkpoint — Phase 8 Complete**: Both manager default querysets scope to `ghfdb_id__isnull=False`; child and parent admin `list_display` match spec FR-012/FR-012b 2026-04-22 column order; all existing tests updated and passing; docs reflect model changes.
+- [ ] **T070** *US-3 · FR-013, FR-015* —
+  `TestPublishedColumns::test_headings_are_the_canonical_order`: the *headings* the built tuple
+  produces equal the order `constants.py` gives, asserted against that module rather than a copy of
+  it. Headings rather than entry names, because T077 requires the entries to be named differently
+  from the columns they render.
+
+### Implementation — the published-column mapping
+
+- [ ] **T071** *US-3 · FR-013, FR-015* — `project/ghfdb/columns.py` holding a `PublishedColumns`
+  class with one entry per published column, naming its group and its accessor and nothing else.
+  Grouped on a class rather than left as loose functions, per constitution principle IX and the house
+  grouping rule. Proves T063. Before: `ImportError` on the module.
+
+- [ ] **T072** *US-3 · FR-013* — The annotation display callable. Proves T066. Before: the changelist
+  entry is a bare attribute name and takes the field's verbose name as its heading.
+
+- [ ] **T073** *US-3 · FR-013, FR-015* — The field display callable, carrying a heading override.
+  Proves T067. Before: the quality column is headed "quality score" rather than `quality_child`.
+
+- [ ] **T074** *US-3 · FR-013* — The many-valued display callable, joining the related terms' labels.
+  Proves T068. Before: the column renders a queryset repr.
+
+- [ ] **T075** *US-3 · FR-013* — The empty display callable for the three columns nothing resolves.
+  Proves T069. Before: rendering raises `AttributeError`.
+
+- [ ] **T076** *US-3 · FR-013, FR-015* — The `list_display` builder, taking a canonical column list
+  and returning the callables in that list's order, raising at import time on a column the map does
+  not hold. R1 records that this makes a drifted column a startup failure rather than a broken page.
+  Proves T064 and T070. Before: the unmapped column passes silently and fails later at `admin.E108`.
+
+- [ ] **T077** *US-3 · FR-013, FR-015* — `short_description` set from the published name verbatim on
+  every callable the factory produces, and **every callable bound under a name that is not a field on
+  the model**. Django resolves a `list_display` entry against the model's fields before the admin's
+  attributes and reads `short_description` only when no field matches, so a callable bound under a
+  published name that is also a field name is silently ignored and the field's `verbose_name` is
+  shown instead. Measured on the current changelists: `expedition` renders as
+  "expedition/platform/ship", `c_comment` as "comment", `water_temperature` as "bottom water
+  temperature", and the leading identifier as "ID Child". Four headings are wrong today for exactly
+  this reason. Proves T065. Before: the heading is the field's `verbose_name`.
+
+### Tests — the determination changelist
+
+- [ ] **T078** *US-3 · FR-012* —
+  `TestGHFDBChildAdmin::test_changelist_renders_for_a_staff_user` (US-3 acceptance scenario 1).
+
+- [ ] **T079** *US-3 · FR-013, SC-007* —
+  `TestGHFDBChildAdmin::test_published_child_columns_appear_in_the_canonical_order`: the headings
+  Django renders for the tail of `list_display` equal `CHILD_COLUMNS`, read from `constants.py` and
+  never from a literal in the test. Asserted through the rendered headings rather than by reading
+  `short_description` off the callables, since T077 records that the two can disagree.
+
+- [ ] **T080** *US-3 · FR-014* —
+  `TestGHFDBChildAdmin::test_the_leading_columns_are_the_four_orientation_columns_and_nothing_else`:
+  the record's published identifier, the site's published identifier, the site name and the site's
+  two coordinate columns, in that order, and no sixth (US-3 acceptance scenario 2).
+
+- [ ] **T081** *US-3 · FR-014* —
+  `TestGHFDBChildAdmin::test_site_values_are_not_restated_on_every_row`: the intersection of
+  `list_display` with the published parent columns is exactly the orientation columns T080 names,
+  and nothing further. Those four are themselves published parent columns, so this is an equality
+  against that set rather than an absence. The familiarity being protected is the child block's, per
+  the 2026-08-23 clarification.
+
+- [ ] **T082** *US-3 · FR-016* —
+  `TestGHFDBChildAdmin::test_search_matches_site_name_and_published_site_identifier`, exercised
+  through the rendered changelist with a query string rather than against the attribute.
+
+- [ ] **T083** *US-3 · FR-017* — `TestGHFDBChildAdmin::test_the_eight_filters_are_offered`:
+  environment, heat production correction flag, exploration method, exploration purpose, country,
+  region, continent and geological domain, each producing matching rows when applied.
+
+- [ ] **T084** *US-3 · FR-018, SC-009* —
+  `TestGHFDBChildAdmin::test_each_vocabulary_filter_offers_exactly_its_own_terms_as_labels`, over
+  environment, exploration method and exploration purpose. Three assertions per filter: every term of
+  its vocabulary is offered, no term of another vocabulary is, and the choice text is the label
+  rather than the stored key.
+
+- [ ] **T085** *US-3 · FR-012, SC-008* —
+  `TestGHFDBChildAdmin::test_there_is_no_route_to_add_change_or_delete`: the three permission hooks
+  return false, the rendered page carries no add link, and no row links into a form. Those three
+  hooks are not the whole surface — the import route writes without consulting any of them, and
+  T123 covers it.
+
+- [ ] **T086** *US-3 · FR-002, SC-005* —
+  `TestGHFDBChildAdmin::test_an_unpublished_determination_is_absent_from_the_rendered_rows`. R6
+  records this as the assertion that would catch an override that stopped going through the scoped
+  manager.
+
+- [ ] **T087** *US-3 · FR-019, SC-003* —
+  `TestGHFDBChildAdmin::test_query_count_is_equal_at_two_row_counts`, measured on the rendered
+  changelist (US-3 acceptance scenario 8).
+
+- [ ] **T088** *US-3 · FR-020* —
+  `TestGHFDBChildAdmin::test_every_declared_path_resolves_on_the_model`: the framework's admin checks
+  report nothing for this registration, covering the display, filter and search declarations
+  together.
+
+- [ ] **T089** *US-3 · FR-021, SC-010* —
+  `TestGHFDBChildAdmin::test_it_carries_the_determination_import_resource_and_the_export_resource`,
+  asserted on both the import and the export attachment.
+
+### Implementation — the determination changelist
+
+- [ ] **T090** *US-3 · FR-013, FR-014* — The `GHFDBChild` registration, its `list_display` built as
+  the four orientation columns followed by the mapping's tuple for `CHILD_COLUMNS`, with the display
+  callables bound onto the class. Proves T078, T079, T080 and T081. Before: the model is absent from
+  the admin registry.
+
+- [ ] **T091** *US-3 · FR-012* — The read-only guarantees on this admin: the three permission hooks
+  return false and no column links into a form. Written out on this class rather than shared with the
+  site changelist through a base, per constitution principle IX. Proves T085. Before: the add button
+  renders and each row links to a change form.
+
+- [ ] **T092** *US-3 · FR-002, FR-019* — `get_queryset()` going through the scoped manager and the
+  export queryset, so the rendered rows are both restricted and complete. Proves T086, and T087 in
+  part. Before: the unpublished determination renders, and reading a many-valued column issues a
+  query per row.
+
+- [ ] **T093** *US-3 · FR-016, FR-020* — `search_fields` on the site name and the site's published
+  identifier, by paths that exist from the determination. Proves T082. Before: searching returns no
+  match, or the admin check reports an unresolvable path.
+
+- [ ] **T094** *US-3 · FR-017* — The plain filters on this admin: heat production correction flag,
+  country, region, continent and geological domain. Proves T083 in part.
+
+- [ ] **T095** *US-3 · FR-018* — A vocabulary-scoped filter class taking a vocabulary, a lookup path
+  and the **lookup mode**, offering that vocabulary's terms by label. Two modes are needed, not one.
+  Environment and exploration method are single-valued concept fields, whose choices come from the
+  vocabulary and match on the stored value. Exploration purpose is many-valued, whose choices come
+  from the concept rows and match on their primary key. Six callers across the two changelists, so
+  one class with two modes is earned. If the two shapes will not read clearly in one class, two
+  classes of three callers each is the alternative and is equally acceptable. Proves T084 in part.
+  Before: the filter offers every stored key present in the table, including terms of other
+  vocabularies.
+
+- [ ] **T096** *US-3 · FR-018, FR-020, SC-009* — The three vocabulary filters wired onto this admin
+  at their paths from the determination. Proves T084 and the rest of T083.
+
+- [ ] **T097** *US-3 · FR-021* — The determination import resource and the export resource attached
+  to this changelist, and no other. The resources themselves belong to `003-ghfdb-import-export` and
+  are not written here. Proves T089. Before: neither attachment exists.
+
+### Tests — the site changelist
+
+- [ ] **T098** *US-3 · FR-012* —
+  `TestGHFDBParentAdmin::test_changelist_renders_for_a_staff_user` (US-3 acceptance scenario 3).
+
+- [ ] **T099** *US-3 · FR-015, SC-007* —
+  `TestGHFDBParentAdmin::test_published_parent_columns_appear_in_the_canonical_order`: the rendered
+  headings, read from `PARENT_COLUMNS`, asserted as T079 asserts them.
+
+- [ ] **T100** *US-3 · FR-015* —
+  `TestGHFDBParentAdmin::test_the_geography_follows_the_published_block`: country, region, continent
+  and geological domain, in that order, immediately after the published columns. D8 keeps them, and
+  places them after rather than among.
+
+- [ ] **T101** *US-3 · FR-015* —
+  `TestGHFDBParentAdmin::test_the_two_determination_counts_come_last`, and render their values.
+
+- [ ] **T102** *US-3 · FR-016* —
+  `TestGHFDBParentAdmin::test_search_matches_site_name_and_published_site_identifier`.
+
+- [ ] **T103** *US-3 · FR-017* — `TestGHFDBParentAdmin::test_the_eight_filters_are_offered`, each
+  producing matching rows when applied.
+
+- [ ] **T104** *US-3 · FR-018, SC-009* —
+  `TestGHFDBParentAdmin::test_each_vocabulary_filter_offers_exactly_its_own_terms_as_labels`. SC-009
+  requires this proven on both changelists, not once.
+
+- [ ] **T105** *US-3 · FR-012, SC-008* —
+  `TestGHFDBParentAdmin::test_there_is_no_route_to_add_change_or_delete`, as T085, with the same
+  note about the import route and T123.
+
+- [ ] **T106** *US-3 · FR-002, SC-005* —
+  `TestGHFDBParentAdmin::test_an_unpublished_site_is_absent_from_the_rendered_rows`.
+
+- [ ] **T107** *US-3 · FR-019, SC-003* —
+  `TestGHFDBParentAdmin::test_query_count_is_equal_at_two_row_counts`.
+
+- [ ] **T108** *US-3 · FR-020* —
+  `TestGHFDBParentAdmin::test_every_declared_path_resolves_on_the_model`.
+
+- [ ] **T109** *US-3 · FR-021, SC-010* —
+  `TestGHFDBParentAdmin::test_it_carries_the_site_import_resource_and_no_export_resource`. The
+  negative half is as much of the requirement as the positive.
+
+- [ ] **T110** *US-3 · FR-021, SC-010* —
+  `TestResourceAttachment::test_no_resource_is_attached_to_both_changelists`.
+
+### Implementation — the site changelist
+
+- [ ] **T111** *US-3 · FR-015* — The `GHFDBParent` registration, its `list_display` opening with the
+  mapping's tuple for `PARENT_COLUMNS`. Proves T098 and T099. Before: the model is absent from the
+  admin registry.
+
+- [ ] **T112** *US-3 · FR-015* — The four geography columns after the published block. Proves T100.
+
+- [ ] **T113** *US-3 · FR-015* — The two determination-count columns last, reading the annotations
+  rather than counting per row. Proves T101. Before: the columns are absent.
+
+- [ ] **T114** *US-3 · FR-012* — The read-only guarantees on this admin. Proves T105.
+
+- [ ] **T115** *US-3 · FR-002, FR-019* — `get_queryset()` going through the scoped manager and
+  chaining the flattening, the counts and the child attachment, so every column on this changelist is
+  read from the queryset rather than by walking a relationship per column (R5). Proves T106 and T107.
+  Before: the unpublished site renders, and the count at four sites exceeds the count at two.
+
+- [ ] **T116** *US-3 · FR-016, FR-020* — `search_fields` on the site name and the site's published
+  identifier, by paths that exist from the representative value. Proves T102.
+
+- [ ] **T117** *US-3 · FR-017* — The plain filters on this admin. Proves T103 in part.
+
+- [ ] **T118** *US-3 · FR-018, FR-020, SC-009* — The three vocabulary filters wired onto this admin
+  at their paths from the representative value, reusing T095's class. Proves T104 and the rest of
+  T103.
+
+- [ ] **T119** *US-3 · FR-021* — The site import resource attached to this changelist, and no export
+  resource. Proves T109 and T110. Before: the attachment is absent, or the export resource is present
+  on both changelists.
+
+- [ ] **T123** *US-3 · FR-012* — Gate the import route on both changelists behind the model's add
+  permission at the user level. `django-import-export` grants import to any staff user whenever
+  `IMPORT_EXPORT_IMPORT_PERMISSION_CODE` is unset, and it is unset in this project — verified. So
+  both registrations, which declare no add, no change and no delete, carry a route that writes
+  records and that a user holding only view permission can reach. Override it on these two
+  registrations rather than in project settings, so the change reaches nothing else.
+  **Test**: `TestImportPermission`, on both changelists — a staff user with view permission only is
+  refused the import URL, and one holding the model's add permission is not. Before: the
+  view-permission-only user reaches the import page and can write.
 
 ---
 
-## Dependencies & Execution Order
+## Phase 5 — Feature-wide
 
-### Phase Dependencies
+- [ ] **T120** *US-1, US-2, US-3 · SC-011* —
+  `TestSuiteHealth::test_no_test_in_this_feature_is_expected_to_fail`: no test module under
+  `tests/test_ghfdb/` carries an `xfail` or an unconditional `skip`. SC-011 is a statement about the
+  suite, so it needs an assertion about the suite.
 
-| Phase | Depends on | Blocks |
-|---|---|---|
-| Phase 1 � Setup | Nothing | Nothing |
-| ~~Phase 2 — Foundational (`HeatFlow.local_id`)~~ [SUPERSEDED] | Phase 1 | ~~Phase 3, Phase 3b, Phase 6~~ (unblocked; migration done via `001` branch) |
-| Phase 3 — US1 GHFDBChild Proxy (P1) | Phase 1 | `003-ghfdb-import-export` Phase 5 (US3 export needs `for_export()`) |
-| Phase 3b — US1b GHFDBParent Proxy (P1) | Phase 1 | `003-ghfdb-import-export` (parent import resource needs `GHFDBParent` admin) |
-| Phase 6 — US4 Map Viewer (P3) | Phase 1 | Nothing (independent) |
-| Phase 7 — Polish | Phase 3 + Phase 3b + Phase 6 | Nothing |
-| Phase 8 — `ghfdb_id`/`quality` Alignment (2026-04-22) | Phase 3 + Phase 3b | `003-ghfdb-import-export` (upsert key change to `ghfdb_id`) |
+- [ ] **T121** *US-1, US-2, US-3 · constitution VII* — Documentation for the query surface this
+  feature adds: the two proxies, their scoping rule, the five queryset methods and the two
+  changelists, plus the field mapping documentation brought current for anything these tasks touched.
+  **Test**: the documentation build passes with warnings treated as errors, and the page names every
+  public queryset method this feature defines. Before: the build reports an undocumented reference,
+  and the assertion finds no mention of the export queryset.
+
+---
+
+## Convergence gates
+
+Not tasks, and deliberately unnumbered — nothing dispatches them. They are the conditions the
+feature exits on, checked once the stories are done.
+
+- The full test suite passes, run once, at the end.
+- Lint, formatting and type checks pass on every changed file. CI runs raw ruff, which is a wider
+  scope than the pre-commit gate.
+- `manage.py check` reports no errors and no warnings with both registrations live.
+- The branch's migrations are squashed to one change set, and they apply cleanly to an empty
+  database. Neither may touch data.
+- No column list, in code or in a test, is a copy of one `constants.py` already holds.
+- Every comment and docstring in a file this run touches describes what the file now does. Four are
+  known wrong today and are corrected in passing rather than given tasks: `constants.py`'s header
+  and its two per-list comments miscount their own lists, `managers.py`'s module docstring says "31
+  scalar columns" where the dictionary holds 34, `managers.py`'s parent flattening docstring says
+  `explo_purpose` is excluded where the code annotates it, and `admin.py`'s docstrings cite
+  requirement numbers and defect handles from the superseded specification.
+- No name introduced by this run carries a leading underscore. The display factory this run replaces
+  is called `_scalar`; its replacement is not.

@@ -39,7 +39,7 @@ Serves G1.
 
 ### R2 — The published structure readable from the model
 
-*Delivered · needs verification · advances G2*
+*Delivered · advances G2*
 
 The published parent and child structure is derived from the stored records rather than kept
 alongside them, so a query written in the portal's own terms and a query written in published

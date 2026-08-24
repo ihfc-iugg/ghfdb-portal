@@ -1,154 +1,330 @@
-# Feature Specification: GHFDB Flat Data Interface
+# Feature Specification: The published structure read from the model
 
 **Feature Branch**: `002-ghfdb-proxy`
+
 **Created**: 2026-04-10
-**Status**: Refined
-**Refined**: 2026-04-14 — Added explicit GHFDB Child admin column order plus required search and filter fields for parent-level spreadsheet attributes.
-**Refined**: 2026-04-17 — Replace single `GHFDB` proxy model with two distinct proxy models: `GHFDBChild` (backed by `HeatFlow`) and `GHFDBParent` (backed by `ParentHeatFlow`). Both registered to admin with spreadsheet-ordered list displays. Import/export resources attached to their respective model admin.
-**Bugfix**: 2026-04-14 — [BUG-001] Added constrained-option behavior for `explo_purpose` admin filtering so list-filter choices are vocabulary-scoped.
-**Bugfix**: 2026-04-17 — [BUG-002] Corrected the `GHFDBChild` admin changelist contract so it shows child-level fields first, with parent/site context columns retained only for orientation.
-**Bugfix**: 2026-04-17 — [BUG-003] Clarified that child-admin queryset optimizations must use only valid ORM relation paths so changelist rendering cannot fail on invalid `prefetch_related()` lookups.
-**Bugfix**: 2026-04-20 — [BUG-004] Broadened FR-015 vocabulary-scoping requirement to cover all concept-backed filter fields (`environment`, `explo_method`, `explo_purpose`) on both admins; added `_interval()` fallback safety requirement.
-**Refined**: 2026-04-22 — Data model update: `ParentHeatFlow` and `HeatFlow` gained `ghfdb_id` (PositiveIntegerField) and `quality` (CharField) fields; `local_id` and `is_ghfdb` have been removed. GHFDB membership is now determined by a non-null `ghfdb_id`. Admin column orders on both proxy admins updated to reflect dropped/added fields and align with the canonical API output schema (child.json / parent.json). New FR-001b added to formalise the `ghfdb_id`-based membership rule.
-**References**: Fuchs et al. (2021); Fuchs et al. (2023); IHFC GHFDB v2024
-**Input**: User description: "GHFDB product layer: proxy model, flat query interface, and web map viewer"
-**Downstream**: Import/export pipeline is specified separately in `003-ghfdb-import-export`.
+
+**Rewritten**: 2026-08-23 — audited against the implementation and rewritten in place. The
+adjudications behind every change are recorded in [decisions.md](decisions.md).
+
+**Status**: Draft
+
+**Goals**: G2 — faithful two-way translation between the relational model and the published
+structure, so internal queries stay predictable and exports match the published format exactly
+
+**Roadmap**: R2
+
+**References**: Fuchs et al. (2021); Fuchs et al. (2023); constitution principles II, III, IX;
+ADR-0001, ADR-0002, ADR-0003, ADR-0007
 
 ## Overview
 
-This feature establishes the GHFDB flat data interface within the `project/ghfdb` app via **two complementary proxy models**:
+The portal stores heat flow as a normalised relational graph:
 
-- **`GHFDBChild`** — a proxy over `HeatFlow` with an optimised `GHFDBChildQuerySet` that returns all child-level GHFDB columns as a flat annotated structure (with optional parent-level data for a complete record) without N+1 queries. Registered in admin as "GHFDB Children". The `GHFDBChildImportResource` and `GHFDBExportResource` are attached to this admin.
-- **`GHFDBParent`** — a proxy over `ParentHeatFlow` that retrieves parent-level data with optional children attached and supports queryset annotations for `total_children` (all child records linked to the parent) and `relevant_children` (child records that meet a quality or relevance threshold). Registered in admin as "GHFDB Parents". The `GHFDBParentImportResource` is attached to this admin.
+- a site
+- the depth intervals within it
+- the gradient and conductivity measured over each interval
+- the heat flow determined from that pair
+- the representative value for the site as a whole
 
-The feature also delivers a dedicated "Explore" page that embeds the GHFDB web-map viewer inside a full-screen iframe with a main-menu link for easy access.
+The database the commission publishes is a flat file, one row per determination, with the site's
+own values restated on every row that mentions it.
 
-**Downstream feature**: Round-trip import/export utilities (staff-only admin, XLSX, vocabulary normalisation) are specified in `003-ghfdb-import-export`. That spec depends on the `GHFDBChild` proxy model and `GHFDBChildManager.for_export()` queryset produced by this spec.
+This feature is the reading direction between the two. It presents the stored graph in the
+published shape without duplicating it, through two proxy models that add no table and no column:
+`GHFDBChild` over `HeatFlow`, and `GHFDBParent` over `ParentHeatFlow`. Each carries a queryset that
+flattens the relationships it needs into published columns, in a number of queries that does not
+grow with the number of rows. Each is also scoped so that only records belonging to the published
+database are visible at all.
 
-**Out of scope (deferred):** Scheduled or automated release generation; public/anonymous downloadable exports.
+Both are registered as read-only admin changelists. Those changelists are how the assessment team
+reads the database, and they are built for people who know the published file. The columns carry
+the published names and appear in the published order, so a curator can find a record and read it
+without translating between two sets of column names. Search and filters scoped to their
+vocabularies make that workable across the whole database, not just the page on screen.
 
-## User Scenarios & Testing *(mandatory)*
+The proxies are also the surface the import and export resources attach to. Those resources, and
+the writing direction generally, are specified in `003-ghfdb-import-export`. What belongs here is
+the query surface they consume and the admin they hang off.
 
-### User Story 1 - GHFDBChild Proxy Model for Efficient Flat Child Queries (Priority: P1)
+The canonical column definitions live in the extraction app's constants module, which names the
+published columns exactly as the published file names them (ADR-0002), with two corrections
+(ADR-0003). This feature treats that module as the single authority for what the columns are called
+and what order they come in. Nothing in this feature restates a column list that the module already
+holds.
 
-A developer or data curator needs to query heat flow records in the exact flat structure used by the GHFDB spreadsheet product — one row per child heat-flow measurement along with all parent-site, thermal-gradient, and thermal-conductivity columns — without writing complex multi-join queries every time.
+## User Scenarios & Testing
 
-**Why this priority**: The child proxy model is the foundation that every other GHFDB product feature (export, admin display, API, map) depends on. Without a well-optimised flat view of the data, downstream features require duplicated query logic.
+### User Story 1 — Determinations read in the published shape (Priority: P1)
 
-**Independent Test**: Can be tested independently by querying the proxy model and verifying that a single queryset call returns all expected GHFDB child-level columns without N+1 queries.
+A developer or a curator asks for heat flow determinations in the shape the published file has —
+one row per determination, carrying the site metadata, the interval geometry, the gradient, the
+conductivity and the corrections that belong to it — and gets them without writing the joins by
+hand and without the query cost growing with the number of rows.
 
-**Acceptance Scenarios**:
+**Why this priority**: everything downstream of the stored model reads through this. The export,
+the admin, and eventually the API all consume the same flattened rows, and each one that assembles
+them independently is another place the published structure can be got wrong.
 
-1. **Given** the database contains a `HeatFlow` record with linked site, parent, thermal-gradient, and thermal-conductivity data, **When** the `GHFDBChild` proxy queryset's `as_ghfdb_flat()` method is called, **Then** each record is returned as a flat structure containing all required GHFDB spreadsheet columns with no additional queries per row.
-2. **Given** the `GHFDBChild` proxy model is used in the Django ORM, **When** standard queryset operations (filter, order_by, count) are applied, **Then** they behave identically to the underlying `HeatFlow` model.
-3. **Given** the `GHFDBChild` proxy model, **When** accessed from the Django admin, **Then** it appears as a separate, read-oriented admin view labelled "GHFDB Children" with the `GHFDBChildImportResource` and `GHFDBExportResource` attached, and changelist queryset evaluation succeeds without invalid relation-path errors.
-4. **Given** the GHFDB Children admin changelist, **When** a staff user views records, **Then** ~~the displayed columns are in this exact order: `ID_parent`, `q`, `q_uncertainty`, `name`, `lat_NS`, `long_EW`, `elevation`, `environment`, `corr_HP_flag`, `total_depth_MD`, `total_depth_TVD`, `explo_method`, `explo_purpose`, `country`, `region`, `continent`, `domain`~~ (superseded by BUG-002 because this duplicates the parent admin contract) and ~~the displayed columns are in this exact order: `local_id`, `ID_parent`~~ (superseded by 2026-04-22 refinement: `local_id` removed, `ghfdb_id` added, `quality` added between `tc_strategy` and `Ref_ISGN`) and the displayed columns are in this exact order: `ghfdb_id`, `ID_parent`, `name`, `lat_NS`, `long_EW`, `qc`, `qc_uncertainty`, `q_method`, `q_top`, `q_bottom`, `probe_penetration`, `publication_reference`, `data_reference`, `relevant_child`, `c_comment`, `corr_IS_flag`, `corr_T_flag`, `corr_S_flag`, `corr_E_flag`, `corr_TOPO_flag`, `corr_PAL_flag`, `corr_SUR_flag`, `corr_CONV_flag`, `corr_HR_flag`, `expedition`, `probe_type`, `probe_length`, `probe_tilt`, `water_temperature`, `geo_lithology`, `geo_stratigraphy`, `T_grad_mean`, `T_grad_uncertainty`, `T_grad_mean_cor`, `T_grad_uncertainty_cor`, `T_method_top`, `T_method_bottom`, `T_shutin_top`, `T_shutin_bottom`, `T_corr_top`, `T_corr_bottom`, `T_number`, `q_date`, `tc_mean`, `tc_uncertainty`, `tc_source`, `tc_location`, `tc_method`, `tc_saturation`, `tc_pT_conditions`, `tc_pT_fuction`, `tc_number`, `tc_strategy`, `quality`, `Ref_ISGN`.
-5. **Given** the GHFDB Children admin changelist, **When** a staff user uses search and filters, **Then** search is supported by `name` and `ID_parent`, list filters are available for `environment`, `corr_HP_flag`, `explo_method`, `explo_purpose`, `country`, `region`, `continent`, and `domain`, and ~~`explo_purpose` filter choices are restricted to values accepted by the `HeatFlowSite.explo_purpose` vocabulary~~ (broadened by BUG-004) all concept-backed filter fields (`environment`, `explo_method`, `explo_purpose`) display vocabulary-scoped human-readable choices rather than raw stored keys.
-
----
-
-### User Story 1b - GHFDBParent Proxy Model for Parent-Level Queries (Priority: P1)
-
-A developer or data curator needs to query heat flow data at the **parent site level** — one row per parent site with aggregated child statistics — to support summary views, data quality dashboards, and parent-scoped import/export workflows.
-
-**Why this priority**: The parent proxy model enables admin views and workflows that operate at the parent level (site-wide), which is distinct from the child-level flat export view. It also enables the `GHFDBParentImportResource` to be cleanly separated from the child import admin.
-
-**Independent Test**: Can be tested independently by querying the proxy model and verifying that count annotations (`total_children`, `relevant_children`) are correct and return in a constant number of queries.
-
-**Acceptance Scenarios**:
-
-1. **Given** the database contains `ParentHeatFlow` records with linked child `HeatFlow` records, **When** the `GHFDBParent` queryset is called with count annotations, **Then** each record includes `total_children` (count of all linked `HeatFlow` children) and `relevant_children` (count meeting a quality/relevance threshold).
-2. **Given** the `GHFDBParent` proxy model, **When** standard queryset operations (filter, order_by, count) are applied, **Then** they behave identically to the underlying `ParentHeatFlow` model.
-3. **Given** the `GHFDBParent` proxy model, **When** accessed from the Django admin, **Then** it appears as a separate admin view labelled "GHFDB Parents" with the `GHFDBParentImportResource` attached.
-4. **Given** the GHFDB Parents admin changelist, **When** a staff user views records, **Then** ~~the displayed columns reflect the parent-level GHFDB spreadsheet columns in the correct order: `ID_parent`, `q`, `q_uncertainty`, `name`, `lat_NS`, `long_EW`, `elevation`, `environment`, `corr_HP_flag`, `total_depth_MD`, `total_depth_TVD`, `explo_method`, `explo_purpose`, `country`, `region`, `continent`, `domain`, plus `total_children` and `relevant_children` as computed columns~~ (superseded by 2026-04-22 refinement: `ghfdb_id` replaces `ID_parent` as lead column, `p_comment` and `quality` added, column order aligned with parent.json API schema) and the displayed columns are in this exact order: `ghfdb_id`, `q`, `q_uncertainty`, `name`, `lat_NS`, `long_EW`, `elevation`, `environment`, `p_comment`, `corr_HP_flag`, `total_depth_MD`, `total_depth_TVD`, `explo_method`, `explo_purpose`, `quality`, `country`, `region`, `continent`, `domain`, `total_children`, `relevant_children`.
-5. **Given** the `GHFDBParent` queryset, **When** `with_children()` (or equivalent) is called, **Then** parent records are returned with their linked child data attached in a constant number of queries.
-
----
-
-### Proxy Edge Cases
-
-- What happens when a `HeatFlowCorrection` for a specific type doesn't exist for a given `HeatFlow` record? The correction subquery annotation returns `None` for that field.
-- What happens when `thermal_gradient` or `thermal_conductivity` is `null` on a `HeatFlow` record? All related annotations return `None`; the queryset still returns the row without error.
-- What happens when the map viewer iframe URL is unreachable? The page must degrade gracefully, showing an informative message rather than a blank frame.
-
-### User Story 4 - Explore Map Viewer Page (Priority: P3)
-
-A portal visitor wants a quick visual overview of the global heat flow distribution. They click a "Map" (or "Explore") link in the application's top navigation bar and see the GHFDB interactive web-map viewer embedded inside the portal page.
-
-**Why this priority**: Lower priority than the data utilities since it is a UI convenience feature, but it is a direct user-facing deliverable that increases portal discoverability.
-
-**Independent Test**: Can be tested independently by navigating to the map URL and confirming the iframe loads and the menu link is active, with no dependency on import/export functionality.
+**Independent Test**: build several complete record chains, ask the queryset for all of them, and
+assert both that every published child column resolves on every row and that the number of queries
+does not change when rows are added.
 
 **Acceptance Scenarios**:
 
-1. **Given** a logged-in or anonymous user, **When** they click the "Explore" menu item in the main navigation, **Then** they are taken to a portal page that renders the GHFDB web-map viewer inside a responsive, full-viewport iframe.
-2. **Given** the map page, **When** it loads, **Then** no horizontal scrollbars appear and the iframe fills the available viewport height.
-3. **Given** the main application menu, **When** the user is on the map page, **Then** the "Explore" menu item is marked as active/current.
+1. **Given** a database holding complete record chains — site, interval, gradient, conductivity,
+   determination, corrections and the site's representative value — **When** the child queryset is
+   asked to flatten them, **Then** every published child column resolves on every row.
+2. **Given** the same request, **When** the number of stored chains is increased, **Then** the
+   number of database queries is unchanged.
+3. **Given** a determination whose gradient, conductivity, probe metadata or a particular
+   correction is absent, **When** the rows are flattened, **Then** the row is returned with those
+   columns empty rather than being dropped or raising.
+4. **Given** the proxy, **When** ordinary queryset operations are used — filtering, ordering,
+   counting, slicing — **Then** they behave as they do on the model the proxy stands in for.
+5. **Given** a determination whose published identifier is not set, **When** any query is made
+   through the proxy, **Then** that record is not among the results.
 
 ---
 
-### Map Edge Cases
+### User Story 2 — Sites read in the published shape, with their determination counts (Priority: P1)
 
-- What happens when a `HeatFlowCorrection` for a specific type doesn't exist for a given `HeatFlow` record? The correction subquery annotation returns `None` for that field.
-- What happens when `thermal_gradient` or `thermal_conductivity` is `null` on a `HeatFlow` record? All related annotations return `None`; the queryset still returns the row without error.
-- What happens when the map viewer iframe URL is unreachable? The page must degrade gracefully, showing an informative message rather than a blank frame.
+A curator or a developer asks for sites in the published parent shape — one row per site with the
+representative value, the site metadata and the geography — and needs to know, per site, how many
+determinations it holds and how many of them contributed to the representative value.
 
-## Requirements *(mandatory)*
+**Why this priority**: the two counts are the assessment team's fastest read on whether a site's
+representative value rests on the evidence they expect. They are also what makes the site-level
+changelist worth having rather than a duplicate of the determination-level one.
+
+**Independent Test**: build sites with differing numbers of contributing and non-contributing
+determinations, ask for the counts, and assert both correctness and a query count that does not
+grow with the number of sites.
+
+**Acceptance Scenarios**:
+
+1. **Given** sites holding determinations of which only some contributed to the representative
+   value, **When** the site queryset is asked for its counts, **Then** each row carries the total
+   number of determinations and the number that contributed.
+2. **Given** the same request, **When** the number of stored sites is increased, **Then** the
+   number of database queries is unchanged.
+3. **Given** a site holding no determinations, **When** the counts are read, **Then** both are zero
+   rather than empty.
+4. **Given** the site queryset, **When** it is asked to flatten to the published parent columns,
+   **Then** every published parent column resolves on every row.
+5. **Given** the site queryset, **When** it is asked to attach the determinations belonging to each
+   site, **Then** reading them adds no query per site.
+6. **Given** a site whose published identifier is not set, **When** any query is made through the
+   proxy, **Then** that site is not among the results.
+
+---
+
+### User Story 3 — The assessment team reads the database in the terms they know (Priority: P2)
+
+A member of the assessment team opens the portal's administrative interface to check a record. They
+know the published file's column names and the order they come in, and they should not have to
+learn a second set of names to read the same data here.
+
+**Why this priority**: it is what makes the stored model usable by the people who maintain the
+database, and a changelist in an unfamiliar order costs their time on every visit rather than once.
+
+**Independent Test**: open both changelists as a staff user against stored records, and assert the
+columns, their order, their headings, the search behaviour and the filter choices.
+
+**Acceptance Scenarios**:
+
+1. **Given** stored determinations, **When** a staff user opens the determination changelist,
+   **Then** it renders, and the published child columns appear in the published order under the
+   published headings.
+2. **Given** the determination changelist, **When** the user reads its leading columns, **Then**
+   they carry enough of the site to identify which record a row belongs to, without restating the
+   site's own values on every row.
+3. **Given** stored sites, **When** a staff user opens the site changelist, **Then** it renders, and
+   the published parent columns appear in the published order under the published headings,
+   followed by the geography and the two determination counts.
+4. **Given** either changelist, **When** the user searches by site name or by published site
+   identifier, **Then** matching rows are returned.
+5. **Given** either changelist, **When** the user opens a filter backed by a controlled vocabulary
+   — environment, exploration method, exploration purpose — **Then** the choices offered are the
+   terms of that vocabulary and no others, shown as their labels rather than their stored keys.
+6. **Given** either changelist, **When** the user filters by country, region, continent or
+   geological domain, **Then** matching rows are returned.
+7. **Given** either changelist, **When** the user attempts to add, change or delete a record,
+   **Then** the interface offers no route to do so.
+8. **Given** either changelist, **When** the number of stored records is increased, **Then** the
+   number of queries the page issues is unchanged.
+
+---
+
+### Edge Cases
+
+- A determination whose interval, site, gradient, conductivity or probe metadata is absent: every
+  column sourced from the missing relationship is empty and the row is still returned.
+- A correction type never recorded against a determination: that correction's column is empty.
+- A site holding no determinations: both counts read zero.
+- A record whose published identifier is not set: invisible through either proxy, on every path,
+  including the changelists.
+- `Ref_IGSN`: present as a column and always empty. The portal holds no sample numbers, by decision
+  (ADR-0003 covers the spelling, and the absence of the field is recorded in `decisions.md`).
+
+## Requirements
 
 ### Functional Requirements
 
-- **FR-001**: The system MUST provide two Django proxy models:
-  - **`GHFDBChild`** backed by `HeatFlow` with a custom `GHFDBChildManager` and `GHFDBChildQuerySet` that returns all child-level GHFDB spreadsheet columns via an optimised single-query path (select_related and prefetch_related). Optional parent-level data may be included for a complete dataset.
-  - **`GHFDBParent`** backed by `ParentHeatFlow` with a custom `GHFDBParentManager` and `GHFDBParentQuerySet` that retrieves parent-level data with optional children attached.
-- **FR-001b**: GHFDB membership is determined exclusively by the `ghfdb_id` field (a `PositiveIntegerField` on both `HeatFlow` and `ParentHeatFlow`). A record is part of the published GHFDB if and only if its `ghfdb_id` is non-null. Both `GHFDBChildManager` and `GHFDBParentManager` MUST scope their default querysets to `ghfdb_id__isnull=False` so that unassigned records are automatically excluded. The ~~`is_ghfdb` boolean flag~~ has been removed from both models; `ghfdb_id` is the sole gate for GHFDB inclusion.
-- **FR-002**: The `GHFDBChildQuerySet` MUST expose a named method (e.g., `as_ghfdb_flat()`) that annotates or selects all columns required by the GHFDB child-level output schema, with an option to include parent-level columns for a complete record.
-- **FR-002b**: The `GHFDBParentQuerySet` MUST expose:
-  - A method (e.g., `with_child_counts()`) that annotates each parent record with `total_children` (count of all linked `HeatFlow` children) and `relevant_children` (count of children meeting a quality or relevance threshold).
-  - A method (e.g., `with_children()`) that prefetches or attaches linked child records in a constant number of queries.
-- **FR-003 to FR-008**: Import/export pipeline behavior was split into `003-ghfdb-import-export`. This feature only defines the proxy/query/admin surface that those downstream resources attach to.
-- **FR-009**: The system MUST provide a URL-accessible view at `ghfdb/explore/` (or equivalent) that renders an HTML template embedding the GHFDB web-map viewer (`https://ihfc-iugg.github.io/HeatFlowMapping/`) inside a full-screen iframe. The URL is hardcoded in the template.
-- **FR-010**: A menu item labelled "Explore" (or equivalent) MUST be registered in the main application navigation bar pointing to the map viewer URL.
-- **FR-011**: Both `GHFDBChild` and `GHFDBParent` proxy models MUST be registered with the Django admin (read-only mode is acceptable) so staff can inspect GHFDB-structured entries without modifying underlying normalised records.
-- **FR-011b**: The `GHFDBChildImportResource` and `GHFDBExportResource` MUST be attached exclusively to the `GHFDBChild` admin. The `GHFDBParentImportResource` MUST be attached exclusively to the `GHFDBParent` admin. No import or export resource should be attached to both admins simultaneously.
-- **FR-012**: The **`GHFDBChild`** admin changelist MUST ~~display these GHFDB spreadsheet fields in this exact order: `ID_parent`, `q`, `q_uncertainty`, `name`, `lat_NS`, `long_EW`, `elevation`, `environment`, `corr_HP_flag`, `total_depth_MD`, `total_depth_TVD`, `explo_method`, `explo_purpose`, `country`, `region`, `continent`, `domain`~~ (superseded by BUG-002 because those are parent-level summary columns) and ~~MUST display the child-oriented changelist fields in this exact order: `local_id`, `ID_parent`~~ (superseded by 2026-04-22 refinement: `local_id` removed, `ghfdb_id` added, `quality` added between `tc_strategy` and `Ref_ISGN`) and MUST display the child-oriented changelist fields in this exact order: `ghfdb_id`, `ID_parent`, `name`, `lat_NS`, `long_EW`, `qc`, `qc_uncertainty`, `q_method`, `q_top`, `q_bottom`, `probe_penetration`, `publication_reference`, `data_reference`, `relevant_child`, `c_comment`, `corr_IS_flag`, `corr_T_flag`, `corr_S_flag`, `corr_E_flag`, `corr_TOPO_flag`, `corr_PAL_flag`, `corr_SUR_flag`, `corr_CONV_flag`, `corr_HR_flag`, `expedition`, `probe_type`, `probe_length`, `probe_tilt`, `water_temperature`, `geo_lithology`, `geo_stratigraphy`, `T_grad_mean`, `T_grad_uncertainty`, `T_grad_mean_cor`, `T_grad_uncertainty_cor`, `T_method_top`, `T_method_bottom`, `T_shutin_top`, `T_shutin_bottom`, `T_corr_top`, `T_corr_bottom`, `T_number`, `q_date`, `tc_mean`, `tc_uncertainty`, `tc_source`, `tc_location`, `tc_method`, `tc_saturation`, `tc_pT_conditions`, `tc_pT_fuction`, `tc_number`, `tc_strategy`, `quality`, `Ref_ISGN`.
-- **FR-012b**: The **`GHFDBParent`** admin changelist MUST ~~display parent-level GHFDB spreadsheet columns in the same spreadsheet column order: `ID_parent`, `q`, `q_uncertainty`, `name`, `lat_NS`, `long_EW`, `elevation`, `environment`, `corr_HP_flag`, `total_depth_MD`, `total_depth_TVD`, `explo_method`, `explo_purpose`, `country`, `region`, `continent`, `domain`, followed by the computed columns `total_children` and `relevant_children`~~ (superseded by 2026-04-22 refinement: `ghfdb_id` replaces `ID_parent` as lead column, `p_comment` and `quality` added, column order aligned with parent.json API schema) and MUST display parent-level columns in this exact order: `ghfdb_id`, `q`, `q_uncertainty`, `name`, `lat_NS`, `long_EW`, `elevation`, `environment`, `p_comment`, `corr_HP_flag`, `total_depth_MD`, `total_depth_TVD`, `explo_method`, `explo_purpose`, `quality`, `country`, `region`, `continent`, `domain`, `total_children`, `relevant_children`.
-- **FR-013**: The **`GHFDBChild`** admin changelist MUST support text search on `name` and `ID_parent`. The **`GHFDBParent`** admin changelist MUST support text search on `name` and `ID_parent`.
-- **FR-014**: The **`GHFDBChild`** admin changelist MUST provide filters for `environment`, `corr_HP_flag`, `explo_method`, `explo_purpose`, `country`, `region`, `continent`, and `domain`. The **`GHFDBParent`** admin changelist MUST provide the same set of filters.
-- **FR-015**: For concept-backed admin list filters on both admins, filter options MUST be constrained to vocabulary-accepted values for the target field. ~~Specifically, the `explo_purpose` filter MUST only show values accepted by `HeatFlowSite.explo_purpose` and MUST NOT show unrelated `Concept` values.~~ (broadened by BUG-004) Specifically: the `environment` filter MUST show only values from the `GeographicEnvironment` vocabulary; the `explo_method` filter MUST show only values from the `ExplorationMethod` vocabulary; the `explo_purpose` filter MUST show only values from the `ExplorationPurpose` vocabulary. All three filters MUST display human-readable vocabulary labels, not raw stored concept keys. Each concept-backed filter on both the child and parent admins MUST use a vocabulary-scoped custom `SimpleListFilter` class.
-- **FR-015b**: The `GHFDBChildAdmin._interval()` helper MUST return `None` (not the raw `Sample` object) when the `heatflowinterval` MTI accessor does not resolve, so that column display methods receive a correctly-typed value or `None`.
-- **FR-016**: Before validating or mapping controlled-vocabulary spreadsheet values, the importer MUST normalise each token by removing surrounding square brackets (for example, `[Onshore (continental)]` -> `Onshore (continental)`) and converting the result to lowercase so standard GHFDB upload-template values remain compatible with lowercase vocabulary definitions.
-- **FR-017**: `GHFDBChild` admin changelist queryset optimizations (`select_related`/`prefetch_related`) MUST reference only valid ORM relation paths on `HeatFlow` and linked models; invalid paths that cause changelist rendering errors are not permitted.
+**The proxies**
 
-### Key Entities
+- **FR-001**: The system MUST provide a `GHFDBChild` proxy over `HeatFlow` and a `GHFDBParent`
+  proxy over `ParentHeatFlow`. Neither may add a database table, a column or a migration that
+  touches data.
+- **FR-002**: Membership of the published database MUST be expressed by the published identifier
+  being set, and by nothing else. Both proxies MUST restrict every queryset they produce to records
+  whose published identifier is set, so that a record which has never been published cannot be
+  reached through either proxy by any route.
+- **FR-003**: Both proxies MUST behave as the models they stand in for under ordinary queryset
+  operations — filtering, ordering, counting, slicing and chaining — with the restriction in FR-002
+  surviving each of them.
 
-- **GHFDBChild (proxy)**: A read-oriented proxy over `HeatFlow` that presents child heat-flow records in the flat GHFDB spreadsheet schema. Does not add database columns; adds custom manager (`GHFDBChildManager`) and queryset (`GHFDBChildQuerySet`) methods for efficient flat-data retrieval, including an `as_ghfdb_flat()` method for fully annotated single-query output and optional parent data inclusion. The underlying `HeatFlow` model now carries `ghfdb_id` (PositiveIntegerField, nullable — the stable GHFDB row identifier) and `quality` (CharField, nullable — composite quality assessment string per Fuchs et al. 2023); ~~`local_id`~~ has been removed. `verbose_name = "GHFDB Child"`, `verbose_name_plural = "GHFDB Children"`.
-- **GHFDBParent (proxy)**: A read-oriented proxy over `ParentHeatFlow` that presents parent-site records in the GHFDB parent-column schema. Does not add database columns; adds custom manager (`GHFDBParentManager`) and queryset (`GHFDBParentQuerySet`) methods, including `with_child_counts()` (annotates `total_children` and `relevant_children`) and `with_children()` (prefetches linked child data). The underlying `ParentHeatFlow` model now carries `ghfdb_id` (PositiveIntegerField, nullable — the stable GHFDB site identifier) and `quality` (CharField, nullable — composite quality assessment string); ~~`local_id`~~ and ~~`is_ghfdb`~~ have been removed. `verbose_name = "GHFDB Parent"`, `verbose_name_plural = "GHFDB Parents"`.
-- **GHFDBParentImportResource**: The downstream parent import resource defined in `003-ghfdb-import-export`. In this feature it matters only as the resource attached to the **`GHFDBParent`** model admin.
-- **GHFDBChildImportResource**: The downstream child import resource defined in `003-ghfdb-import-export`. In this feature it matters only as the resource attached to the **`GHFDBChild`** model admin.
-- **GHFDBExportResource**: The downstream export resource defined in `003-ghfdb-import-export`. In this feature it matters only as the resource attached to the **`GHFDBChild`** model admin.
-- **GHFDBExploreView**: A `TemplateView` subclass that renders the map viewer page. The iframe URL (`https://ihfc-iugg.github.io/HeatFlowMapping/`) is hardcoded directly in the template; no Django setting is required.
+**Flattening**
 
-## Success Criteria *(mandatory)*
+- **FR-004**: The child queryset MUST expose a method that annotates every published child column
+  onto each row, sourced from the site, the interval, the gradient, the conductivity, the probe
+  metadata, the site's representative value and the corrections.
+- **FR-005**: The number of queries issued by FR-004 MUST NOT grow with the number of rows
+  returned.
+- **FR-006**: A relationship that is absent MUST yield empty columns rather than a missing row or
+  an error. This applies to each correction type independently.
+- **FR-007**: The child queryset MUST expose a second method that adds the many-valued
+  relationships needed to write a row out — calculation method, exploration purpose, the gradient's
+  methods and corrections, the conductivity's descriptive vocabularies, lithology, stratigraphy and
+  probe type. Its query count MUST NOT grow with the number of rows returned either.
+- **FR-008**: The parent queryset MUST expose a method annotating every published parent column
+  onto each row.
+- **FR-009**: The parent queryset MUST expose a method annotating each site with the number of
+  determinations it holds and the number that contributed to its representative value, in a query
+  count that does not grow with the number of sites.
+- **FR-010**: The parent queryset MUST expose a method attaching each site's determinations such
+  that reading them costs no query per site.
+- **FR-011**: Where an annotation's published name collides with a field the framework's base class
+  already declares, the annotation MUST carry a distinct name and the published name MUST be
+  restored at the surface that presents it. No other annotation may deviate from its published name
+  (ADR-0002).
 
-### Measurable Outcomes
+**The changelists**
 
-- **SC-001**: Querying all child records via `GHFDBChild.objects.as_ghfdb_flat()` executes in a constant number of database queries regardless of the number of records returned (no N+1 queries).
-- **SC-002**: Querying parent records via `GHFDBParent.objects.with_child_counts()` returns correct `total_children` and `relevant_children` annotations in a constant number of database queries.
-- **SC-003**: Both Django admin changelists render successfully for staff users with the exact required spreadsheet column order and the correct resource attachments (`GHFDBChildImportResource` + `GHFDBExportResource` on `GHFDBChild`; `GHFDBParentImportResource` on `GHFDBParent`).
-- **SC-004**: The map viewer page loads and displays the iframe within 3 seconds on a standard broadband connection.
-- **SC-005**: 100% of the parent-level and child-level spreadsheet columns required by this feature for admin inspection are exposed with no undocumented omissions, including the BUG-002 clarification that the child admin exposes the child-oriented column set while the parent admin retains the parent summary column set. Both admins MUST include the `ghfdb_id` and `quality` fields added in the 2026-04-22 data model update, and MUST NOT reference the removed ~~`local_id`~~ or ~~`is_ghfdb`~~ fields.
+- **FR-012**: Both proxies MUST be registered with the administrative interface as read-only:
+  no add, no change, no delete, and no link from a row into an editable form.
+- **FR-013**: The determination changelist MUST show the published child columns, in the order the
+  canonical column definitions give them, under the published headings. That order MUST be derived
+  from the canonical definitions rather than restated, so that the two cannot disagree.
+- **FR-014**: The determination changelist MUST precede those columns with the record's published
+  identifier, the site's published identifier, the site name and the site's coordinates, and with
+  nothing else. Site values that do not vary between a site's determinations MUST NOT be repeated
+  on every row.
+- **FR-015**: The site changelist MUST show the published parent columns, in the order the
+  canonical column definitions give them, under the published headings, derived from those
+  definitions rather than restated. It MUST then show country, region, continent and geological
+  domain, and then the two determination counts.
+- **FR-016**: Both changelists MUST support text search on the site name and on the published site
+  identifier.
+- **FR-017**: Both changelists MUST offer filters on environment, heat production correction flag,
+  exploration method, exploration purpose, country, region, continent and geological domain.
+- **FR-018**: Every filter backed by a controlled vocabulary MUST offer only the terms of that
+  vocabulary, and MUST show each term's label rather than its stored key. This applies to
+  environment, exploration method and exploration purpose, on both changelists.
+- **FR-019**: The number of queries either changelist issues MUST NOT grow with the number of rows
+  it displays.
+- **FR-020**: Neither changelist may traverse a relationship path that does not exist on the model
+  it queries.
 
-## Clarifications
+**Resource attachment**
 
-### Session 2026-04-10
+- **FR-021**: The determination changelist MUST carry the determination import resource and the
+  export resource. The site changelist MUST carry the site import resource and no export resource.
+  No resource may be attached to both. The resources themselves belong to
+  `003-ghfdb-import-export`. What this feature owns is where they attach.
 
-- Q: What is the default iframe URL for the map viewer, and should it be a configurable Django setting? → A: Hardcoded to `https://ihfc-iugg.github.io/HeatFlowMapping/` directly in the template. No Django setting required.
+## Success Criteria
+
+- **SC-001**: Every published child column resolves on every row of the flattened child queryset,
+  proven by a test that reads the column list from the canonical definitions rather than from a
+  copy.
+- **SC-002**: Every published parent column resolves on every row of the flattened parent queryset,
+  proven the same way.
+- **SC-003**: Adding rows does not add queries. Proven for the child flattening, the child export
+  queryset, the parent counts, the parent flattening, the parent attachment of determinations, and
+  both changelists, each measured at two different row counts rather than one.
+- **SC-004**: The determination counts are correct for sites holding some contributing
+  determinations, all contributing, none contributing, and none at all.
+- **SC-005**: A record whose published identifier is not set is unreachable through either proxy,
+  proven on the manager, on a chained queryset, and on both changelists.
+- **SC-006**: A row whose gradient, conductivity, probe metadata or a given correction is absent is
+  returned with those columns empty, proven for each correction type independently.
+- **SC-007**: Both changelists render for a staff user, and the columns they render, in order and
+  by heading, match the canonical column definitions — proven by a test that fails when the
+  canonical definitions change and the changelist does not.
+- **SC-008**: Neither changelist offers a route to add, change or delete.
+- **SC-009**: Each vocabulary-backed filter offers exactly the terms of its vocabulary, proven on
+  both changelists, and offers no term belonging to another vocabulary.
+- **SC-010**: The resources attached to each changelist are exactly those FR-021 names, proven for
+  both import and export on both changelists.
+- **SC-011**: No test in this feature's suite is expected to fail.
+
+## Out of Scope
+
+- The writing direction. Import and export resources, format detection, vocabulary normalisation
+  and round-trip fidelity all belong to `003-ghfdb-import-export`. This feature defines only the
+  query surface and the attachment points those resources use.
+- The relational model itself. Fields, relationships and constraints belong to
+  `001-heat-flow-data-model`.
+- The map viewer page and its menu entry. It shares this application and nothing else, and the
+  roadmap item that replaces the embedded viewer with one running inside the portal owns it from
+  here.
+- The column metadata file and the routes that serve it. Whether that file should exist at all is
+  an open question belonging to the roadmap item covering the API.
+- A field holding sample numbers. The reasons are recorded in `decisions.md`. The published column
+  stays, and it stays empty.
+- Release records and release generation (ADR-0007).
+- Quality score calculation. Both proxies present the stored code and neither computes it.
 
 ## Assumptions
 
-- The official GHFDB spreadsheet column schema is defined by the Fuchs et al. (2023) publication and the `ghfdb_colmeta.json` metadata file already present in the codebase; no new column definitions will be introduced as part of this feature.
-- The web-map viewer iframe URL (`https://ihfc-iugg.github.io/HeatFlowMapping/`) is hardcoded directly in the template; no Django setting is required.
-- Import/export behavior is specified in `003-ghfdb-import-export`; this feature only defines the proxy/query/admin integration surface consumed by that downstream feature.
-- The proxy model does not introduce additional database tables or migrations.
-- The menu entry for the map viewer is added to the existing `heat_flow/menus.py` (or a new `ghfdb/menus.py`) using the `flex_menu` pattern already established in the project.
-- ~~`local_id` was assumed to serve as the GHFDB upsert key on `HeatFlow`.~~ This assumption is superseded: `ghfdb_id` (PositiveIntegerField) now serves as the stable GHFDB identifier on both `HeatFlow` and `ParentHeatFlow`, and ~~`is_ghfdb`~~ has been removed entirely. The downstream feature `003-ghfdb-import-export` must use `ghfdb_id` as the `import_id_fields` upsert key.
+- The canonical column definitions in the extraction app's constants module are the authority for
+  what the published columns are called and what order they come in. Every column list in this
+  feature derives from that module.
+- The relational model, its polymorphic base classes and its multi-table inheritance are as
+  `001-heat-flow-data-model` specifies. Reaching an interval's own fields from a determination
+  goes through the inheritance accessor.
+- A proxy model adds no table, so the only migrations this feature can require are the ones that
+  record a proxy's existence and its permissions.
+- Controlled vocabularies are declared in the heat flow application's vocabulary module and are
+  the source for every filter this feature scopes.
+- The portal runs SQLite in development and PostgreSQL in production, so no behaviour here may
+  depend on a capability only one of them has.
+
+## Clarifications
+
+### Session 2026-08-23
+
+- Q: Is the exact left-to-right column order of the changelists a requirement, or was it a
+  stand-in for "the flat structure is correct" that the export resource now owns? → A: A
+  requirement. The changelists are how data administrators view the database, and they know it as
+  the published spreadsheet. A different column order would draw complaints and questions from
+  users who know only that file.
+- Q: The published file leads each row with the full parent block. The determination changelist
+  instead shows four site columns for orientation and then the child block. Which is intended? →
+  A: The four-column prefix. Site values that do not vary across a site's determinations are noise
+  when repeated per row. The familiarity being protected is the child block's.
+- Q: The changelists carry `tc_pT_fuction`, `Ref_ISGN` and `quality`, while the canonical
+  definitions carry `tc_pT_function`, `Ref_IGSN`, `quality_child` and `quality_parent`. Which
+  wins? → A: The canonical definitions. ADR-0003 already rules that the portal uses the corrected
+  spellings internally and rejects the misspelled forms on input, and the assessment team reading
+  these changelists are the people who can get the published template corrected. The tail of the
+  child block reorders to match, and the quality columns take their canonical names.
+- Q: `Ref_IGSN` renders empty on every row because the field that held sample numbers was deleted.
+  Does the column stay? → A: Yes, empty. The published structure defines it, and a missing column
+  confuses a curator comparing against the file more than a blank one does. Whether the portal
+  should hold sample numbers at all is settled separately and negatively — see `decisions.md`.
+- Q: Does the map viewer page belong to this feature? → A: No. Remove it.
+- Q: Does this feature bring the column metadata file onto the canonical column names? → A: No.
+  That file and the routes that serve it are an open question for the API work, and this feature
+  leaves both alone.
