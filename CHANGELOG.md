@@ -35,6 +35,10 @@ Releases before that used `<year>.<release>` and are recorded in the
 - Spreadsheet imports no longer fail when every dataset on the portal is
   private. The importer looks up the dataset it should fill, and that lookup had
   started skipping private ones.
+- Spreadsheet imports now require an explicit target dataset. Previously, an
+  import with none supplied attached every record to whichever dataset
+  happened to be first in the database; the admin import page now requires a
+  dataset to be selected, and the importer refuses to guess one.
 
 ### Removed
 

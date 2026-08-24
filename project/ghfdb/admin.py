@@ -11,11 +11,14 @@ References:
     - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
 """
 
+from django import forms
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.utils.translation import gettext_lazy as _
+from fairdm.core.models import Dataset
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import XLSX
+from import_export.forms import ConfirmImportForm, ImportForm
 
 from .models import GHFDBChild, GHFDBParent, GHFDBRelease
 from .resources import (
@@ -25,6 +28,58 @@ from .resources import (
     GHFDBParentImportResource,
     GHFDBSimpleImportFormat,
 )
+
+
+class GHFDBDatasetImportForm(ImportForm):
+    """Import form that requires the curator to name a target dataset explicitly.
+
+    ``all_objects``, not the privacy-filtered default manager: the admin import
+    is where a curator repairs or fills a dataset regardless of who else can
+    read it, matching ``DatasetAdmin.get_queryset()``'s reasoning for the same
+    choice.
+    """
+
+    dataset = forms.ModelChoiceField(
+        queryset=Dataset.all_objects.all(),
+        label=_("Dataset"),
+        help_text=_("Every imported record is attached to this dataset."),
+    )
+
+    field_order = ["resource", "dataset", "import_file", "format"]
+
+
+class GHFDBDatasetConfirmForm(ConfirmImportForm):
+    """Confirm-step form; carries the chosen dataset forward as a hidden field."""
+
+    dataset = forms.ModelChoiceField(
+        queryset=Dataset.all_objects.all(), widget=forms.HiddenInput()
+    )
+
+
+class GHFDBDatasetImportMixin:
+    """Requires an explicit target dataset for the GHFDB import action.
+
+    GHFDBParentImportResource / GHFDBChildImportResource no longer guess a
+    dataset when none is supplied (issue: import attached every record to an
+    arbitrary dataset). This mixin is what supplies one: it adds a required
+    ``dataset`` field to the import form, threads the chosen dataset through
+    the confirm step, and passes it to ``import_data()`` as ``fairdm_dataset``.
+    """
+
+    import_form_class = GHFDBDatasetImportForm
+    confirm_form_class = GHFDBDatasetConfirmForm
+
+    def get_confirm_form_initial(self, request, import_form):
+        initial = super().get_confirm_form_initial(request, import_form)
+        if import_form is not None:
+            initial["dataset"] = import_form.cleaned_data["dataset"].pk
+        return initial
+
+    def get_import_data_kwargs(self, **kwargs):
+        form = kwargs.get("form")
+        if form is not None and "dataset" in getattr(form, "cleaned_data", {}):
+            kwargs["fairdm_dataset"] = form.cleaned_data["dataset"]
+        return super().get_import_data_kwargs(**kwargs)
 
 
 class ExplorePurposeListFilter(SimpleListFilter):
@@ -127,7 +182,7 @@ class GHFDBReleaseAdmin(admin.ModelAdmin):
 
 
 @admin.register(GHFDBChild)
-class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
+class GHFDBChildAdmin(GHFDBDatasetImportMixin, ImportExportMixin, admin.ModelAdmin):
     """Read-only Django admin view for GHFDB flat entries with XLSX import action.
 
     The changelist uses ``GHFDBChildQuerySet.as_ghfdb_flat()`` so all annotated
@@ -241,10 +296,6 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def get_export_formats(self):
         return [XLSX]
-
-    def get_import_resource_kwargs(self, request, **kwargs):
-        """Pass through resource kwargs; dataset defaults to None for format detection."""
-        return super().get_import_resource_kwargs(request, **kwargs)
 
     @admin.display(description=_("ID_parent"), ordering="parent__ghfdb_id")
     def get_id_parent(self, obj):
@@ -509,7 +560,7 @@ class ParentExplorationMethodListFilter(SimpleListFilter):
 
 
 @admin.register(GHFDBParent)
-class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
+class GHFDBParentAdmin(GHFDBDatasetImportMixin, ImportExportMixin, admin.ModelAdmin):
     """Read-only Django admin view for GHFDB Parents with parent-level import.
 
     Displays parent-level GHFDB spreadsheet columns plus computed child count
