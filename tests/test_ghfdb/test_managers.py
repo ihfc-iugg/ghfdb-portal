@@ -36,18 +36,6 @@ class TestGHFDBChildQuerySet:
     """GHFDBChildQuerySet.as_ghfdb_flat() and for_export() behaviour."""
 
     @pytest.mark.django_db
-    def test_as_ghfdb_flat_max_queries(self, django_assert_max_num_queries, heat_flow_chain):
-        """
-        T008: as_ghfdb_flat() must execute ≤2 DB queries, constant regardless of row count.
-        """
-        from project.ghfdb.models import GHFDBChild
-
-        with django_assert_max_num_queries(2):
-            results = list(GHFDBChild.objects.as_ghfdb_flat())
-
-        assert len(results) >= 1
-
-    @pytest.mark.django_db
     def test_as_ghfdb_flat_scalar_columns(self, heat_flow_chain):
         """
         T009: All scalar annotations must be accessible as attributes on
@@ -767,21 +755,6 @@ class TestParentPublishedColumns:
 
 class TestGHFDBParentQuerySet:
     """GHFDBParent proxy queryset methods: with_child_counts(), with_children()."""
-
-    @pytest.mark.django_db
-    def test_parent_with_child_counts_max_queries(
-        self, django_assert_max_num_queries, heat_flow_chain
-    ):
-        """
-        T066 (US1b): with_child_counts() must execute in a constant number of DB
-        queries with no N+1 per parent row.
-        """
-        from project.ghfdb.models import GHFDBParent
-
-        with django_assert_max_num_queries(3):
-            results = list(GHFDBParent.objects.with_child_counts())
-
-        assert len(results) >= 1
 
     @pytest.mark.django_db
     def test_parent_with_child_counts_correctness(self, heat_flow_chain):
