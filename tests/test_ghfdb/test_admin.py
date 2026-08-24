@@ -505,6 +505,7 @@ class TestGHFDBParentAdmin:
         ``None``."""
         from heat_flow.vocabularies import ExplorationPurpose
         from research_vocabs.models import Concept
+
         from project.ghfdb.models import GHFDBParent
 
         site = published_chain.parent.sample
