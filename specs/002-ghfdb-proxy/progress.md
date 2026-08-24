@@ -556,3 +556,44 @@ correlated subqueries and carry none, which is what they carry today.
 **Watch**: `list_display_for` returns callables rather than names, so the
 changelists lose Django's automatic column-name lookup. That is the point, and
 the heading tests are what hold it.
+
+## 2026-08-24T07:52:00Z · Implementer child-admin · T078-T089
+
+**Did**: wrote the twelve tests for the determination changelist, in
+`TestGHFDBChildAdmin`, and discharged T079's own cleanup — removed
+`EXPECTED_LIST_DISPLAY`, the 54-entry literal `test_ghfdb_admin_changelist_refined_configuration`
+compared `list_display` against, and replaced that one assertion with a
+heading comparison read from `constants.CHILD_COLUMNS`. That is the only
+pre-existing test touched; every other one is untouched.
+
+Several tests (T078, T082, T084, T085, T086, T089) passed on first run against
+the *old* `admin.py` — genuine coverage, not tautological: each exercises a
+real code path (permission hooks, search, filter scoping, resource
+attachment) that prior work already got right, and each would fail if that
+behaviour regressed. T080 also passed immediately; the four orientation
+columns were already correctly headed and ordered in the old
+`_scalar`-generated `list_display`, confirmed by reading the failure diff
+before accepting the pass. T079, T081 and the corrected pre-existing test
+fail for the right reason: three headings and one ordering swap have not yet
+moved to the canonical spelling (D2), and T081's intersection check reads
+`get_id_parent` (a bound-method-name *string* on the old admin) rather than a
+callable, which is exactly the shape T090 replaces.
+
+T087 (query-count constancy on the rendered changelist) needed real
+investigation: raw HTTP-level query counts were not comparable at all,
+regardless of admin correctness — recorded as D12. With that confound
+removed, the count was already constant (31 at two chains, 31 at four),
+before any implementation change here.
+
+**Verified**: `poetry run pytest tests/test_ghfdb/test_admin.py -q` →
+`3 failed, 20 passed` — the three RED tests named above, everything else
+green. Each new test's exact command and result is in its own commit.
+
+**Next**: T090-T097, rebuilding `GHFDBChildAdmin` on `ColumnDisplay` to turn
+T079 and T081 green, plus the corrected pre-existing assertion.
+
+**Watch**: `constant_query_count`, used through a full HTTP request for the
+first time in this feature, is polluted by `orbit`'s global audit logging and
+a first-request singleton cost (D12). Any future admin-changelist-level
+query-count test needs the same `override_settings(ORBIT={"ENABLED": False})`
+plus one warm-up call, not the bare fixture.
