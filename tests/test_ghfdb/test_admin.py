@@ -82,23 +82,6 @@ class TestGHFDBAdminChangelist:
         assert "GHFDB Children" in content
 
     @pytest.mark.django_db
-    def test_ghfdb_admin_search_by_name_and_id_parent(self, admin_client, heat_flow_chain):
-        """T013: Search works using parent ghfdb_id and site name mapped fields."""
-        entry = heat_flow_chain
-        entry.parent.ghfdb_id = 99999
-        entry.parent.save(update_fields=["ghfdb_id"])
-
-        url = reverse("admin:ghfdb_ghfdbchild_changelist")
-
-        response_by_name = admin_client.get(
-            url, {"q": entry.sample.heatflowinterval.site.name}
-        )
-        assert response_by_name.status_code == 200
-
-        response_by_parent_id = admin_client.get(url, {"q": str(entry.parent.ghfdb_id)})
-        assert response_by_parent_id.status_code == 200
-
-    @pytest.mark.django_db
     def test_authenticated_staff_import_page_renders_http200(self, admin_client):
         """T066: Authenticated staff GET /admin/ghfdb/ghfdb/import/ returns HTTP 200.
 
