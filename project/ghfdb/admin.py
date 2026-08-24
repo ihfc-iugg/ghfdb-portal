@@ -21,7 +21,7 @@ from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import XLSX
 
 from .columns import ColumnDisplay
-from .constants import CHILD_COLUMNS
+from .constants import CHILD_COLUMNS, PARENT_COLUMNS
 from .models import GHFDBChild, GHFDBParent, GHFDBRelease
 from .resources import (
     GHFDBChildImportResource,
@@ -290,21 +290,7 @@ class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
     """
 
     list_display = (
-        "get_id_parent",
-        "get_q",
-        "get_q_uncertainty",
-        "get_name",
-        "get_lat_ns",
-        "get_long_ew",
-        "get_elevation",
-        "get_environment",
-        "get_p_comment",
-        "get_corr_hp_flag",
-        "get_total_depth_md",
-        "get_total_depth_tvd",
-        "get_explo_method",
-        "get_explo_purpose",
-        "get_quality",
+        *ColumnDisplay.list_display_for(PARENT_COLUMNS),
         "get_country",
         "get_region",
         "get_continent",
@@ -334,90 +320,6 @@ class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def get_import_formats(self):
         return [GHFDBImportFormat, GHFDBSimpleImportFormat]
-
-    @admin.display(description=_("ID_parent"), ordering="ghfdb_id")
-    def get_id_parent(self, obj):
-        return obj.ghfdb_id
-
-    @admin.display(description=_("q"), ordering="value")
-    def get_q(self, obj):
-        return getattr(obj, "value", None)
-
-    @admin.display(description=_("q_uncertainty"), ordering="uncertainty")
-    def get_q_uncertainty(self, obj):
-        return getattr(obj, "uncertainty", None)
-
-    @admin.display(description=_("name"), ordering="sample__name")
-    def get_name(self, obj):
-        site = getattr(obj, "sample", None)
-        return getattr(site, "name", None) if site else None
-
-    @admin.display(description=_("lat_NS"))
-    def get_lat_ns(self, obj):
-        site = getattr(obj, "sample", None)
-        loc = getattr(site, "location", None) if site else None
-        return getattr(loc, "y", None) if loc else None
-
-    @admin.display(description=_("long_EW"))
-    def get_long_ew(self, obj):
-        site = getattr(obj, "sample", None)
-        loc = getattr(site, "location", None) if site else None
-        return getattr(loc, "x", None) if loc else None
-
-    @admin.display(description=_("elevation"))
-    def get_elevation(self, obj):
-        site = getattr(obj, "sample", None)
-        hfs = getattr(site, "heatflowsite", None) if site else None
-        return getattr(hfs, "elevation", None) if hfs else None
-
-    @admin.display(
-        description=_("environment"), ordering="sample__heatflowsite__environment"
-    )
-    def get_environment(self, obj):
-        site = getattr(obj, "sample", None)
-        hfs = getattr(site, "heatflowsite", None) if site else None
-        return getattr(hfs, "environment", None) if hfs else None
-
-    @admin.display(description=_("p_comment"), ordering="comment")
-    def get_p_comment(self, obj):
-        return getattr(obj, "comment", None)
-
-    @admin.display(description=_("corr_HP_flag"), ordering="corr_HP_flag")
-    def get_corr_hp_flag(self, obj):
-        return getattr(obj, "corr_HP_flag", None)
-
-    @admin.display(description=_("total_depth_MD"))
-    def get_total_depth_md(self, obj):
-        site = getattr(obj, "sample", None)
-        hfs = getattr(site, "heatflowsite", None) if site else None
-        return getattr(hfs, "length", None) if hfs else None
-
-    @admin.display(description=_("total_depth_TVD"))
-    def get_total_depth_tvd(self, obj):
-        site = getattr(obj, "sample", None)
-        hfs = getattr(site, "heatflowsite", None) if site else None
-        return getattr(hfs, "vertical_depth", None) if hfs else None
-
-    @admin.display(
-        description=_("explo_method"), ordering="sample__heatflowsite__explo_method"
-    )
-    def get_explo_method(self, obj):
-        site = getattr(obj, "sample", None)
-        hfs = getattr(site, "heatflowsite", None) if site else None
-        return getattr(hfs, "explo_method", None) if hfs else None
-
-    @admin.display(description=_("explo_purpose"))
-    def get_explo_purpose(self, obj):
-        site = getattr(obj, "sample", None)
-        hfs = getattr(site, "heatflowsite", None) if site else None
-        if not hfs:
-            return ""
-        concepts = hfs.explo_purpose.all()
-        return "; ".join(str(c) for c in concepts)
-
-    @admin.display(description=_("quality"), ordering="quality")
-    def get_quality(self, obj):
-        return getattr(obj, "quality", None)
 
     @admin.display(description=_("country"), ordering="sample__heatflowsite__country")
     def get_country(self, obj):
