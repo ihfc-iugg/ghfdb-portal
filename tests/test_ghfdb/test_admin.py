@@ -816,3 +816,24 @@ class TestGHFDBChildAdmin:
         assert model_admin.get_export_resource_classes(request=None) == [
             GHFDBExportResource
         ]
+
+
+class TestResourceAttachment:
+    """T110 (FR-021, SC-010): the negative half of the export requirement
+    proven across both changelists at once — no resource, import or export,
+    is attached to both."""
+
+    def test_no_resource_is_attached_to_both_changelists(self):
+        from project.ghfdb.models import GHFDBParent
+
+        child_admin = admin.site._registry[GHFDBChild]
+        parent_admin = admin.site._registry[GHFDBParent]
+
+        child_import = set(child_admin.get_import_resource_classes(request=None))
+        parent_import = set(parent_admin.get_import_resource_classes(request=None))
+        assert not (child_import & parent_import)
+
+        child_export = set(child_admin.get_export_resource_classes(request=None))
+        parent_export = set(parent_admin.get_export_resource_classes(request=None))
+        assert not (child_export & parent_export)
+        assert parent_export == set()
