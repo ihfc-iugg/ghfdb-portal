@@ -9,9 +9,27 @@ import pathlib
 
 import pytest
 
-from project.ghfdb.constants import CORRECTION_COL_MAP
+from project.ghfdb.columns import PublishedColumns
+from project.ghfdb.constants import CHILD_COLUMNS, CORRECTION_COL_MAP
 
 pytestmark = pytest.mark.ghfdb
+
+
+def many_valued_reader(accessor):
+    """Return a callable reading the related queryset at the dot-separated
+    *accessor* off a row — the same path ``ColumnDisplay.many_valued``
+    walks, stopped one step short of joining the labels, so a test can
+    evaluate the queryset itself to prove no further query is issued.
+    """
+    segments = accessor.split(".")
+
+    def read(row):
+        target = row
+        for segment in segments:
+            target = getattr(target, segment)
+        return target.all()
+
+    return read
 
 
 class TestGHFDBChildQuerySet:
@@ -138,29 +156,14 @@ class TestChildExportQuerySet:
     than after ``as_ghfdb_flat()`` alone.
     """
 
-    # Accessors for the CHILD_COLUMNS reachable only through a many-to-many
-    # relation, whose accessor differs from the published column name for most
-    # of them. The canonical column-to-accessor mapping is US-3's columns.py and
-    # does not exist yet. This is test-only scaffolding, not a copy of a list
-    # constants.py already holds.
+    # The accessor for every CHILD_COLUMNS entry the published-column mapping
+    # (``project/ghfdb/columns.py``) classifies as many-valued, read from
+    # that mapping rather than restated here — the mapping is the one place
+    # a published column's accessor is decided (D1).
     MANY_VALUED_CHILD_ACCESSORS = {
-        "q_method": lambda row: row.method.all(),
-        "probe_type": (
-            lambda row: row.sample.heatflowinterval.probe_metadata.probe_type.all()
-        ),
-        "geo_lithology": lambda row: row.sample.heatflowinterval.lithology.all(),
-        "geo_stratigraphy": lambda row: row.sample.heatflowinterval.stratigraphy.all(),
-        "T_method_top": lambda row: row.thermal_gradient.method_top.all(),
-        "T_method_bottom": lambda row: row.thermal_gradient.method_bottom.all(),
-        "T_corr_top": lambda row: row.thermal_gradient.correction_top.all(),
-        "T_corr_bottom": lambda row: row.thermal_gradient.correction_bottom.all(),
-        "tc_source": lambda row: row.thermal_conductivity.source.all(),
-        "tc_location": lambda row: row.thermal_conductivity.location.all(),
-        "tc_method": lambda row: row.thermal_conductivity.method.all(),
-        "tc_saturation": lambda row: row.thermal_conductivity.saturation.all(),
-        "tc_pT_conditions": lambda row: row.thermal_conductivity.pT_conditions.all(),
-        "tc_pT_function": lambda row: row.thermal_conductivity.pT_function.all(),
-        "tc_strategy": lambda row: row.thermal_conductivity.strategy.all(),
+        name: many_valued_reader(entry.accessor)
+        for name, entry in PublishedColumns.ENTRIES.items()
+        if entry.group == PublishedColumns.MANY_VALUED and name in CHILD_COLUMNS
     }
 
     NOTHING_RESOLVES_CHILD_COLUMNS = frozenset(
