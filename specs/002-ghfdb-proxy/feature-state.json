@@ -2,7 +2,7 @@
   "feature": "002-ghfdb-proxy",
   "branch": "002-ghfdb-proxy",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "REVIEW",
+  "state": "GATE_MERGE",
   "state_history": [
     {
       "state": "SPECIFY",
@@ -42,6 +42,16 @@
       "state": "REVIEW",
       "at": "2026-08-24T12:18:57Z",
       "note": "one reviewer, 14 findings, all applied"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-08-24T12:38:30Z",
+      "note": "PR 182 out of draft"
+    },
+    {
+      "state": "GATE_MERGE",
+      "at": "2026-08-24T12:38:31Z",
+      "note": "awaiting Sam"
     }
   ],
   "gates": {
