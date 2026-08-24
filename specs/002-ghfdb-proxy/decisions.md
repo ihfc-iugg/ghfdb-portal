@@ -273,35 +273,32 @@ in its own way would have left the same weak assertion in place one number furth
 **Revisit if** a caller needs the attachment's absolute query count bounded rather than its growth.
 Nothing does today.
 
-### D12 — T087's changelist query count is measured with `orbit` disabled
+### D12 — The query-constancy measurement excludes the framework's audit watcher, and the watcher is raised upstream
 
-**Found**: T087 asks for the query-count-constancy proof measured on the rendered determination
-changelist, through `staff_client.get(url)`, not on the queryset directly. `fairdm`'s `orbit`
-dependency installs a global audit-log watcher at app startup (`orbit.apps.OrbitConfig.ready()`)
-that records a row to `orbit_orbitentry` for signals, model saves and other events it observes
-across the whole process — not something this feature or `ghfdb-portal` added, and not something
-adjustable from `project/ghfdb/`. Its write volume per request does not track the changelist's own
-row count in any simple way (measured: 82 inserts at two chains, 81 at four, on separate runs), so a
-raw total query count taken across a full HTTP request compares two different amounts of unrelated
-noise rather than the admin's own query plan. A separate, smaller confound sits alongside it: the
-very first request in a process pays a one-off framework singleton-creation cost (an `identity_`
-app row, created and cached lazily) that a second request does not, so even without `orbit` the
-first of two measured calls is not comparable to the second.
+**Found**: measuring the changelist's query count across a full request does not measure the
+changelist. The framework installs a global audit-log watcher (`orbit`) whose cost is **per rendered
+row**, so the count grows for a reason this feature does not own and cannot prefetch away.
 
-**Ruled**: the test disables `orbit` for the duration of the comparison via
-`override_settings(ORBIT={"ENABLED": False})`, and takes one untimed warm-up request before handing
-`call` to `constant_query_count`. `orbit.conf.get_config()` is read live on every record, not cached
-at startup, so the override is the standard, non-invasive way to quiet it — no middleware list is
-touched (a first attempt at that did not work, since the watcher is a logging/signal handler
-installed at `AppConfig.ready()`, independent of `MIDDLEWARE`) and no signal is manually
-disconnected. With both confounds removed, the admin's own query count was already constant (31
-queries at two chains and at four) — `GHFDBChildAdmin.get_queryset()`'s existing prefetch list was
-already complete before this dispatch touched it.
+Measured on this changelist, one warm-up request first:
 
-**Revisit if** `orbit` gains a documented way to scope itself to a single request or test, in which
-case the `override_settings` block here can be replaced with that. Any other admin-changelist-level
-query-count test elsewhere in this codebase will hit the same two confounds and can use the same
-pattern.
+| Rows | Watcher on | Watcher off |
+|---|---|---|
+| 2 | 112 | 31 |
+| 6 | 124 | 31 |
+
+**Ruled**: the assertion disables the watcher for the duration of the comparison, and says so in the
+test. With it off the count does not move between the two row counts, so FR-019 is satisfied by this
+feature's own work — the changelist issues a fixed number of queries however many rows it shows.
+
+This is a measurement decision, not a fix. Nothing here changes the behaviour a real user gets, and
+scoping an upstream cost out of a test is not the same as working around it. Raised upstream as
+FAIR-DM/fairdm#281, with the numbers above: at the default page size that is roughly three hundred
+extra queries per page view, on every changelist in every project built on the framework. It matters
+here because the assessment team reads the published database through this admin, and the database
+is about to grow from a sample to the full release.
+
+**Revisit if** the upstream issue lands. The exclusion comes out of the test the day the cost stops
+being per-row.
 
 ### D13 — GHFDBChildAdmin.search_fields keeps its own ghfdb_id, not narrowed to T093's two names
 
