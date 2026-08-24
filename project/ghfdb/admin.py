@@ -258,12 +258,23 @@ class ParentExplorationMethodListFilter(VocabularyListFilter):
 
 @admin.register(GHFDBParent)
 class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
-    """Read-only Django admin view for GHFDB Parents with parent-level import.
+    """Read-only changelist for the published site view (US-3).
 
-    Displays parent-level GHFDB spreadsheet columns plus computed child count
-    columns (``total_children``, ``relevant_children``). Only the
-    ``GHFDBParentImportResource`` is attached; no export resource or child import
-    resource is present (FR-011b).
+    The published block of ``list_display`` comes entirely from
+    ``project/ghfdb/columns.py``'s published-column mapping (see
+    ``list_display`` below), so a column added to ``constants.PARENT_COLUMNS``
+    and not to that mapping is a startup failure rather than a silently
+    missing column. Four geography columns follow it — portal additions, not
+    part of the published structure (D8) — and the two determination-count
+    columns come last. Mutation of existing records is disabled; data enters
+    only via the import action, gated to staff holding the model's add
+    permission (T123). Only ``GHFDBParentImportResource`` is attached; no
+    export resource is present (FR-021).
+
+    References:
+        - Fuchs et al. (2021). A new database structure for the IHFC Global
+          Heat Flow Database.
+        - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
     """
 
     list_display = (
@@ -297,6 +308,14 @@ class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def get_import_formats(self):
         return [GHFDBImportFormat, GHFDBSimpleImportFormat]
+
+    def get_export_resource_classes(self, request):
+        """No export resource on this changelist (FR-021): ``ImportExportMixin``
+        overrides only the import side, so without this the framework's
+        default export path is live with a generated resource that would
+        emit the site model's own fields rather than the published
+        structure (T119)."""
+        return []
 
     @admin.display(description=_("country"), ordering="sample__heatflowsite__country")
     def get_country(self, obj):
