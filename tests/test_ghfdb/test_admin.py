@@ -1,5 +1,5 @@
 """Tests for GHFDB admin changelist configuration and rendering (T013, T063,
-T066, T078-T089)."""
+T066, T078-T089, T098-T110, T123)."""
 
 import pytest
 from django.contrib import admin
@@ -368,6 +368,13 @@ class TestGHFDBParentAdmin:
             f"Expected [GHFDBParentImportResource], got {resource_classes}"
         )
         assert GHFDBChildImportResource not in resource_classes
+
+    @pytest.mark.django_db
+    def test_changelist_renders_for_a_staff_user(self, staff_client, published_chain):
+        """T098 (US-3 acceptance scenario 3)."""
+        url = reverse("admin:ghfdb_ghfdbparent_changelist")
+        response = staff_client.get(url)
+        assert response.status_code == 200
 
 
 # ---------------------------------------------------------------------------
