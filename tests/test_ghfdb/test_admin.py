@@ -532,3 +532,23 @@ class TestGHFDBChildAdmin:
             for concept in Concept.get_for_vocabulary(ExplorationPurpose)
         }
         assert purpose_choices == expected_purposes
+
+    @pytest.mark.django_db
+    def test_there_is_no_route_to_add_change_or_delete(self, staff_client, published_chain):
+        """T085 (FR-012, SC-008): the three permission hooks refuse, and the
+        rendered page carries no add link and no per-row change link. The
+        import route is a separate surface, covered by T123, out of this
+        dispatch's scope."""
+        model_admin = admin.site._registry[GHFDBChild]
+        request = RequestFactory().get("/")
+        assert model_admin.has_add_permission(request) is False
+        assert model_admin.has_change_permission(request) is False
+        assert model_admin.has_delete_permission(request) is False
+
+        url = reverse("admin:ghfdb_ghfdbchild_changelist")
+        response = staff_client.get(url)
+        content = response.content.decode()
+
+        assert reverse("admin:ghfdb_ghfdbchild_add") not in content
+        change_url = reverse("admin:ghfdb_ghfdbchild_change", args=[published_chain.pk])
+        assert change_url not in content
