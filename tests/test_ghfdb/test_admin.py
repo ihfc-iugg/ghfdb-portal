@@ -16,6 +16,7 @@ from project.ghfdb.admin import (
     ParentExplorationMethodListFilter,
     ParentExplorePurposeListFilter,
 )
+from project.ghfdb.columns import ColumnDisplay
 from project.ghfdb.constants import CHILD_COLUMNS, PARENT_COLUMNS
 from project.ghfdb.models import GHFDBChild
 
@@ -495,6 +496,45 @@ class TestGHFDBParentAdmin:
         assert unpublished_chain.parent not in result_list
 
     @pytest.mark.django_db
+    def test_published_columns_and_geography_render_real_values(
+        self, staff_client, published_chain
+    ):
+        """F5 (D14): as the determination changelist's equivalent test, but
+        also covering the geography block (D15) — a heading assertion
+        cannot tell ``get_country`` resolving from it silently returning
+        ``None``."""
+        from heat_flow.vocabularies import ExplorationPurpose
+        from research_vocabs.models import Concept
+        from project.ghfdb.models import GHFDBParent
+
+        site = published_chain.parent.sample
+        site.country = "Wonderland"
+        site.save(update_fields=["country"])
+        purpose = Concept.get_for_vocabulary(ExplorationPurpose).first()
+        site.explo_purpose.set([purpose])
+        published_chain.parent.corr_HP_flag = True
+        published_chain.parent.save(update_fields=["corr_HP_flag"])
+
+        url = reverse("admin:ghfdb_ghfdbparent_changelist")
+        response = staff_client.get(url)
+        row = next(iter(response.context["cl"].result_list))
+        model_admin = admin.site._registry[GHFDBParent]
+
+        # annotation column, read through the exact callable list_display
+        # renders — not the raw row attribute.
+        q_rendered = ColumnDisplay.build("q")(row)
+        assert (
+            getattr(q_rendered, "magnitude", q_rendered)
+            == published_chain.parent.value
+        )
+        # field column
+        assert ColumnDisplay.build("corr_HP_flag")(row) is True
+        # many-valued column
+        assert ColumnDisplay.build("explo_purpose")(row) == str(purpose)
+        # geography column, read through the bound admin method itself
+        assert model_admin.get_country(row) == "Wonderland"
+
+    @pytest.mark.django_db
     def test_query_count_is_equal_at_two_row_counts(
         self, staff_client, published_chains, constant_query_count
     ):
@@ -747,6 +787,37 @@ class TestGHFDBChildAdmin:
         result_list = list(response.context["cl"].result_list)
         assert published_chain in result_list
         assert unpublished_chain not in result_list
+
+    @pytest.mark.django_db
+    def test_published_columns_render_real_values_not_only_headings(
+        self, staff_client, published_chain
+    ):
+        """F5 (D14): a heading assertion cannot tell a working column from a
+        blank one — every column assertion elsewhere in this module reads a
+        heading. This reads real values off a rendered row and compares them
+        to what the fixture stored: one annotation column, one field column
+        and one many-valued column."""
+        from heat_flow.vocabularies import HeatFlowMethod
+        from research_vocabs.models import Concept
+
+        method = Concept.get_for_vocabulary(HeatFlowMethod).first()
+        published_chain.method.set([method])
+        published_chain.expedition = "R/V Test Expedition"
+        published_chain.save(update_fields=["expedition"])
+
+        url = reverse("admin:ghfdb_ghfdbchild_changelist")
+        response = staff_client.get(url)
+        row = next(iter(response.context["cl"].result_list))
+
+        # annotation column, read through the exact callable list_display
+        # renders — not the raw row attribute, which would pass even if the
+        # callable itself were broken.
+        qc_rendered = ColumnDisplay.build("qc")(row)
+        assert getattr(qc_rendered, "magnitude", qc_rendered) == published_chain.value
+        # field column
+        assert ColumnDisplay.build("expedition")(row) == "R/V Test Expedition"
+        # many-valued column
+        assert ColumnDisplay.build("q_method")(row) == str(method)
 
     @pytest.mark.django_db
     def test_query_count_is_equal_at_two_row_counts(
