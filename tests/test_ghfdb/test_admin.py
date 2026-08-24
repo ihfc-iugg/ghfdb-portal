@@ -543,6 +543,18 @@ class TestGHFDBParentAdmin:
         errors = ModelAdminChecks().check(model_admin)
         assert errors == []
 
+    def test_it_carries_the_site_import_resource_and_no_export_resource(self):
+        """T109 (FR-021, SC-010). The negative half is as much of the
+        requirement as the positive."""
+        from project.ghfdb.models import GHFDBParent
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        model_admin = admin.site._registry[GHFDBParent]
+        assert model_admin.get_import_resource_classes(request=None) == [
+            GHFDBParentImportResource
+        ]
+        assert model_admin.get_export_resource_classes(request=None) == []
+
 
 # ---------------------------------------------------------------------------
 # US-3: the determination changelist (T078-T089).
