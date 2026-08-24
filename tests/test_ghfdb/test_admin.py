@@ -475,6 +475,30 @@ class TestGHFDBParentAdmin:
         }
         assert purpose_choices == expected_purposes
 
+    @pytest.mark.django_db
+    def test_there_is_no_route_to_add_change_or_delete(
+        self, staff_client, published_chain
+    ):
+        """T105 (FR-012, SC-008): as T085, with the same note about the
+        import route — a separate surface, covered by T123."""
+        from project.ghfdb.models import GHFDBParent
+
+        model_admin = admin.site._registry[GHFDBParent]
+        request = RequestFactory().get("/")
+        assert model_admin.has_add_permission(request) is False
+        assert model_admin.has_change_permission(request) is False
+        assert model_admin.has_delete_permission(request) is False
+
+        url = reverse("admin:ghfdb_ghfdbparent_changelist")
+        response = staff_client.get(url)
+        content = response.content.decode()
+
+        assert reverse("admin:ghfdb_ghfdbparent_add") not in content
+        change_url = reverse(
+            "admin:ghfdb_ghfdbparent_change", args=[published_chain.parent.pk]
+        )
+        assert change_url not in content
+
 
 # ---------------------------------------------------------------------------
 # US-3: the determination changelist (T078-T089).
