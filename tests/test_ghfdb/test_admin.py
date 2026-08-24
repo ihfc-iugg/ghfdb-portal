@@ -337,6 +337,28 @@ class TestGHFDBParentAdmin:
 
         assert headings[offset : offset + len(PARENT_COLUMNS)] == list(PARENT_COLUMNS)
 
+    @pytest.mark.django_db
+    def test_the_geography_follows_the_published_block(
+        self, staff_client, published_chain
+    ):
+        """T100 (D8): country, region, continent and geological domain, in
+        that order, immediately after the published columns."""
+        from project.ghfdb.models import GHFDBParent
+
+        url = reverse("admin:ghfdb_ghfdbparent_changelist")
+        response = staff_client.get(url)
+        cl = response.context["cl"]
+        headings = [str(header["text"]) for header in result_headers(cl)]
+        offset = len(headings) - len(admin.site._registry[GHFDBParent].list_display)
+        start = offset + len(PARENT_COLUMNS)
+
+        assert headings[start : start + 4] == [
+            "country",
+            "region",
+            "continent",
+            "domain",
+        ]
+
 
 # ---------------------------------------------------------------------------
 # US-3: the determination changelist (T078-T089).
