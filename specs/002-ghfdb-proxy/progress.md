@@ -794,3 +794,109 @@ source module. The gate is right: a cross-cutting test belongs with its subject.
 
 **Watch**: the 13 expected failures are all under `test_resources` and belong to
 the import and export work. None is in this feature's modules.
+
+## 2026-08-24T21:00:00Z · feature-wide · review-fix pass, F1-F15
+
+**Did**: applied all fifteen findings from an independently-verified review of the
+S8 suite, in order. Five deletions (the only ones authorised): the cannot-fail
+search test (F3), the two single-row query bounds superseded by two-row-count
+tests (F6), and the two `hasattr`-only scalar/correction-flag tests superseded
+by T016, T017, T022, T023 (F7) — one of the two, `test_as_ghfdb_flat_scalar_columns`,
+carried the D6 correction to the scalar-attribute list, so its removal is called
+out here rather than disappearing quietly. Every other pre-existing test stays;
+the thirteen `xfail` under `test_resources` were not touched.
+
+Rewrote two tests that could not fail (F1, F3): the many-valued rendering
+assertion compared `ColumnDisplay.many_valued` to itself and now compares
+against a literal read off `sites_by_contribution`'s two-purpose site; the
+search test asserted `status_code == 200` on both a match and a non-match and
+is now superseded by (already-existing) result-count assertions. Both were
+proven against the defect they exist to catch — body replaced with `return ""`,
+`marks_in_source` reverted to decorator-only — and restored.
+
+Derived `test_managers.py`'s many-valued accessor dict from
+`PublishedColumns.ENTRIES` instead of restating it a second time (F2), closing
+the same duplication D1 already named for column lists. Collapsed the
+`ANNOTATION`/`FIELD` groups in `columns.py` into one `SCALAR` group (F10, the two
+builders were byte-identical) and routed `Ref_IGSN`, `publication_reference`,
+`data_reference`, `quality_child` and `quality_parent` through it too, dropping
+the `EMPTY` group entirely (F12) — the three always-empty columns now read the
+`Value("")` annotation `managers.py` already sets instead of a second hardcoded
+default, and the two quality columns now read their own annotation key instead
+of bypassing it to read a shared `quality` field, which is what gave those
+annotations a consumer. Narrowed the `DisplayCallable` protocol to
+`short_description` alone (F11): `admin_order_field` is only ever set on a
+sortable scalar column, and the protocol no longer claims otherwise. `mypy` was
+kept green throughout by typing the local `display` in `ColumnDisplay.build()`
+as `Any` until both attributes are set, not by suppressing anything.
+
+Fixed the geography display methods to read `obj.sample.heatflowsite.<field>`
+directly per D15, with no defensive `getattr` guard the query already assumes
+resolves, and collapsed the four near-identical methods into one
+`geography_display()` builder (F4), the same generalisation this branch already
+applied to the six vocabulary filters. Deleted the pass-through
+`get_import_resource_kwargs()` override (F13).
+
+Added rendered-value assertions to both changelists' tests (F5) — one
+annotation column, one field column, one many-valued column on each side, and
+the geography block on the site changelist — read through the exact
+`ColumnDisplay`-built callables and bound admin methods the page actually
+calls, not the raw row attribute (which would pass even if the callable itself
+were broken; caught this the first time through and rewrote both tests).
+Proved both genuinely fail: broke `ColumnDisplay.scalar()`'s body, broke
+`geography_display()`'s body, confirmed the failures, restored.
+
+Closed the module-level `pytestmark` hole in `TestSuiteHealth.marks()` (F8):
+it walked decorator lists only, and every module in this suite marks itself
+with a module-level `pytestmark = pytest.mark.ghfdb` assignment, which is
+exactly the shape an expected failure could also take without the gate ever
+seeing it. Added `ast.Assign` walking, added `skipif` to the checked names, and
+added a test that feeds the parsing function a module-level `pytestmark =
+pytest.mark.xfail(...)` string and asserts it is caught — proved it fails
+against the old decorator-only behaviour first.
+
+Corrected the stale docstrings and counts in `managers.py` (F9): the
+`with_children()` "Blocked" paragraph cited a test this branch already
+deleted, two lines above the prefetch it claimed was blocked; the scalar-column
+count was 31 where 40 is correct (counted the `scalar_annotations` dict); and
+`for_export()`'s M2M-path and query-total counts were 14/~16 where 16/18 is
+correct now that D10's two prefetches (lithology, stratigraphy) are in.
+`with_children()`'s own query count is a measured 7 for one site, not the old
+`~2`. All four counts were measured with `CaptureQueriesContext`, not derived.
+
+Fixed the documentation page (F14): a five-item comma list became a bulleted
+list matching `spec.md`'s own formatting; a semicolon clause-join became two
+sentences; "Seventeen" many-valued child columns became "Fifteen" (counted
+`PublishedColumns.ENTRIES` entries whose group is `MANY_VALUED` and whose name
+is in `CHILD_COLUMNS`).
+
+Ruled on the fourth wrong heading (F15): `ghfdb_id` is not a published column
+(no entry in `PublishedColumns.ENTRIES`, absent from `CHILD_COLUMNS`,
+`PARENT_COLUMNS` and `GHFDB_COLUMN_ORDER`), so the trap this module exists to
+avoid — a *published* name losing to a field's `verbose_name` — does not apply
+to it. Left it rendering "ID Child," the field's own `verbose_name`, and
+recorded the ruling as D16 rather than leaving it unaddressed.
+
+**Verified**: `poetry run pytest tests/test_ghfdb -q` → 248 passed, 13 xfailed
+(250 baseline − 5 deletions [F3, F6 ×2, F7 ×2] + 3 additions [F5 ×2, F8 ×1];
+F1 and F12 rewrote existing tests in place, no count change). `poetry run
+pytest tests/ --ignore=tests/test_ghfdb -q` and `poetry run mypy
+project/ghfdb/` both run clean. `poetry run ruff check` on the files this
+pass touched is clean; run over the whole tree it auto-fixes pre-existing
+import-order and unused-import issues in files outside this pass's scope
+(`tests/test_ghfdb/conftest.py`, `tests/test_ghfdb/test_resources/*`) — not
+applied here, reverted when it happened, and not this pass's to fix.
+Verbatim output is in the completion report rather than duplicated here.
+
+**Next**: none — this pass closes the fifteen findings. A resolve pass on the
+reviewer's own recommendation (F1's split zero-query assertion, working around
+`Concept.__str__`'s unfetched `vocabulary` FK) is a candidate for
+`research_vocabs`, not this repository.
+
+**Watch**: `Concept.__str__` (in `research_vocabs`) reads its `vocabulary` FK
+unprefetched, so any real many-valued vocabulary column costs one query per
+member when rendered — found while writing F1's test, not one of the fifteen
+findings, and not fixed here (out of scope: another package). The "7 queries
+for one site" measurement F9 put in `with_children()`'s docstring is a
+measured number, not a formula — re-measure it if that method's prefetch list
+ever changes.
