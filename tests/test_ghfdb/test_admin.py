@@ -1,7 +1,10 @@
-"""Tests for GHFDB admin changelist configuration and rendering (T013, T063, T066)."""
+"""Tests for GHFDB admin changelist configuration and rendering (T013, T063,
+T066, T078-T089)."""
 
 import pytest
 from django.contrib import admin
+from django.contrib.admin.templatetags.admin_list import result_headers
+from django.contrib.admin.utils import label_for_field
 from django.test import RequestFactory
 from django.urls import reverse
 
@@ -12,6 +15,7 @@ from project.ghfdb.admin import (
     ParentEnvironmentListFilter,
     ParentExplorationMethodListFilter,
 )
+from project.ghfdb.constants import CHILD_COLUMNS, PARENT_COLUMNS
 from project.ghfdb.models import GHFDBChild
 
 pytestmark = pytest.mark.ghfdb
@@ -413,3 +417,25 @@ class TestGHFDBParentAdmin:
             f"Expected [GHFDBParentImportResource], got {resource_classes}"
         )
         assert GHFDBChildImportResource not in resource_classes
+
+
+# ---------------------------------------------------------------------------
+# US-3: the determination changelist (T078-T089).
+#
+# ``GHFDBChildAdmin``'s columns are built entirely from
+# ``project/ghfdb/columns.py``'s published-column mapping (D1, D2), so these
+# assert against ``constants.py`` and the rendered page rather than against a
+# restated column list.
+# ---------------------------------------------------------------------------
+
+
+class TestGHFDBChildAdmin:
+    """The determination changelist: its columns, its scoping, its search and
+    filters, and the read-only guarantees around it (US-3)."""
+
+    @pytest.mark.django_db
+    def test_changelist_renders_for_a_staff_user(self, staff_client, published_chain):
+        """T078 (US-3 acceptance scenario 1)."""
+        url = reverse("admin:ghfdb_ghfdbchild_changelist")
+        response = staff_client.get(url)
+        assert response.status_code == 200
