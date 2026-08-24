@@ -774,78 +774,258 @@
       "tasks": [
         {
           "id": "T063",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/columns.py:46",
+              "project/ghfdb/columns.py:163"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_columns.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_columns.py -q -> 12 passed"
+            ]
+          }
         },
         {
           "id": "T064",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/columns.py:46",
+              "project/ghfdb/columns.py:163"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_columns.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_columns.py -q -> 12 passed"
+            ]
+          }
         },
         {
           "id": "T065",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/columns.py:46",
+              "project/ghfdb/columns.py:163"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_columns.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_columns.py -q -> 12 passed"
+            ]
+          }
         },
         {
           "id": "T066",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/columns.py:46",
+              "project/ghfdb/columns.py:163"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_columns.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_columns.py -q -> 12 passed"
+            ]
+          }
         },
         {
           "id": "T067",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/columns.py:46",
+              "project/ghfdb/columns.py:163"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_columns.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_columns.py -q -> 12 passed"
+            ]
+          }
         },
         {
           "id": "T068",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/columns.py:46",
+              "project/ghfdb/columns.py:163"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_columns.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_columns.py -q -> 12 passed"
+            ]
+          }
         },
         {
           "id": "T069",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/columns.py:46",
+              "project/ghfdb/columns.py:163"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_columns.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_columns.py -q -> 12 passed"
+            ]
+          }
         },
         {
           "id": "T070",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/columns.py:46",
+              "project/ghfdb/columns.py:163"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_columns.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_columns.py -q -> 12 passed"
+            ]
+          }
         },
         {
           "id": "T071",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/columns.py:46",
+              "project/ghfdb/columns.py:163"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_columns.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_columns.py -q -> 12 passed"
+            ]
+          }
         },
         {
           "id": "T072",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/columns.py:46",
+              "project/ghfdb/columns.py:163"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_columns.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_columns.py -q -> 12 passed"
+            ]
+          }
         },
         {
           "id": "T073",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/columns.py:46",
+              "project/ghfdb/columns.py:163"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_columns.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_columns.py -q -> 12 passed"
+            ]
+          }
         },
         {
           "id": "T074",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/columns.py:46",
+              "project/ghfdb/columns.py:163"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_columns.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_columns.py -q -> 12 passed"
+            ]
+          }
         },
         {
           "id": "T075",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/columns.py:46",
+              "project/ghfdb/columns.py:163"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_columns.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_columns.py -q -> 12 passed"
+            ]
+          }
         },
         {
           "id": "T076",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/columns.py:46",
+              "project/ghfdb/columns.py:163"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_columns.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_columns.py -q -> 12 passed"
+            ]
+          }
         },
         {
           "id": "T077",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/columns.py:46",
+              "project/ghfdb/columns.py:163"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_columns.py"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_columns.py -q -> 12 passed"
+            ]
+          }
         },
         {
           "id": "T078",

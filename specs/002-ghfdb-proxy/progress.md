@@ -528,3 +528,31 @@ Watch: whoever resolves D10 for `003-ghfdb-import-export`'s carried-over conflic
 should resolve D11 the same pass — both ask the same question of
 `django_assert_max_num_queries`-style pre-existing tests versus the T010
 constant-query-count methodology this feature standardises on.
+
+## 2026-08-24T02:20:00Z · mapping · T063–T077
+
+**Did**: the published-column mapping and its builder. One entry per published
+column naming its group and its accessor, and a builder turning a canonical
+column list into display callables in that list's order, refusing a column the
+mapping does not hold and naming it. 65 entries, exactly the union of
+`CHILD_COLUMNS` and `PARENT_COLUMNS` — no dead entries, none missing.
+
+Every callable is bound under a name that is not a model field name, because
+Django resolves a `list_display` entry against the model's fields before the
+admin's attributes. Two tests pin that: one proves the built callables keep
+their published heading, the other proves the obvious binding loses it, so the
+rule reads as a measurement rather than as superstition.
+
+Scalar columns keep a sort key. The changelist is read at database scale and the
+current one sorts on about thirty columns, so dropping every sort key would have
+been a regression the specification never asked for. Correction flags are
+correlated subqueries and carry none, which is what they carry today.
+
+**Verified**: `poetry run pytest tests/test_ghfdb/test_columns.py -q` → 12 passed.
+`ruff check` and `ruff format --check` clean on both files.
+
+**Next**: both changelists rebuilt on this (T078–T119, T123).
+
+**Watch**: `list_display_for` returns callables rather than names, so the
+changelists lose Django's automatic column-name lookup. That is the point, and
+the heading tests are what hold it.
