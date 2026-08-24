@@ -14,6 +14,7 @@ from project.ghfdb.admin import (
     ExplorePurposeListFilter,
     ParentEnvironmentListFilter,
     ParentExplorationMethodListFilter,
+    ParentExplorePurposeListFilter,
 )
 from project.ghfdb.constants import CHILD_COLUMNS, PARENT_COLUMNS
 from project.ghfdb.models import GHFDBChild
@@ -434,6 +435,45 @@ class TestGHFDBParentAdmin:
         for param, value in filters.items():
             response = staff_client.get(url, {param: value})
             assert response.context["cl"].result_count == 1, param
+
+    @pytest.mark.django_db
+    def test_each_vocabulary_filter_offers_exactly_its_own_terms_as_labels(self):
+        """T104 (FR-018, SC-009): SC-009 requires this proven on both
+        changelists, not once."""
+        from heat_flow.vocabularies import (
+            ExplorationMethod,
+            ExplorationPurpose,
+            GeographicEnvironment,
+        )
+        from research_vocabs.models import Concept
+
+        from project.ghfdb.models import GHFDBParent
+
+        model_admin = admin.site._registry[GHFDBParent]
+
+        environment_filter = ParentEnvironmentListFilter(
+            request=None, params={}, model=GHFDBParent, model_admin=model_admin
+        )
+        assert dict(environment_filter.lookups(None, model_admin)) == dict(
+            GeographicEnvironment().choices
+        )
+
+        method_filter = ParentExplorationMethodListFilter(
+            request=None, params={}, model=GHFDBParent, model_admin=model_admin
+        )
+        assert dict(method_filter.lookups(None, model_admin)) == dict(
+            ExplorationMethod().choices
+        )
+
+        purpose_filter = ParentExplorePurposeListFilter(
+            request=None, params={}, model=GHFDBParent, model_admin=model_admin
+        )
+        purpose_choices = dict(purpose_filter.lookups(None, model_admin))
+        expected_purposes = {
+            concept.pk: concept.label
+            for concept in Concept.get_for_vocabulary(ExplorationPurpose)
+        }
+        assert purpose_choices == expected_purposes
 
 
 # ---------------------------------------------------------------------------
