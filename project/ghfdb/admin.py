@@ -212,71 +212,48 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
         return False
 
 
-class ParentExplorePurposeListFilter(SimpleListFilter):
-    """Vocabulary-scoped list filter for HeatFlowSite.explo_purpose on GHFDBParent.
-
-    Same vocabulary scoping as ``ExplorePurposeListFilter`` but filters via the
-    parent-model FK path: ``sample__heatflowsite__explo_purpose``.
-    """
+class ParentExplorePurposeListFilter(VocabularyListFilter):
+    """Exploration-purpose filter for the site changelist, scoped to the
+    ``ExplorationPurpose`` vocabulary (FR-018). Many-valued, so it matches
+    on the concept row's primary key rather than a stored value (T118)."""
 
     title = _("exploration purpose")
     parameter_name = "explo_purpose"
+    mode = VocabularyListFilter.CONCEPT
+    lookup_path = "sample__heatflowsite__explo_purpose__pk"
 
-    def lookups(self, request, model_admin):
+    def get_vocabulary(self):
         from heat_flow.vocabularies import ExplorationPurpose
-        from research_vocabs.models import Concept
 
-        concepts = Concept.get_for_vocabulary(ExplorationPurpose).order_by("label")
-        return [(c.pk, c.label) for c in concepts]
-
-    def queryset(self, request, queryset):
-        if self.value():
-            return queryset.filter(sample__heatflowsite__explo_purpose__pk=self.value())
-        return queryset
+        return ExplorationPurpose
 
 
-class ParentEnvironmentListFilter(SimpleListFilter):
-    """Vocabulary-scoped list filter for HeatFlowSite.environment on GHFDBParent (BUG-004).
-
-    Same vocabulary scoping as ``EnvironmentListFilter`` but filters via the
-    shorter parent-model path: ``sample__heatflowsite__environment`` (FR-014,
-    FR-015).
-    """
+class ParentEnvironmentListFilter(VocabularyListFilter):
+    """Environment filter for the site changelist, scoped to the
+    ``GeographicEnvironment`` vocabulary (FR-018, T118)."""
 
     title = _("environment")
     parameter_name = "environment"
+    lookup_path = "sample__heatflowsite__environment"
 
-    def lookups(self, request, model_admin):
+    def get_vocabulary(self):
         from heat_flow.vocabularies import GeographicEnvironment
 
-        return GeographicEnvironment().choices
-
-    def queryset(self, request, queryset):
-        if self.value():
-            return queryset.filter(sample__heatflowsite__environment=self.value())
-        return queryset
+        return GeographicEnvironment
 
 
-class ParentExplorationMethodListFilter(SimpleListFilter):
-    """Vocabulary-scoped list filter for HeatFlowSite.explo_method on GHFDBParent (BUG-004).
-
-    Same vocabulary scoping as ``ChildExplorationMethodListFilter`` but filters
-    via the shorter parent-model path: ``sample__heatflowsite__explo_method``
-    (FR-014, FR-015).
-    """
+class ParentExplorationMethodListFilter(VocabularyListFilter):
+    """Exploration-method filter for the site changelist, scoped to the
+    ``ExplorationMethod`` vocabulary (FR-018, T118)."""
 
     title = _("exploration method")
     parameter_name = "explo_method"
+    lookup_path = "sample__heatflowsite__explo_method"
 
-    def lookups(self, request, model_admin):
+    def get_vocabulary(self):
         from heat_flow.vocabularies import ExplorationMethod
 
-        return ExplorationMethod().choices
-
-    def queryset(self, request, queryset):
-        if self.value():
-            return queryset.filter(sample__heatflowsite__explo_method=self.value())
-        return queryset
+        return ExplorationMethod
 
 
 @admin.register(GHFDBParent)
