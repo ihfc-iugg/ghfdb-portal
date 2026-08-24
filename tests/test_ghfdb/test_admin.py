@@ -375,6 +375,26 @@ class TestGHFDBParentAdmin:
         assert row.total_children == 1
         assert row.relevant_children == 0
 
+    @pytest.mark.django_db
+    def test_search_matches_site_name_and_published_site_identifier(
+        self, staff_client, published_chain
+    ):
+        """T102 (FR-016): exercised through the rendered changelist with a
+        query string, not against the search attribute — a search matching
+        nothing must return no rows, not just a 200 status."""
+        url = reverse("admin:ghfdb_ghfdbparent_changelist")
+        parent = published_chain.parent
+        site_name = parent.sample.name
+
+        response = staff_client.get(url, {"q": site_name})
+        assert response.context["cl"].result_count == 1
+
+        response = staff_client.get(url, {"q": str(parent.ghfdb_id)})
+        assert response.context["cl"].result_count == 1
+
+        response = staff_client.get(url, {"q": "no-such-site-name-anywhere"})
+        assert response.context["cl"].result_count == 0
+
 
 # ---------------------------------------------------------------------------
 # US-3: the determination changelist (T078-T089).
