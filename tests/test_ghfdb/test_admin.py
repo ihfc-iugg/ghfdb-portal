@@ -5,7 +5,7 @@ import pytest
 from django.contrib import admin
 from django.contrib.admin.templatetags.admin_list import result_headers
 from django.contrib.admin.utils import label_for_field
-from django.test import RequestFactory
+from django.test import RequestFactory, override_settings
 from django.urls import reverse
 
 from project.ghfdb.admin import (
@@ -564,3 +564,31 @@ class TestGHFDBChildAdmin:
         result_list = list(response.context["cl"].result_list)
         assert published_chain in result_list
         assert unpublished_chain not in result_list
+
+    @pytest.mark.django_db
+    def test_query_count_is_equal_at_two_row_counts(
+        self, staff_client, published_chains, constant_query_count
+    ):
+        """T087 (FR-019, SC-003; US-3 acceptance scenario 8), measured on the
+        rendered changelist.
+
+        ``fairdm``'s ``orbit`` app installs a global audit-log watcher
+        (unrelated to this admin, on every project built on the framework)
+        that inserts a row per signal it observes, so a raw query count
+        across a full request is not a measurement of this changelist alone.
+        Disabled for the duration of the comparison, which is the standard,
+        live-checked way to quiet it (``orbit.conf.get_config()`` reads
+        ``settings.ORBIT`` on every record, not only at startup). One warm-up
+        request is also taken first, because the very first request in a test
+        pays a one-off framework singleton-creation cost that the second
+        request does not — without it, low and high never compare like for
+        like regardless of row count.
+        """
+        url = reverse("admin:ghfdb_ghfdbchild_changelist")
+
+        def call():
+            staff_client.get(url)
+
+        with override_settings(ORBIT={"ENABLED": False}):
+            call()
+            constant_query_count(published_chains, call)
