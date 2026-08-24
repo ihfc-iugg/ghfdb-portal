@@ -1,6 +1,7 @@
+"""Smoke tests for the GHFDB proxy models and the fixtures every story takes.
 """
-Smoke tests for the GHFDB proxy model.
-"""
+
+import pathlib
 
 import pytest
 
@@ -106,13 +107,12 @@ class TestFixtures:
     def test_vocabulary_concepts_are_present(self, db):
         """T002: the autouse concept preload covers every vocabulary this
         feature filters on."""
-        from research_vocabs.models import Concept
-
         from heat_flow.vocabularies import (
             ExplorationMethod,
             ExplorationPurpose,
             GeographicEnvironment,
         )
+        from research_vocabs.models import Concept
 
         for vocabulary in (GeographicEnvironment, ExplorationMethod, ExplorationPurpose):
             assert Concept.get_for_vocabulary(vocabulary).exists(), (
@@ -256,3 +256,67 @@ class TestConstantQueryCount:
             ContentType.objects.count()
 
         constant_query_count(build, call)
+
+
+class TestSuiteHealth:
+    """SC-011 is a statement about the suite, so it needs an assertion about
+    the suite rather than about any one test.
+
+    The decorators are found by parsing each module rather than by searching
+    its text. A text search would match this module's own assertions, and
+    excluding this module to work around that would leave the gate with a hole
+    exactly where someone would put an expected failure to quiet it.
+    """
+
+    #: Import and export are `003-ghfdb-import-export`'s, and thirteen of its
+    #: tests are expected to fail until the published column vocabulary is
+    #: settled there. Named rather than silently swept up, so a new expected
+    #: failure in this feature's own modules cannot hide among them.
+    OTHER_FEATURES = ("test_resources",)
+
+    @staticmethod
+    def marks(path):
+        """Every `pytest.mark.<name>` decorator in *path*, as a set of names."""
+        import ast
+
+        found = set()
+        for node in ast.walk(ast.parse(path.read_text())):
+            if not isinstance(node, ast.FunctionDef | ast.ClassDef):
+                continue
+            for decorator in node.decorator_list:
+                target = decorator.func if isinstance(decorator, ast.Call) else decorator
+                if isinstance(target, ast.Attribute):
+                    found.add(target.attr)
+        return found
+
+    def modules(self):
+        root = pathlib.Path(__file__).parent
+        return [
+            path
+            for path in root.rglob("*.py")
+            if not any(part in self.OTHER_FEATURES for part in path.parts)
+        ]
+
+    def test_no_test_in_this_feature_is_expected_to_fail(self):
+        """T120: an expected failure records a defect someone chose to live
+        with. This feature is not allowed to leave one behind."""
+        offenders = [path.name for path in self.modules() if "xfail" in self.marks(path)]
+        assert offenders == []
+
+    def test_no_test_in_this_feature_is_unconditionally_skipped(self):
+        """T120: a skip that can never fire reads as coverage and is not."""
+        offenders = [path.name for path in self.modules() if "skip" in self.marks(path)]
+        assert offenders == []
+
+    def test_the_named_exclusion_is_real(self):
+        """The exclusion above is honest only if it names something that
+        exists. If import and export stop carrying expected failures, this
+        fails and the exclusion comes out rather than sitting unexplained."""
+        resources = pathlib.Path(__file__).parent / "test_resources"
+        carriers = [
+            path for path in resources.rglob("*.py") if "xfail" in self.marks(path)
+        ]
+        assert carriers, (
+            "no expected failures remain under test_resources — remove the "
+            "exclusion from OTHER_FEATURES rather than leaving it unexplained"
+        )

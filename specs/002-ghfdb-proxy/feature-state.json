@@ -75,7 +75,7 @@
       "priority": "P1",
       "issue": 179,
       "worktree": null,
-      "status": "todo",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
@@ -479,7 +479,7 @@
       "priority": "P1",
       "issue": 180,
       "worktree": null,
-      "status": "todo",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
@@ -769,7 +769,7 @@
       "priority": "P2",
       "issue": 181,
       "worktree": null,
-      "status": "todo",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
@@ -1679,13 +1679,36 @@
         },
         {
           "id": "T120",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "tests/test_ghfdb/test_models.py:1"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_models.py::TestSuiteHealth"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb -q -> 250 passed, 13 xfailed"
+            ]
+          }
         },
         {
           "id": "T121",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "docs/data_models/published-structure.md:1",
+              "docs/data_models/index.md:16"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_docs.py::TestPublishedStructurePage"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_docs.py -q -> 4 passed"
+            ]
+          }
         }
       ]
     }

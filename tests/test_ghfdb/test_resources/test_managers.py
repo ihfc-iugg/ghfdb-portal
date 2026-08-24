@@ -191,11 +191,6 @@ class TestGHFDBParentQuerySetFlatMethod:
         from project.ghfdb.managers import GHFDBParentQuerySet
         from project.ghfdb.models import GHFDBParent
 
-        if not hasattr(GHFDBParentQuerySet, "as_ghfdb_flat"):
-            pytest.skip(
-                "GHFDBParentQuerySet.as_ghfdb_flat() not yet implemented (T097)"
-            )
-
         qs = GHFDBParent.objects.none().as_ghfdb_flat()
         annotations = qs.query.annotations
         # 'name' cannot be used as annotation key (conflicts with Measurement base field);

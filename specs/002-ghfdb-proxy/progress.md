@@ -760,3 +760,35 @@ corrected docstrings. D14 is worth re-reading before extending
 matching key in `as_ghfdb_flat()`'s `scalar_annotations` fails silently
 (blank cell), not loudly, and no task in this dispatch closes that gap with a
 value-level test.
+
+## 2026-08-24T09:40:00Z · feature-wide · T120, T121
+
+**Did**: the suite-health assertion and the page describing the query surface.
+
+T120 finds expected failures and unconditional skips by parsing each module's
+decorators rather than by searching its text. A text search would match this
+module's own assertions, and excluding this module to work around that would
+leave a hole exactly where someone would put an expected failure to quiet the
+gate. The import and export modules are named as an exclusion, and a third
+assertion fails if that exclusion ever stops naming something real.
+
+Also removed a conditional skip in the parent queryset tests that guarded on a
+method which now exists, so it could no longer fire. A skip that cannot fire
+reads as coverage and is not.
+
+T121 documents the two proxies, the membership rule, the five queryset methods,
+the column authority and the two changelists, at `docs/data_models/published-structure.md`.
+Its test reads the method names off the queryset classes, so a method added or
+renamed without a documentation change fails rather than drifting.
+
+The docs test lives in this feature's own test tree rather than under a
+`tests/test_docs/` package, because that package arrives in another open pull
+request and creating it here would collide.
+
+**Verified**: `poetry run pytest tests/test_ghfdb -q` → 250 passed, 13 xfailed.
+`poetry run pytest tests/ --ignore=tests/test_ghfdb -q` → 76 passed, 1 skipped.
+
+**Next**: convergence and review.
+
+**Watch**: the 13 expected failures are all under `test_resources` and belong to
+the import and export work. None is in this feature's modules.
