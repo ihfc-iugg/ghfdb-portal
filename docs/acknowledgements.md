@@ -1,81 +1,13 @@
 # Acknowledgements
 
-This codebase is developed using the open-source [FairDM Framework](https://fairdm.com) for FAIR research data portals which, in turn, utilizes the [Django Web 
-Framework](https://www.djangoproject.com).
+## Contributors
 
-:::::{grid} 2
-:class-container: sd-mt-4
-:class-row: align-items-center
+|        | Name | Organisation |
+|--------|------|--------------|
+|![Dr. Samuel Jennings](https://avatars.githubusercontent.com/SamuelJennings?s=45) | [Dr. Samuel Jennings](https://github.com/SamuelJennings) | [GFZ Potsdam](https://www.gfz-potsdam.de/en/home/) |
+| | [Nikolas Ott](https://github.com/n-o-tud) | [TDU Dresden](https://www.gfz-potsdam.de/en/home/) |
 
-::::{grid-item}
-[![FairDM Framework](/_static/fairdm_logo.svg)](https://fairdm.com/)
-::::
-
-::::{grid-item}
-[![Django Web Framework](/_static/django_logo.svg)](https://www.djangoproject.com/)
-::::
-
-:::::
-
-The codebase is currently maintained by the [German Research Centre for Geosciences (GFZ)](https://www.gfz.de/en/) as part of the [World Heat Flow Database Project](https://www.heatflow.world). This project is currently funded by the [Deutsche Forschungsgemeinschaft (DFG)](https://www.dfg.de) under the project number [491795283](https://gepris-extern.dfg.de/gepris/projekt/491795283).
-
-We extend our gratitude to all individuals, organizations, and institutions who have contributed to and supported this project, both directly and indirectly.
-
-## History
-
-- This codebase takes inspiration from previous work and discussions by Dr. Samuel Jennings and Dr. Derrick Hasterok during development of the ThermoGlobe database.
-
-## Core Developers
-
-:::::{grid} 2 3 3 3
-:class-row: align-items-center
-
-::::{grid-item-card} Dr. Samuel Jennings
-:img-top: https://avatars.githubusercontent.com/SamuelJennings?s=300
-:img-alt: Dr. Samuel Jennings
-:link: https://github.com/SamuelJennings
-:text-align: center
-
-{fas}`building` GFZ, Potsdam
-
-::::
-
-::::{grid-item-card} Nikolas Ott
-:img-top: https://avatars.githubusercontent.com/n-o-tud?s=300
-:img-alt: Nikolas Ott
-:link: https://github.com/n-o-tud
-:text-align: center
-
-{fas}`building` TUD, Dresden
-
-::::
-
-:::::
-
-<!-- ## Code Contributors
-
-:::::{grid} 2 3 3 3
-:class-row: align-items-center
-
-::::{grid-item-card} Dr. Samuel Jennings
-:link: https://github.com/SamuelJennings
-:text-align: center
-:class-body: pt-0
-:class-header: border-0
-
-:::{image} https://avatars.githubusercontent.com/SamuelJennings?s=100
-:width: 75px
-:alt: Dr. Samuel Jennings
-:::
-^^^
-
-{fas}`building` GFZ, Potsdam
-
-::::
-
-::::: -->
-
-## Supporting Organizations
+## Organizations
 
 The following organizations have provided support for this project:
 
@@ -96,3 +28,7 @@ The following organizations have provided support for this project:
 [![IHFC](/_static/IHFC.svg)](https://ihfc.iugg.org)
 :::
 ::::
+
+## Funding
+
+The codebase is currently maintained by the [German Research Centre for Geosciences (GFZ)](https://www.gfz.de/en/) as part of the [World Heat Flow Database Project](https://www.heatflow.world). This project is currently funded by the [Deutsche Forschungsgemeinschaft (DFG)](https://www.dfg.de) under the project number [491795283](https://gepris-extern.dfg.de/gepris/projekt/491795283).
