@@ -326,20 +326,22 @@ only the site name and the site's published identifier — that would be the poi
 pre-existing queryset (`GHFDBParent.objects.with_child_counts().select_related(...)`) showed
 `row.ID_parent`, `row.q` and `row.site_name` all absent. None of T098-T101 caught this: T099-T101
 assert rendered *headings*, which come from each callable's `short_description` and are independent
-of the queryset, and `ColumnDisplay.annotation()`/`.field()` read with `getattr(obj, accessor,
-None)`, so a missing annotation renders as an empty cell rather than raising. The changelist returned
-200 and showed the right column order and headings while every published-column cell was blank.
+of the queryset, and `ColumnDisplay.scalar()` (F10 collapses the former `.annotation()`/`.field()`
+into this one builder, since both read with the identical `getattr(obj, accessor, None)`) renders a
+missing annotation as an empty cell rather than raising. The changelist returned 200 and showed the
+right column order and headings while every published-column cell was blank.
 
 **Ruled**: this is exactly the defect T115 exists to fix, and it is a real functional defect, not
 just a missing test — `get_queryset()` now chains `as_ghfdb_flat().with_child_counts().with_children()`
-so every annotation the mapping's `ANNOTATION`-group entries expect is present on the row. Verified
+so every annotation the mapping's `SCALAR`-group entries expect is present on the row. Verified
 directly (not only through the test suite): `row.ID_parent == 1`, `row.q == "70.00 mW/m²"`,
 `row.site_name == "Test Site"` after the change, all missing before it.
 
-**Revisit if** a future column is added to `PublishedColumns.ENTRIES` as an `ANNOTATION` without a
-matching key in `as_ghfdb_flat()`'s `scalar_annotations` — the same silent-blank failure mode applies,
-and `getattr(obj, accessor, None)`'s permissiveness is why a value-level test (not just a heading-level
-one) is worth adding for a future column, though none is required by this dispatch's task list.
+**Revisit if** a future column is added to `PublishedColumns.ENTRIES` as a `SCALAR` sourced from an
+annotation, without a matching key in `as_ghfdb_flat()`'s `scalar_annotations` — the same
+silent-blank failure mode applies, and `getattr(obj, accessor, None)`'s permissiveness is why a
+value-level test (not just a heading-level one) is worth adding for a future column. F5 adds that
+proof for the columns this dispatch touches; a future column would still need its own.
 
 ### D15 — Geography columns read `obj.sample.heatflowsite.<field>`, not `obj.sample.<field>`
 

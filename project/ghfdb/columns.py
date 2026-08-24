@@ -60,60 +60,63 @@ class ColumnEntry(NamedTuple):
 class PublishedColumns:
     """One entry per published column name: its group and its accessor.
 
-    Four groups, per R1:
+    Three groups, per R1:
 
-    * ``ANNOTATION`` — the value is a queryset annotation, already keyed
-      under the published name by ``project/ghfdb/managers.py``.
-    * ``FIELD`` — the value is a field on the proxy model itself, read
-      directly rather than through an annotation.
+    * ``SCALAR`` — a single value read straight off the row: either a
+      queryset annotation, already keyed under the published name by
+      ``project/ghfdb/managers.py``, or a field on the proxy model itself.
+      Both are read identically here — ``getattr(obj, accessor, None)`` does
+      not care which one put the value on the row — so this mapping does not
+      carry the distinction as two groups (F10). Some published columns
+      arrive one way, some the other; that is a fact about ``managers.py``,
+      not about how this mapping reads them.
     * ``MANY_VALUED`` — the value is a related manager, reached by a
       dot-separated attribute path from the row, and rendered as its
       members' labels joined with "; ".
     * ``EMPTY`` — nothing resolves the column (R4, D3); it renders as "".
     """
 
-    ANNOTATION = "annotation"
-    FIELD = "field"
+    SCALAR = "scalar"
     MANY_VALUED = "many_valued"
     EMPTY = "empty"
 
     ENTRIES: dict[str, ColumnEntry] = {
-        # --- child: queryset annotations ------------------------------------
-        # GHFDBChildQuerySet.as_ghfdb_flat() annotates each of these under
-        # its own published name.
-        "qc": ColumnEntry(ANNOTATION),
-        "qc_uncertainty": ColumnEntry(ANNOTATION),
-        "q_top": ColumnEntry(ANNOTATION),
-        "q_bottom": ColumnEntry(ANNOTATION),
-        "probe_penetration": ColumnEntry(ANNOTATION),
-        "relevant_child": ColumnEntry(ANNOTATION),
-        "corr_IS_flag": ColumnEntry(ANNOTATION),
-        "corr_T_flag": ColumnEntry(ANNOTATION),
-        "corr_S_flag": ColumnEntry(ANNOTATION),
-        "corr_E_flag": ColumnEntry(ANNOTATION),
-        "corr_TOPO_flag": ColumnEntry(ANNOTATION),
-        "corr_PAL_flag": ColumnEntry(ANNOTATION),
-        "corr_SUR_flag": ColumnEntry(ANNOTATION),
-        "corr_CONV_flag": ColumnEntry(ANNOTATION),
-        "corr_HR_flag": ColumnEntry(ANNOTATION),
-        "probe_length": ColumnEntry(ANNOTATION),
-        "probe_tilt": ColumnEntry(ANNOTATION),
-        "T_grad_mean": ColumnEntry(ANNOTATION),
-        "T_grad_uncertainty": ColumnEntry(ANNOTATION),
-        "T_grad_mean_cor": ColumnEntry(ANNOTATION),
-        "T_grad_uncertainty_cor": ColumnEntry(ANNOTATION),
-        "T_shutin_top": ColumnEntry(ANNOTATION),
-        "T_shutin_bottom": ColumnEntry(ANNOTATION),
-        "T_number": ColumnEntry(ANNOTATION),
-        "q_date": ColumnEntry(ANNOTATION),
-        "tc_mean": ColumnEntry(ANNOTATION),
-        "tc_uncertainty": ColumnEntry(ANNOTATION),
-        "tc_number": ColumnEntry(ANNOTATION),
-        # --- child: fields on the proxy itself ------------------------------
-        "c_comment": ColumnEntry(FIELD),
-        "expedition": ColumnEntry(FIELD),
-        "water_temperature": ColumnEntry(FIELD),
-        "quality_child": ColumnEntry(FIELD, "quality"),
+        # --- child: scalar columns -------------------------------------------
+        # Most of these are queryset annotations GHFDBChildQuerySet.as_ghfdb_flat()
+        # keys under the published name; a few are fields on the proxy itself.
+        "qc": ColumnEntry(SCALAR),
+        "qc_uncertainty": ColumnEntry(SCALAR),
+        "q_top": ColumnEntry(SCALAR),
+        "q_bottom": ColumnEntry(SCALAR),
+        "probe_penetration": ColumnEntry(SCALAR),
+        "relevant_child": ColumnEntry(SCALAR),
+        "corr_IS_flag": ColumnEntry(SCALAR),
+        "corr_T_flag": ColumnEntry(SCALAR),
+        "corr_S_flag": ColumnEntry(SCALAR),
+        "corr_E_flag": ColumnEntry(SCALAR),
+        "corr_TOPO_flag": ColumnEntry(SCALAR),
+        "corr_PAL_flag": ColumnEntry(SCALAR),
+        "corr_SUR_flag": ColumnEntry(SCALAR),
+        "corr_CONV_flag": ColumnEntry(SCALAR),
+        "corr_HR_flag": ColumnEntry(SCALAR),
+        "probe_length": ColumnEntry(SCALAR),
+        "probe_tilt": ColumnEntry(SCALAR),
+        "T_grad_mean": ColumnEntry(SCALAR),
+        "T_grad_uncertainty": ColumnEntry(SCALAR),
+        "T_grad_mean_cor": ColumnEntry(SCALAR),
+        "T_grad_uncertainty_cor": ColumnEntry(SCALAR),
+        "T_shutin_top": ColumnEntry(SCALAR),
+        "T_shutin_bottom": ColumnEntry(SCALAR),
+        "T_number": ColumnEntry(SCALAR),
+        "q_date": ColumnEntry(SCALAR),
+        "tc_mean": ColumnEntry(SCALAR),
+        "tc_uncertainty": ColumnEntry(SCALAR),
+        "tc_number": ColumnEntry(SCALAR),
+        # --- child: fields on the proxy itself (also SCALAR — see class docstring) ---
+        "c_comment": ColumnEntry(SCALAR),
+        "expedition": ColumnEntry(SCALAR),
+        "water_temperature": ColumnEntry(SCALAR),
+        "quality_child": ColumnEntry(SCALAR, "quality"),
         # --- child: many-valued relationships -------------------------------
         "q_method": ColumnEntry(MANY_VALUED, "method"),
         "probe_type": ColumnEntry(
@@ -140,33 +143,35 @@ class PublishedColumns:
         "publication_reference": ColumnEntry(EMPTY),
         "data_reference": ColumnEntry(EMPTY),
         "Ref_IGSN": ColumnEntry(EMPTY),
-        # --- parent: queryset annotations ---------------------------------------
-        # GHFDBParentQuerySet.as_ghfdb_flat() annotates each of these; the
-        # published ``name`` is annotated as ``site_name`` because the
-        # framework's base class already declares ``name`` (T048).
-        "ID_parent": ColumnEntry(ANNOTATION),
-        "q": ColumnEntry(ANNOTATION),
-        "q_uncertainty": ColumnEntry(ANNOTATION),
-        "name": ColumnEntry(ANNOTATION, "site_name"),
-        "lat_NS": ColumnEntry(ANNOTATION),
-        "long_EW": ColumnEntry(ANNOTATION),
-        "elevation": ColumnEntry(ANNOTATION),
-        "environment": ColumnEntry(ANNOTATION),
-        "p_comment": ColumnEntry(ANNOTATION),
-        "total_depth_MD": ColumnEntry(ANNOTATION),
-        "total_depth_TVD": ColumnEntry(ANNOTATION),
-        "explo_method": ColumnEntry(ANNOTATION),
-        # --- parent: fields on the proxy itself -----------------------------------
-        "corr_HP_flag": ColumnEntry(FIELD),
-        "quality_parent": ColumnEntry(FIELD, "quality"),
+        # --- parent: scalar columns ----------------------------------------------
+        # Most of these are queryset annotations GHFDBParentQuerySet.as_ghfdb_flat()
+        # keys under the published name; the published ``name`` is annotated as
+        # ``site_name`` because the framework's base class already declares
+        # ``name`` (T048).
+        "ID_parent": ColumnEntry(SCALAR),
+        "q": ColumnEntry(SCALAR),
+        "q_uncertainty": ColumnEntry(SCALAR),
+        "name": ColumnEntry(SCALAR, "site_name"),
+        "lat_NS": ColumnEntry(SCALAR),
+        "long_EW": ColumnEntry(SCALAR),
+        "elevation": ColumnEntry(SCALAR),
+        "environment": ColumnEntry(SCALAR),
+        "p_comment": ColumnEntry(SCALAR),
+        "total_depth_MD": ColumnEntry(SCALAR),
+        "total_depth_TVD": ColumnEntry(SCALAR),
+        "explo_method": ColumnEntry(SCALAR),
+        # --- parent: fields on the proxy itself (also SCALAR — see class docstring) --
+        "corr_HP_flag": ColumnEntry(SCALAR),
+        "quality_parent": ColumnEntry(SCALAR, "quality"),
         # --- parent: many-valued relationships ------------------------------------
         "explo_purpose": ColumnEntry(MANY_VALUED, "sample.heatflowsite.explo_purpose"),
     }
 
 
 class ColumnDisplay:
-    """Builds a display callable for one published column, per R1's four
-    groups, and the ordered tuple a changelist's ``list_display`` takes.
+    """Builds a display callable for one published column, per
+    ``PublishedColumns``'s three groups, and the ordered tuple a
+    changelist's ``list_display`` takes.
 
     A callable's ``short_description`` is always the published name
     verbatim (D2). Every callable returned here is a fresh closure named
@@ -180,17 +185,10 @@ class ColumnDisplay:
     UNSORTABLE = frozenset(CORRECTION_COL_MAP)
 
     @staticmethod
-    def annotation(accessor: str) -> DisplayCallable:
-        """A callable reading *accessor* straight off an annotated row."""
-
-        def display(obj):
-            return getattr(obj, accessor, None)
-
-        return cast(DisplayCallable, display)
-
-    @staticmethod
-    def field(accessor: str) -> DisplayCallable:
-        """A callable reading *accessor* straight off the proxy model."""
+    def scalar(accessor: str) -> DisplayCallable:
+        """A callable reading *accessor* straight off the row — an
+        annotation or a field, whichever ``managers.py`` happens to carry it
+        as (F10, D14's ``PublishedColumns`` docstring)."""
 
         def display(obj):
             return getattr(obj, accessor, None)
@@ -242,8 +240,7 @@ class ColumnDisplay:
             raise ValueError(f"{name!r} is not a published column this mapping covers.")
 
         builders = {
-            PublishedColumns.ANNOTATION: ColumnDisplay.annotation,
-            PublishedColumns.FIELD: ColumnDisplay.field,
+            PublishedColumns.SCALAR: ColumnDisplay.scalar,
             PublishedColumns.MANY_VALUED: ColumnDisplay.many_valued,
             PublishedColumns.EMPTY: ColumnDisplay.empty,
         }
@@ -254,7 +251,7 @@ class ColumnDisplay:
         # A scalar column stays sortable. The changelist is read at database
         # scale, so losing every sort key would be a regression, and a
         # many-valued or empty column has nothing to sort on.
-        sortable = entry.group in (PublishedColumns.ANNOTATION, PublishedColumns.FIELD)
+        sortable = entry.group == PublishedColumns.SCALAR
         if sortable and name not in ColumnDisplay.UNSORTABLE:
             display.admin_order_field = accessor
         return cast(DisplayCallable, display)
