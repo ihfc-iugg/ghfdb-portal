@@ -605,8 +605,8 @@ plus one warm-up call, not the bare fixture.
 columns (`ID_parent`, `name`, `lat_NS`, `long_EW` — all published parent
 columns the child queryset already restates per row) followed by
 `ColumnDisplay.list_display_for(CHILD_COLUMNS)`. Deleted the `_scalar`
-factory, the `_interval` static helper, `get_id_parent`, the thirty
-`_scalar`-generated attributes, and all seventeen hand-written `get_*` display
+factory, the `_interval` static helper, `get_id_parent`, the thirty-one
+`_scalar`-generated attributes, and all nineteen hand-written `get_*` display
 methods for many-valued and empty columns — every one of them is now covered
 by the mapping. `get_queryset()` reads `GHFDBChild.objects.for_export()`
 rather than restating its own copy of the fifteen-entry prefetch list (T092)
