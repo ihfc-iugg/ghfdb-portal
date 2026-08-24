@@ -3,12 +3,14 @@ GHFDB proxy queryset and manager.
 
 Provides ``GHFDBChildQuerySet`` with two key methods:
 
-* ``as_ghfdb_flat()`` — annotates all 31 scalar columns via ``select_related``
-  and ``F()`` expressions, plus 9 correction-flag subqueries; ≤2 DB queries,
-  constant regardless of row count.
+* ``as_ghfdb_flat()`` — annotates all 40 scalar columns (via
+  ``select_related`` and ``F()`` expressions, plus three constant-``Value()``
+  columns nothing resolves), plus 9 correction-flag subqueries; ≤2 DB
+  queries, constant regardless of row count.
 
 * ``for_export()`` — calls ``as_ghfdb_flat()`` and chains
-  ``prefetch_related()`` for all 14 M2M paths; ~16 DB queries, constant.
+  ``prefetch_related()`` for all 16 M2M paths; 18 DB queries, constant
+  (measured: 1 main query, 16 prefetch queries, 1 content-type lookup).
 
 References:
     - Fuchs et al. (2021). A new database structure for the IHFC Global Heat
@@ -18,7 +20,7 @@ References:
 
 from typing import Any, cast
 
-from django.db.models import CharField, Count, F, OuterRef, Q, Subquery
+from django.db.models import CharField, Count, F, OuterRef, Q, Subquery, Value
 from polymorphic.managers import PolymorphicManager, PolymorphicQuerySet
 
 
@@ -51,7 +53,7 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
 
     def as_ghfdb_flat(self) -> "GHFDBChildQuerySet":
         """
-        Annotate the queryset with all 31 scalar GHFDB columns and 9
+        Annotate the queryset with all 40 scalar GHFDB columns and 9
         correction-flag subqueries.
 
         Executes ≤2 DB queries total (main query + optional content-type
@@ -93,6 +95,7 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
             "qc_uncertainty": F("uncertainty"),
             "relevant_child": F("is_relevant"),
             "q_date": F("date_acquired"),
+            "quality_child": F("quality"),
             # Site-level scalars (from HeatFlowSite via interval → site)
             # NOTE: 'name' conflicts with a Measurement base-class field; use
             # 'site_name' as the annotation key and export it via column_name.
@@ -134,6 +137,13 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
             ),
             "probe_length": F("sample__heatflowinterval__probe_metadata__length"),
             "probe_tilt": F("sample__heatflowinterval__probe_metadata__tilt"),
+            # Columns nothing resolves (R4, D3): HeatFlow has no reference
+            # relationship at all, and no field for an IGSN. Explicitly
+            # empty rather than a defensive getattr, so a reader cannot
+            # mistake a guard for a working accessor.
+            "Ref_IGSN": Value("", output_field=CharField()),
+            "publication_reference": Value("", output_field=CharField()),
+            "data_reference": Value("", output_field=CharField()),
         }
 
         qs = qs.annotate(**scalar_annotations)
@@ -143,10 +153,10 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
     def for_export(self) -> "GHFDBChildQuerySet":
         """
         Return a queryset ready for XLSX export: flat scalar annotations plus
-        all 14 M2M relations pre-fetched.
+        all 16 M2M relations pre-fetched.
 
-        Executes ~16 DB queries total (1 main + 14 prefetch-related queries,
-        one per M2M relation, plus optional content-type lookup), all constant
+        Executes 18 DB queries total (1 main + 16 prefetch-related queries,
+        one per M2M relation, plus 1 content-type lookup), all constant
         regardless of row count.
         """
         qs = self.as_ghfdb_flat().prefetch_related(
@@ -164,6 +174,8 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
             "thermal_conductivity__pT_function",
             "thermal_conductivity__strategy",
             "sample__heatflowinterval__probe_metadata__probe_type",
+            "sample__heatflowinterval__lithology",
+            "sample__heatflowinterval__stratigraphy",
         )
         return cast("GHFDBChildQuerySet", qs)
 
@@ -222,13 +234,28 @@ class GHFDBParentQuerySet(PolymorphicQuerySet):
         )
 
     def with_children(self) -> "GHFDBParentQuerySet":
-        """Prefetch linked child ``HeatFlow`` records.
+        """Prefetch linked child ``HeatFlow`` records, and the site's
+        exploration purposes (T062, FR-010) — the one many-valued published
+        parent column, excluded from ``as_ghfdb_flat()``'s annotations for
+        the reason recorded there.
 
-        After calling this, accessing ``parent.children.all()`` will not fire
-        additional queries.  Executes in ~2 DB queries (1 main + 1 prefetch),
-        constant regardless of row count.
+        After calling this, accessing ``parent.children.all()`` and
+        ``parent.sample.heatflowsite.explo_purpose.all()`` will not fire
+        additional queries. A fixed cost that does not grow with row count,
+        not the ``~2`` this docstring used to claim: measured at 7 queries
+        for one site, through the polymorphic inheritance chain the second
+        prefetch walks.
         """
-        return cast("GHFDBParentQuerySet", self.prefetch_related("children"))
+        return cast(
+            "GHFDBParentQuerySet",
+            self.prefetch_related(
+                "children",
+                # The one many-valued published parent column. It cannot be
+                # annotated: F() across a many-to-many joins the through table
+                # and returns one row per site-and-purpose pair.
+                "sample__heatflowsite__explo_purpose",
+            ),
+        )
 
     def as_ghfdb_flat(self) -> "GHFDBParentQuerySet":
         """Annotate parent queryset with all scalar PARENT_COLUMNS fields.
@@ -260,7 +287,6 @@ class GHFDBParentQuerySet(PolymorphicQuerySet):
             "elevation": F("sample__heatflowsite__elevation"),
             "environment": F("sample__heatflowsite__environment"),
             "explo_method": F("sample__heatflowsite__explo_method"),
-            "explo_purpose": F("sample__heatflowsite__explo_purpose"),
             "total_depth_MD": F("sample__heatflowsite__length"),
             "total_depth_TVD": F("sample__heatflowsite__vertical_depth"),
             "quality_parent": F("quality"),

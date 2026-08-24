@@ -1,0 +1,398 @@
+# Decisions — 002 the published structure read from the model
+
+The specification in this directory was written in April 2026 and rewritten in place on 2026-08-23
+after an audit against the code. This file records what the audit found and how each disagreement
+was settled, so that the rewrite can be read against the original rather than replacing it
+silently.
+
+Git history holds the original text. Nothing here is a substitute for reading it.
+
+## How the audit ran
+
+Every requirement in the original specification was checked against the implementation and sorted
+into four groups:
+
+- still true
+- drifted
+- absent
+- behaviour the code has that the specification never mentioned
+
+The task list was then rewritten as though no code existed, and reconciled against the codebase
+afterwards, so that what the feature is missing is measured against what it should have been
+rather than against what was built.
+
+The original `tasks.md` recorded 74 of 74 tasks complete. That is a claim the file makes about
+itself, and it was not treated as evidence of anything.
+
+The original specification was amended in place four times for defects and twice for design
+changes, each time by striking the superseded text through and appending the replacement to the
+same sentence. Several requirements had accumulated three readings in one paragraph. The rewrite
+carries the final reading only.
+
+## Settled
+
+### D1 — The changelist column order is a requirement, and it is derived rather than restated
+
+**Original**: the specification named all 54 determination columns and all 21 site columns in
+order, twice each — once in an acceptance scenario and once in a functional requirement.
+
+**Code**: `admin.py` restates both lists as `list_display` tuples, and `test_admin.py` restates the
+determination list a third time as a literal to assert against.
+
+**Ruled**: the order is a genuine requirement and stays. These changelists are how the assessment
+team reads the database, and that team knows it as the published spreadsheet. A different order
+would draw complaints from users who know only that file.
+
+But four copies of one list is what let them drift — see D2. The requirement is now expressed as
+"the order the canonical column definitions give", and both the changelist and its test read that
+module rather than a copy of it. The specification names no column list at all.
+
+### D2 — The changelists follow the canonical definitions, not the published file's spelling
+
+**Original**: the determination changelist ends `tc_strategy`, `quality`, `Ref_ISGN`.
+
+**Code**: as specified.
+
+**Canonical**: `constants.py` ends the child block `tc_strategy`, `Ref_IGSN`, `quality_child`, and
+names the site quality column `quality_parent`.
+
+**Ruled**: the canonical definitions win, on all three columns and on the ordering of the last two.
+
+ADR-0003 already rules that the portal uses `tc_pT_function` and `Ref_IGSN` internally and rejects
+files carrying the misspelled headers, on the grounds that rejecting loudly puts the correction in
+front of the only people who can make it. Those people are the assessment team, and this changelist
+is where they read the database. Showing them the misspelling would be the same silent acceptance
+the ADR exists to refuse. And a name that differs between the code and the screen is the drift
+ADR-0002 rules out.
+
+### D3 — The portal holds no sample numbers, and the column stays empty
+
+**Original**: `Ref_ISGN` is required as a changelist column. Nothing says what fills it.
+
+**Code**: it renders an empty string unconditionally, in the changelist and in the export.
+`constants.py` carries the note "Recommend removing field." An `IGSN` field existed on the
+determination model and was deleted on 2026-04-09, the day before this specification was written.
+
+**Ruled**: no field is restored, and the column stays, empty.
+
+The way this was originally proposed did not hold up. A sample number does not describe a heat flow
+determination. A case could be made for one on the site, but that case has not been made or agreed.
+And the framework's sample model already stores any number of identifiers, of which a sample number
+is one, so a dedicated field in the heat flow application buys nothing. The later revision, a
+comma-separated list of the samples used to determine the value, has no meaning in the published
+database as a product.
+
+If sample numbers are ever held, it happens at the site level or in the roadmap item that brings in
+thermal property data, where actual physical samples are collected and stored. Neither is this
+feature.
+
+The column itself is not the same question. The published structure defines it, the export must
+carry the published column set exactly, and a curator comparing a changelist against the file is
+more confused by a column that is missing than by one that is blank.
+
+### D4 — The map viewer page leaves this specification
+
+**Original**: user story 4, FR-009 and FR-010 specify a portal page embedding the commission's
+externally hosted map viewer in an iframe, and a menu item pointing at it.
+
+**Code**: built, at `ghfdb/explore/`, with a menu entry and three tests.
+
+**Ruled**: removed from this specification. It shares an application with the flat interface and
+nothing else — no model, no queryset, no column, no test. It was swept in because both landed in
+the same week.
+
+The roadmap separates them too: the flat interface is R2, and the embedded viewer is superseded by
+R12, which brings the viewer inside the portal to read the portal's own API. The page and its tests
+stay exactly as they are, and R12 inherits them.
+
+### D5 — The column metadata file and the routes serving it are out of scope
+
+**Original**: the Assumptions name the column metadata file as authoritative for column
+definitions.
+
+**Code**: the file holds 62 entries with lowercase keys. It disagrees with the canonical
+definitions on 25 columns by case and omits six outright. A route serves it unauthenticated, and a
+second route serves a static copy of the 2024 release file. Neither route is specified anywhere,
+neither has a test, and the tests that check the file against the canonical definitions are all
+expected to fail.
+
+**Ruled**: this feature touches neither the file nor the routes.
+
+Whether the file needs to exist at all is a question for the API work, and answering it here would
+be answering it in the wrong place. The Assumptions are corrected: the canonical definitions in the
+constants module are the authority, per ADR-0002, and the metadata file is not.
+
+The consequence is accepted: the schema-coverage tests that compare the two stay expected-to-fail
+until that question is answered. They belong to `003-ghfdb-import-export`, not here.
+
+### D6 — The flattening contract is tested, and the query-count claim is proven properly
+
+**Original**: SC-001 and SC-002 require a constant query count "regardless of the number of records
+returned".
+
+**Code**: the annotation set has no passing test. The one test that asserts it is expected to
+fail, because the queryset annotates site elevation under the published name while the test expects
+a prefixed one. The query-count tests bound the count against a fixture holding a single record
+chain, which cannot distinguish a constant count from a linear one.
+
+**Ruled**: both are defects and both are this feature's work.
+
+On the annotation name: the published name is correct and the test is wrong. ADR-0002 requires
+annotations to carry published names, and the neighbouring site annotations are prefixed only
+because those names collide with fields the framework's base class declares. Elevation does not
+collide, so it takes its published name. FR-011 states the rule so the next reader does not have to
+infer it from which names happen to be prefixed.
+
+On the query counts: every constancy claim is measured at two different row counts. A bound
+measured once is a bound on one number.
+
+### D7 — Unreachable parent methods
+
+**Original**: silent. The specification requires two parent queryset methods.
+
+**Code**: three exist. The flattening method has no caller and no test. A dictionary accessor on
+the proxy model has no caller and no test, and raises on any field that exists only as an
+annotation.
+
+**Ruled**: the flattening method is specified and tested. It is the natural counterpart of the
+determination one and it is what the site changelist should be reading, rather than walking
+relationships per column as it does now.
+
+The dictionary accessor is removed. It is unreferenced, and it does not work.
+
+### D8 — Site geography columns are portal additions and stay
+
+**Original**: the superseded site column list included country, region, continent and geological
+domain. The final reading dropped them, while FR-014 continued to require filters on all four.
+
+**Code**: the site changelist shows all four, after the quality column.
+
+**Ruled**: they stay, after the published block. They are not published columns, and the
+specification now says so: the published parent columns come first in published order, then the
+geography, then the two counts. A filter the user cannot see the value of is worth less than one
+they can.
+
+### D9 — What the design review reversed
+
+The reconciliation was reviewed by an independent reviewer whose brief was to assume every closure
+was wrong. Three of six were.
+
+**T049** was closed on the determination queryset's elevation annotation and its test, for a task
+about the site queryset. The test asserts a key on an empty queryset, and the same test class is
+rejected as insufficient for a neighbouring task a few rows below in the same file.
+
+**T078 and T098** were closed on tests taking a superuser client, while a third task was held open
+on the grounds that a superuser is not the staff user the tasks name.
+
+**Ruled**: all three reopened. The pattern in both is the same and worth naming, because it is the
+kind of error a review pass exists to catch: evidence was accepted in one row on grounds that had
+already been rejected in another. Consistency within the reconciliation is the check, and it is one
+a reader can apply without re-deriving the verdicts.
+
+The review also found three defects the reconciliation had not:
+
+- a many-valued column annotated with `F()` that duplicates rows
+- four changelist headings Django never reads, because the entries are named after model fields
+- an import route that writes without consulting any of the three read-only hooks the tests assert
+
+Each is recorded in `reconciliation.md` with its measurement, and each has a task.
+
+### D10 — T026 is blocked: the export queryset's missing lithology/stratigraphy prefetches conflict with a pre-existing query-count test
+
+**Original**: T040 (FR-007) names lithology and stratigraphy among the many-valued columns
+`for_export()` must chain into its prefetches, alongside method, exploration purpose, the
+gradient's methods and corrections, the conductivity's descriptive vocabularies and probe type.
+T026 requires every many-valued column readable at zero further queries once the row is evaluated.
+
+**Code**: `for_export()` prefetches 14 M2M paths, matching its own docstring, but two published
+`CHILD_COLUMNS` — `geo_lithology` and `geo_stratigraphy`, reached via
+`sample__heatflowinterval__lithology` and `...stratigraphy` — are not among them. Both resolve on a
+row (T024 passes), but each costs one query per row to read, since neither is prefetched.
+`project/ghfdb/admin.py`'s own `get_queryset()` independently prefetches both paths, which is
+independent evidence the manager is missing them rather than the columns being intentionally
+excluded.
+
+**Tried**: added both prefetches to `for_export()`. `test_many_valued_columns_read_without_further_queries`
+(T026) then passed. Running the wider class turned up a break:
+`tests/test_ghfdb/test_managers.py::TestGHFDBChildQuerySet::test_for_export_max_queries` — a
+pre-existing test, not authored in this story, asserting `django_assert_max_num_queries(16)` —
+failed with 17 queries measured. Reverted the two prefetches.
+
+**Ruled**: blocked, not fixed. This story's brief prohibits modifying a pre-existing test it did
+not author. The two tests' requirements are in direct, provable conflict: 16 as a ceiling against
+18 as the correct count once FR-007 is satisfied. Resolving that takes a decision about
+`test_for_export_max_queries` that only the maintainer or a later pass over the branch can make —
+either retire it in favour of the T025 constant-query-count test, which already supersedes its
+methodology (a bound proven at two row counts, not asserted once against a literal), or raise its
+ceiling to 18. T026 and the lithology/stratigraphy chunk of T040 stay open. The rest of both is
+done.
+
+**Revisit if**: `test_for_export_max_queries` is retired or its bound is raised. At that point the
+two prefetches (`sample__heatflowinterval__lithology`, `sample__heatflowinterval__stratigraphy`)
+are a two-line addition to `for_export()`'s existing `prefetch_related()` call, and
+`test_many_valued_columns_read_without_further_queries` (already written, not committed — see
+`progress.md`'s 2026-08-23T22:45:00Z entry for its body) can be restored.
+
+### D10 — The single-bound export query test is retired, not raised
+
+**Found**: US-1 could not satisfy T026 and the last part of T040. FR-007 requires the export
+queryset to prefetch lithology and stratigraphy, and adding them takes its query count from sixteen
+to seventeen, which breaks `test_for_export_max_queries` — a test asserting
+`django_assert_max_num_queries(16)` against a fixture holding one record chain.
+
+**Ruled**: the old test is removed rather than its bound raised.
+
+Raising it to eighteen would reinstate the same assertion one number further along, and that
+assertion is the exact defect R2 names: a bound satisfied at one row is satisfied by a linear query
+plan as well as by a constant one, so it cannot fail for the reason it exists. Its replacement,
+`TestChildExportQuerySet::test_query_count_is_equal_at_two_row_counts`, asserts strictly more — it
+measures at two row counts and compares the counts to each other rather than to a literal, which
+also survives a framework change that adds or removes a fixed query.
+
+The two prefetches were the point of the task. Without them the two geological columns cost a query
+per row, and the changelist compensated independently by prefetching them itself — one more place
+the same knowledge was written twice.
+
+**Revisit if** a caller needs the export queryset's absolute query count bounded rather than its
+growth. Nothing does today.
+
+### D11 — The single-bound attachment test is retired too, for D10's reason
+
+**Found**: T062 requires `with_children()` to prefetch the site's exploration purposes, the one
+many-valued published parent column. Adding it costs four further queries through the polymorphic
+inheritance chain, and breaks `test_parent_with_children_no_extra_queries` — a test bounding the
+count at three against a fixture holding one site.
+
+**Ruled**: removed, not raised, exactly as D10 rules for its counterpart on the determination side.
+
+The four extra queries are a fixed cost, not a per-site one, which is precisely the distinction the
+old test cannot make and its replacement can. `TestParentChildAttachment::test_query_count_is_equal_at_two_row_counts`
+measures at two site counts and compares them to each other, so it fails if the cost is per-site and
+passes if it is fixed, whatever the fixed number happens to be.
+
+Both blocks were raised rather than worked around, and that was the right call. Editing the test
+instead would have left the same weak assertion in place, one number further along.
+
+**Revisit if** a caller needs the attachment's absolute query count bounded rather than its growth.
+Nothing does today.
+
+### D12 — The query-constancy measurement excludes the framework's audit watcher, and the watcher is raised upstream
+
+**Found**: measuring the changelist's query count across a full request does not measure the
+changelist. The framework installs a global audit-log watcher (`orbit`) whose cost is **per rendered
+row**, so the count grows for a reason this feature does not own and cannot prefetch away.
+
+Measured on this changelist, one warm-up request first:
+
+| Rows | Watcher on | Watcher off |
+|---|---|---|
+| 2 | 112 | 31 |
+| 6 | 124 | 31 |
+
+**Ruled**: the assertion disables the watcher for the duration of the comparison, and says so in the
+test. With it off the count does not move between the two row counts, so FR-019 is satisfied by this
+feature's own work — the changelist issues a fixed number of queries however many rows it shows.
+
+This is a measurement decision, not a fix. Nothing here changes the behaviour a real user gets, and
+scoping an upstream cost out of a test is not the same as working around it. Raised upstream as
+FAIR-DM/fairdm#281, with the numbers above: at the default page size that is roughly three hundred
+extra queries per page view, on every changelist in every project built on the framework. It matters
+here because the assessment team reads the published database through this admin, and the database
+is about to grow from a sample to the full release.
+
+**Revisit if** the upstream issue lands. The exclusion comes out of the test the day the cost stops
+being per-row.
+
+### D13 — GHFDBChildAdmin.search_fields keeps its own ghfdb_id, not narrowed to T093's two names
+
+**Found**: T093 asks for `search_fields` on the site name and the site's published identifier, by
+paths that exist from the determination — two names. The pre-existing `search_fields` already
+carries both, plus a third: the determination's own `ghfdb_id`. A pre-existing test
+(`TestGHFDBAdminChangelist::test_ghfdb_admin_changelist_refined_configuration`) asserts
+`model_admin.search_fields == EXPECTED_SEARCH_FIELDS`, a three-entry tuple including that third
+field, and this story's brief authorises touching only one assertion in that test — the one
+`EXPECTED_LIST_DISPLAY` fed (T079) — not this one.
+
+**Ruled**: `search_fields` is left exactly as it was. T093's requirement is a minimum, not an
+exclusive list — the two names it asks for are present and proven by
+`TestGHFDBChildAdmin::test_search_matches_site_name_and_published_site_identifier` (T082) — and
+removing the third field would have bought nothing this story needs while breaking a test outside
+what this story was authorised to edit.
+
+**Revisit if** a future story is explicitly asked to narrow the determination changelist's search to
+only the site name and the site's published identifier — that would be the point to also correct
+`EXPECTED_SEARCH_FIELDS`.
+
+### D14 — The site changelist's queryset never called `as_ghfdb_flat()`, so every published column rendered blank
+
+**Found**: while implementing T115, before changing `get_queryset()`, a direct check on the
+pre-existing queryset (`GHFDBParent.objects.with_child_counts().select_related(...)`) showed
+`row.ID_parent`, `row.q` and `row.site_name` all absent. None of T098-T101 caught this: T099-T101
+assert rendered *headings*, which come from each callable's `short_description` and are independent
+of the queryset, and `ColumnDisplay.scalar()` (F10 collapses the former `.annotation()`/`.field()`
+into this one builder, since both read with the identical `getattr(obj, accessor, None)`) renders a
+missing annotation as an empty cell rather than raising. The changelist returned 200 and showed the
+right column order and headings while every published-column cell was blank.
+
+**Ruled**: this is exactly the defect T115 exists to fix, and it is a real functional defect, not
+just a missing test — `get_queryset()` now chains `as_ghfdb_flat().with_child_counts().with_children()`
+so every annotation the mapping's `SCALAR`-group entries expect is present on the row. Verified
+directly (not only through the test suite): `row.ID_parent == 1`, `row.q == "70.00 mW/m²"`,
+`row.site_name == "Test Site"` after the change, all missing before it.
+
+**Revisit if** a future column is added to `PublishedColumns.ENTRIES` as a `SCALAR` sourced from an
+annotation, without a matching key in `as_ghfdb_flat()`'s `scalar_annotations` — the same
+silent-blank failure mode applies, and `getattr(obj, accessor, None)`'s permissiveness is why a
+value-level test (not just a heading-level one) is worth adding for a future column. F5 adds that
+proof for the columns this story touches. A future column would still need its own.
+
+### D15 — Geography columns read `obj.sample.heatflowsite.<field>`, not `obj.sample.<field>`
+
+**Found**: `ParentHeatFlow.sample` is a forward FK to the polymorphic base `Sample`. Accessed on an
+instance fetched without `select_related`, that FK descriptor returns the correctly downcast
+`HeatFlowSite` subtype (confirmed: `type(fetched.sample) is HeatFlowSite`), because `Sample`'s default
+manager auto-downcasts on `.get()`. But `as_ghfdb_flat()`'s `select_related("sample",
+"sample__heatflowsite")` builds `row.sample` as the **base** `Sample` instance from the joined SQL
+columns and populates the reverse one-to-one accessor `row.sample.heatflowsite` separately — measured:
+`row.sample.country` raises `AttributeError: 'Sample' object has no attribute 'country'`, while
+`row.sample.heatflowsite.country` resolves at zero extra queries.
+
+**Ruled**: the four geography display methods (`get_country`, `get_region`, `get_continent`,
+`get_domain`) read `obj.sample.heatflowsite.<field>`, matching the pre-existing code's own accessor
+path (it was not dead code, despite reading that way on first glance). No defensive `getattr` guard is
+added around it — the query already assumes this path resolves (the elevation and environment
+annotations traverse the identical `sample__heatflowsite__*` path with an `F()` expression), so a
+guard here would be exactly the kind of accessor a reader could mistake for a working one when it
+never triggers (R4's concern, applied to a relationship walk rather than a missing field).
+
+**Revisit if** a site is ever legitimately published without a `HeatFlowSite` row under its `sample` —
+the domain model does not currently allow this (every `HeatFlowSite.objects.create()` writes both
+tables), so this is not a defensive posture worth adopting here on speculation.
+
+### D16 — The leading `ghfdb_id` column keeps its field heading, "ID Child"
+
+**Found**: `reconciliation.md`'s design review lists four changelist headings that render the model
+field's `verbose_name` instead of the published name, because Django resolves a `list_display` string
+entry against the model's fields before the admin's attributes (the trap this module's docstring
+names). Three — `expedition`, `c_comment`, `water_temperature` — are published columns and were fixed
+by binding them through `ghfdb/columns.py`'s mapping, which carries the published name as
+`short_description` (D2, T077). The fourth, the leading `ghfdb_id` entry in `GHFDBChildAdmin.list_display`,
+was never addressed, and closing the branch's defect list without a ruling on it would be the same
+silent drop the reconciliation exists to catch.
+
+**Ruled**: left as `"ghfdb_id"`, rendering the field's own `verbose_name`, `"ID Child"`.
+
+`ghfdb_id` is not a published column. `PublishedColumns.ENTRIES` holds no entry for it, and none of
+`CHILD_COLUMNS`, `PARENT_COLUMNS` or `GHFDB_COLUMN_ORDER` name it — it is the portal's own row
+identifier, prepended to the determination changelist for orientation (T080's four-orientation-column
+block), the same role `HeatFlow.ghfdb_id`'s own `verbose_name` already names it for. The trap this
+module exists to avoid is a *published* name losing to a field's `verbose_name` — `expedition` reading
+as "expedition/platform/ship" is wrong because the published file calls that column `expedition`.
+`ghfdb_id` has no published name to lose to anything. The field's `verbose_name`, "ID Child", *is*
+the name, chosen by whoever wrote `heat_flow/models/child.py`, and it is accurate. This is the child
+record's own identifier, as `ghfdb_id`'s sibling on the parent side, `verbose_name="ID Parent"`,
+independently confirms for the analogous column on the site changelist.
+
+**Revisit if** `ghfdb_id` is ever given a published-column counterpart, or a curator reports "ID Child"
+as confusing against the published file it sits above — at that point routing it through
+`ColumnDisplay` the way the other three orientation columns already are is a two-line change.

@@ -4,7 +4,6 @@ from django.utils.translation import gettext_lazy as _
 from fairdm.db import models
 from heat_flow.models import HeatFlow, ParentHeatFlow
 
-from .constants import PARENT_COLUMNS
 from .managers import GHFDBChildManager, GHFDBParentManager
 
 
@@ -85,7 +84,3 @@ class GHFDBParent(ParentHeatFlow):
         proxy = True
         verbose_name = _("GHFDB Parent")
         verbose_name_plural = _("GHFDB Parents")
-
-    def as_dict(self):
-        """Returns a dictionary representation of the parent record"""
-        return {f: getattr(self, f) for f in PARENT_COLUMNS}
