@@ -365,3 +365,31 @@ never triggers (R4's concern, applied to a relationship walk rather than a missi
 **Revisit if** a site is ever legitimately published without a `HeatFlowSite` row under its `sample` —
 the domain model does not currently allow this (every `HeatFlowSite.objects.create()` writes both
 tables), so this is not a defensive posture this dispatch adopts speculatively.
+
+### D16 — The leading `ghfdb_id` column keeps its field heading, "ID Child"
+
+**Found**: `reconciliation.md`'s design review lists four changelist headings that render the model
+field's `verbose_name` instead of the published name, because Django resolves a `list_display` string
+entry against the model's fields before the admin's attributes (the trap this module's docstring
+names). Three — `expedition`, `c_comment`, `water_temperature` — are published columns and were fixed
+by binding them through `ghfdb/columns.py`'s mapping, which carries the published name as
+`short_description` (D2, T077). The fourth, the leading `ghfdb_id` entry in `GHFDBChildAdmin.list_display`,
+was never addressed, and closing the branch's defect list without a ruling on it would be the same
+silent drop the reconciliation exists to catch.
+
+**Ruled**: left as `"ghfdb_id"`, rendering the field's own `verbose_name`, `"ID Child"`.
+
+`ghfdb_id` is not a published column. `PublishedColumns.ENTRIES` holds no entry for it, and none of
+`CHILD_COLUMNS`, `PARENT_COLUMNS` or `GHFDB_COLUMN_ORDER` name it — it is the portal's own row
+identifier, prepended to the determination changelist for orientation (T080's four-orientation-column
+block), the same role `HeatFlow.ghfdb_id`'s own `verbose_name` already names it for. The trap this
+module exists to avoid is a *published* name losing to a field's `verbose_name` — `expedition` reading
+as "expedition/platform/ship" is wrong because the published file calls that column `expedition`.
+`ghfdb_id` has no published name to lose to anything; the field's `verbose_name`, "ID Child", *is* the
+name, chosen by whoever wrote `heat_flow/models/child.py`, and it is accurate — this is the child
+record's own identifier, as `ghfdb_id`'s sibling on the parent side, `verbose_name="ID Parent"`,
+independently confirms for the analogous column on the site changelist.
+
+**Revisit if** `ghfdb_id` is ever given a published-column counterpart, or a curator reports "ID Child"
+as confusing against the published file it sits above — at that point routing it through
+`ColumnDisplay` the way the other three orientation columns already are is a two-line change.
