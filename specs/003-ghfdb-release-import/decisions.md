@@ -640,3 +640,28 @@ and a freshly created `Dataset` defaults to `PRIVATE` (`visibility` field defaul
 `fairdm/core/dataset/models.py`). Using the filtered manager would have made T049's reuse silently
 fail on every dataset this story itself creates — the exact failure fairdm's own docstring on
 `DatasetManager` names `all_objects` as existing to avoid for administrative/import code.
+
+### D23 — US-3 first part Implementer notes (T051-T063)
+
+The record graph now exists: a row becomes its site, that site's parent heat flow value, an
+interval, a determination, and the determination's gradient and conductivity. Two identities make
+several rows collapse onto shared records.
+
+**A site is found by its published site identifier, and the lookup reaches the database.**
+`_build_site_and_parent` consults an in-run map first and falls back to a query, so a site written
+by an earlier import is reused rather than duplicated. The parent heat flow value follows the site,
+one per site rather than one per row.
+
+**An interval is found by its site together with the depth range the row gives, and the lookup is
+in-memory only.** `_build_interval` keys a per-run cache on the site's primary key and the top and
+bottom depth magnitudes, cleared at the start of each import pass. A row giving no depth at all
+carries an empty range, which is a range like any other for that key — so every such row on one
+site attaches to a single indeterminate interval, and a site holding both a determinate range and
+the indeterminate one keeps them as distinct records.
+
+**The interval identity does not survive across imports, and US-4 has to close that.** The site
+identity queries the database; the interval identity does not. Every scenario T059-T063 names is
+inside one import pass, so nothing in this story exposes the difference. Re-importing the same
+file will create a second set of intervals against the same sites. US-4 is where reimport
+idempotency is specified, and the interval side needs a database-backed lookup added there, by the
+pattern `_build_site_and_parent` already uses.
