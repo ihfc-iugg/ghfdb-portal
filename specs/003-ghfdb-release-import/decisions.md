@@ -304,3 +304,25 @@ each other about the probe, 878 of them on the probe type alone.
 Those rows are refused and reported, like any other disagreement about a shared record, and
 corrected at source. This is the general rule of D9 applied to a case that turns out to be ordinary
 rather than remote.
+
+### D19 — Foundations Implementer notes (T001-T005, T007)
+
+The plan and the task list name what each Foundations task delivers but not every file name or
+internal boundary. Recorded here, not as design decisions binding a later story, but as the
+Implementer's own record of the non-obvious choices this phase made while staying inside its named
+scope (constants.py, the test module, the fixtures, the conftest that exposes them).
+
+**T001 — the test module's name.** Neither the plan nor the task names the file. `test_release.py`
+mirrors `project/ghfdb/resources/release.py`, the resource name "one resource, not two" (plan.md)
+implies without stating — a release row produces its dataset, its literature, its site, its
+interval and its determination together, so one resource reads one file. `release` also matches the
+vocabulary the spec, CONTEXT.md and this feature's own name already use throughout.
+
+**T001 — what "collects" requires.** Measured directly: a module with a docstring and
+`pytestmark = pytest.mark.ghfdb` but no test function collects zero items under `pytest
+--collect-only`, with or without `-q`, in this repo's configuration — probed by creating and
+deleting a throwaway file (`test_empty_probe.py`) before writing anything real. So "a new test
+module... is named in the collection" needs at least one genuine, non-tautological test, not a bare
+marker declaration. `test_carries_the_ghfdb_marker` proves the module's own claim to the marker
+using `request.node.get_closest_marker`, rather than asserting something trivially true of the
+two lines just above it.
