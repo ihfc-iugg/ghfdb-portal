@@ -18,6 +18,11 @@
       "state": "PLAN",
       "at": "2026-08-25T10:25:30Z",
       "note": "spec gate approved"
+    },
+    {
+      "state": "RECONCILE",
+      "at": "2026-08-25T10:45:48Z",
+      "note": "114 tasks written greenfield; 8 proven done, 106 open"
     }
   ],
   "gates": {
@@ -46,7 +51,163 @@
       "worktree": null,
       "status": "todo",
       "replans": 0,
-      "tasks": []
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "todo"
+        },
+        {
+          "id": "T002",
+          "status": "todo"
+        },
+        {
+          "id": "T003",
+          "status": "todo"
+        },
+        {
+          "id": "T004",
+          "status": "todo"
+        },
+        {
+          "id": "T005",
+          "status": "todo"
+        },
+        {
+          "id": "T006",
+          "status": "done",
+          "evidence": "project/heat_flow/factories.py:33 \u00b7 tests/test_heat_flow/test_factories.py:39"
+        },
+        {
+          "id": "T007",
+          "status": "todo"
+        },
+        {
+          "id": "T110",
+          "status": "todo"
+        },
+        {
+          "id": "T111",
+          "status": "todo"
+        },
+        {
+          "id": "T112",
+          "status": "todo"
+        },
+        {
+          "id": "T113",
+          "status": "todo"
+        },
+        {
+          "id": "T114",
+          "status": "todo"
+        },
+        {
+          "id": "T008",
+          "status": "todo"
+        },
+        {
+          "id": "T009",
+          "status": "todo"
+        },
+        {
+          "id": "T010",
+          "status": "todo"
+        },
+        {
+          "id": "T011",
+          "status": "todo"
+        },
+        {
+          "id": "T012",
+          "status": "todo"
+        },
+        {
+          "id": "T013",
+          "status": "todo"
+        },
+        {
+          "id": "T014",
+          "status": "todo"
+        },
+        {
+          "id": "T015",
+          "status": "todo"
+        },
+        {
+          "id": "T016",
+          "status": "todo"
+        },
+        {
+          "id": "T017",
+          "status": "todo"
+        },
+        {
+          "id": "T018",
+          "status": "todo"
+        },
+        {
+          "id": "T019",
+          "status": "todo"
+        },
+        {
+          "id": "T020",
+          "status": "todo"
+        },
+        {
+          "id": "T021",
+          "status": "todo"
+        },
+        {
+          "id": "T022",
+          "status": "todo"
+        },
+        {
+          "id": "T023",
+          "status": "todo"
+        },
+        {
+          "id": "T024",
+          "status": "todo"
+        },
+        {
+          "id": "T025",
+          "status": "todo"
+        },
+        {
+          "id": "T026",
+          "status": "todo"
+        },
+        {
+          "id": "T027",
+          "status": "todo"
+        },
+        {
+          "id": "T028",
+          "status": "todo"
+        },
+        {
+          "id": "T029",
+          "status": "todo"
+        },
+        {
+          "id": "T030",
+          "status": "todo"
+        },
+        {
+          "id": "T031",
+          "status": "done",
+          "evidence": "project/ghfdb/admin.py:197 \u00b7 tests/test_ghfdb/test_admin.py:908"
+        },
+        {
+          "id": "T032",
+          "status": "done",
+          "evidence": "project/ghfdb/admin.py:197 \u00b7 tests/test_ghfdb/test_admin.py:916"
+        },
+        {
+          "id": "T033",
+          "status": "todo"
+        }
+      ]
     },
     {
       "id": "US2",
@@ -55,7 +216,76 @@
       "worktree": null,
       "status": "todo",
       "replans": 0,
-      "tasks": []
+      "tasks": [
+        {
+          "id": "T034",
+          "status": "todo"
+        },
+        {
+          "id": "T035",
+          "status": "todo"
+        },
+        {
+          "id": "T036",
+          "status": "todo"
+        },
+        {
+          "id": "T037",
+          "status": "todo"
+        },
+        {
+          "id": "T038",
+          "status": "todo"
+        },
+        {
+          "id": "T039",
+          "status": "todo"
+        },
+        {
+          "id": "T040",
+          "status": "todo"
+        },
+        {
+          "id": "T041",
+          "status": "todo"
+        },
+        {
+          "id": "T042",
+          "status": "todo"
+        },
+        {
+          "id": "T043",
+          "status": "todo"
+        },
+        {
+          "id": "T044",
+          "status": "todo"
+        },
+        {
+          "id": "T045",
+          "status": "todo"
+        },
+        {
+          "id": "T046",
+          "status": "todo"
+        },
+        {
+          "id": "T047",
+          "status": "todo"
+        },
+        {
+          "id": "T048",
+          "status": "todo"
+        },
+        {
+          "id": "T049",
+          "status": "todo"
+        },
+        {
+          "id": "T050",
+          "status": "todo"
+        }
+      ]
     },
     {
       "id": "US3",
@@ -64,7 +294,196 @@
       "worktree": null,
       "status": "todo",
       "replans": 0,
-      "tasks": []
+      "tasks": [
+        {
+          "id": "T051",
+          "status": "todo"
+        },
+        {
+          "id": "T052",
+          "status": "todo"
+        },
+        {
+          "id": "T053",
+          "status": "todo"
+        },
+        {
+          "id": "T054",
+          "status": "todo"
+        },
+        {
+          "id": "T055",
+          "status": "todo"
+        },
+        {
+          "id": "T056",
+          "status": "todo"
+        },
+        {
+          "id": "T057",
+          "status": "todo"
+        },
+        {
+          "id": "T058",
+          "status": "todo"
+        },
+        {
+          "id": "T059",
+          "status": "todo"
+        },
+        {
+          "id": "T060",
+          "status": "todo"
+        },
+        {
+          "id": "T061",
+          "status": "todo"
+        },
+        {
+          "id": "T062",
+          "status": "todo"
+        },
+        {
+          "id": "T063",
+          "status": "todo"
+        },
+        {
+          "id": "T064",
+          "status": "todo"
+        },
+        {
+          "id": "T065",
+          "status": "todo"
+        },
+        {
+          "id": "T066",
+          "status": "todo"
+        },
+        {
+          "id": "T067",
+          "status": "todo"
+        },
+        {
+          "id": "T068",
+          "status": "todo"
+        },
+        {
+          "id": "T069",
+          "status": "todo"
+        },
+        {
+          "id": "T070",
+          "status": "todo"
+        },
+        {
+          "id": "T071",
+          "status": "done",
+          "evidence": "project/heat_flow/models/child.py:305 \u00b7 tests/test_ghfdb/test_resources/test_child_import.py:294"
+        },
+        {
+          "id": "T072",
+          "status": "todo"
+        },
+        {
+          "id": "T073",
+          "status": "todo"
+        },
+        {
+          "id": "T074",
+          "status": "todo"
+        },
+        {
+          "id": "T075",
+          "status": "todo"
+        },
+        {
+          "id": "T076",
+          "status": "todo"
+        },
+        {
+          "id": "T077",
+          "status": "todo"
+        },
+        {
+          "id": "T078",
+          "status": "done",
+          "evidence": "project/ghfdb/resources/widgets.py:53 \u00b7 tests/test_ghfdb/test_resources/test_widgets.py:487"
+        },
+        {
+          "id": "T079",
+          "status": "done",
+          "evidence": "project/ghfdb/resources/widgets.py:53 \u00b7 tests/test_ghfdb/test_resources/test_widgets.py:475"
+        },
+        {
+          "id": "T080",
+          "status": "done",
+          "evidence": "project/ghfdb/resources/widgets.py:98 \u00b7 tests/test_ghfdb/test_resources/test_widgets.py:507"
+        },
+        {
+          "id": "T081",
+          "status": "todo"
+        },
+        {
+          "id": "T082",
+          "status": "todo"
+        },
+        {
+          "id": "T083",
+          "status": "todo"
+        },
+        {
+          "id": "T084",
+          "status": "todo"
+        },
+        {
+          "id": "T085",
+          "status": "todo"
+        },
+        {
+          "id": "T086",
+          "status": "todo"
+        },
+        {
+          "id": "T087",
+          "status": "todo"
+        },
+        {
+          "id": "T088",
+          "status": "todo"
+        },
+        {
+          "id": "T089",
+          "status": "todo"
+        },
+        {
+          "id": "T090",
+          "status": "todo"
+        },
+        {
+          "id": "T091",
+          "status": "todo"
+        },
+        {
+          "id": "T092",
+          "status": "todo"
+        },
+        {
+          "id": "T093",
+          "status": "todo"
+        },
+        {
+          "id": "T094",
+          "status": "todo"
+        },
+        {
+          "id": "T095",
+          "status": "todo"
+        },
+        {
+          "id": "T096",
+          "status": "todo"
+        }
+      ]
     },
     {
       "id": "US4",
@@ -73,7 +492,61 @@
       "worktree": null,
       "status": "todo",
       "replans": 0,
-      "tasks": []
+      "tasks": [
+        {
+          "id": "T097",
+          "status": "todo"
+        },
+        {
+          "id": "T098",
+          "status": "todo"
+        },
+        {
+          "id": "T099",
+          "status": "todo"
+        },
+        {
+          "id": "T100",
+          "status": "done",
+          "evidence": "project/ghfdb/resources/child.py:378 \u00b7 tests/test_ghfdb/test_resources/test_child_import.py:150"
+        },
+        {
+          "id": "T101",
+          "status": "todo"
+        },
+        {
+          "id": "T102",
+          "status": "todo"
+        },
+        {
+          "id": "T103",
+          "status": "todo"
+        },
+        {
+          "id": "T104",
+          "status": "todo"
+        },
+        {
+          "id": "T105",
+          "status": "todo"
+        },
+        {
+          "id": "T106",
+          "status": "todo"
+        },
+        {
+          "id": "T107",
+          "status": "todo"
+        },
+        {
+          "id": "T108",
+          "status": "todo"
+        },
+        {
+          "id": "T109",
+          "status": "todo"
+        }
+      ]
     }
   ],
   "budgets": {

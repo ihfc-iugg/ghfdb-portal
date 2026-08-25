@@ -1,228 +1,518 @@
-# Tasks: GHFDB Import/Export Pipeline
+# Tasks — 003 a published release read into the portal
 
-**Feature**: 003-ghfdb-import-export
-**Branch**: `003-ghfdb-import-export`
-**Input**: plan.md, spec.md, data-model.md, research.md, contracts/import-contract.md, contracts/export-contract.md, quickstart.md
-**Split from**: `002-ghfdb-proxy` tasks.md (Phases 3.5–5 + relevant Phase 7 tasks)
-**Propagated**: 2026-04-23 — Updated from spec.md refinement (BUG-010): canonical constants in `constants.py` require five code changes — Phase 4b tasks T091–T101 added.
-**Bugfix**: 2026-04-23 — [BUG-010] Canonical constants alignment: `constants.py` now defines `PARENT_COLUMNS`, `CHILD_COLUMNS`, `META_FIELDS`, and `GHFDB_COLUMN_ORDER = PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS` as single source of truth. Five code changes required: (1) remove old lowercase `GHFDB_COLUMN_ORDER` tuple from `constants.py`; (2) rename stale annotation keys in `GHFDBChildQuerySet.as_ghfdb_flat()` to match canonical names; (3) add `GHFDBParentQuerySet.as_ghfdb_flat()`; (4) fix `get_user_visible_fields()` in `child.py` to lowercase BOTH dict keys and `column_name`; (5) update stale `attribute=` values in `export.py`.
-**Propagated**: 2026-04-20 — Added Phase 4a with second import format tasks (T084–T090): `GHFDBSimpleImportFormat` implementation, admin format-selection requirement, and round-trip coverage (Acceptance Scenarios 11–12).
-**Propagated**: 2026-04-15 — Added controlled-vocabulary import normalization tasks (FR-016): T072 regression tests, T073 widget implementation, T074 validation gate.
-**Propagated**: 2026-04-14 — Updated from spec.md refinement
-**Bugfix**: 2026-04-14 — [BUG-002] Reopened admin import integration tasks and added import-page regression coverage for django-import-export hook compatibility.
-**Bugfix**: 2026-04-14 — [BUG-003] Reopened import upsert tasks and added template-aware natural-key coverage for standard uploads without `ID` / `ID_parent`.
-**Bugfix**: 2026-04-15 — [BUG-003] Reopened standard-upload upsert tasks for header-validation failure when `ID_parent` / `ID` headers are absent from file uploads.
-**Bugfix**: 2026-04-15 — [BUG-004] Reopened T024 (GHFDBImportFormat off-by-one: `min_row=8` reads a metadata row; must be `min_row=9`).
-**Bugfix**: 2026-04-15 — [BUG-005] Reopened T035 and T069; added T075 (confirm-page regression tests) and T076 (child.py synthetic-key removal + location-based parent resolution); T069 scoped to parent.py, T076 scoped to child.py to eliminate overlap.
-**Bugfix**: 2026-04-15 — [BUG-006] Reopened T035 and T036 (field declaration order does not match template); added T077 (failing column-order assertions) and T078 (get_user_visible_fields() override in both resources).
-**Bugfix**: 2026-04-16 — [BUG-007] Reopened T027 and T028 (widget tests: add int/float input regression cases); reopened T031 (widget implementation: add try/except AttributeError guards); added T079 (failing regression tests for numeric cell input) and T080 (implementation of the type-guard fix in `widgets.py`).
-**Bugfix**: 2026-04-16 — [BUG-008] Reopened T028 (GradientWidget/ConductivityWidget numeric-sentinel tests must assert **success**, not ValueError); reopened T034 (sentinel check must treat int/float as present for quantity sentinels); reopened T079 (replace wrong error assertions for GradientWidget and ConductivityWidget with success assertions); reopened T080 (add `isinstance(raw_sentinel, (int, float))` bypass before the `.strip()` guard in `RelatedModelWidget.clean()`).
-**Bugfix**: 2026-04-16 — [BUG-009] Reopened T034 (`geo_stratigraphy` M2M key must be `"age"` not `"stratigraphy"` in `IntervalWidget.m2m_map`); added T081 (fix key in `widgets.py`), T082 (regression test for non-empty `geo_stratigraphy`), T083 (critical validation gate).
+Written from `spec.md`, `research.md` and `decisions.md` as though the repository held no
+implementation of this feature. Nothing here was derived by reading the existing resources, widgets,
+formats or their tests. Two things were read and are treated as authorities rather than as
+implementations: the published column definitions, which are the canonical data definition, and the
+`heat_flow` models, which this feature reads into and does not own.
 
-**Prerequisite**: `002-ghfdb-proxy` must be complete before any task in this spec begins — specifically `GHFDB` proxy model, `GHFDBChildManager.for_export()`, and `local_id` fields on `HeatFlow`, `HeatFlowSite`, and `ParentHeatFlow`.
+Writing the list this way is deliberate. A task list written by reading the implementation can only
+describe the implementation, which is how a specification audit turns into a rubber stamp. The
+difference between this list and what the repository holds is the measurement the exercise exists to
+produce.
 
-## Format: `[ID] [P?] [Story] Description`
+Tests come before the implementation they cover, per constitution principle VI. Every task is one
+increment. Every implementation task names the test that proves it and the assertion that fails
+before it exists.
 
-- **[P]**: Parallelizable (different files, no dependency on an incomplete task)
-- **[US2/3]**: Mapped user story
-- All tasks include an exact file path
+The list was written with every box unchecked, including for behaviour the repository may already
+have. It was then walked against the code, and a task was ticked only where both a code citation and
+a passing test that genuinely exercises it could be given. Eight of the 114 closed that way; each
+carries the evidence it closed on. [reconciliation.md](reconciliation.md) records the split, and the
+six proposed closures that did not survive review.
+
+**Names used below.** The reading format, the resource and the release column definitions live in
+`project/ghfdb/`. Tests mirror that tree under `tests/test_ghfdb/`, per `tests/README.md`.
 
 ---
 
-## Phase 3.5: Resources Package Setup (Prerequisite)
+## Phase 1 — Foundations
 
-**Purpose**: Create the `resources/` package skeleton and `test_resources/` test directory before any US2 or US3 tasks begin.
+Blocking. Every story depends on these.
 
-- [X] T022 Create `project/ghfdb/resources/` package: `__init__.py`, `formats.py`, `widgets.py`, `parent.py`, `child.py`, `export.py` (all empty stubs with a module-level docstring)
-- [X] T023 [P] Create `tests/test_ghfdb/test_resources/` directory with `__init__.py` and stub files: `testwidgets.py`, `test_parent_import.py`, `test_child_import.py`, `test_export.py`, `test_roundtrip.py`; copy/reuse the `heat_flow_chain` and `sample_ghfdb_row` fixtures from `tests/test_ghfdb/conftest.py` as needed via import; **also delete** orphaned top-level stubs `tests/test_ghfdb/test_import.py` and `tests/test_ghfdb/test_export.py` created previously (superseded by the `test_resources/` subdirectory)
-- [X] T024 ⚠️ Reopened Implement `GHFDBImportFormat` (XLSX subclass: sheet `"data list"`, use row 6 as headers, skip rows 7 (unit labels) and 8 ("Allowed range of values"), data rows from row 9 — `ws.iter_rows(min_row=9)`) (reopened — BUG-004); `GHFDB_COLUMN_ORDER` (all **62** GHFDB column names in canonical order, matching `ghfdb_colmeta.json`), `PARENT_COLUMNS` (18 parent-level column names), and `CORRECTION_COL_MAP` (`{"corr_IS_flag": "IS", …}` 9-entry dict) in `project/ghfdb/resources/formats.py`; **BUG-010 amendment**: `GHFDB_COLUMN_ORDER`, `PARENT_COLUMNS`, `CHILD_COLUMNS`, `META_FIELDS`, and `CORRECTION_COL_MAP` are now defined in `project/ghfdb/constants.py` — `formats.py` MUST import them from there rather than redeclaring
-- [X] T025 Verify `ParentHeatFlow.local_id` field exists (check `project/heat_flow/models/`); if absent, add `local_id = CharField(max_length=255, null=True, blank=True, db_index=True)` and generate migration; **also verify `HeatFlowSite.local_id` field exists** — FR-006 uses it as the stable upsert identifier for the parent record; if absent, add the same field definition to `HeatFlowSite`; if either field is new, generate a single combined migration: `poetry run python manage.py makemigrations heat_flow --name add_local_id_fields`
+- [ ] **T001** *foundations* — A test module for the release import mirroring the source tree, with
+  the `ghfdb` marker, alongside the existing test package.
+  **Test**: `pytest --collect-only` names the module. Before: collection reports nothing.
 
-### System Validation — Phase 3.5
+- [ ] **T002** *foundations* — The release format's column definitions: the ordered list of every
+  column name a release file carries, held in the same module as the published parent and
+  determination columns and derived from them rather than restated, plus the names a release adds —
+  the two identifiers, the publication year, the quality code, the geography columns and the
+  assessment columns.
+  **Test**: the release list begins with the published parent columns in order and contains every
+  published determination column exactly once. Before: the name does not resolve.
 
-- [X] T026 ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass before proceeding to Phase 4
-- [X] T026a ⚠️ CRITICAL: Run type checks: `poetry run mypy project/ghfdb/` — MUST pass with no new errors (constitution §VI)
-- [X] T026b ⚠️ CRITICAL: Run linting: `poetry run ruff check project/ghfdb/` — MUST pass with zero violations (constitution §VI)
+- [ ] **T003** *foundations* — The definition of which released columns are read, which are
+  recognised and discarded, and which are refused, expressed as data rather than as behaviour
+  scattered through the reader. FR-007 requires one place both the header check and the row reading
+  consult.
+  **Test**: the three sets are disjoint and their union is the release column list. Before: no such
+  definition exists.
 
-**Checkpoint — Resources Package Ready**: Stub modules created, `formats.py` constants in place, `ParentHeatFlow.local_id` and `HeatFlowSite.local_id` verified.
+- [ ] **T004** *foundations* — A test fixture cut from the published release file: a small number of
+  whole rows copied byte-for-byte from `assets/ghfdb/IHFC_2024_GHFDB.zip`, keeping the real header
+  line, the real column order and the byte-order mark. It must include rows sharing a site, rows
+  sharing an interval, rows with no depth, rows from more than one publication and at least one
+  `[Unspecified]` value.
+  **Test**: the fixture's header equals the release file's header, read from the archive. Before:
+  the fixture does not exist.
+  **Note**: the fixture is cut from the real file on purpose. A hand-built one that matches the
+  reader proves nothing about the format, which is how the gap this feature exists to close stayed
+  invisible.
 
----
+- [ ] **T005** *foundations* — Fixture variants derived from T004 by a single deliberate change
+  each: a misspelled published header, an undefined header, a missing required header, a bad
+  vocabulary value, a numeric value in a text column, two rows disagreeing about a shared site, and
+  two rows disagreeing about a shared interval's probe.
+  **Test**: each variant differs from the base fixture in exactly the intended cell or header.
+  Before: the variants do not exist.
 
-## Phase 4: User Story 2 — Import GHFDB Spreadsheet (Priority: P2)
+- [x] **T006** *foundations* — Factories for every model a row produces, one per model, so tests can
+  state a starting condition without building a graph by hand.
+  **Test**: each factory produces a saved instance whose required fields are populated. Before: the
+  factories do not resolve.
+  **Closed on**: project/heat_flow/factories.py:33 · tests/test_heat_flow/test_factories.py:39
 
-**Goal**: Staff can upload a GHFDB XLSX in the Django admin and select either the "GHFDB Parent" or "GHFDB Child" import resource to create/update `HeatFlowSite`, `ParentHeatFlow`, `HeatFlow`, `ThermalGradient`, `IntervalConductivity`, `HeatFlowCorrection`, and `ProbeMetadata` records with correct controlled-vocabulary mappings, upsert on natural keys (or `local_id` when present), and atomic rollback on any validation error. Vocabulary tokens must be normalised before matching: square brackets stripped and the result lowercased (FR-016).
-
-**Independent Test**: `poetry run pytest tests/test_ghfdb/test_resources/testwidgets.py tests/test_ghfdb/test_resources/test_parent_import.py tests/test_ghfdb/test_resources/test_child_import.py -v`
-
-### Tests for User Story 2 ⚠️ Write FIRST — verify they FAIL before implementing
-
-- [X] T027 ⚠️ Reopened [P] [US2] Write failing leaf-widget tests in `tests/test_ghfdb/test_resources/testwidgets.py`: `ConceptWidget.clean()` case-insensitive lookup + invalid-value `ValueError` listing valid options; `MultiConceptWidget.clean()` semicolon split + batched error for multiple invalid values; `QuantityWidget.clean()` returns `Quantity`, `.render()` returns plain magnitude; `YesNoWidget.clean()` maps `"Yes"`→`True`, `"No"`→`False`, empty→`None`; **add**: assert passing an `int` to `ConceptWidget.clean()` raises `ValueError` whose message names the vocabulary (not a bare `AttributeError`) (reopened — BUG-007)
-- [X] T028 ✅ Resolved (reopened — BUG-008) [P] [US2] Write failing `RelatedModelWidget` and subclass tests in `tests/test_ghfdb/test_resources/testwidgets.py`: sentinel-column check skips instance creation when column is empty; `full_clean()` raises `ValueError` prefixed with model name; `set_m2m_relations()` sets correct M2M; `ParentWidget` creates `HeatFlowSite` + `Point` from lat/long columns; `IntervalWidget` creates `HeatFlowInterval`; `GradientWidget` skips when `T_grad_mean` is empty; `ConductivityWidget` skips when `tc_mean` is empty; **add**: assert that `ParentWidget` with an `int` in the `name` column raises `ValueError` (text-sentinel error remains correct — BUG-007); **correct BUG-008**: assert that `GradientWidget.clean(row={"T_grad_mean": 800, ...})` **succeeds** and returns a `ThermalGradient` — a numeric sentinel value on a quantity sentinel column MUST NOT raise; assert equivalently for `ConductivityWidget` with a numeric `tc_mean`
-- [X] T029 ⚠️ Reopened [P] [US2] Write failing `GHFDBParentImportResource` tests in `tests/test_ghfdb/test_resources/test_parent_import.py`: upsert on `local_id` (re-import updates, does not duplicate); `before_import()` deduplication keeps first occurrence of each `ID_parent`; 18 parent columns mapped to correct fields; `ParentHeatFlow.sample` FK (to `HeatFlowSite`) created with correct `Point` location; `explo_purpose` M2M set; staff-only access control (anonymous admin import URL → 302); plus regression coverage for template rows without `ID_parent` using `lat_NS` + `long_EW` as natural upsert key (reopened — BUG-003)
-- [X] T030 ⚠️ Reopened [P] [US2] Write failing `GHFDBChildImportResource` tests in `tests/test_ghfdb/test_resources/test_child_import.py`: all 14 child field mappings; `parent` FK resolved via `ID_parent` `ForeignKeyWidget`; `after_save_instance()` creates 9 `HeatFlowCorrection` records with correct `correction_type` and `status`; `ProbeMetadata` created when probe columns are non-empty; `method` M2M set via `MultiConceptWidget`; `IntervalWidget`, `GradientWidget`, `ConductivityWidget` M2M set after save; plus regression coverage for template rows without `ID`/`ID_parent` using location + depth + `publication_reference` as child natural key (reopened — BUG-003)
-- [X] T030a [US2] Write failing SC-005 schema-coverage test in `tests/test_ghfdb/test_resources/test_schema_coverage.py`: assert every column name in `GHFDB_COLUMN_ORDER` (from `constants.py`) appears as a declared `Field` in either `GHFDBParentImportResource` or `GHFDBChildImportResource` with no undocumented omissions; assert every column name also appears as a key in `ghfdb_colmeta.json`; assert `len(GHFDB_COLUMN_ORDER) == 62` (authoritative count from `ghfdb_colmeta.json`)
-- [X] T066 [P] [US2] Add an authenticated admin regression test in `tests/test_ghfdb/test_resources/test_parent_import.py` asserting `GET /admin/ghfdb/ghfdb/import/` returns HTTP 200 for a staff user and renders the configured import resource options without a server error
-- [X] T072 [P] [US2] Write failing normalization regression tests in `tests/test_ghfdb/test_resources/testwidgets.py`: assert `ConceptWidget.clean("[Onshore (continental)]")` returns the correct `Concept` for `"onshore (continental)"`; assert `ConceptWidget.clean("[OFFSHORE (MARINE)]")` returns the correct `Concept` for `"offshore (marine)"`; assert `MultiConceptWidget.clean("[Offshore, continental]; [Onshore (continental)]")` splits on `;` and normalises each token independently; assert that a bracketed invalid token raises a `ValueError` whose message contains the **original** bracket-wrapped text (not the stripped/lowercased form) so users can locate the error in the source file (FR-016)
-
-### Implementation for User Story 2
-
-- [X] T031 ⚠️ Reopened [US2] Implement leaf widgets (`ConceptWidget` — case-insensitive label lookup + cache; `MultiConceptWidget` — semicolon split + batch `ConceptWidget`; `QuantityWidget` — `Quantity(Decimal(value), unit)` ↔ `magnitude`; `YesNoWidget` — "Yes"/"No" ↔ `True`/`False`/`None`) in `project/ghfdb/resources/widgets.py`; all user-facing error message strings MUST use `gettext_lazy()` (constitution §V — i18n compliance); **add**: wrap `super().clean()` call in `ConceptWidget.clean()` with `try/except AttributeError` that re-raises a `ValueError` naming the vocabulary (reopened — BUG-007; see T080 for full widget-guard implementation)
-- [X] T073 [US2] Update `ConceptWidget.clean()` and `MultiConceptWidget.clean()` in `project/ghfdb/resources/widgets.py` to apply token normalisation (FR-016): add a `normalize_vocab_token(raw: str) -> str` module-level helper that returns `raw.strip("[]").lower()`; call it on each token **before** cache lookup or database query; error messages MUST include the **original** (pre-normalisation) token text so the user can locate the value in the source file; all message strings MUST use `gettext_lazy()` (constitution §V)
-- [X] T032 [US2] Implement `RelatedModelWidget` base class in `project/ghfdb/resources/widgets.py`: `__init__` accepts `model`, `field_map`, `m2m_map`, `sentinel_column`, `widget_map`; `clean()` checks sentinel → extracts + cleans scalars → `full_clean()` → `save()` → defers M2M; `set_m2m_relations(instance)` sets all M2M via widget `.clean()`; `full_clean()` `ValidationError` re-raised as `ValueError` prefixed with model name; `ValueError` prefix strings MUST use `gettext_lazy()` (constitution §V — i18n compliance)
-- [X] T033 [US2] Implement `ParentWidget` in `project/ghfdb/resources/widgets.py`: `RelatedModelWidget` for `HeatFlowSite` + `Point`, sentinel `"name"`, creates/updates `Point(x=long_EW, y=lat_NS)`, all scalar (`name`, `elevation`, `environment`, `explo_method`, `total_depth_MD`→`length`, `total_depth_TVD`→`vertical_depth`, `Country`, `Region`, `Continent`, `Domain`) and M2M (`explo_purpose`) mappings per `data-model.md`
-- [X] T034 ✅ Resolved (reopened — BUG-008, BUG-009) [US2] Implement `IntervalWidget` (sentinel `None`, `q_top`/`q_bottom` → `QuantityWidget("m")`, `geo_lithology`/`geo_stratigraphy` M2M), `GradientWidget` (sentinel `"T_grad_mean"`, 7 scalar + 4 M2M fields), and `ConductivityWidget` (sentinel `"tc_mean"`, 3 scalar + 7 M2M fields) in `project/ghfdb/resources/widgets.py`; sentinel check for `GradientWidget` and `ConductivityWidget` MUST treat a native `int` or `float` in the sentinel column as **present** (delegate to `QuantityWidget` which handles numeric input natively) — see T080 for the implementation detail; `geo_stratigraphy` M2M key MUST be `"age"` not `"stratigraphy"` (reopened — BUG-009; see T081)
-- [X] T035 ⚠️ Reopened [US2] Implement `GHFDBParentImportResource` in `project/ghfdb/resources/parent.py`: 6 `Field` declarations (`local_id`, `value`, `uncertainty`, `comment`, `corr_HP_flag`, `sample`); `ParentWidget` instantiation; `before_import()` deduplication; `Meta` upsert strategy must be template-aware (`ID_parent` / `local_id` when present, otherwise `lat_NS` + `long_EW` for standard uploads) with transactional rollback preserved; `get_user_visible_fields()` must return fields in `PARENT_COLUMNS` order (reopened — BUG-003, BUG-005, BUG-006)
-- [X] T036 ⚠️ Reopened [US2] Implement `GHFDBChildImportResource` in `project/ghfdb/resources/child.py`: 14 `Field` declarations per `data-model.md`; widget instantiations (`IntervalWidget`, `GradientWidget`, `ConductivityWidget`, `ForeignKeyWidget(ParentHeatFlow, "local_id")`); `after_save_instance()` creating 9 `HeatFlowCorrection.objects.update_or_create()` calls via `CORRECTION_COL_MAP` + `ProbeMetadata.objects.update_or_create()` when probe columns are non-empty + `widget.set_m2m_relations()` for each `RelatedModelWidget` field; `Meta` upsert strategy must be template-aware (`ID` / `local_id` when present, otherwise `lat_NS` + `long_EW` + `q_top` + `q_bottom` + `publication_reference`) with transactional rollback preserved; `get_user_visible_fields()` must return fields in `GHFDB_COLUMN_ORDER` order (reopened — BUG-003, BUG-006)
-- [X] T037 [US2] Update `project/ghfdb/resources/__init__.py` to publicly re-export `GHFDBParentImportResource`, `GHFDBChildImportResource`, `GHFDBExportResource`, `GHFDBImportFormat`
-- [X] T038 ⚠️ Reopened [US2] Update `GHFDBChildAdmin` import integration in `project/ghfdb/admin.py`: keep `get_import_resource_classes()` returning `[GHFDBParentImportResource, GHFDBChildImportResource]` and `get_import_formats()` returning `[GHFDBImportFormat]`, but ensure all django-import-export admin hook overrides accept the request-aware method signatures required by the installed version so `/admin/ghfdb/ghfdb/import/` renders successfully (reopened — BUG-002)
-
-### System Validation — Phase 4
-
-- [X] T039 ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass before proceeding
-- [X] T039a ⚠️ CRITICAL: Run type checks: `poetry run mypy project/ghfdb/` — MUST pass with no new errors (constitution §VI)
-- [X] T039b ⚠️ CRITICAL: Run linting: `poetry run ruff check project/ghfdb/` — MUST pass with zero violations (constitution §VI)
-- [X] T040 ⚠️ CRITICAL: Run User Story 2 tests: `poetry run pytest tests/test_ghfdb/test_resources/testwidgets.py tests/test_ghfdb/test_resources/test_parent_import.py tests/test_ghfdb/test_resources/test_child_import.py -v` — ALL tests MUST pass, including authenticated admin import-page rendering coverage, template-without-ID regression coverage for parent and child natural-key upsert paths, files where `ID` / `ID_parent` headers are fully absent (resolved — BUG-002, BUG-003), and bracket-wrapped/mixed-case vocabulary normalisation regression coverage (FR-016, see T074)
-- [X] T074 ⚠️ CRITICAL [US2] Re-run `poetry run pytest tests/test_ghfdb/test_resources/testwidgets.py -v` and confirm all normalization regression tests (T072) pass — bracketed tokens must match correctly after stripping and lowercasing, and invalid bracketed tokens must report the **original** token text in the `ValueError` message — before closing FR-016
-
-- [X] T067 [P] [US2] Add regression tests in `tests/test_ghfdb/test_resources/test_parent_import.py` for standard upload rows without `ID_parent`: verify deduplication and re-import upsert via `lat_NS` + `long_EW`, ensure no duplicate `ParentHeatFlow`/`HeatFlowSite` rows are created, and cover files where `ID_parent` header is absent (not just blank cell values) (resolved — BUG-003)
-- [X] T068 [P] [US2] Add regression tests in `tests/test_ghfdb/test_resources/test_child_import.py` for standard upload rows without `ID`/`ID_parent`: verify re-import upsert via `lat_NS` + `long_EW` + `q_top` + `q_bottom` + `publication_reference`, verify different `publication_reference` values over the same site/depth interval remain distinct records, and cover files where `ID`/`ID_parent` headers are absent (resolved — BUG-003)
-- [X] T069 ⚠️ Reopened [US2] Update `project/ghfdb/resources/parent.py` to remove `_effective_parent_id()`, `_normalize_decimal()`, and the synthetic-key injection in `before_import_row()`; deduplicate in `before_import()` by `(lat_NS, long_EW)` tuple directly; update `_get_or_create_site()` to look up existing `HeatFlowSite` by `location__x` / `location__y` when `ID_parent` is absent; leave `ParentHeatFlow.local_id` empty for template rows without explicit IDs; keep `Meta.import_id_fields = ("ID_parent",)` mapped to `local_id` — the confirm-page column will now show the real `local_id` or empty, not a synthetic key (reopened — BUG-005)
-- [X] T070 [US2] Update `project/ghfdb/resources/child.py` so template-aware child upsert remains valid when `ID`/`ID_parent` headers are absent from uploaded files and does not fail `import_id_fields` header validation, while preserving distinct-reference matching (resolved — BUG-003)
-- [X] T071 CRITICAL [US2] Re-run `poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py tests/test_ghfdb/test_resources/test_child_import.py -v` and confirm template-aware upsert passes for both blank-ID rows and truly missing `ID`/`ID_parent` headers before closing BUG-003 (resolved — BUG-003)
-- [X] T075 [P] [US2] Write failing regression tests in `tests/test_ghfdb/test_resources/test_parent_import.py`: for a standard-upload import row (no `ID_parent` header), assert that after import no `ParentHeatFlow.local_id` value contains `AUTO_PARENT:`; assert that the `ID_parent` column in the dry-run result shows either the real `ParentHeatFlow.local_id` value or an empty string; add equivalent coverage in `tests/test_ghfdb/test_resources/test_child_import.py` asserting no `HeatFlow.local_id` value contains `AUTO_CHILD:` after import (BUG-005)
-- [X] T076 [P] [US2] Update `project/ghfdb/resources/child.py` to remove `_effective_parent_id()`, `_effective_child_id()`, `_normalize_decimal()`, and `before_import_row()`; add `_resolve_parent_by_location(row)` to look up `ParentHeatFlow` via `HeatFlowSite.objects.filter(location__x=lon, location__y=lat)` when `ForeignKeyWidget` returns no match; depends on T069 (parent.py location-based lookup already in place before child.py resolves parents by location) (BUG-005)
-- [X] T077 [P] [US2] Write failing column-order assertions in `tests/test_ghfdb/test_resources/test_parent_import.py`: assert that `GHFDBParentImportResource().get_user_visible_fields()` returns fields whose `column_name` values appear in the exact order of `PARENT_COLUMNS` (skipping any fields not present in `PARENT_COLUMNS`); add equivalent assertions in `tests/test_ghfdb/test_resources/test_child_import.py` asserting that `GHFDBChildImportResource().get_user_visible_fields()` yields `column_name` values in `GHFDB_COLUMN_ORDER` order (BUG-006)
-- [X] T078 [US2] Override `get_user_visible_fields()` in `GHFDBParentImportResource` (`project/ghfdb/resources/parent.py`) to sort the list returned by `super()` by each field's `column_name` position in `PARENT_COLUMNS` (unknown `column_name` values sorted to the end); apply the equivalent override in `GHFDBChildImportResource` (`project/ghfdb/resources/child.py`) sorting by position in `GHFDB_COLUMN_ORDER`; the canonical-order lists are imported from `.formats` (BUG-006); **BUG-010 amendment**: since `GHFDB_COLUMN_ORDER` now contains mixed-case column names (`T_grad_mean`, `lat_NS`, `corr_HP_flag`), the sort dict MUST lowercase keys: `{col.lower(): i for i, col in enumerate(GHFDB_COLUMN_ORDER)}` and the field lookup MUST also lowercase `column_name`: `order.get(f.column_name.lower(), len(GHFDB_COLUMN_ORDER))`; import from `constants` not `formats` — see T098 (BUG-010)
-- [X] T079 ✅ Resolved (reopened — BUG-008) [P] [US2] Update regression tests in `tests/test_ghfdb/test_resources/testwidgets.py` for numeric cell input: (1) `ConceptWidget.clean(42, row={})` raises `ValueError` whose message contains the vocabulary class name and the value `42` — **not** `AttributeError` (unchanged — BUG-007); (2) **correct BUG-008**: `GradientWidget.clean("", row={"T_grad_mean": 800, ...})` **succeeds** and returns a `ThermalGradient` with a Pint quantity `value` — replace the now-wrong `pytest.raises(ValueError)` assertion with a success assertion; (3) **correct BUG-008**: `ConductivityWidget.clean("", row={"tc_mean": 2.5, ...})` **succeeds** and returns an `IntervalConductivity` — replace the now-wrong `pytest.raises(ValueError)` assertion with a success assertion; (4) `ParentWidget.clean("", row={"name": 1, ...})` raises `ValueError` naming `"name"` column (unchanged — BUG-007, text-sentinel guard still correct)
-- [X] T080 ✅ Resolved (reopened — BUG-008) [US2] Update `try/except AttributeError` type-guards in `project/ghfdb/resources/widgets.py` (BUG-007, amended by BUG-008): (1) `ConceptWidget.clean()` — keep existing guard unchanged; (2) `RelatedModelWidget.clean()` sentinel guard — **add `isinstance` bypass before the `.strip()` call**: `if isinstance(raw_sentinel, (int, float)): pass  # numeric → treat as present` — only convert `AttributeError` → `ValueError` when `raw_sentinel` is non-numeric and `.strip()` actually raises; (3) `ParentWidget.clean()` `name` guard — keep existing guard unchanged (numeric site name is always an error); all messages MUST use `gettext_lazy()` (constitution §V)
-
-- [X] T081 ✅ Resolved [US2] Fix `IntervalWidget.m2m_map` in `project/ghfdb/resources/widgets.py`: change the key `"stratigraphy"` to `"age"` so that `geo_stratigraphy` values are stored on `HeatFlowInterval.age` (`ConceptManyToManyField(vocabulary=GeologicalTimescale)`) rather than `HeatFlowInterval.stratigraphy` (`ManyToManyField(to="stratigraphy.StratigraphicUnit")`); the latter cannot accept `research_vocabs.Concept` objects and raises `"Field 'id' expected a number but got <gts2020: ...>"` at runtime (BUG-009)
-- [X] T082 ✅ Resolved [P] [US2] Add regression test for `geo_stratigraphy` in `tests/test_ghfdb/test_resources/testwidgets.py`: given a `HeatFlowInterval` instance saved to the DB and an `IntervalWidget` whose `_last_row` contains `"geo_stratigraphy": "Holocene"`, assert that `set_m2m_relations(interval)` completes without error and that `interval.age.filter(name="Holocene").exists()` returns `True` (BUG-009); also add a child-import integration assertion in `tests/test_ghfdb/test_resources/test_child_import.py` that a row with `geo_stratigraphy="Holocene"` imports successfully
-- [X] T083 ✅ Resolved ⚠️ CRITICAL [US2] Re-run `poetry run pytest tests/test_ghfdb/test_resources/testwidgets.py tests/test_ghfdb/test_resources/test_child_import.py -v` and confirm all geo_stratigraphy regression tests (T082) pass — non-empty `geo_stratigraphy` values must set `HeatFlowInterval.age`, not raise a type error — before closing BUG-009
-
-**Checkpoint — US2 Complete (BUG-003 resolved 2026-04-15)**: Template-aware natural-key upsert verified for both blank-ID rows and uploads where `ID` / `ID_parent` headers are entirely absent. All 25 import resource tests pass.
-
-> **SC-003 Manual QA Gate** (not automated): Before marking this feature release-ready, manually import a 10,000-row GHFDB XLSX and confirm the complete error report is delivered within 60 seconds.
+- [ ] **T007** *foundations* — A fixture giving a bibliographic record with a known citation key, and
+  one giving two records sharing a citation key, since the portal's citation keys are not unique.
+  **Test**: the second fixture yields two records for one lookup. Before: the fixtures do not exist.
 
 ---
 
-## Phase 4a: Second Import Format — Simple Template (US2)
+## Phase 2 — US-1, a release file is checked in full before anything is written
 
-**Purpose**: Add `GHFDBSimpleImportFormat` for XLSX files with 5 metadata rows, headers at row 6, and data from row 7 (no unit-label or allowed-range skip rows). Expose both format classes in the admin import page so staff can select the correct layout before uploading.
+- [ ] **T008** *US-1* — Test: a release file whose header is the real one passes the column check and
+  its values are read.
+  **Fails before**: no reader exists.
 
-**Depends on**: Phase 4 complete
+- [ ] **T009** *US-1* — The reading format: a comma-separated reader carrying a name a curator can
+  recognise in the format list, reading the header from the first line and the data from the second.
+  **Test**: T008.
 
-### Tests for Phase 4a ⚠️ Write FIRST — verify they FAIL before implementing
+- [ ] **T010** *US-1* — Test: the format's name as offered in the administrative interface is the
+  readable one and not the library's bare format code.
+  **Fails before**: the name is `csv`.
 
-- [X] T084 [P] [US2] Write failing `GHFDBSimpleImportFormat` unit tests in `tests/test_ghfdb/test_resources/test_parent_import.py`: use `openpyxl` to build an in-memory workbook whose sheet `"data list"` has rows 1–5 as arbitrary metadata text, row 6 as column headers matching the first few entries of `GHFDB_COLUMN_ORDER`, and rows 7–8 as genuine data rows; call `GHFDBSimpleImportFormat().create_dataset(stream)` and assert (a) the returned `tablib.Dataset` has exactly 2 data rows, (b) no metadata-row content (e.g. the text `"metadata"`) appears as a data cell value, and (c) column headers match row 6 of the workbook
-- [X] T085 [P] [US2] Write failing admin format-selection tests in `tests/test_ghfdb/test_resources/test_parent_import.py`: instantiate `GHFDBAdmin(GHFDB, AdminSite())` and assert `get_import_formats()` returns a list of exactly 2 items; assert the first item's `get_title()` (or class name) is `"GHFDB Official Template"` and the second is `"GHFDB Simple Template"`; assert `GET /admin/ghfdb/ghfdb/import/` for a staff user returns HTTP 200 and the response body contains both format title strings
+- [ ] **T011** *US-1* — Test: a file carrying a misspelled published column name is refused, the
+  error names the misspelled name, the correct name and the outdated template, and no record of any
+  kind is created.
+  **Fails before**: nothing checks headers.
+  **Note**: this refusal is required without exception, including for the published release, which
+  carries both misspelled names. See D7.
 
-### Implementation for Phase 4a
+- [ ] **T012** *US-1* — The misspelled-name check.
+  **Test**: T011.
 
-- [X] T086 [US2] Implement `GHFDBSimpleImportFormat` in `project/ghfdb/resources/formats.py`: subclass `GHFDBImportFormat`; override `create_dataset()` replacing `ws.iter_rows(min_row=9)` with `ws.iter_rows(min_row=7)` (skip only the 5 metadata rows, not rows 7–8); override `get_title()` to return `"GHFDB Simple Template"`; also add `get_title()` to the existing `GHFDBImportFormat` returning `"GHFDB Official Template"` so both formats appear with distinct human-readable labels in the admin dropdown
-- [X] T087 [US2] Update `GHFDBAdmin.get_import_formats()` in `project/ghfdb/admin.py` to return `[GHFDBImportFormat, GHFDBSimpleImportFormat]`; add `GHFDBSimpleImportFormat` to the import from `project/ghfdb/resources`
-- [X] T088 [US2] Update `project/ghfdb/resources/__init__.py` to add `GHFDBSimpleImportFormat` to the public re-exports alongside `GHFDBImportFormat`
+- [ ] **T013** *US-1* — Test: a file carrying a column name the release format does not define is
+  refused with that column named.
+  **Fails before**: an unknown column is ignored per row.
 
-### System Validation — Phase 4a
+- [ ] **T014** *US-1* — The undefined-name check.
+  **Test**: T013.
 
-- [X] T089 ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass before proceeding
-- [X] T089a ⚠️ CRITICAL [US2] Re-run `poetry run pytest tests/test_ghfdb/test_resources/ -v` — all existing Phase 4 tests MUST remain green and new format-selection and simple-template tests (T084, T085) MUST also pass
+- [ ] **T015** *US-1* — Test: a file missing a column the release format requires is refused with
+  that column named.
+  **Fails before**: a missing column is silently skipped for every row.
 
-### Round-trip Coverage — Phase 4a
+- [ ] **T016** *US-1* — The missing-column check.
+  **Test**: T015.
 
-- [X] T090 [P] [US2] Update `tests/test_ghfdb/test_resources/test_roundtrip.py` (SC-001): add a second round-trip pass using the simple-template layout — create an in-memory XLSX with 5 metadata rows, headers at row 6, and the same data rows as `sample_ghfdb.xlsx` starting at row 7; import via `GHFDBParentImportResource` then `GHFDBChildImportResource` with a `GHFDBSimpleImportFormat` stream; assert the same records are created and that an export through `GHFDBExportResource` produces output identical to the official-template round-trip
+- [ ] **T017** *US-1* — Test: after a header refusal, no data row was read at all — proven by a row
+  that would itself have raised, which produces no second error.
+  **Fails before**: recording a header fault does not stop the row loop, so every row is still read.
+  **Note**: the library offers no hook that aborts before the first row. See R3.
 
-**Checkpoint — Phase 4a Complete**: `GHFDBSimpleImportFormat` verified; admin import page presents both named format options; all format-selection and simple-template round-trip tests pass.
+- [ ] **T018** *US-1* — Emptying the dataset when the header check fails, so the rows are genuinely
+  not read.
+  **Test**: T017.
+
+- [ ] **T019** *US-1* — Test: a file whose header is correct but whose rows carry faults in several
+  different rows reports every fault, not the first.
+  **Fails before**: no reader exists.
+
+- [ ] **T020** *US-1* — Test: a reported fault carries the row number as it appears in the file,
+  counting the header line, so a fault in the first data row reports as line 2.
+  **Fails before**: the library reports data-row position, which is one less.
+
+- [ ] **T021** *US-1* — Reporting the file's line number rather than the data-row position.
+  **Test**: T020.
+
+- [ ] **T022** *US-1* — Test: a reported fault names the column as it appears in the header, not the
+  model attribute the value would have been stored in.
+  **Fails before**: the field name in a report is the model attribute.
+
+- [ ] **T023** *US-1* — Naming the column in the fault, for every column that can refuse a value.
+  **Test**: T022.
+
+- [ ] **T024** *US-1* — Test: a reported fault carries the offending value and a reason that
+  distinguishes it from other reasons.
+  **Fails before**: no reader exists.
+
+- [ ] **T025** *US-1* — Test: a file in which one value is refused writes nothing at all — every
+  record count is what it was before, including for the rows that were themselves valid.
+  **Fails before**: the confirmed pass commits the valid rows and skips the refused one. This is the
+  library's default and the specification forbids it. See R5.
+
+- [ ] **T026** *US-1* — Rolling the confirmed pass back when any value was refused.
+  **Test**: T025.
+
+- [ ] **T027** *US-1* — Test: reinstating the library's default makes T025 fail. The guarantee is an
+  override of a default that would otherwise pass every test written against a clean file.
+  **Fails before**: the test does not exist, and its absence is what would let the override be
+  removed silently.
+
+- [ ] **T028** *US-1* — Test: an import in which any value was refused is not reported to the curator
+  as having succeeded.
+  **Fails before**: the confirmed pass reports success without inspecting its own result.
+
+- [ ] **T029** *US-1* — Checking the confirmed pass's result before reporting it.
+  **Test**: T028.
+
+- [ ] **T030** *US-1* — Test: a file in which every value passes writes the records when the curator
+  confirms.
+  **Fails before**: no reader exists.
+
+- [x] **T031** *US-1* — Test: a staff user without permission to add records cannot reach the import,
+  and one with it can.
+  **Fails before**: the route does not exist.
+  **Closed on**: project/ghfdb/admin.py:197 · tests/test_ghfdb/test_admin.py:908
+
+- [x] **T032** *US-1* — Permission gating on the import route.
+  **Test**: T031.
+  **Closed on**: project/ghfdb/admin.py:197 · tests/test_ghfdb/test_admin.py:916
+
+- [ ] **T033** *US-1* — Test: an anonymous request to the import route is refused, distinguishably
+  from a request that merely redirects to a login page for any administrative address.
+  **Fails before**: the route does not exist.
 
 ---
 
-## Phase 4b: BUG-010 — Canonical Constants Alignment
+## Phase 3 — US-2, the release lands as one dataset for each publication
 
-**Purpose**: Remove the stale hardcoded `GHFDB_COLUMN_ORDER` tuple from `constants.py`; rename all stale annotation keys in `GHFDBChildQuerySet.as_ghfdb_flat()` to match canonical names; add `GHFDBParentQuerySet.as_ghfdb_flat()`; fix two-sided case-insensitive column ordering in `child.py`; update stale `attribute=` values in `export.py`. These changes make `constants.py` the single source of truth for the GHFDB spreadsheet column structure.
+- [ ] **T034** *US-2* — Test: a file whose rows carry several distinct publication references
+  produces one dataset per reference, and no dataset holds records from two.
+  **Fails before**: no dataset is created by reading a file.
 
-**Depends on**: Phase 3.5 complete
+- [ ] **T035** *US-2* — Collecting the file's distinct publication references once, before any row is
+  read.
+  **Test**: T034.
 
-### Tests for Phase 4b ⚠️ Write FIRST — verify they FAIL before implementing
+- [ ] **T036** *US-2* — Creating one dataset per distinct reference.
+  **Test**: T034.
 
-- [X] T091 [P] Write failing schema-coverage tests in `tests/test_ghfdb/test_resources/test_schema_coverage.py`: assert `GHFDB_COLUMN_ORDER` is a `list` (not `tuple`); assert `GHFDB_COLUMN_ORDER == PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS`; assert case-sensitive names such as `"lat_NS"`, `"T_grad_mean"`, `"corr_HP_flag"` appear correctly cased (BUG-010)
-- [X] T092 [P] Write failing queryset annotation tests in `tests/test_ghfdb/test_resources/` (new file `test_managers.py`): call `.as_ghfdb_flat()` on a `GHFDBChildQuerySet` and assert annotation keys match canonical names (e.g. `"lat_NS"` not `"lat_ns"`, `"q"` not `"p_q"`, `"name"` not `"site_name"`, `"corr_HP_flag"` not `"p_corr_hp_flag"`); assert `GHFDBParentQuerySet` exposes `as_ghfdb_flat()` and its keys match `PARENT_COLUMNS` names (BUG-010)
-- [X] T093 [P] Write failing case-sensitivity test in `tests/test_ghfdb/test_resources/test_child_import.py`: call `GHFDBChildImportResource().get_user_visible_fields()`; assert fields with `column_name` values `"T_grad_mean"`, `"lat_NS"`, `"corr_IS_flag"` appear at correct ordinal positions (not sorted to end) (BUG-010)
-- [X] T094 [P] Write failing export attribute tests in `tests/test_ghfdb/test_resources/test_export.py`: assert `GHFDBExportResource` field attributes match renamed annotation keys — e.g. `fields["q"].attribute == "q"` not `"p_q"`, `fields["name"].attribute == "name"` not `"site_name"`, `fields["elevation"].attribute == "elevation"` not `"site_elevation"` (BUG-010)
+- [ ] **T037** *US-2* — Test: two references differing only by case or by surrounding whitespace are
+  one reference, and produce one dataset.
+  **Fails before**: they produce two.
 
-### Implementation for Phase 4b
+- [ ] **T038** *US-2* — Comparing references ignoring case and surrounding whitespace.
+  **Test**: T037.
 
-- [X] T095 Remove old `GHFDB_COLUMN_ORDER: tuple[str, ...]` from `project/ghfdb/constants.py`; update module docstring to document all four canonical lists (`PARENT_COLUMNS`, `CHILD_COLUMNS`, `META_FIELDS`, `GHFDB_COLUMN_ORDER`) (BUG-010)
-- [X] T096 Rename stale annotation keys in `GHFDBChildQuerySet.as_ghfdb_flat()` in `project/ghfdb/managers.py`: `"id_parent"` → `"ID_parent"`, `"p_q"` → `"q"`, `"p_q_uncertainty"` → `"q_uncertainty"`, `"site_name"` → `"name"`, `"site_elevation"` → `"elevation"`, `"site_environment"` → `"environment"`, `"p_corr_hp_flag"` → `"corr_HP_flag"`, `"total_depth_md"` → `"total_depth_MD"`, `"total_depth_tvd"` → `"total_depth_TVD"`, `"site_explo_method"` → `"explo_method"`; retain `site_country`, `site_region`, `site_continent`, `site_domain` (BUG-010)
-- [X] T097 Add `GHFDBParentQuerySet.as_ghfdb_flat()` and `GHFDBParentManager.as_ghfdb_flat()` delegate to `project/ghfdb/managers.py`; annotate all scalar `PARENT_COLUMNS` fields from `ParentHeatFlow` and `HeatFlowSite` model paths using canonical `PARENT_COLUMNS` names as annotation keys (BUG-010)
-- [X] T098 [P] Fix `get_user_visible_fields()` in `project/ghfdb/resources/child.py`: build the sort lookup dict as `{col.lower(): i for i, col in enumerate(GHFDB_COLUMN_ORDER)}` and look up each field as `order.get(f.column_name.lower(), len(GHFDB_COLUMN_ORDER))`; import `GHFDB_COLUMN_ORDER` from `project.ghfdb.constants` (BUG-010)
-- [X] T099 Update all stale `attribute=` values and `dehydrate_*` `getattr` calls in `project/ghfdb/resources/export.py` to match the renamed annotation keys from T096 (BUG-010)
+- [ ] **T039** *US-2* — Test: a reference matching exactly one bibliographic record gives its dataset
+  that record's title, and links the two.
+  **Fails before**: no bibliographic record is consulted.
 
-### System Validation — Phase 4b
+- [ ] **T040** *US-2* — Matching a reference to a bibliographic record and taking its title.
+  **Test**: T039.
 
-- [X] T100 ⚠️ CRITICAL: `poetry run python manage.py check ; poetry run mypy project/ghfdb/` — MUST pass before proceeding to Phase 5 (BUG-010)
-- [X] T101 ⚠️ CRITICAL: `poetry run pytest tests/test_ghfdb/ -v` — all tests including T091–T094 MUST pass before proceeding to Phase 5 (BUG-010)
+- [ ] **T041** *US-2* — Test: a reference matching no bibliographic record creates one carrying that
+  citation key, and the dataset links to it.
+  **Fails before**: nothing is created.
 
-**Checkpoint — Phase 4b Complete**: Canonical constants aligned; all `as_ghfdb_flat()` annotation keys match canonical names; `get_user_visible_fields()` column ordering is case-insensitive on both sides; export `attribute=` values updated; all tests pass.
+- [ ] **T042** *US-2* — Creating a bibliographic record from a citation key alone.
+  **Test**: T041.
 
----
+- [ ] **T043** *US-2* — Test: a reference matching more than one bibliographic record refuses the
+  rows carrying it, naming the reference and the records it matched, and creates neither a dataset
+  nor a record.
+  **Fails before**: the first match is taken.
+  **Note**: citation keys are documented as not unique, so this is reachable rather than defensive.
 
-## Phase 5: User Story 3 — Export Heat Flow Data to GHFDB Format (Priority: P2)
+- [ ] **T044** *US-2* — Refusing an ambiguous reference.
+  **Test**: T043.
 
-**Goal**: Staff can trigger an export from the Django admin that produces a valid GHFDB-format XLSX with all **62** columns in the canonical order, semicolons for M2M fields, and plain SI numeric values for Pint quantity fields.
+- [ ] **T045** *US-2* — Test: a row whose publication reference is empty is refused.
+  **Fails before**: it is filed under a default.
 
-**Independent Test**: `poetry run pytest tests/test_ghfdb/test_resources/test_export.py -v`
+- [ ] **T046** *US-2* — Refusing an empty reference.
+  **Test**: T045.
 
-### Tests for User Story 3 ⚠️ Write FIRST — verify they FAIL before implementing
+- [ ] **T047** *US-2* — Test: the publication reference a dataset was created from can be read back
+  off the dataset, rather than recovered by inspecting its records.
+  **Fails before**: it is not stored.
 
-- [X] T041 [P] [US3] Write failing tests in `tests/test_ghfdb/test_resources/test_export.py`: column set matches all **62** entries in `GHFDB_COLUMN_ORDER`; column order is identical to `GHFDB_COLUMN_ORDER`; Pint quantity field (`q`, `tc_mean`, etc.) renders as plain numeric magnitude (no unit symbol); M2M field (`q_method`, `tc_method`) renders as semicolon-separated labels; `get_queryset()` returns `GHFDB.objects.for_export()`; filtered queryset only exports matching records; staff-only access (anonymous admin export URL → 302)
+- [ ] **T048** *US-2* — Storing the reference on the dataset.
+  **Test**: T047.
 
-### Implementation for User Story 3
+- [ ] **T049** *US-2* — Test: a file whose references already have datasets from an earlier import
+  reuses them and creates no duplicates.
+  **Fails before**: a second set is created.
 
-- [X] T042 [US3] Implement `GHFDBExportResource` class scaffold in `project/ghfdb/resources/export.py`: `Meta` class (`model = GHFDB`, `export_order = GHFDB_COLUMN_ORDER` tuple imported from `formats.py`), `get_queryset()` returning `GHFDB.objects.for_export()`, all **62** explicit `Field` declarations with `attribute` pointing to annotation names from the `data-model.md` mapping table
-- [X] T043 [US3] Implement `dehydrate_*` methods for all Pint quantity fields in `project/ghfdb/resources/export.py` (e.g. `dehydrate_q`, `dehydrate_q_uncertainty`, `dehydrate_tc_mean`, `dehydrate_tc_uncertainty`, `dehydrate_T_grad_mean`, `dehydrate_T_grad_uncertainty`, `dehydrate_T_grad_mean_cor`, etc.): `return obj.<annotation>.magnitude if obj.<annotation> else ""`
-- [X] T044 [US3] Implement `dehydrate_*` methods for all M2M fields in `project/ghfdb/resources/export.py` (e.g. `dehydrate_q_method`, `dehydrate_explo_purpose`, `dehydrate_T_method_top`, `dehydrate_T_corr_top`, `dehydrate_tc_source`, etc.): `return "; ".join(c.label for c in obj.<prefetch_name>.all()) if ... else ""`; add `None`-guard on all dehydrate methods to return `""` not `"None"`
-- [X] T045 [US3] Update `GHFDBChildAdmin.get_export_resource_classes()` to return `[GHFDBExportResource]` and `get_export_formats()` to return `[XLSX]` in `project/ghfdb/admin.py`
-
-### System Validation — Phase 5
-
-- [X] T046 ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass before proceeding
-- [X] T046a ⚠️ CRITICAL: Run type checks: `poetry run mypy project/ghfdb/` — MUST pass with no new errors (constitution §VI)
-- [X] T046b ⚠️ CRITICAL: Run linting: `poetry run ruff check project/ghfdb/` — MUST pass with zero violations (constitution §VI)
-- [X] T047 ⚠️ CRITICAL: Run User Story 3 tests: `poetry run pytest tests/test_ghfdb/test_resources/test_export.py -v` — ALL tests MUST pass
-
-**Checkpoint — US3 Complete**: Export produces a valid GHFDB XLSX with correct **62**-column layout, correct order, M2M semicolon-joined, Pint values as plain numerics.
-
----
-
-## Phase 6: Polish & Cross-Cutting Concerns
-
-**Purpose**: Round-trip regression test (SC-001), retire legacy `resources.py`, documentation, and final full-suite validation.
-
-- [X] T056 Create fixture GHFDB XLSX (`tests/test_ghfdb/fixtures/sample_ghfdb.xlsx`) with 3–5 rows covering: one parent with `explo_purpose` M2M; one child with all 9 correction flags; one child with `ThermalGradient` + `IntervalConductivity` including M2M method fields; quantity fields in SI units
-- [X] T057 [P] Write round-trip regression test (SC-001) in `tests/test_ghfdb/test_resources/test_roundtrip.py`: (1) import `sample_ghfdb.xlsx` via `GHFDBParentImportResource` then `GHFDBChildImportResource`; (2) export via `GHFDBExportResource`; (3) assert exported text/vocabulary cells are identical and numeric cells differ by less than floating-point `1e-9`
-- [X] T058 Retire legacy `project/ghfdb/resources.py`: first verify no remaining code imports from it (`grep -r "from .resources import\|from project.ghfdb.resources import" project/ --include="*.py"`); then delete (or rename to `_resources_legacy.py.bak`)
-- [X] T059a [P] Document the large-export row limit in `docs/ghfdb_fields.md` and in the `GHFDBExportResource` class docstring: state the tested synchronous row limit (e.g. 50,000 rows), note that `get_queryset()` MUST use `.iterator()` to avoid loading the full queryset into memory, and document that exports exceeding the limit should be moved to a background task (deferred to a future spec)
-- [X] T060 [P] Add Fuchs et al. (2021) and Fuchs et al. (2023) inline citations to `GHFDBParentImportResource`, `GHFDBChildImportResource`, and `GHFDBExportResource` class docstrings in their respective module files; **also** add a module-level docstring to `project/ghfdb/resources/widgets.py` citing both references and summarising the widget hierarchy (leaf widgets → `RelatedModelWidget` → specialised sub-model widgets)
-
-### System Validation — Final
-
-- [X] T061 ⚠️ CRITICAL: Run Django system checks: `poetry run python manage.py check` — MUST pass
-- [X] T061a ⚠️ CRITICAL: Run final type checks: `poetry run mypy project/ghfdb/` — MUST pass with no new errors (constitution §VI)
-- [X] T061b ⚠️ CRITICAL: Run final linting: `poetry run ruff check project/ghfdb/` — MUST pass with zero violations (constitution §VI)
-- [X] T062 ⚠️ CRITICAL: Run full GHFDB test suite: `poetry run pytest tests/test_ghfdb/ -v` — ALL test modules MUST pass (includes proxy model, resources, views, round-trip)
-
-**Checkpoint — Feature Complete**: System checks pass, all GHFDB tests green (import resources + export resource + round-trip), legacy `resources.py` retired, large-export limit documented.
+- [ ] **T050** *US-2* — Test: nothing created while checking a file survives the check — a dataset
+  the check would have made does not exist afterwards.
+  **Fails before**: the resolution runs once and its result is carried into the write.
+  **Note**: the check and the write are separate passes over separate objects. Nothing may carry an
+  identifier from one to the other. See R4.
 
 ---
 
-## Dependencies & Execution Order
+## Phase 4 — US-3, every row becomes the records the portal keeps
 
-| Phase | Depends on | Blocks |
-|---|---|---|
-| Prerequisite: 002 complete | Nothing | Everything in this spec |
-| Phase 3.5 — Resources Package Setup | 002 complete | Phase 4 (US2) and Phase 5 (US3) |
-| Phase 4 — US2 Import (P2) | Phase 3.5 | Phase 4a, Phase 6 (round-trip) |
-| Phase 4a — Second Import Format (US2) | Phase 4 | Phase 6 (round-trip) |
-| Phase 4b — BUG-010 Canonical Constants Alignment | Phase 3.5 | Phase 5 (export attribute=), Phase 6 (round-trip) |
-| Phase 5 — US3 Export (P2) | Phase 3.5 + 002 (`for_export()`) + Phase 4b (annotation keys) | Phase 6 (round-trip) |
-| Phase 6 — Polish & Round-trip | Phase 4 + Phase 4a + Phase 4b + Phase 5 | Nothing |
+- [ ] **T051** *US-3* — Test: one row produces a site, an interval, a determination, and the gradient
+  and conductivity measured over that interval, related as the model defines.
+  **Fails before**: no reader exists.
+
+- [ ] **T052** *US-3* — Reading a row into the site.
+  **Test**: T051.
+
+- [ ] **T053** *US-3* — Reading a row into the interval.
+  **Test**: T051.
+
+- [ ] **T054** *US-3* — Reading a row into the determination.
+  **Test**: T051.
+
+- [ ] **T055** *US-3* — Reading a row into the gradient and the conductivity.
+  **Test**: T051.
+
+- [ ] **T056** *US-3* — Test: several rows sharing a published site identifier produce one site
+  carrying every determination.
+  **Fails before**: each row makes its own site.
+
+- [ ] **T057** *US-3* — Identifying a site by its published site identifier.
+  **Test**: T056.
+
+- [ ] **T058** *US-3* — Test: the site-level determination is created once per site and not once per
+  row.
+  **Fails before**: it is created per row.
+
+- [ ] **T059** *US-3* — Test: several rows giving one site and one depth range produce one interval
+  carrying all of their determinations, each with its own gradient and conductivity.
+  **Fails before**: each row makes its own interval.
+  **Note**: an interval is a sample in its own right and can be measured again by someone else. See
+  D15.
+
+- [ ] **T060** *US-3* — Identifying an interval by its site and the depth range the row gives.
+  **Test**: T059.
+
+- [ ] **T061** *US-3* — Test: several rows giving one site and no depth range at all attach to one
+  indeterminate interval for that site.
+  **Fails before**: they produce one interval per row, or collapse into an interval with a depth.
+
+- [ ] **T062** *US-3* — The indeterminate interval, one per site.
+  **Test**: T061.
+
+- [ ] **T063** *US-3* — Test: a site with rows giving a depth range and rows giving none holds an
+  interval for each distinct range plus the one indeterminate interval, and they are distinct.
+  **Fails before**: they are merged.
+
+- [ ] **T064** *US-3* — Test: the gradient and the conductivity a row reports are identified by that
+  row's determination identifier, so two determinations over one interval have their own.
+  **Fails before**: the second row finds the first row's gradient and updates it.
+  **Note**: the file records no way to recognise two rows as reporting one measurement, and matching
+  on the value is the proximity matching the standing constraints rule out. See D16.
+
+- [ ] **T065** *US-3* — Identifying the gradient and the conductivity by the determination.
+  **Test**: T064.
+
+- [ ] **T066** *US-3* — Test: a row supplying some corrections and not others produces a correction
+  record for each supplied and none for the rest.
+  **Fails before**: a record is created for every correction type regardless.
+
+- [ ] **T067** *US-3* — Creating a correction only where the row supplies one.
+  **Test**: T066.
+
+- [ ] **T068** *US-3* — Test: a correction flag that is bracketed or differently cased is read, not
+  lost.
+  **Fails before**: it falls through to an unspecified value.
+
+- [ ] **T069** *US-3* — Normalising a correction flag the same way as any other vocabulary value.
+  **Test**: T068.
+
+- [ ] **T070** *US-3* — Test: probe metadata is created once for an interval, and a row supplying
+  none creates none.
+  **Fails before**: it is created per row, or created empty.
+
+- [x] **T071** *US-3* — Probe metadata belonging to the interval.
+  **Test**: T070.
+  **Closed on**: project/heat_flow/models/child.py:305 · tests/test_ghfdb/test_resources/test_child_import.py:294
+
+- [ ] **T072** *US-3* — Test: two rows sharing an interval but disagreeing about the probe that
+  sampled it are refused, and the disagreement is reported.
+  **Fails before**: the second row overwrites the first, or fails in a way that names nothing.
+  **Note**: 974 shared intervals in the current release disagree this way. Ordinary, not remote.
+
+- [ ] **T073** *US-3* — Refusing a disagreement about a shared interval.
+  **Test**: T072.
+
+- [ ] **T074** *US-3* — Test: two rows sharing a published site identifier but disagreeing about that
+  site's own columns are refused, and the disagreement is reported.
+  **Fails before**: one row's values win silently.
+
+- [ ] **T075** *US-3* — Refusing a disagreement about a shared site.
+  **Test**: T074.
+
+- [ ] **T076** *US-3* — Test: a cell holding the published absent-value marker is read as no value,
+  and creates no record the row did not describe.
+  **Fails before**: it is refused as a non-numeric value in a numeric column.
+
+- [ ] **T077** *US-3* — Reading the absent-value marker as no value.
+  **Test**: T076.
+
+- [x] **T078** *US-3* — Test: a vocabulary value that is bracketed, differently cased, or both is
+  matched to its term.
+  **Fails before**: it matches nothing.
+  **Closed on**: project/ghfdb/resources/widgets.py:53 · tests/test_ghfdb/test_resources/test_widgets.py:487
+
+- [x] **T079** *US-3* — Normalising a vocabulary value before matching.
+  **Test**: T078.
+  **Closed on**: project/ghfdb/resources/widgets.py:53 · tests/test_ghfdb/test_resources/test_widgets.py:475
+
+- [x] **T080** *US-3* — Test: a vocabulary value matching no term is refused and reported, for a
+  column holding one value.
+  **Fails before**: it is stored or dropped.
+  **Closed on**: project/ghfdb/resources/widgets.py:98 · tests/test_ghfdb/test_resources/test_widgets.py:507
+
+- [ ] **T081** *US-3* — Test: a vocabulary value matching no term is refused and reported, for a
+  column holding several values.
+  **Fails before**: the failure is caught and discarded, and the row imports with the relation empty.
+  **Note**: most of a release's vocabulary surface is many-valued, so discarding these discards most
+  of the checking this feature exists to do.
+
+- [ ] **T082** *US-3* — Refusing a vocabulary failure on a many-valued column.
+  **Test**: T081.
+
+- [ ] **T083** *US-3* — Test: a numeric value reaching a column that holds text is refused with the
+  column and the value named, rather than failing in a way that names neither.
+  **Fails before**: it fails without naming the column.
+
+- [ ] **T084** *US-3* — Test: a text value reaching a column that holds a quantity is refused with
+  the column and the value named.
+  **Fails before**: it fails without naming the column.
+
+- [ ] **T085** *US-3* — Test: a site whose name is a number imports, and the stored name is what the
+  file gave.
+  **Fails before**: it is refused as a non-text value.
+  **Note**: 10,898 sites in the current release are named with a number.
+
+- [ ] **T086** *US-3* — Test: a site whose name is a placeholder such as `?`, or empty, imports, and
+  the stored name is what the file gave.
+  **Fails before**: an empty name produces a site with no location.
+  **Note**: 11,513 sites in the current release are named `?`.
+
+- [ ] **T087** *US-3* — Storing a site's name as given, without judging it.
+  **Test**: T085 and T086.
+
+- [ ] **T088** *US-3* — Test: a row carrying a supplied quality code imports, and that code is not
+  stored anywhere.
+  **Fails before**: it is stored.
+
+- [ ] **T089** *US-3* — Recognising and discarding the supplied quality code.
+  **Test**: T088.
+
+- [ ] **T090** *US-3* — Test: a file carrying the assessment columns is not refused for carrying
+  them, and their values are not stored.
+  **Fails before**: the columns are refused as undefined.
+
+- [ ] **T091** *US-3* — Recognising and discarding the assessment columns.
+  **Test**: T090.
+
+- [ ] **T092** *US-3* — Test: a file of `n` valid rows produces `n` determinations. No row is dropped
+  on the way in.
+  **Fails before**: rows sharing a site are removed from the file as it is read, with no count and
+  no notice.
+
+- [ ] **T093** *US-3* — Reading every row, or reporting it as refused, and nothing else.
+  **Test**: T092.
+
+- [ ] **T094** *US-3* — Test: the columns the curator is shown before confirming appear in the
+  published order.
+  **Fails before**: they appear in the order the reader declares them.
+
+- [ ] **T095** *US-3* — Ordering the confirmation's columns by the release format's column list.
+  **Test**: T094.
+
+- [ ] **T096** *US-3* — Test: every entry in the ordering is a column the reader actually has, so
+  that an entry matching nothing cannot be dropped silently.
+  **Fails before**: the ordering is accepted unchecked.
+  **Note**: an unmatched entry being dropped in silence is how the writing side's column order went
+  wrong.
+
+---
+
+## Phase 5 — US-4, importing the same file twice changes nothing the second time
+
+- [ ] **T097** *US-4* — Test: importing an unchanged file twice leaves every record count identical
+  to after the first import.
+  **Fails before**: the second import doubles what the portal holds.
+
+- [ ] **T098** *US-4* — Test: importing an unchanged file twice leaves every stored value identical,
+  not merely the counts.
+  **Fails before**: no reader exists.
+
+- [ ] **T099** *US-4* — Test: correcting one value and re-importing updates that record and creates
+  no second one.
+  **Fails before**: a second record is created.
+
+- [x] **T100** *US-4* — Identifying a determination by its published determination identifier, so a
+  repeat updates.
+  **Test**: T099.
+  **Closed on**: project/ghfdb/resources/child.py:378 · tests/test_ghfdb/test_resources/test_child_import.py:150
+
+- [ ] **T101** *US-4* — Test: re-importing finds the gradient and the conductivity the determination
+  was derived from, rather than creating a second pair.
+  **Fails before**: a second pair is created on every import.
+
+- [ ] **T102** *US-4* — Test: re-importing finds each correction by its determination and correction
+  type, rather than creating a second record of the same type.
+  **Fails before**: duplicates accumulate.
+
+- [ ] **T103** *US-4* — Test: a site reported by two publications belongs to the dataset of the
+  earlier publication year.
+  **Fails before**: it belongs to whichever was imported first.
+
+- [ ] **T104** *US-4* — Deciding a site's dataset by the earliest publication year among its
+  determinations.
+  **Test**: T103.
+
+- [ ] **T105** *US-4* — Test: importing the earlier publication after the later one moves the site to
+  the earlier publication's dataset.
+  **Fails before**: the site stays where it was.
+
+- [ ] **T106** *US-4* — Moving a site when a later import supplies an earlier publication year.
+  **Test**: T105.
+
+- [ ] **T107** *US-4* — Test: importing the later publication after the earlier one leaves the site
+  where it is.
+  **Fails before**: the site moves on every import.
+
+- [ ] **T108** *US-4* — Test: moving a site between datasets leaves its determinations with the
+  datasets of the publications that reported them.
+  **Fails before**: the determinations move with the site.
+
+- [ ] **T109** *US-4* — Keeping determinations with their own publication's dataset.
+  **Test**: T108.
+
+---
+
+## Phase 6 — Documentation and closing
+
+- [ ] **T110** *feature-wide* — Documentation for a curator: what file the portal reads, where the
+  import is, what the check reports and how to act on it, and what happens to a file that fails.
+  **Test**: the documentation builds and the page is reachable from the documentation's contents.
+
+- [ ] **T111** *feature-wide* — Documentation of the release format's column set and which columns
+  are read, recognised and discarded, or refused — generated from the definition rather than
+  restated beside it.
+  **Test**: the documented set equals the definition's, asserted rather than compared by eye.
+
+- [ ] **T112** *feature-wide* — Test: no test in this feature's suite is expected to fail. The suite
+  carries no expected-failure marker attributable to this feature.
+  **Fails before**: the assertion does not exist.
+
+- [ ] **T113** *feature-wide* — A migration for any model change this feature required, squashed into
+  one, or an assertion that none was required.
+  **Test**: this project's own applications report no missing migrations. A vendored dependency's
+  migrations are outside the assertion — they already drift, and this feature does not own them.
+
+- [ ] **T114** *feature-wide* — Test coverage meets the project's threshold for the modules this
+  feature adds.
+  **Test**: the coverage gate passes on the changed files.
