@@ -68,8 +68,8 @@
       "id": "US1",
       "priority": "P1",
       "issue": 185,
-      "worktree": null,
-      "status": "todo",
+      "worktree": "/home/sam/projects/ihfc-iugg/ghfdb-portal-003-us1-header",
+      "status": "in_progress",
       "replans": 0,
       "tasks": [
         {
