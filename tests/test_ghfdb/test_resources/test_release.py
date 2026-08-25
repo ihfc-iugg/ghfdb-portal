@@ -760,6 +760,40 @@ class TestGHFDBReleaseImportResourceIndeterminateInterval:
         assert HeatFlow.objects.filter(sample=interval).count() == 3
 
 
+class TestGHFDBReleaseImportResourceGradientConductivityIdentity:
+    """T064, T065: the gradient and the conductivity a row reports are
+    identified by that row's own determination identifier, so two
+    determinations measured over one shared interval keep their own
+    rather than one updating the other's. Fails before: neither carries
+    the determination's identifier at all (D16)."""
+
+    def test_two_determinations_over_one_interval_keep_their_own_gradient_and_conductivity(
+        self, db
+    ):
+        from heat_flow.models import IntervalConductivity, ThermalGradient
+
+        header, rows = _corrected_header_and_rows()
+        # rows[4] and rows[5] already share one site and depth range
+        # (q_top=4490.00, q_bottom blank) in the real base fixture.
+        dataset = _make_dataset(header, [rows[4], rows[5]])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+
+        first_gradient = ThermalGradient.objects.get(local_id="R24-033563")
+        second_gradient = ThermalGradient.objects.get(local_id="R24-053075")
+        assert first_gradient != second_gradient
+        assert float(first_gradient.value.magnitude) == 58.00
+        assert float(second_gradient.value.magnitude) == 58.40
+
+        first_conductivity = IntervalConductivity.objects.get(local_id="R24-033563")
+        second_conductivity = IntervalConductivity.objects.get(local_id="R24-053075")
+        assert first_conductivity != second_conductivity
+
+
 class TestGHFDBReleaseImportResourceMixedIntervals:
     """T063: a site with some rows giving a depth range and some giving
     none holds one interval for each distinct range plus the one

@@ -369,29 +369,35 @@ class GHFDBReleaseImportResource(ModelResource):
         """Build the thermal gradient a row's determination was derived
         from, measured over the row's interval (T055). Skipped (``None``)
         when the row gives no ``T_grad_mean``, per ``GradientWidget``'s
-        own sentinel. Every row with a gradient gets its own - a row is a
-        determination together with the gradient it was derived from, and
-        the gradient takes the determination's own identifier later
-        (D16, T064), not this story's.
+        own sentinel. Every row with a gradient gets its own, identified
+        by that row's own published determination identifier (D16, T064,
+        T065) - the file gives no identifier that would let two rows be
+        recognised as reporting one measurement, so a determination
+        derived again over an existing interval reports its own gradient
+        rather than finding and updating an earlier row's.
         """
         gradient = self._gradient_widget.clean(row.get("T_grad_mean"), row=row)
         if gradient is None:
             return None
         gradient.dataset = dataset
         gradient.sample = interval
+        gradient.local_id = (row.get("ID") or "").strip()
         gradient.save()
         self._gradient_widget.set_m2m_relations(gradient)
         return gradient
 
     def _build_conductivity(self, row, interval, dataset):
         """Build the interval conductivity a row's determination was
-        derived from (T055). Skipped (``None``) when the row gives no
+        derived from (T055), identified by that row's own published
+        determination identifier (D16, T064, T065) for the same reason as
+        the gradient. Skipped (``None``) when the row gives no
         ``tc_mean``, per ``ConductivityWidget``'s own sentinel."""
         conductivity = self._conductivity_widget.clean(row.get("tc_mean"), row=row)
         if conductivity is None:
             return None
         conductivity.dataset = dataset
         conductivity.sample = interval
+        conductivity.local_id = (row.get("ID") or "").strip()
         conductivity.save()
         self._conductivity_widget.set_m2m_relations(conductivity)
         return conductivity
