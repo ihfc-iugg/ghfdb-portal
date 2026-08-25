@@ -1063,6 +1063,66 @@ class TestGHFDBReleaseImportResourceScalarRefusalNamesTheColumn:
         assert HeatFlowSite.objects.count() == 0
 
 
+class TestGHFDBReleaseImportResourceSiteNameStoredAsGiven:
+    """T085, T086, T087: a site's name is a label, not a key - stored
+    exactly as the file gives it, including a numeric or placeholder
+    value, and never causes a refusal (D14, FR-032). A site's location
+    is set from its coordinates regardless of what its name is (D14).
+    Fails before: a numeric name is refused as a non-text value, and an
+    empty name produces a site with no location."""
+
+    def test_a_numeric_name_imports_and_is_stored_verbatim(self, db):
+        from heat_flow.models import HeatFlowSite
+
+        header, rows = _corrected_header_and_rows()
+        row = _with_cell(header, [rows[4]], 0, "name", "12345")[0]
+        dataset = _make_dataset(header, [row])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+
+        site = HeatFlowSite.objects.get()
+        assert site.name == "12345"
+        assert site.location is not None
+
+    def test_a_placeholder_name_imports_and_the_site_still_gets_a_location(self, db):
+        from heat_flow.models import HeatFlowSite
+
+        header, rows = _corrected_header_and_rows()
+        row = _with_cell(header, [rows[4]], 0, "name", "?")[0]
+        dataset = _make_dataset(header, [row])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+
+        site = HeatFlowSite.objects.get()
+        assert site.name == "?"
+        assert site.location is not None
+
+    def test_an_empty_name_imports_and_the_site_still_gets_a_location(self, db):
+        from heat_flow.models import HeatFlowSite
+
+        header, rows = _corrected_header_and_rows()
+        row = _with_cell(header, [rows[4]], 0, "name", "")[0]
+        dataset = _make_dataset(header, [row])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+
+        site = HeatFlowSite.objects.get()
+        assert site.name == ""
+        assert site.location is not None
+
+
 class TestGHFDBReleaseImportResourceMixedIntervals:
     """T063: a site with some rows giving a depth range and some giving
     none holds one interval for each distinct range plus the one

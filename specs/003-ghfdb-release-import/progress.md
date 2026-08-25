@@ -1154,3 +1154,32 @@ any out-of-reach test. Flagged in this run's completion report for
 Sam/Forge to weigh - the durable fix belongs in
 `heat_flow/vocabularies.py` or in a correction to the published
 release file at source, not in a permanent fallback here.
+
+## 2026-08-25T22:35:00Z · Implementer US-3 (third part) · T085, T086, T087
+
+Did: No new production code - `_set_site_location` (T052) already sets
+a site's location from its coordinates unconditionally, and
+`_build_new_site` already stores whatever `row.get("name")` gives
+without any type or content guard, so a numeric, placeholder or empty
+name already imports and is stored verbatim, with a location either
+way (D14, FR-032). Added
+`TestGHFDBReleaseImportResourceSiteNameStoredAsGiven` (three cases:
+`"12345"`, `"?"`, `""`), each asserting the stored name equals the raw
+value and the site's location is not None.
+
+Verified: all three passed on first run against the already-built
+mechanism - flagged by craft-tdd's own instruction to diagnose rather
+than accept a first-try pass. Probed: temporarily reintroduced a
+guard in `_build_new_site` raising on a purely-numeric name, and made
+`_set_site_location` conditional on a non-blank name - the numeric-name
+case failed with the reintroduced refusal and the empty-name case
+failed with `site.location is None`, confirming both properties are
+load-bearing rather than tautological (the placeholder `"?"` case is
+the same "no name-based refusal" mechanism as the numeric case, so one
+probe covers both). Restored, re-ran green. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 44 passed, full
+module. `ruff check`/`ruff format --check` → clean.
+
+Next: T088, T089, the supplied quality code.
+
+Watch: none.
