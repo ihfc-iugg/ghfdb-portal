@@ -733,3 +733,28 @@ class TestGHFDBReleaseImportResourceSharedInterval:
         }
         assert ThermalGradient.objects.filter(sample=interval).count() == 2
         assert IntervalConductivity.objects.filter(sample=interval).count() == 2
+
+
+class TestGHFDBReleaseImportResourceIndeterminateInterval:
+    """T061, T062: several rows giving one site and no depth range at
+    all attach to one indeterminate interval for that site, one per
+    site. Fails before: they produce one interval per row, or collapse
+    into an interval that has a depth (D17)."""
+
+    def test_rows_with_no_depth_share_the_sites_indeterminate_interval(self, db):
+        from heat_flow.models import HeatFlow, HeatFlowInterval
+
+        header, rows = _corrected_header_and_rows()
+        dataset = _make_dataset(header, [rows[0], rows[1], rows[2]])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+
+        assert HeatFlowInterval.objects.count() == 1
+        interval = HeatFlowInterval.objects.get()
+        assert interval.top is None
+        assert interval.bottom is None
+        assert HeatFlow.objects.filter(sample=interval).count() == 3
