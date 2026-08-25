@@ -226,3 +226,75 @@ happen to it. A site's name is a label, not a key — 11,513 sites in the curren
 `?` and 10,898 are named with a number — so a name is stored as given and never causes a refusal.
 Where two rows genuinely disagree about a site they share, that is reported rather than resolved,
 per the standing constraint that the portal does not guess at supplied data.
+
+### D15 — An interval is a sample, and is shared by every determination measured over it
+
+**Original**: silent. The original importer created an interval per row without saying so.
+
+**Evidence**: 8,145 intervals in the current release carry more than one determination, covering
+21,722 rows — a quarter of the file. Of those groups, 68 per cent differ on the determination's own
+heat flow value and 49 per cent were reported by different publications.
+
+**Proposed and rejected**: that each determination own its own interval. It would have made every
+dependent record reachable from the determination's identifier, which is the whole difficulty this
+decision exists to solve, and the file offers no interval identifier of its own.
+
+**Ruled**: rejected, because it is wrong about what an interval is. An interval is a sample in its
+own right, and it can be sampled again — a heat flow derived from a fresh conductivity or gradient
+over an interval another team measured is measuring the same thing, and must attach to the same
+interval. Modelling one interval per determination would record two samples where the science has
+one.
+
+So the interval is identified by its site together with the depth range the row gives, and is
+shared.
+
+### D16 — The gradient and the conductivity take the determination's identifier
+
+**Original**: silent.
+
+**Ruled**: a row is a determination together with the gradient and the conductivity it was derived
+from, so both take that row's determination identifier.
+
+The question this answers is how a re-derived determination is told apart from a newly added one.
+It is not: the file records no such distinction, and does not need to. Both arrive as a new row with
+a new identifier over an interval that already exists, and what separates them is which publication
+reported each — which the portal already records, because each publication is its own dataset.
+
+Identifying the gradient and the conductivity by the determination records what the file states
+rather than inferring what it does not. Nothing in a release says two rows report one gradient
+*record*, and 43 per cent of shared-interval groups give different gradients while 31 per cent give
+different conductivities. The alternative — matching on the value — is the proximity matching the
+standing constraints rule out.
+
+The consequence worth stating: every dependent record except the interval is now reachable from the
+determination's identifier, which is what makes repeating an import deterministic.
+
+### D17 — Rows with no depth attach to one indeterminate interval per site
+
+**Original**: silent.
+
+**Evidence**: 4,687 groups covering 13,153 rows give neither a top nor a bottom depth. Within them,
+74 per cent carry different determination values, and the site's total depth agrees in all but 21
+groups.
+
+**Ruled**: they attach to a single indeterminate interval for that site, understood as covering the
+whole borehole or probe deployment, with several determinations relating to it. A site may hold that
+interval alongside intervals with real depth ranges; they are different samples and are not merged.
+
+### D18 — Probe metadata stays on the interval, and disagreement is a refusal
+
+**Original**: silent.
+
+**Code**: probe metadata is held once per interval, as a one-to-one relationship.
+
+**Proposed and rejected**: moving it to the determination, on the grounds that 7,540 shared
+intervals carry more than one row bearing probe metadata and the second row's has nowhere to go.
+
+**Ruled**: rejected. For a marine measurement the probe describes the interval being sampled, and
+there is no reason it would differ between determinations over that interval. The relationship is
+right and the data is what disagrees: 974 of the 8,145 shared intervals hold rows that contradict
+each other about the probe, 878 of them on the probe type alone.
+
+Those rows are refused and reported, like any other disagreement about a shared record, and
+corrected at source. This is the general rule of D9 applied to a case that turns out to be ordinary
+rather than remote.

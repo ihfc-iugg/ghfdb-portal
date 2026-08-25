@@ -142,24 +142,33 @@ the values the file gave, and that records the file did not describe do not exis
    defines.
 2. **Given** several rows sharing one published site identifier, **When** they are imported,
    **Then** one site exists and every determination is attached to it.
-3. **Given** a row whose site name is a number, a placeholder such as `?`, or empty, **When** it is
+3. **Given** several rows giving the same site and the same depth range, **When** they are imported,
+   **Then** one interval exists and carries all of their determinations, each with its own gradient
+   and conductivity — an interval is a sample that can be measured again by someone else.
+4. **Given** several rows giving the same site and no depth range at all, **When** they are
+   imported, **Then** they attach to one indeterminate interval for that site, taken to cover the
+   whole borehole or probe deployment.
+5. **Given** two rows sharing an interval but disagreeing about the probe that sampled it, **When**
+   the file is checked, **Then** they are refused and the disagreement is reported, because the
+   probe describes the interval rather than either determination.
+6. **Given** a row whose site name is a number, a placeholder such as `?`, or empty, **When** it is
    imported, **Then** the name is stored exactly as the file gave it and the row is not refused,
    because a site is identified by its published identifier and not by its name.
-4. **Given** a cell holding `[Unspecified]`, **When** it is imported, **Then** it is read as no
+7. **Given** a cell holding `[Unspecified]`, **When** it is imported, **Then** it is read as no
    value rather than as a fault, and no record is created that the file did not describe.
-5. **Given** a controlled-vocabulary value that is bracketed, differently cased, or both, **When**
+8. **Given** a controlled-vocabulary value that is bracketed, differently cased, or both, **When**
    it is imported, **Then** it is matched to the right term.
-6. **Given** a controlled-vocabulary value matching no term, **When** it is imported, **Then** it is
+9. **Given** a controlled-vocabulary value matching no term, **When** it is imported, **Then** it is
    refused and reported, whether the column holds one value or several.
-7. **Given** a row supplying some corrections and not others, **When** it is imported, **Then** a
+10. **Given** a row supplying some corrections and not others, **When** it is imported, **Then** a
    correction record exists for each one supplied and for none of the others.
-8. **Given** a row supplying no probe metadata, **When** it is imported, **Then** no probe metadata
+11. **Given** a row supplying no probe metadata, **When** it is imported, **Then** no probe metadata
    record is created for it.
-9. **Given** a row carrying a supplied quality code, **When** it is imported, **Then** that code is
+12. **Given** a row carrying a supplied quality code, **When** it is imported, **Then** that code is
    not stored, because the portal computes quality from what it holds.
-10. **Given** a file carrying the assessment columns a release includes, **When** it is imported,
+13. **Given** a file carrying the assessment columns a release includes, **When** it is imported,
     **Then** those columns are recognised rather than refused, and their values are not stored.
-11. **Given** a file of `n` data rows in which every row passes, **When** it is imported, **Then**
+14. **Given** a file of `n` data rows in which every row passes, **When** it is imported, **Then**
     `n` determinations exist — no row is dropped on the way in.
 
 ---
@@ -206,10 +215,15 @@ identical after the second run.
 - A numeric cell reaches a column that holds text, or a text cell reaches a column that holds a
   quantity. The value is refused with its row, column and value named, rather than failing in a way
   that names neither.
-- A site's rows disagree about the site's own columns — two rows share a published site identifier
-  but give different coordinates. The portal does not choose between them or merge them; the file is
-  refused and the disagreement reported, per the standing constraint that the portal does not guess
-  at supplied data.
+- Rows disagree about a record they share — two rows give one published site identifier but
+  different coordinates, or one interval but different probe metadata. The portal does not choose
+  between them or merge them; the file is refused and the disagreement reported, per the standing
+  constraint that the portal does not guess at supplied data. In the current release 974 shared
+  intervals disagree about the probe that sampled them, so this is the ordinary case rather than a
+  remote one.
+- A site has both rows giving a depth range and rows giving none. It holds an interval for each
+  distinct range, plus the one indeterminate interval the depthless rows attach to. They are
+  different samples and are not merged.
 - A determination's published identifier repeats within one file. The second occurrence is refused
   rather than silently overwriting the first, because within a single file it means the file is
   wrong.
@@ -273,34 +287,45 @@ identical after the second run.
 
 - **FR-023**: A site MUST be identified by its published site identifier, and rows sharing one MUST
   produce one site.
-- **FR-024**: A determination MUST be identified by its published determination identifier.
-- **FR-025**: The import MUST create, for each row, the depth interval it describes, the thermal
-  gradient and interval conductivity measured over that interval, and the determination that follows
-  from them, related as the model defines.
-- **FR-026**: A correction record MUST be created only for a correction the row supplies. A row that
+- **FR-024**: A depth interval MUST be identified by its site together with the depth range the row
+  gives. An interval is a sample in its own right, so every determination reported over the same
+  interval MUST attach to the one interval record rather than to a copy of it.
+- **FR-025**: Where a row gives no depth range, its determination MUST attach to a single
+  indeterminate interval for that site, understood as covering the full extent of the borehole or
+  probe deployment. Exactly one such interval MUST exist per site.
+- **FR-026**: A determination MUST be identified by its published determination identifier.
+- **FR-027**: The thermal gradient and the interval conductivity a row reports MUST each be
+  identified by that row's published determination identifier. A determination derived again over an
+  existing interval reports its own gradient and conductivity, and the file gives no identifier that
+  would let two rows be recognised as reporting one measurement.
+- **FR-028**: The import MUST create, for each row, the determination it describes together with the
+  gradient and the conductivity it was derived from, attached to the interval the row identifies.
+- **FR-029**: A correction record MUST be created only for a correction the row supplies. A row that
   supplies none MUST produce none.
-- **FR-027**: A correction flag MUST be normalised the same way as any other controlled-vocabulary
+- **FR-030**: A correction flag MUST be normalised the same way as any other controlled-vocabulary
   value, so that a bracketed or differently cased flag is read rather than lost.
-- **FR-028**: Probe metadata MUST be created only for a row that supplies it.
-- **FR-029**: A site's name MUST be stored exactly as the file gives it, including a numeric,
+- **FR-031**: Probe metadata MUST belong to the depth interval, and at most one record MUST exist
+  for an interval. It describes the deployment that sampled the interval and does not vary between
+  the determinations reported over it.
+- **FR-032**: A site's name MUST be stored exactly as the file gives it, including a numeric,
   placeholder or empty value, and MUST never cause a row to be refused.
-- **FR-030**: A supplied quality code MUST NOT be stored. The portal computes quality from what it
+- **FR-033**: A supplied quality code MUST NOT be stored. The portal computes quality from what it
   holds.
-- **FR-031**: The assessment columns a release carries MUST be recognised by the header check and
+- **FR-034**: The assessment columns a release carries MUST be recognised by the header check and
   MUST NOT be stored.
-- **FR-032**: Rows sharing a published site identifier but disagreeing on that site's own columns
-  MUST be refused, with the disagreement reported. The portal MUST NOT choose between them or merge
-  them.
+- **FR-035**: Rows that share a site or an interval but disagree about that shared record's own
+  values MUST be refused, with the disagreement reported. The portal MUST NOT choose between them
+  or merge them.
 
 **Repeating an import**
 
-- **FR-033**: Importing a file the portal has already read MUST update the records it identifies
+- **FR-036**: Importing a file the portal has already read MUST update the records it identifies
   rather than create second copies of them.
-- **FR-034**: A site MUST belong to the dataset of the earliest publication year among the
+- **FR-037**: A site MUST belong to the dataset of the earliest publication year among the
   determinations reported for it.
-- **FR-035**: Where a later import supplies an earlier publication year for a site the portal
+- **FR-038**: Where a later import supplies an earlier publication year for a site the portal
   already holds, the site MUST move to that earlier publication's dataset.
-- **FR-036**: Moving a site between datasets MUST NOT move its determinations. Each determination
+- **FR-039**: Moving a site between datasets MUST NOT move its determinations. Each determination
   stays with the dataset of the publication that reported it.
 
 ### Key Entities
@@ -350,7 +375,14 @@ identical after the second run.
   remain with their own publications' datasets.
 - **SC-013**: No supplied quality code is stored, proven by reading back a record whose row carried
   one.
-- **SC-014**: No test in this feature's suite is expected to fail.
+- **SC-014**: Several rows giving one site and one depth range produce one interval carrying every
+  one of their determinations, each with its own gradient and conductivity.
+- **SC-015**: Rows giving a site and no depth range all attach to one interval for that site,
+  however many of them there are, and that interval is distinct from any the same site has with a
+  depth range.
+- **SC-016**: Rows that share a site or an interval and disagree about that record's own values are
+  refused with the disagreement named, proven for a site and for an interval's probe metadata.
+- **SC-017**: No test in this feature's suite is expected to fail.
 
 ## Out of Scope
 
@@ -409,3 +441,20 @@ identical after the second run.
   probably wrong, and the file is corrected at source before a real run.
 - Q: The published release carries misspelled column names. Should the import accept them? → A: No.
   They are refused, before the import begins, and the refusal is covered by tests.
+- Q: Nothing in the file identifies the interval, the gradient or the conductivity. Should each
+  determination own its own interval, so that re-importing can find them all? → A: No. An interval
+  is a sample in its own right and can be measured again by someone else — a new determination
+  derived from a fresh conductivity or gradient over an interval another team sampled must attach
+  to that same interval, because it is measuring the same thing.
+- Q: Then how is a re-derived determination told apart from a newly added one, and does the
+  determination's identifier apply to the gradient and the conductivity too? → A: The file does not
+  record the distinction, and does not need to — both arrive as a new row with a new identifier over
+  an existing interval, and which publication reported each is what separates them. The gradient and
+  the conductivity take that row's determination identifier, since a re-derivation reports its own.
+- Q: Where a row gives no depth range, what interval does its determination attach to? → A: A single
+  indeterminate interval for that site, taken to cover the whole borehole or probe deployment, with
+  several determinations relating to it.
+- Q: Probe metadata cannot be held once per interval if determinations over one interval disagree
+  about it. Should it move to the determination? → A: No. For a marine measurement the probe
+  describes the interval being sampled and would not change. Rows that disagree about it are
+  refused, like any other disagreement about a shared record.

@@ -16,13 +16,14 @@
 ## Requirement Completeness
 
 - [x] No [NEEDS CLARIFICATION] markers remain
-- [x] Requirements are testable and unambiguous — 36 functional requirements, each stating an
+- [x] Requirements are testable and unambiguous — 39 functional requirements, each stating an
       obligation on the system rather than a description of it
-- [x] Success criteria are measurable — 14 criteria, each naming what is counted or compared
+- [x] Success criteria are measurable — 17 criteria, each naming what is counted or compared
 - [x] All acceptance scenarios are defined — four stories, every one independently testable
 - [x] Edge cases are identified — an empty publication reference, references differing only by
       case, references already holding datasets, a value of the wrong type, rows disagreeing about
-      a site they share, and a determination identifier repeating within one file
+      a site or an interval they share, a site holding both measured and indeterminate intervals,
+      and a determination identifier repeating within one file
 - [x] Scope is clearly bounded — reading a published release through the administrative interface,
       with eight exclusions each naming the item that owns it
 - [x] Dependencies and assumptions identified — depends on `002-ghfdb-proxy`; five assumptions
@@ -34,7 +35,7 @@
 - [x] User scenarios cover the primary flows — checking a file, dividing it into datasets, creating
       the records, and repeating an import
 - [x] Every adjudication from the audit is recorded in [decisions.md](../decisions.md)
-- [x] Every question raised during the audit is answered under `## Clarifications`
+- [x] Every question raised during the audit is answered under `## Clarifications` — twelve
 
 ## Notes
 
@@ -44,4 +45,5 @@
   published-column work with it.
 - The contributor upload template is `005`, under R6.
 - The plan-phase artifacts in this directory still describe the superseded scope and are replaced
-  when the plan is written.
+  when the plan is written. The defect reports the original kept alongside them are gone; the
+  requirements they carried are stated plainly in the specification, and git history holds the rest.
