@@ -27,6 +27,7 @@ from io import StringIO
 
 import tablib
 from django.core.exceptions import ValidationError
+from django.db.models.functions import Lower, Trim
 from django.utils.encoding import force_str
 from fairdm.core.models import Dataset
 from heat_flow.models import HeatFlow
@@ -182,7 +183,15 @@ class GHFDBReleaseImportResource(ModelResource):
 
         datasets_by_reference = {}
         for normalized, reference in references_by_normalized.items():
-            literature_item = LiteratureItem.objects.create(citation_key=reference)
+            matches = list(
+                LiteratureItem.objects.annotate(
+                    normalized_citation_key=Lower(Trim("citation_key"))
+                ).filter(normalized_citation_key=normalized)
+            )
+            if matches:
+                literature_item = matches[0]
+            else:
+                literature_item = LiteratureItem.objects.create(citation_key=reference)
             release_dataset, _created = Dataset.all_objects.get_or_create(
                 reference=literature_item,
                 defaults={

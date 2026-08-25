@@ -407,3 +407,32 @@ class TestGHFDBReleaseImportResourceReferenceNormalization:
             Dataset.all_objects.filter(reference__isnull=False).count()
             == len(distinct_references) - 1
         )
+
+
+class TestGHFDBReleaseImportResourceMatchesExistingLiterature:
+    """T039, T040: a reference matching exactly one bibliographic record
+    gives its dataset that record's title, and links the two. Fails
+    before: no bibliographic record is consulted."""
+
+    def test_matching_reference_links_and_titles_the_dataset(
+        self, db, literature_with_known_citation_key
+    ):
+        header, rows = _corrected_header_and_rows()
+        rows = _with_cell(
+            header,
+            rows,
+            0,
+            "publication_reference",
+            literature_with_known_citation_key.citation_key,
+        )
+        dataset = _make_dataset(header, rows)
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+        release_dataset = Dataset.all_objects.get(
+            reference=literature_with_known_citation_key
+        )
+        assert release_dataset.name == literature_with_known_citation_key.title
