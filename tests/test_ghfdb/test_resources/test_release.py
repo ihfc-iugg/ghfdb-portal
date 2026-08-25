@@ -646,3 +646,51 @@ class TestGHFDBReleaseImportResourceRecordGraph:
         assert determination.thermal_conductivity == conductivity
         assert conductivity.sample == interval
         assert float(conductivity.value.magnitude) == 0.83
+
+
+class TestGHFDBReleaseImportResourceSharedSite:
+    """T056, T057: several rows sharing a published site identifier
+    produce one site carrying every determination, identified by that
+    identifier alone. Fails before: each row makes its own site."""
+
+    def test_rows_sharing_a_site_identifier_produce_one_site(self, db):
+        from heat_flow.models import HeatFlow, HeatFlowSite
+
+        header, rows = _corrected_header_and_rows()
+        dataset = _make_dataset(header, [rows[0], rows[4]])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+
+        assert HeatFlowSite.objects.count() == 1
+        site = HeatFlowSite.objects.get(local_id="R24-P003477")
+        determinations = HeatFlow.objects.filter(sample__in=site.intervals.all())
+        assert determinations.count() == 2
+        assert set(determinations.values_list("local_id", flat=True)) == {
+            "R24-003627",
+            "R24-033563",
+        }
+
+
+class TestGHFDBReleaseImportResourceSharedParent:
+    """T058: the site's parent heat flow value is created once for the
+    site and not once per row. Fails before: it is created per row."""
+
+    def test_rows_sharing_a_site_share_one_parent_heat_flow_value(self, db):
+        from heat_flow.models import HeatFlow, ParentHeatFlow
+
+        header, rows = _corrected_header_and_rows()
+        dataset = _make_dataset(header, [rows[0], rows[4]])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+
+        assert ParentHeatFlow.objects.count() == 1
+        parent = ParentHeatFlow.objects.get(local_id="R24-P003477")
+        assert HeatFlow.objects.filter(parent=parent).count() == 2
