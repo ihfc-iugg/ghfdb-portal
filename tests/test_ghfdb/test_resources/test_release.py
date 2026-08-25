@@ -209,6 +209,121 @@ class TestGHFDBReleaseImportResourceMissingColumn:
         assert result.total_rows == 0
 
 
+class TestGHFDBReleaseImportResourceReportsEveryFault:
+    """T019: a file whose header is correct but whose rows carry faults in
+    several different rows reports every fault, not the first."""
+
+    def test_every_faulty_row_is_reported(self):
+        header, rows = _corrected_header_and_rows()
+        rows = _with_cell(header, rows, 0, "qc", "not-a-number")
+        rows = _with_cell(header, rows, 2, "qc_uncertainty", "also-not-a-number")
+        dataset = _make_dataset(header, rows)
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=True, raise_errors=False)
+
+        assert result.has_validation_errors() is True
+        assert len(result.invalid_rows) == 2
+        faulty_row_numbers = {row.number for row in result.invalid_rows}
+        assert faulty_row_numbers == {2, 4}
+
+
+class TestGHFDBReleaseImportResourceLineNumber:
+    """T020, T021: a reported fault carries the row number as it appears
+    in the file, counting the header line, so a fault in the first data
+    row reports as line 2."""
+
+    def test_fault_in_the_first_data_row_reports_as_line_two(self):
+        header, rows = _corrected_header_and_rows()
+        rows = _with_cell(header, rows, 0, "qc", "not-a-number")
+        dataset = _make_dataset(header, rows)
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=True, raise_errors=False)
+
+        assert len(result.invalid_rows) == 1
+        assert result.invalid_rows[0].number == 2
+
+    def test_fault_in_the_third_data_row_reports_as_line_four(self):
+        header, rows = _corrected_header_and_rows()
+        rows = _with_cell(header, rows, 2, "qc", "not-a-number")
+        dataset = _make_dataset(header, rows)
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=True, raise_errors=False)
+
+        assert len(result.invalid_rows) == 1
+        assert result.invalid_rows[0].number == 4
+
+
+class TestGHFDBReleaseImportResourceColumnName:
+    """T022, T023: a reported fault names the column as it appears in the
+    header, not the model attribute the value would have been stored in -
+    for every column that can refuse a value."""
+
+    @pytest.mark.parametrize(
+        ("column",),
+        [
+            ("qc",),
+            ("qc_uncertainty",),
+        ],
+    )
+    def test_fault_is_keyed_by_the_column_name(self, column):
+        header, rows = _corrected_header_and_rows()
+        rows = _with_cell(header, rows, 0, column, "not-a-number")
+        dataset = _make_dataset(header, rows)
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=True, raise_errors=False)
+
+        assert len(result.invalid_rows) == 1
+        error_dict = result.invalid_rows[0].error_dict
+        assert column in error_dict
+        # The model attribute a curator never sees must not appear instead.
+        attribute = {"qc": "value", "qc_uncertainty": "uncertainty"}[column]
+        assert attribute not in error_dict
+
+
+class TestGHFDBReleaseImportResourceValueAndReason:
+    """T024: a reported fault carries the offending value and a reason
+    that distinguishes it from other reasons."""
+
+    def test_fault_carries_the_offending_value(self):
+        header, rows = _corrected_header_and_rows()
+        rows = _with_cell(header, rows, 0, "qc", "not-a-number")
+        dataset = _make_dataset(header, rows)
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=True, raise_errors=False)
+
+        message = str(result.invalid_rows[0].error_dict["qc"][0])
+        assert "not-a-number" in message
+
+    def test_two_different_offending_values_carry_two_different_messages(self):
+        """The reason is not a generic, value-independent label - a
+        curator reading two faults for the same column can tell them
+        apart, because each message names the value that was refused."""
+        header, rows = _corrected_header_and_rows()
+        first_dataset = _make_dataset(
+            header, _with_cell(header, rows, 0, "qc", "not-a-number")
+        )
+        second_dataset = _make_dataset(
+            header, _with_cell(header, rows, 0, "qc", "48.1kg")
+        )
+
+        resource = GHFDBReleaseImportResource()
+        first_result = resource.import_data(
+            first_dataset, dry_run=True, raise_errors=False
+        )
+        second_result = resource.import_data(
+            second_dataset, dry_run=True, raise_errors=False
+        )
+
+        first_message = str(first_result.invalid_rows[0].error_dict["qc"][0])
+        second_message = str(second_result.invalid_rows[0].error_dict["qc"][0])
+        assert first_message != second_message
+
+
 class TestGHFDBReleaseImportResourceHeaderFailureStopsTheRowLoop:
     """T017, T018: after a header refusal, no data row was read at all -
     proven by a row that would itself have raised, which produces no
