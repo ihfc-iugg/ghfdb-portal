@@ -37,7 +37,13 @@ from import_export.resources import ModelResource
 from literature.models import LiteratureItem
 
 from ..constants import MISSPELLED_COLUMNS, READ_COLUMNS, RELEASE_COLUMNS
-from .widgets import IntervalWidget, ParentWidget, QuantityWidget
+from .widgets import (
+    ConductivityWidget,
+    GradientWidget,
+    IntervalWidget,
+    ParentWidget,
+    QuantityWidget,
+)
 
 # FR-006: a column the release format requires. DISCARDED_COLUMNS is
 # deliberately excluded - two of its members (the legacy per-row quality
@@ -152,6 +158,8 @@ class GHFDBReleaseImportResource(ModelResource):
         super().__init__(**kwargs)
         self._parent_widget = ParentWidget()
         self._interval_widget = IntervalWidget()
+        self._gradient_widget = GradientWidget()
+        self._conductivity_widget = ConductivityWidget()
 
     def before_import(self, dataset, **kwargs):
         headers = dataset.headers or []
@@ -308,7 +316,11 @@ class GHFDBReleaseImportResource(ModelResource):
         site, parent = self._build_site_and_parent(row, dataset)
         instance.parent = parent
 
-        instance.sample = self._build_interval(row, site, dataset)
+        interval = self._build_interval(row, site, dataset)
+        instance.sample = interval
+
+        instance.thermal_gradient = self._build_gradient(row, interval, dataset)
+        instance.thermal_conductivity = self._build_conductivity(row, interval, dataset)
 
     def _build_interval(self, row, site, dataset):
         """Build the interval a row's determination is measured over
@@ -323,6 +335,37 @@ class GHFDBReleaseImportResource(ModelResource):
         interval.save()
         self._interval_widget.set_m2m_relations(interval)
         return interval
+
+    def _build_gradient(self, row, interval, dataset):
+        """Build the thermal gradient a row's determination was derived
+        from, measured over the row's interval (T055). Skipped (``None``)
+        when the row gives no ``T_grad_mean``, per ``GradientWidget``'s
+        own sentinel. Every row with a gradient gets its own - a row is a
+        determination together with the gradient it was derived from, and
+        the gradient takes the determination's own identifier later
+        (D16, T064), not this story's.
+        """
+        gradient = self._gradient_widget.clean(row.get("T_grad_mean"), row=row)
+        if gradient is None:
+            return None
+        gradient.dataset = dataset
+        gradient.sample = interval
+        gradient.save()
+        self._gradient_widget.set_m2m_relations(gradient)
+        return gradient
+
+    def _build_conductivity(self, row, interval, dataset):
+        """Build the interval conductivity a row's determination was
+        derived from (T055). Skipped (``None``) when the row gives no
+        ``tc_mean``, per ``ConductivityWidget``'s own sentinel."""
+        conductivity = self._conductivity_widget.clean(row.get("tc_mean"), row=row)
+        if conductivity is None:
+            return None
+        conductivity.dataset = dataset
+        conductivity.sample = interval
+        conductivity.save()
+        self._conductivity_widget.set_m2m_relations(conductivity)
+        return conductivity
 
     def _build_site_and_parent(self, row, dataset):
         """Return the row's site and its parent heat flow value, building
