@@ -959,6 +959,62 @@ class TestGHFDBReleaseImportResourceSiteDisagreement:
         assert HeatFlowSite.objects.filter(local_id="R24-P003477").count() == 0
 
 
+class TestGHFDBReleaseImportResourceExploPurposeDisagreement:
+    """The `explo_purpose`-disagreement closure this run's brief adds to
+    T074/T075: two rows sharing a published site identifier but
+    disagreeing about `explo_purpose` are refused, the same sentence
+    T074/T075 already deliver for the site's scalar columns. Fails
+    before: `SITE_COLUMNS` omitted `explo_purpose`, so the disagreement
+    imported clean. `explo_purpose` is many-valued, so the comparison is
+    order-independent set equality, not string equality, and a blank
+    column makes no statement (D24)."""
+
+    def test_rows_disagreeing_about_explo_purpose_are_both_refused(self, db):
+        from heat_flow.models import HeatFlowSite
+
+        header, rows = _corrected_header_and_rows()
+        # rows[0] and rows[4] already share the published site
+        # identifier R24-P003477 in the real base fixture, both giving
+        # explo_purpose "[Research]".
+        disagreeing_first = rows[0]
+        disagreeing_second = _with_cell(
+            header, [rows[4]], 0, "explo_purpose", "[Mining]"
+        )[0]
+        dataset = _make_dataset(header, [disagreeing_first, disagreeing_second])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_validation_errors() is True
+        refused = {row.number: row for row in result.invalid_rows}
+        assert {2, 3}.issubset(refused)
+        for number in (2, 3):
+            message = str(refused[number].error_dict["explo_purpose"][0])
+            assert "research" in message
+            assert "mining" in message
+
+        assert HeatFlowSite.objects.filter(local_id="R24-P003477").count() == 0
+
+    def test_the_same_purposes_in_a_different_order_do_not_disagree(self, db):
+        from heat_flow.models import HeatFlowSite
+
+        header, rows = _corrected_header_and_rows()
+        agreeing_first = _with_cell(
+            header, [rows[0]], 0, "explo_purpose", "[Research];[Mining]"
+        )[0]
+        agreeing_second = _with_cell(
+            header, [rows[4]], 0, "explo_purpose", "[Mining];[Research]"
+        )[0]
+        dataset = _make_dataset(header, [agreeing_first, agreeing_second])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+        assert HeatFlowSite.objects.filter(local_id="R24-P003477").count() == 1
+
+
 class TestGHFDBReleaseImportResourceAbsentValueMarker:
     """T076, T077: a cell holding the published absent-value marker is
     read as no value, and creates no record the row did not describe.

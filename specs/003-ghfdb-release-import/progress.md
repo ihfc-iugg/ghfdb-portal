@@ -1403,3 +1403,38 @@ Next: the `explo_purpose` site-disagreement closure D24 flagged and
 left open, then the story's completion report.
 
 Watch: none.
+
+## 2026-08-26T00:35:00Z · Implementer US-3 (third part) · explo_purpose site-disagreement closure
+
+Did: `explo_purpose` joins `SITE_COLUMNS`. `_site_column_value` gained
+a branch for it: split on `;`, each term normalised
+(`normalize_vocab_token`), a term normalising to `unspecified` dropped
+(a row silent about a purpose makes no statement, the same tolerance
+D24 already gives every other disagreement check), the remaining terms
+sorted and joined back into one canonical string - so two rows giving
+the same purposes in a different order compare equal, and
+`_find_disagreements` itself needed no change, since a canonical string
+is still just a string in the same per-key-column set every other
+`SITE_COLUMNS` entry already populates. Closes the gap D24 (US-3
+second part) named and explicitly left open. Added
+`TestGHFDBReleaseImportResourceExploPurposeDisagreement`: two rows
+sharing site `R24-P003477` given genuinely different purposes
+(`[Research]` against `[Mining]`), and a second case giving the same
+two purposes in reversed order to prove that case does not disagree.
+Recorded as D27.
+
+Verified: RED observed - temporarily dropped `explo_purpose` from
+`SITE_COLUMNS` and re-ran; the disagreement test failed
+(`has_validation_errors() is False`), the order-independence test
+still passed (nothing to disagree about either way, so it does not by
+itself prove the mechanism - the disagreement test is what is
+load-bearing here). Restored, re-ran green. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 117 passed, full
+module. Ran the wider suite: `poetry run pytest tests/test_ghfdb/ -q`
+→ 393 passed, 13 xfailed (up by exactly the two tests this task
+added). `ruff check`/`ruff format --check` → clean.
+
+Next: this run's tasks (T081-T093, T115, the explo_purpose closure) are
+all closed. The completion report and one full `forge verify` run.
+
+Watch: none.

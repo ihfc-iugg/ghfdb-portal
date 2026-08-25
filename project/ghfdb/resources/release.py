@@ -187,6 +187,7 @@ SITE_COLUMNS = (
     "total_depth_MD",
     "total_depth_TVD",
     "explo_method",
+    "explo_purpose",
     "Country",
     "Region",
     "Continent",
@@ -198,11 +199,21 @@ def _site_column_value(column, raw):
     """The comparable value of a site column for disagreement purposes
     (T074, T075): ``environment`` and ``explo_method`` are vocabulary
     columns, normalised and treated as blank when unspecified, the same
-    tolerance ``_probe_column_value`` already gives ``probe_type``; the
-    rest compare on their raw text."""
+    tolerance ``_probe_column_value`` already gives ``probe_type``.
+    ``explo_purpose`` is the site's one many-valued column - the closure
+    D24 flagged and left open - so it compares as an order-independent
+    set of normalised terms rather than as text: reduced here to a
+    canonical, sorted, semicolon-joined form, so two rows giving the same
+    purposes in a different order are read as agreeing, and a term
+    normalising to ``unspecified`` makes no statement, the same as a
+    blank cell. The rest compare on their raw text."""
     if column in ("environment", "explo_method"):
         normalized = normalize_vocab_token(raw)
         return "" if normalized == "unspecified" else normalized
+    if column == "explo_purpose":
+        tokens = (normalize_vocab_token(term.strip()) for term in raw.split(";"))
+        terms = {token for token in tokens if token not in ("", "unspecified")}
+        return ";".join(sorted(terms))
     return raw
 
 

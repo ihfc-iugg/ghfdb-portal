@@ -779,3 +779,33 @@ required column again (`DISCARDED_COLUMNS` no longer requiring it on the header 
 what US-4 wants) - that decision belongs to US-4's own Implementer, who should read this entry before
 assuming the header requirement can simply be restored without consequence for whatever else by then
 reads `RELEASE_COLUMNS`'s partition.
+
+### D27 — `explo_purpose` closes the gap D24 flagged in `SITE_COLUMNS`
+
+**Original**: FR-035 - "Rows that share a site or an interval but disagree about that shared
+record's own values MUST be refused, with the disagreement reported."
+
+**Code**: D24 (US-3 second part) named this gap and left it open rather than deciding it:
+`SITE_COLUMNS` omitted `explo_purpose`, the one many-valued (M2M) column `_build_new_site` sets, since
+no acceptance scenario in that run's brief exercised it and the real fixture's own rows already
+agreed on it.
+
+**Ruled**: closed, per this run's own brief. `explo_purpose` joins `SITE_COLUMNS`.
+`_site_column_value` reduces it to a canonical, sorted, semicolon-joined string of normalised terms -
+order-independent set equality, not string equality, since the published column is many-valued and
+two rows giving the same purposes in a different order are not a disagreement. A term normalising to
+`unspecified` is dropped before comparison, the same "blank makes no statement" tolerance D24 already
+gives every other disagreement check (a row silent about a purpose does not conflict with one that
+names it). This reuses `_find_disagreements` exactly as it stands - the canonical string is what goes
+into the same per-key-column set the scalar `SITE_COLUMNS` entries already populate, so no change to
+the disagreement-finding mechanism itself, only to what one column's "comparable value" is.
+
+Verified against the real base fixture directly: the six rows sharing site `R24-P003477` already
+agree on `explo_purpose` (`[Research]` on all six), so this closure changes nothing about which real
+rows the base fixture accepts - confirmed by the full module staying green with no fixture change.
+
+**Not asked for by any earlier task; explicitly asked for by this run's own brief** (the
+`explo_purpose`-disagreement acceptance entry), which is why this is a task closure rather than a
+concern. **Revisit if** a many-valued column beyond `explo_purpose` ever needs the same disagreement
+treatment - `_site_column_value`'s branch is written for this one column specifically, not as a
+general many-valued-column handler.
