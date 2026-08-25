@@ -79,6 +79,13 @@ def _normalize_publication_reference(reference: str) -> str:
     return reference.strip().lower()
 
 
+def _depth_magnitude(value):
+    """The comparable identity of an interval's top or bottom depth
+    (T059, T060): its numeric magnitude, or ``None`` when the row gives
+    no depth at all - the indeterminate interval's own identity (D17)."""
+    return getattr(value, "magnitude", value)
+
+
 class GHFDBReleaseCSVFormat(CSV):
     """The format a published release is distributed in: one header row,
     one data row per determination (FR-002). The library's own
@@ -205,6 +212,10 @@ class GHFDBReleaseImportResource(ModelResource):
         # ``before_import`` call, one per resource instance (R4, R8).
         self._sites_by_local_id = {}
         self._parents_by_site_id = {}
+        # T059-T062: an interval is shared by every row giving the same
+        # site and depth range, within this pass - cleared per
+        # ``before_import`` call.
+        self._intervals_by_key = {}
 
     def _resolve_publication_datasets(self, dataset):
         """T035, T036: collect the file's distinct publication references
@@ -323,17 +334,35 @@ class GHFDBReleaseImportResource(ModelResource):
         instance.thermal_conductivity = self._build_conductivity(row, interval, dataset)
 
     def _build_interval(self, row, site, dataset):
-        """Build the interval a row's determination is measured over
-        (T053): the depth range the row gives, on the row's site. Sharing
-        an interval across rows that give the same site and depth range,
-        and the one indeterminate interval per site for rows that give no
-        depth at all, are T059-T062.
+        """Return the interval a row's determination is measured over
+        (T053): the depth range the row gives, on the row's site -
+        identified by that site together with the depth range (D15,
+        T059, T060), shared with every earlier row that gave the same
+        site and range. A row giving no depth range at all shares the
+        site's one indeterminate interval (D17, T061, T062), since an
+        empty range is a range like any other for identity purposes.
+
+        Scalar and many-valued fields are only applied when the interval
+        is built for the first time - a later row sharing it is linked,
+        not re-applied, the same precedent ``_build_site_and_parent``
+        already sets for a reused site or parent.
         """
         interval = self._interval_widget.clean(None, row=row) or HeatFlowInterval()
+        key = (
+            site.pk,
+            _depth_magnitude(interval.top),
+            _depth_magnitude(interval.bottom),
+        )
+
+        cached = self._intervals_by_key.get(key)
+        if cached is not None:
+            return cached
+
         interval.site = site
         interval.dataset = dataset
         interval.save()
         self._interval_widget.set_m2m_relations(interval)
+        self._intervals_by_key[key] = interval
         return interval
 
     def _build_gradient(self, row, interval, dataset):

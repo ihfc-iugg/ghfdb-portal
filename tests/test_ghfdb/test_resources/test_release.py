@@ -694,3 +694,42 @@ class TestGHFDBReleaseImportResourceSharedParent:
         assert ParentHeatFlow.objects.count() == 1
         parent = ParentHeatFlow.objects.get(local_id="R24-P003477")
         assert HeatFlow.objects.filter(parent=parent).count() == 2
+
+
+class TestGHFDBReleaseImportResourceSharedInterval:
+    """T059, T060: several rows giving one site and one depth range
+    produce one interval, identified by its site and that depth range,
+    carrying all of their determinations, each with its own gradient and
+    conductivity. Fails before: each row makes its own interval. An
+    interval is a sample in its own right and can be measured again by
+    someone else (D15)."""
+
+    def test_rows_sharing_a_site_and_depth_range_produce_one_interval(self, db):
+        from heat_flow.models import (
+            HeatFlow,
+            HeatFlowInterval,
+            IntervalConductivity,
+            ThermalGradient,
+        )
+
+        header, rows = _corrected_header_and_rows()
+        shared_rows = _with_cell(header, [rows[4], rows[5]], 0, "q_bottom", "4520.00")
+        shared_rows = _with_cell(header, shared_rows, 1, "q_bottom", "4520.00")
+        dataset = _make_dataset(header, shared_rows)
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+
+        assert HeatFlowInterval.objects.count() == 1
+        interval = HeatFlowInterval.objects.get()
+        determinations = HeatFlow.objects.filter(sample=interval)
+        assert determinations.count() == 2
+        assert set(determinations.values_list("local_id", flat=True)) == {
+            "R24-033563",
+            "R24-053075",
+        }
+        assert ThermalGradient.objects.filter(sample=interval).count() == 2
+        assert IntervalConductivity.objects.filter(sample=interval).count() == 2
