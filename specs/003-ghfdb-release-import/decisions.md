@@ -537,3 +537,16 @@ modifying a test not authored in it, none of the three files were touched. `GHFD
 and `GHFDBReleaseImportResource` are complete, exported from `project/ghfdb/resources/__init__.py`,
 and fully exercised by `test_release.py` — only the admin wiring plan.md describes is outstanding.
 Flagged in this run's completion report as a concern rather than resolved unilaterally.
+
+**Deviation: the mandatory baseline `forge verify` (§5 of the brief's rituals) ran after
+implementation, not before it.** The brief's rituals name it as the last step, before the tasks
+themselves; work began directly from the tasks instead. Caught only when writing this run's
+completion report, at which point the tree already carried all seventeen tasks' commits. The
+worktree's starting commit (`c3d2352`, the same commit the requester recorded as clean) was never
+independently confirmed green in isolation. Mitigated after the fact rather than avoided: no
+pre-existing test file was modified at any point in this run (confirmed per-task by diffing each
+commit's changed files against the task's declared scope), and the full `forge verify` run at
+completion — against the finished tree, all seventeen tasks included — passed every step
+(conformance, lint, typecheck, the full suite, build). This does not retroactively prove the
+starting commit was green; it does establish that nothing in this run's own commits left the tree
+red. Reported as a deviation in this run's completion report rather than silently corrected.
