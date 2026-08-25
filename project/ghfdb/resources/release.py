@@ -224,7 +224,12 @@ class GHFDBReleaseImportResource(ModelResource):
                 )
 
         reference = (row.get("publication_reference") or "").strip()
-        if reference:
+        if not reference:
+            errors["publication_reference"] = ValidationError(
+                force_str("A row's publication reference must not be empty."),
+                code="invalid",
+            )
+        else:
             normalized = _normalize_publication_reference(reference)
             matches = self._ambiguous_references.get(normalized)
             if matches is not None:

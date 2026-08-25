@@ -497,3 +497,21 @@ class TestGHFDBReleaseImportResourceAmbiguousReference:
             ).count()
             == 2
         )
+
+
+class TestGHFDBReleaseImportResourceEmptyReference:
+    """T045, T046: a row whose publication reference is empty is refused.
+    Fails before: it is filed under a default."""
+
+    def test_empty_publication_reference_is_refused(self, db):
+        header, rows = _corrected_header_and_rows()
+        rows = _with_cell(header, rows, 0, "publication_reference", "")
+        dataset = _make_dataset(header, rows)
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_validation_errors() is True
+        refused = {row.number: row for row in result.invalid_rows}
+        assert 2 in refused
+        assert "publication_reference" in refused[2].error_dict
