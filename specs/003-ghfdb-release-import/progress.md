@@ -1342,3 +1342,64 @@ names only columns with a real destination, so its own coverage
 assertion can hold for every entry.
 
 Watch: none.
+
+## 2026-08-26T00:15:00Z · Implementer US-3 (third part) · T115
+
+Did: `TestGHFDBReleaseImportResourceColumnMapping` in test_release.py.
+`COLUMN_ASSERTIONS` is a module-level dict, one entry per published
+column, each a `(objects, raw) -> bool` check reading the object a
+column's value should have landed on (site, parent, interval,
+determination, gradient, conductivity, probe, or the corrections dict
+keyed by `CORRECTION_COL_MAP`) and the row's own raw value for that
+column - built once by `_import_fully_populated_row`, which imports
+`_fully_populated_row` (row 4 of the real base fixture, with a real
+value filled in by hand for every column that row itself leaves blank
+or `[unspecified]`, so every column has something real to prove a
+destination with) and returns every record it produced.
+`test_every_read_column_has_an_assertion` asserts
+`set(COLUMN_ASSERTIONS) == READ_COLUMNS` - the coverage check SC-007
+and the task's own "failing for any read column that carries no
+assertion" ask for. `test_column_lands_in_its_field` is parametrized
+directly over `sorted(READ_COLUMNS)`, so each column gets its own,
+individually-named test node (T115's "asserted column by column...
+not in aggregate") rather than one test looping silently; a column
+absent from `COLUMN_ASSERTIONS` fails its own node by name
+("... is a read column with no assertion registered"), not just the
+aggregate coverage check.
+
+Vocabulary comparisons reuse the production widgets rather than
+hardcoding expected labels: `_concept_key_matches`/`_concept_set_matches`
+compute what `ConceptWidget`/`MultiConceptWidget` themselves resolve a
+raw value to, independently of whatever the import cached, and compare
+that against what actually landed on the built record - a genuine
+cross-check, not a restatement of the fixture.
+
+Two real, independent bugs surfaced while getting this green, in the
+test itself rather than in `release.py`: the corrections lambda closed
+over the wrong argument name (`corrections` instead of the shared `o`
+every other lambda takes, so `corrections[correction_type]` was
+actually indexing the whole objects dict and raising `KeyError`), and
+the coordinate comparison subtracted a `Decimal` (`site.location.y/x`)
+from a `float` raw value directly. Both were caught by running the new
+test itself, not release.py - no production line changed for this
+task.
+
+Verified: ran the class in isolation first - 65 of 67 failed
+(`corr_*_flag` KeyErrors, `lat_NS`/`long_EW` TypeErrors), fixed both,
+re-ran: 67 passed (66 columns + the coverage test). Probed the
+"failing for any read column that carries no assertion" requirement
+directly: commented out the `tc_strategy` entry - both
+`test_every_read_column_has_an_assertion` and
+`test_column_lands_in_its_field[tc_strategy]` failed, the latter by
+name ("... is a read column with no assertion registered"), confirming
+the mechanism T115 asks for rather than only the aggregate check.
+Restored, re-ran green. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 115 passed, full
+module. Ran the wider suite: `poetry run pytest tests/test_ghfdb/ -q`
+→ 391 passed, 13 xfailed (up by exactly the 67 tests this task added).
+`ruff check`/`ruff format --check` → clean.
+
+Next: the `explo_purpose` site-disagreement closure D24 flagged and
+left open, then the story's completion report.
+
+Watch: none.

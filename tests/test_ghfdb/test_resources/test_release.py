@@ -17,10 +17,16 @@ import tablib
 from fairdm.core.models import Dataset
 from literature.models import LiteratureItem
 
-from project.ghfdb.constants import MISSPELLED_COLUMNS
+from project.ghfdb.constants import CORRECTION_COL_MAP, MISSPELLED_COLUMNS, READ_COLUMNS
 from project.ghfdb.resources.release import (
     GHFDBReleaseCSVFormat,
     GHFDBReleaseImportResource,
+    _correction_status,
+)
+from project.ghfdb.resources.widgets import (
+    ConceptWidget,
+    MultiConceptWidget,
+    YesNoWidget,
 )
 
 pytestmark = pytest.mark.ghfdb
@@ -1263,3 +1269,326 @@ class TestGHFDBReleaseImportResourceMixedIntervals:
         indeterminate_interval = HeatFlowInterval.objects.get(top__isnull=True)
         assert with_depth_interval != indeterminate_interval
         assert indeterminate_interval.bottom is None
+
+
+def _fully_populated_row():
+    """Row 4 of the real base fixture, with a real value filled in by hand
+    for every column that row leaves blank or ``[unspecified]`` (T115) -
+    every ``READ_COLUMNS`` entry gets something real to assert against, not
+    an absence that would prove nothing about where a value lands."""
+    header, rows = _corrected_header_and_rows()
+    row = list(rows[4])
+    overrides = {
+        "Country": "Some Country",
+        "T_grad_mean_cor": "60.00",
+        "T_grad_uncertainty": "2.0",
+        "T_grad_uncertainty_cor": "2.5",
+        "T_shutin_bottom": "5",
+        "T_shutin_top": "3",
+        "T_method_top": "[BHT]",
+        "T_method_bottom": "[BHT]",
+        "T_corr_top": "[Horner plot]",
+        "T_corr_bottom": "[Horner plot]",
+        "c_comment": "child comment text",
+        "probe_length": "12.5",
+        "probe_penetration": "3.5",
+        "probe_tilt": "2.0",
+        "p_comment": "parent comment text",
+        "q_bottom": "4520.00",
+        "tc_number": "5",
+        "tc_uncertainty": "0.05",
+        "tc_pT_function": "[Other]",
+        "total_depth_MD": "5000.00",
+        "total_depth_TVD": "4800.00",
+        "water_temperature": "4.5",
+    }
+    for column, value in overrides.items():
+        row = _with_cell(header, [row], 0, column, value)[0]
+    return header, row
+
+
+def _import_fully_populated_row():
+    """Import ``_fully_populated_row`` and return every record it produces,
+    keyed by the object a column's assertion needs, plus the row itself
+    (as a dict) for the assertion to read its own expected value from."""
+    from heat_flow.models import (
+        HeatFlow,
+        HeatFlowCorrection,
+        HeatFlowInterval,
+        HeatFlowSite,
+        IntervalConductivity,
+        ParentHeatFlow,
+        ProbeMetadata,
+        ThermalGradient,
+    )
+
+    header, row = _fully_populated_row()
+    dataset = _make_dataset(header, [row])
+
+    resource = GHFDBReleaseImportResource()
+    result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+    assert result.has_errors() is False
+    assert result.has_validation_errors() is False
+
+    determination = HeatFlow.objects.get()
+    return {
+        "row": dict(zip(header, row, strict=True)),
+        "determination": determination,
+        "parent": ParentHeatFlow.objects.get(),
+        "site": HeatFlowSite.objects.get(),
+        "interval": HeatFlowInterval.objects.get(),
+        "gradient": ThermalGradient.objects.get(),
+        "conductivity": IntervalConductivity.objects.get(),
+        "probe": ProbeMetadata.objects.get(),
+        "corrections": {
+            c.correction_type: c
+            for c in HeatFlowCorrection.objects.filter(heat_flow=determination)
+        },
+    }
+
+
+def _quantity_matches(quantity, raw):
+    return quantity is not None and float(quantity.magnitude) == float(raw)
+
+
+def _concept_key_matches(vocabulary):
+    def check(actual, raw):
+        expected = ConceptWidget(vocabulary=vocabulary).clean(raw, row={})
+        return str(actual) == expected
+
+    return check
+
+
+def _concept_set_matches(vocabulary):
+    def check(manager, raw):
+        expected = {str(c) for c in MultiConceptWidget(vocabulary).clean(raw, row={})}
+        return {str(c) for c in manager.all()} == expected
+
+    return check
+
+
+def _correction_matches(column):
+    def check(o, raw):
+        correction_type = CORRECTION_COL_MAP[column]
+        return o["corrections"][correction_type].status == _correction_status(raw)
+
+    return check
+
+
+def _heat_flow_method_vocabulary():
+    from heat_flow import vocabularies
+
+    return vocabularies.HeatFlowMethod
+
+
+def _exploration_purpose_vocabulary():
+    from heat_flow import vocabularies
+
+    return vocabularies.ExplorationPurpose
+
+
+def _simple_lithology_vocabulary():
+    from fairdm_geo.vocabularies.cgi.geosciml import SimpleLithology
+
+    return SimpleLithology
+
+
+def _geological_timescale_vocabulary():
+    from fairdm_geo.vocabularies.stratigraphy import GeologicalTimescale
+
+    return GeologicalTimescale
+
+
+def _temperature_method_vocabulary():
+    from heat_flow import vocabularies
+
+    return vocabularies.TemperatureMethod
+
+
+def _temperature_correction_vocabulary():
+    from heat_flow import vocabularies
+
+    return vocabularies.TemperatureCorrection
+
+
+def _conductivity_vocabulary(name):
+    def get():
+        from heat_flow import vocabularies
+
+        return getattr(vocabularies, name)
+
+    return get
+
+
+def _probe_type_vocabulary():
+    from heat_flow import vocabularies
+
+    return vocabularies.ProbeType
+
+
+# T115, SC-007: one assertion per ``READ_COLUMNS`` entry, each a
+# ``(objects, raw) -> bool`` check reading the object(s)
+# ``_import_fully_populated_row`` returns and the row's own raw value for
+# that column. A column landing nowhere, or in the wrong field, fails its
+# own check rather than an aggregate one; a column added to
+# ``READ_COLUMNS`` with no matching key here fails
+# ``test_every_read_column_has_an_assertion`` by name.
+COLUMN_ASSERTIONS = {
+    # -- site --
+    "name": lambda o, raw: o["site"].name == raw,
+    "lat_NS": lambda o, raw: abs(float(o["site"].location.y) - float(raw)) < 1e-6,
+    "long_EW": lambda o, raw: abs(float(o["site"].location.x) - float(raw)) < 1e-6,
+    "elevation": lambda o, raw: _quantity_matches(o["site"].elevation, raw),
+    "environment": lambda o, raw: _concept_key_matches(
+        _heat_flow_environment_vocabulary()
+    )(o["site"].environment, raw),
+    "explo_method": lambda o, raw: _concept_key_matches(
+        _exploration_method_vocabulary()
+    )(o["site"].explo_method, raw),
+    "explo_purpose": lambda o, raw: _concept_set_matches(
+        _exploration_purpose_vocabulary()
+    )(o["site"].explo_purpose, raw),
+    "total_depth_MD": lambda o, raw: _quantity_matches(o["site"].length, raw),
+    "total_depth_TVD": lambda o, raw: _quantity_matches(o["site"].vertical_depth, raw),
+    "Country": lambda o, raw: o["site"].country == raw,
+    "Region": lambda o, raw: o["site"].region == raw,
+    "Continent": lambda o, raw: o["site"].continent == raw,
+    "Domain": lambda o, raw: o["site"].domain == raw,
+    "ID_parent": lambda o, raw: o["site"].local_id == raw,
+    # -- parent --
+    "q": lambda o, raw: _quantity_matches(o["parent"].value, raw),
+    "q_uncertainty": lambda o, raw: _quantity_matches(o["parent"].uncertainty, raw),
+    "p_comment": lambda o, raw: o["parent"].comment == raw,
+    "corr_HP_flag": lambda o, raw: o["parent"].corr_HP_flag == YesNoWidget().clean(raw),
+    # -- determination --
+    "ID": lambda o, raw: o["determination"].local_id == raw,
+    "qc": lambda o, raw: _quantity_matches(o["determination"].value, raw),
+    "qc_uncertainty": lambda o, raw: _quantity_matches(
+        o["determination"].uncertainty, raw
+    ),
+    "c_comment": lambda o, raw: o["determination"].c_comment == raw,
+    "expedition": lambda o, raw: o["determination"].expedition == raw,
+    "water_temperature": lambda o, raw: _quantity_matches(
+        o["determination"].water_temperature, raw
+    ),
+    "q_date": lambda o, raw: str(o["determination"].date_acquired) == raw,
+    "q_method": lambda o, raw: _concept_set_matches(_heat_flow_method_vocabulary())(
+        o["determination"].method, raw
+    ),
+    "relevant_child": lambda o, raw: (
+        o["determination"].is_relevant == (YesNoWidget().clean(raw) or False)
+    ),
+    "publication_reference": lambda o, raw: (
+        o["determination"].dataset.reference.citation_key == raw
+    ),
+    # -- interval --
+    "q_top": lambda o, raw: _quantity_matches(o["interval"].top, raw),
+    "q_bottom": lambda o, raw: _quantity_matches(o["interval"].bottom, raw),
+    "geo_lithology": lambda o, raw: _concept_set_matches(
+        _simple_lithology_vocabulary()
+    )(o["interval"].lithology, raw),
+    "geo_stratigraphy": lambda o, raw: _concept_set_matches(
+        _geological_timescale_vocabulary()
+    )(o["interval"].age, raw),
+    # -- gradient --
+    "T_grad_mean": lambda o, raw: _quantity_matches(o["gradient"].value, raw),
+    "T_grad_uncertainty": lambda o, raw: _quantity_matches(
+        o["gradient"].uncertainty, raw
+    ),
+    "T_grad_mean_cor": lambda o, raw: _quantity_matches(
+        o["gradient"].corrected_value, raw
+    ),
+    "T_grad_uncertainty_cor": lambda o, raw: _quantity_matches(
+        o["gradient"].corrected_uncertainty, raw
+    ),
+    "T_shutin_top": lambda o, raw: _quantity_matches(o["gradient"].shutin_top, raw),
+    "T_shutin_bottom": lambda o, raw: _quantity_matches(
+        o["gradient"].shutin_bottom, raw
+    ),
+    "T_number": lambda o, raw: o["gradient"].number == int(raw),
+    "T_method_top": lambda o, raw: _concept_set_matches(
+        _temperature_method_vocabulary()
+    )(o["gradient"].method_top, raw),
+    "T_method_bottom": lambda o, raw: _concept_set_matches(
+        _temperature_method_vocabulary()
+    )(o["gradient"].method_bottom, raw),
+    "T_corr_top": lambda o, raw: _concept_set_matches(
+        _temperature_correction_vocabulary()
+    )(o["gradient"].correction_top, raw),
+    "T_corr_bottom": lambda o, raw: _concept_set_matches(
+        _temperature_correction_vocabulary()
+    )(o["gradient"].correction_bottom, raw),
+    # -- conductivity --
+    "tc_mean": lambda o, raw: _quantity_matches(o["conductivity"].value, raw),
+    "tc_uncertainty": lambda o, raw: _quantity_matches(
+        o["conductivity"].uncertainty, raw
+    ),
+    "tc_number": lambda o, raw: o["conductivity"].number == int(raw),
+    "tc_source": lambda o, raw: _concept_set_matches(
+        _conductivity_vocabulary("ConductivitySource")()
+    )(o["conductivity"].source, raw),
+    "tc_location": lambda o, raw: _concept_set_matches(
+        _conductivity_vocabulary("ConductivityLocation")()
+    )(o["conductivity"].location, raw),
+    "tc_method": lambda o, raw: _concept_set_matches(
+        _conductivity_vocabulary("ConductivityMethod")()
+    )(o["conductivity"].method, raw),
+    "tc_saturation": lambda o, raw: _concept_set_matches(
+        _conductivity_vocabulary("ConductivitySaturation")()
+    )(o["conductivity"].saturation, raw),
+    "tc_pT_conditions": lambda o, raw: _concept_set_matches(
+        _conductivity_vocabulary("ConductivityPTConditions")()
+    )(o["conductivity"].pT_conditions, raw),
+    "tc_pT_function": lambda o, raw: _concept_set_matches(
+        _conductivity_vocabulary("ConductivityPTFunction")()
+    )(o["conductivity"].pT_function, raw),
+    "tc_strategy": lambda o, raw: _concept_set_matches(
+        _conductivity_vocabulary("ConductivityStrategy")()
+    )(o["conductivity"].strategy, raw),
+    # -- probe metadata --
+    "probe_penetration": lambda o, raw: _quantity_matches(o["probe"].penetration, raw),
+    "probe_length": lambda o, raw: _quantity_matches(o["probe"].length, raw),
+    "probe_tilt": lambda o, raw: _quantity_matches(o["probe"].tilt, raw),
+    "probe_type": lambda o, raw: _concept_set_matches(_probe_type_vocabulary())(
+        o["probe"].probe_type, raw
+    ),
+    # -- corrections --
+    **{column: _correction_matches(column) for column in CORRECTION_COL_MAP},
+}
+
+
+def _heat_flow_environment_vocabulary():
+    from heat_flow import vocabularies
+
+    return vocabularies.GeographicEnvironment
+
+
+def _exploration_method_vocabulary():
+    from heat_flow import vocabularies
+
+    return vocabularies.ExplorationMethod
+
+
+class TestGHFDBReleaseImportResourceColumnMapping:
+    """T115: every column the definition (``READ_COLUMNS``) marks as read
+    lands in the field that holds it, asserted column by column - not in
+    aggregate - against one fully populated row, and failing for any read
+    column that carries no assertion here rather than being dropped in
+    silence (SC-007). Fails before: the mapping was asserted only in
+    aggregate (a handful of fields on the story's own spine test), so a
+    column could go nowhere unnoticed."""
+
+    def test_every_read_column_has_an_assertion(self):
+        assert set(COLUMN_ASSERTIONS) == READ_COLUMNS
+
+    @pytest.mark.parametrize("column", sorted(READ_COLUMNS))
+    def test_column_lands_in_its_field(self, db, column):
+        objects = _import_fully_populated_row()
+        assertion = COLUMN_ASSERTIONS.get(column)
+        assert assertion is not None, (
+            f"{column!r} is a read column with no assertion registered"
+        )
+        raw = objects["row"][column]
+        assert assertion(objects, raw), (
+            f"{column!r}: {raw!r} did not land in its field as expected"
+        )
