@@ -21,6 +21,10 @@ a passing test that genuinely exercises it could be given. Eight of the 114 clos
 carries the evidence it closed on. [reconciliation.md](reconciliation.md) records the split, and the
 six proposed closures that did not survive review.
 
+**Removed at design review**: T010 and T094 to T096 asked for behaviour the approved specification
+does not require — a readable name for the reading format, and the order of the columns on the
+confirmation page. Their ids are not reused. T115 was added in the same pass, for SC-007.
+
 **Names used below.** The reading format, the resource and the release column definitions live in
 `project/ghfdb/`. Tests mirror that tree under `tests/test_ghfdb/`, per `tests/README.md`.
 
@@ -61,7 +65,8 @@ Blocking. Every story depends on these.
   invisible.
 
 - [ ] **T005** *foundations* — Fixture variants derived from T004 by a single deliberate change
-  each: a misspelled published header, an undefined header, a missing required header, a bad
+  each: one variant per misspelled published header (there are two), an undefined header, a
+  missing required header, a bad
   vocabulary value, a numeric value in a text column, two rows disagreeing about a shared site, and
   two rows disagreeing about a shared interval's probe.
   **Test**: each variant differs from the base fixture in exactly the intended cell or header.
@@ -89,13 +94,10 @@ Blocking. Every story depends on these.
   recognise in the format list, reading the header from the first line and the data from the second.
   **Test**: T008.
 
-- [ ] **T010** *US-1* — Test: the format's name as offered in the administrative interface is the
-  readable one and not the library's bare format code.
-  **Fails before**: the name is `csv`.
-
 - [ ] **T011** *US-1* — Test: a file carrying a misspelled published column name is refused, the
   error names the misspelled name, the correct name and the outdated template, and no record of any
-  kind is created.
+  kind is created. Asserted separately for each of the two misspelled names the published format
+  contains, per SC-001, so that a check keyed to one cannot leave the other unrefused.
   **Fails before**: nothing checks headers.
   **Note**: this refusal is required without exception, including for the published release, which
   carries both misspelled names. See D7.
@@ -146,30 +148,6 @@ Blocking. Every story depends on these.
 
 - [ ] **T024** *US-1* — Test: a reported fault carries the offending value and a reason that
   distinguishes it from other reasons.
-  **Fails before**: no reader exists.
-
-- [ ] **T025** *US-1* — Test: a file in which one value is refused writes nothing at all — every
-  record count is what it was before, including for the rows that were themselves valid.
-  **Fails before**: the confirmed pass commits the valid rows and skips the refused one. This is the
-  library's default and the specification forbids it. See R5.
-
-- [ ] **T026** *US-1* — Rolling the confirmed pass back when any value was refused.
-  **Test**: T025.
-
-- [ ] **T027** *US-1* — Test: reinstating the library's default makes T025 fail. The guarantee is an
-  override of a default that would otherwise pass every test written against a clean file.
-  **Fails before**: the test does not exist, and its absence is what would let the override be
-  removed silently.
-
-- [ ] **T028** *US-1* — Test: an import in which any value was refused is not reported to the curator
-  as having succeeded.
-  **Fails before**: the confirmed pass reports success without inspecting its own result.
-
-- [ ] **T029** *US-1* — Checking the confirmed pass's result before reporting it.
-  **Test**: T028.
-
-- [ ] **T030** *US-1* — Test: a file in which every value passes writes the records when the curator
-  confirms.
   **Fails before**: no reader exists.
 
 - [x] **T031** *US-1* — Test: a staff user without permission to add records cannot reach the import,
@@ -280,7 +258,7 @@ Blocking. Every story depends on these.
 - [ ] **T057** *US-3* — Identifying a site by its published site identifier.
   **Test**: T056.
 
-- [ ] **T058** *US-3* — Test: the site-level determination is created once per site and not once per
+- [ ] **T058** *US-3* — Test: the site's parent heat flow value is created once per site and not once per
   row.
   **Fails before**: it is created per row.
 
@@ -331,10 +309,11 @@ Blocking. Every story depends on these.
   none creates none.
   **Fails before**: it is created per row, or created empty.
 
-- [x] **T071** *US-3* — Probe metadata belonging to the interval.
+- [ ] **T071** *US-3* — Probe metadata belonging to the interval. The relationship already exists on
+  the model as a one-to-one field and needs no change; what this task delivers is the release
+  reader creating at most one record per interval and none for a row that supplies no probe
+  columns.
   **Test**: T070.
-  **Closed on**: project/heat_flow/models/child.py:305 · tests/test_ghfdb/test_resources/test_child_import.py:294
-
 - [ ] **T072** *US-3* — Test: two rows sharing an interval but disagreeing about the probe that
   sampled it are refused, and the disagreement is reported.
   **Fails before**: the second row overwrites the first, or fails in a way that names nothing.
@@ -423,18 +402,38 @@ Blocking. Every story depends on these.
 - [ ] **T093** *US-3* — Reading every row, or reporting it as refused, and nothing else.
   **Test**: T092.
 
-- [ ] **T094** *US-3* — Test: the columns the curator is shown before confirming appear in the
-  published order.
-  **Fails before**: they appear in the order the reader declares them.
+- [ ] **T025** *US-1* — Test: a file in which one value is refused writes nothing at all — every
+  record count is what it was before, including for the rows that were themselves valid.
+  **Fails before**: the confirmed pass commits the valid rows and skips the refused one. This is the
+  library's default and the specification forbids it. See R5.
 
-- [ ] **T095** *US-3* — Ordering the confirmation's columns by the release format's column list.
-  **Test**: T094.
+- [ ] **T026** *US-1* — Rolling the confirmed pass back when any value was refused.
+  **Test**: T025.
 
-- [ ] **T096** *US-3* — Test: every entry in the ordering is a column the reader actually has, so
-  that an entry matching nothing cannot be dropped silently.
-  **Fails before**: the ordering is accepted unchecked.
-  **Note**: an unmatched entry being dropped in silence is how the writing side's column order went
-  wrong.
+- [ ] **T027** *US-1* — Test: reinstating the library's default makes T025 fail. The guarantee is an
+  override of a default that would otherwise pass every test written against a clean file.
+  **Fails before**: the test does not exist, and its absence is what would let the override be
+  removed silently.
+
+- [ ] **T028** *US-1* — Test: an import in which any value was refused is not reported to the curator
+  as having succeeded.
+  **Fails before**: the confirmed pass reports success without inspecting its own result.
+
+- [ ] **T029** *US-1* — Checking the confirmed pass's result before reporting it.
+  **Test**: T028.
+
+- [ ] **T030** *US-1* — Test: a file in which every value passes writes the records when the curator
+  confirms.
+  **Fails before**: no reader exists.
+
+
+- [ ] **T115** *US-3* — Test: every column the definition marks as read lands in the field that holds
+  it, asserted column by column against the fixture rather than in aggregate, and failing for any
+  read column that carries no assertion. An entry in the definition that resolves to no field fails
+  here rather than being dropped in silence.
+  **Fails before**: the mapping is asserted only in aggregate, so a column can go nowhere unnoticed.
+  **Serves**: SC-007, and the constitution's obligation that a change to the published field mapping
+  carries an end-to-end test of that mapping.
 
 ---
 
@@ -452,10 +451,9 @@ Blocking. Every story depends on these.
   no second one.
   **Fails before**: a second record is created.
 
-- [x] **T100** *US-4* — Identifying a determination by its published determination identifier, so a
+- [ ] **T100** *US-4* — Identifying a determination by its published determination identifier, so a
   repeat updates.
   **Test**: T099.
-  **Closed on**: project/ghfdb/resources/child.py:378 · tests/test_ghfdb/test_resources/test_child_import.py:150
 
 - [ ] **T101** *US-4* — Test: re-importing finds the gradient and the conductivity the determination
   was derived from, rather than creating a second pair.

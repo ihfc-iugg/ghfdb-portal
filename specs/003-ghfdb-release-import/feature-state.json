@@ -23,6 +23,11 @@
       "state": "RECONCILE",
       "at": "2026-08-25T10:45:48Z",
       "note": "114 tasks written greenfield; 8 proven done, 106 open"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-08-25T10:59:01Z",
+      "note": "request_changes, 8 findings, all applied"
     }
   ],
   "gates": {
@@ -35,8 +40,18 @@
       "at": null
     },
     "design_review": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "design-reviewer",
+      "at": "2026-08-25T10:59:01Z",
+      "self_resolved": [
+        "F1 reconciliation high \u2014 T100 reopened: closed on the contributor template's reader, the same class as T051-T055. Applied.",
+        "F2 spec-compliance high \u2014 SC-007 traced to no task; T115 added for the column-by-column mapping test. Applied.",
+        "F3 security medium \u2014 the plan now names the registration, and states that the rollback correction intentionally reaches the other resource on it, closing #190. Applied.",
+        "F4 architecture medium \u2014 the plan now states that the shared vocabulary fix changes the contributor path too, and why. Applied.",
+        "F5 spec-compliance medium \u2014 the all-or-nothing tasks moved after US-3; US-1 lands in two parts. Applied.",
+        "F6 reconciliation medium \u2014 T071 reopened: closed on another task's test, against the other reader. Applied.",
+        "F7 architecture low \u2014 T010 and T094 to T096 removed as scope beyond the approved specification. Applied.",
+        "F8 spec-compliance low \u2014 T005 and T011 now cover both misspelled names, per SC-001. Applied."
+      ]
     },
     "merge": {
       "approved_by": null,
@@ -54,158 +69,212 @@
       "tasks": [
         {
           "id": "T001",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T002",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T003",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T004",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T005",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T006",
           "status": "done",
-          "evidence": "project/heat_flow/factories.py:33 \u00b7 tests/test_heat_flow/test_factories.py:39"
+          "attempts": 0,
+          "evidence": {
+            "code": [
+              "project/heat_flow/factories.py:33"
+            ],
+            "tests": [
+              "tests/test_heat_flow/test_factories.py:39"
+            ]
+          }
         },
         {
           "id": "T007",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T110",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T111",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T112",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T113",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T114",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T008",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T009",
-          "status": "todo"
-        },
-        {
-          "id": "T010",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T011",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T012",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T013",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T014",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T015",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T016",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T017",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T018",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T019",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T020",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T021",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T022",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T023",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T024",
-          "status": "todo"
-        },
-        {
-          "id": "T025",
-          "status": "todo"
-        },
-        {
-          "id": "T026",
-          "status": "todo"
-        },
-        {
-          "id": "T027",
-          "status": "todo"
-        },
-        {
-          "id": "T028",
-          "status": "todo"
-        },
-        {
-          "id": "T029",
-          "status": "todo"
-        },
-        {
-          "id": "T030",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T031",
           "status": "done",
-          "evidence": "project/ghfdb/admin.py:197 \u00b7 tests/test_ghfdb/test_admin.py:908"
+          "attempts": 0,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py:197"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py:908"
+            ]
+          }
         },
         {
           "id": "T032",
           "status": "done",
-          "evidence": "project/ghfdb/admin.py:197 \u00b7 tests/test_ghfdb/test_admin.py:916"
+          "attempts": 0,
+          "evidence": {
+            "code": [
+              "project/ghfdb/admin.py:197"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py:916"
+            ]
+          }
         },
         {
           "id": "T033",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T025",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T026",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T027",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T028",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T029",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T030",
+          "status": "todo",
+          "attempts": 0
         }
       ]
     },
@@ -219,71 +288,88 @@
       "tasks": [
         {
           "id": "T034",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T035",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T036",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T037",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T038",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T039",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T040",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T041",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T042",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T043",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T044",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T045",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T046",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T047",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T048",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T049",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T050",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         }
       ]
     },
@@ -297,191 +383,247 @@
       "tasks": [
         {
           "id": "T051",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T052",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T053",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T054",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T055",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T056",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T057",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T058",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T059",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T060",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T061",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T062",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T063",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T064",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T065",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T066",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T067",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T068",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T069",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T070",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T071",
-          "status": "done",
-          "evidence": "project/heat_flow/models/child.py:305 \u00b7 tests/test_ghfdb/test_resources/test_child_import.py:294"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T072",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T073",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T074",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T075",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T076",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T077",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T078",
           "status": "done",
-          "evidence": "project/ghfdb/resources/widgets.py:53 \u00b7 tests/test_ghfdb/test_resources/test_widgets.py:487"
+          "attempts": 0,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/widgets.py:53"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_widgets.py:487"
+            ]
+          }
         },
         {
           "id": "T079",
           "status": "done",
-          "evidence": "project/ghfdb/resources/widgets.py:53 \u00b7 tests/test_ghfdb/test_resources/test_widgets.py:475"
+          "attempts": 0,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/widgets.py:53"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_widgets.py:475"
+            ]
+          }
         },
         {
           "id": "T080",
           "status": "done",
-          "evidence": "project/ghfdb/resources/widgets.py:98 \u00b7 tests/test_ghfdb/test_resources/test_widgets.py:507"
+          "attempts": 0,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/widgets.py:98"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_widgets.py:507"
+            ]
+          }
         },
         {
           "id": "T081",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T082",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T083",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T084",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T085",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T086",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T087",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T088",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T089",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T090",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T091",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T092",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T093",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
-          "id": "T094",
-          "status": "todo"
-        },
-        {
-          "id": "T095",
-          "status": "todo"
-        },
-        {
-          "id": "T096",
-          "status": "todo"
+          "id": "T115",
+          "status": "todo",
+          "attempts": 0
         }
       ]
     },
@@ -495,56 +637,68 @@
       "tasks": [
         {
           "id": "T097",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T098",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T099",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T100",
-          "status": "done",
-          "evidence": "project/ghfdb/resources/child.py:378 \u00b7 tests/test_ghfdb/test_resources/test_child_import.py:150"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T101",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T102",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T103",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T104",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T105",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T106",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T107",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T108",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         },
         {
           "id": "T109",
-          "status": "todo"
+          "status": "todo",
+          "attempts": 0
         }
       ]
     }
@@ -559,7 +713,7 @@
       "max": 1
     },
     "design_review_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 1
     },
     "tokens": {

@@ -11,18 +11,21 @@ work is the test. Partial is open. The checkbox state of the superseded task lis
 
 | | Tasks |
 |---|---|
-| Proven done | **8** |
-| Open | **106** |
-| Total | **114** |
+| Proven done | **6** |
+| Open | **105** |
+| Total | **111** |
 
 Why each open task is open:
 
 | Reason | Tasks |
 |---|---|
-| Never built | 82 |
+| Never built | 81 |
 | Built differently | 17 |
 | Built without tests, or only under a vacuous one | 4 |
 | Partial | 3 |
+
+Four tasks were removed at design review for asking more than the approved specification does, and
+one was added for a criterion no task served. The counts above are after both.
 
 The proportion is expected rather than alarming. The feature reads a comma-separated release file
 with its header on the first line; every reader the repository has is a spreadsheet reader taking
@@ -35,15 +38,14 @@ its headers from the sixth. Almost nothing could have been done.
 | T006 factories for every model a row produces | `project/heat_flow/factories.py:33,51,58,78,142,225,236,258` | `tests/test_heat_flow/test_factories.py:39` — 19 passed |
 | T031 permission gating on the import route | `project/ghfdb/admin.py:197,351` | `tests/test_ghfdb/test_admin.py:908,916,939,945` — 4 passed |
 | T032 the gate is the add permission | `project/ghfdb/admin.py:197,351` | `tests/test_ghfdb/test_admin.py:908,916,939,945` — 4 passed |
-| T071 probe metadata belongs to the interval | `project/heat_flow/models/child.py:305`, `project/ghfdb/resources/child.py:337` | `tests/test_ghfdb/test_resources/test_child_import.py:294` — passed |
 | T078 a bracketed or cased vocabulary value matches | `project/ghfdb/resources/widgets.py:53` | `tests/test_ghfdb/test_resources/test_widgets.py:487,497,519` — passed |
 | T079 normalising before matching | `project/ghfdb/resources/widgets.py:53,93,130` | `tests/test_ghfdb/test_resources/test_widgets.py:475,519` — passed |
 | T080 an unmatched value on a single-valued column is refused | `project/ghfdb/resources/widgets.py:98` | `tests/test_ghfdb/test_resources/test_widgets.py:507` — passed |
-| T100 a determination is identified by its published identifier | `project/ghfdb/resources/child.py:48,378` | `tests/test_ghfdb/test_resources/test_child_import.py:150` — passed |
 
-## Six closures reversed on review
+## Eight closures reversed
 
-The reconciliation proposed fourteen. Six did not survive, all for the same two reasons.
+The reconciliation proposed fourteen. Six did not survive its own review and two more did not survive
+the design review that followed. Almost all fell the same way.
 
 **T051, T052, T053, T054, T055 — a row becoming the records.** The evidence was a passing round-trip
 test, and it is a real test. But it reads the spreadsheet fixture through two resources the curator
@@ -54,10 +56,25 @@ T053 fails a second way. It cannot be done while T059 to T063 are open, because 
 code path: the interval it creates has no identity, so a second row over one interval produces a
 second interval. A task cannot be satisfied by code that the tasks below it exist to replace.
 
-**T058 — the site-level determination created once per site.** The cited code achieves it by
+**T058 — the site's parent heat flow value created once per site.** The cited code achieves it by
 deleting rows from the file as it reads, silently and without a count. That is the behaviour T092
 and T093 exist to remove, and the cited test asserts the deletion is correct. Closing T058 would
 lock in what the specification forbids.
+
+### The two the design review caught
+
+**T100 — a determination identified by its published identifier.** Closed on the contributor
+template's reader and a test that drives it, which is the same evidence T051 to T055 were reversed
+for. I applied that reason to five tasks and then failed to apply it to a sixth. Reopened.
+
+The consequence is worth stating: T101 and T102 specify the gradient, conductivity and correction
+identities as following from the determination's, so closing T100 would have left them resting on an
+identity nobody was assigned to write.
+
+**T071 — probe metadata belonging to the interval.** The task names T070 as its test, and T070 is
+open. It was closed on a different test, belonging to another task and driving the other reader —
+two breaches of the rule at the top of this file in one row. The model half is genuinely satisfied
+and the task now says so; what remains is the reader's behaviour, which T070 proves.
 
 ## Two defects found that are not this feature's work
 

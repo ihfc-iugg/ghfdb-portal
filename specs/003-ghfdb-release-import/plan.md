@@ -67,9 +67,25 @@ proves it fails.
 
 ### US-1 — a release file is checked in full before anything is written
 
-The reading format is a thin subclass of the library's comma-separated format, supplying a readable
-title. The layout needs no other change: the release's header is on line 1, which is what the
-library already assumes.
+The reading format is a thin subclass of the library's comma-separated format. The layout needs no
+other change: the release's header is on line 1, which is what the library already assumes.
+
+**Where it is registered, and what that reaches.** The release format and its resource attach to the
+determination changelist, which already carries the import machinery and already gates on the
+permission to add records — which is what FR-001 asks for, and what the two closed permission tasks
+were closed against. The site changelist is not a candidate: a release row carries both halves.
+
+That choice has a consequence to state plainly rather than discover. The rollback correction and the
+result check are properties of the registration, not of one resource, so they also reach the
+contributor template's reader on the same changelist. **This is intended.** That reader declares the
+same guarantee today in a form the library ignores, so its imports commit their valid rows and skip
+their refused ones while reporting success — raised as its own issue during the audit. Correcting it
+here costs nothing extra and leaves no known way to half-write an import behind.
+
+The same reasoning covers the vocabulary correction in US-3: the widget it fixes is shared, so
+making a many-valued vocabulary failure fatal changes the contributor path too. Rows that import
+today with a silently empty relation will be refused instead. Also intended, and for the same
+reason — the alternative is a release-only subclass that leaves the defect live on the other path.
 
 Header validation runs in `before_import` and compares the file's headers against the release
 format's column set, three ways — a misspelled published name, a name the format does not define,
@@ -93,14 +109,16 @@ one where none matches, refuses where more than one does, and creates the datase
 is held on the resource for the row pass.
 
 Comparison ignores case and surrounding whitespace. The reference each dataset came from is stored
-on the dataset rather than left to be recovered later.
+on the dataset rather than left to be recovered later, through the dataset's existing one-to-one
+link to a bibliographic record — the citation key is then one hop away and no model change is
+needed, which is what the constitution check below asserts.
 
 The hook runs on both passes against different instances, and the dry run's writes are rolled back,
 so nothing may carry a primary key from one pass to the next.
 
 ### US-3 — every row becomes the records the portal keeps
 
-Per row: the site, its site-level determination, the interval, the determination, the gradient, the
+Per row: the site, its parent heat flow value, the interval, the determination, the gradient, the
 conductivity, the corrections the row supplies and, where the row supplies it, the probe metadata.
 
 The interval is the part with no column of its own. It is identified by its site together with the
@@ -129,15 +147,20 @@ publication moves the site and leaves its determinations where they are.
 
 ## Sequencing
 
-US-1 first and alone: until a bad file is refused rather than half-written, no test of the other
-three can be trusted, and a test written against the library's default all-or-nothing behaviour
-would pass for the wrong reason.
+**US-1 lands in two parts, and this matters.** Its first part — the header check and the two
+corrections to how a fault is reported — comes first and alone, because it needs no record to be
+written and everything downstream depends on a bad file being refused.
+
+Its second part is the all-or-nothing guarantee, and that cannot be proved until rows write
+something. A test asserting "one refused value writes nothing" passes vacuously against a reader
+that writes nothing at all, which is the same shape the reconciliation rejected a proposed closure
+for. So those tasks sit at the end of the implementation, after US-3, and close US-1 from there.
 
 US-2 and US-3 then run together — a row cannot be filed without its dataset and a dataset is not
 observable without rows, so splitting them would make both halves' tests indirect.
 
-US-4 last, because it asserts about the state two imports leave behind and needs the first three to
-exist before it can say anything.
+US-4 last, because it asserts about the state two imports leave behind and needs the rest to exist
+before it can say anything.
 
 ## Constitution check
 
