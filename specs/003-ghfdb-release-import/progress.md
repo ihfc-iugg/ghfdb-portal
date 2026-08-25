@@ -1215,3 +1215,35 @@ accepted, no behaviour change) / `ruff format --check` → clean.
 Next: T092, T093, the row-count guarantee.
 
 Watch: none.
+
+## 2026-08-25T23:05:00Z · Implementer US-3 (third part) · T092, T093
+
+Did: No new production code - `release.py`'s row loop never removes a
+row from the dataset itself (the header check's `del dataset[:]` only
+runs before any row is read, on a header fault), and the determination
+model carries no upsert identity yet (`Meta.import_id_fields = ()`,
+US-4's work), so every valid row already produces its own
+`HeatFlow`, whether or not it shares a site or an interval with
+another row (D14, FR-015). Added
+`TestGHFDBReleaseImportResourceRowCountGuarantee`, importing the whole
+seven-row real base fixture (rows sharing a site, rows sharing an
+interval, rows with no depth) and asserting `HeatFlow.objects.count()
+== len(rows)`.
+
+Verified: passed on first run against the already-built mechanism -
+flagged by craft-tdd's own instruction to diagnose rather than accept
+a first-try pass. Probed: temporarily deleted one row from the dataset
+in `before_import`, reproducing the "rows sharing a site are removed
+from the file as it is read" defect D14 describes - the test failed
+for the right reason (six determinations instead of seven). Restored,
+re-ran green. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 47 passed, full
+module. `ruff check`/`ruff format --check` → clean.
+
+Next: the real gaps in the published column mapping T115 needs wired
+before its own test can assert them - `p_comment`, `corr_HP_flag`,
+`c_comment`, `expedition`, `water_temperature`, `q_date`, `q_method`
+and `relevant_child` all reach an existing model field today only via
+the sibling contributor-template resource, not this one.
+
+Watch: none.

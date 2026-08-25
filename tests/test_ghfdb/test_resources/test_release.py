@@ -1176,6 +1176,28 @@ class TestGHFDBReleaseImportResourceAssessmentColumnsRecognizedAndDiscarded:
         assert parent.comment != "Florian Neumann"
 
 
+class TestGHFDBReleaseImportResourceRowCountGuarantee:
+    """T092, T093: a file of n valid rows produces n determinations - no
+    row is dropped on the way in, whether or not it shares a site or an
+    interval with another (D14, FR-015). Every row is read, or reported
+    as refused, and nothing else. Fails before: rows sharing a site are
+    removed from the file as it is read, with no count and no notice."""
+
+    def test_n_valid_rows_produce_n_determinations(self, db):
+        from heat_flow.models import HeatFlow
+
+        header, rows = _corrected_header_and_rows()
+        dataset = _make_dataset(header, rows)
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+        assert result.total_rows == len(rows)
+        assert HeatFlow.objects.count() == len(rows)
+
+
 class TestGHFDBReleaseImportResourceMixedIntervals:
     """T063: a site with some rows giving a depth range and some giving
     none holds one interval for each distinct range plus the one
