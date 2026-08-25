@@ -1310,3 +1310,35 @@ a destination.
 
 Watch: the `expedition`/`c_comment` bracketed-marker gap (above) is a
 concern for this run's completion report, not a task closed here.
+
+## 2026-08-25T23:45:00Z · Implementer US-3 (third part) · Year, Ref_IGSN, data_reference reclassified
+
+Did: `Year`, `Ref_IGSN` and `data_reference` moved from `READ_COLUMNS`
+to `DISCARDED_COLUMNS` in constants.py (D26). Confirmed directly, not
+assumed, that none of the three reaches a field on any model this
+feature writes - `HeatFlow`, `ParentHeatFlow`, `HeatFlowSite`,
+`Dataset`, `LiteratureItem` - by listing every field name on each and
+searching for "year", "igsn", "data_ref" and "doi". D13's own framing
+("either read, or recognised and not stored") is binary; a column with
+nowhere to land belongs in the discarded set on that framing, the same
+place the quality code and the assessment columns already sit, and no
+task in this run's brief authorises adding a field to give any of the
+three a home. Added
+`TestReleaseColumnDisposition::test_columns_with_no_holding_field_are_discarded`
+in `test_constants.py` (T003's own module).
+
+Verified: RED observed - `assert {"Year", "Ref_IGSN", "data_reference"}
+<= DISCARDED_COLUMNS` failed before the reclassification. `poetry run
+pytest tests/test_ghfdb/test_constants.py -q` → 26 passed after.
+`poetry run pytest tests/test_ghfdb/test_resources/test_release.py
+tests/test_ghfdb/test_constants.py -q` → 74 passed, both modules. Ran
+the wider suite, since `constants.py` is consulted well beyond this
+story: `poetry run pytest tests/test_ghfdb/ -q` → 324 passed, 13
+xfailed (up by exactly the one new test). `ruff check`/`ruff format
+--check` → clean.
+
+Next: T115, the column-by-column mapping test - `READ_COLUMNS` now
+names only columns with a real destination, so its own coverage
+assertion can hold for every entry.
+
+Watch: none.

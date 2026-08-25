@@ -34,7 +34,10 @@ from project.ghfdb.constants import (
 pytestmark = pytest.mark.ghfdb
 
 ARCHIVE_PATH = (
-    pathlib.Path(__file__).resolve().parents[2] / "assets" / "ghfdb" / "IHFC_2024_GHFDB.zip"
+    pathlib.Path(__file__).resolve().parents[2]
+    / "assets"
+    / "ghfdb"
+    / "IHFC_2024_GHFDB.zip"
 )
 FIXTURES_DIR = pathlib.Path(__file__).parent / "test_resources" / "fixtures" / "release"
 BASE_FIXTURE = FIXTURES_DIR / "release_sample.csv"
@@ -89,7 +92,9 @@ class TestReleaseColumnDisposition:
         assert DISCARDED_COLUMNS.isdisjoint(REFUSED_COLUMNS)
 
     def test_their_union_is_the_release_column_list(self):
-        assert set(RELEASE_COLUMNS) == READ_COLUMNS | DISCARDED_COLUMNS | REFUSED_COLUMNS
+        assert (
+            set(RELEASE_COLUMNS) == READ_COLUMNS | DISCARDED_COLUMNS | REFUSED_COLUMNS
+        )
 
     def test_refused_columns_are_the_misspelled_names(self):
         assert set(MISSPELLED_COLUMNS) == REFUSED_COLUMNS
@@ -102,9 +107,22 @@ class TestReleaseColumnDisposition:
     def test_the_assessment_columns_are_discarded(self):
         """FR-034: the assessment team's own columns are recognised on the
         header and never stored."""
-        assert {"Reviewer_name", "Reviewer_comment", "Review_date", "Review_status"} <= (
-            DISCARDED_COLUMNS
-        )
+        assert {
+            "Reviewer_name",
+            "Reviewer_comment",
+            "Review_date",
+            "Review_status",
+        } <= (DISCARDED_COLUMNS)
+
+    def test_columns_with_no_holding_field_are_discarded(self):
+        """D25: ``Year``, ``Ref_IGSN`` and ``data_reference`` resolve to no
+        field anywhere in the portal's schema - confirmed directly against
+        every model this feature writes, not assumed - so D13's binary
+        ("either read, or recognised and not stored") puts them in the
+        discarded set, the same as the quality code and the assessment
+        columns, rather than leaving them wrongly required by the header
+        check with nowhere for a value to land."""
+        assert {"Year", "Ref_IGSN", "data_reference"} <= DISCARDED_COLUMNS
 
 
 class TestReleaseFixture:
@@ -194,7 +212,9 @@ class TestReleaseFixtureVariants:
 
     def test_missing_required_header_variant_drops_exactly_one_name(self):
         base_header = read_csv_header(BASE_FIXTURE)
-        variant_header = read_csv_header(FIXTURES_DIR / "header_missing_required_column.csv")
+        variant_header = read_csv_header(
+            FIXTURES_DIR / "header_missing_required_column.csv"
+        )
 
         assert len(variant_header) == len(base_header) - 1
         assert set(base_header) - set(variant_header) == {"environment"}
@@ -237,7 +257,9 @@ class TestReleaseFixtureVariants:
         self, filename, row_id, column, old_value, new_value
     ):
         base_rows = {row["ID"]: row for row in read_csv_rows(BASE_FIXTURE)}
-        variant_rows = {row["ID"]: row for row in read_csv_rows(FIXTURES_DIR / filename)}
+        variant_rows = {
+            row["ID"]: row for row in read_csv_rows(FIXTURES_DIR / filename)
+        }
 
         assert set(base_rows) == set(variant_rows)
         assert base_rows[row_id][column] == old_value
@@ -256,9 +278,14 @@ class TestReleaseFixtureVariants:
         probe and every row sharing site R24-P003477 agrees about
         elevation - each variant breaks exactly one of those agreements."""
         base_rows = {row["ID"]: row for row in read_csv_rows(BASE_FIXTURE)}
-        assert base_rows["R24-033563"]["probe_type"] == base_rows["R24-053075"]["probe_type"]
+        assert (
+            base_rows["R24-033563"]["probe_type"]
+            == base_rows["R24-053075"]["probe_type"]
+        )
         site_elevations = {
-            row["elevation"] for row in base_rows.values() if row["ID_parent"] == "R24-P003477"
+            row["elevation"]
+            for row in base_rows.values()
+            if row["ID_parent"] == "R24-P003477"
         }
         assert len(site_elevations) == 1
 

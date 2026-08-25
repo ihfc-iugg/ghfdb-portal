@@ -741,3 +741,41 @@ close, and flagged in that run's completion report. **Revisit if** `heat_flow/vo
 case, though it would remain generally available), or if the published release is corrected at
 source - at that point this fallback is a general tolerance with no known live case forcing it,
 which is worth re-justifying on its own rather than assumed to still be needed.
+
+### D26 — `Year`, `Ref_IGSN` and `data_reference` join the discarded columns
+
+**Original**: silent - `Year`, `Ref_IGSN` and `data_reference` were classified `READ_COLUMNS` by
+T002/T003 (D19), grouped with "the identifiers" and "the publication year" in constants.py's own
+docstring rather than with the quality code or the assessment columns.
+
+**Code**: none of the three reaches a field anywhere. Confirmed directly against every model this
+feature writes (`HeatFlow`, `ParentHeatFlow`, `HeatFlowSite`, `Dataset`, `LiteratureItem`) rather
+than assumed - no field name on any of them contains "year", "igsn", "data_ref" or "doi".
+`Ref_IGSN`/`data_reference` already carry the same status in the unrelated 002 proxy feature's own
+column mapping (`columns.py`'s `PublishedColumns` docstring: "the three columns nothing resolves").
+
+**Ruled**: T115's own acceptance ("every column the definition marks as read lands in the field that
+holds it... failing for any read column that carries no assertion") cannot be met while `READ_COLUMNS`
+holds three names with nowhere to land - and this run may not add a field to close that gap (no task
+here asks for one, and doing so would be inventing schema under a test-writing task). D13's own
+framing is binary, not three-way: a release column "is either read, or recognised and not stored".
+A column with no field to be read into is, by that framing, not-stored - so `Year`, `Ref_IGSN` and
+`data_reference` move to `DISCARDED_COLUMNS`, the same set the quality code and the assessment
+columns already occupy for the same underlying reason (D13).
+
+`Year`'s case is worth stating on its own since it is not vestigial the way the other two are:
+research.md and spec.md's Clarifications describe it as the one piece of the release format US-4
+will read, at import time, to decide which publication's dataset a site's determinations belong to
+("the earliest publication year... compared as each import runs"). That is a runtime comparison
+against the row, not a stored field - `Year` is discarded here in the sense that no model field
+holds it, not in the sense that no future code will ever consult `row.get("Year")`. Moving it out of
+`READ_COLUMNS` only changes whether the header check requires the column's presence today; it does
+not remove the value from the row US-4's own resource instance will read.
+
+**Not asked for by any task in specs/003-ghfdb-release-import/tasks.md.** Made under the third-part
+Implementer's own authority because T115 cannot otherwise assert every `READ_COLUMNS` entry has a
+destination, and flagged in that run's completion report. **Revisit if** US-4 needs `Year` to be a
+required column again (`DISCARDED_COLUMNS` no longer requiring it on the header check may not be
+what US-4 wants) - that decision belongs to US-4's own Implementer, who should read this entry before
+assuming the header requirement can simply be restored without consequence for whatever else by then
+reads `RELEASE_COLUMNS`'s partition.

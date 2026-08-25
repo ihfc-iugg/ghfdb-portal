@@ -195,6 +195,20 @@ RELEASE_COLUMNS: list[str] = (
 # reason. FR-034: the assessment team's own columns are recognised and not
 # stored. Neither may cause a file to be refused (D13) - both are part of
 # the format.
+#
+# D25: ``Year``, ``Ref_IGSN`` and ``data_reference`` join them for a
+# different reason - not a standing constraint against ingesting them, but
+# because no field anywhere in the portal's schema holds any of the three
+# (confirmed directly against every model this feature writes, not
+# assumed). D13's own framing is binary - a release column "is either read,
+# or recognised and not stored" - so a column with no field to be read into
+# belongs here, not among the required columns a curator's file would be
+# refused for omitting. ``Ref_IGSN``/``data_reference`` already carry this
+# same "resolves to nothing" status in the unrelated 002 proxy feature's own
+# column mapping (``columns.py``); ``Year`` is the one piece of the release
+# format US-4 will read at import time to decide which publication a site's
+# determinations belong to (research.md, spec.md Clarifications), but that
+# is a runtime comparison, not a stored field, so it is discarded here too.
 DISCARDED_COLUMNS: frozenset[str] = frozenset(
     {
         "quality_parent",
@@ -204,6 +218,9 @@ DISCARDED_COLUMNS: frozenset[str] = frozenset(
         "Reviewer_comment",
         "Review_date",
         "Review_status",
+        "Year",
+        "Ref_IGSN",
+        "data_reference",
     }
 )
 
