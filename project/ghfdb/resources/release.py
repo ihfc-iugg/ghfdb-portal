@@ -142,6 +142,11 @@ class GHFDBReleaseImportResource(ModelResource):
         column_name="qc_uncertainty",
         widget=QuantityWidget("mW/m^2"),
     )
+    local_id = fields.Field(
+        attribute="local_id",
+        column_name="ID",
+        default="",
+    )
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -392,7 +397,7 @@ class GHFDBReleaseImportResource(ModelResource):
 
     class Meta:
         model = HeatFlow
-        fields = ("qc", "qc_uncertainty")
+        fields = ("qc", "qc_uncertainty", "local_id")
         # No upsert identity yet: finding a determination by its published
         # identifier is later work (US-4). Every row is a new, unsaved
         # instance until then.
