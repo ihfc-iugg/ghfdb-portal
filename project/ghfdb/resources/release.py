@@ -49,6 +49,7 @@ from .widgets import (
     MultiConceptWidget,
     ParentWidget,
     QuantityWidget,
+    YesNoWidget,
     normalize_vocab_token,
 )
 
@@ -543,11 +544,37 @@ class GHFDBReleaseImportResource(ModelResource):
         instance.thermal_gradient = self._build_gradient(row, interval, dataset)
         instance.thermal_conductivity = self._build_conductivity(row, interval, dataset)
 
+        instance.c_comment = row.get("c_comment") or ""
+        instance.expedition = row.get("expedition") or ""
+        instance.water_temperature = QuantityWidget("°C").clean(
+            row.get("water_temperature")
+        )
+        q_date = (row.get("q_date") or "").strip()
+        instance.date_acquired = (
+            None
+            if not q_date or normalize_vocab_token(q_date) == "unspecified"
+            else q_date
+        )
+        instance.is_relevant = YesNoWidget().clean(row.get("relevant_child")) or False
+
     def after_save_instance(self, instance, row, **kwargs):
         """Build the records that depend on the determination already
         being saved (T066, T067): a correction record for each correction
         the row supplies."""
         self._build_corrections(instance, row)
+        self._set_method(instance, row)
+
+    def _set_method(self, instance, row):
+        """The heat-flow calculation method(s) the row reports, a
+        many-valued vocabulary column like any other (``q_method``)."""
+        from heat_flow import vocabularies
+
+        raw = (row.get("q_method") or "").strip()
+        if not raw:
+            return
+        queryset = MultiConceptWidget(vocabularies.HeatFlowMethod).clean(raw, row=row)
+        if queryset is not None:
+            instance.method.set(queryset)
 
     def _build_corrections(self, instance, row):
         """A correction record for each correction column the row
@@ -712,6 +739,8 @@ class GHFDBReleaseImportResource(ModelResource):
                     uncertainty=QuantityWidget("mW/m^2").clean(
                         row.get("q_uncertainty")
                     ),
+                    comment=row.get("p_comment") or "",
+                    corr_HP_flag=YesNoWidget().clean(row.get("corr_HP_flag")),
                 )
                 parent.save()
             self._parents_by_site_id[site.pk] = parent

@@ -1247,3 +1247,66 @@ and `relevant_child` all reach an existing model field today only via
 the sibling contributor-template resource, not this one.
 
 Watch: none.
+
+## 2026-08-25T23:25:00Z · Implementer US-3 (third part) · wiring the columns T115 needs
+
+Did: Eight columns `RELEASE_COLUMNS` already marks as read, and the
+sibling contributor-template resources (`parent.py`, `child.py`)
+already store, reached no field at all in this resource -
+`_build_site_and_parent`'s `ParentHeatFlow(...)` construction now
+carries `comment=row.get("p_comment")` and `corr_HP_flag=YesNoWidget().clean(...)`,
+matching `parent.py`'s own field precisely; `before_save_instance`
+sets `instance.c_comment`, `instance.expedition`,
+`instance.water_temperature` (`QuantityWidget("°C")`) and
+`instance.is_relevant` (`YesNoWidget()`, coalesced to `False` since the
+model field is not nullable) directly on the determination; a new
+`_set_method` in `after_save_instance` reuses `MultiConceptWidget` for
+`q_method`, the same many-valued-vocabulary shape every other m2m
+column already goes through. Added
+`TestGHFDBReleaseImportResourceRemainingColumnsReachTheirFields`,
+asserting all eight against row 4 of the real base fixture (three
+cells filled in by hand where the real row carries no value for that
+column, per `_with_cell`, the rest read as given).
+
+A second real-data gap surfaced running the whole module rather than
+this one test in isolation: `q_date` carries the bracketed marker
+`[unspecified]` (lowercase - not the capitalised `ABSENT_VALUE_MARKER`
+`before_import_row` already blanks) on several of the real fixture's
+rows, and `HeatFlow.date_acquired` (`PartialDateField`) refuses it
+outright as an invalid date string at save time - a fault this
+resource never reached before, since nothing read `q_date` at all.
+`[unspecified]` in this bracketed-lowercase form is already the
+established "no value" convention every vocabulary column in this file
+normalises through (`normalize_vocab_token`); `date_acquired` now
+consults the same helper and treats a token that normalises to
+`unspecified` as no date, rather than inventing a second convention.
+`expedition`/`c_comment` carry the same marker on some rows too, but
+being plain `CharField`s they raise nothing and are left as the raw
+bracketed text stores - not touched, since nothing in this run's brief
+asks for it and it breaks no test; flagged as a concern.
+
+Verified: RED observed - `parent.comment` was `None` against the new
+test's own first assertion before this change (assertions after the
+first were not separately observed red, since the test's own earlier
+assertions already fail without any implementation; each of the eight
+lands through a distinct, newly-added line of production code, not a
+shared branch, so a red first assertion is evidence the mechanism
+overall did not exist, not that the later ones were tautological).
+`poetry run pytest tests/test_ghfdb/test_resources/test_release.py::TestGHFDBReleaseImportResourceRemainingColumnsReachTheirFields -v`
+→ 1 passed after the wiring. Ran the full module, which is where the
+`q_date` gap surfaced: `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 15 failed before
+the `q_date` fix, all with `'[unspecified]' is not a valid date
+string`; 48 passed, full module, after it. Ran the wider suite to
+confirm no regression beyond this module: `poetry run pytest
+tests/test_ghfdb/ -q` → 323 passed, 13 xfailed (up from the 314 passed
+baseline by exactly the nine tests this run and the row-count task
+added). `ruff check`/`ruff format --check` → clean.
+
+Next: `Year`, `Ref_IGSN` and `data_reference` - the three `READ_COLUMNS`
+entries with no field anywhere to hold them - before T115's own test
+can derive its list from `READ_COLUMNS` and expect every entry to have
+a destination.
+
+Watch: the `expedition`/`c_comment` bracketed-marker gap (above) is a
+concern for this run's completion report, not a task closed here.

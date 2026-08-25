@@ -1198,6 +1198,43 @@ class TestGHFDBReleaseImportResourceRowCountGuarantee:
         assert HeatFlow.objects.count() == len(rows)
 
 
+class TestGHFDBReleaseImportResourceRemainingColumnsReachTheirFields:
+    """The columns T115's own mapping test needs wired: ``p_comment`` and
+    ``corr_HP_flag`` on the parent, ``c_comment``, ``expedition``,
+    ``water_temperature``, ``q_date``, ``q_method`` and ``relevant_child``
+    on the determination. Each already has a field on the model - the
+    sibling contributor-template resource (parent.py, child.py) reaches
+    every one of them - but this resource does not yet read any of them.
+    Row 4 of the real base fixture carries a real value for all eight."""
+
+    def test_the_eight_columns_land_in_their_fields(self, db):
+        from heat_flow.models import HeatFlow, ParentHeatFlow
+
+        header, rows = _corrected_header_and_rows()
+        row = _with_cell(header, [rows[4]], 0, "p_comment", "some comment")[0]
+        row = _with_cell(header, [row], 0, "c_comment", "some other comment")[0]
+        row = _with_cell(header, [row], 0, "water_temperature", "4.5")[0]
+        dataset = _make_dataset(header, [row])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+
+        parent = ParentHeatFlow.objects.get()
+        assert parent.comment == "some comment"
+        assert parent.corr_HP_flag is False
+
+        determination = HeatFlow.objects.get()
+        assert determination.c_comment == "some other comment"
+        assert determination.expedition == "R.V Vema cruise 19"
+        assert float(determination.water_temperature.magnitude) == 4.5
+        assert str(determination.date_acquired) == "1963-02"
+        assert determination.is_relevant is False
+        assert {m.label for m in determination.method.all()} == {"Interval method"}
+
+
 class TestGHFDBReleaseImportResourceMixedIntervals:
     """T063: a site with some rows giving a depth range and some giving
     none holds one interval for each distinct range plus the one
