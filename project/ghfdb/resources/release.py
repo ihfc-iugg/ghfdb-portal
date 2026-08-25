@@ -30,14 +30,14 @@ from django.core.exceptions import ValidationError
 from django.db.models.functions import Lower, Trim
 from django.utils.encoding import force_str
 from fairdm.core.models import Dataset
-from heat_flow.models import HeatFlow
+from heat_flow.models import HeatFlow, HeatFlowInterval, HeatFlowSite, ParentHeatFlow
 from import_export import fields, widgets
 from import_export.formats.base_formats import CSV
 from import_export.resources import ModelResource
 from literature.models import LiteratureItem
 
 from ..constants import MISSPELLED_COLUMNS, READ_COLUMNS, RELEASE_COLUMNS
-from .widgets import QuantityWidget
+from .widgets import IntervalWidget, ParentWidget, QuantityWidget
 
 # FR-006: a column the release format requires. DISCARDED_COLUMNS is
 # deliberately excluded - two of its members (the legacy per-row quality
@@ -45,6 +45,26 @@ from .widgets import QuantityWidget
 # be a fault, and the rest are recognised only if a file happens to carry
 # them (D13).
 REQUIRED_COLUMNS = READ_COLUMNS
+
+
+def _blank_row_for_quantity_widgets(row):
+    """The row a quantity-parsing widget sees, with the published
+    absent-value marker (R1: ``[Unspecified]``, the only non-numeric value
+    a numeric column holds) blanked out.
+
+    Reading the marker as no value everywhere, for every widget, is
+    FR-012's job in full and is T076/T077's - out of this story's scope.
+    This reaches only as far as this story's own row-to-record builders
+    need: the real base fixture carries the marker by design (T004), and
+    without this, ``QuantityWidget`` crashes outright on it rather than
+    refusing cleanly, which would break US-1's already-passing
+    whole-fixture tests the moment a real interval, gradient or
+    conductivity is built from every row. The vocabulary widgets already
+    tolerate the marker on their own (``normalize_vocab_token``).
+    """
+    return {
+        key: "" if value == "[Unspecified]" else value for key, value in row.items()
+    }
 
 
 def _normalize_publication_reference(reference: str) -> str:
@@ -123,6 +143,11 @@ class GHFDBReleaseImportResource(ModelResource):
         widget=QuantityWidget("mW/m^2"),
     )
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._parent_widget = ParentWidget()
+        self._interval_widget = IntervalWidget()
+
     def before_import(self, dataset, **kwargs):
         headers = dataset.headers or []
         header_set = set(headers)
@@ -161,6 +186,12 @@ class GHFDBReleaseImportResource(ModelResource):
         self._datasets_by_reference, self._ambiguous_references = (
             self._resolve_publication_datasets(dataset)
         )
+        # T057, T058: sites and their parent heat flow values are shared
+        # across every row that carries the same published site
+        # identifier, within this pass and across passes - cleared per
+        # ``before_import`` call, one per resource instance (R4, R8).
+        self._sites_by_local_id = {}
+        self._parents_by_site_id = {}
 
     def _resolve_publication_datasets(self, dataset):
         """T035, T036: collect the file's distinct publication references
@@ -253,13 +284,111 @@ class GHFDBReleaseImportResource(ModelResource):
             error_row.number += 1
         return result
 
-    def save_instance(self, instance, is_create, row, **kwargs):
-        """A no-op: checking a file writes nothing. Turning a checked row
-        into the records it describes is later work, and the library's
-        default here would try to save an instance with no sample or
-        dataset assigned.
+    def before_save_instance(self, instance, row, **kwargs):
+        """Turn a checked row into the record graph the model defines
+        (US-3): the site, its parent heat flow value, the interval, and
+        the gradient and conductivity measured over that interval.
+
+        T052: the site and its parent heat flow value. Each row builds
+        its own for now - sharing a site across rows that carry the same
+        published site identifier is T057/T058.
         """
-        return
+        reference = (row.get("publication_reference") or "").strip()
+        normalized = _normalize_publication_reference(reference)
+        dataset = self._datasets_by_reference[normalized]
+        instance.dataset = dataset
+
+        row = _blank_row_for_quantity_widgets(row)
+
+        site, parent = self._build_site_and_parent(row, dataset)
+        instance.parent = parent
+
+        instance.sample = self._build_interval(row, site, dataset)
+
+    def _build_interval(self, row, site, dataset):
+        """Build the interval a row's determination is measured over
+        (T053): the depth range the row gives, on the row's site. Sharing
+        an interval across rows that give the same site and depth range,
+        and the one indeterminate interval per site for rows that give no
+        depth at all, are T059-T062.
+        """
+        interval = self._interval_widget.clean(None, row=row) or HeatFlowInterval()
+        interval.site = site
+        interval.dataset = dataset
+        interval.save()
+        self._interval_widget.set_m2m_relations(interval)
+        return interval
+
+    def _build_site_and_parent(self, row, dataset):
+        """Return the row's site and its parent heat flow value, building
+        each once and reusing it for every later row that carries the
+        same published site identifier (T057, T058) - a site is
+        identified by that identifier alone (D10), no proximity or name
+        matching, and a site holds only one parent (the model's own
+        uniqueness constraint on ``ParentHeatFlow.sample``).
+        """
+        local_id = (row.get("ID_parent") or "").strip()
+
+        site = self._sites_by_local_id.get(local_id)
+        if site is None:
+            try:
+                site = HeatFlowSite.objects.get(local_id=local_id)
+            except HeatFlowSite.DoesNotExist:
+                site = self._build_new_site(row, local_id, dataset)
+            self._sites_by_local_id[local_id] = site
+
+        parent = self._parents_by_site_id.get(site.pk)
+        if parent is None:
+            try:
+                parent = ParentHeatFlow.objects.get(sample=site)
+            except ParentHeatFlow.DoesNotExist:
+                parent = ParentHeatFlow(
+                    sample=site,
+                    dataset=dataset,
+                    local_id=local_id,
+                    value=QuantityWidget("mW/m^2").clean(row.get("q")),
+                    uncertainty=QuantityWidget("mW/m^2").clean(
+                        row.get("q_uncertainty")
+                    ),
+                )
+                parent.save()
+            self._parents_by_site_id[site.pk] = parent
+
+        return site, parent
+
+    def _build_new_site(self, row, local_id, dataset):
+        """Build a site for a published site identifier seen for the
+        first time (T052). ``ParentWidget`` is reused as it stands
+        (plan.md) for the fields it already knows how to extract; the
+        published site identifier and the location are set directly here
+        (D10, D14) rather than through the widget's own name-based
+        sentinel, since a site is built for every distinct identifier
+        regardless of whether the row also gives it a name.
+        """
+        site = self._parent_widget.clean(row.get("name"), row=row) or HeatFlowSite()
+        site.local_id = local_id
+        site.dataset = dataset
+        self._set_site_location(site, row)
+        site.save()
+        self._parent_widget.set_m2m_relations(site)
+        return site
+
+    def _set_site_location(self, site, row):
+        """Set the site's location from the row's coordinates, whether or
+        not the site's name is present (D14: an empty name never leaves a
+        site without a location). ``ParentWidget`` may already have
+        attached an unsaved ``Point`` (T052) - either way, the location
+        assigned here is a saved one, since ``HeatFlowSite.save()``
+        refuses an unsaved related object.
+        """
+        lat = (row.get("lat_NS") or "").strip()
+        lon = (row.get("long_EW") or "").strip()
+        if not lat or not lon:
+            return
+        from fairdm.contrib.location.models import Point
+
+        point, _created = Point.objects.get_or_create(x=float(lon), y=float(lat))
+        site.location = point
 
     class Meta:
         model = HeatFlow
