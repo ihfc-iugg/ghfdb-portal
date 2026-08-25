@@ -304,3 +304,123 @@ each other about the probe, 878 of them on the probe type alone.
 Those rows are refused and reported, like any other disagreement about a shared record, and
 corrected at source. This is the general rule of D9 applied to a case that turns out to be ordinary
 rather than remote.
+
+### D19 — Foundations Implementer notes (T001-T005, T007)
+
+The plan and the task list name what each Foundations task delivers but not every file name or
+internal boundary. Recorded here, not as design decisions binding a later story, but as the
+Implementer's own record of the non-obvious choices this phase made while staying inside its named
+scope (constants.py, the test module, the fixtures, the conftest that exposes them).
+
+**T001 — the test module's name.** Neither the plan nor the task names the file. `test_release.py`
+mirrors `project/ghfdb/resources/release.py`, the resource name "one resource, not two" (plan.md)
+implies without stating — a release row produces its dataset, its literature, its site, its
+interval and its determination together, so one resource reads one file. `release` also matches the
+vocabulary the spec, CONTEXT.md and this feature's own name already use throughout.
+
+**T001 — what "collects" requires.** Measured directly: a module with a docstring and
+`pytestmark = pytest.mark.ghfdb` but no test function collects zero items under `pytest
+--collect-only`, with or without `-q`, in this repo's configuration — probed by creating and
+deleting a throwaway file (`test_empty_probe.py`) before writing anything real. So "a new test
+module... is named in the collection" needs at least one genuine, non-tautological test, not a bare
+marker declaration. `test_carries_the_ghfdb_marker` proves the module's own claim to the marker
+using `request.node.get_closest_marker`, rather than asserting something trivially true of the
+two lines just above it.
+
+**T002 — `RELEASE_COLUMNS` folds in the two misspelled names.** T003's own acceptance text says the
+three-way split's union "is the release column list," and FR-007 requires the header check and the
+row reading to consult one place, not two. Appending `MISSPELLED_COLUMNS`'s keys to
+`RELEASE_COLUMNS` is what lets `REFUSED_COLUMNS` be a subset of it — otherwise the union claim in
+T003 and the "one place" requirement in FR-007 would need two collections, contradicting each
+other. This also means `RELEASE_COLUMNS` carries `ID_parent` twice (once from `PARENT_COLUMNS`,
+again from `RELEASE_ONLY_COLUMNS`, since the two identifiers the release format's own R1 measurement
+names — `ID_parent` and `ID` — are conceptually release-only additions even though `ID_parent` was
+already present in the pre-existing `PARENT_COLUMNS` for the unrelated changelist-mapping purpose
+`columns.py` built it for). T002's own acceptance test (a prefix check plus an exactly-once check on
+`CHILD_COLUMNS`) does not exclude extra entries, so the duplicate is harmless to both tests and to
+every consumer that treats `RELEASE_COLUMNS` as a set. **Revisit if** a future task consumes
+`RELEASE_COLUMNS` positionally (e.g. as a literal export column order) rather than as a name set —
+at that point the duplicate needs resolving explicitly rather than left to collapse.
+
+**T003 — `quality_parent` and `quality_child` are discarded, not read.** FR-033 names only the
+release-wide `Quality_Code`. `quality_parent` and `quality_child` are two more names already present
+in `PARENT_COLUMNS`/`CHILD_COLUMNS` (built for the existing changelist-display path, not this
+feature), and R1 measured both as permanently absent from a real release, "the portal computes
+quality, so their absence is correct rather than a gap." Standing constraint 3 ("quality is computed
+here") reads as covering every quality-shaped column, not only the one FR-033 happens to name by
+example, so both join `DISCARDED_COLUMNS` alongside `Quality_Code`. **Revisit if** a future story
+finds a release genuinely carrying either with a value the reader is expected to consult — nothing
+in R1 or the FRs anticipates that, but the assumption is mine, not the spec's.
+
+**T004/T005 — the base fixture keeps both real misspellings; the corrections happen in T005.**
+T004's own acceptance test is literal and unambiguous — "the fixture's header equals the release
+file's header read from the archive" — which only holds if the base keeps `tc_pT_fuction` and
+`Ref_ISGN` exactly as downloaded. SC-001 separately requires proving the misspelled-header refusal
+"for each misspelled name," independently, "so that a check keyed to one cannot leave the other
+unrefused" (T011) — which the base alone cannot demonstrate, since it always carries both together.
+T005's two misspelled-header variants resolve this: each corrects exactly one of the two published
+names, leaving the other misspelled, isolating the two refusal cases the way SC-001 asks for.
+
+**T004 — the fixture's rows.** Cut from site `R24-P003477` (6 of the 7 rows) plus one row from
+`R24-P004314` (for a literal `[Unspecified]` cell — none of `R24-P003477`'s rows carry one).
+`R24-P003477` alone gives rows sharing a site, rows sharing an interval with agreeing (not yet
+disagreeing) depth and probe values, rows with no depth, and four distinct publication references —
+found by scanning the archive programmatically for a site combining all of those shapes in the
+fewest rows, rather than assembling them from unrelated sites. The interval-sharing pair
+(`R24-033563`/`R24-053075`) was chosen specifically because both already agree on `probe_type`,
+which T005's disagreement variant needs — a pair that already disagreed in the real data would leave
+nothing for that variant to change.
+
+**T004 — the fixture's line endings follow the repository's own normalisation, not the archive's.**
+The archive uses CRLF; `.gitattributes`' repository-wide `* text=auto` (pre-existing, not this
+story's) normalises every text file to LF on commit, and the fixture, once staged, is no exception
+— confirmed directly: `git cat-file -p` on the committed blob shows zero CRLF sequences where the
+pre-commit working copy had eight. "Byte-for-byte" here is read as binding the header text, the
+column order, the byte-order mark and every field value — everything T004's own wording names — not
+the row-terminator convention, which is a repository-wide policy this story neither owns nor should
+carve an exception into. `read_csv_rows`/`read_csv_header` use `str.splitlines()`, which treats CRLF
+and LF identically, so no test in this module depends on which one the fixture carries.
+
+**T005 — the variant fixtures.** `header_missing_required_column.csv` and
+`header_undefined_column.csv` change the header line only, leaving the data rows exactly as the
+base fixture has them — deliberately, since FR-003 and the plan both describe the header check as a
+pass over header names alone, before any row is read, so a header/row shape mismatch in these two
+variants is never actually consumed. The four row-level variants (`bad_vocabulary_value`,
+`numeric_value_in_text_column`, `disagreement_shared_site`, `disagreement_shared_interval_probe`)
+each change one field on one row, verified programmatically against the base fixture (parsed with
+`csv.DictReader`, keyed by `ID`, diffed field by field) before being committed, and that same
+single-field-diff property is what `test_single_row_variant_changes_exactly_one_cell` asserts.
+
+**T007 — the ambiguous-citation-key fixture differs by case and whitespace, not identical strings.**
+`literature.LiteratureItem.citation_key` is unique at the database level (upstream), so two rows
+cannot literally share one string. FR-017 requires publication-reference comparisons to ignore case
+and surrounding whitespace, so two citation keys differing only that way are "one reference" by the
+spec's own rule while remaining two distinct, independently-identified database rows. The fixture
+and its test build that pair and confirm both properties hold, without pre-empting US-2's own
+matching implementation.
+
+**Restructuring — the test module moved from `test_resources/test_release.py` to
+`test_ghfdb/test_constants.py`, discovered by the mandatory full `forge verify`, not by inspection.**
+The repo's conformance gate (Article X, mechanical) requires every test module to mirror an existing
+source module. `tests/test_ghfdb/test_resources/test_release.py` mirrored
+`project/ghfdb/resources/release.py` — the resource this phase deliberately does not create, since
+it is US-1's T009 — so the gate failed: "mirrors no source module." The tool provides a
+`[tool.forge.conformance] non-mirror-paths` declaration for genuine "no source module by design"
+cases (a Cotton/template test suite, per the tool's own docstring), but this is not that: the module
+*will* exist, one story later, and declaring a permanent exemption for a temporary gap would need
+walking back the moment T009 lands — a stale declaration nobody would remember to remove.
+
+Renaming and relocating the file to mirror `project/ghfdb/constants.py` instead — the module every
+constant this phase adds actually lives in — passes the gate honestly, with no source module
+invented ahead of its story and no config exemption to reconcile later. T007's two fixtures moved
+from `tests/test_ghfdb/test_resources/conftest.py` (their original home, chosen because a future
+US-2 resource test would look for them there) up to `tests/test_ghfdb/conftest.py`, since a fixture
+consumed by a test at `tests/test_ghfdb/test_constants.py` needs a conftest at or above that level to
+be visible — still "the conftest that exposes them," the brief's own phrase, just the ancestor
+conftest rather than the descendant one. Nothing in the six tasks' content changed; every test,
+fixture and assertion is unchanged from what T001-T007's own progress.md entries describe. **Revisit
+if** T009 creates `project/ghfdb/resources/release.py` and its own test module — at that point the
+constants-only tests in `test_constants.py` and the resource tests in a new `test_resources/test_release.py`
+are two different subjects and should probably stay split as they are now, but a reader landing here
+after T009 exists should not be surprised to find `RELEASE_COLUMNS` tested somewhere other than
+beside the reader that consumes it.

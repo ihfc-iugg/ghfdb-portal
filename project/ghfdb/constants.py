@@ -133,3 +133,86 @@ META_FIELDS: list[str] = [
 
 
 GHFDB_COLUMN_ORDER: list[str] = PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS
+
+
+# ---------------------------------------------------------------------------
+# RELEASE_COLUMNS (003, specs/003-ghfdb-release-import)
+#
+# A published release carries every published parent and determination
+# column, plus columns of its own: two identifiers, the publication year, a
+# computed quality code, four geography columns and four columns the
+# assessment team fills in (D13) - RELEASE_ONLY_COLUMNS below. It is derived
+# from PARENT_COLUMNS and CHILD_COLUMNS rather than restating them, per
+# FR-007: this module is the one place both the header check and the row
+# reading consult, so the two cannot disagree.
+#
+# The release the portal actually reads today carries two misspelled
+# published names rather than their correct forms (R1); MISSPELLED_COLUMNS
+# holds that mapping, and D7 requires the import to refuse a file carrying
+# either without exception. Appending its keys is what lets RELEASE_COLUMNS
+# also be the set REFUSED_COLUMNS, DISCARDED_COLUMNS and READ_COLUMNS
+# partition below (T003) - one release-column list, not two.
+# ---------------------------------------------------------------------------
+RELEASE_ONLY_COLUMNS: list[str] = [
+    "Reviewer_name",
+    "Reviewer_comment",
+    "Review_date",
+    "Review_status",
+    "Country",
+    "Region",
+    "Continent",
+    "Domain",
+    "Year",
+    "Quality_Code",
+    "ID_parent",
+    "ID",
+]
+
+# FR-004, D7: the two published names the 2024 release is actually
+# distributed with, mapped to the correct spelling the portal accepts.
+# Neither correct spelling appears in the archive as downloaded (R1) -
+# correcting them is the operator's preparation step, not the portal's.
+MISSPELLED_COLUMNS: dict[str, str] = {
+    "tc_pT_fuction": "tc_pT_function",
+    "Ref_ISGN": "Ref_IGSN",
+}
+
+RELEASE_COLUMNS: list[str] = (
+    PARENT_COLUMNS + CHILD_COLUMNS + RELEASE_ONLY_COLUMNS + list(MISSPELLED_COLUMNS)
+)
+
+
+# ---------------------------------------------------------------------------
+# The read / recognised-and-discarded / refused split (T003)
+#
+# Three disjoint sets whose union is RELEASE_COLUMNS, expressed as data
+# rather than as behaviour scattered through the reader (FR-007).
+# ---------------------------------------------------------------------------
+
+# Standing constraint 3 / FR-033: quality is computed here, never ingested -
+# covers both the single release-wide code and the two legacy per-row
+# fields, which R1 found are never present in a real release for the same
+# reason. FR-034: the assessment team's own columns are recognised and not
+# stored. Neither may cause a file to be refused (D13) - both are part of
+# the format.
+DISCARDED_COLUMNS: frozenset[str] = frozenset(
+    {
+        "quality_parent",
+        "quality_child",
+        "Quality_Code",
+        "Reviewer_name",
+        "Reviewer_comment",
+        "Review_date",
+        "Review_status",
+    }
+)
+
+# FR-004, D7: the two misspelled forms are recognised by name and refused
+# without exception - the only members of RELEASE_COLUMNS a valid, corrected
+# release never carries.
+REFUSED_COLUMNS: frozenset[str] = frozenset(MISSPELLED_COLUMNS)
+
+# Every other released column: consulted for a value and stored somewhere.
+READ_COLUMNS: frozenset[str] = (
+    frozenset(RELEASE_COLUMNS) - DISCARDED_COLUMNS - REFUSED_COLUMNS
+)
