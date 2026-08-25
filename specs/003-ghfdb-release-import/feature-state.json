@@ -492,7 +492,7 @@
       "priority": "P1",
       "issue": 186,
       "worktree": null,
-      "status": "todo",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
@@ -726,7 +726,7 @@
       "priority": "P1",
       "issue": 187,
       "worktree": null,
-      "status": "todo",
+      "status": "in_progress",
       "replans": 0,
       "tasks": [
         {
