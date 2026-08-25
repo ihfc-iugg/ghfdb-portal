@@ -22,6 +22,7 @@ References:
     - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
 """
 
+import csv
 from io import StringIO
 
 import tablib
@@ -55,16 +56,28 @@ class GHFDBReleaseCSVFormat(CSV):
         return "GHFDB Release Format"
 
     def create_dataset(self, in_stream, **kwargs):
-        """As ``TextFormat.create_dataset``, except the tablib format is
-        looked up by ``TABLIB_MODULE`` rather than by ``get_title()``. The
-        base implementation passes ``get_title()`` to tablib as its own
-        format-registry key ("csv"), which the curator-facing title above
-        no longer is.
+        """Read the header from the first line and the data from the
+        second (T009). Reimplemented rather than delegated to the
+        library's own tablib-backed reader for two reasons: that reader
+        looks up its tablib format by ``get_title()``, which the
+        curator-facing title above no longer is, and it refuses a row
+        that is wider than the header outright rather than reporting the
+        header fault a curator can act on (FR-006) - a header missing one
+        published column, with its data rows otherwise untouched, is
+        exactly the shape a file missing a column takes.
         """
         if isinstance(in_stream, bytes) and self.encoding:
             in_stream = in_stream.decode(self.encoding)
         dataset = tablib.Dataset()
-        self.get_format().import_set(dataset, StringIO(in_stream), **kwargs)
+        for i, row in enumerate(csv.reader(StringIO(in_stream))):
+            if i == 0:
+                dataset.headers = row
+            elif row:
+                if len(row) < dataset.width:
+                    row = row + [""] * (dataset.width - len(row))
+                elif len(row) > dataset.width:
+                    row = row[: dataset.width]
+                dataset.append(row)
         return dataset
 
 

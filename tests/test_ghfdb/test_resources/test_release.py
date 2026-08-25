@@ -152,3 +152,41 @@ class TestGHFDBReleaseImportResourceMisspelledColumns:
         assert "tc_pT_function" in message
         assert result.total_rows == 0
         assert HeatFlow.objects.count() == 0
+
+
+class TestGHFDBReleaseImportResourceUndefinedColumn:
+    """T013, T014: a file carrying a column name the release format does
+    not define is refused with that column named."""
+
+    def test_undefined_column_is_refused_and_named(self):
+        dataset = _dataset_from_fixture(FIXTURES_DIR / "header_undefined_column.csv")
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=True, raise_errors=False)
+
+        assert result.has_errors() is True
+        message = str(result.base_errors[0].error)
+        assert "p_comment_extra" in message
+        assert result.total_rows == 0
+
+
+class TestGHFDBReleaseImportResourceMissingColumn:
+    """T015, T016: a file missing a column the release format requires is
+    refused with that column named."""
+
+    def test_missing_required_column_is_refused_and_named(self):
+        """The fixture drops only the header cell (T005), leaving its data
+        rows one column wider than the new header - read through the
+        format itself, as a curator's upload would be, rather than built
+        by hand."""
+        path = FIXTURES_DIR / "header_missing_required_column.csv"
+        dataset = GHFDBReleaseCSVFormat(encoding="utf-8-sig").create_dataset(
+            path.read_bytes()
+        )
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=True, raise_errors=False)
+
+        assert result.has_errors() is True
+        message = str(result.base_errors[0].error)
+        assert "environment" in message
+        assert result.total_rows == 0
