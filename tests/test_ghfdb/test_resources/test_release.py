@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 import tablib
 from fairdm.core.models import Dataset
+from literature.models import LiteratureItem
 
 from project.ghfdb.constants import MISSPELLED_COLUMNS
 from project.ghfdb.resources.release import (
@@ -436,3 +437,26 @@ class TestGHFDBReleaseImportResourceMatchesExistingLiterature:
             reference=literature_with_known_citation_key
         )
         assert release_dataset.name == literature_with_known_citation_key.title
+
+
+class TestGHFDBReleaseImportResourceCreatesMissingLiterature:
+    """T041, T042: a reference matching no bibliographic record creates one
+    carrying that citation key, and the dataset links to it. Fails before:
+    nothing is created."""
+
+    def test_unmatched_reference_creates_a_bibliographic_record(self, db):
+        header, rows = _corrected_header_and_rows()
+        new_reference = "Unknown_Author_1999"
+        rows = _with_cell(header, rows, 0, "publication_reference", new_reference)
+        dataset = _make_dataset(header, rows)
+
+        assert not LiteratureItem.objects.filter(citation_key=new_reference).exists()
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+        literature_item = LiteratureItem.objects.get(citation_key=new_reference)
+        release_dataset = Dataset.all_objects.get(reference=literature_item)
+        assert release_dataset.reference == literature_item
