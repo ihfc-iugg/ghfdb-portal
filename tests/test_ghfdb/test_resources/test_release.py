@@ -373,3 +373,37 @@ class TestGHFDBReleaseImportResourceDatasetCreation:
         release_datasets = Dataset.all_objects.filter(reference__isnull=False)
         assert release_datasets.count() == len(references)
         assert {d.reference.citation_key for d in release_datasets} == references
+
+
+class TestGHFDBReleaseImportResourceReferenceNormalization:
+    """T037, T038: two references differing only by case or by surrounding
+    whitespace are one reference, and produce one dataset. Fails before:
+    they produce two."""
+
+    def test_references_differing_by_case_and_whitespace_produce_one_dataset(self, db):
+        header, rows = _corrected_header_and_rows()
+        reference_index = header.index("publication_reference")
+        distinct_references = {row[reference_index] for row in rows}
+        canonical_reference = rows[0][reference_index]
+        varied_rows = _with_cell(
+            header,
+            rows,
+            3,
+            "publication_reference",
+            f"  {canonical_reference.upper()}  ",
+        )
+        dataset = _make_dataset(header, varied_rows)
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+        matching = Dataset.all_objects.filter(
+            reference__citation_key=canonical_reference
+        )
+        assert matching.count() == 1
+        assert (
+            Dataset.all_objects.filter(reference__isnull=False).count()
+            == len(distinct_references) - 1
+        )

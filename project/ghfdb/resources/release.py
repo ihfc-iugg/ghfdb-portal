@@ -46,6 +46,12 @@ from .widgets import QuantityWidget
 REQUIRED_COLUMNS = READ_COLUMNS
 
 
+def _normalize_publication_reference(reference: str) -> str:
+    """FR-017: two publication references are the same reference once
+    surrounding whitespace and case are ignored."""
+    return reference.strip().lower()
+
+
 class GHFDBReleaseCSVFormat(CSV):
     """The format a published release is distributed in: one header row,
     one data row per determination (FR-002). The library's own
@@ -158,14 +164,24 @@ class GHFDBReleaseImportResource(ModelResource):
         once, before any row is read, and create the dataset each one
         belongs to (D4) - a bibliographic record carrying the reference's
         citation key is created where none exists yet (T041, D5).
+
+        Two references differing only by case or surrounding whitespace
+        are one reference (FR-017, T037): grouped here by their
+        normalised form, keeping the first raw spelling the file gives so
+        the citation key created for it is stable rather than whichever
+        variant a set happened to iterate first.
         """
-        references = {
-            (row.get("publication_reference") or "").strip() for row in dataset.dict
-        }
-        references.discard("")
+        references_by_normalized = {}
+        for row in dataset.dict:
+            raw_reference = (row.get("publication_reference") or "").strip()
+            if not raw_reference:
+                continue
+            references_by_normalized.setdefault(
+                _normalize_publication_reference(raw_reference), raw_reference
+            )
 
         datasets_by_reference = {}
-        for reference in references:
+        for normalized, reference in references_by_normalized.items():
             literature_item = LiteratureItem.objects.create(citation_key=reference)
             release_dataset, _created = Dataset.all_objects.get_or_create(
                 reference=literature_item,
@@ -173,7 +189,7 @@ class GHFDBReleaseImportResource(ModelResource):
                     "name": literature_item.title or literature_item.citation_key
                 },
             )
-            datasets_by_reference[reference] = release_dataset
+            datasets_by_reference[normalized] = release_dataset
         return datasets_by_reference
 
     def import_instance(self, instance, row, **kwargs):
