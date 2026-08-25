@@ -758,3 +758,33 @@ class TestGHFDBReleaseImportResourceIndeterminateInterval:
         assert interval.top is None
         assert interval.bottom is None
         assert HeatFlow.objects.filter(sample=interval).count() == 3
+
+
+class TestGHFDBReleaseImportResourceMixedIntervals:
+    """T063: a site with some rows giving a depth range and some giving
+    none holds one interval for each distinct range plus the one
+    indeterminate interval, and they are distinct records. Fails before:
+    they are merged."""
+
+    def test_site_holds_distinct_intervals_for_each_range_and_the_indeterminate_one(
+        self, db
+    ):
+        from heat_flow.models import HeatFlowInterval
+
+        header, rows = _corrected_header_and_rows()
+        with_depth = _with_cell(header, [rows[4], rows[5]], 0, "q_bottom", "4520.00")
+        with_depth = _with_cell(header, with_depth, 1, "q_bottom", "4520.00")
+        no_depth = [rows[0], rows[1]]
+        dataset = _make_dataset(header, with_depth + no_depth)
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+
+        assert HeatFlowInterval.objects.count() == 2
+        with_depth_interval = HeatFlowInterval.objects.get(top__isnull=False)
+        indeterminate_interval = HeatFlowInterval.objects.get(top__isnull=True)
+        assert with_depth_interval != indeterminate_interval
+        assert indeterminate_interval.bottom is None
