@@ -437,6 +437,31 @@ class GHFDBReleaseImportResource(ModelResource):
                     force_str(e), code="invalid"
                 )
 
+        # T081-T084: a scalar or many-valued value the site, interval,
+        # gradient or conductivity builders would refuse is checked here,
+        # before ``before_save_instance`` ever calls ``save()`` on any of
+        # them - the same "nothing is written for a refused row" shape the
+        # interval and site disagreement checks below already give a row.
+        # Each widget's own sentinel decides whether it has anything to
+        # check at all (T_grad_mean/tc_mean absent means no gradient or
+        # conductivity is built, so their columns are not consulted).
+        for widget, sentinel_value in (
+            (self._parent_widget, row.get("name")),
+            (self._interval_widget, None),
+            (self._gradient_widget, row.get("T_grad_mean")),
+            (self._conductivity_widget, row.get("tc_mean")),
+        ):
+            try:
+                widget.clean(sentinel_value, row=row)
+            except ValueError as exc:
+                column_errors = getattr(exc, "column_errors", None)
+                if column_errors:
+                    errors.update(column_errors)
+                else:
+                    errors["__related__"] = ValidationError(
+                        force_str(exc), code="invalid"
+                    )
+
         reference = (row.get("publication_reference") or "").strip()
         if not reference:
             errors["publication_reference"] = ValidationError(

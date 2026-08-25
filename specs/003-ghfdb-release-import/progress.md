@@ -1066,3 +1066,91 @@ the completion report.
 Watch: none carried forward. The absent-value-marker workaround
 flagged as a concern by every predecessor entry since T052/T053 is
 now resolved rather than deferred.
+
+## 2026-08-25T22:10:00Z · Implementer US-3 (third part) · T081, T082, T083, T084
+
+Did: `RelatedModelWidget.set_m2m_relations` (widgets.py) no longer
+catches and discards a many-valued vocabulary widget's failure -
+checking continues across every m2m column on the call so more than
+one disagreeing column is reported together (FR-009), then raises one
+combined fault. `RelatedModelWidget.clean` gained the matching
+pre-save check for its own scalar columns, naming the published
+column in the message rather than only the model class name
+(`"Column '%(col)s': %(err)s"` in place of `"%(model)s: %(err)s"`) -
+this is the same defect for both a many-valued vocabulary miss (T081)
+and a numeric/text type mismatch (T083, T084), since both go through
+the same scalar_map/m2m_map loop; `_related_field_error` raises a
+plain `ValueError` (never `ValidationError`, matching every other
+widget in this codebase per R6 and D24) carrying a `column_errors`
+dict attribute so a caller that wants the per-column detail does not
+have to reparse the combined message.
+
+`GHFDBReleaseImportResource.import_instance` calls each of the four
+related-record widgets' own `clean()` before `before_save_instance`
+ever reaches `save()` for any of them, catching that `ValueError` and
+merging its `column_errors` into the row's own error dict - the same
+"nothing is written for a refused row" shape the interval and site
+disagreement checks already give a row, extended to a value the site,
+interval, gradient or conductivity builders themselves would refuse.
+Each widget's own sentinel decides whether there is anything to check
+at all, so a row giving no `T_grad_mean`/`tc_mean` never has its
+gradient/conductivity columns consulted, matching `_build_gradient`/
+`_build_conductivity`'s own skip.
+
+Added `TestGHFDBReleaseImportResourceManyValuedVocabularyRefusal`
+(an unrecognised `geo_lithology` term), and
+`TestGHFDBReleaseImportResourceScalarRefusalNamesTheColumn` (an
+unmatched `environment` value, and free text in the quantity column
+`elevation`) - each asserts the fault lands in
+`result.invalid_rows[0].error_dict[<published column>]`, carrying the
+offending value, and that nothing is written for the refused row.
+
+A real, reachable gap surfaced while proving this against the whole
+module rather than in isolation: the real base fixture gives
+`tc_strategy` the value `[Random or periodic depth sampling (number)]`
+on three of its rows (confirmed directly against
+`assets/ghfdb/IHFC_2024_GHFDB.zip`, not assumed) - a value the
+portal's own `ConductivityStrategy` vocabulary does not carry (its
+term is `Random or periodic depth sampling`, no parenthetical). Once
+`set_m2m_relations` stopped discarding this fault, it broke roughly a
+third of this module's existing tests and `TestGHFDBReleaseImportResourceCleanFile`
+(US-1's own, T008) alongside them, all of them rows this run may not
+touch. `normalize_vocab_token`'s own bracket/case tolerance already
+exists for exactly this shape of gap between what a real spreadsheet
+writes and what the portal's controlled vocabulary carries, so
+`ConceptWidget`/`MultiConceptWidget` now retry a token with a trailing
+parenthetical annotation stripped (`_without_trailing_parenthetical`)
+only once the token as given has already failed to match - a term
+whose own label genuinely includes a parenthetical qualifier
+(`Onshore (continental)`) matches on the first attempt and never
+reaches the fallback, confirmed against the whole real fixture's
+`environment`/`explo_method` columns, which needed no fallback at all.
+This is not asked for by any task in this run's brief; recorded as
+D25 and flagged in this run's own concerns, since it touches the
+shared normalisation layer `parent.py`/`child.py` also use.
+
+Verified: RED observed - `TestGHFDBReleaseImportResourceManyValuedVocabularyRefusal`
+failed with `has_validation_errors() is False` before the
+`set_m2m_relations` fix (the failure discarded, matching the "Fails
+before" text exactly). Probed the pre-save check specifically:
+temporarily emptied the `import_instance` loop over the four related
+widgets and re-ran both new test classes - all three cases failed
+(`has_validation_errors() is False`), confirming the pre-save check,
+not just the post-save `set_m2m_relations` fix, is what turns the
+fault into a reported, nothing-written row rather than an unstructured
+hard error. Restored. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 41 passed, full
+module. Ran the wider suite before and after the vocabulary fallback
+to isolate its effect: `poetry run pytest tests/test_ghfdb/ -q` → 314
+passed, 13 xfailed (unchanged shape from before this run). `ruff
+check`/`ruff format --check` → clean.
+
+Next: T085-T087, a site's name stored as given.
+
+Watch: the vocabulary-fallback normalisation (D25) is a cross-cutting,
+non-obvious call made under this run's own authority to keep T081/T082
+implementable without touching `heat_flow` (owns the vocabulary) or
+any out-of-reach test. Flagged in this run's completion report for
+Sam/Forge to weigh - the durable fix belongs in
+`heat_flow/vocabularies.py` or in a correction to the published
+release file at source, not in a permanent fallback here.

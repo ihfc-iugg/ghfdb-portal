@@ -708,3 +708,36 @@ fixture never exercised (those three columns never carry the marker there) but w
 workaround's own scope left open. `before_import_row` runs earliest in the library's own per-row
 sequence, so every reader of a row - declared fields, the disagreement pre-scan, and every
 `before_save_instance` builder - now sees one row, blanked once, consistently.
+
+### D25 — A vocabulary token falls back to its form without a trailing parenthetical
+
+**Original**: silent - no requirement anticipates this.
+
+**Code**: `ConceptWidget`/`MultiConceptWidget` matched a token only exactly as normalised
+(brackets stripped, lowercased). Closing T081/T082's own defect - `RelatedModelWidget` stopped
+discarding a many-valued vocabulary failure - immediately broke roughly a third of `test_release.py`
+and `TestGHFDBReleaseImportResourceCleanFile` (US-1's own, T008): the real base fixture's
+`tc_strategy` column carries `[Random or periodic depth sampling (number)]` on three of its rows,
+confirmed directly against `assets/ghfdb/IHFC_2024_GHFDB.zip` rather than assumed to be a fixture
+error. The portal's `ConductivityStrategy` vocabulary (`heat_flow/vocabularies.py`) carries the term
+as `Random or periodic depth sampling`, with no parenthetical - a genuine gap between what the
+published 2024 release writes and what the portal's own controlled vocabulary defines, not a
+transcription mistake in the fixture (the archive was read directly to confirm this).
+
+**Ruled**: neither `heat_flow/vocabularies.py` (owned by `heat_flow`, not `ghfdb` - standing
+constraint 4) nor the out-of-reach US-1 test nor the byte-for-byte fixture (T004) may be touched to
+route around this. `normalize_vocab_token` already exists to reconcile exactly this shape of gap
+between a real spreadsheet's phrasing and the portal's clean vocabulary label (brackets, casing).
+Extended in the same spirit: a token that fails to match as given is retried once with a trailing
+`(...)` annotation stripped, and only that retry consulted - a term whose own label genuinely
+includes a parenthetical qualifier (`Onshore (continental)`) matches on the first attempt, before the
+fallback is ever reached, confirmed by re-running the fallback against the real fixture's
+`environment`/`explo_method` columns, which needed no fallback at all.
+
+**Not asked for by any task in specs/003-ghfdb-release-import/tasks.md.** Made under the third-part
+Implementer's own authority to keep T081/T082 implementable without silently narrowing what they
+close, and flagged in that run's completion report. **Revisit if** `heat_flow/vocabularies.py` adds
+`Random or periodic depth sampling (number)` as its own term (making the fallback redundant for this
+case, though it would remain generally available), or if the published release is corrected at
+source - at that point this fallback is a general tolerance with no known live case forcing it,
+which is worth re-justifying on its own rather than assumed to still be needed.

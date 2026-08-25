@@ -989,6 +989,80 @@ class TestGHFDBReleaseImportResourceAbsentValueMarker:
         assert IntervalConductivity.objects.count() == 0
 
 
+class TestGHFDBReleaseImportResourceManyValuedVocabularyRefusal:
+    """T081, T082: a vocabulary value matching no term in a column holding
+    several values is refused and reported, the same as a single-valued
+    column already is (T080). Fails before: the failure is caught inside
+    ``RelatedModelWidget.set_m2m_relations`` and discarded, so the row
+    imports with the relation left empty (D11)."""
+
+    def test_an_unrecognised_lithology_term_is_refused(self, db):
+        from heat_flow.models import HeatFlowInterval
+
+        header, rows = _corrected_header_and_rows()
+        row = _with_cell(header, [rows[4]], 0, "geo_lithology", "not_a_real_lithology")[
+            0
+        ]
+        dataset = _make_dataset(header, [row])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_validation_errors() is True
+        error_dict = result.invalid_rows[0].error_dict
+        assert "geo_lithology" in error_dict
+        message = str(error_dict["geo_lithology"][0])
+        assert "not_a_real_lithology" in message
+
+        assert HeatFlowInterval.objects.count() == 0
+
+
+class TestGHFDBReleaseImportResourceScalarRefusalNamesTheColumn:
+    """T083, T084: a value a related record's own scalar columns refuse -
+    a numeric-looking value in a column holding a controlled-vocabulary
+    label, or free text in a column holding a quantity - is refused with
+    that column and the value named. Fails before:
+    ``RelatedModelWidget.clean`` re-raises naming only the model class
+    (e.g. 'HeatFlowSite: ...'), so the published column a curator would
+    look for in the header never appears in the message."""
+
+    def test_an_unmatched_environment_value_names_the_column(self, db):
+        from heat_flow.models import HeatFlowSite
+
+        header, rows = _corrected_header_and_rows()
+        row = _with_cell(header, [rows[4]], 0, "environment", "9999")[0]
+        dataset = _make_dataset(header, [row])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_validation_errors() is True
+        error_dict = result.invalid_rows[0].error_dict
+        assert "environment" in error_dict
+        message = str(error_dict["environment"][0])
+        assert "9999" in message
+
+        assert HeatFlowSite.objects.count() == 0
+
+    def test_text_in_a_quantity_column_names_the_column(self, db):
+        from heat_flow.models import HeatFlowSite
+
+        header, rows = _corrected_header_and_rows()
+        row = _with_cell(header, [rows[4]], 0, "elevation", "not-a-number")[0]
+        dataset = _make_dataset(header, [row])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_validation_errors() is True
+        error_dict = result.invalid_rows[0].error_dict
+        assert "elevation" in error_dict
+        message = str(error_dict["elevation"][0])
+        assert "not-a-number" in message
+
+        assert HeatFlowSite.objects.count() == 0
+
+
 class TestGHFDBReleaseImportResourceMixedIntervals:
     """T063: a site with some rows giving a depth range and some giving
     none holds one interval for each distinct range plus the one

@@ -19,6 +19,8 @@ References:
     - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
 """
 
+import re
+
 from django.core.exceptions import ValidationError
 from django.db.models.functions import Lower
 from django.utils.translation import gettext_lazy as _
@@ -61,6 +63,35 @@ def normalize_vocab_token(raw: str) -> str:
     return raw.strip("[]").lower()
 
 
+_TRAILING_PARENTHETICAL = re.compile(r"\s*\([^()]*\)\s*$")
+
+
+def _related_field_error(errors: dict) -> ValueError:
+    """A single ``ValueError`` for one or more column failures on a
+    related-record widget (T081-T084) - ``ValueError``, not
+    ``ValidationError``, matching every other widget in this codebase
+    (R6, D24). ``column_errors`` carries the per-column detail so a
+    caller that wants it (``import_instance``'s pre-check) can report
+    each column separately rather than reparsing the combined message.
+    """
+    message = "; ".join(f"{column}: {error}" for column, error in errors.items())
+    error = ValueError(message)
+    error.column_errors = errors
+    return error
+
+
+def _without_trailing_parenthetical(token: str) -> str:
+    """A term some published values carry a trailing annotation for that the
+    portal's own vocabulary label does not - the real 2024 release gives
+    ``tc_strategy`` the value 'random or periodic depth sampling (number)'
+    against the portal's term 'random or periodic depth sampling'. Only
+    tried once a token has already failed to match as given, so a term
+    whose own label genuinely includes a parenthetical qualifier ('onshore
+    (continental)') matches on the first attempt and never reaches this.
+    """
+    return _TRAILING_PARENTHETICAL.sub("", token).strip()
+
+
 # ---------------------------------------------------------------------------
 # Leaf Widgets
 # ---------------------------------------------------------------------------
@@ -94,6 +125,12 @@ class ConceptWidget(CharWidget):
             return None
         normalised = normalize_vocab_token(val)
         result = self.label_to_key.get(normalised) or self.key_to_key.get(normalised)
+        if result is None:
+            fallback = _without_trailing_parenthetical(normalised)
+            if fallback != normalised:
+                result = self.label_to_key.get(fallback) or self.key_to_key.get(
+                    fallback
+                )
         if result is None:
             raise ValueError(
                 _(
@@ -133,13 +170,23 @@ class MultiConceptWidget(ManyToManyWidget):
         if not pairs:
             return self.queryset.none()
         # Validate using normalised forms; report original tokens in error messages
-        normalised = [norm for _, norm in pairs]
         choices_set = set(
             _case_insensitive_qs(self._vocab_class, field="label").values_list(
                 "ilabel", flat=True
             )
         )
-        invalid_originals = [orig for orig, norm in pairs if norm not in choices_set]
+        # A term unmatched as given falls back to its form without a
+        # trailing parenthetical annotation (_without_trailing_parenthetical) -
+        # the same tolerance ``ConceptWidget`` gives a single-valued column.
+        resolved = []
+        for orig, norm in pairs:
+            if norm not in choices_set:
+                fallback = _without_trailing_parenthetical(norm)
+                if fallback != norm and fallback in choices_set:
+                    norm = fallback
+            resolved.append((orig, norm))
+        normalised = [norm for _, norm in resolved]
+        invalid_originals = [orig for orig, norm in resolved if norm not in choices_set]
         if invalid_originals:
             raise ValueError(
                 _(
@@ -264,6 +311,7 @@ class RelatedModelWidget(Widget):
                     return None
 
         model_kwargs = {}
+        errors = {}
         for model_field, row_col in self.scalar_map.items():
             raw = (row or {}).get(row_col, "") or ""
             col_widget = self.widget_map.get(row_col)
@@ -271,28 +319,57 @@ class RelatedModelWidget(Widget):
                 try:
                     model_kwargs[model_field] = col_widget.clean(raw, row=row)
                 except (ValueError, ValidationError) as exc:
-                    raise ValueError(
-                        _("%(model)s: %(err)s")
-                        % {"model": self.model.__name__, "err": str(exc)}
-                    ) from exc
+                    errors[row_col] = ValidationError(
+                        _("Column '%(col)s': %(err)s")
+                        % {"col": row_col, "err": str(exc)},
+                        code="invalid",
+                    )
             else:
                 model_kwargs[model_field] = raw or None
+
+        # T081, T082: a many-valued vocabulary value is validated here too,
+        # before any record is built, so a row carrying one never reaches
+        # ``save()`` for this related record - the same "refused before
+        # anything is written" shape the interval and site disagreement
+        # checks already give a row (D9). ``set_m2m_relations`` applies the
+        # same widgets again, once the instance is saved.
+        for _model_field, (row_col, m2m_widget) in self.m2m_map.items():
+            raw = (row or {}).get(row_col, "") or ""
+            if not raw:
+                continue
+            try:
+                m2m_widget.clean(raw, row=row)
+            except (ValueError, ValidationError) as exc:
+                errors[row_col] = ValidationError(str(exc), code="invalid")
+
+        if errors:
+            raise _related_field_error(errors)
 
         return self.model(**model_kwargs)  # UNSAVED
 
     def set_m2m_relations(self, instance):
-        """Set M2M relationships on an already-saved instance using the last cleaned row."""
+        """Set M2M relationships on an already-saved instance using the last
+        cleaned row (T081, T082, D11). A many-valued vocabulary value
+        matching no term is refused and reported, the same as a
+        single-valued column already is - checking continues past a
+        failure so every disagreeing column in the call is reported
+        together (FR-009), rather than stopping at the first."""
         if instance is None or instance.pk is None or self._last_row is None:
             return
+        errors = {}
         for model_field, (row_col, m2m_widget) in self.m2m_map.items():
             raw = self._last_row.get(row_col, "")
-            if raw:
-                try:
-                    qs = m2m_widget.clean(raw, row=self._last_row)
-                    if qs is not None:
-                        getattr(instance, model_field).set(qs)
-                except (ValueError, ValidationError):
-                    pass  # M2M errors are non-fatal during set_m2m_relations
+            if not raw:
+                continue
+            try:
+                qs = m2m_widget.clean(raw, row=self._last_row)
+            except (ValueError, ValidationError) as exc:
+                errors[row_col] = ValidationError(str(exc), code="invalid")
+                continue
+            if qs is not None:
+                getattr(instance, model_field).set(qs)
+        if errors:
+            raise _related_field_error(errors)
 
 
 class ParentWidget(RelatedModelWidget):
