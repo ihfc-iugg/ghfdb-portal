@@ -14,6 +14,8 @@ citation keys are not unique (T007).
 
 import pytest
 
+from project.ghfdb.constants import CHILD_COLUMNS, PARENT_COLUMNS, RELEASE_COLUMNS
+
 pytestmark = pytest.mark.ghfdb
 
 
@@ -28,3 +30,15 @@ class TestReleaseImportModule:
         (tests/README.md); this is the release-import module's own proof of
         it, not inherited from a sibling."""
         assert request.node.get_closest_marker("ghfdb") is not None
+
+
+class TestReleaseColumns:
+    """T002: the release format's column definitions, derived from the
+    published parent and determination columns rather than restated."""
+
+    def test_begins_with_the_published_parent_columns_in_order(self):
+        assert RELEASE_COLUMNS[: len(PARENT_COLUMNS)] == PARENT_COLUMNS
+
+    def test_contains_every_published_determination_column_exactly_once(self):
+        for column in CHILD_COLUMNS:
+            assert RELEASE_COLUMNS.count(column) == 1

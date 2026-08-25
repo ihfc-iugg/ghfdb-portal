@@ -18,3 +18,21 @@ tests/test_ghfdb/test_resources/test_release.py -v` → 1 passed.
 Next: T002, the release format's column definitions.
 
 Watch: none.
+
+## 2026-08-25T12:20:00Z · Implementer foundations · T002
+
+Did: Added `RELEASE_ONLY_COLUMNS`, `MISSPELLED_COLUMNS` and `RELEASE_COLUMNS` to
+`project/ghfdb/constants.py`. `RELEASE_COLUMNS` is `PARENT_COLUMNS + CHILD_COLUMNS
++ RELEASE_ONLY_COLUMNS + list(MISSPELLED_COLUMNS)` — see decisions.md D19 for why
+the misspelled names are folded in now, ahead of T003. Added `TestReleaseColumns`
+to `test_release.py`.
+
+Verified: RED confirmed — `git show HEAD:project/ghfdb/constants.py | grep -c
+RELEASE_COLUMNS` → 0 before this commit. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -v` → 3 passed (T001's test plus
+both new ones). `poetry run ruff check project/ghfdb/constants.py
+tests/test_ghfdb/test_resources/test_release.py` → clean.
+
+Next: T003, the read / recognised-and-discarded / refused split.
+
+Watch: none.

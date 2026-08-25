@@ -326,3 +326,18 @@ module... is named in the collection" needs at least one genuine, non-tautologic
 marker declaration. `test_carries_the_ghfdb_marker` proves the module's own claim to the marker
 using `request.node.get_closest_marker`, rather than asserting something trivially true of the
 two lines just above it.
+
+**T002 — `RELEASE_COLUMNS` folds in the two misspelled names.** T003's own acceptance text says the
+three-way split's union "is the release column list," and FR-007 requires the header check and the
+row reading to consult one place, not two. Appending `MISSPELLED_COLUMNS`'s keys to
+`RELEASE_COLUMNS` is what lets `REFUSED_COLUMNS` be a subset of it — otherwise the union claim in
+T003 and the "one place" requirement in FR-007 would need two collections, contradicting each
+other. This also means `RELEASE_COLUMNS` carries `ID_parent` twice (once from `PARENT_COLUMNS`,
+again from `RELEASE_ONLY_COLUMNS`, since the two identifiers the release format's own R1 measurement
+names — `ID_parent` and `ID` — are conceptually release-only additions even though `ID_parent` was
+already present in the pre-existing `PARENT_COLUMNS` for the unrelated changelist-mapping purpose
+`columns.py` built it for). T002's own acceptance test (a prefix check plus an exactly-once check on
+`CHILD_COLUMNS`) does not exclude extra entries, so the duplicate is harmless to both tests and to
+every consumer that treats `RELEASE_COLUMNS` as a set. **Revisit if** a future task consumes
+`RELEASE_COLUMNS` positionally (e.g. as a literal export column order) rather than as a name set —
+at that point the duplicate needs resolving explicitly rather than left to collapse.
