@@ -424,3 +424,116 @@ constants-only tests in `test_constants.py` and the resource tests in a new `tes
 are two different subjects and should probably stay split as they are now, but a reader landing here
 after T009 exists should not be surprised to find `RELEASE_COLUMNS` tested somewhere other than
 beside the reader that consumes it.
+
+### D20 — US-1 first part Implementer notes (T008, T009, T011-T024, T033)
+
+Recorded for the same reason as D19: not design decisions binding a later story, but the choices
+this phase made while staying inside its named scope (the reading format, the header check, the
+value-reporting corrections, the anonymous-access proof) and the ones a later story needs to know
+about before building on top of them.
+
+**T008 — "the real header" is the corrected header, not the archive's.** Taken literally against
+D7, this looks contradictory: the base fixture (`release_sample.csv`) carries both misspelled names
+because it is cut byte-for-byte from the real file, and D7 rules that the import refuses that file
+without exception. T008 cannot mean "the fixture, unmodified, passes" without reopening D7. Read the
+other way — "the file a curator would submit after preparing it," which is exactly the phrase D7's
+own ruling uses — the two are consistent: T008 exercises a header with both published names spelled
+correctly, built in the test module by mapping `MISSPELLED_COLUMNS` over the base fixture's real
+header and rows (`_corrected_header_and_rows`), not a new fixture file. No Foundations fixture is
+"corrected" by design (D19, T004/T005), so this construction happens once, in `test_release.py`,
+and every later test in the module that needs a clean starting point calls it.
+
+**T009 — `get_title()` cannot simply return a curator-facing string.** `TablibFormat.create_dataset`
+(the base `CSV` format's own implementation) passes `get_title()` to `tablib.import_set(...,
+format=...)` as the *lookup key* into tablib's own format registry — "csv" is both this format's
+internal registry key and, for the unmodified base class, its displayed title. Overriding
+`get_title()` to return "GHFDB Release Format" (T009's own requirement — a name a curator can
+recognise) breaks that lookup with `UnsupportedFormat`. `GHFDBReleaseCSVFormat.create_dataset` is
+reimplemented directly against `csv.reader` rather than delegated to the inherited path, keyed off
+`TABLIB_MODULE` instead of `get_title()`. The reimplementation also tolerates a data row wider than
+the header (truncating the excess) rather than raising `tablib.exceptions.InvalidDimensions` — see
+the T015/T016 entry below for why this is load-bearing, not incidental robustness.
+
+**T015/T016 — the reading format has to survive a ragged row, because the fixture built for exactly
+this case is ragged.** `header_missing_required_column.csv` (T005) drops one name from the header
+line only, per that task's own note ("leaving the data rows exactly as the base fixture has them").
+Read through tablib's own `CSVFormat.import_set` (or built by hand via `tablib.Dataset(headers=...).
+append(row)`), every data row is one cell wider than the new header and raises `InvalidDimensions`
+before the resource ever sees a `dataset` — the row loop never gets the chance to run, let alone the
+header check. `GHFDBReleaseCSVFormat.create_dataset`'s row loop pads a short row and truncates a
+long one to the header's width, the same tolerance tablib's own reader already applies in one
+direction (padding) but not the other. This is not generic CSV robustness for its own sake; it
+exists because this exact fixture, unmodified, would otherwise be unreadable, and FR-006 requires a
+missing column to be *reported*, not to crash the reader.
+
+**T003's `REQUIRED_COLUMNS` reuses `READ_COLUMNS`, not `READ_COLUMNS | DISCARDED_COLUMNS`.** Checked
+empirically before writing the header check: `DISCARDED_COLUMNS` holds seven names, and the real
+release archive's header (read via `zipfile` + the corrected column set) carries five of them
+(`Quality_Code`, the four assessment columns) but not the other two, `quality_parent` and
+`quality_child` — confirming R1's own note in `constants.py`'s docstring that those two "are never
+present in a real release." Had the missing-column check treated all of `DISCARDED_COLUMNS` as
+required, the corrected base fixture — the file T008 needs to pass cleanly — would itself be refused
+for two columns that D13 says are optional wherever they appear. `REQUIRED_COLUMNS = READ_COLUMNS`
+resolves this without a special case: a column the reader actually consults is required: a column
+it recognises and discards is optional, whichever of the seven a given file happens to carry.
+
+**T011-T024 — the resource maps only `qc` and `qc_uncertainty` to real model attributes; every
+other released column is unmapped for now.** The row-checking mechanics this phase corrects — every
+fault continuing past the first (already the library's own default), the reported column keyed by
+name rather than model attribute, the reported line counting the header — are properties of
+`import_instance`/`import_data` and hold for whichever fields are declared, not for any one field in
+particular. Wiring the two quantity columns already proven safe by `GHFDBChildImportResource`
+(reused, not reinvented, per plan.md "the widget layer is reused as it stands") is enough to
+exercise and test all three corrections without pre-building the site/interval/determination mapping
+that is US-3's job. Every other released column stays a name in `RELEASE_COLUMNS` the header check
+recognises, with no field declared for it yet. **Revisit when** US-3 adds the row-to-record mapping
+— `Meta.fields` grows column by column as each one's real target model attribute is decided there,
+not here.
+
+**`save_instance` is a deliberate no-op.** `HeatFlow.sample` and `HeatFlow.dataset` are both
+non-nullable, and `ModelResource.save_instance` calls `instance.save()` regardless of `dry_run` —
+only the outer transaction decides whether that write survives, not whether it is attempted. Without
+a real site, interval and dataset to assign (US-2/US-3, out of this story's scope by the brief's own
+prohibitions), the library's default `save_instance` would raise `IntegrityError` on every row of
+even a fully clean file, which would make T008 unprovable within this story's boundary. Overriding
+it as a no-op is what "this story ends at a file being checked and its faults reported" means in
+code: nothing is ever attempted, dry run or not, so "no record of any kind is created" (T011) holds
+by construction rather than by transaction rollback. **Revisit when** US-3 gives the resource
+something real to save — at that point this override is replaced, not merely relaxed.
+
+**`Meta.import_id_fields = ()`.** The library's default, `["id"]`, is silently safe only while no
+field named `id` is declared (R3's own finding, re-used here) — but `ModelResource.get_instance`
+looks the id-field names up in `self.fields` before consulting the row at all, and `self.fields`
+only contains this resource's own two declared fields (`qc`, `qc_uncertainty`), so the untouched
+default raises `KeyError('id')` on every row, before either field's widget runs. Explicit empty
+`import_id_fields` keeps `_check_import_id_fields` a no-op (its own special-cased comparison is
+`== ["id"]` exactly, which an empty tuple also satisfies by falling through both its checks with
+nothing to check) and makes `get_or_init_instance` always build a fresh, never-looked-up instance.
+Finding a determination by its published identifier so a repeat import updates rather than
+duplicates is T100's job (US-4), not this story's.
+
+**T033 — "distinguishably" is answered at `has_import_permission`, not at the HTTP layer.** Every
+unauthenticated request to any admin URL, this one included, redirects to the login page the same
+way — Django's own `AdminSite.admin_view` wrapper checks `is_staff` before any view-specific
+permission code runs, so an HTTP-level test asserting only "anonymous gets redirected" would pass
+identically whether or not this route carried a permission check of its own. Measured directly:
+temporarily hard-coding `has_import_permission` to return `True` left the HTTP redirect test
+passing and the module's own `RequestFactory` + `AnonymousUser` test failing — confirming the HTTP
+test alone proves nothing route-specific. The second test calls `has_import_permission` directly
+with an anonymous-user request, the same style T031's already-closed staff-without-permission case
+uses, so the refusal is shown to be the route's own rather than borrowed from the wall in front of
+it.
+
+**Not done: registering the release format and resource on `GHFDBChildAdmin`.** plan.md's own
+"Where it is registered" section states the release format and resource attach to the determination
+changelist's existing import machinery (`get_import_formats`/`get_import_resource_classes` on
+`GHFDBChildAdmin`). Three pre-existing tests not authored in this story assert those two methods'
+return values by exact equality against today's single-resource, two-format state
+(`test_ghfdb_admin_changelist_refined_configuration`,
+`test_it_carries_the_determination_import_resource_and_the_export_resource`, and
+`TestAdminGetImportFormats`'s four cases in `test_parent_import.py`) — adding a second resource and
+a third format necessarily changes what all of them return. Per this story's own prohibition against
+modifying a test not authored in it, none of the three files were touched. `GHFDBReleaseCSVFormat`
+and `GHFDBReleaseImportResource` are complete, exported from `project/ghfdb/resources/__init__.py`,
+and fully exercised by `test_release.py` — only the admin wiring plan.md describes is outstanding.
+Flagged in this run's completion report as a concern rather than resolved unilaterally.
