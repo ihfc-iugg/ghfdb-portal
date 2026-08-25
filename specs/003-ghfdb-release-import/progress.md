@@ -684,3 +684,113 @@ check`/`ruff format --check` → clean.
 Next: T056, several rows sharing a published site identifier.
 
 Watch: none.
+
+## 2026-08-25T20:55:00Z · Implementer US-3 (resumption) · T056, T057, T058
+
+Did: Resumed a previous run that delivered T051-T055 and died mid-step,
+leaving two files uncommitted (see this run's own brief for the full
+account). The worktree carried a deliberate red-proof: the
+`_sites_by_local_id`/DB-lookup identity check in `_build_site_and_parent`
+had been deleted to watch a new test go red, and five new test classes
+covering T056-T063 sat alongside it. Judged the five inherited tests on
+their merits (per this run's own instruction, since they are unreviewed):
+all five assert their task's own acceptance sentence directly, against
+real fixture rows, and none needed changing. Restored the deleted lookup
+first, confirmed it matches `HEAD` byte-for-byte (`git diff` empty on
+`release.py`), and added only the T056/T057/T058 tests
+(`TestGHFDBReleaseImportResourceSharedSite`,
+`TestGHFDBReleaseImportResourceSharedParent`) in this commit; the other
+three inherited classes (T059, T061, T063) wait for their own tasks.
+
+Verified: RED confirmed directly, not assumed from the predecessor's
+account - temporarily re-deleted the lookup and re-ran
+`TestGHFDBReleaseImportResourceSharedSite`: failed with a
+`HeatFlowSite` coordinate-uniqueness `ValidationError` on the second
+row, the same failure the predecessor's own notes describe hitting
+while building T052/T053. Restored, re-ran green. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 28 passed.
+`ruff check`/`ruff format --check` → clean.
+
+Next: T059, several rows sharing a site and a depth range.
+
+Watch: none.
+
+## 2026-08-25T21:05:00Z · Implementer US-3 (resumption) · T059, T060
+
+Did: `_build_interval` now identifies an interval by its site together
+with the depth range the row gives (D15) - `_depth_magnitude` reduces
+each row's built `top`/`bottom` to a plain magnitude or `None`, and an
+in-memory `self._intervals_by_key` dict, cleared per `before_import`
+call, shares one interval across every row giving the same
+`(site, top, bottom)` key. A row sharing an already-built interval is
+linked to it, not re-applied to it - the same precedent
+`_build_site_and_parent` already sets for a reused site or parent, so
+a second row's lithology/age never silently overwrites the first's.
+Added the inherited `TestGHFDBReleaseImportResourceSharedInterval`
+(judged sound on its own merits, no changes needed - see this run's
+first entry).
+
+Verified: RED confirmed - `assert 2 == 1` (`HeatFlowInterval.objects.count()`)
+before this change, one interval per row as before. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 29 passed.
+Probed: short-circuited the cache lookup to always miss - the test
+failed for the same reason (2 intervals instead of 1), confirming the
+identity check is load-bearing. Restored, re-ran green. `ruff
+check`/`ruff format --check` → clean.
+
+Next: T061, several rows sharing a site and no depth range.
+
+Watch: none.
+
+## 2026-08-25T21:15:00Z · Implementer US-3 (resumption) · T061, T062
+
+Did: No new production code - T059/T060's interval identity already
+keys on site plus depth range, and an empty range (both `top` and
+`bottom` `None`) is a range like any other for that purpose, so it
+already produces one indeterminate interval shared by every row on a
+site that gives no depth (D17). Added the inherited
+`TestGHFDBReleaseImportResourceIndeterminateInterval` (judged sound
+on its own merits).
+
+Verified: the new test passed on first run against the already-built
+mechanism - flagged by craft-tdd's own instruction to diagnose rather
+than accept a first-try pass. Probed: made the cache only reuse an
+interval when its key carried a real `top` (`key[1] is not None`) -
+the test failed (3 separate per-row intervals instead of one shared
+indeterminate interval), confirming the general identity check is
+what produces this case, not tautology. Restored, re-ran green.
+`poetry run pytest tests/test_ghfdb/test_resources/test_release.py -q`
+→ 30 passed. `ruff check`/`ruff format --check` → clean.
+
+Next: T063, a site holding both kinds of interval at once.
+
+Watch: none.
+
+## 2026-08-25T21:20:00Z · Implementer US-3 (resumption) · T063
+
+Did: No new production code - the same site-plus-range key keeps a
+determinate-range interval and the site's indeterminate interval
+distinct, since they differ on the key's depth components. Added the
+inherited `TestGHFDBReleaseImportResourceMixedIntervals` (judged
+sound on its own merits) - this closes the eight tasks (T056-T063)
+this run's brief scopes; T064 onward (the gradient/conductivity
+identity, corrections, probe metadata, disagreement refusals, value
+handling) is later work and out of this run's scope.
+
+Verified: the new test passed on first run. Probed: collapsed the
+cache key to the site alone, dropping the depth range - the test
+failed (one merged interval instead of two: a determinate-range one
+and an indeterminate one), confirming the depth components of the key
+are what keeps them distinct. Restored, re-ran green. `poetry run
+pytest tests/test_ghfdb/test_resources/test_release.py -q` → 31
+passed, full module. `ruff check`/`ruff format --check` → clean.
+
+Next: none - this run's eight tasks (T056-T063) are closed. The full
+verify runs once at the completion report, per this run's brief.
+
+Watch: the absent-value-marker workaround flagged as a concern in the
+predecessor's T052/T053/T057/T058 entry is unchanged by this run -
+still narrow and forced, still T076/T077's to confirm subsumed. The
+admin-registration deferral (D21) is likewise unchanged and still
+correctly out of scope. No model, migration or admin change was made
+in this run.
