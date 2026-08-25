@@ -180,3 +180,39 @@ MISSPELLED_COLUMNS: dict[str, str] = {
 RELEASE_COLUMNS: list[str] = (
     PARENT_COLUMNS + CHILD_COLUMNS + RELEASE_ONLY_COLUMNS + list(MISSPELLED_COLUMNS)
 )
+
+
+# ---------------------------------------------------------------------------
+# The read / recognised-and-discarded / refused split (T003)
+#
+# Three disjoint sets whose union is RELEASE_COLUMNS, expressed as data
+# rather than as behaviour scattered through the reader (FR-007).
+# ---------------------------------------------------------------------------
+
+# Standing constraint 3 / FR-033: quality is computed here, never ingested -
+# covers both the single release-wide code and the two legacy per-row
+# fields, which R1 found are never present in a real release for the same
+# reason. FR-034: the assessment team's own columns are recognised and not
+# stored. Neither may cause a file to be refused (D13) - both are part of
+# the format.
+DISCARDED_COLUMNS: frozenset[str] = frozenset(
+    {
+        "quality_parent",
+        "quality_child",
+        "Quality_Code",
+        "Reviewer_name",
+        "Reviewer_comment",
+        "Review_date",
+        "Review_status",
+    }
+)
+
+# FR-004, D7: the two misspelled forms are recognised by name and refused
+# without exception - the only members of RELEASE_COLUMNS a valid, corrected
+# release never carries.
+REFUSED_COLUMNS: frozenset[str] = frozenset(MISSPELLED_COLUMNS)
+
+# Every other released column: consulted for a value and stored somewhere.
+READ_COLUMNS: frozenset[str] = (
+    frozenset(RELEASE_COLUMNS) - DISCARDED_COLUMNS - REFUSED_COLUMNS
+)

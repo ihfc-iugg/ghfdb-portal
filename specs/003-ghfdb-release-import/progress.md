@@ -36,3 +36,25 @@ tests/test_ghfdb/test_resources/test_release.py` → clean.
 Next: T003, the read / recognised-and-discarded / refused split.
 
 Watch: none.
+
+## 2026-08-25T12:30:00Z · Implementer foundations · T003
+
+Did: Added `DISCARDED_COLUMNS`, `REFUSED_COLUMNS` and `READ_COLUMNS` to
+`project/ghfdb/constants.py` — three disjoint sets whose union is
+`RELEASE_COLUMNS`. `REFUSED_COLUMNS` is the misspelled names; `DISCARDED_COLUMNS`
+is the supplied quality code, the two legacy per-row quality names, and the four
+assessment columns (see decisions.md D19 for why the legacy quality names are
+included beyond FR-033's literal wording); `READ_COLUMNS` is everything else.
+Added `TestReleaseColumnDisposition` to `test_release.py`.
+
+Verified: RED confirmed by loading the T002 commit's constants.py in isolation
+(`importlib` against `git show <T002 sha>:project/ghfdb/constants.py`) and
+checking `hasattr` for all three names — all `False`. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 8 passed. `poetry run
+ruff check project/ghfdb/constants.py tests/test_ghfdb/test_resources/test_release.py`
+→ clean (ruff auto-fixed two yoda-condition findings in the new assertions,
+re-verified green and re-linted clean after).
+
+Next: T004, the base fixture cut from the published release archive.
+
+Watch: none.

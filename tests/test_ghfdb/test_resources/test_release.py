@@ -14,7 +14,15 @@ citation keys are not unique (T007).
 
 import pytest
 
-from project.ghfdb.constants import CHILD_COLUMNS, PARENT_COLUMNS, RELEASE_COLUMNS
+from project.ghfdb.constants import (
+    CHILD_COLUMNS,
+    DISCARDED_COLUMNS,
+    MISSPELLED_COLUMNS,
+    PARENT_COLUMNS,
+    READ_COLUMNS,
+    REFUSED_COLUMNS,
+    RELEASE_COLUMNS,
+)
 
 pytestmark = pytest.mark.ghfdb
 
@@ -42,3 +50,31 @@ class TestReleaseColumns:
     def test_contains_every_published_determination_column_exactly_once(self):
         for column in CHILD_COLUMNS:
             assert RELEASE_COLUMNS.count(column) == 1
+
+
+class TestReleaseColumnDisposition:
+    """T003: which released columns are read, which are recognised and
+    discarded, and which are refused, expressed as data (FR-007)."""
+
+    def test_the_three_sets_are_pairwise_disjoint(self):
+        assert READ_COLUMNS.isdisjoint(DISCARDED_COLUMNS)
+        assert READ_COLUMNS.isdisjoint(REFUSED_COLUMNS)
+        assert DISCARDED_COLUMNS.isdisjoint(REFUSED_COLUMNS)
+
+    def test_their_union_is_the_release_column_list(self):
+        assert set(RELEASE_COLUMNS) == READ_COLUMNS | DISCARDED_COLUMNS | REFUSED_COLUMNS
+
+    def test_refused_columns_are_the_misspelled_names(self):
+        assert set(MISSPELLED_COLUMNS) == REFUSED_COLUMNS
+
+    def test_the_supplied_quality_code_is_discarded(self):
+        """FR-033: the portal computes quality and does not ingest a
+        supplied code."""
+        assert "Quality_Code" in DISCARDED_COLUMNS
+
+    def test_the_assessment_columns_are_discarded(self):
+        """FR-034: the assessment team's own columns are recognised on the
+        header and never stored."""
+        assert {"Reviewer_name", "Reviewer_comment", "Review_date", "Review_status"} <= (
+            DISCARDED_COLUMNS
+        )

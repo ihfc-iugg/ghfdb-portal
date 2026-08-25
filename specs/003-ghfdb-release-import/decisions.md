@@ -341,3 +341,13 @@ already present in the pre-existing `PARENT_COLUMNS` for the unrelated changelis
 every consumer that treats `RELEASE_COLUMNS` as a set. **Revisit if** a future task consumes
 `RELEASE_COLUMNS` positionally (e.g. as a literal export column order) rather than as a name set —
 at that point the duplicate needs resolving explicitly rather than left to collapse.
+
+**T003 — `quality_parent` and `quality_child` are discarded, not read.** FR-033 names only the
+release-wide `Quality_Code`. `quality_parent` and `quality_child` are two more names already present
+in `PARENT_COLUMNS`/`CHILD_COLUMNS` (built for the existing changelist-display path, not this
+feature), and R1 measured both as permanently absent from a real release, "the portal computes
+quality, so their absence is correct rather than a gap." Standing constraint 3 ("quality is computed
+here") reads as covering every quality-shaped column, not only the one FR-033 happens to name by
+example, so both join `DISCARDED_COLUMNS` alongside `Quality_Code`. **Revisit if** a future story
+finds a release genuinely carrying either with a value the reader is expected to consult — nothing
+in R1 or the FRs anticipates that, but the assumption is mine, not the spec's.
