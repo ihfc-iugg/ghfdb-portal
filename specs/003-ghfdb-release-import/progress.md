@@ -334,3 +334,222 @@ Three pre-existing tests not authored in this story assert
 against today's state, and this story's own prohibition is against
 modifying a test it did not author. Flagged as a concern in the
 completion report rather than resolved here.
+
+## 2026-08-25T18:10:00Z · Implementer US-2 · T034-T036
+
+Did: Added `GHFDBReleaseImportResource._resolve_publication_datasets`,
+called from `before_import` once the header check passes. Collects the
+file's distinct publication references (`dataset.dict`, before any row is
+read), and for each creates a `LiteratureItem` carrying the reference as
+its citation key plus a `Dataset` linked to it via the framework's own
+one-to-one `reference` field (`fairdm.core.models.Dataset`), through
+`Dataset.all_objects` rather than the privacy-filtered default manager —
+`all_objects` is what fairdm's own docstring names as the route
+administrative/import code needs, since a fresh dataset defaults to
+`PRIVATE` visibility and the filtered manager would silently miss it on
+a later lookup (T049). Added `TestGHFDBReleaseImportResourceDatasetCreation`
+to `test_release.py`, against the base fixture's five distinct references.
+
+Verified: RED confirmed — before this task, `Dataset.all_objects.count()`
+was 0 against 5 expected. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 17 passed. `poetry
+run ruff check`/`ruff format` → clean.
+
+Next: T037, comparing references without regard to case or whitespace.
+
+Watch: none.
+
+## 2026-08-25T18:20:00Z · Implementer US-2 · T037, T038
+
+Did: `_resolve_publication_datasets` now groups references by their
+normalised form (`_normalize_publication_reference`: strip then lower,
+FR-017) before resolving each, keeping the first raw spelling the file
+gives as the representative — deterministic regardless of Python set
+iteration order, since row order is preserved by iterating `dataset.dict`
+directly rather than a set. Added
+`TestGHFDBReleaseImportResourceReferenceNormalization`.
+
+Verified: RED confirmed — a case/whitespace variant of an existing
+reference produced a second, separate dataset before this change. `poetry
+run pytest tests/test_ghfdb/test_resources/test_release.py -q` → 18
+passed. Probed directly (see decisions.md D22): temporarily reverted
+`_normalize_publication_reference` to skip lowercasing — the new test
+failed as expected. Restored, re-ran green. `ruff check`/`ruff format` →
+clean.
+
+Next: T039, matching an existing bibliographic record.
+
+Watch: none.
+
+## 2026-08-25T18:35:00Z · Implementer US-2 · T039, T040
+
+Did: `_resolve_publication_datasets` now looks up an existing
+`LiteratureItem` before creating one, matched on citation key with
+whitespace and case ignored at the database level
+(`Lower(Trim("citation_key"))`, `django.db.models.functions`) rather than
+only within the file — reusing a record that already existed before this
+import run, not only one this run just created. Added
+`TestGHFDBReleaseImportResourceMatchesExistingLiterature`, using T007's
+`literature_with_known_citation_key` fixture.
+
+Verified: RED confirmed — before this task the same test failed with
+`IntegrityError` on the duplicate citation key (the code always created a
+new record, unconditionally). `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 19 passed. Probed:
+reverted the lookup to unconditional creation — the test failed for the
+same duplicate-key reason. Restored, re-ran green.
+
+Next: T041, creating a bibliographic record when none matches.
+
+Watch: none.
+
+## 2026-08-25T18:45:00Z · Implementer US-2 · T041, T042
+
+Did: No new production code — the "create when no match" branch already
+exists as the `else` of T039/T040's lookup, since T034 (the very first
+test in this story) already required creation to make datasets from
+brand-new references, and there is no earlier point at which "matching"
+could exist without "creating" alongside it. Added
+`TestGHFDBReleaseImportResourceCreatesMissingLiterature`.
+
+Verified: the new test passed on first run against the already-existing
+code — flagged by craft-tdd's own instruction to diagnose rather than
+accept a first-try pass. Probed per the skill's "not just read" rule:
+temporarily replaced the `else` branch with `continue` (skip creation
+entirely) — the test failed with `LiteratureItem.DoesNotExist`, confirming
+it genuinely exercises the mechanism rather than passing tautologically.
+Restored, re-ran green (`poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 20 passed). See
+decisions.md D22 for why this task's RED could not be observed in
+isolation from T034's.
+
+Next: T043, refusing an ambiguous reference.
+
+Watch: none.
+
+## 2026-08-25T19:00:00Z · Implementer US-2 · T043, T044
+
+Did: `_resolve_publication_datasets` now records a reference matching
+more than one `LiteratureItem` in `self._ambiguous_references` (keyed by
+normalised form, valued by the matched records) instead of silently
+taking the first match, and creates neither a dataset nor a record for
+it. `import_instance` checks each row's `publication_reference` against
+that map and raises a `ValidationError` keyed `"publication_reference"`,
+naming the reference and every citation key it matched, when it is
+ambiguous — reusing the same per-row fault-reporting path T011-T024
+already built (`error_dict`, line-number correction), rather than a new
+mechanism. Added `TestGHFDBReleaseImportResourceAmbiguousReference`,
+using T007's `literature_with_ambiguous_citation_key` fixture, with two
+rows carrying the same ambiguous reference to prove "the rows carrying
+it" (plural) are refused, not only the first.
+
+Verified: RED confirmed — before this task the ambiguous reference
+silently resolved to `matches[0]` and both rows imported clean. `poetry
+run pytest tests/test_ghfdb/test_resources/test_release.py -q` → 21
+passed. Probed: raised the ambiguity threshold so `len(matches) > 1`
+could never be true — the test failed (no refusal, a dataset was
+created), confirming the branch is load-bearing. Restored, re-ran green.
+
+Next: T045, refusing an empty reference.
+
+Watch: none.
+
+## 2026-08-25T19:10:00Z · Implementer US-2 · T045, T046
+
+Did: `import_instance` now refuses a row whose `publication_reference`
+is empty (after stripping), before checking it against the ambiguous
+map, with a message naming the fault plainly. Added
+`TestGHFDBReleaseImportResourceEmptyReference`.
+
+Verified: RED confirmed — before this task an empty reference simply
+found no entry to resolve to and imported without complaint (the earlier
+`if reference:` guard skipped the ambiguous check silently for a blank
+cell, adding no error). `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 22 passed. `ruff
+check`/`ruff format` → clean.
+
+Next: T047, reading the reference back off the dataset.
+
+Watch: none.
+
+## 2026-08-25T19:20:00Z · Implementer US-2 · T047, T048
+
+Did: No new production code — `Dataset.reference` (the framework's
+existing one-to-one field to `LiteratureItem`, per plan.md) has carried
+the link since T034/T036's own commit, so `dataset.reference.citation_key`
+already reads back the reference a dataset was created from. Added
+`TestGHFDBReleaseImportResourceReferenceReadback`, asserting this
+directly rather than by inspecting any row-produced record (none exist
+in this story — `save_instance` stays a no-op).
+
+Verified: the new test passed on first run. Probed: temporarily replaced
+the `get_or_create(reference=literature_item, ...)` call with a plain
+`Dataset.all_objects.create(name=...)` that never sets `reference` — the
+test failed with `Dataset.DoesNotExist` on the `reference__citation_key`
+lookup, confirming the assertion is anchored to the real field. Restored,
+re-ran green (`poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 23 passed).
+
+Next: T049, reusing datasets across a second import.
+
+Watch: none.
+
+## 2026-08-25T19:30:00Z · Implementer US-2 · T049
+
+Did: No new production code — the lookup-before-create logic T039/T040
+added already makes a second `import_data` call against the same
+references find and reuse the `LiteratureItem` and `Dataset` the first
+call created, since resolution runs against the real database on every
+call rather than any in-memory cache. Added
+`TestGHFDBReleaseImportResourceReusesExistingDatasets`, running two
+separate `GHFDBReleaseImportResource` instances (matching R4/R8's "two
+resources are constructed, one per pass") against the same fixture and
+comparing counts before and after the second call.
+
+Verified: the new test passed on first run. Probed: replaced the
+citation-key lookup query with `.none()` (unconditionally no match) —
+the second import then hit a database `IntegrityError` on the duplicate
+citation key, failing the test as expected. Restored, re-ran green
+(`poetry run pytest tests/test_ghfdb/test_resources/test_release.py -q`
+→ 24 passed).
+
+Next: T050, proving a dry-run check leaves nothing behind.
+
+Watch: none.
+
+## 2026-08-25T19:40:00Z · Implementer US-2 · T050
+
+Did: No new production code. `_resolve_publication_datasets` writes
+directly to the database in `before_import` regardless of `dry_run`, and
+nothing in this story's code branches on it — the check/write separation
+this task asks for is entirely the library's own guarantee (research.md
+R4/R5): `before_import` runs inside `import_data`'s outer transaction,
+and `import_data`'s own signature computes
+`using_transactions = (use_transactions or dry_run) and supports_transactions`,
+so a dry run is transactional even when `use_transactions=False` is
+passed explicitly — confirmed by trying exactly that as a probe (see
+decisions.md D22) rather than assumed from research.md alone. Added
+`TestGHFDBReleaseImportResourceCheckCreatesNothingPersistent`.
+
+Verified: the new test passed on first run. A "disable the transaction
+and confirm it would persist" probe, in the style used for the other
+already-passing tasks in this run, is not possible here — the library
+hard-codes `dry_run` as transactional independent of `use_transactions`,
+confirmed by attempting exactly that (`use_transactions=False,
+dry_run=True`) and observing the write still rolled back. The genuine
+evidence is comparative instead: this test's `dry_run=True` call leaves
+`Dataset.all_objects.count() == 0`, while every other test in this run
+uses `dry_run=False` and shows the same code path leaving real rows
+behind — the same production code, two different persistence outcomes,
+gated only by `dry_run`. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 25 passed, full
+module, all thirty-two tests across US-1 and US-2. `ruff check`/`ruff
+format` → clean.
+
+Next: none — all seventeen tasks in this run's brief (T034-T050) are
+closed. The full `forge verify` runs once more at the completion report.
+
+Watch: the admin registration outstanding from US-1 (decisions.md D20's
+last entry, D21) remains outstanding — still correctly deferred to
+T025-T030, which land after US-3. No new admin, model or migration
+changes were made in this run.

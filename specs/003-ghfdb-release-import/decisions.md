@@ -574,3 +574,69 @@ Two consequences follow, both to be carried out with T025 to T030 rather than tr
   each one keeps its exact-equality shape against the new expected state.
 - The rollback correction and the result check reach the contributor template's reader on the same
   changelist, as plan.md's "Where it is registered" already states and intends.
+
+### D22 — US-2 Implementer notes (T034-T050)
+
+Recorded for the same reason as D19/D20: not design decisions binding a later story, but the
+choices this phase made while staying inside its named scope (resolving publication references to
+datasets and literature) and, this time, the structural overlaps the task list's own decomposition
+produced — worth reading before assuming every task's test was observed genuinely red in isolation.
+
+**T034-T036 and T039-T042 share one mechanism, and the task list orders "match" before "create"
+while the code could not.** T034 (the first test in this story) exercises five publication
+references with no pre-existing bibliographic record, so making it pass at all requires the
+create-a-`LiteratureItem`-from-a-citation-key branch (T041/T042's own subject) to exist from the
+first commit — there is no reference in T034's fixture for a "match an existing record" branch
+(T039/T040) to apply to yet. The task list orders T039/T040 before T041/T042; the dependency runs
+the other way. `_resolve_publication_datasets` was built incrementally in the only order that keeps
+every commit green and every test's assertion meaningful: create-only (T034-T036), then normalise
+the grouping (T037/T038), then add the lookup-before-create branch (T039/T040, which subsumes
+T041/T042's "else" as a side effect). T041/T042's own test was written and run against
+already-existing code and passed on the first try — flagged, per craft-tdd's own instruction, as
+"testing nothing you just wrote" until probed. It was probed (mutating the `else` branch to `continue`,
+confirming `LiteratureItem.DoesNotExist`) rather than accepted on faith or skipped; see progress.md's
+T041/T042 entry for the mutation and the restore. The same shape recurred twice more and was handled
+the same way each time:
+
+- **T047/T048** (the reference reads back off the dataset) is a property of `Dataset.reference`
+  that T034-T036's own commit already established — there is no code path that creates a dataset
+  without setting it, so a dedicated "storing" task has nothing left to add. Probed by swapping the
+  `get_or_create(reference=...)` call for a plain `create()` that never sets it; the new test failed
+  as expected.
+- **T049** (reusing an existing dataset on a second import) is a property of the lookup-before-create
+  branch T039/T040 added — a second `import_data` call queries the real database, not an in-memory
+  cache, so it finds what the first call wrote. Probed by forcing the lookup query to `.none()`; the
+  second import then hit a citation-key `IntegrityError`, confirming the reuse path is load-bearing.
+
+**T050 could not be probed the same way, and that is itself informative.** Every other "test passed
+immediately" case above was probed by disabling the specific branch responsible and confirming
+failure. T050 (a dry-run check leaves nothing behind) is not this story's code at all — it is
+entirely the library's own guarantee, and confirmed as such rather than assumed from research.md:
+`import_export.resources.Resource.import_data`'s own signature computes
+`using_transactions = (use_transactions or dry_run) and supports_transactions`, so passing
+`use_transactions=False` alongside `dry_run=True` does not disable the transaction — attempted
+directly, and the write still rolled back. There is no way to construct a version of this story's
+code that would make T050's test fail without also breaking every other test in this run that
+depends on a *successful* import committing (which none of them tolerate). The genuine evidence
+offered instead is comparative: the identical `_resolve_publication_datasets` code path, run once
+with `dry_run=True` (this test, count stays 0) and repeatedly with `dry_run=False` (every other
+test in this class, count is always positive) — the same writes, gated only by the flag the library
+itself gates on.
+
+**No field was declared for `publication_reference` on the resource, and none was needed.** Per
+D20's own note, every released column beyond `qc`/`qc_uncertainty` stays unmapped until US-3 decides
+its real target model attribute; `HeatFlow.dataset` exists on the model today; but assigning it from
+`import_instance` — even without saving — would be doing US-3's row-to-record mapping under this
+story's name, which the brief's prohibitions rule out explicitly. The ambiguous- and
+empty-reference refusals in `import_instance` therefore read `row.get("publication_reference")`
+directly, exactly the way `_resolve_publication_datasets` does in `before_import`, and write only
+to the `errors` dict already keyed by column name — never to the instance. `self._datasets_by_reference`
+is built and populated in full (every non-ambiguous, non-empty reference resolves to a real
+`Dataset`), ready for US-3 to consume, but nothing in this story reads it back off the instance.
+
+**`Dataset.all_objects`, not `Dataset.objects`, for every lookup and creation in this story.**
+`fairdm.core.dataset.models.DatasetManager` (the default `objects`) excludes `PRIVATE` visibility,
+and a freshly created `Dataset` defaults to `PRIVATE` (`visibility` field default, read directly from
+`fairdm/core/dataset/models.py`). Using the filtered manager would have made T049's reuse silently
+fail on every dataset this story itself creates — the exact failure fairdm's own docstring on
+`DatasetManager` names `all_objects` as existing to avoid for administrative/import code.
