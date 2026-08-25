@@ -570,3 +570,22 @@ class TestGHFDBReleaseImportResourceReusesExistingDatasets:
             == dataset_count_after_first
         )
         assert LiteratureItem.objects.count() == literature_count_after_first
+
+
+class TestGHFDBReleaseImportResourceCheckCreatesNothingPersistent:
+    """T050: nothing created while checking a file survives the check - a
+    dataset the check would have made does not exist afterwards. Fails
+    before: the resolution runs once and its result is carried into the
+    write. The check and the write are separate passes over separate
+    objects (research.md R4)."""
+
+    def test_dry_run_leaves_no_dataset_or_literature_record_behind(self, db):
+        header, rows = _corrected_header_and_rows()
+        dataset = _make_dataset(header, rows)
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=True, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert Dataset.all_objects.filter(reference__isnull=False).count() == 0
+        assert LiteratureItem.objects.count() == 0
