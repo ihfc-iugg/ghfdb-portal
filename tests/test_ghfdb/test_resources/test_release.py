@@ -1123,6 +1123,59 @@ class TestGHFDBReleaseImportResourceSiteNameStoredAsGiven:
         assert site.location is not None
 
 
+class TestGHFDBReleaseImportResourceSuppliedQualityCodeDiscarded:
+    """T088, T089: a row carrying a supplied quality code imports, and
+    that code is not stored anywhere - the portal computes quality from
+    what it holds and never ingests a supplied one (D13, FR-033). Fails
+    before: it is stored. Row 4 of the real base fixture carries a real
+    ``Quality_Code`` value by design (R1)."""
+
+    def test_the_supplied_quality_code_is_not_stored(self, db):
+        from heat_flow.models import HeatFlow, ParentHeatFlow
+
+        header, rows = _corrected_header_and_rows()
+        assert rows[4][header.index("Quality_Code")] == "U2.M3.s-----r"
+        dataset = _make_dataset(header, [rows[4]])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+
+        determination = HeatFlow.objects.get()
+        assert determination.quality != "U2.M3.s-----r"
+        parent = ParentHeatFlow.objects.get()
+        assert parent.quality != "U2.M3.s-----r"
+
+
+class TestGHFDBReleaseImportResourceAssessmentColumnsRecognizedAndDiscarded:
+    """T090, T091: a file carrying the assessment team's own columns is
+    not refused for carrying them, and their values are not stored
+    anywhere - recording assessment in the portal is aspirational and no
+    field waits for them (D13, FR-034). Fails before: the columns are
+    refused as undefined. Row 4 of the real base fixture carries real
+    values for all four columns."""
+
+    def test_the_assessment_columns_do_not_refuse_the_file_and_are_not_stored(self, db):
+        from heat_flow.models import HeatFlow, ParentHeatFlow
+
+        header, rows = _corrected_header_and_rows()
+        assert rows[4][header.index("Reviewer_name")] == "Florian Neumann"
+        dataset = _make_dataset(header, [rows[4]])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+
+        determination = HeatFlow.objects.get()
+        parent = ParentHeatFlow.objects.get()
+        assert determination.c_comment != "Florian Neumann"
+        assert parent.comment != "Florian Neumann"
+
+
 class TestGHFDBReleaseImportResourceMixedIntervals:
     """T063: a site with some rows giving a depth range and some giving
     none holds one interval for each distinct range plus the one

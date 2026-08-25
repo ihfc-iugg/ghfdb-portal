@@ -1183,3 +1183,35 @@ module. `ruff check`/`ruff format --check` → clean.
 Next: T088, T089, the supplied quality code.
 
 Watch: none.
+
+## 2026-08-25T22:50:00Z · Implementer US-3 (third part) · T088, T089, T090, T091
+
+Did: No new production code - `DISCARDED_COLUMNS` (constants.py) already
+carries `quality_parent`, `quality_child`, `Quality_Code` and the four
+`Reviewer_*`/`Review_*` assessment columns, and `release.py` never reads
+any of the nine, so a file carrying real values for them already passes
+the header check untouched and stores nothing from them (D13, FR-033,
+FR-034). Added `TestGHFDBReleaseImportResourceSuppliedQualityCodeDiscarded`
+(row 4's real `Quality_Code` value, checked against `determination.quality`
+and `parent.quality`) and
+`TestGHFDBReleaseImportResourceAssessmentColumnsRecognizedAndDiscarded`
+(row 4's real `Reviewer_name` value, checked against `determination.c_comment`
+and `parent.comment`, the two free-text fields a stray value would most
+plausibly land in by accident).
+
+Verified: both passed on first run against the already-built mechanism -
+flagged by craft-tdd's own instruction to diagnose rather than accept a
+first-try pass. Probed separately: temporarily set `instance.quality =
+row.get("Quality_Code")` in `before_save_instance` - the quality test
+failed for the right reason. Restored, then temporarily dropped
+`Reviewer_name` from `RELEASE_ONLY_COLUMNS` (not just `DISCARDED_COLUMNS`)
+- the assessment test failed with the file refused as carrying an
+undefined column, the exact "Fails before" shape T090 names. Restored,
+re-ran green. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 46 passed, full
+module. `ruff check` (four import-order/comparison-direction fixes
+accepted, no behaviour change) / `ruff format --check` → clean.
+
+Next: T092, T093, the row-count guarantee.
+
+Watch: none.
