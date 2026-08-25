@@ -794,6 +794,36 @@ class TestGHFDBReleaseImportResourceGradientConductivityIdentity:
         assert first_conductivity != second_conductivity
 
 
+class TestGHFDBReleaseImportResourceCorrectionsSuppliedOnly:
+    """T066, T067: a row supplying some corrections and not others
+    produces a correction record for each one supplied and none for the
+    rest. Fails before: no correction record is created at all - the
+    release reader does not yet build them (FR-029)."""
+
+    def test_correction_records_exist_only_for_the_columns_the_row_supplies(self, db):
+        from heat_flow.models import HeatFlow, HeatFlowCorrection
+
+        header, rows = _corrected_header_and_rows()
+        row = rows[4]
+        for column in ("corr_S_flag", "corr_E_flag", "corr_HR_flag"):
+            row = _with_cell(header, [row], 0, column, "")[0]
+        dataset = _make_dataset(header, [row])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+
+        determination = HeatFlow.objects.get()
+        types = set(
+            HeatFlowCorrection.objects.filter(heat_flow=determination).values_list(
+                "correction_type", flat=True
+            )
+        )
+        assert types == {"IS", "T", "TOPO", "PAL", "SUR", "CONV"}
+
+
 class TestGHFDBReleaseImportResourceMixedIntervals:
     """T063: a site with some rows giving a depth range and some giving
     none holds one interval for each distinct range plus the one

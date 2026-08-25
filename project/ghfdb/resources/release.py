@@ -36,13 +36,19 @@ from import_export.formats.base_formats import CSV
 from import_export.resources import ModelResource
 from literature.models import LiteratureItem
 
-from ..constants import MISSPELLED_COLUMNS, READ_COLUMNS, RELEASE_COLUMNS
+from ..constants import (
+    CORRECTION_COL_MAP,
+    MISSPELLED_COLUMNS,
+    READ_COLUMNS,
+    RELEASE_COLUMNS,
+)
 from .widgets import (
     ConductivityWidget,
     GradientWidget,
     IntervalWidget,
     ParentWidget,
     QuantityWidget,
+    normalize_vocab_token,
 )
 
 # FR-006: a column the release format requires. DISCARDED_COLUMNS is
@@ -77,6 +83,29 @@ def _normalize_publication_reference(reference: str) -> str:
     """FR-017: two publication references are the same reference once
     surrounding whitespace and case are ignored."""
     return reference.strip().lower()
+
+
+def _correction_status(raw: str) -> str:
+    """FR-030, T068, T069: a correction flag is normalised the same way as
+    any other controlled-vocabulary value - surrounding brackets stripped
+    and lowercased - before being matched to its
+    ``HeatFlowCorrection.StatusChoices`` term, so a bracketed or
+    differently cased flag is read rather than lost."""
+    from heat_flow.models import HeatFlowCorrection
+
+    token = normalize_vocab_token(raw)
+    label_to_status = {
+        label.lower(): value
+        for value, label in HeatFlowCorrection.StatusChoices.choices
+    }
+    key_to_status = {
+        value.lower(): value
+        for value, _label in HeatFlowCorrection.StatusChoices.choices
+    }
+    status = label_to_status.get(token) or key_to_status.get(token)
+    if status is None:
+        raise ValueError(f"'{raw}' does not match a correction status.")
+    return status
 
 
 def _depth_magnitude(value):
@@ -332,6 +361,29 @@ class GHFDBReleaseImportResource(ModelResource):
 
         instance.thermal_gradient = self._build_gradient(row, interval, dataset)
         instance.thermal_conductivity = self._build_conductivity(row, interval, dataset)
+
+    def after_save_instance(self, instance, row, **kwargs):
+        """Build the records that depend on the determination already
+        being saved (T066, T067): a correction record for each correction
+        the row supplies."""
+        self._build_corrections(instance, row)
+
+    def _build_corrections(self, instance, row):
+        """A correction record for each correction column the row
+        supplies, and none for the rest (FR-029, T066, T067) - a blank
+        column means the row makes no statement about that correction,
+        not that the correction was checked and found absent."""
+        from heat_flow.models import HeatFlowCorrection
+
+        for column, correction_type in CORRECTION_COL_MAP.items():
+            raw = (row.get(column) or "").strip()
+            if not raw:
+                continue
+            HeatFlowCorrection.objects.create(
+                heat_flow=instance,
+                correction_type=correction_type,
+                status=_correction_status(raw),
+            )
 
     def _build_interval(self, row, site, dataset):
         """Return the interval a row's determination is measured over
