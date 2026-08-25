@@ -550,3 +550,27 @@ completion — against the finished tree, all seventeen tasks included — passe
 (conformance, lint, typecheck, the full suite, build). This does not retroactively prove the
 starting commit was green; it does establish that nothing in this run's own commits left the tree
 red. Reported as a deviation in this run's completion report rather than silently corrected.
+
+### D21 — The release format and resource are registered when the resource writes, not before
+
+The US-1 first part left the admin wiring outstanding, correctly, and raised the question of when
+to do it. It is deferred to the all-or-nothing tasks (T025 to T030), which land after US-3.
+
+Registering earlier would put a working entry in the curator's format list in front of a resource
+whose `save_instance` is a deliberate no-op. A curator selecting it would get a run that reads the
+file, reports no fault, writes nothing and says it succeeded — a worse state than the feature
+simply not being reachable yet, and the same silent-success shape D9 exists to remove.
+
+Two consequences follow, both to be carried out with T025 to T030 rather than treated as blocked:
+
+- `test_ghfdb_admin_changelist_refined_configuration` and
+  `test_it_carries_the_determination_import_resource_and_the_export_resource` in
+  `tests/test_ghfdb/test_admin.py`, and `TestAdminGetImportFormats`'s four cases in
+  `tests/test_ghfdb/test_resources/test_parent_import.py`, assert the two methods' return values
+  by exact equality and by count against a single-resource, two-format state. Updating all three to
+  the two-resource, three-format state is part of the registration and is authorised here: the
+  registry they pin deliberately grows, so the assertions are meant to move with it. This is not a
+  test relaxed to accommodate a regression, and none of them may be weakened, skipped or deleted —
+  each one keeps its exact-equality shape against the new expected state.
+- The rollback correction and the result check reach the contributor template's reader on the same
+  changelist, as plan.md's "Where it is registered" already states and intends.
