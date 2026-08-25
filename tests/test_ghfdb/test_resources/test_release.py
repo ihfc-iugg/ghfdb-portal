@@ -62,6 +62,23 @@ def _dataset_from_fixture(path):
     return _make_dataset(header, rows)
 
 
+def _with_cell(header, rows, row_index, column, value):
+    """``rows`` with a single cell replaced, by column name and row
+    position - the rest of the row untouched."""
+    changed = [list(row) for row in rows]
+    changed[row_index][header.index(column)] = value
+    return changed
+
+
+def _without_column(header, rows, column):
+    """``header`` and ``rows`` with one column dropped from both, so the
+    result stays a well-formed (non-ragged) dataset."""
+    index = header.index(column)
+    new_header = header[:index] + header[index + 1 :]
+    new_rows = [row[:index] + row[index + 1 :] for row in rows]
+    return new_header, new_rows
+
+
 class TestGHFDBReleaseCSVFormat:
     """T009: the reading format is a comma-separated reader carrying a name
     a curator can recognise, reading the header from the first line and the
@@ -189,4 +206,27 @@ class TestGHFDBReleaseImportResourceMissingColumn:
         assert result.has_errors() is True
         message = str(result.base_errors[0].error)
         assert "environment" in message
+        assert result.total_rows == 0
+
+
+class TestGHFDBReleaseImportResourceHeaderFailureStopsTheRowLoop:
+    """T017, T018: after a header refusal, no data row was read at all -
+    proven by a row that would itself have raised, which produces no
+    second error."""
+
+    def test_no_row_is_read_after_a_header_refusal(self):
+        header, rows = _corrected_header_and_rows()
+        rows = _with_cell(header, rows, 0, "qc", "not-a-number")
+        header_with_fault, rows_with_fault = _without_column(
+            header, rows, "environment"
+        )
+        dataset = _make_dataset(header_with_fault, rows_with_fault)
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=True, raise_errors=False)
+
+        assert result.has_errors() is True
+        assert "environment" in str(result.base_errors[0].error)
+        assert result.invalid_rows == []
+        assert result.error_rows == []
         assert result.total_rows == 0
