@@ -589,3 +589,60 @@ class TestGHFDBReleaseImportResourceCheckCreatesNothingPersistent:
         assert result.has_errors() is False
         assert Dataset.all_objects.filter(reference__isnull=False).count() == 0
         assert LiteratureItem.objects.count() == 0
+
+
+class TestGHFDBReleaseImportResourceRecordGraph:
+    """T051-T055: one valid row produces a site, an interval, a
+    determination, and the gradient and conductivity measured over that
+    interval, related as the model defines. Fails before: no reader
+    exists - save_instance is a no-op."""
+
+    def test_one_row_produces_the_full_record_graph(self, db):
+        from heat_flow.models import (
+            HeatFlow,
+            HeatFlowInterval,
+            HeatFlowSite,
+            IntervalConductivity,
+            ParentHeatFlow,
+            ThermalGradient,
+        )
+
+        header, rows = _corrected_header_and_rows()
+        row = _with_cell(header, rows, 4, "q_bottom", "4520.00")[4]
+        dataset = _make_dataset(header, [row])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+
+        site = HeatFlowSite.objects.get()
+        assert site.local_id == "R24-P003477"
+        assert site.name == "V19-6"
+
+        parent = ParentHeatFlow.objects.get()
+        assert parent.sample == site
+        assert parent.local_id == "R24-P003477"
+        assert float(parent.value.magnitude) == 50.0
+
+        interval = HeatFlowInterval.objects.get()
+        assert interval.site == site
+        assert float(interval.top.magnitude) == 4490.0
+        assert float(interval.bottom.magnitude) == 4520.0
+
+        determination = HeatFlow.objects.get()
+        assert determination.sample == interval
+        assert determination.parent == parent
+        assert determination.local_id == "R24-033563"
+        assert float(determination.value.magnitude) == 48.0
+
+        gradient = ThermalGradient.objects.get()
+        assert determination.thermal_gradient == gradient
+        assert gradient.sample == interval
+        assert float(gradient.value.magnitude) == 58.0
+
+        conductivity = IntervalConductivity.objects.get()
+        assert determination.thermal_conductivity == conductivity
+        assert conductivity.sample == interval
+        assert float(conductivity.value.magnitude) == 0.83
