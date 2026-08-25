@@ -967,3 +967,43 @@ renamed for the same "token" false positive as T070/T071 -
 Next: T074, T075, refusing a disagreement about a shared site.
 
 Watch: none.
+
+## 2026-08-25T21:45:00Z · Implementer US-3 (second part) · T074, T075
+
+Did: `_site_disagreement_key`/`SITE_COLUMNS`/`_site_column_value`
+reuse T072/T073's own `_find_disagreements` rather than a second
+comparison mechanism - the site's own scalar columns
+(`_build_new_site`'s `ParentWidget` scalar fields plus the
+coordinates it sets directly, per D10/D14) compared across rows
+sharing a published site identifier, with `environment` and
+`explo_method` normalised through `normalize_vocab_token` for the
+same reason `probe_type` already is. `import_instance` gains a second
+lookup block alongside the interval one, raising a `ValidationError`
+per disagreeing site column. Added
+`TestGHFDBReleaseImportResourceSiteDisagreement`, giving row 4's
+`lat_NS` a different value from row 0's while both carry the site
+identifier `R24-P003477` they already share in the real base fixture.
+
+Verified: RED observed - `has_validation_errors()` was `False` before
+this change, and per `_build_site_and_parent`'s own reuse-without-
+reapply precedent (T057/T058), the second row's differing coordinate
+was silently discarded rather than reported. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py::TestGHFDBReleaseImportResourceSiteDisagreement
+-v` → 1 passed. Ran the full module before probing to confirm no
+regression: the six rows sharing site `R24-P003477` in the real
+fixture (rows 0-2, 4-6) already carry identical values on every
+`SITE_COLUMNS` entry, so nothing there was at risk, and this was
+confirmed by the run rather than assumed. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 37 passed.
+Probed: replaced the site-disagreement lookup in `import_instance`
+with an always-empty dict - the test failed for the same reason as
+RED, confirming the lookup is load-bearing. Restored, re-ran the full
+module: 37 passed. `ruff check`/`ruff format` → clean.
+
+Next: T076, T077, the absent-value marker.
+
+Watch: the absent-value-marker workaround (`_blank_row_for_quantity_widgets`)
+is now also relied on by `_interval_disagreement_key` (T072/T073), in
+addition to `before_save_instance` - both call sites are within this
+story's own file and both are T076/T077's to reconcile when that
+workaround is replaced.

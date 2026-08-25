@@ -175,6 +175,45 @@ def _interval_disagreement_key(row):
     return (local_id, top, bottom)
 
 
+# T074, T075: the site's own columns - the scalar fields
+# ``_build_new_site`` sets from ``ParentWidget`` plus the coordinates it
+# sets directly (D10, D14) - compared for disagreement between rows
+# sharing a published site identifier (FR-035).
+SITE_COLUMNS = (
+    "name",
+    "lat_NS",
+    "long_EW",
+    "elevation",
+    "environment",
+    "total_depth_MD",
+    "total_depth_TVD",
+    "explo_method",
+    "Country",
+    "Region",
+    "Continent",
+    "Domain",
+)
+
+
+def _site_column_value(column, raw):
+    """The comparable value of a site column for disagreement purposes
+    (T074, T075): ``environment`` and ``explo_method`` are vocabulary
+    columns, normalised and treated as blank when unspecified, the same
+    tolerance ``_probe_column_value`` already gives ``probe_type``; the
+    rest compare on their raw text."""
+    if column in ("environment", "explo_method"):
+        normalized = normalize_vocab_token(raw)
+        return "" if normalized == "unspecified" else normalized
+    return raw
+
+
+def _site_disagreement_key(row):
+    """The site identity a row's site columns are compared under (T074,
+    T075): the published site identifier alone (D10), the same identity
+    ``_build_site_and_parent`` already shares a site by."""
+    return (row.get("ID_parent") or "").strip() or None
+
+
 class GHFDBReleaseCSVFormat(CSV):
     """The format a published release is distributed in: one header row,
     one data row per determination (FR-002). The library's own
@@ -319,6 +358,15 @@ class GHFDBReleaseImportResource(ModelResource):
             PROBE_COLUMNS,
             normalize=_probe_column_value,
         )
+        # T074, T075: rows sharing a published site identifier but
+        # disagreeing about the site's own columns are refused (FR-035),
+        # found once here for the same reason.
+        self._site_disagreements = _find_disagreements(
+            dataset,
+            _site_disagreement_key,
+            SITE_COLUMNS,
+            normalize=_site_column_value,
+        )
 
     def _resolve_publication_datasets(self, dataset):
         """T035, T036: collect the file's distinct publication references
@@ -409,6 +457,17 @@ class GHFDBReleaseImportResource(ModelResource):
                     f"Rows sharing this interval disagree about '{column}': "
                     f"{', '.join(values)}. The file is refused rather than "
                     f"choosing between them."
+                ),
+                code="invalid",
+            )
+
+        site_key = _site_disagreement_key(row)
+        for column, values in self._site_disagreements.get(site_key, {}).items():
+            errors[column] = ValidationError(
+                force_str(
+                    f"Rows sharing site '{site_key}' disagree about "
+                    f"'{column}': {', '.join(values)}. The file is refused "
+                    f"rather than choosing between them."
                 ),
                 code="invalid",
             )

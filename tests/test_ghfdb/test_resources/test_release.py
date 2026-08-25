@@ -921,6 +921,38 @@ class TestGHFDBReleaseImportResourceIntervalProbeDisagreement:
         assert ProbeMetadata.objects.count() == 0
 
 
+class TestGHFDBReleaseImportResourceSiteDisagreement:
+    """T074, T075: two rows sharing a published site identifier but
+    disagreeing about that site's own columns are refused, and the
+    disagreement is reported. Fails before: one row's values win
+    silently (FR-035)."""
+
+    def test_rows_disagreeing_about_a_shared_sites_coordinates_are_both_refused(
+        self, db
+    ):
+        from heat_flow.models import HeatFlowSite
+
+        header, rows = _corrected_header_and_rows()
+        # rows[0] and rows[4] already share the published site
+        # identifier R24-P003477 in the real base fixture.
+        disagreeing_first = rows[0]
+        disagreeing_second = _with_cell(header, [rows[4]], 0, "lat_NS", "20.00000")[0]
+        dataset = _make_dataset(header, [disagreeing_first, disagreeing_second])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_validation_errors() is True
+        refused = {row.number: row for row in result.invalid_rows}
+        assert {2, 3}.issubset(refused)
+        for number in (2, 3):
+            message = str(refused[number].error_dict["lat_NS"][0])
+            assert "16.10000" in message
+            assert "20.00000" in message
+
+        assert HeatFlowSite.objects.filter(local_id="R24-P003477").count() == 0
+
+
 class TestGHFDBReleaseImportResourceMixedIntervals:
     """T063: a site with some rows giving a depth range and some giving
     none holds one interval for each distinct range plus the one
