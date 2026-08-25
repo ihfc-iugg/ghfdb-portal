@@ -151,3 +151,108 @@ class TestReleaseFixture:
     def test_fixture_includes_an_unspecified_value(self):
         rows = read_csv_rows(BASE_FIXTURE)
         assert any("[Unspecified]" in row.values() for row in rows)
+
+
+class TestReleaseFixtureVariants:
+    """T005: each variant differs from the T004 base fixture in exactly the
+    intended cell or header, and no other byte."""
+
+    def test_one_variant_per_misspelled_header_holds_the_other_misspelled(self):
+        """SC-001, D7: proven for each misspelled name separately, so a
+        check keyed to one cannot leave the other unrefused."""
+        base_header = read_csv_header(BASE_FIXTURE)
+
+        only_ref_isgn_misspelled = read_csv_header(
+            FIXTURES_DIR / "header_misspelled_only_ref_isgn.csv"
+        )
+        assert only_ref_isgn_misspelled.count("tc_pT_function") == 1
+        assert only_ref_isgn_misspelled.count("tc_pT_fuction") == 0
+        assert only_ref_isgn_misspelled.count("Ref_ISGN") == 1
+        assert set(base_header) - set(only_ref_isgn_misspelled) == {"tc_pT_fuction"}
+
+        only_tc_pt_fuction_misspelled = read_csv_header(
+            FIXTURES_DIR / "header_misspelled_only_tc_pt_fuction.csv"
+        )
+        assert only_tc_pt_fuction_misspelled.count("Ref_IGSN") == 1
+        assert only_tc_pt_fuction_misspelled.count("Ref_ISGN") == 0
+        assert only_tc_pt_fuction_misspelled.count("tc_pT_fuction") == 1
+        assert set(base_header) - set(only_tc_pt_fuction_misspelled) == {"Ref_ISGN"}
+
+    def test_undefined_header_variant_renames_one_column_to_an_unrecognised_name(self):
+        base_header = read_csv_header(BASE_FIXTURE)
+        variant_header = read_csv_header(FIXTURES_DIR / "header_undefined_column.csv")
+
+        assert len(variant_header) == len(base_header)
+        assert "p_comment_extra" not in RELEASE_COLUMNS
+        assert set(base_header) - set(variant_header) == {"p_comment"}
+        assert set(variant_header) - set(base_header) == {"p_comment_extra"}
+
+    def test_missing_required_header_variant_drops_exactly_one_name(self):
+        base_header = read_csv_header(BASE_FIXTURE)
+        variant_header = read_csv_header(FIXTURES_DIR / "header_missing_required_column.csv")
+
+        assert len(variant_header) == len(base_header) - 1
+        assert set(base_header) - set(variant_header) == {"environment"}
+        assert set(variant_header) - set(base_header) == set()
+
+    @pytest.mark.parametrize(
+        ("filename", "row_id", "column", "old_value", "new_value"),
+        [
+            (
+                "bad_vocabulary_value.csv",
+                "R24-054171",
+                "geo_lithology",
+                "sediment",
+                "[not_a_real_lithology]",
+            ),
+            (
+                "numeric_value_in_text_column.csv",
+                "R24-033563",
+                "p_comment",
+                "",
+                "12345",
+            ),
+            (
+                "disagreement_shared_site.csv",
+                "R24-054171",
+                "elevation",
+                "-4520.00",
+                "-9999.00",
+            ),
+            (
+                "disagreement_shared_interval_probe.csv",
+                "R24-053075",
+                "probe_type",
+                "[Outrigger probe (Ewing) with corer]",
+                "[Free fall probe (Lister-type)]",
+            ),
+        ],
+    )
+    def test_single_row_variant_changes_exactly_one_cell(
+        self, filename, row_id, column, old_value, new_value
+    ):
+        base_rows = {row["ID"]: row for row in read_csv_rows(BASE_FIXTURE)}
+        variant_rows = {row["ID"]: row for row in read_csv_rows(FIXTURES_DIR / filename)}
+
+        assert set(base_rows) == set(variant_rows)
+        assert base_rows[row_id][column] == old_value
+        assert variant_rows[row_id][column] == new_value
+
+        for row_key, base_row in base_rows.items():
+            variant_row = variant_rows[row_key]
+            differing = {
+                key for key in base_row if base_row[key] != variant_row.get(key)
+            }
+            expected = {column} if row_key == row_id else set()
+            assert differing == expected
+
+    def test_disagreement_variants_disagree_about_a_row_the_base_agreed_on(self):
+        """The base fixture's two rows sharing an interval agree about the
+        probe and every row sharing site R24-P003477 agrees about
+        elevation - each variant breaks exactly one of those agreements."""
+        base_rows = {row["ID"]: row for row in read_csv_rows(BASE_FIXTURE)}
+        assert base_rows["R24-033563"]["probe_type"] == base_rows["R24-053075"]["probe_type"]
+        site_elevations = {
+            row["elevation"] for row in base_rows.values() if row["ID_parent"] == "R24-P003477"
+        }
+        assert len(site_elevations) == 1

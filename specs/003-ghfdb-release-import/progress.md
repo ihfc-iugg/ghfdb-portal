@@ -90,4 +90,33 @@ Watch: T004's fixture keeps both real misspellings in its header, so a reader
 built against it directly (a later story, not this one) would refuse it per
 D7 until a variant with both corrected exists — none of the Foundations
 fixtures is "a clean file that passes," by design; that's what a later
-story's own conftest will need to derive.
+story's own conftest will need to derive. Also: the fixture's line endings
+are LF in the committed blob, not the archive's CRLF — the repository's own
+pre-existing `.gitattributes` (`* text=auto`) normalises it on commit; see
+decisions.md D19 for why this doesn't compromise "byte-for-byte."
+
+## 2026-08-25T13:05:00Z · Implementer foundations · T005
+
+Did: Added 8 fixture variants to `tests/test_ghfdb/test_resources/fixtures/release/`,
+each derived from the T004 base by one deliberate change and verified
+programmatically against it before being written: two isolate one misspelled
+header at a time (`header_misspelled_only_ref_isgn.csv`,
+`header_misspelled_only_tc_pt_fuction.csv`), one renames a column to an
+unrecognised name (`header_undefined_column.csv`), one drops a required column
+from the header line (`header_missing_required_column.csv`), and four change
+one cell each (`bad_vocabulary_value.csv`, `numeric_value_in_text_column.csv`,
+`disagreement_shared_site.csv`, `disagreement_shared_interval_probe.csv`).
+Added `TestReleaseFixtureVariants` to `test_release.py`.
+
+Verified: none of the 8 files existed anywhere in this repository before this
+task. Each was diffed field-by-field against the base fixture with a
+throwaway script before being written (row-keyed by `ID`, header-keyed by
+name) to confirm exactly one field or header name differs — the same property
+`test_single_row_variant_changes_exactly_one_cell` and the two header tests
+now assert directly. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -v` → 23 passed. `poetry run
+ruff check tests/test_ghfdb/test_resources/test_release.py` → clean.
+
+Next: T007, the bibliographic fixtures (T006 is already closed).
+
+Watch: none.

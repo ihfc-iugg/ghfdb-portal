@@ -370,3 +370,23 @@ fewest rows, rather than assembling them from unrelated sites. The interval-shar
 (`R24-033563`/`R24-053075`) was chosen specifically because both already agree on `probe_type`,
 which T005's disagreement variant needs — a pair that already disagreed in the real data would leave
 nothing for that variant to change.
+
+**T004 — the fixture's line endings follow the repository's own normalisation, not the archive's.**
+The archive uses CRLF; `.gitattributes`' repository-wide `* text=auto` (pre-existing, not this
+story's) normalises every text file to LF on commit, and the fixture, once staged, is no exception
+— confirmed directly: `git cat-file -p` on the committed blob shows zero CRLF sequences where the
+pre-commit working copy had eight. "Byte-for-byte" here is read as binding the header text, the
+column order, the byte-order mark and every field value — everything T004's own wording names — not
+the row-terminator convention, which is a repository-wide policy this story neither owns nor should
+carve an exception into. `read_csv_rows`/`read_csv_header` use `str.splitlines()`, which treats CRLF
+and LF identically, so no test in this module depends on which one the fixture carries.
+
+**T005 — the variant fixtures.** `header_missing_required_column.csv` and
+`header_undefined_column.csv` change the header line only, leaving the data rows exactly as the
+base fixture has them — deliberately, since FR-003 and the plan both describe the header check as a
+pass over header names alone, before any row is read, so a header/row shape mismatch in these two
+variants is never actually consumed. The four row-level variants (`bad_vocabulary_value`,
+`numeric_value_in_text_column`, `disagreement_shared_site`, `disagreement_shared_interval_probe`)
+each change one field on one row, verified programmatically against the base fixture (parsed with
+`csv.DictReader`, keyed by `ID`, diffed field by field) before being committed, and that same
+single-field-diff property is what `test_single_row_variant_changes_exactly_one_cell` asserts.
