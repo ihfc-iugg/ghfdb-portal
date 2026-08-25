@@ -398,3 +398,29 @@ and surrounding whitespace, so two citation keys differing only that way are "on
 spec's own rule while remaining two distinct, independently-identified database rows. The fixture
 and its test build that pair and confirm both properties hold, without pre-empting US-2's own
 matching implementation.
+
+**Restructuring — the test module moved from `test_resources/test_release.py` to
+`test_ghfdb/test_constants.py`, discovered by the mandatory full `forge verify`, not by inspection.**
+The repo's conformance gate (Article X, mechanical) requires every test module to mirror an existing
+source module. `tests/test_ghfdb/test_resources/test_release.py` mirrored
+`project/ghfdb/resources/release.py` — the resource this phase deliberately does not create, since
+it is US-1's T009 — so the gate failed: "mirrors no source module." The tool provides a
+`[tool.forge.conformance] non-mirror-paths` declaration for genuine "no source module by design"
+cases (a Cotton/template test suite, per the tool's own docstring), but this is not that: the module
+*will* exist, one story later, and declaring a permanent exemption for a temporary gap would need
+walking back the moment T009 lands — a stale declaration nobody would remember to remove.
+
+Renaming and relocating the file to mirror `project/ghfdb/constants.py` instead — the module every
+constant this phase adds actually lives in — passes the gate honestly, with no source module
+invented ahead of its story and no config exemption to reconcile later. T007's two fixtures moved
+from `tests/test_ghfdb/test_resources/conftest.py` (their original home, chosen because a future
+US-2 resource test would look for them there) up to `tests/test_ghfdb/conftest.py`, since a fixture
+consumed by a test at `tests/test_ghfdb/test_constants.py` needs a conftest at or above that level to
+be visible — still "the conftest that exposes them," the brief's own phrase, just the ancestor
+conftest rather than the descendant one. Nothing in the six tasks' content changed; every test,
+fixture and assertion is unchanged from what T001-T007's own progress.md entries describe. **Revisit
+if** T009 creates `project/ghfdb/resources/release.py` and its own test module — at that point the
+constants-only tests in `test_constants.py` and the resource tests in a new `test_resources/test_release.py`
+are two different subjects and should probably stay split as they are now, but a reader landing here
+after T009 exists should not be surprised to find `RELEASE_COLUMNS` tested somewhere other than
+beside the reader that consumes it.

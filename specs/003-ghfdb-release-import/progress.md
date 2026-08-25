@@ -144,3 +144,38 @@ already closed before this run. The full `forge verify` runs once more at the
 completion report, per the brief's rituals.
 
 Watch: none.
+
+## 2026-08-25T13:40:00Z · Implementer foundations · restructuring
+
+Did: The mandatory full `forge verify` (§5) found what the narrow per-task
+scopes could not: `forge verify --steps conformance` failed — "mirrors no
+source module (expected .../project/ghfdb/resources/release.py)" —
+because `tests/test_ghfdb/test_resources/test_release.py` mirrored a resource
+module this phase correctly never creates (US-1's T009). Moved every class
+unchanged into a new `tests/test_ghfdb/test_constants.py`, which mirrors the
+existing `project/ghfdb/constants.py` that every constant this phase adds
+actually lives in; deleted the old file. Moved T007's two fixtures from
+`tests/test_ghfdb/test_resources/conftest.py` up to `tests/test_ghfdb/conftest.py`
+so a test at the new location can still see them; reverted
+`test_resources/conftest.py` to its pre-T007 state. See decisions.md D19's
+final entry.
+
+Verified: `poetry run pytest tests/test_ghfdb/test_constants.py -v` → 25
+passed, same 25 tests as before the move. `forge verify --repo . --steps
+conformance` → passed (0s), where it previously failed. Caught and reverted
+one piece of collateral damage from this fix itself: `ruff check --fix` (run
+manually, not the actual gate — `.pre-commit-config.yaml` excludes `tests/`
+entirely, so this was extra caution) reordered import statements inside two
+pre-existing functions in `tests/test_ghfdb/conftest.py`
+(`load_concepts`, `sites_by_contribution`) that this task never touched;
+reverted those two hunks by hand and kept only the intended diff (one changed
+import line, two new fixtures at the end) — `git diff` confirms clean scope.
+`poetry run pytest tests/test_ghfdb/test_constants.py
+tests/test_ghfdb/test_resources/ -q` re-run in full to confirm the untouched
+`test_resources/` suite (conftest.py reverted) is unaffected.
+
+Next: none.
+
+Watch: T009 (US-1) should reconsider whether the constants-only tests
+gathered here belong beside the resource module once it exists — see
+decisions.md's "Revisit if" on this entry.

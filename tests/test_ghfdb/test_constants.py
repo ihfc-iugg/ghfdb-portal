@@ -1,15 +1,17 @@
 """
-Tests for the release import (specs/003-ghfdb-release-import).
+Tests for project/ghfdb/constants.py, including its release-format additions
+(specs/003-ghfdb-release-import).
 
-Phase 1 - Foundations (T001-T005, T007). Mirrors the eventual resource
-module this feature adds, ``project/ghfdb/resources/release.py`` - not yet
-created; the reader itself lands in US-1 (T009). This module only
-establishes what every later story builds on: the module pytest collects
+Phase 1 - Foundations (T001-T005, T007). This module establishes what every
+later story of the release import builds on: the module pytest collects
 (T001), the release format's column definitions (T002), the read /
 recognised-and-discarded / refused split (T003), a fixture cut byte-for-byte
 from the published release archive (T004) and its single-change variants
 (T005), and the bibliographic fixtures US-2 needs because the portal's
-citation keys are not unique (T007).
+citation keys are not unique (T007). The reader that will consume all of
+this, ``project/ghfdb/resources/release.py``, does not exist yet and lands
+in US-1 (T009) - this module mirrors the source module that already carries
+every constant it tests, per the repo's conformance check (Article X).
 """
 
 import csv
@@ -32,9 +34,9 @@ from project.ghfdb.constants import (
 pytestmark = pytest.mark.ghfdb
 
 ARCHIVE_PATH = (
-    pathlib.Path(__file__).resolve().parents[3] / "assets" / "ghfdb" / "IHFC_2024_GHFDB.zip"
+    pathlib.Path(__file__).resolve().parents[2] / "assets" / "ghfdb" / "IHFC_2024_GHFDB.zip"
 )
-FIXTURES_DIR = pathlib.Path(__file__).parent / "fixtures" / "release"
+FIXTURES_DIR = pathlib.Path(__file__).parent / "test_resources" / "fixtures" / "release"
 BASE_FIXTURE = FIXTURES_DIR / "release_sample.csv"
 
 
@@ -50,16 +52,18 @@ def read_csv_header(path):
     return next(csv.reader(text.splitlines()[:1]))
 
 
-class TestReleaseImportModule:
-    """T001: the module pytest collects for this feature's release reader.
+class TestReleaseImportModuleIsCollected:
+    """T001: a test module for the release import - here, since it mirrors
+    the module carrying every constant the release format needs - is named
+    in pytest's collection and carries the ghfdb marker.
 
     ``pytest --collect-only`` named nothing at this path before this class
     existed - there was no file here to collect."""
 
     def test_carries_the_ghfdb_marker(self, request):
         """Every module in this app's suite marks itself ``ghfdb``
-        (tests/README.md); this is the release-import module's own proof of
-        it, not inherited from a sibling."""
+        (tests/README.md); this is this module's own proof of it, not
+        inherited from a sibling."""
         assert request.node.get_closest_marker("ghfdb") is not None
 
 

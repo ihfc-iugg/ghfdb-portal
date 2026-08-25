@@ -78,10 +78,10 @@
           "attempts": 1,
           "evidence": {
             "code": [
-              "tests/test_ghfdb/test_resources/test_release.py:53"
+              "tests/test_ghfdb/test_constants.py:55"
             ],
             "tests": [
-              "tests/test_ghfdb/test_resources/test_release.py:53"
+              "tests/test_ghfdb/test_constants.py:55"
             ]
           }
         },
@@ -95,7 +95,7 @@
               "project/ghfdb/constants.py:180"
             ],
             "tests": [
-              "tests/test_ghfdb/test_resources/test_release.py:66"
+              "tests/test_ghfdb/test_constants.py:70"
             ]
           }
         },
@@ -110,7 +110,7 @@
               "project/ghfdb/constants.py:216"
             ],
             "tests": [
-              "tests/test_ghfdb/test_resources/test_release.py:78"
+              "tests/test_ghfdb/test_constants.py:82"
             ]
           }
         },
@@ -123,7 +123,7 @@
               "tests/test_ghfdb/test_resources/fixtures/release/release_sample.csv"
             ],
             "tests": [
-              "tests/test_ghfdb/test_resources/test_release.py:106"
+              "tests/test_ghfdb/test_constants.py:110"
             ]
           }
         },
@@ -143,7 +143,7 @@
               "tests/test_ghfdb/test_resources/fixtures/release/disagreement_shared_interval_probe.csv"
             ],
             "tests": [
-              "tests/test_ghfdb/test_resources/test_release.py:157"
+              "tests/test_ghfdb/test_constants.py:161"
             ]
           }
         },
@@ -166,11 +166,11 @@
           "attempts": 1,
           "evidence": {
             "code": [
-              "tests/test_ghfdb/test_resources/conftest.py:32",
-              "tests/test_ghfdb/test_resources/conftest.py:43"
+              "tests/test_ghfdb/conftest.py:500",
+              "tests/test_ghfdb/conftest.py:511"
             ],
             "tests": [
-              "tests/test_ghfdb/test_resources/test_release.py:262"
+              "tests/test_ghfdb/test_constants.py:266"
             ]
           }
         },
