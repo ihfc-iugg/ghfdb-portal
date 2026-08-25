@@ -217,7 +217,9 @@ class TestGHFDBParentAdminListFilters:
     """GHFDBParentAdmin list_filter choices are scoped to their controlled vocabularies."""
 
     @pytest.mark.django_db
-    def test_parent_environment_filter_choices_are_vocabulary_scoped(self, admin_client):
+    def test_parent_environment_filter_choices_are_vocabulary_scoped(
+        self, admin_client
+    ):
         """BUG-004: ParentEnvironmentListFilter.lookups() returns GeographicEnvironment vocabulary choices."""
         from heat_flow.vocabularies import GeographicEnvironment
 
@@ -238,7 +240,9 @@ class TestGHFDBParentAdminListFilters:
         assert lookup_values == vocab_values
 
     @pytest.mark.django_db
-    def test_parent_explo_method_filter_choices_are_vocabulary_scoped(self, admin_client):
+    def test_parent_explo_method_filter_choices_are_vocabulary_scoped(
+        self, admin_client
+    ):
         """BUG-004: ParentExplorationMethodListFilter.lookups() returns ExplorationMethod vocabulary choices."""
         from heat_flow.vocabularies import ExplorationMethod
 
@@ -525,8 +529,7 @@ class TestGHFDBParentAdmin:
         # renders — not the raw row attribute.
         q_rendered = ColumnDisplay.build("q")(row)
         assert (
-            getattr(q_rendered, "magnitude", q_rendered)
-            == published_chain.parent.value
+            getattr(q_rendered, "magnitude", q_rendered) == published_chain.parent.value
         )
         # field column
         assert ColumnDisplay.build("corr_HP_flag")(row) is True
@@ -963,3 +966,31 @@ class TestImportPermission:
         url = reverse("admin:ghfdb_ghfdbparent_import")
         response = client.get(url)
         assert response.status_code == 200
+
+
+class TestAnonymousRequestToTheImportRoute:
+    """T033: an anonymous request to the import route is refused,
+    distinguishably from a request that merely redirects to a login page
+    for any administrative address. Every unauthenticated request to any
+    admin URL redirects to the login page the same way, so a test that
+    only checks for a redirect would pass even if this route carried no
+    permission check of its own. ``has_import_permission`` is exercised
+    directly, the same mechanism T031's staff-without-permission case
+    already relies on, to prove the refusal is the route's own and not
+    merely the generic authentication wall in front of it."""
+
+    def test_anonymous_get_redirects_to_login_for_this_route(self, client):
+        url = reverse("admin:ghfdb_ghfdbchild_import")
+        response = client.get(url)
+
+        assert response.status_code == 302
+        assert response.url == f"/admin/login/?next={url}"
+
+    def test_has_import_permission_itself_refuses_an_anonymous_user(self):
+        from django.contrib.auth.models import AnonymousUser
+
+        model_admin = admin.site._registry[GHFDBChild]
+        request = RequestFactory().get(reverse("admin:ghfdb_ghfdbchild_import"))
+        request.user = AnonymousUser()
+
+        assert model_admin.has_import_permission(request) is False
