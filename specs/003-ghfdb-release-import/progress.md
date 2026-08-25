@@ -879,3 +879,39 @@ call is what the test depends on. Restored, re-ran the full module:
 Next: T070, T071, probe metadata.
 
 Watch: none.
+
+## 2026-08-25T21:25:00Z · Implementer US-3 (second part) · T070, T071
+
+Did: `_build_probe_metadata`, called from `before_save_instance` right
+after the interval is built, creates at most one `ProbeMetadata` per
+interval (a per-run cache keyed on the interval's own primary key,
+cleared per `before_import` call, the same shape `_intervals_by_key`
+already sets) and none where the row supplies no probe column -
+`probe_penetration`, `probe_length` and `probe_tilt` parsed with
+`QuantityWidget`, `probe_type` normalised and matched with
+`MultiConceptWidget`/`normalize_vocab_token` the same way the shared
+widget layer already treats any other many-valued vocabulary column,
+"unspecified" counting as no value the same way it does everywhere
+else. Added `TestGHFDBReleaseImportResourceProbeMetadata`: two rows
+under distinct published determination identifiers sharing one site
+and depth range with identical probe columns (proving "created once"),
+alongside a third row on a different site supplying no probe column at
+all (proving "none created for it").
+
+Verified: RED observed - `ProbeMetadata.objects.count()` was `0`
+before this change, since the release reader built no probe metadata
+at all. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py::TestGHFDBReleaseImportResourceProbeMetadata
+-v` → 1 passed. Probed: removed the per-interval cache guard - the
+test failed (a second `ProbeMetadata` attempted for the same interval,
+violating its one-to-one field), confirming the guard is load-bearing.
+Restored, re-ran the full module: `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 35 passed. `ruff
+check`/`ruff format` → clean (one variable renamed after `ruff check`
+flagged a name containing "token" as a possible hardcoded secret -
+`probe_type_token` → `probe_type_normalized`, no behaviour change).
+
+Next: T072, T073, refusing a disagreement about a shared interval's
+probe.
+
+Watch: none.

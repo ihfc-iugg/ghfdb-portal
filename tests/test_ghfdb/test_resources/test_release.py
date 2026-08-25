@@ -851,6 +851,44 @@ class TestGHFDBReleaseImportResourceCorrectionFlagNormalization:
         assert correction.status == "tilt_corrected"
 
 
+class TestGHFDBReleaseImportResourceProbeMetadata:
+    """T070, T071: probe metadata is created once for an interval shared
+    by several rows that supply it, and none is created for a row that
+    supplies no probe columns. Fails before: it is created per row, or
+    created empty (D18, FR-031)."""
+
+    def test_probe_metadata_created_once_for_a_shared_interval_and_not_for_a_row_without_it(
+        self, db
+    ):
+        from heat_flow.models import HeatFlowInterval, ProbeMetadata
+
+        header, rows = _corrected_header_and_rows()
+        # rows[4] shares one site and depth range with itself under a
+        # second published determination identifier - the same interval,
+        # both rows supplying identical probe columns.
+        shared_first = rows[4]
+        shared_second = _with_cell(header, [rows[4]], 0, "ID", "R24-999999")[0]
+        # rows[3] belongs to a different site and supplies no probe
+        # column at all.
+        no_probe = rows[3]
+        dataset = _make_dataset(header, [shared_first, shared_second, no_probe])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+
+        assert ProbeMetadata.objects.count() == 1
+
+        shared_interval = HeatFlowInterval.objects.get(site__local_id="R24-P003477")
+        probe = ProbeMetadata.objects.get()
+        assert probe.interval == shared_interval
+
+        no_probe_interval = HeatFlowInterval.objects.get(site__local_id="R24-P004314")
+        assert not ProbeMetadata.objects.filter(interval=no_probe_interval).exists()
+
+
 class TestGHFDBReleaseImportResourceMixedIntervals:
     """T063: a site with some rows giving a depth range and some giving
     none holds one interval for each distinct range plus the one

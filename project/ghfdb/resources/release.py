@@ -46,6 +46,7 @@ from .widgets import (
     ConductivityWidget,
     GradientWidget,
     IntervalWidget,
+    MultiConceptWidget,
     ParentWidget,
     QuantityWidget,
     normalize_vocab_token,
@@ -245,6 +246,10 @@ class GHFDBReleaseImportResource(ModelResource):
         # site and depth range, within this pass - cleared per
         # ``before_import`` call.
         self._intervals_by_key = {}
+        # T070, T071: probe metadata belongs to the interval, at most one
+        # record per interval - cleared per ``before_import`` call, keyed
+        # on the interval's own primary key once built.
+        self._probe_metadata_by_interval_id = {}
 
     def _resolve_publication_datasets(self, dataset):
         """T035, T036: collect the file's distinct publication references
@@ -359,6 +364,8 @@ class GHFDBReleaseImportResource(ModelResource):
         interval = self._build_interval(row, site, dataset)
         instance.sample = interval
 
+        self._build_probe_metadata(row, interval)
+
         instance.thermal_gradient = self._build_gradient(row, interval, dataset)
         instance.thermal_conductivity = self._build_conductivity(row, interval, dataset)
 
@@ -416,6 +423,52 @@ class GHFDBReleaseImportResource(ModelResource):
         self._interval_widget.set_m2m_relations(interval)
         self._intervals_by_key[key] = interval
         return interval
+
+    def _build_probe_metadata(self, row, interval):
+        """Probe metadata belongs to the interval, at most one record per
+        interval (T070, T071, D18, FR-031) - the relationship is a
+        one-to-one field on the model already and needs no change
+        (research.md R7). Skipped where the row supplies no probe
+        column, and skipped where the interval already has one, whether
+        built by an earlier row in this pass or reused from a row that
+        shares the interval.
+        """
+        if interval.pk in self._probe_metadata_by_interval_id:
+            return
+
+        penetration = QuantityWidget("m").clean(row.get("probe_penetration"))
+        length = QuantityWidget("m").clean(row.get("probe_length"))
+        tilt = QuantityWidget("°").clean(row.get("probe_tilt"))
+        probe_type_normalized = normalize_vocab_token(row.get("probe_type") or "")
+        probe_type_given = (
+            bool(probe_type_normalized) and probe_type_normalized != "unspecified"
+        )
+
+        if (
+            penetration is None
+            and length is None
+            and tilt is None
+            and not probe_type_given
+        ):
+            return
+
+        from heat_flow.models import ProbeMetadata
+
+        probe = ProbeMetadata(
+            interval=interval,
+            penetration=penetration,
+            length=length,
+            tilt=tilt,
+        )
+        probe.save()
+        if probe_type_given:
+            from heat_flow import vocabularies
+
+            widget = MultiConceptWidget(vocabularies.ProbeType)
+            queryset = widget.clean(row.get("probe_type"), row=row)
+            if queryset is not None:
+                probe.probe_type.set(queryset)
+        self._probe_metadata_by_interval_id[interval.pk] = probe
 
     def _build_gradient(self, row, interval, dataset):
         """Build the thermal gradient a row's determination was derived
