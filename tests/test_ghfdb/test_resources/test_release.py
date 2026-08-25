@@ -17,6 +17,7 @@ import pathlib
 import zipfile
 
 import pytest
+from literature.models import LiteratureItem
 
 from project.ghfdb.constants import (
     CHILD_COLUMNS,
@@ -256,3 +257,35 @@ class TestReleaseFixtureVariants:
             row["elevation"] for row in base_rows.values() if row["ID_parent"] == "R24-P003477"
         }
         assert len(site_elevations) == 1
+
+
+class TestBibliographicFixtures:
+    """T007: the portal's bibliographic citation keys are not unique (D5,
+    FR-020), so a release row's publication reference can match more than
+    one record. ``LiteratureItem.citation_key`` is unique at the database
+    level, so the two records here differ literally - by case and a
+    trailing space - the same difference FR-017 requires the import to
+    ignore when comparing publication references."""
+
+    def test_known_citation_key_yields_one_record(
+        self, literature_with_known_citation_key
+    ):
+        matches = LiteratureItem.objects.filter(
+            citation_key=literature_with_known_citation_key.citation_key
+        )
+        assert matches.count() == 1
+
+    def test_ambiguous_citation_key_yields_two_records_on_a_normalised_lookup(
+        self, literature_with_ambiguous_citation_key
+    ):
+        first, second = literature_with_ambiguous_citation_key
+        normalised = first.citation_key.strip().lower()
+        assert second.citation_key.strip().lower() == normalised
+        assert first.citation_key != second.citation_key
+
+        matches = [
+            item
+            for item in LiteratureItem.objects.all()
+            if item.citation_key.strip().lower() == normalised
+        ]
+        assert {item.pk for item in matches} == {first.pk, second.pk}

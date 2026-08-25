@@ -390,3 +390,11 @@ variants is never actually consumed. The four row-level variants (`bad_vocabular
 each change one field on one row, verified programmatically against the base fixture (parsed with
 `csv.DictReader`, keyed by `ID`, diffed field by field) before being committed, and that same
 single-field-diff property is what `test_single_row_variant_changes_exactly_one_cell` asserts.
+
+**T007 — the ambiguous-citation-key fixture differs by case and whitespace, not identical strings.**
+`literature.LiteratureItem.citation_key` is unique at the database level (upstream), so two rows
+cannot literally share one string. FR-017 requires publication-reference comparisons to ignore case
+and surrounding whitespace, so two citation keys differing only that way are "one reference" by the
+spec's own rule while remaining two distinct, independently-identified database rows. The fixture
+and its test build that pair and confirm both properties hold, without pre-empting US-2's own
+matching implementation.

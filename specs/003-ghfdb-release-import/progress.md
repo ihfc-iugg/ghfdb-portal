@@ -120,3 +120,27 @@ ruff check tests/test_ghfdb/test_resources/test_release.py` → clean.
 Next: T007, the bibliographic fixtures (T006 is already closed).
 
 Watch: none.
+
+## 2026-08-25T13:15:00Z · Implementer foundations · T007
+
+Did: Added `literature_with_known_citation_key` and
+`literature_with_ambiguous_citation_key` fixtures to
+`tests/test_ghfdb/test_resources/conftest.py`, built with
+`LiteratureItemFactory` per tests/README.md (infrastructure, not the subject
+under test). The ambiguous pair differs by case and a trailing space rather
+than literally sharing a string — `LiteratureItem.citation_key` is unique at
+the database level upstream, so two rows cannot hold the same string; see
+decisions.md D19. Added `TestBibliographicFixtures` to `test_release.py`.
+
+Verified: RED confirmed — `git diff HEAD -- tests/test_ghfdb/test_resources/conftest.py`
+showed both fixtures as pure additions against the T005 commit, not present
+before. `poetry run pytest tests/test_ghfdb/test_resources/test_release.py -v`
+→ 25 passed (full module, all six tasks). `poetry run ruff check
+tests/test_ghfdb/test_resources/test_release.py
+tests/test_ghfdb/test_resources/conftest.py` → clean.
+
+Next: none — Phase 1 Foundations (T001-T005, T007) is complete. T006 was
+already closed before this run. The full `forge verify` runs once more at the
+completion report, per the brief's rituals.
+
+Watch: none.
