@@ -726,7 +726,7 @@
       "priority": "P1",
       "issue": 187,
       "worktree": null,
-      "status": "in_progress",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
@@ -1130,73 +1130,191 @@
         },
         {
           "id": "T081",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/widgets.py:292",
+              "project/ghfdb/resources/widgets.py:350"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:1054"
+            ]
+          }
         },
         {
           "id": "T082",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/widgets.py:69",
+              "project/ghfdb/resources/widgets.py:346"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:1054"
+            ]
+          }
         },
         {
           "id": "T083",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/widgets.py:292",
+              "project/ghfdb/resources/release.py:440"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:1082"
+            ]
+          }
         },
         {
           "id": "T084",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/widgets.py:292",
+              "project/ghfdb/resources/release.py:440"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:1082"
+            ]
+          }
         },
         {
           "id": "T085",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/release.py:721"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:1128"
+            ]
+          }
         },
         {
           "id": "T086",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/release.py:721"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:1128"
+            ]
+          }
         },
         {
           "id": "T087",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/release.py:721"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:1128"
+            ]
+          }
         },
         {
           "id": "T088",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/constants.py:212"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:1188"
+            ]
+          }
         },
         {
           "id": "T089",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/constants.py:212"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:1188"
+            ]
+          }
         },
         {
           "id": "T090",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/constants.py:212"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:1214"
+            ]
+          }
         },
         {
           "id": "T091",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/constants.py:212"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:1214"
+            ]
+          }
         },
         {
           "id": "T092",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/release.py:297"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:1241"
+            ]
+          }
         },
         {
           "id": "T093",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/release.py:297"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:1241"
+            ]
+          }
         },
         {
           "id": "T115",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/release.py:520",
+              "project/ghfdb/resources/release.py:578",
+              "project/ghfdb/constants.py:212"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:1628"
+            ]
+          }
         }
       ]
     },

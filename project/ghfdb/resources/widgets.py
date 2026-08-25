@@ -66,18 +66,20 @@ def normalize_vocab_token(raw: str) -> str:
 _TRAILING_PARENTHETICAL = re.compile(r"\s*\([^()]*\)\s*$")
 
 
-def _related_field_error(errors: dict) -> ValueError:
-    """A single ``ValueError`` for one or more column failures on a
-    related-record widget (T081-T084) - ``ValueError``, not
-    ``ValidationError``, matching every other widget in this codebase
-    (R6, D24). ``column_errors`` carries the per-column detail so a
-    caller that wants it (``import_instance``'s pre-check) can report
-    each column separately rather than reparsing the combined message.
+class ColumnValueError(ValueError):
+    """One or more column failures on a related-record widget (T081-T084).
+
+    A ``ValueError``, not a ``ValidationError``, matching every other widget in
+    this codebase (R6, D24). ``column_errors`` carries the per-column detail so
+    a caller that wants it (``import_instance``'s pre-check) can report each
+    column separately rather than reparsing the combined message.
     """
-    message = "; ".join(f"{column}: {error}" for column, error in errors.items())
-    error = ValueError(message)
-    error.column_errors = errors
-    return error
+
+    def __init__(self, column_errors: dict):
+        super().__init__(
+            "; ".join(f"{column}: {error}" for column, error in column_errors.items())
+        )
+        self.column_errors = column_errors
 
 
 def _without_trailing_parenthetical(token: str) -> str:
@@ -343,7 +345,7 @@ class RelatedModelWidget(Widget):
                 errors[row_col] = ValidationError(str(exc), code="invalid")
 
         if errors:
-            raise _related_field_error(errors)
+            raise ColumnValueError(errors)
 
         return self.model(**model_kwargs)  # UNSAVED
 
@@ -369,7 +371,7 @@ class RelatedModelWidget(Widget):
             if qs is not None:
                 getattr(instance, model_field).set(qs)
         if errors:
-            raise _related_field_error(errors)
+            raise ColumnValueError(errors)
 
 
 class ParentWidget(RelatedModelWidget):

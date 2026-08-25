@@ -350,57 +350,83 @@ Blocking. Every story depends on these.
   **Fails before**: it is stored or dropped.
   **Closed on**: project/ghfdb/resources/widgets.py:98 · tests/test_ghfdb/test_resources/test_widgets.py:507
 
-- [ ] **T081** *US-3* — Test: a vocabulary value matching no term is refused and reported, for a
+- [x] **T081** *US-3* — Test: a vocabulary value matching no term is refused and reported, for a
   column holding several values.
   **Fails before**: the failure is caught and discarded, and the row imports with the relation empty.
   **Note**: most of a release's vocabulary surface is many-valued, so discarding these discards most
   of the checking this feature exists to do.
+  **Closed on**: project/ghfdb/resources/widgets.py:292 · project/ghfdb/resources/widgets.py:350 ·
+  tests/test_ghfdb/test_resources/test_release.py:1054
 
-- [ ] **T082** *US-3* — Refusing a vocabulary failure on a many-valued column.
+- [x] **T082** *US-3* — Refusing a vocabulary failure on a many-valued column.
   **Test**: T081.
+  **Closed on**: project/ghfdb/resources/widgets.py:69 · project/ghfdb/resources/widgets.py:346 ·
+  tests/test_ghfdb/test_resources/test_release.py:1054
 
-- [ ] **T083** *US-3* — Test: a numeric value reaching a column that holds text is refused with the
+- [x] **T083** *US-3* — Test: a numeric value reaching a column that holds text is refused with the
   column and the value named, rather than failing in a way that names neither.
   **Fails before**: it fails without naming the column.
+  **Closed on**: project/ghfdb/resources/widgets.py:292 · project/ghfdb/resources/release.py:440 ·
+  tests/test_ghfdb/test_resources/test_release.py:1082
 
-- [ ] **T084** *US-3* — Test: a text value reaching a column that holds a quantity is refused with
+- [x] **T084** *US-3* — Test: a text value reaching a column that holds a quantity is refused with
   the column and the value named.
   **Fails before**: it fails without naming the column.
+  **Closed on**: project/ghfdb/resources/widgets.py:292 · project/ghfdb/resources/release.py:440 ·
+  tests/test_ghfdb/test_resources/test_release.py:1082
 
-- [ ] **T085** *US-3* — Test: a site whose name is a number imports, and the stored name is what the
+- [x] **T085** *US-3* — Test: a site whose name is a number imports, and the stored name is what the
   file gave.
   **Fails before**: it is refused as a non-text value.
   **Note**: 10,898 sites in the current release are named with a number.
+  **Closed on**: project/ghfdb/resources/release.py:721 ·
+  tests/test_ghfdb/test_resources/test_release.py:1128
 
-- [ ] **T086** *US-3* — Test: a site whose name is a placeholder such as `?`, or empty, imports, and
+- [x] **T086** *US-3* — Test: a site whose name is a placeholder such as `?`, or empty, imports, and
   the stored name is what the file gave.
   **Fails before**: an empty name produces a site with no location.
   **Note**: 11,513 sites in the current release are named `?`.
+  **Closed on**: project/ghfdb/resources/release.py:721 ·
+  tests/test_ghfdb/test_resources/test_release.py:1128
 
-- [ ] **T087** *US-3* — Storing a site's name as given, without judging it.
+- [x] **T087** *US-3* — Storing a site's name as given, without judging it.
   **Test**: T085 and T086.
+  **Closed on**: project/ghfdb/resources/release.py:721 ·
+  tests/test_ghfdb/test_resources/test_release.py:1128
 
-- [ ] **T088** *US-3* — Test: a row carrying a supplied quality code imports, and that code is not
+- [x] **T088** *US-3* — Test: a row carrying a supplied quality code imports, and that code is not
   stored anywhere.
   **Fails before**: it is stored.
+  **Closed on**: project/ghfdb/constants.py:212 ·
+  tests/test_ghfdb/test_resources/test_release.py:1188
 
-- [ ] **T089** *US-3* — Recognising and discarding the supplied quality code.
+- [x] **T089** *US-3* — Recognising and discarding the supplied quality code.
   **Test**: T088.
+  **Closed on**: project/ghfdb/constants.py:212 ·
+  tests/test_ghfdb/test_resources/test_release.py:1188
 
-- [ ] **T090** *US-3* — Test: a file carrying the assessment columns is not refused for carrying
+- [x] **T090** *US-3* — Test: a file carrying the assessment columns is not refused for carrying
   them, and their values are not stored.
   **Fails before**: the columns are refused as undefined.
+  **Closed on**: project/ghfdb/constants.py:212 ·
+  tests/test_ghfdb/test_resources/test_release.py:1214
 
-- [ ] **T091** *US-3* — Recognising and discarding the assessment columns.
+- [x] **T091** *US-3* — Recognising and discarding the assessment columns.
   **Test**: T090.
+  **Closed on**: project/ghfdb/constants.py:212 ·
+  tests/test_ghfdb/test_resources/test_release.py:1214
 
-- [ ] **T092** *US-3* — Test: a file of `n` valid rows produces `n` determinations. No row is dropped
+- [x] **T092** *US-3* — Test: a file of `n` valid rows produces `n` determinations. No row is dropped
   on the way in.
   **Fails before**: rows sharing a site are removed from the file as it is read, with no count and
   no notice.
+  **Closed on**: project/ghfdb/resources/release.py:297 ·
+  tests/test_ghfdb/test_resources/test_release.py:1241
 
-- [ ] **T093** *US-3* — Reading every row, or reporting it as refused, and nothing else.
+- [x] **T093** *US-3* — Reading every row, or reporting it as refused, and nothing else.
   **Test**: T092.
+  **Closed on**: project/ghfdb/resources/release.py:297 ·
+  tests/test_ghfdb/test_resources/test_release.py:1241
 
 - [ ] **T025** *US-1* — Test: a file in which one value is refused writes nothing at all — every
   record count is what it was before, including for the rows that were themselves valid.
@@ -427,13 +453,15 @@ Blocking. Every story depends on these.
   **Fails before**: no reader exists.
 
 
-- [ ] **T115** *US-3* — Test: every column the definition marks as read lands in the field that holds
+- [x] **T115** *US-3* — Test: every column the definition marks as read lands in the field that holds
   it, asserted column by column against the fixture rather than in aggregate, and failing for any
   read column that carries no assertion. An entry in the definition that resolves to no field fails
   here rather than being dropped in silence.
   **Fails before**: the mapping is asserted only in aggregate, so a column can go nowhere unnoticed.
   **Serves**: SC-007, and the constitution's obligation that a change to the published field mapping
   carries an end-to-end test of that mapping.
+  **Closed on**: project/ghfdb/resources/release.py:520 · project/ghfdb/resources/release.py:578 ·
+  project/ghfdb/constants.py:212 · tests/test_ghfdb/test_resources/test_release.py:1628
 
 ---
 
