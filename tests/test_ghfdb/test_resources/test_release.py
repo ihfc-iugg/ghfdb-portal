@@ -540,3 +540,33 @@ class TestGHFDBReleaseImportResourceReferenceReadback:
         assert result.has_errors() is False
         release_dataset = Dataset.all_objects.get(reference__citation_key=reference)
         assert release_dataset.reference.citation_key == reference
+
+
+class TestGHFDBReleaseImportResourceReusesExistingDatasets:
+    """T049: a file whose references already have datasets from an
+    earlier import reuses them and creates no duplicates. Fails before: a
+    second set is created."""
+
+    def test_reimporting_the_same_file_creates_no_duplicate_datasets(self, db):
+        header, rows = _corrected_header_and_rows()
+
+        first_result = GHFDBReleaseImportResource().import_data(
+            _make_dataset(header, rows), dry_run=False, raise_errors=False
+        )
+        assert first_result.has_errors() is False
+
+        dataset_count_after_first = Dataset.all_objects.filter(
+            reference__isnull=False
+        ).count()
+        literature_count_after_first = LiteratureItem.objects.count()
+
+        second_result = GHFDBReleaseImportResource().import_data(
+            _make_dataset(header, rows), dry_run=False, raise_errors=False
+        )
+        assert second_result.has_errors() is False
+
+        assert (
+            Dataset.all_objects.filter(reference__isnull=False).count()
+            == dataset_count_after_first
+        )
+        assert LiteratureItem.objects.count() == literature_count_after_first
