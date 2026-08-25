@@ -665,3 +665,46 @@ inside one import pass, so nothing in this story exposes the difference. Re-impo
 file will create a second set of intervals against the same sites. US-4 is where reimport
 idempotency is specified, and the interval side needs a database-backed lookup added there, by the
 pattern `_build_site_and_parent` already uses.
+
+### D24 — US-3 second part Implementer notes (T064-T077)
+
+What hangs off a determination now exists: the gradient and conductivity carry the determination's
+own identifier, corrections are created only where supplied, probe metadata belongs to the interval,
+two shapes of disagreement are refused, and the absent-value marker is read as no value everywhere
+rather than in the narrow, forced places the first part left it.
+
+**A disagreement is a conflict between two supplied values, never a supplied value against
+silence.** `_find_disagreements` (shared by T072/T073's interval-probe check and T074/T075's site
+check) compares only the non-blank values rows give for a column; a row that leaves a column blank
+makes no statement about it, the same principle T066/T067 already applies to a blank correction
+column. This was forced by the real base fixture, not chosen for its own sake: rows 0-2 and row 6
+already share one indeterminate interval and disagree on raw `probe_type` text (`[unspecified]`
+against a real probe), and the six rows sharing site `R24-P003477` would otherwise have tripped
+false positives the moment a row's optional column was empty. `probe_type`, `environment` and
+`explo_method` are further normalised through `normalize_vocab_token` before comparison, so
+"unspecified" in any casing or bracketing is treated as silence too, not as a value that conflicts
+with a real one.
+
+**`SITE_COLUMNS` omits `explo_purpose`.** It is the one many-valued (M2M) column
+`_build_new_site`/`ParentWidget` sets, and comparing a set-valued column for disagreement is a
+different shape of check than the scalar columns this run built (order-independent set equality,
+not string equality). No acceptance scenario in this run's brief exercises it, and the six rows
+sharing `R24-P003477` in the real fixture already agree on it, so nothing forced the question.
+Flagged rather than silently decided: a genuine `explo_purpose` disagreement between rows sharing a
+site would import clean today rather than being refused.
+
+**A correction or probe-type value matching no term raises, the same as every other widget in this
+codebase.** Neither FR-029/030 nor T066-T069's acceptance says what happens on a value normalising
+to no recognised term — the real fixture's own values all match — so this follows
+`ConceptWidget`/`QuantityWidget`'s own established convention (raise `ValueError`, refused and
+reported) rather than silently defaulting to unspecified, on the standing constraint that the
+portal does not guess at supplied data.
+
+**The absent-value marker moved from a `before_save_instance`-scoped blanking call to a
+`before_import_row` hook that mutates the row in place.** The narrow workaround T052/T053 left in
+place only ever ran inside `before_save_instance`, after `import_instance` had already parsed the
+declared `qc`/`qc_uncertainty`/`local_id` fields against the raw, unblanked row - a gap the real
+fixture never exercised (those three columns never carry the marker there) but which the
+workaround's own scope left open. `before_import_row` runs earliest in the library's own per-row
+sequence, so every reader of a row - declared fields, the disagreement pre-scan, and every
+`before_save_instance` builder - now sees one row, blanked once, consistently.
