@@ -553,3 +553,134 @@ Watch: the admin registration outstanding from US-1 (decisions.md D20's
 last entry, D21) remains outstanding — still correctly deferred to
 T025-T030, which land after US-3. No new admin, model or migration
 changes were made in this run.
+
+## 2026-08-25T20:05:00Z · Implementer US-3 · T051
+
+Did: Added `TestGHFDBReleaseImportResourceRecordGraph`, the story's spine
+test - one row, with `q_bottom` given a real value so its depth range is
+complete, produces a site, an interval, a determination and the gradient
+and conductivity measured over that interval, related as the model
+defines, asserted field by field. Built from the real base fixture's row
+4 (`_corrected_header_and_rows()[4]`), not a hand-built row, per T008's
+own precedent that the fixture proves something about the real format a
+hand-built row cannot.
+
+Verified: RED observed - `HeatFlowSite.DoesNotExist`, since
+`save_instance` is still a no-op. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py::TestGHFDBReleaseImportResourceRecordGraph
+-v` → 1 failed, for that reason.
+
+Next: T052, the site.
+
+Watch: none.
+
+## 2026-08-25T20:20:00Z · Implementer US-3 · T052, T053, T057, T058
+
+Did: `before_save_instance` replaces the no-op `save_instance` and turns
+a row into its site, its parent heat flow value and its interval.
+`ParentWidget`/`IntervalWidget` are reused as they stand for field
+extraction (plan.md); the published site identifier and the location are
+set directly rather than through the widget's own name-based sentinel,
+since identity for a release row is the published identifier alone
+(D10), never proximity or name matching, and D14 requires a site's
+location set whether or not its name is given.
+
+**Site and parent identity (T057, T058) could not land after T052 -
+they had to land with it.** Naive per-row creation is what T056/T058's
+own "Fails before" text describes, and building it first (planned) hit a
+wall immediately: the real base fixture's rows 0-2 and 4-6 all share one
+site (`V19-6`, `ID_parent=R24-P003477`), and running the *existing*,
+not-mine `TestGHFDBReleaseImportResourceCleanFile` test (US-1, whole
+fixture, `has_errors() is False`) against naive per-row creation hit
+`HeatFlowSite.save()`'s own coordinate-uniqueness check on the second
+occurrence, then, once that was fixed, `ParentHeatFlow.save()`'s own
+one-parent-per-site check on the second occurrence of a shared site. The
+model's own constraints make "build first, share later" impossible to
+land as two separate green commits against the real fixture. Reordered
+build-with-identity from the start; noted in decisions.md as a
+same-shape deviation to D22's "the only order that keeps every commit
+green."
+
+The interval (T053) landed in this same commit for the same forcing
+reason, one level down: `HeatFlow.sample` is required (not nullable), so
+without an interval assigned no row can save at all, and every row-level
+test in the module would fail on `IntegrityError` the moment
+`save_instance` stops being a no-op. The interval itself is still naive
+here - one built per row, no sharing by site and depth range yet
+(T059-T062).
+
+A third, unplanned fix landed in the same commit for the same reason:
+quantity-parsing widgets are now handed a row with the published
+absent-value marker (`[Unspecified]`, R1) blanked out first
+(`_blank_row_for_quantity_widgets`). The base fixture carries the marker
+by design (T004, for T076/T077's later benefit) in `q_top`, `q_bottom`,
+`T_grad_mean` and `tc_mean` among others, on row 3. `QuantityWidget`
+raises an uncaught `ValueError` on it rather than refusing cleanly, and
+once `IntervalWidget` is wired to run on every row (this commit), that
+crash reaches the whole-fixture US-1 test the same way the site/parent
+issue did. This is deliberately narrow - only the quantity columns this
+story's own builders touch, confined to `release.py`, not
+`widgets.py` (shared with the contributor template) - and does not
+implement FR-012 in full (every column, every widget) or add FR-012's
+own dedicated test; that remains T076/T077's job. The vocabulary widgets
+already tolerate the marker on their own
+(`normalize_vocab_token`/`"unspecified"`), confirmed by reading
+`MultiConceptWidget.clean`, not assumed.
+
+Verified: each fix observed against a different, specific failure before
+being written - `HeatFlowSite.DoesNotExist` before site building,
+`ValidationError` "A HeatFlowSite already exists..." on the first
+identity attempt without dedup, `ValidationError` "A ParentHeatFlow
+already exists..." on the first attempt without parent dedup, then a raw
+`ValueError` on `'[Unspecified]'` once both were fixed and the whole
+fixture ran clean through `_build_interval` for the first time. `poetry
+run pytest tests/test_ghfdb/test_resources/test_release.py -q` → 25
+passed, 1 failed (T051's own test, now failing only on
+`determination.local_id` and the gradient/conductivity, T054/T055's
+scope). `ruff check`/`ruff format --check` → clean.
+
+Next: T054, the determination's own published identifier.
+
+Watch: reported as a concern in this run's completion report - the
+absent-value-marker workaround is a narrow, forced fix, not a design
+decision, and T076/T077 should confirm it is subsumed rather than
+conflicting when that story lands.
+
+## 2026-08-25T20:35:00Z · Implementer US-3 · T054
+
+Did: Declared `local_id = fields.Field(attribute="local_id",
+column_name="ID", default="")` and added it to `Meta.fields`. `HeatFlow.local_id`
+now carries the row's own published determination identifier (D10).
+Purely additive - nothing looks a determination up by it yet (US-4).
+
+Verified: RED observed - `determination.local_id` was `None` against
+T051's own assertion before this change. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 25 passed, 1
+failed (T051, now failing only on the gradient/conductivity assertions).
+`ruff check`/`ruff format --check` → clean.
+
+Next: T055, the gradient and the conductivity.
+
+Watch: none.
+
+## 2026-08-25T20:45:00Z · Implementer US-3 · T055
+
+Did: `_build_gradient`/`_build_conductivity`, mirroring
+`GHFDBChildImportResource`'s own per-row builders (plan.md's own
+precedent) - `GradientWidget`/`ConductivityWidget` reused as they stand,
+skipped (`None`) on their own sentinel (`T_grad_mean`/`tc_mean` empty).
+Each row gets its own new gradient and conductivity; sharing one across
+rows that report the same determination is T064/T065's identity, not
+this story's (D16).
+
+Verified: RED observed - `ThermalGradient.DoesNotExist` against T051's
+own assertion before this change. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 26 passed, full
+module, T051's spine test green: one row now produces its site, its
+parent heat flow value, its interval, its determination, and the
+gradient and conductivity measured over that interval. `ruff
+check`/`ruff format --check` → clean.
+
+Next: T056, several rows sharing a published site identifier.
+
+Watch: none.
