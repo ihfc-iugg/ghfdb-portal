@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 import tablib
+from fairdm.core.models import Dataset
 
 from project.ghfdb.constants import MISSPELLED_COLUMNS
 from project.ghfdb.resources.release import (
@@ -345,3 +346,30 @@ class TestGHFDBReleaseImportResourceHeaderFailureStopsTheRowLoop:
         assert result.invalid_rows == []
         assert result.error_rows == []
         assert result.total_rows == 0
+
+
+class TestGHFDBReleaseImportResourceDatasetCreation:
+    """T034, T035, T036: a file whose rows carry several distinct
+    publication references produces one dataset for each reference. Fails
+    before: no dataset is created by reading a file.
+
+    The full acceptance sentence also requires that no dataset holds
+    records from two - the second half needs a row to have become a
+    record, which is US-3's job (save_instance stays a no-op in this
+    story). What this story reaches is asserted here: each reference
+    resolves to its own distinct dataset."""
+
+    def test_one_dataset_per_distinct_publication_reference(self, db):
+        header, rows = _corrected_header_and_rows()
+        reference_index = header.index("publication_reference")
+        references = {row[reference_index] for row in rows}
+        dataset = _make_dataset(header, rows)
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+        release_datasets = Dataset.all_objects.filter(reference__isnull=False)
+        assert release_datasets.count() == len(references)
+        assert {d.reference.citation_key for d in release_datasets} == references

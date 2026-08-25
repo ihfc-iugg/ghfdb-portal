@@ -28,10 +28,12 @@ from io import StringIO
 import tablib
 from django.core.exceptions import ValidationError
 from django.utils.encoding import force_str
+from fairdm.core.models import Dataset
 from heat_flow.models import HeatFlow
 from import_export import fields, widgets
 from import_export.formats.base_formats import CSV
 from import_export.resources import ModelResource
+from literature.models import LiteratureItem
 
 from ..constants import MISSPELLED_COLUMNS, READ_COLUMNS, RELEASE_COLUMNS
 from .widgets import QuantityWidget
@@ -148,6 +150,31 @@ class GHFDBReleaseImportResource(ModelResource):
         if faults:
             del dataset[:]
             raise ValueError(" ".join(faults))
+
+        self._datasets_by_reference = self._resolve_publication_datasets(dataset)
+
+    def _resolve_publication_datasets(self, dataset):
+        """T035, T036: collect the file's distinct publication references
+        once, before any row is read, and create the dataset each one
+        belongs to (D4) - a bibliographic record carrying the reference's
+        citation key is created where none exists yet (T041, D5).
+        """
+        references = {
+            (row.get("publication_reference") or "").strip() for row in dataset.dict
+        }
+        references.discard("")
+
+        datasets_by_reference = {}
+        for reference in references:
+            literature_item = LiteratureItem.objects.create(citation_key=reference)
+            release_dataset, _created = Dataset.all_objects.get_or_create(
+                reference=literature_item,
+                defaults={
+                    "name": literature_item.title or literature_item.citation_key
+                },
+            )
+            datasets_by_reference[reference] = release_dataset
+        return datasets_by_reference
 
     def import_instance(self, instance, row, **kwargs):
         errors = {}
