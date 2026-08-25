@@ -2,7 +2,7 @@
   "feature": "003-ghfdb-release-import",
   "branch": "003-ghfdb-release-import",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "PLAN",
+  "state": "IMPLEMENT",
   "state_history": [
     {
       "state": "SPECIFY",
@@ -28,6 +28,11 @@
       "state": "DESIGN_REVIEW",
       "at": "2026-08-25T10:59:01Z",
       "note": "request_changes, 8 findings, all applied"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-08-25T11:26:30Z",
+      "note": "plan veto window closed by Sam; foundations first"
     }
   ],
   "gates": {
@@ -36,8 +41,8 @@
       "at": "2026-08-25T10:25:30Z"
     },
     "plan": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "sam",
+      "at": "2026-08-25T11:26:27Z"
     },
     "design_review": {
       "approved_by": "design-reviewer",
