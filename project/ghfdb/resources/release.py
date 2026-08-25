@@ -158,13 +158,19 @@ class GHFDBReleaseImportResource(ModelResource):
             del dataset[:]
             raise ValueError(" ".join(faults))
 
-        self._datasets_by_reference = self._resolve_publication_datasets(dataset)
+        self._datasets_by_reference, self._ambiguous_references = (
+            self._resolve_publication_datasets(dataset)
+        )
 
     def _resolve_publication_datasets(self, dataset):
         """T035, T036: collect the file's distinct publication references
         once, before any row is read, and create the dataset each one
         belongs to (D4) - a bibliographic record carrying the reference's
-        citation key is created where none exists yet (T041, D5).
+        citation key is created where none exists yet (T041, D5). A
+        reference matching more than one bibliographic record is recorded
+        as ambiguous rather than resolved to either one (T043, D5); no
+        dataset or record is created for it here, and its rows are
+        refused later, in ``import_instance``.
 
         Two references differing only by case or surrounding whitespace
         are one reference (FR-017, T037): grouped here by their
@@ -182,12 +188,16 @@ class GHFDBReleaseImportResource(ModelResource):
             )
 
         datasets_by_reference = {}
+        ambiguous_references = {}
         for normalized, reference in references_by_normalized.items():
             matches = list(
                 LiteratureItem.objects.annotate(
                     normalized_citation_key=Lower(Trim("citation_key"))
                 ).filter(normalized_citation_key=normalized)
             )
+            if len(matches) > 1:
+                ambiguous_references[normalized] = matches
+                continue
             if matches:
                 literature_item = matches[0]
             else:
@@ -199,7 +209,7 @@ class GHFDBReleaseImportResource(ModelResource):
                 },
             )
             datasets_by_reference[normalized] = release_dataset
-        return datasets_by_reference
+        return datasets_by_reference, ambiguous_references
 
     def import_instance(self, instance, row, **kwargs):
         errors = {}
@@ -212,6 +222,21 @@ class GHFDBReleaseImportResource(ModelResource):
                 errors[field.column_name] = ValidationError(
                     force_str(e), code="invalid"
                 )
+
+        reference = (row.get("publication_reference") or "").strip()
+        if reference:
+            normalized = _normalize_publication_reference(reference)
+            matches = self._ambiguous_references.get(normalized)
+            if matches is not None:
+                matched_keys = ", ".join(sorted(m.citation_key for m in matches))
+                errors["publication_reference"] = ValidationError(
+                    force_str(
+                        f"Publication reference '{reference}' matches more "
+                        f"than one bibliographic record: {matched_keys}."
+                    ),
+                    code="invalid",
+                )
+
         if errors:
             raise ValidationError(errors)
 

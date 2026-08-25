@@ -460,3 +460,40 @@ class TestGHFDBReleaseImportResourceCreatesMissingLiterature:
         literature_item = LiteratureItem.objects.get(citation_key=new_reference)
         release_dataset = Dataset.all_objects.get(reference=literature_item)
         assert release_dataset.reference == literature_item
+
+
+class TestGHFDBReleaseImportResourceAmbiguousReference:
+    """T043, T044: a reference matching more than one bibliographic record
+    refuses the rows carrying it, naming the reference and the records it
+    matched, and creates neither a dataset nor a record. Fails before: the
+    first match is taken."""
+
+    def test_ambiguous_reference_refuses_its_rows_and_creates_nothing(
+        self, db, literature_with_ambiguous_citation_key
+    ):
+        first, second = literature_with_ambiguous_citation_key
+        header, rows = _corrected_header_and_rows()
+        ambiguous_reference = "Glaeser_1983_Heat_Flow"
+        rows = _with_cell(header, rows, 0, "publication_reference", ambiguous_reference)
+        rows = _with_cell(header, rows, 1, "publication_reference", ambiguous_reference)
+        dataset = _make_dataset(header, rows)
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_validation_errors() is True
+        refused = {row.number: row for row in result.invalid_rows}
+        assert {2, 3}.issubset(refused)
+        for number in (2, 3):
+            message = str(refused[number].error_dict["publication_reference"][0])
+            assert ambiguous_reference in message
+            assert first.citation_key in message
+            assert second.citation_key in message
+
+        assert not Dataset.all_objects.filter(reference__in=[first, second]).exists()
+        assert (
+            LiteratureItem.objects.filter(
+                citation_key__in=[first.citation_key, second.citation_key]
+            ).count()
+            == 2
+        )
