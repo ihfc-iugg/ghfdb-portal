@@ -116,6 +116,65 @@ def _depth_magnitude(value):
     return getattr(value, "magnitude", value)
 
 
+def _find_disagreements(dataset, key_fn, columns, normalize=None):
+    """Group ``dataset.dict`` by ``key_fn`` and return, for each key, the
+    columns where rows sharing that key give more than one distinct
+    non-blank value, together with the values seen (T072-T075, D18,
+    FR-035). A column left blank by a row is not part of the
+    comparison - the row makes no statement about it, the same
+    principle T066/T067 applies to a blank correction column - so a
+    row that is merely silent never counts as disagreeing with one that
+    supplies a value.
+    """
+    values_by_key_column = {}
+    for row in dataset.dict:
+        key = key_fn(row)
+        if key is None:
+            continue
+        for column in columns:
+            raw = (row.get(column) or "").strip()
+            value = normalize(column, raw) if normalize else raw
+            if not value:
+                continue
+            values_by_key_column.setdefault((key, column), set()).add(value)
+
+    disagreements = {}
+    for (key, column), values in values_by_key_column.items():
+        if len(values) > 1:
+            disagreements.setdefault(key, {})[column] = sorted(values)
+    return disagreements
+
+
+PROBE_COLUMNS = ("probe_penetration", "probe_type", "probe_length", "probe_tilt")
+
+
+def _probe_column_value(column, raw):
+    """The comparable value of a probe column for disagreement purposes
+    (T072, T073): ``probe_type`` is a vocabulary column, so it is
+    normalised and treated as blank when unspecified, the same as any
+    other controlled-vocabulary value; the quantity columns compare on
+    their raw text."""
+    if column == "probe_type":
+        normalized = normalize_vocab_token(raw)
+        return "" if normalized == "unspecified" else normalized
+    return raw
+
+
+def _interval_disagreement_key(row):
+    """The interval identity a row's probe columns are compared under
+    (T072, T073): the same ``(site, top, bottom)`` shape
+    ``_build_interval`` identifies an interval by (D15), computed here
+    from the row alone since the site is not resolved yet when the
+    header is first scanned."""
+    local_id = (row.get("ID_parent") or "").strip()
+    if not local_id:
+        return None
+    blanked = _blank_row_for_quantity_widgets(row)
+    top = _depth_magnitude(QuantityWidget("m").clean(blanked.get("q_top")))
+    bottom = _depth_magnitude(QuantityWidget("m").clean(blanked.get("q_bottom")))
+    return (local_id, top, bottom)
+
+
 class GHFDBReleaseCSVFormat(CSV):
     """The format a published release is distributed in: one header row,
     one data row per determination (FR-002). The library's own
@@ -250,6 +309,16 @@ class GHFDBReleaseImportResource(ModelResource):
         # record per interval - cleared per ``before_import`` call, keyed
         # on the interval's own primary key once built.
         self._probe_metadata_by_interval_id = {}
+        # T072, T073: rows sharing an interval but disagreeing about the
+        # probe that sampled it are refused (D18) - found once, before
+        # any row is read, the same shape ``_resolve_publication_datasets``
+        # already sets for the ambiguous-reference check.
+        self._interval_probe_disagreements = _find_disagreements(
+            dataset,
+            _interval_disagreement_key,
+            PROBE_COLUMNS,
+            normalize=_probe_column_value,
+        )
 
     def _resolve_publication_datasets(self, dataset):
         """T035, T036: collect the file's distinct publication references
@@ -330,6 +399,19 @@ class GHFDBReleaseImportResource(ModelResource):
                     ),
                     code="invalid",
                 )
+
+        interval_key = _interval_disagreement_key(row)
+        for column, values in self._interval_probe_disagreements.get(
+            interval_key, {}
+        ).items():
+            errors[column] = ValidationError(
+                force_str(
+                    f"Rows sharing this interval disagree about '{column}': "
+                    f"{', '.join(values)}. The file is refused rather than "
+                    f"choosing between them."
+                ),
+                code="invalid",
+            )
 
         if errors:
             raise ValidationError(errors)

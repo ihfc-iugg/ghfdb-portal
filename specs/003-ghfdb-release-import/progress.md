@@ -915,3 +915,55 @@ Next: T072, T073, refusing a disagreement about a shared interval's
 probe.
 
 Watch: none.
+
+## 2026-08-25T21:35:00Z · Implementer US-3 (second part) · T072, T073
+
+Did: A new module helper, `_find_disagreements`, groups a dataset's
+rows by an identity key and reports the columns where two rows sharing
+that key give more than one distinct non-blank value, together with
+the values seen - a column left blank by a row is not a disagreement,
+the same principle T066/T067 already applies to a blank correction
+column, so a row that says nothing about the probe never conflicts
+with one that does. `_interval_disagreement_key` computes the same
+`(site, top, bottom)` shape `_build_interval` already identifies an
+interval by (D15), from the raw row, since the site is not resolved
+yet when `before_import` scans the whole file once, before any row is
+read - the same shape `_resolve_publication_datasets` already
+established for the ambiguous-reference check. The scan runs once in
+`before_import`; `import_instance` looks up the current row's interval
+key and raises a `ValidationError` per disagreeing column, naming the
+column and every value rows sharing that interval gave for it -
+reusing the row/column fault-reporting path already in place rather
+than a new mechanism. `probe_type` is compared through
+`normalize_vocab_token` so an unspecified probe type is not itself a
+disagreement, the same tolerance the widget layer already gives every
+other vocabulary column. Added
+`TestGHFDBReleaseImportResourceIntervalProbeDisagreement`, giving
+rows 4 and 5 of the real base fixture (which already share one
+interval without any depth modification) a genuinely conflicting,
+non-blank `probe_length`.
+
+Verified: RED observed - `has_validation_errors()` was `False` before
+this change; the two rows imported cleanly and a `ProbeMetadata` was
+built from whichever row's builder ran first, the disagreement never
+surfacing. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py::TestGHFDBReleaseImportResourceIntervalProbeDisagreement
+-v` → 1 passed. Ran the full module first to confirm no regression
+against the whole-fixture baseline tests (US-1's and US-2's, out of
+this run's reach): rows 0-2 and row 6 of the real fixture already
+share one indeterminate interval and give different `probe_type`
+values (`[unspecified]` vs a real probe), which the
+`normalize_vocab_token`/"unspecified" tolerance is what keeps from
+tripping a false disagreement there - confirmed by running the whole
+suite before probing, not assumed. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 36 passed.
+Probed: replaced the disagreement lookup in `import_instance` with an
+always-empty dict - the test failed for the same reason as RED,
+confirming the lookup is load-bearing. Restored, re-ran the full
+module: 36 passed. `ruff check`/`ruff format` → clean (one variable
+renamed for the same "token" false positive as T070/T071 -
+`token` → `normalized` in `_probe_column_value`).
+
+Next: T074, T075, refusing a disagreement about a shared site.
+
+Watch: none.

@@ -1007,13 +1007,31 @@
         },
         {
           "id": "T072",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/release.py:119",
+              "project/ghfdb/resources/release.py:163"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:892"
+            ]
+          }
         },
         {
           "id": "T073",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/release.py:119",
+              "project/ghfdb/resources/release.py:303"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:892"
+            ]
+          }
         },
         {
           "id": "T074",

@@ -889,6 +889,38 @@ class TestGHFDBReleaseImportResourceProbeMetadata:
         assert not ProbeMetadata.objects.filter(interval=no_probe_interval).exists()
 
 
+class TestGHFDBReleaseImportResourceIntervalProbeDisagreement:
+    """T072, T073: two rows sharing an interval but disagreeing about the
+    probe that sampled it are refused, and the disagreement is reported.
+    Fails before: the second row overwrites the first, or fails in a way
+    that names nothing (D18, FR-035)."""
+
+    def test_rows_disagreeing_about_a_shared_intervals_probe_are_both_refused(self, db):
+        from heat_flow.models import ProbeMetadata
+
+        header, rows = _corrected_header_and_rows()
+        # rows[4] and rows[5] already share one site and depth range in
+        # the real base fixture; giving row 4 a real, differing
+        # probe_length makes them disagree about the probe rather than
+        # one merely being silent about it.
+        disagreeing_first = _with_cell(header, [rows[4]], 0, "probe_length", "10.00")[0]
+        disagreeing_second = rows[5]
+        dataset = _make_dataset(header, [disagreeing_first, disagreeing_second])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_validation_errors() is True
+        refused = {row.number: row for row in result.invalid_rows}
+        assert {2, 3}.issubset(refused)
+        for number in (2, 3):
+            message = str(refused[number].error_dict["probe_length"][0])
+            assert "10.00" in message
+            assert "21.00" in message
+
+        assert ProbeMetadata.objects.count() == 0
+
+
 class TestGHFDBReleaseImportResourceMixedIntervals:
     """T063: a site with some rows giving a depth range and some giving
     none holds one interval for each distinct range plus the one
