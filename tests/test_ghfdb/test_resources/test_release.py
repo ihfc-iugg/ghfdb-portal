@@ -833,9 +833,9 @@ class TestGHFDBReleaseImportResourceCorrectionFlagNormalization:
         from heat_flow.models import HeatFlow, HeatFlowCorrection
 
         header, rows = _corrected_header_and_rows()
-        row = _with_cell(
-            header, [rows[4]], 0, "corr_IS_flag", "  [TILT CORRECTED]  "
-        )[0]
+        row = _with_cell(header, [rows[4]], 0, "corr_IS_flag", "  [TILT CORRECTED]  ")[
+            0
+        ]
         dataset = _make_dataset(header, [row])
 
         resource = GHFDBReleaseImportResource()
@@ -951,6 +951,42 @@ class TestGHFDBReleaseImportResourceSiteDisagreement:
             assert "20.00000" in message
 
         assert HeatFlowSite.objects.filter(local_id="R24-P003477").count() == 0
+
+
+class TestGHFDBReleaseImportResourceAbsentValueMarker:
+    """T076, T077: a cell holding the published absent-value marker is
+    read as no value, and creates no record the row did not describe.
+    Fails before: it is refused as a non-numeric value in a numeric
+    column (FR-012). Row 3 of the real base fixture carries the marker
+    by design (T004), in ``q_top``, ``q_bottom``, ``T_grad_mean`` and
+    ``tc_mean`` among others."""
+
+    def test_the_absent_value_marker_is_read_as_no_value(self, db):
+        from heat_flow.models import (
+            HeatFlow,
+            HeatFlowInterval,
+            IntervalConductivity,
+            ThermalGradient,
+        )
+
+        header, rows = _corrected_header_and_rows()
+        dataset = _make_dataset(header, [rows[3]])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+
+        determination = HeatFlow.objects.get()
+        assert float(determination.value.magnitude) == 67.0
+
+        interval = HeatFlowInterval.objects.get()
+        assert interval.top is None
+        assert interval.bottom is None
+
+        assert ThermalGradient.objects.count() == 0
+        assert IntervalConductivity.objects.count() == 0
 
 
 class TestGHFDBReleaseImportResourceMixedIntervals:

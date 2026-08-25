@@ -60,23 +60,21 @@ from .widgets import (
 REQUIRED_COLUMNS = READ_COLUMNS
 
 
-def _blank_row_for_quantity_widgets(row):
-    """The row a quantity-parsing widget sees, with the published
-    absent-value marker (R1: ``[Unspecified]``, the only non-numeric value
-    a numeric column holds) blanked out.
+ABSENT_VALUE_MARKER = "[Unspecified]"
 
-    Reading the marker as no value everywhere, for every widget, is
-    FR-012's job in full and is T076/T077's - out of this story's scope.
-    This reaches only as far as this story's own row-to-record builders
-    need: the real base fixture carries the marker by design (T004), and
-    without this, ``QuantityWidget`` crashes outright on it rather than
-    refusing cleanly, which would break US-1's already-passing
-    whole-fixture tests the moment a real interval, gradient or
-    conductivity is built from every row. The vocabulary widgets already
-    tolerate the marker on their own (``normalize_vocab_token``).
+
+def _blank_absent_values(row):
+    """The row every field and builder reads, with the published
+    absent-value marker (R1: ``[Unspecified]``, the only non-numeric
+    value a numeric column holds) read as no value in every column
+    (FR-012, T076, T077) - not refused as a fault, and not left for a
+    quantity widget to crash outright on. Replaces the narrower,
+    builder-scoped workaround T052/T053 left in place pending this
+    task, which covered only the columns this story's own row-to-record
+    builders touched.
     """
     return {
-        key: "" if value == "[Unspecified]" else value for key, value in row.items()
+        key: "" if value == ABSENT_VALUE_MARKER else value for key, value in row.items()
     }
 
 
@@ -169,7 +167,7 @@ def _interval_disagreement_key(row):
     local_id = (row.get("ID_parent") or "").strip()
     if not local_id:
         return None
-    blanked = _blank_row_for_quantity_widgets(row)
+    blanked = _blank_absent_values(row)
     top = _depth_magnitude(QuantityWidget("m").clean(blanked.get("q_top")))
     bottom = _depth_magnitude(QuantityWidget("m").clean(blanked.get("q_bottom")))
     return (local_id, top, bottom)
@@ -417,6 +415,16 @@ class GHFDBReleaseImportResource(ModelResource):
             datasets_by_reference[normalized] = release_dataset
         return datasets_by_reference, ambiguous_references
 
+    def before_import_row(self, row, **kwargs):
+        """Read the published absent-value marker as no value, in every
+        column, before anything else reads the row (FR-012, T076,
+        T077) - both the declared field widgets ``import_instance``
+        parses below and the builders ``before_save_instance`` runs
+        later see the same blanked row, since this mutates ``row`` in
+        place rather than returning a copy only some callers used.
+        """
+        row.update(_blank_absent_values(row))
+
     def import_instance(self, instance, row, **kwargs):
         errors = {}
         for field in self.get_import_fields():
@@ -490,14 +498,14 @@ class GHFDBReleaseImportResource(ModelResource):
 
         T052: the site and its parent heat flow value. Each row builds
         its own for now - sharing a site across rows that carry the same
-        published site identifier is T057/T058.
+        published site identifier is T057/T058. ``row`` has already had
+        the absent-value marker read as no value, in every column, by
+        ``before_import_row`` (T076, T077).
         """
         reference = (row.get("publication_reference") or "").strip()
         normalized = _normalize_publication_reference(reference)
         dataset = self._datasets_by_reference[normalized]
         instance.dataset = dataset
-
-        row = _blank_row_for_quantity_widgets(row)
 
         site, parent = self._build_site_and_parent(row, dataset)
         instance.parent = parent

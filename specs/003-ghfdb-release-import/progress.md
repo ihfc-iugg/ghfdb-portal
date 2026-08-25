@@ -1007,3 +1007,62 @@ is now also relied on by `_interval_disagreement_key` (T072/T073), in
 addition to `before_save_instance` - both call sites are within this
 story's own file and both are T076/T077's to reconcile when that
 workaround is replaced.
+
+## 2026-08-25T21:55:00Z · Implementer US-3 (second part) · T076, T077
+
+Did: Added `TestGHFDBReleaseImportResourceAbsentValueMarker`, importing
+row 3 of the real base fixture alone (carrying the marker by design,
+T004, in `q_top`, `q_bottom`, `T_grad_mean` and `tc_mean` among
+others) and asserting it reads clean - the determination's own real
+`qc` value stored, the interval indeterminate rather than refused, no
+gradient or conductivity built for the columns that carried the
+marker. The test passed on first run against the narrow, forced
+workaround `_blank_row_for_quantity_widgets` already left in place
+pending this task - flagged by craft-tdd's instruction to diagnose
+rather than accept it, and confirmed a genuine mechanism by probing:
+temporarily removed the call to it from `before_save_instance` and
+watched the same row fail with `has_errors() is True` (an uncaught
+`ValueError` from `QuantityWidget`, the exact failure T076 names -
+"refused as a non-numeric value in a numeric column"), restored, and
+only then replaced the mechanism rather than trusting the pass.
+
+Replaced `_blank_row_for_quantity_widgets` with `_blank_absent_values`
+(same blanking rule, generalised naming and docstring - `[Unspecified]`
+read as no value in every column, not scoped to "the quantity columns
+this story's own builders touch") and a new `before_import_row` hook
+that mutates the row in place before anything else reads it. This is
+the "properly, in full" replacement T077 asks for: the old workaround
+ran only inside `before_save_instance`, after the declared `qc`,
+`qc_uncertainty` and `local_id` fields had already been parsed by
+`import_instance` against the raw, unblanked row - a gap the real
+fixture happens not to exercise (those three columns never carry the
+marker in the base fixture) but the workaround's own scope left open.
+`before_import_row` runs before `get_or_init_instance`/`import_instance`
+in the library's own row loop, so every reader of the row - the
+declared fields, `_interval_disagreement_key`'s pre-scan comparison,
+and every `before_save_instance` builder - now sees one blanked row
+rather than two different views of it. `_interval_disagreement_key`
+keeps its own direct call (`_blank_absent_values`, renamed) since it
+runs during the `before_import` pre-scan, before any row's
+`before_import_row` has had the chance to run.
+
+Verified: `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py::TestGHFDBReleaseImportResourceAbsentValueMarker
+-v` → 1 passed, both before and after the replacement (the replacement
+is a generalisation, not a behaviour change, for every scenario this
+story's own tests cover). Ran the full module after replacing the
+mechanism: `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 38 passed, full
+module, all fourteen tasks (T064-T077) this run's brief scopes are
+closed. `ruff check`/`ruff format` → clean.
+
+Next: none - T064-T077 are closed. T078-T080 were already closed by
+an earlier run. T081 onward (vocabulary refusals for multi-value
+columns, numeric/text mismatch refusals, name-never-judged, quality
+code and assessment column handling, the row-count guarantee) is
+later work and out of this run's scope. The full verify runs once at
+the completion report.
+
+Watch: none carried forward. The absent-value-marker workaround
+flagged as a concern by every predecessor entry since T052/T053 is
+now resolved rather than deferred.
