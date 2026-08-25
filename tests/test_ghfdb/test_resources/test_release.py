@@ -824,6 +824,33 @@ class TestGHFDBReleaseImportResourceCorrectionsSuppliedOnly:
         assert types == {"IS", "T", "TOPO", "PAL", "SUR", "CONV"}
 
 
+class TestGHFDBReleaseImportResourceCorrectionFlagNormalization:
+    """T068, T069: a correction flag that is bracketed, differently cased,
+    or both is matched to its term rather than lost (FR-030). Fails
+    before: it falls through to an unspecified value."""
+
+    def test_a_differently_cased_correction_flag_is_read_as_its_term(self, db):
+        from heat_flow.models import HeatFlow, HeatFlowCorrection
+
+        header, rows = _corrected_header_and_rows()
+        row = _with_cell(
+            header, [rows[4]], 0, "corr_IS_flag", "  [TILT CORRECTED]  "
+        )[0]
+        dataset = _make_dataset(header, [row])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+
+        determination = HeatFlow.objects.get()
+        correction = HeatFlowCorrection.objects.get(
+            heat_flow=determination, correction_type="IS"
+        )
+        assert correction.status == "tilt_corrected"
+
+
 class TestGHFDBReleaseImportResourceMixedIntervals:
     """T063: a site with some rows giving a depth range and some giving
     none holds one interval for each distinct range plus the one

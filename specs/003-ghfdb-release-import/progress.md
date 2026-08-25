@@ -794,3 +794,88 @@ still narrow and forced, still T076/T077's to confirm subsumed. The
 admin-registration deferral (D21) is likewise unchanged and still
 correctly out of scope. No model, migration or admin change was made
 in this run.
+
+## 2026-08-25T20:45:00Z · Implementer US-3 (second part) · T064, T065
+
+Did: `_build_gradient`/`_build_conductivity` now set `local_id` on the
+built `ThermalGradient`/`IntervalConductivity` from the row's own
+published determination identifier (`row.get("ID")`), the same source
+`local_id` on the determination itself already uses (T054). Added
+`TestGHFDBReleaseImportResourceGradientConductivityIdentity`, using
+rows 4 and 5 of the real base fixture, which already share one site
+and depth range (`q_top=4490.00`, `q_bottom` blank) without any test
+modification - proving two determinations measured over one shared
+interval keep their own gradient and conductivity rather than one
+being found and updated by the other (D16).
+
+Verified: RED observed - `ThermalGradient.DoesNotExist` for
+`local_id="R24-033563"` before this change, since neither model ever
+carried the determination's identifier. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py::TestGHFDBReleaseImportResourceGradientConductivityIdentity
+-v` → 1 passed. Probed: reverted `gradient.local_id` to `""` - the test
+failed for the same reason, confirming the assignment is load-bearing.
+Restored, re-ran the full module: `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 33 passed.
+`ruff check`/`ruff format --check` → clean.
+
+Next: T066, T067, correction records.
+
+Watch: none.
+
+## 2026-08-25T21:00:00Z · Implementer US-3 (second part) · T066, T067
+
+Did: `after_save_instance` and `_build_corrections` build a
+`HeatFlowCorrection` for each of the nine `CORRECTION_COL_MAP` columns
+the row supplies (a non-blank cell), and none for the rest (FR-029) -
+after, not before, since the correction's `heat_flow` foreign key
+needs the determination already saved. A new module helper,
+`_correction_status`, normalises the raw flag the same way a
+controlled-vocabulary value is normalised (`normalize_vocab_token`,
+reused from `widgets.py` rather than reinvented) before matching it to
+its `HeatFlowCorrection.StatusChoices` term, since every correction
+value in the real fixture is bracketed and none would match a raw,
+unnormalised comparison - this is why T066/T067's own implementation
+already carries the normalising T068/T069 asks for, rather than
+landing it first in a form that would fail on the fixture's own data
+and only normalising in a second pass. Added
+`TestGHFDBReleaseImportResourceCorrectionsSuppliedOnly`, blanking three
+of row 4's nine (already-supplied) correction columns and asserting a
+record exists for exactly the other six.
+
+Verified: RED observed - zero `HeatFlowCorrection` records before this
+change, since the release reader built none at all. `poetry run
+pytest tests/test_ghfdb/test_resources/test_release.py::TestGHFDBReleaseImportResourceCorrectionsSuppliedOnly
+-v` → 1 passed. Probed: removed the `if not raw: continue` guard - the
+test failed (nine records instead of six), confirming the skip is
+load-bearing. Restored, re-ran the full module: `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 33 passed.
+`ruff check`/`ruff format` → clean (one import-sort fix accepted).
+
+Next: T068, T069, proving the normalising explicitly.
+
+Watch: none.
+
+## 2026-08-25T21:10:00Z · Implementer US-3 (second part) · T068, T069
+
+Did: Added `TestGHFDBReleaseImportResourceCorrectionFlagNormalization`,
+giving one correction column a bracketed, extra-whitespace, all-caps
+value (`"  [TILT CORRECTED]  "`, a status valid for the `IS` correction
+type per `HeatFlowCorrection.VALID_STATUS_FOR_TYPE`) and asserting it
+reads as `tilt_corrected` rather than falling through to the
+unspecified default. No new production code - `_correction_status`
+already normalises every flag this way, built that way from T066/T067
+for the reason recorded there.
+
+Verified: the new test passed on first run against the already-built
+mechanism - flagged by craft-tdd's own instruction to diagnose rather
+than accept a first-try pass. Probed: replaced
+`normalize_vocab_token(raw)` with the raw value unchanged - the test
+failed (`HeatFlowCorrection.DoesNotExist`, since `"  [TILT CORRECTED]
+  "` matches no status term unnormalised), confirming the normalising
+call is what the test depends on. Restored, re-ran the full module:
+`poetry run pytest tests/test_ghfdb/test_resources/test_release.py -q`
+→ 34 passed. `ruff check`/`ruff format --check` → clean.
+
+Next: T070, T071, probe metadata.
+
+Watch: none.
