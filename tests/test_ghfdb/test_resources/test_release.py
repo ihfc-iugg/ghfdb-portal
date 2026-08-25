@@ -515,3 +515,28 @@ class TestGHFDBReleaseImportResourceEmptyReference:
         refused = {row.number: row for row in result.invalid_rows}
         assert 2 in refused
         assert "publication_reference" in refused[2].error_dict
+
+
+class TestGHFDBReleaseImportResourceReferenceReadback:
+    """T047, T048: the publication reference a dataset was created from
+    can be read back off the dataset, rather than recovered by inspecting
+    its records. Fails before: it is not stored.
+
+    Per plan.md this goes through the dataset's existing one-to-one link
+    to a bibliographic record, so the citation key is one hop away and no
+    model change is needed - no records exist to inspect in this story
+    anyway (save_instance is a no-op), so the read-back is proven directly
+    off ``dataset.reference``."""
+
+    def test_the_reference_reads_back_off_the_dataset(self, db):
+        header, rows = _corrected_header_and_rows()
+        reference_index = header.index("publication_reference")
+        reference = rows[0][reference_index]
+        dataset = _make_dataset(header, rows)
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        release_dataset = Dataset.all_objects.get(reference__citation_key=reference)
+        assert release_dataset.reference.citation_key == reference
