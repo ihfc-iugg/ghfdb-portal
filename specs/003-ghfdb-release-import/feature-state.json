@@ -1,0 +1,101 @@
+{
+  "feature": "003-ghfdb-release-import",
+  "branch": "003-ghfdb-release-import",
+  "repo": "ihfc-iugg/ghfdb-portal",
+  "state": "PLAN",
+  "state_history": [
+    {
+      "state": "SPECIFY",
+      "at": "2026-08-25T10:25:30Z",
+      "note": "spec audit: narrowed to the release import, rewritten in place"
+    },
+    {
+      "state": "SETUP",
+      "at": "2026-08-25T10:25:30Z",
+      "note": "epic #119 reopened and promoted; stories #185-#188; draft PR #189"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-08-25T10:25:30Z",
+      "note": "spec gate approved"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "sam",
+      "at": "2026-08-25T10:25:30Z"
+    },
+    "plan": {
+      "approved_by": null,
+      "at": null
+    },
+    "design_review": {
+      "approved_by": null,
+      "at": null
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    }
+  },
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 185,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": []
+    },
+    {
+      "id": "US2",
+      "priority": "P1",
+      "issue": 186,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": []
+    },
+    {
+      "id": "US3",
+      "priority": "P1",
+      "issue": 187,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": []
+    },
+    {
+      "id": "US4",
+      "priority": "P2",
+      "issue": 188,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": []
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 0,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 0,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 0,
+      "max": 1
+    },
+    "tokens": {
+      "used": 0,
+      "max": 2000000
+    }
+  },
+  "pr": {
+    "number": 189,
+    "draft": true
+  }
+}

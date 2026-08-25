@@ -14,7 +14,7 @@ rewritten in place. The adjudications behind every change are recorded in
 G3 — the complete database held as a collection of individual datasets, each mapped one-to-one to
 its reviewed literature item
 
-**Roadmap**: R3 (the reading half) · the capability R5 depends on
+**Roadmap**: R3 · the capability R5 depends on
 
 **References**: Fuchs et al. (2021); Fuchs et al. (2023); IHFC GHFDB v2024; [CONTEXT.md](../../CONTEXT.md);
 constitution principles II, III, VI, IX; ADR-0003

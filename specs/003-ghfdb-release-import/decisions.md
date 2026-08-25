@@ -43,9 +43,15 @@ The cost was weighed and is small. Export is the only honest check on whether an
 faithful, but its failure is in headers, ordering and completeness rather than in values, so the
 existing round-trip check keeps working while export waits.
 
-**Consequence**: R3 splits into two roadmap items, and R5's deliverable "confirmation that a release
-exported after the import carries the same data as the release that went in" moves to `004`, since
-it cannot be demonstrated without a working export.
+**Consequence**: R3 splits. It keeps the reading half and becomes this feature; writing a release
+out becomes R17, which is where `004` lands. R5's deliverable "confirmation that a release exported
+after the import carries the same data as the release that went in" moves there too, since it
+cannot be demonstrated without a working export. The community upload template was also part of R3
+and belongs to R6, which already covers uploading a completed template file.
+
+R3 had been recorded as delivered, and was not. The audit found that nothing in the code can read a
+published release: it is a comma-separated file with one header row, and both importers read a
+spreadsheet with its headers on the sixth. The tag came off in the same change that split the item.
 
 ### D2 — The release import and the contributor upload are separate specifications
 
