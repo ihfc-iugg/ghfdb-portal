@@ -52,6 +52,16 @@ def _corrected_dataset():
     return _make_dataset(header, rows)
 
 
+def _dataset_from_fixture(path):
+    """A tablib Dataset built from a fixture file's header and rows exactly
+    as written - no correction applied."""
+    text = path.read_text(encoding="utf-8-sig")
+    reader = csv.reader(text.splitlines())
+    header = next(reader)
+    rows = list(reader)
+    return _make_dataset(header, rows)
+
+
 class TestGHFDBReleaseCSVFormat:
     """T009: the reading format is a comma-separated reader carrying a name
     a curator can recognise, reading the header from the first line and the
@@ -85,3 +95,60 @@ class TestGHFDBReleaseImportResourceCleanFile:
         assert result.has_errors() is False
         assert result.has_validation_errors() is False
         assert result.total_rows == len(rows)
+
+
+class TestGHFDBReleaseImportResourceMisspelledColumns:
+    """T011, T012: a file carrying a misspelled published column name is
+    refused, the error names the misspelled name, the correct name and the
+    outdated template, and no record of any kind is created. Asserted
+    separately for each of the two misspelled names (SC-001), so a check
+    keyed to one cannot leave the other unrefused, and the refusal holds
+    without exception for the published release itself, which carries both
+    (D7)."""
+
+    def test_only_ref_isgn_misspelled_is_refused(self):
+        dataset = _dataset_from_fixture(
+            FIXTURES_DIR / "header_misspelled_only_ref_isgn.csv"
+        )
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=True, raise_errors=False)
+
+        assert result.has_errors() is True
+        message = str(result.base_errors[0].error)
+        assert "Ref_ISGN" in message
+        assert "Ref_IGSN" in message
+        assert "outdated" in message
+        assert result.total_rows == 0
+
+    def test_only_tc_pt_fuction_misspelled_is_refused(self):
+        dataset = _dataset_from_fixture(
+            FIXTURES_DIR / "header_misspelled_only_tc_pt_fuction.csv"
+        )
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=True, raise_errors=False)
+
+        assert result.has_errors() is True
+        message = str(result.base_errors[0].error)
+        assert "tc_pT_fuction" in message
+        assert "tc_pT_function" in message
+        assert "outdated" in message
+        assert result.total_rows == 0
+
+    def test_published_release_header_carrying_both_misspellings_is_refused(self, db):
+        """D7: the refusal holds without exception, including for the
+        published release itself, which carries both misspelled names, and
+        no record of any kind is created."""
+        from heat_flow.models import HeatFlow
+
+        dataset = _dataset_from_fixture(BASE_FIXTURE)
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is True
+        message = str(result.base_errors[0].error)
+        assert "Ref_ISGN" in message
+        assert "Ref_IGSN" in message
+        assert "tc_pT_fuction" in message
+        assert "tc_pT_function" in message
+        assert result.total_rows == 0
+        assert HeatFlow.objects.count() == 0
