@@ -351,3 +351,22 @@ here") reads as covering every quality-shaped column, not only the one FR-033 ha
 example, so both join `DISCARDED_COLUMNS` alongside `Quality_Code`. **Revisit if** a future story
 finds a release genuinely carrying either with a value the reader is expected to consult — nothing
 in R1 or the FRs anticipates that, but the assumption is mine, not the spec's.
+
+**T004/T005 — the base fixture keeps both real misspellings; the corrections happen in T005.**
+T004's own acceptance test is literal and unambiguous — "the fixture's header equals the release
+file's header read from the archive" — which only holds if the base keeps `tc_pT_fuction` and
+`Ref_ISGN` exactly as downloaded. SC-001 separately requires proving the misspelled-header refusal
+"for each misspelled name," independently, "so that a check keyed to one cannot leave the other
+unrefused" (T011) — which the base alone cannot demonstrate, since it always carries both together.
+T005's two misspelled-header variants resolve this: each corrects exactly one of the two published
+names, leaving the other misspelled, isolating the two refusal cases the way SC-001 asks for.
+
+**T004 — the fixture's rows.** Cut from site `R24-P003477` (6 of the 7 rows) plus one row from
+`R24-P004314` (for a literal `[Unspecified]` cell — none of `R24-P003477`'s rows carry one).
+`R24-P003477` alone gives rows sharing a site, rows sharing an interval with agreeing (not yet
+disagreeing) depth and probe values, rows with no depth, and four distinct publication references —
+found by scanning the archive programmatically for a site combining all of those shapes in the
+fewest rows, rather than assembling them from unrelated sites. The interval-sharing pair
+(`R24-033563`/`R24-053075`) was chosen specifically because both already agree on `probe_type`,
+which T005's disagreement variant needs — a pair that already disagreed in the real data would leave
+nothing for that variant to change.

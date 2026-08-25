@@ -12,6 +12,10 @@ from the published release archive (T004) and its single-change variants
 citation keys are not unique (T007).
 """
 
+import csv
+import pathlib
+import zipfile
+
 import pytest
 
 from project.ghfdb.constants import (
@@ -25,6 +29,24 @@ from project.ghfdb.constants import (
 )
 
 pytestmark = pytest.mark.ghfdb
+
+ARCHIVE_PATH = (
+    pathlib.Path(__file__).resolve().parents[3] / "assets" / "ghfdb" / "IHFC_2024_GHFDB.zip"
+)
+FIXTURES_DIR = pathlib.Path(__file__).parent / "fixtures" / "release"
+BASE_FIXTURE = FIXTURES_DIR / "release_sample.csv"
+
+
+def read_csv_rows(path):
+    """Every data row of a release-format CSV fixture, as a list of dicts."""
+    text = path.read_text(encoding="utf-8-sig")
+    return list(csv.DictReader(text.splitlines()))
+
+
+def read_csv_header(path):
+    """The raw header line of a release-format CSV fixture, as field names."""
+    text = path.read_text(encoding="utf-8-sig")
+    return next(csv.reader(text.splitlines()[:1]))
 
 
 class TestReleaseImportModule:
@@ -78,3 +100,54 @@ class TestReleaseColumnDisposition:
         assert {"Reviewer_name", "Reviewer_comment", "Review_date", "Review_status"} <= (
             DISCARDED_COLUMNS
         )
+
+
+class TestReleaseFixture:
+    """T004: a fixture cut byte-for-byte from the published release archive
+    at assets/ghfdb/IHFC_2024_GHFDB.zip - real header, real column order,
+    the byte-order mark preserved. A hand-built fixture that matches what a
+    reader expects proves nothing about the format, which is how the gap
+    this feature exists to close stayed invisible."""
+
+    def test_fixture_header_equals_the_archive_header(self):
+        with zipfile.ZipFile(ARCHIVE_PATH) as archive:
+            (member_name,) = archive.namelist()
+            with archive.open(member_name) as member:
+                archive_header_line = member.readline()
+        archive_header = archive_header_line.decode("utf-8-sig").rstrip("\r\n")
+
+        fixture_header = BASE_FIXTURE.read_text(encoding="utf-8-sig").splitlines()[0]
+        assert fixture_header == archive_header
+
+    def test_fixture_preserves_the_byte_order_mark(self):
+        assert BASE_FIXTURE.read_bytes().startswith(b"\xef\xbb\xbf")
+
+    def test_fixture_includes_rows_sharing_a_site(self):
+        rows = read_csv_rows(BASE_FIXTURE)
+        site_ids = [row["ID_parent"] for row in rows]
+        assert len(set(site_ids)) < len(site_ids)
+
+    def test_fixture_includes_rows_sharing_an_interval(self):
+        """Two rows at one site reporting the same depth range - not the
+        indeterminate (no-depth) case, which is a separate requirement."""
+        rows = read_csv_rows(BASE_FIXTURE)
+        depths = [
+            (row["ID_parent"], row["q_top"], row["q_bottom"])
+            for row in rows
+            if row["q_top"] or row["q_bottom"]
+        ]
+        assert len(set(depths)) < len(depths)
+
+    def test_fixture_includes_rows_with_no_depth(self):
+        rows = read_csv_rows(BASE_FIXTURE)
+        no_depth = [row for row in rows if not row["q_top"] and not row["q_bottom"]]
+        assert no_depth
+
+    def test_fixture_includes_rows_from_more_than_one_publication(self):
+        rows = read_csv_rows(BASE_FIXTURE)
+        references = {row["publication_reference"] for row in rows}
+        assert len(references) > 1
+
+    def test_fixture_includes_an_unspecified_value(self):
+        rows = read_csv_rows(BASE_FIXTURE)
+        assert any("[Unspecified]" in row.values() for row in rows)

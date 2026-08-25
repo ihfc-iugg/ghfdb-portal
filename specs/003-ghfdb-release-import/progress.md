@@ -58,3 +58,36 @@ re-verified green and re-linted clean after).
 Next: T004, the base fixture cut from the published release archive.
 
 Watch: none.
+
+## 2026-08-25T12:45:00Z · Implementer foundations · T004
+
+Did: Cut `tests/test_ghfdb/test_resources/fixtures/release/release_sample.csv`
+byte-for-byte from `assets/ghfdb/IHFC_2024_GHFDB.zip` — the real header line
+(both misspellings intact, see decisions.md D19 on why they stay for now), the
+byte-order mark, and 7 real data rows, unzipped and located by scanning the
+archive programmatically (not hand-picked) for a small set of rows satisfying
+every shape T004 names in one place: 6 rows from site `R24-P003477` (rows
+sharing a site; two, `R24-033563`/`R24-053075`, sharing a real interval and
+agreeing on `probe_type`; three sharing the site's indeterminate no-depth
+interval; four distinct publication references across the site) plus one row
+from `R24-P004314` for a literal `[Unspecified]` cell, which no `R24-P003477`
+row carries. Added `TestReleaseFixture` to `test_release.py`, one test per
+shape T004's acceptance names plus the literal header-equality assertion.
+
+Verified: the fixture file did not exist anywhere in this repository before
+this task (confirmed: `git log --all --oneline -- 'tests/test_ghfdb/test_resources/fixtures/release/release_sample.csv'`
+returns nothing before this commit). `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -v` → 15 passed. The header
+match was also verified directly, independent of the test: extracted line 1 of
+the archive's CSV member with `zipfile` + `readline()` in a throwaway script
+and diffed it byte-for-byte against the fixture's first line before writing
+the assertion. `poetry run ruff check tests/test_ghfdb/test_resources/test_release.py`
+→ clean.
+
+Next: T005, the fixture variants.
+
+Watch: T004's fixture keeps both real misspellings in its header, so a reader
+built against it directly (a later story, not this one) would refuse it per
+D7 until a variant with both corrected exists — none of the Foundations
+fixtures is "a clean file that passes," by design; that's what a later
+story's own conftest will need to derive.
