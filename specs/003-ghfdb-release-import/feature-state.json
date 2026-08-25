@@ -74,28 +74,78 @@
       "tasks": [
         {
           "id": "T001",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "tests/test_ghfdb/test_resources/test_release.py:53"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:53"
+            ]
+          }
         },
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/constants.py:156",
+              "project/ghfdb/constants.py:180"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:66"
+            ]
+          }
         },
         {
           "id": "T003",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/constants.py:198",
+              "project/ghfdb/constants.py:213",
+              "project/ghfdb/constants.py:216"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:78"
+            ]
+          }
         },
         {
           "id": "T004",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "tests/test_ghfdb/test_resources/fixtures/release/release_sample.csv"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:106"
+            ]
+          }
         },
         {
           "id": "T005",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "tests/test_ghfdb/test_resources/fixtures/release/header_misspelled_only_ref_isgn.csv",
+              "tests/test_ghfdb/test_resources/fixtures/release/header_misspelled_only_tc_pt_fuction.csv",
+              "tests/test_ghfdb/test_resources/fixtures/release/header_undefined_column.csv",
+              "tests/test_ghfdb/test_resources/fixtures/release/header_missing_required_column.csv",
+              "tests/test_ghfdb/test_resources/fixtures/release/bad_vocabulary_value.csv",
+              "tests/test_ghfdb/test_resources/fixtures/release/numeric_value_in_text_column.csv",
+              "tests/test_ghfdb/test_resources/fixtures/release/disagreement_shared_site.csv",
+              "tests/test_ghfdb/test_resources/fixtures/release/disagreement_shared_interval_probe.csv"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:157"
+            ]
+          }
         },
         {
           "id": "T006",
@@ -112,8 +162,17 @@
         },
         {
           "id": "T007",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "tests/test_ghfdb/test_resources/conftest.py:32",
+              "tests/test_ghfdb/test_resources/conftest.py:43"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:262"
+            ]
+          }
         },
         {
           "id": "T110",
