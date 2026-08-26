@@ -902,3 +902,59 @@ dataset whenever a move happened: `TestGHFDBReleaseImportResourceMovingSiteLeave
 failed. Removed; the test passes against the unmodified mechanism, which is the same "diagnose, don't
 accept a first-try pass" shape earlier stories' Implementers used for tasks whose behaviour a prior
 task's own code already delivered.
+
+### D30 — US-1 closing Implementer notes (T025-T030, T116, T117)
+
+**`rollback_on_validation_errors` is not a `Meta` option - it is only a keyword argument to
+`import_data()`, and `GHFDBChildImportResource.Meta.rollback_on_validation_errors = True` (present
+since the 002 feature) has never done anything.** Confirmed by reading the installed library
+(`import_export/resources.py`): `ResourceOptions` carries no such attribute, and the only place the
+name is consulted is the `import_data(..., rollback_on_validation_errors=False, ...)` parameter
+`admin.py`'s own `process_dataset` never passes. The Meta setting is dead configuration, not a
+guarantee this story's own admin fix duplicates. It is untouched here - `child.py` is off limits
+beyond the one shared correction plan.md names, and removing dead config is not that correction -
+but it is worth a future cleanup task rather than something a later reader should trust.
+
+**The guarantee lives entirely in `GHFDBChildAdmin`, not in either resource.** Two overrides:
+`get_import_data_kwargs` forces `rollback_on_validation_errors=True` on every call (T025, T026), and
+`process_result` checks `result.has_errors()`/`has_validation_errors()` before delegating to the
+library's own success-reporting path, reporting a `messages.error` instead when either is true (T028,
+T029). Both are properties of the registration, exactly as plan.md's "Where it is registered" states,
+so they reach `GHFDBChildImportResource` (the contributor template's reader) for free, with no edit to
+`child.py` at all - the intended effect, not a side effect to route around.
+
+**T030 is the registration itself**: `GHFDBReleaseImportResource` and `GHFDBReleaseCSVFormat` join
+`get_import_resource_classes`/`get_import_formats` on `GHFDBChildAdmin`, appended after the existing
+entries. The three pinned test groups D21 named are updated to the grown state it authorises - two in
+`test_admin.py` (now `[GHFDBChildImportResource, GHFDBReleaseImportResource]`) and the two
+`GHFDBChildAdmin`-specific cases of `TestAdminGetImportFormats` in `test_parent_import.py` (now three
+formats, the release format last). The two `GHFDBParentAdmin`-specific cases in that same class are
+untouched, since the release resource is never registered on the site changelist (plan.md: "The site
+changelist is not a candidate").
+
+**Testing an admin-level guarantee needed a real confirmed pass, not a hand-assembled one.** T025's
+own scenario (one refused row among several valid ones sharing a site) first used a `SITE_COLUMNS`
+entry (`elevation`) to produce the refusal, which triggered T074/T075's own cross-row disagreement
+check on every row sharing that site, not a single-row refusal - confirmed by running the scenario
+with a debug print of `result.rows` before trusting the count. Switched to an unrecognised
+`geo_lithology` term (T081/T082's own established shape for a purely per-row refusal, in neither
+`SITE_COLUMNS` nor `PROBE_COLUMNS`). The result-check tests (`test_a_refused_import_is_not_reported`,
+`test_a_clean_file_is_still_reported`) go through `GHFDBChildAdmin.process_dataset` itself, with a
+minimal stand-in confirm form, rather than assembling a `result` by hand and handing it to
+`process_result` directly - the library's own `process_dataset` sets
+`retain_instance_in_row_result=True`, which `process_result`'s log-entry generation depends on
+(`row.instance`), and a hand-assembled call without it raised `AttributeError` on the success path.
+
+**T116/T117: identity is a per-pass Python set, not a query.** `_local_ids_seen`, reset once in
+`before_import` alongside the story's other per-pass caches, checked and populated in
+`import_instance` before the declared-field loop runs. A repeat within the set is refused, keyed `ID`
+(the header column, not the `local_id` attribute, per R6/FR-010's own established convention for a
+key outside the declared-field loop, e.g. `publication_reference`). Never consulting the database is
+what keeps a reimport (US-4) an update: a fresh resource instance per pass (R4) means the set starts
+empty on every `import_data` call, so the same file imported twice is never seen as repeating within
+either individual pass. Probed directly: with the duplicate check disabled, both new tests still
+passed for `test_repeat_across_two_separate_imports_is_not_refused` (nothing to catch either way) but
+`test_second_occurrence_is_refused_and_nothing_is_written` failed, confirming the check - not the
+already-existing upsert identity - is what the first test depends on. Restored. US-4's own reimport
+test classes (T097-T109, `TestGHFDBReleaseImportResourceReusesExistingDatasets` and the rest) were run
+as part of the full module and stayed green, unaffected by this addition.

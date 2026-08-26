@@ -698,20 +698,28 @@ class TestGHFDBSimpleImportFormat:
 class TestAdminGetImportFormats:
     """T085 — Admin classes expose both import format classes."""
 
-    def test_child_admin_get_import_formats_returns_two_classes(self):
-        """GHFDBChildAdmin.get_import_formats() returns [GHFDBImportFormat, GHFDBSimpleImportFormat]."""
+    def test_child_admin_get_import_formats_returns_three_classes(self):
+        """GHFDBChildAdmin.get_import_formats() returns
+        [GHFDBImportFormat, GHFDBSimpleImportFormat, GHFDBReleaseCSVFormat]
+        (D21: the release format joins the determination changelist once
+        US-1's all-or-nothing guarantee is registered, T030)."""
         from django.contrib.admin import AdminSite
 
         from project.ghfdb.admin import GHFDBChildAdmin
         from project.ghfdb.models import GHFDBChild
-        from project.ghfdb.resources import GHFDBImportFormat, GHFDBSimpleImportFormat
+        from project.ghfdb.resources import (
+            GHFDBImportFormat,
+            GHFDBReleaseCSVFormat,
+            GHFDBSimpleImportFormat,
+        )
 
         site_admin = GHFDBChildAdmin(GHFDBChild, AdminSite())
         formats = site_admin.get_import_formats()
 
-        assert len(formats) == 2
+        assert len(formats) == 3
         assert formats[0] is GHFDBImportFormat
         assert formats[1] is GHFDBSimpleImportFormat
+        assert formats[2] is GHFDBReleaseCSVFormat
 
     def test_parent_admin_get_import_formats_returns_two_classes(self):
         """GHFDBParentAdmin.get_import_formats() returns [GHFDBImportFormat, GHFDBSimpleImportFormat]."""
@@ -729,7 +737,8 @@ class TestAdminGetImportFormats:
         assert formats[1] is GHFDBSimpleImportFormat
 
     def test_child_admin_format_titles(self):
-        """Both format classes returned by GHFDBChildAdmin have the correct get_title() values."""
+        """The three format classes returned by GHFDBChildAdmin have the
+        correct get_title() values, including the release format (D21)."""
         from django.contrib.admin import AdminSite
 
         from project.ghfdb.admin import GHFDBChildAdmin
@@ -740,6 +749,7 @@ class TestAdminGetImportFormats:
 
         assert formats[0]().get_title() == "GHFDB Official Template"
         assert formats[1]().get_title() == "GHFDB Simple Template"
+        assert formats[2]().get_title() == "GHFDB Release Format"
 
     def test_parent_admin_format_titles(self):
         """Both format classes returned by GHFDBParentAdmin have the correct get_title() values."""
