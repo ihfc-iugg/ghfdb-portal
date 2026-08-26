@@ -2025,3 +2025,30 @@ class TestGHFDBReleaseImportResourceRepeatedIdentifierWithinFile:
 
         assert second.has_validation_errors() is False
         assert HeatFlow.objects.count() == len(rows)
+
+
+class TestReleaseImportSuiteHealth:
+    """T112: this module is this feature's own test suite, and it is not
+    allowed to leave a defect behind as an expected failure. The thirteen
+    expected failures already in the repository live in
+    ``test_parent_import.py``, ``test_export.py`` and
+    ``test_schema_coverage.py`` - the contributor upload-template path
+    earlier work left unfinished - and are unrelated to what this feature
+    built, so they are outside this assertion's scope by construction: it
+    reads only this module's own source, not the wider ``test_resources``
+    tree they live in."""
+
+    def test_no_test_in_this_module_is_expected_to_fail_or_skipped(self):
+        import ast
+
+        source = Path(__file__).read_text()
+        marks = set()
+        for node in ast.walk(ast.parse(source)):
+            if isinstance(node, ast.FunctionDef | ast.ClassDef):
+                for decorator in node.decorator_list:
+                    target = (
+                        decorator.func if isinstance(decorator, ast.Call) else decorator
+                    )
+                    if isinstance(target, ast.Attribute):
+                        marks.add(target.attr)
+        assert marks & {"xfail", "skip", "skipif"} == set()
