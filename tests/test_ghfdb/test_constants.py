@@ -16,6 +16,7 @@ every constant it tests, per the repo's conformance check (Article X).
 
 import csv
 import pathlib
+import re
 import zipfile
 
 import pytest
@@ -320,3 +321,32 @@ class TestBibliographicFixtures:
             if item.citation_key.strip().lower() == normalised
         ]
         assert {item.pk for item in matches} == {first.pk, second.pk}
+
+
+GHFDB_FIELDS_PAGE = (
+    pathlib.Path(__file__).resolve().parents[2] / "docs" / "ghfdb_fields.md"
+)
+
+
+class TestReleaseColumnDocumentation:
+    """T111: which columns a release file's columns are read, recognised
+    and discarded, or refused, documented on the page a developer already
+    reads for the field mapping - generated from ``constants.py``'s own
+    three-way split (T003) rather than restated beside it, so a column
+    moved between the sets without a documentation change fails here."""
+
+    @staticmethod
+    def _documented(heading):
+        page = GHFDB_FIELDS_PAGE.read_text()
+        match = re.search(rf"### {heading}\n\n.*?```text\n(.*?)```", page, re.S)
+        assert match, f"'{heading}' section not found in {GHFDB_FIELDS_PAGE}"
+        return set(match.group(1).split())
+
+    def test_read_columns_match_the_definition(self):
+        assert self._documented("Read") == READ_COLUMNS
+
+    def test_discarded_columns_match_the_definition(self):
+        assert self._documented("Recognised and discarded") == DISCARDED_COLUMNS
+
+    def test_refused_columns_match_the_definition(self):
+        assert self._documented("Refused") == REFUSED_COLUMNS
