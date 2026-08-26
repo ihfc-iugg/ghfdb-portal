@@ -92,6 +92,37 @@ def _normalize_publication_reference(reference: str) -> str:
     return reference.strip().lower()
 
 
+def _record_publication_year(literature_item, year):
+    """FR-037: persist a publication's year onto its bibliographic record,
+    in the one existing field that already carries a date
+    (``LiteratureItem.issued``, derived from its CSL ``item`` blob on
+    save) - the only place a site's earliest-year comparison (T103-T107)
+    can read a publication's year back from on a later, separate import
+    pass, since ``Year`` itself is discarded rather than stored (D26).
+    Never overwrites a year the record already carries from elsewhere,
+    and does nothing for a row that gives no year at all."""
+    if not year or literature_item.issued is not None:
+        return
+    try:
+        year_number = int(year)
+    except ValueError:
+        return
+    literature_item.item = {
+        **literature_item.item,
+        "issued": {"date-parts": [[year_number]]},
+    }
+    literature_item.save()
+
+
+def _publication_year(dataset):
+    """The year recorded for a dataset's own publication (T103-T107), or
+    ``None`` where none was ever supplied - read back off the same field
+    ``_record_publication_year`` writes."""
+    reference = getattr(dataset, "reference", None)
+    issued = getattr(reference, "issued", None) if reference is not None else None
+    return issued.date.year if issued is not None else None
+
+
 def _correction_status(raw: str) -> str:
     """FR-030, T068, T069: a correction flag is normalised the same way as
     any other controlled-vocabulary value - surrounding brackets stripped
@@ -402,13 +433,14 @@ class GHFDBReleaseImportResource(ModelResource):
         variant a set happened to iterate first.
         """
         references_by_normalized = {}
+        years_by_normalized = {}
         for row in dataset.dict:
             raw_reference = (row.get("publication_reference") or "").strip()
             if not raw_reference:
                 continue
-            references_by_normalized.setdefault(
-                _normalize_publication_reference(raw_reference), raw_reference
-            )
+            normalized = _normalize_publication_reference(raw_reference)
+            references_by_normalized.setdefault(normalized, raw_reference)
+            years_by_normalized.setdefault(normalized, (row.get("Year") or "").strip())
 
         datasets_by_reference = {}
         ambiguous_references = {}
@@ -425,6 +457,9 @@ class GHFDBReleaseImportResource(ModelResource):
                 literature_item = matches[0]
             else:
                 literature_item = LiteratureItem.objects.create(citation_key=reference)
+            _record_publication_year(
+                literature_item, years_by_normalized.get(normalized)
+            )
             release_dataset, _created = Dataset.all_objects.get_or_create(
                 reference=literature_item,
                 defaults={
@@ -791,7 +826,11 @@ class GHFDBReleaseImportResource(ModelResource):
                 site = HeatFlowSite.objects.get(local_id=local_id)
             except HeatFlowSite.DoesNotExist:
                 site = self._build_new_site(row, local_id, dataset)
+            else:
+                self._reassign_site_dataset_if_earlier(site, dataset)
             self._sites_by_local_id[local_id] = site
+        else:
+            self._reassign_site_dataset_if_earlier(site, dataset)
 
         parent = self._parents_by_site_id.get(site.pk)
         if parent is None:
@@ -813,6 +852,30 @@ class GHFDBReleaseImportResource(ModelResource):
             self._parents_by_site_id[site.pk] = parent
 
         return site, parent
+
+    def _reassign_site_dataset_if_earlier(self, site, dataset):
+        """FR-037, FR-038: a site belongs to the dataset of the earliest
+        publication year among the determinations reported for it,
+        compared on every row that shares the site - within one import
+        pass (T103, T104) and across separate ones (T105-T107), since the
+        comparison reads the year back off each dataset's own
+        bibliographic record rather than anything held only for this
+        pass. Never moves the site when either year is unknown, or when
+        the incoming publication is not strictly earlier (D6: the portal
+        does not guess at supplied data).
+        """
+        if dataset.pk == site.dataset_id:
+            return
+        current_year = _publication_year(site.dataset)
+        incoming_year = _publication_year(dataset)
+        if (
+            current_year is None
+            or incoming_year is None
+            or incoming_year >= current_year
+        ):
+            return
+        site.dataset = dataset
+        site.save(update_fields=["dataset"])
 
     def _build_new_site(self, row, local_id, dataset):
         """Build a site for a published site identifier seen for the

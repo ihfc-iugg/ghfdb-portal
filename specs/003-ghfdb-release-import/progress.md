@@ -1484,3 +1484,37 @@ module (T097-T102's five new test classes plus the 117 already there).
 Next: T103-T109, a site's dataset by the earliest publication year.
 
 Watch: none.
+
+## 2026-08-26T01:45:00Z · Implementer US-4 · T103-T109
+
+Did: a site now belongs to the dataset of the earliest publication year among the determinations
+reported for it (D6, FR-037), and moves there when an earlier one arrives, whether in the same
+import pass (T103, T104) or a later, separate one (T105-T107). `_record_publication_year` persists
+a reference's year onto its bibliographic record's existing `LiteratureItem.issued` field (via its
+CSL `item` blob), the only field anywhere that already carries a date and survives across import
+passes without a schema change (see decisions.md D29 for the full reasoning). `_publication_year`
+reads it back. `_build_site_and_parent` calls the new `_reassign_site_dataset_if_earlier` on every
+row that finds an already-known site, whether from this pass's own cache or a database lookup -
+never on a freshly created one, where the current row's dataset is already correct. A determination's
+own `dataset` is untouched by any of this (FR-039, T108, T109) - it was already set independently
+of the site's, from the row's own publication reference, in `before_save_instance`.
+
+Verified: RED observed for T103/T104 by making `_reassign_site_dataset_if_earlier` an unconditional
+no-op - two rows sharing a site under different publications and years left the site at whichever
+was processed first. RED observed again for T105/T106 with the same no-op. RED observed for T107
+specifically by making the reassignment unconditional instead of disabled - `SiteMovesToEarlierPublication`
+still passed (a later-arriving earlier year still moves the site) while `SiteStaysWithEarlierPublication`
+failed, the site moving to the later publication's dataset when it should not have - confirming the
+pair, not either test alone, is what proves the rule. RED observed for the year-persistence mechanism
+itself by making `_record_publication_year` a no-op - `SiteMovesToEarlierPublication` failed, since a
+second, separate import pass then has no year to compare against. RED observed for T108/T109 by
+adding a line that moved a site's already-saved determinations to its dataset whenever the site
+itself moved - the test failed, confirming the "determinations never move" guarantee is real and not
+merely untested. Each probe was restored before the next. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 126 passed, full module (T103-T109's four new
+test classes plus the 122 already there). `ruff check`/`ruff format` → clean.
+
+Next: none - all thirteen tasks (T097-T109) this run's brief scopes are closed. The full verify runs
+once at the completion report.
+
+Watch: none.

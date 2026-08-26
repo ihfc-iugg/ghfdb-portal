@@ -1407,38 +1407,94 @@
         },
         {
           "id": "T103",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/release.py:856"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:1846"
+            ]
+          }
         },
         {
           "id": "T104",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/release.py:856"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:1846"
+            ]
+          }
         },
         {
           "id": "T105",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/release.py:856"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:1873"
+            ]
+          }
         },
         {
           "id": "T106",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/release.py:856"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:1873"
+            ]
+          }
         },
         {
           "id": "T107",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/release.py:856"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:1901"
+            ]
+          }
         },
         {
           "id": "T108",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/release.py:573"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:1932"
+            ]
+          }
         },
         {
           "id": "T109",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "project/ghfdb/resources/release.py:573"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:1932"
+            ]
+          }
         }
       ]
     }

@@ -851,3 +851,54 @@ sentences decompose into six tasks, but the mechanism they prove is one connecte
 independent ones. Each task's own fallback was still probed in isolation (see Verified above) before
 being folded back in, per craft-tdd's own instruction not to accept a mechanism on the strength of
 the combined test alone.
+
+### D29 — US-4 Implementer notes (T103-T109): the earliest publication year survives a reimport by
+reusing `LiteratureItem.issued`, the one existing field that already carries a date
+
+D6 and FR-037 decide a shared site's dataset by the earliest publication year among its
+determinations, "compared as each import runs" (Clarifications). That comparison has to hold not
+only between two rows in the same file (T103, T104) but between a row in *this* import and whatever
+publication an *earlier, separate* import already gave the site (T105-T107) - and `Year` itself
+carries no field anywhere in the schema (D26): it is read at import time and never stored.
+
+**Ruled**: the year is persisted, once, onto the one field that was already built to hold a
+publication's date and was simply never populated for these records - `LiteratureItem.issued`,
+derived by the model's own `save()` from a CSL `issued` date-parts block in its `item` JSON field.
+`_record_publication_year` sets `item["issued"] = {"date-parts": [[year]]}` and saves, once per
+bibliographic record, the first time a release row supplies a year for it; a year the record already
+carries from elsewhere is never overwritten, and a row that gives no year leaves the record as it
+was. `_publication_year` reads it back off `dataset.reference.issued.date.year`.
+
+**No field or migration was added.** `LiteratureItem.issued` and `item` are both existing columns;
+this uses them as their own model already intends them to be used, for a purpose (a stub
+bibliographic record created from a citation key alone, D5) that never gave them anything to derive
+from before. Confirmed this does not disturb an already-populated record: `LiteratureItem.save()`
+also derives `title` and `type` from the same `item` blob, so a matched, pre-existing record (T039's
+own fixture, carrying a real `item["title"]`) needed its `item` dict merged rather than replaced -
+probed directly by running `TestGHFDBReleaseImportResourceMatchesExistingLiterature` after this
+change; it still asserts the dataset's name against the fixture's own title, unaffected.
+
+**A site is never moved when either side's year is unknown, rather than moved on whichever the
+importer happens to know.** FR-037/038 describe deciding by year, not by "year, falling back to
+import order when absent" - inventing a fallback the requirements do not state would be guessing at
+what the file does not say, which the standing constraint against guessing at supplied data rules
+out. Where a matched, pre-existing bibliographic record never gets a year from any release row (T039's
+own scenario, or a citation key resolved without one), the site simply stays wherever it already was
+placed.
+
+**T105 and T107 are a pair, and only the pair proves the rule.** An unconditional "always move to the
+row's own dataset" implementation passes T105 (earlier arrives after later - moves, correctly) while
+failing what T105 alone cannot detect. Probed directly: replacing the year comparison with an
+unconditional reassignment left `TestGHFDBReleaseImportResourceSiteMovesToEarlierPublication` green
+and failed `TestGHFDBReleaseImportResourceSiteStaysWithEarlierPublication` for exactly the reason its
+own docstring names - the site moved to the later publication's dataset instead of staying at the
+earlier one. Restored.
+
+**T108/T109 needed no production change, and that was probed rather than assumed.** A determination's
+own `dataset` is set independently, from its own row's publication reference, in `before_save_instance`
+- nothing in `_build_site_and_parent` or `_reassign_site_dataset_if_earlier` touches it. Probed by
+adding a line that bulk-updated every determination on a site to the site's own (just-reassigned)
+dataset whenever a move happened: `TestGHFDBReleaseImportResourceMovingSiteLeavesDeterminationsWithTheirOwnDataset`
+failed. Removed; the test passes against the unmodified mechanism, which is the same "diagnose, don't
+accept a first-try pass" shape earlier stories' Implementers used for tasks whose behaviour a prior
+task's own code already delivered.

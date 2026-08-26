@@ -1842,3 +1842,125 @@ class TestGHFDBReleaseImportResourceReimportCorrections:
             == first_count
         )
 
+
+class TestGHFDBReleaseImportResourceSharedSiteEarliestPublicationYear:
+    """T103, T104: a site reported by two publications belongs to the
+    dataset of the earlier publication year - decided by the earliest
+    year among the determinations reported for it. Fails before: it
+    belongs to whichever was imported first."""
+
+    def test_a_site_reported_by_two_publications_belongs_to_the_earlier_year(self, db):
+        from heat_flow.models import HeatFlowSite
+
+        header, rows = _corrected_header_and_rows()
+        # rows[0] (2013, Arnaiz-Rodriguez_Orihuela_2013) and rows[6] (1964,
+        # Langseth_Grim_1964) already share the published site identifier
+        # R24-P003477 in the real base fixture, cited to two different
+        # publications.
+        dataset = _make_dataset(header, [rows[0], rows[6]])
+
+        result = GHFDBReleaseImportResource().import_data(
+            dataset, dry_run=False, raise_errors=False
+        )
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+
+        site = HeatFlowSite.objects.get(local_id="R24-P003477")
+        assert site.dataset.reference.citation_key == "Langseth_Grim_1964"
+
+
+class TestGHFDBReleaseImportResourceSiteMovesToEarlierPublication:
+    """T105, T106: importing the earlier publication after the later one
+    moves the site to the earlier publication's dataset. Fails before:
+    the site stays where it was."""
+
+    def test_a_later_import_supplying_an_earlier_year_moves_the_site(self, db):
+        from heat_flow.models import HeatFlowSite
+
+        header, rows = _corrected_header_and_rows()
+        later = rows[0]  # Arnaiz-Rodriguez_Orihuela_2013, 2013
+        earlier = rows[6]  # Langseth_Grim_1964, 1964
+
+        first_result = GHFDBReleaseImportResource().import_data(
+            _make_dataset(header, [later]), dry_run=False, raise_errors=False
+        )
+        assert first_result.has_errors() is False
+        site = HeatFlowSite.objects.get(local_id="R24-P003477")
+        assert site.dataset.reference.citation_key == "Arnaiz-Rodriguez_Orihuela_2013"
+
+        second_result = GHFDBReleaseImportResource().import_data(
+            _make_dataset(header, [earlier]), dry_run=False, raise_errors=False
+        )
+        assert second_result.has_errors() is False
+
+        site.refresh_from_db()
+        assert site.dataset.reference.citation_key == "Langseth_Grim_1964"
+
+
+class TestGHFDBReleaseImportResourceSiteStaysWithEarlierPublication:
+    """T107: importing the later publication after the earlier one
+    leaves the site where it is. Fails before: the site moves on every
+    import - this is T105's mirror, and the pair is the whole rule; one
+    without the other passes with an unconditional move."""
+
+    def test_a_later_import_supplying_a_later_year_leaves_the_site_where_it_is(
+        self, db
+    ):
+        from heat_flow.models import HeatFlowSite
+
+        header, rows = _corrected_header_and_rows()
+        earlier = rows[6]  # Langseth_Grim_1964, 1964
+        later = rows[0]  # Arnaiz-Rodriguez_Orihuela_2013, 2013
+
+        first_result = GHFDBReleaseImportResource().import_data(
+            _make_dataset(header, [earlier]), dry_run=False, raise_errors=False
+        )
+        assert first_result.has_errors() is False
+        site = HeatFlowSite.objects.get(local_id="R24-P003477")
+        assert site.dataset.reference.citation_key == "Langseth_Grim_1964"
+
+        second_result = GHFDBReleaseImportResource().import_data(
+            _make_dataset(header, [later]), dry_run=False, raise_errors=False
+        )
+        assert second_result.has_errors() is False
+
+        site.refresh_from_db()
+        assert site.dataset.reference.citation_key == "Langseth_Grim_1964"
+
+
+class TestGHFDBReleaseImportResourceMovingSiteLeavesDeterminationsWithTheirOwnDataset:
+    """T108, T109: moving a site between datasets leaves its
+    determinations with the datasets of the publications that reported
+    them - each keeps its own publication's dataset (FR-039). Fails
+    before: the determinations move with the site."""
+
+    def test_determinations_stay_with_their_own_publications_dataset_when_the_site_moves(
+        self, db
+    ):
+        from heat_flow.models import HeatFlow
+
+        header, rows = _corrected_header_and_rows()
+        later = rows[0]  # Arnaiz-Rodriguez_Orihuela_2013, 2013, ID R24-003627
+        earlier = rows[6]  # Langseth_Grim_1964, 1964, ID R24-054171
+
+        first_result = GHFDBReleaseImportResource().import_data(
+            _make_dataset(header, [later]), dry_run=False, raise_errors=False
+        )
+        assert first_result.has_errors() is False
+        second_result = GHFDBReleaseImportResource().import_data(
+            _make_dataset(header, [earlier]), dry_run=False, raise_errors=False
+        )
+        assert second_result.has_errors() is False
+
+        later_determination = HeatFlow.objects.get(local_id="R24-003627")
+        earlier_determination = HeatFlow.objects.get(local_id="R24-054171")
+
+        assert (
+            later_determination.dataset.reference.citation_key
+            == "Arnaiz-Rodriguez_Orihuela_2013"
+        )
+        assert (
+            earlier_determination.dataset.reference.citation_key
+            == "Langseth_Grim_1964"
+        )
