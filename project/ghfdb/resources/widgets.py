@@ -129,10 +129,7 @@ class ConceptWidget(CharWidget):
         result = self.label_to_key.get(normalised) or self.key_to_key.get(normalised)
         if result is None:
             fallback = _without_trailing_parenthetical(normalised)
-            if fallback != normalised:
-                result = self.label_to_key.get(fallback) or self.key_to_key.get(
-                    fallback
-                )
+            result = self.label_to_key.get(fallback) or self.key_to_key.get(fallback)
         if result is None:
             raise ValueError(
                 _(
@@ -335,7 +332,7 @@ class RelatedModelWidget(Widget):
         # anything is written" shape the interval and site disagreement
         # checks already give a row (D9). ``set_m2m_relations`` applies the
         # same widgets again, once the instance is saved.
-        for _model_field, (row_col, m2m_widget) in self.m2m_map.items():
+        for row_col, m2m_widget in self.m2m_map.values():
             raw = (row or {}).get(row_col, "") or ""
             if not raw:
                 continue

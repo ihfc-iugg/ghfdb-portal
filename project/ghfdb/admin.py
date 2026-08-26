@@ -216,7 +216,7 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
         already rolled back to nothing by ``get_import_data_kwargs``
         above, would still tell the curator it succeeded."""
         if result.has_errors() or result.has_validation_errors():
-            self._add_import_failure_message(result, request)
+            self._add_import_failure_message(request)
             app_label, model_name = self.get_model_info()
             url = reverse(
                 f"admin:{app_label}_{model_name}_changelist",
@@ -225,15 +225,14 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
             return HttpResponseRedirect(url)
         return super().process_result(result, request)
 
-    def _add_import_failure_message(self, result, request):
-        opts = self.model._meta
+    def _add_import_failure_message(self, request):
         messages.error(
             request,
             _(
                 "Import of %(name)s was refused: the file contained one or "
                 "more refused values, so nothing was written."
             )
-            % {"name": opts.verbose_name_plural},
+            % {"name": self.model._meta.verbose_name_plural},
         )
 
     # --- Export configuration ---------------------------------------------------

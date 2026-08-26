@@ -1,20 +1,19 @@
 """
 GHFDB release import resource and reading format (specs/003-ghfdb-release-import).
 
-Implements the first part of US-1: a release file is checked in full before
-anything is written. ``GHFDBReleaseCSVFormat`` reads the comma-separated
-format a published release is distributed in, and
-``GHFDBReleaseImportResource`` validates a file's header against the
-release column definitions in ``constants.py`` before any row is read
-(FR-003 to FR-007), then reports every refused value by the column name a
-curator sees in the header and the line it occupies in the file (FR-009,
-FR-010).
+``GHFDBReleaseCSVFormat`` reads the comma-separated format a published
+release is distributed in. ``GHFDBReleaseImportResource`` validates a
+file's header against the release column definitions in ``constants.py``
+before any row is read (FR-003 to FR-007), reports every refused value by
+the column name a curator sees in the header and the line it occupies in
+the file (FR-009, FR-010), and turns each row into the records the portal
+keeps: the dataset its publication reference resolves to, the site, the
+site's parent heat flow value, the interval, and the determination with
+the gradient, conductivity and corrections derived over it.
 
-This part of the story checks a file and reports its faults. It does not
-turn a row into the site, interval and determination it describes, or
-create the dataset and literature a row's publication reference resolves
-to - that is later work, and ``save_instance`` is a deliberate no-op here
-for that reason.
+Nothing is written unless the whole file passes (docs/adr/0012). Reading
+the same file again finds every record by its published identifier and
+updates it in place rather than building a second one (docs/adr/0010).
 
 References:
     - Fuchs et al. (2021). A new database structure for the IHFC Global Heat
@@ -185,15 +184,39 @@ def _find_disagreements(dataset, key_fn, columns, normalize=None):
 PROBE_COLUMNS = ("probe_penetration", "probe_type", "probe_length", "probe_tilt")
 
 
+def _disagreement_errors(disagreements, key, subject):
+    """The refusal for each column that rows sharing ``subject`` disagree
+    about (T072-T075, D18). ``subject`` reads into the message, so it is
+    written as the reader sees it: ``this interval`` or ``site 'X'``."""
+    return {
+        column: ValidationError(
+            force_str(
+                f"Rows sharing {subject} disagree about '{column}': "
+                f"{', '.join(values)}. The file is refused rather than "
+                f"choosing between them."
+            ),
+            code="invalid",
+        )
+        for column, values in disagreements.get(key, {}).items()
+    }
+
+
+def _vocab_term(raw):
+    """A controlled-vocabulary value reduced to the term it is compared
+    under. ``Unspecified`` states nothing, so it reduces to blank and is
+    indistinguishable from an empty cell."""
+    normalized = normalize_vocab_token(raw)
+    return "" if normalized == "unspecified" else normalized
+
+
 def _probe_column_value(column, raw):
     """The comparable value of a probe column for disagreement purposes
     (T072, T073): ``probe_type`` is a vocabulary column, so it is
     normalised and treated as blank when unspecified, the same as any
-    other controlled-vocabulary value; the quantity columns compare on
+    other controlled-vocabulary value. The quantity columns compare on
     their raw text."""
     if column == "probe_type":
-        normalized = normalize_vocab_token(raw)
-        return "" if normalized == "unspecified" else normalized
+        return _vocab_term(raw)
     return raw
 
 
@@ -246,12 +269,10 @@ def _site_column_value(column, raw):
     normalising to ``unspecified`` makes no statement, the same as a
     blank cell. The rest compare on their raw text."""
     if column in ("environment", "explo_method"):
-        normalized = normalize_vocab_token(raw)
-        return "" if normalized == "unspecified" else normalized
+        return _vocab_term(raw)
     if column == "explo_purpose":
-        tokens = (normalize_vocab_token(term.strip()) for term in raw.split(";"))
-        terms = {token for token in tokens if token not in ("", "unspecified")}
-        return ";".join(sorted(terms))
+        terms = {_vocab_term(term.strip()) for term in raw.split(";")}
+        return ";".join(sorted(term for term in terms if term))
     return raw
 
 
@@ -344,10 +365,12 @@ class GHFDBReleaseImportResource(ModelResource):
         self._gradient_widget = GradientWidget()
         self._conductivity_widget = ConductivityWidget()
 
-    def before_import(self, dataset, **kwargs):
-        headers = dataset.headers or []
+    @staticmethod
+    def _header_faults(headers):
+        """Every reason this header is refused, in reporting order: a
+        misspelled published name, a name the release format does not
+        define, then a required name the file does not carry."""
         header_set = set(headers)
-
         faults = []
 
         misspelled_present = [name for name in MISSPELLED_COLUMNS if name in header_set]
@@ -375,6 +398,10 @@ class GHFDBReleaseImportResource(ModelResource):
                 f"file does not carry."
             )
 
+        return faults
+
+    def before_import(self, dataset, **kwargs):
+        faults = self._header_faults(dataset.headers or [])
         if faults:
             del dataset[:]
             raise ValueError(" ".join(faults))
@@ -421,7 +448,7 @@ class GHFDBReleaseImportResource(ModelResource):
         # updates rather than being caught as a within-file repeat.
         self._local_ids_seen = set()
 
-    def _resolve_publication_datasets(self, dataset):
+    def _resolve_publication_datasets(self, table):
         """T035, T036: collect the file's distinct publication references
         once, before any row is read, and create the dataset each one
         belongs to (D4) - a bibliographic record carrying the reference's
@@ -439,7 +466,7 @@ class GHFDBReleaseImportResource(ModelResource):
         """
         references_by_normalized = {}
         years_by_normalized = {}
-        for row in dataset.dict:
+        for row in table.dict:
             raw_reference = (row.get("publication_reference") or "").strip()
             if not raw_reference:
                 continue
@@ -561,28 +588,18 @@ class GHFDBReleaseImportResource(ModelResource):
                 )
 
         interval_key = _interval_disagreement_key(row)
-        for column, values in self._interval_probe_disagreements.get(
-            interval_key, {}
-        ).items():
-            errors[column] = ValidationError(
-                force_str(
-                    f"Rows sharing this interval disagree about '{column}': "
-                    f"{', '.join(values)}. The file is refused rather than "
-                    f"choosing between them."
-                ),
-                code="invalid",
+        errors.update(
+            _disagreement_errors(
+                self._interval_probe_disagreements, interval_key, "this interval"
             )
+        )
 
         site_key = _site_disagreement_key(row)
-        for column, values in self._site_disagreements.get(site_key, {}).items():
-            errors[column] = ValidationError(
-                force_str(
-                    f"Rows sharing site '{site_key}' disagree about "
-                    f"'{column}': {', '.join(values)}. The file is refused "
-                    f"rather than choosing between them."
-                ),
-                code="invalid",
+        errors.update(
+            _disagreement_errors(
+                self._site_disagreements, site_key, f"site '{site_key}'"
             )
+        )
 
         if errors:
             raise ValidationError(errors)
@@ -748,10 +765,7 @@ class GHFDBReleaseImportResource(ModelResource):
         penetration = QuantityWidget("m").clean(row.get("probe_penetration"))
         length = QuantityWidget("m").clean(row.get("probe_length"))
         tilt = QuantityWidget("°").clean(row.get("probe_tilt"))
-        probe_type_normalized = normalize_vocab_token(row.get("probe_type") or "")
-        probe_type_given = (
-            bool(probe_type_normalized) and probe_type_normalized != "unspecified"
-        )
+        probe_type_given = bool(_vocab_term(row.get("probe_type") or ""))
 
         if (
             penetration is None
@@ -795,21 +809,37 @@ class GHFDBReleaseImportResource(ModelResource):
         overwrite fields the widget never touches (the measurement
         base's own ``added``, in particular) with their defaults.
         """
-        gradient = self._gradient_widget.clean(row.get("T_grad_mean"), row=row)
-        if gradient is None:
+        return self._build_measurement(
+            ThermalGradient,
+            self._gradient_widget,
+            row.get("T_grad_mean"),
+            row,
+            interval,
+            dataset,
+        )
+
+    @staticmethod
+    def _build_measurement(model, widget, raw, row, interval, dataset):
+        """The gradient and the conductivity are built the same way: the
+        widget decides whether the row reports one at all, the published
+        determination identifier decides whether it is a new record or an
+        existing one to refresh, and only the fields the widget sets are
+        carried over."""
+        record = widget.clean(raw, row=row)
+        if record is None:
             return None
         local_id = (row.get("ID") or "").strip()
-        existing = ThermalGradient.objects.filter(local_id=local_id).first()
+        existing = model.objects.filter(local_id=local_id).first()
         if existing is not None:
-            for field_name in self._gradient_widget.scalar_map:
-                setattr(existing, field_name, getattr(gradient, field_name))
-            gradient = existing
-        gradient.dataset = dataset
-        gradient.sample = interval
-        gradient.local_id = local_id
-        gradient.save()
-        self._gradient_widget.set_m2m_relations(gradient)
-        return gradient
+            for field_name in widget.scalar_map:
+                setattr(existing, field_name, getattr(record, field_name))
+            record = existing
+        record.dataset = dataset
+        record.sample = interval
+        record.local_id = local_id
+        record.save()
+        widget.set_m2m_relations(record)
+        return record
 
     def _build_conductivity(self, row, interval, dataset):
         """Build the interval conductivity a row's determination was
@@ -819,21 +849,14 @@ class GHFDBReleaseImportResource(ModelResource):
         same row (T101) the same way. Skipped (``None``) when the row
         gives no ``tc_mean``, per ``ConductivityWidget``'s own sentinel.
         """
-        conductivity = self._conductivity_widget.clean(row.get("tc_mean"), row=row)
-        if conductivity is None:
-            return None
-        local_id = (row.get("ID") or "").strip()
-        existing = IntervalConductivity.objects.filter(local_id=local_id).first()
-        if existing is not None:
-            for field_name in self._conductivity_widget.scalar_map:
-                setattr(existing, field_name, getattr(conductivity, field_name))
-            conductivity = existing
-        conductivity.dataset = dataset
-        conductivity.sample = interval
-        conductivity.local_id = local_id
-        conductivity.save()
-        self._conductivity_widget.set_m2m_relations(conductivity)
-        return conductivity
+        return self._build_measurement(
+            IntervalConductivity,
+            self._conductivity_widget,
+            row.get("tc_mean"),
+            row,
+            interval,
+            dataset,
+        )
 
     def _build_site_and_parent(self, row, dataset):
         """Return the row's site and its parent heat flow value, building
@@ -851,11 +874,11 @@ class GHFDBReleaseImportResource(ModelResource):
                 site = HeatFlowSite.objects.get(local_id=local_id)
             except HeatFlowSite.DoesNotExist:
                 site = self._build_new_site(row, local_id, dataset)
-            else:
-                self._reassign_site_dataset_if_earlier(site, dataset)
             self._sites_by_local_id[local_id] = site
-        else:
-            self._reassign_site_dataset_if_earlier(site, dataset)
+        # A site just built already sits in this row's dataset, so the
+        # comparison below is a no-op for it and the rule reads as one
+        # rule applied to every resolved site (D6).
+        self._reassign_site_dataset_if_earlier(site, dataset)
 
         parent = self._parents_by_site_id.get(site.pk)
         if parent is None:
