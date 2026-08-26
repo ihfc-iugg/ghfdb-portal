@@ -2141,3 +2141,46 @@ class TestGHFDBReleaseImportResourceSiteWithoutAName:
         assert "long_EW" in refused[2].error_dict
         assert "abc" in str(refused[2].error_dict["long_EW"][0])
         assert HeatFlowSite.objects.count() == 0
+
+class TestGHFDBReleaseImportResourceAbsentMarkerIsNotADisagreement:
+    """A row carrying the published absent-value marker states nothing, so
+    it never disagrees with a row that supplies a value. Fails before: the
+    site and interval disagreement checks ran over the raw rows, before the
+    marker was read as no value, so ``[Unspecified]`` counted as a distinct
+    value and refused a file that agreed with itself (FR-035, FR-012)."""
+
+    def test_a_sites_absent_marker_does_not_disagree_with_a_supplied_value(self, db):
+        from heat_flow.models import HeatFlowSite
+
+        header, rows = _corrected_header_and_rows()
+        # rows[0] and rows[4] already share the published site identifier
+        # R24-P003477 in the real base fixture.
+        supplying = rows[0]
+        silent = _with_cell(header, [rows[4]], 0, "elevation", ABSENT_VALUE_MARKER)[0]
+        dataset = _make_dataset(header, [supplying, silent])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+        assert HeatFlowSite.objects.filter(local_id="R24-P003477").count() == 1
+
+    def test_an_intervals_absent_marker_does_not_disagree_with_a_supplied_value(
+        self, db
+    ):
+        header, rows = _corrected_header_and_rows()
+        # rows[4] and rows[5] already share one interval of site
+        # R24-P003477 in the real base fixture; rows[5] gives the probe a
+        # length and rows[4] leaves it blank.
+        supplying = rows[5]
+        silent = _with_cell(header, [rows[4]], 0, "probe_length", ABSENT_VALUE_MARKER)[
+            0
+        ]
+        dataset = _make_dataset(header, [supplying, silent])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False

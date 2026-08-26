@@ -163,7 +163,13 @@ def _find_disagreements(dataset, key_fn, columns, normalize=None):
     supplies a value.
     """
     values_by_key_column = {}
-    for row in dataset.dict:
+    for raw_row in dataset.dict:
+        # The published absent-value marker is read as no value here too,
+        # not only per row once the import has started (FR-012). A row
+        # carrying it states nothing about that column, so it must not
+        # count as a second, differing value against a row that does
+        # supply one.
+        row = _blank_absent_values(raw_row)
         key = key_fn(row)
         if key is None:
             continue
