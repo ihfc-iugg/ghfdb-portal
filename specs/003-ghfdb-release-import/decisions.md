@@ -809,3 +809,45 @@ rows the base fixture accepts - confirmed by the full module staying green with 
 concern. **Revisit if** a many-valued column beyond `explo_purpose` ever needs the same disagreement
 treatment - `_site_column_value`'s branch is written for this one column specifically, not as a
 general many-valued-column handler.
+
+### D28 — US-4 Implementer notes (T097-T102)
+
+D23 named the gap precisely: a site is found by a database lookup, but an interval is kept only in a
+per-pass dictionary, so a second `import_data` call built a second set of intervals against the same
+sites. Closing it meant giving the interval the same two-step lookup (in-pass cache, then database)
+`_build_site_and_parent` already uses for the site itself.
+
+**Probe metadata needed the identical fix, one level down, and D23 did not name it.** Once an
+interval is correctly reused across passes, a reimported row with probe columns reaches
+`_build_probe_metadata` with an interval whose `pk` this pass has never seen before - the per-pass
+cache says "build one," and `ProbeMetadata.interval`'s own one-to-one constraint refuses the second
+attempt outright. Probed directly: disabling the interval's database fallback alone doubled
+`HeatFlowInterval` (3 → 6) and `ProbeMetadata` (2 → 4) on a second import of the seven-row base
+fixture in the same run; disabling only the probe-metadata fallback reproduced the same
+`IntegrityError` in isolation. Both fallbacks are load-bearing together, not either alone.
+
+**Copying a freshly built gradient's or conductivity's identity onto an existing record, rather than
+its pk, is not a style choice - the pk route clobbers a column the widget never sets.**
+`GradientWidget`/`ConductivityWidget` return an unsaved instance carrying only their own
+`scalar_map` fields. Setting `.pk = existing.pk` and calling `.save()` still writes every other
+field the fresh instance carries - which for the measurement base's own `added` column is
+whatever an unpopulated instance defaults to, not the value the original record was created with.
+The first attempt at this raised `NOT NULL constraint failed: measurement_measurement.added`
+reimporting a single row with a gradient - confirmed by tracing the failure to `_save_parents`
+overwriting the polymorphic parent row's own columns via an ordinary `UPDATE`. The fix instead
+copies only `scalar_map`'s own field names onto the found record and saves that, leaving every
+column the widget does not own untouched.
+
+**A determination is upserted the same way `child.py`'s own resource already upserts one** -
+`Meta.import_id_fields = ("local_id",)`, the field T054 already populated from the row's `ID`
+(D10) but nothing looked up by until now. `HeatFlowCorrection` moved from `.create()` to
+`.update_or_create()`, the same shape `child.py`'s own `_create_corrections` already uses, keyed
+on the model's existing `unique_together` (R7).
+
+**All six tasks landed in one commit, the same reasoning D23 itself gave for T052/T053/T057/T058.**
+A test asserting record counts are identical after a second import (T097) cannot pass while the
+determination itself still inserts a second copy on every reimport (T100's own fix) - the acceptance
+sentences decompose into six tasks, but the mechanism they prove is one connected fix, not six
+independent ones. Each task's own fallback was still probed in isolation (see Verified above) before
+being folded back in, per craft-tdd's own instruction not to accept a mechanism on the strength of
+the combined test alone.

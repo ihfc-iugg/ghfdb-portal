@@ -30,7 +30,14 @@ from django.core.exceptions import ValidationError
 from django.db.models.functions import Lower, Trim
 from django.utils.encoding import force_str
 from fairdm.core.models import Dataset
-from heat_flow.models import HeatFlow, HeatFlowInterval, HeatFlowSite, ParentHeatFlow
+from heat_flow.models import (
+    HeatFlow,
+    HeatFlowInterval,
+    HeatFlowSite,
+    IntervalConductivity,
+    ParentHeatFlow,
+    ThermalGradient,
+)
 from import_export import fields, widgets
 from import_export.formats.base_formats import CSV
 from import_export.resources import ModelResource
@@ -591,17 +598,22 @@ class GHFDBReleaseImportResource(ModelResource):
         """A correction record for each correction column the row
         supplies, and none for the rest (FR-029, T066, T067) - a blank
         column means the row makes no statement about that correction,
-        not that the correction was checked and found absent."""
+        not that the correction was checked and found absent. Found by
+        its determination and correction type rather than created a
+        second time on a reimport of the same row (T102) - the model's
+        own ``unique_together`` on the two is what a correction is
+        identified by (R7).
+        """
         from heat_flow.models import HeatFlowCorrection
 
         for column, correction_type in CORRECTION_COL_MAP.items():
             raw = (row.get(column) or "").strip()
             if not raw:
                 continue
-            HeatFlowCorrection.objects.create(
+            HeatFlowCorrection.objects.update_or_create(
                 heat_flow=instance,
                 correction_type=correction_type,
-                status=_correction_status(raw),
+                defaults={"status": _correction_status(raw)},
             )
 
     def _build_interval(self, row, site, dataset):
@@ -617,6 +629,13 @@ class GHFDBReleaseImportResource(ModelResource):
         is built for the first time - a later row sharing it is linked,
         not re-applied, the same precedent ``_build_site_and_parent``
         already sets for a reused site or parent.
+
+        The in-pass cache alone does not survive a second import pass
+        (D23) - a row whose interval was not built this pass falls back
+        to a database lookup, the same two-step ``_build_site_and_parent``
+        already uses for the site itself, so a reimport finds and shares
+        the interval an earlier pass created rather than building a
+        second one (T097).
         """
         interval = self._interval_widget.clean(None, row=row) or HeatFlowInterval()
         key = (
@@ -628,6 +647,13 @@ class GHFDBReleaseImportResource(ModelResource):
         cached = self._intervals_by_key.get(key)
         if cached is not None:
             return cached
+
+        existing = HeatFlowInterval.objects.filter(
+            site=site, top=interval.top, bottom=interval.bottom
+        ).first()
+        if existing is not None:
+            self._intervals_by_key[key] = existing
+            return existing
 
         interval.site = site
         interval.dataset = dataset
@@ -642,10 +668,21 @@ class GHFDBReleaseImportResource(ModelResource):
         one-to-one field on the model already and needs no change
         (research.md R7). Skipped where the row supplies no probe
         column, and skipped where the interval already has one, whether
-        built by an earlier row in this pass or reused from a row that
-        shares the interval.
+        built by an earlier row in this pass, reused from a row that
+        shares the interval, or already on the interval from an earlier
+        import pass entirely - the in-pass cache alone would attempt a
+        second record on reimport, the same gap D23 recorded for the
+        interval itself (T097), so a cache miss falls back to the
+        database before building anything.
         """
         if interval.pk in self._probe_metadata_by_interval_id:
+            return
+
+        from heat_flow.models import ProbeMetadata
+
+        existing = ProbeMetadata.objects.filter(interval=interval).first()
+        if existing is not None:
+            self._probe_metadata_by_interval_id[interval.pk] = existing
             return
 
         penetration = QuantityWidget("m").clean(row.get("probe_penetration"))
@@ -663,8 +700,6 @@ class GHFDBReleaseImportResource(ModelResource):
             and not probe_type_given
         ):
             return
-
-        from heat_flow.models import ProbeMetadata
 
         probe = ProbeMetadata(
             interval=interval,
@@ -691,14 +726,27 @@ class GHFDBReleaseImportResource(ModelResource):
         T065) - the file gives no identifier that would let two rows be
         recognised as reporting one measurement, so a determination
         derived again over an existing interval reports its own gradient
-        rather than finding and updating an earlier row's.
+        rather than finding and updating an earlier row's. That row's own
+        identifier is also what a reimport of the same row finds it by
+        (T101): where a gradient with that identifier already exists, its
+        scalar fields are refreshed from the row in place rather than
+        duplicating the record - carrying the pk of a freshly built,
+        otherwise-unpopulated instance onto ``save()`` instead would
+        overwrite fields the widget never touches (the measurement
+        base's own ``added``, in particular) with their defaults.
         """
         gradient = self._gradient_widget.clean(row.get("T_grad_mean"), row=row)
         if gradient is None:
             return None
+        local_id = (row.get("ID") or "").strip()
+        existing = ThermalGradient.objects.filter(local_id=local_id).first()
+        if existing is not None:
+            for field_name in self._gradient_widget.scalar_map:
+                setattr(existing, field_name, getattr(gradient, field_name))
+            gradient = existing
         gradient.dataset = dataset
         gradient.sample = interval
-        gradient.local_id = (row.get("ID") or "").strip()
+        gradient.local_id = local_id
         gradient.save()
         self._gradient_widget.set_m2m_relations(gradient)
         return gradient
@@ -707,14 +755,22 @@ class GHFDBReleaseImportResource(ModelResource):
         """Build the interval conductivity a row's determination was
         derived from (T055), identified by that row's own published
         determination identifier (D16, T064, T065) for the same reason as
-        the gradient. Skipped (``None``) when the row gives no
-        ``tc_mean``, per ``ConductivityWidget``'s own sentinel."""
+        the gradient, and found and refreshed by it on a reimport of the
+        same row (T101) the same way. Skipped (``None``) when the row
+        gives no ``tc_mean``, per ``ConductivityWidget``'s own sentinel.
+        """
         conductivity = self._conductivity_widget.clean(row.get("tc_mean"), row=row)
         if conductivity is None:
             return None
+        local_id = (row.get("ID") or "").strip()
+        existing = IntervalConductivity.objects.filter(local_id=local_id).first()
+        if existing is not None:
+            for field_name in self._conductivity_widget.scalar_map:
+                setattr(existing, field_name, getattr(conductivity, field_name))
+            conductivity = existing
         conductivity.dataset = dataset
         conductivity.sample = interval
-        conductivity.local_id = (row.get("ID") or "").strip()
+        conductivity.local_id = local_id
         conductivity.save()
         self._conductivity_widget.set_m2m_relations(conductivity)
         return conductivity
@@ -795,7 +851,9 @@ class GHFDBReleaseImportResource(ModelResource):
     class Meta:
         model = HeatFlow
         fields = ("qc", "qc_uncertainty", "local_id")
-        # No upsert identity yet: finding a determination by its published
-        # identifier is later work (US-4). Every row is a new, unsaved
-        # instance until then.
-        import_id_fields = ()
+        # T100: a determination is identified by its published
+        # identifier (D10, FR-026), the same field child.py's own
+        # resource already upserts on - so a reimport of the same row
+        # updates the existing determination rather than creating a
+        # second one (T099).
+        import_id_fields = ("local_id",)

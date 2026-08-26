@@ -1438,3 +1438,49 @@ Next: this run's tasks (T081-T093, T115, the explo_purpose closure) are
 all closed. The completion report and one full `forge verify` run.
 
 Watch: none.
+
+## 2026-08-26T01:10:00Z · Implementer US-4 · T097-T102
+
+Did: closed the gap D23 recorded - a reimport now finds and updates
+every record its identity already gives it, rather than building a
+second one. `_build_interval` falls back to
+`HeatFlowInterval.objects.filter(site=site, top=..., bottom=...)` when
+the per-pass cache misses, the same two-step `_build_site_and_parent`
+already uses for the site itself (T097) - the in-pass dict alone never
+survived a second `import_data` call. `_build_probe_metadata` gained the
+same database fallback, a companion gap D23 did not name directly but
+the same shape: without it, a reimported row with probe columns hit
+`ProbeMetadata`'s own one-to-one constraint the moment its interval was
+correctly reused. `Meta.import_id_fields = ("local_id",)` (T100) makes
+a determination upsert on its published identifier, the same field
+child.py's own resource already keys on (D10) - proven by T099,
+correcting one row's `qc` and reimporting. `_build_gradient`/
+`_build_conductivity` now look up an existing record by the row's own
+`ID` and refresh its scalar fields in place rather than always
+inserting (T101) - copying only the widget's own `scalar_map` fields
+onto the found record, not its pk, after a first attempt (carrying the
+pk of a freshly built instance onto `save()`) clobbered the measurement
+base's own `added` column with its default and raised a NOT NULL
+violation; refreshing the found instance's fields avoided touching
+anything the widget does not set. `_build_corrections` moved from
+`.create()` to `.update_or_create()` (T102), the same shape child.py's
+own `_create_corrections` already uses.
+
+Verified: RED observed for T097 by disabling the interval database
+fallback alone - `HeatFlowInterval` went 3 -> 6 and `ProbeMetadata` went
+2 -> 4 on a second import of the seven-row base fixture, confirming both
+fallbacks are load-bearing together. RED observed separately for the
+probe-metadata fallback (an `IntegrityError` reimporting a row with
+probe columns), for T100 (`import_id_fields = ()` restored - the
+corrected-value test failed, a second determination created instead of
+an update), for T101 (disabling both find-before-create lookups - the
+gradient/conductivity counts doubled on reimport), and for T102
+(reverting to `.create()` - correction counts doubled). Each was
+restored before the next was probed. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` -> 122 passed, full
+module (T097-T102's five new test classes plus the 117 already there).
+`ruff check`/`ruff format` -> clean.
+
+Next: T103-T109, a site's dataset by the earliest publication year.
+
+Watch: none.

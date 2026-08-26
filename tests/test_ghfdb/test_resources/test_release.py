@@ -1648,3 +1648,197 @@ class TestGHFDBReleaseImportResourceColumnMapping:
         assert assertion(objects, raw), (
             f"{column!r}: {raw!r} did not land in its field as expected"
         )
+
+
+class TestGHFDBReleaseImportResourceReimportRecordCounts:
+    """T097: importing an unchanged file twice leaves every record count
+    identical to after the first import. Fails before: the second import
+    doubles what the portal holds - an interval's identity (D15, T059,
+    T060) is kept only in a per-pass dictionary (D23), so a second pass
+    builds a second set of intervals, and everything measured over them,
+    again."""
+
+    def test_reimporting_an_unchanged_file_leaves_every_count_identical(self, db):
+        from heat_flow.models import (
+            HeatFlow,
+            HeatFlowCorrection,
+            HeatFlowInterval,
+            HeatFlowSite,
+            IntervalConductivity,
+            ParentHeatFlow,
+            ProbeMetadata,
+            ThermalGradient,
+        )
+
+        models = (
+            HeatFlowSite,
+            ParentHeatFlow,
+            HeatFlowInterval,
+            HeatFlow,
+            ThermalGradient,
+            IntervalConductivity,
+            HeatFlowCorrection,
+            ProbeMetadata,
+        )
+
+        def counts():
+            return {model.__name__: model.objects.count() for model in models}
+
+        header, rows = _corrected_header_and_rows()
+
+        first_result = GHFDBReleaseImportResource().import_data(
+            _make_dataset(header, rows), dry_run=False, raise_errors=False
+        )
+        assert first_result.has_errors() is False
+        assert first_result.has_validation_errors() is False
+        counts_after_first = counts()
+        assert counts_after_first["HeatFlow"] == len(rows)
+
+        second_result = GHFDBReleaseImportResource().import_data(
+            _make_dataset(header, rows), dry_run=False, raise_errors=False
+        )
+
+        assert second_result.has_errors() is False
+        assert second_result.has_validation_errors() is False
+        assert counts() == counts_after_first
+
+
+class TestGHFDBReleaseImportResourceReimportRecordValues:
+    """T098: importing an unchanged file twice leaves every stored value
+    identical too, not merely the counts. Counts can match while values
+    have been overwritten with something else."""
+
+    def test_reimporting_an_unchanged_file_leaves_every_stored_value_identical(
+        self, db
+    ):
+        from heat_flow.models import (
+            HeatFlow,
+            HeatFlowSite,
+            IntervalConductivity,
+            ParentHeatFlow,
+            ThermalGradient,
+        )
+
+        def snapshot():
+            site = HeatFlowSite.objects.get(local_id="R24-P003477")
+            parent = ParentHeatFlow.objects.get(local_id="R24-P003477")
+            determination = HeatFlow.objects.get(local_id="R24-033563")
+            gradient = ThermalGradient.objects.get(local_id="R24-033563")
+            conductivity = IntervalConductivity.objects.get(local_id="R24-033563")
+            return {
+                "site_name": site.name,
+                "parent_value": float(parent.value.magnitude),
+                "determination_value": float(determination.value.magnitude),
+                "gradient_value": float(gradient.value.magnitude),
+                "conductivity_value": float(conductivity.value.magnitude),
+            }
+
+        header, rows = _corrected_header_and_rows()
+
+        first_result = GHFDBReleaseImportResource().import_data(
+            _make_dataset(header, rows), dry_run=False, raise_errors=False
+        )
+        assert first_result.has_errors() is False
+        values_after_first = snapshot()
+
+        second_result = GHFDBReleaseImportResource().import_data(
+            _make_dataset(header, rows), dry_run=False, raise_errors=False
+        )
+
+        assert second_result.has_errors() is False
+        assert second_result.has_validation_errors() is False
+        assert snapshot() == values_after_first
+
+
+class TestGHFDBReleaseImportResourceReimportCorrectedValue:
+    """T099, T100: correcting one value and re-importing updates that
+    record and creates no second one - proving a determination is found
+    by its published determination identifier (D10) rather than created
+    again. Fails before: a second record is created."""
+
+    def test_correcting_a_value_and_reimporting_updates_the_record(self, db):
+        from heat_flow.models import HeatFlow
+
+        header, rows = _corrected_header_and_rows()
+        row = rows[4]
+
+        first_result = GHFDBReleaseImportResource().import_data(
+            _make_dataset(header, [row]), dry_run=False, raise_errors=False
+        )
+        assert first_result.has_errors() is False
+        determination = HeatFlow.objects.get(local_id="R24-033563")
+        assert float(determination.value.magnitude) == 48.0
+
+        corrected_row = _with_cell(header, [row], 0, "qc", "55.00")[0]
+        second_result = GHFDBReleaseImportResource().import_data(
+            _make_dataset(header, [corrected_row]), dry_run=False, raise_errors=False
+        )
+
+        assert second_result.has_errors() is False
+        assert second_result.has_validation_errors() is False
+        assert HeatFlow.objects.filter(local_id="R24-033563").count() == 1
+        determination.refresh_from_db()
+        assert float(determination.value.magnitude) == 55.0
+
+
+class TestGHFDBReleaseImportResourceReimportGradientConductivity:
+    """T101: re-importing finds the gradient and the conductivity a
+    determination was derived from, rather than creating a second pair
+    (D16 - both take the determination's own identifier). Fails before:
+    a second pair is created on every import."""
+
+    def test_reimporting_finds_the_gradient_and_conductivity_rather_than_duplicating(
+        self, db
+    ):
+        from heat_flow.models import IntervalConductivity, ThermalGradient
+
+        header, rows = _corrected_header_and_rows()
+        row = rows[4]
+
+        first_result = GHFDBReleaseImportResource().import_data(
+            _make_dataset(header, [row]), dry_run=False, raise_errors=False
+        )
+        assert first_result.has_errors() is False
+        assert ThermalGradient.objects.filter(local_id="R24-033563").count() == 1
+        assert IntervalConductivity.objects.filter(local_id="R24-033563").count() == 1
+
+        second_result = GHFDBReleaseImportResource().import_data(
+            _make_dataset(header, [row]), dry_run=False, raise_errors=False
+        )
+
+        assert second_result.has_errors() is False
+        assert second_result.has_validation_errors() is False
+        assert ThermalGradient.objects.filter(local_id="R24-033563").count() == 1
+        assert IntervalConductivity.objects.filter(local_id="R24-033563").count() == 1
+
+
+class TestGHFDBReleaseImportResourceReimportCorrections:
+    """T102: re-importing finds each correction by its determination and
+    its correction type, rather than creating a second record of the
+    same type (R7 - the model's own ``unique_together``). Fails before:
+    duplicates accumulate."""
+
+    def test_reimporting_finds_corrections_rather_than_duplicating(self, db):
+        from heat_flow.models import HeatFlow, HeatFlowCorrection
+
+        header, rows = _corrected_header_and_rows()
+        row = rows[4]
+
+        first_result = GHFDBReleaseImportResource().import_data(
+            _make_dataset(header, [row]), dry_run=False, raise_errors=False
+        )
+        assert first_result.has_errors() is False
+        determination = HeatFlow.objects.get(local_id="R24-033563")
+        first_count = HeatFlowCorrection.objects.filter(heat_flow=determination).count()
+        assert first_count > 0
+
+        second_result = GHFDBReleaseImportResource().import_data(
+            _make_dataset(header, [row]), dry_run=False, raise_errors=False
+        )
+
+        assert second_result.has_errors() is False
+        assert (
+            HeatFlowCorrection.objects.filter(heat_flow=determination).count()
+            == first_count
+        )
+
