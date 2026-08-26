@@ -1,6 +1,6 @@
 # Progress — 003-ghfdb-release-import
 
-## 2026-08-25T12:09:00Z · Implementer foundations · T001
+## 2026-08-25T12:09:00Z · foundations · T001
 
 Did: Created `tests/test_ghfdb/test_resources/test_release.py`, mirroring the
 eventual `project/ghfdb/resources/release.py` (not yet created; lands in US-1,
@@ -19,7 +19,7 @@ Next: T002, the release format's column definitions.
 
 Watch: none.
 
-## 2026-08-25T12:20:00Z · Implementer foundations · T002
+## 2026-08-25T12:20:00Z · foundations · T002
 
 Did: Added `RELEASE_ONLY_COLUMNS`, `MISSPELLED_COLUMNS` and `RELEASE_COLUMNS` to
 `project/ghfdb/constants.py`. `RELEASE_COLUMNS` is `PARENT_COLUMNS + CHILD_COLUMNS
@@ -37,7 +37,7 @@ Next: T003, the read / recognised-and-discarded / refused split.
 
 Watch: none.
 
-## 2026-08-25T12:30:00Z · Implementer foundations · T003
+## 2026-08-25T12:30:00Z · foundations · T003
 
 Did: Added `DISCARDED_COLUMNS`, `REFUSED_COLUMNS` and `READ_COLUMNS` to
 `project/ghfdb/constants.py` — three disjoint sets whose union is
@@ -59,7 +59,7 @@ Next: T004, the base fixture cut from the published release archive.
 
 Watch: none.
 
-## 2026-08-25T12:45:00Z · Implementer foundations · T004
+## 2026-08-25T12:45:00Z · foundations · T004
 
 Did: Cut `tests/test_ghfdb/test_resources/fixtures/release/release_sample.csv`
 byte-for-byte from `assets/ghfdb/IHFC_2024_GHFDB.zip` — the real header line
@@ -95,7 +95,7 @@ are LF in the committed blob, not the archive's CRLF — the repository's own
 pre-existing `.gitattributes` (`* text=auto`) normalises it on commit; see
 decisions.md D19 for why this doesn't compromise "byte-for-byte."
 
-## 2026-08-25T13:05:00Z · Implementer foundations · T005
+## 2026-08-25T13:05:00Z · foundations · T005
 
 Did: Added 8 fixture variants to `tests/test_ghfdb/test_resources/fixtures/release/`,
 each derived from the T004 base by one deliberate change and verified
@@ -121,7 +121,7 @@ Next: T007, the bibliographic fixtures (T006 is already closed).
 
 Watch: none.
 
-## 2026-08-25T13:15:00Z · Implementer foundations · T007
+## 2026-08-25T13:15:00Z · foundations · T007
 
 Did: Added `literature_with_known_citation_key` and
 `literature_with_ambiguous_citation_key` fixtures to
@@ -140,15 +140,15 @@ tests/test_ghfdb/test_resources/test_release.py
 tests/test_ghfdb/test_resources/conftest.py` → clean.
 
 Next: none — Phase 1 Foundations (T001-T005, T007) is complete. T006 was
-already closed before this run. The full `forge verify` runs once more at the
+already closed before this run. The full check runs once more at the
 completion report, per the brief's rituals.
 
 Watch: none.
 
-## 2026-08-25T13:40:00Z · Implementer foundations · restructuring
+## 2026-08-25T13:40:00Z · foundations · restructuring
 
-Did: The mandatory full `forge verify` (§5) found what the narrow per-task
-scopes could not: `forge verify --steps conformance` failed — "mirrors no
+Did: The mandatory full check found what the narrow per-task
+scopes could not: the conformance check failed — "mirrors no
 source module (expected .../project/ghfdb/resources/release.py)" —
 because `tests/test_ghfdb/test_resources/test_release.py` mirrored a resource
 module this phase correctly never creates (US-1's T009). Moved every class
@@ -161,8 +161,7 @@ so a test at the new location can still see them; reverted
 final entry.
 
 Verified: `poetry run pytest tests/test_ghfdb/test_constants.py -v` → 25
-passed, same 25 tests as before the move. `forge verify --repo . --steps
-conformance` → passed (0s), where it previously failed. Caught and reverted
+passed, same 25 tests as before the move. The conformance check passed on re-run, where it previously failed. Caught and reverted
 one piece of collateral damage from this fix itself: `ruff check --fix` (run
 manually, not the actual gate — `.pre-commit-config.yaml` excludes `tests/`
 entirely, so this was extra caution) reordered import statements inside two
@@ -180,7 +179,7 @@ Watch: T009 (US-1) should reconsider whether the constants-only tests
 gathered here belong beside the resource module once it exists — see
 decisions.md's "Revisit if" on this entry.
 
-## 2026-08-25T15:20:00Z · Implementer US-1 first part · T008, T009
+## 2026-08-25T15:20:00Z · US-1 first part · T008, T009
 
 Did: Created `project/ghfdb/resources/release.py` — `GHFDBReleaseCSVFormat`
 (a comma-separated reader with a curator-facing title, "GHFDB Release
@@ -203,7 +202,7 @@ Next: T011, the misspelled-column check.
 
 Watch: none.
 
-## 2026-08-25T15:35:00Z · Implementer US-1 first part · T011, T012
+## 2026-08-25T15:35:00Z · US-1 first part · T011, T012
 
 Did: `before_import` on `GHFDBReleaseImportResource` checks the file's
 header against `MISSPELLED_COLUMNS`, `RELEASE_COLUMNS` and
@@ -228,7 +227,7 @@ Next: T013, the undefined-column check.
 
 Watch: none.
 
-## 2026-08-25T15:45:00Z · Implementer US-1 first part · T013-T016
+## 2026-08-25T15:45:00Z · US-1 first part · T013-T016
 
 Did: Added `TestGHFDBReleaseImportResourceUndefinedColumn` and
 `TestGHFDBReleaseImportResourceMissingColumn`, exercising the undefined-
@@ -251,7 +250,7 @@ Next: T017, proving a header refusal stops the row loop.
 
 Watch: none.
 
-## 2026-08-25T15:55:00Z · Implementer US-1 first part · T017, T018
+## 2026-08-25T15:55:00Z · US-1 first part · T017, T018
 
 Did: Added `TestGHFDBReleaseImportResourceHeaderFailureStopsTheRowLoop` —
 a dataset carrying both a header fault (a required column dropped) and a
@@ -273,7 +272,7 @@ Next: T019, every fault reported across several rows.
 
 Watch: none.
 
-## 2026-08-25T16:05:00Z · Implementer US-1 first part · T019-T024
+## 2026-08-25T16:05:00Z · US-1 first part · T019-T024
 
 Did: Added four test classes exercising properties the library already
 provides by default or that landed incidentally with earlier tasks, each
@@ -302,7 +301,7 @@ Watch: decisions.md D20 records why `REQUIRED_COLUMNS`, `save_instance`
 and `import_id_fields` are scoped the way they are, and flags the admin
 registration plan.md describes as not done in this run.
 
-## 2026-08-25T16:15:00Z · Implementer US-1 first part · T033
+## 2026-08-25T16:15:00Z · US-1 first part · T033
 
 Did: Added `TestAnonymousRequestToTheImportRoute` to `tests/test_ghfdb/test_admin.py`
 (mirrors `project/ghfdb/admin.py`, unchanged — T031/T032 already closed
@@ -324,7 +323,7 @@ green under the same mutation, confirming empirically that it alone would
 not have caught a broken permission gate. Reverted, re-ran green.
 
 Next: none — all seventeen tasks in this run's brief are closed. The full
-`forge verify` runs once more at the completion report.
+The full check runs once more at the completion report.
 
 Watch: the admin registration plan.md describes for the release format
 and resource (attaching them to `GHFDBChildAdmin`'s existing import
@@ -335,7 +334,7 @@ against today's state, and this story's own prohibition is against
 modifying a test it did not author. Flagged as a concern in the
 completion report rather than resolved here.
 
-## 2026-08-25T18:10:00Z · Implementer US-2 · T034-T036
+## 2026-08-25T18:10:00Z · US-2 · T034-T036
 
 Did: Added `GHFDBReleaseImportResource._resolve_publication_datasets`,
 called from `before_import` once the header check passes. Collects the
@@ -359,7 +358,7 @@ Next: T037, comparing references without regard to case or whitespace.
 
 Watch: none.
 
-## 2026-08-25T18:20:00Z · Implementer US-2 · T037, T038
+## 2026-08-25T18:20:00Z · US-2 · T037, T038
 
 Did: `_resolve_publication_datasets` now groups references by their
 normalised form (`_normalize_publication_reference`: strip then lower,
@@ -381,7 +380,7 @@ Next: T039, matching an existing bibliographic record.
 
 Watch: none.
 
-## 2026-08-25T18:35:00Z · Implementer US-2 · T039, T040
+## 2026-08-25T18:35:00Z · US-2 · T039, T040
 
 Did: `_resolve_publication_datasets` now looks up an existing
 `LiteratureItem` before creating one, matched on citation key with
@@ -403,7 +402,7 @@ Next: T041, creating a bibliographic record when none matches.
 
 Watch: none.
 
-## 2026-08-25T18:45:00Z · Implementer US-2 · T041, T042
+## 2026-08-25T18:45:00Z · US-2 · T041, T042
 
 Did: No new production code — the "create when no match" branch already
 exists as the `else` of T039/T040's lookup, since T034 (the very first
@@ -427,7 +426,7 @@ Next: T043, refusing an ambiguous reference.
 
 Watch: none.
 
-## 2026-08-25T19:00:00Z · Implementer US-2 · T043, T044
+## 2026-08-25T19:00:00Z · US-2 · T043, T044
 
 Did: `_resolve_publication_datasets` now records a reference matching
 more than one `LiteratureItem` in `self._ambiguous_references` (keyed by
@@ -454,7 +453,7 @@ Next: T045, refusing an empty reference.
 
 Watch: none.
 
-## 2026-08-25T19:10:00Z · Implementer US-2 · T045, T046
+## 2026-08-25T19:10:00Z · US-2 · T045, T046
 
 Did: `import_instance` now refuses a row whose `publication_reference`
 is empty (after stripping), before checking it against the ambiguous
@@ -472,7 +471,7 @@ Next: T047, reading the reference back off the dataset.
 
 Watch: none.
 
-## 2026-08-25T19:20:00Z · Implementer US-2 · T047, T048
+## 2026-08-25T19:20:00Z · US-2 · T047, T048
 
 Did: No new production code — `Dataset.reference` (the framework's
 existing one-to-one field to `LiteratureItem`, per plan.md) has carried
@@ -494,7 +493,7 @@ Next: T049, reusing datasets across a second import.
 
 Watch: none.
 
-## 2026-08-25T19:30:00Z · Implementer US-2 · T049
+## 2026-08-25T19:30:00Z · US-2 · T049
 
 Did: No new production code — the lookup-before-create logic T039/T040
 added already makes a second `import_data` call against the same
@@ -517,7 +516,7 @@ Next: T050, proving a dry-run check leaves nothing behind.
 
 Watch: none.
 
-## 2026-08-25T19:40:00Z · Implementer US-2 · T050
+## 2026-08-25T19:40:00Z · US-2 · T050
 
 Did: No new production code. `_resolve_publication_datasets` writes
 directly to the database in `before_import` regardless of `dry_run`, and
@@ -547,14 +546,14 @@ module, all thirty-two tests across US-1 and US-2. `ruff check`/`ruff
 format` → clean.
 
 Next: none — all seventeen tasks in this run's brief (T034-T050) are
-closed. The full `forge verify` runs once more at the completion report.
+closed. The full check runs once more at the completion report.
 
 Watch: the admin registration outstanding from US-1 (decisions.md D20's
 last entry, D21) remains outstanding — still correctly deferred to
 T025-T030, which land after US-3. No new admin, model or migration
 changes were made in this run.
 
-## 2026-08-25T20:05:00Z · Implementer US-3 · T051
+## 2026-08-25T20:05:00Z · US-3 · T051
 
 Did: Added `TestGHFDBReleaseImportResourceRecordGraph`, the story's spine
 test - one row, with `q_bottom` given a real value so its depth range is
@@ -574,7 +573,7 @@ Next: T052, the site.
 
 Watch: none.
 
-## 2026-08-25T20:20:00Z · Implementer US-3 · T052, T053, T057, T058
+## 2026-08-25T20:20:00Z · US-3 · T052, T053, T057, T058
 
 Did: `before_save_instance` replaces the no-op `save_instance` and turns
 a row into its site, its parent heat flow value and its interval.
@@ -646,7 +645,7 @@ absent-value-marker workaround is a narrow, forced fix, not a design
 decision, and T076/T077 should confirm it is subsumed rather than
 conflicting when that story lands.
 
-## 2026-08-25T20:35:00Z · Implementer US-3 · T054
+## 2026-08-25T20:35:00Z · US-3 · T054
 
 Did: Declared `local_id = fields.Field(attribute="local_id",
 column_name="ID", default="")` and added it to `Meta.fields`. `HeatFlow.local_id`
@@ -663,7 +662,7 @@ Next: T055, the gradient and the conductivity.
 
 Watch: none.
 
-## 2026-08-25T20:45:00Z · Implementer US-3 · T055
+## 2026-08-25T20:45:00Z · US-3 · T055
 
 Did: `_build_gradient`/`_build_conductivity`, mirroring
 `GHFDBChildImportResource`'s own per-row builders (plan.md's own
@@ -685,7 +684,7 @@ Next: T056, several rows sharing a published site identifier.
 
 Watch: none.
 
-## 2026-08-25T20:55:00Z · Implementer US-3 (resumption) · T056, T057, T058
+## 2026-08-25T20:55:00Z · US-3 (resumption) · T056, T057, T058
 
 Did: Resumed a previous run that delivered T051-T055 and died mid-step,
 leaving two files uncommitted (see this run's own brief for the full
@@ -715,7 +714,7 @@ Next: T059, several rows sharing a site and a depth range.
 
 Watch: none.
 
-## 2026-08-25T21:05:00Z · Implementer US-3 (resumption) · T059, T060
+## 2026-08-25T21:05:00Z · US-3 (resumption) · T059, T060
 
 Did: `_build_interval` now identifies an interval by its site together
 with the depth range the row gives (D15) - `_depth_magnitude` reduces
@@ -742,7 +741,7 @@ Next: T061, several rows sharing a site and no depth range.
 
 Watch: none.
 
-## 2026-08-25T21:15:00Z · Implementer US-3 (resumption) · T061, T062
+## 2026-08-25T21:15:00Z · US-3 (resumption) · T061, T062
 
 Did: No new production code - T059/T060's interval identity already
 keys on site plus depth range, and an empty range (both `top` and
@@ -766,7 +765,7 @@ Next: T063, a site holding both kinds of interval at once.
 
 Watch: none.
 
-## 2026-08-25T21:20:00Z · Implementer US-3 (resumption) · T063
+## 2026-08-25T21:20:00Z · US-3 (resumption) · T063
 
 Did: No new production code - the same site-plus-range key keeps a
 determinate-range interval and the site's indeterminate interval
@@ -795,7 +794,7 @@ admin-registration deferral (D21) is likewise unchanged and still
 correctly out of scope. No model, migration or admin change was made
 in this run.
 
-## 2026-08-25T20:45:00Z · Implementer US-3 (second part) · T064, T065
+## 2026-08-25T20:45:00Z · US-3 (second part) · T064, T065
 
 Did: `_build_gradient`/`_build_conductivity` now set `local_id` on the
 built `ThermalGradient`/`IntervalConductivity` from the row's own
@@ -822,7 +821,7 @@ Next: T066, T067, correction records.
 
 Watch: none.
 
-## 2026-08-25T21:00:00Z · Implementer US-3 (second part) · T066, T067
+## 2026-08-25T21:00:00Z · US-3 (second part) · T066, T067
 
 Did: `after_save_instance` and `_build_corrections` build a
 `HeatFlowCorrection` for each of the nine `CORRECTION_COL_MAP` columns
@@ -855,7 +854,7 @@ Next: T068, T069, proving the normalising explicitly.
 
 Watch: none.
 
-## 2026-08-25T21:10:00Z · Implementer US-3 (second part) · T068, T069
+## 2026-08-25T21:10:00Z · US-3 (second part) · T068, T069
 
 Did: Added `TestGHFDBReleaseImportResourceCorrectionFlagNormalization`,
 giving one correction column a bracketed, extra-whitespace, all-caps
@@ -880,7 +879,7 @@ Next: T070, T071, probe metadata.
 
 Watch: none.
 
-## 2026-08-25T21:25:00Z · Implementer US-3 (second part) · T070, T071
+## 2026-08-25T21:25:00Z · US-3 (second part) · T070, T071
 
 Did: `_build_probe_metadata`, called from `before_save_instance` right
 after the interval is built, creates at most one `ProbeMetadata` per
@@ -916,7 +915,7 @@ probe.
 
 Watch: none.
 
-## 2026-08-25T21:35:00Z · Implementer US-3 (second part) · T072, T073
+## 2026-08-25T21:35:00Z · US-3 (second part) · T072, T073
 
 Did: A new module helper, `_find_disagreements`, groups a dataset's
 rows by an identity key and reports the columns where two rows sharing
@@ -968,7 +967,7 @@ Next: T074, T075, refusing a disagreement about a shared site.
 
 Watch: none.
 
-## 2026-08-25T21:45:00Z · Implementer US-3 (second part) · T074, T075
+## 2026-08-25T21:45:00Z · US-3 (second part) · T074, T075
 
 Did: `_site_disagreement_key`/`SITE_COLUMNS`/`_site_column_value`
 reuse T072/T073's own `_find_disagreements` rather than a second
@@ -1008,7 +1007,7 @@ addition to `before_save_instance` - both call sites are within this
 story's own file and both are T076/T077's to reconcile when that
 workaround is replaced.
 
-## 2026-08-25T21:55:00Z · Implementer US-3 (second part) · T076, T077
+## 2026-08-25T21:55:00Z · US-3 (second part) · T076, T077
 
 Did: Added `TestGHFDBReleaseImportResourceAbsentValueMarker`, importing
 row 3 of the real base fixture alone (carrying the marker by design,
@@ -1067,7 +1066,7 @@ Watch: none carried forward. The absent-value-marker workaround
 flagged as a concern by every predecessor entry since T052/T053 is
 now resolved rather than deferred.
 
-## 2026-08-25T22:10:00Z · Implementer US-3 (third part) · T081, T082, T083, T084
+## 2026-08-25T22:10:00Z · US-3 (third part) · T081, T082, T083, T084
 
 Did: `RelatedModelWidget.set_m2m_relations` (widgets.py) no longer
 catches and discards a many-valued vocabulary widget's failure -
@@ -1151,11 +1150,11 @@ Watch: the vocabulary-fallback normalisation (D25) is a cross-cutting,
 non-obvious call made under this run's own authority to keep T081/T082
 implementable without touching `heat_flow` (owns the vocabulary) or
 any out-of-reach test. Flagged in this run's completion report for
-Sam/Forge to weigh - the durable fix belongs in
+for the maintainers to weigh - the durable fix belongs in
 `heat_flow/vocabularies.py` or in a correction to the published
 release file at source, not in a permanent fallback here.
 
-## 2026-08-25T22:35:00Z · Implementer US-3 (third part) · T085, T086, T087
+## 2026-08-25T22:35:00Z · US-3 (third part) · T085, T086, T087
 
 Did: No new production code - `_set_site_location` (T052) already sets
 a site's location from its coordinates unconditionally, and
@@ -1184,7 +1183,7 @@ Next: T088, T089, the supplied quality code.
 
 Watch: none.
 
-## 2026-08-25T22:50:00Z · Implementer US-3 (third part) · T088, T089, T090, T091
+## 2026-08-25T22:50:00Z · US-3 (third part) · T088, T089, T090, T091
 
 Did: No new production code - `DISCARDED_COLUMNS` (constants.py) already
 carries `quality_parent`, `quality_child`, `Quality_Code` and the four
@@ -1216,7 +1215,7 @@ Next: T092, T093, the row-count guarantee.
 
 Watch: none.
 
-## 2026-08-25T23:05:00Z · Implementer US-3 (third part) · T092, T093
+## 2026-08-25T23:05:00Z · US-3 (third part) · T092, T093
 
 Did: No new production code - `release.py`'s row loop never removes a
 row from the dataset itself (the header check's `del dataset[:]` only
@@ -1248,7 +1247,7 @@ the sibling contributor-template resource, not this one.
 
 Watch: none.
 
-## 2026-08-25T23:25:00Z · Implementer US-3 (third part) · wiring the columns T115 needs
+## 2026-08-25T23:25:00Z · US-3 (third part) · wiring the columns T115 needs
 
 Did: Eight columns `RELEASE_COLUMNS` already marks as read, and the
 sibling contributor-template resources (`parent.py`, `child.py`)
@@ -1311,7 +1310,7 @@ a destination.
 Watch: the `expedition`/`c_comment` bracketed-marker gap (above) is a
 concern for this run's completion report, not a task closed here.
 
-## 2026-08-25T23:45:00Z · Implementer US-3 (third part) · Year, Ref_IGSN, data_reference reclassified
+## 2026-08-25T23:45:00Z · US-3 (third part) · Year, Ref_IGSN, data_reference reclassified
 
 Did: `Year`, `Ref_IGSN` and `data_reference` moved from `READ_COLUMNS`
 to `DISCARDED_COLUMNS` in constants.py (D26). Confirmed directly, not
@@ -1343,7 +1342,7 @@ assertion can hold for every entry.
 
 Watch: none.
 
-## 2026-08-26T00:15:00Z · Implementer US-3 (third part) · T115
+## 2026-08-26T00:15:00Z · US-3 (third part) · T115
 
 Did: `TestGHFDBReleaseImportResourceColumnMapping` in test_release.py.
 `COLUMN_ASSERTIONS` is a module-level dict, one entry per published
@@ -1404,7 +1403,7 @@ left open, then the story's completion report.
 
 Watch: none.
 
-## 2026-08-26T00:35:00Z · Implementer US-3 (third part) · explo_purpose site-disagreement closure
+## 2026-08-26T00:35:00Z · US-3 (third part) · explo_purpose site-disagreement closure
 
 Did: `explo_purpose` joins `SITE_COLUMNS`. `_site_column_value` gained
 a branch for it: split on `;`, each term normalised
@@ -1435,11 +1434,11 @@ module. Ran the wider suite: `poetry run pytest tests/test_ghfdb/ -q`
 added). `ruff check`/`ruff format --check` → clean.
 
 Next: this run's tasks (T081-T093, T115, the explo_purpose closure) are
-all closed. The completion report and one full `forge verify` run.
+all closed. The completion report and one full check.
 
 Watch: none.
 
-## 2026-08-26T01:10:00Z · Implementer US-4 · T097-T102
+## 2026-08-26T01:10:00Z · US-4 · T097-T102
 
 Did: closed the gap D23 recorded - a reimport now finds and updates
 every record its identity already gives it, rather than building a
@@ -1485,7 +1484,7 @@ Next: T103-T109, a site's dataset by the earliest publication year.
 
 Watch: none.
 
-## 2026-08-26T01:45:00Z · Implementer US-4 · T103-T109
+## 2026-08-26T01:45:00Z · US-4 · T103-T109
 
 Did: a site now belongs to the dataset of the earliest publication year among the determinations
 reported for it (D6, FR-037), and moves there when an earlier one arrives, whether in the same
@@ -1519,7 +1518,7 @@ once at the completion report.
 
 Watch: none.
 
-## 2026-08-26T12:00:00Z · Implementer US-1 closing · T116, T117
+## 2026-08-26T12:00:00Z · US-1 closing · T116, T117
 
 Did: `import_instance` now refuses a published determination identifier
 that repeats within one file, at its second occurrence, keyed `ID` (the
@@ -1552,7 +1551,7 @@ Next: T025-T030, the all-or-nothing guarantee and its registration.
 
 Watch: none.
 
-## 2026-08-26T12:20:00Z · Implementer US-1 closing · T025-T030
+## 2026-08-26T12:20:00Z · US-1 closing · T025-T030
 
 Did: `GHFDBChildAdmin` gained three overrides. `get_import_data_kwargs`
 forces `rollback_on_validation_errors=True` on every call (T025, T026) -
@@ -1616,7 +1615,7 @@ run's completion report, not resolved here (out of scope: `child.py` is
 off limits beyond the one shared correction plan.md names, and removing
 dead config is not that correction).
 
-## 2026-08-26T14:15:00Z · Implementer docs and closing (resumption) · T110-T112 verified
+## 2026-08-26T14:15:00Z · docs and closing (resumption) · T110-T112 verified
 
 Did: Resumed a run that committed T110, T111 and T112 (4c00e42, 6e9a503,
 f99d720) and ended with no report, so nothing about them had been
@@ -1640,7 +1639,7 @@ Next: T113.
 
 Watch: none.
 
-## 2026-08-26T14:45:00Z · Implementer docs and closing (resumption) · T113
+## 2026-08-26T14:45:00Z · docs and closing (resumption) · T113
 
 Did: Added `TestReleaseFeatureMigrationState` to `test_release.py`,
 running `manage.py makemigrations --check --dry-run` as a real subprocess
@@ -1671,7 +1670,7 @@ Next: T114.
 
 Watch: none.
 
-## 2026-08-26T15:10:00Z · Implementer docs and closing (resumption) · T114
+## 2026-08-26T15:10:00Z · docs and closing (resumption) · T114
 
 Did: No test added - `poetry run pytest tests/test_ghfdb --cov=project
 --cov-report=term-missing -q` (this run's own one-time coverage run, not

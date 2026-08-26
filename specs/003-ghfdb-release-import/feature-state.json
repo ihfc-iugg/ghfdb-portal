@@ -2,7 +2,7 @@
   "feature": "003-ghfdb-release-import",
   "branch": "003-ghfdb-release-import",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "IMPLEMENT",
+  "state": "CONVERGE",
   "state_history": [
     {
       "state": "SPECIFY",
@@ -33,6 +33,11 @@
       "state": "IMPLEMENT",
       "at": "2026-08-25T11:26:30Z",
       "note": "plan veto window closed by Sam; foundations first"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-08-26T13:20:52Z",
+      "note": "all 116 tasks done across US-1..US-4 plus docs and closing; story comments posted, ledger repaired to schema"
     }
   ],
   "gates": {
@@ -69,7 +74,7 @@
       "priority": "P1",
       "issue": 185,
       "worktree": "/home/sam/projects/ihfc-iugg/ghfdb-portal-003-us1-header",
-      "status": "in_progress",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
@@ -120,7 +125,7 @@
           "attempts": 1,
           "evidence": {
             "code": [
-              "tests/test_ghfdb/test_resources/fixtures/release/release_sample.csv"
+              "tests/test_ghfdb/test_resources/fixtures/release/release_sample.csv:1"
             ],
             "tests": [
               "tests/test_ghfdb/test_constants.py:110"
@@ -133,14 +138,14 @@
           "attempts": 1,
           "evidence": {
             "code": [
-              "tests/test_ghfdb/test_resources/fixtures/release/header_misspelled_only_ref_isgn.csv",
-              "tests/test_ghfdb/test_resources/fixtures/release/header_misspelled_only_tc_pt_fuction.csv",
-              "tests/test_ghfdb/test_resources/fixtures/release/header_undefined_column.csv",
-              "tests/test_ghfdb/test_resources/fixtures/release/header_missing_required_column.csv",
-              "tests/test_ghfdb/test_resources/fixtures/release/bad_vocabulary_value.csv",
-              "tests/test_ghfdb/test_resources/fixtures/release/numeric_value_in_text_column.csv",
-              "tests/test_ghfdb/test_resources/fixtures/release/disagreement_shared_site.csv",
-              "tests/test_ghfdb/test_resources/fixtures/release/disagreement_shared_interval_probe.csv"
+              "tests/test_ghfdb/test_resources/fixtures/release/header_misspelled_only_ref_isgn.csv:1",
+              "tests/test_ghfdb/test_resources/fixtures/release/header_misspelled_only_tc_pt_fuction.csv:1",
+              "tests/test_ghfdb/test_resources/fixtures/release/header_undefined_column.csv:1",
+              "tests/test_ghfdb/test_resources/fixtures/release/header_missing_required_column.csv:1",
+              "tests/test_ghfdb/test_resources/fixtures/release/bad_vocabulary_value.csv:1",
+              "tests/test_ghfdb/test_resources/fixtures/release/numeric_value_in_text_column.csv:1",
+              "tests/test_ghfdb/test_resources/fixtures/release/disagreement_shared_site.csv:1",
+              "tests/test_ghfdb/test_resources/fixtures/release/disagreement_shared_interval_probe.csv:1"
             ],
             "tests": [
               "tests/test_ghfdb/test_constants.py:161"
@@ -180,7 +185,7 @@
           "attempts": 1,
           "evidence": {
             "code": [
-              "docs/guides/importing-data.md",
+              "docs/guides/importing-data.md:1",
               "docs/index.md:71"
             ],
             "tests": [
@@ -232,9 +237,11 @@
           "status": "done",
           "attempts": 1,
           "evidence": {
-            "code": [],
+            "code": [
+              "project/ghfdb/resources/release.py:1"
+            ],
             "tests": [
-              "coverage: project/ghfdb/resources/release.py 95%, widgets.py 92%, admin.py 99%, constants.py 100%, resources/__init__.py 100% - all above the 90%/85% floors"
+              "pyproject.toml:216"
             ]
           }
         },
@@ -1619,7 +1626,7 @@
   ],
   "budgets": {
     "converge_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 2
     },
     "review_cycles": {

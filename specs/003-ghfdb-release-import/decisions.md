@@ -25,7 +25,7 @@ reading only, and the defect stamps are gone — see D12.
 
 ## Settled
 
-### D1 — The round trip is split, and this specification is the reading half
+## D1 — The round trip is split, and this specification is the reading half
 
 **Original**: one specification covering import and export together, on the reasoning that "the
 round-trip is only complete when export is working".
@@ -53,7 +53,9 @@ R3 had been recorded as delivered, and was not. The audit found that nothing in 
 published release: it is a comma-separated file with one header row, and both importers read a
 spreadsheet with its headers on the sixth. The tag came off in the same change that split the item.
 
-### D2 — The release import and the contributor upload are separate specifications
+**ADR:** none — a split between specification documents and roadmap items, deciding what gets built next rather than stating a rule the code must obey
+
+## D2 — The release import and the contributor upload are separate specifications
 
 **Original**: silent on the distinction. It described "a GHFDB-format XLSX file exported from the
 official IHFC spreadsheet template" as one thing.
@@ -66,7 +68,9 @@ model, the same reporting — but they are different files with different layout
 them matters now. The release import is this specification. The contributor upload becomes `005`
 under R6, and inherits the reading this one builds.
 
-### D3 — The specification is replaced in place, keeping its number
+**ADR:** none — a boundary between two specification documents; the reading path the two formats share is described by the requirements themselves
+
+## D3 — The specification is replaced in place, keeping its number
 
 **Original**: `003-ghfdb-import-export`.
 
@@ -75,7 +79,9 @@ describes a scope this no longer has. The epic already raised for it is reused r
 one opened for the same subject. A second copy on disk would be a second thing for a reader to find
 and believe.
 
-### D4 — One dataset for each publication reference
+**ADR:** none — housekeeping about where the rewritten document lives and which number it keeps
+
+## D4 — One dataset for each publication reference
 
 **Original**: silent. The original importer had no concept of a dataset at all.
 
@@ -86,7 +92,9 @@ publication is always one dataset — but nothing in the reading path implemente
 The current release carries 1,586 distinct publication references across its rows, none of them
 empty, the largest covering 16,046 rows and 134 appearing exactly once.
 
-### D5 — A missing bibliographic record is created; an ambiguous one is refused
+**ADR:** none — restates doctrine CONTEXT.md already carries, that one publication is always one dataset
+
+## D5 — A missing bibliographic record is created; an ambiguous one is refused
 
 **Original**: silent.
 
@@ -98,7 +106,9 @@ Where a reference matches more than one record, the rows carrying it are refused
 explicitly not unique in the portal's own records, so a match of two is a real possibility, and
 choosing between them would attach a determination to a publication on a guess.
 
-### D6 — A site reported by two publications belongs to the earlier one
+**ADR:** docs/adr/0014-an-unmatched-publication-reference-creates-a-record.md
+
+## D6 — A site reported by two publications belongs to the earlier one
 
 **Original**: silent. The original had no dataset concept, so the question could not arise.
 
@@ -114,7 +124,9 @@ Ownership is compared as each import runs and reassigned when an earlier publica
 rather than resolved from the whole file in advance. The comparison then holds however the work is
 divided, which resolving in advance would not.
 
-### D7 — Misspelled published column names are refused, without exception
+**ADR:** docs/adr/0015-a-shared-site-belongs-to-the-earliest-publication.md
+
+## D7 — Misspelled published column names are refused, without exception
 
 **Original**: silent on the header check. The importer's own concern was the opposite — suppressing
 errors about columns that were *absent*.
@@ -134,7 +146,9 @@ portal's.
 This is settled and closed. Perpetuating a spelling error because a file contains it is what would
 make the error permanent, which is what ADR-0003 exists to prevent.
 
-### D8 — The import is administrative, and the confirm step is the check
+**ADR:** docs/adr/0003-misspelled-published-columns-are-corrected-and-rejected.md — already recorded there; this entry only confirms the rule survives contact with a published release that violates it
+
+## D8 — The import is administrative, and the confirm step is the check
 
 **Original**: "All import/export actions are staff-only via the Django admin."
 
@@ -147,7 +161,9 @@ reading path also serves both this feature and the contributor upload that follo
 A command was considered and rejected. The argument for it was the size of a release file, and
 size is explicitly not this feature's concern.
 
-### D9 — Nothing is written unless the whole file passes
+**ADR:** none — the staff-only administrative path was already the specification's own position and nothing changed
+
+## D9 — Nothing is written unless the whole file passes
 
 **Original**: "The importer collects these as validation errors and rolls back the entire import,
 reporting all such rows together." Stated only as an edge case, for missing mandatory fields.
@@ -160,7 +176,9 @@ indicates a fault in the reader — was rejected. A profile only measures the ch
 to run. A refused row means the data is probably wrong, the file is corrected at source, and a
 seeding is dry-run before it is run for real.
 
-### D10 — Identity is the published identifiers
+**ADR:** docs/adr/0012-a-file-is-imported-whole-or-not-at-all.md
+
+## D10 — Identity is the published identifiers
 
 **Original**: the published identifiers map to `local_id` on the determination and on the parent.
 
@@ -175,7 +193,9 @@ The fallback that computed a key from coordinates when the identifier columns we
 it. A release always carries both identifiers, and the contributor template — which does not — is a
 different specification.
 
-### D11 — A vocabulary failure is never silent
+**ADR:** docs/adr/0010-a-determination-is-identified-by-its-published-identifiers.md
+
+## D11 — A vocabulary failure is never silent
 
 **Original**: "a descriptive validation error is raised identifying the row number, column name, and
 invalid value."
@@ -190,7 +210,9 @@ relationship left empty.
 surface of a release is many-valued, so discarding those errors discards most of the checking this
 feature exists to do.
 
-### D12 — Defect reports leave the specification
+**ADR:** docs/adr/0013-every-vocabulary-failure-is-reported.md
+
+## D12 — Defect reports leave the specification
 
 **Original**: nine defect reports written into the header as dated amendment stamps, several
 amending an earlier stamp, one narrowing the scope of the stamp above it.
@@ -205,7 +227,9 @@ never to reach a curator's screen describe a mechanism the code no longer has �
 generated, so they cannot leak. The stamp requiring the published column vocabulary to be adopted
 throughout was half-carried-out, and what remains of it is `004`'s.
 
-### D13 — What the file supplies and the portal does not keep
+**ADR:** none — an editorial rule about where defect reports belong, binding how the document is written rather than anything in the code
+
+## D13 — What the file supplies and the portal does not keep
 
 **Original**: silent. The original described a spreadsheet the portal had never actually read.
 
@@ -218,7 +242,9 @@ from what it holds and does not ingest supplied codes. The assessment columns ar
 discarded because recording assessment in the portal is aspirational and no field waits for them.
 Neither may cause a file to be refused, since both are part of the format.
 
-### D14 — Rows are never dropped, and names are never judged
+**ADR:** none — the quality-code half is ADR 0004 already, and the rest is a column classification the constants module states directly in code
+
+## D14 — Rows are never dropped, and names are never judged
 
 **Original**: silent on both.
 
@@ -233,7 +259,9 @@ happen to it. A site's name is a label, not a key — 11,513 sites in the curren
 Where two rows genuinely disagree about a site they share, that is reported rather than resolved,
 per the standing constraint that the portal does not guess at supplied data.
 
-### D15 — An interval is a sample, and is shared by every determination measured over it
+**ADR:** none — a site's name not being a key follows from the coordinate identity ADR 0006 records, and reporting rather than resolving a disagreement is a standing constraint
+
+## D15 — An interval is a sample, and is shared by every determination measured over it
 
 **Original**: silent. The original importer created an interval per row without saying so.
 
@@ -254,7 +282,9 @@ one.
 So the interval is identified by its site together with the depth range the row gives, and is
 shared.
 
-### D16 — The gradient and the conductivity take the determination's identifier
+**ADR:** docs/adr/0011-a-depth-interval-is-identified-by-its-site-and-depth-range.md
+
+## D16 — The gradient and the conductivity take the determination's identifier
 
 **Original**: silent.
 
@@ -275,7 +305,9 @@ standing constraints rule out.
 The consequence worth stating: every dependent record except the interval is now reachable from the
 determination's identifier, which is what makes repeating an import deterministic.
 
-### D17 — Rows with no depth attach to one indeterminate interval per site
+**ADR:** docs/adr/0010-a-determination-is-identified-by-its-published-identifiers.md — recorded there as the dependent-record half of the same identity rule
+
+## D17 — Rows with no depth attach to one indeterminate interval per site
 
 **Original**: silent.
 
@@ -287,7 +319,9 @@ groups.
 whole borehole or probe deployment, with several determinations relating to it. A site may hold that
 interval alongside intervals with real depth ranges; they are different samples and are not merged.
 
-### D18 — Probe metadata stays on the interval, and disagreement is a refusal
+**ADR:** none — follows directly from the interval identity rule, an absent depth range being a range like any other for that key
+
+## D18 — Probe metadata stays on the interval, and disagreement is a refusal
 
 **Original**: silent.
 
@@ -305,11 +339,13 @@ Those rows are refused and reported, like any other disagreement about a shared 
 corrected at source. This is the general rule of D9 applied to a case that turns out to be ordinary
 rather than remote.
 
-### D19 — Foundations Implementer notes (T001-T005, T007)
+**ADR:** none — keeps a one-to-one relationship the model already carries and applies the existing all-or-nothing refusal to one further case
+
+## D19 — Foundations implementation notes (T001-T005, T007)
 
 The plan and the task list name what each Foundations task delivers but not every file name or
 internal boundary. Recorded here, not as design decisions binding a later story, but as the
-Implementer's own record of the non-obvious choices this phase made while staying inside its named
+The implementation's own record of the non-obvious choices this phase made while staying inside its named
 scope (constants.py, the test module, the fixtures, the conftest that exposes them).
 
 **T001 — the test module's name.** Neither the plan nor the task names the file. `test_release.py`
@@ -400,13 +436,13 @@ and its test build that pair and confirm both properties hold, without pre-empti
 matching implementation.
 
 **Restructuring — the test module moved from `test_resources/test_release.py` to
-`test_ghfdb/test_constants.py`, discovered by the mandatory full `forge verify`, not by inspection.**
+`test_ghfdb/test_constants.py`, discovered by the mandatory full check, not by inspection.**
 The repo's conformance gate (Article X, mechanical) requires every test module to mirror an existing
 source module. `tests/test_ghfdb/test_resources/test_release.py` mirrored
 `project/ghfdb/resources/release.py` — the resource this phase deliberately does not create, since
-it is US-1's T009 — so the gate failed: "mirrors no source module." The tool provides a
-`[tool.forge.conformance] non-mirror-paths` declaration for genuine "no source module by design"
-cases (a Cotton/template test suite, per the tool's own docstring), but this is not that: the module
+it is US-1's T009 — so the gate failed: "mirrors no source module." The check offers a project-level declaration
+for genuine "no source module by design" cases, such as a Cotton template suite, but this is
+not that: the module
 *will* exist, one story later, and declaring a permanent exemption for a temporary gap would need
 walking back the moment T009 lands — a stale declaration nobody would remember to remove.
 
@@ -425,7 +461,9 @@ are two different subjects and should probably stay split as they are now, but a
 after T009 exists should not be surprised to find `RELEASE_COLUMNS` tested somewhere other than
 beside the reader that consumes it.
 
-### D20 — US-1 first part Implementer notes (T008, T009, T011-T024, T033)
+**ADR:** none — working notes on file names, fixture construction and test placement inside one phase's scope
+
+## D20 — US-1 first part implementation notes (T008, T009, T011-T024, T033)
 
 Recorded for the same reason as D19: not design decisions binding a later story, but the choices
 this phase made while staying inside its named scope (the reading format, the header check, the
@@ -538,20 +576,22 @@ and `GHFDBReleaseImportResource` are complete, exported from `project/ghfdb/reso
 and fully exercised by `test_release.py` — only the admin wiring plan.md describes is outstanding.
 Flagged in this run's completion report as a concern rather than resolved unilaterally.
 
-**Deviation: the mandatory baseline `forge verify` (§5 of the brief's rituals) ran after
+**Deviation: the mandatory baseline check (§5 of the brief's rituals) ran after
 implementation, not before it.** The brief's rituals name it as the last step, before the tasks
 themselves; work began directly from the tasks instead. Caught only when writing this run's
 completion report, at which point the tree already carried all seventeen tasks' commits. The
 worktree's starting commit (`c3d2352`, the same commit the requester recorded as clean) was never
 independently confirmed green in isolation. Mitigated after the fact rather than avoided: no
 pre-existing test file was modified at any point in this run (confirmed per-task by diffing each
-commit's changed files against the task's declared scope), and the full `forge verify` run at
+commit's changed files against the task's declared scope), and the full check run at
 completion — against the finished tree, all seventeen tasks included — passed every step
 (conformance, lint, typecheck, the full suite, build). This does not retroactively prove the
 starting commit was green; it does establish that nothing in this run's own commits left the tree
 red. Reported as a deviation in this run's completion report rather than silently corrected.
 
-### D21 — The release format and resource are registered when the resource writes, not before
+**ADR:** none — working notes on a reading format, a temporary no-op save and deferred admin wiring, each replaced by a later story in this feature
+
+## D21 — The release format and resource are registered when the resource writes, not before
 
 The US-1 first part left the admin wiring outstanding, correctly, and raised the question of when
 to do it. It is deferred to the all-or-nothing tasks (T025 to T030), which land after US-3.
@@ -575,7 +615,9 @@ Two consequences follow, both to be carried out with T025 to T030 rather than tr
 - The rollback correction and the result check reach the contributor template's reader on the same
   changelist, as plan.md's "Where it is registered" already states and intends.
 
-### D22 — US-2 Implementer notes (T034-T050)
+**ADR:** none — sequencing for when one piece of wiring lands within this feature, already carried out and spent
+
+## D22 — US-2 implementation notes (T034-T050)
 
 Recorded for the same reason as D19/D20: not design decisions binding a later story, but the
 choices this phase made while staying inside its named scope (resolving publication references to
@@ -641,7 +683,9 @@ and a freshly created `Dataset` defaults to `PRIVATE` (`visibility` field defaul
 fail on every dataset this story itself creates — the exact failure fairdm's own docstring on
 `DatasetManager` names `all_objects` as existing to avoid for administrative/import code.
 
-### D23 — US-3 first part Implementer notes (T051-T063)
+**ADR:** none — working notes on the order tasks were built in and how each test was probed
+
+## D23 — US-3 first part implementation notes (T051-T063)
 
 The record graph now exists: a row becomes its site, that site's parent heat flow value, an
 interval, a determination, and the determination's gradient and conductivity. Two identities make
@@ -666,7 +710,9 @@ file will create a second set of intervals against the same sites. US-4 is where
 idempotency is specified, and the interval side needs a database-backed lookup added there, by the
 pattern `_build_site_and_parent` already uses.
 
-### D24 — US-3 second part Implementer notes (T064-T077)
+**ADR:** none — working notes describing what the code does, including a gap a later story in the same feature closed
+
+## D24 — US-3 second part implementation notes (T064-T077)
 
 What hangs off a determination now exists: the gradient and conductivity carry the determination's
 own identifier, corrections are created only where supplied, probe metadata belongs to the interval,
@@ -709,7 +755,9 @@ workaround's own scope left open. `before_import_row` runs earliest in the libra
 sequence, so every reader of a row - declared fields, the disagreement pre-scan, and every
 `before_save_instance` builder - now sees one row, blanked once, consistently.
 
-### D25 — A vocabulary token falls back to its form without a trailing parenthetical
+**ADR:** none — working notes on the disagreement checks, including a gap a later run closed
+
+## D25 — A vocabulary token falls back to its form without a trailing parenthetical
 
 **Original**: silent - no requirement anticipates this.
 
@@ -735,14 +783,16 @@ fallback is ever reached, confirmed by re-running the fallback against the real 
 `environment`/`explo_method` columns, which needed no fallback at all.
 
 **Not asked for by any task in specs/003-ghfdb-release-import/tasks.md.** Made under the third-part
-Implementer's own authority to keep T081/T082 implementable without silently narrowing what they
+the implementation's own authority to keep T081/T082 implementable without silently narrowing what they
 close, and flagged in that run's completion report. **Revisit if** `heat_flow/vocabularies.py` adds
 `Random or periodic depth sampling (number)` as its own term (making the fallback redundant for this
 case, though it would remain generally available), or if the published release is corrected at
 source - at that point this fallback is a general tolerance with no known live case forcing it,
 which is worth re-justifying on its own rather than assumed to still be needed.
 
-### D26 — `Year`, `Ref_IGSN` and `data_reference` join the discarded columns
+**ADR:** none — a tolerance inside one token normaliser, carrying its own revisit condition tied to a single published term
+
+## D26 — `Year`, `Ref_IGSN` and `data_reference` join the discarded columns
 
 **Original**: silent - `Year`, `Ref_IGSN` and `data_reference` were classified `READ_COLUMNS` by
 T002/T003 (D19), grouped with "the identifiers" and "the publication year" in constants.py's own
@@ -773,14 +823,16 @@ holds it, not in the sense that no future code will ever consult `row.get("Year"
 not remove the value from the row US-4's own resource instance will read.
 
 **Not asked for by any task in specs/003-ghfdb-release-import/tasks.md.** Made under the third-part
-Implementer's own authority because T115 cannot otherwise assert every `READ_COLUMNS` entry has a
+the implementation's own authority because T115 cannot otherwise assert every `READ_COLUMNS` entry has a
 destination, and flagged in that run's completion report. **Revisit if** US-4 needs `Year` to be a
 required column again (`DISCARDED_COLUMNS` no longer requiring it on the header check may not be
-what US-4 wants) - that decision belongs to US-4's own Implementer, who should read this entry before
+what US-4 wants) - that decision belongs to whoever implements US-4, who should read this entry before
 assuming the header requirement can simply be restored without consequence for whatever else by then
 reads `RELEASE_COLUMNS`'s partition.
 
-### D27 — `explo_purpose` closes the gap D24 flagged in `SITE_COLUMNS`
+**ADR:** none — a column classification the constants module states directly, moving three names between two sets
+
+## D27 — `explo_purpose` closes the gap D24 flagged in `SITE_COLUMNS`
 
 **Original**: FR-035 - "Rows that share a site or an interval but disagree about that shared
 record's own values MUST be refused, with the disagreement reported."
@@ -810,7 +862,9 @@ concern. **Revisit if** a many-valued column beyond `explo_purpose` ever needs t
 treatment - `_site_column_value`'s branch is written for this one column specifically, not as a
 general many-valued-column handler.
 
-### D28 — US-4 Implementer notes (T097-T102)
+**ADR:** none — closes a gap an earlier entry flagged, within the same disagreement mechanism and for one column only
+
+## D28 — US-4 implementation notes (T097-T102)
 
 D23 named the gap precisely: a site is found by a database lookup, but an interval is kept only in a
 per-pass dictionary, so a second `import_data` call built a second set of intervals against the same
@@ -852,7 +906,9 @@ independent ones. Each task's own fallback was still probed in isolation (see Ve
 being folded back in, per craft-tdd's own instruction not to accept a mechanism on the strength of
 the combined test alone.
 
-### D29 — US-4 Implementer notes (T103-T109): the earliest publication year survives a reimport by
+**ADR:** none — working notes on making a repeat import idempotent by extending lookups the code already had
+
+## D29 — US-4 implementation notes (T103-T109): the earliest publication year survives a reimport by
 reusing `LiteratureItem.issued`, the one existing field that already carries a date
 
 D6 and FR-037 decide a shared site's dataset by the earliest publication year among its
@@ -900,10 +956,12 @@ own `dataset` is set independently, from its own row's publication reference, in
 adding a line that bulk-updated every determination on a site to the site's own (just-reassigned)
 dataset whenever a move happened: `TestGHFDBReleaseImportResourceMovingSiteLeavesDeterminationsWithTheirOwnDataset`
 failed. Removed; the test passes against the unmodified mechanism, which is the same "diagnose, don't
-accept a first-try pass" shape earlier stories' Implementers used for tasks whose behaviour a prior
+accept a first-try pass" shape earlier stories used for tasks whose behaviour a prior
 task's own code already delivered.
 
-### D30 — US-1 closing Implementer notes (T025-T030, T116, T117)
+**ADR:** none — an implementation note on which existing field holds a publication year; the rule it serves is recorded in ADR 0015
+
+## D30 — US-1 closing implementation notes (T025-T030, T116, T117)
 
 **`rollback_on_validation_errors` is not a `Meta` option - it is only a keyword argument to
 `import_data()`, and `GHFDBChildImportResource.Meta.rollback_on_validation_errors = True` (present
@@ -958,3 +1016,6 @@ passed for `test_repeat_across_two_separate_imports_is_not_refused` (nothing to 
 already-existing upsert identity - is what the first test depends on. Restored. US-4's own reimport
 test classes (T097-T109, `TestGHFDBReleaseImportResourceReusesExistingDatasets` and the rest) were run
 as part of the full module and stayed green, unaffected by this addition.
+
+**ADR:** none — working notes on where the rollback guarantee is wired and how the repeated-identifier check was tested
+

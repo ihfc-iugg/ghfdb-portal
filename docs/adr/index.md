@@ -21,6 +21,12 @@ The domain vocabulary these records use is defined in `CONTEXT.md` at the reposi
 | [0007](0007-the-portal-database-holds-current-state.md) | The portal database holds current state; releases are artefacts |
 | [0008](0008-one-constitution-one-glossary.md) | One constitution, one glossary, each with a single home |
 | [0009](0009-the-project-is-mit-licensed.md) | The project is MIT licensed |
+| [0010](0010-a-determination-is-identified-by-its-published-identifiers.md) | A determination is identified by its published identifiers |
+| [0011](0011-a-depth-interval-is-identified-by-its-site-and-depth-range.md) | A depth interval is identified by its site and depth range |
+| [0012](0012-a-file-is-imported-whole-or-not-at-all.md) | A file is imported whole or not at all |
+| [0013](0013-every-vocabulary-failure-is-reported.md) | Every vocabulary failure is reported, including on many-valued columns |
+| [0014](0014-an-unmatched-publication-reference-creates-a-record.md) | An unmatched publication reference creates a bibliographic record, and an ambiguous one is refused |
+| [0015](0015-a-shared-site-belongs-to-the-earliest-publication.md) | A site reported by several publications belongs to the earliest one |
 
 :::{toctree}
 :hidden:
