@@ -1964,3 +1964,64 @@ class TestGHFDBReleaseImportResourceMovingSiteLeavesDeterminationsWithTheirOwnDa
             earlier_determination.dataset.reference.citation_key
             == "Langseth_Grim_1964"
         )
+
+
+class TestGHFDBReleaseImportResourceRepeatedIdentifierWithinFile:
+    """T116, T117: a published determination identifier that repeats
+    inside one file is refused at its second occurrence, naming the
+    identifier and the line, and nothing from the file is written -
+    checked against the identifiers already seen in this pass alone,
+    never the database, so the reimport US-4 specifies (T117) stays an
+    update rather than being caught by this check. Fails before: the
+    second row silently overwrites the first (``import_id_fields``
+    resolves it to the same determination, T100) and the import reports
+    success."""
+
+    def test_second_occurrence_is_refused_and_nothing_is_written(self, db):
+        from heat_flow.models import HeatFlow
+
+        header, rows = _corrected_header_and_rows()
+        changed = [list(row) for row in rows]
+        repeated_id = changed[0][header.index("ID")]
+        changed[1][header.index("ID")] = repeated_id
+        dataset = _make_dataset(header, changed)
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(
+            dataset, dry_run=False, raise_errors=False, rollback_on_validation_errors=True
+        )
+
+        assert result.has_validation_errors() is True
+        assert len(result.invalid_rows) == 1
+        invalid_row = result.invalid_rows[0]
+        assert invalid_row.number == 3  # header + the first data row -> the repeat is file line 3
+        message = str(invalid_row.error_dict["ID"][0])
+        assert repeated_id in message
+
+        assert HeatFlow.objects.count() == 0
+
+    def test_repeat_across_two_separate_imports_is_not_refused(self, db):
+        """T117: identity is checked only against this pass, never the
+        database - importing the same file twice is the reimport US-4
+        specifies and stays an update, not a within-file repeat."""
+        from heat_flow.models import HeatFlow
+
+        header, rows = _corrected_header_and_rows()
+
+        first = GHFDBReleaseImportResource().import_data(
+            _make_dataset(header, rows),
+            dry_run=False,
+            raise_errors=False,
+            rollback_on_validation_errors=True,
+        )
+        assert first.has_validation_errors() is False
+
+        second = GHFDBReleaseImportResource().import_data(
+            _make_dataset(header, rows),
+            dry_run=False,
+            raise_errors=False,
+            rollback_on_validation_errors=True,
+        )
+
+        assert second.has_validation_errors() is False
+        assert HeatFlow.objects.count() == len(rows)
