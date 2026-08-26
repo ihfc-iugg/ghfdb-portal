@@ -176,28 +176,67 @@
         },
         {
           "id": "T110",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "docs/guides/importing-data.md",
+              "docs/index.md:71"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_admin.py:1226"
+            ]
+          }
         },
         {
           "id": "T111",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "docs/ghfdb_fields.md:247"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_constants.py:331"
+            ]
+          }
         },
         {
           "id": "T112",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "tests/test_ghfdb/test_resources/test_release.py:2030"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:2041"
+            ]
+          }
         },
         {
           "id": "T113",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [
+              "tests/test_ghfdb/test_resources/test_release.py:2057"
+            ],
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_release.py:2070"
+            ]
+          }
         },
         {
           "id": "T114",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "code": [],
+            "tests": [
+              "coverage: project/ghfdb/resources/release.py 95%, widgets.py 92%, admin.py 99%, constants.py 100%, resources/__init__.py 100% - all above the 90%/85% floors"
+            ]
+          }
         },
         {
           "id": "T008",

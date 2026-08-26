@@ -1615,3 +1615,94 @@ is dead configuration (decisions.md D30) - flagged as a concern in this
 run's completion report, not resolved here (out of scope: `child.py` is
 off limits beyond the one shared correction plan.md names, and removing
 dead config is not that correction).
+
+## 2026-08-26T14:15:00Z · Implementer docs and closing (resumption) · T110-T112 verified
+
+Did: Resumed a run that committed T110, T111 and T112 (4c00e42, 6e9a503,
+f99d720) and ended with no report, so nothing about them had been
+independently confirmed. Read all three diffs and checked each against its
+own acceptance before starting T113: T110's guide is reachable from
+`docs/index.md`'s own contents and its test reads the page's own text for
+the four things a curator needs; T111's documented read/discarded/refused
+column sets are asserted equal to `READ_COLUMNS`/`DISCARDED_COLUMNS`/
+`REFUSED_COLUMNS` themselves, not restated beside them; T112 reads only
+this module's own source for an expected-failure marker, not the wider
+`test_resources` tree the pre-existing thirteen live in. Confirmed
+`GHFDBReleaseCSVFormat`, `GHFDBReleaseImportResource` and `ColumnValueError`
+(the symbols T111's prose names) exist where the page says. Found nothing
+wrong with any of the three; no change made to them.
+
+Verified: `poetry run pytest tests/test_ghfdb -q` run once as this run's
+baseline, before any of my own changes - 415 passed, 13 xfailed, matching
+T112's own account of the pre-existing count exactly.
+
+Next: T113.
+
+Watch: none.
+
+## 2026-08-26T14:45:00Z · Implementer docs and closing (resumption) · T113
+
+Did: Added `TestReleaseFeatureMigrationState` to `test_release.py`,
+running `manage.py makemigrations --check --dry-run` as a real subprocess
+and asserting no reported migration file path falls under this
+repository's own tree. A subprocess, not `call_command` in-process,
+because this suite's own `--nomigrations` (tests/README.md) replaces every
+app's migration module with a no-op for the whole pytest session, which
+would make an in-process call pass no matter what it found - discovered by
+probing the in-process version first and watching it stay green under a
+mutation that should have failed it. Ran the real check directly first:
+this project's own applications (`heat_flow`, `ghfdb`, `review`) report no
+missing migrations; the vendored `orbit` package (site-packages, not this
+repository) has one unrelated pending migration, outside this assertion by
+the task's own acceptance. No model changed in this run, so no migration
+was written.
+
+Verified: RED confirmed - `pytest --collect-only` named nothing matching
+before the class existed. `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py::TestReleaseFeatureMigrationState
+-v` → 1 passed. Probed: temporarily made the filter treat every reported
+path as this project's own - the test failed on the real `orbit` drift,
+confirming the mechanism is load-bearing; reverted, re-ran green. Ran the
+full module: `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py -q` → 130 passed. `poetry
+run ruff check tests/test_ghfdb/test_resources/test_release.py` → clean.
+
+Next: T114.
+
+Watch: none.
+
+## 2026-08-26T15:10:00Z · Implementer docs and closing (resumption) · T114
+
+Did: No test added - `poetry run pytest tests/test_ghfdb --cov=project
+--cov-report=term-missing -q` (this run's own one-time coverage run, not
+encoded as a permanent test: a full-suite `--cov` pass takes about sixteen
+minutes, and embedding it in a test that itself runs under that same suite
+would make the suite measure itself) shows every file this feature changed
+above both the project's 90% and patch's 85% floor (codecov.yml):
+`release.py` 95%, `widgets.py` 92%, `admin.py` 99%, `constants.py` and
+`resources/__init__.py` 100%. Checked the two highest-miss files' gaps
+against this feature's own diff line-by-line, not by the file percentage
+alone: `admin.py`'s two missed lines (67, 245) and eleven of `widgets.py`'s
+fourteen sit outside every hunk this feature's own commits touch, and the
+three inside it (line 133's parenthetical-suffix fallback, and the
+`set_m2m_relations` error path at 368-370/374, a second validation pass
+behind one `import_instance`'s own `clean()` already performs first) are a
+pre-existing widget's own defensive duplicate, not a code path this run's
+two tasks own. Nothing fell short, so nothing was added.
+
+Verified: coverage percentages read directly from the run's own
+`--cov-report=term-missing` output, not assumed. Diff line ranges read
+from `git diff -U0 <merge-base> HEAD -- project/ghfdb/admin.py
+project/ghfdb/resources/widgets.py` and cross-checked against the missing
+line numbers by hand.
+
+Next: none - T113 and T114, the two tasks this run's brief scopes, are
+closed. This closes the feature-wide phase.
+
+Watch: `set_m2m_relations`'s error path (`project/ghfdb/resources/widgets.py:368-374`)
+is untested and, on the evidence read here, unreachable through this
+feature's own resource - `import_instance`'s `clean()` already refuses the
+same fault first (T081/T082, an earlier run's own work). Flagged as a
+concern rather than touched: closing this file's coverage gap or removing
+the now-redundant duplicate is outside T113/T114's scope, and T081/T082
+are already closed on a different code path.

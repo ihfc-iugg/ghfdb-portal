@@ -534,24 +534,30 @@ Blocking. Every story depends on these.
 
 ## Phase 6 — Documentation and closing
 
-- [ ] **T110** *feature-wide* — Documentation for a curator: what file the portal reads, where the
+- [x] **T110** *feature-wide* — Documentation for a curator: what file the portal reads, where the
   import is, what the check reports and how to act on it, and what happens to a file that fails.
   **Test**: the documentation builds and the page is reachable from the documentation's contents.
+  **Closed on**: docs/guides/importing-data.md · docs/index.md:71 · tests/test_ghfdb/test_admin.py:1226
 
-- [ ] **T111** *feature-wide* — Documentation of the release format's column set and which columns
+- [x] **T111** *feature-wide* — Documentation of the release format's column set and which columns
   are read, recognised and discarded, or refused — generated from the definition rather than
   restated beside it.
   **Test**: the documented set equals the definition's, asserted rather than compared by eye.
+  **Closed on**: docs/ghfdb_fields.md:247 · tests/test_ghfdb/test_constants.py:331
 
-- [ ] **T112** *feature-wide* — Test: no test in this feature's suite is expected to fail. The suite
+- [x] **T112** *feature-wide* — Test: no test in this feature's suite is expected to fail. The suite
   carries no expected-failure marker attributable to this feature.
   **Fails before**: the assertion does not exist.
+  **Closed on**: tests/test_ghfdb/test_resources/test_release.py:2041
 
-- [ ] **T113** *feature-wide* — A migration for any model change this feature required, squashed into
+- [x] **T113** *feature-wide* — A migration for any model change this feature required, squashed into
   one, or an assertion that none was required.
   **Test**: this project's own applications report no missing migrations. A vendored dependency's
   migrations are outside the assertion — they already drift, and this feature does not own them.
+  **Closed on**: no model change required · tests/test_ghfdb/test_resources/test_release.py:2070
 
-- [ ] **T114** *feature-wide* — Test coverage meets the project's threshold for the modules this
+- [x] **T114** *feature-wide* — Test coverage meets the project's threshold for the modules this
   feature adds.
   **Test**: the coverage gate passes on the changed files.
+  **Closed on**: `pytest --cov=project` — release.py 95%, widgets.py 92%, admin.py 99%,
+  constants.py 100%, resources/__init__.py 100%, all above the 90%/85% floors (codecov.yml)
