@@ -1518,3 +1518,100 @@ Next: none - all thirteen tasks (T097-T109) this run's brief scopes are closed. 
 once at the completion report.
 
 Watch: none.
+
+## 2026-08-26T12:00:00Z · Implementer US-1 closing · T116, T117
+
+Did: `import_instance` now refuses a published determination identifier
+that repeats within one file, at its second occurrence, keyed `ID` (the
+header column, per R6/FR-010) and naming the identifier in the message.
+`_local_ids_seen`, a per-pass set reset in `before_import` alongside the
+story's other caches, is what "within this pass" is checked against -
+never the database, so US-4's reimport of an unchanged file still
+updates. Added `TestGHFDBReleaseImportResourceRepeatedIdentifierWithinFile`
+to `test_release.py`: the second of two rows sharing an `ID` is refused
+and nothing is written (combined with `rollback_on_validation_errors=True`,
+T025's own guarantee), and importing the same seven-row file twice is not
+refused the second time.
+
+Verified: RED observed - before this change,
+`test_second_occurrence_is_refused_and_nothing_is_written` failed with
+`has_validation_errors() is False` (the second row silently overwrote the
+first via `import_id_fields`, T100). `poetry run pytest
+tests/test_ghfdb/test_resources/test_release.py::TestGHFDBReleaseImportResourceRepeatedIdentifierWithinFile
+-v` → 2 passed. Probed: temporarily disabled the `_local_ids_seen`
+membership check - the within-file test failed for the same reason as
+RED, confirming the check is load-bearing; the across-two-imports test
+stayed green either way (nothing to catch there), which is itself the
+proof that identity, not this check, is what makes a reimport an update.
+Restored, re-ran green. Ran the full module:
+`poetry run pytest tests/test_ghfdb/test_resources/test_release.py -q`
+→ 128 passed (up by exactly the 2 new tests), including every US-4
+reimport test unaffected. `ruff check`/`ruff format --check` → clean.
+
+Next: T025-T030, the all-or-nothing guarantee and its registration.
+
+Watch: none.
+
+## 2026-08-26T12:20:00Z · Implementer US-1 closing · T025-T030
+
+Did: `GHFDBChildAdmin` gained three overrides. `get_import_data_kwargs`
+forces `rollback_on_validation_errors=True` on every call (T025, T026) -
+the library's own default commits the valid rows and skips only the
+refused ones on the confirmed pass (R5), which the specification forbids.
+`process_result` checks `result.has_errors()`/`has_validation_errors()`
+before delegating to the library's own success path, reporting
+`messages.error` instead when either is true (T028, T029) - the
+library's own version reports success unconditionally. `get_import_resource_classes`
+and `get_import_formats` gained `GHFDBReleaseImportResource` and
+`GHFDBReleaseCSVFormat` (T030) - this is what makes every other part of
+US-1 through US-4 reachable at all. Both new admin overrides reach
+`GHFDBChildImportResource` (the contributor template's reader) for free,
+with no edit to `child.py`, since they are properties of the shared
+registration (plan.md, "Where it is registered", D21) - intended, not
+incidental. Discovered and recorded in decisions.md D30:
+`GHFDBChildImportResource.Meta.rollback_on_validation_errors = True`
+(present since the 002 feature) is dead configuration - the library reads
+this only as a keyword argument to `import_data()`, never from `Meta` -
+left untouched (out of this story's scope) and flagged as a concern.
+
+Updated the three test groups D21 authorises to their grown state:
+`test_ghfdb_admin_changelist_refined_configuration` and
+`test_it_carries_the_determination_import_resource_and_the_export_resource`
+in `test_admin.py` now assert `[GHFDBChildImportResource,
+GHFDBReleaseImportResource]`; `TestAdminGetImportFormats`'s two
+`GHFDBChildAdmin`-specific cases in `test_parent_import.py` now assert
+three formats, the release format named last - its two
+`GHFDBParentAdmin`-specific cases are untouched, since the release
+resource is never registered on the site changelist. Added
+`TestGHFDBChildAdminAllOrNothingImport` to `test_admin.py`: a refused
+value among several valid rows writes nothing at all (T025); reinstating
+the library's own default on the same scenario lets the valid rows commit
+(T027, a permanent regression test, not a hand probe); a refused import is
+reported with an error message, never a success one (T028, T029); the
+same check leaves a clean import's success message untouched; and a clean
+file writes its records once the release resource is registered (T030).
+
+Verified: RED observed for all six new/changed tests together, by
+stashing the `admin.py` changes and re-running them - all six failed for
+the reasons named above (T025's scenario left only the row on a different
+site written once the guarantee was removed; the two pinned-group tests
+failed on the grown-list equality; the result-check tests failed because
+`process_result` had nothing to intercept). Restored. `poetry run pytest
+tests/test_ghfdb/test_admin.py -q` → 48 passed. `poetry run pytest
+tests/test_ghfdb/test_resources/test_parent_import.py -q` → 27 passed, 5
+xfailed. `poetry run pytest tests/test_ghfdb/test_resources/test_release.py
+tests/test_ghfdb/test_admin.py tests/test_ghfdb/test_resources/test_parent_import.py
+-q` run in full as this run's one-time verify. `ruff check`
+`project/ghfdb/admin.py` → one `UP031` finding (percent-formatted
+`reverse()` call), fixed to an f-string with `get_model_info()` unpacked
+directly; re-checked clean. `ruff format --check` on `admin.py` → clean
+(tests/ excluded from formatting by design, per `.pre-commit-config.yaml`).
+
+Next: none - all eight tasks this run's brief scopes (T025-T030, T116,
+T117) are closed. This closes US-1 in full.
+
+Watch: `GHFDBChildImportResource.Meta.rollback_on_validation_errors = True`
+is dead configuration (decisions.md D30) - flagged as a concern in this
+run's completion report, not resolved here (out of scope: `child.py` is
+off limits beyond the one shared correction plan.md names, and removing
+dead config is not that correction).

@@ -3,6 +3,7 @@ T066, T078-T089, T098-T110, T123)."""
 
 import pytest
 from django.contrib import admin
+from django.contrib.admin import AdminSite
 from django.contrib.admin.templatetags.admin_list import result_headers
 from django.contrib.admin.utils import label_for_field
 from django.test import RequestFactory, override_settings
@@ -52,6 +53,7 @@ class TestGHFDBAdminChangelist:
             GHFDBChildImportResource,
             GHFDBExportResource,
             GHFDBParentImportResource,
+            GHFDBReleaseImportResource,
         )
 
         url = reverse("admin:ghfdb_ghfdbchild_changelist")
@@ -69,8 +71,13 @@ class TestGHFDBAdminChangelist:
         model_admin = admin.site._registry[GHFDBChild]
         assert model_admin.search_fields == EXPECTED_SEARCH_FIELDS
         assert model_admin.list_filter == EXPECTED_LIST_FILTER
+        # D21: the release resource joins the determination changelist's
+        # import machinery once US-1's all-or-nothing guarantee is
+        # registered (T030) - grown here from a single-resource state,
+        # not restated as a literal independent of that registration.
         assert model_admin.get_import_resource_classes(request=None) == [
-            GHFDBChildImportResource
+            GHFDBChildImportResource,
+            GHFDBReleaseImportResource,
         ]
         assert GHFDBParentImportResource not in model_admin.get_import_resource_classes(
             request=None
@@ -862,15 +869,22 @@ class TestGHFDBChildAdmin:
         assert errors == []
 
     def test_it_carries_the_determination_import_resource_and_the_export_resource(self):
-        """T089 (FR-021, SC-010): both the import and the export attachment."""
+        """T089 (FR-021, SC-010): both the import and the export attachment.
+
+        D21: grown to include the release resource once US-1's
+        all-or-nothing guarantee is registered (T030) - the export side
+        is untouched, since the release story adds no export resource.
+        """
         from project.ghfdb.resources import (
             GHFDBChildImportResource,
             GHFDBExportResource,
+            GHFDBReleaseImportResource,
         )
 
         model_admin = admin.site._registry[GHFDBChild]
         assert model_admin.get_import_resource_classes(request=None) == [
-            GHFDBChildImportResource
+            GHFDBChildImportResource,
+            GHFDBReleaseImportResource,
         ]
         assert model_admin.get_export_resource_classes(request=None) == [
             GHFDBExportResource
@@ -994,3 +1008,210 @@ class TestAnonymousRequestToTheImportRoute:
         request.user = AnonymousUser()
 
         assert model_admin.has_import_permission(request) is False
+
+
+def _release_dataset(mutate=None):
+    """A tablib ``Dataset`` built from the real release base fixture (the
+    same one ``test_release.py`` uses), header-corrected for the two
+    published misspellings (D7) - the file a curator would submit, not
+    the archive as downloaded. ``mutate`` receives the header and the
+    list-of-lists rows and may change them in place before the dataset is
+    built, so a scenario can carry exactly one refused value or one
+    repeated identifier without hand-building a whole valid row."""
+    import csv
+    from pathlib import Path
+
+    import tablib
+
+    from project.ghfdb.constants import MISSPELLED_COLUMNS
+
+    fixture = (
+        Path(__file__).parent
+        / "test_resources"
+        / "fixtures"
+        / "release"
+        / "release_sample.csv"
+    )
+    text = fixture.read_text(encoding="utf-8-sig")
+    reader = csv.reader(text.splitlines())
+    header = [MISSPELLED_COLUMNS.get(name, name) for name in next(reader)]
+    rows = [list(row) for row in reader]
+    if mutate:
+        mutate(header, rows)
+    dataset = tablib.Dataset(headers=header)
+    for row in rows:
+        dataset.append(row)
+    return dataset
+
+
+class _StubConfirmForm:
+    """A minimal stand-in for ``ConfirmImportForm``, carrying only the
+    ``cleaned_data`` keys ``process_dataset`` itself reads - the resource
+    index (so the release resource, not the child one, is chosen) and the
+    original file name."""
+
+    def __init__(self, resource_index):
+        self.cleaned_data = {
+            "resource": str(resource_index),
+            "original_file_name": "release.csv",
+        }
+
+
+def _release_resource_index(admin_instance):
+    from project.ghfdb.resources import GHFDBReleaseImportResource
+
+    return admin_instance.get_import_resource_classes(request=None).index(
+        GHFDBReleaseImportResource
+    )
+
+
+def _confirmed_import(admin_instance, dataset, user):
+    """Run ``dataset`` through the exact method a curator's confirm click
+    invokes (``ImportMixin.process_import`` calls this directly), so the
+    result carries what ``process_result`` needs (T028, T029) - built
+    with a real request instead of a mock, per craft-tdd."""
+    request = RequestFactory().post(reverse("admin:ghfdb_ghfdbchild_import"))
+    request.user = user
+    request.session = {}
+    form = _StubConfirmForm(_release_resource_index(admin_instance))
+    result = admin_instance.process_dataset(dataset, form, request)
+    return result, request
+
+
+def _refuse_one_row(header, rows):
+    """Give the first data row an unrecognised lithology term (T081,
+    T082's own established way to produce a refused value) - a purely
+    per-row refusal, unlike a ``SITE_COLUMNS``/``PROBE_COLUMNS`` entry,
+    which would also fail every other row sharing that row's site or
+    interval as a disagreement. Leaves every other row untouched and
+    valid."""
+    rows[0][header.index("geo_lithology")] = "not_a_real_lithology"
+
+
+class TestGHFDBChildAdminAllOrNothingImport:
+    """T025-T030 (D9, D21): the confirmed pass on the determination
+    changelist writes nothing at all when any value in the file is
+    refused, and never reports such an import as having succeeded. The
+    release resource is what makes this reachable (T030) - the same
+    override, registered once on this changelist, also reaches the
+    contributor template's reader (plan.md, 'Where it is registered')."""
+
+    @pytest.mark.django_db
+    def test_a_refused_value_writes_nothing_at_all(self):
+        """T025: every record count is exactly what it was before,
+        including for the rows that were themselves valid. Fails before:
+        the library's default commits the valid rows and skips the
+        refused one."""
+        from fairdm.core.models import Dataset
+        from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
+        from literature.models import LiteratureItem
+
+        from project.ghfdb.admin import GHFDBChildAdmin
+        from project.ghfdb.resources import GHFDBReleaseImportResource
+
+        dataset = _release_dataset(mutate=_refuse_one_row)
+        admin_instance = GHFDBChildAdmin(GHFDBChild, AdminSite())
+        imp_kwargs = admin_instance.get_import_data_kwargs()
+
+        result = GHFDBReleaseImportResource().import_data(
+            dataset, dry_run=False, raise_errors=False, **imp_kwargs
+        )
+
+        assert result.has_validation_errors() is True
+        assert HeatFlow.objects.count() == 0
+        assert HeatFlowSite.objects.count() == 0
+        assert ParentHeatFlow.objects.count() == 0
+        assert Dataset.all_objects.count() == 0
+        assert LiteratureItem.objects.count() == 0
+
+    @pytest.mark.django_db
+    def test_reinstating_the_librarys_default_makes_the_guarantee_fail(self):
+        """T027: reinstating ``rollback_on_validation_errors=False`` (the
+        library's own default, which
+        ``GHFDBChildAdmin.get_import_data_kwargs`` overrides) on the
+        exact scenario T025 proves lets the valid rows commit and skips
+        only the refused one - proving the override is what T025 depends
+        on, not incidental behaviour of a clean file."""
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBReleaseImportResource
+
+        dataset = _release_dataset(mutate=_refuse_one_row)
+        total_rows = len(dataset)
+
+        result = GHFDBReleaseImportResource().import_data(
+            dataset, dry_run=False, raise_errors=False
+        )
+
+        assert result.has_validation_errors() is True
+        assert HeatFlow.objects.count() == total_rows - 1
+
+    @pytest.mark.django_db
+    def test_a_refused_import_is_not_reported_as_succeeded(self, admin_user):
+        """T028, T029: the confirmed pass's result is checked before
+        anything is reported as done. Fails before: ``process_result``
+        reports success without inspecting the result it was given."""
+        from django.contrib import messages as messages_module
+        from django.contrib.messages.storage.fallback import FallbackStorage
+
+        from project.ghfdb.admin import GHFDBChildAdmin
+
+        dataset = _release_dataset(mutate=_refuse_one_row)
+        admin_instance = GHFDBChildAdmin(GHFDBChild, AdminSite())
+        result, request = _confirmed_import(admin_instance, dataset, admin_user)
+        assert result.has_validation_errors() is True
+        request._messages = FallbackStorage(request)
+
+        admin_instance.process_result(result, request)
+
+        levels = {message.level for message in request._messages}
+        assert messages_module.SUCCESS not in levels
+        assert messages_module.ERROR in levels
+
+    @pytest.mark.django_db
+    def test_a_clean_file_is_still_reported_as_succeeded(self, admin_user):
+        """The other branch of T028/T029's check: a clean import is
+        unaffected and still reports success, proving the check is real
+        rather than always refusing."""
+        from django.contrib import messages as messages_module
+        from django.contrib.messages.storage.fallback import FallbackStorage
+
+        from project.ghfdb.admin import GHFDBChildAdmin
+
+        dataset = _release_dataset()
+        admin_instance = GHFDBChildAdmin(GHFDBChild, AdminSite())
+        result, request = _confirmed_import(admin_instance, dataset, admin_user)
+        assert result.has_validation_errors() is False
+        request._messages = FallbackStorage(request)
+
+        admin_instance.process_result(result, request)
+
+        levels = {message.level for message in request._messages}
+        assert messages_module.SUCCESS in levels
+        assert messages_module.ERROR not in levels
+
+    @pytest.mark.django_db
+    def test_a_clean_file_writes_its_records_once_registered(self):
+        """T030: the release format and resource are registered on the
+        determination changelist, and a file in which every value passes
+        writes the records when the curator confirms. Fails before: no
+        reader is registered here at all."""
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.admin import GHFDBChildAdmin
+        from project.ghfdb.resources import GHFDBReleaseImportResource
+
+        admin_instance = GHFDBChildAdmin(GHFDBChild, AdminSite())
+        assert GHFDBReleaseImportResource in admin_instance.get_import_resource_classes(
+            request=None
+        )
+
+        dataset = _release_dataset()
+        imp_kwargs = admin_instance.get_import_data_kwargs()
+
+        result = GHFDBReleaseImportResource().import_data(
+            dataset, dry_run=False, raise_errors=False, **imp_kwargs
+        )
+
+        assert result.has_validation_errors() is False
+        assert HeatFlow.objects.count() == len(dataset)

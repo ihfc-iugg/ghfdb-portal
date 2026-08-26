@@ -415,6 +415,11 @@ class GHFDBReleaseImportResource(ModelResource):
             SITE_COLUMNS,
             normalize=_site_column_value,
         )
+        # T116, T117: a published determination identifier seen once
+        # already in this pass - checked against this set alone, never
+        # the database, so a reimport of the same file (US-4) still
+        # updates rather than being caught as a within-file repeat.
+        self._local_ids_seen = set()
 
     def _resolve_publication_datasets(self, dataset):
         """T035, T036: collect the file's distinct publication references
@@ -481,6 +486,26 @@ class GHFDBReleaseImportResource(ModelResource):
 
     def import_instance(self, instance, row, **kwargs):
         errors = {}
+
+        # T116, T117: a published determination identifier that repeats
+        # inside this file is refused at its second occurrence - identity
+        # is the published identifier alone (D10), so a row that reuses
+        # one is a fault in the file, not a second measurement of it.
+        local_id = (row.get("ID") or "").strip()
+        if local_id:
+            if local_id in self._local_ids_seen:
+                errors["ID"] = ValidationError(
+                    force_str(
+                        f"Determination identifier '{local_id}' is repeated "
+                        f"within this file. A published identifier must be "
+                        f"unique within one release; the file is refused "
+                        f"rather than letting this row overwrite the first."
+                    ),
+                    code="invalid",
+                )
+            else:
+                self._local_ids_seen.add(local_id)
+
         for field in self.get_import_fields():
             if isinstance(field.widget, widgets.ManyToManyWidget):
                 continue
