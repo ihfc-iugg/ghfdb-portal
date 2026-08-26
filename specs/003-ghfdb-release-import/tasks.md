@@ -452,6 +452,19 @@ Blocking. Every story depends on these.
   confirms.
   **Fails before**: no reader exists.
 
+- [ ] **T116** *US-1* — Test: a determination identifier that repeats inside one file is refused at
+  its second occurrence, naming the identifier and the line, and nothing from the file is written.
+  Two rows carrying one identifier mean the file is wrong, so the portal refuses rather than letting
+  the second row overwrite the first (spec, Edge cases). Added after US-4, which left the case
+  reachable and worse: identifying a determination by that column turned a second occurrence from a
+  duplicate record into a silent overwrite, and no task covered it.
+  **Fails before**: the second row overwrites the first and the import reports success.
+
+- [ ] **T117** *US-1* — Refusing a determination identifier that repeats within one file, checked
+  against the identifiers already seen in this pass rather than against the database — a repeat
+  across two separate imports is the reimport US-4 specifies, and stays an update.
+  **Test**: T116, and US-4's own reimport tests unchanged.
+
 
 - [x] **T115** *US-3* — Test: every column the definition marks as read lands in the field that holds
   it, asserted column by column against the fixture rather than in aggregate, and failing for any
