@@ -2052,3 +2052,40 @@ class TestReleaseImportSuiteHealth:
                     if isinstance(target, ast.Attribute):
                         marks.add(target.attr)
         assert marks & {"xfail", "skip", "skipif"} == set()
+
+
+class TestReleaseFeatureMigrationState:
+    """T113: this feature required no model change, so it owes this
+    project's own applications no migration - checked across every
+    installed application, not scoped to this feature's own apps alone, so a
+    field moved between applications would still be caught. A vendored
+    dependency's own drift (``orbit``, reported from outside this
+    repository's own tree) is outside this assertion; it already drifts and
+    this feature does not own it. Run as a real subprocess, not
+    ``call_command`` in-process, because this suite's own ``--nomigrations``
+    (tests/README.md) replaces every app's migration module with a
+    no-op for the pytest session, which would make the check pass no matter
+    what it found."""
+
+    def test_no_missing_migration_in_this_projects_own_applications(self):
+        import subprocess
+        import sys
+
+        from django.conf import settings
+
+        result = subprocess.run(
+            [sys.executable, "manage.py", "makemigrations", "--check", "--dry-run"],
+            cwd=settings.BASE_DIR,
+            capture_output=True,
+            text=True,
+        )
+
+        base_dir = str(Path(settings.BASE_DIR))
+        reported_paths = [
+            line.strip()
+            for line in (result.stdout + result.stderr).splitlines()
+            if line.strip().startswith("/")
+        ]
+        own_paths = [path for path in reported_paths if path.startswith(base_dir)]
+
+        assert own_paths == []
