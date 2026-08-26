@@ -259,7 +259,7 @@ happen to it. A site's name is a label, not a key — 11,513 sites in the curren
 Where two rows genuinely disagree about a site they share, that is reported rather than resolved,
 per the standing constraint that the portal does not guess at supplied data.
 
-**ADR:** none — a site's name not being a key follows from the coordinate identity ADR 0006 records, and reporting rather than resolving a disagreement is a standing constraint
+**ADR:** 0016 — a release identifies a site by its published site identifier, which is what makes the name a label rather than a key, and narrows the coordinate identity ADR 0006 records to the contributor upload template. Reporting rather than resolving a disagreement is a standing constraint.
 
 ## D15 — An interval is a sample, and is shared by every determination measured over it
 

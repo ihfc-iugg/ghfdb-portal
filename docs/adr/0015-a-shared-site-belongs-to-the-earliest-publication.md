@@ -19,8 +19,8 @@ already in the right dataset and is never reassigned.
 
 Sites are shared far more often than the model's one-dataset relationship suggests. In the 2024
 release, 4,817 of 71,934 sites carry determinations cited to more than one publication. Site
-identity itself is never in doubt, since a site is its coordinates (ADR 0006), so this is purely a
-question of which dataset holds it.
+identity itself is never in doubt, since a release names every site by its published site
+identifier (ADR 0016), so this is purely a question of which dataset holds it.
 
 Earliest-publication ownership matches how the framework describes the relationship: the dataset a
 sample first appeared in. It is also the only rule that is stable. Any rule keyed on import order,

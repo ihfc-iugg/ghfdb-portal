@@ -41,3 +41,11 @@ failure rather than a success message.
 
 Correct the file at the fault named and upload it again. Once every row passes, the import writes
 everything at once.
+
+## Very large files
+
+Because a file is imported whole or not at all, the whole file is read into memory first, and the
+database stays inside one transaction until the run finishes. A full release imports as one file.
+If a particular file is large enough to make that slow, split it and import the pieces in turn.
+Splitting is safe. A site or an interval that more than one piece describes is recognised as the
+same one, and a row already imported is updated rather than duplicated.
