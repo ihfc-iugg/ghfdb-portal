@@ -617,6 +617,13 @@ Two consequences follow, both to be carried out with T025 to T030 rather than tr
 
 **ADR:** none — sequencing for when one piece of wiring lands within this feature, already carried out and spent
 
+**Guardrail triage (convergence).** Three pre-existing test files are flagged as modified:
+`tests/test_ghfdb/test_admin.py`, `tests/test_ghfdb/test_resources/test_parent_import.py` and
+`tests/test_ghfdb/conftest.py`. Every change is this decision being carried out — a registry the
+tests pin by exact equality grows by one entry, so `2` becomes `3` with the new member asserted
+by name — plus formatter reflow of two unrelated signatures. No assertion was removed or
+weakened, and no test was deleted. Approved.
+
 ## D22 — US-2 implementation notes (T034-T050)
 
 Recorded for the same reason as D19/D20: not design decisions binding a later story, but the
@@ -1018,4 +1025,3 @@ test classes (T097-T109, `TestGHFDBReleaseImportResourceReusesExistingDatasets` 
 as part of the full module and stayed green, unaffected by this addition.
 
 **ADR:** none — working notes on where the rollback guarantee is wired and how the repeated-identifier check was tested
-
