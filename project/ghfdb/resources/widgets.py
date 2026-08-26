@@ -378,15 +378,24 @@ class ParentWidget(RelatedModelWidget):
     Also attaches an unsaved Point (x=long_EW, y=lat_NS) to the site's
     location attribute.  The resource is responsible for saving both the
     Point and the site (after assigning a dataset FK).
+
+    ``name_is_sentinel`` decides what a row with no site name means. The
+    contributor template identifies a site by its coordinates, so a row
+    that names no site describes no site and the widget yields nothing.
+    A published release identifies a site by its published identifier
+    instead, so a row still describes a site whether or not it names one:
+    that reader passes ``name_is_sentinel=False`` and gets the site with
+    every other column the row supplies, and an empty name.
     """
 
-    def __init__(self):
+    def __init__(self, name_is_sentinel=True):
         from heat_flow import vocabularies
         from heat_flow.models import HeatFlowSite
 
+        self.name_is_sentinel = name_is_sentinel
         super().__init__(
             model=HeatFlowSite,
-            sentinel_column="name",
+            sentinel_column="name" if name_is_sentinel else None,
             scalar_map={
                 "name": "name",
                 "environment": "environment",
@@ -420,10 +429,10 @@ class ParentWidget(RelatedModelWidget):
 
     def clean(self, value, row=None, **kwargs):
         self._last_row = row
-        raw_name = (row or {}).get("name")
+        row = row or {}
+        raw_name = row.get("name")
         try:
-            if not (raw_name or "").strip():
-                return None
+            has_name = bool((raw_name or "").strip())
         except AttributeError:
             raise ValueError(
                 _(
@@ -432,14 +441,45 @@ class ParentWidget(RelatedModelWidget):
                 % {"val": raw_name}
             ) from None
 
+        if self.name_is_sentinel and not has_name:
+            return None
+
         from fairdm.contrib.location.models import Point
 
-        lat = float((row or {}).get("lat_NS", 0) or 0)
-        lng = float((row or {}).get("long_EW", 0) or 0)
+        # The coordinates are parsed here rather than left to whoever
+        # assigns the location later, so a coordinate that is not a number
+        # is reported against its own column alongside the row's other
+        # column faults, and the row is refused before anything is saved.
+        errors = {}
+        coordinates = {}
+        for column in ("lat_NS", "long_EW"):
+            raw = row.get(column, "")
+            try:
+                coordinates[column] = float(raw or 0)
+            except (TypeError, ValueError):
+                errors[column] = ValidationError(
+                    _("Column '%(col)s' contains %(val)r, which is not a coordinate.")
+                    % {"col": column, "val": raw},
+                    code="invalid",
+                )
 
-        instance = super().clean(value, row=row, **kwargs)
+        try:
+            instance = super().clean(value, row=row, **kwargs)
+        except ColumnValueError as exc:
+            errors.update(exc.column_errors)
+            instance = None
+
+        if errors:
+            raise ColumnValueError(errors)
+
         if instance is not None:
-            instance.location = Point(x=lng, y=lat)
+            if not has_name:
+                # A release row may name no site, and the name is stored
+                # exactly as the file gives it - here, empty. The scalar
+                # reader turns a blank column into None, which this field
+                # does not hold.
+                instance.name = ""
+            instance.location = Point(x=coordinates["long_EW"], y=coordinates["lat_NS"])
         return instance  # UNSAVED (Point also unsaved)
 
 

@@ -360,7 +360,10 @@ class GHFDBReleaseImportResource(ModelResource):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._parent_widget = ParentWidget()
+        # A site is identified by its published identifier here (D10,
+        # FR-023), so a row describes a site whether or not it names one
+        # and the name never acts as a sentinel.
+        self._parent_widget = ParentWidget(name_is_sentinel=False)
         self._interval_widget = IntervalWidget()
         self._gradient_widget = GradientWidget()
         self._conductivity_widget = ConductivityWidget()

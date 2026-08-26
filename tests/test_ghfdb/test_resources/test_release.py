@@ -19,6 +19,7 @@ from literature.models import LiteratureItem
 
 from project.ghfdb.constants import CORRECTION_COL_MAP, MISSPELLED_COLUMNS, READ_COLUMNS
 from project.ghfdb.resources.release import (
+    ABSENT_VALUE_MARKER,
     GHFDBReleaseCSVFormat,
     GHFDBReleaseImportResource,
     _correction_status,
@@ -2089,3 +2090,54 @@ class TestReleaseFeatureMigrationState:
         own_paths = [path for path in reported_paths if path.startswith(base_dir)]
 
         assert own_paths == []
+
+
+class TestGHFDBReleaseImportResourceSiteWithoutAName:
+    """A site whose row gives no name still keeps everything else that row
+    says about it. Fails before: ``ParentWidget.clean`` returned early on a
+    blank name, so the site was built bare and every other site column the
+    row supplied was discarded - permanently, since a reimport finds the
+    same site by its published identifier and never rebuilds it."""
+
+    def test_a_site_with_no_name_keeps_the_rest_of_its_columns(self, db):
+        from heat_flow.models import HeatFlowSite
+
+        header, rows = _corrected_header_and_rows()
+        # Row 4 of the real base fixture supplies environment, elevation,
+        # explo_method, explo_purpose, Region, Continent and Domain.
+        row = _with_cell(header, [rows[4]], 0, "name", "")[0]
+        dataset = _make_dataset(header, [row])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_errors() is False
+        assert result.has_validation_errors() is False
+
+        site = HeatFlowSite.objects.get()
+        assert site.name == ""
+        assert site.elevation is not None
+        assert site.environment is not None
+        assert site.explo_method is not None
+        assert site.region == "Caribbean Sea"
+        assert site.continent == "Caribbean Plate"
+        assert site.domain == "marine"
+        assert site.explo_purpose.exists()
+
+    def test_a_site_with_no_name_and_a_malformed_coordinate_is_refused(self, db):
+        from heat_flow.models import HeatFlowSite
+
+        header, rows = _corrected_header_and_rows()
+        row = _with_cell(header, [rows[4]], 0, "name", "")[0]
+        row = _with_cell(header, [row], 0, "long_EW", "abc")[0]
+        dataset = _make_dataset(header, [row])
+
+        resource = GHFDBReleaseImportResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=False)
+
+        assert result.has_validation_errors() is True
+        refused = {row.number: row for row in result.invalid_rows}
+        assert 2 in refused
+        assert "long_EW" in refused[2].error_dict
+        assert "abc" in str(refused[2].error_dict["long_EW"][0])
+        assert HeatFlowSite.objects.count() == 0
