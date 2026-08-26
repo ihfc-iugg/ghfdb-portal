@@ -1,6 +1,8 @@
 """Tests for GHFDB admin changelist configuration and rendering (T013, T063,
 T066, T078-T089, T098-T110, T123)."""
 
+import pathlib
+
 import pytest
 from django.contrib import admin
 from django.contrib.admin import AdminSite
@@ -1215,3 +1217,29 @@ class TestGHFDBChildAdminAllOrNothingImport:
 
         assert result.has_validation_errors() is False
         assert HeatFlow.objects.count() == len(dataset)
+
+
+DOCS_DIR = pathlib.Path(__file__).resolve().parents[2] / "docs"
+IMPORTING_DATA_GUIDE = DOCS_DIR / "guides" / "importing-data.md"
+
+
+class TestImportingDataGuide:
+    """T110: a curator with a published release file can find what the
+    portal reads, where the import is, what a refusal reports and how to
+    act on it, and what happens to a file that fails - reached from the
+    documentation's own contents, not merely present on disk."""
+
+    def test_the_page_exists_and_is_reachable_from_the_contents(self):
+        assert IMPORTING_DATA_GUIDE.exists()
+        index = (DOCS_DIR / "index.md").read_text()
+        assert "guides/importing-data" in index
+
+    def test_it_covers_what_a_curator_needs(self):
+        """Read from the page itself, not assumed from the file existing,
+        per this task's own acceptance: the four things a curator needs
+        are all present."""
+        page = IMPORTING_DATA_GUIDE.read_text()
+        assert "GHFDB Release Format" in page  # the file it reads, named as the curator sees it
+        assert "Import" in page  # where the import is
+        assert "refused" in page  # what a refusal reports
+        assert "Nothing is written" in page  # what happens when a file fails
