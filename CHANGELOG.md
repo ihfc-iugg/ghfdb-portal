@@ -35,6 +35,9 @@ Releases before that used `<year>.<release>` and are recorded in the
 - Spreadsheet imports no longer fail when every dataset on the portal is
   private. The importer looks up the dataset it should fill, and that lookup had
   started skipping private ones.
+- The map viewer no longer collapses to a sliver on narrow screens. It filled
+  the page correctly on desktop only by accident, through hand-rolled CSS that
+  had no floor for a viewport where the sidebar contributes no height.
 
 ### Removed
 
