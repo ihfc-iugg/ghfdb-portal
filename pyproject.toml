@@ -218,7 +218,14 @@ markers = [
 ]
 
 filterwarnings = ["ignore"]
-env = ["DJANGO_ENV=development"]
+env = [
+    "DJANGO_ENV=development",
+    # Playwright's sync API keeps a real event loop running on the main
+    # thread for as long as the browser fixture is open. Django's own
+    # `live_server`/db setup then trips its async-safety guard on itself,
+    # not on anything the app does — same reason django-mvp sets this.
+    "DJANGO_ALLOW_ASYNC_UNSAFE=1",
+]
 
 [tool.coverage.report]
 skip_empty = true
