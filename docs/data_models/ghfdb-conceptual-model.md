@@ -8,11 +8,10 @@ The Global Heat Flow Database (GHFDB) organizes heat flow information using a hi
 
 ## Conceptual Architecture
 
-The data model comprises **ten primary entities** organized into three conceptual groups:
+The data model organizes its entities into two conceptual groups:
 
 1. **Parent-Related Entities** — Site-level metadata and aggregated heat flow values
 2. **Child-Related Entities** — Interval-level measurements and derived heat flow determinations
-3. **Relational Infrastructure** — Junction tables connecting parent and child records
 
 A **spatial reference entity** (Point) supports geographic positioning across both groups.
 
@@ -56,7 +55,7 @@ Defines geographic coordinates in a specified coordinate reference system. Point
 
 These entities represent interval-specific measurements and calculations. Multiple child entities may exist for a single heat flow site, each corresponding to different depth intervals or measurement campaigns.
 
-#### **GeoDepthInterval**
+#### **HeatFlowInterval**
 Defines a depth-stratified section within a heat flow site, characterized by specific geological and stratigraphic properties. This entity serves as the spatial and geological context for measurements.
 
 **Attributes:**
@@ -64,13 +63,12 @@ Defines a depth-stratified section within a heat flow site, characterized by spe
 - **Depth Boundaries**: Top and bottom depths defining the interval extent
 - **Vertical Reference**: Vertical depth and datum (e.g., mean sea level)
 - **Geological Context**: Lithology, geologic age, stratigraphic unit
-- **Annotations**: Additional notes about the interval
 
 #### **ThermalGradient**
 Represents temperature gradient measurements over a specific depth interval. The thermal gradient quantifies the rate of temperature change with depth.
 
 **Attributes:**
-- **Interval Association**: Link to a GeoDepthInterval
+- **Interval Association**: Link to a HeatFlowInterval
 - **Gradient Values**: Raw and corrected temperature gradient (K/km) with uncertainties
 - **Measurement Methodology**: Temperature acquisition methods at interval boundaries (top and bottom)
 - **Equilibration**: Shut-in times at top and bottom boundaries (hours)
@@ -81,7 +79,7 @@ Represents temperature gradient measurements over a specific depth interval. The
 Stores the mean thermal conductivity over a depth interval, derived from laboratory measurements or estimated from other properties.
 
 **Attributes:**
-- **Interval Association**: Link to a GeoDepthInterval
+- **Interval Association**: Link to a HeatFlowInterval
 - **Conductivity Value**: Mean thermal conductivity (W/mK) with uncertainty
 - **Data Provenance**: Sample source type (core, cuttings, logs) and data location (measured, literature)
 - **Measurement Details**: Determination method, sample saturation state
@@ -94,6 +92,7 @@ A derived entity representing interval-level heat flow density calculated from t
 
 **Attributes:**
 - **Input References**: Links to ThermalGradient and IntervalConductivity entities used in calculation
+- **Parent Reference**: Link to the ParentHeatFlow this determination contributes to, and a relevance flag recording whether it was used in that parent's value
 - **Heat Flow Value**: Calculated heat flow density (mW/m²) with propagated uncertainty
 - **Calculation Method**: Approach used (Fourier, Bullard plot for variable conductivity, etc.)
 - **Acquisition Context**: Date acquired, expedition/cruise/vessel name, bottom water temperature (for marine settings)
@@ -106,7 +105,7 @@ A derived entity representing interval-level heat flow density calculated from t
 Captures metadata specific to marine heat flow probes. This entity is relevant only for marine measurements and stores instrument-specific parameters.
 
 **Attributes:**
-- **Interval Association**: Link to the associated GeoDepthInterval
+- **Interval Association**: Link to the associated HeatFlowInterval
 - **Probe Characteristics**: Probe type, length, penetration depth
 - **Deployment Conditions**: Tilt angle during measurement
 
@@ -120,44 +119,32 @@ Documents corrections applied (or not applied) to heat flow values. Multiple cor
 
 ---
 
-### Relational Infrastructure
-
-#### **ParentChildRelation**
-A junction table establishing many-to-many relationships between parent heat flow records and child heat flow determinations. This entity enables a single parent to aggregate multiple children, and (in rare cases) a single child to contribute to multiple parents.
-
-**Attributes:**
-- **Parent Reference**: Link to a ParentHeatFlow entity
-- **Child Reference**: Link to a HeatFlow entity
-- **Relevance Flag**: Boolean indicator specifying whether this child was used in calculating the parent value (supports exclusion of low-quality determinations)
-
----
-
 ## Relationship Structure
 
 ### Spatial Foundation
-- **Point → HeatFlowSite** (one-to-many): A Point defines the geographic location of one or more HeatFlowSites. Multiple sites may share coordinates when measurements overlap or when different campaigns target the same location.
+- **Point → HeatFlowSite** (one-to-one): A Point defines the geographic location of a site, and a site refuses a coordinate pair another site already holds. A site is its coordinates, as [ADR 0006](../adr/0006-a-site-is-its-coordinates.md) records.
 
 ### Parent-Level Relationships
-- **HeatFlowSite → ParentHeatFlow** (one-to-many): Each site may have one parent heat flow record per release or analysis version.
+- **HeatFlowSite → ParentHeatFlow** (one-to-one): Each site has at most one parent heat flow record, and a second one is refused when it is saved.
 
 ### Cross-Domain Linkage
-- **HeatFlowSite → GeoDepthInterval** (one-to-many): A site contains multiple depth intervals, each representing a distinct geological or measurement segment.
+- **HeatFlowSite → HeatFlowInterval** (one-to-many): A site contains multiple depth intervals, each representing a distinct geological or measurement segment.
 
 ### Measurement Cascade (Child Domain)
 The child entities form a measurement-to-calculation cascade:
 
-1. **GeoDepthInterval → ThermalGradient** (one-to-many): Each interval may have multiple thermal gradient determinations from different measurement campaigns or techniques.
+1. **HeatFlowInterval → ThermalGradient** (one-to-many): Each interval may have multiple thermal gradient determinations from different measurement campaigns or techniques.
 
-2. **GeoDepthInterval → IntervalConductivity** (one-to-many): Similarly, each interval may have multiple conductivity determinations from different samples or methods.
+2. **HeatFlowInterval → IntervalConductivity** (one-to-many): Similarly, each interval may have multiple conductivity determinations from different samples or methods.
 
 3. **ThermalGradient + IntervalConductivity → HeatFlow** (many-to-one converging): A single heat flow determination requires exactly one thermal gradient and one thermal conductivity. The same gradient or conductivity may be combined with different counterparts to produce multiple heat flow estimates (for sensitivity analysis).
 
-4. **GeoDepthInterval → ProbeMetadata** (one-to-many): Marine intervals may have probe metadata records documenting instrument parameters for each deployment.
+4. **HeatFlowInterval → ProbeMetadata** (one-to-one): A marine interval may carry one probe metadata record documenting the instrument parameters of its deployment.
 
 5. **HeatFlow → HeatFlowCorrection** (one-to-many): Each heat flow determination may have multiple correction records, one per disturbance type.
 
 ### Parent-Child Bridge
-- **ParentHeatFlow ← ParentChildRelation → HeatFlow** (many-to-many): The junction table connects parent and child heat flow entities, tracking which child determinations contribute to each parent aggregation. The `is_relevant` flag allows selective inclusion (e.g., excluding low-quality children from the parent calculation while retaining them in the database for provenance).
+- **ParentHeatFlow → HeatFlow** (one-to-many): A child points at its parent directly, and carries an `is_relevant` flag recording whether it fed that parent's value. The flag allows a low-quality determination to be left out of the calculation while staying in the database for provenance. There is no junction table: a child belongs to one parent, so a foreign key says everything a junction table would, and [ADR 0001](../adr/0001-heat-flow-owns-the-model-ghfdb-extracts-it.md) places both the link and the flag in the heat flow application.
 
 ---
 
@@ -167,7 +154,7 @@ The GHFDB data model supports the following conceptual workflow:
 
 1. **Site Establishment**: A HeatFlowSite is defined with geographic coordinates (Point) and metadata (location, exploration context, depth).
 
-2. **Interval Definition**: The site is subdivided into GeoDepthIntervals, each characterized by geological properties (lithology, age, stratigraphy).
+2. **Interval Definition**: The site is subdivided into HeatFlowIntervals, each characterized by geological properties (lithology, age, stratigraphy).
 
 3. **Measurement Acquisition**:
    - Temperature profiles yield ThermalGradient values per interval.
@@ -178,7 +165,7 @@ The GHFDB data model supports the following conceptual workflow:
 
 5. **Correction Assessment**: HeatFlowCorrection records document whether known disturbances (topography, paleoclimate, erosion, etc.) are present, corrected, or uncorrected.
 
-6. **Aggregation to Parent**: Multiple child HeatFlow values are aggregated (e.g., depth-weighted average) to produce a single ParentHeatFlow for the site. The ParentChildRelation junction table tracks which children contribute, with `is_relevant` flagging the subset used in aggregation.
+6. **Aggregation to Parent**: Multiple child HeatFlow values are aggregated to produce a single ParentHeatFlow for the site. Each child names its parent and flags whether it was relevant to that parent's value.
 
 7. **Provenance and Transparency**: The hierarchical structure preserves full provenance from raw measurements through to published heat flow values, enabling reproducibility, quality assessments, and future reanalyses as methodologies improve.
 
@@ -193,7 +180,7 @@ Every parent heat flow value traces back to specific child determinations, which
 Quality assessments occur at multiple levels:
 - **Measurement level**: ThermalGradient and IntervalConductivity entities include quality scores.
 - **Determination level**: HeatFlow entities include U-scores (uncertainty) and M-scores (methodology).
-- **Aggregation level**: ParentChildRelation's `is_relevant` flag allows inclusion/exclusion in parent calculations based on quality thresholds.
+- **Aggregation level**: the child's `is_relevant` flag allows inclusion or exclusion in parent calculations based on quality thresholds.
 
 ### Flexibility for Marine and Terrestrial Settings
 - Terrestrial boreholes: Measurements may span multiple depth intervals with varying lithologies.
@@ -203,17 +190,17 @@ Quality assessments occur at multiple levels:
 ### Correction Transparency
 Rather than storing only "final" corrected values, the model explicitly documents what corrections were applied, enabling users to retrieve uncorrected values or apply alternative correction schemes.
 
-### Spatial Reusability
-Point entities are independent, allowing multiple sites to reference the same coordinates (e.g., repeated measurements from different campaigns at the same location over time).
+### One Site Per Coordinate Pair
+A site is identified by where it is, so a coordinate pair belongs to exactly one site. Repeated campaigns at the same location are recorded as further intervals and measurements on that site rather than as a second site.
 
 ---
 
 ## Summary
 
-The GHFDB conceptual model separates **stable site-level metadata** (parent entities) from **detailed interval-level measurements** (child entities), bridged by a **junction table** that tracks aggregation provenance. This design ensures:
+The GHFDB conceptual model separates **stable site-level metadata** (parent entities) from **detailed interval-level measurements** (child entities), with each child naming the parent it contributes to. This design ensures:
 
 - **Transparency**: Full traceability from raw measurements to published values.
 - **Flexibility**: Accommodation of terrestrial and marine settings, multiple measurement campaigns, and evolving quality standards.
-- **Reusability**: Shared spatial references, correction documentation, and quality-flagged aggregations enable diverse analytical workflows without data duplication.
+- **Reusability**: Correction documentation and quality-flagged aggregations enable diverse analytical workflows without data duplication.
 
-The ten entities work in concert to represent the complexity of heat flow determination while maintaining a clear conceptual hierarchy suitable for both human understanding and computational processing.
+Together the entities represent the complexity of heat flow determination while maintaining a clear conceptual hierarchy suitable for both human understanding and computational processing. For the tables, keys and cardinalities behind them, see the [entity relationship diagram](ghfdb-erd.md).

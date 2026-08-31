@@ -11,12 +11,15 @@ Below is a mapping table that clarifies how each field in the GHFDB spreadsheet 
 | Column Name | Description |
 | --- | --- |
 | **GHFDB Name** | The original field name as it appears in the GHFDB spreadsheet (e.g., `q`, `lat_NS`, `elevation`). |
-| **Database Table** | The name of the actual database table where the data is stored (e.g., `heat_flow_surfaceheatflow`). This reflects the low-level storage destination. |
-| **Accessed From** | The Django model used to access the value (e.g., `SurfaceHeatFlow`, `HeatFlowSite`). This is typically the model from which a queryset would be created. |
+| **Database Table** | The table the value is actually read from. It is often not the table of the model in "Accessed From": a field inherited from a concrete parent lives in the parent's table, and a many-to-many field lives in its own join table. An em dash means the value is computed rather than stored. |
+| **Accessed From** | The Django model used to access the value (e.g., `ParentHeatFlow`, `HeatFlowSite`). This is typically the model from which a queryset would be created. |
 | **Accessor** | The Django field name or property used to retrieve the value from the model listed in "Accessed From" (e.g., `value`, `x`, `name`). This can be a direct model field or a related field through a foreign key. |
-| **Declared By** | The model where the field is originally declared. This is important when `Accessed From` accesses the field via a related object or mixin (e.g., `fairdm.location.Point`, `fairdm.core.Sample`). |
+| **Declared By** | A model that declares the field itself, rather than inheriting it. This matters when "Accessed From" reaches the field through a related object or a base class (e.g., `fairdm.location.Point`, `fairdm.core.Sample`). |
 
-<!-- TODO: add automated mapping test when import/export spec is implemented -->
+Every row below is checked against the models by `tests/test_docs/test_field_map.py`: each of
+the published columns must appear, and each row must name a model that exists, an accessor that
+resolves on it, a model that really declares that accessor, and the table the value is stored in.
+Add a column to the published definitions without adding it here and the suite fails, naming it.
 
 ## Mapping Table
 
@@ -31,11 +34,12 @@ It was previously named `SurfaceHeatFlow` in older versions of this codebase.
 
 | GHFDB Name | GHFDB Ref | Database Table | Accessed From | Accessor | Declared By |
 | --- | --- | --- | --- | --- | --- |
+| ID\_parent | — | heat\_flow\_parentheatflow | ParentHeatFlow | ghfdb\_id | ParentHeatFlow |
 | q | P01 | heat\_flow\_parentheatflow | ParentHeatFlow | value | ParentHeatFlow |
 | q\_uncertainty | P02 | heat\_flow\_parentheatflow | ParentHeatFlow | uncertainty | ParentHeatFlow |
-| name | P03 | fairdm\_sample | HeatFlowSite | name | fairdm.core.Sample |
-| lat\_NS | P04 | fairdm\_point | HeatFlowSite | location.y | fairdm.location.Point |
-| long\_EW | P05 | fairdm\_point | HeatFlowSite | location.x | fairdm.location.Point |
+| name | P03 | sample\_sample | HeatFlowSite | name | fairdm.core.Sample |
+| lat\_NS | P04 | fairdm\_location\_point | HeatFlowSite | location.y | fairdm.location.Point |
+| long\_EW | P05 | fairdm\_location\_point | HeatFlowSite | location.x | fairdm.location.Point |
 | elevation | P06 | heat\_flow\_heatflowsite | HeatFlowSite | elevation | HeatFlowSite |
 | environment | P07 | heat\_flow\_heatflowsite | HeatFlowSite | environment | HeatFlowSite |
 | p\_comment | P08 | heat\_flow\_parentheatflow | ParentHeatFlow | comment | ParentHeatFlow |
@@ -43,7 +47,8 @@ It was previously named `SurfaceHeatFlow` in older versions of this codebase.
 | total\_depth\_MD | P10 | heat\_flow\_heatflowsite | HeatFlowSite | length | fairdm\_geo.GenericHole |
 | total\_depth\_TVD | P11 | heat\_flow\_heatflowsite | HeatFlowSite | vertical\_depth | fairdm\_geo.GeoDepthInterval |
 | explo\_method | P12 | heat\_flow\_heatflowsite | HeatFlowSite | explo\_method | HeatFlowSite |
-| explo\_purpose | P13 | heat\_flow\_heatflowsite | HeatFlowSite | explo\_purpose | HeatFlowSite |
+| explo\_purpose | P13 | heat\_flow\_heatflowsite\_explo\_purpose | HeatFlowSite | explo\_purpose | HeatFlowSite |
+| quality\_parent | — | heat\_flow\_parentheatflow | ParentHeatFlow | quality | ParentHeatFlow |
 | Country | — | heat\_flow\_heatflowsite | HeatFlowSite | country | HeatFlowSite |
 | Region | — | heat\_flow\_heatflowsite | HeatFlowSite | region | HeatFlowSite |
 | Continent | — | heat\_flow\_heatflowsite | HeatFlowSite | continent | HeatFlowSite |
@@ -55,15 +60,16 @@ It was previously named `SurfaceHeatFlow` in older versions of this codebase.
 
 | GHFDB Name | GHFDB Ref | Database Table | Accessed From | Accessor | Declared By |
 | --- | --- | --- | --- | --- | --- |
+| ID | — | heat\_flow\_heatflow | HeatFlow | ghfdb\_id | HeatFlow |
 | qc | C01 | heat\_flow\_heatflow | HeatFlow | value | HeatFlow |
 | qc\_uncertainty | C02 | heat\_flow\_heatflow | HeatFlow | uncertainty | HeatFlow |
-| q\_method | C03 | heat\_flow\_heatflow | HeatFlow | method | HeatFlow |
-| ID | — | heat\_flow\_heatflow | HeatFlow | local\_id | HeatFlow |
+| q\_method | C03 | heat\_flow\_heatflow\_method | HeatFlow | method | HeatFlow |
 | relevant\_child | C09 | heat\_flow\_heatflow | HeatFlow | is\_relevant | HeatFlow |
 | c\_comment | C10 | heat\_flow\_heatflow | HeatFlow | c\_comment | HeatFlow |
 | expedition | C20 | heat\_flow\_heatflow | HeatFlow | expedition | HeatFlow |
 | water\_temperature | C24 | heat\_flow\_heatflow | HeatFlow | water\_temperature | HeatFlow |
 | q\_date | C38 | heat\_flow\_heatflow | HeatFlow | date\_acquired | HeatFlow |
+| quality\_child | — | heat\_flow\_heatflow | HeatFlow | quality | HeatFlow |
 
 #### HeatFlowInterval (depth interval within the borehole)
 
@@ -75,8 +81,17 @@ The site's own fields are reached from a child heat flow as
 | --- | --- | --- | --- | --- | --- |
 | q\_top | C04 | heat\_flow\_heatflowinterval | HeatFlowInterval | top | fairdm\_geo.GeoDepthInterval |
 | q\_bottom | C05 | heat\_flow\_heatflowinterval | HeatFlowInterval | bottom | fairdm\_geo.GeoDepthInterval |
-| geo\_lithology | C25 | heat\_flow\_heatflowinterval | HeatFlowInterval | lithology | fairdm\_geo.GeoDepthInterval |
-| geo\_stratigraphy | C26 | heat\_flow\_heatflowinterval | HeatFlowInterval | stratigraphy | fairdm\_geo.GeoDepthInterval |
+| geo\_lithology | C25 | heat\_flow\_heatflowinterval\_lithology | HeatFlowInterval | lithology | fairdm\_geo.GeoDepthInterval |
+| geo\_stratigraphy | C26 | heat\_flow\_heatflowinterval\_age | HeatFlowInterval | age | fairdm\_geo.GeoDepthInterval |
+| Ref\_IGSN | C49 | sample\_sampleidentifier | HeatFlowInterval | identifiers | fairdm.core.Sample |
+
+`geo_stratigraphy` carries terms from the geological timescale, which is what `age` holds.
+`HeatFlowInterval` also has a `stratigraphy` field, but that one relates to named stratigraphic
+units and is not where this column lands. The importer writes the column to `age`.
+
+`Ref_IGSN` is a sample identifier rather than a property of the measurement, so it is held on the
+interval through the generic identifier relationship FairDM gives every sample. The site carries
+the same relationship and can hold an identifier of its own.
 
 #### HeatFlowCorrection (per-disturbance correction flags — C11–C19)
 
@@ -118,7 +133,7 @@ Access pattern: `heat_flow.sample.probe_metadata.<field>`.
 | GHFDB Name | GHFDB Ref | Database Table | Accessed From | Accessor | Declared By |
 | --- | --- | --- | --- | --- | --- |
 | probe\_penetration | C06 | heat\_flow\_probemetadata | ProbeMetadata | penetration | ProbeMetadata |
-| probe\_type | C21 | heat\_flow\_probemetadata | ProbeMetadata | probe\_type | ProbeMetadata |
+| probe\_type | C21 | heat\_flow\_probemetadata\_probe\_type | ProbeMetadata | probe\_type | ProbeMetadata |
 | probe\_length | C22 | heat\_flow\_probemetadata | ProbeMetadata | length | ProbeMetadata |
 | probe\_tilt | C23 | heat\_flow\_probemetadata | ProbeMetadata | tilt | ProbeMetadata |
 
@@ -130,12 +145,12 @@ Access pattern: `heat_flow.sample.probe_metadata.<field>`.
 | T\_grad\_uncertainty | C28 | heat\_flow\_thermalgradient | ThermalGradient | uncertainty | ThermalGradient |
 | T\_grad\_mean\_cor | C29 | heat\_flow\_thermalgradient | ThermalGradient | corrected\_value | ThermalGradient |
 | T\_grad\_uncertainty\_cor | C30 | heat\_flow\_thermalgradient | ThermalGradient | corrected\_uncertainty | ThermalGradient |
-| T\_method\_top | C31 | heat\_flow\_thermalgradient | ThermalGradient | method\_top | ThermalGradient |
-| T\_method\_bottom | C32 | heat\_flow\_thermalgradient | ThermalGradient | method\_bottom | ThermalGradient |
+| T\_method\_top | C31 | heat\_flow\_thermalgradient\_method\_top | ThermalGradient | method\_top | ThermalGradient |
+| T\_method\_bottom | C32 | heat\_flow\_thermalgradient\_method\_bottom | ThermalGradient | method\_bottom | ThermalGradient |
 | T\_shutin\_top | C33 | heat\_flow\_thermalgradient | ThermalGradient | shutin\_top | ThermalGradient |
 | T\_shutin\_bottom | C34 | heat\_flow\_thermalgradient | ThermalGradient | shutin\_bottom | ThermalGradient |
-| T\_corr\_top | C35 | heat\_flow\_thermalgradient | ThermalGradient | correction\_top | ThermalGradient |
-| T\_corr\_bottom | C36 | heat\_flow\_thermalgradient | ThermalGradient | correction\_bottom | ThermalGradient |
+| T\_corr\_top | C35 | heat\_flow\_thermalgradient\_correction\_top | ThermalGradient | correction\_top | ThermalGradient |
+| T\_corr\_bottom | C36 | heat\_flow\_thermalgradient\_correction\_bottom | ThermalGradient | correction\_bottom | ThermalGradient |
 | T\_number | C37 | heat\_flow\_thermalgradient | ThermalGradient | number | ThermalGradient |
 
 #### IntervalConductivity (C39–C48)
@@ -144,24 +159,42 @@ Access pattern: `heat_flow.sample.probe_metadata.<field>`.
 | --- | --- | --- | --- | --- | --- |
 | tc\_mean | C39 | heat\_flow\_intervalconductivity | IntervalConductivity | value | IntervalConductivity |
 | tc\_uncertainty | C40 | heat\_flow\_intervalconductivity | IntervalConductivity | uncertainty | IntervalConductivity |
-| tc\_source | C41 | heat\_flow\_intervalconductivity | IntervalConductivity | source | IntervalConductivity |
-| tc\_location | C42 | heat\_flow\_intervalconductivity | IntervalConductivity | location | IntervalConductivity |
-| tc\_method | C43 | heat\_flow\_intervalconductivity | IntervalConductivity | method | IntervalConductivity |
-| tc\_saturation | C44 | heat\_flow\_intervalconductivity | IntervalConductivity | saturation | IntervalConductivity |
-| tc\_pT\_conditions | C45 | heat\_flow\_intervalconductivity | IntervalConductivity | pT\_conditions | IntervalConductivity |
-| tc\_pT\_function | C46 | heat\_flow\_intervalconductivity | IntervalConductivity | pT\_function | IntervalConductivity |
+| tc\_source | C41 | heat\_flow\_intervalconductivity\_source | IntervalConductivity | source | IntervalConductivity |
+| tc\_location | C42 | heat\_flow\_intervalconductivity\_location | IntervalConductivity | location | IntervalConductivity |
+| tc\_method | C43 | heat\_flow\_intervalconductivity\_method | IntervalConductivity | method | IntervalConductivity |
+| tc\_saturation | C44 | heat\_flow\_intervalconductivity\_saturation | IntervalConductivity | saturation | IntervalConductivity |
+| tc\_pT\_conditions | C45 | heat\_flow\_intervalconductivity\_pT\_conditions | IntervalConductivity | pT\_conditions | IntervalConductivity |
+| tc\_pT\_function | C46 | heat\_flow\_intervalconductivity\_pT\_function | IntervalConductivity | pT\_function | IntervalConductivity |
 | tc\_number | C47 | heat\_flow\_intervalconductivity | IntervalConductivity | number | IntervalConductivity |
-| tc\_strategy | C48 | heat\_flow\_intervalconductivity | IntervalConductivity | strategy | IntervalConductivity |
+| tc\_strategy | C48 | heat\_flow\_intervalconductivity\_strategy | IntervalConductivity | strategy | IntervalConductivity |
 
 #### References & Review
 
 | GHFDB Name | GHFDB Ref | Database Table | Accessed From | Accessor | Declared By |
 | --- | --- | --- | --- | --- | --- |
-| publication\_reference | C07 | fairdm\_dataset | Dataset | related\_literature | fairdm.core.Dataset |
-| data\_reference | C08 | fairdm\_dataset | Dataset | reference | fairdm.core.Dataset |
-| Reviewer\_name | — | heat\_flow\_review | Review | name | Review |
-| Reviewer\_comment | — | heat\_flow\_review | Review | comment | Review |
-| Review\_date | — | heat\_flow\_review | Review | completion\_date | Review |
+| publication\_reference | C07 | dataset\_datasetliteraturerelation | Dataset | related\_literature | fairdm.core.Dataset |
+| data\_reference | C08 | dataset\_dataset | Dataset | reference | fairdm.core.Dataset |
+| Reviewer\_name | — | review\_review\_reviewers | Review | reviewers | Review |
+| Reviewer\_comment | — | review\_review | Review | comment | Review |
+| Review\_date | — | review\_review | Review | end\_date | Review |
+
+A review records the people who carried it out rather than a single name, so `reviewers` is a
+relation to `Person` and a review may name several. `Review` lives in the `review` app; earlier
+versions of this page placed it in `heat_flow`.
+
+### Quality columns
+
+The published database carries the child and parent quality assessments twice, under two pairs of
+names. Both pairs read the same stored value.
+
+| GHFDB Name | GHFDB Ref | Database Table | Accessed From | Accessor | Declared By |
+| --- | --- | --- | --- | --- | --- |
+| Quality\_Code\_Child | — | heat\_flow\_heatflow | HeatFlow | quality | HeatFlow |
+| Quality\_Score\_Parent | — | heat\_flow\_parentheatflow | ParentHeatFlow | quality | ParentHeatFlow |
+
+Which of the two pairs the portal should treat as canonical on import and export is still open.
+It is tracked in [issue #122](https://github.com/ihfc-iugg/ghfdb-portal/issues/122) along with the
+rest of the published column vocabulary.
 
 #### Removed Fields
 
@@ -169,7 +202,7 @@ The following fields existed in older versions of the data model but have been r
 
 | GHFDB Name | GHFDB Ref | Old Location | Reason Removed | Current Mapping |
 | --- | --- | --- | --- | --- |
-| Ref\_ISGN | C49 | HeatFlow.IGSN | IGSN identifies the physical *sample*, not the heat flow *measurement*; belongs on the Sample subclass | `HeatFlowSite.identifiers` / `HeatFlowInterval.identifiers` via FairDM generic identifier relationship |
+| Ref\_IGSN | C49 | HeatFlow.IGSN | An IGSN identifies the physical *sample* rather than the heat flow *measurement*, so it belongs on the sample subclass | `HeatFlowInterval.identifiers`, and `HeatFlowSite.identifiers` for a site-level identifier (see above) |
 | probe\_penetration | C06 | HeatFlow.probe\_penetration | Probe instrument parameters belong on the interval, not the heat flow measurement | `ProbeMetadata.penetration` (see above) |
 | probe\_length | C22 | HeatFlow.probe\_length | Same rationale as probe\_penetration | `ProbeMetadata.length` (see above) |
 | probe\_tilt | C23 | HeatFlow.probe\_tilt | Same rationale as probe\_penetration | `ProbeMetadata.tilt` (see above) |

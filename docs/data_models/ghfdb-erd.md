@@ -2,13 +2,19 @@
 
 ## Overview
 
-This document provides an Entity Relationship Diagram (ERD) for the Global Heat Flow Database (GHFDB) and Heat Flow models. The database follows a hierarchical parent-child structure as described in Fuchs et al. (2021) and Fuchs et al. (2023).
+This page holds the entity relationship diagram for the tables behind the Global Heat Flow Database, together with a description of each model and the rules it enforces. It covers the same ground as the [conceptual model](ghfdb-conceptual-model.md), at the level of tables, keys and cardinalities rather than entities.
 
 The structure consists of:
-- **Sites** (HeatFlowSite): Geographical locations where measurements are taken
-- **Parent Heat Flow** (ParentHeatFlow): Aggregated surface heat flow values per site
-- **Child Heat Flow** (HeatFlow): Individual heat flow determinations with quality metrics
-- **Supporting Data**: Thermal gradient, thermal conductivity, and intervals
+
+- **Sites** (`HeatFlowSite`): geographic locations where measurements were taken
+- **Depth intervals** (`HeatFlowInterval`): the depth range within a site over which a determination applies
+- **Parent heat flow** (`ParentHeatFlow`): the aggregated surface heat flow value for a site
+- **Child heat flow** (`HeatFlow`): individual determinations with their quality metrics
+- **Supporting measurements**: thermal gradient, thermal conductivity, probe metadata and corrections
+- **Editorial records**: review progress and published release files
+
+For the mapping between the columns of the published spreadsheet and these models, see
+[GHFDB Fields](../ghfdb_fields.md).
 
 ## Key Concepts
 
@@ -16,362 +22,386 @@ The structure consists of:
 
 The GHFDB implements a two-level structure:
 
-1. **Parent Level** (ParentHeatFlow): Represents the site-specific heat-flow density at Earth's surface after aggregating and correcting child measurements. One parent per site.
+1. **Parent level** (`ParentHeatFlow`): the site-specific heat-flow density at Earth's surface, after aggregating and correcting the child measurements. One parent per site.
 
-2. **Child Level** (HeatFlow): Individual heat flow determinations calculated from thermal gradient and conductivity measurements. Multiple children can contribute to one parent.
+2. **Child level** (`HeatFlow`): individual determinations calculated from thermal gradient and conductivity measurements. Several children can contribute to one parent, and each child records whether it was used in that calculation.
+
+A child does not point at its site directly. It hangs off a depth interval, and the interval belongs to the site, so a child reaches its site as `sample.heatflowinterval.site`.
 
 ### Quality Scoring
 
-The database implements a quality assurance scheme with two quality indicators:
+The database implements a quality assurance scheme with two indicators:
 
-- **U-score** (Numerical Uncertainty): Evaluates uncertainty based on coefficient of variation (U1=Excellent, U2=Good, U3=Ok, U4=Poor, Ux=Unknown)
-- **M-score** (Methodological Quality): Evaluates measurement methodology and data quality (M1=Excellent, M2=Good, M3=Ok, M4=Poor, Mx=Unknown)
+- **U-score** (numerical uncertainty), from the coefficient of variation: U1 excellent, U2 good, U3 ok, U4 poor, Ux not determined
+- **M-score** (methodological quality), from the measurement methodology: M1 excellent, M2 good, M3 ok, M4 poor, Mx not determined
 
 ## Entity Relationship Diagram
+
+Entities drawn from FairDM — `Sample`, `Measurement`, `Point`, `Dataset` — are shown only where a
+relationship crosses into them, and only with the fields that relationship uses. Vocabulary
+relationships are left off: nearly every model has several, and each is a join table onto a shared
+concept table, so drawing them would triple the size of the diagram without saying anything about
+the heat flow schema. The `Database Table` column of
+[GHFDB Fields](../ghfdb_fields.md) names the join table for each of them.
+
+`GHFDBChild` and `GHFDBParent` are also absent. They are proxy models over `HeatFlow` and
+`ParentHeatFlow` used by the flat import and export views, and a proxy has no table of its own.
 
 ```mermaid
 erDiagram
     %% ============================================================
-    %% SITE AND SPATIAL MODELS
+    %% FAIRDM BASE MODELS (context only)
     %% ============================================================
-    
+
     Point {
         int id PK "Primary key"
         decimal x "X-coordinate (longitude)"
         decimal y "Y-coordinate (latitude)"
         string crs "Coordinate reference system"
     }
-    
-    HeatFlowSite {
+
+    Sample {
         int id PK "Primary key"
         int location_id FK "Geographic coordinates"
-        string name "Site or survey name"
+        string name "Sample or site name"
+    }
+
+    SampleIdentifier {
+        int id PK "Primary key"
+        int sample_id FK "The sample being identified"
+        string value "Identifier value, such as an IGSN"
+    }
+
+    Measurement {
+        int id PK "Primary key"
+        int sample_id FK "The sample measured"
+        int dataset_id FK "The dataset the measurement belongs to"
+    }
+
+    Dataset {
+        int id PK "Primary key"
+        string reference "Data reference"
+    }
+
+    %% ============================================================
+    %% SITE AND INTERVAL
+    %% ============================================================
+
+    HeatFlowSite {
+        int sample_ptr_id PK "Primary key, inherited from Sample"
         decimal elevation "Surface elevation"
+        string elevation_datum "Reference point for the elevation"
+        string type "Type of sampling location"
         quantity length "Total measured depth (MD)"
         quantity vertical_depth "True vertical depth (TVD)"
-        string environment "Geographic environment type"
+        quantity top "Top of the site interval"
+        quantity bottom "Bottom of the site interval"
+        quantity azimuth "Borehole azimuth"
+        quantity inclination "Borehole inclination"
+        string environment "Basic geographical environment"
         string explo_method "Exploration method"
-        string explo_purpose "Purpose of exploration"
-        string country "Country location"
-        string region "Regional location"
+        string country "Country"
+        string region "Region"
         string continent "Continent"
         string domain "Geological domain"
     }
-    
-    GeoDepthInterval {
-        int id PK "Primary key"
-        int site_id FK "The heat flow site the interval belongs to"
-        quantity top "Top depth of interval"
-        quantity bottom "Bottom depth of interval"
-        quantity vertical_depth "Vertical depth"
-        string vertical_datum "Vertical datum (MSL)"
-        string lithology "Lithology of the interval"
-        string age "Geologic age of the interval"
-        string stratigraphy "Stratigraphic unit"
-        string notes "Additional notes"
+
+    HeatFlowInterval {
+        int sample_ptr_id PK "Primary key, inherited from Sample"
+        int site_id FK "The site this interval belongs to"
+        quantity top "Top depth of the interval"
+        quantity bottom "Bottom depth of the interval"
+        quantity vertical_depth "True vertical depth"
+        string vertical_datum "Vertical datum"
     }
-    
+
     %% ============================================================
     %% PARENT LEVEL - Surface Heat Flow
     %% ============================================================
-    
+
     ParentHeatFlow {
-        int id PK "Primary key"
-        int sample_id FK "Associated heat flow site"
-        quantity value "Surface heat flow density (mW/m²)"
-        quantity uncertainty "Uncertainty (1 sigma, mW/m²)"
-        boolean corr_HP_flag "Heat production correction applied"
-        boolean is_ghfdb "Part of official GHFDB"
-        text comment "General comments"
+        int measurement_ptr_id PK "Primary key, inherited from Measurement"
+        quantity value "Surface heat-flow density (mW/m2)"
+        quantity uncertainty "Uncertainty, one standard deviation (mW/m2)"
+        boolean corr_HP_flag "Heat production correction considered"
+        text comment "General comments on the parent level"
+        int ghfdb_id "Published parent identifier, the upsert key"
+        string quality "Overall quality assessment"
     }
-    
-    ParentChildRelation {
-        int id PK "Primary key"
-        int parent_id FK "Parent heat flow"
-        int child_id FK "Child heat flow"
-        boolean is_relevant "Used in parent calculation"
-    }
-    
+
     %% ============================================================
     %% CHILD LEVEL - Individual Heat Flow Determinations
     %% ============================================================
-    
+
     HeatFlow {
-        int id PK "Primary key"
-        int parent_id FK "Associated interval"
-        int thermal_gradient_id FK "Temperature gradient data"
-        int thermal_conductivity_id FK "Thermal conductivity data"
-        quantity value "Heat flow density (mW/m²)"
-        quantity uncertainty "Uncertainty (1 sigma, mW/m²)"
-        string method "Calculation method (Fourier, Bullard, etc.)"
-        string expedition "Expedition/cruise/vessel name"
+        int measurement_ptr_id PK "Primary key, inherited from Measurement"
+        int parent_id FK "The parent this child contributes to"
+        int thermal_gradient_id FK "Temperature gradient used"
+        int thermal_conductivity_id FK "Thermal conductivity used"
+        quantity value "Heat-flow density (mW/m2)"
+        quantity uncertainty "Uncertainty, one standard deviation (mW/m2)"
+        string expedition "Expedition, cruise or vessel name"
         quantity water_temperature "Bottom water temperature"
-        date date_acquired "Date of data acquisition"
-        text IGSN "Sample identifiers (IGSN)"
-        char U_score "Uncertainty quality (U1-U4, Ux)"
+        date date_acquired "Date of acquisition"
+        boolean is_relevant "Used in the parent calculation"
+        char U_score "Numerical uncertainty (U1-U4, Ux)"
         char M_score "Methodological quality (M1-M4, Mx)"
-        text c_comment "General comments"
+        string quality "Overall quality assessment"
+        text c_comment "General comments on the child level"
+        int ghfdb_id "Published child identifier, the upsert key"
     }
-    
+
     ProbeMetadata {
         int id PK "Primary key"
-        int heat_flow_id FK "Associated heat flow measurement"
-        quantity penetration "Marine probe penetration depth"
-        string probe_type "Type of probe used"
-        quantity length "Length of probe"
-        quantity tilt "Tilt angle of probe"
+        int interval_id FK "The interval the probe sampled"
+        quantity penetration "Probe penetration depth"
+        quantity length "Probe length"
+        quantity tilt "Probe tilt angle"
     }
-    
+
     HeatFlowCorrection {
         int id PK "Primary key"
-        int heat_flow_id FK "Associated heat flow measurement"
-        string correction_type "Type of correction (IS, T, S, E, TOPO, PAL, SUR, CONV, HR)"
-        string status "Correction status (present/corrected/uncorrected)"
-        text description "Detailed description"
+        int heat_flow_id FK "The measurement corrected"
+        string correction_type "IS, T, S, E, TOPO, PAL, SUR, CONV or HR"
+        string status "Whether the disturbance was present and corrected"
+        text comment "Comment on the applied correction"
     }
-    
+
     ThermalGradient {
-        int id PK "Primary key"
-        int sample_id FK "Depth interval (via Measurement)"
+        int measurement_ptr_id PK "Primary key, inherited from Measurement"
         quantity value "Temperature gradient (K/km)"
         quantity uncertainty "Gradient uncertainty (K/km)"
         quantity corrected_value "Corrected gradient (K/km)"
         quantity corrected_uncertainty "Corrected uncertainty (K/km)"
-        string method_top "Top temperature method"
-        string method_bottom "Bottom temperature method"
-        quantity shutin_top "Top shut-in time (hours)"
-        quantity shutin_bottom "Bottom shut-in time (hours)"
-        string correction_top "Top correction method"
-        string correction_bottom "Bottom correction method"
+        quantity shutin_top "Shut-in time at the top of the interval"
+        quantity shutin_bottom "Shut-in time at the bottom of the interval"
         int number "Number of temperature recordings"
-        float score "Quality score (0.0-1.0)"
+        float score "Methodological score"
     }
-    
+
     IntervalConductivity {
-        int id PK "Primary key"
-        int sample_id FK "Depth interval (via Measurement)"
+        int measurement_ptr_id PK "Primary key, inherited from Measurement"
         quantity value "Mean thermal conductivity (W/mK)"
         quantity uncertainty "Conductivity uncertainty (W/mK)"
-        string source "Sample source type"
-        string location "Conductivity data location"
-        string method "Determination method"
-        string saturation "Sample saturation state"
-        string pT_conditions "Pressure-temp conditions"
-        string pT_function "pT correction technique"
-        string strategy "Averaging methodology"
         int number "Number of measurements"
+        float score "Methodological score"
     }
-    
+
+    %% ============================================================
+    %% EDITORIAL RECORDS
+    %% ============================================================
+
+    Review {
+        int id PK "Primary key"
+        int dataset_id FK "The dataset reviewed"
+        int literature_id FK "The literature item reviewed"
+        date start_date "Date the review started"
+        date end_date "Date the review completed"
+        int status "Open, pending or complete"
+        text comment "General comment on the review"
+    }
+
+    GHFDBRelease {
+        int id PK "Primary key"
+        string version "Release version"
+        date release_date "Date of release"
+        text description "Description of the release"
+        string file "The published release file"
+    }
+
     %% ============================================================
     %% RELATIONSHIPS
     %% ============================================================
-    
-    %% Location relationship
-    HeatFlowSite ||--|| Point : "located at"
-    
+
+    %% Inheritance from the FairDM base models
+    Sample ||--|| HeatFlowSite : "specialises into"
+    Sample ||--|| HeatFlowInterval : "specialises into"
+    Measurement ||--|| ParentHeatFlow : "specialises into"
+    Measurement ||--|| HeatFlow : "specialises into"
+    Measurement ||--|| ThermalGradient : "specialises into"
+    Measurement ||--|| IntervalConductivity : "specialises into"
+
+    %% Sample context
+    Point ||--o{ Sample : "locates"
+    Sample ||--o{ SampleIdentifier : "is identified by"
+    Sample ||--o{ Measurement : "is measured by"
+    Dataset ||--o{ Measurement : "collects"
+
     %% Site to intervals and parent
-    HeatFlowSite ||--o{ GeoDepthInterval : "contains"
-    HeatFlowSite ||--o| ParentHeatFlow : "has"
-    
-    %% Intervals to child measurements
-    GeoDepthInterval ||--o{ HeatFlow : "has measurements"
-    
-    %% Intervals to thermal properties
-    GeoDepthInterval ||--o{ ThermalGradient : "measured over"
-    GeoDepthInterval ||--o{ IntervalConductivity : "measured over"
-    
-    %% Parent-child relationship
-    ParentHeatFlow ||--o{ ParentChildRelation : "aggregates"
-    HeatFlow ||--o| ParentChildRelation : "contributes to"
-    
-    %% Child to thermal properties
-    HeatFlow ||--o| ThermalGradient : "measured from"
-    HeatFlow ||--o| IntervalConductivity : "measured from"
-    
-    %% Probe and corrections
-    HeatFlow ||--o| ProbeMetadata : "has probe data"
-    HeatFlow ||--o{ HeatFlowCorrection : "has corrections"
-    
-    %% Note: Many-to-many relationships for vocabularies (method, probe_type, etc.)
-    %% are not shown for diagram clarity. These use ConceptField relationships.
+    HeatFlowSite ||--o{ HeatFlowInterval : "contains"
+    HeatFlowSite ||--o| ParentHeatFlow : "has one aggregate for"
+
+    %% Interval to the measurements taken over it
+    HeatFlowInterval ||--o{ HeatFlow : "is determined over"
+    HeatFlowInterval ||--o{ ThermalGradient : "is measured over"
+    HeatFlowInterval ||--o{ IntervalConductivity : "is measured over"
+    HeatFlowInterval ||--o| ProbeMetadata : "was sampled by"
+
+    %% Parent to children
+    ParentHeatFlow ||--o{ HeatFlow : "aggregates"
+
+    %% Child to the values it was calculated from
+    ThermalGradient ||--o{ HeatFlow : "is used by"
+    IntervalConductivity ||--o{ HeatFlow : "is used by"
+    HeatFlow ||--o{ HeatFlowCorrection : "records"
+
+    %% Editorial
+    Dataset ||--o| Review : "is reviewed by"
 ```
 
 ## Model Descriptions
 
-### Point (Location)
-
-The **Point** model represents geographic coordinates used across the database.
-
-**Key Features:**
-- Stores x (longitude) and y (latitude) coordinates as high-precision decimals (6 decimal places ≈ 0.11m accuracy)
-- Coordinate reference system (CRS) tracks the spatial reference used (default: EPSG:4326 - WGS84)
-- Provides latitude/longitude properties for convenience
-- Unique constraint on (x, y) coordinate pairs
-
-**Business Rules:**
-- Each unique location is stored once and can be referenced by multiple sites
-- CRS is typically not user-editable to maintain consistency
-- Coordinates must be within valid ranges for the specified CRS
-
 ### HeatFlowSite
 
-The **HeatFlowSite** model represents a geographical location where heat flow data has been collected. It extends FairDM's `Borehole` model (which itself extends `Sample`) to include heat-flow-specific metadata.
+A geographical location where heat flow data has been collected. It extends FairDM's borehole and earth sample models, which themselves extend `Sample`.
 
-**Key Features:**
-- Links to Point model for geographic coordinates (accessed via `location.latitude`, `location.longitude`)
-- Tracks both measured depth (MD) and true vertical depth (TVD)
-- Categorizes by environment (onshore/offshore, continental/marine)
-- Links to exploration method and purpose
-- Supports geographic indexing for spatial queries
+**Key Features**
 
-**Business Rules:**
-- Each site can have multiple depth intervals for measurements
-- Each site should have exactly one ParentHeatFlow (enforced at model level)
-- Geographic coordinates managed through relationship to Point model
+- Reaches its geographic coordinates through `Sample.location`, a foreign key to `Point`
+- Tracks both measured depth (`length`) and true vertical depth (`vertical_depth`)
+- Categorises the setting through the geographic environment vocabulary
+- Carries country, region, continent and domain, each indexed for filtering
 
-### GeoDepthInterval
+**Business Rules**
 
-The **GeoDepthInterval** model represents depth intervals within heat flow sites, providing geological context for measurements.
+- A site refuses a coordinate pair already held by another site, checked on both `clean()` and `save()`
+- A site may have many depth intervals
+- A site may have at most one `ParentHeatFlow`, enforced in that model's `save()`
 
-**Key Features:**
-- Extends FairDM's abstract `GeoDepthInterval` to provide concrete implementation for heat flow database
-- Tracks top and bottom depths with automatic depth calculation
-- Includes geological properties: lithology, age, and stratigraphy
-- Vertical datum typically set to Mean Sea Level (MSL)
-- Related to both thermal gradient and thermal conductivity measurements
+### HeatFlowInterval
 
-**Business Rules:**
-- Bottom depth must be greater than top depth (downward positive direction)
-- Vertical depth automatically calculated from top and bottom
-- Each interval belongs to one HeatFlowSite
-- Multiple thermal gradients and conductivities can be measured over the same interval
-- Lithology, age, and stratigraphy support many-to-many relationships for complex geology
+A depth interval within a site's borehole, over which a child determination applies. Like the site it extends `Sample`, so it can carry its own identifiers and be measured directly.
+
+**Key Features**
+
+- Belongs to a site through the `site` foreign key, and the relation is nullable
+- Tracks top and bottom depth, vertical depth and vertical datum
+- Carries the geological vocabularies: lithology, age and stratigraphic unit
+- Is the sample that thermal gradient, thermal conductivity and child heat flow measurements point at
+
+**Business Rules**
+
+- Bottom depth must be at or below top depth, in a downward-positive direction
 
 ### ParentHeatFlow
 
-The **ParentHeatFlow** model stores the aggregated surface heat flow value for a site, representing the "parent level" of the GHFDB schema.
+The aggregated surface heat flow for a site: the parent level of the published schema. It was named `SurfaceHeatFlow` in older versions of this codebase.
 
-**Key Features:**
-- One-to-one relationship with HeatFlowSite (one parent per site)
-- Stores the representative heat flow value after all corrections
-- Tracks whether heat production corrections were applied
-- Links to multiple child measurements via ParentChildRelation
-- Indicates whether data is part of official GHFDB release
+**Key Features**
 
-**Business Rules:**
-- Only one ParentHeatFlow allowed per site (validated in save method)
-- Quality score inherited from child measurements (poorest relevant child)
-- Uncertainty should be non-negative
+- Reaches its site through `Measurement.sample`, and exposes it as the `site` property
+- Stores the representative value after all corrections
+- `corr_HP_flag` records whether the heat production of the overburden was considered
+- `ghfdb_id` is the published parent identifier and the key imports upsert on
 
-### HeatFlow (Child)
+**Business Rules**
 
-The **HeatFlow** model represents individual heat flow determinations at specific depth intervals, corresponding to the "child level" of the GHFDB schema.
+- Its sample must be a `HeatFlowSite`, and only one parent may exist per site. Both are raised on `save()`
+- Quality is inherited from the children: one child passes its own score up, several pass the poorest of the relevant ones
 
-**Key Features:**
-- Calculated from thermal gradient and thermal conductivity measurements
-- Supports both borehole and marine probe methodologies (via optional ProbeMetadata relationship)
-- Environmental and methodological corrections tracked via many-to-many HeatFlowCorrection relationship
-- Quality metrics (U-score for uncertainty, M-score for methodology)
-- One-to-one relationships with ThermalGradient and IntervalConductivity
+### HeatFlow
 
-**Business Rules:**
-- Each child can only belong to one parent via ParentChildRelation
-- Quality scores calculated automatically based on uncertainty and methodology
-- Marine probe measurements distinguished by presence of ProbeMetadata
+An individual heat flow determination over a depth interval: the child level of the published schema.
+
+**Key Features**
+
+- Calculated from a thermal gradient and a thermal conductivity, each an optional foreign key
+- Points at its parent through the nullable `parent` foreign key, and `is_relevant` records whether it was used in the parent's value
+- Carries the U-score and M-score, both indexed, and the overall quality assessment
+- `ghfdb_id` is the published child identifier and the key imports upsert on
+- A determination is treated as a marine probe measurement when its interval carries probe metadata
+
+**Business Rules**
+
+- Its sample must be a `HeatFlowInterval`, raised on `save()`
+- Each child belongs to at most one parent, through a plain foreign key rather than a junction table
 
 ### ProbeMetadata
 
-The **ProbeMetadata** model stores marine heat flow probe-specific information.
+Instrument parameters for a marine heat flow probe.
 
-**Key Features:**
-- Optional one-to-one relationship with HeatFlow (only for marine probe measurements)
-- Tracks penetration depth, probe type, length, and tilt angle
-- All fields are optional to accommodate varying levels of data completeness
+**Key Features**
 
-**Business Rules:**
-- Only exists for marine probe measurements
-- When present, indicates the measurement was taken using a probe rather than a borehole
-- Automatically deleted when associated HeatFlow is deleted (CASCADE)
+- One record per interval, through a one-to-one foreign key to `HeatFlowInterval`
+- Records penetration depth, probe type, length and tilt
+- Every field but the interval is optional, so partial records are accepted
+
+**Business Rules**
+
+- Deleted with its interval
 
 ### HeatFlowCorrection
 
-The **HeatFlowCorrection** model tracks environmental and methodological corrections applied to heat flow measurements.
+One disturbance considered for one child measurement. Corrections are records rather than boolean flags on the measurement, because a boolean cannot express whether a disturbance was recognised, considered or corrected.
 
-**Key Features:**
-- Many-to-many relationship with HeatFlow via foreign key
-- Nine correction types: IS (in-situ), T (temperature), S (sedimentation), E (erosion), TOPO (topographic), PAL (paleoclimatic), SUR (surface/climatic), CONV (convection), HR (heat refraction)
-- Status field indicates whether correction was present, corrected, or uncorrected
-- Optional description field for detailed correction information
-- Unique constraint ensures only one correction of each type per heat flow measurement
+**Correction Types**
 
-**Correction Types:**
-- **IS**: In-situ pressure/temperature conditions
-- **T**: Temperature corrections
-- **S**: Sedimentation/subsidence effects
-- **E**: Erosion effects
-- **TOPO**: Topographic effects
-- **PAL**: Paleoclimatic effects
-- **SUR**: Surface/climate effects (glaciation, warming)
-- **CONV**: Convection effects
-- **HR**: Heat refraction effects
+- **IS**: in-situ pressure and temperature conditions
+- **T**: temperature corrections
+- **S**: sedimentation and subsidence effects
+- **E**: erosion effects
+- **TOPO**: topographic effects
+- **PAL**: paleoclimatic effects
+- **SUR**: surface and climatic effects, such as glaciation or warming
+- **CONV**: convection effects
+- **HR**: heat refraction effects
 
-**Business Rules:**
-- One correction record per type per heat flow measurement (unique_together constraint)
-- Indexed by correction_type and status for efficient filtering
-- Automatically deleted when associated HeatFlow is deleted (CASCADE)
+**Business Rules**
+
+- At most one record of each type per measurement, enforced by a unique constraint on the pair
+- A status that is not meaningful for its type is refused on `save()`. The valid combinations are listed in [GHFDB Fields](../ghfdb_fields.md)
+- Indexed by type and by status
+- Deleted with its measurement
 
 ### ThermalGradient
 
-The **ThermalGradient** model stores temperature gradient measurements used in heat flow calculations.
+A temperature gradient measured over a depth interval.
 
-**Key Features:**
-- Inherits `sample` field from Measurement base class, linking to GeoDepthInterval
-- Stores both measured and corrected gradient values with uncertainties
-- Tracks measurement method at top and bottom of interval
-- Records shut-in times and correction methods
-- Quality score ranges from 0.0 (poor) to 1.0 (excellent)
-- Supports number tracking for statistical confidence
+**Key Features**
 
-**Business Rules:**
-- Uncertainty must be non-negative
-- Number of recordings must be positive if specified
-- Corrected values indicate whether drilling perturbations were addressed
-- Related to GeoDepthInterval via inherited `sample` field from Measurement
+- Reaches its interval through `Measurement.sample`
+- Stores both the measured and the corrected gradient, each with an uncertainty
+- Records the temperature method, shut-in time and correction method at the top and bottom of the interval
+- `score` is the methodological score used in the child's M-score, indexed alongside `number`
+
+**Business Rules**
+
+- Its sample must be a `HeatFlowInterval`, raised on `save()`
+- The number of temperature recordings must be positive where it is given, enforced by a check constraint
 
 ### IntervalConductivity
 
-The **IntervalConductivity** model represents mean thermal conductivity over a depth interval.
+The mean thermal conductivity over a depth interval.
 
-**Key Features:**
-- Inherits `sample` field from Measurement base class, linking to GeoDepthInterval
-- Tracks sample source (outcrop, core, cuttings, etc.)
-- Records measurement location and method
-- Considers saturation state and pressure-temperature conditions
-- Implements quality scoring based on Fuchs et al. (2023) criteria
-- Supports various averaging strategies for vertical interval
+**Key Features**
 
-**Business Rules:**
-- Value must be positive
-- Uncertainty cannot exceed the conductivity value
-- Realistic conductivity range: 0.1 to 50 W/mK (validated in clean method)
-- Quality score ranges from 0.2 (minimum) to 1.2 (maximum)
-- Related to GeoDepthInterval via inherited `sample` field from Measurement
+- Reaches its interval through `Measurement.sample`
+- Records the sample source, the location the value came from, the determination method, the saturation state and the pressure-temperature conditions
+- `score` is computed from those properties following Fuchs et al. (2023) and lands between 0.2 and 1.2
 
-### ParentChildRelation
+**Business Rules**
 
-The **ParentChildRelation** model is an intermediary table managing the many-to-many relationship between parent and child heat flow measurements.
+- Its sample must be a `HeatFlowInterval`, raised on `save()`
+- Uncertainty may not exceed the value itself
+- Values outside 0.1 to 50 W/mK are refused as unrealistic
 
-**Key Features:**
-- Links parent (aggregated) to child (individual) measurements
-- `is_relevant` flag indicates which children were used in parent calculation
-- Enforces unique constraint (one child cannot belong to multiple parents)
+### Review
 
-**Business Rules:**
-- Each child heat flow can only be linked to one parent (unique constraint on child_id)
-- Only relevant children affect parent quality score
-- Enables filtering of outlier or poor-quality child measurements from aggregation
+The editorial record of a dataset being reviewed before publication.
 
+**Key Features**
 
+- One review per dataset and per literature item, both one-to-one
+- Names the people who carried it out through the `reviewers` relation, so a review may have several
+- Tracks start and completion dates as partial dates, and a status of open, pending or complete
+
+**Business Rules**
+
+- A start date later than the completion date is refused on `save()`
+
+### GHFDBRelease
+
+A published release of the database: its version, date, description and the file distributed for it. Versions are unique.
 
 ## Data Flow
 
@@ -382,66 +412,47 @@ flowchart TD
     A[Create HeatFlowSite] --> B[Define HeatFlowInterval]
     B --> C[Measure ThermalGradient]
     B --> D[Measure IntervalConductivity]
-    C --> E[Create HeatFlow Child]
+    C --> E[Create child HeatFlow]
     D --> E
-    E --> F[Calculate U-score & M-score]
-    F --> G{Multiple Children?}
-    G -->|Yes| H[Create ParentChildRelation]
-    G -->|No| I[Create ParentHeatFlow]
-    H --> I
-    I --> J[Inherit Quality from Relevant Children]
-    J --> K[Include in GHFDBRelease]
+    E --> F[Calculate U-score and M-score]
+    F --> G[Create or update ParentHeatFlow for the site]
+    G --> H[Inherit quality from the relevant children]
+    H --> I[Include in a GHFDBRelease]
 ```
 
 ### Quality Score Inheritance
 
 The parent heat flow quality is determined by:
 
-1. **Single Child**: Parent inherits child's quality score directly
-2. **Multiple Children (all relevant)**: Parent inherits poorest child quality
-3. **Multiple Children (some relevant)**: Parent inherits poorest relevant child quality
+1. **One relevant child**: the parent takes that child's quality directly
+2. **Several relevant children**: the parent takes the poorest of them
 
-This ensures conservative quality assessment at the parent level.
+Children marked as not relevant are left out of the calculation entirely, which is how an outlier or a poor determination is kept in the record without dragging the site's value down.
 
 ## Database Indices
 
-The following fields are indexed for query performance:
+The following fields are indexed:
 
-### HeatFlowSite
-- `country`, `continent`, `environment` (filtering by location/type)
-
-### ParentHeatFlow
-- `is_ghfdb`, `corr_HP_flag` (filtering by inclusion/correction status)
-
-### HeatFlow
-- `U_score`, `M_score` (quality-based filtering)
-
-### ThermalGradient
-- `score`, `number` (quality assessment queries)
-
-### IntervalConductivity
-- `number` (measurement confidence queries)
+- **HeatFlowSite**: `country`, `continent`, `environment`
+- **ParentHeatFlow**: `ghfdb_id`, `corr_HP_flag`
+- **HeatFlow**: `U_score`, `M_score`, and `ghfdb_id` through the field's own index
+- **HeatFlowCorrection**: `correction_type`, `status`
+- **ThermalGradient**: `score`, `number`
+- **IntervalConductivity**: `number`
 
 ## Key Constraints
 
-1. **Positive Values**: Uncertainties, probe dimensions, conductivity values must be non-negative
-2. **Uniqueness**: One parent per site, one child per parent-child relation
-3. **Referential Integrity**: Cascading deletes for thermal properties when child is deleted
-4. **Geographic Validity**: Coordinates must use WGS84 (SRID 4326)
-5. **Quality Ranges**: Scores must fall within defined ranges (0.0-1.0 for gradients)
+1. **One parent per site**, and its sample must be a site
+2. **One correction of each type per child measurement**
+3. **One site per coordinate pair**
+4. **Positive temperature recordings** on a thermal gradient, where the count is given
+5. **Realistic conductivity**, between 0.1 and 50 W/mK, with an uncertainty no larger than the value
 
 ## Vocabulary Fields
 
-Many fields use controlled vocabularies via `ConceptField` and `ConceptManyToManyField`:
+Many fields draw on controlled vocabularies through `ConceptField` and `ConceptManyToManyField`. Each many-to-many vocabulary field has its own join table, named for the model and the field, and those names are listed in [GHFDB Fields](../ghfdb_fields.md).
 
-- **Geographic Environment**: onshore_continental, onshore_lake, offshore_continental, offshore_marine, unspecified
-- **Exploration Method**: drilling, mining, tunneling, probing_lake, probing_ocean, unspecified
-- **Heat Flow Method**: fourier, bullard, bootstrap, other
-- **Probe Type**: corer_outrigger, bullard, lister, ewing, other, unspecified
-- **Temperature Method**: BHT, CBHT, DST, PT100, PT1000, LOG, CLOG, DTS, CPD, etc.
-- **Correction Flags**: not_present, present_uncorrected, present_corrected, unspecified
-
-These vocabularies ensure data consistency and enable standardized filtering and analysis.
+The vocabularies in use include the geographic environment, exploration method and purpose, heat flow determination method, probe type, temperature methods and corrections at the top and bottom of an interval, the conductivity source, location, method, saturation and pressure-temperature conditions, and the lithology and geological timescale terms carried by a site and an interval.
 
 ## References
 
@@ -453,6 +464,6 @@ These vocabularies ensure data consistency and enable standardized filtering and
 
 ## See Also
 
-- [FairDM Core Data Model](../core-data-model.md) - Understanding Sample and Measurement base classes
-- [FairDM Registry](../../developer-guide/registry.md) - Model registration and configuration
-- [GHFDB Specification](../development/specifications.md) - Detailed field specifications
+- [The conceptual model](ghfdb-conceptual-model.md) — the entities and the reasoning behind the parent-child split
+- [GHFDB Fields](../ghfdb_fields.md) — every published column and the field that holds it
+- [Specifications](../development/specifications.md) — the detailed field specifications

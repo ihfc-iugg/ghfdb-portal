@@ -29,7 +29,7 @@ Everything the portal has to do to be worth running.
 
 ### R1 — Heat flow held as a normalised relational model
 
-*Delivered · needs verification · advances G1*
+*Delivered · advances G1*
 
 Heat flow is stored as a set of related records covering sites, the depth intervals within them,
 the measurements made over those intervals, and the corrections applied to each measurement. Field
