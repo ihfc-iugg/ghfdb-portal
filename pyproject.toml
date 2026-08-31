@@ -272,7 +272,7 @@ DEP003 = [
     "flex_menu",
     "import_export",
     "literature",
-    "martor",
+    "markdownx",
     "openpyxl",
     "partial_date",
     "polymorphic",

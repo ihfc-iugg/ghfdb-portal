@@ -331,24 +331,6 @@ files = [
 ]
 
 [[package]]
-name = "bleach"
-version = "6.2.0"
-description = "An easy safelist-based HTML-sanitizing tool."
-optional = false
-python-versions = ">=3.9"
-groups = ["main"]
-files = [
-    {file = "bleach-6.2.0-py3-none-any.whl", hash = "sha256:117d9c6097a7c3d22fd578fcd8d35ff1e125df6736f554da4e432fdd63f31e5e"},
-    {file = "bleach-6.2.0.tar.gz", hash = "sha256:123e894118b8a599fd80d3ec1a6d4cc7ce4e5882b1317a7e1ba69b56e95f991f"},
-]
-
-[package.dependencies]
-webencodings = "*"
-
-[package.extras]
-css = ["tinycss2 (>=1.1.0,<1.5)"]
-
-[[package]]
 name = "boto3"
 version = "1.40.9"
 description = "The AWS SDK for Python"
@@ -1816,21 +1798,6 @@ xlsx = ["tablib[xlsx]"]
 yaml = ["tablib[yaml]"]
 
 [[package]]
-name = "django-invitations"
-version = "2.1.0"
-description = "Generic invitations app with support for django-allauth"
-optional = false
-python-versions = ">=3.8,<4.0"
-groups = ["main"]
-files = [
-    {file = "django_invitations-2.1.0-py3-none-any.whl", hash = "sha256:321d4430f06927be146f82c15ba153872d75185e7accd387bfe1773c1130d30f"},
-    {file = "django_invitations-2.1.0.tar.gz", hash = "sha256:88df42bfc20aa846116c5216d81ce916c303303c0249a74f1b1867e260e6814c"},
-]
-
-[package.dependencies]
-django = ">=3.2"
-
-[[package]]
 name = "django-json-widget"
 version = "2.0.3"
 description = "Django json widget is an alternative widget that makes it easy to edit the jsonfield field of django."
@@ -1925,6 +1892,23 @@ type = "git"
 url = "https://github.com/SamuelJennings/django-literature"
 reference = "HEAD"
 resolved_reference = "4af0f66f3e6a131ba2c4ae398920cf66ebd8cb25"
+
+[[package]]
+name = "django-markdownx"
+version = "4.0.11"
+description = "A comprehensive Markdown editor built for Django."
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "django_markdownx-4.0.11-py2.py3-none-any.whl", hash = "sha256:65d32d8892a3f9d678b149b7a0c3a073db6c6c10955df1c4f453b38eb96d163e"},
+    {file = "django_markdownx-4.0.11.tar.gz", hash = "sha256:0f2a4552174af98b621522eb36c8d1009a7f73d2bf591d973a34fc65cc740680"},
+]
+
+[package.dependencies]
+Django = "*"
+Markdown = "*"
+Pillow = "*"
 
 [[package]]
 name = "django-meta"
@@ -2720,10 +2704,10 @@ django-guardian = ">=3.0.3,<4.0.0"
 django-hijack = ">=3.7.4,<4.0.0"
 django-htmx = ">=1.16.0,<2.0.0"
 django-import-export = ">=4.0.3,<5.0.0"
-django-invitations = ">=2.0.0,<3.0.0"
 django-libsass = ">=0.9,<0.10"
 django-lifecycle = ">=1.2.4,<2.0.0"
 django-literature = {git = "https://github.com/SamuelJennings/django-literature"}
+django-markdownx = ">=4.0.11,<5.0.0"
 django-meta = ">=2.1.0,<3.0.0"
 django-model-utils = ">=4.3.1,<5.0.0"
 django-mvp = ">=0.19.1,<0.20.0"
@@ -2752,9 +2736,11 @@ drf-spectacular = {version = ">=0.29.0,<0.30.0", extras = ["sidecar"]}
 easy-thumbnails = ">=2.10,<3.0"
 flower = ">=2.0.1,<3.0.0"
 gunicorn = ">=23.0.0,<24.0.0"
-martor = ">=1.7.11,<2.0.0"
+markdown = ">=3.10.2,<4.0.0"
+nh3 = ">=0.3.7,<0.4.0"
 pint = ">=0.24,<1.0"
 psycopg2-binary = ">=2.9.5,<3.0.0"
+pymdown-extensions = ">=11.0.2,<12.0.0"
 rapidfuzz = ">=3.14.3,<4.0.0"
 redis = ">=4.5.2,<5.0.0"
 requests = ">=2.32,<3.0"
@@ -2771,7 +2757,7 @@ gis = ["djangorestframework-gis (>=1.2.1,<2.0.0)"]
 type = "git"
 url = "https://github.com/FAIR-DM/fairdm"
 reference = "HEAD"
-resolved_reference = "6a02c352708694737e87c8cb4a0c1c15b5ac71e7"
+resolved_reference = "8c9290f4b01365688117be69a5c1885d1815a3b1"
 
 [[package]]
 name = "fairdm-discussions"
@@ -2794,15 +2780,17 @@ resolved_reference = "643d0af810feb687e41c499df6f6c0d510500b79"
 
 [[package]]
 name = "fairdm-docs"
-version = "0.3.0"
-description = "Standardized documentation configuration and tooling for FairDM-powered research data portals"
+version = "0.0.1"
+description = "Sphinx configuration and build tooling for FairDM research data portals"
 optional = false
-python-versions = ">=3.11"
+python-versions = ">=3.12"
 groups = ["docs"]
 files = []
 develop = false
 
 [package.dependencies]
+docutils = "*"
+jinja2 = "*"
 markdown = "*"
 myst-parser = ">=4.0"
 sphinx = ">=8.1"
@@ -2825,7 +2813,7 @@ sphinx-book-theme = ["sphinx-book-theme (>1.1)"]
 type = "git"
 url = "https://github.com/FAIR-DM/fairdm-docs"
 reference = "HEAD"
-resolved_reference = "8af6a3d9eb19b90025495484084a878b3793f52e"
+resolved_reference = "26ae898a9f2d7ebe7883f6cc10d654aa804bd82b"
 
 [[package]]
 name = "fairdm-geo"
@@ -3749,18 +3737,18 @@ source = ["Cython (>=3.0.11,<3.1.0)"]
 
 [[package]]
 name = "markdown"
-version = "3.8.2"
+version = "3.10.3"
 description = "Python implementation of John Gruber's Markdown."
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.10"
 groups = ["main", "docs"]
 files = [
-    {file = "markdown-3.8.2-py3-none-any.whl", hash = "sha256:5c83764dbd4e00bdd94d85a19b8d55ccca20fe35b2e678a1422b380324dd5f24"},
-    {file = "markdown-3.8.2.tar.gz", hash = "sha256:247b9a70dd12e27f67431ce62523e675b866d254f900c4fe75ce3dda62237c45"},
+    {file = "markdown-3.10.3-py3-none-any.whl", hash = "sha256:fa6c92a00a4a3c98b22728c64a935ae1928250ae65058a6ded814d2cc29a4cea"},
+    {file = "markdown-3.10.3.tar.gz", hash = "sha256:3589362618f743188b4d955b874402bc814f4f83f544dc207719f4baa7d9c45f"},
 ]
 
 [package.extras]
-docs = ["mdx_gh_links (>=0.2)", "mkdocs (>=1.6)", "mkdocs-gen-files", "mkdocs-literate-nav", "mkdocs-nature (>=0.6)", "mkdocs-section-index", "mkdocstrings[python]"]
+docs = ["mdx_gh_links (>=0.2)", "mkdocs (>=1.6)", "mkdocs-gen-files", "mkdocs-literate-nav", "mkdocs-nature (>=0.6)", "mkdocs-section-index", "mkdocstrings[python] (>=0.28.3)"]
 testing = ["coverage", "pyyaml"]
 
 [[package]]
@@ -3858,30 +3846,6 @@ files = [
     {file = "MarkupSafe-3.0.2-cp39-cp39-win_amd64.whl", hash = "sha256:6e296a513ca3d94054c2c881cc913116e90fd030ad1c656b3869762b754f5f8a"},
     {file = "markupsafe-3.0.2.tar.gz", hash = "sha256:ee55d3edf80167e48ea11a923c7386f4669df67d7994554387f84e7d8b0a2bf0"},
 ]
-
-[[package]]
-name = "martor"
-version = "1.7.16"
-description = "Django Markdown Editor"
-optional = false
-python-versions = ">=3.9"
-groups = ["main"]
-files = [
-    {file = "martor-1.7.16-py3-none-any.whl", hash = "sha256:c025d49a599e6ceff4162a8453c0d03d4b38d5d012af83978145de0caa51a81f"},
-    {file = "martor-1.7.16.tar.gz", hash = "sha256:de2ec5a6d2f59fb7d863796375d5b24d7d50ac5183059026c2b59edeb0c0fd81"},
-]
-
-[package.dependencies]
-bleach = "*"
-django = ">=3.2"
-markdown = ">=3.0"
-requests = ">=2.12.4"
-tzdata = "*"
-urllib3 = "*"
-zipp = "*"
-
-[package.extras]
-dev = ["black", "django-stubs", "flake8", "isort", "mypy", "mypy-extensions", "pytest", "pytest-django"]
 
 [[package]]
 name = "matplotlib-inline"
@@ -4184,6 +4148,43 @@ example = ["cairocffi (>=1.7)", "contextily (>=1.6)", "igraph (>=0.11)", "momepy
 extra = ["lxml (>=4.6)", "pydot (>=3.0.1)", "pygraphviz (>=1.14)", "sympy (>=1.10)"]
 test = ["pytest (>=7.2)", "pytest-cov (>=4.0)", "pytest-xdist (>=3.0)"]
 test-extras = ["pytest-mpl", "pytest-randomly"]
+
+[[package]]
+name = "nh3"
+version = "0.3.7"
+description = "Python binding to Ammonia HTML sanitizer Rust crate"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "nh3-0.3.7-cp314-cp314t-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:91a4dab4e94d9fc54b9f67b1adfb23e81fab7ab43f33c3b8c97be9aa38f789ba"},
+    {file = "nh3-0.3.7-cp314-cp314t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:eae64328e46a25785535afcb6885b6f182ecaf5ee8c88f8c075422db8aacc65b"},
+    {file = "nh3-0.3.7-cp314-cp314t-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:4968fe8d2db97c6f047659bf46a449fd8ec377f44ebf3e0a1b96c0d3a333ae32"},
+    {file = "nh3-0.3.7-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:be53a4825585f701955cb9baf49f478f56eb81e20294329fe4bc689dd5dd81fa"},
+    {file = "nh3-0.3.7-cp314-cp314t-musllinux_1_2_armv7l.whl", hash = "sha256:94fd6e59553fbb9ffd8ba71bbd5a54e3126ba01799a097ae30d5341d750bc6ac"},
+    {file = "nh3-0.3.7-cp314-cp314t-musllinux_1_2_i686.whl", hash = "sha256:18f4278ecd157d43cb35acd5aae9f35cfa79f546b4922bd86536adc0f6312102"},
+    {file = "nh3-0.3.7-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:808def0c8c07843e6e50dc84f532457bfa2cfd17417b219a5d9e7c773709331a"},
+    {file = "nh3-0.3.7-cp314-cp314t-win32.whl", hash = "sha256:874b7d67a067bd29a59223f6270fc30da4edd8e6d87fd219fc93bcbaa662c946"},
+    {file = "nh3-0.3.7-cp314-cp314t-win_amd64.whl", hash = "sha256:614dac4a4c36ad084e78447d16fe898dedd762e354a7ab9cda2984e82f67883d"},
+    {file = "nh3-0.3.7-cp314-cp314t-win_arm64.whl", hash = "sha256:157ec1eb7a62f3d9a7badb8d82d89aa810e3e24e097eedfa481a25d0c8a99877"},
+    {file = "nh3-0.3.7-cp38-abi3-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:6c3aa50eb26e9228238271db9f983cbc3b006dfbfeca2d4dc34c33ddc6ac5ea5"},
+    {file = "nh3-0.3.7-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f266d3f1b3647449923a8e406524632220dd5d8b647078dfe45b885d33d10479"},
+    {file = "nh3-0.3.7-cp38-abi3-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:e8fd1ab205258b29254f72db377d99e2c96aa7653ef3b015ccab0420b094b506"},
+    {file = "nh3-0.3.7-cp38-abi3-manylinux_2_17_ppc64.manylinux2014_ppc64.whl", hash = "sha256:19f288c938ec6eef1f5d2c6cab47838e71fef8097e1c1233802be5a6230ba086"},
+    {file = "nh3-0.3.7-cp38-abi3-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:de2b2aab32ea303405debefdcfc58043d3e635fa3f67b9eb140d2b0e0c0d2563"},
+    {file = "nh3-0.3.7-cp38-abi3-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:9b7279d43323a25225df23576af6594a16693f61431170848b8b2ac21ad4f174"},
+    {file = "nh3-0.3.7-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:70f5ac8626e899a4bab0ef74ca2f5bd602f49c7b739e6e5026b4afc6d63dac42"},
+    {file = "nh3-0.3.7-cp38-abi3-manylinux_2_31_riscv64.whl", hash = "sha256:5ffdfcb9a686ffb12765376bcfb6b5b55728516d3c0ee317d29982381ded3df8"},
+    {file = "nh3-0.3.7-cp38-abi3-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:bc42bb1193c1e28a1e74c2cabaca178e118a7103e8832699fef8a2b3e2496493"},
+    {file = "nh3-0.3.7-cp38-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:d56e76bd3cadb09b6b0cef364850811663734b348a25f5f587a2819c495367bd"},
+    {file = "nh3-0.3.7-cp38-abi3-musllinux_1_2_armv7l.whl", hash = "sha256:fd4a70efb45d5372174f718878eb7a35c12677626a63b2f103b23b833457dcac"},
+    {file = "nh3-0.3.7-cp38-abi3-musllinux_1_2_i686.whl", hash = "sha256:15f5fbf090f5c88d61c820e1fc1fceecb6520cca9fe85649c06b57ef9dc9ff62"},
+    {file = "nh3-0.3.7-cp38-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:6698a822132beedab80f131c08d8d0ac5a178ddeb488d02ca4b67716ecfac7af"},
+    {file = "nh3-0.3.7-cp38-abi3-win32.whl", hash = "sha256:6e4280115d44c3b278eef712a86748c1a723105cd79feec46952383117ab4e59"},
+    {file = "nh3-0.3.7-cp38-abi3-win_amd64.whl", hash = "sha256:618e3059caf41ccdf5dcccb3fa9df4cf6e4efe23d1382a8bbfca272a8a4f8bfc"},
+    {file = "nh3-0.3.7-cp38-abi3-win_arm64.whl", hash = "sha256:f04b7d333b27f13ca439da3cf1c75c2fba34f104969f6ce4ac8e7079699c2f4a"},
+    {file = "nh3-0.3.7.tar.gz", hash = "sha256:71860d01c16f4d8c72e334e0674beb2b0899dbd0bf760de18932ef4390303848"},
+]
 
 [[package]]
 name = "nodeenv"
@@ -5198,6 +5199,25 @@ crypto = ["cryptography (>=3.4.0)"]
 dev = ["coverage[toml] (==5.0.4)", "cryptography (>=3.4.0)", "pre-commit", "pytest (>=6.0.0,<7.0.0)", "sphinx", "sphinx-rtd-theme", "zope.interface"]
 docs = ["sphinx", "sphinx-rtd-theme", "zope.interface"]
 tests = ["coverage[toml] (==5.0.4)", "pytest (>=6.0.0,<7.0.0)"]
+
+[[package]]
+name = "pymdown-extensions"
+version = "11.0.2"
+description = "Extension pack for Python Markdown."
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "pymdown_extensions-11.0.2-py3-none-any.whl", hash = "sha256:259910762019732caa1dfd76f3faa62c59f191d46573e80bcb1d13c0f675bbe5"},
+    {file = "pymdown_extensions-11.0.2.tar.gz", hash = "sha256:9506fcbe66fa355a775b768084334238dd6805020ac4b92bea0c0dda6f8f223d"},
+]
+
+[package.dependencies]
+markdown = ">=3.6"
+pyyaml = "*"
+
+[package.extras]
+extra = ["pygments (>=2.19.1)"]
 
 [[package]]
 name = "pyparsing"
@@ -7239,18 +7259,6 @@ files = [
 ]
 
 [[package]]
-name = "webencodings"
-version = "0.5.1"
-description = "Character encoding aliases for legacy web content"
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "webencodings-0.5.1-py2.py3-none-any.whl", hash = "sha256:a0af1213f3c2226497a97e2b3aa01a7e4bee4f403f95be16fc9acd2947514a78"},
-    {file = "webencodings-0.5.1.tar.gz", hash = "sha256:b36a1c245f2d304965eb4e0a82848379241dc04b865afcc4aab16748587e1923"},
-]
-
-[[package]]
 name = "websockets"
 version = "15.0.1"
 description = "An implementation of the WebSocket Protocol (RFC 6455 & 7692)"
@@ -7463,26 +7471,6 @@ files = [
     {file = "xlwt-1.3.0-py2.py3-none-any.whl", hash = "sha256:a082260524678ba48a297d922cc385f58278b8aa68741596a87de01a9c628b2e"},
     {file = "xlwt-1.3.0.tar.gz", hash = "sha256:c59912717a9b28f1a3c2a98fd60741014b06b043936dcecbc113eaaada156c88"},
 ]
-
-[[package]]
-name = "zipp"
-version = "3.23.0"
-description = "Backport of pathlib-compatible object wrapper for zip files"
-optional = false
-python-versions = ">=3.9"
-groups = ["main"]
-files = [
-    {file = "zipp-3.23.0-py3-none-any.whl", hash = "sha256:071652d6115ed432f5ce1d34c336c0adfd6a884660d1e9712a256d3d3bd4b14e"},
-    {file = "zipp-3.23.0.tar.gz", hash = "sha256:a07157588a12518c9d4034df3fbbee09c814741a33ff63c05fa29d26a2404166"},
-]
-
-[package.extras]
-check = ["pytest-checkdocs (>=2.4)", "pytest-ruff (>=0.2.1) ; sys_platform != \"cygwin\""]
-cover = ["pytest-cov"]
-doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-lint"]
-enabler = ["pytest-enabler (>=2.2)"]
-test = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more_itertools", "pytest (>=6,!=8.1.*)", "pytest-ignore-flaky"]
-type = ["pytest-mypy"]
 
 [metadata]
 lock-version = "2.1"

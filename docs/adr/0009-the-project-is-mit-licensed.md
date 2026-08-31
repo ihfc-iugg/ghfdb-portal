@@ -37,6 +37,7 @@ Contributors other than the copyright holder acquire a material stake in the cod
 institutional policy is adopted that specifies licensing terms for work of this kind. Either would
 make the licence a decision with more than one party to it.
 
-Separately, note that the published container image bundles third-party dependencies under
-copyleft terms. That is a question about the distributed artefact rather than about this source,
-and it is tracked on its own.
+Separately: the published container image previously bundled two third-party dependencies under
+copyleft terms (`django-invitations`, `martor`), reached transitively through `fairdm`. `fairdm`
+has since dropped both in favour of permissively-licensed replacements, so the image no longer
+carries copyleft-licensed code on that path (issue #150).
