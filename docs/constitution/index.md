@@ -10,7 +10,7 @@ work on the portal. It is what a specification is checked against before it is p
 pull request is reviewed against before it is merged.
 
 There is exactly one copy, and it lives at
-[memory/constitution.md](../../memory/constitution.md). This page deliberately does not repeat any
+[CONSTITUTION.md](../../CONSTITUTION.md). This page deliberately does not repeat any
 of it. An earlier version of this page listed the principles in its own words, and the two lists
 drifted apart until they named different principles in a different order, with each document
 claiming to be authoritative. A page that summarises the constitution will always be at risk of
@@ -18,7 +18,7 @@ that, so this one points at it instead. The reasoning is recorded in
 [ADR 0008](../adr/0008-one-constitution-one-glossary.md).
 
 To read the principles, follow the link above. To propose a change to them, open a pull request
-against `memory/constitution.md` that states the change, the reason for it, and its expected
+against `CONSTITUTION.md` that states the change, the reason for it, and its expected
 impact. The amendment and versioning rules are in the Governance section of the constitution
 itself.
 
@@ -26,13 +26,13 @@ itself.
 
 The naming here is unhelpful and worth stating plainly.
 
-- `memory/constitution.md` is the engineering constitution: the principles and gates that govern
+- `CONSTITUTION.md` is the engineering constitution: the principles and gates that govern
   how code is written for this repository.
 - `docs/constitution/` is this documentation section: project governance and the published
   reference material that the portal's structure was built on.
 
 They are not two versions of the same document. If you are looking for a rule that development
-must follow, it is in `memory/constitution.md`. If you are looking for the specification, proposal,
+must follow, it is in `CONSTITUTION.md`. If you are looking for the specification, proposal,
 or paper that a rule was derived from, it is in `references/` below.
 
 Domain terminology is separate again. Definitions of heat flow terms and GHFDB entities live in

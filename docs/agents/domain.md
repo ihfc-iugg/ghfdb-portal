@@ -7,7 +7,7 @@ order.
 
 - **`CONTEXT.md`** at the repo root — the glossary of core domain concepts.
 - **`docs/adr/`** — the architectural decisions that touch the area you are about to work in.
-- **`memory/constitution.md`** — the project's standards and quality bar.
+- **`CONSTITUTION.md`** — the project's standards and quality bar.
 
 This is a single-context repo. There is no `CONTEXT-MAP.md` and no per-app glossary.
 
@@ -26,14 +26,14 @@ which values are legal, the answer is in that reference material, not in the cod
 code disagrees with it, the code is what is wrong.
 
 Note the name collision: `docs/constitution/` is the project's governance and reference material.
-The engineering constitution is the single file `memory/constitution.md`.
+The engineering constitution is the single file `CONSTITUTION.md`.
 
 ## File structure
 
 ```
 /
 ├── CONTEXT.md              ← domain glossary
-├── memory/constitution.md  ← engineering standards and quality bar
+├── CONSTITUTION.md         ← engineering standards and quality bar
 ├── docs/adr/               ← architectural decision records
 ├── docs/constitution/      ← project governance and published reference material
 ├── config/                 ← Django settings, URLs, WSGI

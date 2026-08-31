@@ -93,4 +93,4 @@ Feature work follows a spec-driven process: spec → plan → tasks → implemen
 record of what was built and why. There is no spec-kit toolchain installed in the repo. It was
 removed because it was a vendored copy of software maintained elsewhere.
 
-Project standards and the quality bar live in `memory/constitution.md`.
+Project standards and the quality bar live in `CONSTITUTION.md`.

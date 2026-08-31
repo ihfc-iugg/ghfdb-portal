@@ -86,4 +86,4 @@ Shared spreadsheets and JSON live in `fixtures/`, described in `fixtures/README.
 
 Write the test first and watch it fail before writing the code that passes it. Put it in the module that mirrors its subject, in a class named for that subject, and give it a name that states the expected outcome. If a fixture would be useful to more than one module, move it up to the nearest `conftest.py`.
 
-The project's engineering standards are in `memory/constitution.md`. Note that `docs/constitution/` is unrelated — that is governance and published reference material.
+The project's engineering standards are in `CONSTITUTION.md`. Note that `docs/constitution/` is unrelated — that is governance and published reference material.
