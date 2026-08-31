@@ -105,7 +105,7 @@ class TestFixtures:
     """The Phase 1 fixture contracts every later phase is held to (T002-T010)."""
 
     def test_vocabulary_concepts_are_present(self, db):
-        """T002: the autouse concept preload covers every vocabulary this
+        """T002: the session concept load covers every vocabulary this
         feature filters on."""
         from heat_flow.vocabularies import (
             ExplorationMethod,
