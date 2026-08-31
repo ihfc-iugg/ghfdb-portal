@@ -2,7 +2,9 @@
 Configuration for pytest.
 """
 
+import importlib.util
 import os
+from pathlib import Path
 
 import django
 import pytest
@@ -13,6 +15,46 @@ def pytest_configure():
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
     os.environ.setdefault("DJANGO_ENV", "development")
     django.setup()
+
+
+def _browser_is_installed():
+    """True when Playwright is importable *and* its browser is downloaded.
+
+    Testing the import alone is not enough: installing the package is one
+    step and downloading the browser is another, and a runner with the
+    dependency but no download errors at launch instead of skipping.
+    """
+    if importlib.util.find_spec("playwright") is None:
+        return False
+
+    from playwright.sync_api import sync_playwright
+
+    try:
+        with sync_playwright() as p:
+            return Path(p.chromium.executable_path).exists()
+    except Exception:
+        return False
+
+
+def _should_skip_browser_tests(has_browser, env):
+    """Decide whether browser-marked tests skip, given the browser and the environment.
+
+    Locally a missing browser is ordinary: a contributor who has not run
+    ``playwright install`` should see skips, not a wall of errors. In CI it
+    is a failure — a runner that never downloaded a browser must error, not
+    quietly skip, or the check reads green for a test that never ran.
+    """
+    if has_browser:
+        return False
+    return env.get("CI", "").lower() not in {"1", "true"}
+
+
+HAS_BROWSER = _browser_is_installed()
+
+requires_browser = pytest.mark.skipif(
+    _should_skip_browser_tests(HAS_BROWSER, os.environ),
+    reason="playwright browser not installed (run: playwright install chromium)",
+)
 
 
 class ConceptPreloadRecord:

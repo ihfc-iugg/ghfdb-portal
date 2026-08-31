@@ -214,6 +214,7 @@ markers = [
     "review: Tests for the review app",
     "integration: Integration tests",
     "slow: Slow running tests",
+    "e2e: Browser-rendered tests (Playwright)",
 ]
 
 filterwarnings = ["ignore"]
