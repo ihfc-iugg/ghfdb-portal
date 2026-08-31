@@ -29,4 +29,5 @@ jobs:
       python-versions: '["3.13"]'
       django-versions: '["5.2"]'
       poetry-install-args: '--with test'
+      install-playwright: true
     secrets: inherit
