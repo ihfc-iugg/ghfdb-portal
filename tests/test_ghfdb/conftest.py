@@ -14,38 +14,8 @@ import pytest
 from fairdm.factories import DatasetFactory
 
 
-@pytest.fixture(autouse=True)
-def load_concepts(db):
-    """Ensure all vocabulary concepts are in the test DB before each test.
-
-    Mirrors the autouse fixture in test_resources/conftest.py so that
-    admin filter-choice tests (T063) also have vocabulary data available.
-
-    ``Concept.preload()`` only preloads vocabularies already present in
-    ``research_vocabs``' global ``vocab_registry``, and registration there is
-    normally a side effect of a model field's own ``__init__``.
-    ``RelatedConceptMixin`` (``ConceptManyToManyField``) does this. The
-    single-valued ``ConceptField`` does not — its registration call is
-    commented out in ``research_vocabs.fields.BaseConceptField.__init__``
-    (upstream gap, not ours to fix here). ``HeatFlowSite.environment`` and
-    ``HeatFlowSite.explo_method`` are both ``ConceptField``, so without this,
-    their concepts silently never load and every filter or fixture that
-    depends on them finds nothing (T002).
-    """
-    from research_vocabs import registry
-    from research_vocabs.models import Concept
-
-    from heat_flow.vocabularies import ExplorationMethod, GeographicEnvironment
-
-    for vocabulary in (GeographicEnvironment, ExplorationMethod):
-        registry.register(vocabulary())
-
-    if not Concept.objects.exists():
-        Concept.preload()
-
-
 @pytest.fixture
-def dataset():
+def dataset(db):
     """A minimal Dataset — infrastructure, not under test."""
     return DatasetFactory()
 
