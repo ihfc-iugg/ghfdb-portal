@@ -6,12 +6,14 @@ Tests mirror the source tree. A test module sits at the path its subject sits at
 
 ```
 tests/
-├── conftest.py                 # settings shared by the whole suite
+├── conftest.py                 # settings and database setup for the whole suite
 ├── fixtures/                   # sample spreadsheets and JSON, see fixtures/README.md
+├── test_migrations.py
 │
 ├── test_ghfdb/                 # project/ghfdb/
 │   ├── conftest.py
 │   ├── test_admin.py
+│   ├── test_columns.py
 │   ├── test_managers.py
 │   ├── test_models.py
 │   ├── test_views.py
@@ -29,10 +31,21 @@ tests/
     ├── conftest.py
     ├── test_config.py
     ├── test_factories.py
-    └── test_models.py
+    ├── test_vocabularies.py
+    └── test_models/            # project/heat_flow/models/
+        ├── test_child.py
+        └── test_parent.py
 ```
 
 `project/review/` has no tests yet.
+
+## Vocabulary concepts
+
+The controlled-vocabulary concepts are written into the test database once, when the session starts, by the `django_db_setup` fixture in the top-level `conftest.py`. They are written outside the per-test transaction, so every test finds them already there and no test pays for loading them.
+
+Two of the vocabularies are registered by hand in that fixture. Registration is normally a side effect of a model field's own `__init__`, which the many-valued concept field does but the single-valued one does not, so `HeatFlowSite.environment` and `HeatFlowSite.explo_method` would otherwise have no concepts to offer.
+
+**Do not load concepts from a per-test fixture.** Each test is rolled back afterwards, so a fixture that checks whether concepts exist always finds none and reloads them — several hundred writes per test. `test_heat_flow/test_vocabularies.py` guards against that returning.
 
 ## Conventions
 

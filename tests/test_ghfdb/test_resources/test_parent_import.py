@@ -375,7 +375,7 @@ class TestGHFDBParentImportRefusesSecondParent:
 class TestGHFDBParentImportResourceAccessControl:
     """T029 — Staff-only access control."""
 
-    def test_anonymous_admin_import_url_redirects(self, client):
+    def test_anonymous_admin_import_url_redirects(self, client, db):
         """Anonymous access to admin import URL redirects (302)."""
         from django.urls import reverse
 
