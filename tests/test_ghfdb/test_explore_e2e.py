@@ -15,6 +15,17 @@ from tests.conftest import requires_browser
 
 pytestmark = [pytest.mark.e2e, requires_browser]
 
+
+@pytest.fixture(autouse=True)
+def _allow_async_db_teardown(monkeypatch):
+    """Playwright's sync API leaves a running event loop on this thread, which
+    trips Django's async-safety guard when ``live_server`` flushes the test
+    database at teardown — nothing in the app runs on this thread, so the
+    guard has nothing to protect here. See Django's own escape hatch for
+    exactly this class of false positive."""
+    monkeypatch.setenv("DJANGO_ALLOW_ASYNC_UNSAFE", "true")
+
+
 VIEWPORTS = {
     "desktop": {"width": 1440, "height": 900},
     "mobile": {"width": 390, "height": 844},
