@@ -4,7 +4,7 @@
 
 ## Decision
 
-`memory/constitution.md` is the constitution. It is the only place principles are stated, and it
+`CONSTITUTION.md` is the constitution. It is the only place principles are stated, and it
 absorbs two that previously existed only in the documentation copy: **simplicity and
 maintainability**, and **fidelity to the funding and mission of the WHDB Project**.
 
@@ -16,7 +16,7 @@ are defined.
 
 The two directories keep their confusingly similar names for now, and mean different things:
 `docs/constitution/` holds project governance and the published reference material the structure is
-built on; `memory/constitution.md` is the engineering constitution.
+built on; `CONSTITUTION.md` is the engineering constitution.
 
 ## Why
 

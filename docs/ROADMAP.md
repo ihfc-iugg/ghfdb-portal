@@ -3,7 +3,7 @@
 **Date:** 2026-08-19
 
 This document was designed against [GOALS.md](../GOALS.md). See also [CONTEXT.md](../CONTEXT.md)
-for domain terminology and [memory/constitution.md](../memory/constitution.md) for project
+for domain terminology and [CONSTITUTION.md](../CONSTITUTION.md) for project
 standards.
 
 The first four items are already built. They are carried here so the sequence reads as a whole
