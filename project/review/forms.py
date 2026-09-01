@@ -8,7 +8,7 @@ from django_select2.forms import Select2Widget
 from fairdm.contrib.contributors.models import Person
 from fairdm.forms import ModelForm
 from literature.models import LiteratureItem
-from martor.fields import MartorFormField
+from markdownx.fields import MarkdownxFormField
 
 from .models import Review
 
@@ -82,7 +82,7 @@ class CreateReviewForm(ReviewForm):
 
 
 class SubmitReviewForm(ReviewForm):
-    comment = MartorFormField(
+    comment = MarkdownxFormField(
         label=_("Comment"),
         help_text=_("Provide any comments or feedback regarding the review."),
         required=False,
