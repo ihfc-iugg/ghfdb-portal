@@ -41,13 +41,13 @@ fairdm-geo = { git = "https://github.com/FAIR-DM/fairdm-geo" }
 fairdm-discussions = { git = "https://github.com/FAIR-DM/fairdm-discussions" }
 
 [tool.poetry.group.test.dependencies]
-mvp-shared = { git = "https://github.com/django-mvp/shared.git", rev = "v0.3.3", extras = [
+mvp-shared = { git = "https://github.com/django-mvp/shared.git", rev = "v0.4.1", extras = [
     "test",
 ] }
 
 
 [tool.poetry.group.dev.dependencies]
-mvp-shared = { git = "https://github.com/django-mvp/shared.git", rev = "v0.3.3", extras = [
+mvp-shared = { git = "https://github.com/django-mvp/shared.git", rev = "v0.4.1", extras = [
     "dev",
 ] }
 numpy = "^2.5.2"

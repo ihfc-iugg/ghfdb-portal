@@ -448,6 +448,11 @@ def constant_query_count(django_assert_num_queries):
         from django.test.utils import CaptureQueriesContext
 
         build(low)
+        # A cold process pays a one-off ContentType lookup the first time a
+        # polymorphic queryset resolves its ctype; call() once, uncounted,
+        # so the baseline below measures steady-state cost rather than
+        # whichever of the two builds happens to run first in the worker.
+        call()
         with CaptureQueriesContext(connection) as baseline:
             call()
 
