@@ -2627,6 +2627,21 @@ files = [
 ]
 
 [[package]]
+name = "execnet"
+version = "2.1.2"
+description = "execnet: rapid multi-Python deployment"
+optional = false
+python-versions = ">=3.8"
+groups = ["test"]
+files = [
+    {file = "execnet-2.1.2-py3-none-any.whl", hash = "sha256:67fba928dd5a544b783f6056f449e5e3931a5c378b128bc18501f7ea79e296ec"},
+    {file = "execnet-2.1.2.tar.gz", hash = "sha256:63d83bfdd9a23e35b9c6a3261412324f964c2ec8dcd8d3c6916ee9373e0befcd"},
+]
+
+[package.extras]
+testing = ["hatch", "pre-commit", "pytest", "tox"]
+
+[[package]]
 name = "executing"
 version = "2.2.0"
 description = "Get the currently executing AST node of a frame, and other information"
@@ -3950,7 +3965,7 @@ files = [
 
 [[package]]
 name = "mvp-shared"
-version = "0.3.3"
+version = "0.4.0"
 description = "Shared development, docs and testing tools for the django-mvp org"
 optional = false
 python-versions = ">=3.12,<4"
@@ -3968,34 +3983,35 @@ django-debug-toolbar = {version = ">=6.3.0,<7.0.0", optional = true}
 django-debug-toolbar-template-profiler = {version = ">=2.1.0,<3.0.0", optional = true}
 django-extensions = {version = ">=4.1,<5.0", optional = true}
 django-model-info = {version = ">=2026.3.1,<2027.0.0", optional = true}
-django-stubs = {version = ">=6.0.9,<7.0.0", optional = true}
+django-stubs = {version = ">=6.1.0,<7.0.0", optional = true}
 django-watchfiles = {version = ">=1.4.0,<2.0.0", optional = true}
-djangorestframework-stubs = {version = ">=3.17.1,<4.0.0", optional = true}
+djangorestframework-stubs = {version = ">=3.18.0,<4.0.0", optional = true}
 djlint = {version = ">=1.44.2,<2.0.0", optional = true}
 factory-boy = {version = ">=3.3.3,<4.0.0", optional = true}
 invoke = {version = ">=3.0.3,<4.0.0", optional = true}
 ipython = {version = ">=9.16.1,<10.0.0", optional = true}
 mypy = {version = ">=2.3.0,<3.0.0", optional = true}
-pre-commit = {version = ">=4.6.1,<5.0.0", optional = true}
+pre-commit = {version = ">=4.6.2,<5.0.0", optional = true}
 pytest = {version = ">=9.1.1,<10.0.0", optional = true}
 pytest-cov = {version = ">=7.1.0,<8.0.0", optional = true}
-pytest-django = {version = ">=4.13.0,<5.0.0", optional = true}
+pytest-django = {version = ">=4.14.0,<5.0.0", optional = true}
 pytest-env = {version = ">=1.7.0,<2.0.0", optional = true}
 pytest-playwright = {version = ">=0.9.0,<0.10.0", optional = true}
 pytest-sugar = {version = ">=1.1.1,<2.0.0", optional = true}
+pytest-xdist = {version = ">=3.8.0,<4.0.0", optional = true}
 ruff = {version = ">=0.15.22,<0.16.0", optional = true}
 types-python-dateutil = {version = ">=2.9.0.20260807,<3.0.0.0", optional = true}
 types-requests = {version = ">=2.33.0.20260712,<3.0.0.0", optional = true}
 
 [package.extras]
-dev = ["deptry (>=0.25.1,<0.26.0)", "django-browser-reload (>=1.21.0,<2.0.0)", "django-debug-toolbar (>=6.3.0,<7.0.0)", "django-debug-toolbar-template-profiler (>=2.1.0,<3.0.0)", "django-extensions (>=4.1,<5.0)", "django-model-info (>=2026.3.1,<2027.0.0)", "django-stubs (>=6.0.9,<7.0.0)", "django-watchfiles (>=1.4.0,<2.0.0)", "djangorestframework-stubs (>=3.17.1,<4.0.0)", "djlint (>=1.44.2,<2.0.0)", "invoke (>=3.0.3,<4.0.0)", "ipython (>=9.16.1,<10.0.0)", "mypy (>=2.3.0,<3.0.0)", "pre-commit (>=4.6.1,<5.0.0)", "ruff (>=0.15.22,<0.16.0)", "types-python-dateutil (>=2.9.0.20260807,<3.0.0.0)", "types-requests (>=2.33.0.20260712,<3.0.0.0)"]
-test = ["beautifulsoup4 (>=4.15.0,<5.0.0)", "coverage (>=7.15.4,<8.0.0)", "django-coverage-plugin (>=3.2.2,<4.0.0)", "factory-boy (>=3.3.3,<4.0.0)", "pytest (>=9.1.1,<10.0.0)", "pytest-cov (>=7.1.0,<8.0.0)", "pytest-django (>=4.13.0,<5.0.0)", "pytest-env (>=1.7.0,<2.0.0)", "pytest-playwright (>=0.9.0,<0.10.0)", "pytest-sugar (>=1.1.1,<2.0.0)"]
+dev = ["deptry (>=0.25.1,<0.26.0)", "django-browser-reload (>=1.21.0,<2.0.0)", "django-debug-toolbar (>=6.3.0,<7.0.0)", "django-debug-toolbar-template-profiler (>=2.1.0,<3.0.0)", "django-extensions (>=4.1,<5.0)", "django-model-info (>=2026.3.1,<2027.0.0)", "django-stubs (>=6.1.0,<7.0.0)", "django-watchfiles (>=1.4.0,<2.0.0)", "djangorestframework-stubs (>=3.18.0,<4.0.0)", "djlint (>=1.44.2,<2.0.0)", "invoke (>=3.0.3,<4.0.0)", "ipython (>=9.16.1,<10.0.0)", "mypy (>=2.3.0,<3.0.0)", "pre-commit (>=4.6.2,<5.0.0)", "ruff (>=0.15.22,<0.16.0)", "types-python-dateutil (>=2.9.0.20260807,<3.0.0.0)", "types-requests (>=2.33.0.20260712,<3.0.0.0)"]
+test = ["beautifulsoup4 (>=4.15.0,<5.0.0)", "coverage (>=7.15.4,<8.0.0)", "django-coverage-plugin (>=3.2.2,<4.0.0)", "factory-boy (>=3.3.3,<4.0.0)", "pytest (>=9.1.1,<10.0.0)", "pytest-cov (>=7.1.0,<8.0.0)", "pytest-django (>=4.14.0,<5.0.0)", "pytest-env (>=1.7.0,<2.0.0)", "pytest-playwright (>=0.9.0,<0.10.0)", "pytest-sugar (>=1.1.1,<2.0.0)", "pytest-xdist (>=3.8.0,<4.0.0)"]
 
 [package.source]
 type = "git"
 url = "https://github.com/django-mvp/shared.git"
-reference = "v0.3.3"
-resolved_reference = "ac41005aabb043f80fc8cce21b6f274cf60c858d"
+reference = "v0.4.1"
+resolved_reference = "3e3c6400385ad270778ddbd6bc42bc13212aa018"
 
 [[package]]
 name = "mypy"
@@ -5412,6 +5428,27 @@ termcolor = ">=2.1.0"
 
 [package.extras]
 dev = ["black", "flake8", "pre-commit"]
+
+[[package]]
+name = "pytest-xdist"
+version = "3.8.0"
+description = "pytest xdist plugin for distributed testing, most importantly across multiple CPUs"
+optional = false
+python-versions = ">=3.9"
+groups = ["test"]
+files = [
+    {file = "pytest_xdist-3.8.0-py3-none-any.whl", hash = "sha256:202ca578cfeb7370784a8c33d6d05bc6e13b4f25b5053c30a152269fd10f0b88"},
+    {file = "pytest_xdist-3.8.0.tar.gz", hash = "sha256:7e578125ec9bc6050861aa93f2d59f1d8d085595d6551c2c90b6f4fad8d3a9f1"},
+]
+
+[package.dependencies]
+execnet = ">=2.1"
+pytest = ">=7.0.0"
+
+[package.extras]
+psutil = ["psutil (>=3.0)"]
+setproctitle = ["setproctitle"]
+testing = ["filelock"]
 
 [[package]]
 name = "python-crontab"
@@ -7475,4 +7512,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<4.0"
-content-hash = "5be7429f5fee65f86459836c8275235cde9bfc75e66cfe1ad346890f4676f202"
+content-hash = "8c44a458abd413626285251c5a482511cd4dbaeae7522e9d7ba8b92b4b97537d"
