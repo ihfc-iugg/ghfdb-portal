@@ -47,14 +47,41 @@ column names return the same facts.
 
 Serves G2.
 
-### R3 — The spreadsheet round trip
+### R3 — A published release read into the portal
 
-*Delivered · needs verification · advances G2, G3*
+*feature · advances G2, G3*
 
-Files in the community upload template and in the release format can be read into the portal, and
-the portal's data can be written back out in the release format.
+A file in the format a published release is distributed in can be read into the portal, landing as
+one dataset for each publication that reported the data, with the literature attached. A file the
+portal cannot read in full is refused rather than partly written, and what failed is reported by row
+and column so it can be corrected at source.
 
-Serves G2 and G3.
+Serves G2 and G3. Out of scope: the community upload template, which arrives with R6.
+
+*This was the round trip, covering both directions and both spreadsheets. It was recorded as
+delivered until an audit in August 2026 read the published release against the code and found that
+nothing could read it: the release is a comma-separated file with one header row, and both
+importers read a spreadsheet with its headers on the sixth. Writing a release out is now R17, and
+the community upload template belongs to R6.*
+
+### R17 — The portal's data written back out as a release
+
+*feature · advances G2*
+
+The portal's own data can be written out in the format a published release is distributed in, so
+that what the portal holds can be submitted, shared, or compared against the release it came from.
+
+**Deliverables:**
+
+- Every published column written under its published name, in the published order, and no column
+  that is not part of the format.
+- Confirmation that a release exported after an import carries the same data as the release that
+  went in.
+- A settled answer to which spelling of the published column vocabulary is canonical, which is what
+  the half-finished column work of #122 is waiting on.
+
+Serves G2. Positioned here because it is the other half of R3; the number is later only because
+numbers are allocated in order of creation and never reused.
 
 ### R4 — Quality computed from what the portal holds
 
@@ -83,8 +110,10 @@ seeding and everything after it arrives dataset by dataset.
 - The correct literature attached to each record, resolved against existing bibliographic records
   where they already exist.
 - A record of what was skipped or rejected and why, in a form a curator can act on.
-- Confirmation that a release exported after the import carries the same data as the release that
-  went in.
+
+Confirming that a release exported after the import matches the one that went in was a deliverable
+here until August 2026. It moved to R17, because it cannot be demonstrated until the portal can
+write a release out.
 
 Serves G3. Out of scope: any change to the published structure, and any user-facing upload path.
 

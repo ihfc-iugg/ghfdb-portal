@@ -276,3 +276,56 @@ The synchronous XLSX export path is currently validated for up to approximately 
 
 - `GHFDBExportResource.get_queryset()` should remain memory-conscious and avoid materializing full result sets eagerly.
 - For exports beyond the tested synchronous limit, move the job to a background task (deferred to a future specification).
+
+## Release format: read, discarded and refused columns
+
+A published release file's header is checked against the same column definitions the row reader
+consults, held in `project/ghfdb/constants.py` as the single place both agree on. Every column the
+release format defines falls into exactly one of three groups.
+
+`GHFDBReleaseCSVFormat` reads the file: one header row, one row per determination.
+`GHFDBReleaseImportResource` checks it and turns each row into its records.
+
+### Read
+
+The value is consulted and stored:
+
+```text
+Continent Country Domain ID ID_parent Region T_corr_bottom T_corr_top T_grad_mean
+T_grad_mean_cor T_grad_uncertainty T_grad_uncertainty_cor T_method_bottom T_method_top T_number
+T_shutin_bottom T_shutin_top c_comment corr_CONV_flag corr_E_flag corr_HP_flag corr_HR_flag
+corr_IS_flag corr_PAL_flag corr_SUR_flag corr_S_flag corr_TOPO_flag corr_T_flag elevation
+environment expedition explo_method explo_purpose geo_lithology geo_stratigraphy lat_NS long_EW
+name p_comment probe_length probe_penetration probe_tilt probe_type publication_reference q
+q_bottom q_date q_method q_top q_uncertainty qc qc_uncertainty relevant_child tc_location tc_mean
+tc_method tc_number tc_pT_conditions tc_pT_function tc_saturation tc_source tc_strategy
+tc_uncertainty total_depth_MD total_depth_TVD water_temperature
+```
+
+### Recognised and discarded
+
+Part of the format, and never a reason to refuse the file, but no value is stored from it:
+
+```text
+Quality_Code Ref_IGSN Review_date Review_status Reviewer_comment Reviewer_name Year data_reference
+quality_child quality_parent
+```
+
+`quality_parent`, `quality_child` and `Quality_Code` are quality codes computed by the portal, never
+ingested. `Reviewer_name`, `Reviewer_comment`, `Review_date` and `Review_status` belong to the
+assessment team's own working process. `Ref_IGSN` and `data_reference` have no field anywhere in the
+portal's schema to be read into. `Year` is read at import time, to decide which publication's
+dataset a site's determinations belong to, but that comparison is not itself a stored field.
+
+### Refused
+
+Two published names are distributed misspelled. A file carrying either is refused outright, naming
+the outdated form and the correct one:
+
+```text
+Ref_ISGN tc_pT_fuction
+```
+
+A row value refused for a column that can carry several values at once — exploration purpose or
+the calculation method, for instance — raises `ColumnValueError`, which reports each failing column
+on its own rather than folding them into one message.

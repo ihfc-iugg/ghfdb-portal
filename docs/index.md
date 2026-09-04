@@ -68,6 +68,7 @@ acknowledgements
 :caption: Guides
 
 guides/introduction
+guides/importing-data
 guides/map-exploration/index
 :::
 

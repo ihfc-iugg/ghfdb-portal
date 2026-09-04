@@ -15,9 +15,11 @@ References:
     - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
 """
 
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter
 from django.contrib.auth import get_permission_codename
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import XLSX
@@ -30,6 +32,8 @@ from .resources import (
     GHFDBExportResource,
     GHFDBImportFormat,
     GHFDBParentImportResource,
+    GHFDBReleaseCSVFormat,
+    GHFDBReleaseImportResource,
     GHFDBSimpleImportFormat,
 )
 
@@ -181,10 +185,55 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
     # --- Import configuration -------------------------------------------------------
 
     def get_import_resource_classes(self, request):
-        return [GHFDBChildImportResource]
+        """D21: the release resource is attached here, alongside the
+        existing contributor-template reader - a release row carries both
+        the site and the determination halves, so the determination
+        changelist is where it belongs (plan.md, 'Where it is
+        registered'). This is what makes US-1's guarantee reachable at
+        all (T030)."""
+        return [GHFDBChildImportResource, GHFDBReleaseImportResource]
 
     def get_import_formats(self):
-        return [GHFDBImportFormat, GHFDBSimpleImportFormat]
+        return [GHFDBImportFormat, GHFDBSimpleImportFormat, GHFDBReleaseCSVFormat]
+
+    def get_import_data_kwargs(self, **kwargs):
+        """T025, T026, D9: roll back the confirmed pass in full when any
+        row is refused. The library's own default
+        (``rollback_on_validation_errors=False``) commits the valid rows
+        and skips only the refused ones (R5) - the opposite of what the
+        specification requires. This reaches every resource registered
+        on this changelist, including the contributor template's reader,
+        which is intended (plan.md, 'Where it is registered')."""
+        kwargs = super().get_import_data_kwargs(**kwargs)
+        kwargs["rollback_on_validation_errors"] = True
+        return kwargs
+
+    def process_result(self, result, request):
+        """T028, T029, D9: the confirmed pass's result is checked before
+        anything is reported as done. The library's own
+        ``process_result`` reports success unconditionally, without
+        inspecting the result it was given (R5) - so a refused import,
+        already rolled back to nothing by ``get_import_data_kwargs``
+        above, would still tell the curator it succeeded."""
+        if result.has_errors() or result.has_validation_errors():
+            self._add_import_failure_message(request)
+            app_label, model_name = self.get_model_info()
+            url = reverse(
+                f"admin:{app_label}_{model_name}_changelist",
+                current_app=self.admin_site.name,
+            )
+            return HttpResponseRedirect(url)
+        return super().process_result(result, request)
+
+    def _add_import_failure_message(self, request):
+        messages.error(
+            request,
+            _(
+                "Import of %(name)s was refused: the file contained one or "
+                "more refused values, so nothing was written."
+            )
+            % {"name": self.model._meta.verbose_name_plural},
+        )
 
     # --- Export configuration ---------------------------------------------------
 

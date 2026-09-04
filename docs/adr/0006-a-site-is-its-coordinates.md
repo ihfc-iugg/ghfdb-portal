@@ -1,6 +1,9 @@
 # ADR 0006 — A heat flow site is identified by its coordinates
 
-**Status:** accepted
+**Status:** accepted for the contributor upload template. Narrowed by
+[ADR 0016](0016-a-release-identifies-a-site-by-its-published-identifier.md), which identifies a
+site by its published site identifier when a release is imported. The text below is unchanged and
+describes the template path.
 
 ## Decision
 

@@ -19,6 +19,8 @@ References:
     - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
 """
 
+import re
+
 from django.core.exceptions import ValidationError
 from django.db.models.functions import Lower
 from django.utils.translation import gettext_lazy as _
@@ -61,6 +63,37 @@ def normalize_vocab_token(raw: str) -> str:
     return raw.strip("[]").lower()
 
 
+_TRAILING_PARENTHETICAL = re.compile(r"\s*\([^()]*\)\s*$")
+
+
+class ColumnValueError(ValueError):
+    """One or more column failures on a related-record widget (T081-T084).
+
+    A ``ValueError``, not a ``ValidationError``, matching every other widget in
+    this codebase (R6, D24). ``column_errors`` carries the per-column detail so
+    a caller that wants it (``import_instance``'s pre-check) can report each
+    column separately rather than reparsing the combined message.
+    """
+
+    def __init__(self, column_errors: dict):
+        super().__init__(
+            "; ".join(f"{column}: {error}" for column, error in column_errors.items())
+        )
+        self.column_errors = column_errors
+
+
+def _without_trailing_parenthetical(token: str) -> str:
+    """A term some published values carry a trailing annotation for that the
+    portal's own vocabulary label does not - the real 2024 release gives
+    ``tc_strategy`` the value 'random or periodic depth sampling (number)'
+    against the portal's term 'random or periodic depth sampling'. Only
+    tried once a token has already failed to match as given, so a term
+    whose own label genuinely includes a parenthetical qualifier ('onshore
+    (continental)') matches on the first attempt and never reaches this.
+    """
+    return _TRAILING_PARENTHETICAL.sub("", token).strip()
+
+
 # ---------------------------------------------------------------------------
 # Leaf Widgets
 # ---------------------------------------------------------------------------
@@ -94,6 +127,9 @@ class ConceptWidget(CharWidget):
             return None
         normalised = normalize_vocab_token(val)
         result = self.label_to_key.get(normalised) or self.key_to_key.get(normalised)
+        if result is None:
+            fallback = _without_trailing_parenthetical(normalised)
+            result = self.label_to_key.get(fallback) or self.key_to_key.get(fallback)
         if result is None:
             raise ValueError(
                 _(
@@ -133,13 +169,23 @@ class MultiConceptWidget(ManyToManyWidget):
         if not pairs:
             return self.queryset.none()
         # Validate using normalised forms; report original tokens in error messages
-        normalised = [norm for _, norm in pairs]
         choices_set = set(
             _case_insensitive_qs(self._vocab_class, field="label").values_list(
                 "ilabel", flat=True
             )
         )
-        invalid_originals = [orig for orig, norm in pairs if norm not in choices_set]
+        # A term unmatched as given falls back to its form without a
+        # trailing parenthetical annotation (_without_trailing_parenthetical) -
+        # the same tolerance ``ConceptWidget`` gives a single-valued column.
+        resolved = []
+        for orig, norm in pairs:
+            if norm not in choices_set:
+                fallback = _without_trailing_parenthetical(norm)
+                if fallback != norm and fallback in choices_set:
+                    norm = fallback
+            resolved.append((orig, norm))
+        normalised = [norm for _, norm in resolved]
+        invalid_originals = [orig for orig, norm in resolved if norm not in choices_set]
         if invalid_originals:
             raise ValueError(
                 _(
@@ -264,6 +310,7 @@ class RelatedModelWidget(Widget):
                     return None
 
         model_kwargs = {}
+        errors = {}
         for model_field, row_col in self.scalar_map.items():
             raw = (row or {}).get(row_col, "") or ""
             col_widget = self.widget_map.get(row_col)
@@ -271,28 +318,57 @@ class RelatedModelWidget(Widget):
                 try:
                     model_kwargs[model_field] = col_widget.clean(raw, row=row)
                 except (ValueError, ValidationError) as exc:
-                    raise ValueError(
-                        _("%(model)s: %(err)s")
-                        % {"model": self.model.__name__, "err": str(exc)}
-                    ) from exc
+                    errors[row_col] = ValidationError(
+                        _("Column '%(col)s': %(err)s")
+                        % {"col": row_col, "err": str(exc)},
+                        code="invalid",
+                    )
             else:
                 model_kwargs[model_field] = raw or None
+
+        # T081, T082: a many-valued vocabulary value is validated here too,
+        # before any record is built, so a row carrying one never reaches
+        # ``save()`` for this related record - the same "refused before
+        # anything is written" shape the interval and site disagreement
+        # checks already give a row (D9). ``set_m2m_relations`` applies the
+        # same widgets again, once the instance is saved.
+        for row_col, m2m_widget in self.m2m_map.values():
+            raw = (row or {}).get(row_col, "") or ""
+            if not raw:
+                continue
+            try:
+                m2m_widget.clean(raw, row=row)
+            except (ValueError, ValidationError) as exc:
+                errors[row_col] = ValidationError(str(exc), code="invalid")
+
+        if errors:
+            raise ColumnValueError(errors)
 
         return self.model(**model_kwargs)  # UNSAVED
 
     def set_m2m_relations(self, instance):
-        """Set M2M relationships on an already-saved instance using the last cleaned row."""
+        """Set M2M relationships on an already-saved instance using the last
+        cleaned row (T081, T082, D11). A many-valued vocabulary value
+        matching no term is refused and reported, the same as a
+        single-valued column already is - checking continues past a
+        failure so every disagreeing column in the call is reported
+        together (FR-009), rather than stopping at the first."""
         if instance is None or instance.pk is None or self._last_row is None:
             return
+        errors = {}
         for model_field, (row_col, m2m_widget) in self.m2m_map.items():
             raw = self._last_row.get(row_col, "")
-            if raw:
-                try:
-                    qs = m2m_widget.clean(raw, row=self._last_row)
-                    if qs is not None:
-                        getattr(instance, model_field).set(qs)
-                except (ValueError, ValidationError):
-                    pass  # M2M errors are non-fatal during set_m2m_relations
+            if not raw:
+                continue
+            try:
+                qs = m2m_widget.clean(raw, row=self._last_row)
+            except (ValueError, ValidationError) as exc:
+                errors[row_col] = ValidationError(str(exc), code="invalid")
+                continue
+            if qs is not None:
+                getattr(instance, model_field).set(qs)
+        if errors:
+            raise ColumnValueError(errors)
 
 
 class ParentWidget(RelatedModelWidget):
@@ -302,15 +378,24 @@ class ParentWidget(RelatedModelWidget):
     Also attaches an unsaved Point (x=long_EW, y=lat_NS) to the site's
     location attribute.  The resource is responsible for saving both the
     Point and the site (after assigning a dataset FK).
+
+    ``name_is_sentinel`` decides what a row with no site name means. The
+    contributor template identifies a site by its coordinates, so a row
+    that names no site describes no site and the widget yields nothing.
+    A published release identifies a site by its published identifier
+    instead, so a row still describes a site whether or not it names one:
+    that reader passes ``name_is_sentinel=False`` and gets the site with
+    every other column the row supplies, and an empty name.
     """
 
-    def __init__(self):
+    def __init__(self, name_is_sentinel=True):
         from heat_flow import vocabularies
         from heat_flow.models import HeatFlowSite
 
+        self.name_is_sentinel = name_is_sentinel
         super().__init__(
             model=HeatFlowSite,
-            sentinel_column="name",
+            sentinel_column="name" if name_is_sentinel else None,
             scalar_map={
                 "name": "name",
                 "environment": "environment",
@@ -344,10 +429,10 @@ class ParentWidget(RelatedModelWidget):
 
     def clean(self, value, row=None, **kwargs):
         self._last_row = row
-        raw_name = (row or {}).get("name")
+        row = row or {}
+        raw_name = row.get("name")
         try:
-            if not (raw_name or "").strip():
-                return None
+            has_name = bool((raw_name or "").strip())
         except AttributeError:
             raise ValueError(
                 _(
@@ -356,14 +441,45 @@ class ParentWidget(RelatedModelWidget):
                 % {"val": raw_name}
             ) from None
 
+        if self.name_is_sentinel and not has_name:
+            return None
+
         from fairdm.contrib.location.models import Point
 
-        lat = float((row or {}).get("lat_NS", 0) or 0)
-        lng = float((row or {}).get("long_EW", 0) or 0)
+        # The coordinates are parsed here rather than left to whoever
+        # assigns the location later, so a coordinate that is not a number
+        # is reported against its own column alongside the row's other
+        # column faults, and the row is refused before anything is saved.
+        errors = {}
+        coordinates = {}
+        for column in ("lat_NS", "long_EW"):
+            raw = row.get(column, "")
+            try:
+                coordinates[column] = float(raw or 0)
+            except (TypeError, ValueError):
+                errors[column] = ValidationError(
+                    _("Column '%(col)s' contains %(val)r, which is not a coordinate.")
+                    % {"col": column, "val": raw},
+                    code="invalid",
+                )
 
-        instance = super().clean(value, row=row, **kwargs)
+        try:
+            instance = super().clean(value, row=row, **kwargs)
+        except ColumnValueError as exc:
+            errors.update(exc.column_errors)
+            instance = None
+
+        if errors:
+            raise ColumnValueError(errors)
+
         if instance is not None:
-            instance.location = Point(x=lng, y=lat)
+            if not has_name:
+                # A release row may name no site, and the name is stored
+                # exactly as the file gives it - here, empty. The scalar
+                # reader turns a blank column into None, which this field
+                # does not hold.
+                instance.name = ""
+            instance.location = Point(x=coordinates["long_EW"], y=coordinates["lat_NS"])
         return instance  # UNSAVED (Point also unsaved)
 
 
