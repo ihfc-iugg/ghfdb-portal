@@ -56,7 +56,7 @@ numpy = "^2.5.2"
 fairdm-docs = { git = "https://github.com/FAIR-DM/fairdm-docs", extras = [
     "sphinx-book-theme",
 ] }
-sphinxcontrib-mermaid = "^1.0"
+sphinxcontrib-mermaid = "^2.1"
 
 [tool.forge.conformance]
 # The subject of these tests is docs/ghfdb_fields.md and the built documentation,
