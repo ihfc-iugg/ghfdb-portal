@@ -99,6 +99,10 @@ metadata attached, and that `relevant_child` names the ones the parent value cam
 
 ### User Story 4 - A file the portal cannot absorb is refused whole (Priority: P1)
 
+**Refined 2026-09-11**: this story now also closes #190. The guarantee below is declared today as
+`rollback_on_validation_errors` inside a resource `Meta`, which is not a place the import library
+reads, so nothing enforces it. The story fixes the declaration as part of making the guarantee real.
+
 The import either lands completely or changes nothing. A file is refused before anything is written
 when it carries a failure the portal genuinely cannot absorb: a header that is not the official one,
 a value the model cannot store, or a mandatory model field left empty. Every fault is reported by
@@ -118,6 +122,8 @@ untouched afterwards and the report names every faulty row and column, not just 
    what it held before the import.
 3. **Given** a file with no faults, **When** it is imported, **Then** nothing is reported and every
    row lands.
+4. **Given** the rollback behaviour is reinstated to how it was declared before #190 was fixed,
+   **When** the test suite runs, **Then** it fails, so the guarantee is proven rather than assumed.
 
 ---
 
@@ -207,6 +213,8 @@ duplicating anything.
   them.
 - **FR-017**: The test suite MUST read an unmodified copy of the official template, not a hand-built
   approximation of it.
+- **FR-018**: The all-or-nothing guarantee MUST be enforced by something the import library actually
+  reads, and a test MUST fail if that enforcement is removed (#190).
 
 ### Key Entities
 
@@ -266,7 +274,8 @@ Questions raised by the ambiguity scan, answered from the agreed feature stateme
   that no longer matches rather than by a version.
 - Until a completed real file is available, the empty official template at
   `docs/constitution/references/data_upload_template.xlsx` is what the work is built against.
-- The all-or-nothing refusal depends on the rollback defect in #190 being fixed.
+- The all-or-nothing refusal depends on the rollback defect in #190, which US-4 now fixes rather than
+  waits on (Sam, 2026-09-11).
 - Nothing in this feature has a person clicking anything. The upload page, the readable validation
   result and everything about who may import belong to R6's other half and to R7.
 - Reading a published release in is not part of this or any feature. The data assessment team
