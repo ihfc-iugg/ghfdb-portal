@@ -21,6 +21,7 @@ The domain vocabulary these records use is defined in `CONTEXT.md` at the reposi
 | [0007](0007-the-portal-database-holds-current-state.md) | The portal database holds current state; releases are artefacts |
 | [0008](0008-one-constitution-one-glossary.md) | One constitution, one glossary, each with a single home |
 | [0009](0009-the-project-is-mit-licensed.md) | The project is MIT licensed |
+| [0010](0010-the-release-import-direction-ends.md) | Reading a published release into the portal is not a direction the project takes |
 
 :::{toctree}
 :hidden:
