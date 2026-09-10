@@ -3,7 +3,7 @@
   "feature": "004-import-upload-template",
   "branch": "004-import-upload-template",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "DESIGN_REVIEW",
+  "state": "IMPLEMENT",
   "state_history": [
     {
       "state": "PLAN",
@@ -14,6 +14,11 @@
       "state": "DESIGN_REVIEW",
       "at": "2026-09-10T22:40:39Z",
       "note": "plan and tasks authored; reviewer dispatched"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-09-10T22:58:09Z",
+      "note": "design review closed one round, three findings folded; plan notification sent"
     }
   ],
   "gates": {
@@ -28,8 +33,8 @@
       ]
     },
     "plan": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "notified",
+      "at": "2026-09-10T22:58:06Z"
     },
     "merge": {
       "approved_by": null,
