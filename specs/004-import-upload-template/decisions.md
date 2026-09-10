@@ -68,3 +68,37 @@ R3 and R5 are struck through, with an ADR recording that the data assessment tea
 import direction. R6 gains a note that this feature delivers its programmatic half and the page
 follows separately. Recorded here because they are decisions this run took, and they land on this
 branch.
+
+## D6 — Three design-review findings, all verified and folded into the plan
+
+The design review ran before any code was written, across compliance, security and architecture. It
+returned three blocking findings, each checked against the code before being accepted.
+
+**DR-001, critical.** The plan claimed `ConceptWidget.clean` and `MultiConceptWidget.clean` were the
+only places a vocabulary value is interpreted. They are not. Every many-valued vocabulary column
+reaches `MultiConceptWidget.clean` through `RelatedModelWidget.set_m2m_relations`, which wraps it in
+`except (ValueError, ValidationError): pass` (`resources/widgets.py:294-295`). Thirteen of the
+template's controlled-vocabulary columns take that path, so an unrecognised concept in any of them is
+discarded and the relation left unset rather than refusing the file. Confirmed in the code. The
+swallow is now T028a, and T028b requires the rule's test to use one of those thirteen columns, since
+a test written against a single-valued column would have passed over the top of the defect.
+
+**DR-002, high.** `rollback_on_validation_errors` only adds rollback on *validation* errors, and
+those come from `Model.full_clean()` only when `Meta.clean_model_instances` is true, which defaults
+to false and is set nowhere here. Row errors already roll back without the flag
+(`import_export/resources.py:851-855`). So FR-011's fourth fault type, an empty mandatory model
+field, had no path to a located fault: it would either write or raise a bare `IntegrityError` naming
+no column. Confirmed against the installed library. `clean_model_instances = True` joins T022, and
+T026a covers the case.
+
+**DR-003, high.** The child natural key is built from `lat_NS`, `long_EW`, `q_top`, `q_bottom` and
+`publication_reference` (`child.py:361-370`), so a resubmitted file correcting a depth interval no
+longer matches its own earlier row and writes a second determination. Confirmed in the code. T034 now
+names `q_top`/`q_bottom` as the field the test changes, rather than leaving "one changed value" to
+chance.
+
+All three remove uncertainty rather than adding architecture, which is the only kind of finding this
+stage is meant to produce.
+
+**ADR:** none — these are corrections to a plan before it was built, and the durable decisions they
+touch are already covered by D1 and by the stories themselves.

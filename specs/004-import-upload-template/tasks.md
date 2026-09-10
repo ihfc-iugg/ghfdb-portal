@@ -61,7 +61,10 @@ the stated reason before the change and passes after, and the class it belongs t
 - **T021** Test: with the rollback declared as it is today, a file with a late fault leaves rows
   written. This is the reproduction of #190 and must fail before the fix.
 - **T022** Pass `rollback_on_validation_errors` as the `import_data()` argument it is, from the entry
-  point, and remove the declaration from both resources' `Meta`. T021 goes green.
+  point, and remove the declaration from both resources' `Meta`. Set `clean_model_instances = True`
+  on both resources' `Meta` in the same change: without it `result.has_validation_errors()` is never
+  populated, so the flag being passed correctly still enforces nothing beyond what row errors already
+  roll back. T021 goes green.
 - **T023** Test: reinstating the `Meta` form makes the suite fail, so the guarantee is guarded rather
   than assumed.
 - **T024** Test: a file with faults on two widely separated rows reports both, each naming its row
@@ -69,12 +72,24 @@ the stated reason before the change and passes after, and the class it belongs t
 - **T025** Run the whole pass in dry-run, gather every row error, and commit only when there are
   none. T024 goes green.
 - **T026** Test: a clean file imports with nothing reported and every row landed.
+- **T026a** Test: a row with an empty mandatory model field produces a fault naming its row and
+  column, in a translated message, and refuses the whole file. This is FR-011's fourth fault type,
+  and it is the one with no enforcement path before T022 adds `clean_model_instances`.
 
 ## US-5 — The portal's vocabularies decide (#204)
 
 - **T027** Test: a value the portal holds no concept for refuses the file, naming row, column and
   value.
 - **T028** Make T027 pass in `ConceptWidget.clean` and `MultiConceptWidget.clean`.
+- **T028a** Remove or narrow the `except (ValueError, ValidationError): pass` in
+  `RelatedModelWidget.set_m2m_relations` (`resources/widgets.py:294-295`). Every many-valued
+  vocabulary column reaches `MultiConceptWidget.clean` through it, so an unrecognised concept in any
+  of thirteen columns is currently discarded and the relation left unset instead of refusing the
+  file. `set_m2m_relations` runs after the row is saved, inside the transaction, so the fault has to
+  be recorded where the resource checks it before committing rather than raised into nothing.
+- **T028b** Test T027's rule again using one of the thirteen many-valued columns — `geo_lithology`,
+  `tc_method` or a sibling — never `environment` or another single-valued column. A test written
+  against a single-valued column passes while the defect ships.
 - **T029** Test: a value the template's own vocabulary sheet lists, which the portal does not hold,
   is still refused. This is the rule stated backwards on purpose, and it is the one most likely to be
   implemented the wrong way round.
@@ -86,9 +101,14 @@ the stated reason before the change and passes after, and the class it belongs t
 - **T032** Test: importing the same file twice leaves site and determination counts unchanged.
 - **T033** Make T032 pass. Template rows carry no `ID_parent`, so confirm the coordinate fallback in
   `import_id_fields` matches rather than inserting.
-- **T034** Test: a file identical except for one changed value updates that value in place and
-  duplicates nothing.
-- **T035** Make T034 pass.
+- **T034** Test: a file identical except for a changed `q_top` or `q_bottom` updates the
+  determination in place and duplicates nothing. The changed field is named deliberately: the child
+  natural key is built from `lat_NS`, `long_EW`, `q_top`, `q_bottom` and `publication_reference`
+  (`child.py:361-370`), so a depth-interval correction — the most plausible real one — currently
+  fails to match its own earlier row and writes a second determination. A test that changed `qc`
+  instead would pass over the top of that.
+- **T035** Make T034 pass. Whether the answer is a narrower natural key or something else is this
+  story's decision to take, and it goes in `decisions.md` with its reasoning.
 
 ## Documentation
 

@@ -3,12 +3,17 @@
   "feature": "004-import-upload-template",
   "branch": "004-import-upload-template",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "PLAN",
+  "state": "DESIGN_REVIEW",
   "state_history": [
     {
       "state": "PLAN",
       "at": "2026-09-10T22:39:34Z",
       "note": "plan and tasks authored"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-09-10T22:40:39Z",
+      "note": "plan and tasks authored; reviewer dispatched"
     }
   ],
   "gates": {
@@ -29,6 +34,15 @@
     "merge": {
       "approved_by": null,
       "at": null
+    },
+    "design_review": {
+      "approved_by": "design review (three lenses), one round",
+      "at": "2026-09-10T22:51:23Z",
+      "self_resolved": [
+        "DR-001 critical: set_m2m_relations swallows concept errors for 13 many-valued vocabulary columns; T028a/T028b added",
+        "DR-002 high: clean_model_instances defaults False, so validation errors never populate; folded into T022, T026a added",
+        "DR-003 high: child natural key contains q_top/q_bottom, so a depth correction duplicates; T034 now names the field"
+      ]
     }
   },
   "stories": [
@@ -209,6 +223,11 @@
           "id": "T026",
           "status": "todo",
           "attempts": 0
+        },
+        {
+          "id": "T026a",
+          "status": "todo",
+          "attempts": 0
         }
       ]
     },
@@ -227,6 +246,16 @@
         },
         {
           "id": "T028",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T028a",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T028b",
           "status": "todo",
           "attempts": 0
         },
@@ -303,7 +332,7 @@
       "max": 1
     },
     "design_review_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 1
     },
     "tokens": {

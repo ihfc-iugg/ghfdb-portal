@@ -147,18 +147,53 @@ Collect faults for the whole file rather than raising on the first. `import-expo
 already carries per-row errors, so this is a matter of running the whole pass in dry-run, gathering
 `result.row_errors()`, and only committing when that is empty.
 
+**Row errors already roll back; validation errors do not.** `resources.py:851-855` rolls back on
+`result.has_errors()` regardless of the flag, so the flag's only effect is on
+`result.has_validation_errors()` — and that is populated from `Model.full_clean()` only when
+`Meta.clean_model_instances` is `True`, which defaults to `False` (`options.py:88`) and is set
+nowhere in this repository. FR-011's fourth fault type, an empty mandatory model field, therefore has
+no path to a located fault today: it either writes, or surfaces as a raw `IntegrityError` naming no
+column and passing through no translation. Both resources get `clean_model_instances = True`, and a
+test covers the empty-mandatory-field case specifically.
+
 ### US-5 — The portal's vocabularies decide
 
-`ConceptWidget.clean` and `MultiConceptWidget.clean` are the only places a vocabulary value is
-interpreted. Both must resolve against the portal's own concepts and raise a located fault when they
-cannot. Nothing anywhere may read the template's `controlled vocabulary` sheet, and a test asserts
-that the sheet is not consulted, using a value that sheet lists and the portal does not hold.
+There are **three** places a vocabulary value is interpreted, not two, and the third is where the
+rule currently fails.
+
+`ConceptWidget.clean` and `MultiConceptWidget.clean` both resolve against the portal's own concepts
+and raise when they cannot. That is correct today. But every many-valued vocabulary column reaches
+`MultiConceptWidget.clean` through `RelatedModelWidget.set_m2m_relations`
+(`resources/widgets.py:283-295`), which wraps the call in `except (ValueError, ValidationError):
+pass`. The exception never reaches `import_row`, so the row is not refused and the relation is left
+quietly unset. Thirteen of the template's controlled-vocabulary columns take that path:
+`explo_purpose`, `geo_lithology`, `geo_stratigraphy`, `T_method_top`, `T_method_bottom`,
+`T_corr_top`, `T_corr_bottom`, `tc_source`, `tc_location`, `tc_method`, `tc_saturation`,
+`tc_pT_conditions`, `tc_pT_function` and `tc_strategy`.
+
+The swallow has to go, or narrow to something that is genuinely not a fault. `set_m2m_relations`
+runs from `after_save_instance`, after the row is saved inside the transaction, so an unrecognised
+concept must be recorded as a row error the resource checks before committing rather than raised
+into the void.
+
+Nothing anywhere may read the template's `controlled vocabulary` sheet, and a test asserts that the
+sheet is not consulted, using a value that sheet lists and the portal does not hold. **That test
+uses one of the thirteen columns above**, not a single-valued one, because a test written against
+`environment` passes while the defect ships.
 
 ### US-6 — Repeat import updates in place
 
 Both resources declare `import_id_fields`. Parent keys on `ID_parent` with a documented fallback to
 the site's coordinates. Confirm the fallback holds for template rows, which carry no `ID_parent`, so
 a second import of the same file matches rather than inserting.
+
+**The child natural key contains the values a correction is most likely to change.**
+`child.py:361-370` builds it from `lat_NS`, `long_EW`, `q_top`, `q_bottom` and
+`publication_reference`. A resubmitted file that corrects a depth interval no longer matches its own
+earlier row, so `get_or_init_instance` falls through and writes a second determination under the
+same site. The changed-value test therefore changes `q_top` or `q_bottom` specifically. Whether the
+right answer is a narrower key or something else is a decision for the story, recorded in
+`decisions.md`.
 
 ## Sequencing
 
