@@ -10,6 +10,8 @@ assessment team actually fills in, not a hand-built approximation of it
 import filecmp
 from pathlib import Path
 
+from project.ghfdb.constants import CHILD_COLUMNS, META_FIELDS, PARENT_COLUMNS
+
 OFFICIAL_TEMPLATE_PATH = (
     Path(__file__).resolve().parents[2] / "fixtures" / "official_upload_template.xlsx"
 )
@@ -36,3 +38,36 @@ class TestOfficialUploadTemplateFixture:
 
     def test_fixture_opens_as_a_workbook(self, official_upload_template_workbook):
         assert "data list" in official_upload_template_workbook.sheetnames
+
+
+def _read_header_row(workbook):
+    """The template's Short Name row (row 6 of the ``data list`` sheet).
+
+    Column A carries the row's own label ("Short Name") rather than a
+    published column, so the real header starts at column B.
+    """
+    worksheet = workbook["data list"]
+    return [
+        cell.value
+        for cell in worksheet[6][1:]
+        if cell.value is not None
+    ]
+
+
+class TestTemplateColumnsMatchTheCanonicalConstants:
+    """T002: every column the official template carries must be recognised
+    by ``PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS`` — a column the
+    template carries that no constant covers is exactly the disagreement
+    FR-004 exists to catch."""
+
+    def test_every_template_column_resolves_to_a_canonical_constant(
+        self, official_upload_template_workbook
+    ):
+        header = _read_header_row(official_upload_template_workbook)
+        known = set(PARENT_COLUMNS) | set(CHILD_COLUMNS) | set(META_FIELDS)
+        resolved = {name for name in header if name in known}
+
+        assert resolved == set(header), (
+            "template columns not covered by PARENT_COLUMNS + CHILD_COLUMNS + "
+            f"META_FIELDS: {sorted(set(header) - resolved)}"
+        )
