@@ -359,3 +359,36 @@ class TestGHFDBTemplateRefusedWhole:
         assert not HeatFlowSite.objects.exists()
         assert not ParentHeatFlow.objects.exists()
         assert not HeatFlow.objects.exists()
+
+
+@pytest.mark.django_db
+class TestControlledVocabularyDecides:
+    """T027 — US-5/#204: the portal's own concepts decide what a controlled-
+    vocabulary column accepts, not the template's own vocabulary sheet."""
+
+    def test_an_unrecognised_vocabulary_value_names_row_column_and_value_and_refuses_the_file(
+        self, dataset
+    ):
+        """A single-valued controlled-vocabulary column (``environment``)
+        carrying a value the portal holds no concept for refuses the whole
+        file, and the fault names the row, the column and the unrecognised
+        value."""
+        from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        row1 = dict(ROW)
+        row1["environment"] = "not_a_real_value"
+
+        outcome = import_ghfdb_template(make_dataset(row1), dataset)
+
+        assert outcome.has_errors()
+        row_number, errors = outcome.parent.row_errors()[0]
+        assert row_number == 1
+        message = str(errors[0].error)
+        assert "environment" in message
+        assert "not_a_real_value" in message
+
+        assert not HeatFlowSite.objects.exists()
+        assert not ParentHeatFlow.objects.exists()
+        assert not HeatFlow.objects.exists()
