@@ -3,7 +3,7 @@
   "feature": "004-import-upload-template",
   "branch": "004-import-upload-template",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "REVIEW",
+  "state": "PR_READY",
   "state_history": [
     {
       "state": "PLAN",
@@ -34,6 +34,11 @@
       "state": "REVIEW",
       "at": "2026-09-11T18:00:38Z",
       "note": "two lenses dispatched: correctness and spec, plus security for the untrusted upload surface"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-09-11T18:45:54Z",
+      "note": "review returned four findings; three fixed with each test probed against the unfixed code, the fourth noted and left"
     }
   ],
   "gates": {
