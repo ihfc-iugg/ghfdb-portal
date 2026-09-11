@@ -524,3 +524,46 @@ class TestControlledVocabularyDecides:
         assert value in {
             label.lower() for label in child.method.values_list("label", flat=True)
         }
+
+    def test_the_import_never_opens_the_controlled_vocabulary_sheet(self, dataset):
+        """T031 — proven by sheet name, not by hoping: wraps the real
+        ``openpyxl.load_workbook()`` call the reader makes while importing
+        the real, unmodified template fixture, and records every sheet
+        name reached through ``Workbook.__getitem__``. A future change
+        that starts honouring the sheet fails here."""
+        from pathlib import Path
+        from unittest import mock
+
+        import openpyxl
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        accessed_sheets = []
+        real_load_workbook = openpyxl.load_workbook
+
+        class _TrackingWorkbook:
+            def __init__(self, wb):
+                self._wb = wb
+
+            def __getitem__(self, name):
+                accessed_sheets.append(name)
+                return self._wb[name]
+
+            def __getattr__(self, name):
+                return getattr(self._wb, name)
+
+        def _tracking_load_workbook(*args, **kwargs):
+            return _TrackingWorkbook(real_load_workbook(*args, **kwargs))
+
+        path = (
+            Path(__file__).resolve().parents[1]
+            / "fixtures"
+            / "official_upload_template.xlsx"
+        )
+        xlsx_bytes = path.read_bytes()
+
+        with mock.patch("openpyxl.load_workbook", side_effect=_tracking_load_workbook):
+            import_ghfdb_template(xlsx_bytes, dataset)
+
+        assert "data list" in accessed_sheets
+        assert "controlled vocabulary" not in accessed_sheets

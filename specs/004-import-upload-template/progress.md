@@ -940,4 +940,44 @@ real data.
 Next: T031 — assert nothing in the import path opens the template's
 "controlled vocabulary" sheet.
 
+## 2026-09-11 — US-5 · T031
+
+Did: added `test_the_import_never_opens_the_controlled_vocabulary_sheet`
+to `TestControlledVocabularyDecides`. Patches `openpyxl.load_workbook`
+(the exact name `GHFDBImportFormat.create_dataset` imports fresh on every
+call, so patching the `openpyxl` module attribute — not
+`project.ghfdb.resources.formats.load_workbook`, which does not exist as
+a module-level name — is what actually intercepts it) with a wrapper
+that returns the real workbook wrapped in a thin proxy recording every
+sheet name passed to `__getitem__`, then imports the real, unmodified
+`official_upload_template.xlsx` fixture through `import_ghfdb_template`.
+Asserts `"data list"` was accessed (the tracking actually engaged) and
+`"controlled vocabulary"` was not — proven by name, not by absence of a
+crash.
+
+Passed on first run, so probed per `craft-tdd`/D14: saved a pre-probe
+copy of `formats.py`, added one line inside `create_dataset()` —
+`wb["controlled vocabulary"]`, simulating a future change that starts
+honouring the sheet — and re-ran. Restored the pre-probe copy and
+confirmed a byte-clean diff before re-running the suite.
+
+Verified:
+- Probe (broken): `poetry run pytest
+  "tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides::test_the_import_never_opens_the_controlled_vocabulary_sheet"
+  -x -q` — 1 failed: `AssertionError: assert 'controlled vocabulary' not
+  in ['data list', 'controlled vocabulary']` — the right reason.
+- Restore: `diff` against the pre-probe copy of `formats.py` — no
+  differences.
+- Restored green: `poetry run pytest tests/test_ghfdb/test_importers.py
+  -q` — 13 passed.
+- Lint, scoped: `poetry run ruff check
+  tests/test_ghfdb/test_importers.py project/ghfdb/resources/formats.py`
+  and `poetry run ruff format --check` on the same two files — both
+  clean; `ruff format` (not `--check`) applied one reformat to the new
+  test's own body (blank-line spacing inside the nested class), reviewed
+  before committing.
+
+No decisions.md entry: FR-014 already states the rule; this proves it
+holds, it does not resolve an ambiguity.
+
 Next: full repo verify, then the completion report.
