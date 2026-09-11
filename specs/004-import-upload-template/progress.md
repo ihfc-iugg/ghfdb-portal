@@ -123,3 +123,47 @@ Verified:
 Next: T006 — refuse a file whose header isn't the template's.
 
 Watch: none.
+
+## 2026-09-11 — Implementer US-1 · T006
+
+Did: added `validate_official_header()` and `OFFICIAL_TEMPLATE_HEADER` to
+`constants.py`. Raises `ValueError` naming the header when it is not
+exactly `PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS +
+PORTAL_ADDITION_COLUMNS`. Pure — inspects only the header it is given, so a
+refusal happens before any row is read and before anything could be
+written.
+
+Deviation, recorded rather than silently assumed: the test's original
+"official header validates" case was wrong. The *currently distributed*
+template itself carries the two ADR 0003 misspellings
+(`tc_pT_fuction`, `Ref_ISGN`), so it is exactly the case ADR 0003 says must
+be refused, not accepted — proven when the first version of this test
+failed against the real fixture. `test_template_columns.py` now uses the
+real, currently-distributed template as the refusal case (asserting both
+misspellings are named), and a header built from the corrected spellings
+as the positive case.
+
+Verified:
+- Wrote the test importing `validate_official_header`/`OFFICIAL_TEMPLATE_HEADER`
+  before they existed; confirmed `ImportError` (right reason).
+- After implementing: `poetry run pytest
+  tests/test_ghfdb/test_resources/test_template_columns.py -v` — 7 passed.
+- Probed: a header missing one column from `OFFICIAL_TEMPLATE_HEADER` still
+  raises.
+- `poetry run pytest tests/test_ghfdb/ -q` (whole app, narrower than the
+  full repo suite but the widest scope touching these constants) — 261
+  passed, 13 xfailed, no change in the xfail set from before this story.
+
+Concern, not fixed (outside this story's file scope — constants.py and
+columns.py only): `validate_official_header()` is not wired into any import
+resource's `before_import` hook, so no actual upload attempt is refused by
+it yet. It is exercised directly at the reader level, matching spec.md's
+"Independent Test" framing for US-1. Wiring it into the resource pipeline
+is US-2/US-4's `importers.py` entry point (T013) or a dedicated task —
+flagging for Forge to route.
+
+Next: none — US-1 (T001-T006) complete. Full verify pending.
+
+Watch: the five pre-existing constants (`ID_parent`, `quality_parent`,
+`quality_child`, `Quality_Code_Child`, `Quality_Score_Parent`) and issue
+#122's half-landed BUG-010 work remain untouched, per decisions.md D7.
