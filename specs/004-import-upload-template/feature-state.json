@@ -68,7 +68,7 @@
               "tests/test_ghfdb/test_constants.py::TestOfficialUploadTemplateFixture"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_constants.py::TestOfficialUploadTemplateFixture -v \u2014 2 passed"
+              "poetry run pytest tests/test_ghfdb/test_constants.py::TestOfficialUploadTemplateFixture -v — 2 passed"
             ]
           }
         },
@@ -81,7 +81,7 @@
               "tests/test_ghfdb/test_constants.py::TestTemplateColumnsMatchTheCanonicalConstants"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_constants.py -v \u2014 3 passed"
+              "poetry run pytest tests/test_ghfdb/test_constants.py -v — 3 passed"
             ]
           }
         }
@@ -101,7 +101,7 @@
           "attempts": 1,
           "evidence": {
             "commands": [
-              "specs/004-import-upload-template/decisions.md D7 \u2014 the ten disagreements judged"
+              "specs/004-import-upload-template/decisions.md D7 — the ten disagreements judged"
             ]
           }
         },
@@ -114,8 +114,8 @@
               "tests/test_ghfdb/test_constants.py::TestTemplateColumnsMatchTheCanonicalConstants"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_constants.py -v \u2014 3 passed",
-              "poetry run pytest tests/test_ghfdb/test_resources/test_schema_coverage.py tests/test_ghfdb/test_resources/test_export.py tests/test_ghfdb/test_admin.py tests/test_ghfdb/test_columns.py -v \u2014 78 passed, 8 xfailed (unchanged)"
+              "poetry run pytest tests/test_ghfdb/test_constants.py -v — 3 passed",
+              "poetry run pytest tests/test_ghfdb/test_resources/test_schema_coverage.py tests/test_ghfdb/test_resources/test_export.py tests/test_ghfdb/test_admin.py tests/test_ghfdb/test_columns.py -v — 78 passed, 8 xfailed (unchanged)"
             ]
           }
         },
@@ -128,7 +128,7 @@
               "tests/test_ghfdb/test_constants.py::TestEveryTemplateColumnIsMappedOrAccepted"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_constants.py -v \u2014 4 passed"
+              "poetry run pytest tests/test_ghfdb/test_constants.py -v — 4 passed"
             ]
           }
         },
@@ -141,8 +141,8 @@
               "tests/test_ghfdb/test_constants.py::TestOfficialHeaderRefusal"
             ],
             "commands": [
-              "poetry run pytest tests/test_ghfdb/test_constants.py -v \u2014 7 passed",
-              "forge verify (independent, a782df0) \u2014 conformance/docs/lint/typecheck/test/build all green; 646 passed, 1 skipped, 13 xfailed"
+              "poetry run pytest tests/test_ghfdb/test_constants.py -v — 7 passed",
+              "forge verify (independent, a782df0) — conformance/docs/lint/typecheck/test/build all green; 646 passed, 1 skipped, 13 xfailed"
             ]
           }
         }
@@ -153,7 +153,7 @@
       "priority": "P1",
       "issue": 201,
       "worktree": null,
-      "status": "todo",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
@@ -249,6 +249,22 @@
             "commands": [
               "poetry run pytest tests/test_ghfdb/test_importers.py -v — 4 passed",
               "poetry run pytest tests/test_ghfdb/test_admin.py -q — 42 passed"
+            ]
+          }
+        },
+        {
+          "id": "TC01",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_parent_import.py",
+              "tests/test_ghfdb/test_resources/test_child_import.py"
+            ],
+            "commands": [
+              "poetry run pytest on both modules — 54 passed, 5 xfailed (37 pre-existing failures repaired by passing fairdm_dataset=dataset)",
+              "independent check: both modules parsed and compared as syntax trees against 713d8ae with the fairdm_dataset keyword stripped — identical, so no assertion, fixture or expected value changed",
+              "independent full verification at 5c2c19a — 656 passed, 1 skipped, 13 xfailed; lint, typecheck, structural and documentation checks and the package build all green"
             ]
           }
         }
