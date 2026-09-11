@@ -567,3 +567,75 @@ class TestControlledVocabularyDecides:
 
         assert "data list" in accessed_sheets
         assert "controlled vocabulary" not in accessed_sheets
+
+
+@pytest.mark.django_db
+class TestGHFDBTemplateRepeatImport:
+    """T032/T033 — US-6: re-importing a file the dataset already holds
+    updates what is there instead of duplicating it. The upload template
+    never carries ``ID`` or ``ID_parent`` columns, so both passes match
+    purely through the fallback each resource derives from the row — the
+    parent pass through site coordinates, the child pass through the
+    parent it resolves via those same coordinates."""
+
+    def test_reimporting_an_unchanged_file_leaves_counts_identical(self, dataset):
+        """FR-016: the same file imported twice produces the same number
+        of sites and determinations both times, not double the second
+        time."""
+        from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        row = {k: v for k, v in ROW.items() if k not in ("ID", "ID_parent")}
+        ds = make_dataset(row)
+
+        first = import_ghfdb_template(ds, dataset)
+        assert not first.has_errors(), (
+            first.parent.invalid_rows,
+            first.child.invalid_rows,
+        )
+        assert HeatFlowSite.objects.count() == 1
+        assert ParentHeatFlow.objects.count() == 1
+        assert HeatFlow.objects.count() == 1
+
+        second = import_ghfdb_template(make_dataset(row), dataset)
+        assert not second.has_errors(), (
+            second.parent.invalid_rows,
+            second.child.invalid_rows,
+        )
+        assert HeatFlowSite.objects.count() == 1
+        assert ParentHeatFlow.objects.count() == 1
+        assert HeatFlow.objects.count() == 1
+
+    def test_the_second_import_matches_the_existing_site_and_parent_rather_than_inserting(
+        self, dataset
+    ):
+        """The parent pass's coordinate fallback must resolve to the same
+        ``HeatFlowSite``/``ParentHeatFlow`` the first import created, and
+        the child pass must resolve its ``parent`` FK to that same
+        ``ParentHeatFlow`` — not a second one at the same coordinates."""
+        from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        row = {k: v for k, v in ROW.items() if k not in ("ID", "ID_parent")}
+
+        import_ghfdb_template(make_dataset(row), dataset)
+        site_before = HeatFlowSite.objects.get()
+        parent_before = ParentHeatFlow.objects.get()
+        child_before = HeatFlow.objects.get()
+
+        second = import_ghfdb_template(make_dataset(row), dataset)
+        assert not second.has_errors(), (
+            second.parent.invalid_rows,
+            second.child.invalid_rows,
+        )
+
+        site_after = HeatFlowSite.objects.get()
+        parent_after = ParentHeatFlow.objects.get()
+        child_after = HeatFlow.objects.get()
+
+        assert site_after.pk == site_before.pk
+        assert parent_after.pk == parent_before.pk
+        assert child_after.pk == child_before.pk
+        assert child_after.parent_id == parent_after.pk

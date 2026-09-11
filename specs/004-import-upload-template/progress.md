@@ -981,3 +981,46 @@ No decisions.md entry: FR-014 already states the rule; this proves it
 holds, it does not resolve an ambiguity.
 
 Next: full repo verify, then the completion report.
+
+## 2026-09-11 — US-6 · T032/T033
+
+Did: added `TestGHFDBTemplateRepeatImport` to `test_importers.py` — two
+tests, both against rows with `ID`/`ID_parent` dropped entirely, matching
+the real template's shape. The first imports one row twice unchanged and
+asserts `HeatFlowSite`/`ParentHeatFlow`/`HeatFlow` counts are each 1
+after both imports. The second imports the same row twice and asserts
+the site, parent and child primary keys are identical across the two
+imports, and that the child's `parent_id` still points at that same
+parent — proving the coordinate fallback matched the existing records
+rather than inserting a second set.
+
+Both passed on first run, so probed per `craft-tdd`/D14: saved a
+pre-probe copy of `parent.py`, changed `_get_or_create_site`'s
+`existing_by_location` lookup to `if False and ...` so it can never find
+a match, and re-ran. Restored the pre-probe copy and confirmed a
+byte-clean diff before re-running the suite.
+
+Verified:
+- Probe (broken): `poetry run pytest
+  tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRepeatImport -x -q`
+  — 1 failed: `ValidationError(['A HeatFlowSite already exists at
+  coordinate pair (11.00000, 48.00000).'])` on the second import — the
+  disabled lookup no longer finds the first import's site, so the second
+  import tries to create a second one at the same coordinates and the
+  model's own uniqueness constraint refuses it. The right mechanism,
+  failing for the right reason.
+- Restore: `diff` against the pre-probe copy of `parent.py` — no
+  differences.
+- Restored green: `poetry run pytest
+  tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRepeatImport -q`
+  — 2 passed.
+- Lint, scoped: `poetry run ruff check tests/test_ghfdb/test_importers.py`
+  and `poetry run ruff format --check tests/test_ghfdb/test_importers.py`
+  — both clean.
+
+No decisions.md entry: T032/T033 needed no production change and no
+ambiguity resolution — the acceptance criteria already held, exactly as
+D14 anticipated.
+
+Next: T034 — a file identical except for a changed `q_top`/`q_bottom`
+must update the determination in place rather than duplicating it.
