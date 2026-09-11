@@ -121,6 +121,20 @@ empty mandatory model field, reported by `full_clean()`. Both name the row; `inv
 `field_specific_errors` additionally names the column. Every fault in the file is collected this
 way rather than the import stopping at the first one.
 
+### Three fields are excluded from row validation
+
+Reporting an empty mandatory field needs `Meta.clean_model_instances` turned on, which makes
+django-import-export run `full_clean()` on each row's instance before it is saved. Three fields are
+not populated at that point: `sample`, `dataset` and `name`. Both resources fill those in on the way
+to the database, in `before_save_instance()`, which runs later. Validating them at row-validation
+time would refuse every row of every file on relations the resource is about to set correctly.
+
+`ExcludeFieldsSetAfterValidation`, in `project/ghfdb/resources/validation.py`, is the one override
+both resources share. It runs the same validation django-import-export would, minus those three
+fields. The database's own constraints stay as the backstop, so nothing reaching a table has skipped
+them entirely. A genuine failure to set one is reported as a database-level row error rather than a
+located message naming the column.
+
 ## The portal's own vocabulary decides, not the template's sheet
 
 The template ships a "controlled vocabulary" sheet listing values it considers permitted for each
