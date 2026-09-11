@@ -80,6 +80,11 @@ if outcome.has_errors():
     ...  # outcome.parent and outcome.child are the two import_export.results.Result objects
 ```
 
+What comes back is a `project.ghfdb.importers.GHFDBImportOutcome`, a small record holding the two
+`import_export.results.Result` objects in the order the passes ran, as `parent` and `child`. Its
+`has_errors()` is true when either pass reported an error, so a caller that only needs to know
+whether the file landed can ask the outcome rather than unpack both results itself.
+
 Underneath, it runs the **parent pass** — every site and its parent heat flow value — before the
 **child pass** — the determinations beneath each site — since a child row resolves its parent from
 the site the parent pass has already created. Both passes run inside one transaction and are wired
@@ -89,5 +94,5 @@ that already holds one.
 Calling either resource directly without naming a dataset — `GHFDBParentImportResource().import_data(...)`
 with no `fairdm_dataset=` keyword — is refused the same way: a `ValueError` from `before_import`,
 or a base error on the returned result if the resource absorbed it (the default, since
-`raise_errors` is not set). A dataset existing in the database is never enough on its own; the
+`raise_errors` is not set). A dataset existing in the database is never enough on its own. The
 caller always names it.
