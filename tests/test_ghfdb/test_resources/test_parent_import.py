@@ -438,6 +438,43 @@ class TestGHFDBParentImportTwoCoordinatePairs:
         assert alpha.sample_id != beta.sample_id
 
 
+@pytest.mark.django_db
+class TestGHFDBParentImportGeographyStoredAsSupplied:
+    """T011 — FR-008: geography columns are stored as supplied, never
+    recomputed from the coordinates."""
+
+    def test_geography_values_are_stored_exactly_as_supplied(self, dataset):
+        """Country/Region/Continent/Domain land on HeatFlowSite unchanged,
+        even where they disagree with what the coordinates would suggest."""
+        from heat_flow.models import HeatFlowSite
+
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        row = dict(PARENT_ROW)
+        # lat_NS/long_EW place this site in Germany/Europe; the geography
+        # columns deliberately disagree, so a passing test proves the
+        # stored values come from the row rather than from the coordinates.
+        row["Country"] = "Nowhereland"
+        row["Region"] = "Somewhere Province"
+        row["Continent"] = "Atlantis"
+        row["Domain"] = "Deep Sea"
+
+        resource = GHFDBParentImportResource()
+        result = resource.import_data(
+            make_dataset(row),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        site = HeatFlowSite.objects.get(name="Test Site Alpha")
+        assert site.country == "Nowhereland"
+        assert site.region == "Somewhere Province"
+        assert site.continent == "Atlantis"
+        assert site.domain == "Deep Sea"
+
+
 class TestGHFDBParentImportResourceAccessControl:
     """T029 — Staff-only access control."""
 
