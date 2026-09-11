@@ -204,3 +204,71 @@ state, which is why the diff no longer modifies a pre-existing test file.
 is eighteen added lines declaring one new fixture, `official_upload_template_workbook`. No existing
 fixture, assertion or test is altered, removed or weakened, and the suite it supports grew from 639
 to 646 passing tests across the story.
+
+## D11 — Removing the dataset-guessing fallback breaks 37 pre-existing tests, left unfixed
+
+**Ambiguous because** T008 requires removing
+`kwargs.get("fairdm_dataset") or FairDataset.all_objects.first()` from both resources'
+`before_import`, and every pre-existing test in `test_parent_import.py` and `test_child_import.py`
+that calls `import_data()` without passing `fairdm_dataset=` was — unknowingly — relying on exactly
+that fallback: a `dataset` fixture exists in the database, `all_objects.first()` silently finds it,
+and the test passes without ever naming its target. Removing the fallback (FR-002, T007, T008) turns
+every one of those calls into the located `ValueError` T008 adds. Confirmed by running
+`tests/test_ghfdb/test_resources/test_parent_import.py tests/test_ghfdb/test_resources/test_child_import.py`
+after the change: 37 pre-existing tests fail, all with the same cause.
+
+**Chosen**: the fallback is removed, per T008, and the 37 tests are left exactly as they are —
+neither their assertions nor their call sites are touched. `craft-tdd`'s prohibition is explicit:
+never modify or delete a test this story did not author, and a pre-existing test that must change is
+reported, not silently repaired. Reported in this run's `concerns`, with the full test list and the
+one-line fix (`fairdm_dataset=dataset`, the pattern `test_roundtrip.py` already uses at four call
+sites), for Forge to apply or dispatch.
+
+**Defensible because** the alternative — editing 37 tests I did not author, across two files, to
+keep the run's own suite green — is precisely the shortcut the prohibition exists to prevent. The
+fix is mechanical and the resulting call sites would be indistinguishable from ones written with
+intent, which is exactly why an Implementer must not be the one who makes that judgement silently.
+This mirrors D9's approach: a real, foreseen consequence of a correct change, accepted and recorded
+rather than patched around.
+
+**Consequence accepted**: `poetry run pytest tests/test_ghfdb/` (and the full repo verify) reports
+these 37 as newly failing until the call sites are updated. Every other test in the two files —
+including the ones this story added for T007, T009, T011 and T012 — passes on its own narrow scope.
+
+**Revisit if**: never — this is a one-time migration. Once the 37 call sites carry `fairdm_dataset=`,
+the fallback's removal has no further pre-existing-test cost.
+
+## D12 — `importers.py` takes either a raw file or an already-parsed dataset; the admin path is not
+made functional
+
+**Ambiguous because** T013 asks for one callable "taking a file and a dataset," and for "the admin
+import path" to call it rather than duplicate its sequence. `spec.md`'s Assumptions are explicit that
+this feature has "nothing... a person clicking anything" — the upload page belongs to a later
+roadmap item (R6/R7) — yet `GHFDBParentAdmin` and `GHFDBChildAdmin` already expose a working Django
+admin import wizard today, built on `django-import-export`'s `ImportExportMixin`. That wizard commits
+through `process_dataset(dataset, form, request, **kwargs)`, which by the time it runs already holds
+a parsed `tablib.Dataset` — never the raw uploaded bytes — and neither admin class has ever had a way
+to name a target `Dataset`; both silently relied on the same `.first()` fallback T008 removes.
+
+**Chosen**: `import_ghfdb_template(file, dataset)` accepts either raw file bytes/a file-like object
+or an already-parsed `tablib.Dataset`, so both a code caller (FR-001, holding a real file) and
+`GHFDBParentAdmin.process_dataset` (holding an already-parsed one) reach the same function without
+either re-serialising a dataset back to bytes or re-reading a spent upload stream.
+`GHFDBParentAdmin.process_dataset` is overridden to call it — the one admin path this story
+touches, since it is the site-and-parent import US-2 owns; `GHFDBChildAdmin`'s separate wizard is
+untouched. Neither override adds a way to name the target dataset: with none available, the call
+always raises T008's located error, so the admin import routes remain unable to complete a real
+import until a dataset-selection surface exists.
+
+**Defensible because** building that surface is explicitly out of this feature's scope (spec.md
+Assumptions: "the upload page... belong[s] to R6's other half and to R7"), and it was never
+functional in the sense of writing to a caller-chosen dataset — it always wrote to whichever dataset
+happened to be first. Failing loudly now is strictly better than the silent wrong-dataset write it
+replaces, and FR-002 requires exactly that refusal regardless of caller.
+
+**Consequence accepted**: the Django admin's GHFDB import actions raise on every use until a
+dataset-selection mechanism is added; there is no regression in what a curator could reliably do
+through them, since neither route ever safely chose the right dataset before.
+
+**Revisit if**: R6/R7 adds a dataset-selection surface to either admin path — at that point it
+supplies `dataset=` to `import_ghfdb_template` and the route becomes usable again.

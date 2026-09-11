@@ -142,16 +142,21 @@ class GHFDBChildImportResource(ModelResource):
     # ------------------------------------------------------------------
 
     def before_import(self, dataset, **kwargs):
-        """Store the FairDM dataset reference for use during row processing."""
-        from fairdm.core.models import Dataset as FairDataset
+        """Store the caller's named FairDM dataset for use during row
+        processing.
 
-        # all_objects, not objects: the default manager hides private datasets, and an
-        # import run by a curator has to reach the dataset it is filling regardless of
-        # who can read it. Narrowing here does not protect anything — it only leaves
-        # the target unresolved and fails later on a null column.
-        self._fairdm_dataset = (
-            kwargs.get("fairdm_dataset") or FairDataset.all_objects.first()
-        )
+        FR-002: the import refuses to guess a dataset. A caller passing an
+        already-resolved ``Dataset`` instance as ``fairdm_dataset`` reaches a
+        private dataset the same as a public one — there is no lookup here
+        to narrow to the default manager in the first place.
+        """
+        fairdm_dataset = kwargs.get("fairdm_dataset")
+        if fairdm_dataset is None:
+            raise ValueError(
+                "GHFDBChildImportResource.import_data() requires a "
+                "fairdm_dataset — the import refuses to choose one (FR-002)."
+            )
+        self._fairdm_dataset = fairdm_dataset
 
         # Inject optional ID / ID_parent columns when the upload template omits them.
         # _check_import_id_fields() runs after before_import(), so injecting here
