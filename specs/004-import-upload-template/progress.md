@@ -632,3 +632,64 @@ No decisions.md entry: nothing ambiguous was resolved, this task is the
 probe itself.
 
 Next: T024 — test two widely separated faults are both reported.
+
+## 2026-09-11 — Implementer US-4 · T024
+
+Did: added `test_two_widely_separated_faults_are_both_reported_and_nothing_lands`
+to `TestGHFDBTemplateRefusedWhole`. Three rows: the first entirely clean,
+the second and third each carrying their own child-side fault only (`qc`,
+then `qc_uncertainty`) — the parent side (site, parent heat flow) has no
+fault on any of the three rows, so the parent pass alone would commit
+cleanly. Asserts both faults are named by row (`invalid.number`) and
+column (`invalid.field_specific_errors` keys), and that nothing from
+either resource lands.
+
+Verified:
+- Red, for the intended reason: `poetry run pytest
+  "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole::test_two_widely_separated_faults_are_both_reported_and_nothing_lands"
+  -x -q` — 1 failed on the first assertion, `outcome.has_errors()` was
+  `False` despite two validation faults — `GHFDBImportOutcome.has_errors()`
+  does not check `has_validation_errors()` on either pass, the same gap
+  T021 traces back to.
+
+No decisions.md entry: the gap this test exposes is the same one D15/T022
+already named, no new ambiguity.
+
+Next: T025 — make it green without breaking the parent pass's dependency
+on cross-pass visibility.
+
+## 2026-09-11 — Implementer US-4 · T025
+
+Did: `GHFDBImportOutcome.has_errors()` now also checks
+`has_validation_errors()` on both passes. `import_ghfdb_template()` checks
+the combined outcome after both passes complete and calls
+`transaction.set_rollback(True)` before the shared `with
+transaction.atomic():` block exits if either pass reports any error —
+covering the case each pass's own `rollback_on_validation_errors` cannot:
+one pass at fault while the other has nothing wrong with it and would
+otherwise commit its own rows.
+
+Considered and rejected calling both passes with `dry_run=True` first, as
+the brief's wording literally reads. Confirmed empirically (D16) that each
+`import_data()` call's own savepoint rolls back unconditionally at the end
+of *that* call when `dry_run=True`, before the next pass runs — so the
+child pass, which resolves its parent via `ID_parent`/coordinates, would
+never see the parent pass's rows and would refuse every file, clean ones
+included. `transaction.set_rollback` on the shared outer transaction gets
+the same "nothing commits unless both passes are clean" property without
+disturbing that dependency. Recorded as D16 with the query that confirmed
+it.
+
+Verified:
+- T024 green: `poetry run pytest tests/test_ghfdb/test_importers.py -q`
+  — 6 passed.
+- No regression: `poetry run pytest tests/test_ghfdb/ -q` — 277 passed,
+  13 xfailed.
+- Lint, scoped: `poetry run ruff check project/ghfdb/importers.py
+  tests/test_ghfdb/test_importers.py` — all checks passed.
+
+decisions.md D16 records why a literal dry-run-first design does not
+work here and what replaces it.
+
+Next: T026 — a clean file imports with nothing reported, every row
+landed, counted rather than merely checked for existence.

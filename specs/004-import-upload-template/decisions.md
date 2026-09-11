@@ -371,3 +371,39 @@ the flag — just with a worse message than the fields this story's fault type a
 **Revisit if**: a later story moves relation-population into `after_init_instance()` (or another hook
 that runs before `validate_instance()`) for both resources — at that point the exclusion is no longer
 needed and should be removed along with it.
+
+## D16 — T025 does not literally pass `dry_run=True`; it uses an explicit outer `set_rollback`
+
+**Ambiguous because** T025 describes "run the whole pass in dry-run, gather every row error, and
+commit only when there are none." The literal reading is: call both resources' `import_data()` with
+`dry_run=True` first to discover faults, then call them again with `dry_run=False` to commit.
+
+**Chosen**: neither pass is ever called with `dry_run=True`. Both still run once, for real, inside
+the existing outer `transaction.atomic()`; afterward, if `GHFDBImportOutcome.has_errors()` is true,
+`transaction.set_rollback(True)` is called before the `with` block exits, discarding everything both
+passes wrote.
+
+**Confirmed in the code, empirically, before writing this**: `import_data()`'s own
+`atomic_if_using_transaction(...)` wraps the *entire* `import_data_inner()` call in one savepoint per
+resource, and `dry_run=True` marks that savepoint to roll back unconditionally at the end of that
+same `import_data()` call — before the next one starts. The child pass resolves its parent via
+`ID_parent`/coordinates, both of which require the parent pass's rows to still be visible when the
+child pass runs. Verified directly: a `dry_run=True` parent import's rows are invisible to a query
+run immediately afterward, *inside the same outer transaction* (row count 0, where the real pass
+gives 1). Calling both passes with `dry_run=True` independently would make every child row that
+resolves its parent by `ID_parent` fail to find one — refusing every file, including a clean one,
+for a reason that has nothing to do with the file.
+
+**Defensible because** the property T025 actually needs — nothing commits unless both passes are
+clean — holds under `set_rollback` exactly as it would under a literal dry run, and does not disturb
+the cross-pass visibility the child pass has always depended on. Verified directly: a parent-only
+fault on one row, with the child pass entirely clean, still leaves zero rows of either kind after the
+call returns (`test_two_widely_separated_faults_are_both_reported_and_nothing_lands`, T024).
+
+**Consequence accepted**: this costs one extra query round-trip's worth of nothing over the naive
+"trust each pass's own rollback" version it replaces — no extra `import_data()` calls are made, so
+the runtime cost of this story's fix is the same as before it.
+
+**Revisit if**: a future story reduces the two passes to one, or removes the child pass's dependency
+on the parent pass's rows being visible mid-transaction — at that point revisit whether a literal
+dry-run preview is worth adding back for a cheaper failure path on a very large file.
