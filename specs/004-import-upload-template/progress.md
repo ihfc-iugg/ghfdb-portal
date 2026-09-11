@@ -606,3 +606,29 @@ restructure.
 
 Next: T023 — probe that reinstating the old `Meta` form makes the guard
 fail.
+
+## 2026-09-11 — Implementer US-4 · T023
+
+Did: probed T021's test against the pre-T022 form, exactly as it was
+declared before this story: temporarily removed the
+`rollback_on_validation_errors=True` keyword from both `import_data()`
+calls in `importers.py` and added `rollback_on_validation_errors = True`
+back to both resources' `Meta` (`clean_model_instances = True` left in
+place — DR-002's other half). No test file touched.
+
+Verified:
+- Probe (broken): `poetry run pytest
+  tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole -x -q`
+  — 1 failed, same `AssertionError` as T021's original red (row 1 written
+  despite row 2's fault) — confirming the entry-point keyword, not the
+  `Meta` declaration, is what the guard actually depends on.
+- Restore: `diff` of `importers.py`, `resources/parent.py`,
+  `resources/child.py` against the pre-probe (post-T022) copies — no
+  differences in any of the three.
+- Restored: `poetry run pytest tests/test_ghfdb/test_importers.py -q` —
+  5 passed.
+
+No decisions.md entry: nothing ambiguous was resolved, this task is the
+probe itself.
+
+Next: T024 — test two widely separated faults are both reported.
