@@ -430,3 +430,97 @@ class TestControlledVocabularyDecides:
         assert not ParentHeatFlow.objects.exists()
         assert not HeatFlow.objects.exists()
         assert not IntervalConductivity.objects.exists()
+
+    def test_a_value_the_templates_sheet_lists_but_the_portal_does_not_hold_is_still_refused(
+        self, dataset, official_upload_template_workbook
+    ):
+        """T029 — FR-014, stated backwards on purpose: a value straight
+        from the official template's own 'controlled vocabulary' sheet —
+        the sheet lists it, the portal holds no concept for it — still
+        refuses the file. The value is read from the real fixture's sheet
+        at test time, never hard-coded, so the test cannot pass by
+        accident on a value absent from both."""
+        from heat_flow import vocabularies
+        from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
+        from research_vocabs.models import Concept
+
+        from project.ghfdb.importers import import_ghfdb_template
+        from project.ghfdb.resources.widgets import normalize_vocab_token
+
+        ws = official_upload_template_workbook["controlled vocabulary"]
+        rows = list(ws.iter_rows(values_only=True))
+        header = rows[0]
+        idx = header.index("Type of exploration method")
+        sheet_values = {
+            normalize_vocab_token(cell) for cell in (r[idx] for r in rows[2:]) if cell
+        }
+        portal_labels = {
+            label.lower()
+            for label in Concept.get_for_vocabulary(
+                vocabularies.ExplorationMethod
+            ).values_list("label", flat=True)
+        }
+        only_on_sheet = sorted(sheet_values - portal_labels)
+        assert only_on_sheet, (
+            "expected the template's vocabulary sheet to list at least "
+            "one value the portal holds no concept for"
+        )
+        value = only_on_sheet[0]
+
+        row1 = dict(ROW)
+        row1["explo_method"] = value
+
+        outcome = import_ghfdb_template(make_dataset(row1), dataset)
+
+        assert outcome.has_errors()
+        assert not HeatFlowSite.objects.exists()
+        assert not ParentHeatFlow.objects.exists()
+        assert not HeatFlow.objects.exists()
+
+    def test_a_value_the_portal_holds_but_the_templates_sheet_does_not_list_is_accepted(
+        self, dataset, official_upload_template_workbook
+    ):
+        """T030 — the other half of FR-013/FR-014: a value the portal
+        holds a concept for, which the template's own sheet does not
+        list, is accepted and the row lands. The value is read from the
+        real fixture's sheet, the same way T029's is."""
+        from heat_flow import vocabularies
+        from heat_flow.models import HeatFlow
+        from research_vocabs.models import Concept
+
+        from project.ghfdb.importers import import_ghfdb_template
+        from project.ghfdb.resources.widgets import normalize_vocab_token
+
+        ws = official_upload_template_workbook["controlled vocabulary"]
+        rows = list(ws.iter_rows(values_only=True))
+        header = rows[0]
+        idx = header.index("Heat-flow method")
+        sheet_values = {
+            normalize_vocab_token(cell) for cell in (r[idx] for r in rows[2:]) if cell
+        }
+        portal_labels = {
+            label.lower()
+            for label in Concept.get_for_vocabulary(
+                vocabularies.HeatFlowMethod
+            ).values_list("label", flat=True)
+        }
+        only_in_portal = sorted(portal_labels - sheet_values)
+        assert only_in_portal, (
+            "expected the portal to hold at least one concept the "
+            "template's vocabulary sheet does not list"
+        )
+        value = only_in_portal[0]
+
+        row1 = dict(ROW)
+        row1["q_method"] = value
+
+        outcome = import_ghfdb_template(make_dataset(row1), dataset)
+
+        assert not outcome.has_errors(), (
+            outcome.parent.invalid_rows,
+            outcome.child.invalid_rows,
+        )
+        child = HeatFlow.objects.get(ghfdb_id=1)
+        assert value in {
+            label.lower() for label in child.method.values_list("label", flat=True)
+        }

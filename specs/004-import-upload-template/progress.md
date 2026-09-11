@@ -882,4 +882,62 @@ needed.
 Next: T029 — a value the template's own vocabulary sheet lists, which the
 portal does not hold, is still refused.
 
+## 2026-09-11 — US-5 · T029, T030
+
+Did: added `test_a_value_the_templates_sheet_lists_but_the_portal_does_not_hold_is_still_refused`
+(T029) and `test_a_value_the_portal_holds_but_the_templates_sheet_does_not_list_is_accepted`
+(T030) to `TestControlledVocabularyDecides`. Both read the real
+`official_upload_template_workbook` fixture's `"controlled vocabulary"`
+sheet at test run time and diff its values against the portal's own
+`Concept` labels for a chosen vocabulary — T029 picks a value only the
+sheet lists (`"Type of exploration method"` / `ExplorationMethod`: the
+sheet lists `"other (specify in comments)"`, the portal holds only
+`"other"`), T030 picks a value only the portal holds (`"Heat-flow
+method"` / `HeatFlowMethod`: the portal holds `"other"`, the sheet's
+column for it lists only `"other (specify in coments)"` [sic] and
+`"unspecified"`). Neither value is hard-coded — each test asserts its
+set difference is non-empty before using it, so a future edit to the
+fixture or the portal's vocabularies that erases the disagreement fails
+the test loudly rather than passing vacuously on an empty set.
+
+Both passed on first run. Probed per `craft-tdd`/D14: saved a pre-probe
+copy of `widgets.py`, temporarily made `ConceptWidget.clean()` return the
+normalised value instead of raising for an unrecognised choice (bypassing
+the refusal T027/T028 cover), and re-ran both. T030 still passed, as
+expected — it doesn't depend on refusal. T029 also still passed, but for
+an unintended reason: with the widget-level check disabled, the garbage
+`explo_method` value the parent pass accepts is carried through to the
+child pass, where it trips a `ValueError` from a URI-construction routine
+serialising a concept key with spaces and parentheses in it — an
+incidental crash from the probe's own invalid state, not evidence about
+the mechanism T029 exists to cover. Restored the pre-probe copy and
+confirmed a byte-clean diff before re-running the suite.
+
+This did not weaken confidence in T029: the widget-level rejection it
+depends on is the exact mechanism T027 already probed cleanly (breaking
+it there produced the intended, on-topic failure). T029 and T030 add the
+thing T027 alone cannot: proof that the values in play are genuinely
+sourced from the real template fixture and genuinely disagree with the
+portal, which is what FR-014's "stated backwards on purpose" acceptance
+criterion asks for. Recorded here rather than reworking the probe target,
+per `craft-tdd`'s own instruction to say what was tried rather than force
+a clean mutation onto a test where the honest one is noisy.
+
+Verified:
+- Green (post-restore): `poetry run pytest
+  tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides
+  tests/test_ghfdb/test_resources/test_widgets.py -q` — 43 passed.
+- Restore: `diff` against the pre-probe copy of `widgets.py` — no
+  differences.
+- Lint, scoped: `poetry run ruff check tests/test_ghfdb/test_importers.py`
+  and `poetry run ruff format --check tests/test_ghfdb/test_importers.py`
+  — both clean.
+
+No decisions.md entry: FR-013/FR-014 already state the rule; nothing here
+resolves an ambiguity, it demonstrates the already-decided rule against
+real data.
+
+Next: T031 — assert nothing in the import path opens the template's
+"controlled vocabulary" sheet.
+
 Next: full repo verify, then the completion report.
