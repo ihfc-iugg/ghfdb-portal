@@ -503,43 +503,103 @@
       "priority": "P2",
       "issue": 204,
       "worktree": "/home/sam/projects/ihfc-iugg/ghfdb-portal-004-us5-vocab",
-      "status": "in_progress",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
           "id": "T027",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides::test_an_unrecognised_vocabulary_value_names_row_column_and_value_and_refuses_the_file"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides -x -q"
+            ]
+          }
         },
         {
           "id": "T028",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides tests/test_ghfdb/test_resources/test_widgets.py -q",
+              "poetry run ruff check project/ghfdb/resources/widgets.py",
+              "poetry run ruff format --check project/ghfdb/resources/widgets.py"
+            ]
+          }
         },
         {
           "id": "T028a",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides::test_an_unrecognised_value_in_a_many_valued_column_refuses_the_file -q",
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides tests/test_ghfdb/test_resources/test_widgets.py -q"
+            ]
+          }
         },
         {
           "id": "T028b",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides::test_an_unrecognised_value_in_a_many_valued_column_refuses_the_file"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides::test_an_unrecognised_value_in_a_many_valued_column_refuses_the_file -q",
+              "poetry run ruff check project/ghfdb/resources/widgets.py tests/test_ghfdb/test_importers.py",
+              "poetry run ruff format --check project/ghfdb/resources/widgets.py tests/test_ghfdb/test_importers.py"
+            ]
+          }
         },
         {
           "id": "T029",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides::test_a_value_the_templates_sheet_lists_but_the_portal_does_not_hold_is_still_refused"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides -q",
+              "poetry run ruff check tests/test_ghfdb/test_importers.py",
+              "poetry run ruff format --check tests/test_ghfdb/test_importers.py"
+            ]
+          }
         },
         {
           "id": "T030",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides::test_a_value_the_portal_holds_but_the_templates_sheet_does_not_list_is_accepted"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides -q"
+            ]
+          }
         },
         {
           "id": "T031",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides::test_the_import_never_opens_the_controlled_vocabulary_sheet"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides::test_the_import_never_opens_the_controlled_vocabulary_sheet -x -q",
+              "poetry run pytest tests/test_ghfdb/test_importers.py -q",
+              "poetry run ruff check tests/test_ghfdb/test_importers.py project/ghfdb/resources/formats.py",
+              "poetry run ruff format --check tests/test_ghfdb/test_importers.py project/ghfdb/resources/formats.py"
+            ]
+          }
         }
       ]
     },
@@ -548,28 +608,64 @@
       "priority": "P2",
       "issue": 205,
       "worktree": null,
-      "status": "todo",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
           "id": "T032",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRepeatImport::test_reimporting_an_unchanged_file_leaves_counts_identical"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRepeatImport -q",
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRepeatImport -x -q  # probe: existing_by_location lookup disabled (D14)"
+            ]
+          }
         },
         {
           "id": "T033",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRepeatImport::test_the_second_import_matches_the_existing_site_and_parent_rather_than_inserting"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRepeatImport -q"
+            ]
+          }
         },
         {
           "id": "T034",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRepeatImport::test_a_changed_depth_interval_updates_the_determination_in_place"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRepeatImport::test_a_changed_depth_interval_updates_the_determination_in_place -x -q"
+            ]
+          }
         },
         {
           "id": "T035",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRepeatImport::test_two_distinct_determinations_at_one_site_stay_distinct_across_reimport"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRepeatImport -q",
+              "poetry run pytest tests/test_ghfdb/test_importers.py tests/test_ghfdb/test_resources/test_child_import.py -q",
+              "poetry run ruff check tests/test_ghfdb/test_importers.py project/ghfdb/resources/child.py",
+              "poetry run ruff format --check tests/test_ghfdb/test_importers.py project/ghfdb/resources/child.py"
+            ]
+          }
         }
       ]
     },
@@ -578,13 +674,18 @@
       "priority": "P2",
       "issue": null,
       "worktree": null,
-      "status": "todo",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
           "id": "T036",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_doc_scratch.py -x -q -s  # throwaway module verifying every documented call; deleted, not committed"
+            ]
+          }
         }
       ]
     }
