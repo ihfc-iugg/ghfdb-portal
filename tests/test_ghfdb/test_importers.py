@@ -286,3 +286,37 @@ class TestGHFDBTemplateRefusedWhole:
         assert not HeatFlowSite.objects.exists()
         assert not ParentHeatFlow.objects.exists()
         assert not HeatFlow.objects.exists()
+
+    def test_a_clean_file_reports_nothing_and_every_row_lands(self, dataset):
+        """T026 — three rows, no fault anywhere: nothing is reported, and
+        the count of every kind of record this file describes matches the
+        row count exactly, not merely "something exists"."""
+        from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        row1 = dict(ROW)
+
+        row2 = dict(ROW)
+        row2["ID_parent"] = "2"
+        row2["ID"] = "2"
+        row2["name"] = "Test Site Beta"
+        row2["lat_NS"] = "50.0"
+        row2["long_EW"] = "8.0"
+
+        row3 = dict(ROW)
+        row3["ID_parent"] = "3"
+        row3["ID"] = "3"
+        row3["name"] = "Test Site Gamma"
+        row3["lat_NS"] = "52.0"
+        row3["long_EW"] = "9.0"
+
+        outcome = import_ghfdb_template(make_dataset(row1, row2, row3), dataset)
+
+        assert not outcome.has_errors(), (
+            outcome.parent.invalid_rows,
+            outcome.child.invalid_rows,
+        )
+        assert HeatFlowSite.objects.count() == 3
+        assert ParentHeatFlow.objects.count() == 3
+        assert HeatFlow.objects.count() == 3

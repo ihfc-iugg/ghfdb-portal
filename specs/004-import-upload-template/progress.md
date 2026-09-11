@@ -693,3 +693,29 @@ work here and what replaces it.
 
 Next: T026 — a clean file imports with nothing reported, every row
 landed, counted rather than merely checked for existence.
+
+## 2026-09-11 — Implementer US-4 · T026
+
+Did: added `test_a_clean_file_reports_nothing_and_every_row_lands` to
+`TestGHFDBTemplateRefusedWhole`: three rows, no fault anywhere, asserts
+`HeatFlowSite.objects.count() == 3`, `ParentHeatFlow.objects.count() ==
+3`, `HeatFlow.objects.count() == 3` — the count, not existence. Passed on
+first run (T022/T025 already make a clean import commit correctly), so
+probed per craft-tdd rather than accepted on trust: inverted the
+`if outcome.has_errors():` condition T025 added in `importers.py` to
+`if not outcome.has_errors():`, so a clean file's writes would be rolled
+back instead of a faulty one's.
+
+Verified:
+- Probe (broken): `poetry run pytest
+  "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole::test_a_clean_file_reports_nothing_and_every_row_lands"
+  -x -q` — 1 failed, `HeatFlowSite.objects.count()` was `0`, expected `3`.
+- Restore: `diff` against the pre-probe copy of `importers.py` — no
+  differences.
+- Restored: `poetry run pytest tests/test_ghfdb/test_importers.py -q` —
+  7 passed.
+
+No decisions.md entry: nothing ambiguous, no production code changed.
+
+Next: T026a — an empty mandatory model field names its row and column, in
+a translated message, and refuses the whole file.
