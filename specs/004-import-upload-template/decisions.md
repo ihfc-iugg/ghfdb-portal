@@ -645,6 +645,8 @@ through `import_id_fields` and the coordinate fallback.
 **Revisit if** a story gives either record a display name of its own, at which point this fallback
 becomes the default rather than the only source.
 
+**ADR:** none — carried at the code, in the comment above each resource's `instance.name` assignment and in `ExcludeFieldsSetAfterValidation`'s docstring, which records why the database cannot stand in for it.
+
 ## D21 — Two pre-existing tests changed at review, and why neither is a weakened assertion
 
 **Ambiguous because** the review fixes touch two tests that existed before this pass, which the
@@ -671,3 +673,5 @@ coupling the header check itself introduces, and the failure is loud.
 
 **Revisit if** the fixture row grows far enough from a real submission that building it from the
 template file itself becomes simpler than maintaining the dict.
+
+**ADR:** none — a guardrail triage for this pass's two test-input changes, recorded here with the reason each is not a weakened assertion.
