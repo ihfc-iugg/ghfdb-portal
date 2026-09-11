@@ -4,6 +4,7 @@ Rationale too long to sit inside `spec.md`, plus every ambiguity resolved withou
 
 ## D1 — The portal's vocabularies are the authority, the template's sheet is not
 
+
 **Ambiguous because** the upload template ships a `controlled vocabulary` sheet listing permitted
 values, and the portal separately holds its own concepts for the same columns. Either could have
 been treated as the thing an import validates against, and the sheet is the more convenient of the
@@ -22,7 +23,11 @@ the database, which puts the authority inside the artefact being checked.
 will be refused. That is worked out as real datasets are imported, not by reconciliation code
 written now.
 
+**ADR:** docs/adr/0011-the-portal-concepts-decide-a-vocabulary-value.md — graduated. The portal's own
+concepts decide what a controlled-vocabulary value may be.
+
 ## D2 — Only failures the portal cannot absorb refuse a file
+
 
 **Ambiguous because** the template carries three separate contracts of its own: the obligation row
 (M/R/O), the allowed-range row, and the vocabulary sheet. Enforcing all three at import would have
@@ -39,7 +44,11 @@ application genuinely cannot accept what it is given. They become checks at a la
 Note the asymmetry with D1: the vocabulary sheet is not a deferred check. It is simply not the
 authority, while vocabulary validation against the portal's own concepts is in scope from the start.
 
+**ADR:** docs/adr/0012-what-refuses-an-uploaded-file.md — graduated. It records all four refusals and
+why the template's obligation and range rows are not among them.
+
 ## D3 — The official template is the fixture
+
 
 **Ambiguous because** three spreadsheet fixtures already exist in the test suite and could have been
 extended.
@@ -51,7 +60,10 @@ template on ten names, so the current tests establish nothing about a real uploa
 **Defensible because** the feature's whole claim is that the file the assessment team fills in can be
 read. A fixture nobody uses cannot support that claim.
 
+**ADR:** none — a fixture choice, carried by the tests that use it rather than by a record about the codebase.
+
 ## D4 — No revision marker, so the header is the detection
+
 
 **Ambiguous because** nothing inside the template says which revision of it a file is, so a revised
 template that renames, adds or drops a column would be discovered only when a header stopped
@@ -62,14 +74,21 @@ matching.
 **Defensible because** a revision handling scheme has no requirement behind it yet, and the failure
 it would guard against is loud rather than silent: the file is refused, naming the header.
 
+**ADR:** docs/adr/0012-what-refuses-an-uploaded-file.md — graduated, folded into the same record,
+which carries the header check as the revision detection and why no revision scheme was built.
+
 ## D5 — Roadmap corrections this feature carries
+
 
 R3 and R5 are struck through, with an ADR recording that the data assessment team ended the release
 import direction. R6 gains a note that this feature delivers its programmatic half and the page
 follows separately. Recorded here because they are decisions this run took, and they land on this
 branch.
 
+**ADR:** none — roadmap bookkeeping. The decision behind the strike-throughs is ADR 0010, which already exists.
+
 ## D6 — Three design-review findings, all verified and folded into the plan
+
 
 The design review ran before any code was written, across compliance, security and architecture. It
 returned three blocking findings, each checked against the code before being accepted.
@@ -104,6 +123,7 @@ stage is meant to produce.
 touch are already covered by D1 and by the stories themselves.
 
 ## D7 — The ten disagreements T002 reports: verdicts
+
 
 T002's test reads the official template's header (row 6, columns B onward) and checks that every
 name resolves against `PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS`. It disagrees on ten names.
@@ -159,7 +179,10 @@ not claim every name the constants carry is one the template recognises.
 `ID_parent`/`quality_parent`/`quality_child`/`Quality_Code_Child`/`Quality_Score_Parent`'s place in
 these constants should be reconsidered as part of that work, not this one.
 
+**ADR:** none — every verdict here rests on a record that already exists: ADR 0003 for the two misspellings, and D8 of `specs/002-ghfdb-proxy/decisions.md` for the four geography columns.
+
 ## D9 — US-1's first acceptance scenario is amended to match ADR 0003
+
 
 **Decision**: acceptance scenario 1 of US-1 said every one of the template's seventy columns
 resolves to "either a stored field or an explicitly accepted-and-ignored column". Two of them
@@ -183,7 +206,10 @@ than discovering at first real use.
 **Revisit if**: IHFC corrects the published template. ADR 0003's own revisit clause then applies —
 the refusal narrows to a migration aid for files produced against older templates.
 
+**ADR:** none — ADR 0003 already holds, and this repairs a specification sentence that contradicted it. The consequence it names is ADR 0003's own, not a new one.
+
 ## D10 — the reconciliation test lives with the module it is about
+
 
 **Decision**: the reconciliation and refusal tests were written to
 `tests/test_ghfdb/test_resources/test_template_columns.py`, the path `plan.md` named. They test
@@ -205,7 +231,10 @@ is eighteen added lines declaring one new fixture, `official_upload_template_wor
 fixture, assertion or test is altered, removed or weakened, and the suite it supports grew from 639
 to 646 passing tests across the story.
 
+**ADR:** none — the constitution already requires the test tree to mirror the source tree. This is that rule being applied.
+
 ## D11 — Removing the dataset-guessing fallback breaks 37 pre-existing tests, left unfixed
+
 
 **Ambiguous because** T008 requires removing
 `kwargs.get("fairdm_dataset") or FairDataset.all_objects.first()` from both resources'
@@ -238,7 +267,10 @@ including the ones this story added for T007, T009, T011 and T012 — passes on 
 **Revisit if**: never — this is a one-time migration. Once the 37 call sites carry `fairdm_dataset=`,
 the fallback's removal has no further pre-existing-test cost.
 
+**ADR:** none — superseded by D13, which carried out the repair. The durable half is ADR 0013.
+
 ## D12 — `importers.py` takes either a raw file or an already-parsed dataset; the admin path is not
+
 made functional
 
 **Ambiguous because** T013 asks for one callable "taking a file and a dataset," and for "the admin
@@ -273,7 +305,11 @@ through them, since neither route ever safely chose the right dataset before.
 **Revisit if**: R6/R7 adds a dataset-selection surface to either admin path — at that point it
 supplies `dataset=` to `import_ghfdb_template` and the route becomes usable again.
 
+**ADR:** docs/adr/0013-an-import-is-told-which-dataset-it-writes-to.md — graduated, including the
+admin wizards' refusal until a dataset-selection surface exists.
+
 ## D13 — TC01: the 37 call sites D11 left unfixed now carry `fairdm_dataset=dataset`
+
 
 **Ambiguous because** D11 recorded 37 pre-existing tests across `test_parent_import.py` and
 `test_child_import.py` failing because they called `import_data()` without naming a dataset, and
@@ -301,7 +337,10 @@ nothing else in either module moved.
 
 **Revisit if**: never — this was the one-time migration D11 already scoped.
 
+**ADR:** none — the one-time migration D11 scoped.
+
 ## D14 — US-3 needed no production change, so each of its tests was probed before being accepted
+
 
 **Ambiguous because** every acceptance criterion in US-3 — one interval per determination, gradient
 and conductivity and correction and probe values kept per determination, `relevant_child` mapped to
@@ -329,7 +368,10 @@ Triaged and approved on that evidence.
 **Revisit if**: a later story changes `child.py` in a way these four tests do not catch — that would
 mean the probes chose the wrong mechanism to break.
 
+**ADR:** none — a method decision about how this story's four tests earned their place, recorded with the probe transcripts in `progress.md`.
+
 ## D15 — `clean_model_instances = True` needs `validate_instance()` to exclude three fields, or it refuses every row
+
 
 **Ambiguous because** T022 asks for `clean_model_instances = True` on both resources' `Meta`, on the
 strength of DR-002's claim that this is what makes `result.has_validation_errors()` populate at all.
@@ -372,7 +414,10 @@ the flag — just with a worse message than the fields this story's fault type a
 that runs before `validate_instance()`) for both resources — at that point the exclusion is no longer
 needed and should be removed along with it.
 
+**ADR:** none — carried at the code, in `project/ghfdb/resources/validation.py`, which states which three fields are excluded and why.
+
 ## D16 — T025 does not literally pass `dry_run=True`; it uses an explicit outer `set_rollback`
+
 
 **Ambiguous because** T025 describes "run the whole pass in dry-run, gather every row error, and
 commit only when there are none." The literal reading is: call both resources' `import_data()` with
@@ -408,7 +453,10 @@ the runtime cost of this story's fix is the same as before it.
 on the parent pass's rows being visible mid-transaction — at that point revisit whether a literal
 dry-run preview is worth adding back for a cheaper failure path on a very large file.
 
+**ADR:** none — carried at the code, in the comment above `transaction.set_rollback(True)` in `project/ghfdb/importers.py`.
+
 ## D17 — `set_m2m_relations`'s fault reaches `import_row`'s own exception handling unaided
+
 
 **Ambiguous because** T028a's brief flags that `set_m2m_relations` "runs after the row is saved,
 inside the transaction, so a raise from here may not reach the resource's error collection the way a
@@ -456,7 +504,10 @@ file committed.
 entirely) — at that point this decision's premise no longer holds and the fault needs an explicit
 channel of its own.
 
+**ADR:** none — carried in `set_m2m_relations`'s own docstring, which records why the existing handling reaches it unaided.
+
 ## D18 — T035: the child's no-ID natural key drops q_top/q_bottom for the row's file position
+
 
 **Ambiguous because** T034 confirmed DR-003 directly: `_child_natural_key` (child.py) built the
 no-ID lookup key from `lat_NS`, `long_EW`, `q_top`, `q_bottom` and `publication_reference`, so
@@ -520,3 +571,6 @@ a restructured one.
 of an existing row — at that point file position stops being a reliable proxy for row identity and a
 persisted identifier (assigning and round-tripping a real `ID` on export, for instance) is the actual
 fix.
+
+**ADR:** docs/adr/0014-a-determination-without-an-identifier-is-its-row.md — graduated. A determination
+with no identifier is recognised by its site, its publication and its place in the file.
