@@ -3,7 +3,7 @@
   "feature": "004-import-upload-template",
   "branch": "004-import-upload-template",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "CONVERGE",
+  "state": "REVIEW",
   "state_history": [
     {
       "state": "PLAN",
@@ -29,6 +29,11 @@
       "state": "CONVERGE",
       "at": "2026-09-11T17:58:41Z",
       "note": "every story accepted; the shared row-validation override deduplicated, four decisions graduated to architecture records, no migrations to squash"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-09-11T18:00:38Z",
+      "note": "two lenses dispatched: correctness and spec, plus security for the untrusted upload surface"
     }
   ],
   "gates": {
@@ -706,7 +711,7 @@
       "max": 2
     },
     "review_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 1
     },
     "design_review_cycles": {

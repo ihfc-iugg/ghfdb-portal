@@ -17,9 +17,12 @@ from project.ghfdb.constants import (
     CHILD_COLUMNS,
     META_FIELDS,
     OFFICIAL_TEMPLATE_HEADER,
+    OPTIONAL_TEMPLATE_COLUMNS,
     PARENT_COLUMNS,
     PORTAL_ADDITION_COLUMNS,
     REJECTED_MISSPELLED_COLUMNS,
+    REQUIRED_TEMPLATE_COLUMNS,
+    UPLOAD_TEMPLATE_HEADER_ROW,
     validate_official_header,
 )
 from project.ghfdb.resources import GHFDBChildImportResource, GHFDBParentImportResource
@@ -107,6 +110,47 @@ class TestEveryTemplateColumnIsMappedOrAccepted:
             "template columns neither mapped by a resource field nor in "
             f"ACCEPTED_UNSTORED_COLUMNS: {sorted(considered - handled)}"
         )
+
+
+class TestTheHeaderConstantIsTheTemplatesOwnHeader:
+    """FR-017: ``UPLOAD_TEMPLATE_HEADER_ROW`` is the template's header row,
+    in the template's order, with only the two ADR 0003 misspellings
+    corrected. Pinned to an unmodified copy of the template so a revised
+    template shows up as a failure here rather than as a refused submission
+    in production."""
+
+    def test_it_matches_the_templates_header_row_corrected(
+        self, official_upload_template_workbook
+    ):
+        corrections = {"tc_pT_fuction": "tc_pT_function", "Ref_ISGN": "Ref_IGSN"}
+        header = [
+            corrections.get(name, name)
+            for name in _read_header_row(official_upload_template_workbook)
+        ]
+
+        assert header == UPLOAD_TEMPLATE_HEADER_ROW
+
+    def test_the_optional_columns_are_the_identifiers_and_assessment_columns(self):
+        """Everything else the template carries is required, so a file that
+        drops one is a different template. The optional set is small and
+        deliberate: identifiers a first submission cannot have, and the
+        columns filled in after a submission is read."""
+        assert OPTIONAL_TEMPLATE_COLUMNS == frozenset(
+            {
+                "ID",
+                "ID_parent",
+                "Ref_IGSN",
+                "igsn",
+                "Reviewer_name",
+                "Reviewer_comment",
+                "Review_date",
+            }
+        )
+        assert REQUIRED_TEMPLATE_COLUMNS == (
+            OFFICIAL_TEMPLATE_HEADER - OPTIONAL_TEMPLATE_COLUMNS
+        )
+        assert "q" in REQUIRED_TEMPLATE_COLUMNS
+        assert "ID" not in REQUIRED_TEMPLATE_COLUMNS
 
 
 class TestOfficialHeaderRefusal:

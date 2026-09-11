@@ -215,8 +215,16 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         if instance.parent is None and not str(row.get("ID_parent") or "").strip():
             instance.parent = self._resolve_parent_by_location(row)
 
-        # Set stable natural key as name for no-ID rows.
-        if not str(row.get("ID") or "").strip():
+        # Every determination is named. A row that carries an ID is named by
+        # it — the identifier the submission itself gives the determination —
+        # and a row without one falls back to the stable natural key. Leaving
+        # name unset is not an option: it is a required CharField, so an
+        # unset one saves as an empty string without the database objecting,
+        # and the determination then has nothing to display itself by.
+        ghfdb_id = str(row.get("ID") or "").strip()
+        if ghfdb_id:
+            instance.name = ghfdb_id
+        else:
             natural_key = self._child_natural_key(row)
             if natural_key:
                 instance.name = natural_key

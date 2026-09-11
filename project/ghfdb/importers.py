@@ -21,6 +21,7 @@ import tablib
 from django.db import transaction
 from import_export.results import Result
 
+from .constants import validate_official_header
 from .resources import (
     GHFDBChildImportResource,
     GHFDBImportFormat,
@@ -67,6 +68,11 @@ def import_ghfdb_template(file: Any, dataset: Any) -> GHFDBImportOutcome:
     else:
         content = file.read() if hasattr(file, "read") else file
         rows = GHFDBImportFormat().create_dataset(content)
+
+    # FR-003: a file that is not the official template is refused on its
+    # header, before a single row is read and before the transaction opens,
+    # so nothing is written for it (FR-010).
+    validate_official_header(list(rows.headers or []))
 
     with transaction.atomic():
         parent_result = GHFDBParentImportResource().import_data(

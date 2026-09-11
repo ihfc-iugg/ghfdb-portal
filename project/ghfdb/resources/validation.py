@@ -19,8 +19,12 @@ class ExcludeFieldsSetAfterValidation:
     """Validate the instance as django-import-export does, minus the fields
     ``before_save_instance()`` fills in later.
 
-    The database's own NOT NULL constraints remain the backstop for those
-    fields, so nothing that reaches the table skips them entirely.
+    ``sample`` and ``dataset`` are foreign keys, so the database's own NOT
+    NULL constraint is a real backstop for them: a resource that failed to
+    set one would refuse the file with a database-level row error. ``name``
+    has no such backstop — it is a required ``CharField``, and an unset one
+    saves as an empty string the constraint is perfectly happy with — so both
+    resources set it on every row rather than relying on one.
     """
 
     def validate_instance(

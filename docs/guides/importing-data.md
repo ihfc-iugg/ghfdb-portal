@@ -53,12 +53,28 @@ from project.ghfdb.constants import validate_official_header
 validate_official_header(header)
 ```
 
-Anything else raises `ValueError`, with a message naming the header it was given. The function
-inspects only the header it is handed and reads no rows and touches no database, so a file refused
-here is refused before any part of it could have been written.
+Anything else raises `ValueError`, with a message naming both what is missing and what does not
+belong, followed by the header it was given. The function inspects only the header it is handed and
+reads no rows and touches no database, so a file refused here is refused before any part of it could
+have been written. `import_ghfdb_template` calls it on every file it is given, before it opens a
+transaction.
 
-`project.ghfdb.constants.OFFICIAL_TEMPLATE_HEADER` holds the set it checks against, should you need
-to compare a header yourself rather than have one validated.
+Seven columns are optional, and everything else the template carries is required:
+
+- `ID` and `ID_parent`, which name a determination and its parent so that a later file can correct
+  them. A first submission has none to give, and both resources fill the columns in when they are
+  absent.
+- `Ref_IGSN` and `igsn`, the two spellings of the sample reference, which nothing in the data model
+  holds yet.
+- `Reviewer_name`, `Reviewer_comment` and `Review_date`, which are filled in during assessment,
+  after a submission has been read.
+
+Column order is not checked — every reader here addresses columns by name — and the label the
+template puts in the first cell of its header row is ignored.
+
+`project.ghfdb.constants.UPLOAD_TEMPLATE_HEADER_ROW` is the template's header row in the template's
+own order, and `REQUIRED_TEMPLATE_COLUMNS` and `OPTIONAL_TEMPLATE_COLUMNS` are the two sets the
+check uses, should you need to compare a header yourself rather than have one validated.
 
 ## Running an import
 
@@ -131,9 +147,14 @@ time would refuse every row of every file on relations the resource is about to 
 
 `ExcludeFieldsSetAfterValidation`, in `project/ghfdb/resources/validation.py`, is the one override
 both resources share. It runs the same validation django-import-export would, minus those three
-fields. The database's own constraints stay as the backstop, so nothing reaching a table has skipped
-them entirely. A genuine failure to set one is reported as a database-level row error rather than a
-located message naming the column.
+fields.
+
+For `sample` and `dataset` the database's own constraint stays as the backstop: both are foreign
+keys, so a failure to set one is reported as a database-level row error rather than a located
+message naming the column. `name` has no such backstop. It is a required text field, and a field
+left unset saves as an empty string that no constraint objects to, so both resources set it on
+every row: a record's own identifier where the row carries one, and the site it belongs to where it
+does not.
 
 ## The portal's own vocabulary decides, not the template's sheet
 

@@ -1126,3 +1126,26 @@ No decisions.md entry: T036 is documentation only, resolving no
 ambiguity of its own.
 
 Next: full repo verify, then the completion report.
+
+## 2026-09-11 — Review fixes
+
+Did: acted on the code review's four findings.
+
+- Wired `validate_official_header()` into `import_ghfdb_template()`, which closes the US-1 concern
+  recorded above, and corrected the header set it checks against — it was assembled from the
+  published database structure and would have refused a corrected copy of the official template
+  (decisions.md D19).
+- A row that names a site but leaves `lat_NS` or `long_EW` empty is now a fault naming the row and
+  the empty columns. It used to default both to zero and save the site at 0°N 0°E.
+- Both resources now set `name` on every row they save. Determinations carrying an `ID`, and every
+  parent value in every file, used to save with a blank name (decisions.md D20).
+- Corrected the `validate_instance()` docstring and the importing guide, which both claimed a
+  database backstop for `name` that cannot exist.
+
+Not changed: the entry point holds two deep copies of the parsed rows, one per pass, which the
+review raised as memory amplification on an untrusted upload. A template's row count is bounded by
+what an assessment team fills in by hand, and dropping a copy means either re-reading the file or
+copying column subsets — more moving parts than the cost justifies.
+
+Verified: `poetry run pytest` — 689 passed, 1 skipped, 13 xfailed. Each new test was run against the
+unfixed code first and failed for the right reason.

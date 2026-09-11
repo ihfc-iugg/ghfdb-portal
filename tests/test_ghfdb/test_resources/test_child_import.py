@@ -134,6 +134,27 @@ class TestGHFDBChildImportResourceImport:
         assert not result.has_errors(), result.invalid_rows
         assert HeatFlow.objects.filter(ghfdb_id=1).exists()
 
+    def test_a_row_with_an_id_is_named_by_it(self, dataset):
+        """Every determination carries a name. ``name`` is a required field
+        with no default, so an unset one saves as an empty string without the
+        database objecting, and the determination has nothing to display
+        itself by — the row's own identifier is what names it."""
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(CHILD_ROW),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        assert HeatFlow.objects.get(ghfdb_id=1).name == "1"
+
     def test_parent_fk_resolved_via_id_parent(self, dataset):
         """HeatFlow.parent FK is resolved from ID_parent column."""
         import_parents(dataset)

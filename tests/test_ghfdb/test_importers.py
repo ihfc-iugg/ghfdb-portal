@@ -52,6 +52,8 @@ ROW = {
     "corr_SUR_flag": "No",
     "corr_CONV_flag": "No",
     "corr_HR_flag": "No",
+    "geo_lithology": "",
+    "geo_stratigraphy": "",
     "T_grad_mean": "",
     "T_grad_uncertainty": "",
     "T_grad_mean_cor": "",
@@ -115,6 +117,112 @@ def _build_official_xlsx(headers: list, data_rows: list[list]) -> bytes:
     buf = BytesIO()
     wb.save(buf)
     return buf.getvalue()
+
+
+def _corrected_official_template_bytes() -> bytes:
+    """The real template fixture, with the two ADR 0003 misspellings in its
+    header corrected and nothing else changed.
+
+    The distributed template is refused on its header (ADR 0003), so a test
+    that needs the import to read the real file all the way through has to
+    correct those two cells first.
+    """
+    from io import BytesIO
+    from pathlib import Path
+
+    import openpyxl
+
+    path = (
+        Path(__file__).resolve().parents[1]
+        / "fixtures"
+        / "official_upload_template.xlsx"
+    )
+    workbook = openpyxl.load_workbook(path)
+    corrections = {"tc_pT_fuction": "tc_pT_function", "Ref_ISGN": "Ref_IGSN"}
+    for cell in workbook["data list"][6]:
+        if cell.value in corrections:
+            cell.value = corrections[cell.value]
+
+    buffer = BytesIO()
+    workbook.save(buffer)
+    return buffer.getvalue()
+
+
+@pytest.mark.django_db
+class TestTheHeaderRefusesABeforeAnythingIsRead:
+    """FR-003/FR-010: the entry point refuses a file whose header is not the
+    official template's, before it reads a row and before it opens the
+    transaction, so nothing from a refused file lands."""
+
+    def test_a_file_missing_a_template_column_is_refused_and_the_column_named(
+        self, dataset
+    ):
+        from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        short_row = {key: value for key, value in ROW.items() if key != "tc_mean"}
+
+        with pytest.raises(ValueError) as excinfo:
+            import_ghfdb_template(make_dataset(short_row), dataset)
+
+        assert "tc_mean" in str(excinfo.value)
+        assert not HeatFlowSite.objects.exists()
+        assert not ParentHeatFlow.objects.exists()
+        assert not HeatFlow.objects.exists()
+
+    def test_a_file_carrying_a_column_the_template_does_not_have_is_refused(
+        self, dataset
+    ):
+        from heat_flow.models import HeatFlowSite
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        with pytest.raises(ValueError) as excinfo:
+            import_ghfdb_template(make_dataset({**ROW, "q_invented": "1"}), dataset)
+
+        assert "q_invented" in str(excinfo.value)
+        assert not HeatFlowSite.objects.exists()
+
+    def test_the_misspelled_columns_of_the_distributed_template_are_refused(
+        self, dataset
+    ):
+        """ADR 0003: a file produced from the currently distributed template
+        carries ``tc_pT_fuction`` and ``Ref_ISGN`` and is refused on them,
+        rather than silently mapped."""
+        from project.ghfdb.importers import import_ghfdb_template
+
+        outdated = {
+            **{
+                key: value
+                for key, value in ROW.items()
+                if key not in ("tc_pT_function", "igsn")
+            },
+            "tc_pT_fuction": "",
+            "Ref_ISGN": "",
+        }
+
+        with pytest.raises(ValueError) as excinfo:
+            import_ghfdb_template(make_dataset(outdated), dataset)
+
+        message = str(excinfo.value)
+        assert "tc_pT_fuction" in message
+        assert "Ref_ISGN" in message
+
+    def test_the_official_template_itself_is_read(self, dataset):
+        """The refusal is narrow enough to let the real thing through: a
+        corrected copy of the official template, header row and row label
+        cell exactly as the template carries them, is read rather than
+        refused (FR-017)."""
+        from project.ghfdb.importers import import_ghfdb_template
+
+        # Returning at all is the assertion: a refused header raises before a
+        # row is read. The blank example rows the template ships with have
+        # row-level faults of their own, which is not what this covers.
+        outcome = import_ghfdb_template(_corrected_official_template_bytes(), dataset)
+
+        assert outcome.parent.base_errors == []
+        assert outcome.child.base_errors == []
 
 
 @pytest.mark.django_db
@@ -361,6 +469,51 @@ class TestGHFDBTemplateRefusedWhole:
         assert not HeatFlow.objects.exists()
 
 
+    def test_a_named_row_without_its_coordinate_pair_names_its_row_and_refuses_the_file(
+        self, dataset
+    ):
+        """A site is its coordinates (ADR 0006), so a row that names a site
+        but leaves the coordinate pair empty has nowhere to put it: the fault
+        names the row and the empty columns, and the file is refused. A blank
+        cell must not become zero, which would file the site in the Gulf of
+        Guinea and report nothing."""
+        from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        row1 = dict(ROW)
+        row1["lat_NS"] = ""
+        row1["long_EW"] = ""
+
+        outcome = import_ghfdb_template(make_dataset(row1), dataset)
+
+        assert outcome.has_errors()
+        row_number, errors = outcome.parent.row_errors()[0]
+        assert row_number == 1
+        message = str(errors[0].error)
+        assert "lat_NS" in message
+        assert "long_EW" in message
+
+        assert not HeatFlowSite.objects.exists()
+        assert not ParentHeatFlow.objects.exists()
+        assert not HeatFlow.objects.exists()
+
+    def test_a_row_missing_only_its_latitude_is_refused_too(self, dataset):
+        """Half a coordinate pair places nothing either."""
+        from heat_flow.models import HeatFlowSite
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        row1 = dict(ROW)
+        row1["lat_NS"] = ""
+
+        outcome = import_ghfdb_template(make_dataset(row1), dataset)
+
+        assert outcome.has_errors()
+        assert "lat_NS" in str(outcome.parent.row_errors()[0][1][0].error)
+        assert not HeatFlowSite.objects.exists()
+
+
 @pytest.mark.django_db
 class TestControlledVocabularyDecides:
     """T027 — US-5/#204: the portal's own concepts decide what a controlled-
@@ -528,10 +681,9 @@ class TestControlledVocabularyDecides:
     def test_the_import_never_opens_the_controlled_vocabulary_sheet(self, dataset):
         """T031 — proven by sheet name, not by hoping: wraps the real
         ``openpyxl.load_workbook()`` call the reader makes while importing
-        the real, unmodified template fixture, and records every sheet
-        name reached through ``Workbook.__getitem__``. A future change
-        that starts honouring the sheet fails here."""
-        from pathlib import Path
+        the real template fixture, and records every sheet name reached
+        through ``Workbook.__getitem__``. A future change that starts
+        honouring the sheet fails here."""
         from unittest import mock
 
         import openpyxl
@@ -555,12 +707,7 @@ class TestControlledVocabularyDecides:
         def _tracking_load_workbook(*args, **kwargs):
             return _TrackingWorkbook(real_load_workbook(*args, **kwargs))
 
-        path = (
-            Path(__file__).resolve().parents[1]
-            / "fixtures"
-            / "official_upload_template.xlsx"
-        )
-        xlsx_bytes = path.read_bytes()
+        xlsx_bytes = _corrected_official_template_bytes()
 
         with mock.patch("openpyxl.load_workbook", side_effect=_tracking_load_workbook):
             import_ghfdb_template(xlsx_bytes, dataset)

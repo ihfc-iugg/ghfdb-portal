@@ -20,6 +20,14 @@ The header check is also how a revised template is detected. Nothing in the file
 of the template it was produced from, so a renamed, added or dropped column is discovered when the
 header stops matching.
 
+"The header is not the official one" means one of two things: a column the template asks for is
+missing, or a column the template does not carry is present. Seven columns are exempt from the first
+half, because a perfectly good submission can be without them — the two identifier columns, which a
+first submission has no values for and the portal supplies itself, the two sample-reference columns,
+which nothing in the data model holds, and the three reviewer columns, which are filled in during
+assessment after a submission has been read. Column order is not part of the check: every reader
+addresses columns by name, and a contributor who moved one has still sent every value asked for.
+
 ## Why
 
 The obligation row and the range row are data reporting contracts. They describe what a good

@@ -377,8 +377,28 @@ class ParentWidget(RelatedModelWidget):
 
         from fairdm.contrib.location.models import Point
 
-        lat = float((row or {}).get("lat_NS", 0) or 0)
-        lng = float((row or {}).get("long_EW", 0) or 0)
+        # A site is its coordinates (ADR 0006), so a named row with no
+        # coordinate pair has nowhere to be placed and is a fault reported
+        # against the row. Defaulting a blank cell to zero would file the
+        # site in the Gulf of Guinea instead.
+        raw_lat = (row or {}).get("lat_NS")
+        raw_lng = (row or {}).get("long_EW")
+        missing = [
+            column
+            for column, raw in (("lat_NS", raw_lat), ("long_EW", raw_lng))
+            if not str(raw if raw is not None else "").strip()
+        ]
+        if missing:
+            raise ValueError(
+                _(
+                    "Row names a site but leaves %(columns)s empty; a site cannot be "
+                    "placed without both a latitude and a longitude."
+                )
+                % {"columns": " and ".join(f"'{column}'" for column in missing)}
+            )
+
+        lat = float(raw_lat)
+        lng = float(raw_lng)
 
         instance = super().clean(value, row=row, **kwargs)
         if instance is not None:

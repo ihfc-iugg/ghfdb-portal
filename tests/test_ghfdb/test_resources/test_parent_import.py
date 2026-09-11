@@ -76,6 +76,44 @@ class TestGHFDBParentImportResourceImport:
         assert ParentHeatFlow.objects.filter(ghfdb_id=1).exists()
         assert HeatFlowSite.objects.filter(name="Test Site Alpha").exists()
 
+    def test_a_row_with_an_identifier_names_the_parent_value_by_it(self, dataset):
+        """``name`` is required and has no default, so an unset one saves as
+        an empty string and the record has nothing to display itself by. The
+        row's identifier names it."""
+        from heat_flow.models import ParentHeatFlow
+
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        result = GHFDBParentImportResource().import_data(
+            make_dataset(PARENT_ROW),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        assert ParentHeatFlow.objects.get(ghfdb_id=1).name == "1"
+
+    def test_a_row_without_an_identifier_is_named_after_its_site(self, dataset):
+        """The fallback is the site, which is resolved from the coordinates,
+        so it holds steady across a repeat import of the same file."""
+        from heat_flow.models import ParentHeatFlow
+
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        row = {**PARENT_ROW, "ID_parent": ""}
+
+        result = GHFDBParentImportResource().import_data(
+            make_dataset(row),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        (parent,) = ParentHeatFlow.objects.all()
+        assert parent.name == "Test Site Alpha"
+
     def test_upsert_on_ghfdb_id_does_not_duplicate(self, dataset):
         """Re-importing the same ID_parent updates, does not create a second record."""
         from heat_flow.models import ParentHeatFlow

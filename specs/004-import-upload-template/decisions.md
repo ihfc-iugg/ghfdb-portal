@@ -574,3 +574,73 @@ fix.
 
 **ADR:** docs/adr/0014-a-determination-without-an-identifier-is-its-row.md — graduated. A determination
 with no identifier is recognised by its site, its publication and its place in the file.
+
+## D19 — The header check refuses a file at the entry point, and seven columns are optional
+
+**Ambiguous because** FR-003 asks for a reader that "MUST recognise the official template's header
+row and refuse any file whose header is not it", and T006 delivered `validate_official_header()`
+against a set assembled from `PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS +
+PORTAL_ADDITION_COLUMNS` — the published *database structure*, which is not the same list as the
+*submission template*. Nothing called it, so the mismatch never showed up against a real file, and
+the progress note at US-1 flagged the wiring as unrouted.
+
+**Confirmed in the code**: the assembled set demanded five columns the template does not carry at
+all (`ID_parent`, `quality_parent`, `quality_child`, `Quality_Code_Child`, `Quality_Score_Parent`)
+and omitted `igsn`, which the template does carry and the child resource reads
+(`child.py:132`). `GHFDBImportFormat.create_dataset()` takes row 6 whole, so the header list also
+carries the template's own row-label cell in column A. Wired as it stood, the check would have
+refused a corrected copy of the official template itself, and the portal's own sample file with it.
+
+**Chosen**: `UPLOAD_TEMPLATE_HEADER_ROW` is now the template's header row in the template's own
+order, with the two ADR 0003 misspellings written corrected, pinned by a test to an unmodified copy
+of the template (FR-017). A file is refused when it drops a column the template asks for, or carries
+one the template does not have — including either misspelling. Seven columns may be absent without
+making it a different template: `ID` and `ID_parent`, which a first submission has no values for and
+both resources inject when missing; `Ref_IGSN` and `igsn`, which nothing in the data model holds;
+and the three reviewer columns, which are filled in during assessment, after a submission is read.
+Column order is not checked, and the row-label cell is ignored. `import_ghfdb_template()` runs the
+check before it opens the transaction, so a refused file is refused with nothing written (FR-010).
+
+**Defensible because** every membership decision is traceable to the template or to an FR: required
+is "the template asks for it", optional is "FR-009 says it is accepted and not stored" or "the
+resources supply it themselves". The two ADR 0003 misspellings are refused by the same rule that
+refuses any other column the template does not carry, rather than by a second mechanism.
+
+**Consequence accepted**: a revised template that adds or renames a column is refused until this
+list is updated, which is the detection mechanism ADR 0012 chose deliberately. A file that drops one
+of the seven optional columns and also drops a required one is refused on the required one only.
+
+**Revisit if** the published template is corrected upstream, at which point the corrected-spelling
+substitution here collapses into reading the template's own names.
+
+**ADR:** docs/adr/0012-what-refuses-an-uploaded-file.md — extended in place with what "the header is
+not the official one" means precisely.
+
+## D20 — Both resources name every record they save, because the database cannot back `name` up
+
+**Ambiguous because** D15 excluded `sample`, `dataset` and `name` from row validation on the
+strength of "the DB's own NOT NULL constraint is the backstop if either resource ever fails to set
+them", and recorded the consequence as a *future* bug surfacing as an `IntegrityError`-shaped row
+error.
+
+**Confirmed in the code**: the backstop does not exist for `name`. It is a required `CharField` on
+`BaseModel` with no default, and an attribute never set saves as `""`, which satisfies NOT NULL — no
+error, located or otherwise. It was not a future bug either: the child resource named only its
+no-ID rows, so every row carrying an `ID` saved with a blank name, and the parent resource named
+nothing at all, so every parent value in every file did.
+
+**Chosen**: both resources set `name` on every row. A record is named by its own identifier where
+the row carries one (`ID` for a determination, `ID_parent` for a parent value), and by its stable
+fallback where it does not — the natural key for a determination (D18), the site for a parent value,
+which is itself resolved from the coordinates and so holds steady across a repeat import.
+
+**Defensible because** the alternative — validating `name` like any other field — refuses every row
+of every file, which is the problem D15 exists to solve. Naming the record from data the row already
+carries needs no new column and no new lookup.
+
+**Consequence accepted**: a determination's name duplicates its `ghfdb_id`, and a parent value's name
+duplicates its site's. Both are labels for display, not identity: matching on re-import still goes
+through `import_id_fields` and the coordinate fallback.
+
+**Revisit if** a story gives either record a display name of its own, at which point this fallback
+becomes the default rather than the only source.

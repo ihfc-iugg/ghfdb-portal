@@ -165,6 +165,15 @@ class GHFDBParentImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         site = self._get_or_create_site(id_parent, row)
         instance.sample = site
 
+        # Every parent value carries a name, for the same reason each
+        # determination beneath it does: name is required, an unset one saves
+        # as an empty string without the database objecting, and the record
+        # then has nothing to display itself by. The row's own identifier
+        # names it where the row has one, and the site names it where the row
+        # has not — the site is resolved from the coordinates, so that
+        # fallback holds steady across a repeat import.
+        instance.name = str(id_parent).strip() or site.name
+
     def after_save_instance(self, instance, row, **kwargs):
         """Apply M2M relations (explo_purpose) to the site."""
         if instance.sample_id:
