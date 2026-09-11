@@ -392,6 +392,52 @@ class TestGHFDBParentImportRequiresNamedDataset:
             resource.before_import(ds)
 
 
+@pytest.mark.django_db
+class TestGHFDBParentImportTwoCoordinatePairs:
+    """T009 — US-2's independent test: two sites, each with its own parent
+    value, both in the dataset the caller named (FR-005, FR-006)."""
+
+    def test_two_coordinate_pairs_produce_two_sites_in_the_named_dataset(
+        self, dataset
+    ):
+        """Two rows at two coordinate pairs each become a site carrying its
+        own P-column parent value, both attached to the named dataset."""
+        from heat_flow.models import HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        row_a = dict(PARENT_ROW)
+        row_b = dict(PARENT_ROW)
+        row_b["ID_parent"] = "2"
+        row_b["name"] = "Test Site Beta"
+        row_b["lat_NS"] = "50.0"
+        row_b["long_EW"] = "8.0"
+        row_b["q"] = "90.0"
+
+        resource = GHFDBParentImportResource()
+        result = resource.import_data(
+            make_dataset(row_a, row_b),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        assert HeatFlowSite.objects.count() == 2
+        assert ParentHeatFlow.objects.count() == 2
+
+        for site in HeatFlowSite.objects.all():
+            assert site.dataset_id == dataset.pk
+
+        alpha = ParentHeatFlow.objects.get(ghfdb_id=1)
+        beta = ParentHeatFlow.objects.get(ghfdb_id=2)
+        assert float(alpha.value.magnitude) == pytest.approx(70.0)
+        assert float(beta.value.magnitude) == pytest.approx(90.0)
+        assert alpha.dataset_id == dataset.pk
+        assert beta.dataset_id == dataset.pk
+        assert alpha.sample_id != beta.sample_id
+
+
 class TestGHFDBParentImportResourceAccessControl:
     """T029 — Staff-only access control."""
 
