@@ -3,7 +3,7 @@
   "feature": "004-import-upload-template",
   "branch": "004-import-upload-template",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "IMPLEMENT",
+  "state": "CONVERGE",
   "state_history": [
     {
       "state": "PLAN",
@@ -19,6 +19,16 @@
       "state": "IMPLEMENT",
       "at": "2026-09-10T22:58:09Z",
       "note": "design review closed one round, three findings folded; plan notification sent"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-09-11T17:58:13Z",
+      "note": "every story accepted; validate_instance deduplicated, four decisions graduated to architecture records, no migrations to squash"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-09-11T17:58:41Z",
+      "note": "every story accepted; the shared row-validation override deduplicated, four decisions graduated to architecture records, no migrations to squash"
     }
   ],
   "gates": {
@@ -692,7 +702,7 @@
   ],
   "budgets": {
     "converge_cycles": {
-      "used": 0,
+      "used": 2,
       "max": 2
     },
     "review_cycles": {
