@@ -469,3 +469,44 @@ No decisions.md entry: nothing ambiguous was resolved, and no production
 code changed.
 
 Next: T018 — `relevant_child` names exactly the contributing children.
+
+## 2026-09-11 — Implementer US-3 · T018
+
+Did: added `TestGHFDBChildRelevantChildFlag` to `test_child_import.py`
+(FR-006): two determinations, one `relevant_child="Yes"` and one
+`relevant_child="No"`, and asserted both directions — the contributing
+child is marked `is_relevant=True`, the non-contributing one
+`is_relevant=False`.
+
+Verified: `poetry run pytest
+tests/test_ghfdb/test_resources/test_child_import.py::TestGHFDBChildRelevantChildFlag
+-x -q` — passed on first run, no production change made. Carried to T019
+for the non-vacuity probe.
+
+Next: T019 — probe the passing test before accepting it.
+
+## 2026-09-11 — Implementer US-3 · T019
+
+Did: T018's test passed against the unmodified tree, so no production
+change was needed. Probed per the brief's non-vacuity rule: temporarily
+added `instance.is_relevant = True` unconditionally in
+`GHFDBChildImportResource.before_save_instance`, ran the T018 test,
+watched it fail on the non-contributing child's assertion, then restored
+`child.py` from a pre-edit copy and confirmed a clean diff and a passing
+re-run.
+
+Verified:
+- Probe (broken): `poetry run pytest
+  tests/test_ghfdb/test_resources/test_child_import.py::TestGHFDBChildRelevantChildFlag
+  -x -q` — 1 failed (`child_b.is_relevant` was `True`, expected `False`).
+- Restore: `diff` against the pre-edit copy of `child.py` — no
+  differences.
+- Restored: full module —
+  `poetry run pytest tests/test_ghfdb/test_resources/test_child_import.py -q`
+  — 26 passed.
+
+No decisions.md entry: nothing ambiguous was resolved, and no production
+code changed.
+
+Next: T020 — every child object attaches to the named dataset, proven
+against a decoy.

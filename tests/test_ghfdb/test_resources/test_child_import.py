@@ -896,3 +896,45 @@ class TestGHFDBChildSubMeasurementsPerDetermination:
         pm_b = ProbeMetadata.objects.get(interval=child_b.sample)
         assert float(pm_a.penetration.magnitude) == pytest.approx(3.0)
         assert float(pm_b.penetration.magnitude) == pytest.approx(6.0)
+
+
+@pytest.mark.django_db
+class TestGHFDBChildRelevantChildFlag:
+    """T018 — US-3: `relevant_child` names exactly the children that fed the
+    parent value, and no others (FR-006)."""
+
+    def test_relevant_child_marks_exactly_the_contributing_children(self, dataset):
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row_a = dict(CHILD_ROW)
+        row_a["ID"] = "1"
+        row_a["q_top"] = "0"
+        row_a["q_bottom"] = "500"
+        row_a["relevant_child"] = "Yes"
+
+        row_b = dict(CHILD_ROW)
+        row_b["ID"] = "2"
+        row_b["q_top"] = "500"
+        row_b["q_bottom"] = "1000"
+        row_b["relevant_child"] = "No"
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row_a, row_b),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+
+        child_a = HeatFlow.objects.get(ghfdb_id=1)
+        child_b = HeatFlow.objects.get(ghfdb_id=2)
+
+        # The child that fed the parent value is marked...
+        assert child_a.is_relevant is True
+        # ...and the one that did not is not.
+        assert child_b.is_relevant is False
