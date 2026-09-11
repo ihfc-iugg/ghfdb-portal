@@ -407,3 +407,51 @@ the runtime cost of this story's fix is the same as before it.
 **Revisit if**: a future story reduces the two passes to one, or removes the child pass's dependency
 on the parent pass's rows being visible mid-transaction — at that point revisit whether a literal
 dry-run preview is worth adding back for a cheaper failure path on a very large file.
+
+## D17 — `set_m2m_relations`'s fault reaches `import_row`'s own exception handling unaided
+
+**Ambiguous because** T028a's brief flags that `set_m2m_relations` "runs after the row is saved,
+inside the transaction, so a raise from here may not reach the resource's error collection the way a
+clean-time fault does" — raising the question of whether narrowing the swallowed `except` is enough
+on its own, or whether the fault additionally needs to be threaded through some other channel (an
+explicit `import_validation_errors` dict, a deferred re-raise from `after_import_row`, or similar) to
+be recorded at all.
+
+**Confirmed in the installed library, empirically, before writing this**: every caller of
+`set_m2m_relations` (`GHFDBParentImportResource.after_save_instance`,
+`GHFDBChildImportResource.after_save_instance`) invokes it directly, with nothing between it and the
+resource's own `after_save_instance` hook. `import_export.resources.Resource.save_instance()`
+(`resources.py:281-309`) calls `before_save_instance()`, does the actual `instance.save()`, then calls
+`after_save_instance()` — all three in the same call frame — and `save_instance()` itself is called
+from inside `import_row()`'s single outer `try` block (`resources.py:754`), which already wraps
+`before_save_instance()`. An exception raised from `after_save_instance()` therefore unwinds through
+exactly the same `try`/`except ValidationError`/`except Exception` in `import_row()`
+(`resources.py:768-779`) that a `before_save_instance()` exception does — there is no separate path
+and nothing to wire up. Verified directly: with the swallow narrowed, an unrecognised concept in
+`tc_method` produces `outcome.has_errors() is True`, `outcome.child.row_errors()` naming row 1, and
+`tc_method` in the recorded message (T028b) — and reverting the narrowing to the original bare
+`except (ValueError, ValidationError): pass` makes the same assertion fail with `has_errors() is
+False`, the concept silently dropped and every other row's data committed (probe transcript in
+`progress.md` under T028b).
+
+**Chosen**: `set_m2m_relations` re-raises exactly like `RelatedModelWidget.clean`'s existing scalar
+loop already does — catch `(ValueError, ValidationError)`, wrap as `ValueError("%(model)s:
+%(err)s")`, re-raise with `from exc` — now also passing `column=row_col` through to
+`MultiConceptWidget.clean` so the many-valued path names its column the same way T028 made the scalar
+path do. No new recording channel; the one `import_row()` already uses for `before_save_instance` is
+sufficient, because `after_save_instance` runs inside the same protected call.
+
+**Defensible because** the resource never needed a new fault channel — DR-001's five-word phrase "so
+the swallow is now T028a" undersold how small the actual fix is once the call graph is traced, and
+building a separate recording path for something the existing mechanism already covers would be
+exactly the unjustified complexity `craft-simplify`/`craft-increments` rule out.
+
+**Consequence accepted**: an unrecognised concept in any of the thirteen many-valued columns now
+refuses the whole file (FR-011, FR-013), the same as a single-valued column fault did after T028 —
+where before T028a it was silently discarded and the relation left unset while everything else in the
+file committed.
+
+**Revisit if**: a future resource calls `set_m2m_relations` from a hook that does *not* run inside
+`import_row()`'s own `try` (a bulk path, an async task, a call made outside the import machinery
+entirely) — at that point this decision's premise no longer holds and the fault needs an explicit
+channel of its own.

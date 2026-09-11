@@ -757,4 +757,129 @@ assumption. No decisions.md entry: nothing ambiguous, no production code
 changed for this task — T022 already carries the fix, this task is its
 proof.
 
+## 2026-09-11 — US-5 · T027
+
+Did: added `TestControlledVocabularyDecides` to `test_ghfdb/test_importers.py`
+with `test_an_unrecognised_vocabulary_value_names_row_column_and_value_and_refuses_the_file`
+— one row, otherwise clean, with `environment` (a single-valued
+controlled-vocabulary column, via `ConceptWidget`) set to a value the
+portal's `GeographicEnvironment` vocabulary holds no concept for.
+
+First draft used `"not_a_real_environment"` as the bogus value and
+asserted `"environment" in message`; it passed immediately, for the wrong
+reason — the assertion was vacuously true because the substring
+`"environment"` appears inside `"not_a_real_environment"` itself, not
+because the fault names the column. Caught by printing the actual message
+before trusting the pass: `"HeatFlowSite: Invalid value
+'not_a_real_environment' for GeographicEnvironment vocabulary. Valid
+options are: [...]"` — the column name `environment` never appears in it
+at all, only the vocabulary class name `GeographicEnvironment` and the
+value. Rewrote with a bogus value that shares no substring with the
+column name (`"not_a_real_value"`) to make the assertion honest.
+
+Verified:
+- Red: `poetry run pytest
+  "tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides::test_an_unrecognised_vocabulary_value_names_row_column_and_value_and_refuses_the_file"
+  -x -q` — 1 failed on `assert "environment" in message`, against
+  `"HeatFlowSite: Invalid value 'not_a_real_value' for
+  GeographicEnvironment vocabulary. ..."` — the right reason: `environment`
+  is a pass-through resource field with no `attribute`, so its value is
+  never routed through `import_field()`/`import_instance()`'s column-aware
+  `ValidationError` wrapping; `ConceptWidget.clean()` is instead called
+  directly from `ParentWidget`/`RelatedModelWidget.clean()` inside
+  `_get_or_create_site()` (`before_save_instance`), and the plain
+  `ValueError` it raises falls into `import_row()`'s generic
+  `except Exception` handler, which records the message string but has no
+  concept of "column".
+
+No decisions.md entry: the ambiguity this task surfaced (why the column
+is missing) is the mechanism T028 fixes, not a judgement call of its own.
+
+Next: T028 — make the test pass in `ConceptWidget.clean` and
+`MultiConceptWidget.clean`.
+
+## 2026-09-11 — US-5 · T028
+
+Did: `ConceptWidget.clean()` and `MultiConceptWidget.clean()`
+(`project/ghfdb/resources/widgets.py`) now accept an optional `column`
+keyword; when a value fails to resolve, the raised message is prefixed
+`"Column '%(column)s': "` whenever the caller supplies one, falling back
+to the original unprefixed message otherwise so every existing caller and
+test that does not pass `column` sees no change at all.
+`RelatedModelWidget.clean()`'s scalar loop — the one caller that already
+holds the row's column name (`row_col`) at the point it calls
+`col_widget.clean(...)` — now passes `column=row_col` through.
+`QuantityWidget.clean()` (the only other widget reachable via
+`widget_map`) already accepts `**kwargs`, so the added keyword is a no-op
+there.
+
+Verified:
+- Green: `poetry run pytest
+  tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides
+  tests/test_ghfdb/test_resources/test_widgets.py -q` — 41 passed. T027
+  goes green; every pre-existing widget test (including the ones that
+  assert on the unprefixed message shape) is unaffected.
+- Lint, scoped: `poetry run ruff check
+  project/ghfdb/resources/widgets.py` and `poetry run ruff format --check
+  project/ghfdb/resources/widgets.py` — both clean.
+
+No decisions.md entry: T028's brief already named the exact fix location
+and shape; nothing left ambiguous.
+
+Next: T028a — close the swallow in `RelatedModelWidget.set_m2m_relations`
+so the many-valued vocabulary path enforces the same rule.
+
+## 2026-09-11 — US-5 · T028a, T028b
+
+Did: `RelatedModelWidget.set_m2m_relations()` no longer swallows
+`(ValueError, ValidationError)` from `m2m_widget.clean(...)` with a bare
+`except: pass`. It now mirrors the scalar loop in `clean()` that T028
+already exercises: catch, wrap as `ValueError("%(model)s: %(err)s")`,
+re-raise `from exc` — and pass `column=row_col` through so the
+many-valued path names its column the same way the scalar path now does.
+Added `test_an_unrecognised_value_in_a_many_valued_column_refuses_the_file`
+(T028b) to `TestControlledVocabularyDecides`, using `tc_method` (one of
+the thirteen many-valued columns DR-001 named, reached through
+`ConductivityWidget`'s `m2m_map`) rather than a single-valued column, per
+the brief's own warning that a single-valued test would pass over the top
+of this defect.
+
+T028b passed on first run against the already-fixed tree, so probed per
+`craft-tdd`/D14 rather than accepted on trust: saved a pre-probe copy of
+`widgets.py`, mechanically reverted `set_m2m_relations` to the original
+bare `except (ValueError, ValidationError): pass` (moving the `.set(qs)`
+call back inside the `try`, dropping the `column=` argument), re-ran,
+then restored from the saved copy and diffed to confirm a byte-clean
+restore.
+
+Verified:
+- Probe (broken): `poetry run pytest
+  "tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides::test_an_unrecognised_value_in_a_many_valued_column_refuses_the_file"
+  -q` — 1 failed on `assert outcome.has_errors()` — `False`: with the
+  swallow restored, the unrecognised `tc_method` concept is silently
+  discarded, `IntervalConductivity.method` (etc.) simply never gets set,
+  and the row commits as if nothing were wrong.
+- Restore: `diff /tmp/widgets_pre_probe.py
+  project/ghfdb/resources/widgets.py` — no differences (confirmed
+  byte-clean before any further edit).
+- Restored green: `poetry run pytest
+  tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides
+  tests/test_ghfdb/test_resources/test_widgets.py -q` — 41 passed.
+- Lint, scoped: `poetry run ruff check project/ghfdb/resources/widgets.py
+  tests/test_ghfdb/test_importers.py` and `poetry run ruff format --check`
+  on the same two files — both clean.
+
+decisions.md D17 records where the brief flagged genuine uncertainty:
+whether a fault raised from inside `set_m2m_relations` (called from
+`after_save_instance`, after the row is already saved) reaches the
+resource's fault-recording mechanism the same way a `before_save_instance`
+fault does. Traced and confirmed empirically (see D17): it does, unaided
+— `save_instance()` calls `before_save_instance()`, saves, then
+`after_save_instance()`, all inside `import_row()`'s one outer `try`, so
+narrowing the swallow was the whole fix; no new recording channel was
+needed.
+
+Next: T029 — a value the template's own vocabulary sheet lists, which the
+portal does not hold, is still refused.
+
 Next: full repo verify, then the completion report.

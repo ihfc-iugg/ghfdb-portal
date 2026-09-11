@@ -287,18 +287,31 @@ class RelatedModelWidget(Widget):
         return self.model(**model_kwargs)  # UNSAVED
 
     def set_m2m_relations(self, instance):
-        """Set M2M relationships on an already-saved instance using the last cleaned row."""
+        """Set M2M relationships on an already-saved instance using the last cleaned row.
+
+        Runs after the row is saved, inside the resource's row-processing
+        call frame (``save_instance`` calls ``before_save_instance``, then
+        ``after_save_instance``, which is where every caller of this method
+        invokes it) — a raised error here still reaches ``import_row``'s own
+        exception handling the same way a ``before_save_instance`` error
+        does (D17, ``specs/004-import-upload-template/decisions.md``), so it
+        refuses the file the same as any other located fault rather than
+        being lost after the instance is already saved.
+        """
         if instance is None or instance.pk is None or self._last_row is None:
             return
         for model_field, (row_col, m2m_widget) in self.m2m_map.items():
             raw = self._last_row.get(row_col, "")
             if raw:
                 try:
-                    qs = m2m_widget.clean(raw, row=self._last_row)
-                    if qs is not None:
-                        getattr(instance, model_field).set(qs)
-                except (ValueError, ValidationError):
-                    pass  # M2M errors are non-fatal during set_m2m_relations
+                    qs = m2m_widget.clean(raw, row=self._last_row, column=row_col)
+                except (ValueError, ValidationError) as exc:
+                    raise ValueError(
+                        _("%(model)s: %(err)s")
+                        % {"model": self.model.__name__, "err": str(exc)}
+                    ) from exc
+                if qs is not None:
+                    getattr(instance, model_field).set(qs)
 
 
 class ParentWidget(RelatedModelWidget):

@@ -392,3 +392,41 @@ class TestControlledVocabularyDecides:
         assert not HeatFlowSite.objects.exists()
         assert not ParentHeatFlow.objects.exists()
         assert not HeatFlow.objects.exists()
+
+    def test_an_unrecognised_value_in_a_many_valued_column_refuses_the_file(
+        self, dataset
+    ):
+        """T028b — the rule holds through the many-valued path too. Every
+        many-valued controlled-vocabulary column reaches
+        ``MultiConceptWidget.clean`` through
+        ``RelatedModelWidget.set_m2m_relations``, not through the scalar
+        path T027/T028 cover — ``tc_method`` is one of the thirteen columns
+        that path serves. Deliberately not a single-valued column like
+        ``environment``: a test written against one of those would pass
+        over the top of the defect T028a fixes (D6/DR-001)."""
+        from heat_flow.models import (
+            HeatFlow,
+            HeatFlowSite,
+            IntervalConductivity,
+            ParentHeatFlow,
+        )
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        row1 = dict(ROW)
+        row1["tc_mean"] = "2.5"
+        row1["tc_method"] = "not_a_real_method"
+
+        outcome = import_ghfdb_template(make_dataset(row1), dataset)
+
+        assert outcome.has_errors()
+        row_number, errors = outcome.child.row_errors()[0]
+        assert row_number == 1
+        message = str(errors[0].error)
+        assert "tc_method" in message
+        assert "not_a_real_method" in message
+
+        assert not HeatFlowSite.objects.exists()
+        assert not ParentHeatFlow.objects.exists()
+        assert not HeatFlow.objects.exists()
+        assert not IntervalConductivity.objects.exists()
