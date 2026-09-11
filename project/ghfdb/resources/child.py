@@ -18,13 +18,13 @@ References:
     - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
 """
 
-from django.core.exceptions import ValidationError
 from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
 from import_export import fields, widgets
 from import_export.resources import ModelResource
 from import_export.widgets import ForeignKeyWidget
 
 from ..constants import CORRECTION_COL_MAP, GHFDB_COLUMN_ORDER
+from .validation import ExcludeFieldsSetAfterValidation
 from .widgets import (
     ConductivityWidget,
     GradientWidget,
@@ -35,7 +35,7 @@ from .widgets import (
 )
 
 
-class GHFDBChildImportResource(ModelResource):
+class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
     """
     Import resource for GHFDB child-level data.
 
@@ -177,32 +177,6 @@ class GHFDBChildImportResource(ModelResource):
         for col_name in ("ID", "ID_parent"):
             if col_name not in (dataset.headers or []):
                 dataset.append_col(["" for _ in range(len(dataset))], header=col_name)
-
-    def validate_instance(
-        self, instance, import_validation_errors=None, validate_unique=True
-    ):
-        """As the base implementation, but excludes ``sample``, ``dataset``
-        and ``name`` from ``full_clean()``.
-
-        ``before_save_instance`` sets all three after this point in the
-        row's processing (DR-002, ``specs/004-import-upload-template/decisions.md``
-        D15), so validating them here would refuse every row on relations
-        the resource is about to set correctly, rather than on anything the
-        file itself got wrong.
-        """
-        errors = (
-            {} if import_validation_errors is None else import_validation_errors.copy()
-        )
-        if self._meta.clean_model_instances:
-            try:
-                instance.full_clean(
-                    exclude={*errors.keys(), "sample", "dataset", "name"},
-                    validate_unique=validate_unique,
-                )
-            except ValidationError as e:
-                errors = e.update_error_dict(errors)
-        if errors:
-            raise ValidationError(errors)
 
     def get_or_init_instance(self, instance_loader, row):
         """Return (instance, is_create) using natural-key lookup for no-ID child rows."""

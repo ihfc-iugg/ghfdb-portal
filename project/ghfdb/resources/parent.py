@@ -18,15 +18,15 @@ References:
 
 from typing import cast
 
-from django.core.exceptions import ValidationError
 from heat_flow.models import HeatFlowSite, ParentHeatFlow
 from import_export import fields, widgets
 from import_export.resources import ModelResource
 
+from .validation import ExcludeFieldsSetAfterValidation
 from .widgets import ParentWidget, QuantityWidget, YesNoWidget
 
 
-class GHFDBParentImportResource(ModelResource):
+class GHFDBParentImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
     """
     Import resource for GHFDB parent-level data.
 
@@ -131,32 +131,6 @@ class GHFDBParentImportResource(ModelResource):
 
         for i in reversed(rows_to_delete):
             del dataset[i]
-
-    def validate_instance(
-        self, instance, import_validation_errors=None, validate_unique=True
-    ):
-        """As the base implementation, but excludes ``sample``, ``dataset``
-        and ``name`` from ``full_clean()``.
-
-        ``before_save_instance`` sets all three after this point in the
-        row's processing (DR-002, ``specs/004-import-upload-template/decisions.md``
-        D15), so validating them here would refuse every row on relations
-        the resource is about to set correctly, rather than on anything the
-        file itself got wrong.
-        """
-        errors = (
-            {} if import_validation_errors is None else import_validation_errors.copy()
-        )
-        if self._meta.clean_model_instances:
-            try:
-                instance.full_clean(
-                    exclude={*errors.keys(), "sample", "dataset", "name"},
-                    validate_unique=validate_unique,
-                )
-            except ValidationError as e:
-                errors = e.update_error_dict(errors)
-        if errors:
-            raise ValidationError(errors)
 
     def get_or_init_instance(self, instance_loader, row):
         """Return (instance, is_create) using location-based lookup for no-ID rows."""
