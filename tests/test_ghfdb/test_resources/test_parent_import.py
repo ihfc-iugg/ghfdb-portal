@@ -372,6 +372,26 @@ class TestGHFDBParentImportRefusesSecondParent:
         assert not ParentHeatFlow.objects.filter(ghfdb_id=2).exists()
 
 
+@pytest.mark.django_db
+class TestGHFDBParentImportRequiresNamedDataset:
+    """T007 — FR-002: the import refuses to guess a dataset.
+
+    A dataset existing in the database is not enough to satisfy the
+    requirement — the old behaviour (``FairDataset.all_objects.first()``)
+    would have silently used it, which is exactly the guess FR-002 forbids.
+    """
+
+    def test_before_import_raises_when_no_dataset_is_named(self, dataset):
+        """before_import() raises rather than falling back to the first dataset."""
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        resource = GHFDBParentImportResource()
+        ds = make_dataset(PARENT_ROW)
+
+        with pytest.raises(ValueError, match="dataset"):
+            resource.before_import(ds)
+
+
 class TestGHFDBParentImportResourceAccessControl:
     """T029 — Staff-only access control."""
 
