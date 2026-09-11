@@ -167,3 +167,50 @@ Next: none — US-1 (T001-T006) complete. Full verify pending.
 Watch: the five pre-existing constants (`ID_parent`, `quality_parent`,
 `quality_child`, `Quality_Code_Child`, `Quality_Score_Parent`) and issue
 #122's half-landed BUG-010 work remain untouched, per decisions.md D7.
+
+## 2026-09-11 — Implementer US-2 · T007
+
+Did: added `TestGHFDBParentImportRequiresNamedDataset` to
+`test_parent_import.py`. Calls `before_import()` directly with no
+`fairdm_dataset` kwarg, with a real `Dataset` present in the database (the
+`dataset` fixture), and asserts it raises — proving the old fallback would
+have silently used that dataset rather than refusing.
+
+Verified: `poetry run pytest
+tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportRequiresNamedDataset -q`
+— failed first (`DID NOT RAISE ValueError`), confirming the fallback is
+still live; passed after T008.
+
+Next: T008 — remove the fallback.
+
+Watch: none.
+
+## 2026-09-11 — Implementer US-2 · T008
+
+Did: removed `kwargs.get("fairdm_dataset") or FairDataset.all_objects.first()`
+from both `GHFDBParentImportResource.before_import` and
+`GHFDBChildImportResource.before_import`; each now raises `ValueError`
+naming the resource when `fairdm_dataset` is absent. No lookup logic is
+added or removed for the case where a dataset IS named — the caller
+already passes a resolved instance, so the "reach private datasets"
+caution (R1 in plan.md) has nothing to narrow.
+
+Verified:
+- `poetry run pytest
+  tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportRequiresNamedDataset -q`
+  — 1 passed (T007 green).
+- `poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py
+  tests/test_ghfdb/test_resources/test_child_import.py -q` — 37 failed, 13
+  passed, 5 xfailed. All 37 failures are pre-existing tests calling
+  `import_data()` without `fairdm_dataset=`, unknowingly relying on the
+  removed fallback (same root cause in every case, confirmed by reading the
+  traceback of each). Not modified, per craft-tdd — recorded in
+  decisions.md D11 for Forge to apply the one-line fix each needs
+  (`fairdm_dataset=dataset`, the pattern already used in
+  `test_roundtrip.py`).
+
+Next: T009 — two sites, each with its parent value, in a named dataset.
+
+Watch: the full repo verify at the end of this story will report these 37
+as failing. This is the accepted, documented consequence in decisions.md
+D11, not a regression introduced by a later task.
