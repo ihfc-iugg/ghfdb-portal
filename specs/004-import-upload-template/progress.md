@@ -214,3 +214,31 @@ Next: T009 — two sites, each with its parent value, in a named dataset.
 Watch: the full repo verify at the end of this story will report these 37
 as failing. This is the accepted, documented consequence in decisions.md
 D11, not a regression introduced by a later task.
+
+## 2026-09-11 — Implementer US-2 · T009-T010
+
+Did: added `TestGHFDBParentImportTwoCoordinatePairs` to
+`test_parent_import.py` (T009): two rows at two coordinate pairs, imported
+with `fairdm_dataset=dataset`, asserted as two `HeatFlowSite` + two
+`ParentHeatFlow`, each with its own P-column value and both attached to
+the named dataset.
+
+T010 (make it pass) needed no production change: the per-site dataset
+wiring already existed in `before_save_instance` / `_get_or_create_site`
+(pre-dating this story) — T008 was what stood between it and a caller
+that could actually reach it. Probed rather than assumed: temporarily
+disabled `site.dataset = self._fairdm_dataset` in
+`_get_or_create_site` and confirmed the test fails
+(`site.dataset_id == dataset.pk`); restored.
+
+Verified:
+- `poetry run pytest
+  tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportTwoCoordinatePairs -q`
+  — 1 passed.
+- `poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py -q`
+  — 18 failed, 11 passed, 5 xfailed. Same 18 pre-existing failures as
+  before T009 (decisions.md D11) — no new regression from this test.
+
+Next: T011 — geography columns stored as supplied, never recomputed.
+
+Watch: none.
