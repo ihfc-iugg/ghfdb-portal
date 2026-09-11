@@ -320,3 +320,38 @@ class TestGHFDBTemplateRefusedWhole:
         assert HeatFlowSite.objects.count() == 3
         assert ParentHeatFlow.objects.count() == 3
         assert HeatFlow.objects.count() == 3
+
+    def test_an_empty_mandatory_model_field_names_its_row_and_column_and_refuses_the_file(
+        self, dataset
+    ):
+        """T026a — FR-011's fourth fault type: a row leaving a mandatory
+        model field empty. Before T022 this had no enforcement path at all
+        (DR-002): the widget silently sets the attribute to ``None`` and,
+        with ``clean_model_instances`` false, nothing ever called
+        ``full_clean()`` to catch it — the row wrote with a blank value, or
+        the database raised an unnamed, untranslated ``IntegrityError``
+        (SQLite has no ``value``/``unit`` split column pair to violate
+        here; the parent heat-flow ``value`` is what is left empty). The
+        fault must name its row and column, in a translated message
+        (Django's own ``full_clean()`` messages are already
+        ``gettext``-translated), and refuse the whole file."""
+        from django.utils.translation import gettext as _
+        from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        row1 = dict(ROW)
+        row1["q"] = ""
+
+        outcome = import_ghfdb_template(make_dataset(row1), dataset)
+
+        assert outcome.has_errors()
+        assert outcome.parent.has_validation_errors()
+        (invalid,) = outcome.parent.invalid_rows
+        assert invalid.number == 1
+        assert "value" in invalid.field_specific_errors
+        assert invalid.field_specific_errors["value"] == [_("This field cannot be null.")]
+
+        assert not HeatFlowSite.objects.exists()
+        assert not ParentHeatFlow.objects.exists()
+        assert not HeatFlow.objects.exists()

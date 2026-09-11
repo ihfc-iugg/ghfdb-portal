@@ -719,3 +719,42 @@ No decisions.md entry: nothing ambiguous, no production code changed.
 
 Next: T026a — an empty mandatory model field names its row and column, in
 a translated message, and refuses the whole file.
+
+## 2026-09-11 — Implementer US-4 · T026a
+
+Did: added
+`test_an_empty_mandatory_model_field_names_its_row_and_column_and_refuses_the_file`
+to `TestGHFDBTemplateRefusedWhole`. One row, otherwise clean, with `q`
+(the parent heat-flow value) left empty. Passed on first run against the
+already-landed T022/T025 tree, so probed rather than accepted on trust:
+temporarily set `clean_model_instances = False` on
+`GHFDBParentImportResource.Meta` — the exact pre-T022 form for this
+option — and re-ran.
+
+Verified:
+- Probe (broken): `poetry run pytest
+  "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole::test_an_empty_mandatory_model_field_names_its_row_and_column_and_refuses_the_file"
+  -x -q` — 1 failed, `outcome.parent.has_validation_errors()` was `False`
+  — confirming DR-002's claim directly: this fault type had no
+  enforcement path before `clean_model_instances` was turned on.
+- Restore: `diff` against the pre-probe copy of `resources/parent.py` —
+  no differences.
+- Restored: `poetry run pytest tests/test_ghfdb/test_importers.py -q` —
+  8 passed.
+- Wider check: `poetry run pytest tests/test_ghfdb/ -q` — 279 passed, 13
+  xfailed.
+- Lint, scoped: `poetry run ruff check project/ghfdb/importers.py
+  project/ghfdb/resources/parent.py project/ghfdb/resources/child.py
+  tests/test_ghfdb/test_importers.py` — 1 import-order fix applied to the
+  new test's own import block, nothing else changed; re-ran the module
+  after, still 8 passed.
+
+The actual Django message the model raises for this field is "This field
+cannot be null." (QuantityField checks null before blank), not "This
+field cannot be blank." as first guessed — corrected in the assertion
+against what the probe actually showed, not the docstring's initial
+assumption. No decisions.md entry: nothing ambiguous, no production code
+changed for this task — T022 already carries the fix, this task is its
+proof.
+
+Next: full repo verify, then the completion report.
