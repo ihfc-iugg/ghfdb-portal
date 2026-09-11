@@ -56,20 +56,34 @@
       "priority": "P1",
       "issue": null,
       "worktree": null,
-      "status": "todo",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
           "id": "T001",
           "status": "done",
           "attempts": 1,
-          "evidence": "tests/test_ghfdb/test_resources/test_template_columns.py::TestOfficialUploadTemplateFixture — 2 passed"
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_constants.py::TestOfficialUploadTemplateFixture"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_constants.py::TestOfficialUploadTemplateFixture -v \u2014 2 passed"
+            ]
+          }
         },
         {
           "id": "T002",
           "status": "done",
           "attempts": 1,
-          "evidence": "tests/test_ghfdb/test_resources/test_template_columns.py::TestTemplateColumnsMatchTheCanonicalConstants — 1 passed"
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_constants.py::TestTemplateColumnsMatchTheCanonicalConstants"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_constants.py -v \u2014 3 passed"
+            ]
+          }
         }
       ]
     },
@@ -78,32 +92,59 @@
       "priority": "P1",
       "issue": 200,
       "worktree": null,
-      "status": "todo",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
           "id": "T003",
           "status": "done",
           "attempts": 1,
-          "evidence": "specs/004-import-upload-template/decisions.md D7"
+          "evidence": {
+            "commands": [
+              "specs/004-import-upload-template/decisions.md D7 \u2014 the ten disagreements judged"
+            ]
+          }
         },
         {
           "id": "T004",
           "status": "done",
           "attempts": 1,
-          "evidence": "tests/test_ghfdb/test_resources/test_template_columns.py -v — 3 passed; tests/test_ghfdb/test_resources/test_schema_coverage.py tests/test_ghfdb/test_resources/test_export.py tests/test_ghfdb/test_admin.py tests/test_ghfdb/test_columns.py -v — 78 passed, 8 xfailed (unchanged)"
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_constants.py::TestTemplateColumnsMatchTheCanonicalConstants"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_constants.py -v \u2014 3 passed",
+              "poetry run pytest tests/test_ghfdb/test_resources/test_schema_coverage.py tests/test_ghfdb/test_resources/test_export.py tests/test_ghfdb/test_admin.py tests/test_ghfdb/test_columns.py -v \u2014 78 passed, 8 xfailed (unchanged)"
+            ]
+          }
         },
         {
           "id": "T005",
           "status": "done",
           "attempts": 1,
-          "evidence": "tests/test_ghfdb/test_resources/test_template_columns.py -v — 4 passed"
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_constants.py::TestEveryTemplateColumnIsMappedOrAccepted"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_constants.py -v \u2014 4 passed"
+            ]
+          }
         },
         {
           "id": "T006",
           "status": "done",
           "attempts": 1,
-          "evidence": "tests/test_ghfdb/test_resources/test_template_columns.py -v — 7 passed; poetry run pytest -q (full suite) — 646 passed, 1 skipped, 13 xfailed"
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_constants.py::TestOfficialHeaderRefusal"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_constants.py -v \u2014 7 passed",
+              "forge verify (independent, a782df0) \u2014 conformance/docs/lint/typecheck/test/build all green; 646 passed, 1 skipped, 13 xfailed"
+            ]
+          }
         }
       ]
     },
