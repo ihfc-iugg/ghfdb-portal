@@ -1024,3 +1024,37 @@ D14 anticipated.
 
 Next: T034 — a file identical except for a changed `q_top`/`q_bottom`
 must update the determination in place rather than duplicating it.
+
+## 2026-09-11 — US-6 · T034
+
+Did: added
+`test_a_changed_depth_interval_updates_the_determination_in_place` to
+`TestGHFDBTemplateRepeatImport`. Imports the no-ID/no-ID_parent row once,
+then re-imports it with `q_top`/`q_bottom` changed, and asserts exactly
+one `HeatFlow` exists afterward, that its primary key is the same one
+the first import created, and that its interval carries the corrected
+values — deliberately `q_top`/`q_bottom`, per DR-003/the brief, since a
+test that changed `qc` instead would pass over the top of the defect.
+
+Ran and watched it fail for the right reason before any production
+change:
+`AssertionError: assert 2 == 1` — the second import wrote a second
+`HeatFlow` rather than updating the first, because `_child_natural_key`
+(child.py) includes `q_top`/`q_bottom`, so changing either changes the
+row's lookup key and `get_or_init_instance` no longer finds the existing
+record.
+
+Verified:
+- Red: `poetry run pytest
+  "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRepeatImport::test_a_changed_depth_interval_updates_the_determination_in_place"
+  -x -q` — 1 failed, `assert 2 == 1`, confirming the reported defect.
+- Lint, scoped: `poetry run ruff check tests/test_ghfdb/test_importers.py`
+  — clean; `poetry run ruff format --check` flagged one line-wrap, applied
+  with `ruff format` (no assertion or fixture changed) and reviewed
+  before committing.
+
+No decisions.md entry yet: T034 is the reproduction only. The match
+strategy decision belongs to T035.
+
+Next: T035 — make T034 pass by changing the child match strategy without
+letting two genuinely distinct determinations at one site collide.

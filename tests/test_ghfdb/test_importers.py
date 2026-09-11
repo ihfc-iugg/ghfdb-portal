@@ -639,3 +639,38 @@ class TestGHFDBTemplateRepeatImport:
         assert parent_after.pk == parent_before.pk
         assert child_after.pk == child_before.pk
         assert child_after.parent_id == parent_after.pk
+
+    def test_a_changed_depth_interval_updates_the_determination_in_place(self, dataset):
+        """T034 — DR-003: ``q_top``/``q_bottom`` are ingredients of the
+        child's natural key (``_child_natural_key``, child.py). A file
+        identical except for a corrected depth interval — the single most
+        plausible real correction — must update the existing
+        determination rather than write a second one at the same site."""
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        row = {k: v for k, v in ROW.items() if k not in ("ID", "ID_parent")}
+
+        first = import_ghfdb_template(make_dataset(row), dataset)
+        assert not first.has_errors(), (
+            first.parent.invalid_rows,
+            first.child.invalid_rows,
+        )
+        child_before = HeatFlow.objects.get()
+
+        corrected = dict(row)
+        corrected["q_top"] = "100"
+        corrected["q_bottom"] = "600"
+
+        second = import_ghfdb_template(make_dataset(corrected), dataset)
+        assert not second.has_errors(), (
+            second.parent.invalid_rows,
+            second.child.invalid_rows,
+        )
+
+        assert HeatFlow.objects.count() == 1
+        child_after = HeatFlow.objects.get()
+        assert child_after.pk == child_before.pk
+        assert float(child_after.sample.top.magnitude) == pytest.approx(100.0)
+        assert float(child_after.sample.bottom.magnitude) == pytest.approx(600.0)
