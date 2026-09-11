@@ -340,6 +340,21 @@ class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
     def get_import_formats(self):
         return [GHFDBImportFormat, GHFDBSimpleImportFormat]
 
+    def process_dataset(self, dataset, form, request, **kwargs):
+        """Commit through the shared entry point (T013) rather than
+        re-implementing the parent-then-child sequence here.
+
+        No dataset-selection surface exists on this admin route yet
+        (decisions.md D12 — out of this feature's scope), so
+        ``fairdm_dataset`` is never supplied and this always raises the
+        located error T008 added, the same as it always silently wrote to
+        whichever dataset happened to be first before this story.
+        """
+        from .importers import import_ghfdb_template
+
+        imp_kwargs = self.get_import_data_kwargs(request=request, form=form, **kwargs)
+        return import_ghfdb_template(dataset, imp_kwargs.get("fairdm_dataset"))
+
     def get_export_resource_classes(self, request):
         """No export resource on this changelist (FR-021): ``ImportExportMixin``
         overrides only the import side, so without this the framework's

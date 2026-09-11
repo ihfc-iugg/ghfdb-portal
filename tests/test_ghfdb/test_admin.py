@@ -300,6 +300,35 @@ class TestGHFDBParentAdmin:
         )
         assert GHFDBChildImportResource not in resource_classes
 
+    def test_process_dataset_delegates_to_the_shared_entry_point(self, monkeypatch):
+        """T013: the commit step calls ``import_ghfdb_template()`` rather
+        than re-implementing the parent-then-child sequence here."""
+        import tablib
+
+        from project.ghfdb.models import GHFDBParent
+
+        called = {}
+
+        def fake_import_ghfdb_template(file, dataset):
+            called["file"] = file
+            called["dataset"] = dataset
+            return "OUTCOME-SENTINEL"
+
+        monkeypatch.setattr(
+            "project.ghfdb.importers.import_ghfdb_template",
+            fake_import_ghfdb_template,
+        )
+
+        model_admin = admin.site._registry[GHFDBParent]
+        ds = tablib.Dataset(headers=["name"])
+        request = RequestFactory().get("/")
+
+        result = model_admin.process_dataset(ds, form=None, request=request)
+
+        assert result == "OUTCOME-SENTINEL"
+        assert called["file"] is ds
+        assert called["dataset"] is None  # no dataset-selection surface yet (D12)
+
     @pytest.mark.django_db
     def test_changelist_renders_for_a_staff_user(self, staff_client, published_chain):
         """T098 (US-3 acceptance scenario 3)."""
