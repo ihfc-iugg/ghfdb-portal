@@ -37,7 +37,12 @@ class GHFDBImportOutcome:
     child: Result
 
     def has_errors(self) -> bool:
-        return self.parent.has_errors() or self.child.has_errors()
+        return (
+            self.parent.has_errors()
+            or self.parent.has_validation_errors()
+            or self.child.has_errors()
+            or self.child.has_validation_errors()
+        )
 
 
 def import_ghfdb_template(file: Any, dataset: Any) -> GHFDBImportOutcome:
@@ -77,4 +82,14 @@ def import_ghfdb_template(file: Any, dataset: Any) -> GHFDBImportOutcome:
             rollback_on_validation_errors=True,
         )
 
-    return GHFDBImportOutcome(parent=parent_result, child=child_result)
+        outcome = GHFDBImportOutcome(parent=parent_result, child=child_result)
+        if outcome.has_errors():
+            # Each pass already rolls back its own rows on its own faults
+            # (rollback_on_validation_errors above). This covers the case
+            # a single pass cannot: one pass faults while the other has
+            # nothing wrong with it and would otherwise commit its rows on
+            # its own (FR-010) — both passes share this transaction, so
+            # marking it here discards both once either one is at fault.
+            transaction.set_rollback(True)
+
+    return outcome
