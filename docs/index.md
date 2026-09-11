@@ -69,6 +69,7 @@ acknowledgements
 
 guides/introduction
 guides/map-exploration/index
+guides/importing-data
 :::
 
 :::{toctree}
