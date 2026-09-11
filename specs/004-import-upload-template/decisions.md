@@ -300,3 +300,31 @@ pre-existing, unrelated xfails from BUG-006/#122) — the 37 tests D11 left fail
 nothing else in either module moved.
 
 **Revisit if**: never — this was the one-time migration D11 already scoped.
+
+## D14 — US-3 needed no production change, so each of its tests was probed before being accepted
+
+**Ambiguous because** every acceptance criterion in US-3 — one interval per determination, gradient
+and conductivity and correction and probe values kept per determination, `relevant_child` mapped to
+exactly the contributing children, every created object attached to the caller's dataset — already
+held in `GHFDBChildImportResource` at the moment the story started. A test that passes the first
+time it is run proves nothing on its own: it may be asserting something the code cannot fail.
+
+**Chosen**: the story lands as tests only, with no edit to `project/ghfdb/resources/child.py`, and
+each test earns its place by a probe rather than by passing. For each one the specific mechanism it
+claims to cover was temporarily broken — the interval reused across rows, the gradient reused,
+`is_relevant` hard-coded, the conductivity's dataset assignment dropped — the test was watched
+failing for that reason, the file was restored, and the restore was confirmed byte-clean against a
+pre-edit copy before the commit. The probe transcripts are in `progress.md` under T015, T017, T019
+and T020.
+
+**Defensible because** the alternative — rewriting working code so the story has a diff — would
+trade a correct implementation for a risk, and the alternative to probing is a suite that grows
+four tests nobody has evidence are load-bearing.
+
+**Consequence accepted**: the guardrail that watches for changes to pre-existing tests flags this
+story, because `test_child_import.py` existed before it. The change is append-only: 211 added lines,
+zero removed, four new classes at the end of the module, no assertion or fixture above them touched.
+Triaged and approved on that evidence.
+
+**Revisit if**: a later story changes `child.py` in a way these four tests do not catch — that would
+mean the probes chose the wrong mechanism to break.
