@@ -10,7 +10,13 @@ assessment team actually fills in, not a hand-built approximation of it
 import filecmp
 from pathlib import Path
 
-from project.ghfdb.constants import CHILD_COLUMNS, META_FIELDS, PARENT_COLUMNS
+from project.ghfdb.constants import (
+    CHILD_COLUMNS,
+    META_FIELDS,
+    PARENT_COLUMNS,
+    PORTAL_ADDITION_COLUMNS,
+    REJECTED_MISSPELLED_COLUMNS,
+)
 
 OFFICIAL_TEMPLATE_PATH = (
     Path(__file__).resolve().parents[2] / "fixtures" / "official_upload_template.xlsx"
@@ -55,19 +61,24 @@ def _read_header_row(workbook):
 
 
 class TestTemplateColumnsMatchTheCanonicalConstants:
-    """T002: every column the official template carries must be recognised
-    by ``PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS`` — a column the
-    template carries that no constant covers is exactly the disagreement
-    FR-004 exists to catch."""
+    """T002/T004: every column the official template carries must be
+    recognised — either by ``PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS``,
+    or by one of the two documented exceptions in ``constants.py`` (US-1 D7):
+    the two ADR 0003 misspellings the portal rejects rather than maps, and
+    the four D8 portal-addition geography columns. A column the template
+    carries that resolves through neither is exactly the disagreement FR-004
+    exists to catch."""
 
     def test_every_template_column_resolves_to_a_canonical_constant(
         self, official_upload_template_workbook
     ):
         header = _read_header_row(official_upload_template_workbook)
         known = set(PARENT_COLUMNS) | set(CHILD_COLUMNS) | set(META_FIELDS)
-        resolved = {name for name in header if name in known}
+        excepted = set(REJECTED_MISSPELLED_COLUMNS) | set(PORTAL_ADDITION_COLUMNS)
+        resolved = {name for name in header if name in known or name in excepted}
 
         assert resolved == set(header), (
             "template columns not covered by PARENT_COLUMNS + CHILD_COLUMNS + "
-            f"META_FIELDS: {sorted(set(header) - resolved)}"
+            "META_FIELDS, nor a documented exception: "
+            f"{sorted(set(header) - resolved)}"
         )

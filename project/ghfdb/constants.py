@@ -126,10 +126,40 @@ CHILD_COLUMNS: list[str] = [
 
 # Quality/meta columns appended after PARENT_COLUMNS + CHILD_COLUMNS.
 # Do NOT include names already present in PARENT_COLUMNS or CHILD_COLUMNS.
+# ID, Reviewer_name, Reviewer_comment and Review_date are published-template
+# columns the portal accepts without storing (FR-009, US-1 D7). They belong
+# here rather than in PARENT_COLUMNS/CHILD_COLUMNS because those two feed
+# admin.py's ColumnDisplay.list_display_for(), which requires a matching
+# entry in columns.py's PublishedColumns.ENTRIES for every member.
 META_FIELDS: list[str] = [
     "Quality_Code_Child",
     "Quality_Score_Parent",
+    "ID",
+    "Reviewer_name",
+    "Reviewer_comment",
+    "Review_date",
 ]
 
 
 GHFDB_COLUMN_ORDER: list[str] = PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS
+
+# ---------------------------------------------------------------------------
+# Documented exceptions to "the template's spelling wins" (US-1 D7,
+# specs/004-import-upload-template/decisions.md).
+# ---------------------------------------------------------------------------
+
+# ADR 0003 (docs/adr/0003): the currently distributed template carries these
+# two misspellings. The portal keeps the corrected spelling internally
+# (Ref_IGSN, tc_pT_function, both already present above) and refuses a file
+# whose header carries either misspelled form, rather than silently mapping
+# it. They therefore never resolve against PARENT_COLUMNS/CHILD_COLUMNS/
+# META_FIELDS, by design.
+REJECTED_MISSPELLED_COLUMNS: list[str] = ["Ref_ISGN", "tc_pT_fuction"]
+
+# D8 (specs/002-ghfdb-proxy/decisions.md): site geography columns are portal
+# additions, not part of the published GHFDB structure. Stored on
+# HeatFlowSite (FR-008) and rendered by GHFDBParentAdmin after the published
+# block, but deliberately never a member of PARENT_COLUMNS — adding them
+# there would route them through ColumnDisplay.list_display_for(PARENT_COLUMNS)
+# ahead of that separate block.
+PORTAL_ADDITION_COLUMNS: list[str] = ["Country", "Region", "Continent", "Domain"]
