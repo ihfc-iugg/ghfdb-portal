@@ -158,38 +158,99 @@
       "tasks": [
         {
           "id": "T007",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportRequiresNamedDataset"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportRequiresNamedDataset -q — 1 passed"
+            ]
+          }
         },
         {
           "id": "T008",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportRequiresNamedDataset"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportRequiresNamedDataset -q — 1 passed (T007 green)",
+              "poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py tests/test_ghfdb/test_resources/test_child_import.py -q — 37 failed (pre-existing, decisions.md D11), 13 passed, 5 xfailed"
+            ]
+          }
         },
         {
           "id": "T009",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportTwoCoordinatePairs"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportTwoCoordinatePairs -q — 1 passed"
+            ]
+          }
         },
         {
           "id": "T010",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportTwoCoordinatePairs"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py -q — 18 failed (pre-existing, decisions.md D11), 11 passed, 5 xfailed — no new regression from T009"
+            ]
+          }
         },
         {
           "id": "T011",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportGeographyStoredAsSupplied"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportGeographyStoredAsSupplied -q — 1 passed",
+              "probed: removed ParentWidget's four geography scalar_map entries — test failed; restored"
+            ]
+          }
         },
         {
           "id": "T012",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportAcceptsUnstoredColumns",
+              "tests/test_ghfdb/test_resources/test_child_import.py::TestGHFDBChildImportAcceptsUnstoredColumns"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportAcceptsUnstoredColumns tests/test_ghfdb/test_resources/test_child_import.py::TestGHFDBChildImportAcceptsUnstoredColumns -q — 2 passed"
+            ]
+          }
         },
         {
           "id": "T013",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestImportGHFDBTemplate",
+              "tests/test_ghfdb/test_admin.py::TestGHFDBParentAdmin::test_process_dataset_delegates_to_the_shared_entry_point"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py -v — 4 passed",
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q — 42 passed"
+            ]
+          }
         }
       ]
     },
