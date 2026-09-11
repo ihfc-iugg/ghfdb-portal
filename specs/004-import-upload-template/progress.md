@@ -346,3 +346,39 @@ Next: full repo verify (§5), then the completion report.
 Watch: `GHFDBParentAdmin`'s import route cannot complete a real import
 until a dataset-selection surface exists (D12) — not a regression, since
 it never safely chose the right dataset before either.
+
+## 2026-09-11 — Implementer US-2 · TC01
+
+Did: repaired the 37 pre-existing tests D11 left failing when the
+dataset-guessing fallback was removed from both resources'
+`before_import()`. Each `import_data()` call site in
+`test_parent_import.py` and `test_child_import.py` that omitted
+`fairdm_dataset=` now passes `fairdm_dataset=dataset` — the fixture every
+one of those tests already receives — matching the pattern
+`test_roundtrip.py` already used. In `test_child_import.py`, the shared
+`import_parents()` helper (already parameterized on `dataset`) covers
+most of its callers with a single fix at the helper itself. No assertion,
+fixture, row, expected value, class or name in either module changed;
+`ruff check`'s `fix = true` reordered one unrelated import block in
+`test_child_import.py` (`TestGHFDBChildPrivateDatasetRegression`) as a
+side effect of a scoped lint run — reverted by hand to its original
+ordering, confirmed byte-identical to the pre-task committed file.
+Two commits, one per module (decisions.md D13).
+
+Verified:
+- `poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py
+  tests/test_ghfdb/test_resources/test_child_import.py -q` before any
+  edit — 37 failed, 17 passed, 5 xfailed, confirming D11's count.
+- `poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py
+  -q` after that module's fix — 31 passed, 5 xfailed.
+- `poetry run pytest tests/test_ghfdb/test_resources/test_child_import.py
+  -q` after that module's fix — 23 passed.
+- `poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py
+  tests/test_ghfdb/test_resources/test_child_import.py -q` — 54 passed, 5
+  xfailed (the same 5 pre-existing BUG-006/#122 xfails, untouched).
+- `poetry run ruff check` and `poetry run ruff format --check`, each
+  scoped to the one file just edited.
+
+Next: full repo verify (§5), then the completion report.
+
+Watch: none.

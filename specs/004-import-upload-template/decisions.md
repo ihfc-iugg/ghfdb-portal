@@ -272,3 +272,31 @@ through them, since neither route ever safely chose the right dataset before.
 
 **Revisit if**: R6/R7 adds a dataset-selection surface to either admin path — at that point it
 supplies `dataset=` to `import_ghfdb_template` and the route becomes usable again.
+
+## D13 — TC01: the 37 call sites D11 left unfixed now carry `fairdm_dataset=dataset`
+
+**Ambiguous because** D11 recorded 37 pre-existing tests across `test_parent_import.py` and
+`test_child_import.py` failing because they called `import_data()` without naming a dataset, and
+explicitly declined to fix them in that story — a pre-existing test that must change is reported,
+not silently repaired by the story that broke it. This follow-on task is that sanctioned repair,
+scoped to exactly the fix D11 already named: add `fairdm_dataset=dataset` to each call site, and
+nothing else.
+
+**Chosen**: every `import_data()` call in both modules that omitted `fairdm_dataset=` now passes
+`fairdm_dataset=dataset` — the `dataset` fixture every one of the 37 tests already receives,
+matching the pattern `test_roundtrip.py` already used at four call sites. In
+`test_child_import.py`, most call sites are covered by fixing the module's own `import_parents()`
+helper once, since it already takes `dataset` as a parameter and every caller passes it through.
+No assertion, fixture, row, expected value, class or name in either module changed — confirmed by
+diff review before each commit, and by running the narrowest scope after each edit.
+
+**Defensible because** this is exactly the one-line, evidence-backed fix D11 already named as the
+correct resolution, done as its own sanctioned change rather than folded into the story that
+removed the fallback — the separation D11 argued for.
+
+**Consequence accepted**: `poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py
+tests/test_ghfdb/test_resources/test_child_import.py` reports 54 passed, 5 xfailed (the same 5
+pre-existing, unrelated xfails from BUG-006/#122) — the 37 tests D11 left failing are green, and
+nothing else in either module moved.
+
+**Revisit if**: never — this was the one-time migration D11 already scoped.
