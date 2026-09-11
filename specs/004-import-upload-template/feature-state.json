@@ -502,8 +502,8 @@
       "id": "US5",
       "priority": "P2",
       "issue": 204,
-      "worktree": null,
-      "status": "todo",
+      "worktree": "/home/sam/projects/ihfc-iugg/ghfdb-portal-004-us5-vocab",
+      "status": "in_progress",
       "replans": 0,
       "tasks": [
         {
