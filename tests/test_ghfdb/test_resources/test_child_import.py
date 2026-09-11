@@ -106,7 +106,7 @@ def import_parents(dataset):
 
     resource = GHFDBParentImportResource()
     ds = make_dataset(PARENT_ROW)
-    resource.import_data(ds, dry_run=False, raise_errors=True)
+    resource.import_data(ds, dry_run=False, raise_errors=True, fairdm_dataset=dataset)
 
 
 # ---------------------------------------------------------------------------
@@ -127,7 +127,9 @@ class TestGHFDBChildImportResourceImport:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(CHILD_ROW)
-        result = resource.import_data(ds, dry_run=False, raise_errors=False)
+        result = resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         assert not result.has_errors(), result.invalid_rows
         assert HeatFlow.objects.filter(ghfdb_id=1).exists()
@@ -141,7 +143,9 @@ class TestGHFDBChildImportResourceImport:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(CHILD_ROW)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         child = HeatFlow.objects.get(ghfdb_id=1)
         assert child.parent is not None
@@ -156,8 +160,12 @@ class TestGHFDBChildImportResourceImport:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(CHILD_ROW)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         assert HeatFlow.objects.filter(ghfdb_id=1).count() == 1
 
@@ -170,7 +178,9 @@ class TestGHFDBChildImportResourceImport:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(CHILD_ROW)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         child = HeatFlow.objects.get(ghfdb_id=1)
         assert child.corrections.count() == 9
@@ -184,7 +194,9 @@ class TestGHFDBChildImportResourceImport:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(CHILD_ROW)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         child = HeatFlow.objects.get(ghfdb_id=1)
         t_corr = child.corrections.get(correction_type="T")
@@ -200,7 +212,9 @@ class TestGHFDBChildImportResourceImport:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(CHILD_ROW)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         child = HeatFlow.objects.get(ghfdb_id=1)
         assert child.thermal_gradient is not None
@@ -214,7 +228,9 @@ class TestGHFDBChildImportResourceImport:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(CHILD_ROW)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         child = HeatFlow.objects.get(ghfdb_id=1)
         assert child.thermal_conductivity is not None
@@ -231,7 +247,9 @@ class TestGHFDBChildImportResourceImport:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(row)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         child = HeatFlow.objects.get(ghfdb_id=1)
         assert child.thermal_gradient is None
@@ -248,7 +266,9 @@ class TestGHFDBChildImportResourceImport:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(row)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         child = HeatFlow.objects.get(ghfdb_id=1)
         assert child.thermal_conductivity is None
@@ -268,7 +288,9 @@ class TestGHFDBChildImportResourceImport:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(row)
-        result = resource.import_data(ds, dry_run=False, raise_errors=False)
+        result = resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         # Import must complete without row-level errors
         assert not result.has_errors(), (
@@ -350,7 +372,9 @@ class TestGHFDBChildProbeMetadata:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(row)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         child = HeatFlow.objects.get(ghfdb_id=1)
         assert ProbeMetadata.objects.filter(interval=child.sample).exists()
@@ -364,7 +388,9 @@ class TestGHFDBChildProbeMetadata:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(CHILD_ROW)  # probe_penetration = ""
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         child = HeatFlow.objects.get(ghfdb_id=1)
         assert not ProbeMetadata.objects.filter(interval=child.sample).exists()
@@ -389,6 +415,7 @@ class TestGHFDBChildTemplateNoIdRegression:
             make_dataset(parent_row),
             dry_run=False,
             raise_errors=True,
+            fairdm_dataset=dataset,
         )
 
         child_row = dict(CHILD_ROW)
@@ -403,6 +430,7 @@ class TestGHFDBChildTemplateNoIdRegression:
             make_dataset(child_row),
             dry_run=False,
             raise_errors=False,
+            fairdm_dataset=dataset,
         )
         assert not first.has_errors(), first.invalid_rows
 
@@ -412,6 +440,7 @@ class TestGHFDBChildTemplateNoIdRegression:
             make_dataset(child_row_update),
             dry_run=False,
             raise_errors=False,
+            fairdm_dataset=dataset,
         )
         assert not second.has_errors(), second.invalid_rows
 
@@ -435,6 +464,7 @@ class TestGHFDBChildTemplateNoIdRegression:
             make_dataset(parent_row),
             dry_run=False,
             raise_errors=True,
+            fairdm_dataset=dataset,
         )
 
         child_base = dict(CHILD_ROW)
@@ -454,6 +484,7 @@ class TestGHFDBChildTemplateNoIdRegression:
             make_dataset(row_a, row_b),
             dry_run=False,
             raise_errors=False,
+            fairdm_dataset=dataset,
         )
 
         assert not result.has_errors(), result.invalid_rows
@@ -475,7 +506,10 @@ class TestGHFDBChildAbsentHeaderRegression:
 
         parent_row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
         GHFDBParentImportResource().import_data(
-            make_dataset(parent_row), dry_run=False, raise_errors=True
+            make_dataset(parent_row),
+            dry_run=False,
+            raise_errors=True,
+            fairdm_dataset=dataset,
         )
 
         child_row = {k: v for k, v in CHILD_ROW.items() if k not in ("ID", "ID_parent")}
@@ -487,7 +521,7 @@ class TestGHFDBChildAbsentHeaderRegression:
         assert "ID_parent" not in ds.headers
 
         result = GHFDBChildImportResource().import_data(
-            ds, dry_run=False, raise_errors=False
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
         )
 
         assert not result.has_errors(), result.invalid_rows
@@ -504,7 +538,10 @@ class TestGHFDBChildAbsentHeaderRegression:
 
         parent_row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
         GHFDBParentImportResource().import_data(
-            make_dataset(parent_row), dry_run=False, raise_errors=True
+            make_dataset(parent_row),
+            dry_run=False,
+            raise_errors=True,
+            fairdm_dataset=dataset,
         )
 
         child_row = {k: v for k, v in CHILD_ROW.items() if k not in ("ID", "ID_parent")}
@@ -513,13 +550,19 @@ class TestGHFDBChildAbsentHeaderRegression:
         child_row["publication_reference"] = "Ref A"
 
         GHFDBChildImportResource().import_data(
-            make_dataset(child_row), dry_run=False, raise_errors=False
+            make_dataset(child_row),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
         )
 
         child_row_update = dict(child_row)
         child_row_update["qc"] = "77.7"
         result = GHFDBChildImportResource().import_data(
-            make_dataset(child_row_update), dry_run=False, raise_errors=False
+            make_dataset(child_row_update),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
         )
 
         assert not result.has_errors(), result.invalid_rows
@@ -544,7 +587,10 @@ class TestGHFDBAutoChildKeyRegression:
 
         parent_row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
         GHFDBParentImportResource().import_data(
-            make_dataset(parent_row), dry_run=False, raise_errors=True
+            make_dataset(parent_row),
+            dry_run=False,
+            raise_errors=True,
+            fairdm_dataset=dataset,
         )
 
         child_row = {k: v for k, v in CHILD_ROW.items() if k not in ("ID", "ID_parent")}
@@ -553,7 +599,10 @@ class TestGHFDBAutoChildKeyRegression:
         child_row["publication_reference"] = "Ref A"
 
         result = GHFDBChildImportResource().import_data(
-            make_dataset(child_row), dry_run=False, raise_errors=False
+            make_dataset(child_row),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
         )
 
         assert not result.has_errors(), result.invalid_rows
@@ -571,7 +620,10 @@ class TestGHFDBAutoChildKeyRegression:
 
         parent_row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
         GHFDBParentImportResource().import_data(
-            make_dataset(parent_row), dry_run=False, raise_errors=True
+            make_dataset(parent_row),
+            dry_run=False,
+            raise_errors=True,
+            fairdm_dataset=dataset,
         )
 
         child_row = {k: v for k, v in CHILD_ROW.items() if k not in ("ID", "ID_parent")}
@@ -580,7 +632,10 @@ class TestGHFDBAutoChildKeyRegression:
         child_row["publication_reference"] = "Ref A"
 
         result = GHFDBChildImportResource().import_data(
-            make_dataset(child_row), dry_run=True, raise_errors=False
+            make_dataset(child_row),
+            dry_run=True,
+            raise_errors=False,
+            fairdm_dataset=dataset,
         )
 
         assert not result.has_errors(), result.invalid_rows
@@ -709,9 +764,15 @@ class TestGHFDBChildPrivateDatasetRegression:
         import_parents(dataset)
 
         resource = GHFDBChildImportResource()
-        result = resource.import_data(make_dataset(CHILD_ROW), dry_run=False, raise_errors=False)
+        result = resource.import_data(
+            make_dataset(CHILD_ROW),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
 
         assert not result.has_errors(), [
-            (line, [str(e.error) for e in errors]) for line, errors in result.row_errors()
+            (line, [str(e.error) for e in errors])
+            for line, errors in result.row_errors()
         ]
         assert HeatFlow.objects.get(ghfdb_id=1).dataset == dataset
