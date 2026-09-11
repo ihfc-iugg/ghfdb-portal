@@ -390,38 +390,111 @@
       "tasks": [
         {
           "id": "T021",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole::test_a_later_row_fault_does_not_roll_back_an_earlier_row"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole -x -q \u2014 red first, on the partial write issue #190 reports: the earlier row was found in the database after the later row faulted",
+              "commit 8d175c6"
+            ]
+          }
         },
         {
           "id": "T022",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole"
+            ],
+            "commands": [
+              "rollback_on_validation_errors moved out of both resources' Meta and passed to each import_data() call from import_ghfdb_template(); clean_model_instances = True on both resources",
+              "validate_instance() overridden on both resources to exclude sample, dataset and name from full_clean() \u2014 before_save_instance() sets all three after validation runs (decisions.md D15, design review DR-002)",
+              "poetry run pytest tests/test_ghfdb/test_importers.py -q \u2014 T021 green",
+              "poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py tests/test_ghfdb/test_resources/test_child_import.py -q \u2014 no regression",
+              "poetry run pytest tests/test_ghfdb/ -q \u2014 green",
+              "commit ea893a7"
+            ]
+          }
         },
         {
           "id": "T023",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole"
+            ],
+            "commands": [
+              "probed: the old Meta form reinstated and the entry-point keyword removed \u2014 T021 failed for that reason; restored, diff against the pre-probe copies of importers.py, parent.py and child.py showed no differences",
+              "poetry run pytest tests/test_ghfdb/test_importers.py -q \u2014 green after restore",
+              "commit 51eea94"
+            ]
+          }
         },
         {
           "id": "T024",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole::test_two_widely_separated_faults_are_both_reported_and_nothing_lands"
+            ],
+            "commands": [
+              "poetry run pytest \"tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole::test_two_widely_separated_faults_are_both_reported_and_nothing_lands\" -x -q \u2014 red first",
+              "commit 0da7761"
+            ]
+          }
         },
         {
           "id": "T025",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole"
+            ],
+            "commands": [
+              "both passes run once inside one outer transaction, which is rolled back when either pass reports an error or a validation error; a literal per-pass dry run was tried and rejected \u2014 a dry-run pass discards its savepoint before the next pass starts, so the child pass can no longer resolve its parent (decisions.md D16)",
+              "poetry run pytest tests/test_ghfdb/test_importers.py -q \u2014 T024 green",
+              "poetry run pytest tests/test_ghfdb/ -q \u2014 no regression",
+              "commits 9224482, 8d7d94c"
+            ]
+          }
         },
         {
           "id": "T026",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole::test_a_clean_file_reports_nothing_and_every_row_lands"
+            ],
+            "commands": [
+              "probed: the outer commit condition inverted \u2014 test failed for that reason; restored, diff against the pre-probe copy of importers.py showed no differences",
+              "poetry run pytest tests/test_ghfdb/test_importers.py -q \u2014 green after restore",
+              "commit 3df91b0"
+            ]
+          }
         },
         {
           "id": "T026a",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole::test_an_empty_mandatory_model_field_names_its_row_and_column_and_refuses_the_file"
+            ],
+            "commands": [
+              "probed: clean_model_instances set back to False on GHFDBParentImportResource.Meta \u2014 test failed for that reason, the fault type design review DR-002 named had no enforcement path before T022; restored, diff against the pre-probe copy showed no differences",
+              "poetry run pytest tests/test_ghfdb/test_importers.py -q \u2014 green after restore",
+              "poetry run pytest tests/test_ghfdb/ -q \u2014 green",
+              "commits db94993, f74127a"
+            ]
+          }
         }
       ]
     },
