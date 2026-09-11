@@ -298,3 +298,51 @@ check after T012 uses `ruff check --no-fix` on scoped paths instead.
 Next: T013 — the callable entry point.
 
 Watch: none.
+
+## 2026-09-11 — Implementer US-2 · T013
+
+Did: added `project/ghfdb/importers.py` with the public callable
+`import_ghfdb_template(file, dataset)` (FR-001). Accepts either raw XLSX
+bytes/a binary file-like object or an already-parsed `tablib.Dataset`,
+runs the parent pass then the child pass — each against its own
+`copy.deepcopy` of the parsed rows, since the parent resource's
+`before_import()` dedups rows in place and the child pass needs every row
+— inside one `transaction.atomic()`, wired to `dataset` through
+`fairdm_dataset`. Returns a `GHFDBImportOutcome(parent, child)` dataclass.
+
+Also overrode `GHFDBParentAdmin.process_dataset()` to call the entry point
+rather than the framework's default single-resource commit (D12) — the
+one admin path this story touches, since site+parent import is US-2's own
+territory. `GHFDBChildAdmin`'s separate wizard is untouched.
+
+Decision recorded (decisions.md D12): no dataset-selection surface exists
+on either admin route, and adding one is out of this feature's scope
+(spec.md Assumptions: "nothing... has a person clicking anything" — the
+upload page belongs to R6/R7). The admin route therefore always raises
+the FR-002 error once it reaches `process_dataset` — no worse than always
+silently writing to whichever dataset happened to be first, which is what
+it did before this story.
+
+Verified:
+- `poetry run pytest tests/test_ghfdb/test_importers.py -v` — 4 passed.
+  Confirmed RED first: temporarily moved `importers.py` aside,
+  `ModuleNotFoundError` on all four; restored, green again.
+- `poetry run pytest
+  tests/test_ghfdb/test_admin.py::TestGHFDBParentAdmin::test_process_dataset_delegates_to_the_shared_entry_point -v`
+  — 1 passed. Confirmed RED first: temporarily reverted the
+  `process_dataset` override via a tagged stash — fails with
+  `AttributeError: 'NoneType' object has no attribute 'cleaned_data'`
+  (the framework default expects a real confirm form); restored from the
+  stash by its SHA, dropped it.
+- `poetry run pytest tests/test_ghfdb/test_admin.py -q` — 42 passed, no
+  regression.
+- Updated `docs/guides/importing-data.md` with a "Running an import"
+  section. Verified its example against this branch with a scratch test
+  using a real file-like object (`io.BytesIO`, exercising the `file.read()`
+  branch, not just raw bytes) — passed, then deleted the scratch file.
+
+Next: full repo verify (§5), then the completion report.
+
+Watch: `GHFDBParentAdmin`'s import route cannot complete a real import
+until a dataset-selection surface exists (D12) — not a regression, since
+it never safely chose the right dataset before either.
