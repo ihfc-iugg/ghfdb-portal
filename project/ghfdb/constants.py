@@ -184,10 +184,11 @@ ACCEPTED_UNSTORED_COLUMNS: list[str] = [
 # T006: refuse a header that is not the official template's (FR-003).
 # ---------------------------------------------------------------------------
 
-OFFICIAL_TEMPLATE_HEADER: frozenset[str] = frozenset(
-    PARENT_COLUMNS
-) | frozenset(CHILD_COLUMNS) | frozenset(META_FIELDS) | frozenset(
-    PORTAL_ADDITION_COLUMNS
+OFFICIAL_TEMPLATE_HEADER: frozenset[str] = (
+    frozenset(PARENT_COLUMNS)
+    | frozenset(CHILD_COLUMNS)
+    | frozenset(META_FIELDS)
+    | frozenset(PORTAL_ADDITION_COLUMNS)
 )
 
 

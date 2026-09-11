@@ -59,11 +59,7 @@ def _read_header_row(workbook):
     published column, so the real header starts at column B.
     """
     worksheet = workbook["data list"]
-    return [
-        cell.value
-        for cell in worksheet[6][1:]
-        if cell.value is not None
-    ]
+    return [cell.value for cell in worksheet[6][1:] if cell.value is not None]
 
 
 class TestTemplateColumnsMatchTheCanonicalConstants:
