@@ -938,3 +938,52 @@ class TestGHFDBChildRelevantChildFlag:
         assert child_a.is_relevant is True
         # ...and the one that did not is not.
         assert child_b.is_relevant is False
+
+
+@pytest.mark.django_db
+class TestGHFDBChildObjectsAttachToNamedDataset:
+    """T020 — US-3: every child object the import creates is attached to the
+    dataset the caller named, not to whatever the parent pass happened to
+    resolve, proven against a database holding a second, decoy dataset."""
+
+    def test_child_objects_attach_to_named_dataset_not_a_decoy(self, dataset):
+        from fairdm.factories import DatasetFactory
+
+        decoy = DatasetFactory()
+
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow, ProbeMetadata
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row = dict(CHILD_ROW)
+        row["T_grad_mean"] = "25.0"
+        row["tc_mean"] = "2.5"
+        row["probe_penetration"] = "3.5"
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row), dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+
+        child = HeatFlow.objects.get(ghfdb_id=1)
+        interval = child.sample
+        gradient = child.thermal_gradient
+        conductivity = child.thermal_conductivity
+        probe = ProbeMetadata.objects.get(interval=interval)
+
+        # The determination and every related object holding a dataset
+        # reference belongs to the named dataset, never the decoy.
+        assert child.dataset == dataset
+        assert child.dataset != decoy
+        assert interval.dataset == dataset
+        assert gradient.dataset == dataset
+        assert conductivity.dataset == dataset
+
+        # ProbeMetadata and HeatFlowCorrection hold no dataset FK of their
+        # own — they are reached only through the interval/heat_flow FK
+        # already asserted above.
+        assert not hasattr(probe, "dataset")
+        assert not hasattr(child.corrections.first(), "dataset")

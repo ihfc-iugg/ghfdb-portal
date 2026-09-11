@@ -510,3 +510,45 @@ code changed.
 
 Next: T020 — every child object attaches to the named dataset, proven
 against a decoy.
+
+## 2026-09-11 — Implementer US-3 · T020
+
+Did: added `TestGHFDBChildObjectsAttachToNamedDataset` to
+`test_child_import.py`. Creates a decoy `Dataset` before importing, then
+asserts every child object that holds a `dataset` FK —
+`HeatFlow`/determination, `HeatFlowInterval`/depth interval,
+`ThermalGradient`, `IntervalConductivity` — is attached to the named
+dataset and not the decoy. Confirmed `HeatFlowCorrection` and
+`ProbeMetadata` hold no `dataset` field of their own (checked against
+`heat_flow/models/child.py`), so the test asserts `not hasattr(...,
+"dataset")` for those two rather than a dataset comparison the model
+cannot support.
+
+This test's acceptance text does not carry the brief's explicit "same
+non-vacuity rule as T015" instruction, unlike T014/T016/T018 — but it
+passed on first run for the same reason those three did (the child pass
+already resolves `dataset` correctly), so I probed it anyway per
+craft-tdd's general rule, rather than only where the brief said to.
+Temporarily removed the `conductivity.dataset = self._fairdm_dataset`
+line in `_build_conductivity`, ran the test, watched it fail (a NOT NULL
+constraint surfaced as a row error), then restored `child.py` from a
+pre-edit copy and confirmed a clean diff and a passing re-run.
+
+Verified:
+- Probe (broken): `poetry run pytest
+  tests/test_ghfdb/test_resources/test_child_import.py::TestGHFDBChildObjectsAttachToNamedDataset
+  -x -q` — 1 failed (`result.has_errors()` was `True` — the row raised
+  saving `IntervalConductivity` with no dataset).
+- Restore: `diff` against the pre-edit copy of `child.py` — no
+  differences.
+- Restored: full module —
+  `poetry run pytest tests/test_ghfdb/test_resources/test_child_import.py -q`
+  — 27 passed.
+
+No decisions.md entry: nothing ambiguous was resolved, and no production
+code changed. This closes US-3's task list (T014-T020); every task's
+acceptance criterion was already satisfied by the tree at dispatch — no
+production code in `project/ghfdb/resources/child.py` changed across the
+whole story, only `tests/test_ghfdb/test_resources/test_child_import.py`.
+
+Next: full repo verify, then the completion report.
