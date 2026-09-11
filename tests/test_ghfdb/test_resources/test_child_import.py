@@ -776,3 +776,52 @@ class TestGHFDBChildPrivateDatasetRegression:
             for line, errors in result.row_errors()
         ]
         assert HeatFlow.objects.get(ghfdb_id=1).dataset == dataset
+
+
+@pytest.mark.django_db
+class TestGHFDBChildMultipleDeterminationsPerSite:
+    """T014 — US-3: rows describing two determinations at one coordinate pair
+    produce two determinations beneath one site, each with its own depth
+    interval (FR-007)."""
+
+    def test_two_child_rows_produce_two_determinations_with_distinct_intervals(
+        self, dataset
+    ):
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row_a = dict(CHILD_ROW)
+        row_a["ID"] = "1"
+        row_a["q_top"] = "0"
+        row_a["q_bottom"] = "500"
+
+        row_b = dict(CHILD_ROW)
+        row_b["ID"] = "2"
+        row_b["q_top"] = "500"
+        row_b["q_bottom"] = "1000"
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row_a, row_b),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+
+        child_a = HeatFlow.objects.get(ghfdb_id=1)
+        child_b = HeatFlow.objects.get(ghfdb_id=2)
+
+        # Both determinations sit beneath the one site the parent pass created.
+        assert child_a.parent_id == child_b.parent_id
+        assert child_a.parent.sample_id == child_b.parent.sample_id
+
+        # Each has its own depth interval, not a shared one.
+        assert child_a.sample_id != child_b.sample_id
+        assert float(child_a.sample.top.magnitude) == pytest.approx(0.0)
+        assert float(child_a.sample.bottom.magnitude) == pytest.approx(500.0)
+        assert float(child_b.sample.top.magnitude) == pytest.approx(500.0)
+        assert float(child_b.sample.bottom.magnitude) == pytest.approx(1000.0)

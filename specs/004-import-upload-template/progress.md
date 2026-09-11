@@ -382,3 +382,44 @@ Verified:
 Next: full repo verify (§5), then the completion report.
 
 Watch: none.
+
+## 2026-09-11 — Implementer US-3 · T014
+
+Did: added `TestGHFDBChildMultipleDeterminationsPerSite` to
+`test_child_import.py` (FR-007): two child rows sharing one `ID_parent`,
+with distinct `q_top`/`q_bottom`, must produce two `HeatFlow` records
+beneath the same site, each carrying its own `HeatFlowInterval`.
+
+Verified: `poetry run pytest
+tests/test_ghfdb/test_resources/test_child_import.py::TestGHFDBChildMultipleDeterminationsPerSite
+-x -q` — passed on first run, no production change made yet. Carried to
+T015 for the non-vacuity probe the brief requires before this counts as
+covered.
+
+Next: T015 — probe the passing test before accepting it.
+
+## 2026-09-11 — Implementer US-3 · T015
+
+Did: T014's test passed against the unmodified tree, so `child.py`
+already satisfies FR-007's per-row interval requirement — no production
+change was needed. Probed the test per the brief's non-vacuity rule
+rather than accepting the green result at face value: temporarily edited
+`GHFDBChildImportResource._build_interval` to cache and reuse the first
+row's `HeatFlowInterval` across subsequent rows on the same resource
+instance, ran the T014 test, watched it fail
+(`assert child_a.sample_id != child_b.sample_id` — both were `2`), then
+restored `child.py` from a pre-edit copy and confirmed the restored file
+diffed clean against the copy and the test passed again.
+
+Verified:
+- Probe (broken): `poetry run pytest
+  tests/test_ghfdb/test_resources/test_child_import.py::TestGHFDBChildMultipleDeterminationsPerSite
+  -x -q` — 1 failed, `assert 2 != 2` on `sample_id`.
+- Restore: `diff` against the pre-edit copy of `child.py` — no
+  differences.
+- Restored: same command — 1 passed.
+
+No decisions.md entry: nothing ambiguous was resolved, and no production
+code changed. `child.py` is untouched by this task.
+
+Next: T016 — sub-measurement values land on their own determination.
