@@ -825,3 +825,74 @@ class TestGHFDBChildMultipleDeterminationsPerSite:
         assert float(child_a.sample.bottom.magnitude) == pytest.approx(500.0)
         assert float(child_b.sample.top.magnitude) == pytest.approx(500.0)
         assert float(child_b.sample.bottom.magnitude) == pytest.approx(1000.0)
+
+
+@pytest.mark.django_db
+class TestGHFDBChildSubMeasurementsPerDetermination:
+    """T016 — US-3: gradient, conductivity, correction and probe values land
+    against their own determination, using the template's real column names
+    (T_grad_*, tc_*, corr_*_flag, probe_*) rather than invented ones (FR-007)."""
+
+    def test_two_determinations_keep_distinct_sub_measurement_values(self, dataset):
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow, HeatFlowCorrection, ProbeMetadata
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row_a = dict(CHILD_ROW)
+        row_a["ID"] = "1"
+        row_a["q_top"] = "0"
+        row_a["q_bottom"] = "500"
+        row_a["T_grad_mean"] = "20.0"
+        row_a["tc_mean"] = "2.0"
+        row_a["corr_T_flag"] = "Yes"
+        row_a["corr_S_flag"] = "No"
+        row_a["probe_penetration"] = "3.0"
+
+        row_b = dict(CHILD_ROW)
+        row_b["ID"] = "2"
+        row_b["q_top"] = "500"
+        row_b["q_bottom"] = "1000"
+        row_b["T_grad_mean"] = "40.0"
+        row_b["tc_mean"] = "4.0"
+        row_b["corr_T_flag"] = "No"
+        row_b["corr_S_flag"] = "Yes"
+        row_b["probe_penetration"] = "6.0"
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row_a, row_b),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+
+        child_a = HeatFlow.objects.get(ghfdb_id=1)
+        child_b = HeatFlow.objects.get(ghfdb_id=2)
+
+        # Gradient (T_grad_mean) is stored on each determination's own record.
+        assert float(child_a.thermal_gradient.value.magnitude) == pytest.approx(20.0)
+        assert float(child_b.thermal_gradient.value.magnitude) == pytest.approx(40.0)
+
+        # Conductivity (tc_mean) likewise.
+        assert float(child_a.thermal_conductivity.value.magnitude) == pytest.approx(2.0)
+        assert float(child_b.thermal_conductivity.value.magnitude) == pytest.approx(4.0)
+
+        # Corrections (corr_T_flag / corr_S_flag) do not bleed across determinations.
+        a_t = child_a.corrections.get(correction_type="T")
+        b_t = child_b.corrections.get(correction_type="T")
+        assert a_t.status != HeatFlowCorrection.StatusChoices.UNSPECIFIED
+        assert b_t.status == HeatFlowCorrection.StatusChoices.UNSPECIFIED
+
+        a_s = child_a.corrections.get(correction_type="S")
+        b_s = child_b.corrections.get(correction_type="S")
+        assert a_s.status == HeatFlowCorrection.StatusChoices.UNSPECIFIED
+        assert b_s.status != HeatFlowCorrection.StatusChoices.UNSPECIFIED
+
+        # Probe metadata (probe_penetration) is keyed to each determination's interval.
+        pm_a = ProbeMetadata.objects.get(interval=child_a.sample)
+        pm_b = ProbeMetadata.objects.get(interval=child_b.sample)
+        assert float(pm_a.penetration.magnitude) == pytest.approx(3.0)
+        assert float(pm_b.penetration.magnitude) == pytest.approx(6.0)

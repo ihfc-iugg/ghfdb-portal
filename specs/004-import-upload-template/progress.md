@@ -423,3 +423,49 @@ No decisions.md entry: nothing ambiguous was resolved, and no production
 code changed. `child.py` is untouched by this task.
 
 Next: T016 — sub-measurement values land on their own determination.
+
+## 2026-09-11 — Implementer US-3 · T016
+
+Did: added `TestGHFDBChildSubMeasurementsPerDetermination` to
+`test_child_import.py` (FR-007): two determinations with distinct
+gradient (`T_grad_mean`), conductivity (`tc_mean`), correction
+(`corr_T_flag`/`corr_S_flag`) and probe (`probe_penetration`) values must
+each keep their own values rather than one bleeding onto the other.
+Column names checked against `columns.py`'s `PublishedColumns.ENTRIES`
+and the official template fixture's header row (both confirm `T_grad_*`,
+`tc_*`, `corr_*_flag`, `probe_*` as the real names; the template's
+`tc_pT_fuction` misspelling is out of scope here — ADR 0003 already
+refuses it, and this test does not touch that column).
+
+Verified: `poetry run pytest
+tests/test_ghfdb/test_resources/test_child_import.py::TestGHFDBChildSubMeasurementsPerDetermination
+-x -q` — passed on first run, no production change made. Carried to T017
+for the non-vacuity probe.
+
+Next: T017 — probe the passing test before accepting it.
+
+## 2026-09-11 — Implementer US-3 · T017
+
+Did: T016's test passed against the unmodified tree, so no production
+change was needed. Probed per the brief's non-vacuity rule: temporarily
+edited `GHFDBChildImportResource._build_gradient` to cache and reuse the
+first row's `ThermalGradient` across subsequent rows on the same resource
+instance (the same shape of bug T015 probed on the interval), ran the
+T016 test, watched it fail on the gradient-value assertions, then
+restored `child.py` from a pre-edit copy and confirmed a clean diff and a
+passing re-run.
+
+Verified:
+- Probe (broken): `poetry run pytest
+  tests/test_ghfdb/test_resources/test_child_import.py::TestGHFDBChildSubMeasurementsPerDetermination
+  -x -q` — 1 failed (`child_b.thermal_gradient.value` was 20.0, not 40.0).
+- Restore: `diff` against the pre-edit copy of `child.py` — no
+  differences.
+- Restored: same command — 1 passed; full module —
+  `poetry run pytest tests/test_ghfdb/test_resources/test_child_import.py -q`
+  — 25 passed.
+
+No decisions.md entry: nothing ambiguous was resolved, and no production
+code changed.
+
+Next: T018 — `relevant_child` names exactly the contributing children.
