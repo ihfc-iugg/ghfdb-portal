@@ -80,7 +80,7 @@ class ConceptWidget(CharWidget):
         self.key_to_key = {key.lower(): key for key, _ in self.choices}
         super().__init__(**kwargs)
 
-    def clean(self, value, row=None, **kwargs):
+    def clean(self, value, row=None, column=None, **kwargs):
         try:
             val = super().clean(value, row, **kwargs)
         except AttributeError:
@@ -95,8 +95,10 @@ class ConceptWidget(CharWidget):
         normalised = normalize_vocab_token(val)
         result = self.label_to_key.get(normalised) or self.key_to_key.get(normalised)
         if result is None:
+            location = _("Column '%(column)s': ") % {"column": column} if column else ""
             raise ValueError(
-                _(
+                location
+                + _(
                     "Invalid value '%(val)s' for %(vocab)s vocabulary. Valid options are: %(opts)s"
                 )
                 % {
@@ -118,7 +120,7 @@ class MultiConceptWidget(ManyToManyWidget):
         super().__init__(Concept, separator=separator, field="label", **kwargs)
         self.queryset = Concept.get_for_vocabulary(self._vocab_class)
 
-    def clean(self, value, row=None, *args, **kwargs):
+    def clean(self, value, row=None, column=None, *args, **kwargs):
         if not value:
             return self.queryset.none()
         # Build (original, normalised) pairs; skip blank and "unspecified" tokens
@@ -141,8 +143,10 @@ class MultiConceptWidget(ManyToManyWidget):
         )
         invalid_originals = [orig for orig, norm in pairs if norm not in choices_set]
         if invalid_originals:
+            location = _("Column '%(column)s': ") % {"column": column} if column else ""
             raise ValueError(
-                _(
+                location
+                + _(
                     "The following values are not part of the %(vocab)s vocabulary: %(invalid)s"
                 )
                 % {"vocab": self._vocab_class.__name__, "invalid": invalid_originals}
@@ -269,7 +273,9 @@ class RelatedModelWidget(Widget):
             col_widget = self.widget_map.get(row_col)
             if col_widget:
                 try:
-                    model_kwargs[model_field] = col_widget.clean(raw, row=row)
+                    model_kwargs[model_field] = col_widget.clean(
+                        raw, row=row, column=row_col
+                    )
                 except (ValueError, ValidationError) as exc:
                     raise ValueError(
                         _("%(model)s: %(err)s")
