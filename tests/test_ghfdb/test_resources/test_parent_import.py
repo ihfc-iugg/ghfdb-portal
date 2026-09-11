@@ -397,9 +397,7 @@ class TestGHFDBParentImportTwoCoordinatePairs:
     """T009 — US-2's independent test: two sites, each with its own parent
     value, both in the dataset the caller named (FR-005, FR-006)."""
 
-    def test_two_coordinate_pairs_produce_two_sites_in_the_named_dataset(
-        self, dataset
-    ):
+    def test_two_coordinate_pairs_produce_two_sites_in_the_named_dataset(self, dataset):
         """Two rows at two coordinate pairs each become a site carrying its
         own P-column parent value, both attached to the named dataset."""
         from heat_flow.models import HeatFlowSite, ParentHeatFlow

@@ -163,9 +163,7 @@ class TestImportGHFDBTemplate:
         assert ParentHeatFlow.objects.filter(ghfdb_id=1).exists()
         assert HeatFlow.objects.filter(ghfdb_id=1).exists()
 
-    def test_a_second_row_at_a_different_coordinate_pair_is_not_lost(
-        self, dataset
-    ):
+    def test_a_second_row_at_a_different_coordinate_pair_is_not_lost(self, dataset):
         """The parent resource's before_import() deduplicates its own
         working copy of the rows; the child pass must still see every row,
         proving each pass gets its own copy rather than sharing one that
