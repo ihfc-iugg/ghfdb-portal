@@ -1,0 +1,735 @@
+{
+  "$schema": "../../../../.openclaw/workspaces/forge/engineering-org/kit/schemas/feature-state.schema.json",
+  "feature": "004-import-upload-template",
+  "branch": "004-import-upload-template",
+  "repo": "ihfc-iugg/ghfdb-portal",
+  "state": "PR_READY",
+  "state_history": [
+    {
+      "state": "PLAN",
+      "at": "2026-09-10T22:39:34Z",
+      "note": "plan and tasks authored"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-09-10T22:40:39Z",
+      "note": "plan and tasks authored; reviewer dispatched"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-09-10T22:58:09Z",
+      "note": "design review closed one round, three findings folded; plan notification sent"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-09-11T17:58:13Z",
+      "note": "every story accepted; validate_instance deduplicated, four decisions graduated to architecture records, no migrations to squash"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-09-11T17:58:41Z",
+      "note": "every story accepted; the shared row-validation override deduplicated, four decisions graduated to architecture records, no migrations to squash"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-09-11T18:00:38Z",
+      "note": "two lenses dispatched: correctness and spec, plus security for the untrusted upload surface"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-09-11T18:45:54Z",
+      "note": "review returned four findings; three fixed with each test probed against the unfixed code, the fourth noted and left"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "Sam",
+      "at": "2026-09-10T22:39:34Z",
+      "self_resolved": [
+        "D1 the portal's vocabularies are the authority, not the template's sheet",
+        "D2 only failures the portal cannot absorb refuse a file",
+        "D3 the official template becomes the test fixture",
+        "D4 no revision marker, so the header is the detection"
+      ]
+    },
+    "plan": {
+      "approved_by": "notified",
+      "at": "2026-09-10T22:58:06Z"
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    },
+    "design_review": {
+      "approved_by": "design review (three lenses), one round",
+      "at": "2026-09-10T22:51:23Z",
+      "self_resolved": [
+        "DR-001 critical: set_m2m_relations swallows concept errors for 13 many-valued vocabulary columns; T028a/T028b added",
+        "DR-002 high: clean_model_instances defaults False, so validation errors never populate; folded into T022, T026a added",
+        "DR-003 high: child natural key contains q_top/q_bottom, so a depth correction duplicates; T034 now names the field"
+      ]
+    }
+  },
+  "stories": [
+    {
+      "id": "US0",
+      "priority": "P1",
+      "issue": null,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_constants.py::TestOfficialUploadTemplateFixture"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_constants.py::TestOfficialUploadTemplateFixture -v \u2014 2 passed"
+            ]
+          }
+        },
+        {
+          "id": "T002",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_constants.py::TestTemplateColumnsMatchTheCanonicalConstants"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_constants.py -v \u2014 3 passed"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 200,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T003",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "specs/004-import-upload-template/decisions.md D7 \u2014 the ten disagreements judged"
+            ]
+          }
+        },
+        {
+          "id": "T004",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_constants.py::TestTemplateColumnsMatchTheCanonicalConstants"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_constants.py -v \u2014 3 passed",
+              "poetry run pytest tests/test_ghfdb/test_resources/test_schema_coverage.py tests/test_ghfdb/test_resources/test_export.py tests/test_ghfdb/test_admin.py tests/test_ghfdb/test_columns.py -v \u2014 78 passed, 8 xfailed (unchanged)"
+            ]
+          }
+        },
+        {
+          "id": "T005",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_constants.py::TestEveryTemplateColumnIsMappedOrAccepted"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_constants.py -v \u2014 4 passed"
+            ]
+          }
+        },
+        {
+          "id": "T006",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_constants.py::TestOfficialHeaderRefusal"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_constants.py -v \u2014 7 passed",
+              "forge verify (independent, a782df0) \u2014 conformance/docs/lint/typecheck/test/build all green; 646 passed, 1 skipped, 13 xfailed"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P1",
+      "issue": 201,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T007",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportRequiresNamedDataset"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportRequiresNamedDataset -q \u2014 1 passed"
+            ]
+          }
+        },
+        {
+          "id": "T008",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportRequiresNamedDataset"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportRequiresNamedDataset -q \u2014 1 passed (T007 green)",
+              "poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py tests/test_ghfdb/test_resources/test_child_import.py -q \u2014 37 failed (pre-existing, decisions.md D11), 13 passed, 5 xfailed"
+            ]
+          }
+        },
+        {
+          "id": "T009",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportTwoCoordinatePairs"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportTwoCoordinatePairs -q \u2014 1 passed"
+            ]
+          }
+        },
+        {
+          "id": "T010",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportTwoCoordinatePairs"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py -q \u2014 18 failed (pre-existing, decisions.md D11), 11 passed, 5 xfailed \u2014 no new regression from T009"
+            ]
+          }
+        },
+        {
+          "id": "T011",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportGeographyStoredAsSupplied"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportGeographyStoredAsSupplied -q \u2014 1 passed",
+              "probed: removed ParentWidget's four geography scalar_map entries \u2014 test failed; restored"
+            ]
+          }
+        },
+        {
+          "id": "T012",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportAcceptsUnstoredColumns",
+              "tests/test_ghfdb/test_resources/test_child_import.py::TestGHFDBChildImportAcceptsUnstoredColumns"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportAcceptsUnstoredColumns tests/test_ghfdb/test_resources/test_child_import.py::TestGHFDBChildImportAcceptsUnstoredColumns -q \u2014 2 passed"
+            ]
+          }
+        },
+        {
+          "id": "T013",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestImportGHFDBTemplate",
+              "tests/test_ghfdb/test_admin.py::TestGHFDBParentAdmin::test_process_dataset_delegates_to_the_shared_entry_point"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py -v \u2014 4 passed",
+              "poetry run pytest tests/test_ghfdb/test_admin.py -q \u2014 42 passed"
+            ]
+          }
+        },
+        {
+          "id": "TC01",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_parent_import.py",
+              "tests/test_ghfdb/test_resources/test_child_import.py"
+            ],
+            "commands": [
+              "poetry run pytest on both modules \u2014 54 passed, 5 xfailed (37 pre-existing failures repaired by passing fairdm_dataset=dataset)",
+              "independent check: both modules parsed and compared as syntax trees against 713d8ae with the fairdm_dataset keyword stripped \u2014 identical, so no assertion, fixture or expected value changed",
+              "independent full verification at 5c2c19a \u2014 656 passed, 1 skipped, 13 xfailed; lint, typecheck, structural and documentation checks and the package build all green"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P1",
+      "issue": 202,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T014",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_child_import.py::TestGHFDBChildMultipleDeterminationsPerSite"
+            ],
+            "commands": [
+              "poetry run pytest ...::TestGHFDBChildMultipleDeterminationsPerSite -x -q \u2014 1 passed"
+            ]
+          }
+        },
+        {
+          "id": "T015",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_child_import.py::TestGHFDBChildMultipleDeterminationsPerSite"
+            ],
+            "commands": [
+              "probed: _build_interval made to reuse the first row's interval \u2014 test failed on sample_id; restored, diff against the pre-edit copy showed no differences",
+              "poetry run pytest tests/test_ghfdb/test_resources/test_child_import.py -q \u2014 24 passed after restore",
+              "criterion already satisfied by the tree at dispatch; no production code changed"
+            ]
+          }
+        },
+        {
+          "id": "T016",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_child_import.py::TestGHFDBChildSubMeasurementsPerDetermination"
+            ],
+            "commands": [
+              "poetry run pytest ...::TestGHFDBChildSubMeasurementsPerDetermination -x -q \u2014 1 passed"
+            ]
+          }
+        },
+        {
+          "id": "T017",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_child_import.py::TestGHFDBChildSubMeasurementsPerDetermination"
+            ],
+            "commands": [
+              "probed: _build_gradient made to reuse the first row's gradient \u2014 test failed; restored, diff clean",
+              "poetry run pytest tests/test_ghfdb/test_resources/test_child_import.py -q \u2014 25 passed after restore",
+              "criterion already satisfied by the tree at dispatch; no production code changed"
+            ]
+          }
+        },
+        {
+          "id": "T018",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_child_import.py::TestGHFDBChildRelevantChildFlag"
+            ],
+            "commands": [
+              "poetry run pytest ...::TestGHFDBChildRelevantChildFlag -x -q \u2014 1 passed"
+            ]
+          }
+        },
+        {
+          "id": "T019",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_child_import.py::TestGHFDBChildRelevantChildFlag"
+            ],
+            "commands": [
+              "probed: is_relevant hard-coded True \u2014 test failed; restored, diff clean",
+              "poetry run pytest tests/test_ghfdb/test_resources/test_child_import.py -q \u2014 26 passed after restore",
+              "criterion already satisfied by the tree at dispatch; no production code changed"
+            ]
+          }
+        },
+        {
+          "id": "T020",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_child_import.py::TestGHFDBChildObjectsAttachToNamedDataset"
+            ],
+            "commands": [
+              "poetry run pytest ...::TestGHFDBChildObjectsAttachToNamedDataset -x -q \u2014 1 passed against a database holding a decoy dataset",
+              "probed: conductivity dataset assignment removed \u2014 row error (NOT NULL), test failed; restored, diff clean",
+              "independent verification at 52a7cd1 \u2014 conformance, documentation, lint, typecheck, test and build all green; 660 passed, 1 skipped, 13 xfailed",
+              "independent diff against edfec24 \u2014 additive only, 381 lines across the child-import test module and progress.md, no production file and no pre-existing test touched"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US4",
+      "priority": "P1",
+      "issue": 203,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T021",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole::test_a_later_row_fault_does_not_roll_back_an_earlier_row"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole -x -q \u2014 red first, on the partial write issue #190 reports: the earlier row was found in the database after the later row faulted",
+              "commit 8d175c6"
+            ]
+          }
+        },
+        {
+          "id": "T022",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole"
+            ],
+            "commands": [
+              "rollback_on_validation_errors moved out of both resources' Meta and passed to each import_data() call from import_ghfdb_template(); clean_model_instances = True on both resources",
+              "validate_instance() overridden on both resources to exclude sample, dataset and name from full_clean() \u2014 before_save_instance() sets all three after validation runs (decisions.md D15, design review DR-002)",
+              "poetry run pytest tests/test_ghfdb/test_importers.py -q \u2014 T021 green",
+              "poetry run pytest tests/test_ghfdb/test_resources/test_parent_import.py tests/test_ghfdb/test_resources/test_child_import.py -q \u2014 no regression",
+              "poetry run pytest tests/test_ghfdb/ -q \u2014 green",
+              "commit ea893a7"
+            ]
+          }
+        },
+        {
+          "id": "T023",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole"
+            ],
+            "commands": [
+              "probed: the old Meta form reinstated and the entry-point keyword removed \u2014 T021 failed for that reason; restored, diff against the pre-probe copies of importers.py, parent.py and child.py showed no differences",
+              "poetry run pytest tests/test_ghfdb/test_importers.py -q \u2014 green after restore",
+              "commit 51eea94"
+            ]
+          }
+        },
+        {
+          "id": "T024",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole::test_two_widely_separated_faults_are_both_reported_and_nothing_lands"
+            ],
+            "commands": [
+              "poetry run pytest \"tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole::test_two_widely_separated_faults_are_both_reported_and_nothing_lands\" -x -q \u2014 red first",
+              "commit 0da7761"
+            ]
+          }
+        },
+        {
+          "id": "T025",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole"
+            ],
+            "commands": [
+              "both passes run once inside one outer transaction, which is rolled back when either pass reports an error or a validation error; a literal per-pass dry run was tried and rejected \u2014 a dry-run pass discards its savepoint before the next pass starts, so the child pass can no longer resolve its parent (decisions.md D16)",
+              "poetry run pytest tests/test_ghfdb/test_importers.py -q \u2014 T024 green",
+              "poetry run pytest tests/test_ghfdb/ -q \u2014 no regression",
+              "commits 9224482, 8d7d94c"
+            ]
+          }
+        },
+        {
+          "id": "T026",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole::test_a_clean_file_reports_nothing_and_every_row_lands"
+            ],
+            "commands": [
+              "probed: the outer commit condition inverted \u2014 test failed for that reason; restored, diff against the pre-probe copy of importers.py showed no differences",
+              "poetry run pytest tests/test_ghfdb/test_importers.py -q \u2014 green after restore",
+              "commit 3df91b0"
+            ]
+          }
+        },
+        {
+          "id": "T026a",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole::test_an_empty_mandatory_model_field_names_its_row_and_column_and_refuses_the_file"
+            ],
+            "commands": [
+              "probed: clean_model_instances set back to False on GHFDBParentImportResource.Meta \u2014 test failed for that reason, the fault type design review DR-002 named had no enforcement path before T022; restored, diff against the pre-probe copy showed no differences",
+              "poetry run pytest tests/test_ghfdb/test_importers.py -q \u2014 green after restore",
+              "poetry run pytest tests/test_ghfdb/ -q \u2014 green",
+              "commits db94993, f74127a"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US5",
+      "priority": "P2",
+      "issue": 204,
+      "worktree": "/home/sam/projects/ihfc-iugg/ghfdb-portal-004-us5-vocab",
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T027",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides::test_an_unrecognised_vocabulary_value_names_row_column_and_value_and_refuses_the_file"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides -x -q"
+            ]
+          }
+        },
+        {
+          "id": "T028",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides tests/test_ghfdb/test_resources/test_widgets.py -q",
+              "poetry run ruff check project/ghfdb/resources/widgets.py",
+              "poetry run ruff format --check project/ghfdb/resources/widgets.py"
+            ]
+          }
+        },
+        {
+          "id": "T028a",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides::test_an_unrecognised_value_in_a_many_valued_column_refuses_the_file -q",
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides tests/test_ghfdb/test_resources/test_widgets.py -q"
+            ]
+          }
+        },
+        {
+          "id": "T028b",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides::test_an_unrecognised_value_in_a_many_valued_column_refuses_the_file"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides::test_an_unrecognised_value_in_a_many_valued_column_refuses_the_file -q",
+              "poetry run ruff check project/ghfdb/resources/widgets.py tests/test_ghfdb/test_importers.py",
+              "poetry run ruff format --check project/ghfdb/resources/widgets.py tests/test_ghfdb/test_importers.py"
+            ]
+          }
+        },
+        {
+          "id": "T029",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides::test_a_value_the_templates_sheet_lists_but_the_portal_does_not_hold_is_still_refused"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides -q",
+              "poetry run ruff check tests/test_ghfdb/test_importers.py",
+              "poetry run ruff format --check tests/test_ghfdb/test_importers.py"
+            ]
+          }
+        },
+        {
+          "id": "T030",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides::test_a_value_the_portal_holds_but_the_templates_sheet_does_not_list_is_accepted"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides -q"
+            ]
+          }
+        },
+        {
+          "id": "T031",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides::test_the_import_never_opens_the_controlled_vocabulary_sheet"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestControlledVocabularyDecides::test_the_import_never_opens_the_controlled_vocabulary_sheet -x -q",
+              "poetry run pytest tests/test_ghfdb/test_importers.py -q",
+              "poetry run ruff check tests/test_ghfdb/test_importers.py project/ghfdb/resources/formats.py",
+              "poetry run ruff format --check tests/test_ghfdb/test_importers.py project/ghfdb/resources/formats.py"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US6",
+      "priority": "P2",
+      "issue": 205,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T032",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRepeatImport::test_reimporting_an_unchanged_file_leaves_counts_identical"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRepeatImport -q",
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRepeatImport -x -q  # probe: existing_by_location lookup disabled (D14)"
+            ]
+          }
+        },
+        {
+          "id": "T033",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRepeatImport::test_the_second_import_matches_the_existing_site_and_parent_rather_than_inserting"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRepeatImport -q"
+            ]
+          }
+        },
+        {
+          "id": "T034",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRepeatImport::test_a_changed_depth_interval_updates_the_determination_in_place"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRepeatImport::test_a_changed_depth_interval_updates_the_determination_in_place -x -q"
+            ]
+          }
+        },
+        {
+          "id": "T035",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRepeatImport::test_two_distinct_determinations_at_one_site_stay_distinct_across_reimport"
+            ],
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRepeatImport -q",
+              "poetry run pytest tests/test_ghfdb/test_importers.py tests/test_ghfdb/test_resources/test_child_import.py -q",
+              "poetry run ruff check tests/test_ghfdb/test_importers.py project/ghfdb/resources/child.py",
+              "poetry run ruff format --check tests/test_ghfdb/test_importers.py project/ghfdb/resources/child.py"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US7",
+      "priority": "P2",
+      "issue": null,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T036",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "poetry run pytest tests/test_ghfdb/test_doc_scratch.py -x -q -s  # throwaway module verifying every documented call; deleted, not committed"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 2,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "tokens": {
+      "used": 0,
+      "max": 120
+    }
+  },
+  "pr": {
+    "number": 206,
+    "draft": true
+  }
+}

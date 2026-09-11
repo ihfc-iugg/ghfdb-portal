@@ -47,14 +47,17 @@ column names return the same facts.
 
 Serves G2.
 
-### R3 — The spreadsheet round trip
+### ~~R3 — The spreadsheet round trip~~
 
-*Delivered · needs verification · advances G2, G3*
+*Withdrawn September 2026 · see [ADR 0010](adr/0010-the-release-import-direction-ends.md)*
 
-Files in the community upload template and in the release format can be read into the portal, and
-the portal's data can be written back out in the release format.
+~~Files in the community upload template and in the release format can be read into the portal, and
+the portal's data can be written back out in the release format.~~
 
-Serves G2 and G3.
+This item no longer holds together. Writing a release out moved to R17 after an audit found that
+nothing in the codebase could read one, and the data assessment team has since ended the
+release-import direction altogether. What is left of it, reading the community upload template,
+belongs to R6.
 
 ### R4 — Quality computed from what the portal holds
 
@@ -65,18 +68,22 @@ Codes present in an incoming file are rejected rather than stored.
 
 Serves G6.
 
-### R5 — The published database imported in full
+### ~~R5 — The published database imported in full~~
 
-*multi-feature · advances G3*
+*Withdrawn September 2026 · see [ADR 0010](adr/0010-the-release-import-direction-ends.md)*
 
-The portal holds a sample rather than the database. Until the current published release is in,
+The data assessment team decided this seeding run is unnecessary and will not happen. The database
+accumulates one dataset at a time through R6 instead. The original text is kept below because the
+downstream work it names still waits on real data, whichever route the data takes.
+
+~~The portal holds a sample rather than the database. Until the current published release is in,
 nothing downstream has real data to work against: public access, generated releases and the map
 viewer all wait on it. The import has to land the release as a collection of individual datasets,
 each tied to the reviewed literature item it came from, not as one undifferentiated pile of sites
 and measurements. Reliability matters more here than repeatability, because this is a one-off
-seeding and everything after it arrives dataset by dataset.
+seeding and everything after it arrives dataset by dataset.~~
 
-**Deliverables:**
+~~**Deliverables:**~~
 
 - Every row of the current published release loaded into the portal.
 - One dataset per reviewed literature item, with that mapping stored rather than inferred later.
@@ -86,7 +93,7 @@ seeding and everything after it arrives dataset by dataset.
 - Confirmation that a release exported after the import carries the same data as the release that
   went in.
 
-Serves G3. Out of scope: any change to the published structure, and any user-facing upload path.
+~~Serves G3. Out of scope: any change to the published structure, and any user-facing upload path.~~
 
 ### R6 — Datasets added to the portal from inside it
 
@@ -104,6 +111,11 @@ pages, against a dataset they own, without going through the admin.
 
 Serves G4. Out of scope: the trust and review distinctions that separate team members from outside
 contributors.
+
+This item has two halves. Reading a completed template file into a dataset, callable from code, is
+specified in `specs/004-import-upload-template/` and issue #199. The page the team uploads through,
+and the validation result they read there, follow separately. With R5 withdrawn, this is the only
+route by which data enters the portal.
 
 ### R7 — Contribution from outside the team, reviewed before it goes public
 

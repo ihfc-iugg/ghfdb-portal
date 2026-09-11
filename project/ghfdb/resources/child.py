@@ -24,6 +24,7 @@ from import_export.resources import ModelResource
 from import_export.widgets import ForeignKeyWidget
 
 from ..constants import CORRECTION_COL_MAP, GHFDB_COLUMN_ORDER
+from .validation import ExcludeFieldsSetAfterValidation
 from .widgets import (
     ConductivityWidget,
     GradientWidget,
@@ -34,7 +35,7 @@ from .widgets import (
 )
 
 
-class GHFDBChildImportResource(ModelResource):
+class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
     """
     Import resource for GHFDB child-level data.
 
@@ -136,22 +137,39 @@ class GHFDBChildImportResource(ModelResource):
         self._gradient_widget = GradientWidget()
         self._conductivity_widget = ConductivityWidget()
         self._fairdm_dataset = None
+        self._current_row_number = None
 
     # ------------------------------------------------------------------
     # Hooks
     # ------------------------------------------------------------------
 
-    def before_import(self, dataset, **kwargs):
-        """Store the FairDM dataset reference for use during row processing."""
-        from fairdm.core.models import Dataset as FairDataset
+    def before_import_row(self, row, **kwargs):
+        """Record this row's position in the file (T035).
 
-        # all_objects, not objects: the default manager hides private datasets, and an
-        # import run by a curator has to reach the dataset it is filling regardless of
-        # who can read it. Narrowing here does not protect anything — it only leaves
-        # the target unresolved and fails later on a null column.
-        self._fairdm_dataset = (
-            kwargs.get("fairdm_dataset") or FairDataset.all_objects.first()
-        )
+        ``_child_natural_key`` uses it in place of ``q_top``/``q_bottom``,
+        so a no-ID row's identity survives a corrected depth interval.
+        ``row_number`` restarts at 1 on every ``import_data()`` call, so a
+        repeat import of the same rows in the same order reproduces the
+        same key.
+        """
+        self._current_row_number = kwargs.get("row_number")
+
+    def before_import(self, dataset, **kwargs):
+        """Store the caller's named FairDM dataset for use during row
+        processing.
+
+        FR-002: the import refuses to guess a dataset. A caller passing an
+        already-resolved ``Dataset`` instance as ``fairdm_dataset`` reaches a
+        private dataset the same as a public one — there is no lookup here
+        to narrow to the default manager in the first place.
+        """
+        fairdm_dataset = kwargs.get("fairdm_dataset")
+        if fairdm_dataset is None:
+            raise ValueError(
+                "GHFDBChildImportResource.import_data() requires a "
+                "fairdm_dataset — the import refuses to choose one (FR-002)."
+            )
+        self._fairdm_dataset = fairdm_dataset
 
         # Inject optional ID / ID_parent columns when the upload template omits them.
         # _check_import_id_fields() runs after before_import(), so injecting here
@@ -197,8 +215,16 @@ class GHFDBChildImportResource(ModelResource):
         if instance.parent is None and not str(row.get("ID_parent") or "").strip():
             instance.parent = self._resolve_parent_by_location(row)
 
-        # Set stable natural key as name for no-ID rows.
-        if not str(row.get("ID") or "").strip():
+        # Every determination is named. A row that carries an ID is named by
+        # it — the identifier the submission itself gives the determination —
+        # and a row without one falls back to the stable natural key. Leaving
+        # name unset is not an option: it is a required CharField, so an
+        # unset one saves as an empty string without the database objecting,
+        # and the determination then has nothing to display itself by.
+        ghfdb_id = str(row.get("ID") or "").strip()
+        if ghfdb_id:
+            instance.name = ghfdb_id
+        else:
             natural_key = self._child_natural_key(row)
             if natural_key:
                 instance.name = natural_key
@@ -359,15 +385,24 @@ class GHFDBChildImportResource(ModelResource):
         return ParentHeatFlow.objects.filter(sample=site).first()
 
     def _child_natural_key(self, row: dict) -> str | None:
-        """Return a stable natural key for no-ID child rows (no synthetic prefix)."""
+        """Return a stable natural key for no-ID child rows (no synthetic prefix).
+
+        Keyed on site location, publication reference and this row's
+        position in the file — not on ``q_top``/``q_bottom`` (T035,
+        DR-003): those are exactly the values a corrected depth interval
+        changes, so keying on them turned a correction into a second
+        determination. Position holds steady across a repeat import of
+        the same rows in the same order, which is what "the same
+        spreadsheet with one value changed" means in practice, and it
+        still separates two genuinely distinct determinations at one
+        site: each occupies its own row and so its own position.
+        """
         lat = str(row.get("lat_NS") or "").strip()
         lon = str(row.get("long_EW") or "").strip()
         if not lat or not lon:
             return None
-        q_top = str(row.get("q_top") or "").strip()
-        q_bottom = str(row.get("q_bottom") or "").strip()
         pub_ref = str(row.get("publication_reference") or "").strip().lower()
-        return f"{lat}:{lon}:{q_top}:{q_bottom}:{pub_ref}"
+        return f"{lat}:{lon}:{pub_ref}:{self._current_row_number}"
 
     # ------------------------------------------------------------------
     # Meta
@@ -377,7 +412,7 @@ class GHFDBChildImportResource(ModelResource):
         model = HeatFlow
         import_id_fields = ("ghfdb_id",)
         use_transactions = True
-        rollback_on_validation_errors = True
+        clean_model_instances = True
         fields = (
             "ghfdb_id",
             "qc",

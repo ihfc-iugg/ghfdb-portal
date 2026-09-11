@@ -22,10 +22,11 @@ from heat_flow.models import HeatFlowSite, ParentHeatFlow
 from import_export import fields, widgets
 from import_export.resources import ModelResource
 
+from .validation import ExcludeFieldsSetAfterValidation
 from .widgets import ParentWidget, QuantityWidget, YesNoWidget
 
 
-class GHFDBParentImportResource(ModelResource):
+class GHFDBParentImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
     """
     Import resource for GHFDB parent-level data.
 
@@ -89,16 +90,21 @@ class GHFDBParentImportResource(ModelResource):
     # ------------------------------------------------------------------
 
     def before_import(self, dataset, **kwargs):
-        """Store the FairDM dataset and deduplicate rows by effective parent key."""
-        from fairdm.core.models import Dataset as FairDataset
+        """Store the caller's named FairDM dataset and deduplicate rows by
+        effective parent key.
 
-        # all_objects, not objects: the default manager hides private datasets, and an
-        # import run by a curator has to reach the dataset it is filling regardless of
-        # who can read it. Narrowing here does not protect anything — it only leaves
-        # the target unresolved and fails later on a null column.
-        self._fairdm_dataset = (
-            kwargs.get("fairdm_dataset") or FairDataset.all_objects.first()
-        )
+        FR-002: the import refuses to guess a dataset. A caller passing an
+        already-resolved ``Dataset`` instance as ``fairdm_dataset`` reaches a
+        private dataset the same as a public one — there is no lookup here
+        to narrow to the default manager in the first place.
+        """
+        fairdm_dataset = kwargs.get("fairdm_dataset")
+        if fairdm_dataset is None:
+            raise ValueError(
+                "GHFDBParentImportResource.import_data() requires a "
+                "fairdm_dataset — the import refuses to choose one (FR-002)."
+            )
+        self._fairdm_dataset = fairdm_dataset
 
         # Inject ID_parent column when the upload template omits it entirely.
         # _check_import_id_fields() runs after before_import(), so adding the column
@@ -158,6 +164,15 @@ class GHFDBParentImportResource(ModelResource):
         id_parent = row.get("ID_parent") or ""
         site = self._get_or_create_site(id_parent, row)
         instance.sample = site
+
+        # Every parent value carries a name, for the same reason each
+        # determination beneath it does: name is required, an unset one saves
+        # as an empty string without the database objecting, and the record
+        # then has nothing to display itself by. The row's own identifier
+        # names it where the row has one, and the site names it where the row
+        # has not — the site is resolved from the coordinates, so that
+        # fallback holds steady across a repeat import.
+        instance.name = str(id_parent).strip() or site.name
 
     def after_save_instance(self, instance, row, **kwargs):
         """Apply M2M relations (explo_purpose) to the site."""
@@ -247,7 +262,7 @@ class GHFDBParentImportResource(ModelResource):
         model = ParentHeatFlow
         import_id_fields = ("ID_parent",)
         use_transactions = True
-        rollback_on_validation_errors = True
+        clean_model_instances = True
         fields = (
             "ID_parent",
             "q",
