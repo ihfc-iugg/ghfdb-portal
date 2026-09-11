@@ -242,3 +242,59 @@ Verified:
 Next: T011 — geography columns stored as supplied, never recomputed.
 
 Watch: none.
+
+## 2026-09-11 — Implementer US-2 · T011
+
+Did: added `TestGHFDBParentImportGeographyStoredAsSupplied` to
+`test_parent_import.py`. Country/Region/Continent/Domain are set to
+values that deliberately disagree with what the row's own coordinates
+would suggest (Germany/Europe), so a passing test proves the stored
+values come from the row rather than being derived (FR-008). Required no
+production change — `ParentWidget`'s `scalar_map` already carries all
+four with no widget override, i.e. no recomputation path exists.
+
+Verified:
+- `poetry run pytest
+  tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportGeographyStoredAsSupplied -q`
+  — 1 passed.
+- Probed: temporarily removed the four `scalar_map` entries in
+  `ParentWidget.__init__` — test failed (`site.country == "Nowhereland"` no
+  longer holds, since neither is set). Restored; re-ran green.
+
+Next: T012 — reviewer columns and ID accepted without being stored.
+
+Watch: none.
+
+## 2026-09-11 — Implementer US-2 · T012
+
+Did: added `TestGHFDBParentImportAcceptsUnstoredColumns` to
+`test_parent_import.py` and `TestGHFDBChildImportAcceptsUnstoredColumns`
+to `test_child_import.py`. Each imports a row carrying
+`Reviewer_name`/`Reviewer_comment`/`Review_date` (plus `ID` on the parent
+side, where it is not a declared field) and asserts the import completes
+without error (FR-009). Required no production change — neither resource
+declares these columns, and `django-import-export` ignores any dataset
+column a resource's `Meta.fields` does not name.
+
+The child-side test does not use this module's pre-existing
+`import_parents()` helper: like 37 other pre-existing call sites across
+both files (decisions.md D11), it omits `fairdm_dataset=` and T008 now
+refuses that. The new test names its dataset explicitly throughout
+instead, rather than touching the shared helper.
+
+Verified: `poetry run pytest
+tests/test_ghfdb/test_resources/test_parent_import.py::TestGHFDBParentImportAcceptsUnstoredColumns
+tests/test_ghfdb/test_resources/test_child_import.py::TestGHFDBChildImportAcceptsUnstoredColumns -q`
+— 2 passed.
+
+Concern (lint tooling, not scope): `poetry run ruff check` with this
+repo's `fix = true` rewrote an unrelated pre-existing test's import block
+(`test_child_import.py::TestGHFDBChildPrivateDatasetRegression`) on a
+scoped run against the file I was editing — the violation already existed
+at this story's base commit (confirmed by checking it against a stash of
+only my own edits). Reverted by hand both times it recurred; every lint
+check after T012 uses `ruff check --no-fix` on scoped paths instead.
+
+Next: T013 — the callable entry point.
+
+Watch: none.
