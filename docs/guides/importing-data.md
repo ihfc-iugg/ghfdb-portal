@@ -59,3 +59,35 @@ here is refused before any part of it could have been written.
 
 `project.ghfdb.constants.OFFICIAL_TEMPLATE_HEADER` holds the set it checks against, should you need
 to compare a header yourself rather than have one validated.
+
+## Running an import
+
+`project.ghfdb.importers.import_ghfdb_template` is the callable entry point: one file, one dataset,
+nothing else. The caller names the dataset explicitly — the import never guesses one, even when
+exactly one exists — and gets back the combined outcome of the two passes it runs underneath.
+
+```python
+from fairdm.core.models import Dataset
+
+from project.ghfdb.importers import import_ghfdb_template
+
+dataset = Dataset.objects.get(pk=...)
+
+with open("filled_template.xlsx", "rb") as f:
+    outcome = import_ghfdb_template(f, dataset)
+
+if outcome.has_errors():
+    ...  # outcome.parent and outcome.child are the two import_export.results.Result objects
+```
+
+Underneath, it runs the **parent pass** — every site and its parent heat flow value — before the
+**child pass** — the determinations beneath each site — since a child row resolves its parent from
+the site the parent pass has already created. Both passes run inside one transaction and are wired
+to the dataset the caller named. `file` may also be an already-parsed `tablib.Dataset`, for a caller
+that already holds one.
+
+Calling either resource directly without naming a dataset — `GHFDBParentImportResource().import_data(...)`
+with no `fairdm_dataset=` keyword — is refused the same way: a `ValueError` from `before_import`,
+or a base error on the returned result if the resource absorbed it (the default, since
+`raise_errors` is not set). A dataset existing in the database is never enough on its own; the
+caller always names it.
