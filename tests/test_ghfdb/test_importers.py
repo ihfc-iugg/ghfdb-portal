@@ -281,7 +281,9 @@ class TestGHFDBTemplateRefusedWhole:
             for invalid in outcome.child.invalid_rows
             for column in invalid.field_specific_errors
         }
-        assert columns_with_faults == {"value", "uncertainty"}, outcome.child.invalid_rows
+        assert columns_with_faults == {"value", "uncertainty"}, (
+            outcome.child.invalid_rows
+        )
 
         assert not HeatFlowSite.objects.exists()
         assert not ParentHeatFlow.objects.exists()
@@ -350,7 +352,9 @@ class TestGHFDBTemplateRefusedWhole:
         (invalid,) = outcome.parent.invalid_rows
         assert invalid.number == 1
         assert "value" in invalid.field_specific_errors
-        assert invalid.field_specific_errors["value"] == [_("This field cannot be null.")]
+        assert invalid.field_specific_errors["value"] == [
+            _("This field cannot be null.")
+        ]
 
         assert not HeatFlowSite.objects.exists()
         assert not ParentHeatFlow.objects.exists()
