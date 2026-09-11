@@ -644,3 +644,30 @@ through `import_id_fields` and the coordinate fallback.
 
 **Revisit if** a story gives either record a display name of its own, at which point this fallback
 becomes the default rather than the only source.
+
+## D21 — Two pre-existing tests changed at review, and why neither is a weakened assertion
+
+**Ambiguous because** the review fixes touch two tests that existed before this pass, which the
+guardrail flags for triage rather than waving through.
+
+**Confirmed in the code**: both changes are inputs, not assertions. `test_importers.ROW` — the row
+dict every test in the module builds its dataset from — gained `geo_lithology` and
+`geo_stratigraphy`, two columns the official template carries and the fixture row simply did not
+list, with empty values. `test_the_import_never_opens_the_controlled_vocabulary_sheet` now imports a
+copy of the template with the two ADR 0003 misspellings corrected, because the distributed template
+is refused on its header and a refusal never reaches the sheet the test is about.
+
+**Chosen**: both kept. No assertion, expected value or count changed in either test, and the second
+test's claim — the reader never opens the vocabulary sheet — is now proven against a file the reader
+actually reads through, which is strictly stronger than proving it against a file refused first.
+
+**Defensible because** the alternative for the second test is to assert the absence of a sheet access
+that could not have happened anyway, which is the vacuous shape this feature's own D14 probe rule
+exists to catch.
+
+**Consequence accepted**: the module's row fixture now has to carry every required template column,
+so a future template column added to the contract has to be added here too. That is the same
+coupling the header check itself introduces, and the failure is loud.
+
+**Revisit if** the fixture row grows far enough from a real submission that building it from the
+template file itself becomes simpler than maintaining the dict.

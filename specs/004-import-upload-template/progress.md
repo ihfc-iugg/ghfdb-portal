@@ -1147,5 +1147,5 @@ review raised as memory amplification on an untrusted upload. A template's row c
 what an assessment team fills in by hand, and dropping a copy means either re-reading the file or
 copying column subsets — more moving parts than the cost justifies.
 
-Verified: `poetry run pytest` — 689 passed, 1 skipped, 13 xfailed. Each new test was run against the
+Verified: `poetry run pytest` — 684 passed, 1 skipped, 13 xfailed. Each new test was run against the
 unfixed code first and failed for the right reason.
