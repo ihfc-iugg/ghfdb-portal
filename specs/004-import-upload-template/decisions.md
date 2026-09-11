@@ -198,3 +198,9 @@ that no module backs. Moving the tests also returned `test_resources/conftest.py
 state, which is why the diff no longer modifies a pre-existing test file.
 
 **Revisit if**: the header-validation surface moves out of `constants.py`.
+
+**Guardrail triage**: the diff modifies one pre-existing test file,
+`tests/test_ghfdb/conftest.py`, and the structural check flags it. Reviewed and approved: the change
+is eighteen added lines declaring one new fixture, `official_upload_template_workbook`. No existing
+fixture, assertion or test is altered, removed or weakened, and the suite it supports grew from 639
+to 646 passing tests across the story.
