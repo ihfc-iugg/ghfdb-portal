@@ -163,3 +163,19 @@ REJECTED_MISSPELLED_COLUMNS: list[str] = ["Ref_ISGN", "tc_pT_fuction"]
 # there would route them through ColumnDisplay.list_display_for(PARENT_COLUMNS)
 # ahead of that separate block.
 PORTAL_ADDITION_COLUMNS: list[str] = ["Country", "Region", "Continent", "Domain"]
+
+# ---------------------------------------------------------------------------
+# T005: accepted-and-not-stored.
+# ---------------------------------------------------------------------------
+
+# FR-009: the reviewer columns and ID are accepted without being stored.
+# Declared as their own collection, distinct from PARENT_COLUMNS/
+# CHILD_COLUMNS/META_FIELDS membership, so a column the reader recognises
+# but deliberately does not store cannot be confused with one nothing
+# resolves at all.
+ACCEPTED_UNSTORED_COLUMNS: list[str] = [
+    "ID",
+    "Reviewer_name",
+    "Reviewer_comment",
+    "Review_date",
+]

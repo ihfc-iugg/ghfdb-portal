@@ -11,12 +11,14 @@ import filecmp
 from pathlib import Path
 
 from project.ghfdb.constants import (
+    ACCEPTED_UNSTORED_COLUMNS,
     CHILD_COLUMNS,
     META_FIELDS,
     PARENT_COLUMNS,
     PORTAL_ADDITION_COLUMNS,
     REJECTED_MISSPELLED_COLUMNS,
 )
+from project.ghfdb.resources import GHFDBChildImportResource, GHFDBParentImportResource
 
 OFFICIAL_TEMPLATE_PATH = (
     Path(__file__).resolve().parents[2] / "fixtures" / "official_upload_template.xlsx"
@@ -81,4 +83,27 @@ class TestTemplateColumnsMatchTheCanonicalConstants:
             "template columns not covered by PARENT_COLUMNS + CHILD_COLUMNS + "
             "META_FIELDS, nor a documented exception: "
             f"{sorted(set(header) - resolved)}"
+        )
+
+
+class TestEveryTemplateColumnIsMappedOrAccepted:
+    """T005: every template column the portal is expected to actually
+    process — that is, excluding the two ADR 0003 misspellings T006 refuses
+    outright — must be either mapped by a resource field's ``column_name``
+    or a member of ``ACCEPTED_UNSTORED_COLUMNS``. Without this, "unmatched"
+    (a real defect) and "deliberately ignored" look the same."""
+
+    def test_every_template_column_is_mapped_or_accepted(
+        self, official_upload_template_workbook
+    ):
+        header = _read_header_row(official_upload_template_workbook)
+        mapped = {
+            field.column_name for field in GHFDBParentImportResource().fields.values()
+        } | {field.column_name for field in GHFDBChildImportResource().fields.values()}
+        handled = mapped | set(ACCEPTED_UNSTORED_COLUMNS)
+        considered = set(header) - set(REJECTED_MISSPELLED_COLUMNS)
+
+        assert considered <= handled, (
+            "template columns neither mapped by a resource field nor in "
+            f"ACCEPTED_UNSTORED_COLUMNS: {sorted(considered - handled)}"
         )
