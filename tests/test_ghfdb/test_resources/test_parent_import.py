@@ -475,6 +475,37 @@ class TestGHFDBParentImportGeographyStoredAsSupplied:
         assert site.domain == "Deep Sea"
 
 
+@pytest.mark.django_db
+class TestGHFDBParentImportAcceptsUnstoredColumns:
+    """T012 — FR-009: the reviewer columns and ID are accepted without being
+    stored, and their presence is not an error."""
+
+    def test_id_and_reviewer_columns_do_not_cause_an_error(self, dataset):
+        """ID and the three reviewer columns are not PARENT_COLUMNS fields,
+        so their presence in the row must not raise or block the import."""
+        from heat_flow.models import HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        row = dict(PARENT_ROW)
+        row["ID"] = "999"
+        row["Reviewer_name"] = "Jane Reviewer"
+        row["Reviewer_comment"] = "Looks fine"
+        row["Review_date"] = "2026-01-01"
+
+        resource = GHFDBParentImportResource()
+        result = resource.import_data(
+            make_dataset(row),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        assert ParentHeatFlow.objects.filter(ghfdb_id=1).exists()
+        assert HeatFlowSite.objects.filter(name="Test Site Alpha").exists()
+
+
 class TestGHFDBParentImportResourceAccessControl:
     """T029 — Staff-only access control."""
 

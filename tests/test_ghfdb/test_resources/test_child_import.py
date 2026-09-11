@@ -288,6 +288,53 @@ class TestGHFDBChildImportResourceImport:
 
 
 @pytest.mark.django_db
+class TestGHFDBChildImportAcceptsUnstoredColumns:
+    """T012 — FR-009: the reviewer columns are accepted without being
+    stored, and their presence is not an error. ``ID`` is a declared child
+    field (``ghfdb_id``), exercised throughout this file; this covers the
+    three reviewer columns specifically.
+
+    Does not use this module's ``import_parents()`` helper: it calls
+    ``import_data()`` without ``fairdm_dataset``, which T008 now refuses
+    (decisions.md D11). This test names its dataset throughout instead.
+    """
+
+    def test_reviewer_columns_do_not_cause_an_error(self, dataset):
+        """Reviewer_name/Reviewer_comment/Review_date are not CHILD_COLUMNS
+        fields, so their presence in the row must not raise or block the
+        import."""
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import (
+            GHFDBChildImportResource,
+            GHFDBParentImportResource,
+        )
+
+        GHFDBParentImportResource().import_data(
+            make_dataset(PARENT_ROW),
+            dry_run=False,
+            raise_errors=True,
+            fairdm_dataset=dataset,
+        )
+
+        row = dict(CHILD_ROW)
+        row["Reviewer_name"] = "Jane Reviewer"
+        row["Reviewer_comment"] = "Looks fine"
+        row["Review_date"] = "2026-01-01"
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        assert HeatFlow.objects.filter(ghfdb_id=1).exists()
+
+
+@pytest.mark.django_db
 class TestGHFDBChildProbeMetadata:
     """T030 — ProbeMetadata creation."""
 
