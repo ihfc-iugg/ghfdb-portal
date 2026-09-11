@@ -65,10 +65,16 @@ def import_ghfdb_template(file: Any, dataset: Any) -> GHFDBImportOutcome:
 
     with transaction.atomic():
         parent_result = GHFDBParentImportResource().import_data(
-            copy.deepcopy(rows), dry_run=False, fairdm_dataset=dataset
+            copy.deepcopy(rows),
+            dry_run=False,
+            fairdm_dataset=dataset,
+            rollback_on_validation_errors=True,
         )
         child_result = GHFDBChildImportResource().import_data(
-            copy.deepcopy(rows), dry_run=False, fairdm_dataset=dataset
+            copy.deepcopy(rows),
+            dry_run=False,
+            fairdm_dataset=dataset,
+            rollback_on_validation_errors=True,
         )
 
     return GHFDBImportOutcome(parent=parent_result, child=child_result)

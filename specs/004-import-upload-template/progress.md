@@ -551,4 +551,58 @@ acceptance criterion was already satisfied by the tree at dispatch — no
 production code in `project/ghfdb/resources/child.py` changed across the
 whole story, only `tests/test_ghfdb/test_resources/test_child_import.py`.
 
-Next: full repo verify, then the completion report.
+## 2026-09-11 — Implementer US-4 · T021
+
+Did: added `TestGHFDBTemplateRefusedWhole` to `test_importers.py`,
+reproducing #190 directly: two child rows, the second carrying a `qc`
+value `QuantityWidget` cannot parse. Confirmed against the tree as
+dispatched (before any US-4 change) that row 1's `HeatFlow` survives the
+import even though row 2 faults — the reproduction failed for exactly
+that reason.
+
+Verified:
+- Reproduction (red): `poetry run pytest
+  tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole -x -q`
+  — 1 failed, `AssertionError` on `not HeatFlow.objects.filter(ghfdb_id=1).exists()`
+  (row 1 was written).
+
+No decisions.md entry: nothing ambiguous, this task is the reproduction
+itself.
+
+Next: T022 — pass `rollback_on_validation_errors` from the entry point.
+
+## 2026-09-11 — Implementer US-4 · T022
+
+Did: removed `rollback_on_validation_errors = True` from both resources'
+`Meta` (`parent.py`, `child.py`) and added `clean_model_instances = True`
+to both instead; `importers.py` now passes
+`rollback_on_validation_errors=True` explicitly to both `import_data()`
+calls. Discovered along the way that `clean_model_instances = True` alone
+refused every row, on `sample`/`dataset`/`name` rather than on anything
+the file got wrong — `before_save_instance()` (where both resources set
+those three) runs after `full_clean()`, not before it. Fixed by
+overriding `validate_instance()` on both resources to exclude those three
+fields from `full_clean()`, recorded as D15.
+
+Verified:
+- T021 green: `poetry run pytest
+  tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRefusedWhole -q`
+  — 1 passed.
+- Full module: `poetry run pytest tests/test_ghfdb/test_importers.py -q`
+  — 5 passed.
+- No regression: `poetry run pytest
+  tests/test_ghfdb/test_resources/test_parent_import.py
+  tests/test_ghfdb/test_resources/test_child_import.py -q` — 58 passed, 5
+  xfailed (same 5 pre-existing xfails as before this story).
+- Wider check: `poetry run pytest tests/test_ghfdb/ -q` — 276 passed, 13
+  xfailed.
+- Lint, scoped: `poetry run ruff check project/ghfdb/resources/parent.py
+  project/ghfdb/resources/child.py project/ghfdb/importers.py
+  tests/test_ghfdb/test_importers.py` — all checks passed.
+
+decisions.md D15 records the `validate_instance()` exclusion and why it is
+scoped to `sample`/`dataset`/`name` rather than a larger hook-order
+restructure.
+
+Next: T023 — probe that reinstating the old `Meta` form makes the guard
+fail.

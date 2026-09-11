@@ -328,3 +328,46 @@ Triaged and approved on that evidence.
 
 **Revisit if**: a later story changes `child.py` in a way these four tests do not catch — that would
 mean the probes chose the wrong mechanism to break.
+
+## D15 — `clean_model_instances = True` needs `validate_instance()` to exclude three fields, or it refuses every row
+
+**Ambiguous because** T022 asks for `clean_model_instances = True` on both resources' `Meta`, on the
+strength of DR-002's claim that this is what makes `result.has_validation_errors()` populate at all.
+Turning it on exactly as described broke every previously-passing test in
+`tests/test_ghfdb/test_importers.py` and both `test_resources` import modules — not on anything the
+row data got wrong, but on `sample`, `dataset` and `name`, all required by the `Measurement` base
+class (`fairdm.core.measurement.models`) and all still unset at the point `full_clean()` runs.
+
+**Confirmed in the code**: `import_row()` calls `validate_instance()` — which is where
+`full_clean()` runs when `clean_model_instances` is true — before `save_instance()`, and
+`save_instance()` is what calls `before_save_instance()`. Both resources' `before_save_instance()`
+is where `instance.sample` (the site, or the depth interval) and `instance.dataset` are set; neither
+resource ever sets `instance.name` on the measurement itself (the *site's* name is a separate field,
+already stored on `HeatFlowSite`). `full_clean()` therefore always saw `sample`, `dataset` and `name`
+as blank, on every row of every file, refusing files that had nothing wrong with them at all.
+
+**Chosen**: both resources override `validate_instance()` to call `full_clean(exclude={...,
+"sample", "dataset", "name"})` — the base implementation's own logic, with those three fields added
+to the exclusion set alongside the fields `import_instance()` already flagged. `before_save_instance`
+still sets all three, moments later, before the row is saved; the DB's own NOT NULL constraint is
+the backstop if either resource ever fails to. `has_errors()` already rolls back on a row-level
+exception regardless of `rollback_on_validation_errors` (`import_export/resources.py:851-855`), so
+that backstop still refuses the file — it would simply report a database-level message instead of a
+located, translated one.
+
+**Defensible because** `sample`, `dataset` and `name` are resource-internal linkage, not columns the
+uploaded file supplies — FR-011's fourth fault type is about a *spreadsheet cell* left empty that
+maps to a required model field (`q`, `qc`, and siblings via `QuantityWidget`), not about the plumbing
+that attaches a row to its site and dataset. Restructuring both resources so every hook that
+populates a relation runs before `import_instance()`/`validate_instance()` would fix the same problem
+at a structural level, but it is a far larger, riskier diff than this story's scope (`Meta` and the
+entry point, per `plan.md`), for the same practical result on every case this story's tests cover.
+
+**Consequence accepted**: a genuine future bug that left `sample`, `dataset` or `name` unset on save
+would still surface as an unlocated `IntegrityError`-shaped row error rather than a located,
+translated `full_clean()` message. It would still refuse the file — `has_errors()` does not depend on
+the flag — just with a worse message than the fields this story's fault type actually targets get.
+
+**Revisit if**: a later story moves relation-population into `after_init_instance()` (or another hook
+that runs before `validate_instance()`) for both resources — at that point the exclusion is no longer
+needed and should be removed along with it.
