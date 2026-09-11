@@ -455,3 +455,68 @@ file committed.
 `import_row()`'s own `try` (a bulk path, an async task, a call made outside the import machinery
 entirely) — at that point this decision's premise no longer holds and the fault needs an explicit
 channel of its own.
+
+## D18 — T035: the child's no-ID natural key drops q_top/q_bottom for the row's file position
+
+**Ambiguous because** T034 confirmed DR-003 directly: `_child_natural_key` (child.py) built the
+no-ID lookup key from `lat_NS`, `long_EW`, `q_top`, `q_bottom` and `publication_reference`, so
+correcting a depth interval — the single most plausible real correction — changed the key and wrote
+a second determination instead of updating the first. T035's brief named three shapes a fix could
+take: a narrower key, a different match strategy, or something else, and required whatever is chosen
+to keep two rows that are genuinely different determinations at one site distinct — narrowing until
+real siblings collide trades a duplicate for silent data loss, the worse failure.
+
+**Chosen**: `q_top`/`q_bottom` are dropped from the key entirely, replaced with the row's position in
+the file. `GHFDBChildImportResource.before_import_row` now records `kwargs["row_number"]` (the
+index `import_row()` already receives, restarting at 1 on every `import_data()` call) on `self`
+before `get_or_init_instance` runs; `_child_natural_key` reads it back. The key is now
+`f"{lat}:{lon}:{pub_ref}:{row_number}"`.
+
+**Alternatives considered and rejected**:
+
+- **Narrow the key to just `lat`/`lon`/`publication_reference`, dropping the depth interval with
+  nothing to replace it.** Rejected outright — this is exactly the collision the brief's prohibition
+  names: two genuinely different determinations at one site sharing a publication reference (a paper
+  reporting two depths from the same borehole) would resolve to the same key and the second import
+  would overwrite the first's data rather than adding beside it. T035's own regression test
+  (`test_two_distinct_determinations_at_one_site_stay_distinct_across_reimport`) constructs exactly
+  this case.
+- **Keep `q_top`/`q_bottom` in the key but round them, or key on interval midpoint.** Rejected: a
+  correction that moves the interval by more than the rounding tolerance is still indistinguishable
+  from a genuinely new determination at a nearby depth, so this only narrows the window in which the
+  defect reproduces rather than closing it, and invents a tolerance the spec gives no basis for.
+- **A separate explicit ordinal counted per `(lat, lon, publication_reference)` group**, injected as
+  a synthetic dataset column in `before_import` the way `ID`/`ID_parent` already are. Rejected as
+  needless complexity for the same outcome: `row_number` is already unique per row and already
+  available through the hook `import_row()` calls immediately before `get_or_init_instance`, so a
+  second counting mechanism scoped to a sub-group buys nothing this story needs.
+
+**Defensible because** file position is the one thing this correction scenario ("the same
+spreadsheet, one value changed") reliably holds constant, since the story's own acceptance criteria
+describe re-sending the same file with an edit, not a reordered or restructured one. It is also
+strictly more distinguishing than the key it replaces: `row_number` alone already guarantees two
+rows in the same file never collide, before `lat`/`lon`/`publication_reference` are even considered,
+so keeping those three fields in the key is redundancy for readability and future debugging, not a
+requirement for correctness.
+
+**Verified in the code**: `import_export.resources.Resource.import_row()` calls
+`self.before_import_row(row, **kwargs)` then `self.get_or_init_instance(instance_loader, row)` in the
+same call, for one row, before advancing to the next
+(`import_export/resources.py:714-715` in the installed library) — so the row number captured in
+`before_import_row` is still current when `_child_natural_key` is read from both
+`get_or_init_instance` (the lookup) and `before_save_instance` (setting `instance.name` to match).
+`import_data_inner()`'s row loop (`resources.py:897`) restarts `row_number` at 1 on every
+`import_data()` call, confirmed by reading the loop directly — not assumed — so a second call
+importing the same rows in the same order reproduces the same keys.
+
+**Consequence accepted**: a re-sent file that reorders, inserts or removes rows ahead of a given
+determination's row will compute a different key for it and treat it as a new determination rather
+than matching the original — the same limitation the coordinate-only parent-side fallback already
+has for anything beyond "the same file, one value changed" (D11 onward never claimed to survive
+reordering either). Out of this story's scope: the acceptance criteria describe an edited resend, not
+a restructured one.
+
+**Revisit if**: a future story needs re-import to survive row reordering or insertion/deletion ahead
+of an existing row — at that point file position stops being a reliable proxy for row identity and a
+persisted identifier (assigning and round-tripping a real `ID` on export, for instance) is the actual
+fix.

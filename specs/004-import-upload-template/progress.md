@@ -1058,3 +1058,34 @@ strategy decision belongs to T035.
 
 Next: T035 — make T034 pass by changing the child match strategy without
 letting two genuinely distinct determinations at one site collide.
+
+## 2026-09-11 — US-6 · T035
+
+Did: made T034 pass. `GHFDBChildImportResource` gains
+`before_import_row`, recording `kwargs["row_number"]` on `self` before
+`get_or_init_instance` runs each row; `_child_natural_key` now builds the
+no-ID lookup key from site location, publication reference and that row
+number instead of `q_top`/`q_bottom` — so a corrected depth interval no
+longer changes the key. Also added
+`test_two_distinct_determinations_at_one_site_stay_distinct_across_reimport`,
+proving two rows sharing a site and publication reference but differing
+only by depth interval stay separate records across a repeat import —
+the case the brief's prohibition names, and the one a same-site/pub-ref
+key with nothing else would have collided. Decision recorded as D18,
+including two rejected alternatives (drop the depth fields with nothing
+replacing them; a synthetic per-group ordinal column).
+
+Verified:
+- Green: `poetry run pytest tests/test_ghfdb/test_importers.py::TestGHFDBTemplateRepeatImport -q`
+  — 4 passed (T032, T033, T034, the new sibling-distinctness test).
+- Broader scope: `poetry run pytest tests/test_ghfdb/test_importers.py
+  tests/test_ghfdb/test_resources/test_child_import.py -q` — 44 passed,
+  nothing pre-existing moved.
+- Lint, scoped: `poetry run ruff check tests/test_ghfdb/test_importers.py
+  project/ghfdb/resources/child.py` and `poetry run ruff format --check`
+  on the same two files — both clean.
+
+Next: T036 — bring docs/guides/importing-data.md up to date with D12's
+entry point, the all-or-nothing/located-fault rules, the vocabulary
+rule, and this story's repeat-import behaviour; run every example in the
+guide against this branch.

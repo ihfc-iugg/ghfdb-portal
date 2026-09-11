@@ -674,3 +674,42 @@ class TestGHFDBTemplateRepeatImport:
         assert child_after.pk == child_before.pk
         assert float(child_after.sample.top.magnitude) == pytest.approx(100.0)
         assert float(child_after.sample.bottom.magnitude) == pytest.approx(600.0)
+
+    def test_two_distinct_determinations_at_one_site_stay_distinct_across_reimport(
+        self, dataset
+    ):
+        """T035: the match strategy that lets a depth correction update in
+        place must not also merge two rows that are genuinely separate
+        determinations at the same site and publication reference — they
+        differ only by depth interval, exactly the case narrowing the key
+        to drop q_top/q_bottom entirely would have collided."""
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        row_a = {k: v for k, v in ROW.items() if k not in ("ID", "ID_parent")}
+        row_b = dict(row_a)
+        row_b["q_top"] = "500"
+        row_b["q_bottom"] = "1000"
+
+        first = import_ghfdb_template(make_dataset(row_a, row_b), dataset)
+        assert not first.has_errors(), (
+            first.parent.invalid_rows,
+            first.child.invalid_rows,
+        )
+        assert HeatFlow.objects.count() == 2
+        tops_before = sorted(
+            float(c.sample.top.magnitude) for c in HeatFlow.objects.all()
+        )
+        assert tops_before == [0.0, 500.0]
+
+        second = import_ghfdb_template(make_dataset(row_a, row_b), dataset)
+        assert not second.has_errors(), (
+            second.parent.invalid_rows,
+            second.child.invalid_rows,
+        )
+        assert HeatFlow.objects.count() == 2
+        tops_after = sorted(
+            float(c.sample.top.magnitude) for c in HeatFlow.objects.all()
+        )
+        assert tops_after == [0.0, 500.0]

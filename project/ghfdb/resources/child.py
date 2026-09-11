@@ -137,10 +137,22 @@ class GHFDBChildImportResource(ModelResource):
         self._gradient_widget = GradientWidget()
         self._conductivity_widget = ConductivityWidget()
         self._fairdm_dataset = None
+        self._current_row_number = None
 
     # ------------------------------------------------------------------
     # Hooks
     # ------------------------------------------------------------------
+
+    def before_import_row(self, row, **kwargs):
+        """Record this row's position in the file (T035).
+
+        ``_child_natural_key`` uses it in place of ``q_top``/``q_bottom``,
+        so a no-ID row's identity survives a corrected depth interval.
+        ``row_number`` restarts at 1 on every ``import_data()`` call, so a
+        repeat import of the same rows in the same order reproduces the
+        same key.
+        """
+        self._current_row_number = kwargs.get("row_number")
 
     def before_import(self, dataset, **kwargs):
         """Store the caller's named FairDM dataset for use during row
@@ -391,15 +403,24 @@ class GHFDBChildImportResource(ModelResource):
         return ParentHeatFlow.objects.filter(sample=site).first()
 
     def _child_natural_key(self, row: dict) -> str | None:
-        """Return a stable natural key for no-ID child rows (no synthetic prefix)."""
+        """Return a stable natural key for no-ID child rows (no synthetic prefix).
+
+        Keyed on site location, publication reference and this row's
+        position in the file — not on ``q_top``/``q_bottom`` (T035,
+        DR-003): those are exactly the values a corrected depth interval
+        changes, so keying on them turned a correction into a second
+        determination. Position holds steady across a repeat import of
+        the same rows in the same order, which is what "the same
+        spreadsheet with one value changed" means in practice, and it
+        still separates two genuinely distinct determinations at one
+        site: each occupies its own row and so its own position.
+        """
         lat = str(row.get("lat_NS") or "").strip()
         lon = str(row.get("long_EW") or "").strip()
         if not lat or not lon:
             return None
-        q_top = str(row.get("q_top") or "").strip()
-        q_bottom = str(row.get("q_bottom") or "").strip()
         pub_ref = str(row.get("publication_reference") or "").strip().lower()
-        return f"{lat}:{lon}:{q_top}:{q_bottom}:{pub_ref}"
+        return f"{lat}:{lon}:{pub_ref}:{self._current_row_number}"
 
     # ------------------------------------------------------------------
     # Meta
