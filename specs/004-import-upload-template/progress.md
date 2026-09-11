@@ -551,7 +551,7 @@ acceptance criterion was already satisfied by the tree at dispatch — no
 production code in `project/ghfdb/resources/child.py` changed across the
 whole story, only `tests/test_ghfdb/test_resources/test_child_import.py`.
 
-## 2026-09-11 — Implementer US-4 · T021
+## 2026-09-11 — US-4 · T021
 
 Did: added `TestGHFDBTemplateRefusedWhole` to `test_importers.py`,
 reproducing #190 directly: two child rows, the second carrying a `qc`
@@ -571,7 +571,7 @@ itself.
 
 Next: T022 — pass `rollback_on_validation_errors` from the entry point.
 
-## 2026-09-11 — Implementer US-4 · T022
+## 2026-09-11 — US-4 · T022
 
 Did: removed `rollback_on_validation_errors = True` from both resources'
 `Meta` (`parent.py`, `child.py`) and added `clean_model_instances = True`
@@ -607,7 +607,7 @@ restructure.
 Next: T023 — probe that reinstating the old `Meta` form makes the guard
 fail.
 
-## 2026-09-11 — Implementer US-4 · T023
+## 2026-09-11 — US-4 · T023
 
 Did: probed T021's test against the pre-T022 form, exactly as it was
 declared before this story: temporarily removed the
@@ -633,7 +633,7 @@ probe itself.
 
 Next: T024 — test two widely separated faults are both reported.
 
-## 2026-09-11 — Implementer US-4 · T024
+## 2026-09-11 — US-4 · T024
 
 Did: added `test_two_widely_separated_faults_are_both_reported_and_nothing_lands`
 to `TestGHFDBTemplateRefusedWhole`. Three rows: the first entirely clean,
@@ -658,7 +658,7 @@ already named, no new ambiguity.
 Next: T025 — make it green without breaking the parent pass's dependency
 on cross-pass visibility.
 
-## 2026-09-11 — Implementer US-4 · T025
+## 2026-09-11 — US-4 · T025
 
 Did: `GHFDBImportOutcome.has_errors()` now also checks
 `has_validation_errors()` on both passes. `import_ghfdb_template()` checks
@@ -694,7 +694,7 @@ work here and what replaces it.
 Next: T026 — a clean file imports with nothing reported, every row
 landed, counted rather than merely checked for existence.
 
-## 2026-09-11 — Implementer US-4 · T026
+## 2026-09-11 — US-4 · T026
 
 Did: added `test_a_clean_file_reports_nothing_and_every_row_lands` to
 `TestGHFDBTemplateRefusedWhole`: three rows, no fault anywhere, asserts
@@ -720,7 +720,7 @@ No decisions.md entry: nothing ambiguous, no production code changed.
 Next: T026a — an empty mandatory model field names its row and column, in
 a translated message, and refuses the whole file.
 
-## 2026-09-11 — Implementer US-4 · T026a
+## 2026-09-11 — US-4 · T026a
 
 Did: added
 `test_an_empty_mandatory_model_field_names_its_row_and_column_and_refuses_the_file`
