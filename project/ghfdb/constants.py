@@ -179,3 +179,27 @@ ACCEPTED_UNSTORED_COLUMNS: list[str] = [
     "Reviewer_comment",
     "Review_date",
 ]
+
+# ---------------------------------------------------------------------------
+# T006: refuse a header that is not the official template's (FR-003).
+# ---------------------------------------------------------------------------
+
+OFFICIAL_TEMPLATE_HEADER: frozenset[str] = frozenset(
+    PARENT_COLUMNS
+) | frozenset(CHILD_COLUMNS) | frozenset(META_FIELDS) | frozenset(
+    PORTAL_ADDITION_COLUMNS
+)
+
+
+def validate_official_header(header: list[str]) -> None:
+    """Raise ``ValueError`` naming *header* unless it is the official
+    template's header — every published column present, and nothing else.
+
+    Pure: inspects only the header it is given, so a caller that validates
+    before reading any row never writes anything for a refused file.
+    """
+    if set(header) != OFFICIAL_TEMPLATE_HEADER:
+        raise ValueError(
+            "Not the official upload template header — an outdated or "
+            f"unrecognised template: {header!r}"
+        )

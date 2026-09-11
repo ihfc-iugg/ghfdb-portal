@@ -10,13 +10,17 @@ assessment team actually fills in, not a hand-built approximation of it
 import filecmp
 from pathlib import Path
 
+import pytest
+
 from project.ghfdb.constants import (
     ACCEPTED_UNSTORED_COLUMNS,
     CHILD_COLUMNS,
     META_FIELDS,
+    OFFICIAL_TEMPLATE_HEADER,
     PARENT_COLUMNS,
     PORTAL_ADDITION_COLUMNS,
     REJECTED_MISSPELLED_COLUMNS,
+    validate_official_header,
 )
 from project.ghfdb.resources import GHFDBChildImportResource, GHFDBParentImportResource
 
@@ -107,3 +111,36 @@ class TestEveryTemplateColumnIsMappedOrAccepted:
             "template columns neither mapped by a resource field nor in "
             f"ACCEPTED_UNSTORED_COLUMNS: {sorted(considered - handled)}"
         )
+
+
+class TestOfficialHeaderRefusal:
+    """T006 (FR-003): a spreadsheet whose header row is not the official
+    template's is refused whole, naming the header, rather than partially
+    read. ``validate_official_header`` is pure — it inspects only the header
+    it is given — so a refusal here happens before any row is read and
+    before anything could be written."""
+
+    def test_a_header_with_the_corrected_spellings_validates(self):
+        validate_official_header(list(OFFICIAL_TEMPLATE_HEADER))  # must not raise
+
+    def test_the_currently_distributed_template_is_refused_and_named(
+        self, official_upload_template_workbook
+    ):
+        """ADR 0003: the currently distributed template itself carries the
+        two misspellings (``tc_pT_fuction``, ``Ref_ISGN``) and is refused,
+        naming them, rather than silently mapped."""
+        header = _read_header_row(official_upload_template_workbook)
+
+        with pytest.raises(ValueError) as excinfo:
+            validate_official_header(header)
+
+        assert "tc_pT_fuction" in str(excinfo.value)
+        assert "Ref_ISGN" in str(excinfo.value)
+
+    def test_a_foreign_header_is_refused_and_named(self):
+        foreign_header = ["not", "the", "official", "template"]
+
+        with pytest.raises(ValueError) as excinfo:
+            validate_official_header(foreign_header)
+
+        assert repr(foreign_header) in str(excinfo.value)
