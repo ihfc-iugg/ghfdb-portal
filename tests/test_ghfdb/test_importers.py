@@ -237,3 +237,52 @@ class TestGHFDBTemplateRefusedWhole:
             "row 1 was written even though row 2, later in the same file, "
             "carried a fault the model cannot store (#190)"
         )
+
+    def test_two_widely_separated_faults_are_both_reported_and_nothing_lands(
+        self, dataset
+    ):
+        """T024 — three rows: the first is entirely clean, the second and
+        third each carry their own fault on the child side only — the
+        parent side (site, parent heat flow) has no fault on any row at
+        all. Both faults must be reported, each naming its own row and
+        column, and nothing from either pass may land: a resource with no
+        fault of its own must not commit just because the other resource
+        failed (FR-010, FR-012)."""
+        from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        row1 = dict(ROW)
+
+        row2 = dict(ROW)
+        row2["ID_parent"] = "2"
+        row2["ID"] = "2"
+        row2["name"] = "Test Site Beta"
+        row2["lat_NS"] = "50.0"
+        row2["long_EW"] = "8.0"
+        row2["qc"] = "not-a-number"
+
+        row3 = dict(ROW)
+        row3["ID_parent"] = "3"
+        row3["ID"] = "3"
+        row3["name"] = "Test Site Gamma"
+        row3["lat_NS"] = "52.0"
+        row3["long_EW"] = "9.0"
+        row3["qc_uncertainty"] = "also-not-a-number"
+
+        outcome = import_ghfdb_template(make_dataset(row1, row2, row3), dataset)
+
+        assert outcome.has_errors()
+        assert outcome.child.has_validation_errors()
+        rows_with_faults = {invalid.number for invalid in outcome.child.invalid_rows}
+        assert rows_with_faults == {2, 3}, outcome.child.invalid_rows
+        columns_with_faults = {
+            column
+            for invalid in outcome.child.invalid_rows
+            for column in invalid.field_specific_errors
+        }
+        assert columns_with_faults == {"value", "uncertainty"}, outcome.child.invalid_rows
+
+        assert not HeatFlowSite.objects.exists()
+        assert not ParentHeatFlow.objects.exists()
+        assert not HeatFlow.objects.exists()
