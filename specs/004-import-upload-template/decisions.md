@@ -102,3 +102,59 @@ stage is meant to produce.
 
 **ADR:** none — these are corrections to a plan before it was built, and the durable decisions they
 touch are already covered by D1 and by the stories themselves.
+
+## D7 — The ten disagreements T002 reports: verdicts
+
+T002's test reads the official template's header (row 6, columns B onward) and checks that every
+name resolves against `PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS`. It disagrees on ten names.
+None of the ten is a straightforward rename; each is a genuine decision, exactly the possibility the
+plan's Risks section named. Judged one at a time:
+
+**`Ref_ISGN` and `tc_pT_fuction` — exception, ADR 0003.** Both are misspellings ADR 0003 already
+names as ones the portal corrects: the code keeps `Ref_IGSN` and `tc_pT_function`, and a file
+carrying either misspelled form is refused rather than silently mapped (T006). No change to
+`constants.py` for these two — the disagreement is permanent and intentional, not something T004
+resolves.
+
+**`Country`, `Region`, `Continent`, `Domain` — exception, D8 of `specs/002-ghfdb-proxy/decisions.md`.**
+That decision, from the feature that built the admin proxy, already ruled: "they are not published
+columns" — geography enrichment fields stored on `HeatFlowSite` (FR-008) and rendered in
+`GHFDBParentAdmin`'s changelist after the published block, never through
+`PARENT_COLUMNS`. `admin.py`'s own docstring says so directly ("Four geography columns follow it —
+portal additions, not part of the published structure (D8)"), and
+`GHFDBParentImportResource` already declares pass-through fields for all four
+(`project/ghfdb/resources/parent.py`), so the import side already treats them as ordinary spreadsheet
+columns — they are simply never one of the *published* ones. Adding them to `PARENT_COLUMNS` would
+put them through `ColumnDisplay.list_display_for(PARENT_COLUMNS)` in `GHFDBParentAdmin`, which would
+break `test_admin.py::TestGHFDBParentAdmin::test_the_geography_follows_the_published_block` (T100) —
+a pre-existing, passing test outside this story's file scope. Left untouched.
+
+**`ID`, `Reviewer_name`, `Reviewer_comment`, `Review_date` — rename (add), verdict: accepted and not
+stored.** FR-009 names these as accepted without being stored. Added to `META_FIELDS` in T004 (not
+`PARENT_COLUMNS`/`CHILD_COLUMNS`, which would additionally require entries in `columns.py`'s
+`PublishedColumns.ENTRIES` per `test_columns.py::test_every_published_column_has_an_entry` — `ID`,
+unlike the three reviewer columns, already resolves through
+`GHFDBChildImportResource.ghfdb_id` (`column_name="ID"`), so double-declaring it as
+"accepted-and-not-stored" would misstate what the code does; T005's named collection carries it
+anyway, per the brief, since the OR in T005's assertion makes the redundancy harmless). `META_FIELDS`
+is not consumed by `admin.py`'s `list_display_for`, so this addition carries no admin regression risk
+matching Country/Region/Continent/Domain's.
+
+**Consequence**: T002's test is deliberately one-directional (`resolved == set(header)`, not
+`set(header) == set(PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS)`). The reverse direction would also
+require `PARENT_COLUMNS`/`CHILD_COLUMNS`/`META_FIELDS` to drop `ID_parent`, `quality_parent`,
+`quality_child`, `Quality_Code_Child` and `Quality_Score_Parent` — names the constants carry that the
+template does not. `ID_parent` is required to stay by
+`test_admin.py::test_site_values_are_not_restated_on_every_row`, which asserts
+`headings & set(PARENT_COLUMNS) == {"ID_parent", "name", "lat_NS", "long_EW"}`; removing
+`quality_parent` would flip `test_schema_coverage.py::test_parent_resource_declares_all_parent_columns`
+from a `strict=True` xfail (documented against issue #122) to an unexpected pass, which is itself a
+failure. Both are pre-existing tests outside this story's scope (constants.py and columns.py only),
+so both names — and, for consistency and minimal diff, their siblings `quality_child`,
+`Quality_Code_Child` and `Quality_Score_Parent` — are left exactly as they are. This story's claim is
+narrower than literal set equality: every column the template carries is recognised (FR-004); it does
+not claim every name the constants carry is one the template recognises.
+
+**Revisit if**: issue #122 is resolved and the half-landed BUG-010 work is finished — at that point
+`ID_parent`/`quality_parent`/`quality_child`/`Quality_Code_Child`/`Quality_Score_Parent`'s place in
+these constants should be reconsidered as part of that work, not this one.
