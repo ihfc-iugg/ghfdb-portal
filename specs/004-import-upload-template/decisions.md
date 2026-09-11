@@ -158,3 +158,43 @@ not claim every name the constants carry is one the template recognises.
 **Revisit if**: issue #122 is resolved and the half-landed BUG-010 work is finished — at that point
 `ID_parent`/`quality_parent`/`quality_child`/`Quality_Code_Child`/`Quality_Score_Parent`'s place in
 these constants should be reconsidered as part of that work, not this one.
+
+## D9 — US-1's first acceptance scenario is amended to match ADR 0003
+
+**Decision**: acceptance scenario 1 of US-1 said every one of the template's seventy columns
+resolves to "either a stored field or an explicitly accepted-and-ignored column". Two of them
+resolve to neither, by design: `tc_pT_fuction` and `Ref_ISGN`, which ADR 0003 refuses rather than
+maps. The scenario is amended to name all four outcomes a column can have, and scenario 2 now
+states the consequence plainly — the template distributed today carries both misspellings, so a
+file produced from it is refused on those two names until IHFC corrects the template.
+
+**Why**: the contradiction was in the specification, not in ADR 0003 or in the implementation. The
+ADR is explicit that both misspellings are "present in the currently distributed upload template",
+that rejecting loudly is deliberately stricter than translating quietly, and that the revisit
+condition is the template being corrected upstream. The specification sentence was written before
+the ten disagreements had been enumerated against the real file, and it described an outcome the
+recorded decision forbids. Amending the sentence I wrote is the correct repair; reopening a
+decision Sam declined to reopen at the specification gate is not.
+
+**Consequence**: until the published template is corrected, the portal imports no file produced
+from it. That is the intended pressure, and it is a fact worth carrying to the merge gate rather
+than discovering at first real use.
+
+**Revisit if**: IHFC corrects the published template. ADR 0003's own revisit clause then applies —
+the refusal narrows to a migration aid for files produced against older templates.
+
+## D10 — the reconciliation test lives with the module it is about
+
+**Decision**: the reconciliation and refusal tests were written to
+`tests/test_ghfdb/test_resources/test_template_columns.py`, the path `plan.md` named. They test
+`project/ghfdb/constants.py`, so they were moved to `tests/test_ghfdb/test_constants.py` and the
+workbook fixture moved with them, from `tests/test_ghfdb/test_resources/conftest.py` up to
+`tests/test_ghfdb/conftest.py`.
+
+**Why**: constitution Article X requires the test tree to mirror the source tree, and the mechanical
+structure check reads it that way — a test file under `test_resources/` is taken to be about a module
+under `resources/`, and no `resources/template_columns.py` exists or should. The plan named a path
+that no module backs. Moving the tests also returned `test_resources/conftest.py` to its committed
+state, which is why the diff no longer modifies a pre-existing test file.
+
+**Revisit if**: the header-validation surface moves out of `constants.py`.

@@ -25,10 +25,10 @@ from project.ghfdb.constants import (
 from project.ghfdb.resources import GHFDBChildImportResource, GHFDBParentImportResource
 
 OFFICIAL_TEMPLATE_PATH = (
-    Path(__file__).resolve().parents[2] / "fixtures" / "official_upload_template.xlsx"
+    Path(__file__).resolve().parents[1] / "fixtures" / "official_upload_template.xlsx"
 )
 PUBLISHED_TEMPLATE_PATH = (
-    Path(__file__).resolve().parents[3]
+    Path(__file__).resolve().parents[2]
     / "docs"
     / "constitution"
     / "references"

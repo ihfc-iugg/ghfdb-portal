@@ -37,10 +37,14 @@ it recognises the header and resolves all seventy columns, with no column silent
 **Acceptance Scenarios**:
 
 1. **Given** an unmodified copy of the official upload template, **When** the file is read, **Then**
-   its header row is recognised and every one of its seventy columns resolves to either a stored
-   field or an explicitly accepted-and-ignored column.
+   its header row is recognised and every one of its seventy columns resolves to exactly one of
+   four things: a stored field, a site column stored as supplied, an explicitly
+   accepted-and-ignored column, or one of the two misspellings ADR 0003 refuses.
 2. **Given** a file whose header row is not the official template's, **When** the file is read,
-   **Then** it is refused whole with the header named as the reason and nothing is written.
+   **Then** it is refused whole with the header named as the reason and nothing is written. The
+   template distributed today carries both ADR 0003 misspellings, so a file produced from it is
+   refused on those two names until the template is corrected upstream. That refusal is the
+   decision working as intended, not a defect in the reader.
 3. **Given** a column present in the template but not resolvable in the code, **When** the test
    suite runs, **Then** it fails, so the disagreement cannot return unnoticed.
 
