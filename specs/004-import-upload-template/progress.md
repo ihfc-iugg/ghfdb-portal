@@ -95,3 +95,31 @@ Next: T005 — the accepted-and-not-stored named collection.
 Watch: `ID_parent`, `quality_parent`, `quality_child`, `Quality_Code_Child`,
 `Quality_Score_Parent` remain in the constants without a template
 counterpart — pre-existing, out of this story's scope (decisions.md D7).
+
+## 2026-09-11 — Implementer US-1 · T005
+
+Did: added `ACCEPTED_UNSTORED_COLUMNS` to `constants.py` (`ID`,
+`Reviewer_name`, `Reviewer_comment`, `Review_date`). Added
+`TestEveryTemplateColumnIsMappedOrAccepted` to `test_template_columns.py`,
+asserting every template column — other than the two ADR 0003 misspellings,
+which T006 refuses outright rather than mapping or accepting — is either
+mapped by a resource field's `column_name` (not its dict key, which is
+lowercase on several `GHFDBChildImportResource` fields) or a member of the
+new collection.
+
+Verified:
+- Wrote the test importing `ACCEPTED_UNSTORED_COLUMNS` before it existed;
+  confirmed it failed for the right reason (`ImportError`).
+- `poetry run pytest tests/test_ghfdb/test_resources/test_template_columns.py -v`
+  — 4 passed, after adding the constant.
+- Probed the assertion: temporarily dropped `Reviewer_comment` from
+  `ACCEPTED_UNSTORED_COLUMNS` — the new test failed, naming it. Restored.
+- `poetry run pytest tests/test_ghfdb/test_resources/test_template_columns.py
+  tests/test_ghfdb/test_resources/test_schema_coverage.py
+  tests/test_ghfdb/test_resources/test_export.py tests/test_ghfdb/test_admin.py
+  tests/test_ghfdb/test_columns.py -q` — 82 passed, 8 xfailed (unchanged from
+  T004's run).
+
+Next: T006 — refuse a file whose header isn't the template's.
+
+Watch: none.
