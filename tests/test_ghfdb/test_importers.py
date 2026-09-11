@@ -205,3 +205,35 @@ class TestImportGHFDBTemplate:
         assert outcome.has_errors()
         assert not ParentHeatFlow.objects.exists()
         assert not HeatFlow.objects.exists()
+
+
+@pytest.mark.django_db
+class TestGHFDBTemplateRefusedWhole:
+    """T021 — US-4/#203, reproducing #190: a fault on a later row must not
+    leave an earlier row's data written. ``rollback_on_validation_errors``
+    is declared today inside both resources' ``Meta``, a place
+    ``import_data()`` never reads it from, so nothing enforces it."""
+
+    def test_a_later_row_fault_does_not_roll_back_an_earlier_row(self, dataset):
+        """Two child rows; the second (later) row carries a value the model
+        cannot store. The first row's determination must not survive the
+        import once the second row faults — today it does."""
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        row1 = dict(ROW)
+        row2 = dict(ROW)
+        row2["ID_parent"] = "2"
+        row2["ID"] = "2"
+        row2["name"] = "Test Site Beta"
+        row2["lat_NS"] = "50.0"
+        row2["long_EW"] = "8.0"
+        row2["qc"] = "not-a-number"
+
+        import_ghfdb_template(make_dataset(row1, row2), dataset)
+
+        assert not HeatFlow.objects.filter(ghfdb_id=1).exists(), (
+            "row 1 was written even though row 2, later in the same file, "
+            "carried a fault the model cannot store (#190)"
+        )
