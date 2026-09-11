@@ -1089,3 +1089,40 @@ Next: T036 — bring docs/guides/importing-data.md up to date with D12's
 entry point, the all-or-nothing/located-fault rules, the vocabulary
 rule, and this story's repeat-import behaviour; run every example in the
 guide against this branch.
+
+## 2026-09-11 — US-6 · T036
+
+Did: brought `docs/guides/importing-data.md` up to date with the three
+stories it was silent on. Added "Nothing is written when the file
+carries a fault, and every fault is located" (FR-010/FR-011/FR-012,
+US-4), covering the four fault types and reading them back off the
+outcome via `row_errors()`/`invalid_rows`. Added "The portal's own
+vocabulary decides, not the template's sheet" (FR-013/FR-014, D1/US-5).
+Added "Importing the same file again updates what is there" (FR-016,
+this story), naming the coordinate-based site/parent match, the
+publication-reference-and-file-position child match, and the
+row-ordering limitation D18 already accepted as a consequence.
+
+Ran every example against this branch before writing the prose around
+it, in a throwaway pytest module (not committed): `validate_official_header`
+raising `ValueError` on a bad header; `import_ghfdb_template` accepting
+a `tablib.Dataset` and returning a `GHFDBImportOutcome` whose
+`has_errors()` reflects validation failures; `GHFDBParentImportResource().import_data()`
+without `fairdm_dataset=` reporting a base error. The fault-reading
+example (`row_errors()`, `invalid_rows`, `field_specific_errors`) mirrors
+the exact calls T026a/T027/T028b already exercise in
+`test_importers.py`, so it was cross-checked against those rather than
+re-run standalone.
+
+Verified:
+- Doc examples: `poetry run pytest` against a throwaway module exercising
+  each import/constants call the guide names — all passed, then the
+  module was deleted (not part of this story's diff).
+- Lint: `poetry run ruff check docs/guides/importing-data.md` — no
+  Python files under that path, nothing to check (markdown has no ruff
+  target in this repo).
+
+No decisions.md entry: T036 is documentation only, resolving no
+ambiguity of its own.
+
+Next: full repo verify, then the completion report.

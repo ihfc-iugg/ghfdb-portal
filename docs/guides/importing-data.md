@@ -96,3 +96,57 @@ with no `fairdm_dataset=` keyword — is refused the same way: a `ValueError` fr
 or a base error on the returned result if the resource absorbed it (the default, since
 `raise_errors` is not set). A dataset existing in the database is never enough on its own. The
 caller always names it.
+
+## Nothing is written when the file carries a fault, and every fault is located
+
+A fault is one of four things: a header that is not the official one, a value the model cannot
+store, a controlled-vocabulary value the portal holds no concept for, or an empty mandatory model
+field. If any row in either pass has one, nothing from the file is written — not just the faulty
+row, the whole file, including every row that was otherwise clean:
+
+```python
+outcome = import_ghfdb_template(xlsx_bytes, dataset)
+
+if outcome.has_errors():
+    for row_number, errors in outcome.parent.row_errors():
+        for error in errors:
+            print(row_number, error.error)
+    for invalid in outcome.child.invalid_rows:
+        print(invalid.number, invalid.field_specific_errors)
+```
+
+`row_errors()` covers a value the model cannot store or a fault raised while a relation is being
+set (a controlled-vocabulary value with no matching concept, for one); `invalid_rows` covers an
+empty mandatory model field, reported by `full_clean()`. Both name the row; `invalid_rows`'
+`field_specific_errors` additionally names the column. Every fault in the file is collected this
+way rather than the import stopping at the first one.
+
+## The portal's own vocabulary decides, not the template's sheet
+
+The template ships a "controlled vocabulary" sheet listing values it considers permitted for each
+controlled-vocabulary column. The import never reads it. What a controlled-vocabulary column
+accepts is decided entirely by the concepts the portal itself holds for that vocabulary: a value
+the sheet lists but the portal holds no concept for is still refused, and a value the portal holds
+a concept for but the sheet does not list is still accepted. The two are expected to disagree from
+time to time; when they do, the portal's concepts are what matters, not the copy of the sheet
+travelling with the file.
+
+## Importing the same file again updates what is there
+
+Re-sending a file the dataset already holds the contents of does not add a second copy of
+everything. Unchanged, it changes nothing; with a value corrected, the existing record picks up the
+correction rather than a new one being written beside it.
+
+The published template carries neither an `ID` nor an `ID_parent` column, so this holds without the
+caller ever supplying one. The parent pass matches an existing site (and the parent heat-flow value
+beneath it) by coordinates; the child pass resolves its parent through those same coordinates, and
+separately matches an existing determination by the site's coordinates, the determination's
+publication reference, and the determination's position within the file. That third piece is what
+lets correcting a depth interval (`q_top`/`q_bottom`) update the existing determination instead of
+writing a second one at the same site: depth is no longer part of what identifies it.
+
+This depends on a resent file presenting its rows in the same relative order as the file it is
+correcting. A row that moves earlier or later in the file — because rows ahead of it were inserted,
+removed or reordered — is matched as if it were a new determination rather than the one it is
+meant to correct. Re-sending the same file with one cell changed, which is how corrections actually
+arrive, keeps every row's position exactly where it was.
