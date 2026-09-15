@@ -13,12 +13,58 @@ from django.utils.translation import gettext as _
 from fairdm.db import models
 from partial_date.fields import PartialDateField
 
+from .states import States
+
 
 class Review(models.Model):
     class STATUS_CHOICES(models.IntegerChoices):
         OPEN = 0, _("Open to review")
         PENDING = 1, _("Pending")
         COMPLETE = 2, _("Complete")
+
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("uploaded by"),
+        help_text=_(
+            "The person who created this assessment. Object permissions follow "
+            "this person rather than the assessor list, because an assessor may "
+            "be an unclaimed profile with no account."
+        ),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="uploaded_reviews",
+    )
+
+    state = models.IntegerField(
+        choices=States.choices,
+        default=States.DESCRIBED,
+        verbose_name=_("state"),
+        help_text=_("Where this assessment has got to."),
+    )
+
+    decided_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("decided by"),
+        help_text=_("The Data Curator who approved or sent back this assessment."),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="decided_reviews",
+    )
+
+    decided_at = models.DateTimeField(
+        verbose_name=_("decided at"),
+        help_text=_("When the decision on this assessment was made."),
+        null=True,
+        blank=True,
+    )
+
+    decision_comment = models.TextField(
+        verbose_name=_("decision comment"),
+        help_text=_("What the curator said when sending this assessment back."),
+        blank=True,
+    )
 
     reviewers = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
@@ -55,13 +101,6 @@ class Review(models.Model):
         help_text=_("Date the review was completed."),
         null=True,
         blank=True,
-    )
-
-    status = models.IntegerField(
-        choices=STATUS_CHOICES,
-        default=1,
-        verbose_name=_("status"),
-        help_text=_("The status of the review."),
     )
 
     comment = models.TextField(

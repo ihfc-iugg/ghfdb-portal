@@ -53,3 +53,25 @@ class TestCreateReviewGroups:
         assert not Group.objects.filter(
             name__in=["Data Assessor", "Data Curator"]
         ).exists()
+
+
+WORKFLOW_FIELDS_MODULE = "project.review.migrations.0003_review_workflow_fields"
+
+
+class TestStatusToStateMapping:
+    """T006: the old three-value ``status`` maps onto the new four-value
+    ``state``. The suite runs with ``--nomigrations`` (tests/README.md), so
+    the test database is built straight from the current model and has no
+    ``status`` column left to migrate data out of — the mapping table this
+    migration's ``RunPython`` reads from is what a test can pin directly."""
+
+    def test_every_old_status_value_maps_to_its_new_state(self):
+        from review.states import States
+
+        module = importlib.import_module(WORKFLOW_FIELDS_MODULE)
+
+        assert module.STATUS_TO_STATE == {
+            0: States.DESCRIBED,  # OPEN -> DESCRIBED
+            1: States.AWAITING_DECISION,  # PENDING -> AWAITING_DECISION
+            2: States.COMPLETE,  # COMPLETE -> COMPLETE
+        }

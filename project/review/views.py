@@ -49,7 +49,7 @@ class ReviewFilterSet(LiteratureFilterset):
 
     class Meta:
         model = LiteratureItem
-        fields = ["review__status", "reviewer", "type", "issued", "doi", "title"]
+        fields = ["review__state", "reviewer", "type", "issued", "doi", "title"]
 
 
 class ReviewListView(SelectRelatedMixin, FairDMListView):

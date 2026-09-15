@@ -16,7 +16,7 @@ from .models import Review
 class ReviewFilterSet(FilterSet):
     class Meta:
         model = LiteratureItem
-        fields = ["review__status"]
+        fields = ["review__state"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
