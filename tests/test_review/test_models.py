@@ -74,3 +74,71 @@ class TestReviewWorkflowFields:
 
         assert str(field.verbose_name).strip()
         assert str(field.help_text).strip()
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestSubmittedFile:
+    """T007, data-model.md "review.SubmittedFile" — a file per submission,
+    not a field on the assessment, because a curator can send an assessment
+    back and the replacement must not erase what was rejected."""
+
+    def test_current_returns_the_most_recent_submission(
+        self, literature, dataset, tmp_path, settings
+    ):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from review.models import SubmittedFile
+
+        settings.MEDIA_ROOT = str(tmp_path)
+        review = Review.objects.create(literature=literature, dataset=dataset)
+        uploader = ClaimedPersonFactory()
+
+        first = SubmittedFile.objects.create(
+            review=review,
+            file=SimpleUploadedFile("first.xlsx", b"first"),
+            submitted_by=uploader,
+        )
+        second = SubmittedFile.objects.create(
+            review=review,
+            file=SimpleUploadedFile("second.xlsx", b"second"),
+            submitted_by=uploader,
+        )
+
+        assert review.current.pk == second.pk
+
+    def test_every_earlier_submission_remains_retrievable(
+        self, literature, dataset, tmp_path, settings
+    ):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from review.models import SubmittedFile
+
+        settings.MEDIA_ROOT = str(tmp_path)
+        review = Review.objects.create(literature=literature, dataset=dataset)
+        uploader = ClaimedPersonFactory()
+
+        first = SubmittedFile.objects.create(
+            review=review,
+            file=SimpleUploadedFile("first.xlsx", b"first"),
+            submitted_by=uploader,
+        )
+        second = SubmittedFile.objects.create(
+            review=review,
+            file=SimpleUploadedFile("second.xlsx", b"second"),
+            submitted_by=uploader,
+        )
+
+        assert set(review.submissions.values_list("pk", flat=True)) == {
+            first.pk,
+            second.pk,
+        }
+
+    @pytest.mark.parametrize("field_name", ["file", "submitted_by", "submitted_at", "imported_at"])
+    def test_every_field_has_a_verbose_name_and_help_text(self, field_name):
+        from review.models import SubmittedFile
+
+        field = SubmittedFile._meta.get_field(field_name)
+
+        assert str(field.verbose_name).strip()
+        assert str(field.help_text).strip()

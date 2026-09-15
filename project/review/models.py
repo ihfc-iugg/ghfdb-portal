@@ -121,3 +121,67 @@ class Review(models.Model):
         if self.start_date and self.end_date and self.start_date > self.end_date:
             raise ValueError(_("Start date cannot be after end date."))
         super().save(*args, **kwargs)
+
+    @property
+    def current(self):
+        """The most recent submitted file, or ``None`` if none has been
+        submitted yet (data-model.md "review.SubmittedFile")."""
+        return self.submissions.order_by("-submitted_at", "-pk").first()
+
+
+def submission_upload_path(instance, filename):
+    """Scope a submitted file's storage path to its assessment."""
+    return f"review/submissions/{instance.review_id}/{filename}"
+
+
+class SubmittedFile(models.Model):
+    """One completed upload template as supplied, kept against its
+    assessment (T007, data-model.md "review.SubmittedFile").
+
+    A row per submission rather than a field on ``Review``: a curator can
+    send an assessment back, and the replacement must not erase what was
+    rejected (FR-015).
+    """
+
+    review = models.ForeignKey(
+        Review,
+        verbose_name=_("assessment"),
+        help_text=_("The assessment this file was submitted against."),
+        on_delete=models.CASCADE,
+        related_name="submissions",
+    )
+
+    file = models.FileField(
+        upload_to=submission_upload_path,
+        verbose_name=_("file"),
+        help_text=_("The completed upload template as supplied."),
+    )
+
+    submitted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("submitted by"),
+        help_text=_("Who submitted this file."),
+        on_delete=models.PROTECT,
+        related_name="submitted_files",
+    )
+
+    submitted_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=_("submitted at"),
+        help_text=_("When this file was submitted."),
+    )
+
+    imported_at = models.DateTimeField(
+        verbose_name=_("imported at"),
+        help_text=_(
+            "When this file's contents were written. Null means checked but "
+            "never confirmed."
+        ),
+        null=True,
+        blank=True,
+    )
+
+    class Meta:
+        verbose_name = _("Submitted file")
+        verbose_name_plural = _("Submitted files")
+        ordering = ["-submitted_at"]
