@@ -305,8 +305,10 @@ public and the decision and its maker are recorded on the assessment.
   Data Curator has approved it.
 - **SC-005**: Every dataset created through this workflow can be traced back to the exact file it
   was built from, including datasets whose first submitted file was rejected.
-- **SC-006**: The `review` application, which has no test coverage today, meets the coverage floor
-  the constitution sets.
+- **SC-006**: The `review` application, which has no tests at all today, has pytest coverage for
+  every behaviour this feature adds or changes, in a test tree mirroring `project/review/`. The
+  constitution treats coverage as a guide rather than a merge gate, so the obligation is that each
+  behaviour is tested, not that a percentage is reached.
 
 ## Assumptions
 

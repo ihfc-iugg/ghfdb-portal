@@ -1,0 +1,332 @@
+{
+  "feature": "005-assessment-upload-workflow",
+  "branch": "005-assessment-upload-workflow",
+  "repo": "ihfc-iugg/ghfdb-portal",
+  "state": "PLAN",
+  "state_history": [
+    {
+      "state": "GATE_SPEC",
+      "at": "2026-09-15T00:00:00Z",
+      "note": "approved in session"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-09-15T00:00:00Z",
+      "note": "plan, tasks and design docs authored"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "SamuelJennings",
+      "at": "2026-09-15T00:00:00Z",
+      "self_resolved": [
+        "D1 one feature spanning R6's remainder and R7's trust half",
+        "D2 the role is the trust level, superseding R7's fifth deliverable",
+        "D3 CONTEXT.md adopts Data Assessor and Data Curator"
+      ]
+    },
+    "plan": {
+      "approved_by": null,
+      "at": null
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    }
+  },
+  "stories": [
+    {
+      "id": "US0",
+      "priority": "P0",
+      "issue": null,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T002",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T003",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T004",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T005",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T006",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T007",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T008",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T009",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T010",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T038",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T039",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T040",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T041",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 210,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T011",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T012",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T013",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T014",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P1",
+      "issue": 211,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T015",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T016",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T017",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T018",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T019",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P1",
+      "issue": 212,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T020",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T021",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T022",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T023",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T024",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US4",
+      "priority": "P1",
+      "issue": 213,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T025",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T026",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T027",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T028",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US5",
+      "priority": "P1",
+      "issue": 214,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T029",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T030",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T031",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T032",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US6",
+      "priority": "P2",
+      "issue": 215,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T033",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T034",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T035",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T036",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T037",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 0,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 0,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 0,
+      "max": 1
+    },
+    "tokens": {
+      "used": 0,
+      "max": 120
+    }
+  }
+}
