@@ -156,6 +156,35 @@ class TestHeatFlow:
         assert fresh.M_score == MScoreOptions.Mx
 
     @pytest.mark.django_db
+    def test_surface_temperature_persists_for_marine_and_continental_readings(
+        self, dataset, interval_fixture
+    ):
+        """The 2026.03 template renames ``water_temperature`` to
+        ``Surface_temperature`` (C24) because the value applies to both
+        marine and continental measurements, not just marine ones. The
+        model field follows: ``HeatFlow.surface_temperature`` in °C or K,
+        readable back with its magnitude, for either kind of reading."""
+        from heat_flow.models import HeatFlow
+
+        child = HeatFlow.objects.create(
+            dataset=dataset,
+            sample=interval_fixture,
+            name="Continental reading",
+            value=50.0,
+            surface_temperature=12.5,
+        )
+        reloaded = HeatFlow.objects.get(pk=child.pk)
+        assert hasattr(reloaded.surface_temperature, "magnitude")
+        assert float(reloaded.surface_temperature.magnitude) == pytest.approx(12.5)
+        assert not hasattr(reloaded, "water_temperature")
+
+        field = HeatFlow._meta.get_field("surface_temperature")
+        assert "surface" in str(field.verbose_name).lower()
+        help_text = str(field.help_text).lower()
+        assert "seafloor" in help_text or "bottom-water" in help_text
+        assert "ground-surface" in help_text or "mudline" in help_text
+
+    @pytest.mark.django_db
     def test_heat_flow_save_rejects_wrong_sample(self, site_fixture, child_fixture):
         """
         T018 – HeatFlow.save() raises ValidationError when sample is a
@@ -505,6 +534,42 @@ class TestThermalGradient:
         assert float(reloaded.shutin_bottom.magnitude) == pytest.approx(15)
 
         assert reloaded.number == 8
+
+    @pytest.mark.django_db
+    def test_top_and_bottom_absolute_temperatures_persist(
+        self, dataset, interval_fixture
+    ):
+        """The 2026.03 template adds four columns (C50-C53) carrying the
+        absolute temperatures used to calculate the gradient: the mean and
+        uncertainty at the top and bottom of the heat-flow determination
+        interval."""
+        from heat_flow.models import ThermalGradient
+
+        gradient = ThermalGradient.objects.create(
+            dataset=dataset,
+            sample=interval_fixture,
+            name="Gradient with absolute temperatures",
+            value=25.0,
+            temperature_top=8.2,
+            temperature_top_uncertainty=0.5,
+            temperature_bottom=45.7,
+            temperature_bottom_uncertainty=0.8,
+        )
+
+        reloaded = ThermalGradient.objects.get(pk=gradient.pk)
+
+        assert hasattr(reloaded.temperature_top, "magnitude")
+        assert float(reloaded.temperature_top.magnitude) == pytest.approx(8.2)
+        assert hasattr(reloaded.temperature_top_uncertainty, "magnitude")
+        assert float(
+            reloaded.temperature_top_uncertainty.magnitude
+        ) == pytest.approx(0.5)
+        assert hasattr(reloaded.temperature_bottom, "magnitude")
+        assert float(reloaded.temperature_bottom.magnitude) == pytest.approx(45.7)
+        assert hasattr(reloaded.temperature_bottom_uncertainty, "magnitude")
+        assert float(
+            reloaded.temperature_bottom_uncertainty.magnitude
+        ) == pytest.approx(0.8)
 
 
 class TestIntervalConductivity:
