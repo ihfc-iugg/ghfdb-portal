@@ -66,6 +66,24 @@ def normalize_vocab_token(raw: str) -> str:
     return raw.strip().strip("[]").strip().lower()
 
 
+#: Cell values the assessment corpus uses to mean "nothing entered here
+#: yet", beyond an empty or whitespace-only cell — a bare hyphen in a
+#: reference column filled in later, such as ``Ref_IGSN``.
+BLANK_CELL_MARKERS = {"-"}
+
+
+def is_blank_cell(raw) -> bool:
+    """Whether *raw* means no value was given for a reference-style column.
+
+    True for ``None``, an empty or whitespace-only string, and any of
+    ``BLANK_CELL_MARKERS``.
+    """
+    if raw is None:
+        return True
+    text = str(raw).strip()
+    return not text or text in BLANK_CELL_MARKERS
+
+
 # ---------------------------------------------------------------------------
 # Leaf Widgets
 # ---------------------------------------------------------------------------

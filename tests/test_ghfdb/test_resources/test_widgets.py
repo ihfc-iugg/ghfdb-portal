@@ -469,6 +469,24 @@ class TestConductivityWidget:
 # ---- T072: FR-016 Vocabulary normalisation regression tests ----------------
 
 
+class TestBlankCellSentinel:
+    """The corpus of completed submissions writes ``-`` for "nothing entered
+    here yet" in reference columns filled in during assessment, such as
+    ``Ref_IGSN`` (D26, specs/004-import-upload-template/decisions.md)."""
+
+    def test_none_empty_whitespace_and_hyphen_are_blank(self):
+        from project.ghfdb.resources.widgets import is_blank_cell
+
+        for raw in (None, "", "   ", "-"):
+            assert is_blank_cell(raw) is True
+
+    def test_a_real_value_is_not_blank(self):
+        from project.ghfdb.resources.widgets import is_blank_cell
+
+        assert is_blank_cell("10.60516/AU1101") is False
+        assert is_blank_cell(" 10.60516/AU1101 ") is False
+
+
 class TestVocabNormalisation:
     """T072 — FR-016: bracket-wrapped and mixed-case vocab tokens are normalised before matching."""
 
