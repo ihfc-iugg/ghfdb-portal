@@ -37,6 +37,11 @@ class HeatFlowMethod(VocabularyBuilder):
         definition=_("Specify the method in comments"),
     )
 
+    unspecified = Concept(
+        prefLabel=_("Unspecified"),
+        definition=_(""),
+    )
+
     class Meta:
         name = "heat-flow-method"
         prefix = "ghfdb"
@@ -95,6 +100,11 @@ class ProbeType(VocabularyBuilder):
     )
     submersible = Concept(
         prefLabel=_("Submersible probe"),
+        definition=_(""),
+    )
+
+    outrigger_hybrid_lister_hylo = Concept(
+        prefLabel=_("Outrigger probe (Hybrid Lister) HyLO"),
         definition=_(""),
     )
 
@@ -675,6 +685,11 @@ class ConductivityMethod(VocabularyBuilder):
         definition=_(""),
     )
 
+    probeContinuousHeating = Concept(
+        prefLabel=_("Probe - continuous heating technique"),
+        definition=_(""),
+    )
+
     wellLogDeterministic = Concept(
         prefLabel=_("Well-log - deterministic approach"),
         definition=_(""),
@@ -738,6 +753,7 @@ class ConductivityMethod(VocabularyBuilder):
                 definition=_("Probe measurements"),
                 members=[
                     "probePulse",
+                    "probeContinuousHeating",
                 ],
             ),
             "well_log": Collection(

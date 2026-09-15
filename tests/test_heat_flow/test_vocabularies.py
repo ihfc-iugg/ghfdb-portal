@@ -138,6 +138,8 @@ class TestTheVocabulariesCarryWhatTheTemplateOffers:
             ("ConductivityPTFunction", "p - Ratcliffe (1960)"),
             ("ConductivityPTFunction", "pT - Ratcliffe (1960)"),
             ("ConductivityPTFunction", "pT - Hyndman et al. (1974)"),
+            ("ConductivityMethod", "Probe - continuous heating technique"),
+            ("ProbeType", "Outrigger probe (Hybrid Lister) HyLO"),
         ],
     )
     def test_the_template_value_resolves(self, db, vocabulary_name, label):
@@ -155,6 +157,22 @@ class TestTheVocabulariesCarryWhatTheTemplateOffers:
 
         # And the reader resolves it in the bracketed form a cell carries.
         assert MultiConceptWidget(vocabulary).clean(f"[{label}]", row={}).count() == 1
+
+    def test_heat_flow_method_carries_an_unspecified_concept(self, db):
+        """The 2026.03 template adds an explicit "Unspecified" option to its
+        heat-flow method dropdown. Checked by stored label rather than
+        through ``MultiConceptWidget``: every "unspecified" token is a
+        sentinel for "no value" there, by design, regardless of vocabulary,
+        so a cell naming it never resolves to a concept."""
+        from research_vocabs.models import Concept
+
+        from heat_flow.vocabularies import HeatFlowMethod
+
+        labels = {
+            concept.label.lower()
+            for concept in Concept.get_for_vocabulary(HeatFlowMethod)
+        }
+        assert "unspecified" in labels
 
     def test_the_three_ratcliffe_functions_are_three_concepts(self, db):
         """The surname was spelled two different wrong ways, and the
