@@ -849,3 +849,31 @@ building a new one, at which point keying the identifier on the interval directl
 suggested, becomes both correct and simpler.
 
 **ADR:** none — recorded here.
+
+## D27 — Two intervals in one file cannot claim the same IGSN
+
+**Ambiguous because** D26 re-attaches an existing identifier to the row's current interval, which is
+what makes a repeat import a no-op. Applied without qualification, that same re-attachment also
+resolves a contributor's mistake: two rows in one file naming the same IGSN for two different depth
+intervals import cleanly, the later row takes the identifier, and the earlier interval is left with
+none. The import reports success and nothing records that a value was dropped.
+
+**Chosen**: the resource records each IGSN value claimed during a run, keyed to the interval that
+claimed it, and refuses a second interval claiming the same value with an error naming it. The record
+is cleared in `before_import`, so the rule applies within one file and never across runs. A repeat
+import of an unchanged file still re-attaches as D26 describes.
+
+**Defensible because** an IGSN names one physical sample, so two depth intervals sharing one is a
+statement that cannot be true, and the reader's job on a value it cannot accept is to say so. The
+distinction the run-scoped record draws is exactly the one that matters: across runs the earlier
+interval has already been replaced and re-attachment loses nothing, while within a run both intervals
+are live and re-attachment loses one of them silently.
+
+**Consequence accepted**: the file is refused whole rather than partially, because the resource runs
+under `use_transactions`, so a contributor fixing a duplicated IGSN resubmits the file rather than a
+correction to one row. That is the same all-or-nothing refusal every other invalid cell already gets.
+
+**Revisit if** a future revision of the template allows one IGSN to name a set of intervals, which
+would make the duplicate a legitimate statement rather than a mistake.
+
+**ADR:** none — recorded here.

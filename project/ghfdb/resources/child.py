@@ -152,6 +152,7 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         self._conductivity_widget = ConductivityWidget()
         self._fairdm_dataset = None
         self._current_row_number = None
+        self._igsn_claims: dict[str, int] = {}
 
     # ------------------------------------------------------------------
     # Hooks
@@ -176,7 +177,12 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         already-resolved ``Dataset`` instance as ``fairdm_dataset`` reaches a
         private dataset the same as a public one — there is no lookup here
         to narrow to the default manager in the first place.
+
+        Also clears the IGSN claims recorded during the previous run, so
+        two rows sharing an identifier are only ever a conflict within one
+        file (see ``_create_igsn_identifier``).
         """
+        self._igsn_claims = {}
         fairdm_dataset = kwargs.get("fairdm_dataset")
         if fairdm_dataset is None:
             raise ValueError(
@@ -405,6 +411,14 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         makes a repeat import of an unchanged file a no-op instead of an
         integrity error against the identifier's own uniqueness constraint.
 
+        That re-attachment is only ever right across runs. Within one file
+        two intervals claiming the same IGSN is a contributor's mistake, and
+        re-attaching would resolve it silently in favour of whichever row
+        came last, leaving the earlier interval with no identifier and no
+        indication that anything was dropped. ``_igsn_claims`` records what
+        each value claimed during this run, so the second row is refused
+        with an error naming the value instead.
+
         Runs the framework's own ``full_clean()`` before saving, so its
         format validation and normalisation apply, and reports a bad value
         as a row error the same way any other invalid cell in this resource
@@ -424,6 +438,17 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         if value is None:
             return
 
+        claimed_by = self._igsn_claims.get(value)
+        if claimed_by is not None and claimed_by != interval.pk:
+            raise ValueError(
+                _(
+                    "Ref_IGSN: '%(value)s' is already used by another interval in"
+                    " this file. An IGSN names one physical sample, so two"
+                    " intervals cannot share one."
+                )
+                % {"value": value}
+            )
+
         from fairdm.core.sample.models import SampleIdentifier
 
         try:
@@ -439,6 +464,7 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
                 _("Ref_IGSN: %(err)s") % {"err": "; ".join(exc.messages)}
             ) from exc
         identifier.save()
+        self._igsn_claims[value] = interval.pk
 
     def _resolve_parent_by_location(self, row: dict):
         """Look up the parent ParentHeatFlow via HeatFlowSite location when ID_parent is absent."""

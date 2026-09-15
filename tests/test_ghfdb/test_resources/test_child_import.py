@@ -1207,3 +1207,71 @@ class TestGHFDBChildImportResourceIGSN:
         assert result.has_errors()
         assert result.error_rows
         assert "IGSN" in str(result.error_rows[0].errors[0].error)
+
+    def test_two_intervals_in_one_file_cannot_claim_the_same_igsn(self, dataset):
+        """An IGSN names one physical sample, so two depth intervals sharing
+        one is a contributor's mistake and has to be reported.
+
+        Worth pinning because the failure it guards against is silent: the
+        identifier is re-attached rather than duplicated, so without this
+        check the later row simply takes the identifier and the earlier
+        interval is left with none, on an import that reports success.
+        """
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        first = dict(CHILD_ROW, ID="1", q_top="0", q_bottom="100")
+        first["Ref_IGSN"] = VALID_IGSN
+        second = dict(CHILD_ROW, ID="2", q_top="200", q_bottom="300")
+        second["Ref_IGSN"] = VALID_IGSN
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(first, second),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
+
+        assert result.has_errors()
+        assert "already used by another interval" in str(
+            result.error_rows[0].errors[0].error
+        )
+
+        # The file is refused whole, so neither row lands and no identifier
+        # is left behind from the row that was read first.
+        from fairdm.core.sample.models import SampleIdentifier
+
+        assert not HeatFlow.objects.filter(ghfdb_id__in=[1, 2]).exists()
+        assert not SampleIdentifier.objects.filter(value=VALID_IGSN).exists()
+
+    def test_the_same_file_imported_twice_keeps_one_identifier(self, dataset):
+        """The interval is rebuilt on every import, so the identifier moves
+        to the new one rather than colliding with itself."""
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row = dict(CHILD_ROW)
+        row["Ref_IGSN"] = VALID_IGSN
+
+        for _attempt in range(2):
+            resource = GHFDBChildImportResource()
+            result = resource.import_data(
+                make_dataset(row),
+                dry_run=False,
+                raise_errors=False,
+                fairdm_dataset=dataset,
+            )
+            assert not result.has_errors(), result.invalid_rows
+
+        from fairdm.core.sample.models import SampleIdentifier
+
+        assert SampleIdentifier.objects.filter(value=VALID_IGSN).count() == 1
+        child = HeatFlow.objects.get(ghfdb_id=1)
+        assert [identifier.value for identifier in child.sample.identifiers.all()] == [
+            VALID_IGSN
+        ]
