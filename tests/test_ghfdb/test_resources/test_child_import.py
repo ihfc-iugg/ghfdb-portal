@@ -51,7 +51,7 @@ CHILD_ROW = {
     "probe_tilt": "",
     "expedition": "",
     "probe_type": "",
-    "water_temperature": "",
+    "Surface_temperature": "",
     "relevant_child": "Yes",
     "c_comment": "",
     "corr_IS_flag": "No",
@@ -74,6 +74,10 @@ CHILD_ROW = {
     "T_corr_top": "",
     "T_corr_bottom": "",
     "T_number": "",
+    "T_top_mean": "",
+    "T_top_uncertainty": "",
+    "T_bot_mean": "",
+    "T_bot_uncertainty": "",
     "tc_mean": "2.5",
     "tc_uncertainty": "",
     "tc_source": "",
@@ -328,6 +332,88 @@ class TestGHFDBChildImportResourceImport:
         assert interval.stratigraphy.count() == 0, (
             "HeatFlowInterval.stratigraphy must NOT be populated by geo_stratigraphy import"
         )
+
+    def test_surface_temperature_stored_from_the_renamed_column(self, dataset):
+        """The 2026.03 template's ``Surface_temperature`` column (C24, was
+        ``water_temperature``) stores onto ``HeatFlow.surface_temperature``."""
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row = dict(CHILD_ROW)
+        row["Surface_temperature"] = "12.5"
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row), dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        child = HeatFlow.objects.get(ghfdb_id=1)
+        assert float(child.surface_temperature.magnitude) == pytest.approx(12.5)
+
+    def test_gradient_absolute_temperatures_stored_from_row(self, dataset):
+        """The 2026.03 template's four new columns (C50-C53) store onto the
+        ``ThermalGradient`` created for the row, alongside the gradient
+        itself."""
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row = dict(CHILD_ROW)
+        row["T_top_mean"] = "8.2"
+        row["T_top_uncertainty"] = "0.5"
+        row["T_bot_mean"] = "45.7"
+        row["T_bot_uncertainty"] = "0.8"
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row), dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        gradient = HeatFlow.objects.get(ghfdb_id=1).thermal_gradient
+        assert gradient is not None
+        assert float(gradient.temperature_top.magnitude) == pytest.approx(8.2)
+        assert float(
+            gradient.temperature_top_uncertainty.magnitude
+        ) == pytest.approx(0.5)
+        assert float(gradient.temperature_bottom.magnitude) == pytest.approx(45.7)
+        assert float(
+            gradient.temperature_bottom_uncertainty.magnitude
+        ) == pytest.approx(0.8)
+
+    def test_gradient_absolute_temperatures_not_stored_when_t_grad_mean_empty(
+        self, dataset
+    ):
+        """T_grad_mean is the sentinel ``GradientWidget`` uses to decide
+        whether to create a ``ThermalGradient`` at all (C7,
+        specs/004-import-upload-template/decisions.md). A row carrying only
+        the new absolute temperatures and no gradient mean therefore stores
+        nothing — T_grad_mean is itself a mandatory template column, so this
+        is a row shape a real submission cannot produce, but the sentinel
+        behaviour is worth pinning."""
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow, ThermalGradient
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row = dict(CHILD_ROW)
+        row["T_grad_mean"] = ""
+        row["T_top_mean"] = "8.2"
+        row["T_bot_mean"] = "45.7"
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row), dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        child = HeatFlow.objects.get(ghfdb_id=1)
+        assert child.thermal_gradient is None
+        assert not ThermalGradient.objects.exists()
 
 
 @pytest.mark.django_db

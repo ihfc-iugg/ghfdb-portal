@@ -164,6 +164,25 @@ REJECTED_MISSPELLED_COLUMNS: list[str] = ["Ref_ISGN", "tc_pT_fuction"]
 # ahead of that separate block.
 PORTAL_ADDITION_COLUMNS: list[str] = ["Country", "Region", "Continent", "Domain"]
 
+# specs/004-import-upload-template/decisions.md: the 2026.03 template
+# revision renamed one column and added four more that the published GHFDB
+# release format does not carry as columns of its own. The submission
+# template and the published release are separate contracts (D-c) — the
+# released structure keeps the name ``water_temperature`` (CHILD_COLUMNS,
+# GHFDB_COLUMN_ORDER), so the template's own spelling of it, and the four
+# brand-new temperature columns the template adds, resolve through this
+# exception rather than through PARENT_COLUMNS/CHILD_COLUMNS/META_FIELDS.
+# ``Surface_temperature`` maps onto ``HeatFlow.surface_temperature``; the
+# four ``T_top``/``T_bot`` columns feed the new ``ThermalGradient`` absolute
+# temperature fields.
+TEMPLATE_ONLY_COLUMNS: list[str] = [
+    "Surface_temperature",
+    "T_top_mean",
+    "T_top_uncertainty",
+    "T_bot_mean",
+    "T_bot_uncertainty",
+]
+
 # ---------------------------------------------------------------------------
 # T005: accepted-and-not-stored.
 # ---------------------------------------------------------------------------
@@ -235,7 +254,7 @@ UPLOAD_TEMPLATE_HEADER_ROW: list[str] = [
     "probe_type",
     "probe_length",
     "probe_tilt",
-    "water_temperature",
+    "Surface_temperature",
     "geo_lithology",
     "geo_stratigraphy",
     "T_grad_mean",
@@ -250,6 +269,10 @@ UPLOAD_TEMPLATE_HEADER_ROW: list[str] = [
     "T_corr_bottom",
     "T_number",
     "q_date",
+    "T_top_mean",
+    "T_top_uncertainty",
+    "T_bot_mean",
+    "T_bot_uncertainty",
     "tc_mean",
     "tc_uncertainty",
     "tc_source",

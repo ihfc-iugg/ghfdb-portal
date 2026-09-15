@@ -1,15 +1,17 @@
 """Reconciles the official upload template's header against the canonical
 column constants (US-1, T001-T006).
 
-``tests/fixtures/official_upload_template.xlsx`` is an unmodified copy of
-``docs/constitution/references/data_upload_template.xlsx`` — the file the
-assessment team actually fills in, not a hand-built approximation of it
-(D3, ``specs/004-import-upload-template/decisions.md``).
+``tests/fixtures/official_upload_template.xlsx`` is the published template
+(``docs/constitution/references/data_upload_template.xlsx``, the file the
+assessment team actually fills in) with exactly the two ADR 0003
+misspellings corrected — ``tc_pT_fuction`` to ``tc_pT_function`` and
+``Ref_ISGN`` to ``Ref_IGSN`` — and nothing else different (D3,
+``specs/004-import-upload-template/decisions.md``).
 """
 
-import filecmp
 from pathlib import Path
 
+import openpyxl
 import pytest
 
 from project.ghfdb.constants import (
@@ -22,6 +24,7 @@ from project.ghfdb.constants import (
     PORTAL_ADDITION_COLUMNS,
     REJECTED_MISSPELLED_COLUMNS,
     REQUIRED_TEMPLATE_COLUMNS,
+    TEMPLATE_ONLY_COLUMNS,
     UPLOAD_TEMPLATE_HEADER_ROW,
     validate_official_header,
 )
@@ -40,16 +43,33 @@ PUBLISHED_TEMPLATE_PATH = (
 
 
 class TestOfficialUploadTemplateFixture:
-    """T001: the fixture is a byte-identical, openable copy of the published
-    template."""
+    """T001: the fixture differs from the published template in exactly the
+    two ADR 0003 misspellings, and nowhere else."""
 
-    def test_fixture_bytes_are_identical_to_the_published_template(self):
-        assert filecmp.cmp(
-            OFFICIAL_TEMPLATE_PATH, PUBLISHED_TEMPLATE_PATH, shallow=False
-        ), (
-            f"{OFFICIAL_TEMPLATE_PATH} must be byte-identical to "
-            f"{PUBLISHED_TEMPLATE_PATH}"
+    def test_fixture_differs_from_the_published_template_in_exactly_the_two_corrected_cells(
+        self, official_upload_template_workbook
+    ):
+        published_workbook = openpyxl.load_workbook(
+            PUBLISHED_TEMPLATE_PATH, data_only=True
         )
+        fixture_header = _read_header_row(official_upload_template_workbook)
+        published_header = _read_header_row(published_workbook)
+
+        assert len(fixture_header) == len(published_header), (
+            "the fixture and the published template no longer carry the same "
+            "number of header cells"
+        )
+        differences = {
+            published_name: fixture_name
+            for published_name, fixture_name in zip(
+                published_header, fixture_header, strict=True
+            )
+            if published_name != fixture_name
+        }
+        assert differences == {
+            "tc_pT_fuction": "tc_pT_function",
+            "Ref_ISGN": "Ref_IGSN",
+        }
 
     def test_fixture_opens_as_a_workbook(self, official_upload_template_workbook):
         assert "data list" in official_upload_template_workbook.sheetnames
@@ -68,9 +88,11 @@ def _read_header_row(workbook):
 class TestTemplateColumnsMatchTheCanonicalConstants:
     """T002/T004: every column the official template carries must be
     recognised — either by ``PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS``,
-    or by one of the two documented exceptions in ``constants.py`` (US-1 D7):
-    the two ADR 0003 misspellings the portal rejects rather than maps, and
-    the four D8 portal-addition geography columns. A column the template
+    or by one of the documented exceptions in ``constants.py`` (US-1 D7):
+    the two ADR 0003 misspellings the portal rejects rather than maps, the
+    four D8 portal-addition geography columns, and the template-only columns
+    the 2026.03 revision added, which feed the relational model directly
+    without a published-column name of their own. A column the template
     carries that resolves through neither is exactly the disagreement FR-004
     exists to catch."""
 
@@ -79,7 +101,11 @@ class TestTemplateColumnsMatchTheCanonicalConstants:
     ):
         header = _read_header_row(official_upload_template_workbook)
         known = set(PARENT_COLUMNS) | set(CHILD_COLUMNS) | set(META_FIELDS)
-        excepted = set(REJECTED_MISSPELLED_COLUMNS) | set(PORTAL_ADDITION_COLUMNS)
+        excepted = (
+            set(REJECTED_MISSPELLED_COLUMNS)
+            | set(PORTAL_ADDITION_COLUMNS)
+            | set(TEMPLATE_ONLY_COLUMNS)
+        )
         resolved = {name for name in header if name in known or name in excepted}
 
         assert resolved == set(header), (
@@ -152,6 +178,18 @@ class TestTheHeaderConstantIsTheTemplatesOwnHeader:
         assert "q" in REQUIRED_TEMPLATE_COLUMNS
         assert "ID" not in REQUIRED_TEMPLATE_COLUMNS
 
+    def test_the_new_2026_03_temperature_columns_are_required(self):
+        """The four columns the 2026.03 template adds carry the absolute
+        temperatures a determination's gradient is calculated from, not an
+        identifier or an assessment field, so they are not optional."""
+        for column in (
+            "T_top_mean",
+            "T_top_uncertainty",
+            "T_bot_mean",
+            "T_bot_uncertainty",
+        ):
+            assert column in REQUIRED_TEMPLATE_COLUMNS
+
 
 class TestOfficialHeaderRefusal:
     """T006 (FR-003): a spreadsheet whose header row is not the official
@@ -163,13 +201,16 @@ class TestOfficialHeaderRefusal:
     def test_a_header_with_the_corrected_spellings_validates(self):
         validate_official_header(list(OFFICIAL_TEMPLATE_HEADER))  # must not raise
 
-    def test_the_currently_distributed_template_is_refused_and_named(
-        self, official_upload_template_workbook
-    ):
+    def test_the_currently_distributed_template_is_refused_and_named(self):
         """ADR 0003: the currently distributed template itself carries the
         two misspellings (``tc_pT_fuction``, ``Ref_ISGN``) and is refused,
-        naming them, rather than silently mapped."""
-        header = _read_header_row(official_upload_template_workbook)
+        naming them, rather than silently mapped. Read from the published
+        file directly, since the fixture used elsewhere in this module has
+        those two cells corrected."""
+        published_workbook = openpyxl.load_workbook(
+            PUBLISHED_TEMPLATE_PATH, data_only=True
+        )
+        header = _read_header_row(published_workbook)
 
         with pytest.raises(ValueError) as excinfo:
             validate_official_header(header)

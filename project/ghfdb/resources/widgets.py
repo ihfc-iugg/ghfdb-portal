@@ -499,6 +499,10 @@ class GradientWidget(RelatedModelWidget):
                 "shutin_top": "T_shutin_top",
                 "shutin_bottom": "T_shutin_bottom",
                 "number": "T_number",
+                "temperature_top": "T_top_mean",
+                "temperature_top_uncertainty": "T_top_uncertainty",
+                "temperature_bottom": "T_bot_mean",
+                "temperature_bottom_uncertainty": "T_bot_uncertainty",
             },
             m2m_map={
                 "method_top": (
@@ -525,6 +529,10 @@ class GradientWidget(RelatedModelWidget):
                 "T_grad_uncertainty_cor": QuantityWidget("K/km"),
                 "T_shutin_top": QuantityWidget("hr"),
                 "T_shutin_bottom": QuantityWidget("hr"),
+                "T_top_mean": QuantityWidget("°C"),
+                "T_top_uncertainty": QuantityWidget("°C"),
+                "T_bot_mean": QuantityWidget("°C"),
+                "T_bot_uncertainty": QuantityWidget("°C"),
             },
         )
 

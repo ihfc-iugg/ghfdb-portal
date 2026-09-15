@@ -74,9 +74,9 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
     expedition = fields.Field(
         attribute="expedition", column_name="expedition", default=""
     )
-    water_temperature = fields.Field(
-        attribute="water_temperature",
-        column_name="water_temperature",
+    surface_temperature = fields.Field(
+        attribute="surface_temperature",
+        column_name="Surface_temperature",
         widget=QuantityWidget("°C"),
     )
     q_date = fields.Field(
@@ -125,6 +125,10 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
     t_corr_top = fields.Field(column_name="T_corr_top")
     t_corr_bottom = fields.Field(column_name="T_corr_bottom")
     t_number = fields.Field(column_name="T_number")
+    t_top_mean = fields.Field(column_name="T_top_mean")
+    t_top_uncertainty = fields.Field(column_name="T_top_uncertainty")
+    t_bot_mean = fields.Field(column_name="T_bot_mean")
+    t_bot_uncertainty = fields.Field(column_name="T_bot_uncertainty")
     tc_mean = fields.Field(column_name="tc_mean")
     tc_uncertainty = fields.Field(column_name="tc_uncertainty")
     tc_source = fields.Field(column_name="tc_source")
@@ -136,6 +140,7 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
     tc_number = fields.Field(column_name="tc_number")
     tc_strategy = fields.Field(column_name="tc_strategy")
     igsn = fields.Field(column_name="igsn")
+    ref_igsn = fields.Field(column_name="Ref_IGSN")
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -427,7 +432,7 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
             "relevant_child",
             "c_comment",
             "expedition",
-            "water_temperature",
+            "surface_temperature",
             "q_date",
             "lat_ns",
             "long_ew",
@@ -465,6 +470,10 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
             "t_corr_top",
             "t_corr_bottom",
             "t_number",
+            "t_top_mean",
+            "t_top_uncertainty",
+            "t_bot_mean",
+            "t_bot_uncertainty",
             "tc_mean",
             "tc_uncertainty",
             "tc_source",
@@ -476,4 +485,5 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
             "tc_number",
             "tc_strategy",
             "igsn",
+            "ref_igsn",
         )
