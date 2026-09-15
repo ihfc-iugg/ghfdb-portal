@@ -152,7 +152,10 @@ class GHFDBExportResource(ModelResource):
     probe_type = fields.Field(attribute=None)
     probe_length = fields.Field(attribute="probe_length")
     probe_tilt = fields.Field(attribute="probe_tilt")
-    water_temperature = fields.Field(attribute="water_temperature")
+    # US-7: the published column keeps the released name
+    # "water_temperature" (D-c, specs/004-import-upload-template/decisions.md)
+    # while the underlying field is now HeatFlow.surface_temperature.
+    water_temperature = fields.Field(attribute="surface_temperature")
 
     # Geological context M2M (not yet mapped to model fields — returns "")
     geo_lithology = fields.Field(attribute=None)
@@ -233,7 +236,7 @@ class GHFDBExportResource(ModelResource):
         return _mag(getattr(obj, "probe_tilt", None))
 
     def dehydrate_water_temperature(self, obj) -> float | str:
-        return _mag(getattr(obj, "water_temperature", None))
+        return _mag(getattr(obj, "surface_temperature", None))
 
     def dehydrate_t_grad_mean(self, obj) -> float | str:
         return _mag(getattr(obj, "T_grad_mean", None))

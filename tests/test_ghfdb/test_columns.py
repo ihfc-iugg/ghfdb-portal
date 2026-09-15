@@ -181,6 +181,20 @@ class TestPublishedColumns:
         for unsortable in ("q_method", "corr_IS_flag"):
             assert not hasattr(ColumnDisplay.build(unsortable), "admin_order_field")
 
+    def test_water_temperature_reads_the_renamed_surface_temperature_field(self):
+        """The submission template and the published release are separate
+        contracts (specs/004-import-upload-template/decisions.md): US-7
+        renamed the model field to ``surface_temperature`` because the value
+        is not marine-only, but the published column keeps the name
+        ``water_temperature`` — reached now through an explicit accessor
+        rather than the default of reading the published name straight off
+        the row."""
+
+        class Row:
+            surface_temperature = 3.0
+
+        assert ColumnDisplay.build("water_temperature")(Row()) == 3.0
+
 
 class TestBuiltCallablesAvoidTheFieldNameTrap:
     """Django resolves a ``list_display`` entry against the model's fields
@@ -193,9 +207,9 @@ class TestBuiltCallablesAvoidTheFieldNameTrap:
     def test_a_column_named_after_a_model_field_still_renders_its_published_heading(
         self,
     ):
-        """T077. ``expedition``, ``c_comment`` and ``water_temperature`` are
-        all fields on the determination model whose ``verbose_name`` differs
-        from the published column name.
+        """T077. ``expedition`` and ``c_comment`` are fields on the
+        determination model whose ``verbose_name`` differs from the
+        published column name.
         """
         from django.contrib import admin
 
@@ -203,7 +217,7 @@ class TestBuiltCallablesAvoidTheFieldNameTrap:
 
         model_admin = admin.site._registry[GHFDBChild]
 
-        for name in ("expedition", "c_comment", "water_temperature"):
+        for name in ("expedition", "c_comment"):
             display = ColumnDisplay.build(name)
             bound = f"published_{name}"
             setattr(model_admin.__class__, bound, display)
@@ -214,15 +228,21 @@ class TestBuiltCallablesAvoidTheFieldNameTrap:
 
     @pytest.mark.django_db
     def test_binding_under_the_field_name_would_lose_the_heading(self):
-        """The same three, bound the obvious way, prove the trap is real rather
-        than theoretical — otherwise the rule above reads as superstition."""
+        """The same two, bound the obvious way, prove the trap is real rather
+        than theoretical — otherwise the rule above reads as superstition.
+
+        ``water_temperature`` was a third example here before US-7 renamed
+        the underlying field to ``surface_temperature``: the published
+        column and the field name no longer collide, so it no longer
+        illustrates this trap.
+        """
         from django.contrib import admin
 
         from project.ghfdb.models import GHFDBChild
 
         model_admin = admin.site._registry[GHFDBChild]
 
-        for name in ("expedition", "c_comment", "water_temperature"):
+        for name in ("expedition", "c_comment"):
             rendered = label_for_field(name, GHFDBChild, model_admin)
             assert rendered != name, (
                 f"{name!r} was expected to render its field verbose_name"

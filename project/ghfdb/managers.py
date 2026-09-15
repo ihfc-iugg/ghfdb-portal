@@ -96,6 +96,11 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
             "relevant_child": F("is_relevant"),
             "q_date": F("date_acquired"),
             "quality_child": F("quality"),
+            # US-7: the submission template renamed this field to
+            # ``surface_temperature``; the published column keeps the
+            # released name ``water_temperature`` (D-c,
+            # specs/004-import-upload-template/decisions.md).
+            "water_temperature": F("surface_temperature"),
             # Site-level scalars (from HeatFlowSite via interval → site)
             # NOTE: 'name' conflicts with a Measurement base-class field; use
             # 'site_name' as the annotation key and export it via column_name.

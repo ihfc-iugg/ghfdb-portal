@@ -123,7 +123,11 @@ class PublishedColumns:
         # --- child: fields on the proxy itself (also SCALAR — see class docstring) ---
         "c_comment": ColumnEntry(SCALAR),
         "expedition": ColumnEntry(SCALAR),
-        "water_temperature": ColumnEntry(SCALAR),
+        # US-7: the submission template renamed the underlying field to
+        # ``surface_temperature`` because the value is not marine-only; the
+        # published column keeps the released name (D-c,
+        # specs/004-import-upload-template/decisions.md).
+        "water_temperature": ColumnEntry(SCALAR, "surface_temperature"),
         "quality_child": ColumnEntry(SCALAR),
         # --- child: many-valued relationships -------------------------------
         "q_method": ColumnEntry(MANY_VALUED, "method"),
