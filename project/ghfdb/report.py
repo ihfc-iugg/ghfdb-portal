@@ -128,9 +128,13 @@ def build_report(outcome: GHFDBImportOutcome) -> GHFDBImportReport:
 
     failures = [
         *_base_error_failures(outcome.parent),
-        *_invalid_row_failures(outcome.parent, _field_to_column(GHFDBParentImportResource)),
+        *_invalid_row_failures(
+            outcome.parent, _field_to_column(GHFDBParentImportResource)
+        ),
         *_base_error_failures(outcome.child),
-        *_invalid_row_failures(outcome.child, _field_to_column(GHFDBChildImportResource)),
+        *_invalid_row_failures(
+            outcome.child, _field_to_column(GHFDBChildImportResource)
+        ),
     ]
     failures.sort(key=lambda failure: failure.row_number)
 

@@ -1,14 +1,11 @@
-from django.urls import path
+"""Assessment upload workflow routes.
 
-from .views import ReviewCreateView, ReviewerListView, ReviewListView
+Empty for now: the routes the old Review record's views defined
+(``review-list``, ``review-create``, ``community/reviewers/``) were retired
+in the same phase that changed the record (T010a). The real routes for this
+workflow are built in US-1 onward.
+"""
 
-urlpatterns = [
-    path("reviews/", ReviewListView.as_view(), name="review-list"),
-    path(
-        "reviews/<int:literature_id>/create/",
-        ReviewCreateView.as_view(),
-        name="review-create",
-    ),
-    path("community/reviewers/", ReviewerListView.as_view(), name="reviewer-list"),
-    # path("dataset/<int:literature_id>/create/", ReviewCreateView.as_view(), name="review-create"),
-]
+from django.urls import URLPattern, URLResolver
+
+urlpatterns: list[URLPattern | URLResolver] = []

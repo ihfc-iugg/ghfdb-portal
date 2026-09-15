@@ -3,9 +3,9 @@
 
 Every view, navigation check and template condition calls these two
 functions rather than testing group names inline — the single place the
-group names live, so the case-sensitivity defect the current code carries
-(``groups__name="reviewers"`` vs. the fixture's ``"reviewers"`` vs. the admin
-group named ``"Reviewers"``) cannot recur.
+group names live, so the retired code's case-sensitivity defect, where the
+same role was spelled three different ways across a queryset filter, a
+fixture and the admin's own group name, cannot recur.
 """
 
 DATA_ASSESSOR_GROUP = "Data Assessor"

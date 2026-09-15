@@ -199,10 +199,23 @@ erDiagram
         int id PK "Primary key"
         int dataset_id FK "The dataset reviewed"
         int literature_id FK "The literature item reviewed"
+        int uploaded_by_id FK "Who created this assessment"
         date start_date "Date the review started"
         date end_date "Date the review completed"
-        int status "Open, pending or complete"
+        int state "Described, awaiting decision, changes requested or complete"
+        int decided_by_id FK "The curator who approved or sent back"
+        datetime decided_at "When the decision was made"
+        text decision_comment "What the curator said when sending it back"
         text comment "General comment on the review"
+    }
+
+    SubmittedFile {
+        int id PK "Primary key"
+        int review_id FK "The assessment this file was submitted against"
+        string file "The completed upload template as supplied"
+        int submitted_by_id FK "Who submitted this file"
+        datetime submitted_at "When this file was submitted"
+        datetime imported_at "When this file's contents were written, if confirmed"
     }
 
     GHFDBRelease {
@@ -251,6 +264,7 @@ erDiagram
 
     %% Editorial
     Dataset ||--o| Review : "is reviewed by"
+    Review ||--o{ SubmittedFile : "has"
 ```
 
 ## Model Descriptions
@@ -391,17 +405,28 @@ The mean thermal conductivity over a depth interval.
 
 ### Review
 
-The editorial record of a dataset being reviewed before publication.
+The record of a publication being turned into a dataset through the assessment upload workflow — described, then either awaiting a decision, sent back for changes, or complete.
 
 **Key Features**
 
 - One review per dataset and per literature item, both one-to-one
 - Names the people who carried it out through the `reviewers` relation, so a review may have several
-- Tracks start and completion dates as partial dates, and a status of open, pending or complete
+- Tracks start and completion dates as partial dates, and its state through `review.states.States`
+- Records who created it (`uploaded_by`) and, once decided, who decided it and when (`decided_by`, `decided_at`, `decision_comment`)
 
 **Business Rules**
 
 - A start date later than the completion date is refused on `save()`
+- Every legal state transition, and who may make it, is enforced by `review.states` rather than by each caller testing field combinations
+
+### SubmittedFile
+
+One completed upload template as supplied, kept against its assessment.
+
+**Key Features**
+
+- A row per submission rather than a field on `Review`, so a file a curator sends back is never overwritten by its replacement
+- `Review.current` reads the most recent submission
 
 ### GHFDBRelease
 

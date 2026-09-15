@@ -17,11 +17,6 @@ from .states import States
 
 
 class Review(models.Model):
-    class STATUS_CHOICES(models.IntegerChoices):
-        OPEN = 0, _("Open to review")
-        PENDING = 1, _("Pending")
-        COMPLETE = 2, _("Complete")
-
     uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_("uploaded by"),
