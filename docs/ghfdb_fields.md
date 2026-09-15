@@ -67,7 +67,7 @@ It was previously named `SurfaceHeatFlow` in older versions of this codebase.
 | relevant\_child | C09 | heat\_flow\_heatflow | HeatFlow | is\_relevant | HeatFlow |
 | c\_comment | C10 | heat\_flow\_heatflow | HeatFlow | c\_comment | HeatFlow |
 | expedition | C20 | heat\_flow\_heatflow | HeatFlow | expedition | HeatFlow |
-| water\_temperature | C24 | heat\_flow\_heatflow | HeatFlow | water\_temperature | HeatFlow |
+| water\_temperature | C24 | heat\_flow\_heatflow | HeatFlow | surface\_temperature | HeatFlow |
 | q\_date | C38 | heat\_flow\_heatflow | HeatFlow | date\_acquired | HeatFlow |
 | quality\_child | — | heat\_flow\_heatflow | HeatFlow | quality | HeatFlow |
 
