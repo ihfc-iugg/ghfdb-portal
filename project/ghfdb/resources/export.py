@@ -192,8 +192,10 @@ class GHFDBExportResource(ModelResource):
     tc_number = fields.Field(attribute="tc_number")
     tc_strategy = fields.Field(attribute=None)
 
-    # IGSN — not yet mapped to a model field (returns "")
-    igsn = fields.Field(attribute=None)
+    # Reads the interval's IGSN identifier through the Ref_IGSN annotation
+    # (managers.py, D26 specs/004-import-upload-template/decisions.md); ""
+    # when the interval carries none.
+    Ref_IGSN = fields.Field(attribute="Ref_IGSN")
 
     # -----------------------------------------------------------------------
     # T043: Pint quantity dehydrate methods
@@ -384,9 +386,6 @@ class GHFDBExportResource(ModelResource):
         return ""
 
     def dehydrate_geo_stratigraphy(self, obj) -> str:
-        return ""
-
-    def dehydrate_igsn(self, obj) -> str:
         return ""
 
     # -----------------------------------------------------------------------

@@ -254,6 +254,47 @@ class TestGHFDBExportM2MFields:
 
 
 # ---------------------------------------------------------------------------
+# Ref_IGSN column tests (D26, specs/004-import-upload-template/decisions.md)
+# ---------------------------------------------------------------------------
+
+
+class TestGHFDBExportRefIGSN:
+    """``Ref_IGSN`` reads back the interval's IGSN identifier instead of a
+    hardcoded empty string."""
+
+    @pytest.mark.django_db
+    def test_ref_igsn_emits_the_stored_identifier(self, heat_flow_chain):
+        from fairdm.core.sample.models import SampleIdentifier
+        from project.ghfdb.models import GHFDBChild
+        from project.ghfdb.resources.export import GHFDBExportResource
+
+        SampleIdentifier.objects.create(
+            related=heat_flow_chain.sample, type="IGSN", value="10.60516/AU1101"
+        )
+
+        resource = GHFDBExportResource()
+        qs = GHFDBChild.objects.for_export().filter(pk=heat_flow_chain.pk)
+        dataset = resource.export(qs)
+        row = dataset.dict[0]
+
+        assert row["Ref_IGSN"] == "10.60516/AU1101"
+
+    @pytest.mark.django_db
+    def test_ref_igsn_emits_empty_string_when_the_interval_carries_none(
+        self, heat_flow_chain
+    ):
+        from project.ghfdb.models import GHFDBChild
+        from project.ghfdb.resources.export import GHFDBExportResource
+
+        resource = GHFDBExportResource()
+        qs = GHFDBChild.objects.for_export().filter(pk=heat_flow_chain.pk)
+        dataset = resource.export(qs)
+        row = dataset.dict[0]
+
+        assert row["Ref_IGSN"] == ""
+
+
+# ---------------------------------------------------------------------------
 # T041: Staff-only access control
 # ---------------------------------------------------------------------------
 
