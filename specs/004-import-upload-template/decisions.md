@@ -784,3 +784,68 @@ fixture and the published file become byte-identical again and the two-cell comp
 degenerates to an equality check.
 
 **ADR:** none — recorded here.
+
+## D26 — Ref_IGSN stores through the sample identifier relationship the data model already specified
+
+**Ambiguous because** `data-model.md` (line 470) and `docs/ghfdb_fields.md` already documented
+`Ref_IGSN` as living on `HeatFlowInterval.identifiers` through the framework's generic sample
+identifier relationship, but nothing wired the column to it: the reader declared it a pass-through
+field with no attribute, and `managers.py` annotated it as a constant empty string on the way out.
+What was left open was how the reader tells "no value" from a real one, and how the writer avoids
+the identifier's own uniqueness constraint on a repeat import.
+
+**Chosen**: a child row's `Ref_IGSN` (or the 2024-release spelling `igsn`, read the same way, `Ref_IGSN`
+taking precedence when both are present) becomes a `fairdm.core.sample.models.SampleIdentifier` with
+`type="IGSN"`, attached to that row's `HeatFlowInterval`, created in `after_save_instance` once the
+interval has a primary key. `-`, empty and whitespace-only cells store nothing — a census of all 215
+completed assessment-team submissions found 430 of 102,983 child rows carry anything at all in this
+column, and every one of those 430 carries the single value `-`. A new `is_blank_cell()` helper in
+`resources/widgets.py` recognises that marker alongside an empty or whitespace-only cell, reachable
+by any future column that needs the same rule. The identifier is validated with the model's own
+`full_clean()` before it is saved, so the framework's format check and normalisation apply, and a
+malformed value is raised as `ValueError` — the same way every other invalid cell in this resource is
+reported — rather than left to escape as an unhandled `ValidationError`.
+
+The identifier is looked up by `(value, type)` rather than by `(related, type)`, though the model's
+own constraint is `UniqueConstraint(fields=["related", "type"])`. `before_save_instance` rebuilds a
+new, unsaved `HeatFlowInterval` on every call (T035/D18), so a re-imported row's interval is never
+the same database row twice — confirmed by importing one row twice and reading `HeatFlow.sample_id`
+after each call. Keying the identifier lookup on the interval would therefore create a second
+identifier for the same value on every repeat import, and fail immediately on the value's own
+uniqueness constraint (`AbstractIdentifier.value` is `unique=True`, and `AbstractIdentifier.clean()`
+checks it again across every identifier subclass). An IGSN identifies one physical sample regardless
+of which interval row currently represents it, so re-attaching the existing identifier to the row's
+current interval is what makes a second import of an unchanged file a no-op instead of an integrity
+error.
+
+On export, `managers.py`'s `Value("", output_field=CharField())` annotation is replaced with a
+correlated subquery reading `SampleIdentifier.value` where `related_id` equals the row's own
+`sample_id` — `HeatFlow.sample_id` already is the interval's primary key, multi-table inheritance
+shares it with the concrete `HeatFlowInterval` row, so no `heatflowinterval` traversal is needed —
+wrapped in `Coalesce(..., Value(""))` so an interval with no identifier still reads as an empty
+string. One subquery, evaluated by the database as part of the single query, the same way the nine
+correction-flag subqueries already on this queryset are: no query per row.
+
+`resources/export.py` declares its field for this column as `igsn`, not `Ref_IGSN` — a pre-existing
+mismatch against `GHFDB_COLUMN_ORDER` tracked separately (issue #122, `TestGHFDBExportResourceDeclaration`
+and its siblings in `test_export.py`, both `xfail(strict=True)`) that leaves the column absent from
+every export regardless of what it resolves to. Renaming that one field to `Ref_IGSN` — the minimum
+needed for this column specifically to appear in an export at all — does not touch any of the other
+mismatched columns those tests still fail on, so they remain correctly `xfail`.
+
+**Defensible because** every piece was already decided elsewhere: the storage location by
+`data-model.md`, the corpus's own meaning of `-` by the census, and one identifier per interval by
+the framework's own constraint. The `(value, type)` keying is the one choice this story made that the
+brief's own wording did not anticipate, made from directly reproducing the interval-recreation
+behaviour rather than assuming the model's constraint shape was also the right upsert key.
+
+**Consequence accepted**: an interval whose row is later resubmitted with a *different* IGSN value
+leaves its previous identifier attached to the orphaned old interval row rather than deleting it —
+the same orphaning `_build_interval` already produces for the interval itself on every repeat import,
+not a new gap this story introduces.
+
+**Revisit if** `_build_interval` starts reusing the existing interval row on an update instead of
+building a new one, at which point keying the identifier on the interval directly, as first
+suggested, becomes both correct and simpler.
+
+**ADR:** none — recorded here.

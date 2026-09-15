@@ -309,9 +309,11 @@ TEMPLATE_ROW_LABEL_CELL = "Short Name"
 #     has no identifiers to give, and both import resources inject the
 #     columns when they are absent, so requiring them would refuse exactly
 #     the files the portal most expects.
-#   - the assessment columns. The reviewer fields and the IGSN reference
-#     resolve to nothing the portal stores (FR-009), and they are filled in
-#     during assessment — after the submission has been read.
+#   - the assessment columns. The reviewer fields resolve to nothing the
+#     portal stores (FR-009); the IGSN reference is stored (D26,
+#     specs/004-import-upload-template/decisions.md), but is still optional
+#     because it is filled in during assessment — after the submission has
+#     been read, a first submission has none to give.
 #
 # ``igsn`` is the spelling the 2024 release file uses for the same reference;
 # the child resource reads either.

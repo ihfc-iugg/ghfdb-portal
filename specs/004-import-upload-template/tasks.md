@@ -127,6 +127,14 @@ the stated reason before the change and passes after, and the class it belongs t
 - **T040** Add the three vocabulary concepts the revised template's dropdowns now offer, and a test
   pinning the gradient sentinel behaviour from T039.
 
+## Ref_IGSN stores through the sample identifier relationship
+
+- **T042** Store a child row's `Ref_IGSN`/`igsn` as a `SampleIdentifier` on its `HeatFlowInterval`,
+  treating `-`, empty and whitespace-only cells as no value given, and run the framework's own
+  `full_clean()` so a malformed value is reported as a row error. Read it back on export instead of
+  the constant empty string it used to be, without adding a query per row. Decision and reasoning in
+  `decisions.md` (D26).
+
 ## Documentation
 
 - **T036** Update `docs/guides/importing-data.md` for the callable entry point, the refusal rule and
