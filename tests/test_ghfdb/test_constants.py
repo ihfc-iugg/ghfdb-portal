@@ -49,23 +49,36 @@ class TestOfficialUploadTemplateFixture:
     def test_fixture_differs_from_the_published_template_in_exactly_the_two_corrected_cells(
         self, official_upload_template_workbook
     ):
+        """Every cell of every sheet, not only the header row.
+
+        The correction is made against the workbook's string table, so a
+        misspelling that also appeared on the readme or the vocabulary sheet
+        would have been corrected there too and would never show up in a
+        header-row comparison. Walking both workbooks whole is what makes
+        "and nothing else" a claim the suite checks rather than asserts.
+        """
         published_workbook = openpyxl.load_workbook(
             PUBLISHED_TEMPLATE_PATH, data_only=True
         )
-        fixture_header = _read_header_row(official_upload_template_workbook)
-        published_header = _read_header_row(published_workbook)
 
-        assert len(fixture_header) == len(published_header), (
-            "the fixture and the published template no longer carry the same "
-            "number of header cells"
+        assert (
+            official_upload_template_workbook.sheetnames
+            == published_workbook.sheetnames
         )
-        differences = {
-            published_name: fixture_name
-            for published_name, fixture_name in zip(
-                published_header, fixture_header, strict=True
-            )
-            if published_name != fixture_name
-        }
+
+        differences = {}
+        for sheet_name in published_workbook.sheetnames:
+            published_sheet = published_workbook[sheet_name]
+            fixture_sheet = official_upload_template_workbook[sheet_name]
+            rows = max(published_sheet.max_row, fixture_sheet.max_row)
+            columns = max(published_sheet.max_column, fixture_sheet.max_column)
+            for row in range(1, rows + 1):
+                for column in range(1, columns + 1):
+                    published_value = published_sheet.cell(row, column).value
+                    fixture_value = fixture_sheet.cell(row, column).value
+                    if published_value != fixture_value:
+                        differences[published_value] = fixture_value
+
         assert differences == {
             "tc_pT_fuction": "tc_pT_function",
             "Ref_ISGN": "Ref_IGSN",

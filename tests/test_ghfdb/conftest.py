@@ -27,8 +27,9 @@ def dataset(db):
 def official_upload_template_workbook():
     """The official GHFDB upload template, opened unmodified (US-1, T001).
 
-    ``tests/fixtures/official_upload_template.xlsx`` is a byte-identical copy
-    of ``docs/constitution/references/data_upload_template.xlsx``.
+    ``tests/fixtures/official_upload_template.xlsx`` is
+    ``docs/constitution/references/data_upload_template.xlsx`` with the two
+    ADR 0003 misspellings corrected, and nothing else changed.
     """
     path = (
         Path(__file__).resolve().parents[1]
