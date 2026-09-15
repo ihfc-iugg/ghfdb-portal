@@ -175,6 +175,34 @@ duplicating anything.
 
 ---
 
+### User Story 7 - The reader keeps pace with a revised template (Priority: P2)
+
+The published template was revised after US-1 landed: one column was renamed and four were added.
+The reader recognises the new revision's header, stores the renamed column under a name that covers
+both marine and continental readings, and stores the four new columns against the temperature
+gradient they help calculate.
+
+**Why this priority**: the header check this feature exists to enforce (US-1) means a template
+revision the reader has not caught up with refuses every file produced from it, not just the columns
+that changed.
+
+**Independent Test**: import a file carrying the renamed column and the four new ones, and confirm
+each value lands on the field it maps to.
+
+**Acceptance Scenarios**:
+
+1. **Given** a file using the revised template's header, **When** it is imported, **Then** the
+   header is recognised rather than refused.
+2. **Given** a value in the renamed temperature column, **When** the file is imported, **Then** it
+   is stored on the determination regardless of whether the reading is marine or continental.
+3. **Given** values in the four new temperature columns, **When** the file is imported, **Then**
+   each lands on the temperature gradient calculated for that row.
+4. **Given** a row carrying the four new temperature columns but no gradient value, **When** the
+   file is imported, **Then** nothing is stored for that row's gradient, consistent with how every
+   other gradient column already behaves.
+
+---
+
 ### Edge Cases
 
 - A row whose coordinate pair matches an existing site in the same dataset joins that site rather
@@ -219,6 +247,8 @@ duplicating anything.
   approximation of it.
 - **FR-018**: The all-or-nothing guarantee MUST be enforced by something the import library actually
   reads, and a test MUST fail if that enforcement is removed (#190).
+- **FR-019**: The reader MUST recognise the header of the template revision currently published,
+  including a column renamed since an earlier revision and any columns added since.
 
 ### Key Entities
 
@@ -249,6 +279,8 @@ duplicating anything.
 - **SC-005**: Importing the same file twice produces the same record counts as importing it once.
 - **SC-006**: A site whose parent value came from a subset of its children names exactly that subset
   in `relevant_child`.
+- **SC-007**: A file produced from the currently published template revision imports with nothing
+  reported, including its renamed and newly added columns.
 
 ## Clarifications
 

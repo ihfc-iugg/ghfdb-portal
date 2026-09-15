@@ -675,3 +675,112 @@ coupling the header check itself introduces, and the failure is loud.
 template file itself becomes simpler than maintaining the dict.
 
 **ADR:** none — a guardrail triage for this pass's two test-input changes, recorded here with the reason each is not a weakened assertion.
+
+## D22 — The renamed temperature field stays on the child model and covers both marine and continental readings
+
+**Ambiguous because** the field's existing name (`water_temperature`) and its `verbose_name` and
+`help_text` described only a marine reading, but the published change log for the column's rename
+gives no reason to treat marine and continental measurements differently, and `ProbeMetadata` — the
+model built specifically for marine probe calculations — was an available alternative home for it.
+
+**Chosen**: the field stays on `HeatFlow`, renamed to `surface_temperature`, with its `verbose_name`
+and `help_text` broadened to name both cases: seafloor or bottom-water temperature for a marine
+measurement, ground-surface or mudline temperature for a continental one.
+
+**Defensible because** the value is read at C24 for every determination the template carries,
+marine or continental, and `ProbeMetadata` only exists for rows with a marine probe attached — moving
+the field there would refuse to store it for every continental reading the template also offers.
+
+**Consequence accepted**: the field's name no longer echoes the "water" language the site's marine
+origins carried, so a reader coming from the pre-2026.03 model has to learn the new name.
+
+**Revisit if** the published structure ever splits this reading into two separate columns, one per
+environment.
+
+**ADR:** none — recorded here.
+
+## D23 — The four new temperature columns land on ThermalGradient
+
+**Ambiguous because** the template places the four new columns (C50-C53) between `q_date` and
+`tc_mean`, adjacent to both the gradient's own columns and the thermal-conductivity ones, so
+placement is not obvious from position alone.
+
+**Confirmed in the published change log**: "The four new metadata fields contain data on the
+absolute temperatures used for the temperature gradient calculation of the heat flow determination
+interval" — stated as the reason for the addition, not inferred from position.
+
+**Chosen**: `temperature_top`, `temperature_top_uncertainty`, `temperature_bottom` and
+`temperature_bottom_uncertainty` are added to `ThermalGradient`, alongside its existing
+`method_top`/`method_bottom`, `shutin_top`/`shutin_bottom` and `correction_top`/`correction_bottom`
+pairs, and read through the same `GradientWidget` and the same `T_grad_mean` sentinel every other
+gradient column already uses. All four are required template columns, not optional: unlike the
+identifier and assessment columns `OPTIONAL_TEMPLATE_COLUMNS` names, these are ordinary data columns
+every current submission is expected to carry, and the header check identifies the template by its
+whole shape.
+
+**Defensible because** the change log names the gradient calculation as the reason these values
+exist; placing them anywhere else would separate a value from the calculation it was added to
+support.
+
+**Consequence accepted**: a row carrying the four new columns but no `T_grad_mean` value stores none
+of them, the same sentinel behaviour every other gradient column already has — acceptable because
+`T_grad_mean` is itself a mandatory template column, so no real submission produces that row shape.
+
+**Revisit if** a future revision reports these temperatures independently of a gradient value.
+
+**ADR:** none — recorded here.
+
+## D24 — The submission template and the published release are separate contracts
+
+**Ambiguous because** renaming `HeatFlow.water_temperature` to `surface_temperature` touches the one
+model field both the submission-template reader and the published-release export read from, raising
+the question of whether the released column should be renamed to match.
+
+**Chosen**: no. `CHILD_COLUMNS`, `GHFDB_COLUMN_ORDER` and `PublishedColumns` in `columns.py` keep the
+released name `water_temperature` (Fuchs et al. 2021/2023, the 2024 release file). Only how that
+column's value is reached changed: `columns.py` gives it the explicit accessor
+`surface_temperature`, `export.py`'s field and `dehydrate_water_temperature` read the renamed
+attribute, and `GHFDBChildQuerySet.as_ghfdb_flat()` annotates `water_temperature` from
+`surface_temperature` so a plain `getattr(record, "water_temperature")` on a flattened row still
+resolves.
+
+**Defensible because** the submission template (what the assessment team fills in, revised
+periodically) and the published release format (what downstream consumers of the database already
+depend on) are two different documents with two different change processes. Renaming the release
+column would break every existing consumer of the 2021/2023/2024 structure for a rename that exists
+only in the submission template's own header.
+
+**Consequence accepted**: the model field name and the released column name now differ
+(`surface_temperature` vs. `water_temperature`), which the accessor and the annotation exist
+specifically to bridge, and which a future reader of `columns.py`/`export.py`/`managers.py` needs to
+know to look for.
+
+**Revisit if** a future release of the published structure itself renames the column.
+
+**ADR:** none — recorded here.
+
+## D25 — The fixture deviates from the published template in exactly two cells
+
+**Ambiguous because** `tests/fixtures/official_upload_template.xlsx` previously carried the same two
+misspellings the published template carries (ADR 0003), and `TestOfficialUploadTemplateFixture`
+asserted the two files were byte-identical.
+
+**Chosen**: the fixture is now the published 2026.03 template
+(`GHFDB_SubmissionTemplate_2026.03.xlsx`, DOI 10.5880/fidgeo.2025.042) with exactly the two ADR 0003
+misspellings corrected in its shared strings — `tc_pT_fuction` to `tc_pT_function`, `Ref_ISGN` to
+`Ref_IGSN` — and nothing else changed. `TestOfficialUploadTemplateFixture` now opens both workbooks
+and asserts their header rows differ in exactly those two cells.
+
+**Defensible because** every other test in this module that reads the fixture needs the corrected
+spellings to exercise the reader past the header check ADR 0003 exists to enforce, and a fixture
+that is otherwise byte-for-byte the published file is the strongest guarantee available that no
+other divergence has crept in unnoticed.
+
+**Consequence accepted**: a test written against "the fixture is untouched" no longer holds, and any
+future correction to the fixture beyond these two cells needs its own decision recorded here.
+
+**Revisit if** the published template corrects the two misspellings upstream, at which point the
+fixture and the published file become byte-identical again and the two-cell comparison test
+degenerates to an equality check.
+
+**ADR:** none — recorded here.

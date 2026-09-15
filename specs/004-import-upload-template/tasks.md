@@ -110,13 +110,33 @@ the stated reason before the change and passes after, and the class it belongs t
 - **T035** Make T034 pass. Whether the answer is a narrower natural key or something else is this
   story's decision to take, and it goes in `decisions.md` with its reasoning.
 
+## US-7 — The reader keeps pace with a revised template (#206)
+
+- **T037** Replace the fixture-identity test with one that opens the fixture and the published
+  template side by side and asserts their header rows differ in exactly the two ADR 0003 cells and
+  nowhere else. Update `UPLOAD_TEMPLATE_HEADER_ROW` for the renamed column and the four additions.
+  Decide whether the four additions are optional, and record the decision in `decisions.md`.
+- **T038** Rename `HeatFlow.water_temperature` to `surface_temperature`, broadening its help text to
+  cover a continental reading as well as a marine one, with a migration using `RenameField`. Update
+  the resource field, and the published-export mapping in `columns.py`/`export.py`/`managers.py` so
+  the released column keeps its existing name.
+- **T039** Add `temperature_top`, `temperature_top_uncertainty`, `temperature_bottom` and
+  `temperature_bottom_uncertainty` to `ThermalGradient`, mapped from the template's four new
+  columns through the existing gradient widget, so a row with no gradient value still stores none of
+  them (consistent with every other gradient column).
+- **T040** Add the three vocabulary concepts the revised template's dropdowns now offer, and a test
+  pinning the gradient sentinel behaviour from T039.
+
 ## Documentation
 
 - **T036** Update `docs/guides/importing-data.md` for the callable entry point, the refusal rule and
   the vocabulary rule, and run its examples against the branch.
+- **T041** Update `docs/guides/importing-data.md`, `docs/ghfdb_fields.md` and
+  `docs/data_models/ghfdb-erd.md` for the renamed field and the four additions.
 
 ## Dependencies
 
 T001 and T002 precede everything. US-2 precedes US-3, because child rows attach to sites the parent
 pass creates. US-4 follows US-3, so there is something real to refuse. US-5 and US-6 are independent
-of each other.
+of each other. US-7 follows US-1 through US-3, since it revises the header check and the reader they
+built.
