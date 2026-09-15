@@ -99,6 +99,49 @@ class TestBuildReportFailures:
         assert failure.row_number == 1
         assert failure.column == "q"
 
+    def test_a_scalar_vocabulary_failure_names_the_value_and_the_vocabulary(
+        self, dataset
+    ):
+        """T010/FR-012: a bare 'invalid value' does not satisfy this — the
+        reason must name both the supplied value and the vocabulary it was
+        checked against."""
+        from project.ghfdb.importers import import_ghfdb_template
+        from project.ghfdb.report import build_report
+
+        row1 = dict(ROW)
+        row1["environment"] = "not_a_real_value"
+
+        outcome = import_ghfdb_template(make_dataset(row1), dataset, check_only=True)
+        report = build_report(outcome)
+
+        # The child pass also reports a fault of its own here — it cannot
+        # resolve the parent the environment fault kept from being created —
+        # so this asserts on the environment failure specifically rather
+        # than assuming it is the only one.
+        failure = next(f for f in report.failures if f.column == "environment")
+        assert "not_a_real_value" in failure.reason
+        assert "GeographicEnvironment" in failure.reason
+
+    def test_a_many_valued_vocabulary_failure_names_the_value_and_the_vocabulary(
+        self, dataset
+    ):
+        """The many-valued path (``tc_method``, via
+        ``RelatedModelWidget.set_m2m_relations``) must carry the same two
+        facts as the scalar path."""
+        from project.ghfdb.importers import import_ghfdb_template
+        from project.ghfdb.report import build_report
+
+        row1 = dict(ROW)
+        row1["tc_mean"] = "2.5"
+        row1["tc_method"] = "not_a_real_method"
+
+        outcome = import_ghfdb_template(make_dataset(row1), dataset, check_only=True)
+        report = build_report(outcome)
+
+        (failure,) = report.failures
+        assert "not_a_real_method" in failure.reason
+        assert "ConductivityMethod" in failure.reason
+
     def test_multiple_failures_are_all_reported(self, dataset):
         from project.ghfdb.importers import import_ghfdb_template
         from project.ghfdb.report import build_report
