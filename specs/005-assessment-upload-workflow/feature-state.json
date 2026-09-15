@@ -31,8 +31,8 @@
       ]
     },
     "plan": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "notified",
+      "at": "2026-09-15T00:00:00Z"
     },
     "merge": {
       "approved_by": null,
