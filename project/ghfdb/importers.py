@@ -46,7 +46,9 @@ class GHFDBImportOutcome:
         )
 
 
-def import_ghfdb_template(file: Any, dataset: Any) -> GHFDBImportOutcome:
+def import_ghfdb_template(
+    file: Any, dataset: Any, check_only: bool = False
+) -> GHFDBImportOutcome:
     """Import one official GHFDB upload template *file* into *dataset*.
 
     *file* is either the raw XLSX bytes (or a binary file-like object) of an
@@ -62,6 +64,19 @@ def import_ghfdb_template(file: Any, dataset: Any) -> GHFDBImportOutcome:
     the child pass needs every row that dedup would otherwise have removed.
     Both passes run inside one transaction and are wired to *dataset*
     through the ``fairdm_dataset`` keyword every resource hook reads.
+
+    *check_only* (US-3, FR-008/FR-010): when true, both passes still run for
+    real — nothing here calls either resource with ``dry_run=True``. Doing
+    so was tried and rejected (specs/004-import-upload-template/decisions.md
+    D16): ``import_data()`` wraps each resource in its own savepoint, and a
+    literal ``dry_run=True`` rolls that savepoint back at the end of that
+    same call, before the next pass starts — so the child pass, which
+    resolves its parent through ``ID_parent`` and coordinates, can no longer
+    see the parent pass's rows, and every file is refused, clean ones
+    included, for a reason that has nothing to do with the file. Instead the
+    transaction this function already opens is rolled back unconditionally
+    on the way out when *check_only* is set, the same ``set_rollback``
+    mechanism already used below for the error case.
     """
     if isinstance(file, tablib.Dataset):
         rows = file
@@ -89,13 +104,15 @@ def import_ghfdb_template(file: Any, dataset: Any) -> GHFDBImportOutcome:
         )
 
         outcome = GHFDBImportOutcome(parent=parent_result, child=child_result)
-        if outcome.has_errors():
+        if check_only or outcome.has_errors():
             # Each pass already rolls back its own rows on its own faults
-            # (rollback_on_validation_errors above). This covers the case
-            # a single pass cannot: one pass faults while the other has
-            # nothing wrong with it and would otherwise commit its rows on
-            # its own (FR-010) — both passes share this transaction, so
-            # marking it here discards both once either one is at fault.
+            # (rollback_on_validation_errors above). This covers the cases
+            # that cannot: one pass faults while the other has nothing
+            # wrong with it and would otherwise commit its rows on its own
+            # (FR-010) — both passes share this transaction, so marking it
+            # here discards both once either one is at fault — and the
+            # checking mode, which must write nothing at all regardless of
+            # whether either pass found a fault (FR-010, D16 above).
             transaction.set_rollback(True)
 
     return outcome

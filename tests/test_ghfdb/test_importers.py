@@ -938,3 +938,121 @@ class TestARowInTheShapeARealSubmissionCarries:
         ]
         assert any("Aluvium" in message for message in messages), messages
         assert not HeatFlowSite.objects.exists()
+
+
+@pytest.mark.django_db
+class TestCheckOnlyMode:
+    """T008 — the checking mode both passes run for real inside the outer
+    transaction, then the transaction is always rolled back
+    (specs/004-import-upload-template/decisions.md D16). Neither pass is
+    ever called with ``dry_run=True``: that hides the parent pass's rows
+    from the child pass and refuses every file, clean ones included."""
+
+    def test_a_clean_multi_site_file_reports_no_failures_and_writes_nothing(
+        self, dataset
+    ):
+        from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        row1 = dict(ROW)
+
+        row2 = dict(ROW)
+        row2["ID_parent"] = "2"
+        row2["ID"] = "2"
+        row2["name"] = "Test Site Beta"
+        row2["lat_NS"] = "50.0"
+        row2["long_EW"] = "8.0"
+
+        outcome = import_ghfdb_template(
+            make_dataset(row1, row2), dataset, check_only=True
+        )
+
+        assert not outcome.has_errors(), (
+            outcome.parent.invalid_rows,
+            outcome.child.invalid_rows,
+        )
+        assert not HeatFlowSite.objects.exists()
+        assert not ParentHeatFlow.objects.exists()
+        assert not HeatFlow.objects.exists()
+
+    def test_a_clean_multi_site_file_reports_what_would_have_been_created(
+        self, dataset
+    ):
+        """FR-009: the report still names what would have been written, even
+        though nothing was."""
+        from project.ghfdb.importers import import_ghfdb_template
+
+        row1 = dict(ROW)
+
+        row2 = dict(ROW)
+        row2["ID_parent"] = "2"
+        row2["ID"] = "2"
+        row2["name"] = "Test Site Beta"
+        row2["lat_NS"] = "50.0"
+        row2["long_EW"] = "8.0"
+
+        outcome = import_ghfdb_template(
+            make_dataset(row1, row2), dataset, check_only=True
+        )
+
+        assert len(outcome.parent.rows) == 2
+        assert all(row.is_new() for row in outcome.parent.rows)
+        assert len(outcome.child.rows) == 2
+        assert all(row.is_new() for row in outcome.child.rows)
+
+    def test_a_failing_file_still_reports_its_faults_and_writes_nothing(self, dataset):
+        """The checking mode must not hide a real fault — a file that would
+        be refused on confirmation is refused here too."""
+        from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        row1 = dict(ROW)
+        row1["environment"] = "not_a_real_value"
+
+        outcome = import_ghfdb_template(
+            make_dataset(row1), dataset, check_only=True
+        )
+
+        assert outcome.has_errors()
+        assert not HeatFlowSite.objects.exists()
+        assert not ParentHeatFlow.objects.exists()
+        assert not HeatFlow.objects.exists()
+
+    def test_neither_pass_is_ever_called_with_dry_run_true(self, dataset):
+        """D16 — the one mistake this brief exists to prevent. Spies on both
+        resources' real ``import_data`` rather than asserting on written
+        rows, so a regression is caught even if it happened to leave the
+        right rows behind."""
+        from unittest import mock
+
+        from import_export.resources import ModelResource
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        original = ModelResource.import_data
+        seen_dry_run = []
+
+        def spy(self, *args, **kwargs):
+            seen_dry_run.append(kwargs.get("dry_run"))
+            return original(self, *args, **kwargs)
+
+        with mock.patch.object(ModelResource, "import_data", spy):
+            import_ghfdb_template(make_dataset(ROW), dataset, check_only=True)
+
+        assert seen_dry_run == [False, False], seen_dry_run
+
+    def test_check_only_defaults_to_false(self, dataset):
+        """The existing callers are unaffected (plan.md "The checking
+        mode")."""
+        from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        outcome = import_ghfdb_template(make_dataset(ROW), dataset)
+
+        assert not outcome.has_errors()
+        assert HeatFlowSite.objects.exists()
+        assert ParentHeatFlow.objects.exists()
+        assert HeatFlow.objects.exists()
