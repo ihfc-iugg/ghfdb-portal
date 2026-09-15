@@ -18,6 +18,8 @@ References:
     - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
 """
 
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
 from import_export import fields, widgets
 from import_export.resources import ModelResource
@@ -33,6 +35,7 @@ from .widgets import (
     MultiConceptWidget,
     QuantityWidget,
     YesNoWidget,
+    is_blank_cell,
 )
 
 
@@ -260,6 +263,7 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         """Create HeatFlowCorrection + ProbeMetadata; set interval M2M fields."""
         self._create_corrections(instance, row)
         self._create_probe_metadata(instance, row)
+        self._create_igsn_identifier(instance, row)
 
         # Apply M2M relations to sub-measurements
         interval = instance.sample
@@ -379,6 +383,62 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
                 "tilt": _qty(probe_tilt, "°"),
             },
         )
+
+    def _create_igsn_identifier(self, instance, row):
+        """Attach this row's IGSN reference to the interval as a SampleIdentifier.
+
+        ``-``, blank and whitespace-only cells mean no identifier was given
+        (D26, specs/004-import-upload-template/decisions.md) — every one of
+        the 430 rows in the assessment team's own corpus that carries
+        anything at all in this column carries the single value ``-``.
+        Reads both column spellings the template has used, ``Ref_IGSN`` and
+        the 2024-release ``igsn``, preferring the former when both are
+        present.
+
+        Looked up by (``value``, ``type``) rather than by the interval:
+        ``_build_interval`` saves a new ``HeatFlowInterval`` on every call
+        (T035/D18), so a re-imported row's interval is never the same row
+        twice. An IGSN identifies one physical sample regardless of which
+        interval currently represents it, so re-attaching the existing
+        identifier to the row's current interval — rather than keying on
+        the interval and creating a second row for the same value — is what
+        makes a repeat import of an unchanged file a no-op instead of an
+        integrity error against the identifier's own uniqueness constraint.
+
+        Runs the framework's own ``full_clean()`` before saving, so its
+        format validation and normalisation apply, and reports a bad value
+        as a row error the same way any other invalid cell in this resource
+        does — by raising ``ValueError`` — rather than letting the
+        framework's ``ValidationError`` escape unhandled.
+        """
+        interval = instance.sample
+        if interval is None or not interval.pk:
+            return
+
+        value = None
+        for column in ("Ref_IGSN", "igsn"):
+            raw = row.get(column)
+            if not is_blank_cell(raw):
+                value = str(raw).strip()
+                break
+        if value is None:
+            return
+
+        from fairdm.core.sample.models import SampleIdentifier
+
+        try:
+            identifier = SampleIdentifier.objects.get(type="IGSN", value=value)
+            identifier.related = interval
+        except SampleIdentifier.DoesNotExist:
+            identifier = SampleIdentifier(related=interval, type="IGSN", value=value)
+
+        try:
+            identifier.full_clean()
+        except ValidationError as exc:
+            raise ValueError(
+                _("Ref_IGSN: %(err)s") % {"err": "; ".join(exc.messages)}
+            ) from exc
+        identifier.save()
 
     def _resolve_parent_by_location(self, row: dict):
         """Look up the parent ParentHeatFlow via HeatFlowSite location when ID_parent is absent."""

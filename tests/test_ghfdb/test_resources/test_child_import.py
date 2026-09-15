@@ -1094,3 +1094,116 @@ class TestGHFDBChildObjectsAttachToNamedDataset:
         # already asserted above.
         assert not hasattr(probe, "dataset")
         assert not hasattr(child.corrections.first(), "dataset")
+
+
+VALID_IGSN = "10.60516/AU1101"
+
+
+@pytest.mark.django_db
+class TestGHFDBChildImportResourceIGSN:
+    """A child row's ``Ref_IGSN`` becomes a ``SampleIdentifier`` on that
+    row's interval (D26, specs/004-import-upload-template/decisions.md)."""
+
+    def test_a_valid_igsn_is_stored_on_the_intervals_identifiers(self, dataset):
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row = dict(CHILD_ROW)
+        row["Ref_IGSN"] = VALID_IGSN
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row), dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        child = HeatFlow.objects.get(ghfdb_id=1)
+        identifiers = list(child.sample.identifiers.all())
+        assert len(identifiers) == 1
+        assert identifiers[0].type == "IGSN"
+        assert identifiers[0].value == VALID_IGSN
+
+    @pytest.mark.parametrize("blank_value", ["-", "", "   "])
+    def test_a_blank_marker_stores_no_identifier(self, dataset, blank_value):
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row = dict(CHILD_ROW)
+        row["Ref_IGSN"] = blank_value
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row), dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        child = HeatFlow.objects.get(ghfdb_id=1)
+        assert child.sample.identifiers.count() == 0
+
+    def test_the_lowercase_igsn_spelling_is_read_the_same_way(self, dataset):
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row = dict(CHILD_ROW)
+        row["Ref_IGSN"] = ""
+        row["igsn"] = VALID_IGSN
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row), dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        child = HeatFlow.objects.get(ghfdb_id=1)
+        assert child.sample.identifiers.get(type="IGSN").value == VALID_IGSN
+
+    def test_reimporting_the_same_row_does_not_fail_or_duplicate(self, dataset):
+        """The reader upserts HeatFlow by ghfdb_id, but before_save_instance
+        rebuilds a fresh HeatFlowInterval on every save (T035/D18), so the
+        interval a re-imported row resolves to is never the same row twice.
+        A second import of an unchanged file must still be a no-op rather
+        than an integrity error against the identifier's own uniqueness
+        constraint (D26)."""
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row = dict(CHILD_ROW)
+        row["Ref_IGSN"] = VALID_IGSN
+
+        resource = GHFDBChildImportResource()
+        for _ in range(2):
+            result = resource.import_data(
+                make_dataset(row),
+                dry_run=False,
+                raise_errors=False,
+                fairdm_dataset=dataset,
+            )
+            assert not result.has_errors(), result.invalid_rows
+
+        child = HeatFlow.objects.get(ghfdb_id=1)
+        assert child.sample.identifiers.count() == 1
+        assert child.sample.identifiers.get(type="IGSN").value == VALID_IGSN
+
+    def test_a_malformed_igsn_is_a_row_error_not_a_crash(self, dataset):
+        import_parents(dataset)
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row = dict(CHILD_ROW)
+        row["Ref_IGSN"] = "not-an-igsn"
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row), dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
+
+        assert result.has_errors()
+        assert result.error_rows
+        assert "IGSN" in str(result.error_rows[0].errors[0].error)
