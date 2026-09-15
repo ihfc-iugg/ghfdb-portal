@@ -860,3 +860,77 @@ class TestGHFDBTemplateRepeatImport:
             float(c.sample.top.magnitude) for c in HeatFlow.objects.all()
         )
         assert tops_after == [0.0, 500.0]
+
+
+@pytest.mark.django_db
+class TestARowInTheShapeARealSubmissionCarries:
+    """One row per cell shape taken from the assessment team's completed
+    templates, driven through the entry point end to end.
+
+    The values are transcribed from files the team produced; no submitted
+    spreadsheet is stored in the repository. Each of these refused a real
+    file before the reader was corrected.
+    """
+
+    def test_a_row_of_template_supplied_values_lands(self, dataset):
+        """Bracketed vocabulary tokens, a numeric site name, a lithology
+        named by its key and an unspecified acquisition date, together."""
+        from heat_flow.models import HeatFlow, HeatFlowSite
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        row = {
+            **ROW,
+            "name": 3,
+            "environment": "[Onshore (continental)]",
+            "explo_method": "[Drilling]",
+            "explo_purpose": "[Geothermal]",
+            "corr_HP_flag": "[No]",
+            "relevant_child": "[Yes]",
+            "geo_lithology": "alkali_feldspar_granite;andesite",
+            "geo_stratigraphy": "CambrianSeries2",
+            "q_date": " [unspecified]",
+            "tc_mean": "2.5",
+            "tc_saturation": "[unspecified]",
+        }
+
+        outcome = import_ghfdb_template(make_dataset(row), dataset)
+
+        assert not outcome.has_errors(), (
+            outcome.parent.base_errors,
+            outcome.parent.invalid_rows,
+            outcome.child.base_errors,
+            outcome.child.invalid_rows,
+        )
+        site = HeatFlowSite.objects.get()
+        assert site.name == "3"
+        child = HeatFlow.objects.get()
+        assert child.date_acquired is None
+        assert sorted(c.name for c in child.sample.lithology.all()) == [
+            "alkali_feldspar_granite",
+            "andesite",
+        ]
+        assert [c.name for c in child.sample.age.all()] == ["CambrianSeries2"]
+
+    def test_a_misspelled_lithology_still_refuses_the_file(self, dataset):
+        """``Aluvium`` appears in a submitted file and in no vocabulary.
+
+        Reading keys as well as labels widens what the portal accepts; it
+        must not stop the portal reporting a value nothing resolves.
+        """
+        from heat_flow.models import HeatFlowSite
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        outcome = import_ghfdb_template(
+            make_dataset({**ROW, "geo_lithology": "Aluvium"}), dataset
+        )
+
+        assert outcome.has_errors()
+        messages = [
+            str(error.error)
+            for row in outcome.child.error_rows
+            for error in row.errors
+        ]
+        assert any("Aluvium" in message for message in messages), messages
+        assert not HeatFlowSite.objects.exists()

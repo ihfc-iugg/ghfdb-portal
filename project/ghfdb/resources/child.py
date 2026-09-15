@@ -26,6 +26,7 @@ from import_export.widgets import ForeignKeyWidget
 from ..constants import CORRECTION_COL_MAP, GHFDB_COLUMN_ORDER
 from .validation import ExcludeFieldsSetAfterValidation
 from .widgets import (
+    AcquisitionDateWidget,
     ConductivityWidget,
     GradientWidget,
     IntervalWidget,
@@ -78,7 +79,12 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         column_name="water_temperature",
         widget=QuantityWidget("°C"),
     )
-    q_date = fields.Field(attribute="date_acquired", column_name="q_date", default="")
+    q_date = fields.Field(
+        attribute="date_acquired",
+        column_name="q_date",
+        widget=AcquisitionDateWidget(),
+        default="",
+    )
 
     # Pass-through fields (no attribute) — values extracted from row by hooks/widgets.
     # Declared here so all GHFDB child columns appear in resource.fields for schema coverage.

@@ -57,8 +57,13 @@ def normalize_vocab_token(raw: str) -> str:
     e.g. '[Onshore (continental)]'. This helper normalises such tokens so they
     match the lowercase vocabulary definitions stored in the database.
     The caller should preserve the original raw value for error messages.
+
+    Whitespace is stripped on both sides of the brackets, not just inside
+    them. Real submissions carry cells like ``' [unspecified]'`` — a leading
+    space defeats a bare ``strip("[]")``, because the first character is not
+    a bracket and stripping stops there.
     """
-    return raw.strip("[]").lower()
+    return raw.strip().strip("[]").strip().lower()
 
 
 # ---------------------------------------------------------------------------
@@ -134,14 +139,26 @@ class MultiConceptWidget(ManyToManyWidget):
                 pairs.append((raw, norm))
         if not pairs:
             return self.queryset.none()
-        # Validate using normalised forms; report original tokens in error messages
-        normalised = [norm for _, norm in pairs]
-        choices_set = set(
-            _case_insensitive_qs(self._vocab_class, field="label").values_list(
-                "ilabel", flat=True
-            )
-        )
-        invalid_originals = [orig for orig, norm in pairs if norm not in choices_set]
+        # A cell names a concept by its label or by its key, and the upload
+        # template uses both: the lithology and stratigraphic-age columns
+        # offer keys ('alkali_feldspar_granite', 'CambrianSeries2') while
+        # every other vocabulary column offers labels. ``ConceptWidget``
+        # already reads either; matching on the label alone here made 174 of
+        # the 265 lithologies and 29 of the 181 ages the template offers
+        # unreachable, so a file using them was refused on values its own
+        # template supplied.
+        concepts = list(self.queryset)
+        by_label = {concept.label.lower(): concept.pk for concept in concepts}
+        by_key = {concept.name.lower(): concept.pk for concept in concepts}
+
+        matched, invalid_originals = [], []
+        for orig, norm in pairs:
+            pk = by_label.get(norm, by_key.get(norm))
+            if pk is None:
+                invalid_originals.append(orig)
+            else:
+                matched.append(pk)
+
         if invalid_originals:
             location = _("Column '%(column)s': ") % {"column": column} if column else ""
             raise ValueError(
@@ -151,8 +168,25 @@ class MultiConceptWidget(ManyToManyWidget):
                 )
                 % {"vocab": self._vocab_class.__name__, "invalid": invalid_originals}
             )
-        qs = _case_insensitive_qs(self._vocab_class, field="label")
-        return qs.filter(ilabel__in=normalised)
+        return self.queryset.filter(pk__in=matched)
+
+
+class AcquisitionDateWidget(CharWidget):
+    """Reads the template's date-of-acquisition cell.
+
+    The template's own vocabulary sheet offers two things in this column: a
+    ``years-months`` date, and ``[unspecified]``. The sentinel is the same
+    one every vocabulary column carries, so it means the same thing here —
+    no date was given — and is read as an empty cell rather than being put
+    to the date field, which refuses it.
+    """
+
+    def clean(self, value, row=None, **kwargs):
+        if value is None:
+            return None
+        if isinstance(value, str) and normalize_vocab_token(value) == "unspecified":
+            return None
+        return super().clean(value, row=row, **kwargs)
 
 
 class YesNoWidget(BooleanWidget):
@@ -362,18 +396,18 @@ class ParentWidget(RelatedModelWidget):
         )
 
     def clean(self, value, row=None, **kwargs):
-        self._last_row = row
+        # A site name is a label, not a number, but a spreadsheet does not
+        # know that: a submission whose sites are numbered 1, 2, 3 arrives
+        # with integer cells, and refusing those refused 2,338 rows of the
+        # assessment team's own files. Read whatever the cell holds as text.
         raw_name = (row or {}).get("name")
-        try:
-            if not (raw_name or "").strip():
-                return None
-        except AttributeError:
-            raise ValueError(
-                _(
-                    "Column 'name' contains a non-text value %(val)r; expected a site name string."
-                )
-                % {"val": raw_name}
-            ) from None
+        if raw_name is not None and not isinstance(raw_name, str):
+            row = dict(row)
+            raw_name = row["name"] = str(raw_name)
+
+        self._last_row = row
+        if not (raw_name or "").strip():
+            return None
 
         from fairdm.contrib.location.models import Point
 
