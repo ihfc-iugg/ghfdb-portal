@@ -6,10 +6,11 @@ that file when it reads it.
 
 ## The template the portal reads
 
-The portal reads the published upload template and nothing else. A copy of the empty template ships
-with the documentation at `docs/constitution/references/data_upload_template.xlsx`, and a
-byte-identical copy is the fixture the reader is tested against, so a change to the published
-template shows up as a test failure rather than a silent mismatch.
+The portal reads the published upload template and nothing else. It currently reads revision
+2026.03 (DOI 10.5880/fidgeo.2025.042). A copy of the empty template ships with the documentation at
+`docs/constitution/references/data_upload_template.xlsx`, and the fixture the reader is tested
+against is the same file with the two misspellings below corrected, so a further change to the
+published template shows up as a test failure rather than a silent mismatch.
 
 Column names are taken from the header row of the `data list` sheet. Each one falls into one of
 four groups:
