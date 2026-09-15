@@ -2,7 +2,7 @@
   "feature": "005-assessment-upload-workflow",
   "branch": "005-assessment-upload-workflow",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "PLAN",
+  "state": "DESIGN_REVIEW",
   "state_history": [
     {
       "state": "GATE_SPEC",
@@ -13,6 +13,11 @@
       "state": "PLAN",
       "at": "2026-09-15T00:00:00Z",
       "note": "plan, tasks and design docs authored"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-09-15T19:47:22Z",
+      "note": "one reviewer, three lenses; three verified blocking findings applied as plan edits"
     }
   ],
   "gates": {
@@ -32,6 +37,16 @@
     "merge": {
       "approved_by": null,
       "at": null
+    },
+    "design_review": {
+      "approved_by": "design-panel",
+      "at": "2026-09-15T00:00:00Z",
+      "self_resolved": [
+        "DR-001 critical verified: check_only uses transaction.set_rollback, never dry_run=True (FS-004 D16); plan.md, research.md and T008 corrected",
+        "DR-002 high verified: T010a added to retire the superseded views, forms, admin and card template in the foundational phase",
+        "DR-003 high verified: data-model.md corrected, uploaded_by is set at assessment creation",
+        "DR-004 low: extension bound folded into T020, size bound left at the Django default and recorded as a watch item"
+      ]
     }
   },
   "stories": [
@@ -90,6 +105,11 @@
         },
         {
           "id": "T010",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T010a",
           "status": "todo",
           "attempts": 0
         },
@@ -321,7 +341,7 @@
       "max": 1
     },
     "design_review_cycles": {
-      "used": 0,
+      "used": 2,
       "max": 1
     },
     "tokens": {

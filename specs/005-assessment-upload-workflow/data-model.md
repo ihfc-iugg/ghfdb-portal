@@ -11,7 +11,7 @@ Added:
 
 | Field | Type | Why |
 |---|---|---|
-| `uploaded_by` | FK to `contributors.Person`, null until a file is submitted | Who holds the assessment. Object permissions follow this, not the assessor list, because an assessor may be an unclaimed profile with no account. |
+| `uploaded_by` | FK to `contributors.Person`, set when the assessment is created | Who holds the assessment. Object permissions follow this, not the assessor list, because an assessor may be an unclaimed profile with no account. Set at creation rather than at first upload, because the upload page is gated on it and the person who described the assessment is the person who must be able to reach that page next. |
 | `state` | small integer, choices from `review.states` | Where the assessment has got to. Replaces the current three-value `status`. |
 | `decided_by` | FK to `contributors.Person`, null | The curator who approved or sent back. |
 | `decided_at` | datetime, null | When that decision was made. |

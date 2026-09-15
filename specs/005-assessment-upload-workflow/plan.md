@@ -74,8 +74,20 @@ the model rather than testing field combinations themselves.
 ### The checking mode
 
 `import_ghfdb_template(file, dataset)` gains a `check_only` parameter, defaulting to `False`. When
-true, both passes run with `dry_run=True` and the transaction is rolled back unconditionally. The
-existing callers are unaffected.
+true, both passes still run for real inside the existing `transaction.atomic()` block and the
+transaction is rolled back unconditionally on the way out:
+`if check_only or outcome.has_errors(): transaction.set_rollback(True)`.
+
+**Neither pass is ever called with `dry_run=True`**, and that is not a stylistic choice. FS-004
+established empirically (`specs/004-import-upload-template/decisions.md` D16) that
+`import_data()` wraps each resource in its own savepoint, which `dry_run=True` rolls back at the end
+of that same call, before the next pass starts. The child pass resolves its parent through
+`ID_parent` and coordinates, both of which need the parent pass's rows visible mid-transaction, so a
+literal dry run refuses every file, including clean ones, for a reason that has nothing to do with
+the file. The `set_rollback` mechanism already in `importers.py` for the error case is the same
+mechanism, and it is already verified correct in this repository.
+
+The existing callers are unaffected.
 
 The two `Result` objects already carry what the report needs. A thin reading layer turns them into
 the counts FR-009 asks for and the per-row failures FR-012 asks for, with the template's own column

@@ -1,0 +1,58 @@
+{
+  "stage": "design",
+  "lens": "architecture",
+  "verdict": "request_changes",
+  "risk": "high",
+  "scope": "specs/005-assessment-upload-workflow/{spec,plan,research,data-model,tasks,decisions}.md against CONSTITUTION.md, CONTEXT.md, project/review/*, project/ghfdb/{importers.py,columns.py,resources/*}, and the resolved FairDM framework checkout",
+  "skills_loaded": [
+    {
+      "name": "openclaw-skills:craft-review",
+      "receipt": "RECEIPT: craft-review/2026-09-07/817f8514",
+      "loaded_via": "skill-tool"
+    },
+    {
+      "name": "openclaw-skills:craft-security",
+      "receipt": "RECEIPT: craft-security/2026-08-04/ea3d6742",
+      "loaded_via": "skill-tool"
+    },
+    {
+      "name": "openclaw-skills:craft-simplify",
+      "receipt": "RECEIPT: craft-simplify/2026-08-04/69038ce1",
+      "loaded_via": "skill-tool"
+    }
+  ],
+  "findings": [
+    {
+      "id": "DR-001",
+      "severity": "critical",
+      "confidence": "verified",
+      "claim": "[architecture] The planned check_only mechanism — calling both import passes with dry_run=True — will make every real file's check report wrong, because the parent pass's rows are invisible to the child pass by the time it runs, defeating the one safety property US-3 exists to deliver (FR-008/FR-009, D5).",
+      "evidence": "plan.md §\"The checking mode\" (line 76-78): \"`import_ghfdb_template(file, dataset)` gains a `check_only` parameter... When true, both passes run with `dry_run=True` and the transaction is rolled back unconditionally.\" Identically stated in research.md line 13 and tasks.md T008 (line 42-45). This is the same approach specs/004-import-upload-template/decisions.md D16 (lines 419-454) already tried and rejected in this codebase, for this same reader, with an empirical test cited: \"`import_data()`'s own `atomic_if_using_transaction(...)` wraps the *entire* `import_data_inner()` call in one savepoint per resource, and `dry_run=True` marks that savepoint to roll back unconditionally at the end of that same `import_data()` call — before the next one starts... Calling both passes with `dry_run=True` independently would make every child row that resolves its parent by `ID_parent` fail to find one — refusing every file, including a clean one, for a reason that has nothing to do with the file.\" project/ghfdb/resources/child.py's `_resolve_parent_by_location` and the `parent = fields.Field(..., widget=ForeignKeyWidget(ParentHeatFlow, field=\"ghfdb_id\"))` mapping confirm the child pass depends on the parent pass's rows being visible mid-transaction, exactly as D16 describes. project/ghfdb/importers.py already carries the D16 remedy in comment form (\"Each pass already rolls back its own rows on its own faults... This covers the case a single pass cannot\") but the 005 design does not reuse it for check_only.",
+      "suggested_fix": "Do not pass dry_run=True to either resource. Implement check_only exactly as D16 already established for the error case: run both passes for real inside the existing `with transaction.atomic():` block, then call `transaction.set_rollback(True)` unconditionally when check_only is true (in addition to the existing `if outcome.has_errors(): transaction.set_rollback(True)`), e.g. `if check_only or outcome.has_errors(): transaction.set_rollback(True)`. This reuses the mechanism already verified correct in this repository and requires no new code path."
+    },
+    {
+      "id": "DR-002",
+      "severity": "high",
+      "confidence": "verified",
+      "claim": "[architecture] The plan removes `review.Review.status`/`STATUS_CHOICES` and the `\"Reviewers\"`/`reviewers` group (T005, T006) but names no task to retire the existing code that reads them, which will fail `python manage.py check` (a stated merge gate, Article VI/VIII) or leave dead code in the tree (Article IX).",
+      "evidence": "project/review/views.py:33 (`if review.status != Review.STATUS_CHOICES.PENDING:`), :52 (`fields = [\"review__status\", ...]` in `ReviewFilterSet.Meta`), :81/:87 (`groups__name=\"Reviewers\"`, `group_required = [\"Reviewers\"]`), :127 (`self.object.status = Review.STATUS_CHOICES.PENDING`), :226 (`qs.filter(groups__name=\"Reviewers\")`); project/review/forms.py:19 (`fields = [\"review__status\"]`); project/review/admin.py:38/:41 (`list_display`/`list_filter` include `\"status\"`); project/review/templates/cotton/review/card.html:5 (`review.status`). tasks.md's 41 tasks (T001-T041) never mention `admin.py`, `ReviewCreateView`, `ReviewSubmitView`, `ReviewFilterSet`, `ReviewerListView`, `CreateReviewForm`, `SubmitReviewForm`, or the `reviewer-list`/`review-create` URL names for deletion or rewrite — only plan.md's \"Project Structure\" diagram implies views.py/forms.py end up holding only the new seven views and two new forms, without saying so as a task.",
+      "suggested_fix": "Add an explicit task in Phase 1, alongside T005/T006, to delete `ReviewCreateView`, `ReviewSubmitView`, `ReviewFilterSet`, `ReviewerListView` and their forms/URLs, and to update `project/review/admin.py`'s `list_display`/`list_filter` and the `cotton/review/card.html` template for the new `state` field and group names — in the same migration that removes `status` and the old group, not left implicit in the structure diagram."
+    },
+    {
+      "id": "DR-003",
+      "severity": "high",
+      "confidence": "verified",
+      "claim": "[architecture] data-model.md documents `Review.uploaded_by` as \"null until a file is submitted\", but tasks.md T017 sets it (and grants the uploader's object permissions) at assessment creation, before any file exists — if the field is built to the documented semantics, the access rule for \"Upload a file\" (\"the assessment's uploader, or any curator\") admits nobody but curators, locking every Data Assessor out of the very next step after describing their own assessment (US-2 → US-3, spec.md's primary P1 path).",
+      "evidence": "data-model.md §\"review.Review—the assessment record\", `uploaded_by` row: \"FK to contributors.Person, null until a file is submitted | Who holds the assessment. Object permissions follow this...\" versus tasks.md T017 (line 80-82): \"Create view: writes the assessment in DESCRIBED, creates the private dataset, ... records `uploaded_by`, grants the uploader object permissions...\" — both under Phase 3 (US-2, no file yet). plan.md's access table (§\"The pages\") gates `/assessments/<pk>/upload/` on \"the assessment's uploader, or any curator\".",
+      "suggested_fix": "Amend data-model.md's `uploaded_by` row to match what T017 actually needs and does: set to the creating user at assessment creation (not null until a file is submitted). This is a documentation correction, not a new mechanism — T017's behaviour is what makes the US-2→US-3 handoff work at all."
+    },
+    {
+      "id": "DR-004",
+      "severity": "low",
+      "confidence": "likely",
+      "claim": "[security] data-model.md's `SubmittedFile.file` carries no stated size or extension bound before the file reaches the reader, which parses the whole workbook into memory (craft-security's file-upload and DoS checks).",
+      "evidence": "data-model.md §\"review.SubmittedFile\": `file | FileField, upload path scoped to the assessment | The template as supplied.` — no mention of a size cap or content-type allowlist. project/ghfdb/importers.py:69-70 reads the whole file into a `tablib.Dataset` before any check runs.",
+      "suggested_fix": "Note in data-model.md or decisions.md whether the project's `DATA_UPLOAD_MAX_MEMORY_SIZE`/`FILE_UPLOAD_MAX_MEMORY_SIZE` settings already bound this for a team of ~10 trusted uploaders, or add a small size/extension validator on `SubmittedFile.file`."
+    }
+  ]
+}

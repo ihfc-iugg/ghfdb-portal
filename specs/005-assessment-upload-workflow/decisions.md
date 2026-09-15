@@ -136,3 +136,36 @@ While reading it: the group it creates is named `reviewers`, and `ReviewCreateVi
 `Reviewers`. Django group lookups are case-sensitive, so that check could never have passed. This
 feature replaces the group entirely, so the defect resolves rather than needing its own fix, and the
 predicates in `review.permissions` are what stop it recurring.
+
+## D12 — The checking mode uses an outer rollback, never `dry_run=True`
+
+The plan first proposed running both import passes with `dry_run=True`. The design review caught it,
+and the record it cited settles the question rather than opening one.
+
+`specs/004-import-upload-template/decisions.md` D16 tested this directly while building the reader.
+`import_data()` wraps each resource in its own savepoint, and `dry_run=True` rolls that savepoint
+back at the end of the same call, before the next pass runs. The child pass resolves its parent
+through `ID_parent` and coordinates, so it needs the parent pass's rows visible mid-transaction. A
+parent import run with `dry_run=True` leaves zero rows visible to a query issued immediately
+afterwards inside the same outer transaction. Calling both passes that way would refuse every file,
+clean ones included, for a reason that has nothing to do with the file.
+
+The checking mode therefore runs both passes for real and rolls the outer transaction back
+unconditionally: `if check_only or outcome.has_errors(): transaction.set_rollback(True)`. That is
+the mechanism `importers.py` already uses for the error case, already verified in this repository,
+and it adds no new code path.
+
+The lesson worth keeping is not about savepoints. A decision this project had already made
+empirically, one feature earlier, in the same file, was re-derived from first principles and got a
+different answer. The prior feature's `decisions.md` is part of the codebase for the next feature
+that touches the same code.
+
+## D13 — Superseded views are deleted in the same phase that changes the record
+
+`project/review/` holds views, forms, an admin registration and a card template that read
+`Review.status` and a `Reviewers` group, both of which this feature removes. The plan left their
+removal implied by a structure diagram rather than stated as work.
+
+They are deleted in the foundational phase, in the same commit range that changes the field, with a
+test asserting no reference survives. A tree carrying two answers to the same question is how the
+next reader picks the wrong one, and a structure diagram is not a task anybody executes.

@@ -40,9 +40,13 @@ tests at all today, so every task writes its failing test first.
 - [ ] T007 Add `review.SubmittedFile` per data-model.md, with the `current` property on `Review`
       reading the most recent row. Tests first, including an assessment with several submissions.
 - [ ] T008 Add `check_only` to `project/ghfdb/importers.py::import_ghfdb_template`, defaulting to
-      `False`. When true both passes run with `dry_run=True` and the transaction rolls back
-      unconditionally. Test first, asserting the database is untouched and the returned outcome
-      still reports what would have happened.
+      `False`. Both passes still run for real inside the existing `transaction.atomic()` block, and
+      the exit condition becomes `if check_only or outcome.has_errors():
+      transaction.set_rollback(True)`. **Do not pass `dry_run=True` to either resource** —
+      `specs/004-import-upload-template/decisions.md` D16 records the empirical test showing that it
+      hides the parent pass's rows from the child pass and refuses every file, clean ones included.
+      Test first, asserting the database is untouched afterwards, the returned outcome still reports
+      what would have happened, and a clean multi-site file reports no failures.
 - [ ] T009 Write `project/ghfdb/report.py`: turn a `GHFDBImportOutcome` into counts (sites and
       determinations, created and updated separately) and per-row failures carrying the row number,
       the template's own column heading and a specific reason. Column headings come from
@@ -51,7 +55,17 @@ tests at all today, so every task writes its failing test first.
       controlled vocabulary it failed against, satisfying FR-012. Test first, with a file carrying
       a value outside a known vocabulary.
 
-**Checkpoint**: the record, the states, the roles and the reporting layer all exist and are tested.
+- [ ] T010a Retire the code the new record supersedes, in the same phase that removes `status` and
+      the old group, so the tree never holds two answers at once. Delete `ReviewCreateView`,
+      `ReviewSubmitView`, `ReviewFilterSet`, `ReviewerListView`, `CreateReviewForm` and
+      `SubmitReviewForm`, and the `review-create` and `reviewer-list` routes. Update
+      `project/review/admin.py`'s `list_display` and `list_filter` for `state`, and
+      `project/review/templates/cotton/review/card.html`, which reads `review.status`. `manage.py
+      check` must pass and no reference to `STATUS_CHOICES`, `review__status` or a `Reviewers`
+      group may remain. Verify with a grep assertion in the test suite, not by eye.
+
+**Checkpoint**: the record, the states, the roles and the reporting layer all exist and are tested,
+and nothing in the tree still reads the vocabulary they replace.
 
 ---
 
@@ -91,7 +105,10 @@ tests at all today, so every task writes its failing test first.
 ## Phase 4: US-3 — A file is checked before anything is written (P1)
 
 - [ ] T020 [US3] Upload form and view: store the submission, run the reader with `check_only=True`,
-      render the report. Tests first, asserting the dataset still holds no data afterwards.
+      render the report. The form reuses the `FileExtensionValidator(allowed_extensions=["xlsx"])`
+      already on `project/ghfdb/forms.py::GHFDBImportForm` rather than defining a second one. Tests
+      first, asserting the dataset still holds no data afterwards and that a non-spreadsheet file is
+      refused by the form before the reader sees it.
 - [ ] T021 [US3] Report template state showing the counts from T009. Test asserts against rendered
       HTML.
 - [ ] T022 [US3] Confirm view, POST only: re-run the check against the stored file, write in the
@@ -188,3 +205,11 @@ tests at all today, so every task writes its failing test first.
   that group, and no task should quietly do so.
 - The dataset visibility default is private in both framework fields. No task should add code that
   sets private explicitly, because the safe outcome is the one that happens when nothing runs.
+- `dry_run=True` is forbidden on either import pass, for the reason recorded in T008. A future
+  reader of `importers.py` will find the naive version tempting; the comment there has to say why it
+  is wrong, not just what to do instead.
+- The design review noted that `SubmittedFile.file` has no explicit size bound. The extension bound
+  is covered by T020. The size bound is Django's `DATA_UPLOAD_MAX_MEMORY_SIZE`, left at its default:
+  the uploaders are a team of roughly ten signed-in colleagues, and an upload template is a few
+  hundred rows. If this application ever accepts files from outside that group, the bound becomes a
+  real decision rather than an inherited default.

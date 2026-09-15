@@ -10,10 +10,21 @@ validates the header before opening a transaction, runs the parent pass then the
 rolls both back if either faults. It returns `GHFDBImportOutcome`, holding the two
 `import_export.results.Result` objects.
 
-**The gap**: it hardcodes `dry_run=False` on both passes. A checking mode is a parameter threaded to
-those two calls plus a rollback at the end, not a second code path. `Result` already carries
-per-row outcomes and error rows, so the counts FR-009 asks for and the row-level failures FR-012
-asks for are both read off the existing return value.
+**The gap**: there is no checking mode. Adding one is a rollback at the end of the existing
+transaction, not a second code path. `Result` already carries per-row outcomes and error rows, so
+the counts FR-009 asks for and the row-level failures FR-012 asks for are both read off the existing
+return value.
+
+**`dry_run=True` is not the route, and this is settled rather than open.**
+`specs/004-import-upload-template/decisions.md` D16 records the empirical test:
+`import_data()` wraps each resource in its own savepoint and `dry_run=True` rolls that savepoint
+back at the end of the same call, before the next pass runs. The child pass resolves its parent
+through `ID_parent` and coordinates (`project/ghfdb/resources/child.py:68`,
+`child.py:469 _resolve_parent_by_location`), which needs the parent pass's rows visible
+mid-transaction. A parent import run with `dry_run=True` leaves zero rows visible to a query issued
+immediately afterwards inside the same outer transaction, so a literal dry run would refuse every
+file, clean ones included. `transaction.set_rollback(True)` on the way out of the existing
+`atomic()` block is the mechanism that works, and `importers.py` already uses it for the error case.
 
 ## The assessment record already exists, partly
 
