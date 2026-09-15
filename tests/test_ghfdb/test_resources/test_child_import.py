@@ -51,7 +51,7 @@ CHILD_ROW = {
     "probe_tilt": "",
     "expedition": "",
     "probe_type": "",
-    "water_temperature": "",
+    "Surface_temperature": "",
     "relevant_child": "Yes",
     "c_comment": "",
     "corr_IS_flag": "No",
@@ -74,6 +74,10 @@ CHILD_ROW = {
     "T_corr_top": "",
     "T_corr_bottom": "",
     "T_number": "",
+    "T_top_mean": "",
+    "T_top_uncertainty": "",
+    "T_bot_mean": "",
+    "T_bot_uncertainty": "",
     "tc_mean": "2.5",
     "tc_uncertainty": "",
     "tc_source": "",
@@ -106,7 +110,7 @@ def import_parents(dataset):
 
     resource = GHFDBParentImportResource()
     ds = make_dataset(PARENT_ROW)
-    resource.import_data(ds, dry_run=False, raise_errors=True)
+    resource.import_data(ds, dry_run=False, raise_errors=True, fairdm_dataset=dataset)
 
 
 # ---------------------------------------------------------------------------
@@ -127,10 +131,33 @@ class TestGHFDBChildImportResourceImport:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(CHILD_ROW)
-        result = resource.import_data(ds, dry_run=False, raise_errors=False)
+        result = resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         assert not result.has_errors(), result.invalid_rows
         assert HeatFlow.objects.filter(ghfdb_id=1).exists()
+
+    def test_a_row_with_an_id_is_named_by_it(self, dataset):
+        """Every determination carries a name. ``name`` is a required field
+        with no default, so an unset one saves as an empty string without the
+        database objecting, and the determination has nothing to display
+        itself by — the row's own identifier is what names it."""
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(CHILD_ROW),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        assert HeatFlow.objects.get(ghfdb_id=1).name == "1"
 
     def test_parent_fk_resolved_via_id_parent(self, dataset):
         """HeatFlow.parent FK is resolved from ID_parent column."""
@@ -141,7 +168,9 @@ class TestGHFDBChildImportResourceImport:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(CHILD_ROW)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         child = HeatFlow.objects.get(ghfdb_id=1)
         assert child.parent is not None
@@ -156,8 +185,12 @@ class TestGHFDBChildImportResourceImport:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(CHILD_ROW)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         assert HeatFlow.objects.filter(ghfdb_id=1).count() == 1
 
@@ -170,7 +203,9 @@ class TestGHFDBChildImportResourceImport:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(CHILD_ROW)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         child = HeatFlow.objects.get(ghfdb_id=1)
         assert child.corrections.count() == 9
@@ -184,7 +219,9 @@ class TestGHFDBChildImportResourceImport:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(CHILD_ROW)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         child = HeatFlow.objects.get(ghfdb_id=1)
         t_corr = child.corrections.get(correction_type="T")
@@ -200,7 +237,9 @@ class TestGHFDBChildImportResourceImport:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(CHILD_ROW)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         child = HeatFlow.objects.get(ghfdb_id=1)
         assert child.thermal_gradient is not None
@@ -214,7 +253,9 @@ class TestGHFDBChildImportResourceImport:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(CHILD_ROW)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         child = HeatFlow.objects.get(ghfdb_id=1)
         assert child.thermal_conductivity is not None
@@ -231,7 +272,9 @@ class TestGHFDBChildImportResourceImport:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(row)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         child = HeatFlow.objects.get(ghfdb_id=1)
         assert child.thermal_gradient is None
@@ -248,7 +291,9 @@ class TestGHFDBChildImportResourceImport:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(row)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         child = HeatFlow.objects.get(ghfdb_id=1)
         assert child.thermal_conductivity is None
@@ -268,7 +313,9 @@ class TestGHFDBChildImportResourceImport:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(row)
-        result = resource.import_data(ds, dry_run=False, raise_errors=False)
+        result = resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         # Import must complete without row-level errors
         assert not result.has_errors(), (
@@ -285,6 +332,135 @@ class TestGHFDBChildImportResourceImport:
         assert interval.stratigraphy.count() == 0, (
             "HeatFlowInterval.stratigraphy must NOT be populated by geo_stratigraphy import"
         )
+
+    def test_surface_temperature_stored_from_the_renamed_column(self, dataset):
+        """The 2026.03 template's ``Surface_temperature`` column (C24, was
+        ``water_temperature``) stores onto ``HeatFlow.surface_temperature``."""
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row = dict(CHILD_ROW)
+        row["Surface_temperature"] = "12.5"
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row), dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        child = HeatFlow.objects.get(ghfdb_id=1)
+        assert float(child.surface_temperature.magnitude) == pytest.approx(12.5)
+
+    def test_gradient_absolute_temperatures_stored_from_row(self, dataset):
+        """The 2026.03 template's four new columns (C50-C53) store onto the
+        ``ThermalGradient`` created for the row, alongside the gradient
+        itself."""
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row = dict(CHILD_ROW)
+        row["T_top_mean"] = "8.2"
+        row["T_top_uncertainty"] = "0.5"
+        row["T_bot_mean"] = "45.7"
+        row["T_bot_uncertainty"] = "0.8"
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row), dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        gradient = HeatFlow.objects.get(ghfdb_id=1).thermal_gradient
+        assert gradient is not None
+        assert float(gradient.temperature_top.magnitude) == pytest.approx(8.2)
+        assert float(
+            gradient.temperature_top_uncertainty.magnitude
+        ) == pytest.approx(0.5)
+        assert float(gradient.temperature_bottom.magnitude) == pytest.approx(45.7)
+        assert float(
+            gradient.temperature_bottom_uncertainty.magnitude
+        ) == pytest.approx(0.8)
+
+    def test_gradient_absolute_temperatures_not_stored_when_t_grad_mean_empty(
+        self, dataset
+    ):
+        """T_grad_mean is the sentinel ``GradientWidget`` uses to decide
+        whether to create a ``ThermalGradient`` at all (C7,
+        specs/004-import-upload-template/decisions.md). A row carrying only
+        the new absolute temperatures and no gradient mean therefore stores
+        nothing — T_grad_mean is itself a mandatory template column, so this
+        is a row shape a real submission cannot produce, but the sentinel
+        behaviour is worth pinning."""
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow, ThermalGradient
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row = dict(CHILD_ROW)
+        row["T_grad_mean"] = ""
+        row["T_top_mean"] = "8.2"
+        row["T_bot_mean"] = "45.7"
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row), dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        child = HeatFlow.objects.get(ghfdb_id=1)
+        assert child.thermal_gradient is None
+        assert not ThermalGradient.objects.exists()
+
+
+@pytest.mark.django_db
+class TestGHFDBChildImportAcceptsUnstoredColumns:
+    """T012 — FR-009: the reviewer columns are accepted without being
+    stored, and their presence is not an error. ``ID`` is a declared child
+    field (``ghfdb_id``), exercised throughout this file; this covers the
+    three reviewer columns specifically.
+
+    Does not use this module's ``import_parents()`` helper: it calls
+    ``import_data()`` without ``fairdm_dataset``, which T008 now refuses
+    (decisions.md D11). This test names its dataset throughout instead.
+    """
+
+    def test_reviewer_columns_do_not_cause_an_error(self, dataset):
+        """Reviewer_name/Reviewer_comment/Review_date are not CHILD_COLUMNS
+        fields, so their presence in the row must not raise or block the
+        import."""
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import (
+            GHFDBChildImportResource,
+            GHFDBParentImportResource,
+        )
+
+        GHFDBParentImportResource().import_data(
+            make_dataset(PARENT_ROW),
+            dry_run=False,
+            raise_errors=True,
+            fairdm_dataset=dataset,
+        )
+
+        row = dict(CHILD_ROW)
+        row["Reviewer_name"] = "Jane Reviewer"
+        row["Reviewer_comment"] = "Looks fine"
+        row["Review_date"] = "2026-01-01"
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        assert HeatFlow.objects.filter(ghfdb_id=1).exists()
 
 
 @pytest.mark.django_db
@@ -303,7 +479,9 @@ class TestGHFDBChildProbeMetadata:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(row)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         child = HeatFlow.objects.get(ghfdb_id=1)
         assert ProbeMetadata.objects.filter(interval=child.sample).exists()
@@ -317,7 +495,9 @@ class TestGHFDBChildProbeMetadata:
 
         resource = GHFDBChildImportResource()
         ds = make_dataset(CHILD_ROW)  # probe_penetration = ""
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         child = HeatFlow.objects.get(ghfdb_id=1)
         assert not ProbeMetadata.objects.filter(interval=child.sample).exists()
@@ -342,6 +522,7 @@ class TestGHFDBChildTemplateNoIdRegression:
             make_dataset(parent_row),
             dry_run=False,
             raise_errors=True,
+            fairdm_dataset=dataset,
         )
 
         child_row = dict(CHILD_ROW)
@@ -356,6 +537,7 @@ class TestGHFDBChildTemplateNoIdRegression:
             make_dataset(child_row),
             dry_run=False,
             raise_errors=False,
+            fairdm_dataset=dataset,
         )
         assert not first.has_errors(), first.invalid_rows
 
@@ -365,6 +547,7 @@ class TestGHFDBChildTemplateNoIdRegression:
             make_dataset(child_row_update),
             dry_run=False,
             raise_errors=False,
+            fairdm_dataset=dataset,
         )
         assert not second.has_errors(), second.invalid_rows
 
@@ -388,6 +571,7 @@ class TestGHFDBChildTemplateNoIdRegression:
             make_dataset(parent_row),
             dry_run=False,
             raise_errors=True,
+            fairdm_dataset=dataset,
         )
 
         child_base = dict(CHILD_ROW)
@@ -407,6 +591,7 @@ class TestGHFDBChildTemplateNoIdRegression:
             make_dataset(row_a, row_b),
             dry_run=False,
             raise_errors=False,
+            fairdm_dataset=dataset,
         )
 
         assert not result.has_errors(), result.invalid_rows
@@ -428,7 +613,10 @@ class TestGHFDBChildAbsentHeaderRegression:
 
         parent_row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
         GHFDBParentImportResource().import_data(
-            make_dataset(parent_row), dry_run=False, raise_errors=True
+            make_dataset(parent_row),
+            dry_run=False,
+            raise_errors=True,
+            fairdm_dataset=dataset,
         )
 
         child_row = {k: v for k, v in CHILD_ROW.items() if k not in ("ID", "ID_parent")}
@@ -440,7 +628,7 @@ class TestGHFDBChildAbsentHeaderRegression:
         assert "ID_parent" not in ds.headers
 
         result = GHFDBChildImportResource().import_data(
-            ds, dry_run=False, raise_errors=False
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
         )
 
         assert not result.has_errors(), result.invalid_rows
@@ -457,7 +645,10 @@ class TestGHFDBChildAbsentHeaderRegression:
 
         parent_row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
         GHFDBParentImportResource().import_data(
-            make_dataset(parent_row), dry_run=False, raise_errors=True
+            make_dataset(parent_row),
+            dry_run=False,
+            raise_errors=True,
+            fairdm_dataset=dataset,
         )
 
         child_row = {k: v for k, v in CHILD_ROW.items() if k not in ("ID", "ID_parent")}
@@ -466,13 +657,19 @@ class TestGHFDBChildAbsentHeaderRegression:
         child_row["publication_reference"] = "Ref A"
 
         GHFDBChildImportResource().import_data(
-            make_dataset(child_row), dry_run=False, raise_errors=False
+            make_dataset(child_row),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
         )
 
         child_row_update = dict(child_row)
         child_row_update["qc"] = "77.7"
         result = GHFDBChildImportResource().import_data(
-            make_dataset(child_row_update), dry_run=False, raise_errors=False
+            make_dataset(child_row_update),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
         )
 
         assert not result.has_errors(), result.invalid_rows
@@ -497,7 +694,10 @@ class TestGHFDBAutoChildKeyRegression:
 
         parent_row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
         GHFDBParentImportResource().import_data(
-            make_dataset(parent_row), dry_run=False, raise_errors=True
+            make_dataset(parent_row),
+            dry_run=False,
+            raise_errors=True,
+            fairdm_dataset=dataset,
         )
 
         child_row = {k: v for k, v in CHILD_ROW.items() if k not in ("ID", "ID_parent")}
@@ -506,7 +706,10 @@ class TestGHFDBAutoChildKeyRegression:
         child_row["publication_reference"] = "Ref A"
 
         result = GHFDBChildImportResource().import_data(
-            make_dataset(child_row), dry_run=False, raise_errors=False
+            make_dataset(child_row),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
         )
 
         assert not result.has_errors(), result.invalid_rows
@@ -524,7 +727,10 @@ class TestGHFDBAutoChildKeyRegression:
 
         parent_row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
         GHFDBParentImportResource().import_data(
-            make_dataset(parent_row), dry_run=False, raise_errors=True
+            make_dataset(parent_row),
+            dry_run=False,
+            raise_errors=True,
+            fairdm_dataset=dataset,
         )
 
         child_row = {k: v for k, v in CHILD_ROW.items() if k not in ("ID", "ID_parent")}
@@ -533,7 +739,10 @@ class TestGHFDBAutoChildKeyRegression:
         child_row["publication_reference"] = "Ref A"
 
         result = GHFDBChildImportResource().import_data(
-            make_dataset(child_row), dry_run=True, raise_errors=False
+            make_dataset(child_row),
+            dry_run=True,
+            raise_errors=False,
+            fairdm_dataset=dataset,
         )
 
         assert not result.has_errors(), result.invalid_rows
@@ -662,9 +871,407 @@ class TestGHFDBChildPrivateDatasetRegression:
         import_parents(dataset)
 
         resource = GHFDBChildImportResource()
-        result = resource.import_data(make_dataset(CHILD_ROW), dry_run=False, raise_errors=False)
+        result = resource.import_data(
+            make_dataset(CHILD_ROW),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
 
         assert not result.has_errors(), [
-            (line, [str(e.error) for e in errors]) for line, errors in result.row_errors()
+            (line, [str(e.error) for e in errors])
+            for line, errors in result.row_errors()
         ]
         assert HeatFlow.objects.get(ghfdb_id=1).dataset == dataset
+
+
+@pytest.mark.django_db
+class TestGHFDBChildMultipleDeterminationsPerSite:
+    """T014 — US-3: rows describing two determinations at one coordinate pair
+    produce two determinations beneath one site, each with its own depth
+    interval (FR-007)."""
+
+    def test_two_child_rows_produce_two_determinations_with_distinct_intervals(
+        self, dataset
+    ):
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row_a = dict(CHILD_ROW)
+        row_a["ID"] = "1"
+        row_a["q_top"] = "0"
+        row_a["q_bottom"] = "500"
+
+        row_b = dict(CHILD_ROW)
+        row_b["ID"] = "2"
+        row_b["q_top"] = "500"
+        row_b["q_bottom"] = "1000"
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row_a, row_b),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+
+        child_a = HeatFlow.objects.get(ghfdb_id=1)
+        child_b = HeatFlow.objects.get(ghfdb_id=2)
+
+        # Both determinations sit beneath the one site the parent pass created.
+        assert child_a.parent_id == child_b.parent_id
+        assert child_a.parent.sample_id == child_b.parent.sample_id
+
+        # Each has its own depth interval, not a shared one.
+        assert child_a.sample_id != child_b.sample_id
+        assert float(child_a.sample.top.magnitude) == pytest.approx(0.0)
+        assert float(child_a.sample.bottom.magnitude) == pytest.approx(500.0)
+        assert float(child_b.sample.top.magnitude) == pytest.approx(500.0)
+        assert float(child_b.sample.bottom.magnitude) == pytest.approx(1000.0)
+
+
+@pytest.mark.django_db
+class TestGHFDBChildSubMeasurementsPerDetermination:
+    """T016 — US-3: gradient, conductivity, correction and probe values land
+    against their own determination, using the template's real column names
+    (T_grad_*, tc_*, corr_*_flag, probe_*) rather than invented ones (FR-007)."""
+
+    def test_two_determinations_keep_distinct_sub_measurement_values(self, dataset):
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow, HeatFlowCorrection, ProbeMetadata
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row_a = dict(CHILD_ROW)
+        row_a["ID"] = "1"
+        row_a["q_top"] = "0"
+        row_a["q_bottom"] = "500"
+        row_a["T_grad_mean"] = "20.0"
+        row_a["tc_mean"] = "2.0"
+        row_a["corr_T_flag"] = "Yes"
+        row_a["corr_S_flag"] = "No"
+        row_a["probe_penetration"] = "3.0"
+
+        row_b = dict(CHILD_ROW)
+        row_b["ID"] = "2"
+        row_b["q_top"] = "500"
+        row_b["q_bottom"] = "1000"
+        row_b["T_grad_mean"] = "40.0"
+        row_b["tc_mean"] = "4.0"
+        row_b["corr_T_flag"] = "No"
+        row_b["corr_S_flag"] = "Yes"
+        row_b["probe_penetration"] = "6.0"
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row_a, row_b),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+
+        child_a = HeatFlow.objects.get(ghfdb_id=1)
+        child_b = HeatFlow.objects.get(ghfdb_id=2)
+
+        # Gradient (T_grad_mean) is stored on each determination's own record.
+        assert float(child_a.thermal_gradient.value.magnitude) == pytest.approx(20.0)
+        assert float(child_b.thermal_gradient.value.magnitude) == pytest.approx(40.0)
+
+        # Conductivity (tc_mean) likewise.
+        assert float(child_a.thermal_conductivity.value.magnitude) == pytest.approx(2.0)
+        assert float(child_b.thermal_conductivity.value.magnitude) == pytest.approx(4.0)
+
+        # Corrections (corr_T_flag / corr_S_flag) do not bleed across determinations.
+        a_t = child_a.corrections.get(correction_type="T")
+        b_t = child_b.corrections.get(correction_type="T")
+        assert a_t.status != HeatFlowCorrection.StatusChoices.UNSPECIFIED
+        assert b_t.status == HeatFlowCorrection.StatusChoices.UNSPECIFIED
+
+        a_s = child_a.corrections.get(correction_type="S")
+        b_s = child_b.corrections.get(correction_type="S")
+        assert a_s.status == HeatFlowCorrection.StatusChoices.UNSPECIFIED
+        assert b_s.status != HeatFlowCorrection.StatusChoices.UNSPECIFIED
+
+        # Probe metadata (probe_penetration) is keyed to each determination's interval.
+        pm_a = ProbeMetadata.objects.get(interval=child_a.sample)
+        pm_b = ProbeMetadata.objects.get(interval=child_b.sample)
+        assert float(pm_a.penetration.magnitude) == pytest.approx(3.0)
+        assert float(pm_b.penetration.magnitude) == pytest.approx(6.0)
+
+
+@pytest.mark.django_db
+class TestGHFDBChildRelevantChildFlag:
+    """T018 — US-3: `relevant_child` names exactly the children that fed the
+    parent value, and no others (FR-006)."""
+
+    def test_relevant_child_marks_exactly_the_contributing_children(self, dataset):
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row_a = dict(CHILD_ROW)
+        row_a["ID"] = "1"
+        row_a["q_top"] = "0"
+        row_a["q_bottom"] = "500"
+        row_a["relevant_child"] = "Yes"
+
+        row_b = dict(CHILD_ROW)
+        row_b["ID"] = "2"
+        row_b["q_top"] = "500"
+        row_b["q_bottom"] = "1000"
+        row_b["relevant_child"] = "No"
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row_a, row_b),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+
+        child_a = HeatFlow.objects.get(ghfdb_id=1)
+        child_b = HeatFlow.objects.get(ghfdb_id=2)
+
+        # The child that fed the parent value is marked...
+        assert child_a.is_relevant is True
+        # ...and the one that did not is not.
+        assert child_b.is_relevant is False
+
+
+@pytest.mark.django_db
+class TestGHFDBChildObjectsAttachToNamedDataset:
+    """T020 — US-3: every child object the import creates is attached to the
+    dataset the caller named, not to whatever the parent pass happened to
+    resolve, proven against a database holding a second, decoy dataset."""
+
+    def test_child_objects_attach_to_named_dataset_not_a_decoy(self, dataset):
+        from fairdm.factories import DatasetFactory
+
+        decoy = DatasetFactory()
+
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow, ProbeMetadata
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row = dict(CHILD_ROW)
+        row["T_grad_mean"] = "25.0"
+        row["tc_mean"] = "2.5"
+        row["probe_penetration"] = "3.5"
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row), dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+
+        child = HeatFlow.objects.get(ghfdb_id=1)
+        interval = child.sample
+        gradient = child.thermal_gradient
+        conductivity = child.thermal_conductivity
+        probe = ProbeMetadata.objects.get(interval=interval)
+
+        # The determination and every related object holding a dataset
+        # reference belongs to the named dataset, never the decoy.
+        assert child.dataset == dataset
+        assert child.dataset != decoy
+        assert interval.dataset == dataset
+        assert gradient.dataset == dataset
+        assert conductivity.dataset == dataset
+
+        # ProbeMetadata and HeatFlowCorrection hold no dataset FK of their
+        # own — they are reached only through the interval/heat_flow FK
+        # already asserted above.
+        assert not hasattr(probe, "dataset")
+        assert not hasattr(child.corrections.first(), "dataset")
+
+
+VALID_IGSN = "10.60516/AU1101"
+
+
+@pytest.mark.django_db
+class TestGHFDBChildImportResourceIGSN:
+    """A child row's ``Ref_IGSN`` becomes a ``SampleIdentifier`` on that
+    row's interval (D26, specs/004-import-upload-template/decisions.md)."""
+
+    def test_a_valid_igsn_is_stored_on_the_intervals_identifiers(self, dataset):
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row = dict(CHILD_ROW)
+        row["Ref_IGSN"] = VALID_IGSN
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row), dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        child = HeatFlow.objects.get(ghfdb_id=1)
+        identifiers = list(child.sample.identifiers.all())
+        assert len(identifiers) == 1
+        assert identifiers[0].type == "IGSN"
+        assert identifiers[0].value == VALID_IGSN
+
+    @pytest.mark.parametrize("blank_value", ["-", "", "   "])
+    def test_a_blank_marker_stores_no_identifier(self, dataset, blank_value):
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row = dict(CHILD_ROW)
+        row["Ref_IGSN"] = blank_value
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row), dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        child = HeatFlow.objects.get(ghfdb_id=1)
+        assert child.sample.identifiers.count() == 0
+
+    def test_the_lowercase_igsn_spelling_is_read_the_same_way(self, dataset):
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row = dict(CHILD_ROW)
+        row["Ref_IGSN"] = ""
+        row["igsn"] = VALID_IGSN
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row), dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        child = HeatFlow.objects.get(ghfdb_id=1)
+        assert child.sample.identifiers.get(type="IGSN").value == VALID_IGSN
+
+    def test_reimporting_the_same_row_does_not_fail_or_duplicate(self, dataset):
+        """The reader upserts HeatFlow by ghfdb_id, but before_save_instance
+        rebuilds a fresh HeatFlowInterval on every save (T035/D18), so the
+        interval a re-imported row resolves to is never the same row twice.
+        A second import of an unchanged file must still be a no-op rather
+        than an integrity error against the identifier's own uniqueness
+        constraint (D26)."""
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row = dict(CHILD_ROW)
+        row["Ref_IGSN"] = VALID_IGSN
+
+        resource = GHFDBChildImportResource()
+        for _ in range(2):
+            result = resource.import_data(
+                make_dataset(row),
+                dry_run=False,
+                raise_errors=False,
+                fairdm_dataset=dataset,
+            )
+            assert not result.has_errors(), result.invalid_rows
+
+        child = HeatFlow.objects.get(ghfdb_id=1)
+        assert child.sample.identifiers.count() == 1
+        assert child.sample.identifiers.get(type="IGSN").value == VALID_IGSN
+
+    def test_a_malformed_igsn_is_a_row_error_not_a_crash(self, dataset):
+        import_parents(dataset)
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row = dict(CHILD_ROW)
+        row["Ref_IGSN"] = "not-an-igsn"
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(row), dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
+
+        assert result.has_errors()
+        assert result.error_rows
+        assert "IGSN" in str(result.error_rows[0].errors[0].error)
+
+    def test_two_intervals_in_one_file_cannot_claim_the_same_igsn(self, dataset):
+        """An IGSN names one physical sample, so two depth intervals sharing
+        one is a contributor's mistake and has to be reported.
+
+        Worth pinning because the failure it guards against is silent: the
+        identifier is re-attached rather than duplicated, so without this
+        check the later row simply takes the identifier and the earlier
+        interval is left with none, on an import that reports success.
+        """
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        first = dict(CHILD_ROW, ID="1", q_top="0", q_bottom="100")
+        first["Ref_IGSN"] = VALID_IGSN
+        second = dict(CHILD_ROW, ID="2", q_top="200", q_bottom="300")
+        second["Ref_IGSN"] = VALID_IGSN
+
+        resource = GHFDBChildImportResource()
+        result = resource.import_data(
+            make_dataset(first, second),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
+
+        assert result.has_errors()
+        assert "already used by another interval" in str(
+            result.error_rows[0].errors[0].error
+        )
+
+        # The file is refused whole, so neither row lands and no identifier
+        # is left behind from the row that was read first.
+        from fairdm.core.sample.models import SampleIdentifier
+
+        assert not HeatFlow.objects.filter(ghfdb_id__in=[1, 2]).exists()
+        assert not SampleIdentifier.objects.filter(value=VALID_IGSN).exists()
+
+    def test_the_same_file_imported_twice_keeps_one_identifier(self, dataset):
+        """The interval is rebuilt on every import, so the identifier moves
+        to the new one rather than colliding with itself."""
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        row = dict(CHILD_ROW)
+        row["Ref_IGSN"] = VALID_IGSN
+
+        for _attempt in range(2):
+            resource = GHFDBChildImportResource()
+            result = resource.import_data(
+                make_dataset(row),
+                dry_run=False,
+                raise_errors=False,
+                fairdm_dataset=dataset,
+            )
+            assert not result.has_errors(), result.invalid_rows
+
+        from fairdm.core.sample.models import SampleIdentifier
+
+        assert SampleIdentifier.objects.filter(value=VALID_IGSN).count() == 1
+        child = HeatFlow.objects.get(ghfdb_id=1)
+        assert [identifier.value for identifier in child.sample.identifiers.all()] == [
+            VALID_IGSN
+        ]

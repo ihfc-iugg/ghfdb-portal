@@ -196,6 +196,29 @@ class TestGHFDBExportQuantityFields:
         )
         assert tc_val is not None and str(tc_val) != ""
 
+    @pytest.mark.django_db
+    def test_water_temperature_column_reads_the_renamed_surface_temperature_field(
+        self, dataset, heat_flow_chain
+    ):
+        """The published export still emits a column named
+        ``water_temperature`` (D-c, specs/004-import-upload-template/decisions.md
+        — the submission template and the published release are separate
+        contracts), and its value comes from the renamed
+        ``HeatFlow.surface_temperature`` field."""
+        from project.ghfdb.models import GHFDBChild
+        from project.ghfdb.resources.export import GHFDBExportResource
+
+        heat_flow_chain.surface_temperature = 4.5
+        heat_flow_chain.save()
+
+        resource = GHFDBExportResource()
+        qs = GHFDBChild.objects.for_export().filter(pk=heat_flow_chain.pk)
+        dataset_out = resource.export(qs)
+        row = dataset_out.dict[0]
+
+        assert "water_temperature" in row
+        assert float(row["water_temperature"]) == pytest.approx(4.5)
+
 
 # ---------------------------------------------------------------------------
 # T041: M2M rendering tests
@@ -228,6 +251,47 @@ class TestGHFDBExportM2MFields:
         dataset = resource.export(qs)
         row = dataset.dict[0]
         assert row["t_method_top"] in ("", None)
+
+
+# ---------------------------------------------------------------------------
+# Ref_IGSN column tests (D26, specs/004-import-upload-template/decisions.md)
+# ---------------------------------------------------------------------------
+
+
+class TestGHFDBExportRefIGSN:
+    """``Ref_IGSN`` reads back the interval's IGSN identifier instead of a
+    hardcoded empty string."""
+
+    @pytest.mark.django_db
+    def test_ref_igsn_emits_the_stored_identifier(self, heat_flow_chain):
+        from fairdm.core.sample.models import SampleIdentifier
+        from project.ghfdb.models import GHFDBChild
+        from project.ghfdb.resources.export import GHFDBExportResource
+
+        SampleIdentifier.objects.create(
+            related=heat_flow_chain.sample, type="IGSN", value="10.60516/AU1101"
+        )
+
+        resource = GHFDBExportResource()
+        qs = GHFDBChild.objects.for_export().filter(pk=heat_flow_chain.pk)
+        dataset = resource.export(qs)
+        row = dataset.dict[0]
+
+        assert row["Ref_IGSN"] == "10.60516/AU1101"
+
+    @pytest.mark.django_db
+    def test_ref_igsn_emits_empty_string_when_the_interval_carries_none(
+        self, heat_flow_chain
+    ):
+        from project.ghfdb.models import GHFDBChild
+        from project.ghfdb.resources.export import GHFDBExportResource
+
+        resource = GHFDBExportResource()
+        qs = GHFDBChild.objects.for_export().filter(pk=heat_flow_chain.pk)
+        dataset = resource.export(qs)
+        row = dataset.dict[0]
+
+        assert row["Ref_IGSN"] == ""
 
 
 # ---------------------------------------------------------------------------
@@ -346,4 +410,18 @@ class TestBUG010ExportAttributeValues:
         resource = GHFDBExportResource()
         assert resource.fields["explo_method"].attribute == "explo_method", (
             f"Field 'explo_method' has attribute '{resource.fields['explo_method'].attribute}', expected 'explo_method' (BUG-010)"
+        )
+
+    def test_water_temperature_attribute_reads_surface_temperature(self):
+        """Field 'water_temperature' attribute must be 'surface_temperature',
+        the renamed field name (US-7)."""
+        from project.ghfdb.resources.export import GHFDBExportResource
+
+        resource = GHFDBExportResource()
+        assert (
+            resource.fields["water_temperature"].attribute == "surface_temperature"
+        ), (
+            f"Field 'water_temperature' has attribute "
+            f"'{resource.fields['water_temperature'].attribute}', expected "
+            f"'surface_temperature'"
         )

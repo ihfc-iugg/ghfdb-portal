@@ -21,6 +21,11 @@ The domain vocabulary these records use is defined in `CONTEXT.md` at the reposi
 | [0007](0007-the-portal-database-holds-current-state.md) | The portal database holds current state; releases are artefacts |
 | [0008](0008-one-constitution-one-glossary.md) | One constitution, one glossary, each with a single home |
 | [0009](0009-the-project-is-mit-licensed.md) | The project is MIT licensed |
+| [0010](0010-the-release-import-direction-ends.md) | Reading a published release into the portal is not a direction the project takes |
+| [0011](0011-the-portal-concepts-decide-a-vocabulary-value.md) | The portal's own concepts decide what a controlled-vocabulary value may be |
+| [0012](0012-what-refuses-an-uploaded-file.md) | Four things refuse an uploaded file, and the template's own reporting rules are not among them |
+| [0013](0013-an-import-is-told-which-dataset-it-writes-to.md) | An import is told which dataset it writes to, and refuses when it is not |
+| [0014](0014-a-determination-without-an-identifier-is-its-row.md) | A determination with no identifier is recognised by its site, its publication and its place in the file |
 
 :::{toctree}
 :hidden:

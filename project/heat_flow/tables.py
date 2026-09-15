@@ -96,7 +96,7 @@ class HeatFlowTable(IntervalMixin, MeasurementTable):
             "probe_penetration",
             "probe_length",
             "probe_tilt",
-            "water_temperature",
+            "surface_temperature",
             "corr_IS_flag",
             "corr_T_flag",
             "corr_S_flag",

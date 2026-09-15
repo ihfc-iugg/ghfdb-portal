@@ -37,6 +37,11 @@ class HeatFlowMethod(VocabularyBuilder):
         definition=_("Specify the method in comments"),
     )
 
+    unspecified = Concept(
+        prefLabel=_("Unspecified"),
+        definition=_(""),
+    )
+
     class Meta:
         name = "heat-flow-method"
         prefix = "ghfdb"
@@ -95,6 +100,11 @@ class ProbeType(VocabularyBuilder):
     )
     submersible = Concept(
         prefLabel=_("Submersible probe"),
+        definition=_(""),
+    )
+
+    outrigger_hybrid_lister_hylo = Concept(
+        prefLabel=_("Outrigger probe (Hybrid Lister) HyLO"),
         definition=_(""),
     )
 
@@ -168,7 +178,7 @@ class GeographicEnvironment(VocabularyBuilder):
     )
 
     onshore_marine = Concept(
-        prefLabel=_("Onshore (lake, river, etc.)"),
+        prefLabel=_("Onshore (lake-river-etc.)"),
         definition=_(""),
     )
 
@@ -233,12 +243,12 @@ class ExplorationMethod(VocabularyBuilder):
     )
 
     probing_onshore = Concept(
-        prefLabel=_("Probing (onshore/lake, river, etc.)"),
+        prefLabel=_("Probing (onshore-lake-river-etc.)"),
         definition=_(""),
     )
 
     probing_offshore = Concept(
-        prefLabel=_("Probing (offshore/ocean)"),
+        prefLabel=_("Probing (offshore-ocean)"),
         definition=_(""),
     )
 
@@ -253,7 +263,7 @@ class ExplorationMethod(VocabularyBuilder):
     )
 
     indirect = Concept(
-        prefLabel=_("Indirect (GTM, CPD, etc.)"),
+        prefLabel=_("Indirect (GTM-BSR-CPD-etc.)"),
         definition=_(""),
     )
 
@@ -391,9 +401,21 @@ class TemperatureMethod(VocabularyBuilder):
         prefLabel=_("cBHT"),
         definition=_("Bottom Hole Temperature, corrected for perturbations."),
     )
+    # The upload template offers the equilibrium and perturbed readings
+    # separately, the way every other method here is split (LOGeq/LOGpert,
+    # RTDeq/RTDpert), and offers no undivided "HT-FT". The equilibrium
+    # reading keeps the key the undivided concept was stored under.
     HT_FT = Concept(
-        prefLabel=_("HT-FT"),
-        definition=_(""),
+        prefLabel=_("HT-FTeq"),
+        definition=_(
+            "High-temperature fluid-temperature measurement in equilibrium conditions."
+        ),
+    )
+    HT_FTpert = Concept(
+        prefLabel=_("HT-FTpert"),
+        definition=_(
+            "High-temperature fluid-temperature measurement in perturbed conditions."
+        ),
     )
     cHT_FT = Concept(
         prefLabel=_("cHT-FT"),
@@ -579,7 +601,7 @@ class ConductivitySource(VocabularyBuilder):
     )
 
     other = Concept(
-        prefLabel=_("Other (specify)"),
+        prefLabel=_("Other"),
         definition=_(""),
     )
 
@@ -634,22 +656,22 @@ class ConductivityMethod(VocabularyBuilder):
     )
 
     lineSourceFull = Concept(
-        prefLabel=_("Lab - line source / full space"),
+        prefLabel=_("Lab - line source - full space"),
         definition=_(""),
     )
 
     lineSourceHalf = Concept(
-        prefLabel=_("Lab - line source / half space"),
+        prefLabel=_("Lab - line source - half space"),
         definition=_(""),
     )
 
     planeSourceFull = Concept(
-        prefLabel=_("Lab - plane source / full space"),
+        prefLabel=_("Lab - plane source - full space"),
         definition=_(""),
     )
 
     planeSourceHalf = Concept(
-        prefLabel=_("Lab - plane source / half space"),
+        prefLabel=_("Lab - plane source - half space"),
         definition=_(""),
     )
 
@@ -660,6 +682,11 @@ class ConductivityMethod(VocabularyBuilder):
 
     probePulse = Concept(
         prefLabel=_("Probe - pulse technique"),
+        definition=_(""),
+    )
+
+    probeContinuousHeating = Concept(
+        prefLabel=_("Probe - continuous heating technique"),
         definition=_(""),
     )
 
@@ -679,7 +706,7 @@ class ConductivityMethod(VocabularyBuilder):
     )
 
     waterContent = Concept(
-        prefLabel=_("Estimation - from water content/porosity"),
+        prefLabel=_("Estimation - from water content-porosity"),
         definition=_(""),
     )
 
@@ -726,6 +753,7 @@ class ConductivityMethod(VocabularyBuilder):
                 definition=_("Probe measurements"),
                 members=[
                     "probePulse",
+                    "probeContinuousHeating",
                 ],
             ),
             "well_log": Collection(
@@ -770,7 +798,7 @@ class ConductivityLocation(VocabularyBuilder):
     )
 
     literature = Concept(
-        prefLabel=_("Literature/unspecified"),
+        prefLabel=_("Literature-unspecified"),
         definition=_(""),
     )
 
@@ -1002,7 +1030,7 @@ class ConductivityPTFunction(VocabularyBuilder):
     """
 
     BirchClark1940 = Concept(
-        prefLabel="T - Birch and Clark (1940)",
+        prefLabel="T - Birch & Clark (1940)",
     )
 
     Tikhomirov1968 = Concept(
@@ -1049,11 +1077,17 @@ class ConductivityPTFunction(VocabularyBuilder):
         prefLabel="T - Funnell et al. (1996)",
     )
 
-    Kukkonen1999 = Concept(
+    # Named apart from the pressure-dependent Kukkonen and Seipold functions
+    # below. Each pair was declared under one attribute name, so the class
+    # body bound the pressure variant last and these two temperature
+    # functions never existed: the vocabulary carried 39 of the 42 functions
+    # the upload template offers, and a file naming either was refused. The
+    # pressure entries keep the bare names they are already stored under.
+    KukkonenT1999 = Concept(
         prefLabel="T - Kukkonen et al. (1999)",
     )
 
-    Seipold2001 = Concept(
+    SeipoldT2001 = Concept(
         prefLabel="T - Seipold (2001)",
     )
 
@@ -1070,7 +1104,7 @@ class ConductivityPTFunction(VocabularyBuilder):
     )
 
     Ratcliff1960 = Concept(
-        prefLabel="T - Ratcliff (1960)",
+        prefLabel="T - Ratcliffe (1960)",
     )
 
     Bridgman1924 = Concept(
@@ -1105,8 +1139,12 @@ class ConductivityPTFunction(VocabularyBuilder):
         prefLabel="p - Fuchs & Förster (2014)",
     )
 
+    RatcliffeP1960 = Concept(
+        prefLabel="p - Ratcliffe (1960)",
+    )
+
     Radcliff1960 = Concept(
-        prefLabel="pT - Radcliff (1960)",
+        prefLabel="pT - Ratcliffe (1960)",
     )
 
     Langseth1965 = Concept(
@@ -1114,7 +1152,7 @@ class ConductivityPTFunction(VocabularyBuilder):
     )
 
     Hyndman1974 = Concept(
-        prefLabel="pT - Hyndman (1974)",
+        prefLabel="pT - Hyndman et al. (1974)",
     )
 
     Buntebarth1991 = Concept(
@@ -1191,8 +1229,8 @@ class ConductivityPTFunction(VocabularyBuilder):
                     "Somerton1992",
                     "Sass1992",
                     "Funnell1996",
-                    "Kukkonen1999",
-                    "Seipold2001",
+                    "KukkonenT1999",
+                    "SeipoldT2001",
                     "VosteenSchellschmidt2003",
                     "Sun2017",
                     "Miranda2018",
@@ -1211,6 +1249,7 @@ class ConductivityPTFunction(VocabularyBuilder):
                     "Demirci2004",
                     "Gorgulu2008",
                     "FuchsFoerster2014",
+                    "RatcliffeP1960",
                 ],
             ),
             "pressure_temperature": Collection(

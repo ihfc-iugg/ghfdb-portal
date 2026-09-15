@@ -10,6 +10,9 @@ Also provides a ``sample_ghfdb_row`` fixture with a minimal valid dict of
 GHFDB flat-column values for import testing.
 """
 
+from pathlib import Path
+
+import openpyxl
 import pytest
 from fairdm.factories import DatasetFactory
 
@@ -18,6 +21,22 @@ from fairdm.factories import DatasetFactory
 def dataset(db):
     """A minimal Dataset — infrastructure, not under test."""
     return DatasetFactory()
+
+
+@pytest.fixture
+def official_upload_template_workbook():
+    """The official GHFDB upload template, opened unmodified (US-1, T001).
+
+    ``tests/fixtures/official_upload_template.xlsx`` is
+    ``docs/constitution/references/data_upload_template.xlsx`` with the two
+    ADR 0003 misspellings corrected, and nothing else changed.
+    """
+    path = (
+        Path(__file__).resolve().parents[1]
+        / "fixtures"
+        / "official_upload_template.xlsx"
+    )
+    return openpyxl.load_workbook(path, data_only=True)
 
 
 @pytest.fixture
@@ -144,6 +163,10 @@ def sample_ghfdb_row():
         "T_corr_top": "",
         "T_corr_bottom": "",
         "T_number": "",
+        "T_top_mean": "",
+        "T_top_uncertainty": "",
+        "T_bot_mean": "",
+        "T_bot_uncertainty": "",
         "tc_mean": "2.5",
         "tc_uncertainty": "",
         "tc_source": "",
@@ -158,7 +181,7 @@ def sample_ghfdb_row():
         "probe_type": "",
         "probe_length": "",
         "probe_tilt": "",
-        "water_temperature": "",
+        "Surface_temperature": "",
         "corr_HP_flag": "No",
         "corr_IS_flag": "",
         "corr_T_flag": "",

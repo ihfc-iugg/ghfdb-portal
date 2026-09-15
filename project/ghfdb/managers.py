@@ -4,9 +4,11 @@ GHFDB proxy queryset and manager.
 Provides ``GHFDBChildQuerySet`` with two key methods:
 
 * ``as_ghfdb_flat()`` — annotates all 40 scalar columns (via
-  ``select_related`` and ``F()`` expressions, plus three constant-``Value()``
-  columns nothing resolves), plus 9 correction-flag subqueries; ≤2 DB
-  queries, constant regardless of row count.
+  ``select_related`` and ``F()`` expressions, plus two constant-``Value()``
+  columns nothing resolves and a correlated subquery reading ``Ref_IGSN``
+  through the interval's sample identifier relationship), plus 9
+  correction-flag subqueries; ≤2 DB queries, constant regardless of row
+  count.
 
 * ``for_export()`` — calls ``as_ghfdb_flat()`` and chains
   ``prefetch_related()`` for all 16 M2M paths; 18 DB queries, constant
@@ -21,6 +23,7 @@ References:
 from typing import Any, cast
 
 from django.db.models import CharField, Count, F, OuterRef, Q, Subquery, Value
+from django.db.models.functions import Coalesce
 from polymorphic.managers import PolymorphicManager, PolymorphicQuerySet
 
 
@@ -46,6 +49,31 @@ def _correction_subqueries() -> dict[str, Subquery]:
             output_field=CharField(),
         )
     return annotations
+
+
+def _ref_igsn_annotation() -> Coalesce:
+    """Return the correlated subquery for the published ``Ref_IGSN`` column.
+
+    ``HeatFlow.sample_id`` already is the interval's ``Sample`` primary
+    key — multi-table inheritance shares it with the concrete
+    ``HeatFlowInterval`` row — so this correlates directly against
+    ``SampleIdentifier.related_id`` without walking the
+    ``heatflowinterval`` accessor. One subquery evaluated by the database
+    as part of the single query, the same way the correction-flag
+    subqueries above are, not a further query per row.
+    """
+    from fairdm.core.sample.models import SampleIdentifier
+
+    return Coalesce(
+        Subquery(
+            SampleIdentifier.objects.filter(
+                related_id=OuterRef("sample_id"), type="IGSN"
+            ).values("value")[:1],
+            output_field=CharField(),
+        ),
+        Value(""),
+        output_field=CharField(),
+    )
 
 
 class GHFDBChildQuerySet(PolymorphicQuerySet):
@@ -96,6 +124,11 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
             "relevant_child": F("is_relevant"),
             "q_date": F("date_acquired"),
             "quality_child": F("quality"),
+            # US-7: the submission template renamed this field to
+            # ``surface_temperature``; the published column keeps the
+            # released name ``water_temperature`` (D-c,
+            # specs/004-import-upload-template/decisions.md).
+            "water_temperature": F("surface_temperature"),
             # Site-level scalars (from HeatFlowSite via interval → site)
             # NOTE: 'name' conflicts with a Measurement base-class field; use
             # 'site_name' as the annotation key and export it via column_name.
@@ -137,11 +170,14 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
             ),
             "probe_length": F("sample__heatflowinterval__probe_metadata__length"),
             "probe_tilt": F("sample__heatflowinterval__probe_metadata__tilt"),
+            # Ref_IGSN resolves through the interval's sample identifier
+            # relationship (D26, specs/004-import-upload-template/decisions.md):
+            # empty when the interval carries no IGSN.
+            "Ref_IGSN": _ref_igsn_annotation(),
             # Columns nothing resolves (R4, D3): HeatFlow has no reference
-            # relationship at all, and no field for an IGSN. Explicitly
-            # empty rather than a defensive getattr, so a reader cannot
-            # mistake a guard for a working accessor.
-            "Ref_IGSN": Value("", output_field=CharField()),
+            # relationship at all. Explicitly empty rather than a
+            # defensive getattr, so a reader cannot mistake a guard for a
+            # working accessor.
             "publication_reference": Value("", output_field=CharField()),
             "data_reference": Value("", output_field=CharField()),
         }
