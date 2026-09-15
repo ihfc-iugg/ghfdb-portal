@@ -135,20 +135,35 @@ class TestPublishedColumns:
         assert ColumnDisplay.build("T_method_top")(Row()) == ""
 
     def test_the_columns_nothing_resolves_read_the_annotation_managers_py_sets(self):
-        """T069, revised under F12: ``Ref_IGSN``, ``publication_reference``
-        and ``data_reference`` are present and empty by decision (R4, D3),
-        but that decision is made once, by the ``Value("")`` annotations in
+        """T069, revised under F12: ``publication_reference`` and
+        ``data_reference`` are present and empty by decision (R4, D3), but
+        that decision is made once, by the ``Value("")`` annotations in
         ``managers.py`` — this mapping no longer hardcodes a second,
         competing empty default and just reads the row like any other
-        scalar column."""
+        scalar column. ``Ref_IGSN`` moved out of this group under D26 —
+        see ``test_ref_igsn_reads_whatever_the_row_carries``."""
 
         class Row:
-            Ref_IGSN = ""
             publication_reference = ""
             data_reference = ""
 
-        for name in ("Ref_IGSN", "publication_reference", "data_reference"):
+        for name in ("publication_reference", "data_reference"):
             assert ColumnDisplay.build(name)(Row()) == ""
+
+    def test_ref_igsn_reads_whatever_the_row_carries(self):
+        """D26: ``Ref_IGSN`` is a real accessor onto the interval's sample
+        identifier now, read like any other scalar column — empty when the
+        row's annotation is empty, and the stored value when it is not."""
+
+        class EmptyRow:
+            Ref_IGSN = ""
+
+        class PopulatedRow:
+            Ref_IGSN = "10.60516/AU1101"
+
+        display = ColumnDisplay.build("Ref_IGSN")
+        assert display(EmptyRow()) == ""
+        assert display(PopulatedRow()) == "10.60516/AU1101"
 
     def test_headings_are_the_canonical_order(self):
         """T070: the headings the built tuple produces equal the order
@@ -172,10 +187,9 @@ class TestPublishedColumns:
         # F12: quality_child now reads its own annotation key rather than a
         # shared "quality" accessor, so it sorts on its own key too.
         assert ColumnDisplay.build("quality_child").admin_order_field == "quality_child"
-        # F12: Ref_IGSN moved from the (now-removed) EMPTY group into SCALAR,
-        # so it is sortable like any other scalar column — sorting on a
-        # column that is always "" is harmless, and the mapping no longer
-        # special-cases it.
+        # F12: Ref_IGSN is in the SCALAR group like any other scalar column,
+        # so it stays sortable — first because sorting on a column that was
+        # always "" was harmless, and now (D26) because it is a real value.
         assert ColumnDisplay.build("Ref_IGSN").admin_order_field == "Ref_IGSN"
 
         for unsortable in ("q_method", "corr_IS_flag"):
