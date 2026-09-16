@@ -308,3 +308,29 @@ view) and T019 (its route) face the same dependency in principle, but T017's tes
 proves everything T017's acceptance asks without a route to reverse. T019 registers
 `review-create` and adds its own access-control and route-resolution tests afterwards, independent
 of T017's landing order, rather than repeating the forced reordering D15 recorded.
+
+## D22 — `review.views` imports GHFDB symbols as `project.ghfdb.*`, and `deptry` is told so
+
+`ghfdb.apps.GhfdbConfig` registers itself under the dotted name `project.ghfdb` rather than the bare
+`ghfdb` its sibling apps (`heat_flow`, `review`) use — an existing inconsistency this story did not
+introduce and has no reason to correct (`ghfdb.apps.py` is outside `project/review/`'s scope, and
+the fix would ripple through every existing `project.ghfdb.*` import in `tests/test_ghfdb/`).
+A first attempt at `from ghfdb.importers import import_ghfdb_template` in `review/views.py` failed
+at collection with `RuntimeError: Model class ghfdb.models.GHFDBRelease doesn't declare an explicit
+app_label` — the bare path re-executes the whole `ghfdb.models`/`ghfdb.resources` chain under a
+module identity Django's app registry never registered, since the registry populated
+`project.ghfdb.models` instead. `tests/test_ghfdb/test_importers.py` already imports through
+`project.ghfdb.importers` for the same reason. `review/views.py` now does the same, which left
+`poetry run deptry` flagging `project` as an undeclared dependency (`DEP001`) — `project` is this
+repository's own source root (`pythonpath = ["project"]`), not a package deptry can see any other
+way, so it joins `ghfdb`/`heat_flow`/`review` in `[tool.deptry] known_first_party`.
+
+## D23 — T022 and T023 land as one commit
+
+D6 makes confirmation's re-check-and-write and its double-submission guard the same mechanism: the
+assessment's own state is what both a stale report and a second POST have to pass. Building T022's
+write path without also gating it on `review.state` would mean shipping a working confirm view that
+writes twice on a repeated POST for one commit's worth of work — a state the story's own D5 (the
+check cannot be turned off) and D6 exist specifically to rule out. The two tasks' tests (writing and
+idempotency) landed in the same commit rather than the guard being added as an afterthought once
+T023's test caught its absence.

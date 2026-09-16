@@ -78,3 +78,39 @@ Full suite: 847 passed, 1 skipped, 13 xfailed. `manage.py check` and `makemigrat
 both clean. `poetry run pre-commit run -a` clean.
 
 Next: US-3, the upload and check report.
+
+## 2026-09-16 — US-3 complete (T020, T021, T022+T023, T024)
+
+`review.permissions.can_manage_upload` landed first, its own small slice: the assessment's own
+uploader or any Data Curator, nobody else — the object-level rule both new routes share.
+
+T020 built `ReviewUploadView` on Django's plain `DetailView` rather than a `FairDM*` base class
+(none of `FairDMCreateView`/`FairDMUpdateView` fit a page backed by two models rather than one
+`ModelForm`). GET renders `GHFDBImportForm` (reused from `project/ghfdb/forms.py` rather than
+redefined, per the brief); POST reads the uploaded file's bytes once, saves them as a
+`SubmittedFile` via `ContentFile`, and calls `import_ghfdb_template(check_only=True)` on the
+in-memory bytes rather than re-reading the just-saved `FieldFile` — re-reading it in the same
+request risks the underlying stream having already been consumed by the storage write (untested
+directly, but cheap to avoid and free of that whole class of flake). D22 records the import-path
+correction this needed (`project.ghfdb.*` rather than bare `ghfdb.*`) and the one-line `deptry` fix
+it required.
+
+T021 added the counts to `review/upload_report.html`, a partial included from `upload.html` and
+tested directly via `render_to_string` the same way T012 tests `review_list_item.html` — the full
+page is unaffected by D16's chrome defect, but exercising it through the client isn't necessary
+either way once the counts live in their own included template.
+
+T022 built `ReviewConfirmView` (`SingleObjectMixin` + `View`, POST-only): re-runs the check with
+`check_only=False` against `review.current.file`, and only stamps `imported_at` and runs
+`review.states.confirm_upload` when that re-check comes back clean. D23 explains why T023's
+idempotency guard (checking `review.state` before doing any of that) landed in the same commit
+rather than as a follow-up. T024 closed the phase: a test enumerating every view class routed in
+`review.urls` fails if any of them references the GHFDB import resources directly rather than
+through `import_ghfdb_template` — verified as a real guard, not a tautology, by temporarily
+reinstating exactly that bypass in `ReviewConfirmView` and watching the test fail before reverting.
+
+Full suite: 871 passed, 1 skipped, 13 xfailed (`-n auto --dist loadscope`, 85s). `manage.py check`
+clean; `makemigrations review --check` clean (no model changes this story). `poetry run
+pre-commit run -a` clean.
+
+Next: US-4, explaining a failing file in the spreadsheet's own terms.
