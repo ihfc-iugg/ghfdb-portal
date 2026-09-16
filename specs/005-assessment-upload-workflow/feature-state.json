@@ -2,7 +2,7 @@
   "feature": "005-assessment-upload-workflow",
   "branch": "005-assessment-upload-workflow",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "DESIGN_REVIEW",
+  "state": "IMPLEMENT",
   "state_history": [
     {
       "state": "GATE_SPEC",
@@ -18,6 +18,11 @@
       "state": "DESIGN_REVIEW",
       "at": "2026-09-15T19:47:22Z",
       "note": "one reviewer, three lenses; three verified blocking findings applied as plan edits"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-09-15T19:53:44Z",
+      "note": "US0 foundational phase dispatched on sonnet"
     }
   ],
   "gates": {
@@ -60,56 +65,160 @@
       "tasks": [
         {
           "id": "T001",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/"
+            ],
+            "commands": [
+              "forge verify --base main (lint/typecheck/test/build green)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/"
+            ],
+            "commands": [
+              "forge verify --base main (lint/typecheck/test/build green)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T003",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/"
+            ],
+            "commands": [
+              "forge verify --base main (lint/typecheck/test/build green)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T004",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/"
+            ],
+            "commands": [
+              "forge verify --base main (lint/typecheck/test/build green)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T005",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/"
+            ],
+            "commands": [
+              "forge verify --base main (lint/typecheck/test/build green)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T006",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/"
+            ],
+            "commands": [
+              "forge verify --base main (lint/typecheck/test/build green)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T007",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/"
+            ],
+            "commands": [
+              "forge verify --base main (lint/typecheck/test/build green)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T008",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/"
+            ],
+            "commands": [
+              "forge verify --base main (lint/typecheck/test/build green)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T009",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/"
+            ],
+            "commands": [
+              "forge verify --base main (lint/typecheck/test/build green)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T010",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/"
+            ],
+            "commands": [
+              "forge verify --base main (lint/typecheck/test/build green)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T010a",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/"
+            ],
+            "commands": [
+              "forge verify --base main (lint/typecheck/test/build green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T010b",
           "status": "todo",
           "attempts": 0
         },

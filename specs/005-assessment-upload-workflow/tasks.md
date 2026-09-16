@@ -174,7 +174,23 @@ and nothing in the tree still reads the vocabulary they replace.
 
 ---
 
-## Phase 8: Documentation and vocabulary
+## Documentation is part of each story, not a phase at the end
+
+**Amended 2026-09-16, after US0.** The original plan deferred every page to Phase 8. The machine
+gate runs a documentation step at each stage exit, and it went red the moment US0 landed: nine new
+public names that no page documents, plus `docs/guides/importing-data.md` describing an
+`import_ghfdb_template` whose signature had changed under it.
+
+The rule the org already holds is that a story's own documentation is part of that story. So each
+story below documents what it adds, in the same commit range, and Phase 8 keeps only the two
+vocabulary files that describe the feature as a whole.
+
+- [ ] T010b Document what US0 introduced: the assessment record and its states, the two role
+      predicates, the checking mode and the failure report. Update
+      `docs/guides/importing-data.md`, which documents `import_ghfdb_template` and was not touched
+      when its signature changed. `forge verify --steps docs` must be green.
+
+## Phase 8: Vocabulary
 
 - [ ] T038 [P] `CONTEXT.md`: add Data Assessor and Data Curator, retire "Reviewer" and "data
       administrator", and keep the rule against writing "review" unqualified.
@@ -182,8 +198,10 @@ and nothing in the tree still reads the vocabulary they replace.
       team, and strike its deliverable placing team members outside the gate.
 - [ ] T040 [P] `docs/guides/`: the team's own page for this workflow, covering what each role may do
       and what to do when a file is refused. Include the outdated-template refusal, because it is
-      what they will hit first.
-- [ ] T041 Run `tests/test_docs` and reconcile anything the new pages break.
+      what they will hit first. This is the reader-facing guide; the per-name reference each story
+      writes as it goes is a different thing and is not deferred to here.
+- [ ] T041 Run `tests/test_docs` and `forge verify --steps docs` and reconcile anything the new
+      pages break.
 
 ---
 

@@ -1,0 +1,134 @@
+{
+  "story": "US0",
+  "repo": "ihfc-iugg/ghfdb-portal",
+  "worktree": "/home/sam/projects/ihfc-iugg/ghfdb-portal-005",
+  "tasks": [
+    "T001",
+    "T002",
+    "T003",
+    "T004",
+    "T005",
+    "T006",
+    "T007",
+    "T008",
+    "T009",
+    "T010",
+    "T010a"
+  ],
+  "required_skills": [
+    {
+      "name": "craft-tdd",
+      "path": "/home/sam/.openclaw/workspaces/forge/skills/craft-tdd/SKILL.md",
+      "receipt": "craft-tdd/2026-08-24/0f180d36"
+    },
+    {
+      "name": "craft-increments",
+      "path": "/home/sam/.openclaw/workspaces/forge/skills/craft-increments/SKILL.md",
+      "receipt": "craft-increments/2026-08-05/d3dce07f"
+    }
+  ],
+  "context": {
+    "why": "This is the foundational phase of the assessment upload workflow. The data assessment team will upload one completed GHFDB template at a time through the portal's own pages, and every story that follows depends on the record, the states, the roles and the reporting layer you build here. Nothing user-facing is in your scope. The reader that parses a template already exists and works; you are giving it a checking mode and giving the workflow its data model.",
+    "environment": "Python 3.13 via Poetry. The worktree's virtualenv is already synced (global-heat-flow-database-K3xPiQpH-py3.13). Prefix every command with `poetry run`. Run tests with `poetry run pytest`. The lint gate is `poetry run pre-commit run -a`, never raw ruff: raw `ruff check .` is red at main by design. Full suite takes about 105 seconds.",
+    "spec_sections": [
+      "spec.md FR-006, FR-008, FR-009, FR-011, FR-012, FR-015, FR-023",
+      "spec.md Key Entities (Assessment, Data Assessor, Data Curator, Submitted file, Assessment state)",
+      "spec.md SC-002, SC-005"
+    ],
+    "plan_sections": [
+      "plan.md 'The record'",
+      "plan.md 'The checking mode'",
+      "plan.md 'Roles and access'",
+      "data-model.md in full",
+      "research.md 'The reader is already built'"
+    ],
+    "prior_decisions": [
+      "D5: the check cannot be turned off. There is no setting, parameter or URL that writes without checking first.",
+      "D6: confirmation re-checks rather than trusting a stored report. The assessment's state is the idempotency key.",
+      "D7: every submitted file is kept, including rejected ones. Files are rows against the assessment, not a field on it.",
+      "D11: groups come from a data migration, never a fixture, and nothing is pinned by permission primary key.",
+      "D12: THE LOAD-BEARING ONE. The checking mode runs both import passes for real and rolls the outer transaction back. NEVER pass dry_run=True to either resource. specs/004-import-upload-template/decisions.md D16 tested this: import_data() wraps each resource in its own savepoint and dry_run=True rolls it back before the next pass runs, so the child pass cannot see the parent rows it resolves against, and every file is refused including clean ones.",
+      "D13: superseded views are deleted in the same phase that changes the record. The tree must never hold two answers at once."
+    ],
+    "acceptance": [
+      {
+        "task": "T001",
+        "given_when_then": "Given the repository, When the test suite runs, Then tests/test_review/ exists mirroring project/review/ with __init__.py at each level and a conftest.py, per constitution Article VI."
+      },
+      {
+        "task": "T002",
+        "given_when_then": "Given the new test tree, When a test needs an assessment, a claimed person, a ghost person or a publication, Then a factory-boy factory supplies it, reusing the framework's own factories where they exist rather than redefining them."
+      },
+      {
+        "task": "T003",
+        "given_when_then": "Given project/review/states.py, When any transition is attempted, Then every legal transition from data-model.md succeeds and at least one illegal transition per state is refused, including a non-curator attempting to reach COMPLETE from AWAITING_DECISION."
+      },
+      {
+        "task": "T004",
+        "given_when_then": "Given project/review/permissions.py, When is_data_assessor or is_data_curator is called, Then it answers correctly for a user in each group, a user in neither, and a user in both."
+      },
+      {
+        "task": "T005",
+        "given_when_then": "Given a fresh database, When migrations run, Then the Data Assessor and Data Curator groups exist, the migration is idempotent on a second run, no auth.permission row is pinned by primary key, and project/review/fixtures/ghfdb_review_group.json and its commented loaddata hook in config/settings.py are gone."
+      },
+      {
+        "task": "T006",
+        "given_when_then": "Given the Review model, When migrations run, Then uploaded_by, state, decided_by, decided_at and decision_comment exist with verbose_name and help_text through gettext_lazy, the old status values are migrated into state, and status no longer exists."
+      },
+      {
+        "task": "T007",
+        "given_when_then": "Given an assessment with several submissions, When its current submission is read, Then it is the most recent SubmittedFile row, and every earlier submission remains retrievable."
+      },
+      {
+        "task": "T008",
+        "given_when_then": "Given a clean multi-site template file and check_only=True, When import_ghfdb_template runs, Then it reports what would have been written, reports no failures, and the database holds nothing afterwards. Neither pass is called with dry_run=True."
+      },
+      {
+        "task": "T009",
+        "given_when_then": "Given a GHFDBImportOutcome, When it is turned into a report, Then the counts separate sites from determinations and created from updated, and each failure carries its row number and the template's own column heading from project/ghfdb/columns.py."
+      },
+      {
+        "task": "T010",
+        "given_when_then": "Given a file carrying a value outside a known controlled vocabulary, When it is checked, Then the reported reason names the supplied value and the vocabulary it failed against. A bare 'invalid value' fails this test."
+      },
+      {
+        "task": "T010a",
+        "given_when_then": "Given the tree after T005 and T006, When `poetry run python manage.py check` runs and the suite runs, Then both pass and no reference to STATUS_CHOICES, review__status or a Reviewers group survives anywhere in project/, asserted by a test rather than by eye."
+      }
+    ],
+    "verified_base": {
+      "commit": "a19283d2e5d3bb258ace4ebff2349c13e2ea4e75",
+      "verified_at": "2026-09-15T19:51:58Z",
+      "steps": [
+        "lint",
+        "typecheck",
+        "test",
+        "build",
+        "conformance",
+        "docs"
+      ],
+      "note": "Full suite green in about 105 seconds, pre-commit clean, mypy clean, deptry clean. The lint step reports failed on a run where pre-commit reformats files and passes on the next run; that is the hook rewriting, not a defect. If the tree is red on arrival, STOP and report it rather than fixing it: the base was verified at this exact commit."
+    }
+  },
+  "budgets": {
+    "attempts_per_task": 5,
+    "wallclock_minutes": 240
+  },
+  "rituals": [
+    "Read specs/005-assessment-upload-workflow/spec.md, plan.md, data-model.md and tasks.md before writing anything.",
+    "Read specs/004-import-upload-template/decisions.md D16 before touching project/ghfdb/importers.py.",
+    "Read project/review/ in full \u2014 models.py, views.py, forms.py, admin.py, urls.py, menus.py and templates/ \u2014 before changing any of it.",
+    "Confirm HEAD equals the verified_base commit before starting.",
+    "Work in thin slices: each slice leaves the suite green and is committed before the next begins."
+  ],
+  "prohibitions": [
+    "Never pass dry_run=True to either import resource. This is the one mistake this brief exists to prevent.",
+    "Never weaken or delete a test you did not author in this story.",
+    "Do not build any view, form, template or URL for the user-facing pages. That is US-1 to US-6 and not your scope.",
+    "Do not rename the framework's 'Data Administrators' group or touch Person.is_data_admin.",
+    "Do not add a notification framework or any new dependency.",
+    "Do not touch .github/workflows/**.",
+    "Do not push, open pull requests or comment on GitHub. Commit locally only.",
+    "Do not edit files under specs/ other than appending to your own notes if asked."
+  ]
+}
