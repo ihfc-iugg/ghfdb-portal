@@ -151,6 +151,21 @@ class ReviewUploadView(UserPassesTestMixin, DetailView):
         )
 
 
+def _publish_if_complete(review):
+    """Write the dataset public exactly when the assessment's own state
+    reached ``COMPLETE`` (T029/T034, data-model.md "Dataset visibility",
+    D27). A curator's confirmation and a curator's approval both make a
+    dataset public through this one path rather than each writing
+    ``visibility`` for itself — "public" is ``Visibility.PUBLIC`` and
+    nothing else on the framework version this project resolves; a second
+    field, ``Dataset.published``, does not exist here and is never
+    referenced.
+    """
+    if review.state == States.COMPLETE:
+        review.dataset.visibility = Dataset.VISIBILITY_CHOICES.PUBLIC
+        review.dataset.save(update_fields=["visibility"])
+
+
 class ReviewConfirmView(UserPassesTestMixin, SingleObjectMixin, View):
     """Confirm a checked upload, POST only (T022/T023, plan.md "Confirmation
     safety", FR-024, D6).
@@ -189,5 +204,6 @@ class ReviewConfirmView(UserPassesTestMixin, SingleObjectMixin, View):
         submission.save(update_fields=["imported_at"])
         confirm_upload(review, request.user)
         review.save(update_fields=["state"])
+        _publish_if_complete(review)
 
         return redirect(review.dataset.get_absolute_url())

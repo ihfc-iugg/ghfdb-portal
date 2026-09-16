@@ -460,6 +460,12 @@ assessment no longer in `DESCRIBED` or `CHANGES_REQUESTED` is a no-op redirect r
 write, which is also what keeps a stale report from being trusted — confirming always re-checks
 rather than replaying the numbers the uploader saw.
 
+A Data Curator's own confirmation makes the dataset public immediately, because `review.states.confirm_upload`
+puts the assessment straight into `COMPLETE` for a curator rather than `AWAITING_DECISION`.
+`review.views._publish_if_complete` is what writes it: whenever an assessment's state reaches
+`COMPLETE`, the dataset's `visibility` is set to `Visibility.PUBLIC` and nothing else is touched.
+It is the one path both a curator's confirmation and a curator's approval use.
+
 ### SubmittedFile
 
 One completed upload template as supplied, kept against its assessment.

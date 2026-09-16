@@ -853,6 +853,43 @@ class TestAssessorDatasetVisibility:
 
         assert response.status_code == 404
 
+    def test_an_assessors_confirmation_writes_nothing_to_visibility(
+        self, rf, assessor, valid_upload_bytes
+    ):
+        review = ReviewFactory(uploaded_by=assessor)
+        _submitted_file(review, assessor, valid_upload_bytes)
+
+        self._confirm(rf, assessor, review)
+
+        review.refresh_from_db()
+        assert review.dataset.visibility == review.dataset.VISIBILITY_CHOICES.PRIVATE
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestCuratorConfirmationVisibility:
+    """T029, spec.md User Story 5 scenario 2, D27: a Data Curator's own
+    confirmation makes the dataset public by the one field the resolved
+    framework carries (data-model.md "Dataset visibility") — asserted
+    directly against the field, so removing the write fails this test.
+    """
+
+    def _confirm(self, rf, user, review):
+        request = rf.post(f"/assessments/{review.pk}/confirm/")
+        request.user = user
+        return ReviewConfirmView.as_view()(request, pk=review.pk)
+
+    def test_a_curators_own_confirmation_makes_the_dataset_public(
+        self, rf, curator, valid_upload_bytes
+    ):
+        review = ReviewFactory(uploaded_by=curator)
+        _submitted_file(review, curator, valid_upload_bytes)
+
+        self._confirm(rf, curator, review)
+
+        review.refresh_from_db()
+        assert review.dataset.visibility == review.dataset.VISIBILITY_CHOICES.PUBLIC
+
 
 @pytest.mark.django_db
 @pytest.mark.review
