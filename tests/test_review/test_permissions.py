@@ -52,6 +52,58 @@ class TestIsDataAssessor:
 
 @pytest.mark.django_db
 @pytest.mark.review
+class TestCanManageUpload:
+    """T020, plan.md "The pages": the upload and confirm routes are open to
+    the assessment's own uploader, or to any Data Curator, and refused to
+    everyone else — including a signed-in Data Assessor who did not create
+    the assessment."""
+
+    def test_the_uploader_may_manage_their_own_upload(self):
+        from review.permissions import can_manage_upload
+        from tests.test_review.factories import ReviewFactory
+
+        uploader = ClaimedPersonFactory()
+        review = ReviewFactory(uploaded_by=uploader)
+
+        assert can_manage_upload(uploader, review) is True
+
+    def test_any_curator_may_manage_an_upload_they_did_not_create(
+        self, data_curator_group
+    ):
+        from review.permissions import can_manage_upload
+        from tests.test_review.factories import ReviewFactory
+
+        uploader = ClaimedPersonFactory()
+        review = ReviewFactory(uploaded_by=uploader)
+        curator = ClaimedPersonFactory()
+        curator.groups.add(data_curator_group)
+
+        assert can_manage_upload(curator, review) is True
+
+    def test_a_different_assessor_may_not_manage_it(self, data_assessor_group):
+        from review.permissions import can_manage_upload
+        from tests.test_review.factories import ReviewFactory
+
+        uploader = ClaimedPersonFactory()
+        review = ReviewFactory(uploaded_by=uploader)
+        other = ClaimedPersonFactory()
+        other.groups.add(data_assessor_group)
+
+        assert can_manage_upload(other, review) is False
+
+    def test_an_anonymous_user_may_not_manage_it(self):
+        from django.contrib.auth.models import AnonymousUser
+
+        from review.permissions import can_manage_upload
+        from tests.test_review.factories import ReviewFactory
+
+        review = ReviewFactory()
+
+        assert can_manage_upload(AnonymousUser(), review) is False
+
+
+@pytest.mark.django_db
+@pytest.mark.review
 class TestIsDataCurator:
     def test_true_for_a_user_in_the_data_curator_group(self, data_curator_group):
         from review.permissions import is_data_curator
