@@ -515,6 +515,48 @@ class TestReviewUploadReportTemplateFailures:
         assert "third failure text" in html
 
 
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewUploadViewReupload:
+    """T027, spec.md User Story 4 scenario 4, FR-014/FR-015: uploading a
+    corrected file against the same assessment checks the new file afresh
+    — the earlier failure does not leak into the new response — while the
+    superseded submission stays retrievable rather than being replaced."""
+
+    def _post(self, rf, user, review, file):
+        request = rf.post(f"/assessments/{review.pk}/upload/", data={"file": file})
+        request.user = user
+        return ReviewUploadView.as_view()(request, pk=review.pk)
+
+    def test_a_corrected_reupload_is_checked_afresh_and_the_failed_submission_stays_retrievable(
+        self, rf, assessor, valid_upload_bytes
+    ):
+        review = ReviewFactory(uploaded_by=assessor)
+        bad_row = dict(ROW)
+        bad_row["environment"] = "not_a_real_value"
+        failing_bytes = _build_official_xlsx(
+            list(bad_row.keys()), [list(bad_row.values())]
+        )
+        failing_file = _xlsx_upload("assessment.xlsx", failing_bytes)
+
+        first = self._post(rf, assessor, review, failing_file)
+        first_report = first.context_data["report"]
+        assert first_report.has_failures
+        first_reason = first_report.failures[0].reason
+
+        corrected_file = _xlsx_upload("assessment-corrected.xlsx", valid_upload_bytes)
+        second = self._post(rf, assessor, review, corrected_file)
+
+        assert second.status_code == 200
+        second_report = second.context_data["report"]
+        assert not second_report.has_failures
+        assert first_reason not in str(second.context_data)
+
+        submissions = list(SubmittedFile.objects.filter(review=review).order_by("id"))
+        assert len(submissions) == 2
+        assert submissions[0].file.read() == failing_bytes
+
+
 def _submitted_file(review, user, content, name="assessment.xlsx"):
     return SubmittedFile.objects.create(
         review=review,
