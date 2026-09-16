@@ -825,3 +825,30 @@ class TestReviewConfirmViewIdempotency:
         second = self._confirm(rf, assessor, review)
 
         assert second.url == review.dataset.get_absolute_url()
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestAssessorDatasetVisibility:
+    """T029/T030, spec.md User Story 5 scenario 1, SC-004: an assessor's
+    confirmation writes nothing to ``Dataset.visibility`` — the framework's
+    own default (PRIVATE, data-model.md "Dataset visibility") is what stays
+    in effect — so a dataset an assessor confirmed and no curator has
+    decided on yet cannot be reached by an anonymous visitor.
+    """
+
+    def _confirm(self, rf, user, review):
+        request = rf.post(f"/assessments/{review.pk}/confirm/")
+        request.user = user
+        return ReviewConfirmView.as_view()(request, pk=review.pk)
+
+    def test_an_anonymous_visitor_cannot_reach_an_assessors_confirmed_dataset(
+        self, client, rf, assessor, valid_upload_bytes
+    ):
+        review = ReviewFactory(uploaded_by=assessor)
+        _submitted_file(review, assessor, valid_upload_bytes)
+        self._confirm(rf, assessor, review)
+
+        response = client.get(review.dataset.get_absolute_url())
+
+        assert response.status_code == 404
