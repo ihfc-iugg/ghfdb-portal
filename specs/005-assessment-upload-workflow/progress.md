@@ -156,3 +156,33 @@ changes since no model changed here. `poetry run pre-commit run -a` clean (this 
 rather than committed, per the shared-worktree rule against touching paths outside this story).
 
 Next: US-5, writing the data and deciding who can see it.
+
+## 2026-09-16 — US-5
+
+T029 is blocked. Its curator branch needs `Dataset.published`, which does not exist on the `fairdm`
+dependency version this repository is pinned to — confirmed against the running model class, not
+just the docs describing it (D26). No production code was written for either branch of T029: the
+assessor branch (dataset stays private, nothing written) is already the framework's own default, and
+is exercised as a precondition of the T030 test below rather than duplicated in a T029-only test.
+
+T030, T031 and T032 needed no production code: each is proving a guarantee the framework or an
+earlier story's code already provides — `PrivateRecordNotFoundMixin`/`DatasetManager` for T030
+(private-by-default visibility, already the outcome of T029's un-implementable-but-also-unneeded
+assessor branch), `Review.current`/`SubmittedFile`'s per-submission rows for T031, and `project/ghfdb
+/resources`' existing `ACCEPTED_UNSTORED_COLUMNS` handling (FR-009, US-4) for T032. Per craft-tdd's
+probing requirement, each was confirmed rather than assumed: a temporary one-line mutation of the
+mechanism each test protects (forcing `dataset.visibility` public after confirm for T030, reversing
+`Review.current`'s ordering for T031, clearing `review.reviewers` after confirm for T032) was applied
+in turn, the corresponding test observed to fail for the right reason, then reverted before running
+the suite again and committing. All three land as test-only commits in `tests/test_review/
+test_views.py`, the module whose subject (`ReviewConfirmView`/`ReviewUploadView`) each is about.
+
+`poetry run ruff check`/`ruff format --check` on the touched file surfaced two pre-existing `I001`
+import-order findings unrelated to anything added here (lines 21 and 764, both present unchanged at
+this story's own `verified_base` commit — confirmed by running the same check against `git show
+HEAD:tests/test_review/test_views.py`). Left alone, out of scope: AGENTS.md's own "Lint" section
+already documents that `pre-commit`'s pinned ruff (which excludes `tests/` entirely) is not what CI
+enforces, and these are exactly the kind of gap that split creates. Flagged in the completion report
+rather than fixed.
+
+Full suite and the repo's verify commands: see the completion report.

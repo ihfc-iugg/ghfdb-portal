@@ -380,3 +380,33 @@ message is also read directly by developers debugging raw `Result` output outsid
 admin's own django-import-export UI, for one), so removing the model name there would trade a
 leak in one reader-facing surface for a real loss of information in another. Sanitizing at the
 report boundary fixes the one surface FR-013 actually governs.
+
+## D26 — T029's curator half is blocked: `Dataset.published` does not exist in the pinned `fairdm`
+
+`data-model.md` ("Dataset visibility") and `research.md` ("Visibility is two fields, not one") both
+state "public" means `Dataset.visibility` set to its public value **and** `Dataset.published` set
+true, reading directly from `fairdm.core.dataset.models`. Confirmed against the actual installed
+package rather than the docs describing it, per the brief's own ritual: `Dataset._meta.get_fields()`
+against the pinned commit (`poetry.lock`'s `resolved_reference`, `8c9290f4b01365688117be69a5c1885d18
+15a3b1`) lists no `published` field, and `dir(Dataset)` finds no attribute of that name at all — not
+a missing migration, the field is not declared on the model class this dependency version installs.
+Fetched `fairdm/core/dataset/models.py` from `FAIR-DM/fairdm`'s `main` branch directly (2026-09-16)
+and found `published = models.BooleanField(...)` there, plus a `DatasetQuerySet.published` filter
+method — the field exists upstream, added to `main` after the commit this repository's `poetry.lock`
+resolved to. This is a dependency-version gap, not a mistake in either design doc.
+
+Setting only `visibility = PUBLIC` on the curator path and leaving `published` alone (because it
+cannot be set) was considered and rejected: every enforcement point read for this story
+(`DatasetManager.get_queryset`, `fairdm.contrib.plugins.mixins.dataset_is_visible`) currently checks
+`visibility` alone, so a visibility-only write would make the dataset fully public today — and then
+silently regress once the `fairdm` pin is next bumped and `published` starts defaulting `False` on
+every dataset already marked public this way, reproducing exactly the half-published state
+data-model.md names as the failure mode to avoid, for every curator-confirmed dataset created before
+the bump. No code was written for the curator branch of T029 as a result; see `progress.md`.
+
+Bumping the `fairdm` git pin was considered and rejected as something to do unilaterally inside this
+story: `poetry.lock` regeneration against a moving `HEAD` reference can pull in unrelated upstream
+changes, is a dependency-version decision outside an Implementer's authority, and the brief's own
+prohibitions ("do not add any new dependency") place dependency changes out of this run's scope even
+though this is technically a version bump rather than a new package. Resolving D26 is a prerequisite
+for T029's curator branch, tracked as follow-up work rather than attempted here.
