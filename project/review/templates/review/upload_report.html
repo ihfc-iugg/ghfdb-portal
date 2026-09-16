@@ -28,5 +28,12 @@
         {{ report.determinations_updated }}
       </dd>
     </dl>
+    <form method="post"
+          action="{% url 'review-confirm' pk=review.pk %}">
+      {% csrf_token %}
+      <c-button type="submit"
+                text="{% trans "Confirm and import" %}"
+                variant="primary" />
+    </form>
   {% endif %}
 </div>

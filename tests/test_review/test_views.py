@@ -21,6 +21,7 @@ view builds a normal 200 response for each.
 from unittest import mock
 
 import pytest
+from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -29,7 +30,12 @@ from guardian.shortcuts import get_perms
 
 from review.models import Review, SubmittedFile
 from review.states import States
-from review.views import ReviewCreateView, ReviewListView, ReviewUploadView
+from review.views import (
+    ReviewConfirmView,
+    ReviewCreateView,
+    ReviewListView,
+    ReviewUploadView,
+)
 from tests.test_review.factories import ClaimedPersonFactory, ReviewFactory
 
 
@@ -349,3 +355,187 @@ class TestReviewUploadReportTemplate:
         assert "9" in html
         assert "6" in html
         assert "11" in html
+
+
+def _submitted_file(review, user, content, name="assessment.xlsx"):
+    return SubmittedFile.objects.create(
+        review=review,
+        file=ContentFile(content, name=name),
+        submitted_by=user,
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewConfirmViewAccess:
+    """T022, plan.md's access table: the confirm route is open to the
+    assessment's own uploader or to any Data Curator, and refused to
+    everyone else, the same as the upload route (T020)."""
+
+    def _confirm(self, rf, user, review):
+        request = rf.post(f"/assessments/{review.pk}/confirm/")
+        request.user = user
+        return ReviewConfirmView.as_view()(request, pk=review.pk)
+
+    def test_the_uploader_is_granted_entry(self, rf, assessor, valid_upload_bytes):
+        review = ReviewFactory(uploaded_by=assessor)
+        _submitted_file(review, assessor, valid_upload_bytes)
+
+        response = self._confirm(rf, assessor, review)
+
+        assert response.status_code == 302
+
+    def test_a_different_assessor_is_refused(
+        self, client, assessor, data_assessor_group, valid_upload_bytes
+    ):
+        review = ReviewFactory(uploaded_by=assessor)
+        _submitted_file(review, assessor, valid_upload_bytes)
+        other = ClaimedPersonFactory()
+        other.groups.add(data_assessor_group)
+        client.force_login(other)
+
+        response = client.post(reverse("review-confirm", kwargs={"pk": review.pk}))
+
+        assert response.status_code == 403
+
+    def test_an_anonymous_visitor_is_redirected_to_log_in_rather_than_served(
+        self, client, assessor, valid_upload_bytes
+    ):
+        review = ReviewFactory(uploaded_by=assessor)
+        _submitted_file(review, assessor, valid_upload_bytes)
+
+        response = client.post(reverse("review-confirm", kwargs={"pk": review.pk}))
+
+        assert response.status_code == 302
+        assert response.url != reverse("review-confirm", kwargs={"pk": review.pk})
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewConfirmViewWriting:
+    """T022, spec.md User Story 3 scenario 4, FR-008/FR-010, D6: confirming
+    re-runs the check against the stored file and writes in the same
+    transaction, stamping ``imported_at`` and moving the assessment out of
+    ``DESCRIBED`` — with the counts written matching the counts a check of
+    the same file reports.
+    """
+
+    def _confirm(self, rf, user, review):
+        request = rf.post(f"/assessments/{review.pk}/confirm/")
+        request.user = user
+        return ReviewConfirmView.as_view()(request, pk=review.pk)
+
+    def test_confirming_writes_the_checked_file_and_stamps_imported_at(
+        self, rf, assessor, valid_upload_bytes
+    ):
+        from heat_flow.models import HeatFlowSite
+
+        review = ReviewFactory(uploaded_by=assessor)
+        submission = _submitted_file(review, assessor, valid_upload_bytes)
+
+        response = self._confirm(rf, assessor, review)
+
+        assert response.status_code == 302
+        submission.refresh_from_db()
+        assert submission.imported_at is not None
+        assert HeatFlowSite.objects.filter(dataset=review.dataset).exists()
+
+    def test_confirming_by_an_assessor_moves_the_assessment_to_awaiting_decision(
+        self, rf, assessor, valid_upload_bytes
+    ):
+        review = ReviewFactory(uploaded_by=assessor)
+        _submitted_file(review, assessor, valid_upload_bytes)
+
+        self._confirm(rf, assessor, review)
+
+        review.refresh_from_db()
+        assert review.state == States.AWAITING_DECISION
+
+    def test_confirming_by_a_curator_completes_the_assessment_immediately(
+        self, rf, curator, valid_upload_bytes
+    ):
+        review = ReviewFactory(uploaded_by=curator)
+        _submitted_file(review, curator, valid_upload_bytes)
+
+        self._confirm(rf, curator, review)
+
+        review.refresh_from_db()
+        assert review.state == States.COMPLETE
+
+    def test_confirming_redirects_to_the_dataset(
+        self, rf, assessor, valid_upload_bytes
+    ):
+        review = ReviewFactory(uploaded_by=assessor)
+        _submitted_file(review, assessor, valid_upload_bytes)
+
+        response = self._confirm(rf, assessor, review)
+
+        assert response.url == review.dataset.get_absolute_url()
+
+    def test_the_written_counts_match_a_checks_reported_counts(
+        self, rf, assessor, valid_upload_bytes
+    ):
+        from heat_flow.models import HeatFlow, HeatFlowSite
+        from project.ghfdb.importers import import_ghfdb_template
+        from project.ghfdb.report import build_report
+
+        review = ReviewFactory(uploaded_by=assessor)
+        _submitted_file(review, assessor, valid_upload_bytes)
+        checked_outcome = import_ghfdb_template(
+            valid_upload_bytes, review.dataset, check_only=True
+        )
+        report = build_report(checked_outcome)
+
+        self._confirm(rf, assessor, review)
+
+        assert (
+            HeatFlowSite.objects.filter(dataset=review.dataset).count()
+            == report.sites_created
+        )
+        assert (
+            HeatFlow.objects.filter(dataset=review.dataset).count()
+            == report.determinations_created
+        )
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewConfirmViewIdempotency:
+    """T023, spec.md User Story 3 scenario 6, FR-024, D6: a second
+    confirmation for an assessment already written is a no-op redirect —
+    the assessment's own state is the idempotency key, so nothing is
+    written twice."""
+
+    def _confirm(self, rf, user, review):
+        request = rf.post(f"/assessments/{review.pk}/confirm/")
+        request.user = user
+        return ReviewConfirmView.as_view()(request, pk=review.pk)
+
+    def test_a_second_confirmation_does_not_write_twice(
+        self, rf, assessor, valid_upload_bytes
+    ):
+        from heat_flow.models import HeatFlowSite
+
+        review = ReviewFactory(uploaded_by=assessor)
+        _submitted_file(review, assessor, valid_upload_bytes)
+        self._confirm(rf, assessor, review)
+        count_after_first = HeatFlowSite.objects.filter(dataset=review.dataset).count()
+
+        second = self._confirm(rf, assessor, review)
+
+        assert second.status_code == 302
+        assert (
+            HeatFlowSite.objects.filter(dataset=review.dataset).count()
+            == count_after_first
+        )
+
+    def test_a_second_confirmation_still_redirects_to_the_result(
+        self, rf, assessor, valid_upload_bytes
+    ):
+        review = ReviewFactory(uploaded_by=assessor)
+        _submitted_file(review, assessor, valid_upload_bytes)
+        self._confirm(rf, assessor, review)
+
+        second = self._confirm(rf, assessor, review)
+
+        assert second.url == review.dataset.get_absolute_url()

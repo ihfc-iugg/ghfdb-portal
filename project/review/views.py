@@ -8,8 +8,10 @@ onward.
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.core.files.base import ContentFile
 from django.shortcuts import redirect
+from django.utils import timezone
 from django.utils.translation import gettext as _
-from django.views.generic import DetailView
+from django.views.generic import DetailView, View
+from django.views.generic.detail import SingleObjectMixin
 from fairdm.core.dataset.models import Dataset
 from fairdm.utils.permissions import assign_all_model_perms
 from fairdm.views import FairDMCreateView, FairDMListView
@@ -21,6 +23,7 @@ from project.ghfdb.report import build_report
 from .forms import ReviewDescriptionForm
 from .models import Review, SubmittedFile
 from .permissions import can_manage_upload, is_data_assessor, is_data_curator
+from .states import States, confirm_upload
 
 
 class ReviewListView(UserPassesTestMixin, FairDMListView):
@@ -135,3 +138,45 @@ class ReviewUploadView(UserPassesTestMixin, DetailView):
         return self.render_to_response(
             self.get_context_data(form=GHFDBImportForm(), report=report)
         )
+
+
+class ReviewConfirmView(UserPassesTestMixin, SingleObjectMixin, View):
+    """Confirm a checked upload, POST only (T022/T023, plan.md "Confirmation
+    safety", FR-024, D6).
+
+    Re-runs the check against the assessment's stored file rather than
+    trusting the report the uploader saw, and writes in the same
+    transaction. The assessment's own state is the idempotency key: a
+    confirmation for an assessment that has already moved past ``DESCRIBED``
+    or ``CHANGES_REQUESTED`` is a no-op redirect, which covers both a
+    doubled submission (T023) and a report that has gone stale.
+    """
+
+    model = Review
+    http_method_names = ["post"]
+
+    def test_func(self):
+        return can_manage_upload(self.request.user, self.get_object())
+
+    def post(self, request, *args, **kwargs):
+        review = self.get_object()
+
+        if review.state not in (States.DESCRIBED, States.CHANGES_REQUESTED):
+            return redirect(review.dataset.get_absolute_url())
+
+        submission = review.current
+        if submission is None:
+            return redirect("review-upload", pk=review.pk)
+
+        outcome = import_ghfdb_template(
+            submission.file, review.dataset, check_only=False
+        )
+        if outcome.has_errors():
+            return redirect("review-upload", pk=review.pk)
+
+        submission.imported_at = timezone.now()
+        submission.save(update_fields=["imported_at"])
+        confirm_upload(review, request.user)
+        review.save(update_fields=["state"])
+
+        return redirect(review.dataset.get_absolute_url())

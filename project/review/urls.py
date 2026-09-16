@@ -9,7 +9,12 @@ the table's routes are built from US-3 onward.
 
 from django.urls import URLPattern, URLResolver, path
 
-from .views import ReviewCreateView, ReviewListView, ReviewUploadView
+from .views import (
+    ReviewConfirmView,
+    ReviewCreateView,
+    ReviewListView,
+    ReviewUploadView,
+)
 
 urlpatterns: list[URLPattern | URLResolver] = [
     path("assessments/", ReviewListView.as_view(), name="review-list"),
@@ -18,5 +23,10 @@ urlpatterns: list[URLPattern | URLResolver] = [
         "assessments/<int:pk>/upload/",
         ReviewUploadView.as_view(),
         name="review-upload",
+    ),
+    path(
+        "assessments/<int:pk>/confirm/",
+        ReviewConfirmView.as_view(),
+        name="review-confirm",
     ),
 ]
