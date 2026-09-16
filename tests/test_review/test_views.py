@@ -19,9 +19,12 @@ view builds a normal 200 response for each.
 """
 
 import pytest
+from django.template.loader import render_to_string
 from django.urls import reverse
 
+from review.states import States
 from review.views import ReviewListView
+from tests.test_review.factories import ReviewFactory
 
 
 @pytest.mark.django_db
@@ -57,3 +60,30 @@ class TestReviewListViewAccess:
 
         assert response.status_code == 302
         assert response.url != reverse("review-list")
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewListItemTemplate:
+    """T012: each row names the publication it covers, its uploader and its
+    state (spec.md User Story 1, acceptance scenario 5), asserted against
+    the rendered HTML rather than the template context.
+
+    Rendered directly rather than through the full list page: the page
+    chrome around it is affected by the pre-existing defect noted on
+    ReviewListView's tests above, and this is what T012 owns.
+    """
+
+    def test_row_names_the_publication_uploader_and_state(self, assessor):
+        review = ReviewFactory(
+            uploaded_by=assessor,
+            state=States.AWAITING_DECISION,
+        )
+
+        html = render_to_string(
+            "review/review_list_item.html", {"review": review, "object": review}
+        )
+
+        assert str(review.literature) in html
+        assert str(assessor) in html
+        assert review.get_state_display() in html
