@@ -23,7 +23,7 @@ from project.ghfdb.report import build_report
 from .forms import ReviewDescriptionForm
 from .models import Review, SubmittedFile
 from .permissions import can_manage_upload, is_data_assessor, is_data_curator
-from .states import States, approve, confirm_upload
+from .states import States, approve, confirm_upload, send_back
 
 
 class ReviewListView(UserPassesTestMixin, FairDMListView):
@@ -144,6 +144,9 @@ class ReviewUploadView(UserPassesTestMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.setdefault("form", GHFDBImportForm())
+        review = self.object
+        if review.state == States.CHANGES_REQUESTED:
+            context.setdefault("decision_comment", review.decision_comment)
         return context
 
     def post(self, request, *args, **kwargs):
@@ -258,11 +261,20 @@ class ReviewDecideView(UserPassesTestMixin, SingleObjectMixin, View):
         if review.state != States.AWAITING_DECISION:
             return redirect("review-queue")
 
-        if request.POST.get("action") == "approve":
+        action = request.POST.get("action")
+        if action == "approve":
             approve(review, request.user)
-            review.decided_by = request.user
-            review.decided_at = timezone.now()
-            review.save(update_fields=["state", "decided_by", "decided_at"])
-            _publish_if_complete(review)
+        elif action == "send_back":
+            send_back(review, request.user)
+            review.decision_comment = request.POST.get("comment", "")
+        else:
+            return redirect("review-queue")
+
+        review.decided_by = request.user
+        review.decided_at = timezone.now()
+        review.save(
+            update_fields=["state", "decided_by", "decided_at", "decision_comment"]
+        )
+        _publish_if_complete(review)
 
         return redirect("review-queue")

@@ -381,6 +381,124 @@ class TestReviewDecideViewApprove:
 
 @pytest.mark.django_db
 @pytest.mark.review
+class TestReviewDecideViewSendBack:
+    """T035, spec.md User Story 6 scenario 3, FR-020: sending a waiting
+    assessment back keeps its dataset private, records the comment and who
+    made the decision, and moves it to ``CHANGES_REQUESTED``."""
+
+    def _send_back(self, rf, user, review, comment="Please fix the coordinates."):
+        request = rf.post(
+            f"/assessments/{review.pk}/decide/",
+            data={"action": "send_back", "comment": comment},
+        )
+        request.user = user
+        return ReviewDecideView.as_view()(request, pk=review.pk)
+
+    def test_sending_back_keeps_the_dataset_private_and_requests_changes(
+        self, rf, curator
+    ):
+        review = ReviewFactory(state=States.AWAITING_DECISION)
+
+        self._send_back(rf, curator, review)
+
+        review.refresh_from_db()
+        assert review.state == States.CHANGES_REQUESTED
+        assert review.dataset.visibility == review.dataset.VISIBILITY_CHOICES.PRIVATE
+
+    def test_sending_back_records_the_comment_and_who_decided(self, rf, curator):
+        review = ReviewFactory(state=States.AWAITING_DECISION)
+
+        self._send_back(rf, curator, review, comment="Please fix the coordinates.")
+
+        review.refresh_from_db()
+        assert review.decision_comment == "Please fix the coordinates."
+        assert review.decided_by_id == curator.pk
+        assert review.decided_at is not None
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewSendBackRoundTrip:
+    """T035, spec.md User Story 6 scenario 4: a sent-back assessment's
+    uploader can supply a replacement file, which is checked and confirmed
+    as before and returns the assessment to waiting on a decision — the
+    data already imported from the earlier file is never deleted (D7)."""
+
+    def _send_back(self, rf, user, review, comment="Please fix the coordinates."):
+        request = rf.post(
+            f"/assessments/{review.pk}/decide/",
+            data={"action": "send_back", "comment": comment},
+        )
+        request.user = user
+        return ReviewDecideView.as_view()(request, pk=review.pk)
+
+    def _post_upload(self, rf, user, review, file):
+        request = rf.post(f"/assessments/{review.pk}/upload/", data={"file": file})
+        request.user = user
+        return ReviewUploadView.as_view()(request, pk=review.pk)
+
+    def _confirm(self, rf, user, review):
+        request = rf.post(f"/assessments/{review.pk}/confirm/")
+        request.user = user
+        return ReviewConfirmView.as_view()(request, pk=review.pk)
+
+    def test_a_replacement_file_is_confirmed_and_returns_to_awaiting_decision(
+        self, rf, assessor, curator, valid_upload_bytes
+    ):
+        review = ReviewFactory(uploaded_by=assessor)
+        first_submission = _submitted_file(review, assessor, valid_upload_bytes)
+        self._confirm(rf, assessor, review)
+        self._send_back(rf, curator, review, comment="Please fix the coordinates.")
+
+        review.refresh_from_db()
+        assert review.state == States.CHANGES_REQUESTED
+
+        replacement = _xlsx_upload("assessment-2.xlsx", valid_upload_bytes)
+        self._post_upload(rf, assessor, review, replacement)
+        self._confirm(rf, assessor, review)
+
+        review.refresh_from_db()
+        assert review.state == States.AWAITING_DECISION
+        submissions = list(review.submissions.all())
+        assert len(submissions) == 2
+        assert first_submission in submissions
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewUploadViewShowsSendBackComment:
+    """T035, spec.md User Story 6 scenario 3, FR-020: the curator's comment
+    reaches the uploader on the page they use to supply a replacement."""
+
+    def test_the_comment_is_in_context_when_changes_are_requested(
+        self, rf, assessor
+    ):
+        review = ReviewFactory(
+            uploaded_by=assessor,
+            state=States.CHANGES_REQUESTED,
+            decision_comment="Please fix the coordinates.",
+        )
+        request = rf.get(f"/assessments/{review.pk}/upload/")
+        request.user = assessor
+
+        response = ReviewUploadView.as_view()(request, pk=review.pk)
+
+        assert response.context_data.get("decision_comment") == (
+            "Please fix the coordinates."
+        )
+
+    def test_no_comment_is_shown_outside_changes_requested(self, rf, assessor):
+        review = ReviewFactory(uploaded_by=assessor, state=States.DESCRIBED)
+        request = rf.get(f"/assessments/{review.pk}/upload/")
+        request.user = assessor
+
+        response = ReviewUploadView.as_view()(request, pk=review.pk)
+
+        assert not response.context_data.get("decision_comment")
+
+
+@pytest.mark.django_db
+@pytest.mark.review
 class TestReviewUploadViewAccess:
     """T020, plan.md's access table: the upload route is open to the
     assessment's own uploader or to any Data Curator, and refused to

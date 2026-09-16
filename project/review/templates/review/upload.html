@@ -2,6 +2,11 @@
 {% load i18n %}
 {% block page.content %}
   <div class="w-full lg:max-w-4xl">
+    {% if decision_comment %}
+      <c-alert variant="warning">
+        <p>{% trans "A curator sent this back" %}: {{ decision_comment }}</p>
+      </c-alert>
+    {% endif %}
     <form method="post"
           enctype="multipart/form-data"
           action="{{ request.path }}">
