@@ -444,6 +444,22 @@ this field to account holders would make those people unnameable. Assessors are 
 contributors on the resulting dataset. They are not granted access to it, which follows
 `uploaded_by` alone.
 
+**Checking and confirming an upload**
+
+`review.views.ReviewUploadView` and `review.views.ReviewConfirmView` are the two routes a file
+passes through, and neither writes to the assessment's dataset alone. Uploading stores the file as a
+`SubmittedFile`, runs `project.ghfdb.importers.import_ghfdb_template` with `check_only=True`, and
+renders `project.ghfdb.report.build_report`'s counts and failures in the same response — nothing
+reaches the dataset from this route. Confirming re-runs the same reader against the stored file with
+`check_only=False`, writing in the transaction it opens, then stamps `SubmittedFile.imported_at` and
+runs the matching `review.states` transition. Both routes are open to the assessment's own uploader
+or to any Data Curator, decided by `review.permissions.can_manage_upload`.
+
+The assessment's own state is what makes confirming safe to submit twice: a confirmation for an
+assessment no longer in `DESCRIBED` or `CHANGES_REQUESTED` is a no-op redirect rather than a second
+write, which is also what keeps a stale report from being trusted — confirming always re-checks
+rather than replaying the numbers the uploader saw.
+
 ### SubmittedFile
 
 One completed upload template as supplied, kept against its assessment.
