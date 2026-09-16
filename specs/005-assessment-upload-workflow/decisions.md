@@ -169,3 +169,61 @@ removal implied by a structure diagram rather than stated as work.
 They are deleted in the foundational phase, in the same commit range that changes the field, with a
 test asserting no reference survives. A tree carrying two answers to the same question is how the
 next reader picks the wrong one, and a structure diagram is not a task anybody executes.
+
+## D14 — The assessment list carries no filterset (US-1)
+
+`FairDMListView` auto-generates a `django-filter` `FilterSet` from every model field when
+`filterset_class` is left unset, and `Review.start_date`/`end_date` are `PartialDateField`, a type
+django-filter has no mapping for — the auto-generated set raises `AssertionError` the first time
+anyone requests the page.
+
+Filtering the list is not named anywhere in spec.md or plan.md's access table for US-1, so building
+a real `FilterSet` would be scope the story never asked for. `ReviewListView.filterset_fields = []`
+disables the auto-generation without adding a filtering feature; a later story that does want
+filtering replaces it with an explicit `filterset_class`, the pattern `fairdm.core.dataset.views.
+DatasetListView` already uses.
+
+## D15 — T014's route lands in T011's commit; T013 follows T014, not the reverse
+
+Two implementation-order departures from tasks.md's listed order (T011, T012, T013, T014), both
+forced by a dependency the task breakdown does not surface:
+
+- **T014 inside T011.** This repo's own view-test convention (`tests/test_ghfdb/test_views.py`) is
+  `client.get(reverse(...))`, which resolves through `ROOT_URLCONF` — there is no way to exercise
+  "a direct URL is refused" (US-1's own acceptance wording) without the route already existing. T011's
+  commit therefore carries the `path("assessments/", ...)` registration that is nominally T014's, and
+  T014's own commit adds the confirming resolution test only.
+- **T013 after T014.** `AssessmentMenuItem.check()` resolves its `view_name` through
+  `flex_menu`'s `resolve_url` → `reverse()`; without `review-list` registered, the item cannot
+  resolve, marks itself invisible regardless of role, and T013's own acceptance test would pass for
+  the wrong reason (invisible-because-broken, not invisible-because-refused). `[P]` on T013 reads as
+  "no ordering dependency on its listed neighbours" for cases where that is true; here it was not.
+
+Every task still lands as its own commit with its own tests, in the task IDs tasks.md assigns them —
+only the wall-clock order changed.
+
+## D16 — The served-list tests stop at an unrendered response
+
+Discovered mid-story, not part of any known-red state at the starting commit: any authenticated
+request that reaches this project's shared page chrome (the sidebar via `mvp`'s
+`cotton/app/sidebar/index.html`, which calls `{% render_menu %}` for `AppMenu`) raises
+`KeyError: 'request'`. It reproduces identically, with no `review/` code in the call stack at all, on
+the pre-existing `/datasets/` page (`fairdm.core.dataset.views.DatasetListView`) for any logged-in
+user — anonymous requests to the same page render fine. Instrumenting `flex_menu`'s `process_menu`
+showed the first `render_menu` call for a page carries a real `RequestContext`; every subsequent call
+for the same page (the sidebar and the mobile dock both call it, for `AppMenu` and
+`MobileFooterMenu`) carries a plain `Context` with no request bound, consistent with `django_cotton`
+re-rendering a component through `render_to_string()` without forwarding the request on a second
+pass. This is upstream of `project/review/`, sitewide (every authenticated visitor to any portal page
+built on this chrome hits it), and not a defect this story's files can fix — see the completion
+report's `concerns`.
+
+`ReviewListView`'s and `AssessmentMenuItem`'s own tests for the roles that should be *granted* entry
+therefore stop short of forcing that render: the view's tests use `RequestFactory` and assert on the
+unrendered `TemplateResponse`'s status code, and the menu item's tests call `check()` directly. Both
+assert exactly what US-1 asks these two units to be responsible for — access and visibility — without
+depending on chrome that is broken for reasons neither owns. The *refusal* paths (`PermissionDenied`,
+the anonymous redirect) are unaffected: both short-circuit in `dispatch()`, before any template
+renders, so the ordinary test client is used for them. T012's list-item-template test renders that
+one template directly (`render_to_string`) for the same reason, rather than through the full list
+page.
