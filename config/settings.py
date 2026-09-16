@@ -23,6 +23,18 @@ DJANGO_SETUP_TOOLS = globals().get("DJANGO_SETUP_TOOLS", {})
 DJANGO_SETUP_TOOLS[""]["always_run"].insert(0, ("makemigrations", "--no-input"))
 DJANGO_SETUP_TOOLS[""]["always_run"].append(("compress",))
 
+# The development server is reached over the local network by hostname, not only
+# on localhost. DEBUG=True auto-allows localhost alone, so without this any
+# other hostname is answered with 400 DisallowedHost. Development settings only:
+# config/production.py sets its own ALLOWED_HOSTS from the environment.
+ALLOWED_HOSTS = ["*"]
+
+# The development server speaks plain HTTP, so a cookie marked Secure is
+# discarded by the browser. That failure is silent in one direction only: GET
+# pages render perfectly and every form post comes back 403.
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+
 MVP_CONFIG["layout"]["sidebar"]["title"] = "Heatflow.world"
 
 
