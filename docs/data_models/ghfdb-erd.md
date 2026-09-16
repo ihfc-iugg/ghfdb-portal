@@ -427,6 +427,23 @@ The record of a publication being turned into a dataset through the assessment u
   `review.states.send_back` — each raise `review.states.IllegalTransition` when the record's current
   state or the acting person is not one the transition allows
 
+**Describing an assessment**
+
+`review.forms.ReviewDescriptionForm` is how a record is created. It collects the publication, the
+people who carried out the assessment, the dates, and an optional title that falls back to the
+publication's own when left blank. Two things about it are worth knowing before reading the code.
+
+The publication may be chosen from the catalogue or supplied as a CSL-JSON bibliography file, in
+which case the form creates the `LiteratureItem` while validating and links the new record to it. An
+assessment can therefore be started for a publication the portal has never seen, without leaving the
+page.
+
+The assessor field draws on `Person.objects.real()`, which includes profiles that have never been
+claimed. Someone credited with assessing a publication need not hold a portal account, and filtering
+this field to account holders would make those people unnameable. Assessors are credited as
+contributors on the resulting dataset. They are not granted access to it, which follows
+`uploaded_by` alone.
+
 ### SubmittedFile
 
 One completed upload template as supplied, kept against its assessment.

@@ -329,28 +329,73 @@
       "tasks": [
         {
           "id": "T015",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_forms.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T016",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_forms.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T017",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_forms.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T018",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_forms.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T019",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_forms.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
