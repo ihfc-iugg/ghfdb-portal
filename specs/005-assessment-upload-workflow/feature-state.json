@@ -2,7 +2,7 @@
   "feature": "005-assessment-upload-workflow",
   "branch": "005-assessment-upload-workflow",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "IMPLEMENT",
+  "state": "CONVERGE",
   "state_history": [
     {
       "state": "GATE_SPEC",
@@ -23,6 +23,11 @@
       "state": "IMPLEMENT",
       "at": "2026-09-15T19:53:44Z",
       "note": "US0 foundational phase dispatched on sonnet"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-09-16T21:04:02Z",
+      "note": "all six stories accepted, migrations proven from empty, ADR verdicts recorded, cleanup pass applied"
     }
   ],
   "gates": {
@@ -730,7 +735,7 @@
   ],
   "budgets": {
     "converge_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 2
     },
     "review_cycles": {
