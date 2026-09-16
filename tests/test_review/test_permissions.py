@@ -129,3 +129,55 @@ class TestIsDataCurator:
         person.groups.add(data_assessor_group, data_curator_group)
 
         assert is_data_curator(person) is True
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestIsAssessmentTeamMember:
+    """Either role is on the team; nobody else is. The list, the description
+    form and the navigation entry all ask this one question rather than
+    testing the two roles in turn."""
+
+    def test_true_for_a_data_assessor(self, data_assessor_group):
+        from review.permissions import is_assessment_team_member
+
+        person = ClaimedPersonFactory()
+        person.groups.add(data_assessor_group)
+
+        assert is_assessment_team_member(person) is True
+
+    def test_true_for_a_data_curator(self, data_curator_group):
+        from review.permissions import is_assessment_team_member
+
+        person = ClaimedPersonFactory()
+        person.groups.add(data_curator_group)
+
+        assert is_assessment_team_member(person) is True
+
+    def test_true_for_a_user_in_both_groups(
+        self, data_assessor_group, data_curator_group
+    ):
+        from review.permissions import is_assessment_team_member
+
+        person = ClaimedPersonFactory()
+        person.groups.add(data_assessor_group, data_curator_group)
+
+        assert is_assessment_team_member(person) is True
+
+    def test_false_for_a_user_in_neither_group(self):
+        from review.permissions import is_assessment_team_member
+
+        person = ClaimedPersonFactory()
+
+        assert is_assessment_team_member(person) is False
+
+    def test_asks_the_database_once(
+        self, data_assessor_group, django_assert_num_queries
+    ):
+        from review.permissions import is_assessment_team_member
+
+        person = ClaimedPersonFactory()
+        person.groups.add(data_assessor_group)
+
+        with django_assert_num_queries(1):
+            is_assessment_team_member(person)

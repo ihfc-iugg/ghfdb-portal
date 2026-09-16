@@ -564,3 +564,18 @@ scope.
 
 **ADR:** none — the roadmap records its own state; that is what the roadmap is for.
 
+
+## D30 — "On the assessment team" is one question, asked once
+
+The cleanup pass found `is_data_assessor(user) or is_data_curator(user)` written out in three places:
+the assessment list, the description form's view, and the navigation entry. Each hit the database
+twice to answer one question.
+
+Three call sites clear the bar for naming a thing. `is_assessment_team_member` is not an abstraction
+over the two role predicates — those stay, and the pages that genuinely care which role a person
+holds still call them. It is the name of a question the workflow asks in its own right: the list, the
+description form and the navigation entry are open to both roles and care about nothing finer.
+
+Naming it also makes it one query instead of two, which is a consequence rather than the reason.
+
+**ADR:** none — a local naming decision inside one application's permission module.

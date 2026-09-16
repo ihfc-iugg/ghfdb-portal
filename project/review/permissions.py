@@ -22,6 +22,20 @@ def is_data_curator(user) -> bool:
     return user.groups.filter(name=DATA_CURATOR_GROUP).exists()
 
 
+def is_assessment_team_member(user) -> bool:
+    """Whether *user* belongs to either role.
+
+    "On the assessment team" is a thing the workflow asks about in its own
+    right — the list, the description form and the navigation entry are open
+    to both roles and care about nothing finer. Asking it once reads as the
+    question it is, and costs one query rather than the two that testing each
+    role in turn would.
+    """
+    return user.groups.filter(
+        name__in=(DATA_ASSESSOR_GROUP, DATA_CURATOR_GROUP)
+    ).exists()
+
+
 def can_manage_upload(user, review) -> bool:
     """Whether *user* may upload against or confirm *review* (T020, plan.md
     "The pages"): its own uploader, or any Data Curator, and no one else —

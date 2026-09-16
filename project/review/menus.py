@@ -11,7 +11,7 @@ from fairdm.menus import AppMenu
 from flex_menu import MenuItem
 
 from .models import Review
-from .permissions import is_data_assessor, is_data_curator
+from .permissions import is_assessment_team_member, is_data_curator
 from .states import States
 
 
@@ -32,7 +32,7 @@ class AssessmentMenuItem(MenuItem):
 
     def check(self, request, **kwargs):
         user = getattr(request, "user", None)
-        if user is None or not (is_data_assessor(user) or is_data_curator(user)):
+        if user is None or not is_assessment_team_member(user):
             return False
         extra_context = {k: v for k, v in self.extra_context.items() if k != "badge"}
         if is_data_curator(user):

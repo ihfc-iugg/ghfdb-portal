@@ -22,7 +22,11 @@ from project.ghfdb.report import build_report
 
 from .forms import ReviewDescriptionForm
 from .models import Review, SubmittedFile
-from .permissions import can_manage_upload, is_data_assessor, is_data_curator
+from .permissions import (
+    can_manage_upload,
+    is_assessment_team_member,
+    is_data_curator,
+)
 from .states import States, approve, confirm_upload, send_back
 
 
@@ -47,7 +51,7 @@ class ReviewListView(UserPassesTestMixin, FairDMListView):
 
     def test_func(self):
         user = self.request.user
-        return is_data_assessor(user) or is_data_curator(user)
+        return is_assessment_team_member(user)
 
     def get_queryset(self):
         return super().get_queryset().select_related("literature", "uploaded_by")
@@ -102,7 +106,7 @@ class ReviewCreateView(UserPassesTestMixin, FairDMCreateView):
 
     def test_func(self):
         user = self.request.user
-        return is_data_assessor(user) or is_data_curator(user)
+        return is_assessment_team_member(user)
 
     def form_valid(self, form):
         self.object = form.save(commit=False)
