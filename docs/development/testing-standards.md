@@ -385,6 +385,7 @@ def test_review_submission_workflow():
     # Act: Submit for review
     review = Review.objects.create(
         dataset=dataset,
+        literature=LiteratureItemFactory(),
         state=States.AWAITING_DECISION,
     )
     review.reviewers.add(user)
@@ -487,6 +488,7 @@ def test_full_workflow_import_to_export():
     # Act 2: Submit for review
     review = Review.objects.create(
         dataset=dataset,
+        literature=LiteratureItemFactory(),
         state=States.AWAITING_DECISION,
     )
 
@@ -609,6 +611,7 @@ def test_approve_for_publication_requires_a_data_curator():
     dataset = Dataset.objects.create(name="Test Dataset")
     review = Review.objects.create(
         dataset=dataset,
+        literature=LiteratureItemFactory(),
         state=States.AWAITING_DECISION,
     )
 

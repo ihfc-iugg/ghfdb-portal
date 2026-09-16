@@ -9,7 +9,7 @@ import json
 
 from django import forms
 from django.core.exceptions import ValidationError
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django_select2.forms import Select2MultipleWidget, Select2Widget
 from fairdm.contrib.contributors.models import Person
 from fairdm.forms import ModelForm
@@ -93,10 +93,11 @@ class ReviewDescriptionForm(ModelForm):
 
         literature = cleaned_data.get("literature")
         bibliography_data = cleaned_data.get("bibliography_file")
-        if not literature and bibliography_data:
-            literature = LiteratureItem.objects.create(item=bibliography_data)
-            cleaned_data["literature"] = literature
-        elif not literature and not self.has_error("bibliography_file"):
+        if (
+            not literature
+            and not bibliography_data
+            and not self.has_error("bibliography_file")
+        ):
             self.add_error(
                 "literature",
                 _(
@@ -125,4 +126,16 @@ class ReviewDescriptionForm(ModelForm):
                 _("The end date (%(end)s) cannot be before the start date (%(start)s).")
                 % {"end": end_date, "start": start_date},
             )
+
+        # The publication is written last, and only once every other check
+        # above has had its say. Django runs each field's own cleaning and then
+        # calls this method regardless of what that found, so creating it any
+        # earlier leaves a publication behind for every rejected submission —
+        # a date entered the wrong way round would quietly add one that nobody
+        # asked for and nobody afterwards knows to remove.
+        if not literature and bibliography_data and not self.errors:
+            cleaned_data["literature"] = LiteratureItem.objects.create(
+                item=bibliography_data
+            )
+
         return cleaned_data

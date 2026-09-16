@@ -6,7 +6,7 @@ they named; ``review-list`` is restored, ``reviewer-list`` is not (US-1
 does not touch the reviewer directory).
 """
 
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from fairdm.menus import AppMenu
 from flex_menu import MenuItem
 

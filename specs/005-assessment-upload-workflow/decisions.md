@@ -579,3 +579,43 @@ description form and the navigation entry are open to both roles and care about 
 Naming it also makes it one query instead of two, which is a consequence rather than the reason.
 
 **ADR:** none — a local naming decision inside one application's permission module.
+
+## D31 — Anything relaxed in the settings module is relaxed in production
+
+The review found that `ALLOWED_HOSTS = ["*"]`, `SESSION_COOKIE_SECURE = False` and
+`CSRF_COOKIE_SECURE = False` had been written unguarded into `config/settings.py`, to let a
+development server answer on a hostname other than localhost.
+
+`deploy/Dockerfile` sets `DJANGO_SETTINGS_MODULE=config.settings` alongside
+`DJANGO_ENV=production`. That is the same module. The comment written above those lines claimed the
+opposite — that `config/production.py` supplied production's own values — and that claim was asserted
+from the file's name without being checked. `config/production.py` carries object-storage settings
+and nothing about hosts or cookies.
+
+Shipped, this would have accepted any Host header on the public site and sent the session and CSRF
+cookies unencrypted.
+
+The three lines are now inside `if os.environ.get("DJANGO_ENV", "development") == "development":`,
+and a test reads the module's own source to assert none of them is ever assigned unconditionally
+again. The test was confirmed to fail with the unguarded version reinstated before being accepted.
+
+The general rule: this project has one settings module for every environment, so a relaxation written
+there is a relaxation everywhere, and a comment asserting otherwise is worth less than the one command
+that checks.
+
+**ADR:** none — a guard on this project's own settings module, recorded here and enforced by a test
+rather than by a document.
+
+## D32 — The publication is written after every other check, not during them
+
+A publication supplied as a bibliography file was created part-way through the form's `clean()`,
+before that method's own checks on the publication's uniqueness and on the date order had run. Django
+calls `clean()` regardless of what field-level validation found, so a submission rejected for any
+reason still left a publication behind — invisible to the person who submitted it, and unknown to
+anyone who might later remove it.
+
+Guarding the create on `not self.errors` alone is not enough, because the errors that matter most are
+added by `clean()` itself, further down. The create moves to the end of the method, after everything
+else has had its say.
+
+**ADR:** none — the ordering of one form's own validation.

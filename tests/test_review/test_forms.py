@@ -100,6 +100,35 @@ class TestReviewDescriptionFormBibliographyFile:
         assert literature.title == "A New Paper"
         assert LiteratureItem.objects.filter(pk=literature.pk).exists()
 
+    def test_a_rejected_form_leaves_no_publication_behind(self):
+        """A publication is written only once the rest of the form is sound.
+
+        Django runs every field's own cleaning and then calls ``clean()``
+        regardless of what that found, so an unguarded create here would add a
+        publication for every rejected submission — one nobody asked for and
+        nobody afterwards knows to remove.
+        """
+        assessor = ClaimedPersonFactory()
+        bibliography_file = SimpleUploadedFile(
+            "publication.json",
+            json.dumps({"title": "Never Asked For", "type": "article-journal"}).encode(),
+            content_type="application/json",
+        )
+        before = LiteratureItem.objects.count()
+
+        form = ReviewDescriptionForm(
+            data={
+                "reviewers": [assessor.pk],
+                "start_date": "2026-02-01",
+                "end_date": "2026-01-01",  # the wrong way round
+            },
+            files={"bibliography_file": bibliography_file},
+        )
+
+        assert not form.is_valid()
+        assert LiteratureItem.objects.count() == before
+        assert not LiteratureItem.objects.filter(title="Never Asked For").exists()
+
     def test_neither_a_publication_nor_a_file_is_refused(self):
         assessor = ClaimedPersonFactory()
 

@@ -23,17 +23,21 @@ DJANGO_SETUP_TOOLS = globals().get("DJANGO_SETUP_TOOLS", {})
 DJANGO_SETUP_TOOLS[""]["always_run"].insert(0, ("makemigrations", "--no-input"))
 DJANGO_SETUP_TOOLS[""]["always_run"].append(("compress",))
 
-# The development server is reached over the local network by hostname, not only
-# on localhost. DEBUG=True auto-allows localhost alone, so without this any
-# other hostname is answered with 400 DisallowedHost. Development settings only:
-# config/production.py sets its own ALLOWED_HOSTS from the environment.
-ALLOWED_HOSTS = ["*"]
+# This module is loaded in every environment, production included — the
+# deployed image sets DJANGO_SETTINGS_MODULE=config.settings alongside
+# DJANGO_ENV=production (deploy/Dockerfile). Anything relaxed here has to be
+# guarded, or it is relaxed on the public site.
+if os.environ.get("DJANGO_ENV", "development") == "development":
+    # A development server is reached over the local network by hostname, not
+    # only on localhost, and DEBUG=True auto-allows localhost alone — so
+    # without this any other hostname is answered with 400 DisallowedHost.
+    ALLOWED_HOSTS = ["*"]
 
-# The development server speaks plain HTTP, so a cookie marked Secure is
-# discarded by the browser. That failure is silent in one direction only: GET
-# pages render perfectly and every form post comes back 403.
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
+    # A development server speaks plain HTTP, so a browser discards any cookie
+    # marked Secure. The failure is silent in one direction only: pages render
+    # perfectly and every form post comes back 403.
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
 
 MVP_CONFIG["layout"]["sidebar"]["title"] = "Heatflow.world"
 

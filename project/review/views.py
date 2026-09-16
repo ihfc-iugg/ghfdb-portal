@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.core.files.base import ContentFile
 from django.shortcuts import redirect
 from django.utils import timezone
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, View
 from django.views.generic.detail import SingleObjectMixin
 from fairdm.core.dataset.models import Dataset

@@ -9,7 +9,7 @@ Global Heat Flow Database (GHFDB) models for Django. The models are defined usin
 """
 
 from django.conf import settings
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from fairdm.db import models
 from partial_date.fields import PartialDateField
 
