@@ -11,7 +11,7 @@
                 text="{% trans "Check file" %}"
                 variant="primary" />
     </form>
-    {% if report %}
+    {% if report or header_refused %}
       {% include "review/upload_report.html" %}
     {% endif %}
   </div>

@@ -1,7 +1,15 @@
 {% load i18n %}
 <div class="upload-report">
   <h2>{% trans "Check report" %}</h2>
-  {% if report.has_failures %}
+  {% if header_refused %}
+    <p>
+      {% blocktrans %}
+        This file's header does not match the official upload template. The
+        upload template appears to be out of date — download the current
+        version of the template and try again.
+      {% endblocktrans %}
+    </p>
+  {% elif report.has_failures %}
     <p>
       {% blocktrans count counter=report.failures|length %}
         This file has {{ counter }} problem to fix before it can be confirmed.

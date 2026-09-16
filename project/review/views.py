@@ -133,7 +133,18 @@ class ReviewUploadView(UserPassesTestMixin, DetailView):
             file=ContentFile(content, name=uploaded_file.name),
             submitted_by=request.user,
         )
-        outcome = import_ghfdb_template(content, review.dataset, check_only=True)
+        try:
+            outcome = import_ghfdb_template(content, review.dataset, check_only=True)
+        except ValueError:
+            # ADR 0003: the team's current template still carries two
+            # misspelled columns this refuses, so the header refusal is a
+            # decision, not a defect (research.md "The blocker nothing here
+            # can fix"). The raised message quotes column names the reader
+            # cannot act on (FR-012), so nothing from it reaches the page —
+            # only the fact that the template is out of date.
+            return self.render_to_response(
+                self.get_context_data(form=GHFDBImportForm(), header_refused=True)
+            )
         report = build_report(outcome)
         return self.render_to_response(
             self.get_context_data(form=GHFDBImportForm(), report=report)

@@ -36,7 +36,16 @@ from review.views import (
     ReviewListView,
     ReviewUploadView,
 )
+from tests.test_ghfdb.test_importers import ROW, _build_official_xlsx
 from tests.test_review.factories import ClaimedPersonFactory, ReviewFactory
+
+_XLSX_CONTENT_TYPE = (
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
+
+
+def _xlsx_upload(name: str, content: bytes) -> SimpleUploadedFile:
+    return SimpleUploadedFile(name, content, content_type=_XLSX_CONTENT_TYPE)
 
 
 @pytest.mark.django_db
@@ -324,6 +333,85 @@ class TestReviewUploadViewChecking:
         assert response.status_code == 200
         reader.assert_not_called()
         assert not SubmittedFile.objects.filter(review=review).exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewUploadViewHeaderRefusal:
+    """T026, spec.md User Story 4 scenario 3, ADR 0003, research.md "The
+    blocker nothing here can fix": a file whose header carries the two
+    misspellings the currently distributed template ships with is refused
+    on the header alone, before any row is read. This is a decision, not a
+    defect — the test proves the refusal happens and that it is reported as
+    a checkable outcome rather than an unhandled exception."""
+
+    def _post(self, rf, user, review, file):
+        request = rf.post(f"/assessments/{review.pk}/upload/", data={"file": file})
+        request.user = user
+        return ReviewUploadView.as_view()(request, pk=review.pk)
+
+    def _outdated_template_bytes(self) -> bytes:
+        outdated = {
+            key: value for key, value in ROW.items() if key != "tc_pT_function"
+        }
+        outdated["tc_pT_fuction"] = ""
+        outdated["Ref_ISGN"] = outdated.pop("Ref_IGSN", "")
+        return _build_official_xlsx(list(outdated.keys()), [list(outdated.values())])
+
+    def test_an_outdated_header_is_refused_without_reporting_row_failures(
+        self, rf, assessor
+    ):
+        review = ReviewFactory(uploaded_by=assessor)
+        outdated_file = _xlsx_upload(
+            "assessment.xlsx", self._outdated_template_bytes()
+        )
+
+        response = self._post(rf, assessor, review, outdated_file)
+
+        assert response.status_code == 200
+        assert response.context_data.get("header_refused") is True
+        assert "report" not in response.context_data
+
+    def test_the_refused_file_is_still_kept_as_a_submission(self, rf, assessor):
+        review = ReviewFactory(uploaded_by=assessor)
+        outdated_file = _xlsx_upload(
+            "assessment.xlsx", self._outdated_template_bytes()
+        )
+
+        self._post(rf, assessor, review, outdated_file)
+
+        assert SubmittedFile.objects.filter(review=review).exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewUploadReportTemplateHeaderRefusal:
+    """T026: the header-refusal message says the template is out of date
+    rather than quoting a column name the reader cannot act on, asserted
+    against the rendered HTML."""
+
+    def test_the_message_says_the_template_is_out_of_date(self):
+        review = ReviewFactory()
+
+        html = render_to_string(
+            "review/upload_report.html",
+            {"review": review, "header_refused": True},
+        )
+
+        assert "out of date" in html
+
+    def test_no_column_name_is_quoted_and_no_row_failures_appear(self):
+        review = ReviewFactory()
+
+        html = render_to_string(
+            "review/upload_report.html",
+            {"review": review, "header_refused": True},
+        )
+
+        assert "tc_pT_fuction" not in html
+        assert "Ref_ISGN" not in html
+        assert "problem" not in html
+        assert "<ul>" not in html
 
 
 @pytest.mark.django_db
