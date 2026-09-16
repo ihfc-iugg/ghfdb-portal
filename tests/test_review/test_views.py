@@ -36,7 +36,7 @@ from review.views import (
     ReviewListView,
     ReviewUploadView,
 )
-from tests.test_ghfdb.test_importers import ROW, _build_official_xlsx
+from tests.test_ghfdb.test_importers import ROW, _build_official_xlsx, make_dataset
 from tests.test_review.factories import ClaimedPersonFactory, ReviewFactory
 
 _XLSX_CONTENT_TYPE = (
@@ -555,6 +555,92 @@ class TestReviewUploadViewReupload:
         submissions = list(SubmittedFile.objects.filter(review=review).order_by("id"))
         assert len(submissions) == 2
         assert submissions[0].file.read() == failing_bytes
+
+
+#: T028, spec.md User Story 4 scenario 5, FR-013: none of these may appear
+#: in a rendered failure report — internal field/model names, resource and
+#: widget class names, exception type names, or a traceback marker.
+_DENY_LIST = (
+    "Traceback",
+    "ValueError",
+    "ValidationError",
+    "KeyError",
+    "TypeError",
+    "AttributeError",
+    "IntegrityError",
+    "HeatFlowSite",
+    "HeatFlow",
+    "ParentHeatFlow",
+    "GHFDBChild",
+    "GHFDBParent",
+    "GHFDBParentImportResource",
+    "GHFDBChildImportResource",
+    "ConceptWidget",
+    "MultiConceptWidget",
+    "RelatedModelWidget",
+    "surface_temperature",
+    'File "',
+)
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewUploadReportDenyList:
+    """T028, spec.md User Story 4 scenario 5, FR-013: no internal field
+    name, model name or traceback marker reaches a rendered failure report
+    — asserted against a deny list rather than by inspection."""
+
+    def test_a_real_failing_files_report_carries_none_of_the_deny_list(self):
+        from project.ghfdb.importers import import_ghfdb_template
+        from project.ghfdb.report import build_report
+
+        review = ReviewFactory()
+
+        row1 = dict(ROW)
+        row1["environment"] = "not_a_real_value"
+
+        row2 = dict(ROW)
+        row2["ID_parent"] = "2"
+        row2["ID"] = "2"
+        row2["name"] = "Test Site Beta"
+        row2["lat_NS"] = "50.0"
+        row2["long_EW"] = "8.0"
+        row2["q"] = ""
+
+        row3 = dict(ROW)
+        row3["ID_parent"] = "3"
+        row3["ID"] = "3"
+        row3["name"] = "Test Site Gamma"
+        row3["lat_NS"] = "52.0"
+        row3["long_EW"] = "9.0"
+        row3["tc_mean"] = "2.5"
+        row3["tc_method"] = "not_a_real_method"
+
+        outcome = import_ghfdb_template(
+            make_dataset(row1, row2, row3), review.dataset, check_only=True
+        )
+        report = build_report(outcome)
+        assert report.has_failures
+
+        html = render_to_string(
+            "review/upload_report.html", {"review": review, "report": report}
+        )
+
+        for term in _DENY_LIST:
+            assert term not in html, f"{term!r} leaked into the failure report"
+
+    def test_the_header_refusal_message_carries_none_of_the_deny_list_or_the_files_own_column_names(
+        self,
+    ):
+        review = ReviewFactory()
+
+        html = render_to_string(
+            "review/upload_report.html",
+            {"review": review, "header_refused": True},
+        )
+
+        for term in (*_DENY_LIST, "tc_pT_fuction", "Ref_ISGN"):
+            assert term not in html, f"{term!r} leaked into the header refusal message"
 
 
 def _submitted_file(review, user, content, name="assessment.xlsx"):

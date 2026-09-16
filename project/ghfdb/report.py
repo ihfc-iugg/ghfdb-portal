@@ -22,6 +22,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from django.utils.translation import gettext_lazy as _
 from import_export.results import Result
 
 from .importers import GHFDBImportOutcome
@@ -33,6 +34,43 @@ from .resources import GHFDBChildImportResource, GHFDBParentImportResource
 #: conflict in ``child.py``). Tried in that order.
 _COLUMN_IN_QUOTES = re.compile(r"Column '([^']+)'")
 _LEADING_COLUMN_PREFIX = re.compile(r"^([A-Za-z][A-Za-z0-9_]*): ")
+
+#: ``RelatedModelWidget.clean()``/``set_m2m_relations()`` (widgets.py)
+#: prefixes a sub-field's error with the Django model it is building —
+#: ``"HeatFlowSite: Column 'environment': ..."`` — to help a developer
+#: place the fault. That model name is internal (FR-013) and never reaches
+#: the report: the useful part of the message already starts at the
+#: embedded ``Column '...'`` marker, so everything before it is dropped.
+_DJANGO_DOES_NOT_EXIST = re.compile(
+    r"^[A-Za-z][A-Za-z0-9_]* matching query does not exist\.$"
+)
+
+
+def _sanitize_reason(message: str) -> str:
+    """Strip an internal Django model or class name out of *message* before
+    it becomes a ``RowFailure.reason`` (FR-013).
+
+    Two known leaks, both from third-party or wrapping code this report
+    layer does not control: ``RelatedModelWidget``'s own "which model"
+    prefix (stripped down to the embedded ``Column '...'`` marker that
+    already carries the useful part), and Django's default
+    ``Model.DoesNotExist`` message, which names the model class directly —
+    raised here when a child row's ``ForeignKeyWidget`` cannot resolve a
+    parent that itself failed to import. The row is still reported; only
+    the model name is replaced.
+    """
+    column_match = _COLUMN_IN_QUOTES.search(message)
+    if column_match:
+        return message[column_match.start() :]
+    if _DJANGO_DOES_NOT_EXIST.match(message):
+        return str(
+            _(
+                "This row's related record could not be found — an earlier "
+                "row it depends on did not import. Check that row's own "
+                "reported problem first."
+            )
+        )
+    return message
 
 
 @dataclass(frozen=True)
@@ -95,7 +133,7 @@ def _base_error_failures(result: Result) -> list[RowFailure]:
         RowFailure(
             row_number=number,
             column=_column_from_message(str(error.error)),
-            reason=str(error.error),
+            reason=_sanitize_reason(str(error.error)),
         )
         for number, errors in result.row_errors()
         for error in errors

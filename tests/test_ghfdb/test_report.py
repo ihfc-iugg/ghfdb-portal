@@ -142,6 +142,46 @@ class TestBuildReportFailures:
         assert "not_a_real_method" in failure.reason
         assert "ConductivityMethod" in failure.reason
 
+    def test_a_related_widget_failure_does_not_name_the_model_it_wraps(self, dataset):
+        """T028, FR-013: ``RelatedModelWidget`` wraps a sub-field's error
+        with its own Django model's class name (``ParentWidget`` ->
+        ``HeatFlowSite``) so a developer reading raw output can place the
+        fault — that name is internal and must not reach the report."""
+        from project.ghfdb.importers import import_ghfdb_template
+        from project.ghfdb.report import build_report
+
+        row1 = dict(ROW)
+        row1["environment"] = "not_a_real_value"
+
+        outcome = import_ghfdb_template(make_dataset(row1), dataset, check_only=True)
+        report = build_report(outcome)
+
+        failure = next(f for f in report.failures if f.column == "environment")
+        assert "HeatFlowSite" not in failure.reason
+        assert "not_a_real_value" in failure.reason
+        assert "GeographicEnvironment" in failure.reason
+
+    def test_a_downstream_parent_resolution_failure_does_not_name_the_model_class(
+        self, dataset
+    ):
+        """T028, FR-013: when a row's parent failed to import, the child
+        pass's own ``ForeignKeyWidget`` cannot resolve it and raises
+        Django's own ``DoesNotExist``, whose default message names the
+        model class directly — that must not reach the report either."""
+        from project.ghfdb.importers import import_ghfdb_template
+        from project.ghfdb.report import build_report
+
+        row1 = dict(ROW)
+        row1["environment"] = "not_a_real_value"
+
+        outcome = import_ghfdb_template(make_dataset(row1), dataset, check_only=True)
+        report = build_report(outcome)
+
+        assert report.has_failures
+        for failure in report.failures:
+            assert "ParentHeatFlow" not in failure.reason
+            assert "matching query does not exist" not in failure.reason
+
     def test_multiple_failures_are_all_reported(self, dataset):
         from project.ghfdb.importers import import_ghfdb_template
         from project.ghfdb.report import build_report
