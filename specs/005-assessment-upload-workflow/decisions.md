@@ -431,3 +431,28 @@ path must set it alongside `visibility`.
 T029 moves into US-6 rather than being patched into a finished story. A curator's confirmation and a
 curator's approval make a dataset public by the same mechanism, so the behaviour belongs in one place
 and was split across two stories by an accident of decomposition.
+
+## D28 — The decision queue renders its own rows, not through `FairDMListView`'s item-card mechanism
+
+`ReviewListView` (T011) uses `FairDMListView`'s stock rendering: `list_item_template` cards are
+built by `mvp`'s `render_list_item` template tag, which calls `render_to_string(template_name, new)`
+with a plain dict — no `request` — because `c-page.list` calls it from inside `list_view.html`
+without passing the page's own context through. A `{% csrf_token %}` inside a template rendered that
+way has no `csrf_token` in its context and renders nothing usable; a `<form>` built there would fail
+CSRF validation on every submission, silently, since nothing surfaces the missing token at render
+time.
+
+The queue's rows carry two POST forms per assessment (T037), so this mattered here in a way it never
+has for a read-only card. `ReviewQueueView` sets its own `template_name` (`review/queue.html`)
+instead of relying on `FairDMListView`'s auto-derived one, and that template loops `object_list`
+itself, including `review/review_queue_item.html` with Django's `{% include %}` rather than the
+`render_list_item` tag — `{% include %}` inherits the parent template's context, which does carry
+`csrf_token` because `queue.html` itself is rendered the normal way, through the view's own
+`TemplateResponse`. `list_item_template` stays set on the view (consistent with the rest of the
+plan, and harmless since nothing calls `render_list_item` for this view), but `queue.html`'s own loop
+is what actually renders each row.
+
+Revisit if: `FairDMListView`'s card mechanism gains a way to pass `request` through to
+`render_list_item`, at which point a read-only queue row could go back to the standard mechanism —
+though the two POST forms would still need it, so this is unlikely to become the simpler path even
+then.

@@ -186,3 +186,51 @@ enforces, and these are exactly the kind of gap that split creates. Flagged in t
 rather than fixed.
 
 Full suite and the repo's verify commands: see the completion report.
+
+## 2026-09-16 — US-6
+
+T029, moved here from US-5 (D27): confirmed `Dataset` carries `visibility` and nothing named
+`published` by importing it from the installed package and printing its fields, per the brief's own
+instruction not to take its word for it. `ReviewConfirmView.post` now calls a new
+`_publish_if_complete(review)` after the state transition — writes `visibility = PUBLIC` exactly
+when the assessment's own state reached `COMPLETE`, so it does not re-implement `is_data_curator`
+anywhere; it reads the outcome `review.states.confirm_upload` already computed. Proven by asserting
+the field directly on both branches (curator: `PUBLIC`; assessor: still `PRIVATE`, extending the
+existing `TestAssessorDatasetVisibility`).
+
+T033: `ReviewQueueView` at `/assessments/queue/`, `is_data_curator`-gated, filtered to
+`AWAITING_DECISION`. See D28 for why its template does not use `FairDMListView`'s stock item-card
+rendering — the short version is that mechanism strips `request` from the row's context, which is
+fine for a read-only card and not fine for the two POST forms T037 adds later.
+
+T034: `ReviewDecideView`, POST only at `/assessments/<pk>/decide/`, `is_data_curator`-gated. The
+approve branch calls `review.states.approve` (which still raises `IllegalTransition` for a wrong
+state or a non-curator actor — defence in depth, `test_func` is what actually stops the request) then
+the same `_publish_if_complete` T029 added, and stamps `decided_by`/`decided_at`.
+
+T035: the same view's `send_back` branch calls `review.states.send_back`, leaves the dataset alone
+(private stays private, nothing writes it), and records `decision_comment` alongside
+`decided_by`/`decided_at`. The comment reaches the uploader through `ReviewUploadView`'s own context
+— added only while the assessment is `CHANGES_REQUESTED`, so a comment from a cycle already resolved
+does not linger on the page. The full round trip (send back → replacement upload → confirm → back to
+`AWAITING_DECISION`, with the original `SubmittedFile` still present) is proven end to end in
+`TestReviewSendBackRoundTrip`, reusing the existing upload/confirm routes rather than adding
+anything new to them.
+
+T036: one dedicated test proves an assessor cannot approve their own upload through this route —
+`review-decide` is gated by `is_data_curator` alone, never `can_manage_upload`, unlike upload/
+confirm. Per craft-tdd's probing rule, checked as a real guard rather than assumed: `test_func` was
+temporarily widened to also allow the uploader, the test observed to fail for the right reason (a
+302 in place of the expected 403), then reverted before committing.
+
+T037: `review_queue_item.html` gained the approve and send-back forms once `review-decide` existed to
+point them at (D28 explains why they live in the include rather than the auto-rendered card).
+Route-resolution tests for both `review-queue` and `review-decide` were added to `test_urls.py`,
+mirroring T014's role for T011's already-wired route — the URLs themselves landed with their views'
+own commits (T033/T034), same shape as `review-list`/`review-create`.
+
+No notification framework, model or dependency was added (D8): the queue itself and the badge count
+T013 already built on the navigation entry are what FR-022 asks for.
+
+Full suite, `manage.py check`, `makemigrations --check`, and `poetry run pre-commit run -a`: see the
+completion report.
