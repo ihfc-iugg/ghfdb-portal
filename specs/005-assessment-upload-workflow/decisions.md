@@ -227,3 +227,28 @@ the anonymous redirect) are unaffected: both short-circuit in `dispatch()`, befo
 renders, so the ordinary test client is used for them. T012's list-item-template test renders that
 one template directly (`render_to_string`) for the same reason, rather than through the full list
 page.
+
+## D17 — The navigation entry is wired through `apps.py.ready()`, imported via `fairdm.menus`
+
+`review/menus.py` had no caller anywhere in the tree — `project/ghfdb/menus.py` carries the same gap
+today, its one entry never actually reaching `AppMenu`, because nothing autodiscovers a `menus`
+module the way Django admin autodiscovers `admin.py` (`fairdm.apps.FairDMConfig.ready()` calls
+`autodiscover_modules("config")` and `autodiscover_modules("plugins")`, not `"menus"`). Without an
+explicit import, `assessment_entry`'s tests would pass — importing the module for the test is enough
+to register it — while the running site never showed the entry at all, exactly the gap between "the
+tests are green" and "the feature works" this org exists to close.
+
+`review/apps.py`'s `GHFDBReviewConfig.ready()` now imports `. import menus` explicitly. Confirmed
+against the app registry directly (`root.get("AppMenu")` lists `"assessments"` among its children
+after a bare `django.setup()`, with no test importing `review.menus` itself) rather than only through
+the module import that would have masked the gap.
+
+`ghfdb/menus.py`'s equivalent gap is out of `project/review/`'s scope and is left for the repo to
+triage on its own — noted in the completion report's `concerns` rather than fixed here.
+
+Separately, `menus.py` imports `AppMenu` from `fairdm.menus` rather than `mvp.menus`: both name the
+identical object (`fairdm/menus/__init__.py` re-exports `mvp.menus.AppMenu` unchanged, and
+`project/ghfdb/menus.py` already imports it this same way), but `mvp` is only a transitive dependency
+of this project's `pyproject.toml` — `poetry run deptry` flags a direct import of it as `DEP003`.
+Importing through `fairdm`, which is a direct dependency, resolves the lint finding and matches the
+one precedent already in the tree.
