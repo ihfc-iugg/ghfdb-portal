@@ -471,7 +471,8 @@ It is the one path both a curator's confirmation and a curator's approval use.
 `review.views.ReviewQueueView`, at `/assessments/queue/`, lists every assessment in
 `AWAITING_DECISION` — a Data Curator only, refused to anyone else including the Data Assessor who
 uploaded one of the waiting assessments. Each row is rendered by `review/review_queue_item.html`,
-naming the publication and the uploader.
+naming the publication and the uploader, and carries the approve and send-back forms that post to
+`review-decide`.
 
 `review.views.ReviewDecideView`, at `/assessments/<pk>/decide/`, POST only, is how a curator acts on
 one. Approving runs `review.states.approve`, then `review.views._publish_if_complete` — the same

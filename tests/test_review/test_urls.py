@@ -16,7 +16,9 @@ from review import urls as review_urls
 from review.views import (
     ReviewConfirmView,
     ReviewCreateView,
+    ReviewDecideView,
     ReviewListView,
+    ReviewQueueView,
     ReviewUploadView,
 )
 
@@ -44,6 +46,34 @@ class TestReviewCreateRoute:
         match = resolve("/assessments/new/")
 
         assert match.func.view_class is ReviewCreateView
+
+
+@pytest.mark.review
+class TestReviewQueueRoute:
+    """T037, plan.md's access table: the decision queue resolves by the
+    name plan.md's access table gives it."""
+
+    def test_review_queue_resolves_by_name_to_the_documented_path(self):
+        assert reverse("review-queue") == "/assessments/queue/"
+
+    def test_the_path_resolves_to_the_queue_view(self):
+        match = resolve("/assessments/queue/")
+
+        assert match.func.view_class is ReviewQueueView
+
+
+@pytest.mark.review
+class TestReviewDecideRoute:
+    """T037, plan.md's access table: the decide route resolves by the name
+    plan.md's access table gives it."""
+
+    def test_review_decide_resolves_by_name_to_the_documented_path(self):
+        assert reverse("review-decide", kwargs={"pk": 1}) == "/assessments/1/decide/"
+
+    def test_the_path_resolves_to_the_decide_view(self):
+        match = resolve("/assessments/1/decide/")
+
+        assert match.func.view_class is ReviewDecideView
 
 
 @pytest.mark.review

@@ -310,6 +310,21 @@ class TestReviewQueueItemTemplate:
         assert str(review.literature) in html
         assert str(assessor) in html
 
+    def test_row_carries_an_approve_and_a_send_back_form(self, assessor):
+        review = ReviewFactory(
+            uploaded_by=assessor,
+            state=States.AWAITING_DECISION,
+        )
+        decide_url = reverse("review-decide", kwargs={"pk": review.pk})
+
+        html = render_to_string(
+            "review/review_queue_item.html", {"review": review}
+        )
+
+        assert html.count(f'action="{decide_url}"') == 2
+        assert 'value="approve"' in html
+        assert 'value="send_back"' in html
+
 
 @pytest.mark.django_db
 @pytest.mark.review
