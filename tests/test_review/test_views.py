@@ -852,3 +852,45 @@ class TestAssessorDatasetVisibility:
         response = client.get(review.dataset.get_absolute_url())
 
         assert response.status_code == 404
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewSubmissionsRetrievability:
+    """T031, spec.md User Story 5 scenario 4, SC-005: every file submitted
+    against an assessment stays retrievable, including one superseded by a
+    later submission, and each stays distinguishable from the current one
+    (``Review.current``, data-model.md "review.SubmittedFile")."""
+
+    def _confirm(self, rf, user, review):
+        request = rf.post(f"/assessments/{review.pk}/confirm/")
+        request.user = user
+        return ReviewConfirmView.as_view()(request, pk=review.pk)
+
+    def _post_upload(self, rf, user, review, file):
+        request = rf.post(f"/assessments/{review.pk}/upload/", data={"file": file})
+        request.user = user
+        return ReviewUploadView.as_view()(request, pk=review.pk)
+
+    def test_a_superseded_submission_stays_retrievable_and_distinguishable_from_the_current_one(
+        self, rf, assessor, valid_upload_bytes
+    ):
+        review = ReviewFactory(uploaded_by=assessor)
+        first = _submitted_file(review, assessor, valid_upload_bytes)
+        self._confirm(rf, assessor, review)
+        first.refresh_from_db()
+
+        second_bytes = _build_official_xlsx(
+            list(ROW.keys()), [[ROW[header] for header in ROW]]
+        )
+        second_upload = _xlsx_upload("assessment-2.xlsx", second_bytes)
+        self._post_upload(rf, assessor, review, second_upload)
+
+        submissions = list(review.submissions.all())
+        assert len(submissions) == 2
+        assert first in submissions
+
+        current = review.current
+        assert current.pk != first.pk
+        assert first.imported_at is not None
+        assert current.imported_at is None
