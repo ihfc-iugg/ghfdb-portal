@@ -1,0 +1,120 @@
+{
+  "story": "US2",
+  "skills_loaded": [
+    {
+      "name": "craft-tdd",
+      "receipt": "craft-tdd/2026-08-24/0f180d36",
+      "loaded_via": "skill-tool"
+    },
+    {
+      "name": "craft-increments",
+      "receipt": "craft-increments/2026-08-05/d3dce07f",
+      "loaded_via": "skill-tool"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T015",
+      "status": "done",
+      "evidence": {
+        "tests_added": [
+          "tests/test_review/test_forms.py::TestReviewDescriptionFormValidation::test_valid_with_catalogued_publication_assessors_and_dates",
+          "tests/test_review/test_forms.py::TestReviewDescriptionFormValidation::test_end_date_before_start_date_is_refused_naming_the_dates",
+          "tests/test_review/test_forms.py::TestReviewDescriptionFormValidation::test_a_ghost_profile_is_accepted_as_an_assessor"
+        ],
+        "commands": ["poetry run pytest tests/test_review/test_forms.py -v"],
+        "exit_code": 0
+      },
+      "commits": ["97fc437"]
+    },
+    {
+      "id": "T016",
+      "status": "done",
+      "evidence": {
+        "tests_added": [
+          "tests/test_review/test_forms.py::TestReviewDescriptionFormBibliographyFile::test_a_bibliography_file_adds_the_publication_and_links_it",
+          "tests/test_review/test_forms.py::TestReviewDescriptionFormBibliographyFile::test_neither_a_publication_nor_a_file_is_refused",
+          "tests/test_review/test_forms.py::TestReviewDescriptionFormBibliographyFile::test_an_invalid_bibliography_file_is_refused"
+        ],
+        "commands": ["poetry run pytest tests/test_review/test_forms.py -v"],
+        "exit_code": 0
+      },
+      "commits": ["02f1798"]
+    },
+    {
+      "id": "T017",
+      "status": "done",
+      "evidence": {
+        "tests_added": [
+          "tests/test_review/test_views.py::TestReviewCreateView::test_submitting_creates_an_assessment_in_described_state",
+          "tests/test_review/test_views.py::TestReviewCreateView::test_the_new_dataset_holds_no_data_and_is_not_public",
+          "tests/test_review/test_views.py::TestReviewCreateView::test_uploaded_by_is_the_submitting_user",
+          "tests/test_review/test_views.py::TestReviewCreateView::test_the_uploader_holds_object_permissions_on_the_dataset",
+          "tests/test_review/test_views.py::TestReviewCreateView::test_each_named_assessor_is_credited_as_a_contributor",
+          "tests/test_review/test_views.py::TestReviewCreateView::test_a_blank_title_takes_the_publications_own_title",
+          "tests/test_review/test_views.py::TestReviewCreateView::test_a_given_title_is_used_over_the_publications_own"
+        ],
+        "commands": ["poetry run pytest tests/test_review/test_views.py::TestReviewCreateView -v"],
+        "exit_code": 0
+      },
+      "commits": ["b8c8645"]
+    },
+    {
+      "id": "T018",
+      "status": "done",
+      "evidence": {
+        "tests_added": [
+          "tests/test_review/test_forms.py::TestReviewDescriptionFormDuplicateLiterature::test_a_publication_with_an_existing_assessment_is_refused"
+        ],
+        "commands": ["poetry run pytest tests/test_review/test_forms.py -v"],
+        "exit_code": 0
+      },
+      "commits": ["7764007"]
+    },
+    {
+      "id": "T019",
+      "status": "done",
+      "evidence": {
+        "tests_added": [
+          "tests/test_review/test_urls.py::TestReviewCreateRoute::test_review_create_resolves_by_name_to_the_documented_path",
+          "tests/test_review/test_urls.py::TestReviewCreateRoute::test_the_path_resolves_to_the_create_view",
+          "tests/test_review/test_views.py::TestReviewCreateViewAccess::test_a_data_assessor_is_granted_entry",
+          "tests/test_review/test_views.py::TestReviewCreateViewAccess::test_a_data_curator_is_granted_entry",
+          "tests/test_review/test_views.py::TestReviewCreateViewAccess::test_a_signed_in_user_in_neither_role_is_refused",
+          "tests/test_review/test_views.py::TestReviewCreateViewAccess::test_an_anonymous_visitor_is_redirected_to_log_in_rather_than_served"
+        ],
+        "commands": [
+          "poetry run pytest tests/test_review/test_urls.py tests/test_review/test_views.py::TestReviewCreateViewAccess -v"
+        ],
+        "exit_code": 0
+      },
+      "commits": ["ff372b8"]
+    }
+  ],
+  "deviations": [
+    {
+      "what": "The bibliography-file path (T016) accepts a CSL-JSON file rather than BibTeX/RIS/EndNote.",
+      "why": "django-literature's own add-without-leaving-the-page mechanism parses those three formats client-side, in a bundled JS library this repository doesn't own; no server-side parser is an available dependency (pybtex/citeproc-py are transitive-only, and deptry DEP003 refuses a direct import of either). CSL-JSON is read with the stdlib json module and passed straight to LiteratureItem.objects.create(item=...), the same shape the model already derives type/title/issued/citation_key from.",
+      "decision_ref": "decisions.md#d18-the-bibliography-file-path-t016-accepts-csl-json-not-bibtexrisendnote"
+    },
+    {
+      "what": "Assessors are credited as dataset contributors under the FairDMRoles role DataCollector, not DataCurator (the retired view's choice).",
+      "why": "DataCurator is now the name of this feature's own Data Curator portal group; carrying it forward as a contributor-role label would misleadingly claim portal-role membership rather than record what an assessor actually did. DataCollector is the closest existing FairDMRoles concept to carrying out an assessment.",
+      "decision_ref": "decisions.md#d19-assessors-are-credited-as-datacollector-not-datacurator"
+    },
+    {
+      "what": "The uploader's object permissions are granted via fairdm.utils.permissions.assign_all_model_perms (every Dataset permission) rather than the five named permissions DatasetCreateView.form_valid grants via guardian.shortcuts.assign_perm.",
+      "why": "django-guardian is a transitive dependency only; deptry DEP003 refuses a direct guardian import from project/review/. assign_all_model_perms wraps the same guardian call through fairdm, a direct dependency, and is the same helper the retired create view already called once per reviewer — now called once for uploaded_by instead, which is the brief's actual correction.",
+      "decision_ref": "decisions.md#d20-the-uploaders-object-permissions-reuse-assign_all_model_perms-redirected-to-uploaded_by"
+    },
+    {
+      "what": "T017's tests call ReviewCreateView.as_view() directly via RequestFactory rather than through reverse(\"review-create\"); the route itself is registered in T019, not pulled forward into T017's commit.",
+      "why": "Unlike US-1's list view (D15), T017's acceptance is about POST/database behaviour, not a rendered response, so no resolvable URL is needed to prove it. This keeps T017 and T019 independent of each other's landing order instead of repeating D15's forced reordering.",
+      "decision_ref": "decisions.md#d21-t017s-own-tests-call-the-view-directly-not-through-reversereview-create"
+    }
+  ],
+  "concerns": [
+    "docs/data_models/ghfdb-erd.md and the guides carry no changes: US-2 added no new model fields (uploaded_by/state/decided_by/decided_at/decision_comment were already added and documented in US-1/T010b), so the documentation check's existing coverage needed no updates. Confirmed rather than assumed: tests/test_docs/ (305 tests) passed unchanged."
+  ],
+  "blocked": []
+}

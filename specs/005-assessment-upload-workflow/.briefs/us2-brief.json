@@ -1,0 +1,109 @@
+{
+  "story": "US2",
+  "repo": "ihfc-iugg/ghfdb-portal",
+  "issue": 211,
+  "worktree": "/home/sam/projects/ihfc-iugg/ghfdb-portal-005",
+  "tasks": [
+    "T015",
+    "T016",
+    "T017",
+    "T018",
+    "T019"
+  ],
+  "required_skills": [
+    {
+      "name": "craft-tdd",
+      "path": "/home/sam/.openclaw/workspaces/forge/skills/craft-tdd/SKILL.md",
+      "receipt": "craft-tdd/2026-08-24/0f180d36"
+    },
+    {
+      "name": "craft-increments",
+      "path": "/home/sam/.openclaw/workspaces/forge/skills/craft-increments/SKILL.md",
+      "receipt": "craft-increments/2026-08-05/d3dce07f"
+    }
+  ],
+  "context": {
+    "why": "The second page of the assessment upload workflow, and the one that decides what a dataset IS before any file is chosen. The uploader names the publication the data comes from \u2014 found in the portal's literature catalogue, or added from a bibliography file when it is not there yet \u2014 the people who carried out the assessment, the dates the work ran between, and optionally a title. Leaving the title blank takes the publication's own. Submitting creates the assessment record in DESCRIBED and a private dataset to hold what comes next. The team's spreadsheet template has reviewer columns; this form is what replaces them, which is why the assessors are recorded here against real contributor profiles instead of read out of a spreadsheet cell.",
+    "environment": "Python 3.13 via Poetry, virtualenv already synced. Prefix commands with `poetry run`. Tests: `poetry run pytest`. Lint gate: `poetry run pre-commit run -a`, never raw ruff. A development server is already running from this worktree on 0.0.0.0:8001 with the autoreloader; do not start another and do not stop it.",
+    "spec_sections": [
+      "spec.md User Story 2 and its six acceptance scenarios",
+      "spec.md FR-003, FR-004, FR-005, FR-006, FR-007, FR-016"
+    ],
+    "plan_sections": [
+      "plan.md 'The record'",
+      "plan.md 'The pages'",
+      "data-model.md 'review.Review'",
+      "data-model.md 'review.states'",
+      "research.md 'Assessors do not need accounts'",
+      "research.md 'The assessment record already exists, partly'"
+    ],
+    "prior_decisions": [
+      "One publication is one dataset. Review.literature is a OneToOne and stays that way \u2014 CONTEXT.md states it and the maintainer confirmed it.",
+      "Assessors are contributor profiles, not necessarily account holders. Person.objects.real() already includes ghost and invited profiles and excludes only superusers and the guardian anonymous user. Do not filter to claimed accounts.",
+      "Object permissions follow uploaded_by, never the assessor list. An assessor may be a ghost profile with no account, so granting object permissions to assessors is meaningless. The old code did that and it is gone.",
+      "Assessors still get contributor credit on the dataset. That is attribution, not access.",
+      "The dataset is private on creation because both framework fields default that way. Do not write code that sets private explicitly \u2014 the safe outcome is the one that happens when nothing runs.",
+      "D16/#367: rendering the shared page chrome for a signed-in user raises when DEBUG=False. Scope granted-path tests the way US-1 did and do not try to fix it here."
+    ],
+    "acceptance": [
+      {
+        "task": "T015",
+        "given_when_then": "Given the description form, When it is completed with a publication already in the catalogue, assessors, dates and no title, Then it validates; and When the end date precedes the start date, Then it is refused naming the dates; and When a ghost contributor profile is chosen as an assessor, Then it is accepted."
+      },
+      {
+        "task": "T016",
+        "given_when_then": "Given a publication absent from the catalogue, When its bibliography file is supplied through the same form, Then the publication is added to the catalogue and the assessment links to it without the uploader leaving the form."
+      },
+      {
+        "task": "T017",
+        "given_when_then": "Given a completed form, When it is submitted, Then an assessment exists in DESCRIBED with a new dataset that holds no data and is not public, uploaded_by is the submitting user, that user holds object permissions on the dataset, each named assessor is credited as a contributor, and a blank title took the publication's own."
+      },
+      {
+        "task": "T018",
+        "given_when_then": "Given a publication that already has an assessment, When the form names it again, Then it is refused and the message names the existing assessment."
+      },
+      {
+        "task": "T019",
+        "given_when_then": "Given the description route, When a member of either role requests it, Then it is served; When anyone else does, Then it is refused; and the route resolves by the name plan.md's access table gives it."
+      }
+    ],
+    "verified_base": {
+      "commit": "c6c1dc1e43b416662a60a4f37ab6c26b97bbf3da",
+      "verified_at": "2026-09-16T13:05:00Z",
+      "steps": [
+        "lint",
+        "typecheck",
+        "test",
+        "build",
+        "conformance",
+        "docs"
+      ],
+      "note": "Every step green, full suite about 124 seconds. Nothing is known-red at this commit. If anything is red when you arrive, STOP and report rather than fixing it."
+    }
+  },
+  "budgets": {
+    "attempts_per_task": 5,
+    "wallclock_minutes": 240
+  },
+  "rituals": [
+    "Read specs/005-assessment-upload-workflow/spec.md User Story 2, plan.md, data-model.md and research.md before writing anything.",
+    "Read project/review/ in full, and read git show 78c12d1 to see the create view that was retired \u2014 it did much of this and its permission grant was wrong in a specific way the brief names.",
+    "Read how US-1 built its view and tests (project/review/views.py, tests/test_review/test_views.py) and follow that shape.",
+    "Confirm HEAD equals the verified_base commit before starting.",
+    "Work in thin slices: each slice leaves the suite green and is committed before the next begins."
+  ],
+  "prohibitions": [
+    "Stage explicit paths only. Never `git add -A` or `git add .` \u2014 this worktree is shared with a running development server and the orchestrator.",
+    "Do not stop, restart or start a development server. One is already running on port 8001 with the autoreloader.",
+    "Never weaken or delete a test you did not author in this story.",
+    "Do not build the upload page, the check report, the confirm path or the curator queue. Those are US-3 onward.",
+    "Do not grant object permissions to assessors. They follow uploaded_by.",
+    "Do not filter the assessor queryset to claimed accounts.",
+    "Do not relax Review.literature from OneToOne.",
+    "Do not attempt to fix the DEBUG=False chrome defect; it is raised upstream as django-mvp/django-mvp#367.",
+    "Do not add any new dependency.",
+    "Do not touch .github/workflows/**.",
+    "Do not push, open pull requests or comment on GitHub. Commit locally only.",
+    "Never judge layout or appearance from a screenshot and never claim a visual result is correct on that basis."
+  ]
+}

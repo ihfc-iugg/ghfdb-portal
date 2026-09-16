@@ -1,0 +1,109 @@
+{
+  "story": "US3",
+  "skills_loaded": [
+    {
+      "name": "craft-tdd",
+      "receipt": "craft-tdd/2026-09-16/3c401f5e",
+      "loaded_via": "skill-tool"
+    },
+    {
+      "name": "craft-increments",
+      "receipt": "craft-increments/2026-08-05/d3dce07f",
+      "loaded_via": "skill-tool"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T020",
+      "status": "done",
+      "evidence": {
+        "tests_added": [
+          "tests/test_review/test_permissions.py::TestCanManageUpload",
+          "tests/test_review/test_views.py::TestReviewUploadViewAccess",
+          "tests/test_review/test_views.py::TestReviewUploadViewChecking"
+        ],
+        "commands": [
+          "poetry run pytest tests/test_review/test_permissions.py -x -q",
+          "poetry run pytest tests/test_review/test_views.py -k Upload -q",
+          "poetry run pytest tests/test_review -q"
+        ],
+        "exit_code": 0
+      },
+      "commits": ["0fb78ce", "06f698d"]
+    },
+    {
+      "id": "T021",
+      "status": "done",
+      "evidence": {
+        "tests_added": [
+          "tests/test_review/test_views.py::TestReviewUploadReportTemplate"
+        ],
+        "commands": [
+          "poetry run pytest tests/test_review/test_views.py::TestReviewUploadReportTemplate -q",
+          "poetry run pytest tests/test_review -q"
+        ],
+        "exit_code": 0
+      },
+      "commits": ["79b30e6"]
+    },
+    {
+      "id": "T022",
+      "status": "done",
+      "evidence": {
+        "tests_added": [
+          "tests/test_review/test_views.py::TestReviewConfirmViewAccess",
+          "tests/test_review/test_views.py::TestReviewConfirmViewWriting"
+        ],
+        "commands": [
+          "poetry run pytest tests/test_review/test_views.py -k Confirm -q",
+          "poetry run pytest tests/test_review tests/test_ghfdb -q"
+        ],
+        "exit_code": 0
+      },
+      "commits": ["3cc16e2"]
+    },
+    {
+      "id": "T023",
+      "status": "done",
+      "evidence": {
+        "tests_added": [
+          "tests/test_review/test_views.py::TestReviewConfirmViewIdempotency"
+        ],
+        "commands": [
+          "poetry run pytest tests/test_review/test_views.py::TestReviewConfirmViewIdempotency -q"
+        ],
+        "exit_code": 0
+      },
+      "commits": ["3cc16e2"]
+    },
+    {
+      "id": "T024",
+      "status": "done",
+      "evidence": {
+        "tests_added": [
+          "tests/test_review/test_urls.py::TestNoRouteWritesWithoutChecking"
+        ],
+        "commands": [
+          "poetry run pytest tests/test_review/test_urls.py -q",
+          "manual: reinstated GHFDBParentImportResource().import_data(...) bypass in ReviewConfirmView.post, re-ran the test, confirmed test_every_routed_view_avoids_the_import_resources_directly failed with the expected message, then reverted (git diff clean)"
+        ],
+        "exit_code": 0
+      },
+      "commits": ["09267bf"]
+    }
+  ],
+  "deviations": [
+    {
+      "what": "review.views imports project.ghfdb.{forms,importers,report} instead of bare ghfdb.{forms,importers,report}, and [tool.deptry] known_first_party in pyproject.toml gained \"project\".",
+      "why": "ghfdb.apps.GhfdbConfig registers under the dotted name \"project.ghfdb\" rather than bare \"ghfdb\" (unlike its sibling apps). A bare cross-app import re-executes ghfdb.models under a module identity the app registry never registered, raising RuntimeError at collection. project.ghfdb.* is the same path tests/test_ghfdb already uses, which left deptry flagging \"project\" as an undeclared dependency until known_first_party listed it.",
+      "decision_ref": "specs/005-assessment-upload-workflow/decisions.md#d22-reviewviews-imports-ghfdb-symbols-as-projectghfdb-and-deptry-is-told-so"
+    },
+    {
+      "what": "T022 and T023 landed in one commit (3cc16e2) instead of two.",
+      "why": "D6 makes the re-check-and-write and the double-submission guard the same mechanism (the assessment's state). Building T022's write path without the state guard would ship a confirm view that writes twice on a repeated POST for one commit's worth of work, which the story's own D5/D6 exist to rule out.",
+      "decision_ref": "specs/005-assessment-upload-workflow/decisions.md#d23-t022-and-t023-land-as-one-commit"
+    }
+  ],
+  "concerns": [],
+  "blocked": []
+}

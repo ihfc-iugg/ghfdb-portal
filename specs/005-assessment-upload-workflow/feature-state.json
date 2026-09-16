@@ -404,33 +404,78 @@
       "priority": "P1",
       "issue": 212,
       "worktree": null,
-      "status": "todo",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
           "id": "T020",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T021",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T022",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T023",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T024",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
