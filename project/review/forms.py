@@ -5,7 +5,10 @@ Publication, assessors, dates and an optional title, collected before any
 file is chosen (FR-003 through FR-007).
 """
 
+import json
+
 from django import forms
+from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
 from django_select2.forms import Select2MultipleWidget, Select2Widget
 from fairdm.contrib.contributors.models import Person
@@ -19,10 +22,24 @@ from .models import Review
 class ReviewDescriptionForm(ModelForm):
     literature = forms.ModelChoiceField(
         queryset=LiteratureItem.objects.all(),
-        required=True,
+        required=False,
         label=_("Publication"),
-        help_text=_("The publication the assessed data comes from."),
+        help_text=_(
+            "The publication the assessed data comes from, found in the "
+            "catalogue. Leave blank and supply a bibliography file below "
+            "when it is not there yet."
+        ),
         widget=Select2Widget,
+    )
+
+    bibliography_file = forms.FileField(
+        required=False,
+        label=_("Bibliography file"),
+        help_text=_(
+            "A CSL-JSON bibliography record for the publication, used "
+            "instead of the field above to add it to the catalogue without "
+            "leaving this form."
+        ),
     )
 
     reviewers = forms.ModelMultipleChoiceField(
@@ -46,10 +63,48 @@ class ReviewDescriptionForm(ModelForm):
 
     class Meta:
         model = Review
-        fields = ["literature", "reviewers", "start_date", "end_date", "title"]
+        fields = [
+            "literature",
+            "reviewers",
+            "start_date",
+            "end_date",
+            "title",
+            "bibliography_file",
+        ]
+
+    def clean_bibliography_file(self):
+        bibliography_file = self.cleaned_data.get("bibliography_file")
+        if not bibliography_file:
+            return bibliography_file
+        try:
+            data = json.loads(bibliography_file.read().decode("utf-8"))
+        except (ValueError, UnicodeDecodeError) as exc:
+            raise ValidationError(
+                _("This is not a valid bibliography record."), code="invalid"
+            ) from exc
+        if not isinstance(data, dict):
+            raise ValidationError(
+                _("This is not a valid bibliography record."), code="invalid"
+            )
+        return data
 
     def clean(self):
         cleaned_data = super().clean()
+
+        literature = cleaned_data.get("literature")
+        bibliography_data = cleaned_data.get("bibliography_file")
+        if not literature and bibliography_data:
+            literature = LiteratureItem.objects.create(item=bibliography_data)
+            cleaned_data["literature"] = literature
+        elif not literature and not self.has_error("bibliography_file"):
+            self.add_error(
+                "literature",
+                _(
+                    "Choose a publication from the catalogue, or add one "
+                    "from a bibliography file."
+                ),
+            )
+
         start_date = cleaned_data.get("start_date")
         end_date = cleaned_data.get("end_date")
         if start_date and end_date and PartialDate(end_date) < PartialDate(start_date):

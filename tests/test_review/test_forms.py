@@ -4,8 +4,12 @@ Publication, assessors, dates and an optional title, collected before any
 file is chosen (FR-003 through FR-007).
 """
 
+import json
+
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from fairdm.factories import LiteratureItemFactory
+from literature.models import LiteratureItem
 
 from review.forms import ReviewDescriptionForm
 from tests.test_review.factories import ClaimedPersonFactory, GhostPersonFactory
@@ -61,3 +65,65 @@ class TestReviewDescriptionFormValidation:
         )
 
         assert form.is_valid(), form.errors
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewDescriptionFormBibliographyFile:
+    """T016: a publication absent from the catalogue is added from a
+    bibliography file supplied through the same form (spec.md User Story 2
+    scenario 2, FR-004)."""
+
+    def test_a_bibliography_file_adds_the_publication_and_links_it(self):
+        assessor = ClaimedPersonFactory()
+        bibliography_file = SimpleUploadedFile(
+            "publication.json",
+            json.dumps({"title": "A New Paper", "type": "article-journal"}).encode(),
+            content_type="application/json",
+        )
+
+        form = ReviewDescriptionForm(
+            data={
+                "reviewers": [assessor.pk],
+                "start_date": "2026-01-01",
+                "end_date": "2026-02-01",
+            },
+            files={"bibliography_file": bibliography_file},
+        )
+
+        assert form.is_valid(), form.errors
+        literature = form.cleaned_data["literature"]
+        assert literature.title == "A New Paper"
+        assert LiteratureItem.objects.filter(pk=literature.pk).exists()
+
+    def test_neither_a_publication_nor_a_file_is_refused(self):
+        assessor = ClaimedPersonFactory()
+
+        form = ReviewDescriptionForm(
+            data={
+                "reviewers": [assessor.pk],
+                "start_date": "2026-01-01",
+                "end_date": "2026-02-01",
+            }
+        )
+
+        assert not form.is_valid()
+        assert "literature" in form.errors
+
+    def test_an_invalid_bibliography_file_is_refused(self):
+        assessor = ClaimedPersonFactory()
+        bibliography_file = SimpleUploadedFile(
+            "publication.json", b"not json", content_type="application/json"
+        )
+
+        form = ReviewDescriptionForm(
+            data={
+                "reviewers": [assessor.pk],
+                "start_date": "2026-01-01",
+                "end_date": "2026-02-01",
+            },
+            files={"bibliography_file": bibliography_file},
+        )
+
+        assert not form.is_valid()
+        assert "bibliography_file" in form.errors
