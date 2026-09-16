@@ -67,6 +67,44 @@ class TestReviewListViewAccess:
 
 @pytest.mark.django_db
 @pytest.mark.review
+class TestReviewCreateViewAccess:
+    """T019: the description route is served to either role and refused to
+    anyone else (plan.md's access table)."""
+
+    def test_a_data_assessor_is_granted_entry(self, rf, assessor):
+        request = rf.get(reverse("review-create"))
+        request.user = assessor
+
+        response = ReviewCreateView.as_view()(request)
+
+        assert response.status_code == 200
+
+    def test_a_data_curator_is_granted_entry(self, rf, curator):
+        request = rf.get(reverse("review-create"))
+        request.user = curator
+
+        response = ReviewCreateView.as_view()(request)
+
+        assert response.status_code == 200
+
+    def test_a_signed_in_user_in_neither_role_is_refused(self, client, outsider):
+        client.force_login(outsider)
+
+        response = client.get(reverse("review-create"))
+
+        assert response.status_code == 403
+
+    def test_an_anonymous_visitor_is_redirected_to_log_in_rather_than_served(
+        self, client
+    ):
+        response = client.get(reverse("review-create"))
+
+        assert response.status_code == 302
+        assert response.url != reverse("review-create")
+
+
+@pytest.mark.django_db
+@pytest.mark.review
 class TestReviewCreateView:
     """T017: submitting the description form writes the assessment (spec.md
     User Story 2 scenarios 1, 3 and 5, FR-003 through FR-007, FR-016).

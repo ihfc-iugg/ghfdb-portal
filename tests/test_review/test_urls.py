@@ -10,7 +10,7 @@ table gives the assessment list.
 import pytest
 from django.urls import resolve, reverse
 
-from review.views import ReviewListView
+from review.views import ReviewCreateView, ReviewListView
 
 
 @pytest.mark.review
@@ -22,3 +22,17 @@ class TestReviewListRoute:
         match = resolve("/assessments/")
 
         assert match.func.view_class is ReviewListView
+
+
+@pytest.mark.review
+class TestReviewCreateRoute:
+    """T019: the description route resolves by the name plan.md's access
+    table gives it."""
+
+    def test_review_create_resolves_by_name_to_the_documented_path(self):
+        assert reverse("review-create") == "/assessments/new/"
+
+    def test_the_path_resolves_to_the_create_view(self):
+        match = resolve("/assessments/new/")
+
+        assert match.func.view_class is ReviewCreateView
