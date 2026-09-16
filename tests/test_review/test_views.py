@@ -894,3 +894,36 @@ class TestReviewSubmissionsRetrievability:
         assert current.pk != first.pk
         assert first.imported_at is not None
         assert current.imported_at is None
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewConfirmViewIgnoresReviewerColumns:
+    """T032, spec.md User Story 5 scenario 6, FR-023: the template's own
+    reviewer columns (Reviewer_name/Reviewer_comment/Review_date) contribute
+    nothing on confirmation, and the assessment's own assessors — named on
+    the description form — stand unchanged."""
+
+    def _confirm(self, rf, user, review):
+        request = rf.post(f"/assessments/{review.pk}/confirm/")
+        request.user = user
+        return ReviewConfirmView.as_view()(request, pk=review.pk)
+
+    def test_confirming_a_file_with_reviewer_columns_filled_in_leaves_the_assessors_unchanged(
+        self, rf, assessor
+    ):
+        review = ReviewFactory(uploaded_by=assessor)
+        review.reviewers.set([assessor])
+
+        row = dict(ROW)
+        row["Reviewer_name"] = "Jane Reviewer"
+        row["Reviewer_comment"] = "Looks fine"
+        row["Review_date"] = "2026-01-01"
+        content = _build_official_xlsx(list(row.keys()), [list(row.values())])
+        _submitted_file(review, assessor, content)
+
+        response = self._confirm(rf, assessor, review)
+
+        assert response.status_code == 302
+        review.refresh_from_db()
+        assert list(review.reviewers.all()) == [assessor]
