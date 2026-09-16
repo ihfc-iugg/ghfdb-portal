@@ -33,6 +33,7 @@ from review.states import States
 from review.views import (
     ReviewConfirmView,
     ReviewCreateView,
+    ReviewDecideView,
     ReviewListView,
     ReviewQueueView,
     ReviewUploadView,
@@ -308,6 +309,74 @@ class TestReviewQueueItemTemplate:
 
         assert str(review.literature) in html
         assert str(assessor) in html
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewDecideViewAccess:
+    """T034, plan.md's access table: the decide route is curators only,
+    POST only."""
+
+    def _approve(self, rf, user, review):
+        request = rf.post(
+            f"/assessments/{review.pk}/decide/", data={"action": "approve"}
+        )
+        request.user = user
+        return ReviewDecideView.as_view()(request, pk=review.pk)
+
+    def test_a_data_curator_is_granted_entry(self, rf, curator):
+        review = ReviewFactory(state=States.AWAITING_DECISION)
+
+        response = self._approve(rf, curator, review)
+
+        assert response.status_code == 302
+
+    def test_a_data_assessor_is_refused(self, client, assessor):
+        review = ReviewFactory(state=States.AWAITING_DECISION)
+        client.force_login(assessor)
+
+        response = client.post(
+            reverse("review-decide", kwargs={"pk": review.pk}),
+            data={"action": "approve"},
+        )
+
+        assert response.status_code == 403
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewDecideViewApprove:
+    """T034, spec.md User Story 6 scenario 2, FR-019, D27: approving a
+    waiting assessment makes its dataset public through the same mechanism
+    T029's curator confirmation uses, completes the assessment, and
+    records who decided it and when."""
+
+    def _approve(self, rf, user, review):
+        request = rf.post(
+            f"/assessments/{review.pk}/decide/", data={"action": "approve"}
+        )
+        request.user = user
+        return ReviewDecideView.as_view()(request, pk=review.pk)
+
+    def test_approving_makes_the_dataset_public_and_completes_the_assessment(
+        self, rf, curator
+    ):
+        review = ReviewFactory(state=States.AWAITING_DECISION)
+
+        self._approve(rf, curator, review)
+
+        review.refresh_from_db()
+        assert review.state == States.COMPLETE
+        assert review.dataset.visibility == review.dataset.VISIBILITY_CHOICES.PUBLIC
+
+    def test_approving_records_who_decided_and_when(self, rf, curator):
+        review = ReviewFactory(state=States.AWAITING_DECISION)
+
+        self._approve(rf, curator, review)
+
+        review.refresh_from_db()
+        assert review.decided_by_id == curator.pk
+        assert review.decided_at is not None
 
 
 @pytest.mark.django_db

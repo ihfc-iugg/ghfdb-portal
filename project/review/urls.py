@@ -12,6 +12,7 @@ from django.urls import URLPattern, URLResolver, path
 from .views import (
     ReviewConfirmView,
     ReviewCreateView,
+    ReviewDecideView,
     ReviewListView,
     ReviewQueueView,
     ReviewUploadView,
@@ -30,5 +31,10 @@ urlpatterns: list[URLPattern | URLResolver] = [
         "assessments/<int:pk>/confirm/",
         ReviewConfirmView.as_view(),
         name="review-confirm",
+    ),
+    path(
+        "assessments/<int:pk>/decide/",
+        ReviewDecideView.as_view(),
+        name="review-decide",
     ),
 ]

@@ -23,7 +23,7 @@ from project.ghfdb.report import build_report
 from .forms import ReviewDescriptionForm
 from .models import Review, SubmittedFile
 from .permissions import can_manage_upload, is_data_assessor, is_data_curator
-from .states import States, confirm_upload
+from .states import States, approve, confirm_upload
 
 
 class ReviewListView(UserPassesTestMixin, FairDMListView):
@@ -233,3 +233,36 @@ class ReviewConfirmView(UserPassesTestMixin, SingleObjectMixin, View):
         _publish_if_complete(review)
 
         return redirect(review.dataset.get_absolute_url())
+
+
+class ReviewDecideView(UserPassesTestMixin, SingleObjectMixin, View):
+    """Approve a waiting assessment, POST only (T034, plan.md "The pages",
+    FR-019, FR-021, spec.md User Story 6 scenarios 2 and 5).
+
+    Curators only — ``approve`` raises ``IllegalTransition`` for anyone
+    else too (states.py's own rule), but ``test_func`` refuses the request
+    before that is ever reached, the same shape ``ReviewQueueView`` uses.
+    An assessment no longer ``AWAITING_DECISION`` is a no-op redirect, the
+    same idempotency shape ``ReviewConfirmView`` uses.
+    """
+
+    model = Review
+    http_method_names = ["post"]
+
+    def test_func(self):
+        return is_data_curator(self.request.user)
+
+    def post(self, request, *args, **kwargs):
+        review = self.get_object()
+
+        if review.state != States.AWAITING_DECISION:
+            return redirect("review-queue")
+
+        if request.POST.get("action") == "approve":
+            approve(review, request.user)
+            review.decided_by = request.user
+            review.decided_at = timezone.now()
+            review.save(update_fields=["state", "decided_by", "decided_at"])
+            _publish_if_complete(review)
+
+        return redirect("review-queue")

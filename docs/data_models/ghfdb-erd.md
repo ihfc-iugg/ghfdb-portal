@@ -473,6 +473,12 @@ It is the one path both a curator's confirmation and a curator's approval use.
 uploaded one of the waiting assessments. Each row is rendered by `review/review_queue_item.html`,
 naming the publication and the uploader.
 
+`review.views.ReviewDecideView`, at `/assessments/<pk>/decide/`, POST only, is how a curator acts on
+one. Approving runs `review.states.approve`, then `review.views._publish_if_complete` — the same
+mechanism a curator's own confirmation uses — and records `decided_by`/`decided_at`. Curators only;
+refused to anyone else the same way `ReviewQueueView` is, before `approve` ever gets a chance to
+raise its own `IllegalTransition` for the same reason.
+
 ### SubmittedFile
 
 One completed upload template as supplied, kept against its assessment.
