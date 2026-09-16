@@ -6,6 +6,7 @@ decision at convergence, once the code that would carry them exists.
 
 ## D1 — The workflow is one feature, not two
 
+
 The roadmap splits this work across two items. R6 asks for the page the team uploads through and the
 validation result they read there, and says in as many words that the trust and review distinctions
 separating team members from outside contributors are out of its scope. R7 asks for the role, the
@@ -18,7 +19,10 @@ gate is not a decoration on the workflow, it is its last step.
 This feature therefore takes R6's remaining half together with R7's first three deliverables, and R7
 narrows to what it is actually about: contribution from people outside the assessment team.
 
+**ADR:** none — a scope decision about which roadmap items this feature covers. The roadmap itself now records the outcome, and nothing downstream inherits the reasoning.
+
 ## D2 — The role is the trust level
+
 
 R7's fifth deliverable reads "datasets from team members published without waiting". Taken at face
 value that exempts every member of the assessment team from the gate, which is the opposite of why
@@ -33,7 +37,10 @@ and nothing else about the two paths differs.
 This supersedes R7's fifth deliverable, and R7's text is corrected on this branch rather than left
 contradicting the specification.
 
+**ADR:** docs/adr/0017-a-role-carries-the-trust-that-decides-publication.md
+
 ## D3 — The vocabulary changes rather than the code working around it
+
 
 `CONTEXT.md` defines **Reviewer** as a member of the assessment team who carries out data
 assessment, and **publication approval** as a separate decision made by a **data administrator**.
@@ -45,7 +52,10 @@ that rule on the first commit. The glossary is updated on this branch, and the e
 group and `heat_flow_reviews` relation are carried into the new naming rather than left as a second
 vocabulary.
 
+**ADR:** none — a vocabulary change, carried by CONTEXT.md, which is the file that owns the project's terms.
+
 ## D4 — The template's reviewer columns stay ignored
+
 
 The upload template carries columns naming who reviewed what, and FS-004 already accepts and ignores
 them. This feature does not start reading them: the same information is collected on the form that
@@ -56,7 +66,10 @@ That makes the form the authority and the columns vestigial, which is the intend
 columns stay accepted-and-ignored rather than becoming an error, because the template is not ours to
 change and a file that fills them in is not wrong.
 
+**ADR:** none — the behaviour and its reasoning were settled by FS-004 and are unchanged here.
+
 ## D5 — The check cannot be turned off
+
 
 The obvious shape for this is a checkbox offering a trial run. It was rejected.
 
@@ -66,7 +79,10 @@ click past it are the ones the gate exists for. The check costs one extra page i
 removes a class of accident entirely, so it is unconditional, and a test enumerates the write paths
 to keep it that way.
 
+**ADR:** docs/adr/0018-an-upload-is-checked-before-it-is-written.md
+
 ## D6 — Confirmation re-checks rather than trusting its report
+
 
 The report a user confirms was produced at some earlier moment, against data that may since have
 moved. Storing the report and writing from it would mean writing numbers the portal no longer
@@ -77,7 +93,10 @@ duplicate submission harmless, at the cost of one more read of a file that is al
 assessment's own state is the idempotency key, so one mechanism covers both the double submission
 and the stale report.
 
+**ADR:** docs/adr/0018-an-upload-is-checked-before-it-is-written.md — the mechanism that makes the guarantee in 0018 hold, recorded there rather than as a second ADR.
+
 ## D7 — Every submitted file is kept, including the rejected ones
+
 
 The stated reason for keeping the file at all is traceability from a dataset back to the spreadsheet
 it came from. A single file that is overwritten by the next submission satisfies that only for
@@ -87,7 +106,10 @@ something back.
 Files are therefore rows against the assessment rather than a field on it. The current submission is
 the most recent row, read through a property, so there is no second pointer to keep in step.
 
+**ADR:** docs/adr/0019-every-submitted-file-is-kept.md
+
 ## D8 — No notification framework is added
+
 
 FR-022 asks for Data Curators to be notified in the portal. Neither the framework nor its installed
 addons provide any notification mechanism: there is no notifications application in
@@ -103,7 +125,10 @@ would check anyway.
 The navigation entry therefore carries the count of assessments waiting on a decision, and the queue
 lists them. If the team finds that too quiet, email is a small change once the queue exists.
 
+**ADR:** docs/adr/0020-the-queue-is-the-notification.md
+
 ## D9 — `Person.is_data_admin` is left alone
+
 
 The framework fixes `is_data_admin` to a group named "Data Administrators" and gates its own import
 and publication views on it. Renaming that group to match the portal's vocabulary would silently
@@ -113,7 +138,10 @@ This feature creates its own two groups alongside it and checks its own predicat
 Whether the framework should take the group name from a setting is a question for the framework, and
 it is raised there rather than worked around here.
 
+**ADR:** none — a deliberate non-action on a framework concern, raised where it belongs rather than decided here.
+
 ## D10 — SC-006 is amended to match the constitution
+
 
 The specification as signed off asked the `review` application to meet "the coverage floor the
 constitution sets". The constitution sets none: Article VI says in terms that coverage is a guide to
@@ -123,7 +151,10 @@ The criterion is amended to what the constitution actually requires, which is th
 added or changed here is tested, in a tree mirroring `project/review/`. This narrows nothing and
 adds nothing, so it does not reopen the gate.
 
+**ADR:** none — a correction to this feature's own specification, with no life beyond it.
+
 ## D11 — Groups come from a data migration, not a fixture
+
 
 `project/review/fixtures/ghfdb_review_group.json` creates a group by loading `auth.permission` rows
 pinned by primary key, which breaks whenever a migration reorders permissions, and its `loaddata`
@@ -137,7 +168,10 @@ While reading it: the group it creates is named `reviewers`, and `ReviewCreateVi
 feature replaces the group entirely, so the defect resolves rather than needing its own fix, and the
 predicates in `review.permissions` are what stop it recurring.
 
+**ADR:** none — how one migration is written; nothing downstream inherits it.
+
 ## D12 — The checking mode uses an outer rollback, never `dry_run=True`
+
 
 The plan first proposed running both import passes with `dry_run=True`. The design review caught it,
 and the record it cited settles the question rather than opening one.
@@ -160,7 +194,10 @@ empirically, one feature earlier, in the same file, was re-derived from first pr
 different answer. The prior feature's `decisions.md` is part of the codebase for the next feature
 that touches the same code.
 
+**ADR:** none — FS-004's own decision record already carries this at the code, in the comment above the rollback it explains. A second record would be a second place to keep in step.
+
 ## D13 — Superseded views are deleted in the same phase that changes the record
+
 
 `project/review/` holds views, forms, an admin registration and a card template that read
 `Review.status` and a `Reviewers` group, both of which this feature removes. The plan left their
@@ -170,7 +207,10 @@ They are deleted in the foundational phase, in the same commit range that change
 test asserting no reference survives. A tree carrying two answers to the same question is how the
 next reader picks the wrong one, and a structure diagram is not a task anybody executes.
 
+**ADR:** none — sequencing within this feature's own phases.
+
 ## D14 — The assessment list carries no filterset (US-1)
+
 
 `FairDMListView` auto-generates a `django-filter` `FilterSet` from every model field when
 `filterset_class` is left unset, and `Review.start_date`/`end_date` are `PartialDateField`, a type
@@ -183,7 +223,10 @@ disables the auto-generation without adding a filtering feature; a later story t
 filtering replaces it with an explicit `filterset_class`, the pattern `fairdm.core.dataset.views.
 DatasetListView` already uses.
 
+**ADR:** none — a local accommodation of a framework limitation in one view.
+
 ## D15 — T014's route lands in T011's commit; T013 follows T014, not the reverse
+
 
 Two implementation-order departures from tasks.md's listed order (T011, T012, T013, T014), both
 forced by a dependency the task breakdown does not surface:
@@ -202,7 +245,10 @@ forced by a dependency the task breakdown does not surface:
 Every task still lands as its own commit with its own tests, in the task IDs tasks.md assigns them —
 only the wall-clock order changed.
 
+**ADR:** none — the order two tasks landed in.
+
 ## D16 — The served-list tests stop at an unrendered response
+
 
 Discovered mid-story, not part of any known-red state at the starting commit: any authenticated
 request that reaches this project's shared page chrome (the sidebar via `mvp`'s
@@ -228,7 +274,10 @@ renders, so the ordinary test client is used for them. T012's list-item-template
 one template directly (`render_to_string`) for the same reason, rather than through the full list
 page.
 
+**ADR:** none — a workaround for a defect raised upstream as django-mvp/django-mvp#367; it disappears when that is fixed, and an ADR would outlive it.
+
 ## D17 — The navigation entry is wired through `apps.py.ready()`, imported via `fairdm.menus`
+
 
 `review/menus.py` had no caller anywhere in the tree — `project/ghfdb/menus.py` carries the same gap
 today, its one entry never actually reaching `AppMenu`, because nothing autodiscovers a `menus`
@@ -253,7 +302,10 @@ of this project's `pyproject.toml` — `poetry run deptry` flags a direct import
 Importing through `fairdm`, which is a direct dependency, resolves the lint finding and matches the
 one precedent already in the tree.
 
+**ADR:** none — how one navigation entry is wired.
+
 ## D18 — The bibliography-file path (T016) accepts CSL-JSON, not BibTeX/RIS/EndNote
+
 
 `django-literature`'s own "add a publication without leaving the page" mechanism
 (`ImportView`/`ImportForm`) relies on a bundled client-side JS library to parse BibTeX, RIS and
@@ -274,7 +326,10 @@ publication and links it without leaving the form) without a new dependency or c
 A future story that wants BibTeX/RIS/EndNote specifically would extend `django-literature` itself,
 not this form.
 
+**ADR:** none — a format choice bounded by what parsers are available; it changes the moment a server-side parser is.
+
 ## D19 — Assessors are credited as `DataCollector`, not `DataCurator`
+
 
 The retired create view (`git show 78c12d1`) credited every reviewer as a dataset contributor under
 the FairDM role `DataCurator` (`fairdm.core.vocabularies.FairDMRoles`). That role name is now the
@@ -285,7 +340,10 @@ for carrying out the assessment, not a claim about portal role). `DataCollector`
 collected the data" — is the closest existing `FairDMRoles` concept to what an assessor actually did,
 and is credited instead.
 
+**ADR:** none — which credit role one relation uses.
+
 ## D20 — The uploader's object permissions reuse `assign_all_model_perms`, redirected to `uploaded_by`
+
 
 `fairdm.core.dataset.views.DatasetCreateView.form_valid` — the newer, direct-dataset-creation
 precedent — grants its creator five named permissions via `guardian.shortcuts.assign_perm`.
@@ -298,7 +356,10 @@ type rather than a named five. `ReviewCreateView.form_valid` calls it once, for 
 alone, which is the brief's actual correction: not the breadth of what the old code granted, but
 who it granted it to.
 
+**ADR:** none — corrects a defect in code this feature replaced, and the correct rule is stated in 0017's permission model.
+
 ## D21 — T017's own tests call the view directly, not through `reverse("review-create")`
+
 
 T014's route registration had to land inside T011's commit (D15) because the list view's own
 access-control tests need a resolvable URL to exercise through the test client. T017 (the create
@@ -309,7 +370,10 @@ proves everything T017's acceptance asks without a route to reverse. T019 regist
 `review-create` and adds its own access-control and route-resolution tests afterwards, independent
 of T017's landing order, rather than repeating the forced reordering D15 recorded.
 
+**ADR:** none — how one story's tests avoid depending on another's landing order.
+
 ## D22 — `review.views` imports GHFDB symbols as `project.ghfdb.*`, and `deptry` is told so
+
 
 `ghfdb.apps.GhfdbConfig` registers itself under the dotted name `project.ghfdb` rather than the bare
 `ghfdb` its sibling apps (`heat_flow`, `review`) use — an existing inconsistency this story did not
@@ -325,7 +389,10 @@ module identity Django's app registry never registered, since the registry popul
 repository's own source root (`pythonpath = ["project"]`), not a package deptry can see any other
 way, so it joins `ghfdb`/`heat_flow`/`review` in `[tool.deptry] known_first_party`.
 
+**ADR:** none — an import path and the dependency check that reads it.
+
 ## D23 — T022 and T023 land as one commit
+
 
 D6 makes confirmation's re-check-and-write and its double-submission guard the same mechanism: the
 assessment's own state is what both a stale report and a second POST have to pass. Building T022's
@@ -335,7 +402,10 @@ check cannot be turned off) and D6 exist specifically to rule out. The two tasks
 idempotency) landed in the same commit rather than the guard being added as an afterthought once
 T023's test caught its absence.
 
+**ADR:** none — two tasks in one commit.
+
 ## D24 — Brief skill receipts are generated, never copied
+
 
 The receipt gate went red accepting US-3: the brief named a `craft-tdd` receipt the implementer had
 not echoed. The implementer was right and the brief was wrong. The skill was edited between the
@@ -351,7 +421,10 @@ Copying it turns a check on the child's work into a check on the orchestrator's 
 Every brief from here regenerates that block at dispatch. Nothing else about the copy-and-edit
 approach to briefs is a problem — the rest is context that genuinely carries forward.
 
+**ADR:** none — a rule about how this organisation writes its own briefs, not about the portal. Recorded in the workspace's own operating notes.
+
 ## D25 — Failure reasons are sanitized in `report.py`, not at their source
+
 
 T028's deny-list test (FR-013: no internal field name, model name or traceback reaches a failure
 report) failed on its first run against real data, not a contrived one: `RelatedModelWidget.clean()`
@@ -381,7 +454,10 @@ admin's own django-import-export UI, for one), so removing the model name there 
 leak in one reader-facing surface for a real loss of information in another. Sanitizing at the
 report boundary fixes the one surface FR-013 actually governs.
 
+**ADR:** none — where one sanitisation step sits within the reporting layer 0018 describes.
+
 ## D26 — T029's curator half is blocked: `Dataset.published` does not exist in the pinned `fairdm`
+
 
 `data-model.md` ("Dataset visibility") and `research.md` ("Visibility is two fields, not one") both
 state "public" means `Dataset.visibility` set to its public value **and** `Dataset.published` set
@@ -411,7 +487,10 @@ prohibitions ("do not add any new dependency") place dependency changes out of t
 though this is technically a version bump rather than a new package. Resolving D26 is a prerequisite
 for T029's curator branch, tracked as follow-up work rather than attempted here.
 
+**ADR:** none — superseded by D27, which records the cause and the corrected design.
+
 ## D27 — A dependency claim is checked against the resolved package, never a sibling checkout
+
 
 US-5's T029 was briefed to make a dataset public by setting two fields, `Dataset.visibility` and
 `Dataset.published`. The second does not exist on the framework version this project resolves. The
@@ -432,7 +511,10 @@ T029 moves into US-6 rather than being patched into a finished story. A curator'
 curator's approval make a dataset public by the same mechanism, so the behaviour belongs in one place
 and was split across two stories by an accident of decomposition.
 
+**ADR:** none — a rule about how this organisation verifies a dependency claim, not about the portal's architecture.
+
 ## D28 — The decision queue renders its own rows, not through `FairDMListView`'s item-card mechanism
+
 
 `ReviewListView` (T011) uses `FairDMListView`'s stock rendering: `list_item_template` cards are
 built by `mvp`'s `render_list_item` template tag, which calls `render_to_string(template_name, new)`
@@ -457,7 +539,10 @@ Revisit if: `FairDMListView`'s card mechanism gains a way to pass `request` thro
 though the two POST forms would still need it, so this is unlikely to become the simpler path even
 then.
 
+**ADR:** none — how one page renders its rows.
+
 ## D29 — R6 converts to prose on delivery; R7 keeps only its undelivered deliverable
+
 
 T039 asked for R6 marked delivered and R7 narrowed. R6's own bullet-list "Deliverables"/"Out of
 scope" shape is how every still-open roadmap item is written; every already-delivered item (R1, R2,
@@ -476,3 +561,6 @@ The new guide (T040) is linked only from `docs/index.md`'s toctree, not from
 `docs/guides/introduction.md`'s prose list of GHFDB-specific guides — that list does not mention
 `importing-data.md` either, so it already omits an existing guide and fixing it is outside this
 scope.
+
+**ADR:** none — the roadmap records its own state; that is what the roadmap is for.
+

@@ -26,6 +26,10 @@ The domain vocabulary these records use is defined in `CONTEXT.md` at the reposi
 | [0012](0012-what-refuses-an-uploaded-file.md) | Four things refuse an uploaded file, and the template's own reporting rules are not among them |
 | [0013](0013-an-import-is-told-which-dataset-it-writes-to.md) | An import is told which dataset it writes to, and refuses when it is not |
 | [0014](0014-a-determination-without-an-identifier-is-its-row.md) | A determination with no identifier is recognised by its site, its publication and its place in the file |
+| [0017](0017-a-role-carries-the-trust-that-decides-publication.md) | A role carries the trust that decides publication, not a per-person setting |
+| [0018](0018-an-upload-is-checked-before-it-is-written.md) | An upload is checked before it is written, with no way to skip the check |
+| [0019](0019-every-submitted-file-is-kept.md) | Every submitted file is kept, including the ones that were refused |
+| [0020](0020-the-queue-is-the-notification.md) | The queue is how curators are told there is something waiting |
 
 :::{toctree}
 :hidden:
