@@ -234,3 +234,35 @@ T013 already built on the navigation entry are what FR-022 asks for.
 
 Full suite, `manage.py check`, `makemigrations --check`, and `poetry run pre-commit run -a`: see the
 completion report.
+
+## 2026-09-16 — Phase 8 complete (T038, T039, T040, T041)
+
+T038 retired "Reviewer" and "data administrator" from `CONTEXT.md`, replacing the single Reviewer
+entry with a Data Assessor entry and a new Data Curator entry, and pointed "Publication approval" at
+Data Curator. Noted in passing: the model's own `reviewers` field and `heat_flow_reviews` related
+name keep their pre-rename spelling (D3), so the glossary says so rather than leaving a reader to
+find the mismatch themselves.
+
+T039 marked R6 delivered and rewrote it as prose describing what the portal now does, matching R1/
+R2/R4's own delivered convention rather than keeping its "Deliverables"/"Out of scope" bullets with
+only a status tag changed. R7 narrowed to the one thing it still lacks — a route into the existing
+role/gate/queue mechanism for someone holding neither role — dropping the "Datasets from team
+members published without waiting" deliverable D2 superseded, along with the three deliverables
+this feature already built. D29 records both calls.
+
+T040 added `docs/guides/assessment-uploads.md`: what each role may do, describing an assessment,
+reading a check report row by row, and the two decision actions a curator can take. States plainly,
+near the top rather than buried, that a file produced from today's distributed template is refused
+on its header until the template is corrected upstream (ADR 0003) — the first thing the team will
+hit. Linked from `docs/index.md`'s Guides toctree (D29 on why not also from
+`guides/introduction.md`).
+
+T041: `poetry run pytest tests/test_docs` — 305 passed. `python3 kit/forge verify --steps docs
+--base df3ccba` — passed. `poetry run sphinx-build -b html docs docs/_build/html -W --keep-going` —
+45 warnings, all pre-existing (confirmed identical count and content against the unmodified base
+commit). Full suite: 908 passed, 1 skipped, 13 xfailed, matching the brief's `verified_base` count
+exactly. `manage.py check` clean. `poetry run pre-commit run -a` clean, once one unrelated
+`end-of-file-fixer` touch to `us6-brief.json` — another orchestrator's file in this shared worktree
+— was reverted rather than committed.
+
+No Python changed anywhere in this phase.

@@ -456,3 +456,23 @@ Revisit if: `FairDMListView`'s card mechanism gains a way to pass `request` thro
 `render_list_item`, at which point a read-only queue row could go back to the standard mechanism —
 though the two POST forms would still need it, so this is unlikely to become the simpler path even
 then.
+
+## D29 — R6 converts to prose on delivery; R7 keeps only its undelivered deliverable
+
+T039 asked for R6 marked delivered and R7 narrowed. R6's own bullet-list "Deliverables"/"Out of
+scope" shape is how every still-open roadmap item is written; every already-delivered item (R1, R2,
+R4) drops that shape for a paragraph describing what the portal now does. R6 follows the delivered
+convention rather than keeping its bullets with a status tag changed, since the bullets describing
+what would be built read as future tense once it exists.
+
+R7's original six deliverables include three this feature actually built as infrastructure — the
+role, the private-until-approved rule, and the decision queue — but only for the assessment team's
+own uploads (D1). Nothing yet lets a person outside both roles create a dataset at all, so that
+remains R7's real gap. Its deliverables list is trimmed to that one route plus its test coverage,
+and its intro paragraph says plainly that the mechanism already exists and names what is missing,
+rather than re-listing finished work as still to do.
+
+The new guide (T040) is linked only from `docs/index.md`'s toctree, not from
+`docs/guides/introduction.md`'s prose list of GHFDB-specific guides — that list does not mention
+`importing-data.md` either, so it already omits an existing guide and fixing it is outside this
+scope.
