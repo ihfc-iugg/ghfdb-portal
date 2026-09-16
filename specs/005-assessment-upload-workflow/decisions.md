@@ -350,3 +350,33 @@ Copying it turns a check on the child's work into a check on the orchestrator's 
 
 Every brief from here regenerates that block at dispatch. Nothing else about the copy-and-edit
 approach to briefs is a problem — the rest is context that genuinely carries forward.
+
+## D25 — Failure reasons are sanitized in `report.py`, not at their source
+
+T028's deny-list test (FR-013: no internal field name, model name or traceback reaches a failure
+report) failed on its first run against real data, not a contrived one: `RelatedModelWidget.clean()`
+and `set_m2m_relations()` (`project/ghfdb/resources/widgets.py`) both prefix a wrapped sub-field's
+error with `self.model.__name__` — e.g. `"HeatFlowSite: Column 'environment': Invalid value ..."` —
+to help a developer reading raw `import_export` output place the fault. And a child row whose parent
+failed to import reaches `import_export`'s own `ForeignKeyWidget`, which raises Django's default
+`Model.DoesNotExist` — `"ParentHeatFlow matching query does not exist."` — naming the model class
+directly. Neither is this story's own code, and neither is something a caller can pass a flag to
+suppress.
+
+The fix landed in `project/ghfdb/report.py`'s `_base_error_failures`, not in the widgets or in
+`import_export` itself. That module already exists to turn raw `Result` data into the report FR-012
+requires — translating Django field names to template column names is its established job — and it
+is the one seam every failure this checking pipeline can produce already passes through before
+reaching a template. `_sanitize_reason` handles the two known leaks: where the message carries an
+embedded `Column '...'` marker (`RelatedModelWidget`'s own wrapping), everything before that marker
+is dropped, reusing the same regex `_column_from_message` already searches with for column
+extraction; Django's `"... matching query does not exist."` pattern is replaced with a generic,
+still-actionable message pointing the reader at the row's other reported problem rather than at the
+model that failed to resolve. The row is still reported in both cases — only the leaking text is
+replaced, not the failure itself.
+
+Editing `widgets.py` to stop building model-named messages was considered and rejected: that
+message is also read directly by developers debugging raw `Result` output outside this report (the
+admin's own django-import-export UI, for one), so removing the model name there would trade a
+leak in one reader-facing surface for a real loss of information in another. Sanitizing at the
+report boundary fixes the one surface FR-013 actually governs.

@@ -114,3 +114,45 @@ clean; `makemigrations review --check` clean (no model changes this story). `poe
 pre-commit run -a` clean.
 
 Next: US-4, explaining a failing file in the spreadsheet's own terms.
+
+## 2026-09-16 — US-4 complete (T025, T026, T027, T028)
+
+T025 added the per-failure listing to `upload_report.html`: each `RowFailure` (row, the template's
+own column heading, the reason) renders as its own list item, alongside the existing failure count.
+Tested by rendering the partial directly with hand-built `GHFDBImportReport`/`RowFailure` objects,
+the same way T021 tests the clean-report state.
+
+T026 caught the `ValueError` `import_ghfdb_template` already raises for a header `validate_official_
+header` refuses (ADR 0003) — previously unhandled in `ReviewUploadView.post`, so a real file hit an
+unhandled 500 rather than a checkable outcome. The view now renders a fixed, translated "the template
+is out of date" message instead; nothing from the raised message (which quotes the offending column
+names) reaches the page. The refused file is still kept as a `SubmittedFile`, per D7.
+
+T027 needed no production change: the view already builds its report fresh per request with nothing
+stored between them, so a corrected re-upload is checked afresh by construction. Per craft-tdd's
+probe requirement, this was confirmed rather than assumed — a temporary mutation making the view
+merge a stale failure into the next report's `report.failures` was applied, observed to fail the new
+test for the right reason, then reverted before committing.
+
+T028's deny-list test found two real FR-013 leaks on its first run, both from `project/ghfdb/report.
+py`'s only remaining untranslated seam — the raw `str(exception)` copied into `RowFailure.reason`:
+`RelatedModelWidget` (widgets.py) prefixes a wrapped sub-field error with the Django model it is
+building (`"HeatFlowSite: Column 'environment': ..."`), and a child row whose parent failed to import
+hits Django's own `ForeignKeyWidget` → `Model.DoesNotExist`, whose default message names the model
+class directly (`"ParentHeatFlow matching query does not exist."`). `report.py` gained
+`_sanitize_reason`: the first case is resolved by keeping only the message from its embedded
+`Column '...'` marker onward (already correctly used for column extraction, now reused for the
+reason text too); the second is replaced with a generic, still-actionable message pointing at the
+row's other reported problem. D25 records this. Both are unit-tested directly in `test_ghfdb/
+test_report.py` (mirroring the module that changed) in addition to the deny-list assertion itself in
+`test_review/test_views.py`.
+
+Full suite: 882 passed, 1 skipped, 13 xfailed (serial — `-n auto` failed in this sandbox on an
+unrelated remote-vocabulary fetch every worker's own Django setup makes, not reproducible serially
+and not touched by this story). `manage.py check` clean; `makemigrations --check` shows one
+pre-existing unrelated migration in a third-party app (`orbit`), present regardless of this story's
+changes since no model changed here. `poetry run pre-commit run -a` clean (this shared worktree's
+`end-of-file-fixer` also touched two other stories' brief JSON files each run; reverted both times
+rather than committed, per the shared-worktree rule against touching paths outside this story).
+
+Next: US-5, writing the data and deciding who can see it.
