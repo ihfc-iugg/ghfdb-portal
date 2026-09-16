@@ -415,6 +415,9 @@ The record of a publication being turned into a dataset through the assessment u
 - Records who created it (`uploaded_by`) and, once decided, who decided it and when (`decided_by`, `decided_at`, `decision_comment`)
 - Access to the record and its pages is decided by `review.permissions.is_data_assessor` and
   `review.permissions.is_data_curator`, the only place group membership is tested
+- Where a page is open to both roles and cares about nothing finer — the list, the description form
+  and the navigation entry — it asks `review.permissions.is_assessment_team_member` instead, which
+  answers the same question in one query and reads as the question it is
 - The portal's navigation carries a `review.menus.AssessmentMenuItem` (the `assessment_entry`
   instance), visible to either role, which recomputes its badge count of assessments awaiting a
   decision on every request rather than caching it
