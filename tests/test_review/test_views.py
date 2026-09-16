@@ -318,3 +318,34 @@ class TestReviewUploadViewChecking:
         assert response.status_code == 200
         reader.assert_not_called()
         assert not SubmittedFile.objects.filter(review=review).exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewUploadReportTemplate:
+    """T021, spec.md User Story 3 scenario 1, FR-009: a clean file's report
+    names how many sites and determinations would be created, and how many
+    existing records would be updated — asserted against the rendered HTML,
+    the same way T012 tests its list item template rather than the context
+    dict."""
+
+    def test_a_clean_reports_counts_are_named_in_the_rendered_html(self):
+        from project.ghfdb.report import GHFDBImportReport
+
+        review = ReviewFactory()
+        report = GHFDBImportReport(
+            sites_created=4,
+            sites_updated=9,
+            determinations_created=6,
+            determinations_updated=11,
+            failures=(),
+        )
+
+        html = render_to_string(
+            "review/upload_report.html", {"review": review, "report": report}
+        )
+
+        assert "4" in html
+        assert "9" in html
+        assert "6" in html
+        assert "11" in html
