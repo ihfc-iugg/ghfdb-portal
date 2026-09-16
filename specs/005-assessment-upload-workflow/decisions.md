@@ -252,3 +252,59 @@ identical object (`fairdm/menus/__init__.py` re-exports `mvp.menus.AppMenu` unch
 of this project's `pyproject.toml` — `poetry run deptry` flags a direct import of it as `DEP003`.
 Importing through `fairdm`, which is a direct dependency, resolves the lint finding and matches the
 one precedent already in the tree.
+
+## D18 — The bibliography-file path (T016) accepts CSL-JSON, not BibTeX/RIS/EndNote
+
+`django-literature`'s own "add a publication without leaving the page" mechanism
+(`ImportView`/`ImportForm`) relies on a bundled client-side JS library to parse BibTeX, RIS and
+EndNote XML into CSL-JSON in the browser before posting; the server-side half only ever validates
+and saves an already-parsed CSL-JSON dict (`literature.utils.csl.process_single_entry`). No
+server-side parser for those three formats is installed — `pybtex` and `citeproc-py` are present
+only as transitive dependencies of `django-literature` itself, unused by any of its own import code,
+and `poetry run deptry` (DEP003) would refuse a direct import of either from `project/review/`
+regardless. Adding a parsing dependency is out of scope (the brief's own prohibition), and wiring
+`ImportView`'s browser-side flow into this form would mean adding popup-response support
+(`django_addanother.views.CreatePopupMixin`) to an installed package this repository does not own.
+
+`ReviewDescriptionForm.clean_bibliography_file` instead reads the uploaded file as a CSL-JSON
+object directly (`json.loads`, stdlib only) and passes it straight to `LiteratureItem.objects.create(item=...)`
+— the same dict shape `LiteratureItem.save()` already derives `type`/`title`/`issued`/`citation_key`
+from. This satisfies FR-004 and US-2 scenario 2 exactly as specified (a bibliography file adds the
+publication and links it without leaving the form) without a new dependency or cross-app changes.
+A future story that wants BibTeX/RIS/EndNote specifically would extend `django-literature` itself,
+not this form.
+
+## D19 — Assessors are credited as `DataCollector`, not `DataCurator`
+
+The retired create view (`git show 78c12d1`) credited every reviewer as a dataset contributor under
+the FairDM role `DataCurator` (`fairdm.core.vocabularies.FairDMRoles`). That role name is now the
+name of one of this feature's two portal groups (`review.permissions.DATA_CURATOR_GROUP`) — carrying
+it forward as a contributor-role label would read as "this person is a Data Curator" on every
+dataset an assessor merely helped assess, which is neither true nor what FR-016 asks for (attribution
+for carrying out the assessment, not a claim about portal role). `DataCollector` — "the person(s) who
+collected the data" — is the closest existing `FairDMRoles` concept to what an assessor actually did,
+and is credited instead.
+
+## D20 — The uploader's object permissions reuse `assign_all_model_perms`, redirected to `uploaded_by`
+
+`fairdm.core.dataset.views.DatasetCreateView.form_valid` — the newer, direct-dataset-creation
+precedent — grants its creator five named permissions via `guardian.shortcuts.assign_perm`.
+`guardian` is only a transitive dependency here (`django-guardian` is not in this project's
+`pyproject.toml`), and `poetry run deptry` (DEP003) refuses a direct import of it from
+`project/review/`. `fairdm.utils.permissions.assign_all_model_perms` — the helper the retired
+create view already called once per reviewer — wraps the same `guardian.shortcuts.assign_perm`
+call through `fairdm`, a direct dependency, and grants every permission for the `Dataset` content
+type rather than a named five. `ReviewCreateView.form_valid` calls it once, for `self.request.user`
+alone, which is the brief's actual correction: not the breadth of what the old code granted, but
+who it granted it to.
+
+## D21 — T017's own tests call the view directly, not through `reverse("review-create")`
+
+T014's route registration had to land inside T011's commit (D15) because the list view's own
+access-control tests need a resolvable URL to exercise through the test client. T017 (the create
+view) and T019 (its route) face the same dependency in principle, but T017's tests exercise
+`form_valid` — POST behaviour verified against the database, not against a rendered response — so
+`RequestFactory().post(...)` followed by calling `ReviewCreateView.as_view()(request)` directly
+proves everything T017's acceptance asks without a route to reverse. T019 registers
+`review-create` and adds its own access-control and route-resolution tests afterwards, independent
+of T017's landing order, rather than repeating the forced reordering D15 recorded.
