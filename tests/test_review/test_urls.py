@@ -7,10 +7,18 @@ confirming test: the route resolves by name, at the path plan.md's access
 table gives the assessment list.
 """
 
+import inspect
+
 import pytest
 from django.urls import resolve, reverse
 
-from review.views import ReviewCreateView, ReviewListView
+from review import urls as review_urls
+from review.views import (
+    ReviewConfirmView,
+    ReviewCreateView,
+    ReviewListView,
+    ReviewUploadView,
+)
 
 
 @pytest.mark.review
@@ -36,3 +44,57 @@ class TestReviewCreateRoute:
         match = resolve("/assessments/new/")
 
         assert match.func.view_class is ReviewCreateView
+
+
+@pytest.mark.review
+class TestNoRouteWritesWithoutChecking:
+    """T024, spec.md SC-002, decisions.md D5: every route registered in
+    ``review.urls`` is proven to reach a checked import through
+    ``import_ghfdb_template`` — the one function that always validates
+    before it writes — rather than the underlying GHFDB import resources
+    directly. A view that re-implemented the write without going through it
+    would pass every other test in this story and still violate SC-002, so
+    this test inspects the route table's own view classes rather than one
+    view's behaviour.
+
+    Verified as a real guard, not a tautology (T024's own instruction):
+    temporarily reinstating a bypass — a view calling
+    ``GHFDBParentImportResource().import_data(...)`` directly instead of
+    going through ``import_ghfdb_template`` — makes
+    ``test_every_routed_view_avoids_the_import_resources_directly`` fail.
+    """
+
+    #: Symbols that write GHFDB rows directly. A view referencing one of
+    #: these, rather than calling ``import_ghfdb_template``, writes without
+    #: the check FR-008 requires.
+    _WRITE_CAPABLE_SYMBOLS = (
+        "GHFDBParentImportResource",
+        "GHFDBChildImportResource",
+        "import_data(",
+    )
+
+    def _routed_view_classes(self):
+        for pattern in review_urls.urlpatterns:
+            view_class = getattr(pattern.callback, "view_class", None)
+            if view_class is not None:
+                yield pattern.pattern, view_class
+
+    def test_every_routed_view_avoids_the_import_resources_directly(self):
+        for pattern, view_class in self._routed_view_classes():
+            source = inspect.getsource(view_class)
+            for symbol in self._WRITE_CAPABLE_SYMBOLS:
+                assert symbol not in source, (
+                    f"{view_class.__name__} (route {pattern}) references "
+                    f"{symbol} directly, bypassing import_ghfdb_template's check."
+                )
+
+    def test_the_confirm_route_is_the_only_one_that_writes_for_real(self):
+        confirm_source = inspect.getsource(ReviewConfirmView)
+        upload_source = inspect.getsource(ReviewUploadView)
+
+        assert "import_ghfdb_template" in confirm_source
+        assert "check_only=False" in confirm_source
+
+        assert "import_ghfdb_template" in upload_source
+        assert "check_only=True" in upload_source
+        assert "check_only=False" not in upload_source
