@@ -1,0 +1,95 @@
+{
+  "story": "US4",
+  "skills_loaded": [
+    {
+      "name": "craft-tdd",
+      "receipt": "craft-tdd/2026-09-16/3c401f5e",
+      "loaded_via": "skill-tool"
+    },
+    {
+      "name": "craft-increments",
+      "receipt": "craft-increments/2026-08-05/d3dce07f",
+      "loaded_via": "skill-tool"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T025",
+      "status": "done",
+      "evidence": {
+        "tests_added": [
+          "tests/test_review/test_views.py::TestReviewUploadReportTemplateFailures::test_every_failure_is_listed_with_its_row_column_and_reason",
+          "tests/test_review/test_views.py::TestReviewUploadReportTemplateFailures::test_all_failures_are_reported_together_not_only_the_first"
+        ],
+        "commands": [
+          "poetry run pytest tests/test_review/test_views.py -k TestReviewUploadReportTemplateFailures -v"
+        ],
+        "exit_code": 0
+      },
+      "commits": ["42eae4dce1dae6230309ec6a73033a44824eb76f"]
+    },
+    {
+      "id": "T026",
+      "status": "done",
+      "evidence": {
+        "tests_added": [
+          "tests/test_review/test_views.py::TestReviewUploadViewHeaderRefusal::test_an_outdated_header_is_refused_without_reporting_row_failures",
+          "tests/test_review/test_views.py::TestReviewUploadViewHeaderRefusal::test_the_refused_file_is_still_kept_as_a_submission",
+          "tests/test_review/test_views.py::TestReviewUploadReportTemplateHeaderRefusal::test_the_message_says_the_template_is_out_of_date",
+          "tests/test_review/test_views.py::TestReviewUploadReportTemplateHeaderRefusal::test_no_column_name_is_quoted_and_no_row_failures_appear"
+        ],
+        "commands": [
+          "poetry run pytest tests/test_review/test_views.py -k HeaderRefusal -v"
+        ],
+        "exit_code": 0
+      },
+      "commits": ["1b32a72665e39b91f076e9c67bae36ea3596a620"]
+    },
+    {
+      "id": "T027",
+      "status": "done",
+      "evidence": {
+        "tests_added": [
+          "tests/test_review/test_views.py::TestReviewUploadViewReupload::test_a_corrected_reupload_is_checked_afresh_and_the_failed_submission_stays_retrievable"
+        ],
+        "commands": [
+          "poetry run pytest tests/test_review/test_views.py -k Reupload -v"
+        ],
+        "exit_code": 0
+      },
+      "commits": ["c44e602b8b43d34966b4b73f3b6af9b1c39dd24c"]
+    },
+    {
+      "id": "T028",
+      "status": "done",
+      "evidence": {
+        "tests_added": [
+          "tests/test_review/test_views.py::TestReviewUploadReportDenyList::test_a_real_failing_files_report_carries_none_of_the_deny_list",
+          "tests/test_review/test_views.py::TestReviewUploadReportDenyList::test_the_header_refusal_message_carries_none_of_the_deny_list_or_the_files_own_column_names",
+          "tests/test_ghfdb/test_report.py::TestBuildReportFailures::test_a_related_widget_failure_does_not_name_the_model_it_wraps",
+          "tests/test_ghfdb/test_report.py::TestBuildReportFailures::test_a_downstream_parent_resolution_failure_does_not_name_the_model_class"
+        ],
+        "commands": [
+          "poetry run pytest tests/test_review/test_views.py -k DenyList -v",
+          "poetry run pytest tests/test_ghfdb/test_report.py -v"
+        ],
+        "exit_code": 0
+      },
+      "commits": [
+        "29353be8ba4a8a70f117096bc3f288788eb4712e",
+        "d9820ebe8c5a68c03dd94387c09f8a15ed52c548"
+      ]
+    }
+  ],
+  "deviations": [
+    {
+      "what": "T028's required deny-list test failed on its first run against real check output, not a contrived case: report.py's RowFailure.reason carried a raw Django model class name in two places (RelatedModelWidget's own 'which model' wrapping in widgets.py, and Django's default Model.DoesNotExist message when a child row's parent failed to import). Fixed with a new _sanitize_reason step in project/ghfdb/report.py's _base_error_failures, outside project/review/ but inside the file the brief's own rituals name as this story's failure-object source.",
+      "why": "FR-013/T028 requires that no internal model name reach the report, asserted against a deny list rather than by inspection. The deny list found a real violation the brief did not anticipate; leaving it unfixed would mean landing a test asserting behaviour the code does not have. The fix belongs in report.py, the one seam every failure already passes through to become display text, rather than in widgets.py (whose model-named messages are also read directly by developers debugging raw import_export output outside this report) or by weakening the new test.",
+      "decision_ref": "specs/005-assessment-upload-workflow/decisions.md#D25"
+    }
+  ],
+  "concerns": [
+    "`poetry run python manage.py makemigrations --check --dry-run` reports one pending migration in a third-party app (`orbit`, unrelated to this repository's own apps). No model in this story changed; confirmed this is pre-existing drift unrelated to US-4's diff, not something introduced here."
+  ],
+  "blocked": []
+}

@@ -484,28 +484,64 @@
       "priority": "P1",
       "issue": 213,
       "worktree": null,
-      "status": "todo",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
           "id": "T025",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T026",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T027",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T028",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
