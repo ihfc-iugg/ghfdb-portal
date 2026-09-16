@@ -342,6 +342,27 @@ class TestReviewDecideViewAccess:
 
         assert response.status_code == 403
 
+    def test_the_uploader_who_is_an_assessor_is_refused_to_approve_their_own(
+        self, client, assessor
+    ):
+        """T036, spec.md User Story 6 scenario 5: being the assessment's own
+        uploader is what grants access to upload and confirm
+        (``can_manage_upload``) — it grants nothing here. Only
+        ``is_data_curator`` decides this route, so the uploader is refused
+        exactly like any other Data Assessor."""
+        review = ReviewFactory(uploaded_by=assessor, state=States.AWAITING_DECISION)
+        client.force_login(assessor)
+
+        response = client.post(
+            reverse("review-decide", kwargs={"pk": review.pk}),
+            data={"action": "approve"},
+        )
+
+        assert response.status_code == 403
+        review.refresh_from_db()
+        assert review.state == States.AWAITING_DECISION
+        assert review.dataset.visibility == review.dataset.VISIBILITY_CHOICES.PRIVATE
+
 
 @pytest.mark.django_db
 @pytest.mark.review

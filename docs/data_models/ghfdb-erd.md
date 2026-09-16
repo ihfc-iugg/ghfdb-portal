@@ -479,7 +479,10 @@ mechanism a curator's own confirmation uses — and records `decided_by`/`decide
 runs `review.states.send_back` instead, leaving the dataset untouched (private), and records the
 curator's comment on `decision_comment` alongside the same `decided_by`/`decided_at`. Curators only;
 refused to anyone else the same way `ReviewQueueView` is, before `approve`/`send_back` ever get a
-chance to raise their own `IllegalTransition` for the same reason.
+chance to raise their own `IllegalTransition` for the same reason. Unlike the upload and confirm
+routes, being an assessment's own uploader grants nothing here: an assessor who uploaded the
+assessment they are trying to decide on is refused exactly like any other Data Assessor, because
+this route is decided by `is_data_curator` alone, never `can_manage_upload`.
 
 A sent-back assessment's comment reaches its uploader on `review.views.ReviewUploadView`, the same
 page they return to for a replacement file: `decision_comment` is added to that view's context, and
