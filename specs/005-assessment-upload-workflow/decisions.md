@@ -410,3 +410,24 @@ changes, is a dependency-version decision outside an Implementer's authority, an
 prohibitions ("do not add any new dependency") place dependency changes out of this run's scope even
 though this is technically a version bump rather than a new package. Resolving D26 is a prerequisite
 for T029's curator branch, tracked as follow-up work rather than attempted here.
+
+## D27 — A dependency claim is checked against the resolved package, never a sibling checkout
+
+US-5's T029 was briefed to make a dataset public by setting two fields, `Dataset.visibility` and
+`Dataset.published`. The second does not exist on the framework version this project resolves. The
+implementer verified that against the running model class rather than accepting the brief, reported
+it as a blocker, and wrote no code for it. That was the right call.
+
+The error is upstream of the brief, in `research.md`. The field was read from the framework's working
+checkout on this machine, which tracks its development branch, rather than from the package in this
+project's virtualenv. The two share a name and a version number and carry different code. The
+development branch has `published`; the resolved release does not.
+
+On the resolved version, public means `visibility = Visibility.PUBLIC` and nothing else. The default
+manager excludes private datasets, so the guarantee the specification asks for holds with one field.
+When the pin moves to a release carrying `published`, both the confirmation path and the approval
+path must set it alongside `visibility`.
+
+T029 moves into US-6 rather than being patched into a finished story. A curator's confirmation and a
+curator's approval make a dataset public by the same mechanism, so the behaviour belongs in one place
+and was split across two stories by an accident of decomposition.

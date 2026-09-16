@@ -143,9 +143,13 @@ and nothing in the tree still reads the vocabulary they replace.
 
 ## Phase 6: US-5 — Confirming writes the data and decides who can see it (P1)
 
-- [ ] T029 [US5] Set the dataset's visibility on confirmation from the uploader's role: a curator's
-      upload sets both `visibility` and `published`, an assessor's sets neither and moves the
-      assessment to `AWAITING_DECISION`. Tests first, one per role.
+- [ ] T029 Set the dataset's visibility on confirmation from the uploader's role: a curator's upload
+      sets `visibility` to its public value, an assessor's sets nothing and moves the assessment to
+      `AWAITING_DECISION`. Tests first, one per role. **Moved into US-6** after US-5 found that
+      `Dataset.published` does not exist on the framework version this project resolves, so the
+      original two-field instruction could not be carried out. It belongs beside the approval action
+      in any case: a curator's confirmation and a curator's approval make a dataset public by the
+      same mechanism, and splitting them across two stories split one behaviour in half.
 - [ ] T030 [US5] Assert an anonymous visitor cannot reach an assessor's dataset before a decision.
       This is the test for SC-004. Test first.
 - [ ] T031 [US5] Assert every submitted file including superseded ones stays retrievable from the

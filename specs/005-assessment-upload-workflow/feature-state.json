@@ -550,28 +550,55 @@
       "priority": "P1",
       "issue": 214,
       "worktree": null,
-      "status": "todo",
+      "status": "in_progress",
       "replans": 0,
       "tasks": [
         {
           "id": "T029",
           "status": "todo",
-          "attempts": 0
+          "attempts": 1
         },
         {
           "id": "T030",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "pytest tests/ (885 passed, 1 skipped, 13 xfailed)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T031",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "pytest tests/ (885 passed, 1 skipped, 13 xfailed)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T032",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "pytest tests/ (885 passed, 1 skipped, 13 xfailed)"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },

@@ -58,13 +58,20 @@ rather than in each view.
 
 ## Dataset visibility
 
-"Public" means both of the framework's fields: `Dataset.visibility` set to its public value and
-`Dataset.published` set true. `visibility` governs the metadata and `published` governs the data
-beneath it, and a dataset that is one without the other is half-published.
+"Public" means `Dataset.visibility` set to `Visibility.PUBLIC`. On the framework version this
+project resolves, that is the whole of it: `Visibility` offers Private and Public, the field defaults
+to Private, and the default manager excludes private datasets, so a private dataset is absent from
+every ordinary query rather than merely unlabelled.
 
-Both default to private on creation, so an assessor's path sets nothing and a curator's path sets
-both. That asymmetry is deliberate: the private outcome is what happens when no code runs, which is
-the safe direction for a default to fail in.
+`visibility` defaults to private on creation, so an assessor's path sets nothing and a curator's path
+sets it. That asymmetry is deliberate: the private outcome is what happens when no code runs, which
+is the safe direction for a default to fail in.
+
+A second field, `Dataset.published`, exists on the framework's development branch and is not present
+on the version resolved here. When the dependency pin moves to a release carrying it, a curator's
+confirmation and a curator's approval both have to set it alongside `visibility` — the two govern
+different things, and a dataset that is one without the other is half-published. Nothing in this
+feature may reference it before then.
 
 ## Groups
 

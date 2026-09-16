@@ -52,15 +52,22 @@ every reviewer. Object permissions on a ghost profile are meaningless, and the p
 access is the uploader. The permission grant moves to the uploader; reviewers keep the contributor
 credit, which is attribution rather than access.
 
-## Visibility is two fields, not one
+## Visibility is one field on the version this project resolves
 
-`Dataset.visibility` is an `IntegerField` over `Visibility` (`fairdm/utils/choices.py`), defaulting
-to `PRIVATE`, and governs metadata. `Dataset.published` is a separate boolean governing whether the
-data beneath it may be shown, and its help text says it is set in the Django admin.
+`Dataset.visibility` is an `IntegerField` over `Visibility`, which offers Private and Public and
+defaults to Private. The default manager excludes private datasets, so a private dataset is absent
+from ordinary queries rather than merely marked. "Public" in this feature therefore means
+`visibility = Visibility.PUBLIC`, and nothing else.
 
-So "public" in this feature means both: visibility public **and** published true. An assessor's
-upload leaves both at their defaults, which is already private, so the private path needs no action
-beyond not acting. The curator path sets both.
+An assessor's upload leaves the field at its default, so the private path needs no action beyond not
+acting. The curator path sets it.
+
+**This entry was wrong when first written, and the way it was wrong is worth keeping.** It described
+a second field, `Dataset.published`, read from the framework's development checkout on this machine
+rather than from the package the project actually resolves. That field exists upstream and does not
+exist here. Every claim in this file about a dependency is checked against the resolved package in
+the virtualenv, not against a sibling working copy that happens to share the name — the two carry the
+same version number and different code, and the difference cost a story a blocked task.
 
 ## The group check in the existing code has never matched
 

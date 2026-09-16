@@ -1,0 +1,106 @@
+{
+  "story": "US5",
+  "repo": "ihfc-iugg/ghfdb-portal",
+  "issue": 214,
+  "worktree": "/home/sam/projects/ihfc-iugg/ghfdb-portal-005",
+  "tasks": [
+    "T029",
+    "T030",
+    "T031",
+    "T032"
+  ],
+  "required_skills": [
+    {
+      "name": "craft-tdd",
+      "path": "/home/sam/.openclaw/workspaces/forge/skills/craft-tdd/SKILL.md",
+      "receipt": "craft-tdd/2026-09-16/3c401f5e"
+    },
+    {
+      "name": "craft-increments",
+      "path": "/home/sam/.openclaw/workspaces/forge/skills/craft-increments/SKILL.md",
+      "receipt": "craft-increments/2026-08-05/d3dce07f"
+    }
+  ],
+  "context": {
+    "why": "Where the trust distinction between the two roles becomes real. Confirming an import writes the data, keeps the submitted file against the assessment, and decides who can see the result from the uploader's role alone: a Data Curator's upload is public from that moment, a Data Assessor's stays private and waits for a curator. The role IS the trust level \u2014 there is no per-person setting and no second workflow. The confirmation path itself already exists from US-3; this story is what it sets afterwards.",
+    "environment": "Python 3.13 via Poetry, virtualenv already synced. Prefix commands with `poetry run`. Tests: `poetry run pytest`. Lint gate: `poetry run pre-commit run -a`, never raw ruff. A development server is already running from this worktree on 0.0.0.0:8001 with the autoreloader; do not start another and do not stop it.",
+    "spec_sections": [
+      "spec.md User Story 5 and its six acceptance scenarios",
+      "spec.md FR-015, FR-016, FR-017, FR-018, FR-023",
+      "spec.md SC-004, SC-005"
+    ],
+    "plan_sections": [
+      "plan.md 'Roles and access'",
+      "plan.md 'Confirmation safety'",
+      "data-model.md 'Dataset visibility'",
+      "data-model.md 'review.states'",
+      "research.md 'Visibility is two fields, not one'"
+    ],
+    "prior_decisions": [
+      "Public means BOTH framework fields: Dataset.visibility set to its public value AND Dataset.published set true. visibility governs the metadata, published governs the data beneath it, and a dataset that is one without the other is half-published.",
+      "Both fields default to private on creation. The assessor path therefore SETS NOTHING and moves the assessment to AWAITING_DECISION. Do not write code that sets private explicitly \u2014 the safe outcome should be the one that happens when no code runs.",
+      "D2: the role is the trust level. A curator's own upload does not wait; an assessor's does. No per-person flag, no second path.",
+      "D7: every submitted file is kept, superseded ones included, and stays retrievable from its assessment.",
+      "D4: the template's reviewer columns contribute nothing. The assessors named on the description form stand.",
+      "Assessors are credited as contributors; that is attribution, not access. Access follows uploaded_by.",
+      "D16/#367: the DEBUG=False chrome defect is upstream and not yours."
+    ],
+    "acceptance": [
+      {
+        "task": "T029",
+        "given_when_then": "Given a checked file, When a Data Curator confirms, Then the dataset is public on both framework fields and the assessment reaches COMPLETE; and When a Data Assessor confirms, Then neither field is written, the dataset stays private and the assessment moves to AWAITING_DECISION."
+      },
+      {
+        "task": "T030",
+        "given_when_then": "Given a dataset an assessor confirmed and no decision yet, When an anonymous visitor requests it, Then they cannot reach it. This is the test for SC-004 \u2014 prove it fails if the visibility rule is removed."
+      },
+      {
+        "task": "T031",
+        "given_when_then": "Given an assessment with several submissions, When its submissions are read, Then every one including superseded ones is retrievable and distinguishable from the current one. This is the test for SC-005."
+      },
+      {
+        "task": "T032",
+        "given_when_then": "Given a template whose reviewer columns are filled in, When it is confirmed, Then nothing from those columns is stored and the assessors named on the description form stand unchanged."
+      }
+    ],
+    "verified_base": {
+      "commit": "4baaf920ccd47bb0735320a4f7b2e482808c7c60",
+      "verified_at": "2026-09-16T16:00:00Z",
+      "steps": [
+        "lint",
+        "typecheck",
+        "test",
+        "build",
+        "conformance",
+        "docs"
+      ],
+      "note": "Every step green, full suite about 87 seconds. Nothing is known-red at this commit. If anything is red when you arrive, STOP and report rather than fixing it."
+    }
+  },
+  "budgets": {
+    "attempts_per_task": 5,
+    "wallclock_minutes": 240
+  },
+  "rituals": [
+    "Read specs/005-assessment-upload-workflow/spec.md User Story 5, plan.md and data-model.md before writing anything.",
+    "Read project/review/views.py ReviewConfirmView and project/review/states.py \u2014 the confirmation path and the transitions already exist.",
+    "Read fairdm/core/dataset/models.py for what visibility and published actually mean, rather than inferring from the names.",
+    "Read project/review/permissions.py so the role test goes through the predicates, never a group name.",
+    "Confirm HEAD equals the verified_base commit before starting.",
+    "Work in thin slices: each slice leaves the suite green and is committed before the next begins."
+  ],
+  "prohibitions": [
+    "Stage explicit paths only. Never `git add -A` or `git add .` \u2014 this worktree is shared with a running development server and the orchestrator.",
+    "Do not stop, restart or start a development server. One is already running on port 8001 with the autoreloader.",
+    "Do not write code that sets a dataset private. Private is the default and must stay the outcome of no code running.",
+    "Do not add a per-person trust flag or a second confirmation path. The role is the trust level.",
+    "Never pass dry_run=True to either import resource.",
+    "Never weaken or delete a test you did not author in this story.",
+    "Do not build the curator queue or the decision actions. That is US-6.",
+    "Do not attempt to fix the DEBUG=False chrome defect; it is raised upstream as django-mvp/django-mvp#367.",
+    "Do not add any new dependency.",
+    "Do not touch .github/workflows/**.",
+    "Do not push, open pull requests or comment on GitHub. Commit locally only.",
+    "Never judge layout or appearance from a screenshot and never claim a visual result is correct on that basis."
+  ]
+}
