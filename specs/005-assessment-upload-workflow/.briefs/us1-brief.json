@@ -1,0 +1,100 @@
+{
+  "story": "US1",
+  "repo": "ihfc-iugg/ghfdb-portal",
+  "issue": 210,
+  "worktree": "/home/sam/projects/ihfc-iugg/ghfdb-portal-005",
+  "tasks": [
+    "T010b",
+    "T011",
+    "T012",
+    "T013",
+    "T014"
+  ],
+  "required_skills": [
+    {
+      "name": "craft-tdd",
+      "path": "/home/sam/.openclaw/workspaces/forge/skills/craft-tdd/SKILL.md",
+      "receipt": "craft-tdd/2026-08-24/0f180d36"
+    },
+    {
+      "name": "craft-increments",
+      "path": "/home/sam/.openclaw/workspaces/forge/skills/craft-increments/SKILL.md",
+      "receipt": "craft-increments/2026-08-05/d3dce07f"
+    }
+  ],
+  "context": {
+    "why": "This is the first page of the assessment upload workflow and the entry point to all of it: a navigation entry only the data assessment team sees, leading to a list of their assessments and the route to start a new one. The foundational phase has already built the record, the four states, the two role predicates and the groups. The review application currently has no routes at all \u2014 you are giving it its first. A dev server is running against this worktree on port 8001 and reloads on every save, so the person who asked for this is watching the pages appear as you build them.",
+    "environment": "Python 3.13 via Poetry, virtualenv already synced. Prefix commands with `poetry run`. Tests: `poetry run pytest`. Lint gate: `poetry run pre-commit run -a`, never raw ruff. A development server is already running from this worktree on 0.0.0.0:8001 with the autoreloader; do not start another and do not stop it. `config/settings.py` carries an uncommitted change that server depends on \u2014 leave it alone and never stage it, it is landing separately in PR #217.",
+    "spec_sections": [
+      "spec.md User Story 1 and its five acceptance scenarios",
+      "spec.md FR-001, FR-002, FR-022"
+    ],
+    "plan_sections": [
+      "plan.md 'The pages' (the access table)",
+      "plan.md 'Roles and access'",
+      "plan.md 'Notification'",
+      "data-model.md 'review.states'"
+    ],
+    "prior_decisions": [
+      "D8: no notification framework is added. FR-022 is met by the navigation entry carrying the count of assessments waiting on a decision, visible to curators, and by the queue listing them. Do not add a dependency, a notification model or email.",
+      "D11: access is decided by the predicates in review.permissions, never by testing a group name inline. The old code tested group names in four places with two different spellings and could never match. Call is_data_assessor and is_data_curator.",
+      "D13: the tree never holds two answers at once. review/urls.py and review/menus.py are deliberately empty right now; you are filling them, not restoring what was deleted."
+    ],
+    "acceptance": [
+      {
+        "task": "T010b",
+        "given_when_then": "Given the foundational phase's public names (the assessment record and its states, is_data_assessor, is_data_curator, the checking mode, build_report, RowFailure, GHFDBImportReport, IllegalTransition), When `poetry run python -m forge_verify`-equivalent runs as `forge verify --steps docs`, Then it is green: every new public name is documented on a page, and docs/guides/importing-data.md is brought up to date with import_ghfdb_template's changed signature."
+      },
+      {
+        "task": "T011",
+        "given_when_then": "Given a signed-in Data Assessor, a signed-in Data Curator, a signed-in user in neither role and an anonymous visitor, When each requests the assessment list URL directly, Then the first two are served and the last two are refused rather than shown an empty list."
+      },
+      {
+        "task": "T012",
+        "given_when_then": "Given a Data Assessor with two assessments in different states, When the list renders, Then each row names the publication it covers, who uploaded it and the state it has reached, asserted against the rendered HTML rather than the template context."
+      },
+      {
+        "task": "T013",
+        "given_when_then": "Given each of the two roles and a user in neither, When any portal page renders, Then the navigation entry is present for the two roles and absent otherwise, and for a curator it carries the number of assessments waiting on a decision."
+      },
+      {
+        "task": "T014",
+        "given_when_then": "Given project/review/urls.py, When the list view is reached by its URL name, Then it resolves, and the route is the one plan.md's access table names."
+      }
+    ],
+    "verified_base": {
+      "commit": "efa1f20",
+      "verified_at": "2026-09-16T09:20:00Z",
+      "steps": [
+        "lint",
+        "typecheck",
+        "test",
+        "build",
+        "conformance"
+      ],
+      "note": "Suite green in about 109 seconds, pre-commit clean, mypy clean. The docs step is RED at this commit and T010b is the task that fixes it \u2014 that is the one known-red thing and it is yours. Everything else must be green when you arrive; if it is not, STOP and report rather than fixing it."
+    }
+  },
+  "budgets": {
+    "attempts_per_task": 5,
+    "wallclock_minutes": 240
+  },
+  "rituals": [
+    "Read specs/005-assessment-upload-workflow/spec.md User Story 1, plan.md and data-model.md before writing anything.",
+    "Read project/review/ in full \u2014 it is small now: models.py, states.py, permissions.py, admin.py, urls.py, menus.py.",
+    "Read how an existing portal page is built before building yours: project/ghfdb/views.py and the framework's fairdm.views base classes.",
+    "Confirm HEAD equals the verified_base commit before starting.",
+    "Work in thin slices: each slice leaves the suite green and is committed before the next begins."
+  ],
+  "prohibitions": [
+    "Never stage or commit config/settings.py. It carries an uncommitted change the running dev server depends on, landing separately.",
+    "Do not stop, restart or start a development server. One is already running on port 8001 with the autoreloader.",
+    "Never weaken or delete a test you did not author in this story.",
+    "Do not build the description form, the upload page, the confirm path or the curator queue. Those are US-2 onward.",
+    "Do not add a notification framework, email, or any new dependency.",
+    "Do not test a group name inline; call the predicates in review.permissions.",
+    "Do not touch .github/workflows/**.",
+    "Do not push, open pull requests or comment on GitHub. Commit locally only.",
+    "Never judge layout, spacing or appearance from a screenshot and never claim a visual result is correct on that basis. Assert against rendered HTML."
+  ]
+}
