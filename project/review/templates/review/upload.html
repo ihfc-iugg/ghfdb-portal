@@ -1,0 +1,18 @@
+{% extends "page_view.html" %}
+{% load i18n %}
+{% block page.content %}
+  <div class="w-full lg:max-w-4xl">
+    <form method="post"
+          enctype="multipart/form-data"
+          action="{{ request.path }}">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <c-button type="submit"
+                text="{% trans "Check file" %}"
+                variant="primary" />
+    </form>
+    {% if report %}
+      {% include "review/upload_report.html" %}
+    {% endif %}
+  </div>
+{% endblock page.content %}

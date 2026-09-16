@@ -18,15 +18,18 @@ defect: ``ReviewListView.test_func`` grants entry to both roles and the
 view builds a normal 200 response for each.
 """
 
+from unittest import mock
+
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.template.loader import render_to_string
 from django.urls import reverse
 from fairdm.factories import LiteratureItemFactory
 from guardian.shortcuts import get_perms
 
-from review.models import Review
+from review.models import Review, SubmittedFile
 from review.states import States
-from review.views import ReviewCreateView, ReviewListView
+from review.views import ReviewCreateView, ReviewListView, ReviewUploadView
 from tests.test_review.factories import ClaimedPersonFactory, ReviewFactory
 
 
@@ -208,3 +211,110 @@ class TestReviewListItemTemplate:
         assert str(review.literature) in html
         assert str(assessor) in html
         assert review.get_state_display() in html
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewUploadViewAccess:
+    """T020, plan.md's access table: the upload route is open to the
+    assessment's own uploader or to any Data Curator, and refused to
+    everyone else."""
+
+    def test_the_uploader_is_granted_entry(self, rf, assessor):
+        review = ReviewFactory(uploaded_by=assessor)
+        request = rf.get(f"/assessments/{review.pk}/upload/")
+        request.user = assessor
+
+        response = ReviewUploadView.as_view()(request, pk=review.pk)
+
+        assert response.status_code == 200
+
+    def test_any_curator_is_granted_entry_even_when_not_the_uploader(
+        self, rf, assessor, curator
+    ):
+        review = ReviewFactory(uploaded_by=assessor)
+        request = rf.get(f"/assessments/{review.pk}/upload/")
+        request.user = curator
+
+        response = ReviewUploadView.as_view()(request, pk=review.pk)
+
+        assert response.status_code == 200
+
+    def test_a_different_assessor_is_refused(self, client, assessor, data_assessor_group):
+        review = ReviewFactory(uploaded_by=assessor)
+        other = ClaimedPersonFactory()
+        other.groups.add(data_assessor_group)
+        client.force_login(other)
+
+        response = client.get(reverse("review-upload", kwargs={"pk": review.pk}))
+
+        assert response.status_code == 403
+
+    def test_an_anonymous_visitor_is_redirected_to_log_in_rather_than_served(
+        self, client, assessor
+    ):
+        review = ReviewFactory(uploaded_by=assessor)
+
+        response = client.get(reverse("review-upload", kwargs={"pk": review.pk}))
+
+        assert response.status_code == 302
+        assert response.url != reverse("review-upload", kwargs={"pk": review.pk})
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewUploadViewChecking:
+    """T020, spec.md User Story 3 scenarios 1-2, FR-008/FR-010: a valid file
+    is checked and reported without writing to the dataset, and a
+    non-spreadsheet file is refused by the form before the reader ever sees
+    it (D5).
+
+    Built with ``RequestFactory`` rather than ``reverse`` + the test client,
+    for the same reason T017's own tests are (decisions.md D21): the
+    response renders the shared page chrome, which raises for a signed-in
+    user under ``DEBUG=False`` (predates this story, django-mvp/django-mvp
+    #367) — these tests stop at the unrendered ``TemplateResponse``, the
+    same way T011/T019's granted-path tests do.
+    """
+
+    def _post(self, rf, user, review, file):
+        request = rf.post(f"/assessments/{review.pk}/upload/", data={"file": file})
+        request.user = user
+        return ReviewUploadView.as_view()(request, pk=review.pk)
+
+    def test_a_valid_file_is_checked_without_writing_to_the_dataset(
+        self, rf, assessor, valid_upload_file
+    ):
+        review = ReviewFactory(uploaded_by=assessor)
+
+        response = self._post(rf, assessor, review, valid_upload_file)
+
+        assert response.status_code == 200
+        review.refresh_from_db()
+        assert not review.dataset.has_data
+
+    def test_a_valid_file_creates_a_submitted_file_row(
+        self, rf, assessor, valid_upload_file
+    ):
+        review = ReviewFactory(uploaded_by=assessor)
+
+        self._post(rf, assessor, review, valid_upload_file)
+
+        submission = SubmittedFile.objects.get(review=review)
+        assert submission.submitted_by_id == assessor.pk
+        assert submission.imported_at is None
+
+    def test_a_non_spreadsheet_file_is_refused_before_the_reader_runs(
+        self, rf, assessor
+    ):
+        review = ReviewFactory(uploaded_by=assessor)
+        not_a_spreadsheet = SimpleUploadedFile(
+            "notes.txt", b"this is not a spreadsheet", content_type="text/plain"
+        )
+
+        with mock.patch("review.views.import_ghfdb_template") as reader:
+            response = self._post(rf, assessor, review, not_a_spreadsheet)
+
+        assert response.status_code == 200
+        reader.assert_not_called()
+        assert not SubmittedFile.objects.filter(review=review).exists()

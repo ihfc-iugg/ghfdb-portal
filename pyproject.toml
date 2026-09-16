@@ -246,7 +246,12 @@ source = ["project"]
 
 [tool.deptry]
 extend_exclude = ["tasks.py", "docs", ".*tests", ".*migrations", "scripts"]
-known_first_party = ["ghfdb", "heat_flow", "review"]
+# "project" itself: ghfdb.apps.GhfdbConfig registers under the dotted name
+# "project.ghfdb" rather than the bare "ghfdb" its sibling apps use, so a
+# cross-app import into it (review.views, T020) has to spell it
+# "project.ghfdb" too — a second, bare import would double-load its models
+# under a module identity Django's app registry does not recognise.
+known_first_party = ["ghfdb", "heat_flow", "review", "project"]
 
 # DEP003 lists the modules this project imports through FairDM rather than
 # declaring itself. FairDM owns the Django pin and the rest of that stack, so

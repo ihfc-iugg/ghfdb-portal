@@ -1,0 +1,39 @@
+{% load i18n %}
+<div class="upload-report">
+  <h2>{% trans "Check report" %}</h2>
+  {% if report.has_failures %}
+    <p>
+      {% blocktrans count counter=report.failures|length %}
+        This file has {{ counter }} problem to fix before it can be confirmed.
+      {% plural %}
+        This file has {{ counter }} problems to fix before it can be confirmed.
+      {% endblocktrans %}
+    </p>
+  {% else %}
+    <dl>
+      <dt>{% trans "Sites created" %}</dt>
+      <dd>
+        {{ report.sites_created }}
+      </dd>
+      <dt>{% trans "Sites updated" %}</dt>
+      <dd>
+        {{ report.sites_updated }}
+      </dd>
+      <dt>{% trans "Determinations created" %}</dt>
+      <dd>
+        {{ report.determinations_created }}
+      </dd>
+      <dt>{% trans "Determinations updated" %}</dt>
+      <dd>
+        {{ report.determinations_updated }}
+      </dd>
+    </dl>
+    <form method="post"
+          action="{% url 'review-confirm' pk=review.pk %}">
+      {% csrf_token %}
+      <c-button type="submit"
+                text="{% trans "Confirm and import" %}"
+                variant="primary" />
+    </form>
+  {% endif %}
+</div>

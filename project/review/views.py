@@ -6,15 +6,21 @@ onward.
 """
 
 from django.contrib.auth.mixins import UserPassesTestMixin
+from django.core.files.base import ContentFile
 from django.shortcuts import redirect
 from django.utils.translation import gettext as _
+from django.views.generic import DetailView
 from fairdm.core.dataset.models import Dataset
 from fairdm.utils.permissions import assign_all_model_perms
 from fairdm.views import FairDMCreateView, FairDMListView
 
+from project.ghfdb.forms import GHFDBImportForm
+from project.ghfdb.importers import import_ghfdb_template
+from project.ghfdb.report import build_report
+
 from .forms import ReviewDescriptionForm
-from .models import Review
-from .permissions import is_data_assessor, is_data_curator
+from .models import Review, SubmittedFile
+from .permissions import can_manage_upload, is_data_assessor, is_data_curator
 
 
 class ReviewListView(UserPassesTestMixin, FairDMListView):
@@ -85,3 +91,47 @@ class ReviewCreateView(UserPassesTestMixin, FairDMCreateView):
             dataset.add_contributor(assessor, with_roles=["DataCollector"])
 
         return redirect(dataset.get_absolute_url())
+
+
+class ReviewUploadView(UserPassesTestMixin, DetailView):
+    """Upload a file and see its check report (T020, plan.md "The pages",
+    FR-008 through FR-010, D5).
+
+    The upload form and its check report share one route and one response:
+    a GET shows the blank form, and a POST stores the submission, runs the
+    reader in ``check_only`` mode and renders the report in the same
+    response — the dataset is never written to here (D6 leaves that to
+    confirmation). The submitted file is kept regardless of whether the
+    check passes, per FR-015.
+    """
+
+    model = Review
+    template_name = "review/upload.html"
+    context_object_name = "review"
+
+    def test_func(self):
+        return can_manage_upload(self.request.user, self.get_object())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.setdefault("form", GHFDBImportForm())
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = review = self.get_object()
+        form = GHFDBImportForm(request.POST, request.FILES)
+        if not form.is_valid():
+            return self.render_to_response(self.get_context_data(form=form))
+
+        uploaded_file = form.cleaned_data["file"]
+        content = uploaded_file.read()
+        SubmittedFile.objects.create(
+            review=review,
+            file=ContentFile(content, name=uploaded_file.name),
+            submitted_by=request.user,
+        )
+        outcome = import_ghfdb_template(content, review.dataset, check_only=True)
+        report = build_report(outcome)
+        return self.render_to_response(
+            self.get_context_data(form=GHFDBImportForm(), report=report)
+        )
