@@ -105,6 +105,18 @@ class ReviewDescriptionForm(ModelForm):
                 ),
             )
 
+        if literature:
+            existing = Review.objects.filter(literature=literature)
+            if self.instance.pk:
+                existing = existing.exclude(pk=self.instance.pk)
+            existing = existing.first()
+            if existing:
+                self.add_error(
+                    "literature",
+                    _("%(literature)s already has an assessment: %(title)s.")
+                    % {"literature": literature, "title": existing.dataset.name},
+                )
+
         start_date = cleaned_data.get("start_date")
         end_date = cleaned_data.get("end_date")
         if start_date and end_date and PartialDate(end_date) < PartialDate(start_date):

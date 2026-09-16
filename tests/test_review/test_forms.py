@@ -12,7 +12,11 @@ from fairdm.factories import LiteratureItemFactory
 from literature.models import LiteratureItem
 
 from review.forms import ReviewDescriptionForm
-from tests.test_review.factories import ClaimedPersonFactory, GhostPersonFactory
+from tests.test_review.factories import (
+    ClaimedPersonFactory,
+    GhostPersonFactory,
+    ReviewFactory,
+)
 
 
 @pytest.mark.django_db
@@ -127,3 +131,27 @@ class TestReviewDescriptionFormBibliographyFile:
 
         assert not form.is_valid()
         assert "bibliography_file" in form.errors
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewDescriptionFormDuplicateLiterature:
+    """T018: a publication that already has an assessment is refused, naming
+    the existing assessment (spec.md User Story 2 scenario 4, FR-007)."""
+
+    def test_a_publication_with_an_existing_assessment_is_refused(self):
+        existing = ReviewFactory()
+        assessor = ClaimedPersonFactory()
+
+        form = ReviewDescriptionForm(
+            data={
+                "literature": existing.literature.pk,
+                "reviewers": [assessor.pk],
+                "start_date": "2026-01-01",
+                "end_date": "2026-02-01",
+            }
+        )
+
+        assert not form.is_valid()
+        errors = " ".join(form.errors.get("literature", []))
+        assert existing.dataset.name in errors
