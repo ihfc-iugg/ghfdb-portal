@@ -34,6 +34,7 @@ from review.views import (
     ReviewConfirmView,
     ReviewCreateView,
     ReviewListView,
+    ReviewQueueView,
     ReviewUploadView,
 )
 from tests.test_ghfdb.test_importers import ROW, _build_official_xlsx, make_dataset
@@ -226,6 +227,87 @@ class TestReviewListItemTemplate:
         assert str(review.literature) in html
         assert str(assessor) in html
         assert review.get_state_display() in html
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewQueueViewAccess:
+    """T033, plan.md's access table: the decision queue is served to a Data
+    Curator and refused to everyone else, including a Data Assessor,
+    whether reached through the navigation or a direct URL — the same
+    refusal shape ``ReviewListView`` uses."""
+
+    def test_a_data_curator_is_granted_entry(self, rf, curator):
+        request = rf.get(reverse("review-queue"))
+        request.user = curator
+
+        response = ReviewQueueView.as_view()(request)
+
+        assert response.status_code == 200
+
+    def test_a_data_assessor_is_refused(self, client, assessor):
+        client.force_login(assessor)
+
+        response = client.get(reverse("review-queue"))
+
+        assert response.status_code == 403
+
+    def test_a_signed_in_user_in_neither_role_is_refused(self, client, outsider):
+        client.force_login(outsider)
+
+        response = client.get(reverse("review-queue"))
+
+        assert response.status_code == 403
+
+    def test_an_anonymous_visitor_is_redirected_to_log_in_rather_than_served(
+        self, client
+    ):
+        response = client.get(reverse("review-queue"))
+
+        assert response.status_code == 302
+        assert response.url != reverse("review-queue")
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewQueueViewContent:
+    """T033, spec.md User Story 6 scenario 1: an assessment waiting on a
+    decision appears in the queue, and one that has not reached
+    ``AWAITING_DECISION`` does not."""
+
+    def test_only_awaiting_decision_assessments_are_listed(self, rf, curator):
+        waiting = ReviewFactory(state=States.AWAITING_DECISION)
+        ReviewFactory(state=States.DESCRIBED)
+        request = rf.get(reverse("review-queue"))
+        request.user = curator
+
+        response = ReviewQueueView.as_view()(request)
+
+        assert list(response.context_data["object_list"]) == [waiting]
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewQueueItemTemplate:
+    """T033, spec.md User Story 6 scenario 1: each row names the
+    publication it covers and who uploaded it, asserted against the
+    rendered HTML rather than the template context (T012's pattern) —
+    the full queue page extends the shared chrome that raises for a
+    signed-in user under ``DEBUG=False`` (D16/#367), so this is what proves
+    the row's content."""
+
+    def test_row_names_the_publication_and_uploader(self, assessor):
+        review = ReviewFactory(
+            uploaded_by=assessor,
+            state=States.AWAITING_DECISION,
+        )
+
+        html = render_to_string(
+            "review/review_queue_item.html", {"review": review}
+        )
+
+        assert str(review.literature) in html
+        assert str(assessor) in html
 
 
 @pytest.mark.django_db

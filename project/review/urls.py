@@ -13,12 +13,14 @@ from .views import (
     ReviewConfirmView,
     ReviewCreateView,
     ReviewListView,
+    ReviewQueueView,
     ReviewUploadView,
 )
 
 urlpatterns: list[URLPattern | URLResolver] = [
     path("assessments/", ReviewListView.as_view(), name="review-list"),
     path("assessments/new/", ReviewCreateView.as_view(), name="review-create"),
+    path("assessments/queue/", ReviewQueueView.as_view(), name="review-queue"),
     path(
         "assessments/<int:pk>/upload/",
         ReviewUploadView.as_view(),

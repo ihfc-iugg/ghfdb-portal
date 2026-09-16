@@ -1,0 +1,4 @@
+{% load i18n %}
+<c-card title="{{ review.literature }}">
+  <p>{% trans "Uploaded by" %}: {{ review.uploaded_by|default:_("Unknown") }}</p>
+</c-card>

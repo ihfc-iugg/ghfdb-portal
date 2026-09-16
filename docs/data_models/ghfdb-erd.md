@@ -466,6 +466,13 @@ puts the assessment straight into `COMPLETE` for a curator rather than `AWAITING
 `COMPLETE`, the dataset's `visibility` is set to `Visibility.PUBLIC` and nothing else is touched.
 It is the one path both a curator's confirmation and a curator's approval use.
 
+**Deciding on an assessor's upload**
+
+`review.views.ReviewQueueView`, at `/assessments/queue/`, lists every assessment in
+`AWAITING_DECISION` — a Data Curator only, refused to anyone else including the Data Assessor who
+uploaded one of the waiting assessments. Each row is rendered by `review/review_queue_item.html`,
+naming the publication and the uploader.
+
 ### SubmittedFile
 
 One completed upload template as supplied, kept against its assessment.

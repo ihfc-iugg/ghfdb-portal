@@ -53,6 +53,32 @@ class ReviewListView(UserPassesTestMixin, FairDMListView):
         return super().get_queryset().select_related("literature", "uploaded_by")
 
 
+class ReviewQueueView(UserPassesTestMixin, FairDMListView):
+    """The decision queue (T033, plan.md "The pages", FR-002, FR-019,
+    spec.md User Story 6 scenario 1): assessments waiting on a Data
+    Curator's decision. Served to a Data Curator; refused to anyone else,
+    including the Data Assessor who uploaded one of the waiting
+    assessments.
+    """
+
+    model = Review
+    template_name = "review/queue.html"
+    list_item_template = "review/review_queue_item.html"
+    page_title = _("Assessments awaiting a decision")
+    filterset_fields: list[str] = []
+
+    def test_func(self):
+        return is_data_curator(self.request.user)
+
+    def get_queryset(self):
+        return (
+            super()
+            .get_queryset()
+            .filter(state=States.AWAITING_DECISION)
+            .select_related("literature", "uploaded_by")
+        )
+
+
 class ReviewCreateView(UserPassesTestMixin, FairDMCreateView):
     """Start an assessment (FR-003 through FR-007, FR-016; T017).
 

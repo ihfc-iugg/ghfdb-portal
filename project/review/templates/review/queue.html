@@ -1,0 +1,11 @@
+{% extends "page_view.html" %}
+{% load i18n %}
+{% block page.content %}
+  <div class="w-full lg:max-w-4xl">
+    {% for review in object_list %}
+      {% include "review/review_queue_item.html" %}
+    {% empty %}
+      <p>{% trans "Nothing is waiting on a decision." %}</p>
+    {% endfor %}
+  </div>
+{% endblock page.content %}
