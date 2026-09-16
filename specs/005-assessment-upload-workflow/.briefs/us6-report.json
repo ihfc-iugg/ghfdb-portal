@@ -1,0 +1,134 @@
+{
+  "story": "US6",
+  "skills_loaded": [
+    {
+      "name": "craft-tdd",
+      "receipt": "craft-tdd/2026-09-16/3c401f5e",
+      "loaded_via": "skill-tool"
+    },
+    {
+      "name": "craft-increments",
+      "receipt": "craft-increments/2026-08-05/d3dce07f",
+      "loaded_via": "skill-tool"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T029",
+      "status": "done",
+      "evidence": {
+        "tests_added": [
+          "tests/test_review/test_views.py::TestAssessorDatasetVisibility::test_an_assessors_confirmation_writes_nothing_to_visibility",
+          "tests/test_review/test_views.py::TestCuratorConfirmationVisibility::test_a_curators_own_confirmation_makes_the_dataset_public"
+        ],
+        "commands": [
+          "poetry run pytest tests/test_review/test_views.py -k \"TestCuratorConfirmationVisibility or TestAssessorDatasetVisibility or TestReviewConfirmView\" -q"
+        ],
+        "exit_code": 0
+      },
+      "commits": ["9ffe1be52bc5ba635873582c8754b108f1b014d7"]
+    },
+    {
+      "id": "T033",
+      "status": "done",
+      "evidence": {
+        "tests_added": [
+          "tests/test_review/test_views.py::TestReviewQueueViewAccess::test_a_data_curator_is_granted_entry",
+          "tests/test_review/test_views.py::TestReviewQueueViewAccess::test_a_data_assessor_is_refused",
+          "tests/test_review/test_views.py::TestReviewQueueViewAccess::test_a_signed_in_user_in_neither_role_is_refused",
+          "tests/test_review/test_views.py::TestReviewQueueViewAccess::test_an_anonymous_visitor_is_redirected_to_log_in_rather_than_served",
+          "tests/test_review/test_views.py::TestReviewQueueViewContent::test_only_awaiting_decision_assessments_are_listed",
+          "tests/test_review/test_views.py::TestReviewQueueItemTemplate::test_row_names_the_publication_and_uploader"
+        ],
+        "commands": [
+          "poetry run pytest tests/test_review/test_views.py -k \"TestReviewQueueView or TestReviewQueueItemTemplate\" -q"
+        ],
+        "exit_code": 0
+      },
+      "commits": ["008a2fb8b0d56368697434f52947f0a60fb292b0"]
+    },
+    {
+      "id": "T034",
+      "status": "done",
+      "evidence": {
+        "tests_added": [
+          "tests/test_review/test_views.py::TestReviewDecideViewAccess::test_a_data_curator_is_granted_entry",
+          "tests/test_review/test_views.py::TestReviewDecideViewAccess::test_a_data_assessor_is_refused",
+          "tests/test_review/test_views.py::TestReviewDecideViewApprove::test_approving_makes_the_dataset_public_and_completes_the_assessment",
+          "tests/test_review/test_views.py::TestReviewDecideViewApprove::test_approving_records_who_decided_and_when"
+        ],
+        "commands": [
+          "poetry run pytest tests/test_review/test_views.py -k \"TestReviewDecideView\" -q"
+        ],
+        "exit_code": 0
+      },
+      "commits": ["538f42240ad81c827c7b0638d9d8dceb269848cf"]
+    },
+    {
+      "id": "T035",
+      "status": "done",
+      "evidence": {
+        "tests_added": [
+          "tests/test_review/test_views.py::TestReviewDecideViewSendBack::test_sending_back_keeps_the_dataset_private_and_requests_changes",
+          "tests/test_review/test_views.py::TestReviewDecideViewSendBack::test_sending_back_records_the_comment_and_who_decided",
+          "tests/test_review/test_views.py::TestReviewSendBackRoundTrip::test_a_replacement_file_is_confirmed_and_returns_to_awaiting_decision",
+          "tests/test_review/test_views.py::TestReviewUploadViewShowsSendBackComment::test_the_comment_is_in_context_when_changes_are_requested",
+          "tests/test_review/test_views.py::TestReviewUploadViewShowsSendBackComment::test_no_comment_is_shown_outside_changes_requested"
+        ],
+        "commands": [
+          "poetry run pytest tests/test_review/test_views.py -k \"TestReviewDecideViewSendBack or TestReviewSendBackRoundTrip or TestReviewUploadViewShowsSendBackComment\" -q"
+        ],
+        "exit_code": 0
+      },
+      "commits": ["2a9c3eea60ea82721fa9bd4046c500e2a388e109"]
+    },
+    {
+      "id": "T036",
+      "status": "done",
+      "evidence": {
+        "tests_added": [
+          "tests/test_review/test_views.py::TestReviewDecideViewAccess::test_the_uploader_who_is_an_assessor_is_refused_to_approve_their_own"
+        ],
+        "commands": [
+          "poetry run pytest tests/test_review/test_views.py -k test_the_uploader_who_is_an_assessor_is_refused_to_approve_their_own -q"
+        ],
+        "exit_code": 0
+      },
+      "commits": ["5fa379aa9f7bec87fb11457311f6ccb93bb9c180"]
+    },
+    {
+      "id": "T037",
+      "status": "done",
+      "evidence": {
+        "tests_added": [
+          "tests/test_review/test_urls.py::TestReviewQueueRoute::test_review_queue_resolves_by_name_to_the_documented_path",
+          "tests/test_review/test_urls.py::TestReviewQueueRoute::test_the_path_resolves_to_the_queue_view",
+          "tests/test_review/test_urls.py::TestReviewDecideRoute::test_review_decide_resolves_by_name_to_the_documented_path",
+          "tests/test_review/test_urls.py::TestReviewDecideRoute::test_the_path_resolves_to_the_decide_view",
+          "tests/test_review/test_views.py::TestReviewQueueItemTemplate::test_row_carries_an_approve_and_a_send_back_form"
+        ],
+        "commands": [
+          "poetry run pytest tests/test_review/test_urls.py tests/test_review/test_views.py -k \"TestReviewQueueRoute or TestReviewDecideRoute or TestReviewQueueItemTemplate\" -q"
+        ],
+        "exit_code": 0
+      },
+      "commits": [
+        "8b583b0c886bce5d77027ef97ab620434df84ae8",
+        "219ff4a29f17e2d2fa896f41adc2a38d3d52fdc9"
+      ]
+    }
+  ],
+  "deviations": [
+    {
+      "what": "ReviewQueueView sets its own template_name (review/queue.html) and its row template is included with Django's {% include %} rather than rendered through FairDMListView's stock render_list_item item-card mechanism.",
+      "why": "render_list_item calls render_to_string(template_name, new) with a plain dict, no request — so {% csrf_token %} inside a card rendered that way has no token in its context and a form built there fails CSRF validation on every submission, silently. The queue's rows carry two POST forms per assessment (approve, send back), so this mattered here in a way it never has for ReviewListView's read-only card. {% include %} inherits the parent template's real request context instead.",
+      "decision_ref": "decisions.md#D28"
+    }
+  ],
+  "concerns": [
+    "poetry run pre-commit run -a's end-of-file-fixer touched specs/005-assessment-upload-workflow/.briefs/us5-brief.json (another story's file, same finding progress.md already recorded for a prior run in this shared worktree) — reverted rather than committed, since it is outside this story's scope.",
+    "T037's queue_item content test (proving the approve/send-back forms render) was written after the forms rather than strictly before them, since the forms and the route they point at (review-decide) already existed and were already behaviour-tested by T034/T035/T036; the test still failed for the right reason before T037's earlier attempt at the forms and was re-verified green after djlint's auto-reformat changed the exact whitespace the assertion matched against.",
+    "The two pre-existing ruff import-order findings in tests/ (flagged in US-5's progress.md, outside pre-commit's scope) and the DEBUG=False shared-chrome defect (django-mvp/django-mvp#367) are both untouched, per the brief's own prohibitions."
+  ],
+  "blocked": []
+}
