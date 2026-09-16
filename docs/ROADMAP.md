@@ -97,43 +97,33 @@ seeding and everything after it arrives dataset by dataset.~~
 
 ### R6 — Datasets added to the portal from inside it
 
-*feature · advances G4*
+*Delivered · advances G4*
 
-The only working import today is in the Django admin, and the views that once offered it elsewhere
-were removed. The assessment team needs to add one dataset at a time through the portal's own
-pages, against a dataset they own, without going through the admin.
+The assessment team adds one dataset at a time through the portal's own pages. They describe the
+assessment first — the publication it comes from, who carried out the work and when — then upload
+the completed template. The portal checks the file and reports what it would do, naming the row and
+column at fault where it would not, before anything is written, and nothing is written until the
+uploader confirms. A Data Curator's confirmed upload is public immediately; a Data Assessor's waits
+for a Data Curator to approve it. Every submitted file is kept against its assessment record,
+including one sent back and replaced, so a dataset can always be traced to the file it came from.
 
-**Deliverables:**
+Serves G4. With R5 withdrawn, this is the only route by which data enters the portal.
 
-- Upload of a completed template file against a dataset, from the portal rather than the admin.
-- A validation result the uploader can read and act on, naming the row and column at fault.
-- A file that fails validation leaves the dataset unchanged.
-
-Serves G4. Out of scope: the trust and review distinctions that separate team members from outside
-contributors.
-
-This item has two halves. Reading a completed template file into a dataset, callable from code, is
-specified in `specs/004-import-upload-template/` and issue #199. The page the team uploads through,
-and the validation result they read there, follow separately. With R5 withdrawn, this is the only
-route by which data enters the portal.
-
-### R7 — Contribution from outside the team, reviewed before it goes public
+### R7 — Contribution from outside the assessment team, approved before it goes public
 
 *multi-feature · advances G5*
 
-A heat flow researcher with their own data should be able to create a dataset and upload into it
-unaided. What separates them from the assessment team is trust rather than mechanism: data from
-outside the team stays private until someone on the team has looked at it, while data from team
-members does not wait.
+A heat flow researcher with their own data, and no place on the assessment team, should be able to
+create a dataset and upload into it unaided. The role, the private-until-approved rule and the
+decision queue this needs already exist and gate the assessment team's own uploads: a Data
+Assessor's stays private until a Data Curator decides on it, a Data Curator's does not. What is
+missing is a route into that same workflow for someone holding neither role.
 
 **Deliverables:**
 
-- A role marking a portal user as part of the assessment team, and the permissions that follow it.
-- A dataset uploaded from outside that role stays invisible to the public until it is reviewed.
-- A queue of datasets awaiting review, and a route from that queue to a decision.
-- The outcome of each review, and who made it, recorded on the dataset.
-- Datasets from team members published without waiting.
-- Test coverage for the review application, which currently has none.
+- A route for a portal user in neither role to create a dataset and upload into it, held private
+  the same way a Data Assessor's upload is, until a Data Curator decides on it.
+- Test coverage extended to that route.
 
 Serves G5. Out of scope: assessing the science of a submission. This is the gate on publication,
 not the assessment work itself, which is R15.
