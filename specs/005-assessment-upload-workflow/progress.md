@@ -43,3 +43,38 @@ Full suite: 827 passed, 1 skipped, 13 xfailed. `forge verify --steps docs --base
 `manage.py check` and `makemigrations review --check` both clean.
 
 Next: US-2, the description form.
+
+## 2026-09-16 — US-2 complete (T015, T016, T018, T017, T019)
+
+`ReviewDescriptionForm` (T015): publication, assessors and dates, with an optional title field that
+belongs to the dataset rather than the model. Assessors are drawn from `Person.objects.real()`,
+so a ghost profile with no account validates; end-before-start is refused naming both dates,
+compared as `PartialDate` rather than as strings (the model's own equivalent check lives in
+`save()`, which form validation never reaches).
+
+T016 made `literature` optional and added `bibliography_file`: a CSL-JSON file read with the
+stdlib `json` module creates the `LiteratureItem` inline during `clean()`. D18 records why this
+accepts CSL-JSON specifically rather than the BibTeX/RIS/EndNote `django-literature`'s own import
+page supports — that page's parsing happens client-side, in a bundled JS library this repository
+doesn't own, and no server-side parser is an available dependency here.
+
+T018 added the duplicate check ahead of Django's own `validate_unique()`, naming the existing
+assessment's dataset in the refusal rather than the framework's generic message.
+
+T017 built `ReviewCreateView`: writes the `Review` in its default `DESCRIBED` state, creates a
+`Dataset` left at the framework's private defaults (nothing sets `visibility` or `published`),
+grants the uploader — never the assessor list — object permissions via `assign_all_model_perms`
+(D20, correcting the retired view's grant of the same helper to every reviewer — see `git show
+78c12d1`), and credits each assessor as a `DataCollector` contributor (D19, replacing the retired
+view's `DataCurator` credit, now a name this feature's own portal group also uses). T017's own
+tests call the view directly rather than through `reverse()` (D21), so it carries no dependency on
+T019's landing order.
+
+T019 registered `review-create` at `/assessments/new/` and its access-control tests, mirroring
+`review-list`'s own (D16 scoping unchanged: granted-path tests stop at the unrendered
+`TemplateResponse`, refusal paths go through the client).
+
+Full suite: 847 passed, 1 skipped, 13 xfailed. `manage.py check` and `makemigrations review --check`
+both clean. `poetry run pre-commit run -a` clean.
+
+Next: US-3, the upload and check report.
