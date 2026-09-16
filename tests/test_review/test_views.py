@@ -357,6 +357,76 @@ class TestReviewUploadReportTemplate:
         assert "11" in html
 
 
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewUploadReportTemplateFailures:
+    """T025, spec.md User Story 4 scenarios 1-2, FR-011/FR-012: every
+    failure is listed with its row, the template's own column heading and
+    the reason, asserted against the rendered HTML rather than the context
+    — the same way T021 tests the clean-report state."""
+
+    def test_every_failure_is_listed_with_its_row_column_and_reason(self):
+        from project.ghfdb.report import GHFDBImportReport, RowFailure
+
+        review = ReviewFactory()
+        report = GHFDBImportReport(
+            sites_created=0,
+            sites_updated=0,
+            determinations_created=0,
+            determinations_updated=0,
+            failures=(
+                RowFailure(
+                    row_number=3, column="q", reason="This field cannot be blank."
+                ),
+                RowFailure(
+                    row_number=7,
+                    column="environment",
+                    reason=(
+                        "Invalid value 'swamp' for GeographicEnvironment "
+                        "vocabulary. Valid options are: [...]"
+                    ),
+                ),
+            ),
+        )
+
+        html = render_to_string(
+            "review/upload_report.html", {"review": review, "report": report}
+        )
+
+        assert "3" in html
+        assert "This field cannot be blank." in html
+        assert "7" in html
+        assert "environment" in html
+        assert "swamp" in html
+        assert "GeographicEnvironment" in html
+
+    def test_all_failures_are_reported_together_not_only_the_first(self):
+        from project.ghfdb.report import GHFDBImportReport, RowFailure
+
+        review = ReviewFactory()
+        report = GHFDBImportReport(
+            sites_created=0,
+            sites_updated=0,
+            determinations_created=0,
+            determinations_updated=0,
+            failures=(
+                RowFailure(row_number=1, column="q", reason="first failure text"),
+                RowFailure(row_number=2, column="qc", reason="second failure text"),
+                RowFailure(
+                    row_number=3, column="tc_mean", reason="third failure text"
+                ),
+            ),
+        )
+
+        html = render_to_string(
+            "review/upload_report.html", {"review": review, "report": report}
+        )
+
+        assert "first failure text" in html
+        assert "second failure text" in html
+        assert "third failure text" in html
+
+
 def _submitted_file(review, user, content, name="assessment.xlsx"):
     return SubmittedFile.objects.create(
         review=review,

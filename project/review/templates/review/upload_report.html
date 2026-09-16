@@ -9,6 +9,15 @@
         This file has {{ counter }} problems to fix before it can be confirmed.
       {% endblocktrans %}
     </p>
+    <ul>
+      {% for failure in report.failures %}
+        <li>
+          {% blocktrans with row=failure.row_number column=failure.column reason=failure.reason %}
+            Row {{ row }}, column "{{ column }}": {{ reason }}
+          {% endblocktrans %}
+        </li>
+      {% endfor %}
+    </ul>
   {% else %}
     <dl>
       <dt>{% trans "Sites created" %}</dt>
