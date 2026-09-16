@@ -413,11 +413,16 @@ The record of a publication being turned into a dataset through the assessment u
 - Names the people who carried it out through the `reviewers` relation, so a review may have several
 - Tracks start and completion dates as partial dates, and its state through `review.states.States`
 - Records who created it (`uploaded_by`) and, once decided, who decided it and when (`decided_by`, `decided_at`, `decision_comment`)
+- Access to the record and its pages is decided by `review.permissions.is_data_assessor` and
+  `review.permissions.is_data_curator`, the only place group membership is tested
 
 **Business Rules**
 
 - A start date later than the completion date is refused on `save()`
 - Every legal state transition, and who may make it, is enforced by `review.states` rather than by each caller testing field combinations
+- The three transitions — `review.states.confirm_upload`, `review.states.approve`,
+  `review.states.send_back` — each raise `review.states.IllegalTransition` when the record's current
+  state or the acting person is not one the transition allows
 
 ### SubmittedFile
 
@@ -427,6 +432,7 @@ One completed upload template as supplied, kept against its assessment.
 
 - A row per submission rather than a field on `Review`, so a file a curator sends back is never overwritten by its replacement
 - `Review.current` reads the most recent submission
+- Stored at a path scoped to its assessment by `review.models.submission_upload_path`
 
 ### GHFDBRelease
 

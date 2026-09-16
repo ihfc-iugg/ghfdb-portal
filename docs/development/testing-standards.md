@@ -362,7 +362,10 @@ Integration tests validate complete user workflows through the Django stack.
 ```python
 import pytest
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from fairdm.core.models import Dataset
+from review.models import Review
+from review.states import IllegalTransition, States, approve
 
 @pytest.mark.integration
 @pytest.mark.django_db
@@ -382,13 +385,13 @@ def test_review_submission_workflow():
     # Act: Submit for review
     review = Review.objects.create(
         dataset=dataset,
-        status=Review.STATUS_CHOICES.PENDING
+        state=States.AWAITING_DECISION,
     )
     review.reviewers.add(user)
 
     # Assert: State transitions correctly
     assert dataset.visibility == 0  # Still private
-    assert review.status == Review.STATUS_CHOICES.PENDING
+    assert review.state == States.AWAITING_DECISION
     assert user in review.reviewers.all()
 ```
 
@@ -426,7 +429,7 @@ approve_dataset(dataset)
 
 # After action
 assert dataset.visibility == 1  # Public
-assert dataset.review.status == Review.STATUS_CHOICES.COMPLETE
+assert dataset.review.state == States.COMPLETE
 ```
 
 **Data Preservation**: Ensure data survives round-trip
@@ -484,22 +487,21 @@ def test_full_workflow_import_to_export():
     # Act 2: Submit for review
     review = Review.objects.create(
         dataset=dataset,
-        status=Review.STATUS_CHOICES.PENDING
+        state=States.AWAITING_DECISION,
     )
 
     # Assert 2: Review created
-    assert review.status == Review.STATUS_CHOICES.PENDING
+    assert review.state == States.AWAITING_DECISION
 
     # Act 3: Admin approval
-    review.status = Review.STATUS_CHOICES.COMPLETE
-    review.approved_by = admin_user
+    approve(review, admin_user)
     review.save()
     dataset.visibility = 1  # Public
     dataset.save()
 
     # Assert 3: Approved and published
     assert dataset.visibility == 1
-    assert review.status == Review.STATUS_CHOICES.COMPLETE
+    assert review.state == States.COMPLETE
 
     # Act 4: Export data
     export_data = resource.export()
@@ -563,13 +565,13 @@ def test_review_workflow(review_submission_dataset):
     """review_submission_dataset.json: Dataset with pending review."""
     dataset = Dataset.objects.get(pk=100)
     assert dataset.visibility == 0  # Private
-    assert dataset.review.status == Review.STATUS_CHOICES.PENDING
+    assert dataset.review.state == States.AWAITING_DECISION
 
 def test_admin_approval(admin_approval_dataset):
     """admin_approval_dataset.json: Dataset approved for publication."""
     dataset = Dataset.objects.get(pk=200)
     assert dataset.visibility == 1  # Public
-    assert dataset.review.status == Review.STATUS_CHOICES.COMPLETE
+    assert dataset.review.state == States.COMPLETE
 ```
 
 ### Workflow Gates and Authorization
@@ -596,31 +598,27 @@ def test_export_without_approval_fails():
 
 @pytest.mark.integration
 @pytest.mark.django_db
-def test_approve_for_publication_requires_admin():
-    """Only admin users can approve datasets."""
-    # Arrange: Regular user and dataset
+def test_approve_for_publication_requires_a_data_curator():
+    """Only a Data Curator can approve an assessment (review.permissions)."""
+    # Arrange: a regular user and a Data Curator, and a dataset awaiting decision
     User = get_user_model()
-    regular_user = User.objects.create_user(
-        username='regularuser',
-        is_staff=False
-    )
+    regular_user = User.objects.create_user(username='regularuser')
+    curator = User.objects.create_user(username='curator')
+    curator.groups.add(Group.objects.get(name='Data Curator'))
+
     dataset = Dataset.objects.create(name="Test Dataset")
     review = Review.objects.create(
         dataset=dataset,
-        status=Review.STATUS_CHOICES.PENDING
+        state=States.AWAITING_DECISION,
     )
 
-    # Act & Assert: Regular user cannot approve
-    with pytest.raises(PermissionError):
-        review.approve(user=regular_user)
+    # Act & Assert: a user outside the Data Curator group cannot approve
+    with pytest.raises(IllegalTransition):
+        approve(review, regular_user)
 
-    # Act & Assert: Admin user can approve
-    admin_user = User.objects.create_user(
-        username='admin',
-        is_staff=True
-    )
-    review.approve(user=admin_user)  # Should succeed
-    assert review.status == Review.STATUS_CHOICES.COMPLETE
+    # Act & Assert: a Data Curator can approve
+    approve(review, curator)  # Should succeed
+    assert review.state == States.COMPLETE
 ```
 
 ---
