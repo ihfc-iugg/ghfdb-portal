@@ -377,9 +377,9 @@ class TestGHFDBChildImportResourceImport:
         gradient = HeatFlow.objects.get(ghfdb_id=1).thermal_gradient
         assert gradient is not None
         assert float(gradient.temperature_top.magnitude) == pytest.approx(8.2)
-        assert float(
-            gradient.temperature_top_uncertainty.magnitude
-        ) == pytest.approx(0.5)
+        assert float(gradient.temperature_top_uncertainty.magnitude) == pytest.approx(
+            0.5
+        )
         assert float(gradient.temperature_bottom.magnitude) == pytest.approx(45.7)
         assert float(
             gradient.temperature_bottom_uncertainty.magnitude
@@ -863,8 +863,8 @@ class TestGHFDBChildPrivateDatasetRegression:
     def test_import_attaches_records_to_a_private_dataset(self, dataset):
         """A row imports into the only dataset available, whether or not it is public."""
         from fairdm.utils.choices import Visibility
-
         from heat_flow.models import HeatFlow
+
         from project.ghfdb.resources import GHFDBChildImportResource
 
         assert dataset.visibility == Visibility.PRIVATE

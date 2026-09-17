@@ -20,7 +20,6 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from fairdm.factories import LiteratureItemFactory
 from guardian.shortcuts import get_perms
-
 from review.models import Review, SubmittedFile
 from review.states import STATE_VARIANTS, States
 from review.views import (
@@ -29,12 +28,11 @@ from review.views import (
     ReviewDecideView,
     ReviewUploadView,
 )
+
 from tests.test_ghfdb.test_importers import ROW, _build_official_xlsx, make_dataset
 from tests.test_review.factories import ClaimedPersonFactory, ReviewFactory
 
-_XLSX_CONTENT_TYPE = (
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-)
+_XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 
 def _xlsx_upload(name: str, content: bytes) -> SimpleUploadedFile:
@@ -94,9 +92,7 @@ class TestReviewListViewCreateRoute:
 
     def _create_links(self, response):
         html = response.content.decode()
-        return [
-            line for line in html.splitlines() if reverse("review-create") in line
-        ]
+        return [line for line in html.splitlines() if reverse("review-create") in line]
 
     def test_a_data_assessor_is_offered_the_route(self, client, assessor):
         client.force_login(assessor)
@@ -349,9 +345,7 @@ class TestTheListNarrowsToWhatIsWaiting:
     def test_the_rows_still_name_the_publication_and_uploader(
         self, client, curator, assessor
     ):
-        review = ReviewFactory(
-            uploaded_by=assessor, state=States.AWAITING_DECISION
-        )
+        review = ReviewFactory(uploaded_by=assessor, state=States.AWAITING_DECISION)
         client.force_login(curator)
 
         response = client.get(
@@ -501,9 +495,7 @@ class TestReviewDetailViewOffersOnlyWhatTheReaderMayDo:
     def test_a_curator_is_offered_deciding_on_a_waiting_assessment(
         self, client, curator, assessor
     ):
-        review = ReviewFactory(
-            uploaded_by=assessor, state=States.AWAITING_DECISION
-        )
+        review = ReviewFactory(uploaded_by=assessor, state=States.AWAITING_DECISION)
         client.force_login(curator)
 
         routes = self._routes(client.get(review.get_absolute_url()), review)
@@ -523,9 +515,7 @@ class TestReviewDetailViewOffersOnlyWhatTheReaderMayDo:
     def test_a_different_assessor_is_offered_nothing(
         self, client, assessor, data_assessor_group
     ):
-        review = ReviewFactory(
-            uploaded_by=assessor, state=States.AWAITING_DECISION
-        )
+        review = ReviewFactory(uploaded_by=assessor, state=States.AWAITING_DECISION)
         stranger = ClaimedPersonFactory()
         stranger.groups.add(data_assessor_group)
         client.force_login(stranger)
@@ -535,9 +525,7 @@ class TestReviewDetailViewOffersOnlyWhatTheReaderMayDo:
         assert not any(routes.values())
 
     def test_an_anonymous_visitor_is_offered_nothing(self, client, assessor):
-        review = ReviewFactory(
-            uploaded_by=assessor, state=States.AWAITING_DECISION
-        )
+        review = ReviewFactory(uploaded_by=assessor, state=States.AWAITING_DECISION)
 
         routes = self._routes(client.get(review.get_absolute_url()), review)
 
@@ -885,9 +873,7 @@ class TestReviewUploadViewShowsSendBackComment:
     """T035, spec.md User Story 6 scenario 3, FR-020: the curator's comment
     reaches the uploader on the page they use to supply a replacement."""
 
-    def test_the_comment_is_in_context_when_changes_are_requested(
-        self, rf, assessor
-    ):
+    def test_the_comment_is_in_context_when_changes_are_requested(self, rf, assessor):
         review = ReviewFactory(
             uploaded_by=assessor,
             state=States.CHANGES_REQUESTED,
@@ -939,7 +925,9 @@ class TestReviewUploadViewAccess:
 
         assert response.status_code == 200
 
-    def test_a_different_assessor_is_refused(self, client, assessor, data_assessor_group):
+    def test_a_different_assessor_is_refused(
+        self, client, assessor, data_assessor_group
+    ):
         review = ReviewFactory(uploaded_by=assessor)
         other = ClaimedPersonFactory()
         other.groups.add(data_assessor_group)
@@ -1035,9 +1023,7 @@ class TestReviewUploadViewHeaderRefusal:
         return ReviewUploadView.as_view()(request, pk=review.pk)
 
     def _outdated_template_bytes(self) -> bytes:
-        outdated = {
-            key: value for key, value in ROW.items() if key != "tc_pT_function"
-        }
+        outdated = {key: value for key, value in ROW.items() if key != "tc_pT_function"}
         outdated["tc_pT_fuction"] = ""
         outdated["Ref_ISGN"] = outdated.pop("Ref_IGSN", "")
         return _build_official_xlsx(list(outdated.keys()), [list(outdated.values())])
@@ -1046,9 +1032,7 @@ class TestReviewUploadViewHeaderRefusal:
         self, rf, assessor
     ):
         review = ReviewFactory(uploaded_by=assessor)
-        outdated_file = _xlsx_upload(
-            "assessment.xlsx", self._outdated_template_bytes()
-        )
+        outdated_file = _xlsx_upload("assessment.xlsx", self._outdated_template_bytes())
 
         response = self._post(rf, assessor, review, outdated_file)
 
@@ -1058,9 +1042,7 @@ class TestReviewUploadViewHeaderRefusal:
 
     def test_the_refused_file_is_still_kept_as_a_submission(self, rf, assessor):
         review = ReviewFactory(uploaded_by=assessor)
-        outdated_file = _xlsx_upload(
-            "assessment.xlsx", self._outdated_template_bytes()
-        )
+        outdated_file = _xlsx_upload("assessment.xlsx", self._outdated_template_bytes())
 
         self._post(rf, assessor, review, outdated_file)
 
@@ -1184,9 +1166,7 @@ class TestReviewUploadReportTemplateFailures:
             failures=(
                 RowFailure(row_number=1, column="q", reason="first failure text"),
                 RowFailure(row_number=2, column="qc", reason="second failure text"),
-                RowFailure(
-                    row_number=3, column="tc_mean", reason="third failure text"
-                ),
+                RowFailure(row_number=3, column="tc_mean", reason="third failure text"),
             ),
         )
 
@@ -1446,6 +1426,7 @@ class TestReviewConfirmViewWriting:
         self, rf, assessor, valid_upload_bytes
     ):
         from heat_flow.models import HeatFlow, HeatFlowSite
+
         from project.ghfdb.importers import import_ghfdb_template
         from project.ghfdb.report import build_report
 

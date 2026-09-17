@@ -217,7 +217,9 @@ class TestGHFDBParentAdminListFilters:
     """GHFDBParentAdmin list_filter choices are scoped to their controlled vocabularies."""
 
     @pytest.mark.django_db
-    def test_parent_environment_filter_choices_are_vocabulary_scoped(self, admin_client):
+    def test_parent_environment_filter_choices_are_vocabulary_scoped(
+        self, admin_client
+    ):
         """BUG-004: ParentEnvironmentListFilter.lookups() returns GeographicEnvironment vocabulary choices."""
         from heat_flow.vocabularies import GeographicEnvironment
 
@@ -238,7 +240,9 @@ class TestGHFDBParentAdminListFilters:
         assert lookup_values == vocab_values
 
     @pytest.mark.django_db
-    def test_parent_explo_method_filter_choices_are_vocabulary_scoped(self, admin_client):
+    def test_parent_explo_method_filter_choices_are_vocabulary_scoped(
+        self, admin_client
+    ):
         """BUG-004: ParentExplorationMethodListFilter.lookups() returns ExplorationMethod vocabulary choices."""
         from heat_flow.vocabularies import ExplorationMethod
 
@@ -554,8 +558,7 @@ class TestGHFDBParentAdmin:
         # renders — not the raw row attribute.
         q_rendered = ColumnDisplay.build("q")(row)
         assert (
-            getattr(q_rendered, "magnitude", q_rendered)
-            == published_chain.parent.value
+            getattr(q_rendered, "magnitude", q_rendered) == published_chain.parent.value
         )
         # field column
         assert ColumnDisplay.build("corr_HP_flag")(row) is True

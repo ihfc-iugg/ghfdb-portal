@@ -25,7 +25,9 @@ def built_diagram_page(tmp_path_factory) -> str:
         reason="building the documentation needs the documentation dependency group",
     )
     out_dir = tmp_path_factory.mktemp("docs-html")
-    subprocess.run(
+    # Every argument is a fixed repo-relative path or sys.executable, never input
+    # from outside this test.
+    subprocess.run(  # noqa: S603
         [
             sys.executable,
             "-m",

@@ -472,7 +472,6 @@ class TestGHFDBTemplateRefusedWhole:
         assert not ParentHeatFlow.objects.exists()
         assert not HeatFlow.objects.exists()
 
-
     def test_a_named_row_without_its_coordinate_pair_names_its_row_and_refuses_the_file(
         self, dataset
     ):
@@ -932,9 +931,7 @@ class TestARowInTheShapeARealSubmissionCarries:
 
         assert outcome.has_errors()
         messages = [
-            str(error.error)
-            for row in outcome.child.error_rows
-            for error in row.errors
+            str(error.error) for row in outcome.child.error_rows for error in row.errors
         ]
         assert any("Aluvium" in message for message in messages), messages
         assert not HeatFlowSite.objects.exists()
@@ -1011,9 +1008,7 @@ class TestCheckOnlyMode:
         row1 = dict(ROW)
         row1["environment"] = "not_a_real_value"
 
-        outcome = import_ghfdb_template(
-            make_dataset(row1), dataset, check_only=True
-        )
+        outcome = import_ghfdb_template(make_dataset(row1), dataset, check_only=True)
 
         assert outcome.has_errors()
         assert not HeatFlowSite.objects.exists()

@@ -10,9 +10,9 @@ from pathlib import Path
 import pytest
 from django.core.exceptions import FieldDoesNotExist
 from fairdm.factories import DatasetFactory, LiteratureItemFactory
-
 from review.models import Review
 from review.states import States
+
 from tests.test_review.factories import ClaimedPersonFactory
 
 
@@ -89,14 +89,13 @@ class TestSubmittedFile:
         self, literature, dataset, tmp_path, settings
     ):
         from django.core.files.uploadedfile import SimpleUploadedFile
-
         from review.models import SubmittedFile
 
         settings.MEDIA_ROOT = str(tmp_path)
         review = Review.objects.create(literature=literature, dataset=dataset)
         uploader = ClaimedPersonFactory()
 
-        first = SubmittedFile.objects.create(
+        SubmittedFile.objects.create(
             review=review,
             file=SimpleUploadedFile("first.xlsx", b"first"),
             submitted_by=uploader,
@@ -113,7 +112,6 @@ class TestSubmittedFile:
         self, literature, dataset, tmp_path, settings
     ):
         from django.core.files.uploadedfile import SimpleUploadedFile
-
         from review.models import SubmittedFile
 
         settings.MEDIA_ROOT = str(tmp_path)
@@ -136,7 +134,9 @@ class TestSubmittedFile:
             second.pk,
         }
 
-    @pytest.mark.parametrize("field_name", ["file", "submitted_by", "submitted_at", "imported_at"])
+    @pytest.mark.parametrize(
+        "field_name", ["file", "submitted_by", "submitted_at", "imported_at"]
+    )
     def test_every_field_has_a_verbose_name_and_help_text(self, field_name):
         from review.models import SubmittedFile
 
@@ -177,8 +177,7 @@ def _python_files():
 
 
 def _html_files():
-    for path in PROJECT_ROOT.rglob("*.html"):
-        yield path
+    yield from PROJECT_ROOT.rglob("*.html")
 
 
 class TestOldRecordVocabularyIsRetired:

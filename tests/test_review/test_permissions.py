@@ -60,6 +60,7 @@ class TestCanManageUpload:
 
     def test_the_uploader_may_manage_their_own_upload(self):
         from review.permissions import can_manage_upload
+
         from tests.test_review.factories import ReviewFactory
 
         uploader = ClaimedPersonFactory()
@@ -71,6 +72,7 @@ class TestCanManageUpload:
         self, data_curator_group
     ):
         from review.permissions import can_manage_upload
+
         from tests.test_review.factories import ReviewFactory
 
         uploader = ClaimedPersonFactory()
@@ -82,6 +84,7 @@ class TestCanManageUpload:
 
     def test_a_different_assessor_may_not_manage_it(self, data_assessor_group):
         from review.permissions import can_manage_upload
+
         from tests.test_review.factories import ReviewFactory
 
         uploader = ClaimedPersonFactory()
@@ -93,8 +96,8 @@ class TestCanManageUpload:
 
     def test_an_anonymous_user_may_not_manage_it(self):
         from django.contrib.auth.models import AnonymousUser
-
         from review.permissions import can_manage_upload
+
         from tests.test_review.factories import ReviewFactory
 
         review = ReviewFactory()

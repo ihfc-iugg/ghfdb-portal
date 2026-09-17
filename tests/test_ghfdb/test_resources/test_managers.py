@@ -188,7 +188,6 @@ class TestGHFDBParentQuerySetFlatMethod:
     @pytest.mark.django_db
     def test_parent_queryset_flat_returns_canonical_keys(self):
         """GHFDBParentQuerySet.as_ghfdb_flat() must annotate with canonical PARENT_COLUMNS keys (BUG-010)."""
-        from project.ghfdb.managers import GHFDBParentQuerySet
         from project.ghfdb.models import GHFDBParent
 
         qs = GHFDBParent.objects.none().as_ghfdb_flat()

@@ -7,7 +7,7 @@ and never again while tests are running.
 
 import pytest
 
-from tests.conftest import flushes_the_database, concept_preload_record
+from tests.conftest import concept_preload_record, flushes_the_database
 
 
 @pytest.fixture(scope="module")
@@ -190,15 +190,14 @@ class TestTheVocabulariesCarryWhatTheTemplateOffers:
         ],
     )
     def test_the_template_value_resolves(self, db, vocabulary_name, label):
+        import heat_flow.vocabularies as vocabularies
         from research_vocabs.models import Concept
 
-        import heat_flow.vocabularies as vocabularies
         from project.ghfdb.resources.widgets import MultiConceptWidget
 
         vocabulary = getattr(vocabularies, vocabulary_name)
         stored = {
-            concept.label.lower()
-            for concept in Concept.get_for_vocabulary(vocabulary)
+            concept.label.lower() for concept in Concept.get_for_vocabulary(vocabulary)
         }
         assert label.lower() in stored
 
@@ -211,9 +210,8 @@ class TestTheVocabulariesCarryWhatTheTemplateOffers:
         through ``MultiConceptWidget``: every "unspecified" token is a
         sentinel for "no value" there, by design, regardless of vocabulary,
         so a cell naming it never resolves to a concept."""
-        from research_vocabs.models import Concept
-
         from heat_flow.vocabularies import HeatFlowMethod
+        from research_vocabs.models import Concept
 
         labels = {
             concept.label.lower()
@@ -224,9 +222,8 @@ class TestTheVocabulariesCarryWhatTheTemplateOffers:
     def test_the_three_ratcliffe_functions_are_three_concepts(self, db):
         """The surname was spelled two different wrong ways, and the
         pressure-dependent function was missing outright."""
-        from research_vocabs.models import Concept
-
         from heat_flow.vocabularies import ConductivityPTFunction
+        from research_vocabs.models import Concept
 
         labels = {
             concept.label
@@ -238,4 +235,6 @@ class TestTheVocabulariesCarryWhatTheTemplateOffers:
             "p - Ratcliffe (1960)",
             "pT - Ratcliffe (1960)",
         } <= labels
-        assert not [label for label in labels if "atcliff " in label or "adcliff" in label]
+        assert not [
+            label for label in labels if "atcliff " in label or "adcliff" in label
+        ]

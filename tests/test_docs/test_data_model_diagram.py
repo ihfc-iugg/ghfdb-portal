@@ -12,7 +12,9 @@ from pathlib import Path
 import pytest
 from django.apps import apps
 
-DIAGRAM_PAGE = Path(__file__).resolve().parents[2] / "docs" / "data_models" / "ghfdb-erd.md"
+DIAGRAM_PAGE = (
+    Path(__file__).resolve().parents[2] / "docs" / "data_models" / "ghfdb-erd.md"
+)
 
 #: The apps whose models this portal defines. Everything else on the diagram comes
 #: from FairDM and is drawn for context.
@@ -25,7 +27,8 @@ ENTITY = re.compile(r"^\s+(\w+)\s*\{", re.MULTILINE)
 def entity_diagram() -> str:
     """The source of the page's entity relationship diagram."""
     blocks = [
-        block for block in MERMAID_BLOCK.findall(DIAGRAM_PAGE.read_text(encoding="utf-8"))
+        block
+        for block in MERMAID_BLOCK.findall(DIAGRAM_PAGE.read_text(encoding="utf-8"))
         if block.lstrip().startswith("erDiagram")
     ]
     assert len(blocks) == 1, (
@@ -61,7 +64,9 @@ class TestDiagramCoversTheModels:
     def test_every_relationship_names_entities_the_diagram_defines(self):
         source = entity_diagram()
         entities = set(ENTITY.findall(source))
-        relationship = re.compile(r"^\s+(\w+)\s+[|}o][|}o.-]*[|{o]\s+(\w+)\s*:", re.MULTILINE)
+        relationship = re.compile(
+            r"^\s+(\w+)\s+[|}o][|}o.-]*[|{o]\s+(\w+)\s*:", re.MULTILINE
+        )
         pairs = relationship.findall(source)
         assert pairs, "The diagram declares no relationships"
         undefined = sorted(

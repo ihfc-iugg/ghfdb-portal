@@ -57,7 +57,9 @@ class Mapping:
 
 def cells(row: str) -> list[str]:
     """The cells of a markdown table row, with the map's escaping undone."""
-    return [cell.strip().replace("\\_", "_") for cell in row.strip().strip("|").split("|")]
+    return [
+        cell.strip().replace("\\_", "_") for cell in row.strip().strip("|").split("|")
+    ]
 
 
 def read_mappings() -> list[Mapping]:
@@ -71,7 +73,10 @@ def read_mappings() -> list[Mapping]:
     lines = FIELD_MAP.read_text(encoding="utf-8").splitlines()
     index = 0
     while index < len(lines):
-        if lines[index].startswith("|") and tuple(cells(lines[index])) == MAPPING_HEADER:
+        if (
+            lines[index].startswith("|")
+            and tuple(cells(lines[index])) == MAPPING_HEADER
+        ):
             index += 2  # the header and the alignment row beneath it
             while index < len(lines) and lines[index].startswith("|"):
                 values = cells(lines[index])
@@ -169,7 +174,9 @@ class TestFieldMapCoverage:
         duplicates = []
         for mapping in MAPPINGS:
             if mapping.column in seen:
-                duplicates.append(f"{mapping} also mapped at line {seen[mapping.column].line}")
+                duplicates.append(
+                    f"{mapping} also mapped at line {seen[mapping.column].line}"
+                )
             seen[mapping.column] = mapping
         assert not duplicates, duplicates
 
