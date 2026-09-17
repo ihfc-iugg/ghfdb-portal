@@ -681,7 +681,16 @@ to make visible — the datasets themselves stay private until a curator approve
 where the confidentiality actually lives. Hiding the index as well protected nothing and left outside
 readers unable to see that a publication was already being worked on.
 
-US-1 is rewritten accordingly, and FR-001 with it. The navigation entry and the route to start a new
-assessment remain visible only to the two roles, because an entry point nobody may use is noise.
+US-1 is rewritten accordingly, and FR-001 with it.
+
+The navigation entry follows the page: everyone sees it, because a public page reachable only by
+typing its URL is not public in any useful sense. Hiding it was the same over-caution in a second
+place, argued from the wrong end — an entry is noise when it leads somewhere the reader may not go,
+and this one does not. The route to start a new assessment does lead somewhere most readers may not
+go, so that stays with the two roles.
+
+The count a Data Curator sees on the entry stays a curator's alone. It is not access control — the
+same number is derivable by filtering the public list — but it answers "is there anything waiting on
+me", which is a question only a curator has.
 
 **ADR:** none — the access rule for one page, stated in the specification it belongs to.

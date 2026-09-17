@@ -44,6 +44,9 @@ class TestAssessmentGroupPlacement:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestAssessmentEntryVisibility:
+    """The entry leads to a public page, so everyone sees it. Hiding it
+    would leave that page reachable only by typing its URL."""
+
     def test_visible_to_a_data_assessor(self, rf, assessor):
         request = rf.get("/")
         request.user = assessor
@@ -56,17 +59,22 @@ class TestAssessmentEntryVisibility:
 
         assert assessment_entry.check(request) is True
 
-    def test_hidden_from_a_user_in_neither_role(self, rf, outsider):
+    def test_visible_to_a_user_in_neither_role(self, rf, outsider):
         request = rf.get("/")
         request.user = outsider
 
-        assert assessment_entry.check(request) is False
+        assert assessment_entry.check(request) is True
 
-    def test_hidden_from_an_anonymous_visitor(self, rf):
+    def test_visible_to_an_anonymous_visitor(self, rf):
         request = rf.get("/")
         request.user = AnonymousUser()
 
-        assert assessment_entry.check(request) is False
+        assert assessment_entry.check(request) is True
+
+    def test_visible_on_a_request_that_carries_no_user(self, rf):
+        """A request from outside the auth middleware, such as an error page
+        rendered before it ran."""
+        assert assessment_entry.check(rf.get("/")) is True
 
 
 @pytest.mark.django_db
@@ -86,6 +94,15 @@ class TestAssessmentEntryBadge:
     def test_carries_no_badge_for_an_assessor(self, rf, assessor):
         request = rf.get("/")
         request.user = assessor
+
+        assessment_entry.check(request)
+
+        assert "badge" not in assessment_entry.extra_context
+
+    def test_carries_no_badge_for_an_anonymous_visitor(self, rf):
+        ReviewFactory(state=States.AWAITING_DECISION)
+        request = rf.get("/")
+        request.user = AnonymousUser()
 
         assessment_entry.check(request)
 
