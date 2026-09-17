@@ -65,13 +65,74 @@ class ConceptPreloadRecord:
     ``django_db_setup`` below. ``tests/test_heat_flow/test_vocabularies.py``
     asserts against this record, because the constitution asks for a
     deterministic guard on performance rather than a wall-clock measurement.
+
+    ``restores`` counts the separate, rarer case of writing them again after
+    a test truncated them, which ``vocabulary_concepts_outlive_a_flush``
+    below explains. Counted apart from ``calls`` so the guard on per-test
+    loading still means what it says: a restore is not a test paying for its
+    own concepts, and a test that is not transactional must never cause one.
     """
 
     def __init__(self) -> None:
         self.calls = 0
+        self.restores = 0
+        self.write_concepts = None
 
 
 concept_preload_record = ConceptPreloadRecord()
+
+
+def flushes_the_database(item) -> bool:
+    """Whether this test truncates the database when it finishes.
+
+    True for a test that asked for a real transaction — directly, through
+    ``transactional_db``, or through ``live_server``, which is built on one.
+    Django's ``TransactionTestCase`` cannot roll such a test back, so it
+    empties every table instead.
+    """
+    if {"live_server", "transactional_db"} & set(item.fixturenames):
+        return True
+
+    marker = item.get_closest_marker("django_db")
+    if marker is None:
+        return False
+    if marker.args and marker.args[0]:
+        return True
+    return bool(marker.kwargs.get("transaction"))
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_teardown(item):
+    """Write the vocabulary concepts again after a test that truncated them.
+
+    A test that runs in a real transaction cannot be rolled back, so Django
+    empties every table when it finishes. The concepts ``django_db_setup``
+    wrote belong to no test's transaction, so that flush takes them for
+    good, and every later test on the same worker then finds an empty
+    vocabulary — a factory choosing from no concepts, or an import refusing
+    a value its own vocabulary should carry.
+
+    Which tests those are depends on how xdist happened to spread the suite
+    across workers, so the suite passed at one worker count and failed at
+    another on the same commit.
+
+    A hook rather than a fixture: fixtures are torn down in reverse order of
+    setup, so any fixture of ours would finish before the flush it is there
+    to undo. This runs after every fixture for the test has been torn down,
+    which is the only point at which the table is known to be empty.
+    """
+    yield
+
+    if concept_preload_record.write_concepts is None:
+        return
+    if not flushes_the_database(item):
+        return
+
+    from pytest_django.plugin import blocking_manager_key
+
+    concept_preload_record.restores += 1
+    with item.config.stash[blocking_manager_key].unblock():
+        concept_preload_record.write_concepts()
 
 
 @pytest.fixture(scope="session")
@@ -107,6 +168,11 @@ def django_db_setup(django_db_setup, django_db_blocker):
         preload(cls)
 
     Concept.preload = classmethod(counted_preload)
+
+    # The uncounted original, for restoring after a flush. A restore is not a
+    # test loading its own concepts, which is what ``calls`` is there to
+    # catch, so it is recorded under ``restores`` instead.
+    concept_preload_record.write_concepts = lambda: preload(Concept)
 
     for vocabulary in (GeographicEnvironment, ExplorationMethod):
         registry.register(vocabulary())

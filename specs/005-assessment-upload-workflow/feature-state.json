@@ -1,0 +1,754 @@
+{
+  "feature": "005-assessment-upload-workflow",
+  "branch": "005-assessment-upload-workflow",
+  "repo": "ihfc-iugg/ghfdb-portal",
+  "state": "CONVERGE",
+  "state_history": [
+    {
+      "state": "GATE_SPEC",
+      "at": "2026-09-15T00:00:00Z",
+      "note": "approved in session"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-09-15T00:00:00Z",
+      "note": "plan, tasks and design docs authored"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-09-15T19:47:22Z",
+      "note": "one reviewer, three lenses; three verified blocking findings applied as plan edits"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-09-15T19:53:44Z",
+      "note": "US0 foundational phase dispatched on sonnet"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-09-16T21:04:02Z",
+      "note": "all six stories accepted, migrations proven from empty, ADR verdicts recorded, cleanup pass applied"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "SamuelJennings",
+      "at": "2026-09-15T00:00:00Z",
+      "self_resolved": [
+        "D1 one feature spanning R6's remainder and R7's trust half",
+        "D2 the role is the trust level, superseding R7's fifth deliverable",
+        "D3 CONTEXT.md adopts Data Assessor and Data Curator"
+      ]
+    },
+    "plan": {
+      "approved_by": "notified",
+      "at": "2026-09-15T00:00:00Z"
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    },
+    "design_review": {
+      "approved_by": "design-panel",
+      "at": "2026-09-15T00:00:00Z",
+      "self_resolved": [
+        "DR-001 critical verified: check_only uses transaction.set_rollback, never dry_run=True (FS-004 D16); plan.md, research.md and T008 corrected",
+        "DR-002 high verified: T010a added to retire the superseded views, forms, admin and card template in the foundational phase",
+        "DR-003 high verified: data-model.md corrected, uploaded_by is set at assessment creation",
+        "DR-004 low: extension bound folded into T020, size bound left at the Django default and recorded as a watch item"
+      ]
+    }
+  },
+  "stories": [
+    {
+      "id": "US0",
+      "priority": "P0",
+      "issue": null,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/"
+            ],
+            "commands": [
+              "forge verify --base main (lint/typecheck/test/build green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T002",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/"
+            ],
+            "commands": [
+              "forge verify --base main (lint/typecheck/test/build green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T003",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/"
+            ],
+            "commands": [
+              "forge verify --base main (lint/typecheck/test/build green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T004",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/"
+            ],
+            "commands": [
+              "forge verify --base main (lint/typecheck/test/build green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T005",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/"
+            ],
+            "commands": [
+              "forge verify --base main (lint/typecheck/test/build green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T006",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/"
+            ],
+            "commands": [
+              "forge verify --base main (lint/typecheck/test/build green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T007",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/"
+            ],
+            "commands": [
+              "forge verify --base main (lint/typecheck/test/build green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T008",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/"
+            ],
+            "commands": [
+              "forge verify --base main (lint/typecheck/test/build green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T009",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/"
+            ],
+            "commands": [
+              "forge verify --base main (lint/typecheck/test/build green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T010",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/"
+            ],
+            "commands": [
+              "forge verify --base main (lint/typecheck/test/build green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T010a",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/"
+            ],
+            "commands": [
+              "forge verify --base main (lint/typecheck/test/build green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T010b",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "forge verify --steps docs (green)"
+            ],
+            "commands": [
+              "forge verify --base main"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T038",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_docs"
+            ],
+            "commands": [
+              "forge verify --base main (docs step green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T039",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_docs"
+            ],
+            "commands": [
+              "forge verify --base main (docs step green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T040",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_docs"
+            ],
+            "commands": [
+              "forge verify --base main (docs step green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T041",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_docs"
+            ],
+            "commands": [
+              "forge verify --base main (docs step green)"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 210,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T011",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T012",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T013",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T014",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P1",
+      "issue": 211,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T015",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_forms.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T016",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_forms.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T017",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_forms.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T018",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_forms.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T019",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_forms.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P1",
+      "issue": 212,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T020",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T021",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T022",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T023",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T024",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US4",
+      "priority": "P1",
+      "issue": 213,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T025",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T026",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T027",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T028",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "forge verify --base main (all steps green)"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US5",
+      "priority": "P1",
+      "issue": 214,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T029",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "pytest tests/ (908 passed, 1 skipped, 13 xfailed)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T030",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "pytest tests/ (885 passed, 1 skipped, 13 xfailed)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T031",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "pytest tests/ (885 passed, 1 skipped, 13 xfailed)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T032",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "pytest tests/ (885 passed, 1 skipped, 13 xfailed)"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US6",
+      "priority": "P2",
+      "issue": 215,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T033",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "pytest tests/ (908 passed, 1 skipped, 13 xfailed)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T034",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "pytest tests/ (908 passed, 1 skipped, 13 xfailed)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T035",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "pytest tests/ (908 passed, 1 skipped, 13 xfailed)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T036",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "pytest tests/ (908 passed, 1 skipped, 13 xfailed)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T037",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "pytest tests/ (908 passed, 1 skipped, 13 xfailed)"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 1,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 0,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 2,
+      "max": 1
+    },
+    "tokens": {
+      "used": 0,
+      "max": 120
+    }
+  }
+}

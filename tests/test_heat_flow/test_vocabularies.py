@@ -7,7 +7,7 @@ and never again while tests are running.
 
 import pytest
 
-from tests.conftest import concept_preload_record
+from tests.conftest import flushes_the_database, concept_preload_record
 
 
 @pytest.fixture(scope="module")
@@ -43,6 +43,53 @@ class TestConceptPreload:
         shows up as a difference between two tests.
         """
         assert concept_preload_record.calls == preload_calls_at_module_start
+
+
+class TestWhichTestsEmptyTheDatabase:
+    """A test that runs in a real transaction cannot be rolled back, so
+    Django empties every table when it finishes — the concepts loaded at
+    session start among them. ``tests/conftest.py`` writes them again after
+    such a test, and recognising which tests those are is the whole of what
+    it has to get right.
+
+    Left unrecognised, the concepts go for the rest of that worker's run,
+    and which tests then fail depends on how xdist happened to spread the
+    suite: the same commit passed at eight workers and failed at two.
+
+    Pinned here because the rule reads pytest-django's own fixture names,
+    which a version of it is free to rename. When that happens this fails
+    with the reason, rather than the suite failing somewhere else at some
+    worker counts and not others.
+    """
+
+    class Node:
+        """The parts of a test node the rule reads."""
+
+        def __init__(self, fixturenames=(), marker=None):
+            self.fixturenames = list(fixturenames)
+            self._marker = marker
+
+        def get_closest_marker(self, name):
+            return self._marker if name == "django_db" else None
+
+    @pytest.mark.parametrize(
+        "fixturenames", [["live_server", "page"], ["transactional_db"]]
+    )
+    def test_a_test_asking_for_a_real_transaction_is_recognised(self, fixturenames):
+        assert flushes_the_database(self.Node(fixturenames)) is True
+
+    def test_the_transaction_argument_to_the_marker_is_recognised(self):
+        node = self.Node(["db"], marker=pytest.mark.django_db(transaction=True).mark)
+
+        assert flushes_the_database(node) is True
+
+    def test_an_ordinary_database_test_is_not(self):
+        node = self.Node(["db"], marker=pytest.mark.django_db.mark)
+
+        assert flushes_the_database(node) is False
+
+    def test_a_test_that_never_touches_the_database_is_not(self):
+        assert flushes_the_database(self.Node()) is False
 
 
 class TestEveryConceptDeclaredIsAConcept:

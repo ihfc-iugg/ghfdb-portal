@@ -80,8 +80,9 @@ check uses, should you need to compare a header yourself rather than have one va
 ## Running an import
 
 `project.ghfdb.importers.import_ghfdb_template` is the callable entry point: one file, one dataset,
-nothing else. The caller names the dataset explicitly — the import never guesses one, even when
-exactly one exists — and gets back the combined outcome of the two passes it runs underneath.
+and an optional `check_only` flag, nothing else. The caller names the dataset explicitly — the
+import never guesses one, even when exactly one exists — and gets back the combined outcome of the
+two passes it runs underneath.
 
 ```python
 from fairdm.core.models import Dataset
@@ -96,6 +97,42 @@ with open("filled_template.xlsx", "rb") as f:
 if outcome.has_errors():
     ...  # outcome.parent and outcome.child are the two import_export.results.Result objects
 ```
+
+### Checking a file without writing it
+
+`check_only=True` runs both passes for real, exactly as a normal import does, then discards
+everything: nothing is written even when every row is clean. This is the assessment upload
+workflow's checking mode, which lets an uploader see what a file would do before confirming it
+(FR-008, FR-010).
+
+```python
+outcome = import_ghfdb_template(f, dataset, check_only=True)
+```
+
+A `check_only` call does not run either resource with `dry_run=True` — the parent and child passes
+depend on seeing each other's rows within the same transaction, which a resource's own `dry_run`
+rolls back before the second pass starts. Instead the transaction `import_ghfdb_template` already
+opens is rolled back unconditionally on the way out when `check_only` is set.
+
+`project.ghfdb.report.build_report` turns the outcome of either kind of call into a
+`project.ghfdb.report.GHFDBImportReport`: how many sites and determinations would be created or
+updated (FR-009), and every failure in the file rather than only the first (FR-011).
+
+```python
+from project.ghfdb.report import build_report
+
+report = build_report(outcome)
+
+report.sites_created
+report.sites_updated
+report.determinations_created
+report.determinations_updated
+report.has_failures  # True when report.failures is non-empty
+```
+
+Each entry in `report.failures` is a `project.ghfdb.report.RowFailure`: the row number, the column
+using the template's own heading (FR-012), and a reason specific enough to act on — naming the
+supplied value and, for a controlled-vocabulary fault, the vocabulary it failed against.
 
 What comes back is a `project.ghfdb.importers.GHFDBImportOutcome`, a small record holding the two
 `import_export.results.Result` objects in the order the passes ran, as `parent` and `child`. Its

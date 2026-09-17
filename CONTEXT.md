@@ -249,9 +249,9 @@ and recording it as a dataset. Implemented by the `review` app.
 **One publication is always one dataset.** Datasets spanning several publications are possible in
 principle but are out of scope.
 
-Today this work is done outside the portal, on spreadsheets: a reviewer reads a paper, fills in a
-per-publication spreadsheet by hand, and that spreadsheet is later merged into the aggregate. Every
-hop in that chain loses information and none of it is traceable.
+Today this work is done outside the portal, on spreadsheets: a member of the assessment team reads
+a paper, fills in a per-publication spreadsheet by hand, and that spreadsheet is later merged into
+the aggregate. Every hop in that chain loses information and none of it is traceable.
 
 Moving the activity inside the portal is what the `review` app is building toward, but it is a
 long-term want rather than a near-term priority. An earlier version of this file called it the
@@ -265,16 +265,28 @@ Avoid "literature review", which to a researcher means a survey article.
 
 ### Publication approval
 
-The separate decision, made by a data administrator, that a completed dataset may become public. It
+The separate decision, made by a Data Curator, that a completed dataset may become public. It
 is a different act by a different person from data assessment, and no dataset becomes public
 without it.
 
 Never write "review" unqualified when either of these is meant.
 
-### Reviewer
+### Data Assessor
 
-A member of the assessment team who carries out data assessment. Distinct from a data
-administrator, who grants publication approval.
+A member of the assessment team who describes an assessment and uploads its completed template.
+Their own uploads wait for a Data Curator's decision before the dataset is public. Implemented as
+the `Data Assessor` group; `review.permissions.is_data_assessor` is the predicate the `review` app
+tests, rather than checking group membership inline.
+
+The model's own `reviewers` field and its `heat_flow_reviews` related name keep their pre-rename
+spelling and hold Data Assessors; nothing in this feature renames them.
+
+### Data Curator
+
+Everything a Data Assessor may do, and one thing more: deciding a waiting assessment, approving it
+or sending it back with a comment. A Data Curator's own uploads are public immediately, without
+anyone else's decision. Implemented as the `Data Curator` group; `review.permissions.
+is_data_curator` is the predicate.
 
 ## Aspirational, not built
 

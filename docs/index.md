@@ -70,6 +70,7 @@ acknowledgements
 guides/introduction
 guides/map-exploration/index
 guides/importing-data
+guides/assessment-uploads
 :::
 
 :::{toctree}

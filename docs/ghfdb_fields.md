@@ -182,6 +182,9 @@ A review records the people who carried it out rather than a single name, so `re
 relation to `Person` and a review may name several. `Review` lives in the `review` app; earlier
 versions of this page placed it in `heat_flow`.
 
+`Review` also carries a `state` field, tracked through `review.states.States` — not to be confused
+with the unrelated `status` field on `HeatFlowCorrection`, below.
+
 ### Quality columns
 
 The published database carries the child and parent quality assessments twice, under two pairs of
