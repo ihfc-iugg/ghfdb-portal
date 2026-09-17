@@ -22,30 +22,33 @@ Data Assessor's upload stays private until a Data Curator approves it.
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - The team reaches its own uploads from the portal (Priority: P1)
+### User Story 1 - The assessments are visible, and the team can add to them (Priority: P1)
 
-A member of the assessment team signs in and finds an entry in the site navigation that nobody
-outside the team sees. It leads to a list of the assessments uploaded so far, each showing what it
-covers and where it has got to, and offers the route to start a new one.
+Anyone can see what the assessment team has been working on: a list of the assessments, each showing
+the publication it covers and where it has got to. A member of the team additionally finds an entry
+in the site navigation and a route to start a new one, neither of which anyone else sees.
 
 **Why this priority**: it is the entry point. Without it every other story is reachable only by
 typing a URL, and the roles that gate the rest of the feature are defined here.
 
-**Independent Test**: sign in as a member of the team and confirm the navigation entry and the list
-are present, then sign in as a portal user who is not on the team and confirm neither is reachable,
-by navigation or by direct URL.
+**Independent Test**: request the list as an anonymous visitor and confirm it renders, then sign in
+as a member of the team and confirm the navigation entry and the route to start a new assessment
+appear, and that neither appears for a signed-in user outside the team.
 
 **Acceptance Scenarios**:
 
-1. **Given** a signed-in Data Assessor, **When** any portal page renders, **Then** the assessment
-   entry appears in the site navigation and leads to the list of assessments.
-2. **Given** a signed-in Data Curator, **When** any portal page renders, **Then** the same entry
-   appears, and the list additionally shows assessments awaiting a decision.
-3. **Given** a signed-in portal user in neither role, **When** any portal page renders, **Then** the
-   entry is absent, and requesting the list's URL directly is refused rather than rendered empty.
-4. **Given** an anonymous visitor, **When** the list's URL is requested, **Then** it is refused.
+1. **Given** an anonymous visitor, **When** the list's URL is requested, **Then** it renders, showing
+   each assessment's publication and the state it has reached.
+2. **Given** a signed-in Data Assessor, **When** any portal page renders, **Then** the assessment
+   entry appears in the site navigation, and the list carries a visible route to start a new
+   assessment.
+3. **Given** a signed-in Data Curator, **When** any portal page renders, **Then** the same entry
+   appears, carrying the number of assessments awaiting a decision.
+4. **Given** a visitor in neither role, signed in or not, **When** the list renders, **Then** the
+   navigation entry and the route to start a new assessment are both absent, and requesting the
+   create page's URL directly is refused.
 5. **Given** a Data Assessor with two assessments in different states, **When** the list renders,
-   **Then** each row names the publication it covers and the state it has reached.
+   **Then** each row names the publication it covers, who uploaded it, and the state it has reached.
 
 ---
 
@@ -232,8 +235,9 @@ public and the decision and its maker are recorded on the assessment.
 
 ### Functional Requirements
 
-- **FR-001**: The portal MUST offer members of the assessment team a route from the site navigation
-  to their assessments, and MUST NOT show or serve that route to anyone else.
+- **FR-001**: The portal MUST show the list of assessments to anyone, and MUST offer members of the
+  assessment team an entry in the site navigation and a route to start a new one, neither of which is
+  shown or served to anyone else.
 - **FR-002**: The portal MUST list existing assessments with the publication each covers, who
   uploaded it and the state it has reached.
 - **FR-003**: The portal MUST collect the publication, the assessors, the start and end dates, and

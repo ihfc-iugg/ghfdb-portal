@@ -669,3 +669,19 @@ measurements it exists to carry are not.
 
 **ADR:** docs/adr/0017-a-role-carries-the-trust-that-decides-publication.md — the ADR describes what
 publication means for this workflow, and this is that meaning becoming whole.
+
+## D36 — The list is public; only adding to it is restricted
+
+The specification as signed off refused the assessment list to anyone outside the two roles. Reviewing
+the running pages, Sam asked for it to be public, with the create page restricted instead.
+
+That is the right shape and the original was over-cautious. What the list shows is which publications
+the team has assessed and how far each has got, which is exactly the kind of thing the portal exists
+to make visible — the datasets themselves stay private until a curator approves them, and that is
+where the confidentiality actually lives. Hiding the index as well protected nothing and left outside
+readers unable to see that a publication was already being worked on.
+
+US-1 is rewritten accordingly, and FR-001 with it. The navigation entry and the route to start a new
+assessment remain visible only to the two roles, because an entry point nobody may use is noise.
+
+**ADR:** none — the access rule for one page, stated in the specification it belongs to.
