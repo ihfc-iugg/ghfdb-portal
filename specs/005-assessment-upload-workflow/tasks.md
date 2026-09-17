@@ -235,3 +235,22 @@ vocabulary files that describe the feature as a whole.
   the uploaders are a team of roughly ten signed-in colleagues, and an upload template is a few
   hundred rows. If this application ever accepts files from outside that group, the bound becomes a
   real decision rather than an inherited default.
+
+---
+
+## Feedback from the walkthrough
+
+Four items Sam raised after walking the running pages. T043 changes an approved acceptance criterion;
+the specification is amended to match before the work begins.
+
+- [ ] T042 A menu group titled "Data Assessment", placed immediately before "Community", holding one
+      entry labelled "Data Assessments" with an icon. Visible to the two roles and absent for
+      everyone else. The entry is currently appended to the end of the application menu, which put
+      it under "Documentation".
+- [ ] T043 The assessment list becomes public. The create page is refused to anyone outside the two
+      roles. Spec US-1 and FR-001 already say this; update the existing access tests rather than
+      adding a second set beside them.
+- [ ] T044 A visible control on the list leading to the create page, for the two roles and nobody
+      else. There is none today, which is what Sam hit when signed in as an assessor.
+- [ ] T045 The card carries its state as a colour-coded badge above the title, and renders its
+      assessors through the framework's own contributor components rather than a hand-rolled list.
