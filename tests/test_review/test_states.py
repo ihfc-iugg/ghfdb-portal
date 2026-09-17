@@ -15,14 +15,14 @@ from tests.test_review.factories import ClaimedPersonFactory
 @pytest.fixture
 def curator(db):
     person = ClaimedPersonFactory()
-    person.groups.add(Group.objects.create(name="Data Curator"))
+    person.groups.add(Group.objects.get_or_create(name="Data Curator")[0])
     return person
 
 
 @pytest.fixture
 def assessor(db):
     person = ClaimedPersonFactory()
-    person.groups.add(Group.objects.create(name="Data Assessor"))
+    person.groups.add(Group.objects.get_or_create(name="Data Assessor")[0])
     return person
 
 

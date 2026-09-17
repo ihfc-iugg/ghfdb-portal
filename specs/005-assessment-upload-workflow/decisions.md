@@ -619,3 +619,53 @@ added by `clean()` itself, further down. The create moves to the end of the meth
 else has had its say.
 
 **ADR:** none — the ordering of one form's own validation.
+
+## D33 — Environment settings live in their own module, and the framework now supplies them
+
+The framework resolves `config/<DJANGO_ENV>.py` beside the settings module and applies only the one
+matching the running environment. The relaxations a development server needs — `ALLOWED_HOSTS`, the
+two cookie flags — move into `config/development.py`, which nothing in production loads.
+
+This replaces the environment guard written inside `config/settings.py`. The guard was correct and
+the separation is better: a reader of `config/development.py` can see at a glance that everything in
+it is development-only, where a guard buried in a shared module relies on each reader noticing the
+condition.
+
+The test that enforces this now asserts both halves — that the shared module relaxes nothing, and
+that the development module carries each relaxation.
+
+**ADR:** none — how this project arranges its own settings, and the arrangement is the framework's
+convention rather than a decision of ours.
+
+## D34 — Data Curator is the framework's role, not ours to create
+
+The framework update ships four portal roles, and one of them is **Data Curator**, carrying real
+model permissions. It installs the role itself and refuses to delete it, and it is the renamed
+successor of the `Data Administrators` group that `Person.is_data_admin` used to check —
+`is_data_admin` no longer exists.
+
+Our migration created a group of the same name with no permissions. Whichever ran first decided what
+the role meant, which is not a thing to leave to ordering.
+
+The migration now creates only **Data Assessor**, which has no framework counterpart. The predicate
+`is_data_curator` is unchanged: it asks about the same group name, which the framework now supplies.
+
+This settles D9. The question it raised — whether the framework should stop hardcoding a group name —
+was answered upstream by replacing the mechanism, and the name this feature chose turned out to be
+the one the framework chose too.
+
+**ADR:** none — D9's verdict already covers the reasoning, and the resolution is the framework's.
+
+## D35 — Public means both fields again
+
+`Dataset.published` exists on the updated framework version. D27 recorded that it did not, and that
+when the pin moved, both the confirmation path and the approval path would have to set it beside
+`visibility`. The pin has moved.
+
+`_publish_if_complete` now writes both, and the tests assert both — including that the private paths
+leave both alone. `visibility` governs the metadata and `published` governs the data beneath it, so a
+dataset that is one without the other is half-published: its record discoverable while the
+measurements it exists to carry are not.
+
+**ADR:** docs/adr/0017-a-role-carries-the-trust-that-decides-publication.md — the ADR describes what
+publication means for this workflow, and this is that meaning becoming whole.

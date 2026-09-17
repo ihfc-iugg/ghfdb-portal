@@ -34,7 +34,7 @@ def migrate_state_into_status(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("review", "0002_data_assessor_and_data_curator_groups"),
+        ("review", "0002_data_assessor_group"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 

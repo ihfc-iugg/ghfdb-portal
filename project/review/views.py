@@ -186,17 +186,21 @@ class ReviewUploadView(UserPassesTestMixin, DetailView):
 
 def _publish_if_complete(review):
     """Write the dataset public exactly when the assessment's own state
-    reached ``COMPLETE`` (T029/T034, data-model.md "Dataset visibility",
-    D27). A curator's confirmation and a curator's approval both make a
-    dataset public through this one path rather than each writing
-    ``visibility`` for itself — "public" is ``Visibility.PUBLIC`` and
-    nothing else on the framework version this project resolves; a second
-    field, ``Dataset.published``, does not exist here and is never
-    referenced.
+    reached ``COMPLETE`` (T029/T034, data-model.md "Dataset visibility").
+
+    A curator's confirmation and a curator's approval both make a dataset
+    public through this one path rather than each writing the fields for
+    itself.
+
+    "Public" is both of the framework's fields. ``visibility`` governs the
+    metadata and ``published`` governs the data beneath it, so a dataset that
+    is one without the other is half-published — its record is discoverable
+    while the measurements it exists to carry are not.
     """
     if review.state == States.COMPLETE:
         review.dataset.visibility = Dataset.VISIBILITY_CHOICES.PUBLIC
-        review.dataset.save(update_fields=["visibility"])
+        review.dataset.published = True
+        review.dataset.save(update_fields=["visibility", "published"])
 
 
 class ReviewConfirmView(UserPassesTestMixin, SingleObjectMixin, View):

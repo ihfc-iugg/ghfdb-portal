@@ -13,12 +13,12 @@ from tests.test_review.factories import ClaimedPersonFactory
 
 @pytest.fixture
 def data_assessor_group(db):
-    return Group.objects.create(name="Data Assessor")
+    return Group.objects.get_or_create(name="Data Assessor")[0]
 
 
 @pytest.fixture
 def data_curator_group(db):
-    return Group.objects.create(name="Data Curator")
+    return Group.objects.get_or_create(name="Data Curator")[0]
 
 
 @pytest.mark.django_db

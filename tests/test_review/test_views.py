@@ -167,6 +167,7 @@ class TestReviewCreateView:
         review = Review.objects.get()
         assert not review.dataset.has_data
         assert review.dataset.visibility == review.dataset.VISIBILITY_CHOICES.PRIVATE
+        assert review.dataset.published is False
 
     def test_uploaded_by_is_the_submitting_user(self, rf, assessor):
         self._post(rf, assessor)
@@ -377,6 +378,7 @@ class TestReviewDecideViewAccess:
         review.refresh_from_db()
         assert review.state == States.AWAITING_DECISION
         assert review.dataset.visibility == review.dataset.VISIBILITY_CHOICES.PRIVATE
+        assert review.dataset.published is False
 
 
 @pytest.mark.django_db
@@ -404,6 +406,7 @@ class TestReviewDecideViewApprove:
         review.refresh_from_db()
         assert review.state == States.COMPLETE
         assert review.dataset.visibility == review.dataset.VISIBILITY_CHOICES.PUBLIC
+        assert review.dataset.published is True
 
     def test_approving_records_who_decided_and_when(self, rf, curator):
         review = ReviewFactory(state=States.AWAITING_DECISION)
@@ -440,6 +443,7 @@ class TestReviewDecideViewSendBack:
         review.refresh_from_db()
         assert review.state == States.CHANGES_REQUESTED
         assert review.dataset.visibility == review.dataset.VISIBILITY_CHOICES.PRIVATE
+        assert review.dataset.published is False
 
     def test_sending_back_records_the_comment_and_who_decided(self, rf, curator):
         review = ReviewFactory(state=States.AWAITING_DECISION)
@@ -1168,15 +1172,18 @@ class TestAssessorDatasetVisibility:
 
         review.refresh_from_db()
         assert review.dataset.visibility == review.dataset.VISIBILITY_CHOICES.PRIVATE
+        assert review.dataset.published is False
 
 
 @pytest.mark.django_db
 @pytest.mark.review
 class TestCuratorConfirmationVisibility:
-    """T029, spec.md User Story 5 scenario 2, D27: a Data Curator's own
-    confirmation makes the dataset public by the one field the resolved
-    framework carries (data-model.md "Dataset visibility") — asserted
-    directly against the field, so removing the write fails this test.
+    """T029, spec.md User Story 5 scenario 2: a Data Curator's own
+    confirmation makes the dataset public on both of the framework's fields
+    (data-model.md "Dataset visibility") — asserted directly against each, so
+    removing either write fails this test. ``visibility`` governs the metadata
+    and ``published`` governs the data beneath it, and a dataset that is one
+    without the other is half-published.
     """
 
     def _confirm(self, rf, user, review):
@@ -1194,6 +1201,8 @@ class TestCuratorConfirmationVisibility:
 
         review.refresh_from_db()
         assert review.dataset.visibility == review.dataset.VISIBILITY_CHOICES.PUBLIC
+        assert review.dataset.published is True
+        assert review.dataset.published is True
 
 
 @pytest.mark.django_db
