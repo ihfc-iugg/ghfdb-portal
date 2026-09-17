@@ -72,14 +72,14 @@ class PublishedColumns:
       ``project/ghfdb/managers.py``, or a field on the proxy model itself.
       Both are read identically here — ``getattr(obj, accessor, None)`` does
       not care which one put the value on the row — so this mapping does not
-      carry the distinction as two groups (F10). This also covers the three
-      columns nothing resolves (``Ref_IGSN``, ``publication_reference``,
-      ``data_reference``, R4, D3) and the two quality columns
-      (``quality_child``, ``quality_parent``): each is a plain
-      ``Value("")`` or ``F("quality")`` annotation in ``managers.py``, kept
-      under its own published name, so this mapping reads it exactly like
-      any other scalar rather than deciding a second time what it resolves
-      to (F12).
+      carry the distinction as two groups (F10). This also covers the two
+      columns nothing resolves (``publication_reference``,
+      ``data_reference``, R4, D3), ``Ref_IGSN`` (a correlated subquery
+      reading the interval's sample identifier, specs/004-import-upload-template/decisions.md
+      D26), and the two quality columns (``quality_child``,
+      ``quality_parent``): each is kept under its own published name by
+      ``managers.py``, so this mapping reads it exactly like any other
+      scalar rather than deciding a second time what it resolves to (F12).
     * ``MANY_VALUED`` — the value is a related manager, reached by a
       dot-separated attribute path from the row, and rendered as its
       members' labels joined with "; ".
@@ -123,7 +123,11 @@ class PublishedColumns:
         # --- child: fields on the proxy itself (also SCALAR — see class docstring) ---
         "c_comment": ColumnEntry(SCALAR),
         "expedition": ColumnEntry(SCALAR),
-        "water_temperature": ColumnEntry(SCALAR),
+        # US-7: the submission template renamed the underlying field to
+        # ``surface_temperature`` because the value is not marine-only; the
+        # published column keeps the released name (D-c,
+        # specs/004-import-upload-template/decisions.md).
+        "water_temperature": ColumnEntry(SCALAR, "surface_temperature"),
         "quality_child": ColumnEntry(SCALAR),
         # --- child: many-valued relationships -------------------------------
         "q_method": ColumnEntry(MANY_VALUED, "method"),
@@ -153,6 +157,9 @@ class PublishedColumns:
         # rather than hardcoding a second, competing "always empty" (F12).
         "publication_reference": ColumnEntry(SCALAR),
         "data_reference": ColumnEntry(SCALAR),
+        # Reads the interval's IGSN identifier through a correlated
+        # subquery in managers.py (D26) — empty when the interval carries
+        # none, not a column nothing resolves.
         "Ref_IGSN": ColumnEntry(SCALAR),
         # --- parent: scalar columns ----------------------------------------------
         # Most of these are queryset annotations GHFDBParentQuerySet.as_ghfdb_flat()

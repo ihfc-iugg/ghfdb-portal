@@ -29,8 +29,6 @@ MVP_CONFIG["layout"]["sidebar"]["title"] = "Heatflow.world"
 EASY_ICONS["svg"]["icons"]["ihfc"] = "ihfc.svg"
 
 
-# DJANGO_SETUP_TOOLS[""]["on_initial"].append(("loaddata", "ghfdb_review_group.json"))
-
 # FAIRDM_CONFIG = {
 #     "home": {
 #         "Explore": [

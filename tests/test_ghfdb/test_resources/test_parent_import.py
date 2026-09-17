@@ -68,11 +68,51 @@ class TestGHFDBParentImportResourceImport:
 
         resource = GHFDBParentImportResource()
         ds = make_dataset(PARENT_ROW)
-        result = resource.import_data(ds, dry_run=False, raise_errors=False)
+        result = resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         assert not result.has_errors(), result.invalid_rows
         assert ParentHeatFlow.objects.filter(ghfdb_id=1).exists()
         assert HeatFlowSite.objects.filter(name="Test Site Alpha").exists()
+
+    def test_a_row_with_an_identifier_names_the_parent_value_by_it(self, dataset):
+        """``name`` is required and has no default, so an unset one saves as
+        an empty string and the record has nothing to display itself by. The
+        row's identifier names it."""
+        from heat_flow.models import ParentHeatFlow
+
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        result = GHFDBParentImportResource().import_data(
+            make_dataset(PARENT_ROW),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        assert ParentHeatFlow.objects.get(ghfdb_id=1).name == "1"
+
+    def test_a_row_without_an_identifier_is_named_after_its_site(self, dataset):
+        """The fallback is the site, which is resolved from the coordinates,
+        so it holds steady across a repeat import of the same file."""
+        from heat_flow.models import ParentHeatFlow
+
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        row = {**PARENT_ROW, "ID_parent": ""}
+
+        result = GHFDBParentImportResource().import_data(
+            make_dataset(row),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        (parent,) = ParentHeatFlow.objects.all()
+        assert parent.name == "Test Site Alpha"
 
     def test_upsert_on_ghfdb_id_does_not_duplicate(self, dataset):
         """Re-importing the same ID_parent updates, does not create a second record."""
@@ -82,8 +122,12 @@ class TestGHFDBParentImportResourceImport:
 
         resource = GHFDBParentImportResource()
         ds = make_dataset(PARENT_ROW)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         assert ParentHeatFlow.objects.filter(ghfdb_id=1).count() == 1
 
@@ -95,12 +139,16 @@ class TestGHFDBParentImportResourceImport:
 
         resource = GHFDBParentImportResource()
         ds1 = make_dataset(PARENT_ROW)
-        resource.import_data(ds1, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds1, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         updated = dict(PARENT_ROW)
         updated["q"] = "80.0"
         ds2 = make_dataset(updated)
-        resource.import_data(ds2, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds2, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         parent = ParentHeatFlow.objects.get(ghfdb_id=1)
         assert float(parent.value.magnitude) == pytest.approx(80.0)
@@ -113,7 +161,9 @@ class TestGHFDBParentImportResourceImport:
 
         resource = GHFDBParentImportResource()
         ds = make_dataset(PARENT_ROW)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         site = HeatFlowSite.objects.get(name="Test Site Alpha")
         assert site.location is not None
@@ -128,7 +178,9 @@ class TestGHFDBParentImportResourceImport:
 
         resource = GHFDBParentImportResource()
         ds = make_dataset(PARENT_ROW)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         site = HeatFlowSite.objects.get(name="Test Site Alpha")
         assert site.explo_purpose.count() >= 1
@@ -139,7 +191,9 @@ class TestGHFDBParentImportResourceImport:
 
         resource = GHFDBParentImportResource()
         ds = make_dataset(PARENT_ROW)
-        result = resource.import_data(ds, dry_run=True, raise_errors=False)
+        result = resource.import_data(
+            ds, dry_run=True, raise_errors=False, fairdm_dataset=dataset
+        )
         assert not result.has_errors(), result.invalid_rows
 
 
@@ -159,7 +213,9 @@ class TestGHFDBParentBeforeImportDedup:
         row2["q"] = "99.9"  # different value but same ID_parent
 
         ds = make_dataset(row1, row2)
-        resource.import_data(ds, dry_run=False, raise_errors=False)
+        resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         assert ParentHeatFlow.objects.filter(ghfdb_id=1).count() == 1
         parent = ParentHeatFlow.objects.get(ghfdb_id=1)
@@ -185,7 +241,9 @@ class TestGHFDBParentTemplateNoIdRegression:
 
         resource = GHFDBParentImportResource()
         ds = make_dataset(row1, row2)
-        result = resource.import_data(ds, dry_run=False, raise_errors=False)
+        result = resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         assert not result.has_errors(), result.invalid_rows
         assert ParentHeatFlow.objects.count() == 1
@@ -205,7 +263,7 @@ class TestGHFDBParentTemplateNoIdRegression:
         assert "ID_parent" not in ds.headers
 
         result = GHFDBParentImportResource().import_data(
-            ds, dry_run=False, raise_errors=False
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
         )
 
         assert not result.has_errors(), result.invalid_rows
@@ -220,13 +278,16 @@ class TestGHFDBParentTemplateNoIdRegression:
 
         row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
         GHFDBParentImportResource().import_data(
-            make_dataset(row), dry_run=False, raise_errors=False
+            make_dataset(row), dry_run=False, raise_errors=False, fairdm_dataset=dataset
         )
 
         row_update = dict(row)
         row_update["q"] = "88.8"
         result = GHFDBParentImportResource().import_data(
-            make_dataset(row_update), dry_run=False, raise_errors=False
+            make_dataset(row_update),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
         )
 
         assert not result.has_errors(), result.invalid_rows
@@ -245,7 +306,9 @@ class TestGHFDBParentTemplateNoIdRegression:
         row = dict(PARENT_ROW)
         row["ID_parent"] = ""
 
-        resource.import_data(make_dataset(row), dry_run=False, raise_errors=False)
+        resource.import_data(
+            make_dataset(row), dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         row_update = dict(row)
         row_update["q"] = "81.5"
@@ -253,6 +316,7 @@ class TestGHFDBParentTemplateNoIdRegression:
             make_dataset(row_update),
             dry_run=False,
             raise_errors=False,
+            fairdm_dataset=dataset,
         )
 
         assert not result.has_errors(), result.invalid_rows
@@ -284,7 +348,9 @@ class TestGHFDBParentImportSiteIdentity:
 
         resource = GHFDBParentImportResource()
         ds = make_dataset(PARENT_ROW)  # lat_NS=48.0, long_EW=11.0, ID_parent=1
-        result = resource.import_data(ds, dry_run=False, raise_errors=False)
+        result = resource.import_data(
+            ds, dry_run=False, raise_errors=False, fairdm_dataset=dataset
+        )
 
         assert not result.has_errors(), result.invalid_rows
         assert not result.has_validation_errors(), [
@@ -321,7 +387,7 @@ class TestGHFDBParentImportSiteIdentity:
 
         resource = GHFDBParentImportResource()
         result = resource.import_data(
-            make_dataset(row), dry_run=False, raise_errors=False
+            make_dataset(row), dry_run=False, raise_errors=False, fairdm_dataset=dataset
         )
 
         assert not result.has_errors(), result.invalid_rows
@@ -350,7 +416,10 @@ class TestGHFDBParentImportRefusesSecondParent:
 
         resource = GHFDBParentImportResource()
         first_result = resource.import_data(
-            make_dataset(PARENT_ROW), dry_run=False, raise_errors=False
+            make_dataset(PARENT_ROW),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
         )
         assert not first_result.has_errors(), first_result.invalid_rows
         assert ParentHeatFlow.objects.filter(ghfdb_id=1).exists()
@@ -362,7 +431,10 @@ class TestGHFDBParentImportRefusesSecondParent:
         second_row["q"] = "99.0"
 
         second_result = GHFDBParentImportResource().import_data(
-            make_dataset(second_row), dry_run=False, raise_errors=False
+            make_dataset(second_row),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
         )
 
         assert second_result.has_validation_errors()
@@ -370,6 +442,138 @@ class TestGHFDBParentImportRefusesSecondParent:
         site = HeatFlowSite.objects.get(name="Test Site Alpha")
         assert ParentHeatFlow.objects.filter(sample=site).count() == 1
         assert not ParentHeatFlow.objects.filter(ghfdb_id=2).exists()
+
+
+@pytest.mark.django_db
+class TestGHFDBParentImportRequiresNamedDataset:
+    """T007 — FR-002: the import refuses to guess a dataset.
+
+    A dataset existing in the database is not enough to satisfy the
+    requirement — the old behaviour (``FairDataset.all_objects.first()``)
+    would have silently used it, which is exactly the guess FR-002 forbids.
+    """
+
+    def test_before_import_raises_when_no_dataset_is_named(self, dataset):
+        """before_import() raises rather than falling back to the first dataset."""
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        resource = GHFDBParentImportResource()
+        ds = make_dataset(PARENT_ROW)
+
+        with pytest.raises(ValueError, match="dataset"):
+            resource.before_import(ds)
+
+
+@pytest.mark.django_db
+class TestGHFDBParentImportTwoCoordinatePairs:
+    """T009 — US-2's independent test: two sites, each with its own parent
+    value, both in the dataset the caller named (FR-005, FR-006)."""
+
+    def test_two_coordinate_pairs_produce_two_sites_in_the_named_dataset(self, dataset):
+        """Two rows at two coordinate pairs each become a site carrying its
+        own P-column parent value, both attached to the named dataset."""
+        from heat_flow.models import HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        row_a = dict(PARENT_ROW)
+        row_b = dict(PARENT_ROW)
+        row_b["ID_parent"] = "2"
+        row_b["name"] = "Test Site Beta"
+        row_b["lat_NS"] = "50.0"
+        row_b["long_EW"] = "8.0"
+        row_b["q"] = "90.0"
+
+        resource = GHFDBParentImportResource()
+        result = resource.import_data(
+            make_dataset(row_a, row_b),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        assert HeatFlowSite.objects.count() == 2
+        assert ParentHeatFlow.objects.count() == 2
+
+        for site in HeatFlowSite.objects.all():
+            assert site.dataset_id == dataset.pk
+
+        alpha = ParentHeatFlow.objects.get(ghfdb_id=1)
+        beta = ParentHeatFlow.objects.get(ghfdb_id=2)
+        assert float(alpha.value.magnitude) == pytest.approx(70.0)
+        assert float(beta.value.magnitude) == pytest.approx(90.0)
+        assert alpha.dataset_id == dataset.pk
+        assert beta.dataset_id == dataset.pk
+        assert alpha.sample_id != beta.sample_id
+
+
+@pytest.mark.django_db
+class TestGHFDBParentImportGeographyStoredAsSupplied:
+    """T011 — FR-008: geography columns are stored as supplied, never
+    recomputed from the coordinates."""
+
+    def test_geography_values_are_stored_exactly_as_supplied(self, dataset):
+        """Country/Region/Continent/Domain land on HeatFlowSite unchanged,
+        even where they disagree with what the coordinates would suggest."""
+        from heat_flow.models import HeatFlowSite
+
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        row = dict(PARENT_ROW)
+        # lat_NS/long_EW place this site in Germany/Europe; the geography
+        # columns deliberately disagree, so a passing test proves the
+        # stored values come from the row rather than from the coordinates.
+        row["Country"] = "Nowhereland"
+        row["Region"] = "Somewhere Province"
+        row["Continent"] = "Atlantis"
+        row["Domain"] = "Deep Sea"
+
+        resource = GHFDBParentImportResource()
+        result = resource.import_data(
+            make_dataset(row),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        site = HeatFlowSite.objects.get(name="Test Site Alpha")
+        assert site.country == "Nowhereland"
+        assert site.region == "Somewhere Province"
+        assert site.continent == "Atlantis"
+        assert site.domain == "Deep Sea"
+
+
+@pytest.mark.django_db
+class TestGHFDBParentImportAcceptsUnstoredColumns:
+    """T012 — FR-009: the reviewer columns and ID are accepted without being
+    stored, and their presence is not an error."""
+
+    def test_id_and_reviewer_columns_do_not_cause_an_error(self, dataset):
+        """ID and the three reviewer columns are not PARENT_COLUMNS fields,
+        so their presence in the row must not raise or block the import."""
+        from heat_flow.models import HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.resources import GHFDBParentImportResource
+
+        row = dict(PARENT_ROW)
+        row["ID"] = "999"
+        row["Reviewer_name"] = "Jane Reviewer"
+        row["Reviewer_comment"] = "Looks fine"
+        row["Review_date"] = "2026-01-01"
+
+        resource = GHFDBParentImportResource()
+        result = resource.import_data(
+            make_dataset(row),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
+
+        assert not result.has_errors(), result.invalid_rows
+        assert ParentHeatFlow.objects.filter(ghfdb_id=1).exists()
+        assert HeatFlowSite.objects.filter(name="Test Site Alpha").exists()
 
 
 class TestGHFDBParentImportResourceAccessControl:
@@ -397,7 +601,7 @@ class TestGHFDBAutoParentKeyRegression:
         row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
         resource = GHFDBParentImportResource()
         result = resource.import_data(
-            make_dataset(row), dry_run=False, raise_errors=False
+            make_dataset(row), dry_run=False, raise_errors=False, fairdm_dataset=dataset
         )
 
         assert not result.has_errors(), result.invalid_rows
@@ -414,7 +618,7 @@ class TestGHFDBAutoParentKeyRegression:
         row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
         resource = GHFDBParentImportResource()
         result = resource.import_data(
-            make_dataset(row), dry_run=True, raise_errors=False
+            make_dataset(row), dry_run=True, raise_errors=False, fairdm_dataset=dataset
         )
 
         assert not result.has_errors(), result.invalid_rows
@@ -796,7 +1000,10 @@ class TestGHFDBParentPrivateDatasetRegression:
 
         resource = GHFDBParentImportResource()
         result = resource.import_data(
-            make_dataset(PARENT_ROW), dry_run=False, raise_errors=False
+            make_dataset(PARENT_ROW),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
         )
 
         assert not result.has_errors(), [
@@ -836,7 +1043,10 @@ class TestGHFDBParentImportRecordsIdentifierOnMatchedSite:
         assert not existing.local_id
 
         result = GHFDBParentImportResource().import_data(
-            make_dataset(PARENT_ROW), dry_run=False, raise_errors=False
+            make_dataset(PARENT_ROW),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
         )
         assert not result.has_errors(), result.invalid_rows
 

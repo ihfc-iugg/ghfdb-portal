@@ -1,0 +1,87 @@
+# Family-standard base ruff configuration for django-mvp repositories.
+#
+# Copy to the repo root as `ruff-shared.toml`, then reference it from the
+# package's own pyproject.toml:
+#
+#   [tool.ruff]
+#   extend = "ruff-shared.toml"
+#
+# `extend` only accepts a local filesystem path — Ruff has no mechanism for
+# extending a config file that lives in another repository — so this file is
+# copied in and re-copied on each family-standard bump, the same discipline
+# already used for templates/pre-commit-config.yaml. What changes is what a
+# downstream pyproject.toml has to state itself: once extending, a package's
+# own [tool.ruff] holds only its remainder — extend-ignore for additional
+# ignored rules, extend-exclude for additional excluded paths,
+# [tool.ruff.lint.per-file-ignores] for test/example carve-outs, and any
+# [tool.ruff.format] keys that differ from the ones set below — instead of
+# restating the whole family rule set.
+#
+# `line-length` and `target-version` are deliberately absent here. Line length
+# defaults to 88, matching Black — what Django, pytest and httpx all ship,
+# and PEP 8's own cap on a team's preferred limit is 99 — so leaving it unset
+# is the family standard, not an oversight. target-version is inferred from
+# each package's own `requires-python` and would only ever drift if pinned
+# here. A package still on the pre-2026-08 120-column style sets
+# `line-length = 120` in its own file until its reformat PR lands.
+
+extend-exclude = [
+    "*/migrations/*.py",
+    "staticfiles/*",
+    "docs/",
+    ".github/",
+]
+fix = true
+
+[lint]
+select = [
+    # flake8-2020
+    "YTT",
+    # flake8-bandit
+    "S",
+    # flake8-bugbear
+    "B",
+    # flake8-builtins
+    "A",
+    # flake8-comprehensions
+    "C4",
+    # flake8-debugger
+    "T10",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+    # mccabe
+    "C90",
+    # pycodestyle
+    "E", "W",
+    # pyflakes
+    "F",
+    # pygrep-hooks
+    "PGH",
+    # pyupgrade
+    "UP",
+    # ruff
+    "RUF",
+    # tryceratops
+    "TRY",
+]
+ignore = [
+    # LineTooLong
+    "E501",
+    # DoNotAssignLambda
+    "E731",
+    # Mutable class attributes (noise on Django Meta)
+    "RUF012",
+    # Avoid long messages outside the exception class
+    "TRY003",
+    # Class attribute shadowing a builtin (Django field names)
+    "A003",
+    # Function too complex
+    "C901",
+]
+
+[format]
+docstring-code-format = true
+line-ending = "lf"
+exclude = ["*/migrations/*.py"]

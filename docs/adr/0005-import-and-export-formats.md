@@ -1,6 +1,8 @@
 # ADR 0005 — Exports use the release format; imports accept the upload template and a full release
 
-**Status:** accepted
+**Status:** partly superseded by [ADR 0010](0010-the-release-import-direction-ends.md). The second
+import path, reading a full published release, is no longer a direction the project takes. What this
+record says about export, and about the upload template path, still stands.
 
 ## Decision
 

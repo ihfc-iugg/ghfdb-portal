@@ -141,7 +141,7 @@ erDiagram
         quantity value "Heat-flow density (mW/m2)"
         quantity uncertainty "Uncertainty, one standard deviation (mW/m2)"
         string expedition "Expedition, cruise or vessel name"
-        quantity water_temperature "Bottom water temperature"
+        quantity surface_temperature "Temperature at the upper boundary of the interval"
         date date_acquired "Date of acquisition"
         boolean is_relevant "Used in the parent calculation"
         char U_score "Numerical uncertainty (U1-U4, Ux)"
@@ -175,6 +175,10 @@ erDiagram
         quantity corrected_uncertainty "Corrected uncertainty (K/km)"
         quantity shutin_top "Shut-in time at the top of the interval"
         quantity shutin_bottom "Shut-in time at the bottom of the interval"
+        quantity temperature_top "Absolute temperature at the top of the interval"
+        quantity temperature_top_uncertainty "Uncertainty of the top temperature"
+        quantity temperature_bottom "Absolute temperature at the bottom of the interval"
+        quantity temperature_bottom_uncertainty "Uncertainty of the bottom temperature"
         int number "Number of temperature recordings"
         float score "Methodological score"
     }
@@ -195,10 +199,23 @@ erDiagram
         int id PK "Primary key"
         int dataset_id FK "The dataset reviewed"
         int literature_id FK "The literature item reviewed"
+        int uploaded_by_id FK "Who created this assessment"
         date start_date "Date the review started"
         date end_date "Date the review completed"
-        int status "Open, pending or complete"
+        int state "Described, awaiting decision, changes requested or complete"
+        int decided_by_id FK "The curator who approved or sent back"
+        datetime decided_at "When the decision was made"
+        text decision_comment "What the curator said when sending it back"
         text comment "General comment on the review"
+    }
+
+    SubmittedFile {
+        int id PK "Primary key"
+        int review_id FK "The assessment this file was submitted against"
+        string file "The completed upload template as supplied"
+        int submitted_by_id FK "Who submitted this file"
+        datetime submitted_at "When this file was submitted"
+        datetime imported_at "When this file's contents were written, if confirmed"
     }
 
     GHFDBRelease {
@@ -247,6 +264,7 @@ erDiagram
 
     %% Editorial
     Dataset ||--o| Review : "is reviewed by"
+    Review ||--o{ SubmittedFile : "has"
 ```
 
 ## Model Descriptions
@@ -387,17 +405,104 @@ The mean thermal conductivity over a depth interval.
 
 ### Review
 
-The editorial record of a dataset being reviewed before publication.
+The record of a publication being turned into a dataset through the assessment upload workflow — described, then either awaiting a decision, sent back for changes, or complete.
 
 **Key Features**
 
 - One review per dataset and per literature item, both one-to-one
 - Names the people who carried it out through the `reviewers` relation, so a review may have several
-- Tracks start and completion dates as partial dates, and a status of open, pending or complete
+- Tracks start and completion dates as partial dates, and its state through `review.states.States`
+- Records who created it (`uploaded_by`) and, once decided, who decided it and when (`decided_by`, `decided_at`, `decision_comment`)
+- Access to the record and its pages is decided by `review.permissions.is_data_assessor` and
+  `review.permissions.is_data_curator`, the only place group membership is tested
+- Where a page is open to both roles and cares about nothing finer — the list, the description form
+  and the navigation entry — it asks `review.permissions.is_assessment_team_member` instead, which
+  answers the same question in one query and reads as the question it is
+- The portal's navigation carries a `review.menus.AssessmentMenuItem` (the `assessment_entry`
+  instance), visible to either role, which recomputes its badge count of assessments awaiting a
+  decision on every request rather than caching it
 
 **Business Rules**
 
 - A start date later than the completion date is refused on `save()`
+- Every legal state transition, and who may make it, is enforced by `review.states` rather than by each caller testing field combinations
+- The three transitions — `review.states.confirm_upload`, `review.states.approve`,
+  `review.states.send_back` — each raise `review.states.IllegalTransition` when the record's current
+  state or the acting person is not one the transition allows
+
+**Describing an assessment**
+
+`review.forms.ReviewDescriptionForm` is how a record is created. It collects the publication, the
+people who carried out the assessment, the dates, and an optional title that falls back to the
+publication's own when left blank. Two things about it are worth knowing before reading the code.
+
+The publication may be chosen from the catalogue or supplied as a CSL-JSON bibliography file, in
+which case the form creates the `LiteratureItem` while validating and links the new record to it. An
+assessment can therefore be started for a publication the portal has never seen, without leaving the
+page.
+
+The assessor field draws on `Person.objects.real()`, which includes profiles that have never been
+claimed. Someone credited with assessing a publication need not hold a portal account, and filtering
+this field to account holders would make those people unnameable. Assessors are credited as
+contributors on the resulting dataset. They are not granted access to it, which follows
+`uploaded_by` alone.
+
+**Checking and confirming an upload**
+
+`review.views.ReviewUploadView` and `review.views.ReviewConfirmView` are the two routes a file
+passes through, and neither writes to the assessment's dataset alone. Uploading stores the file as a
+`SubmittedFile`, runs `project.ghfdb.importers.import_ghfdb_template` with `check_only=True`, and
+renders `project.ghfdb.report.build_report`'s counts and failures in the same response — nothing
+reaches the dataset from this route. Confirming re-runs the same reader against the stored file with
+`check_only=False`, writing in the transaction it opens, then stamps `SubmittedFile.imported_at` and
+runs the matching `review.states` transition. Both routes are open to the assessment's own uploader
+or to any Data Curator, decided by `review.permissions.can_manage_upload`.
+
+The assessment's own state is what makes confirming safe to submit twice: a confirmation for an
+assessment no longer in `DESCRIBED` or `CHANGES_REQUESTED` is a no-op redirect rather than a second
+write, which is also what keeps a stale report from being trusted — confirming always re-checks
+rather than replaying the numbers the uploader saw.
+
+A Data Curator's own confirmation makes the dataset public immediately, because `review.states.confirm_upload`
+puts the assessment straight into `COMPLETE` for a curator rather than `AWAITING_DECISION`.
+`review.views._publish_if_complete` is what writes it: whenever an assessment's state reaches
+`COMPLETE`, the dataset's `visibility` is set to `Visibility.PUBLIC` and nothing else is touched.
+It is the one path both a curator's confirmation and a curator's approval use.
+
+**Deciding on an assessor's upload**
+
+`review.views.ReviewQueueView`, at `/assessments/queue/`, lists every assessment in
+`AWAITING_DECISION` — a Data Curator only, refused to anyone else including the Data Assessor who
+uploaded one of the waiting assessments. Each row is rendered by `review/review_queue_item.html`,
+naming the publication and the uploader, and carries the approve and send-back forms that post to
+`review-decide`.
+
+`review.views.ReviewDecideView`, at `/assessments/<pk>/decide/`, POST only, is how a curator acts on
+one. Approving runs `review.states.approve`, then `review.views._publish_if_complete` — the same
+mechanism a curator's own confirmation uses — and records `decided_by`/`decided_at`. Sending back
+runs `review.states.send_back` instead, leaving the dataset untouched (private), and records the
+curator's comment on `decision_comment` alongside the same `decided_by`/`decided_at`. Curators only;
+refused to anyone else the same way `ReviewQueueView` is, before `approve`/`send_back` ever get a
+chance to raise their own `IllegalTransition` for the same reason. Unlike the upload and confirm
+routes, being an assessment's own uploader grants nothing here: an assessor who uploaded the
+assessment they are trying to decide on is refused exactly like any other Data Assessor, because
+this route is decided by `is_data_curator` alone, never `can_manage_upload`.
+
+A sent-back assessment's comment reaches its uploader on `review.views.ReviewUploadView`, the same
+page they return to for a replacement file: `decision_comment` is added to that view's context, and
+only while the assessment is still `CHANGES_REQUESTED`, so a stale comment cannot outlive the state
+it was about. Nothing already imported is deleted when an assessment is sent back — a replacement
+file is a new `SubmittedFile` row, per D7.
+
+### SubmittedFile
+
+One completed upload template as supplied, kept against its assessment.
+
+**Key Features**
+
+- A row per submission rather than a field on `Review`, so a file a curator sends back is never overwritten by its replacement
+- `Review.current` reads the most recent submission
+- Stored at a path scoped to its assessment by `review.models.submission_upload_path`
 
 ### GHFDBRelease
 

@@ -469,6 +469,24 @@ class TestConductivityWidget:
 # ---- T072: FR-016 Vocabulary normalisation regression tests ----------------
 
 
+class TestBlankCellSentinel:
+    """The corpus of completed submissions writes ``-`` for "nothing entered
+    here yet" in reference columns filled in during assessment, such as
+    ``Ref_IGSN`` (D26, specs/004-import-upload-template/decisions.md)."""
+
+    def test_none_empty_whitespace_and_hyphen_are_blank(self):
+        from project.ghfdb.resources.widgets import is_blank_cell
+
+        for raw in (None, "", "   ", "-"):
+            assert is_blank_cell(raw) is True
+
+    def test_a_real_value_is_not_blank(self):
+        from project.ghfdb.resources.widgets import is_blank_cell
+
+        assert is_blank_cell("10.60516/AU1101") is False
+        assert is_blank_cell(" 10.60516/AU1101 ") is False
+
+
 class TestVocabNormalisation:
     """T072 — FR-016: bracket-wrapped and mixed-case vocab tokens are normalised before matching."""
 
@@ -643,17 +661,129 @@ class TestNumericCellInputGuards:
         )
         assert isinstance(result, IntervalConductivity)
 
-    def test_parent_widget_numeric_name_raises_valueerror(self, db):
-        """ParentWidget.clean() with an int in the 'name' column raises ValueError naming 'name'."""
+    def test_parent_widget_reads_a_numeric_site_name_as_text(self, db):
+        """A numbered site is a named site.
+
+        Submissions whose sites are numbered rather than titled arrive with
+        integer cells in the ``name`` column, and a spreadsheet gives no way
+        to say otherwise. Refusing them refused 2,338 rows of the assessment
+        team's own files, so the cell is read as text.
+        """
         from project.ghfdb.resources.widgets import ParentWidget
 
         widget = ParentWidget()
         row = {
-            "name": 1,  # int — simulates openpyxl reading a numeric cell
+            "name": 3,  # int — openpyxl reading a numeric cell
             "lat_NS": "48.0",
             "long_EW": "11.0",
         }
-        with pytest.raises(ValueError) as exc_info:
-            widget.clean("", row=row)
-        error_msg = str(exc_info.value)
-        assert "name" in error_msg
+
+        site = widget.clean("", row=row)
+
+        assert site is not None
+        assert site.name == "3"
+
+
+# ---------------------------------------------------------------------------
+# Shapes taken from the assessment team's completed templates.
+#
+# Every case below reproduces a value that refused a real submission. The
+# values are transcribed; no submitted file is stored in the repository.
+# ---------------------------------------------------------------------------
+
+
+class TestValuesRealSubmissionsCarry:
+    """Cell shapes the published template produces that the reader refused."""
+
+    def test_a_sentinel_padded_with_whitespace_is_still_the_sentinel(self):
+        """``' [unspecified]'`` — a leading space defeats a bare ``strip('[]')``.
+
+        The first character is not a bracket, so stripping stops there and
+        the token never matches. 6,612 cells across the corpus carry it.
+        """
+        from project.ghfdb.resources.widgets import normalize_vocab_token
+
+        assert normalize_vocab_token(" [unspecified]") == "unspecified"
+        assert normalize_vocab_token("[unspecified] ") == "unspecified"
+        assert normalize_vocab_token("[ unspecified ]") == "unspecified"
+        assert normalize_vocab_token("[unspecified]") == "unspecified"
+
+    def test_a_lithology_named_by_its_key_is_matched(self, db):
+        """The template's lithology column offers keys, not labels.
+
+        ``alkali_feldspar_granite`` is the cell value the template's own
+        dropdown supplies; ``alkali feldspar granite`` is the portal's label
+        for the same concept. Matching on the label alone left 174 of the
+        265 lithologies the template offers unreachable.
+        """
+        from fairdm_geo.vocabularies.cgi.geosciml import SimpleLithology
+
+        from project.ghfdb.resources.widgets import MultiConceptWidget
+
+        widget = MultiConceptWidget(SimpleLithology)
+
+        result = widget.clean("alkali_feldspar_granite", row={})
+
+        assert [concept.name for concept in result] == ["alkali_feldspar_granite"]
+
+    def test_a_stratigraphic_age_named_by_its_key_is_matched(self, db):
+        """The same, for the 29 ages whose key differs from their label."""
+        from fairdm_geo.vocabularies.stratigraphy import GeologicalTimescale
+
+        from project.ghfdb.resources.widgets import MultiConceptWidget
+
+        widget = MultiConceptWidget(GeologicalTimescale)
+
+        result = widget.clean("CambrianSeries2", row={})
+
+        assert [concept.name for concept in result] == ["CambrianSeries2"]
+
+    def test_labels_still_match_after_keys_are_accepted(self, db):
+        """Reading keys does not stop the reader reading labels."""
+        from fairdm_geo.vocabularies.cgi.geosciml import SimpleLithology
+
+        from project.ghfdb.resources.widgets import MultiConceptWidget
+
+        widget = MultiConceptWidget(SimpleLithology)
+
+        result = widget.clean("andesite;basalt", row={})
+
+        assert sorted(concept.name for concept in result) == ["andesite", "basalt"]
+
+    def test_a_value_in_neither_the_keys_nor_the_labels_is_still_refused(self, db):
+        """``Aluvium`` is a misspelling in a submitted file, not a concept.
+
+        Accepting keys must not turn the vocabulary check into a pass.
+        """
+        from fairdm_geo.vocabularies.cgi.geosciml import SimpleLithology
+
+        from project.ghfdb.resources.widgets import MultiConceptWidget
+
+        widget = MultiConceptWidget(SimpleLithology)
+
+        with pytest.raises(ValueError) as excinfo:
+            widget.clean("Aluvium", row={}, column="geo_lithology")
+
+        assert "Aluvium" in str(excinfo.value)
+        assert "geo_lithology" in str(excinfo.value)
+
+    @pytest.mark.parametrize(
+        "cell", ["[unspecified]", " [unspecified]", "[Unspecified]"]
+    )
+    def test_an_unspecified_acquisition_date_is_read_as_no_date(self, cell):
+        """The template offers ``[unspecified]`` in the date column itself.
+
+        Its vocabulary sheet lists exactly two things for ``q_date``: a
+        ``years-months`` date, and this sentinel. Putting the sentinel to
+        the date field made it 'not a valid date string' and refused the
+        file — 87,523 cells across the corpus carry it.
+        """
+        from project.ghfdb.resources.widgets import AcquisitionDateWidget
+
+        assert AcquisitionDateWidget().clean(cell) is None
+
+    def test_a_real_acquisition_date_is_still_read(self):
+        """The sentinel is the only thing the widget absorbs."""
+        from project.ghfdb.resources.widgets import AcquisitionDateWidget
+
+        assert AcquisitionDateWidget().clean("1979-12") == "1979-12"

@@ -67,7 +67,7 @@ It was previously named `SurfaceHeatFlow` in older versions of this codebase.
 | relevant\_child | C09 | heat\_flow\_heatflow | HeatFlow | is\_relevant | HeatFlow |
 | c\_comment | C10 | heat\_flow\_heatflow | HeatFlow | c\_comment | HeatFlow |
 | expedition | C20 | heat\_flow\_heatflow | HeatFlow | expedition | HeatFlow |
-| water\_temperature | C24 | heat\_flow\_heatflow | HeatFlow | water\_temperature | HeatFlow |
+| water\_temperature | C24 | heat\_flow\_heatflow | HeatFlow | surface\_temperature | HeatFlow |
 | q\_date | C38 | heat\_flow\_heatflow | HeatFlow | date\_acquired | HeatFlow |
 | quality\_child | — | heat\_flow\_heatflow | HeatFlow | quality | HeatFlow |
 
@@ -181,6 +181,9 @@ Access pattern: `heat_flow.sample.probe_metadata.<field>`.
 A review records the people who carried it out rather than a single name, so `reviewers` is a
 relation to `Person` and a review may name several. `Review` lives in the `review` app; earlier
 versions of this page placed it in `heat_flow`.
+
+`Review` also carries a `state` field, tracked through `review.states.States` — not to be confused
+with the unrelated `status` field on `HeatFlowCorrection`, below.
 
 ### Quality columns
 

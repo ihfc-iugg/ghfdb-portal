@@ -135,20 +135,35 @@ class TestPublishedColumns:
         assert ColumnDisplay.build("T_method_top")(Row()) == ""
 
     def test_the_columns_nothing_resolves_read_the_annotation_managers_py_sets(self):
-        """T069, revised under F12: ``Ref_IGSN``, ``publication_reference``
-        and ``data_reference`` are present and empty by decision (R4, D3),
-        but that decision is made once, by the ``Value("")`` annotations in
+        """T069, revised under F12: ``publication_reference`` and
+        ``data_reference`` are present and empty by decision (R4, D3), but
+        that decision is made once, by the ``Value("")`` annotations in
         ``managers.py`` — this mapping no longer hardcodes a second,
         competing empty default and just reads the row like any other
-        scalar column."""
+        scalar column. ``Ref_IGSN`` moved out of this group under D26 —
+        see ``test_ref_igsn_reads_whatever_the_row_carries``."""
 
         class Row:
-            Ref_IGSN = ""
             publication_reference = ""
             data_reference = ""
 
-        for name in ("Ref_IGSN", "publication_reference", "data_reference"):
+        for name in ("publication_reference", "data_reference"):
             assert ColumnDisplay.build(name)(Row()) == ""
+
+    def test_ref_igsn_reads_whatever_the_row_carries(self):
+        """D26: ``Ref_IGSN`` is a real accessor onto the interval's sample
+        identifier now, read like any other scalar column — empty when the
+        row's annotation is empty, and the stored value when it is not."""
+
+        class EmptyRow:
+            Ref_IGSN = ""
+
+        class PopulatedRow:
+            Ref_IGSN = "10.60516/AU1101"
+
+        display = ColumnDisplay.build("Ref_IGSN")
+        assert display(EmptyRow()) == ""
+        assert display(PopulatedRow()) == "10.60516/AU1101"
 
     def test_headings_are_the_canonical_order(self):
         """T070: the headings the built tuple produces equal the order
@@ -172,14 +187,27 @@ class TestPublishedColumns:
         # F12: quality_child now reads its own annotation key rather than a
         # shared "quality" accessor, so it sorts on its own key too.
         assert ColumnDisplay.build("quality_child").admin_order_field == "quality_child"
-        # F12: Ref_IGSN moved from the (now-removed) EMPTY group into SCALAR,
-        # so it is sortable like any other scalar column — sorting on a
-        # column that is always "" is harmless, and the mapping no longer
-        # special-cases it.
+        # F12: Ref_IGSN is in the SCALAR group like any other scalar column,
+        # so it stays sortable — first because sorting on a column that was
+        # always "" was harmless, and now (D26) because it is a real value.
         assert ColumnDisplay.build("Ref_IGSN").admin_order_field == "Ref_IGSN"
 
         for unsortable in ("q_method", "corr_IS_flag"):
             assert not hasattr(ColumnDisplay.build(unsortable), "admin_order_field")
+
+    def test_water_temperature_reads_the_renamed_surface_temperature_field(self):
+        """The submission template and the published release are separate
+        contracts (specs/004-import-upload-template/decisions.md): US-7
+        renamed the model field to ``surface_temperature`` because the value
+        is not marine-only, but the published column keeps the name
+        ``water_temperature`` — reached now through an explicit accessor
+        rather than the default of reading the published name straight off
+        the row."""
+
+        class Row:
+            surface_temperature = 3.0
+
+        assert ColumnDisplay.build("water_temperature")(Row()) == 3.0
 
 
 class TestBuiltCallablesAvoidTheFieldNameTrap:
@@ -193,9 +221,9 @@ class TestBuiltCallablesAvoidTheFieldNameTrap:
     def test_a_column_named_after_a_model_field_still_renders_its_published_heading(
         self,
     ):
-        """T077. ``expedition``, ``c_comment`` and ``water_temperature`` are
-        all fields on the determination model whose ``verbose_name`` differs
-        from the published column name.
+        """T077. ``expedition`` and ``c_comment`` are fields on the
+        determination model whose ``verbose_name`` differs from the
+        published column name.
         """
         from django.contrib import admin
 
@@ -203,7 +231,7 @@ class TestBuiltCallablesAvoidTheFieldNameTrap:
 
         model_admin = admin.site._registry[GHFDBChild]
 
-        for name in ("expedition", "c_comment", "water_temperature"):
+        for name in ("expedition", "c_comment"):
             display = ColumnDisplay.build(name)
             bound = f"published_{name}"
             setattr(model_admin.__class__, bound, display)
@@ -214,15 +242,21 @@ class TestBuiltCallablesAvoidTheFieldNameTrap:
 
     @pytest.mark.django_db
     def test_binding_under_the_field_name_would_lose_the_heading(self):
-        """The same three, bound the obvious way, prove the trap is real rather
-        than theoretical — otherwise the rule above reads as superstition."""
+        """The same two, bound the obvious way, prove the trap is real rather
+        than theoretical — otherwise the rule above reads as superstition.
+
+        ``water_temperature`` was a third example here before US-7 renamed
+        the underlying field to ``surface_temperature``: the published
+        column and the field name no longer collide, so it no longer
+        illustrates this trap.
+        """
         from django.contrib import admin
 
         from project.ghfdb.models import GHFDBChild
 
         model_admin = admin.site._registry[GHFDBChild]
 
-        for name in ("expedition", "c_comment", "water_temperature"):
+        for name in ("expedition", "c_comment"):
             rendered = label_for_field(name, GHFDBChild, model_admin)
             assert rendered != name, (
                 f"{name!r} was expected to render its field verbose_name"

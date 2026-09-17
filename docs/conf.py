@@ -29,7 +29,12 @@ html_short_title = "Heatflow.world"
 # )
 
 html_theme_options["path_to_docs"] = "docs"
-extensions.remove("autodoc2")
+# autodoc2 is not wanted here, and whether the shared configuration still
+# enables it is the shared configuration's business. A bare remove() raises
+# once it stops doing so, which takes the whole documentation build down over
+# an extension this project did not want in the first place.
+if "autodoc2" in extensions:
+    extensions.remove("autodoc2")
 extensions += [
     "sphinx_design",
     # fairdm_docs.extensions.autodoc_models is deliberately not enabled. It reads

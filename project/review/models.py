@@ -8,17 +8,61 @@ Global Heat Flow Database (GHFDB) models for Django. The models are defined usin
 
 """
 
+from pathlib import PurePosixPath
+
 from django.conf import settings
-from django.utils.translation import gettext as _
+from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from fairdm.db import models
 from partial_date.fields import PartialDateField
 
+from .states import STATE_VARIANTS, States
+
 
 class Review(models.Model):
-    class STATUS_CHOICES(models.IntegerChoices):
-        OPEN = 0, _("Open to review")
-        PENDING = 1, _("Pending")
-        COMPLETE = 2, _("Complete")
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("uploaded by"),
+        help_text=_(
+            "The person who created this assessment. Object permissions follow "
+            "this person rather than the assessor list, because an assessor may "
+            "be an unclaimed profile with no account."
+        ),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="uploaded_reviews",
+    )
+
+    state = models.IntegerField(
+        choices=States.choices,
+        default=States.DESCRIBED,
+        verbose_name=_("state"),
+        help_text=_("Where this assessment has got to."),
+    )
+
+    decided_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("decided by"),
+        help_text=_("The Data Curator who approved or sent back this assessment."),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="decided_reviews",
+    )
+
+    decided_at = models.DateTimeField(
+        verbose_name=_("decided at"),
+        help_text=_("When the decision on this assessment was made."),
+        null=True,
+        blank=True,
+    )
+
+    decision_comment = models.TextField(
+        verbose_name=_("decision comment"),
+        help_text=_("What the curator said when sending this assessment back."),
+        blank=True,
+    )
 
     reviewers = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
@@ -57,13 +101,6 @@ class Review(models.Model):
         blank=True,
     )
 
-    status = models.IntegerField(
-        choices=STATUS_CHOICES,
-        default=1,
-        verbose_name=_("status"),
-        help_text=_("The status of the review."),
-    )
-
     comment = models.TextField(
         verbose_name=_("comment"),
         help_text=_("General comment on the review."),
@@ -72,8 +109,12 @@ class Review(models.Model):
     )
 
     class Meta:
-        verbose_name = _("Review")
-        verbose_name_plural = _("Reviews")
+        # "Assessment" is what the portal calls this everywhere a reader can
+        # see it, and the framework builds its own page furniture — the
+        # "showing n of m" line, the empty state — from these two names. The
+        # class keeps the name the database and the code already use (D3).
+        verbose_name = _("Assessment")
+        verbose_name_plural = _("Assessments")
         ordering = ["-end_date"]
 
     def save(self, *args, **kwargs):
@@ -82,3 +123,96 @@ class Review(models.Model):
         if self.start_date and self.end_date and self.start_date > self.end_date:
             raise ValueError(_("Start date cannot be after end date."))
         super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        """The assessment's own page (FR-027)."""
+        return reverse("review-detail", kwargs={"pk": self.pk})
+
+    @property
+    def state_variant(self):
+        """The badge colour this assessment's state is drawn in."""
+        return STATE_VARIANTS[States(self.state)]
+
+    @property
+    def sent_back(self):
+        """Whether a curator asked for changes and is waiting on them.
+
+        Asked here rather than compared against the state vocabulary in each
+        template that wants it — a template comparing to a bare number is
+        the version of this that breaks silently when a state is added.
+        """
+        return self.state == States.CHANGES_REQUESTED
+
+    @property
+    def current(self):
+        """The most recent submitted file, or ``None`` if none has been
+        submitted yet (data-model.md "review.SubmittedFile")."""
+        return self.submissions.order_by("-submitted_at", "-pk").first()
+
+
+def submission_upload_path(instance, filename):
+    """Scope a submitted file's storage path to its assessment."""
+    return f"review/submissions/{instance.review_id}/{filename}"
+
+
+class SubmittedFile(models.Model):
+    """One completed upload template as supplied, kept against its
+    assessment (T007, data-model.md "review.SubmittedFile").
+
+    A row per submission rather than a field on ``Review``: a curator can
+    send an assessment back, and the replacement must not erase what was
+    rejected (FR-015).
+    """
+
+    review = models.ForeignKey(
+        Review,
+        verbose_name=_("assessment"),
+        help_text=_("The assessment this file was submitted against."),
+        on_delete=models.CASCADE,
+        related_name="submissions",
+    )
+
+    file = models.FileField(
+        upload_to=submission_upload_path,
+        verbose_name=_("file"),
+        help_text=_("The completed upload template as supplied."),
+    )
+
+    submitted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("submitted by"),
+        help_text=_("Who submitted this file."),
+        on_delete=models.PROTECT,
+        related_name="submitted_files",
+    )
+
+    submitted_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=_("submitted at"),
+        help_text=_("When this file was submitted."),
+    )
+
+    imported_at = models.DateTimeField(
+        verbose_name=_("imported at"),
+        help_text=_(
+            "When this file's contents were written. Null means checked but "
+            "never confirmed."
+        ),
+        null=True,
+        blank=True,
+    )
+
+    class Meta:
+        verbose_name = _("Submitted file")
+        verbose_name_plural = _("Submitted files")
+        ordering = ["-submitted_at"]
+
+    @property
+    def filename(self):
+        """The file's own name, without the path it is stored under.
+
+        Storage may have added a suffix to keep two submissions of the same
+        name apart, and that suffix stays: it is what distinguishes them on
+        a page listing both.
+        """
+        return PurePosixPath(self.file.name).name

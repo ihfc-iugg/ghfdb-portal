@@ -113,13 +113,14 @@ class HeatFlow(Measurement):
         blank=True,
     )
 
-    water_temperature = models.QuantityField(
+    surface_temperature = models.QuantityField(
         base_units="°C",
         unit_choices=["°C", "K"],
-        verbose_name=_("bottom water temperature"),
+        verbose_name=_("surface temperature"),
         help_text=_(
-            "Seafloor temperature where surface heat-flow value (q) is taken. e.g. PT 100 or Mudline temperature for"
-            " ocean drilling data."
+            "Temperature at the upper boundary of the heat-flow determination interval: seafloor or"
+            " bottom-water temperature for a marine measurement, ground-surface or mudline temperature for a"
+            " continental one. e.g. PT 100 or Mudline temperature for ocean drilling data."
         ),
         null=True,
         blank=True,
@@ -595,6 +596,54 @@ class ThermalGradient(Measurement):
         ),
         blank=True,
         null=True,
+    )
+    temperature_top = models.QuantityField(
+        base_units="°C",
+        unit_choices=["°C", "K"],
+        verbose_name=_("temperature (top)"),
+        help_text=_(
+            "Mean absolute temperature at the top of the heat-flow determination interval, used to calculate the"
+            " temperature gradient."
+        ),
+        null=True,
+        blank=True,
+        validators=[MinVal(-99999.99), MaxVal(99999.99)],
+    )
+    temperature_top_uncertainty = models.QuantityField(
+        base_units="°C",
+        unit_choices=["°C", "K"],
+        verbose_name=_("temperature uncertainty (top)"),
+        help_text=_(
+            "Uncertainty (1 sigma) of the mean absolute temperature at the top of the heat-flow determination"
+            " interval."
+        ),
+        null=True,
+        blank=True,
+        validators=[MinVal(-99999.99), MaxVal(99999.99)],
+    )
+    temperature_bottom = models.QuantityField(
+        base_units="°C",
+        unit_choices=["°C", "K"],
+        verbose_name=_("temperature (bottom)"),
+        help_text=_(
+            "Mean absolute temperature at the bottom of the heat-flow determination interval, used to calculate the"
+            " temperature gradient."
+        ),
+        null=True,
+        blank=True,
+        validators=[MinVal(-99999.99), MaxVal(99999.99)],
+    )
+    temperature_bottom_uncertainty = models.QuantityField(
+        base_units="°C",
+        unit_choices=["°C", "K"],
+        verbose_name=_("temperature uncertainty (bottom)"),
+        help_text=_(
+            "Uncertainty (1 sigma) of the mean absolute temperature at the bottom of the heat-flow determination"
+            " interval."
+        ),
+        null=True,
+        blank=True,
+        validators=[MinVal(-99999.99), MaxVal(99999.99)],
     )
     score = models.FloatField(
         verbose_name=_("T-score"),

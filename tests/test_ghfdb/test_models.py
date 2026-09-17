@@ -1,5 +1,4 @@
-"""Smoke tests for the GHFDB proxy models and the fixtures every story takes.
-"""
+"""Smoke tests for the GHFDB proxy models and the fixtures every story takes."""
 
 import pathlib
 
@@ -114,7 +113,11 @@ class TestFixtures:
         )
         from research_vocabs.models import Concept
 
-        for vocabulary in (GeographicEnvironment, ExplorationMethod, ExplorationPurpose):
+        for vocabulary in (
+            GeographicEnvironment,
+            ExplorationMethod,
+            ExplorationPurpose,
+        ):
             assert Concept.get_for_vocabulary(vocabulary).exists(), (
                 f"no concepts preloaded for {vocabulary.__name__}"
             )
@@ -333,7 +336,9 @@ class TestSuiteHealth:
     def test_no_test_in_this_feature_is_expected_to_fail(self):
         """T120: an expected failure records a defect someone chose to live
         with. This feature is not allowed to leave one behind."""
-        offenders = [path.name for path in self.modules() if "xfail" in self.marks(path)]
+        offenders = [
+            path.name for path in self.modules() if "xfail" in self.marks(path)
+        ]
         assert offenders == []
 
     def test_no_test_in_this_feature_is_unconditionally_skipped(self):
@@ -342,7 +347,9 @@ class TestSuiteHealth:
         ``skipif``, either of which reads as coverage while proving nothing
         if it can never fire (F8)."""
         offenders = [
-            path.name for path in self.modules() if self.marks(path) & {"skip", "skipif"}
+            path.name
+            for path in self.modules()
+            if self.marks(path) & {"skip", "skipif"}
         ]
         assert offenders == []
 

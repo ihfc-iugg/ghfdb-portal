@@ -122,10 +122,11 @@ an outdated template. The reasoning is in
 that published names are preserved exactly, casing included, is
 [ADR 0002](../adr/0002-published-column-names-are-preserved-exactly.md).
 
-Three published columns are present and always empty. `Ref_IGSN` has no field behind it by
-decision. The portal holds no sample numbers, and identifiers belong on the framework's sample
-model rather than in a dedicated heat flow field. `publication_reference` and `data_reference` wait
-on the work that attaches literature to each record.
+Two published columns are present and always empty: `publication_reference` and `data_reference`
+wait on the work that attaches literature to each record. `Ref_IGSN` used to be a third — the
+portal held no sample numbers — but now reads back the IGSN stored on the row's interval through
+the framework's sample identifier relationship, and is empty only when the interval carries none
+(specs/004-import-upload-template/decisions.md).
 
 ## The administrative changelists
 

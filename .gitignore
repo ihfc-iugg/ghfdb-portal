@@ -175,3 +175,6 @@ Thumbs.db
 *.tmp
 *.swp
 .idea/
+
+# Per-feature working notes for a delivery run; never part of the published spec.
+specs/*/.briefs/

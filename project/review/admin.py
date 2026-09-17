@@ -35,10 +35,10 @@ class ReviewAdmin(admin.ModelAdmin):
         "_reviewers",
         "start_date",
         "end_date",
-        "status",
+        "state",
     )
     search_fields = ("dataset__name", "literature__title")
-    list_filter = ("status", RelatedPersonFilter)
+    list_filter = ("state", RelatedPersonFilter)
 
     def get_queryset(self, request):
         """Optimize queryset for admin."""

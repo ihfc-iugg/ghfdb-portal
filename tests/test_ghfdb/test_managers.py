@@ -73,7 +73,7 @@ class TestChildExportQuerySet:
     }
 
     NOTHING_RESOLVES_CHILD_COLUMNS = frozenset(
-        {"Ref_IGSN", "publication_reference", "data_reference"}
+        {"publication_reference", "data_reference"}
     )
 
     @pytest.mark.django_db
@@ -81,7 +81,7 @@ class TestChildExportQuerySet:
         self, published_chain
     ):
         """T024 (SC-001): every CHILD_COLUMNS entry — scalar, many-valued
-        and the three that resolve to nothing — is readable on the row
+        and the two that resolve to nothing — is readable on the row
         after ``for_export()``."""
         from project.ghfdb.constants import CHILD_COLUMNS
         from project.ghfdb.models import GHFDBChild
@@ -126,14 +126,57 @@ class TestChildExportQuerySet:
 
     @pytest.mark.django_db
     def test_columns_nothing_resolves_are_present_and_empty(self, published_chain):
-        """T027 (FR-006): Ref_IGSN, publication_reference and
-        data_reference are on the row and empty, per R4 and D3."""
+        """T027 (FR-006): publication_reference and data_reference are on
+        the row and empty, per R4 and D3. ``Ref_IGSN`` moved out of this
+        group under D26 — see ``TestRefIgsnAnnotation``."""
         from project.ghfdb.models import GHFDBChild
 
         record = GHFDBChild.objects.for_export().get(pk=published_chain.pk)
 
         for column in self.NOTHING_RESOLVES_CHILD_COLUMNS:
             assert getattr(record, column) == ""
+
+
+class TestRefIgsnAnnotation:
+    """``Ref_IGSN`` resolves through the interval's sample identifier
+    relationship (D26, specs/004-import-upload-template/decisions.md)
+    rather than the constant empty string it used to be."""
+
+    @pytest.mark.django_db
+    def test_empty_when_the_interval_carries_no_identifier(self, published_chain):
+        from project.ghfdb.models import GHFDBChild
+
+        record = GHFDBChild.objects.as_ghfdb_flat().get(pk=published_chain.pk)
+        assert record.Ref_IGSN == ""
+
+    @pytest.mark.django_db
+    def test_reads_the_intervals_igsn_identifier(self, published_chain):
+        from fairdm.core.sample.models import SampleIdentifier
+
+        from project.ghfdb.models import GHFDBChild
+
+        SampleIdentifier.objects.create(
+            related=published_chain.sample, type="IGSN", value="10.60516/AU1101"
+        )
+
+        record = GHFDBChild.objects.as_ghfdb_flat().get(pk=published_chain.pk)
+        assert record.Ref_IGSN == "10.60516/AU1101"
+
+    @pytest.mark.django_db
+    def test_reading_it_on_every_row_costs_no_further_query(
+        self, django_assert_num_queries, published_chains
+    ):
+        """The annotation is a correlated subquery evaluated by the database
+        as part of the one query, not a further query per row."""
+        from project.ghfdb.models import GHFDBChild
+
+        published_chains(2)
+        rows = list(GHFDBChild.objects.as_ghfdb_flat())
+        assert len(rows) == 2
+
+        with django_assert_num_queries(0):
+            for row in rows:
+                assert row.Ref_IGSN == ""
 
 
 class TestGHFDBChildManager:
@@ -197,9 +240,9 @@ class TestGHFDBChildManager:
         assert set(GHFDBChild.objects.values_list("pk", flat=True)) == set(
             reference.values_list("pk", flat=True)
         )
-        assert list(GHFDBChild.objects.order_by("pk").values_list("pk", flat=True)) == list(
-            reference.order_by("pk").values_list("pk", flat=True)
-        )
+        assert list(
+            GHFDBChild.objects.order_by("pk").values_list("pk", flat=True)
+        ) == list(reference.order_by("pk").values_list("pk", flat=True))
         assert list(
             GHFDBChild.objects.order_by("pk")[:1].values_list("pk", flat=True)
         ) == list(reference.order_by("pk")[:1].values_list("pk", flat=True))
@@ -232,8 +275,9 @@ class TestChildFlattening:
     )
 
     # Published CHILD_COLUMNS with no data behind them at all (R4, D3).
+    # ``Ref_IGSN`` moved out of this group under D26.
     NOTHING_RESOLVES_CHILD_COLUMNS = frozenset(
-        {"Ref_IGSN", "publication_reference", "data_reference"}
+        {"publication_reference", "data_reference"}
     )
 
     @pytest.mark.django_db
@@ -241,7 +285,7 @@ class TestChildFlattening:
         self, published_chains
     ):
         """T016 (FR-004): every CHILD_COLUMNS entry that is neither
-        many-valued nor one of the three that resolve to nothing is
+        many-valued nor one of the two that resolve to nothing is
         readable, without error, on every row."""
         from project.ghfdb.constants import CHILD_COLUMNS
         from project.ghfdb.models import GHFDBChild
@@ -530,9 +574,7 @@ class TestParentFlattening:
         site.elevation = 123.0
         site.save(update_fields=["elevation"])
 
-        record = GHFDBParent.objects.as_ghfdb_flat().get(
-            pk=published_chain.parent.pk
-        )
+        record = GHFDBParent.objects.as_ghfdb_flat().get(pk=published_chain.parent.pk)
 
         assert getattr(record.elevation, "magnitude", record.elevation) == 123.0
 
@@ -687,7 +729,9 @@ class TestGHFDBParentQuerySet:
         heat_flow_chain.is_relevant = True
         heat_flow_chain.save(update_fields=["is_relevant"])
 
-        parent = GHFDBParent.objects.with_child_counts().get(pk=heat_flow_chain.parent.pk)
+        parent = GHFDBParent.objects.with_child_counts().get(
+            pk=heat_flow_chain.parent.pk
+        )
         assert parent.total_children == 1
         assert parent.relevant_children == 1
 
@@ -771,7 +815,10 @@ class TestGHFDBManagerScoping:
 
 
 PUBLISHED_STRUCTURE_PAGE = (
-    pathlib.Path(__file__).parents[2] / "docs" / "data_models" / "published-structure.md"
+    pathlib.Path(__file__).parents[2]
+    / "docs"
+    / "data_models"
+    / "published-structure.md"
 )
 
 
@@ -803,6 +850,8 @@ class TestPublishedStructurePage:
             assert corrected in page
 
     def test_it_names_the_columns_that_are_always_empty(self):
+        """D26: ``Ref_IGSN`` moved out of this group — it now resolves
+        through the interval's sample identifier relationship."""
         page = PUBLISHED_STRUCTURE_PAGE.read_text()
-        for empty in ("Ref_IGSN", "publication_reference", "data_reference"):
+        for empty in ("publication_reference", "data_reference"):
             assert empty in page

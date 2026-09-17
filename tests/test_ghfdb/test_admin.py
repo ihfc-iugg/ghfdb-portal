@@ -217,7 +217,9 @@ class TestGHFDBParentAdminListFilters:
     """GHFDBParentAdmin list_filter choices are scoped to their controlled vocabularies."""
 
     @pytest.mark.django_db
-    def test_parent_environment_filter_choices_are_vocabulary_scoped(self, admin_client):
+    def test_parent_environment_filter_choices_are_vocabulary_scoped(
+        self, admin_client
+    ):
         """BUG-004: ParentEnvironmentListFilter.lookups() returns GeographicEnvironment vocabulary choices."""
         from heat_flow.vocabularies import GeographicEnvironment
 
@@ -238,7 +240,9 @@ class TestGHFDBParentAdminListFilters:
         assert lookup_values == vocab_values
 
     @pytest.mark.django_db
-    def test_parent_explo_method_filter_choices_are_vocabulary_scoped(self, admin_client):
+    def test_parent_explo_method_filter_choices_are_vocabulary_scoped(
+        self, admin_client
+    ):
         """BUG-004: ParentExplorationMethodListFilter.lookups() returns ExplorationMethod vocabulary choices."""
         from heat_flow.vocabularies import ExplorationMethod
 
@@ -299,6 +303,35 @@ class TestGHFDBParentAdmin:
             f"Expected [GHFDBParentImportResource], got {resource_classes}"
         )
         assert GHFDBChildImportResource not in resource_classes
+
+    def test_process_dataset_delegates_to_the_shared_entry_point(self, monkeypatch):
+        """T013: the commit step calls ``import_ghfdb_template()`` rather
+        than re-implementing the parent-then-child sequence here."""
+        import tablib
+
+        from project.ghfdb.models import GHFDBParent
+
+        called = {}
+
+        def fake_import_ghfdb_template(file, dataset):
+            called["file"] = file
+            called["dataset"] = dataset
+            return "OUTCOME-SENTINEL"
+
+        monkeypatch.setattr(
+            "project.ghfdb.importers.import_ghfdb_template",
+            fake_import_ghfdb_template,
+        )
+
+        model_admin = admin.site._registry[GHFDBParent]
+        ds = tablib.Dataset(headers=["name"])
+        request = RequestFactory().get("/")
+
+        result = model_admin.process_dataset(ds, form=None, request=request)
+
+        assert result == "OUTCOME-SENTINEL"
+        assert called["file"] is ds
+        assert called["dataset"] is None  # no dataset-selection surface yet (D12)
 
     @pytest.mark.django_db
     def test_changelist_renders_for_a_staff_user(self, staff_client, published_chain):
@@ -525,8 +558,7 @@ class TestGHFDBParentAdmin:
         # renders — not the raw row attribute.
         q_rendered = ColumnDisplay.build("q")(row)
         assert (
-            getattr(q_rendered, "magnitude", q_rendered)
-            == published_chain.parent.value
+            getattr(q_rendered, "magnitude", q_rendered) == published_chain.parent.value
         )
         # field column
         assert ColumnDisplay.build("corr_HP_flag")(row) is True
