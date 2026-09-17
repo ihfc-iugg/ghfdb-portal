@@ -243,14 +243,22 @@ vocabulary files that describe the feature as a whole.
 Four items Sam raised after walking the running pages. T043 changes an approved acceptance criterion;
 the specification is amended to match before the work begins.
 
-- [ ] T042 A menu group titled "Data Assessment", placed immediately before "Community", holding one
+- [x] T042 A menu group titled "Data Assessment", placed immediately before "Community", holding one
       entry labelled "Data Assessments" with an icon. Visible to the two roles and absent for
-      everyone else. The entry is currently appended to the end of the application menu, which put
-      it under "Documentation".
-- [ ] T043 The assessment list becomes public. The create page is refused to anyone outside the two
-      roles. Spec US-1 and FR-001 already say this; update the existing access tests rather than
-      adding a second set beside them.
-- [ ] T044 A visible control on the list leading to the create page, for the two roles and nobody
-      else. There is none today, which is what Sam hit when signed in as an assessor.
-- [ ] T045 The card carries its state as a colour-coded badge above the title, and renders its
-      assessors through the framework's own contributor components rather than a hand-rolled list.
+      everyone else. The entry had been appended to the end of the application menu, which filed it
+      under "Documentation", and its icon name resolved to nothing so it drew no icon at all.
+- [x] T043 The assessment list becomes public. The create page is refused to anyone outside the two
+      roles. Spec US-1 and FR-001 already say this; the existing access tests are updated rather
+      than a second set added beside them.
+- [x] T044 A visible control on the list leading to the create page, for the two roles and nobody
+      else. Drawn by the component library's own list actions, which the view opts into by naming
+      `create` in its directory and answering `show_create_action` for the requesting user.
+- [x] T045 The card carries its state as a colour-coded badge above the title, and names its
+      assessors with their avatars, each linked to their own profile.
+
+The framework's own contributor components were the first choice for T045's assessor list, and
+neither one draws. `c-contributor.names` calls `c-text.lead`, which the component library no longer
+ships. `c-contributor.avatar` still emits Bootstrap markup and reads an initials method the person
+object does not have, so it renders a square grey box containing the word "None". Raised upstream
+rather than worked around here — the row uses the component library's current avatar and text
+components directly.

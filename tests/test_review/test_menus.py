@@ -1,18 +1,44 @@
 """Tests for review.menus (T013, plan.md "Notification").
 
-Tested against ``check()`` directly rather than a full page render: the
-shared page chrome currently raises for any authenticated request (see
-T011's completion notes), which is unrelated to and would mask what this
-menu item itself is responsible for — who it is visible to, and what count
-it carries for a curator.
+Visibility is tested against ``check()`` directly rather than a full page
+render, which is the one hook the request reaches and so the whole of what
+the item decides — who sees it, and what count it carries for a curator.
 """
 
 import pytest
 from django.contrib.auth.models import AnonymousUser
+from easy_icons import icon
+from fairdm.menus import AppMenu
 
-from review.menus import assessment_entry
+from review.menus import assessment_entry, assessment_group
 from review.states import States
 from tests.test_review.factories import ReviewFactory
+
+
+@pytest.mark.review
+class TestAssessmentGroupPlacement:
+    """T042: the entry sits under a heading of its own, immediately before
+    Community, rather than appended to the end of the navigation where it
+    fell under whichever heading came last.
+
+    Asserted against the assembled tree: the position is worked out at
+    import time from what the framework and this project have each added,
+    so a number written into the test would prove only that the number had
+    been copied.
+    """
+
+    def test_the_entry_sits_under_the_data_assessment_heading(self):
+        assert assessment_entry.parent is assessment_group
+        assert str(assessment_group.name) == "Data Assessment"
+
+    def test_the_heading_comes_directly_before_community(self):
+        names = [str(child.name) for child in AppMenu.children]
+
+        assert names.index("Data Assessment") == names.index("Community") - 1
+
+    def test_the_entry_carries_a_label_and_an_icon_that_draws(self):
+        assert str(assessment_entry.extra_context["label"]) == "Data Assessments"
+        assert icon(assessment_entry.extra_context["icon"])
 
 
 @pytest.mark.django_db

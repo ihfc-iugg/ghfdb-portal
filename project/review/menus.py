@@ -46,6 +46,35 @@ class AssessmentMenuItem(MenuItem):
 assessment_entry = AssessmentMenuItem(
     name="assessments",
     view_name="review-list",
-    extra_context={"label": _("Assessments"), "icon": "clipboard-list"},
+    extra_context={"label": _("Data Assessments"), "icon": "verified"},
 )
-AppMenu.append(assessment_entry)
+
+#: The section the entry sits in. A heading of its own rather than an entry
+#: appended to the end of the navigation, which filed it under whichever
+#: heading happened to be last.
+#:
+#: A plain parent item, the same shape the framework's own Community and
+#: Documentation headings take: the sidebar draws a parent as a section
+#: heading unless its context marks it collapsible, and its name is the
+#: heading text. It carries no visibility check of its own, because
+#: flex_menu hides a container whose children all resolved invisible — the
+#: entry's own check is what decides whether the heading is drawn at all.
+assessment_group = MenuItem(_("Data Assessment"), children=[assessment_entry])
+
+
+def position_of(menu, name):
+    """Where the child called *name* sits among *menu*'s direct children.
+
+    Looked up rather than written down as a number: the navigation is
+    assembled from the framework's own entries and this project's, so the
+    index any one of them lands at depends on what else has been added by the
+    time this module is imported. Falls back to the end when the framework no
+    longer ships that entry, which puts the group in the position it held
+    before rather than raising on a page that has nothing to do with it.
+    """
+    match = menu.get(name, maxlevel=1)
+    children = list(menu.children)
+    return children.index(match) if match in children else len(children)
+
+
+AppMenu.insert(assessment_group, position=position_of(AppMenu, "Community"))

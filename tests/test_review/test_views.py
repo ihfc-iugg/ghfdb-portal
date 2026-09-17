@@ -1,21 +1,14 @@
 """Tests for review.views (T011).
 
-Access is refused rather than the list rendering empty (spec.md User Story
-1, acceptance scenarios 3 and 4).
+The assessment list is served to anyone (spec.md User Story 1, acceptance
+scenario 1). Every other page in the workflow is refused rather than
+rendered empty, and those refusals go through the full request/response
+cycle via the test client: ``PermissionDenied`` and the anonymous redirect
+both short-circuit in ``dispatch()``, before any template renders.
 
-The refusal paths go through the full request/response cycle via the test
-client: ``PermissionDenied`` and the anonymous redirect both short-circuit
-in ``dispatch()``, before any template renders, so the client's normal
-rendering is never reached.
-
-The served paths use ``RequestFactory`` and stop at the unrendered
-``TemplateResponse`` deliberately. This project's shared page chrome
-currently raises for *any* authenticated request — reproduces on the
-pre-existing ``/datasets/`` page too, so it predates this story and is
-flagged separately rather than fixed here (out of ``project/review/``'s
-scope). What these tests exist to prove is narrower and unaffected by that
-defect: ``ReviewListView.test_func`` grants entry to both roles and the
-view builds a normal 200 response for each.
+Some served paths use ``RequestFactory`` and stop at the unrendered
+``TemplateResponse``, where what is under test is what the view puts in its
+context rather than what the page draws around it.
 """
 
 from unittest import mock
@@ -29,12 +22,11 @@ from fairdm.factories import LiteratureItemFactory
 from guardian.shortcuts import get_perms
 
 from review.models import Review, SubmittedFile
-from review.states import States
+from review.states import STATE_VARIANTS, States
 from review.views import (
     ReviewConfirmView,
     ReviewCreateView,
     ReviewDecideView,
-    ReviewListView,
     ReviewQueueView,
     ReviewUploadView,
 )
@@ -53,36 +45,85 @@ def _xlsx_upload(name: str, content: bytes) -> SimpleUploadedFile:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewListViewAccess:
-    def test_a_data_assessor_is_granted_entry(self, rf, assessor):
-        request = rf.get(reverse("review-list"))
-        request.user = assessor
+    """D36: the list is public. Only adding to it is restricted."""
 
-        response = ReviewListView.as_view()(request)
+    def test_a_data_assessor_is_granted_entry(self, client, assessor):
+        client.force_login(assessor)
 
-        assert response.status_code == 200
-
-    def test_a_data_curator_is_granted_entry(self, rf, curator):
-        request = rf.get(reverse("review-list"))
-        request.user = curator
-
-        response = ReviewListView.as_view()(request)
+        response = client.get(reverse("review-list"))
 
         assert response.status_code == 200
 
-    def test_a_signed_in_user_in_neither_role_is_refused(self, client, outsider):
+    def test_a_data_curator_is_granted_entry(self, client, curator):
+        client.force_login(curator)
+
+        response = client.get(reverse("review-list"))
+
+        assert response.status_code == 200
+
+    def test_a_signed_in_user_in_neither_role_is_served(self, client, outsider):
         client.force_login(outsider)
 
         response = client.get(reverse("review-list"))
 
-        assert response.status_code == 403
+        assert response.status_code == 200
 
-    def test_an_anonymous_visitor_is_redirected_to_log_in_rather_than_served(
-        self, client
-    ):
+    def test_an_anonymous_visitor_is_served(self, client):
         response = client.get(reverse("review-list"))
 
-        assert response.status_code == 302
-        assert response.url != reverse("review-list")
+        assert response.status_code == 200
+
+    def test_an_anonymous_visitor_sees_the_assessments_themselves(self, client):
+        review = ReviewFactory(state=States.COMPLETE)
+
+        response = client.get(reverse("review-list"))
+
+        assert str(review.literature) in response.content.decode()
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewListViewCreateRoute:
+    """T044: the list carries a visible route to start a new assessment, for
+    the two roles and nobody else (spec.md User Story 1, acceptance scenarios
+    2 and 4).
+
+    Asserted against the rendered page rather than the ``directory`` context
+    entry: what Sam reported missing was the control, and a context key that
+    no template draws is not one.
+    """
+
+    def _create_links(self, response):
+        html = response.content.decode()
+        return [
+            line for line in html.splitlines() if reverse("review-create") in line
+        ]
+
+    def test_a_data_assessor_is_offered_the_route(self, client, assessor):
+        client.force_login(assessor)
+
+        response = client.get(reverse("review-list"))
+
+        assert self._create_links(response)
+
+    def test_a_data_curator_is_offered_the_route(self, client, curator):
+        client.force_login(curator)
+
+        response = client.get(reverse("review-list"))
+
+        assert self._create_links(response)
+
+    def test_a_signed_in_user_in_neither_role_is_not(self, client, outsider):
+        client.force_login(outsider)
+
+        response = client.get(reverse("review-list"))
+
+        assert not self._create_links(response)
+
+    def test_an_anonymous_visitor_is_not(self, client):
+        response = client.get(reverse("review-list"))
+
+        assert not self._create_links(response)
 
 
 @pytest.mark.django_db
@@ -211,9 +252,8 @@ class TestReviewListItemTemplate:
     state (spec.md User Story 1, acceptance scenario 5), asserted against
     the rendered HTML rather than the template context.
 
-    Rendered directly rather than through the full list page: the page
-    chrome around it is affected by the pre-existing defect noted on
-    ReviewListView's tests above, and this is what T012 owns.
+    Rendered on its own rather than through the whole list page, which is
+    what the page's own tests above cover.
     """
 
     def test_row_names_the_publication_uploader_and_state(self, assessor):
@@ -229,6 +269,65 @@ class TestReviewListItemTemplate:
         assert str(review.literature) in html
         assert str(assessor) in html
         assert review.get_state_display() in html
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewListItemState:
+    """T045: the state is carried as a badge in the colour the vocabulary
+    assigns it, rather than as a line of text.
+
+    The colours themselves are not asserted by name — which colour reads as
+    "waiting" is a theme's decision, not this row's. What is asserted is
+    that the badge draws the colour ``STATE_VARIANTS`` gives the state, and
+    that no two states are drawn the same, which is what "colour-coded"
+    means.
+    """
+
+    def _badge_classes(self, review):
+        html = render_to_string("review/review_list_item.html", {"review": review})
+        return [
+            line for line in html.splitlines() if "badge" in line and "<div" in line
+        ]
+
+    @pytest.mark.parametrize("state", list(States))
+    def test_the_badge_carries_the_states_own_colour(self, state):
+        review = ReviewFactory(state=state)
+
+        badges = self._badge_classes(review)
+
+        assert badges
+        assert f"badge-{STATE_VARIANTS[state]}" in badges[0]
+        assert review.get_state_display() in badges[0]
+
+    def test_no_two_states_are_drawn_in_the_same_colour(self):
+        assert len(set(STATE_VARIANTS.values())) == len(States)
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewListItemAssessors:
+    """T045: the people who carried the assessment out are named on the row
+    and linked to their profiles."""
+
+    def test_every_assessor_is_named_and_linked(self, assessor):
+        review = ReviewFactory(uploaded_by=assessor)
+        first, second = ClaimedPersonFactory(), ClaimedPersonFactory()
+        review.reviewers.set([first, second])
+
+        html = render_to_string("review/review_list_item.html", {"review": review})
+
+        for person in (first, second):
+            assert str(person) in html
+            assert person.get_absolute_url() in html
+
+    def test_a_row_with_no_assessors_names_none(self, assessor):
+        review = ReviewFactory(uploaded_by=assessor)
+        stranger = ClaimedPersonFactory()
+
+        html = render_to_string("review/review_list_item.html", {"review": review})
+
+        assert stranger.get_absolute_url() not in html
 
 
 @pytest.mark.django_db

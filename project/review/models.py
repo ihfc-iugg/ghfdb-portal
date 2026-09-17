@@ -13,7 +13,7 @@ from django.utils.translation import gettext_lazy as _
 from fairdm.db import models
 from partial_date.fields import PartialDateField
 
-from .states import States
+from .states import STATE_VARIANTS, States
 
 
 class Review(models.Model):
@@ -116,6 +116,11 @@ class Review(models.Model):
         if self.start_date and self.end_date and self.start_date > self.end_date:
             raise ValueError(_("Start date cannot be after end date."))
         super().save(*args, **kwargs)
+
+    @property
+    def state_variant(self):
+        """The badge colour this assessment's state is drawn in."""
+        return STATE_VARIANTS[States(self.state)]
 
     @property
     def current(self):

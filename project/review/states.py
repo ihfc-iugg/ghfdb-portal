@@ -25,6 +25,18 @@ class States(models.IntegerChoices):
     COMPLETE = 3, _("Complete")
 
 
+#: The colour each state is drawn in, as a badge variant the component library
+#: understands. Declared beside the vocabulary it colours rather than in a
+#: template, so every surface showing a state agrees on its colour and a state
+#: added later cannot reach a page without one.
+STATE_VARIANTS = {
+    States.DESCRIBED: "neutral",
+    States.AWAITING_DECISION: "warning",
+    States.CHANGES_REQUESTED: "error",
+    States.COMPLETE: "success",
+}
+
+
 class IllegalTransition(Exception):
     """Raised when a transition's origin state or acting person is not one
     the state machine allows."""

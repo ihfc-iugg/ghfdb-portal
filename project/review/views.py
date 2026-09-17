@@ -30,14 +30,19 @@ from .permissions import (
 from .states import States, approve, confirm_upload, send_back
 
 
-class ReviewListView(UserPassesTestMixin, FairDMListView):
-    """The assessment list (FR-001, FR-002).
+class ReviewListView(FairDMListView):
+    """The assessment list (FR-001, FR-002, D36).
 
-    Served to a Data Assessor or a Data Curator; refused to anyone else,
-    whether they reach it through the navigation entry or a direct URL —
-    ``UserPassesTestMixin`` redirects an anonymous visitor to log in and
-    raises ``PermissionDenied`` for a signed-in user outside both roles,
-    in neither case rendering the list.
+    Served to anyone: what it shows is which publications the team has
+    assessed and how far each has got, which is what the portal exists to
+    make visible. The datasets themselves stay private until a curator
+    approves them, which is where the confidentiality actually lives.
+
+    The route to start a new assessment is the restricted half. It is
+    ``ReviewCreateView`` that refuses anyone outside the two roles;
+    ``show_create_action`` only decides whether the link to it is drawn,
+    because an entry point nobody may use is noise rather than a
+    safeguard.
     """
 
     model = Review
@@ -48,13 +53,18 @@ class ReviewListView(UserPassesTestMixin, FairDMListView):
     # PartialDateField start_date/end_date carry — filtering is not part of
     # this story, so the field list stays empty rather than crashing.
     filterset_fields: list[str] = []
+    directory = ["create"]
 
-    def test_func(self):
-        user = self.request.user
+    def show_create_action(self, user):
         return is_assessment_team_member(user)
 
     def get_queryset(self):
-        return super().get_queryset().select_related("literature", "uploaded_by")
+        return (
+            super()
+            .get_queryset()
+            .select_related("literature", "uploaded_by")
+            .prefetch_related("reviewers")
+        )
 
 
 class ReviewQueueView(UserPassesTestMixin, FairDMListView):
