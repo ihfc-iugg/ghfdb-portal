@@ -43,7 +43,9 @@
             <a class="link link-hover"
                href="{{ assessor.get_absolute_url }}">{{ assessor }}</a>{% if not forloop.last %},{% endif %}
           {% empty %}
-            <c-text size="sm" muted tight>{% trans "Nobody is named" %}</c-text>
+            <c-text size="sm" muted tight>
+              {% trans "Nobody is named" %}
+            </c-text>
           {% endfor %}
         </dd>
         <dt class="font-semibold">{% trans "Uploaded by" %}</dt>
@@ -106,13 +108,19 @@
             {{ submission.submitted_by }}, {{ submission.submitted_at|date:"j F Y, H:i" }}
           </c-text>
           {% if submission.imported_at %}
-            <c-badge text="{% trans "Written" %}" variant="success" size="sm" />
+            <c-badge text="{% trans "Written" %}"
+                     variant="success"
+                     size="sm" />
           {% else %}
-            <c-badge text="{% trans "Checked only" %}" variant="neutral" size="sm" />
+            <c-badge text="{% trans "Checked only" %}"
+                     variant="neutral"
+                     size="sm" />
           {% endif %}
         </div>
       {% empty %}
-        <c-text size="sm" muted tight>{% trans "No file has been supplied yet" %}</c-text>
+        <c-text size="sm" muted tight>
+          {% trans "No file has been supplied yet" %}
+        </c-text>
       {% endfor %}
     </c-card>
   </div>
