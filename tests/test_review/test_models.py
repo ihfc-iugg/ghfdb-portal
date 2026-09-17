@@ -196,3 +196,20 @@ class TestOldRecordVocabularyIsRetired:
             str(path) for path in _html_files() if "review.status" in path.read_text()
         ]
         assert not matches, matches
+
+
+class TestTheRecordIsCalledAnAssessment:
+    """D3: the class keeps the name the database and the code use, and
+    everywhere a reader can see it the portal says "assessment".
+
+    Worth pinning because the framework builds page furniture from these two
+    names — the "showing n of m" line on the list, the empty state — so a
+    regression here reads to the assessment team as the portal using a word
+    they retired, in a place nobody thinks to look at.
+    """
+
+    def test_the_names_a_reader_sees_are_assessment(self):
+        meta = Review._meta
+
+        assert str(meta.verbose_name) == "Assessment"
+        assert str(meta.verbose_name_plural) == "Assessments"

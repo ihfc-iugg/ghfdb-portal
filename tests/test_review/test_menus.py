@@ -7,10 +7,15 @@ the item decides — who sees it, and what count it carries for a curator.
 
 import pytest
 from django.contrib.auth.models import AnonymousUser
+from django.urls import reverse
 from easy_icons import icon
 from fairdm.menus import AppMenu
 
-from review.menus import assessment_entry, assessment_group
+from review.menus import (
+    assessment_entry,
+    assessment_group,
+    awaiting_decision_entry,
+)
 from review.states import States
 from tests.test_review.factories import ReviewFactory
 
@@ -27,8 +32,9 @@ class TestAssessmentGroupPlacement:
     been copied.
     """
 
-    def test_the_entry_sits_under_the_data_assessment_heading(self):
+    def test_both_entries_sit_under_the_data_assessment_heading(self):
         assert assessment_entry.parent is assessment_group
+        assert awaiting_decision_entry.parent is assessment_group
         assert str(assessment_group.name) == "Data Assessment"
 
     def test_the_heading_comes_directly_before_community(self):
@@ -79,49 +85,68 @@ class TestAssessmentEntryVisibility:
 
 @pytest.mark.django_db
 @pytest.mark.review
-class TestAssessmentEntryBadge:
-    def test_carries_the_count_awaiting_decision_for_a_curator(self, rf, curator):
+class TestAwaitingDecisionEntry:
+    """The curator's own entry: what is waiting, and how many (FR-022)."""
+
+    def test_visible_to_a_data_curator(self, rf, curator):
+        request = rf.get("/")
+        request.user = curator
+
+        assert awaiting_decision_entry.check(request) is True
+
+    def test_hidden_from_a_data_assessor(self, rf, assessor):
+        request = rf.get("/")
+        request.user = assessor
+
+        assert awaiting_decision_entry.check(request) is False
+
+    def test_hidden_from_an_anonymous_visitor(self, rf):
+        request = rf.get("/")
+        request.user = AnonymousUser()
+
+        assert awaiting_decision_entry.check(request) is False
+
+    def test_carries_the_count_awaiting_decision(self, rf, curator):
         ReviewFactory(state=States.AWAITING_DECISION)
         ReviewFactory(state=States.AWAITING_DECISION)
         ReviewFactory(state=States.DESCRIBED)
         request = rf.get("/")
         request.user = curator
 
-        assessment_entry.check(request)
+        awaiting_decision_entry.check(request)
 
-        assert assessment_entry.extra_context["badge"] == 2
+        assert awaiting_decision_entry.extra_context["badge"] == 2
 
-    def test_carries_no_badge_for_an_assessor(self, rf, assessor):
-        request = rf.get("/")
-        request.user = assessor
-
-        assessment_entry.check(request)
-
-        assert "badge" not in assessment_entry.extra_context
-
-    def test_carries_no_badge_for_an_anonymous_visitor(self, rf):
-        ReviewFactory(state=States.AWAITING_DECISION)
-        request = rf.get("/")
-        request.user = AnonymousUser()
-
-        assessment_entry.check(request)
-
-        assert "badge" not in assessment_entry.extra_context
-
-    def test_a_later_check_for_an_assessor_clears_a_curators_earlier_badge(
-        self, rf, curator, assessor
+    def test_the_count_follows_the_data_rather_than_being_written_once(
+        self, rf, curator
     ):
-        """The item is a module-level singleton reused across requests, so a
-        stale badge from one request must not survive into the next."""
+        """The item is a module-level singleton reused across every request,
+        so a count computed once at import would be permanently stale."""
+        request = rf.get("/")
+        request.user = curator
+        awaiting_decision_entry.check(request)
+        assert awaiting_decision_entry.extra_context["badge"] == 0
+
         ReviewFactory(state=States.AWAITING_DECISION)
-        curator_request = rf.get("/")
-        curator_request.user = curator
-        assessment_entry.check(curator_request)
-        assert "badge" in assessment_entry.extra_context
 
-        assessor_request = rf.get("/")
-        assessor_request.user = assessor
+        awaiting_decision_entry.check(request)
 
-        assessment_entry.check(assessor_request)
+        assert awaiting_decision_entry.extra_context["badge"] == 1
+
+    def test_it_leads_to_the_list_narrowed_to_what_is_waiting(self, rf, curator):
+        request = rf.get("/")
+        request.user = curator
+        awaiting_decision_entry.check(request)
+
+        url = awaiting_decision_entry.resolve_url()
+
+        assert url == f"{reverse('review-list')}?state={States.AWAITING_DECISION.value}"
+
+    def test_the_plain_entry_carries_no_count(self, rf, curator):
+        ReviewFactory(state=States.AWAITING_DECISION)
+        request = rf.get("/")
+        request.user = curator
+
+        assessment_entry.check(request)
 
         assert "badge" not in assessment_entry.extra_context

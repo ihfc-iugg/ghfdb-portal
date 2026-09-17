@@ -1,8 +1,11 @@
-"""Assessment upload workflow views (T011, plan.md "The pages").
+"""Assessment upload workflow views (plan.md "The pages").
 
-The list is the first of seven views the plan names; the rest (starting an
-assessment, uploading a file, the decision queue) are built from US-2
-onward.
+Five pages and two actions. The list is the way in and is public, an
+assessment's own page is public too and is where everything about one of
+them is reached, and the three that change something — starting an
+assessment, correcting one, supplying a file — are refused to anyone who
+may not. Confirming an upload and deciding on one are POST-only actions
+rather than pages.
 """
 
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -14,12 +17,18 @@ from django.views.generic import DetailView, View
 from django.views.generic.detail import SingleObjectMixin
 from fairdm.core.dataset.models import Dataset
 from fairdm.utils.permissions import assign_all_model_perms
-from fairdm.views import FairDMCreateView, FairDMListView
+from fairdm.views import (
+    FairDMCreateView,
+    FairDMDetailView,
+    FairDMListView,
+    FairDMUpdateView,
+)
 
 from project.ghfdb.forms import GHFDBImportForm
 from project.ghfdb.importers import import_ghfdb_template
 from project.ghfdb.report import build_report
 
+from .filters import ReviewFilter
 from .forms import ReviewDescriptionForm
 from .models import Review, SubmittedFile
 from .permissions import (
@@ -48,11 +57,8 @@ class ReviewListView(FairDMListView):
     model = Review
     list_item_template = "review/review_list_item.html"
     page_title = _("Assessments")
-    # FairDMListView auto-generates a FilterSet from every model field when
-    # none is configured, and django-filter has no mapping for the
-    # PartialDateField start_date/end_date carry — filtering is not part of
-    # this story, so the field list stays empty rather than crashing.
-    filterset_fields: list[str] = []
+    filterset_class = ReviewFilter
+    search_fields = ["literature__title"]
     directory = ["create"]
 
     def show_create_action(self, user):
@@ -67,30 +73,60 @@ class ReviewListView(FairDMListView):
         )
 
 
-class ReviewQueueView(UserPassesTestMixin, FairDMListView):
-    """The decision queue (T033, plan.md "The pages", FR-002, FR-019,
-    spec.md User Story 6 scenario 1): assessments waiting on a Data
-    Curator's decision. Served to a Data Curator; refused to anyone else,
-    including the Data Assessor who uploaded one of the waiting
-    assessments.
+class ReviewDetailView(FairDMDetailView):
+    """One assessment's own page (T046, FR-027 through FR-029, US-7).
+
+    Served to anyone, like the list: it describes an assessment, and the
+    dataset it produced enforces its own visibility separately.
+
+    What the page *offers* is another matter. Each route is drawn only for a
+    reader who may follow it, and each page it leads to refuses everyone
+    else in its own right — hiding a control is presentation, not access
+    control, and the two are decided in different places on purpose.
     """
 
     model = Review
-    template_name = "review/queue.html"
-    list_item_template = "review/review_queue_item.html"
-    page_title = _("Assessments awaiting a decision")
-    filterset_fields: list[str] = []
-
-    def test_func(self):
-        return is_data_curator(self.request.user)
+    template_name = "review/review_detail.html"
+    context_object_name = "review"
 
     def get_queryset(self):
         return (
             super()
             .get_queryset()
-            .filter(state=States.AWAITING_DECISION)
-            .select_related("literature", "uploaded_by")
+            .select_related("literature", "dataset", "uploaded_by", "decided_by")
+            .prefetch_related("reviewers", "submissions__submitted_by")
         )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        review = self.object
+        context["may_manage"] = can_manage_upload(user, review)
+        context["may_decide"] = (
+            is_data_curator(user) and review.state == States.AWAITING_DECISION
+        )
+        return context
+
+
+class ReviewUpdateView(UserPassesTestMixin, FairDMUpdateView):
+    """Correct an assessment's description after it was created (T047,
+    FR-030).
+
+    The same people who may upload against an assessment may correct what it
+    says: its own uploader, or any Data Curator. The form is the one the
+    assessment was created with, so a correction cannot introduce a shape
+    the create step would have refused.
+    """
+
+    model = Review
+    form_class = ReviewDescriptionForm
+    page_title = _("Correct an assessment")
+
+    def test_func(self):
+        return can_manage_upload(self.request.user, self.get_object())
+
+    def get_success_url(self):
+        return self.object.get_absolute_url()
 
 
 class ReviewCreateView(UserPassesTestMixin, FairDMCreateView):
@@ -159,7 +195,7 @@ class ReviewUploadView(UserPassesTestMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context.setdefault("form", GHFDBImportForm())
         review = self.object
-        if review.state == States.CHANGES_REQUESTED:
+        if review.sent_back:
             context.setdefault("decision_comment", review.decision_comment)
         return context
 
@@ -257,14 +293,16 @@ class ReviewConfirmView(UserPassesTestMixin, SingleObjectMixin, View):
 
 
 class ReviewDecideView(UserPassesTestMixin, SingleObjectMixin, View):
-    """Approve a waiting assessment, POST only (T034, plan.md "The pages",
-    FR-019, FR-021, spec.md User Story 6 scenarios 2 and 5).
+    """Approve or send back a waiting assessment, POST only (T034, plan.md
+    "The pages", FR-019, FR-021, spec.md User Story 6 scenarios 2 and 5).
 
-    Curators only — ``approve`` raises ``IllegalTransition`` for anyone
-    else too (states.py's own rule), but ``test_func`` refuses the request
-    before that is ever reached, the same shape ``ReviewQueueView`` uses.
-    An assessment no longer ``AWAITING_DECISION`` is a no-op redirect, the
-    same idempotency shape ``ReviewConfirmView`` uses.
+    Curators only — ``approve`` raises ``IllegalTransition`` for anyone else
+    too (states.py's own rule), but ``test_func`` refuses the request before
+    that is ever reached. An assessment no longer ``AWAITING_DECISION`` is a
+    no-op redirect, the same idempotency shape ``ReviewConfirmView`` uses.
+
+    Every path returns to the assessment's own page, which is where the
+    decision was made and where its outcome now reads.
     """
 
     model = Review
@@ -277,7 +315,7 @@ class ReviewDecideView(UserPassesTestMixin, SingleObjectMixin, View):
         review = self.get_object()
 
         if review.state != States.AWAITING_DECISION:
-            return redirect("review-queue")
+            return redirect(review)
 
         action = request.POST.get("action")
         if action == "approve":
@@ -286,7 +324,7 @@ class ReviewDecideView(UserPassesTestMixin, SingleObjectMixin, View):
             send_back(review, request.user)
             review.decision_comment = request.POST.get("comment", "")
         else:
-            return redirect("review-queue")
+            return redirect(review)
 
         review.decided_by = request.user
         review.decided_at = timezone.now()
@@ -295,4 +333,4 @@ class ReviewDecideView(UserPassesTestMixin, SingleObjectMixin, View):
         )
         _publish_if_complete(review)
 
-        return redirect("review-queue")
+        return redirect(review)

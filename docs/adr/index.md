@@ -29,7 +29,7 @@ The domain vocabulary these records use is defined in `CONTEXT.md` at the reposi
 | [0017](0017-a-role-carries-the-trust-that-decides-publication.md) | A role carries the trust that decides publication, not a per-person setting |
 | [0018](0018-an-upload-is-checked-before-it-is-written.md) | An upload is checked before it is written, with no way to skip the check |
 | [0019](0019-every-submitted-file-is-kept.md) | Every submitted file is kept, including the ones that were refused |
-| [0020](0020-the-queue-is-the-notification.md) | The queue is how curators are told there is something waiting |
+| [0020](0020-a-count-in-the-navigation-is-the-notification.md) | A count in the navigation is how curators are told there is something waiting |
 
 :::{toctree}
 :hidden:

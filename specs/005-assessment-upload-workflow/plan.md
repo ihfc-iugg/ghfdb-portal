@@ -9,7 +9,7 @@
 Build the pages the data assessment team uploads a completed GHFDB template through, on top of the
 reader FS-004 delivered. An assessment is described first, the file is then checked without writing,
 failures are rendered in the template's own column names, and a confirmation writes the data and
-sets the dataset's visibility from the uploader's role. An assessor's upload waits in a queue for a
+sets the dataset's visibility from the uploader's role. An assessor's upload waits for a
 curator's decision.
 
 The work concentrates in `project/review/`, which today holds a partial version of the assessment
@@ -100,13 +100,17 @@ Seven views in `project/review/views.py`, all on the framework's own base classe
 
 | View | Route | Access |
 |---|---|---|
-| Assessment list | `/assessments/` | either role |
+| Assessment list | `/assessments/` | anyone |
 | Start an assessment | `/assessments/new/` | either role |
-| Upload a file | `/assessments/<pk>/upload/` | the assessment's uploader, or any curator |
+| An assessment's own page | `/assessments/<pk>/` | anyone |
+| Correct an assessment | `/assessments/<pk>/edit/` | the assessment's uploader, or any curator |
+| Upload a file | `/assessments/<pk>/upload/` | same |
 | Check report | same route, rendered from the check | same |
 | Confirm | `/assessments/<pk>/confirm/` | same, POST only |
-| Decision queue | `/assessments/queue/` | curators only |
 | Decide | `/assessments/<pk>/decide/` | curators only, POST only |
+
+There is no waiting-list page. It was the assessment list narrowed to one state, so it is a filter
+on that list instead, alongside filters for the assessors, the uploader and the curator who decided.
 
 The check report and the upload form share one template with three states, empty, failed and
 checked, which is how `fairdm/contrib/import_export/templates/import_export/import.html` already
@@ -134,8 +138,8 @@ covers both the double submission in FR-024 and the stale report in the edge cas
 
 ### Notification
 
-The navigation entry carries the number of assessments waiting on a decision, visible to curators,
-and the queue lists them. No notification framework is added. Reasoning and rejected alternatives:
+A second navigation entry, shown to curators alone, carries the number of assessments waiting on a
+decision and leads to the list narrowed to them. No notification framework is added. Reasoning and rejected alternatives:
 [decisions.md](./decisions.md).
 
 ## Project Structure
@@ -162,11 +166,12 @@ project/
 │   ├── states.py          # the state vocabulary and its transitions
 │   ├── permissions.py     # is_data_assessor / is_data_curator predicates
 │   ├── forms.py           # the description form, the upload form
-│   ├── views.py           # the seven views above
-│   ├── menus.py           # the navigation entry, currently commented out
+│   ├── views.py           # the views above
+│   ├── filters.py         # how the list is narrowed
+│   ├── menus.py           # the two navigation entries
 │   ├── urls.py
 │   ├── migrations/
-│   └── templates/review/  # list, description, upload and report, queue, decision
+│   └── templates/review/  # list row, the assessment's page, upload and report
 └── ghfdb/
     ├── importers.py       # check_only parameter
     └── report.py          # Result objects to counts and per-row failures

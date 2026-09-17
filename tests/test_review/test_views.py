@@ -27,7 +27,6 @@ from review.views import (
     ReviewConfirmView,
     ReviewCreateView,
     ReviewDecideView,
-    ReviewQueueView,
     ReviewUploadView,
 )
 from tests.test_ghfdb.test_importers import ROW, _build_official_xlsx, make_dataset
@@ -332,98 +331,375 @@ class TestReviewListItemAssessors:
 
 @pytest.mark.django_db
 @pytest.mark.review
-class TestReviewQueueViewAccess:
-    """T033, plan.md's access table: the decision queue is served to a Data
-    Curator and refused to everyone else, including a Data Assessor,
-    whether reached through the navigation or a direct URL — the same
-    refusal shape ``ReviewListView`` uses."""
+class TestTheListNarrowsToWhatIsWaiting:
+    """FR-025, spec.md User Story 6 scenario 1: what used to be a decision
+    queue of its own is the assessment list with one filter chosen."""
 
-    def test_a_data_curator_is_granted_entry(self, rf, curator):
-        request = rf.get(reverse("review-queue"))
-        request.user = curator
+    def test_only_awaiting_decision_assessments_remain(self, client, curator):
+        waiting = ReviewFactory(state=States.AWAITING_DECISION)
+        ReviewFactory(state=States.DESCRIBED)
+        client.force_login(curator)
 
-        response = ReviewQueueView.as_view()(request)
+        response = client.get(
+            reverse("review-list"), {"state": States.AWAITING_DECISION.value}
+        )
+
+        assert list(response.context["object_list"]) == [waiting]
+
+    def test_the_rows_still_name_the_publication_and_uploader(
+        self, client, curator, assessor
+    ):
+        review = ReviewFactory(
+            uploaded_by=assessor, state=States.AWAITING_DECISION
+        )
+        client.force_login(curator)
+
+        response = client.get(
+            reverse("review-list"), {"state": States.AWAITING_DECISION.value}
+        )
+
+        html = response.content.decode()
+        assert str(review.literature) in html
+        assert str(assessor) in html
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewDetailViewAccess:
+    """US-7: an assessment's page is served to anyone, like the list it is
+    reached from."""
+
+    def test_an_anonymous_visitor_is_served(self, client):
+        review = ReviewFactory()
+
+        response = client.get(review.get_absolute_url())
 
         assert response.status_code == 200
 
-    def test_a_data_assessor_is_refused(self, client, assessor):
-        client.force_login(assessor)
-
-        response = client.get(reverse("review-queue"))
-
-        assert response.status_code == 403
-
-    def test_a_signed_in_user_in_neither_role_is_refused(self, client, outsider):
+    def test_a_signed_in_user_in_neither_role_is_served(self, client, outsider):
+        review = ReviewFactory()
         client.force_login(outsider)
 
-        response = client.get(reverse("review-queue"))
+        response = client.get(review.get_absolute_url())
+
+        assert response.status_code == 200
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewDetailViewContent:
+    """FR-027, FR-028, US-7 scenarios 1 to 3: what the page says about the
+    assessment, to anyone who opens it."""
+
+    def test_it_names_the_publication_uploader_assessors_and_state(
+        self, client, assessor
+    ):
+        review = ReviewFactory(uploaded_by=assessor, state=States.AWAITING_DECISION)
+        named = ClaimedPersonFactory()
+        review.reviewers.set([named])
+
+        html = client.get(review.get_absolute_url()).content.decode()
+
+        assert str(review.literature) in html
+        assert str(assessor) in html
+        assert str(named) in html
+        assert review.get_state_display() in html
+
+    def test_it_links_to_the_publication_and_the_dataset(self, client, assessor):
+        review = ReviewFactory(uploaded_by=assessor)
+
+        html = client.get(review.get_absolute_url()).content.decode()
+
+        assert review.dataset.get_absolute_url() in html
+        assert review.literature.get_absolute_url() in html
+
+    def test_it_lists_the_submitted_files_newest_first(self, client, assessor):
+        review = ReviewFactory(uploaded_by=assessor)
+        first, second = (
+            SubmittedFile.objects.create(
+                review=review,
+                file=ContentFile(b"x", name=name),
+                submitted_by=assessor,
+            )
+            for name in ("first.xlsx", "second.xlsx")
+        )
+
+        html = client.get(review.get_absolute_url()).content.decode()
+
+        assert html.index(second.filename) < html.index(first.filename)
+
+    def test_a_submission_says_whether_its_contents_were_written(
+        self, client, assessor
+    ):
+        review = ReviewFactory(uploaded_by=assessor)
+        SubmittedFile.objects.create(
+            review=review,
+            file=ContentFile(b"x", name="checked.xlsx"),
+            submitted_by=assessor,
+        )
+
+        html = client.get(review.get_absolute_url()).content.decode()
+
+        assert "Checked only" in html
+        assert "Written" not in html
+
+    def test_it_says_so_when_no_file_has_been_supplied(self, client, assessor):
+        review = ReviewFactory(uploaded_by=assessor)
+
+        html = client.get(review.get_absolute_url()).content.decode()
+
+        assert "No file has been supplied yet" in html
+
+    def test_a_sent_back_assessment_shows_the_curators_note(self, client, assessor):
+        review = ReviewFactory(
+            uploaded_by=assessor,
+            state=States.CHANGES_REQUESTED,
+            decision_comment="The depths are in feet.",
+        )
+
+        html = client.get(review.get_absolute_url()).content.decode()
+
+        assert "The depths are in feet." in html
+
+    def test_a_note_from_an_earlier_round_is_not_shown_once_it_is_settled(
+        self, client, assessor
+    ):
+        review = ReviewFactory(
+            uploaded_by=assessor,
+            state=States.COMPLETE,
+            decision_comment="The depths are in feet.",
+        )
+
+        html = client.get(review.get_absolute_url()).content.decode()
+
+        assert "The depths are in feet." not in html
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewDetailViewOffersOnlyWhatTheReaderMayDo:
+    """FR-029, US-7 scenarios 4 to 6. A route is drawn only for a reader who
+    may follow it — and the page behind each one refuses everyone else in its
+    own right, which the access tests for those pages prove separately."""
+
+    def _routes(self, response, review):
+        html = response.content.decode()
+        return {
+            "update": reverse("review-update", kwargs={"pk": review.pk}) in html,
+            "upload": reverse("review-upload", kwargs={"pk": review.pk}) in html,
+            "decide": reverse("review-decide", kwargs={"pk": review.pk}) in html,
+        }
+
+    def test_the_uploader_is_offered_correcting_and_uploading(self, client, assessor):
+        review = ReviewFactory(uploaded_by=assessor)
+        client.force_login(assessor)
+
+        routes = self._routes(client.get(review.get_absolute_url()), review)
+
+        assert routes == {"update": True, "upload": True, "decide": False}
+
+    def test_a_curator_is_offered_deciding_on_a_waiting_assessment(
+        self, client, curator, assessor
+    ):
+        review = ReviewFactory(
+            uploaded_by=assessor, state=States.AWAITING_DECISION
+        )
+        client.force_login(curator)
+
+        routes = self._routes(client.get(review.get_absolute_url()), review)
+
+        assert routes["decide"] is True
+
+    def test_a_curator_is_not_offered_deciding_on_an_assessment_not_waiting(
+        self, client, curator, assessor
+    ):
+        review = ReviewFactory(uploaded_by=assessor, state=States.DESCRIBED)
+        client.force_login(curator)
+
+        routes = self._routes(client.get(review.get_absolute_url()), review)
+
+        assert routes["decide"] is False
+
+    def test_a_different_assessor_is_offered_nothing(
+        self, client, assessor, data_assessor_group
+    ):
+        review = ReviewFactory(
+            uploaded_by=assessor, state=States.AWAITING_DECISION
+        )
+        stranger = ClaimedPersonFactory()
+        stranger.groups.add(data_assessor_group)
+        client.force_login(stranger)
+
+        routes = self._routes(client.get(review.get_absolute_url()), review)
+
+        assert not any(routes.values())
+
+    def test_an_anonymous_visitor_is_offered_nothing(self, client, assessor):
+        review = ReviewFactory(
+            uploaded_by=assessor, state=States.AWAITING_DECISION
+        )
+
+        routes = self._routes(client.get(review.get_absolute_url()), review)
+
+        assert not any(routes.values())
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestReviewUpdateView:
+    """FR-030, US-7 scenario 4: whoever may upload against an assessment may
+    correct what it says."""
+
+    def _post(self, client, review, **overrides):
+        data = {
+            "literature": review.literature.pk,
+            "reviewers": [p.pk for p in review.reviewers.all()],
+            "start_date": "2026-03-01",
+            "end_date": "2026-04-01",
+            "title": "",
+        }
+        data.update(overrides)
+        return client.post(reverse("review-update", kwargs={"pk": review.pk}), data)
+
+    def test_the_uploader_may_correct_it(self, client, assessor):
+        review = ReviewFactory(uploaded_by=assessor)
+        review.reviewers.set([ClaimedPersonFactory()])
+        client.force_login(assessor)
+
+        response = self._post(client, review)
+
+        assert response.status_code == 302
+        review.refresh_from_db()
+        assert str(review.start_date) == "2026-03-01"
+
+    def test_it_returns_to_the_assessments_own_page(self, client, assessor):
+        review = ReviewFactory(uploaded_by=assessor)
+        review.reviewers.set([ClaimedPersonFactory()])
+        client.force_login(assessor)
+
+        response = self._post(client, review)
+
+        assert response.url == review.get_absolute_url()
+
+    def test_any_curator_may_correct_one_they_did_not_upload(
+        self, client, curator, assessor
+    ):
+        review = ReviewFactory(uploaded_by=assessor)
+        review.reviewers.set([ClaimedPersonFactory()])
+        client.force_login(curator)
+
+        response = client.get(reverse("review-update", kwargs={"pk": review.pk}))
+
+        assert response.status_code == 200
+
+    def test_a_different_assessor_is_refused(
+        self, client, assessor, data_assessor_group
+    ):
+        review = ReviewFactory(uploaded_by=assessor)
+        stranger = ClaimedPersonFactory()
+        stranger.groups.add(data_assessor_group)
+        client.force_login(stranger)
+
+        response = client.get(reverse("review-update", kwargs={"pk": review.pk}))
 
         assert response.status_code == 403
 
     def test_an_anonymous_visitor_is_redirected_to_log_in_rather_than_served(
         self, client
     ):
-        response = client.get(reverse("review-queue"))
+        review = ReviewFactory()
+        url = reverse("review-update", kwargs={"pk": review.pk})
+
+        response = client.get(url)
 
         assert response.status_code == 302
-        assert response.url != reverse("review-queue")
+        assert response.url != url
 
 
 @pytest.mark.django_db
 @pytest.mark.review
-class TestReviewQueueViewContent:
-    """T033, spec.md User Story 6 scenario 1: an assessment waiting on a
-    decision appears in the queue, and one that has not reached
-    ``AWAITING_DECISION`` does not."""
+class TestTheListNarrows:
+    """FR-025, FR-026, US-1 scenario 6: one list, narrowed by the question
+    the reader is asking."""
 
-    def test_only_awaiting_decision_assessments_are_listed(self, rf, curator):
+    def _listed(self, client, **params):
+        response = client.get(reverse("review-list"), params)
+        return list(response.context["object_list"])
+
+    def test_by_state(self, client):
         waiting = ReviewFactory(state=States.AWAITING_DECISION)
+        ReviewFactory(state=States.COMPLETE)
+
+        assert self._listed(client, state=States.AWAITING_DECISION.value) == [waiting]
+
+    def test_by_assessor(self, client):
+        named = ClaimedPersonFactory()
+        theirs = ReviewFactory()
+        theirs.reviewers.set([named])
+        ReviewFactory().reviewers.set([ClaimedPersonFactory()])
+
+        assert self._listed(client, reviewers=named.pk) == [theirs]
+
+    def test_by_uploader(self, client, assessor):
+        theirs = ReviewFactory(uploaded_by=assessor)
+        ReviewFactory(uploaded_by=ClaimedPersonFactory())
+
+        assert self._listed(client, uploaded_by=assessor.pk) == [theirs]
+
+    def test_by_who_decided(self, client, curator):
+        decided = ReviewFactory(state=States.COMPLETE, decided_by=curator)
         ReviewFactory(state=States.DESCRIBED)
-        request = rf.get(reverse("review-queue"))
-        request.user = curator
 
-        response = ReviewQueueView.as_view()(request)
+        assert self._listed(client, decided_by=curator.pk) == [decided]
 
-        assert list(response.context_data["object_list"]) == [waiting]
+    def test_two_filters_together_narrow_further(self, client, assessor):
+        ReviewFactory(uploaded_by=assessor, state=States.COMPLETE)
+        wanted = ReviewFactory(uploaded_by=assessor, state=States.AWAITING_DECISION)
+        ReviewFactory(state=States.AWAITING_DECISION)
 
-
-@pytest.mark.django_db
-@pytest.mark.review
-class TestReviewQueueItemTemplate:
-    """T033, spec.md User Story 6 scenario 1: each row names the
-    publication it covers and who uploaded it, asserted against the
-    rendered HTML rather than the template context (T012's pattern) —
-    the full queue page extends the shared chrome that raises for a
-    signed-in user under ``DEBUG=False`` (D16/#367), so this is what proves
-    the row's content."""
-
-    def test_row_names_the_publication_and_uploader(self, assessor):
-        review = ReviewFactory(
-            uploaded_by=assessor,
-            state=States.AWAITING_DECISION,
+        listed = self._listed(
+            client,
+            uploaded_by=assessor.pk,
+            state=States.AWAITING_DECISION.value,
         )
 
-        html = render_to_string(
-            "review/review_queue_item.html", {"review": review}
+        assert listed == [wanted]
+
+    def test_no_filter_shows_everything(self, client):
+        ReviewFactory(state=States.COMPLETE)
+        ReviewFactory(state=States.DESCRIBED)
+
+        assert len(self._listed(client)) == 2
+
+    def test_searching_by_the_publications_title(self, client):
+        # LiteratureItem.save() derives `title` from the CSL blob, so the
+        # title has to be set there rather than on the field directly.
+        wanted = ReviewFactory(
+            literature=LiteratureItemFactory(
+                item={
+                    "type": "article-journal",
+                    "title": "Heat flow of the Rhine Graben",
+                }
+            )
+        )
+        ReviewFactory(
+            literature=LiteratureItemFactory(
+                item={"type": "article-journal", "title": "Something else entirely"}
+            )
         )
 
-        assert str(review.literature) in html
-        assert str(assessor) in html
+        assert self._listed(client, q="Rhine") == [wanted]
 
-    def test_row_carries_an_approve_and_a_send_back_form(self, assessor):
-        review = ReviewFactory(
-            uploaded_by=assessor,
-            state=States.AWAITING_DECISION,
-        )
-        decide_url = reverse("review-decide", kwargs={"pk": review.pk})
+    def test_a_person_filter_offers_only_people_who_hold_that_role(self, client):
+        uploader = ClaimedPersonFactory()
+        ReviewFactory(uploaded_by=uploader)
+        bystander = ClaimedPersonFactory()
 
-        html = render_to_string(
-            "review/review_queue_item.html", {"review": review}
-        )
+        response = client.get(reverse("review-list"))
+        offered = response.context["filter"].form.fields["uploaded_by"].queryset
 
-        assert html.count(f'action="{decide_url}"') == 2
-        assert 'value="approve"' in html
-        assert 'value="send_back"' in html
+        assert uploader in offered
+        assert bystander not in offered
 
 
 @pytest.mark.django_db

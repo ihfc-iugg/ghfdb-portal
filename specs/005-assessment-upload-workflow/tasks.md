@@ -262,3 +262,24 @@ ships. `c-contributor.avatar` still emits Bootstrap markup and reads an initials
 object does not have, so it renders a square grey box containing the word "None". Raised upstream
 rather than worked around here — the row uses the component library's current avatar and text
 components directly.
+
+---
+
+## The list becomes the way in, and the assessment gets a page
+
+Sam's second round after the walkthrough. Reasoning in decisions.md D37; US-1 gains filters, US-6
+moves its decision onto the assessment's page, and US-7 is new.
+
+- [x] T048 The navigation entry is shown to everyone. The page it leads to is public, so hiding the
+      entry left it reachable only by typing its URL.
+- [x] T049 A second entry, a Data Curator's alone, carrying the count of assessments awaiting a
+      decision and leading to the list narrowed to them. The decision queue's route, view, page
+      template and row template are deleted.
+- [x] T050 The assessment list is narrowed by state, assessor, uploader and deciding curator, in any
+      combination, and searched by the publication's title. Each person filter offers only the people
+      who hold that role on some assessment.
+- [x] T051 Every assessment has a page of its own, public, naming what it covers and who is working
+      on it, listing its submissions newest first, and linking to its publication and its dataset.
+- [x] T052 That page offers correcting the description, supplying a file and deciding, each only to a
+      reader who may follow it, with each destination refusing everyone else in its own right.
+- [x] T053 Correcting an assessment's description, open to whoever may upload against it.

@@ -17,8 +17,9 @@ from review.views import (
     ReviewConfirmView,
     ReviewCreateView,
     ReviewDecideView,
+    ReviewDetailView,
     ReviewListView,
-    ReviewQueueView,
+    ReviewUpdateView,
     ReviewUploadView,
 )
 
@@ -49,17 +50,53 @@ class TestReviewCreateRoute:
 
 
 @pytest.mark.review
-class TestReviewQueueRoute:
-    """T037, plan.md's access table: the decision queue resolves by the
-    name plan.md's access table gives it."""
+class TestReviewDetailRoute:
+    """T046, plan.md's access table: an assessment's own page."""
 
-    def test_review_queue_resolves_by_name_to_the_documented_path(self):
-        assert reverse("review-queue") == "/assessments/queue/"
+    def test_review_detail_resolves_by_name_to_the_documented_path(self):
+        assert reverse("review-detail", kwargs={"pk": 1}) == "/assessments/1/"
 
-    def test_the_path_resolves_to_the_queue_view(self):
-        match = resolve("/assessments/queue/")
+    def test_the_path_resolves_to_the_detail_view(self):
+        match = resolve("/assessments/1/")
 
-        assert match.func.view_class is ReviewQueueView
+        assert match.func.view_class is ReviewDetailView
+
+
+@pytest.mark.review
+class TestReviewUpdateRoute:
+    """T047, plan.md's access table: correcting an assessment."""
+
+    def test_review_update_resolves_by_name_to_the_documented_path(self):
+        assert reverse("review-update", kwargs={"pk": 1}) == "/assessments/1/edit/"
+
+    def test_the_path_resolves_to_the_update_view(self):
+        match = resolve("/assessments/1/edit/")
+
+        assert match.func.view_class is ReviewUpdateView
+
+
+@pytest.mark.django_db
+@pytest.mark.review
+class TestTheDecisionQueueHasNoRouteOfItsOwn:
+    """The waiting list is the assessment list narrowed to one state
+    (FR-025), so it is a filter rather than a page. Asserted rather than
+    merely deleted: a route quietly reinstated would leave two ways to ask
+    the same question, one of which nothing maintains."""
+
+    def test_no_route_is_registered_under_that_name(self):
+        from django.urls import NoReverseMatch
+
+        with pytest.raises(NoReverseMatch):
+            reverse("review-queue")
+
+    def test_the_narrowed_list_is_reachable_instead(self, client):
+        from review.states import States
+
+        response = client.get(
+            reverse("review-list"), {"state": States.AWAITING_DECISION.value}
+        )
+
+        assert response.status_code == 200
 
 
 @pytest.mark.review

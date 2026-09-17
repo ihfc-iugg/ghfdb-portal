@@ -8,7 +8,10 @@ Global Heat Flow Database (GHFDB) models for Django. The models are defined usin
 
 """
 
+from pathlib import PurePosixPath
+
 from django.conf import settings
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from fairdm.db import models
 from partial_date.fields import PartialDateField
@@ -106,8 +109,12 @@ class Review(models.Model):
     )
 
     class Meta:
-        verbose_name = _("Review")
-        verbose_name_plural = _("Reviews")
+        # "Assessment" is what the portal calls this everywhere a reader can
+        # see it, and the framework builds its own page furniture — the
+        # "showing n of m" line, the empty state — from these two names. The
+        # class keeps the name the database and the code already use (D3).
+        verbose_name = _("Assessment")
+        verbose_name_plural = _("Assessments")
         ordering = ["-end_date"]
 
     def save(self, *args, **kwargs):
@@ -117,10 +124,24 @@ class Review(models.Model):
             raise ValueError(_("Start date cannot be after end date."))
         super().save(*args, **kwargs)
 
+    def get_absolute_url(self):
+        """The assessment's own page (FR-027)."""
+        return reverse("review-detail", kwargs={"pk": self.pk})
+
     @property
     def state_variant(self):
         """The badge colour this assessment's state is drawn in."""
         return STATE_VARIANTS[States(self.state)]
+
+    @property
+    def sent_back(self):
+        """Whether a curator asked for changes and is waiting on them.
+
+        Asked here rather than compared against the state vocabulary in each
+        template that wants it — a template comparing to a bare number is
+        the version of this that breaks silently when a state is added.
+        """
+        return self.state == States.CHANGES_REQUESTED
 
     @property
     def current(self):
@@ -185,3 +206,13 @@ class SubmittedFile(models.Model):
         verbose_name = _("Submitted file")
         verbose_name_plural = _("Submitted files")
         ordering = ["-submitted_at"]
+
+    @property
+    def filename(self):
+        """The file's own name, without the path it is stored under.
+
+        Storage may have added a suffix to keep two submissions of the same
+        name apart, and that suffix stays: it is what distinguishes them on
+        a page listing both.
+        """
+        return PurePosixPath(self.file.name).name

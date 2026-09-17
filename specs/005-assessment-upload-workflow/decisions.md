@@ -10,7 +10,7 @@ decision at convergence, once the code that would carry them exists.
 The roadmap splits this work across two items. R6 asks for the page the team uploads through and the
 validation result they read there, and says in as many words that the trust and review distinctions
 separating team members from outside contributors are out of its scope. R7 asks for the role, the
-private-until-reviewed rule, the queue and the recorded decision.
+private-until-reviewed rule, the approval step and the recorded decision.
 
 Building only R6's half would mean shipping a workflow where an upload becomes public the instant it
 is confirmed, then rebuilding the confirmation path a second time to put a gate in front of it. The
@@ -119,13 +119,14 @@ per-request messages, which do not survive to another user's session.
 Three options were weighed. Adding a notification framework to the portal is a dependency, a data
 model, a rendering surface and a settings story for one use. Email is explicitly out of the
 specification's scope and is the wrong first move for a team of ten who are already in the portal
-daily. Making the queue visible where curators already look costs nothing and is the thing they
-would check anyway.
+daily. Putting the count where curators already look costs nothing and is the thing they would check
+anyway.
 
-The navigation entry therefore carries the count of assessments waiting on a decision, and the queue
-lists them. If the team finds that too quiet, email is a small change once the queue exists.
+A navigation entry of their own therefore carries the count of assessments waiting on a decision and
+leads to the assessment list narrowed to them. If the team finds that too quiet, email is a small
+change once there is a count to send.
 
-**ADR:** docs/adr/0020-the-queue-is-the-notification.md
+**ADR:** docs/adr/0020-a-count-in-the-navigation-is-the-notification.md
 
 ## D9 — `Person.is_data_admin` is left alone
 
@@ -513,31 +514,22 @@ and was split across two stories by an accident of decomposition.
 
 **ADR:** none — a rule about how this organisation verifies a dependency claim, not about the portal's architecture.
 
-## D28 — The decision queue renders its own rows, not through `FairDMListView`'s item-card mechanism
+## D28 — A list row cannot carry a form
 
+`FairDMListView`'s stock rendering builds `list_item_template` cards through `mvp`'s
+`render_list_item` template tag, which calls `render_to_string(template_name, new)` with a plain
+dict — no `request` — because `c-page.list` calls it from inside `list_view.html` without passing
+the page's own context through. A `{% csrf_token %}` inside a template rendered that way has no
+`csrf_token` in its context and renders nothing usable, so a `<form>` built there fails CSRF
+validation on every submission, silently, since nothing surfaces the missing token at render time.
 
-`ReviewListView` (T011) uses `FairDMListView`'s stock rendering: `list_item_template` cards are
-built by `mvp`'s `render_list_item` template tag, which calls `render_to_string(template_name, new)`
-with a plain dict — no `request` — because `c-page.list` calls it from inside `list_view.html`
-without passing the page's own context through. A `{% csrf_token %}` inside a template rendered that
-way has no `csrf_token` in its context and renders nothing usable; a `<form>` built there would fail
-CSRF validation on every submission, silently, since nothing surfaces the missing token at render
-time.
-
-The queue's rows carry two POST forms per assessment (T037), so this mattered here in a way it never
-has for a read-only card. `ReviewQueueView` sets its own `template_name` (`review/queue.html`)
-instead of relying on `FairDMListView`'s auto-derived one, and that template loops `object_list`
-itself, including `review/review_queue_item.html` with Django's `{% include %}` rather than the
-`render_list_item` tag — `{% include %}` inherits the parent template's context, which does carry
-`csrf_token` because `queue.html` itself is rendered the normal way, through the view's own
-`TemplateResponse`. `list_item_template` stays set on the view (consistent with the rest of the
-plan, and harmless since nothing calls `render_list_item` for this view), but `queue.html`'s own loop
-is what actually renders each row.
+This is why approving and sending back are not controls on a row. They live on the assessment's own
+page, which is rendered the ordinary way through its view's `TemplateResponse` and therefore has a
+token. The rows stay read-only cards through the stock mechanism.
 
 Revisit if: `FairDMListView`'s card mechanism gains a way to pass `request` through to
-`render_list_item`, at which point a read-only queue row could go back to the standard mechanism —
-though the two POST forms would still need it, so this is unlikely to become the simpler path even
-then.
+`render_list_item`. Even then a decision belongs on the page describing what is being decided, so
+this would change nothing here.
 
 **ADR:** none — how one page renders its rows.
 
@@ -551,7 +543,7 @@ convention rather than keeping its bullets with a status tag changed, since the 
 what would be built read as future tense once it exists.
 
 R7's original six deliverables include three this feature actually built as infrastructure — the
-role, the private-until-approved rule, and the decision queue — but only for the assessment team's
+role, the private-until-approved rule, and the approval step — but only for the assessment team's
 own uploads (D1). Nothing yet lets a person outside both roles create a dataset at all, so that
 remains R7's real gap. Its deliverables list is trimmed to that one route plus its test coverage,
 and its intro paragraph says plainly that the mechanism already exists and names what is missing,
@@ -694,3 +686,36 @@ same number is derivable by filtering the public list — but it answers "is the
 me", which is a question only a curator has.
 
 **ADR:** none — the access rule for one page, stated in the specification it belongs to.
+
+## D37 — The waiting list is a filter, and the assessment gets a page
+
+Walking the running pages, Sam asked for the decision queue to go, for the assessment list to be
+filterable, and for each row to open onto a detail page where the assessment is acted on.
+
+The queue was the assessment list filtered to one state, given a route, a view, a template and a
+row template of its own. Everything it showed the list already had, and every question it could not
+answer — who assessed this, who uploaded it, who decided on it — the list could not answer either.
+Making those questions filters answers all of them with one page, and the waiting list falls out as
+one of the answers rather than being built separately.
+
+The detail page is what the record never had. An assessment was reachable only as a row and an
+upload form, so there was nowhere to see what had been submitted, what a curator had said, or where
+the data went. It is also where deciding belongs: a list row cannot carry a form at all (D28), which
+is why approving and sending back were confined to a page of their own in the first place.
+
+Uploading keeps its own page. It carries a check report and a confirmation, which are a sequence
+rather than a description, and folding them into the page that describes the assessment would put
+two unrelated states on one screen. The detail page links to it, as it links to correcting the
+description.
+
+Comments are not part of this. Assessors and curators discussing an assessment on its page is worth
+having and the portal already carries `django-comments-xtd` through the framework, but how it
+attaches here has details to settle first. The only text an assessment carries remains the note a
+curator leaves when sending it back.
+
+The queue's route, view and two templates go. The assessment's own page and the correction form
+arrive, and between them absorb what the queue did.
+
+**ADR:** docs/adr/0020-a-count-in-the-navigation-is-the-notification.md is amended rather than
+superseded — the count is still the notification, and what it now leads to is the narrowed list. The
+rest is page structure, which belongs in the specification.

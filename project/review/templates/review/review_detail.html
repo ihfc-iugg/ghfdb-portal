@@ -1,0 +1,119 @@
+{% extends "page_view.html" %}
+{% load i18n %}
+{% block page.content %}
+  <div class="w-full lg:max-w-4xl flex flex-col gap-4">
+    {% if review.sent_back and review.decision_comment %}
+      <c-alert variant="warning">
+        <p>{% trans "A curator sent this back" %}: {{ review.decision_comment }}</p>
+      </c-alert>
+    {% endif %}
+    <c-card title="{% trans "The assessment" %}">
+      <c-slot name="badges">
+        <c-badge text="{{ review.get_state_display }}"
+                 variant="{{ review.state_variant }}"
+                 size="sm" />
+      </c-slot>
+      <c-slot name="actions">
+        {% if may_manage %}
+          <c-button text="{% trans "Correct" %}"
+                    icon="edit"
+                    size="sm"
+                    ghost
+                    href="{% url 'review-update' pk=review.pk %}" />
+          <c-button text="{% trans "Supply a file" %}"
+                    icon="upload"
+                    size="sm"
+                    href="{% url 'review-upload' pk=review.pk %}" />
+        {% endif %}
+      </c-slot>
+      <dl class="grid grid-cols-1 sm:grid-cols-[10rem_1fr] gap-x-4 gap-y-2">
+        <dt class="font-semibold">{% trans "Publication" %}</dt>
+        <dd>
+          <a class="link link-hover"
+             href="{{ review.literature.get_absolute_url }}">{{ review.literature }}</a>
+        </dd>
+        <dt class="font-semibold">{% trans "Dataset" %}</dt>
+        <dd>
+          <a class="link link-hover"
+             href="{{ review.dataset.get_absolute_url }}">{{ review.dataset }}</a>
+        </dd>
+        <dt class="font-semibold">{% trans "Assessors" %}</dt>
+        <dd>
+          {% for assessor in review.reviewers.all %}
+            <a class="link link-hover"
+               href="{{ assessor.get_absolute_url }}">{{ assessor }}</a>{% if not forloop.last %},{% endif %}
+          {% empty %}
+            <c-text size="sm" muted tight>{% trans "Nobody is named" %}</c-text>
+          {% endfor %}
+        </dd>
+        <dt class="font-semibold">{% trans "Uploaded by" %}</dt>
+        <dd>
+          {{ review.uploaded_by|default:_("Unknown") }}
+        </dd>
+        <dt class="font-semibold">{% trans "Started" %}</dt>
+        <dd>
+          {{ review.start_date|default:"—" }}
+        </dd>
+        <dt class="font-semibold">{% trans "Completed" %}</dt>
+        <dd>
+          {{ review.end_date|default:"—" }}
+        </dd>
+        {% if review.decided_by %}
+          <dt class="font-semibold">{% trans "Decided by" %}</dt>
+          <dd>
+            {{ review.decided_by }}{% if review.decided_at %}, {{ review.decided_at|date:"j F Y" }}{% endif %}
+          </dd>
+        {% endif %}
+        {% if review.comment %}
+          <dt class="font-semibold">{% trans "Comment" %}</dt>
+          <dd>
+            {{ review.comment }}
+          </dd>
+        {% endif %}
+      </dl>
+    </c-card>
+    {% if may_decide %}
+      <c-card title="{% trans "Decision" %}" icon="verified">
+        <form method="post"
+              action="{% url 'review-decide' pk=review.pk %}">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="approve" />
+          <c-button type="submit"
+                    text="{% trans "Approve" %}"
+                    variant="primary" />
+        </form>
+        <form method="post"
+              class="flex flex-col gap-2"
+              action="{% url 'review-decide' pk=review.pk %}">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="send_back" />
+          <textarea name="comment"
+                    class="textarea w-full"
+                    placeholder="{% trans "What needs to change" %}"
+                    required></textarea>
+          <c-button type="submit"
+                    text="{% trans "Send back" %}"
+                    variant="secondary" />
+        </form>
+      </c-card>
+    {% endif %}
+    <c-card title="{% trans "Submitted files" %}" icon="file">
+      {% for submission in review.submissions.all %}
+        <div class="flex flex-wrap items-center gap-2 py-1">
+          <c-icon name="file" />
+          <span>{{ submission.filename }}</span>
+          <c-text size="sm" muted tight>
+            {{ submission.submitted_by }}, {{ submission.submitted_at|date:"j F Y, H:i" }}
+          </c-text>
+          {% if submission.imported_at %}
+            <c-badge text="{% trans "Written" %}" variant="success" size="sm" />
+          {% else %}
+            <c-badge text="{% trans "Checked only" %}" variant="neutral" size="sm" />
+          {% endif %}
+        </div>
+      {% empty %}
+        <c-text size="sm" muted tight>{% trans "No file has been supplied yet" %}</c-text>
+      {% endfor %}
+    </c-card>
+  </div>
+{% endblock page.content %}

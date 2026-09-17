@@ -6,7 +6,10 @@
                variant="{{ review.state_variant }}"
                size="sm" />
     </div>
-    <h2 class="card-title text-base">{{ review.literature }}</h2>
+    <h2 class="card-title text-base">
+      <a class="link link-hover"
+         href="{{ review.get_absolute_url }}">{{ review.literature }}</a>
+    </h2>
     {% with assessors=review.reviewers.all %}
       {% if assessors %}
         <div class="flex items-center gap-2">

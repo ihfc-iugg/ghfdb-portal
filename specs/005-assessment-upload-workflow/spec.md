@@ -9,7 +9,7 @@
 **Goals**: G4 (the assessment team can add datasets one at a time), with G5 behind it
 
 **Roadmap**: R6, the page the team uploads through. Takes on the role, the private-until-approved
-rule and the approval queue from R7.
+rule and the approval step from R7.
 
 **Issue**: #209
 
@@ -25,15 +25,20 @@ Data Assessor's upload stays private until a Data Curator approves it.
 ### User Story 1 - The assessments are visible, and the team can add to them (Priority: P1)
 
 Anyone can see what the assessment team has been working on: an entry in the site navigation leading
-to a list of the assessments, each showing the publication it covers and where it has got to. A
-member of the team additionally finds a route to start a new one, which nobody else sees.
+to a list of the assessments, each showing the publication it covers and where it has got to, and
+each opening onto the assessment's own page. The list can be narrowed to the assessments a reader
+cares about — by state, by who assessed or uploaded them, by who decided on them. A member of the
+team additionally finds a route to start a new one, which nobody else sees.
 
 **Why this priority**: it is the entry point. Without it every other story is reachable only by
-typing a URL, and the roles that gate the rest of the feature are defined here.
+typing a URL, and the roles that gate the rest of the feature are defined here. The filters are what
+let one list serve a reader looking for a publication and a curator looking for work waiting on
+them, which is why there is no second listing page.
 
 **Independent Test**: browse the portal as an anonymous visitor and confirm the navigation entry
-appears and the list it leads to renders, then sign in as a member of the team and confirm the route
-to start a new assessment appears, and that it does not for a signed-in user outside the team.
+appears and the list it leads to renders, narrow it by state and by assessor and confirm only
+matching assessments remain, then sign in as a member of the team and confirm the route to start a
+new assessment appears, and that it does not for a signed-in user outside the team.
 
 **Acceptance Scenarios**:
 
@@ -43,12 +48,17 @@ to start a new assessment appears, and that it does not for a signed-in user out
 2. **Given** a signed-in Data Assessor, **When** the list renders, **Then** it carries a visible
    route to start a new assessment.
 3. **Given** a signed-in Data Curator, **When** any portal page renders, **Then** the navigation
-   entry carries the number of assessments awaiting a decision.
+   entry carries the number of assessments awaiting a decision, and leads to the list already
+   narrowed to those.
 4. **Given** a visitor in neither role, signed in or not, **When** the list renders, **Then** the
    route to start a new assessment is absent, and requesting the create page's URL directly is
    refused.
 5. **Given** a Data Assessor with two assessments in different states, **When** the list renders,
-   **Then** each row names the publication it covers, who uploaded it, and the state it has reached.
+   **Then** each row names the publication it covers, who uploaded it, and the state it has reached,
+   and links to that assessment's own page.
+6. **Given** assessments in several states by several people, **When** the reader narrows the list by
+   state, by assessor, by uploader or by who decided, **Then** only the assessments matching every
+   chosen filter remain, and the narrowing survives being shared as a link.
 
 ---
 
@@ -187,33 +197,66 @@ cases.
 
 ### User Story 6 - A curator decides on an assessor's upload (Priority: P2)
 
-An upload from a Data Assessor waits for a Data Curator. Curators see the waiting assessments,
-open one, and either approve it, which makes the dataset public, or send it back with a comment
-saying what is wrong. A sent-back assessment returns to its uploader, who can replace the file and
-submit it again.
+An upload from a Data Assessor waits for a Data Curator. A curator narrows the list to what is
+waiting, opens one, and from its page either approves it, which makes the dataset public, or sends
+it back with a note saying what is wrong. A sent-back assessment returns to its uploader, who can
+replace the file and submit it again.
 
 **Why this priority**: the workflow is usable without it, because a curator can upload directly and
 an assessor's work is safely private in the meantime. It is the second half of the trust model
 rather than a precondition for the first.
 
-**Independent Test**: upload as an assessor, approve as a curator, and confirm the dataset becomes
-public and the decision and its maker are recorded on the assessment.
+**Independent Test**: upload as an assessor, approve as a curator from the assessment's page, and
+confirm the dataset becomes public and the decision and its maker are recorded on the assessment.
 
 **Acceptance Scenarios**:
 
-1. **Given** an assessment waiting on a decision, **When** a Data Curator views the waiting list,
-   **Then** it appears there, naming its publication and who uploaded it.
-2. **Given** a waiting assessment, **When** a curator approves it, **Then** the dataset becomes
-   public and the assessment records the decision, who made it and when.
-3. **Given** a waiting assessment, **When** a curator sends it back with a comment, **Then** the
-   dataset stays private, the comment reaches the uploader, and the assessment is open for a
-   replacement file.
+1. **Given** an assessment waiting on a decision, **When** a Data Curator narrows the list to what is
+   waiting, **Then** it appears there, naming its publication and who uploaded it.
+2. **Given** a waiting assessment, **When** a curator approves it from its page, **Then** the dataset
+   becomes public and the assessment records the decision, who made it and when.
+3. **Given** a waiting assessment, **When** a curator sends it back with a note, **Then** the dataset
+   stays private, the note reaches the uploader, and the assessment is open for a replacement file.
 4. **Given** a sent-back assessment, **When** its uploader supplies a corrected file, **Then** it is
    checked and confirmed as before and returns to waiting on a decision.
 5. **Given** a Data Assessor, **When** they attempt to approve any assessment including their own,
    **Then** it is refused.
 6. **Given** an assessment that becomes ready for a decision, **When** it enters that state,
    **Then** the Data Curators are notified within the portal.
+
+---
+
+### User Story 7 - An assessment has a page of its own (Priority: P1)
+
+Every assessment has one page that shows what it covers, who is working on it, where it has got to,
+and what has been submitted against it. It is where the assessment's related records are reached —
+its publication, its dataset — and where whoever may act on it finds the routes to do so: a Data
+Assessor to correct its description or supply a file, a Data Curator to decide on it.
+
+**Why this priority**: without it the assessment is only ever a row in a list and a file upload
+form, with no place to see what was submitted, what a curator said, or where the data went. It is
+also what removes the need for a separate waiting-list page, since the decision is made here.
+
+**Independent Test**: open an assessment's page as an anonymous visitor and confirm it describes the
+assessment without offering any action, then open the same page as its uploader and as a curator and
+confirm each is offered only the routes their role allows.
+
+**Acceptance Scenarios**:
+
+1. **Given** any assessment, **When** anyone opens its page, **Then** it names the publication, the
+   assessors, the uploader, the dates, the state it has reached, and links to the publication and to
+   the dataset.
+2. **Given** an assessment with submitted files, **When** its page renders, **Then** the submissions
+   appear most recent first, each showing who submitted it and when, and whether it was written.
+3. **Given** an assessment sent back for changes, **When** its page renders, **Then** the curator's
+   note appears on it.
+4. **Given** an assessment whose uploader is signed in, **When** its page renders, **Then** it offers
+   the routes to correct the description and to supply a file.
+5. **Given** an assessment waiting on a decision and a signed-in Data Curator, **When** its page
+   renders, **Then** it offers approving and sending back, and neither appears for anyone else or in
+   any other state.
+6. **Given** a signed-in visitor in neither role, **When** they open any assessment's page, **Then**
+   it renders and offers no action at all.
 
 ---
 
@@ -239,7 +282,7 @@ public and the decision and its maker are recorded on the assessment.
   assessments, and MUST show that list to anyone. It MUST offer members of the assessment team a
   route to start a new assessment, which is neither shown nor served to anyone else.
 - **FR-002**: The portal MUST list existing assessments with the publication each covers, who
-  uploaded it and the state it has reached.
+  uploaded it and the state it has reached, each linking to that assessment's own page.
 - **FR-003**: The portal MUST collect the publication, the assessors, the start and end dates, and
   an optional title before any file is chosen.
 - **FR-004**: The portal MUST let the uploader find a publication already in its literature
@@ -268,17 +311,33 @@ public and the decision and its maker are recorded on the assessment.
 - **FR-017**: The portal MUST make a dataset public on confirmation when the uploader is a Data
   Curator.
 - **FR-018**: The portal MUST keep a dataset private on confirmation when the uploader is a Data
-  Assessor, and place the assessment in the queue for a decision.
-- **FR-019**: The portal MUST let a Data Curator approve a waiting assessment, making its dataset
-  public, and MUST record the decision, its maker and its date on the assessment.
-- **FR-020**: The portal MUST let a Data Curator send a waiting assessment back with a comment,
-  leaving the dataset private and the assessment open for a replacement file.
+  Assessor, and leave the assessment waiting on a decision.
+- **FR-019**: The portal MUST let a Data Curator approve a waiting assessment from its own page,
+  making its dataset public, and MUST record the decision, its maker and its date on the assessment.
+- **FR-020**: The portal MUST let a Data Curator send a waiting assessment back with a note, leaving
+  the dataset private and the assessment open for a replacement file.
 - **FR-021**: The portal MUST refuse an approval from anyone who is not a Data Curator.
 - **FR-022**: The portal MUST notify Data Curators within the portal when an assessment becomes
-  ready for a decision.
+  ready for a decision, and that notice MUST lead to the assessments waiting on them.
 - **FR-023**: The portal MUST ignore the reviewer columns present in the upload template, taking
   that information from the assessment record instead.
 - **FR-024**: A confirmation MUST be safe to submit more than once without importing twice.
+- **FR-025**: The portal MUST let a reader narrow the list by state, by assessor, by uploader and by
+  the curator who decided, in any combination, and MUST carry that narrowing in the address so a
+  narrowed list can be shared and returned to.
+- **FR-026**: The portal MUST let a reader search the list by the title of the publication a row
+  covers.
+- **FR-027**: The portal MUST give every assessment a page of its own, showing to anyone the
+  publication, the assessors, the uploader, the dates, the state, the submitted files with who
+  supplied each and when, and links to the publication and the dataset.
+- **FR-028**: The portal MUST show on that page the note a curator left when sending the assessment
+  back, while it is open for a replacement file.
+- **FR-029**: The portal MUST offer on that page, and only to whoever may use them, the routes to
+  correct the assessment's description, to supply a file, and to decide on it. A route MUST NOT be
+  drawn for a reader who may not follow it, and the page it leads to MUST refuse them in its own
+  right.
+- **FR-030**: The portal MUST let whoever may upload against an assessment correct the description
+  it was created with.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -345,13 +404,28 @@ public and the decision and its maker are recorded on the assessment.
   in the catalogue nor in a file? **A**: no. The publication link is what makes the dataset findable
   and is the one thing the template cannot supply, so it is required. US-2 scenario 2 gives the
   route for a publication that is merely absent.
-- **Q**: Who may see an assessment that is not theirs? **A**: any member of either role may see that
-  it exists and what state it is in, and only Data Curators may act on one they did not upload. The
-  team is small and works together, and hiding colleagues' work from each other would make the
-  queue in US-6 unreadable. US-1 scenario 5.
+- **Q**: Who may see an assessment that is not theirs? **A**: anyone may see that it exists, what
+  state it is in and what has been submitted against it, and only Data Curators may act on one they
+  did not upload. US-1 scenario 5, US-7 scenario 6.
 - **Q**: Is the check's report tied to the file that produced it? **A**: yes, and the confirmation
   re-runs the check rather than trusting the stored report, which is what makes FR-024 and the
   stale-report edge case safe.
+
+### Session 2026-09-17
+
+- **Q**: Does the waiting list need a page of its own? **A**: no. It is the assessment list narrowed
+  to one state, so it is a filter rather than a page, and the filters US-1 now carries cover it along
+  with every other question a reader asks of the list. The curator's count in the navigation leads to
+  the narrowed list. FR-022, FR-025.
+- **Q**: Where is an assessment decided on? **A**: on its own page, which is also where its
+  submissions, its publication and its dataset are reached. US-7, FR-019, FR-027.
+- **Q**: Does supplying a file move onto that page too? **A**: no. Uploading is a step with its own
+  report and confirmation, and folding it into the page that describes the assessment would put two
+  unrelated states on one screen. The page links to it. FR-029.
+- **Q**: Do assessors and curators discuss an assessment on its page? **A**: not in this feature.
+  Threaded comments are worth having and the portal already carries a commenting system, but how it
+  attaches here has details to settle first, so the only text an assessment carries remains the note
+  a curator leaves when sending it back. FR-028.
 
 ## Dependencies and risks
 
