@@ -3,7 +3,7 @@
   "feature": "004-import-upload-template",
   "branch": "004-import-upload-template",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "PR_READY",
+  "state": "MERGED",
   "state_history": [
     {
       "state": "PLAN",
@@ -39,6 +39,11 @@
       "state": "PR_READY",
       "at": "2026-09-11T18:45:54Z",
       "note": "review returned four findings; three fixed with each test probed against the unfixed code, the fourth noted and left"
+    },
+    {
+      "state": "MERGED",
+      "at": "2026-09-15T16:04:09Z",
+      "note": "PR #206 merged; approved by SamuelJennings"
     }
   ],
   "gates": {
@@ -57,8 +62,8 @@
       "at": "2026-09-10T22:58:06Z"
     },
     "merge": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "SamuelJennings",
+      "at": "2026-09-15T16:03:59Z"
     },
     "design_review": {
       "approved_by": "design review (three lenses), one round",
@@ -730,6 +735,6 @@
   },
   "pr": {
     "number": 206,
-    "draft": true
+    "draft": false
   }
 }

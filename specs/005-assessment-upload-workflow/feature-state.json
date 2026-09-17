@@ -2,7 +2,7 @@
   "feature": "005-assessment-upload-workflow",
   "branch": "005-assessment-upload-workflow",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "CONVERGE",
+  "state": "MERGED",
   "state_history": [
     {
       "state": "GATE_SPEC",
@@ -28,6 +28,11 @@
       "state": "CONVERGE",
       "at": "2026-09-16T21:04:02Z",
       "note": "all six stories accepted, migrations proven from empty, ADR verdicts recorded, cleanup pass applied"
+    },
+    {
+      "state": "MERGED",
+      "at": "2026-09-17T13:40:03Z",
+      "note": "PR #216 merged; approved by SamuelJennings"
     }
   ],
   "gates": {
@@ -45,8 +50,8 @@
       "at": "2026-09-15T00:00:00Z"
     },
     "merge": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "SamuelJennings",
+      "at": "2026-09-17T13:38:45Z"
     },
     "design_review": {
       "approved_by": "design-panel",
@@ -750,5 +755,9 @@
       "used": 0,
       "max": 120
     }
+  },
+  "pr": {
+    "number": 216,
+    "draft": false
   }
 }
