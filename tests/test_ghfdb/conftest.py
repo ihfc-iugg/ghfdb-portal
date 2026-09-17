@@ -397,9 +397,8 @@ def sites_by_contribution(dataset):
     one many-valued parent column is exercised — without it nothing would
     notice a site rendering twice.
     """
-    from research_vocabs.models import Concept
-
     from heat_flow.vocabularies import ExplorationPurpose
+    from research_vocabs.models import Concept
 
     purposes = list(Concept.get_for_vocabulary(ExplorationPurpose)[:2])
 

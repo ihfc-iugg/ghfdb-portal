@@ -68,89 +68,15 @@ requires = ["poetry-core (>=2.0,<3.0)"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
-# line-length is deliberately unset: Ruff's default is 88, matching Black, which
-# is what Django, pytest and httpx ship. PEP 8 caps a team's own preference at 99.
-# target-version is deliberately unset too: Ruff infers it from requires-python,
-# so it cannot drift above the versions this package actually supports.
-exclude = [
-    ".bzr",
-    ".direnv",
-    ".eggs",
-    ".git",
-    ".git-rewrite",
-    ".hg",
-    ".mypy_cache",
-    ".nox",
-    ".pants.d",
-    ".pytype",
-    ".ruff_cache",
-    ".svn",
-    ".tox",
-    ".venv",
-    "__pypackages__",
-    "_build",
-    "buck-out",
-    "build",
-    "dist",
-    "node_modules",
-    "venv",
-    "*/migrations/*.py",
-    "staticfiles/*",
-    "docs/",
-    ".github/",
-]
-fix = true
+extend = "ruff-base.toml"
 
 [tool.ruff.lint]
-select = [
-    # flake8-2020
-    "YTT",
-    # flake8-bandit
-    "S",
-    # flake8-bugbear
-    "B",
-    # flake8-builtins
-    "A",
-    # flake8-comprehensions
-    "C4",
-    # flake8-debugger
-    "T10",
-    # flake8-simplify
-    "SIM",
-    # isort
-    "I",
-    # mccabe
-    "C90",
-    # pycodestyle
-    "E",
-    "W",
-    # pyflakes
-    "F",
-    # pygrep-hooks
-    "PGH",
-    # pyupgrade
-    "UP",
-    # ruff
-    "RUF",
-    # tryceratops
-    "TRY",
-]
-ignore = [
-    # LineTooLong
-    "E501",
-    # DoNotAssignLambda
-    "E731",
-    # ClassAttributesShouldBeAnnotated
-    "RUF012",
-    "TRY003",
-    # Use of mark_safe
+extend-ignore = [
+    # project/review/admin.py builds this HTML from a list of vetted links, not
+    # user input.
     "S308",
-    # Use of standard pseudo-random generators
+    # project/heat_flow/factories.py uses random for test-data generation only.
     "S311",
-    "A003",
-    "F403",
-    "F405",
-    "C901",
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -161,18 +87,10 @@ ignore = [
 # RUF002/RUF003: prose punctuation in test docstrings and comments is not a defect
 # (the rules stay enabled for the package itself).
 "tests/**" = ["S101", "S105", "S106", "RUF002", "RUF003"]
-# Demo/dev settings carry an intentional non-secret placeholder SECRET_KEY.
-"**/demo/settings.py" = ["S105"]
 # fairdm.setup() injects its settings into this module's namespace at runtime,
 # so names it defines (MVP_CONFIG, EASY_ICONS, INSTALLED_APPS, ALLOWED_HOSTS)
 # have no visible binding here. Every F821 in this file is that pattern.
 "config/settings.py" = ["F821"]
-
-[tool.ruff.format]
-docstring-code-format = true
-docstring-code-line-length = "dynamic"
-line-ending = "lf"
-exclude = ["*/migrations/*.py"]
 
 [tool.djlint]
 blank_line_after_tag = "c-vars"

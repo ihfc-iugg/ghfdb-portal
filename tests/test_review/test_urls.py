@@ -11,7 +11,6 @@ import inspect
 
 import pytest
 from django.urls import resolve, reverse
-
 from review import urls as review_urls
 from review.views import (
     ReviewConfirmView,

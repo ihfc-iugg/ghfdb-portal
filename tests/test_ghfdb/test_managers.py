@@ -72,7 +72,9 @@ class TestChildExportQuerySet:
         if entry.group == PublishedColumns.MANY_VALUED and name in CHILD_COLUMNS
     }
 
-    NOTHING_RESOLVES_CHILD_COLUMNS = frozenset({"publication_reference", "data_reference"})
+    NOTHING_RESOLVES_CHILD_COLUMNS = frozenset(
+        {"publication_reference", "data_reference"}
+    )
 
     @pytest.mark.django_db
     def test_every_published_child_column_resolves_on_the_complete_row(
@@ -238,9 +240,9 @@ class TestGHFDBChildManager:
         assert set(GHFDBChild.objects.values_list("pk", flat=True)) == set(
             reference.values_list("pk", flat=True)
         )
-        assert list(GHFDBChild.objects.order_by("pk").values_list("pk", flat=True)) == list(
-            reference.order_by("pk").values_list("pk", flat=True)
-        )
+        assert list(
+            GHFDBChild.objects.order_by("pk").values_list("pk", flat=True)
+        ) == list(reference.order_by("pk").values_list("pk", flat=True))
         assert list(
             GHFDBChild.objects.order_by("pk")[:1].values_list("pk", flat=True)
         ) == list(reference.order_by("pk")[:1].values_list("pk", flat=True))
@@ -274,7 +276,9 @@ class TestChildFlattening:
 
     # Published CHILD_COLUMNS with no data behind them at all (R4, D3).
     # ``Ref_IGSN`` moved out of this group under D26.
-    NOTHING_RESOLVES_CHILD_COLUMNS = frozenset({"publication_reference", "data_reference"})
+    NOTHING_RESOLVES_CHILD_COLUMNS = frozenset(
+        {"publication_reference", "data_reference"}
+    )
 
     @pytest.mark.django_db
     def test_every_scalar_published_child_column_resolves_on_every_row(
@@ -570,9 +574,7 @@ class TestParentFlattening:
         site.elevation = 123.0
         site.save(update_fields=["elevation"])
 
-        record = GHFDBParent.objects.as_ghfdb_flat().get(
-            pk=published_chain.parent.pk
-        )
+        record = GHFDBParent.objects.as_ghfdb_flat().get(pk=published_chain.parent.pk)
 
         assert getattr(record.elevation, "magnitude", record.elevation) == 123.0
 
@@ -727,7 +729,9 @@ class TestGHFDBParentQuerySet:
         heat_flow_chain.is_relevant = True
         heat_flow_chain.save(update_fields=["is_relevant"])
 
-        parent = GHFDBParent.objects.with_child_counts().get(pk=heat_flow_chain.parent.pk)
+        parent = GHFDBParent.objects.with_child_counts().get(
+            pk=heat_flow_chain.parent.pk
+        )
         assert parent.total_children == 1
         assert parent.relevant_children == 1
 
@@ -811,7 +815,10 @@ class TestGHFDBManagerScoping:
 
 
 PUBLISHED_STRUCTURE_PAGE = (
-    pathlib.Path(__file__).parents[2] / "docs" / "data_models" / "published-structure.md"
+    pathlib.Path(__file__).parents[2]
+    / "docs"
+    / "data_models"
+    / "published-structure.md"
 )
 
 

@@ -767,7 +767,9 @@ class TestValuesRealSubmissionsCarry:
         assert "Aluvium" in str(excinfo.value)
         assert "geo_lithology" in str(excinfo.value)
 
-    @pytest.mark.parametrize("cell", ["[unspecified]", " [unspecified]", "[Unspecified]"])
+    @pytest.mark.parametrize(
+        "cell", ["[unspecified]", " [unspecified]", "[Unspecified]"]
+    )
     def test_an_unspecified_acquisition_date_is_read_as_no_date(self, cell):
         """The template offers ``[unspecified]`` in the date column itself.
 

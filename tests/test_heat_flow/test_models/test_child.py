@@ -561,9 +561,9 @@ class TestThermalGradient:
         assert hasattr(reloaded.temperature_top, "magnitude")
         assert float(reloaded.temperature_top.magnitude) == pytest.approx(8.2)
         assert hasattr(reloaded.temperature_top_uncertainty, "magnitude")
-        assert float(
-            reloaded.temperature_top_uncertainty.magnitude
-        ) == pytest.approx(0.5)
+        assert float(reloaded.temperature_top_uncertainty.magnitude) == pytest.approx(
+            0.5
+        )
         assert hasattr(reloaded.temperature_bottom, "magnitude")
         assert float(reloaded.temperature_bottom.magnitude) == pytest.approx(45.7)
         assert hasattr(reloaded.temperature_bottom_uncertainty, "magnitude")

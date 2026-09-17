@@ -57,9 +57,7 @@ class TestConfirmUpload:
 
         assert review.state == States.AWAITING_DECISION
 
-    def test_curator_confirming_from_described_reaches_complete_directly(
-        self, curator
-    ):
+    def test_curator_confirming_from_described_reaches_complete_directly(self, curator):
         from review.states import States, confirm_upload
 
         review = review_in(States.DESCRIBED)

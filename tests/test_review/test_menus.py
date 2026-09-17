@@ -10,13 +10,13 @@ from django.contrib.auth.models import AnonymousUser
 from django.urls import reverse
 from easy_icons import icon
 from fairdm.menus import AppMenu
-
 from review.menus import (
     assessment_entry,
     assessment_group,
     awaiting_decision_entry,
 )
 from review.states import States
+
 from tests.test_review.factories import ReviewFactory
 
 

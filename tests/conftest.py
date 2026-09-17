@@ -156,10 +156,9 @@ def django_db_setup(django_db_setup, django_db_blocker):
     two vocabularies are registered by hand here. Without that, their concepts
     never load and every filter or fixture depending on them finds nothing.
     """
+    from heat_flow.vocabularies import ExplorationMethod, GeographicEnvironment
     from research_vocabs import registry
     from research_vocabs.models import Concept
-
-    from heat_flow.vocabularies import ExplorationMethod, GeographicEnvironment
 
     preload = Concept.preload.__func__
 

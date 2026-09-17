@@ -174,16 +174,19 @@ class TestTheHeaderConstantIsTheTemplatesOwnHeader:
         drops one is a different template. The optional set is small and
         deliberate: identifiers a first submission cannot have, and the
         columns filled in after a submission is read."""
-        assert OPTIONAL_TEMPLATE_COLUMNS == frozenset(
-            {
-                "ID",
-                "ID_parent",
-                "Ref_IGSN",
-                "igsn",
-                "Reviewer_name",
-                "Reviewer_comment",
-                "Review_date",
-            }
+        assert (
+            frozenset(
+                {
+                    "ID",
+                    "ID_parent",
+                    "Ref_IGSN",
+                    "igsn",
+                    "Reviewer_name",
+                    "Reviewer_comment",
+                    "Review_date",
+                }
+            )
+            == OPTIONAL_TEMPLATE_COLUMNS
         )
         assert REQUIRED_TEMPLATE_COLUMNS == (
             OFFICIAL_TEMPLATE_HEADER - OPTIONAL_TEMPLATE_COLUMNS

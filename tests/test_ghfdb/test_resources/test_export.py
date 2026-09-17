@@ -25,13 +25,16 @@ from project.ghfdb.constants import GHFDB_COLUMN_ORDER
 class TestGHFDBExportResourceDeclaration:
     """GHFDBExportResource declares the GHFDB columns."""
 
-    @pytest.mark.xfail(strict=True, reason=(
-        "Half-landed GHFDB canonical column work: the constants moved to the "
-        "published spreadsheet casing, but ghfdb_colmeta.json, the resource "
-        "field declarations and one manager annotation key did not follow. "
-        "Needs debugging, and a decision on the published column vocabulary, "
-        "before it can pass. See issue #122."
-    ))
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "Half-landed GHFDB canonical column work: the constants moved to the "
+            "published spreadsheet casing, but ghfdb_colmeta.json, the resource "
+            "field declarations and one manager annotation key did not follow. "
+            "Needs debugging, and a decision on the published column vocabulary, "
+            "before it can pass. See issue #122."
+        ),
+    )
     def test_all_62_columns_declared(self):
         """GHFDBExportResource has a Field for each of the GHFDB_COLUMN_ORDER entries."""
         from project.ghfdb.resources.export import GHFDBExportResource
@@ -41,13 +44,16 @@ class TestGHFDBExportResourceDeclaration:
         missing = set(GHFDB_COLUMN_ORDER) - field_names
         assert not missing, f"Missing fields: {missing}"
 
-    @pytest.mark.xfail(strict=True, reason=(
-        "Half-landed GHFDB canonical column work: the constants moved to the "
-        "published spreadsheet casing, but ghfdb_colmeta.json, the resource "
-        "field declarations and one manager annotation key did not follow. "
-        "Needs debugging, and a decision on the published column vocabulary, "
-        "before it can pass. See issue #122."
-    ))
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "Half-landed GHFDB canonical column work: the constants moved to the "
+            "published spreadsheet casing, but ghfdb_colmeta.json, the resource "
+            "field declarations and one manager annotation key did not follow. "
+            "Needs debugging, and a decision on the published column vocabulary, "
+            "before it can pass. See issue #122."
+        ),
+    )
     def test_no_extra_columns_beyond_column_order(self):
         """No fields beyond GHFDB_COLUMN_ORDER are declared."""
         from project.ghfdb.resources.export import GHFDBExportResource
@@ -93,13 +99,16 @@ class TestGHFDBExportQueryset:
         dataset = resource.export(qs)
         assert len(dataset) == 1
 
-    @pytest.mark.xfail(strict=True, reason=(
-        "Half-landed GHFDB canonical column work: the constants moved to the "
-        "published spreadsheet casing, but ghfdb_colmeta.json, the resource "
-        "field declarations and one manager annotation key did not follow. "
-        "Needs debugging, and a decision on the published column vocabulary, "
-        "before it can pass. See issue #122."
-    ))
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "Half-landed GHFDB canonical column work: the constants moved to the "
+            "published spreadsheet casing, but ghfdb_colmeta.json, the resource "
+            "field declarations and one manager annotation key did not follow. "
+            "Needs debugging, and a decision on the published column vocabulary, "
+            "before it can pass. See issue #122."
+        ),
+    )
     @pytest.mark.django_db
     def test_empty_queryset_exports_headers_only(self):
         """An empty queryset exports headers but no data rows."""
@@ -121,13 +130,16 @@ class TestGHFDBExportQueryset:
 class TestGHFDBExportColumnOrder:
     """Exported headers appear in GHFDB_COLUMN_ORDER sequence."""
 
-    @pytest.mark.xfail(strict=True, reason=(
-        "Half-landed GHFDB canonical column work: the constants moved to the "
-        "published spreadsheet casing, but ghfdb_colmeta.json, the resource "
-        "field declarations and one manager annotation key did not follow. "
-        "Needs debugging, and a decision on the published column vocabulary, "
-        "before it can pass. See issue #122."
-    ))
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "Half-landed GHFDB canonical column work: the constants moved to the "
+            "published spreadsheet casing, but ghfdb_colmeta.json, the resource "
+            "field declarations and one manager annotation key did not follow. "
+            "Needs debugging, and a decision on the published column vocabulary, "
+            "before it can pass. See issue #122."
+        ),
+    )
     @pytest.mark.django_db
     def test_exported_headers_match_column_order(self, heat_flow_chain):
         """Exported dataset column headers appear in exact GHFDB_COLUMN_ORDER sequence."""
@@ -265,6 +277,7 @@ class TestGHFDBExportRefIGSN:
     @pytest.mark.django_db
     def test_ref_igsn_emits_the_stored_identifier(self, heat_flow_chain):
         from fairdm.core.sample.models import SampleIdentifier
+
         from project.ghfdb.models import GHFDBChild
         from project.ghfdb.resources.export import GHFDBExportResource
 

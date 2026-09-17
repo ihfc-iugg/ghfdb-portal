@@ -10,8 +10,8 @@ import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from fairdm.factories import LiteratureItemFactory
 from literature.models import LiteratureItem
-
 from review.forms import ReviewDescriptionForm
+
 from tests.test_review.factories import (
     ClaimedPersonFactory,
     GhostPersonFactory,
@@ -111,7 +111,9 @@ class TestReviewDescriptionFormBibliographyFile:
         assessor = ClaimedPersonFactory()
         bibliography_file = SimpleUploadedFile(
             "publication.json",
-            json.dumps({"title": "Never Asked For", "type": "article-journal"}).encode(),
+            json.dumps(
+                {"title": "Never Asked For", "type": "article-journal"}
+            ).encode(),
             content_type="application/json",
         )
         before = LiteratureItem.objects.count()

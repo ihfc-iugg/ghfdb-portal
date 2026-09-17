@@ -6,7 +6,6 @@ A publication is supplied directly by ``fairdm.factories.LiteratureItemFactory``
 
 import factory
 from fairdm.factories import DatasetFactory, LiteratureItemFactory, PersonFactory
-
 from review.models import Review
 
 
