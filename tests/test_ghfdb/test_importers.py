@@ -587,6 +587,31 @@ class TestControlledVocabularyDecides:
         assert not HeatFlow.objects.exists()
         assert not IntervalConductivity.objects.exists()
 
+    def test_an_unrecognised_q_method_value_names_its_column(self, dataset):
+        """``q_method`` is set in ``after_save_instance`` by a direct
+        ``MultiConceptWidget.clean()`` call rather than through
+        ``set_m2m_relations``, so it is the one many-valued column that
+        skipped the column name T028b proved for the other twelve."""
+        from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        row1 = dict(ROW)
+        row1["q_method"] = "not_a_real_method"
+
+        outcome = import_ghfdb_template(make_dataset(row1), dataset)
+
+        assert outcome.has_errors()
+        row_number, errors = outcome.child.row_errors()[0]
+        assert row_number == 1
+        message = str(errors[0].error)
+        assert "q_method" in message
+        assert "not_a_real_method" in message
+
+        assert not HeatFlowSite.objects.exists()
+        assert not ParentHeatFlow.objects.exists()
+        assert not HeatFlow.objects.exists()
+
     def test_a_value_the_templates_sheet_lists_but_the_portal_does_not_hold_is_still_refused(
         self, dataset, official_upload_template_workbook
     ):

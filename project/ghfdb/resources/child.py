@@ -288,7 +288,7 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         q_method_raw = row.get("q_method", "")
         if q_method_raw:
             widget = MultiConceptWidget(vocabularies.HeatFlowMethod)
-            qs = widget.clean(q_method_raw, row=row)
+            qs = widget.clean(q_method_raw, row=row, column="q_method")
             if qs is not None:
                 instance.method.set(qs)
 
