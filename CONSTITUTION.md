@@ -264,7 +264,7 @@ This section governs how changes move from idea to deployed code within the GHFD
 - **Test-First**: Tests written and observed failing before implementation, per Principle VI.
 - **Implementation Validation Checkpoints**:
   - Run `python manage.py check` after each phase; fix all errors before continuing.
-  - Run the full test suite (`poetry run pytest`) before marking any user story complete.
+  - Run the full test suite (`uv run pytest`) before marking any user story complete.
   - Verify FairDM registry integrity after modifying models or `ModelConfig` classes.
   - Update `docs/ghfdb_fields.md` immediately when any schema change is made.
 - **Documentation Currency**: Documentation is updated incrementally as capabilities are added, never deferred.

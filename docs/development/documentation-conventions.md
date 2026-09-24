@@ -165,8 +165,8 @@ Documentation quality is enforced through automated checks:
 Run validation locally before pushing:
 
 ```bash
-poetry run sphinx-build -b html docs docs/_build/html -W --keep-going
-poetry run sphinx-build -b linkcheck docs docs/_build/linkcheck -W --keep-going
+uv run sphinx-build -b html docs docs/_build/html -W --keep-going
+uv run sphinx-build -b linkcheck docs docs/_build/linkcheck -W --keep-going
 ```
 
 ## Getting Help

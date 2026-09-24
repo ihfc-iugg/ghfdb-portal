@@ -8,10 +8,9 @@ def install(c):
     """
     Install the project dependencies
     """
-    print("🚀 Creating virtual environment using pyenv and poetry")
-    c.run("poetry install")
-    c.run("poetry run pre-commit install")
-    c.run("poetry shell")
+    print("🚀 Creating virtual environment using uv")
+    c.run("uv sync")
+    c.run("uv run pre-commit install")
 
 
 @task
@@ -20,18 +19,18 @@ def check(c):
     Check the consistency of the project using various tools
     """
     print(
-        "🚀 Checking Poetry lock file consistency with 'pyproject.toml': Running poetry lock --check"
+        "🚀 Checking lock file consistency with 'pyproject.toml': Running uv lock --check"
     )
-    c.run("poetry lock --check")
+    c.run("uv lock --check")
 
     print("🚀 Linting code: Running pre-commit")
-    c.run("poetry run pre-commit run -a")
+    c.run("uv run pre-commit run -a")
 
     print("🚀 Static type checking: Running mypy")
-    c.run("poetry run mypy")
+    c.run("uv run mypy")
 
     print("🚀 Checking for obsolete dependencies: Running deptry")
-    c.run("poetry run deptry .")
+    c.run("uv run deptry .")
 
 
 @task
@@ -40,7 +39,7 @@ def test(c):
     Run the test suite
     """
     print("🚀 Testing code: Running pytest")
-    c.run("poetry run pytest --cov --cov-config=pyproject.toml --cov-report=html")
+    c.run("uv run pytest --cov --cov-config=pyproject.toml --cov-report=html")
 
 
 @task
@@ -62,14 +61,14 @@ def release(c, overwrite=False):
     Release a new version of the app using year.release-number versioning.
     """
     if overwrite:
-        version = c.run("poetry version -s", hide=True).stdout.strip()
+        version = c.run("uv version --short", hide=True).stdout.strip()
         print(f"Overwriting release {version}")
     else:
         # 1. Determine the current year
         current_year = datetime.datetime.now().year
 
         # 2. Get the current version
-        year, num = c.run("poetry version -s", hide=True).stdout.strip().split(".")
+        year, num = c.run("uv version --short", hide=True).stdout.strip().split(".")
         year = int(year)
         num = int(num)
 
@@ -77,10 +76,10 @@ def release(c, overwrite=False):
         version = f"{current_year}.1" if year != current_year else f"{year}.{num + 1}"
 
         # 4. Update the version in pyproject.toml
-        c.run(f"poetry version {version}")
+        c.run(f"uv version {version}")
 
-        # 5. Commit the change
-        c.run(f'git commit pyproject.toml -m "release v{version}"')
+        # 5. Commit the change (uv.lock records the project's own version too)
+        c.run(f'git commit pyproject.toml uv.lock -m "release v{version}"')
 
     # 6. Delete the existing tag if overwriting
     if overwrite:
@@ -160,7 +159,8 @@ def update_deps(c):
         "fairdm-rest-api",
     ]
 
-    c.run(f"poetry update {' '.join(packages)}")
+    upgrades = " ".join(f"--upgrade-package {name}" for name in packages)
+    c.run(f"uv lock {upgrades}")
 
 
 @task
