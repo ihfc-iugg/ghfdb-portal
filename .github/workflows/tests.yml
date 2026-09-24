@@ -10,7 +10,7 @@ on:
       - 'tests/**'
       - 'templates/**'
       - 'pyproject.toml'
-      - 'poetry.lock'
+      - 'uv.lock'
       - '.github/workflows/tests.yml'
   # No paths filter on pull_request: these checks are ruleset-required, and a
   # path-filtered required check never reports on out-of-scope PRs, blocking merge.
@@ -20,7 +20,7 @@ on:
 
 jobs:
   call-tests:
-    uses: django-mvp/shared/.github/workflows/tests.yml@v0.4.1
+    uses: django-mvp/shared/.github/workflows/tests.yml@v0.6.0
     with:
       coverage-package: project
       # This is a deployed application, not a library, so it runs on exactly one
@@ -28,6 +28,5 @@ jobs:
       # nothing runs on.
       python-versions: '["3.13"]'
       django-versions: '["5.2"]'
-      poetry-install-args: '--with test'
       install-playwright: true
     secrets: inherit

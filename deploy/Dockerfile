@@ -3,9 +3,11 @@
 # ---------------------------------------------------------------------------
 FROM python:3.13-slim AS builder
 
-ARG POETRY_VERSION=2.3.4
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    UV_PROJECT_ENVIRONMENT=/venv \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_LINK_MODE=copy
 
 # build-essential and libpq-dev for packages with C extensions; git because
 # fairdm, fairdm-geo and fairdm-discussions are all VCS dependencies.
@@ -15,14 +17,19 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir "poetry==${POETRY_VERSION}" && \
-    poetry self add poetry-plugin-bundle
+COPY --from=ghcr.io/astral-sh/uv:0.12.18 /uv /usr/local/bin/uv
 
 WORKDIR /build
-COPY pyproject.toml poetry.lock README.md ./
-COPY project/ ./project/
 
-RUN poetry bundle venv --only=main /venv
+# Third-party dependencies first, so this layer is reused until uv.lock or the
+# dependency list changes. --locked fails the build when uv.lock is out of date
+# with pyproject.toml, and --no-dev leaves out the test, lint and docs tooling.
+COPY pyproject.toml uv.lock README.md ./
+RUN uv sync --locked --no-dev --no-install-project
+
+# Then the project's own packages, installed into the same venv.
+COPY project/ ./project/
+RUN uv sync --locked --no-dev --no-editable
 
 # ---------------------------------------------------------------------------
 # Stage 2 — runtime: minimal image with app code and bundled venv

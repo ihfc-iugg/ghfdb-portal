@@ -1,28 +1,42 @@
-# Family-standard base ruff configuration for django-mvp repositories.
+# Base ruff configuration shared by every repository that adopts this standard.
 #
-# Copy to the repo root as `ruff-shared.toml`, then reference it from the
+# Copy to the repo root as `ruff-base.toml`, then reference it from the
 # package's own pyproject.toml:
 #
 #   [tool.ruff]
-#   extend = "ruff-shared.toml"
+#   extend = "ruff-base.toml"
+#
+# Do NOT rename this to `ruff.toml` or `.ruff.toml`, however much more standard
+# those look. Ruff auto-discovers both, and when either is present it uses that
+# file INSTEAD of the `[tool.ruff]` section in pyproject.toml — the two are
+# never merged. A repo would silently lose its own `extend`, its
+# per-file-ignores and its format overrides, while ruff carried on reporting
+# success against a config nobody meant to run. Verified against ruff 0.15.22.
+# `ruff-base.toml` is not a discovered name, so pyproject stays authoritative
+# and pulls this file in explicitly.
+#
+# A copy is only worth having if something compares it. Each repo's copy is
+# checked against this file at the shared tag that repo pins, which catches the
+# four ways it goes wrong: missing, stale, under an old name, or present but
+# not extended from pyproject.
 #
 # `extend` only accepts a local filesystem path — Ruff has no mechanism for
 # extending a config file that lives in another repository — so this file is
-# copied in and re-copied on each family-standard bump, the same discipline
+# copied in and re-copied whenever this file changes here, the same discipline
 # already used for templates/pre-commit-config.yaml. What changes is what a
 # downstream pyproject.toml has to state itself: once extending, a package's
 # own [tool.ruff] holds only its remainder — extend-ignore for additional
 # ignored rules, extend-exclude for additional excluded paths,
 # [tool.ruff.lint.per-file-ignores] for test/example carve-outs, and any
 # [tool.ruff.format] keys that differ from the ones set below — instead of
-# restating the whole family rule set.
+# restating the whole shared rule set.
 #
 # `line-length` and `target-version` are deliberately absent here. Line length
 # defaults to 88, matching Black — what Django, pytest and httpx all ship,
 # and PEP 8's own cap on a team's preferred limit is 99 — so leaving it unset
-# is the family standard, not an oversight. target-version is inferred from
-# each package's own `requires-python` and would only ever drift if pinned
-# here. A package still on the pre-2026-08 120-column style sets
+# is deliberate in every repository here, not an oversight. target-version is
+# inferred from each package's own `requires-python` and would only ever drift
+# if pinned here. A package still on the pre-2026-08 120-column style sets
 # `line-length = 120` in its own file until its reformat PR lands.
 
 extend-exclude = [

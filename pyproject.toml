@@ -1,14 +1,13 @@
 [project]
 name = "global-heat-flow-database"
+# Source of truth for the release flow: tag-release cuts v<version> when no
+# matching tag exists on a main push touching this file.
+version = "2025.21"
 description = "Code base for the IHFC's Global Heat Flow Database web application"
 license = "MIT"
 readme = "README.md"
 authors = [{ name = "Sam Jennings", email = "samuel.scott.jennings@gmail.com" }]
 requires-python = ">=3.13,<4.0"
-# Version stays in [tool.poetry] because that is what the release flow bumps.
-# Dependencies stay there too: several are git references, which are clearer in
-# Poetry's form than as PEP 508 direct references.
-dynamic = ["version", "dependencies"]
 classifiers = [
     "Development Status :: 1 - Planning",
     "Framework :: Django :: 5.2",
@@ -16,47 +15,28 @@ classifiers = [
     "Natural Language :: English",
     "Programming Language :: Python :: 3.13",
 ]
+dependencies = ["fairdm", "fairdm-geo", "fairdm-discussions"]
 
 [project.urls]
 Homepage = "https://github.com/ihfc-iugg/ghfdb-portal"
 "World Heat Flow Database Project" = "https://heatflow.world"
 IHFC = "http://ihfc-iugg.org"
 
-[tool.poetry]
-# Source of truth for the release flow: tag-release cuts v<version> when no
-# matching tag exists on a main push touching this file.
-version = "2025.21"
-requires-poetry = ">=2.0,<3.0"
-include = ["LICENSE", "README.md"]
-packages = [
-    { include = "heat_flow", from = "project" },
-    { include = "ghfdb", from = "project" },
-    { include = "review", from = "project" },
+[dependency-groups]
+dev = ["mvp-shared[dev,test]", "numpy>=2.5.3,<3"]
+docs = [
+    "fairdm-docs[sphinx-book-theme]",
+    "sphinxcontrib-mermaid>=2.1,<3",
 ]
 
-[tool.poetry.dependencies]
-python = ">=3.13,<4.0"
-fairdm = { git = "https://github.com/FAIR-DM/fairdm" }
-fairdm-geo = { git = "https://github.com/FAIR-DM/fairdm-geo" }
-fairdm-discussions = { git = "https://github.com/FAIR-DM/fairdm-discussions" }
-
-[tool.poetry.group.test.dependencies]
-mvp-shared = { git = "https://github.com/django-mvp/shared.git", rev = "v0.4.1", extras = [
-    "test",
-] }
-
-
-[tool.poetry.group.dev.dependencies]
-mvp-shared = { git = "https://github.com/django-mvp/shared.git", rev = "v0.4.1", extras = [
-    "dev",
-] }
-numpy = "^2.5.3"
-
-[tool.poetry.group.docs.dependencies]
-fairdm-docs = { git = "https://github.com/FAIR-DM/fairdm-docs", extras = [
-    "sphinx-book-theme",
-] }
-sphinxcontrib-mermaid = "^2.1"
+[tool.uv.sources]
+# The FairDM packages are pinned to the commits the previous lockfile held, so
+# the move to uv changes none of them. Move a pin deliberately, not by re-locking.
+fairdm = { git = "https://github.com/FAIR-DM/fairdm", rev = "3928eb5f735dd539fa115494b356c5694ed92f7e" }
+fairdm-geo = { git = "https://github.com/FAIR-DM/fairdm-geo", rev = "a58d86a34b692d4a329b3cb37a02149ba9626e9f" }
+fairdm-discussions = { git = "https://github.com/FAIR-DM/fairdm-discussions", rev = "643d0af810feb687e41c499df6f6c0d510500b79" }
+fairdm-docs = { git = "https://github.com/FAIR-DM/fairdm-docs", rev = "bead56e901d8ea6af05b0d440bd81e0eaf4690b2" }
+mvp-shared = { git = "https://github.com/django-mvp/shared.git", tag = "v0.6.0" }
 
 [tool.forge.conformance]
 # The subject of these tests is docs/ghfdb_fields.md and the built documentation,
@@ -64,8 +44,14 @@ sphinxcontrib-mermaid = "^2.1"
 non-mirror-paths = ["tests/test_docs/"]
 
 [build-system]
-requires = ["poetry-core (>=2.0,<3.0)"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["project/heat_flow", "project/ghfdb", "project/review"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/project/heat_flow", "/project/ghfdb", "/project/review", "/LICENSE", "/README.md"]
 
 [tool.ruff]
 extend = "ruff-base.toml"

@@ -86,9 +86,9 @@ jobs:
   call-prepare-release:
     name: Open release PR
     needs: compute-version
-    uses: django-mvp/shared/.github/workflows/prepare-release.yml@v0.4.1
+    uses: django-mvp/shared/.github/workflows/prepare-release.yml@v0.6.0
     with:
-      # The shared workflow passes this straight to `poetry version`, which
+      # The shared workflow passes this straight to `uv version`, which
       # accepts an explicit version as readily as a bump level.
       bump: ${{ needs.compute-version.outputs.version }}
     secrets:
