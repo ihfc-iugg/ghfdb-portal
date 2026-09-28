@@ -66,29 +66,23 @@ def release(c, overwrite=False):
         version = c.run("uv version --short", hide=True).stdout.strip()
         print(f"Overwriting release {version}")
     else:
-        # 1. Determine the current year
         current_year = datetime.datetime.now().year
 
-        # 2. Get the current version
         year, num = c.run("uv version --short", hide=True).stdout.strip().split(".")
         year = int(year)
         num = int(num)
 
-        # 3. Form the new version string
         version = f"{current_year}.1" if year != current_year else f"{year}.{num + 1}"
 
-        # 4. Update the version in pyproject.toml
         c.run(f"uv version {version}")
 
-        # 5. Commit the change (uv.lock records the project's own version too)
+        # uv.lock records the project's own version too, so it commits alongside.
         c.run(f'git commit pyproject.toml uv.lock -m "release v{version}"')
 
-    # 6. Delete the existing tag if overwriting
     if overwrite:
         c.run(f"git tag -d v{version}", warn=True)
         c.run(f"git push --delete origin v{version}", warn=True)
 
-    # 7. Create a tag and push it
     c.run(f'git tag -a v{version} -m "Release {version}"')
     c.run("git push --tags")
     c.run("git push origin main")

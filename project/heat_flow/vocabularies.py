@@ -1,3 +1,5 @@
+"""Controlled vocabularies for the heat flow schema's classification fields."""
+
 from django.utils.translation import gettext_lazy as _
 from research_vocabs.builder.skos import Collection, Concept
 from research_vocabs.vocabularies import VocabularyBuilder
@@ -6,6 +8,8 @@ BASE_NAMESPACE = "https://heatflow.world/vocabularies/"
 
 
 class HeatFlowMethod(VocabularyBuilder):
+    """Specification of the method used to determine the heat flow value."""
+
     interval = Concept(
         prefLabel=_("Interval method"),
         definition=_(
@@ -355,8 +359,7 @@ class ExplorationPurpose(VocabularyBuilder):
 
 
 class TemperatureMethod(VocabularyBuilder):
-    """The allowed temperature methods for the T_method_top and T_method_bottom fields at the heat flow child level.
-    """
+    """The allowed temperature methods for the T_method_top and T_method_bottom fields at the heat flow child level."""
 
     LOGeq = Concept(
         prefLabel=_("LOGeq"),
@@ -811,8 +814,7 @@ class ConductivityLocation(VocabularyBuilder):
 
 
 class ConductivitySaturation(VocabularyBuilder):
-    """Specification of the saturation state of the rocks during the thermal conductivity measurement.
-    """
+    """Specification of the saturation state of the rocks during the thermal conductivity measurement."""
 
     saturatedInSitu = Concept(
         prefLabel=_("Saturated measured in-situ"),
@@ -867,8 +869,7 @@ class ConductivitySaturation(VocabularyBuilder):
 
 
 class ConductivityPTConditions(VocabularyBuilder):
-    """Specification of the conditions under which the thermal conductivity was measured.
-    """
+    """Specification of the conditions under which the thermal conductivity was measured."""
 
     unrecordedAmbient = Concept(
         prefLabel=_("Unrecorded ambient pT conditions"),
@@ -975,8 +976,7 @@ class ConductivityPTConditions(VocabularyBuilder):
 
 
 class ConductivityStrategy(VocabularyBuilder):
-    """Specification of the strategy used to determine the thermal conductivity.
-    """
+    """Specification of the strategy used to determine the thermal conductivity."""
 
     random = Concept(
         prefLabel=_("Random or periodic depth sampling"),
@@ -1021,8 +1021,7 @@ class ConductivityStrategy(VocabularyBuilder):
 
 
 class ConductivityPTFunction(VocabularyBuilder):
-    """Specification of the function used to determine the thermal conductivity.
-    """
+    """Specification of the function used to determine the thermal conductivity."""
 
     BirchClark1940 = Concept(
         prefLabel="T - Birch & Clark (1940)",

@@ -286,8 +286,5 @@ class ColumnDisplay:
 
         Returns:
             The corresponding display callables, in the same order.
-
-        Raises:
-            ValueError: If any column is one ``PublishedColumns`` does not hold.
         """
         return tuple(ColumnDisplay.build(name) for name in columns)

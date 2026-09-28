@@ -1,5 +1,4 @@
-"""The assessment description form (T015, plan.md "The pages", spec.md User
-Story 2).
+"""The assessment description form (T015, plan.md "The pages", spec.md User Story 2).
 
 Publication, assessors, dates and an optional title, collected before any
 file is chosen (FR-003 through FR-007).
@@ -20,6 +19,8 @@ from .models import Review
 
 
 class ReviewDescriptionForm(ModelForm):
+    """Create or update an assessment's description before any file is uploaded."""
+
     literature = forms.ModelChoiceField(
         queryset=LiteratureItem.objects.all(),
         required=False,
@@ -73,6 +74,7 @@ class ReviewDescriptionForm(ModelForm):
         ]
 
     def clean_bibliography_file(self):
+        """Parse the uploaded file as a CSL-JSON bibliography record."""
         bibliography_file = self.cleaned_data.get("bibliography_file")
         if not bibliography_file:
             return bibliography_file
@@ -89,6 +91,7 @@ class ReviewDescriptionForm(ModelForm):
         return data
 
     def clean(self):
+        """Require a publication, reject a taken one, and check the date order."""
         cleaned_data = super().clean()
 
         literature = cleaned_data.get("literature")

@@ -113,8 +113,7 @@ class ReviewDetailView(FairDMDetailView):
 
 
 class ReviewUpdateView(UserPassesTestMixin, FairDMUpdateView):
-    """Correct an assessment's description after it was created (T047,
-    FR-030).
+    """Correct an assessment's description after it was created (T047, FR-030).
 
     The same people who may upload against an assessment may correct what it
     says: its own uploader, or any Data Curator. The form is the one the
@@ -127,9 +126,11 @@ class ReviewUpdateView(UserPassesTestMixin, FairDMUpdateView):
     page_title = _("Correct an assessment")
 
     def test_func(self):
+        """Allow the assessment's own uploader or any Data Curator."""
         return can_manage_upload(self.request.user, self.get_object())
 
     def get_success_url(self):
+        """Return to the assessment's own page after saving."""
         return self.object.get_absolute_url()
 
 
@@ -155,10 +156,12 @@ class ReviewCreateView(UserPassesTestMixin, FairDMCreateView):
     page_title = _("Start an assessment")
 
     def test_func(self):
+        """Allow either assessment role."""
         user = self.request.user
         return is_assessment_team_member(user)
 
     def form_valid(self, form):
+        """Create the assessment's dataset and credit the assessors as contributors."""
         self.object = form.save(commit=False)
         self.object.uploaded_by = self.request.user
 
@@ -177,8 +180,7 @@ class ReviewCreateView(UserPassesTestMixin, FairDMCreateView):
 
 
 class ReviewUploadView(UserPassesTestMixin, DetailView):
-    """Upload a file and see its check report (T020, plan.md "The pages",
-    FR-008 through FR-010, D5).
+    """Upload a file and see its check report (T020, plan.md "The pages", FR-008 through FR-010, D5).
 
     The upload form and its check report share one route and one response:
     a GET shows the blank form, and a POST stores the submission, runs the
@@ -193,9 +195,11 @@ class ReviewUploadView(UserPassesTestMixin, DetailView):
     context_object_name = "review"
 
     def test_func(self):
+        """Allow the assessment's own uploader or any Data Curator."""
         return can_manage_upload(self.request.user, self.get_object())
 
     def get_context_data(self, **kwargs):
+        """Add the upload form and, if sent back, the curator's comment."""
         context = super().get_context_data(**kwargs)
         context.setdefault("form", GHFDBImportForm())
         review = self.object
@@ -204,6 +208,7 @@ class ReviewUploadView(UserPassesTestMixin, DetailView):
         return context
 
     def post(self, request, *args, **kwargs):
+        """Store the submitted file and run a check-only import against it."""
         self.object = review = self.get_object()
         form = GHFDBImportForm(request.POST, request.FILES)
         if not form.is_valid():
@@ -219,12 +224,9 @@ class ReviewUploadView(UserPassesTestMixin, DetailView):
         try:
             outcome = import_ghfdb_template(content, review.dataset, check_only=True)
         except ValueError:
-            # ADR 0003: the team's current template still carries two
-            # misspelled columns this refuses, so the header refusal is a
-            # decision, not a defect (research.md "The blocker nothing here
-            # can fix"). The raised message quotes column names the reader
-            # cannot act on (FR-012), so nothing from it reaches the page —
-            # only the fact that the template is out of date.
+            # A deliberate header refusal, not a defect (docs/adr/0003). The raised
+            # message names columns the reader cannot act on, so only the fact that
+            # the template is out of date reaches the page.
             return self.render_to_response(
                 self.get_context_data(form=GHFDBImportForm(), header_refused=True)
             )
@@ -235,8 +237,7 @@ class ReviewUploadView(UserPassesTestMixin, DetailView):
 
 
 def _publish_if_complete(review):
-    """Write the dataset public exactly when the assessment's own state
-    reached ``COMPLETE`` (T029/T034, data-model.md "Dataset visibility").
+    """Write the dataset public exactly when the assessment's own state reached ``COMPLETE`` (T029/T034, data-model.md "Dataset visibility").
 
     A curator's confirmation and a curator's approval both make a dataset
     public through this one path rather than each writing the fields for
@@ -254,8 +255,7 @@ def _publish_if_complete(review):
 
 
 class ReviewConfirmView(UserPassesTestMixin, SingleObjectMixin, View):
-    """Confirm a checked upload, POST only (T022/T023, plan.md "Confirmation
-    safety", FR-024, D6).
+    """Confirm a checked upload, POST only (T022/T023, plan.md "Confirmation safety", FR-024, D6).
 
     Re-runs the check against the assessment's stored file rather than
     trusting the report the uploader saw, and writes in the same
@@ -269,9 +269,11 @@ class ReviewConfirmView(UserPassesTestMixin, SingleObjectMixin, View):
     http_method_names = ["post"]
 
     def test_func(self):
+        """Allow the assessment's own uploader or any Data Curator."""
         return can_manage_upload(self.request.user, self.get_object())
 
     def post(self, request, *args, **kwargs):
+        """Re-check the stored submission and confirm the assessment if it passes."""
         review = self.get_object()
 
         if review.state not in (States.DESCRIBED, States.CHANGES_REQUESTED):
@@ -297,8 +299,7 @@ class ReviewConfirmView(UserPassesTestMixin, SingleObjectMixin, View):
 
 
 class ReviewDecideView(UserPassesTestMixin, SingleObjectMixin, View):
-    """Approve or send back a waiting assessment, POST only (T034, plan.md
-    "The pages", FR-019, FR-021, spec.md User Story 6 scenarios 2 and 5).
+    """Approve or send back a waiting assessment, POST only (T034, plan.md "The pages", FR-019, FR-021, spec.md User Story 6 scenarios 2 and 5).
 
     Curators only — ``approve`` raises ``IllegalTransition`` for anyone else
     too (states.py's own rule), but ``test_func`` refuses the request before
@@ -313,9 +314,11 @@ class ReviewDecideView(UserPassesTestMixin, SingleObjectMixin, View):
     http_method_names = ["post"]
 
     def test_func(self):
+        """Allow Data Curators only."""
         return is_data_curator(self.request.user)
 
     def post(self, request, *args, **kwargs):
+        """Approve or send back the waiting assessment, then redirect to it."""
         review = self.get_object()
 
         if review.state != States.AWAITING_DECISION:

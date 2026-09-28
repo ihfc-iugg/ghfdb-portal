@@ -1,5 +1,4 @@
-"""The assessment state vocabulary and its transitions (T003, data-model.md
-"review.states").
+"""The assessment state vocabulary and its transitions (T003, data-model.md "review.states").
 
 Four states, five transitions, and every one of them is an action a person
 takes — nothing here transitions on a timer or a signal. Transitions take
@@ -19,6 +18,8 @@ from .permissions import is_data_curator
 
 
 class States(models.IntegerChoices):
+    """The states an assessment moves through, from description to publication."""
+
     DESCRIBED = 0, _("Described")
     AWAITING_DECISION = 1, _("Awaiting decision")
     CHANGES_REQUESTED = 2, _("Changes requested")
@@ -38,9 +39,7 @@ STATE_VARIANTS = {
 
 
 class IllegalTransition(Exception):
-    """Raised when a transition's origin state or acting person is not one
-    the state machine allows.
-    """
+    """Raised when a transition's origin state or acting person is not one the state machine allows."""
 
 
 def confirm_upload(assessment, actor):
@@ -73,9 +72,7 @@ def approve(assessment, actor):
 
 
 def send_back(assessment, actor):
-    """AWAITING_DECISION -> CHANGES_REQUESTED. Only a Data Curator may send
-    an assessment back.
-    """
+    """AWAITING_DECISION -> CHANGES_REQUESTED. Only a Data Curator may send an assessment back."""
     if assessment.state != States.AWAITING_DECISION:
         raise IllegalTransition(
             f"Cannot send back an assessment in {States(assessment.state).label}."

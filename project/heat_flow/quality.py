@@ -1,4 +1,4 @@
-"""Heat Flow Quality Assessment Module
+"""Heat Flow Quality Assessment Module.
 
 This file implements the quality assessment scheme for heat flow measurements
 as described in Fuchs et al. (2023) following the decision tree structure:
@@ -39,6 +39,8 @@ logger = logging.getLogger(__name__)
 
 
 class UScoreOptions(models.TextChoices):
+    """Quality grades for a heat flow measurement's U-score (uncertainty)."""
+
     U1 = "U1", _("Excellent")
     U2 = "U2", _("Good")
     U3 = "U3", _("Acceptable")
@@ -47,6 +49,8 @@ class UScoreOptions(models.TextChoices):
 
 
 class MScoreOptions(models.TextChoices):
+    """Quality grades for a heat flow measurement's M-score (methodology)."""
+
     M1 = "M1", _("Excellent")
     M2 = "M2", _("Good")
     M3 = "M3", _("Acceptable")
@@ -419,15 +423,18 @@ class BoreholeQualityCalculator:
 def calculate_perturbation_flags(heat_flow):
     """Calculate perturbation flags (p-flags) for a heat flow measurement.
 
-    Returns:
-        str: 7-character string representing perturbation effects
-
     Flag meanings:
     - Uppercase: Present and corrected
     - Lowercase: Present but not corrected
     - X: Present but insignificant
     - x: Not present/not recognized
     - -: Insufficient information
+
+    Args:
+        heat_flow: HeatFlow model instance.
+
+    Returns:
+        str: 7-character string representing perturbation effects.
     """
     flags = []
 

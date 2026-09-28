@@ -1,5 +1,4 @@
-"""
-GHFDB child-level import resource (HeatFlow + related measurements).
+"""GHFDB child-level import resource (HeatFlow + related measurements).
 
 Implements GHFDBChildImportResource which reads the GHFDB XLSX spreadsheet
 and creates/updates child-level records:
@@ -40,8 +39,7 @@ from .widgets import (
 
 
 class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
-    """
-    Import resource for GHFDB child-level data.
+    """Import resource for GHFDB child-level data.
 
     Processes all child columns from the GHFDB spreadsheet and upserts
     ``HeatFlow`` records keyed on ``ID``.  Related objects (HeatFlowInterval,
@@ -170,8 +168,7 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         self._current_row_number = kwargs.get("row_number")
 
     def before_import(self, dataset, **kwargs):
-        """Store the caller's named FairDM dataset for use during row
-        processing.
+        """Store the caller's named FairDM dataset for use during row processing.
 
         FR-002: the import refuses to guess a dataset. A caller passing an
         already-resolved ``Dataset`` instance as ``fairdm_dataset`` reaches a
@@ -224,9 +221,9 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         )
 
     def before_save_instance(self, instance, row, **kwargs):
-        """
-        Save the HeatFlowInterval and optional sub-measurements, then link them
-        to the HeatFlow instance.
+        """Save the HeatFlowInterval and optional sub-measurements.
+
+        Links them to the HeatFlow instance.
         """
         if not instance.dataset_id:
             instance.dataset = self._fairdm_dataset
@@ -235,12 +232,8 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         if instance.parent is None and not str(row.get("ID_parent") or "").strip():
             instance.parent = self._resolve_parent_by_location(row)
 
-        # Every determination is named. A row that carries an ID is named by
-        # it — the identifier the submission itself gives the determination —
-        # and a row without one falls back to the stable natural key. Leaving
-        # name unset is not an option: it is a required CharField, so an
-        # unset one saves as an empty string without the database objecting,
-        # and the determination then has nothing to display itself by.
+        # name is a required CharField with no default, so leaving it unset
+        # would silently save as "" rather than fail (#206).
         ghfdb_id = str(row.get("ID") or "").strip()
         if ghfdb_id:
             instance.name = ghfdb_id
@@ -249,19 +242,15 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
             if natural_key:
                 instance.name = natural_key
 
-        # Determine the parent HeatFlowSite for the interval
         parent_hf = instance.parent
         heat_flow_site = parent_hf.site if parent_hf else None
 
-        # --- HeatFlowInterval ---
         interval = self._build_interval(row, heat_flow_site)
         instance.sample = interval
 
-        # --- ThermalGradient (sentinel: T_grad_mean) ---
         gradient = self._build_gradient(row, interval)
         instance.thermal_gradient = gradient
 
-        # --- IntervalConductivity (sentinel: tc_mean) ---
         conductivity = self._build_conductivity(row, interval)
         instance.thermal_conductivity = conductivity
 

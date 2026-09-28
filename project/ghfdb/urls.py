@@ -1,3 +1,5 @@
+"""URL routes for the GHFDB app."""
+
 from django.urls import path
 
 from .views import GHFDBExploreView, GHFDBMetaDataAPIView, GHFDBPathDownloadView

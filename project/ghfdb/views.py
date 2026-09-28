@@ -1,3 +1,5 @@
+"""Views for the GHFDB app: API endpoints and the map explorer page."""
+
 import json
 from pathlib import Path
 
@@ -18,8 +20,8 @@ data_dir = Path(__file__).resolve().parent / "data"
 
 
 def can_publish_dataset(request, instance, **kwargs):
-    """
-    Check if the user has permission to publish the dataset.
+    """Check if the user has permission to publish the dataset.
+
     This is a placeholder function and should be replaced with actual permission logic.
     """
     if check_has_edit_permission(request, instance, **kwargs) and instance.has_data:
@@ -33,9 +35,12 @@ def can_publish_dataset(request, instance, **kwargs):
     responses=MyJSONSchemaSerializer,
 )
 class GHFDBMetaDataAPIView(APIView):
+    """Serve the GHFDB column metadata JSON file as a DRF endpoint."""
+
     permission_classes = [AllowAny]
 
     def get(self, request, file_format=None):
+        """Return the contents of ``ghfdb_colmeta.json``."""
         file_path = data_dir / "ghfdb_colmeta.json"
         try:
             with open(file_path) as f:
@@ -53,7 +58,10 @@ class GHFDBMetaDataAPIView(APIView):
 
 
 class GHFDBPathDownloadView(PathDownloadView):
+    """Serve the static GHFDB CSV export as a download."""
+
     def get_path(self):
+        """Return the path to the GHFDB CSV file."""
         return finders.find("ghfdb/IHFC_2024_GHFDB.csv")
 
 
@@ -65,6 +73,8 @@ class GHFDBPathDownloadView(PathDownloadView):
 
 
 class GHFDBExploreView(FairDMTemplateView):
+    """Render the GHFDB map explorer page."""
+
     template_name = "ghfdb/explore.html"
     page_title = _("GHFDB Map Viewer")
 

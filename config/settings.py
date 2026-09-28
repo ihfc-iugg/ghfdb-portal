@@ -10,9 +10,7 @@ fairdm.setup(
         "heat_flow",
         "review",
         "fairdm_geo",
-        # "fairdm_geo.geology.lithology",
         "fairdm_geo.geology.stratigraphy",
-        # "fairdm_geo.geology.geologic_time",
     ],
     addons=[
         "fairdm_discussions",
@@ -21,7 +19,7 @@ fairdm.setup(
 
 DJANGO_SETUP_TOOLS = globals().get("DJANGO_SETUP_TOOLS", {})
 
-# this line is only required during staging because no migrations are being committed to the fairdm repo
+# Only required during staging: no migrations are committed to the fairdm repo.
 DJANGO_SETUP_TOOLS[""]["always_run"].insert(0, ("makemigrations", "--no-input"))
 DJANGO_SETUP_TOOLS[""]["always_run"].append(("compress",))
 
@@ -35,11 +33,9 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 
-# A second connection, defined only when the environment names a file for it, so that a
-# test can migrate into an empty database without touching the developer's own.  The
-# development settings hard-wire the SQLite path, so there is no other way to redirect a
-# `migrate` run.  Inert unless MIGRATION_CHECK_DATABASE is set, which only
-# tests/test_migrations.py does.
+# A second connection, used only to migrate an empty database into for testing
+# without touching the developer's own; inert unless MIGRATION_CHECK_DATABASE
+# is set, which only tests/test_migrations.py does (#173).
 if os.environ.get("MIGRATION_CHECK_DATABASE"):
     DATABASES["migration_check"] = {
         "ENGINE": "django.db.backends.sqlite3",

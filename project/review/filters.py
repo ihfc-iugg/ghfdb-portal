@@ -35,6 +35,8 @@ def _people_who(field_name):
 
 
 class ReviewFilter(django_filters.FilterSet):
+    """Narrow the assessment list by state, assessor, uploader or decider."""
+
     state = django_filters.ChoiceFilter(
         choices=States.choices,
         label=_("State"),

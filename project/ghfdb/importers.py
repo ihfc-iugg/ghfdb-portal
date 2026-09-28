@@ -1,5 +1,4 @@
-"""
-The callable entry point for importing one GHFDB upload template file.
+"""The callable entry point for importing one GHFDB upload template file.
 
 FR-001: importing is callable from code, taking one file and one dataset
 named by the caller — a script or management command has no admin request
@@ -31,13 +30,16 @@ from .resources import (
 
 @dataclass
 class GHFDBImportOutcome:
-    """The combined result of one GHFDB template import: the parent pass,
-    then the child pass."""
+    """The combined result of one GHFDB template import.
+
+    Holds the parent pass result, then the child pass result.
+    """
 
     parent: Result
     child: Result
 
     def has_errors(self) -> bool:
+        """Report whether either import pass produced an error."""
         return (
             self.parent.has_errors()
             or self.parent.has_validation_errors()

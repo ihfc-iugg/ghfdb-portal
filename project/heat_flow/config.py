@@ -1,3 +1,5 @@
+"""FairDM registry configuration for the heat flow schema's models."""
+
 import fairdm
 from django.utils.translation import gettext_lazy as _
 from fairdm.registry.config import (
@@ -49,13 +51,14 @@ class IHFCConfig(ModelConfiguration):
 
 @fairdm.register
 class HeatFlowSiteConfig(IHFCConfig):
+    """FairDM registry configuration for the heat flow site model."""
+
     model = HeatFlowSite
     description = _(
         "A heat flow site is a specific geological location where measurements of subsurface temperature gradients and thermal conductivity are conducted to determine the heat flow, or the rate of heat transfer from the Earth's interior to its surface."
     )
     filterset_class = HeatFlowSiteFilter
     table_class = HeatFlowSiteTable
-    # resource_class = SampleWithLocationResource
     fields = [
         "name",
         "country",
@@ -75,6 +78,8 @@ class HeatFlowSiteConfig(IHFCConfig):
 
 @fairdm.register
 class HeatFlowIntervalConfig(IHFCConfig):
+    """FairDM registry configuration for the heat flow depth interval model."""
+
     model = HeatFlowInterval
     description = _(
         "A heat flow depth interval is a vertical depth interval within the Earth's subsurface, defined by top and bottom depth measurements, over which temperature measurements are taken to determine the terrestrial heat flow at a given location. This interval is used to assess the rate at which heat is conducted from the Earth's interior to the surface. The depth interval is characterized by its vertical extent, which allows for the analysis of temperature gradients and the calculation of heat flux. This data is crucial for understanding geothermal gradients, heat transfer processes, and the thermal structure of the Earth's crust at that location."
@@ -83,8 +88,6 @@ class HeatFlowIntervalConfig(IHFCConfig):
     admin_list_display = ["top", "bottom", "vertical_depth", "vertical_datum"]
     table_class = HeatFlowIntervalTable
     fields = [
-        # "id",
-        # "dataset",
         ("top", "bottom"),
         ("vertical_depth", "vertical_datum"),
         "lithology",
@@ -95,6 +98,8 @@ class HeatFlowIntervalConfig(IHFCConfig):
 
 @fairdm.register
 class HeatFlowConfig(IHFCConfig):
+    """FairDM registry configuration for the child heat flow measurement model."""
+
     model = HeatFlow
     description = _(
         "A child heat flow measurement refers to the heat flow data obtained from a specific, typically vertical, depth interval within a larger dataset, such as that from a borehole. These measurements represent localized heat flow at particular depths, capturing the rate at which heat is conducted through the Earth at that specific interval. By averaging these child measurements across several depth intervals, scientists can determine the overall surface heat flow for the area. Child heat flow measurements are essential for capturing variations in thermal conductivity and temperature gradients within the subsurface, allowing for a more accurate assessment of the Earth's heat flow at the surface."
@@ -108,12 +113,13 @@ class HeatFlowConfig(IHFCConfig):
         "method",
         "expedition",
         "c_comment",
-        # "water_temperature",
     ]
 
 
 @fairdm.register
 class ThermalGradientConfig(IHFCConfig):
+    """FairDM registry configuration for the thermal gradient model."""
+
     model = ThermalGradient
     # method_top, method_bottom, correction_top, correction_bottom are M2M and cannot be in list_display
     admin_list_display = [
@@ -139,6 +145,8 @@ class ThermalGradientConfig(IHFCConfig):
 
 @fairdm.register
 class IntervalConductivityConfig(IHFCConfig):
+    """FairDM registry configuration for the interval thermal conductivity model."""
+
     model = IntervalConductivity
     # method, strategy, source, saturation, pT_conditions, pT_function are M2M and cannot be in list_display
     admin_list_display = ["value", "uncertainty", "number"]

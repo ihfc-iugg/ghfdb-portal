@@ -148,10 +148,12 @@ class HeatFlowSite(GenericHole, AbstractGeoDepthInterval, GenericEarthSample):
                 )
 
     def clean(self):
+        """Reject a location already held by another HeatFlowSite."""
         super().clean()
         self._check_location_uniqueness()
 
     def save(self, *args, **kwargs):
+        """Default an unset top depth to 0 and enforce location uniqueness."""
         if not self.top:
             self.top = 0
         self._check_location_uniqueness()
@@ -161,9 +163,10 @@ class HeatFlowSite(GenericHole, AbstractGeoDepthInterval, GenericEarthSample):
 
 
 class ParentHeatFlow(Measurement):
-    """Database table that stores terrestrial heat flow data. This is the
-    'parent' schema outlined in the formal structure of the database put
-    forth by Fuchs et al (2021).
+    """Database table that stores terrestrial heat flow data.
+
+    This is the 'parent' schema outlined in the formal structure of the
+    database put forth by Fuchs et al (2021).
     """
 
     value = models.QuantityField(
@@ -239,6 +242,7 @@ class ParentHeatFlow(Measurement):
         ]
 
     def save(self, *args, **kwargs):
+        """Enforce one parent record per site before saving."""
         if self.sample_id:
             if not isinstance(self.sample, HeatFlowSite):
                 raise ValidationError(
@@ -258,10 +262,12 @@ class ParentHeatFlow(Measurement):
         super().save(*args, **kwargs)
 
     def __str__(self):
+        """Return the parent heat flow value."""
         return f"{self.value}"
 
     @property
     def site(self):
+        """Return the HeatFlowSite this parent record belongs to."""
         return self.sample
 
     def get_quality(self):

@@ -1,5 +1,4 @@
-"""
-Custom import/export widgets for the GHFDB product layer.
+"""Custom import/export widgets for the GHFDB product layer.
 
 Widget hierarchy:
     import_export.widgets.Widget
@@ -24,10 +23,6 @@ from django.db.models.functions import Lower
 from django.utils.translation import gettext_lazy as _
 from import_export.widgets import BooleanWidget, CharWidget, ManyToManyWidget, Widget
 from research_vocabs.models import Concept
-
-# ---------------------------------------------------------------------------
-# Utility helpers
-# ---------------------------------------------------------------------------
 
 
 def _case_insensitive_qs(vocabulary, field="label"):
@@ -84,11 +79,6 @@ def is_blank_cell(raw) -> bool:
     return not text or text in BLANK_CELL_MARKERS
 
 
-# ---------------------------------------------------------------------------
-# Leaf Widgets
-# ---------------------------------------------------------------------------
-
-
 class ConceptWidget(CharWidget):
     """Maps a human-readable concept label (or key) to its vocabulary key."""
 
@@ -104,6 +94,7 @@ class ConceptWidget(CharWidget):
         super().__init__(**kwargs)
 
     def clean(self, value, row=None, column=None, **kwargs):
+        """Resolve *value* to a vocabulary key, or ``None`` for a blank cell."""
         try:
             val = super().clean(value, row, **kwargs)
         except AttributeError:
@@ -144,6 +135,7 @@ class MultiConceptWidget(ManyToManyWidget):
         self.queryset = Concept.get_for_vocabulary(self._vocab_class)
 
     def clean(self, value, row=None, column=None, *args, **kwargs):
+        """Resolve semicolon-separated labels or keys to a Concept QuerySet."""
         if not value:
             return self.queryset.none()
         # Build (original, normalised) pairs; skip blank and "unspecified" tokens
@@ -157,14 +149,9 @@ class MultiConceptWidget(ManyToManyWidget):
                 pairs.append((raw, norm))
         if not pairs:
             return self.queryset.none()
-        # A cell names a concept by its label or by its key, and the upload
-        # template uses both: the lithology and stratigraphic-age columns
-        # offer keys ('alkali_feldspar_granite', 'CambrianSeries2') while
-        # every other vocabulary column offers labels. ``ConceptWidget``
-        # already reads either; matching on the label alone here made 174 of
-        # the 265 lithologies and 29 of the 181 ages the template offers
-        # unreachable, so a file using them was refused on values its own
-        # template supplied.
+        # A cell names a concept by its label or by its key — the lithology
+        # and stratigraphic-age columns offer keys, every other vocabulary
+        # column offers labels — so both must be matched here (#206).
         concepts = list(self.queryset)
         by_label = {concept.label.lower(): concept.pk for concept in concepts}
         by_key = {concept.name.lower(): concept.pk for concept in concepts}
@@ -200,6 +187,7 @@ class AcquisitionDateWidget(CharWidget):
     """
 
     def clean(self, value, row=None, **kwargs):
+        """Read the cell, treating the "unspecified" sentinel as blank."""
         if value is None:
             return None
         if isinstance(value, str) and normalize_vocab_token(value) == "unspecified":
@@ -245,6 +233,7 @@ class QuantityWidget(Widget):
         self.unit = unit
 
     def clean(self, value, row=None, **kwargs):
+        """Convert a numeric cell to a Pint Quantity in this widget's unit."""
         if value is None or str(value).strip() == "":
             return None
         from quantityfield.units import ureg
@@ -258,19 +247,14 @@ class QuantityWidget(Widget):
             ) from exc
 
     def render(self, value, obj=None):
+        """Render a Pint Quantity back to its plain numeric magnitude."""
         if value is None:
             return ""
         return str(float(value.magnitude))
 
 
-# ---------------------------------------------------------------------------
-# RelatedModelWidget and subclasses
-# ---------------------------------------------------------------------------
-
-
 class RelatedModelWidget(Widget):
-    """
-    Base widget that creates an unsaved related model instance from multiple row columns.
+    """Base widget that creates an unsaved related model instance from multiple columns.
 
     Scalar fields are extracted from the row using the declared widget_map and stored
     into the model instance.  M2M fields are deferred: call set_m2m_relations(instance)
@@ -299,13 +283,14 @@ class RelatedModelWidget(Widget):
         self._last_row = None
 
     def clean(self, value, row=None, **kwargs):
+        """Build an unsaved model instance from this widget's scalar columns."""
         self._last_row = row
         if self.sentinel_column is not None:
             raw_sentinel = (row or {}).get(self.sentinel_column)
             # Numeric values (int/float) are valid for quantity-type sentinel columns
             # (e.g. T_grad_mean, tc_mean) — treat as present and proceed.
             if isinstance(raw_sentinel, int | float):
-                pass  # numeric sentinel → sub-record should be created
+                pass
             else:
                 try:
                     sentinel_val = (raw_sentinel or "").strip()
@@ -367,8 +352,7 @@ class RelatedModelWidget(Widget):
 
 
 class ParentWidget(RelatedModelWidget):
-    """
-    Creates an unsaved HeatFlowSite from parent-level GHFDB columns.
+    """Creates an unsaved HeatFlowSite from parent-level GHFDB columns.
 
     Also attaches an unsaved Point (x=long_EW, y=lat_NS) to the site's
     location attribute.  The resource is responsible for saving both the
@@ -414,6 +398,7 @@ class ParentWidget(RelatedModelWidget):
         )
 
     def clean(self, value, row=None, **kwargs):
+        """Build an unsaved HeatFlowSite, requiring a coordinate pair when named."""
         # A site name is a label, not a number, but a spreadsheet does not
         # know that: a submission whose sites are numbered 1, 2, 3 arrives
         # with integer cells, and refusing those refused 2,338 rows of the
@@ -459,8 +444,7 @@ class ParentWidget(RelatedModelWidget):
 
 
 class IntervalWidget(RelatedModelWidget):
-    """
-    Creates an unsaved HeatFlowInterval from depth columns.
+    """Creates an unsaved HeatFlowInterval from depth columns.
 
     sentinel_column=None means the interval is always created (every child row
     should have interval data).
@@ -496,8 +480,7 @@ class IntervalWidget(RelatedModelWidget):
 
 
 class GradientWidget(RelatedModelWidget):
-    """
-    Creates an unsaved ThermalGradient from T_grad_* columns.
+    """Creates an unsaved ThermalGradient from T_grad_* columns.
 
     Skipped (returns None) when T_grad_mean is empty (sentinel column).
     """
@@ -556,8 +539,7 @@ class GradientWidget(RelatedModelWidget):
 
 
 class ConductivityWidget(RelatedModelWidget):
-    """
-    Creates an unsaved IntervalConductivity from tc_* columns.
+    """Creates an unsaved IntervalConductivity from tc_* columns.
 
     Skipped (returns None) when tc_mean is empty (sentinel column).
     """
