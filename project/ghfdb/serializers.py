@@ -10,6 +10,7 @@ from drf_spectacular.utils import (
 from rest_framework import serializers
 
 from .columns import PublishedColumns
+from .constants import PARENT_COLUMNS
 
 
 @extend_schema_serializer(
@@ -105,3 +106,24 @@ def published_fields(
         else:
             built[name] = PublishedValueField(**source_kwargs)
     return built
+
+
+class GHFDBParentSerializer(serializers.Serializer):
+    """One published parent record: its link, its counts, then its columns.
+
+    The non-published keys are declared here and so come first; the
+    published parent columns are appended by ``get_fields()``, which
+    satisfies FR-003 by construction (plan.md Design > Parents).
+    """
+
+    url = serializers.HyperlinkedIdentityField(
+        view_name="api:ghfdb-parents-detail", lookup_field="ghfdb_id"
+    )
+    total_children = serializers.IntegerField(read_only=True)
+    relevant_children = serializers.IntegerField(read_only=True)
+
+    def get_fields(self):
+        """Append the published parent columns after the declared keys."""
+        fields = super().get_fields()
+        fields.update(published_fields(PARENT_COLUMNS))
+        return fields

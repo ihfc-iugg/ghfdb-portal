@@ -13,6 +13,17 @@ def dataset(db):
 
 
 @pytest.fixture
+def public_dataset(db):
+    # DatasetFactory defaults to Visibility.PRIVATE, which an anonymous API
+    # request never sees. The API tests need a dataset an anonymous consumer
+    # can actually read, so this is separate from `dataset` above rather than
+    # changing what that fixture builds (FS-006 US1).
+    from fairdm.utils.choices import Visibility
+
+    return DatasetFactory(visibility=Visibility.PUBLIC)
+
+
+@pytest.fixture
 def official_upload_template_workbook():
     # The official GHFDB upload template, opened unmodified (FS-004 US-1).
     path = (
