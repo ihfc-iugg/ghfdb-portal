@@ -97,6 +97,42 @@ what the portal holds, in the released row's shape and order.
   Both stay. Retiring the static download belongs to R8, which is what replaces it.
 - **Anything that writes.** The routes into the portal are the import paths.
 
+## D11 — The framework's visibility filter stays, ordering and field filtering do not
+
+Decided at planning. The proxies decide which records belong to the published database. The
+framework's visibility filter decides whether a record's dataset may be shown to the person asking.
+Keeping it means a record carrying a published identifier in a private dataset is never served to an
+anonymous consumer. The framework's ordering backend would offer ordering on the many-valued
+columns, which repeats a record once per related value, so it is dropped with the field-filter
+backend. Pages are ordered by published identifier.
+
+## D12 — A duplicated published identifier resolves to the earliest record
+
+Decided at planning. The database does not make a published identifier unique, though both import
+paths upsert on it. A single-record route matching two records answers with the one created first
+rather than a server error. List routes carry both records as they are.
+
+## D13 — The child counts count published determinations
+
+Decided at planning. A determination with no published identifier is outside the published
+database and unreachable through these endpoints, so a parent counting it would report more
+determinations than its attached list holds. Both counts narrow to determinations carrying a
+published identifier, in the proxy, so the admin's parent list agrees with its own child list too.
+
+## D14 — An empty scalar is `null`
+
+Decided at planning. D7 settles that an absent value is present and empty. For a scalar, empty is
+`null`, and an empty string is emitted as `null` too: the two columns nothing resolves are annotated
+as empty strings, and a consumer gains nothing from telling the two apart.
+
+## D15 — The released row carries no identifier of its own
+
+Decided at planning, as a reading of the spec rather than a change to it. The spec defines the flat
+row as the published parent columns followed by the published child columns, in the order the
+constants module holds, and SC-006 admits no other key. The determination's own identifier is held
+there as a meta column, outside both lists, so the row carries `ID_parent` but not `ID`. A consumer
+still reaches a single row by `ID`, which addresses the route.
+
 ## Open, and carried rather than resolved
 
 **The canonical column vocabulary is disputed in one place** ([#122](https://github.com/ihfc-iugg/ghfdb-portal/issues/122)):
