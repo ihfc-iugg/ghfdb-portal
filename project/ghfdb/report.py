@@ -1,5 +1,4 @@
-"""Turn a ``GHFDBImportOutcome`` into a checking report (T009, FR-009,
-FR-011, FR-012).
+"""Turn a ``GHFDBImportOutcome`` into a checking report (FS-005 FR-009, FR-011, FR-012).
 
 Counts separate sites from determinations and created from updated
 records, and each failure carries its row number, the template's own
@@ -38,7 +37,7 @@ _LEADING_COLUMN_PREFIX = re.compile(r"^([A-Za-z][A-Za-z0-9_]*): ")
 #: ``RelatedModelWidget.clean()``/``set_m2m_relations()`` (widgets.py)
 #: prefixes a sub-field's error with the Django model it is building —
 #: ``"HeatFlowSite: Column 'environment': ..."`` — to help a developer
-#: place the fault. That model name is internal (FR-013) and never reaches
+#: place the fault. That model name is internal (FS-005 FR-013) and never reaches
 #: the report: the useful part of the message already starts at the
 #: embedded ``Column '...'`` marker, so everything before it is dropped.
 _DJANGO_DOES_NOT_EXIST = re.compile(
@@ -47,8 +46,9 @@ _DJANGO_DOES_NOT_EXIST = re.compile(
 
 
 def _sanitize_reason(message: str) -> str:
-    """Strip an internal Django model or class name out of *message* before
-    it becomes a ``RowFailure.reason`` (FR-013).
+    """Strip an internal Django model or class name out of *message* (FS-005 FR-013).
+
+    Applies before *message* becomes a ``RowFailure.reason``.
 
     Two known leaks, both from third-party or wrapping code this report
     layer does not control: ``RelatedModelWidget``'s own "which model"
@@ -75,9 +75,11 @@ def _sanitize_reason(message: str) -> str:
 
 @dataclass(frozen=True)
 class RowFailure:
-    """One failure a checked file produced: its row, its column (the
-    template's own spelling, or "" when a column could not be identified),
-    and a reason specific enough to act on."""
+    """One failure a checked file produced.
+
+    Carries its row, its column (the template's own spelling, or "" when a
+    column could not be identified), and a reason specific enough to act on.
+    """
 
     row_number: int
     column: str
@@ -86,8 +88,10 @@ class RowFailure:
 
 @dataclass(frozen=True)
 class GHFDBImportReport:
-    """The report US-3/US-4 render: what a checked file would do, and
-    everything wrong with it."""
+    """The report US-3/US-4 render.
+
+    Shows what a checked file would do, and everything wrong with it.
+    """
 
     sites_created: int
     sites_updated: int
@@ -97,13 +101,15 @@ class GHFDBImportReport:
 
     @property
     def has_failures(self) -> bool:
+        """Report whether the checked file produced any failures."""
         return bool(self.failures)
 
 
 def _field_to_column(resource_cls: type) -> dict[str, str]:
-    """Map *resource_cls*'s Django model attribute names to the template
-    column that feeds each one, from the resource's own field
-    declarations."""
+    """Map *resource_cls*'s model attributes to their template columns.
+
+    Reads the mapping from the resource's own field declarations.
+    """
     resource = resource_cls()
     return {
         field.attribute: field.column_name
@@ -113,12 +119,14 @@ def _field_to_column(resource_cls: type) -> dict[str, str]:
 
 
 def _counts(result: Result) -> tuple[int, int]:
+    """Count created and updated rows in an import *result*."""
     created = sum(1 for row in result.rows if row.is_new())
     updated = sum(1 for row in result.rows if row.is_update())
     return created, updated
 
 
 def _column_from_message(message: str) -> str:
+    """Extract the template column name embedded in an error *message*."""
     match = _COLUMN_IN_QUOTES.search(message)
     if match:
         return match.group(1)
@@ -127,8 +135,10 @@ def _column_from_message(message: str) -> str:
 
 
 def _base_error_failures(result: Result) -> list[RowFailure]:
-    """Failures raised as exceptions — a widget or a hook refusing a value —
-    reaching ``result.row_errors()``."""
+    """Build failures from exceptions a widget or hook raised.
+
+    Reads them from ``result.row_errors()``.
+    """
     return [
         RowFailure(
             row_number=number,
@@ -143,9 +153,11 @@ def _base_error_failures(result: Result) -> list[RowFailure]:
 def _invalid_row_failures(
     result: Result, field_to_column: dict[str, str]
 ) -> list[RowFailure]:
-    """Failures from ``full_clean()`` model validation, reaching
-    ``result.invalid_rows`` with Django field names rather than column
-    names."""
+    """Build failures from ``full_clean()`` model validation.
+
+    Reads them from ``result.invalid_rows``, which carries Django field
+    names rather than column names.
+    """
     return [
         RowFailure(
             row_number=invalid.number,
@@ -159,8 +171,10 @@ def _invalid_row_failures(
 
 
 def build_report(outcome: GHFDBImportOutcome) -> GHFDBImportReport:
-    """Turn *outcome* — the combined result of one checked or confirmed
-    import — into the counts and failures a checking report needs."""
+    """Turn *outcome* into the counts and failures a checking report needs.
+
+    *outcome* is the combined result of one checked or confirmed import.
+    """
     sites_created, sites_updated = _counts(outcome.parent)
     determinations_created, determinations_updated = _counts(outcome.child)
 

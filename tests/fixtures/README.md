@@ -171,12 +171,12 @@ assert all_fields_match(original_data, re_imported_data)
 from django.core.management import call_command
 
 # Load fixture
-call_command('loaddata', 'review_submission_dataset.json')
+call_command("loaddata", "review_submission_dataset.json")
 
 # Verify state
 dataset = Dataset.objects.get(pk=100)
 assert dataset.visibility == 0  # Private
-assert not hasattr(dataset, 'review')  # No review yet
+assert not hasattr(dataset, "review")  # No review yet
 ```
 
 **Test Files**: 
@@ -222,7 +222,7 @@ assert not hasattr(dataset, 'review')  # No review yet
 **Usage**:
 ```python
 # Load fixture
-call_command('loaddata', 'admin_approval_dataset.json')
+call_command("loaddata", "admin_approval_dataset.json")
 
 # Verify state
 dataset = Dataset.objects.get(pk=200)
@@ -264,29 +264,33 @@ def minimal_ghfdb_import_data():
     """Load minimal GHFDB import fixture."""
     return get_file("fixtures/minimal_ghfdb_import.xlsx")
 
+
 @pytest.fixture
 def invalid_ghfdb_import_data():
     """Load invalid GHFDB import fixture for error testing."""
     return get_file("fixtures/invalid_ghfdb_import.xlsx")
+
 
 @pytest.fixture
 def round_trip_reference_data():
     """Load comprehensive round-trip reference fixture."""
     return get_file("fixtures/round_trip_reference.xlsx")
 
+
 # Django JSON fixture loading
 @pytest.fixture
 def review_submission_dataset(django_db_blocker):
     """Load review submission workflow fixture."""
     with django_db_blocker.unblock():
-        call_command('loaddata', 'review_submission_dataset.json')
+        call_command("loaddata", "review_submission_dataset.json")
     return Dataset.objects.get(pk=100)
+
 
 @pytest.fixture
 def admin_approval_dataset(django_db_blocker):
     """Load approved dataset with review fixture."""
     with django_db_blocker.unblock():
-        call_command('loaddata', 'admin_approval_dataset.json')
+        call_command("loaddata", "admin_approval_dataset.json")
     return Dataset.objects.get(pk=200)
 ```
 

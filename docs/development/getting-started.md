@@ -11,7 +11,7 @@ Please review the contributor [Code of Conduct](https://www.contributor-covenant
 Before you begin, ensure that you have the following installed on your local machine:
 
 - [Git](https://git-scm.com/downloads)
-- [Python Poetry](https://python-poetry.org/docs/) (version 1.1.0 or higher)
+- [uv](https://docs.astral.sh/uv/)
 
 ## Step 1: Fork the Repository and Clone it to Your Local Machine
 
@@ -35,10 +35,10 @@ Before you begin, ensure that you have the following installed on your local mac
    cd ghfdb-portal
    ```
 
-2. Run the following command to set up a virtual environment using Poetry:
+2. Run the following command to set up a virtual environment using uv:
 
    ```shell
-   poetry install
+   uv sync
    ```
 
    This command will create a new virtual environment and install the project's dependencies.

@@ -1,3 +1,5 @@
+"""Table definitions for the heat flow schema's list views."""
+
 import django_tables2 as tables
 from django.utils.translation import gettext_lazy as _
 from fairdm.contrib.collections.tables import MeasurementTable, SampleTable
@@ -8,6 +10,8 @@ from .models import HeatFlow, HeatFlowInterval, HeatFlowSite
 
 
 class HeatFlowSiteTable(SampleTable):
+    """Table of heat flow sites for the site list view."""
+
     name = tables.Column(verbose_name=_("Site name"), linkify=True)
 
     class Meta:
@@ -24,25 +28,19 @@ class HeatFlowSiteTable(SampleTable):
             "region",
             "continent",
             "domain",
-            # "elevation_datum",
-            # "azimuth",
-            # "inclination",
             "length",
             "environment",
             "explo_method",
             "explo_purpose",
             "lithology",
             "age",
-            # "stratigraphy",
         ]
-        attrs = {
-            "thead": {
-                "th": {"class": "text-nowrap"}  # class for all <th> elements
-            }
-        }
+        attrs = {"thead": {"th": {"class": "text-nowrap"}}}
 
 
 class HeatFlowIntervalTable(SampleTable):
+    """Table of heat flow depth intervals for the interval list view."""
+
     class Meta:
         model = HeatFlowInterval
         fields = [
@@ -54,29 +52,26 @@ class HeatFlowIntervalTable(SampleTable):
             "top",
             "bottom",
             "vertical_depth",
-            # "vertical_datum",
             "lithology",
             "age",
-            # "stratigraphy",
-            # "status",
-            # "local_id",
         ]
         exclude = ["name"]
 
     def __init__(self, data=None, *args, **kwargs):
-        # data = data.prefetch_related("sample__heatflowsite")
-        # modify the queryset (data) here if required
         super().__init__(*args, data=data, **kwargs)
 
 
 class IntervalMixin:
+    """Prefetch the sample's heat flow interval for tables that display it."""
+
     def __init__(self, data=None, *args, **kwargs):
-        # modify the queryset (data) here if required
         data = data.prefetch_related("sample__heatflowinterval")
         super().__init__(*args, data=data, **kwargs)
 
 
 class HeatFlowTable(IntervalMixin, MeasurementTable):
+    """Table of child heat flow measurements for the measurement list view."""
+
     class Meta:
         model = HeatFlow
         exclude = ["latitude", "longitude"]
@@ -110,7 +105,7 @@ class HeatFlowTable(IntervalMixin, MeasurementTable):
 
 
 class ThermalGradientTable(IntervalMixin, MeasurementTable):
-    # depth_top = tables.Column(verbose_name=_("Top depth"), empty_values=())
+    """Table of thermal gradient measurements for the measurement list view."""
 
     class Meta:
         model = ThermalGradient
@@ -120,12 +115,8 @@ class ThermalGradientTable(IntervalMixin, MeasurementTable):
             "dataset",
             "location",
             "sample",
-            # "sample_type",
             "sample__heatflowinterval__top",
             "sample__heatflowinterval__bottom",
-            # "sample__top",
-            # "sample__bottom",
-            # "depth_top",
             "value",
             "uncertainty",
             "corrected_value",

@@ -1,21 +1,9 @@
-"""
-Tests for GHFDBChildImportResource.
-
-Covers:
-- All 14 child field mappings
-- parent FK resolved via ID_parent ForeignKeyWidget
-- after_save_instance() creates 9 HeatFlowCorrection records
-- ProbeMetadata created when probe columns non-empty
-- method M2M set via MultiConceptWidget
-- IntervalWidget, GradientWidget, ConductivityWidget M2M set after save
-"""
+# Tests for GHFDBChildImportResource.
 
 import pytest
 import tablib
 
-# ---------------------------------------------------------------------------
 # Helpers: row data mirrors what the full GHFDB flat row looks like
-# ---------------------------------------------------------------------------
 
 PARENT_ROW = {
     "ID_parent": "1",
@@ -113,17 +101,9 @@ def import_parents(dataset):
     resource.import_data(ds, dry_run=False, raise_errors=True, fairdm_dataset=dataset)
 
 
-# ---------------------------------------------------------------------------
-# T030 Tests
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.django_db
 class TestGHFDBChildImportResourceImport:
-    """T030 — GHFDBChildImportResource end-to-end import tests."""
-
     def test_import_creates_heatflow(self, dataset):
-        """Importing a child row creates a HeatFlow with ghfdb_id set."""
         import_parents(dataset)
         from heat_flow.models import HeatFlow
 
@@ -139,10 +119,7 @@ class TestGHFDBChildImportResourceImport:
         assert HeatFlow.objects.filter(ghfdb_id=1).exists()
 
     def test_a_row_with_an_id_is_named_by_it(self, dataset):
-        """Every determination carries a name. ``name`` is a required field
-        with no default, so an unset one saves as an empty string without the
-        database objecting, and the determination has nothing to display
-        itself by — the row's own identifier is what names it."""
+        # Every determination carries a name.
         import_parents(dataset)
         from heat_flow.models import HeatFlow
 
@@ -160,7 +137,6 @@ class TestGHFDBChildImportResourceImport:
         assert HeatFlow.objects.get(ghfdb_id=1).name == "1"
 
     def test_parent_fk_resolved_via_id_parent(self, dataset):
-        """HeatFlow.parent FK is resolved from ID_parent column."""
         import_parents(dataset)
         from heat_flow.models import HeatFlow
 
@@ -177,7 +153,6 @@ class TestGHFDBChildImportResourceImport:
         assert child.parent.ghfdb_id == 1
 
     def test_upsert_on_ghfdb_id(self, dataset):
-        """Re-importing same ID updates, not duplicates."""
         import_parents(dataset)
         from heat_flow.models import HeatFlow
 
@@ -195,7 +170,6 @@ class TestGHFDBChildImportResourceImport:
         assert HeatFlow.objects.filter(ghfdb_id=1).count() == 1
 
     def test_after_save_creates_9_corrections(self, dataset):
-        """after_save_instance() creates 9 HeatFlowCorrection records."""
         import_parents(dataset)
         from heat_flow.models import HeatFlow
 
@@ -211,7 +185,6 @@ class TestGHFDBChildImportResourceImport:
         assert child.corrections.count() == 9
 
     def test_correction_values_match_row(self, dataset):
-        """Correction flags are set per the row values."""
         import_parents(dataset)
         from heat_flow.models import HeatFlow, HeatFlowCorrection
 
@@ -225,11 +198,9 @@ class TestGHFDBChildImportResourceImport:
 
         child = HeatFlow.objects.get(ghfdb_id=1)
         t_corr = child.corrections.get(correction_type="T")
-        # corr_T_flag = "Yes" in CHILD_ROW
         assert t_corr.status != HeatFlowCorrection.StatusChoices.UNSPECIFIED
 
     def test_gradient_created_when_t_grad_mean_set(self, dataset):
-        """ThermalGradient record is created when T_grad_mean is non-empty."""
         import_parents(dataset)
         from heat_flow.models import HeatFlow
 
@@ -245,7 +216,6 @@ class TestGHFDBChildImportResourceImport:
         assert child.thermal_gradient is not None
 
     def test_conductivity_created_when_tc_mean_set(self, dataset):
-        """IntervalConductivity record is created when tc_mean is non-empty."""
         import_parents(dataset)
         from heat_flow.models import HeatFlow
 
@@ -261,7 +231,6 @@ class TestGHFDBChildImportResourceImport:
         assert child.thermal_conductivity is not None
 
     def test_gradient_skipped_when_empty(self, dataset):
-        """ThermalGradient is not created when T_grad_mean is empty."""
         import_parents(dataset)
         from heat_flow.models import HeatFlow
 
@@ -280,7 +249,6 @@ class TestGHFDBChildImportResourceImport:
         assert child.thermal_gradient is None
 
     def test_conductivity_skipped_when_empty(self, dataset):
-        """IntervalConductivity is not created when tc_mean is empty."""
         import_parents(dataset)
         from heat_flow.models import HeatFlow
 
@@ -299,10 +267,9 @@ class TestGHFDBChildImportResourceImport:
         assert child.thermal_conductivity is None
 
     def test_geo_stratigraphy_imports_to_age_field(self, dataset):
-        """BUG-009 regression: geo_stratigraphy='Holocene' must import without error
-        and store the matched Concept on HeatFlowInterval.age — not on
-        HeatFlowInterval.stratigraphy (which maps to stratigraphy.StratigraphicUnit).
-        """
+        # BUG-009 regression: geo_stratigraphy='Holocene' must import without error and
+        # store the matched Concept on HeatFlowInterval.age — not on
+        # HeatFlowInterval.stratigraphy (which maps to stratigraphy.StratigraphicUnit).
         import_parents(dataset)
         from heat_flow.models import HeatFlow
 
@@ -334,8 +301,8 @@ class TestGHFDBChildImportResourceImport:
         )
 
     def test_surface_temperature_stored_from_the_renamed_column(self, dataset):
-        """The 2026.03 template's ``Surface_temperature`` column (C24, was
-        ``water_temperature``) stores onto ``HeatFlow.surface_temperature``."""
+        # The 2026.03 template's ``Surface_temperature`` column (C24, was
+        # ``water_temperature``) stores onto ``HeatFlow.surface_temperature``.
         import_parents(dataset)
         from heat_flow.models import HeatFlow
 
@@ -354,9 +321,8 @@ class TestGHFDBChildImportResourceImport:
         assert float(child.surface_temperature.magnitude) == pytest.approx(12.5)
 
     def test_gradient_absolute_temperatures_stored_from_row(self, dataset):
-        """The 2026.03 template's four new columns (C50-C53) store onto the
-        ``ThermalGradient`` created for the row, alongside the gradient
-        itself."""
+        # The 2026.03 template's four new columns (C50-C53) store onto the
+        # ``ThermalGradient`` created for the row, alongside the gradient itself.
         import_parents(dataset)
         from heat_flow.models import HeatFlow
 
@@ -388,13 +354,9 @@ class TestGHFDBChildImportResourceImport:
     def test_gradient_absolute_temperatures_not_stored_when_t_grad_mean_empty(
         self, dataset
     ):
-        """T_grad_mean is the sentinel ``GradientWidget`` uses to decide
-        whether to create a ``ThermalGradient`` at all (C7,
-        specs/004-import-upload-template/decisions.md). A row carrying only
-        the new absolute temperatures and no gradient mean therefore stores
-        nothing — T_grad_mean is itself a mandatory template column, so this
-        is a row shape a real submission cannot produce, but the sentinel
-        behaviour is worth pinning."""
+        # T_grad_mean is the sentinel ``GradientWidget`` uses to decide whether to
+        # create a ``ThermalGradient`` at all (C7,
+        # specs/004-import-upload-template/decisions.md).
         import_parents(dataset)
         from heat_flow.models import HeatFlow, ThermalGradient
 
@@ -418,20 +380,13 @@ class TestGHFDBChildImportResourceImport:
 
 @pytest.mark.django_db
 class TestGHFDBChildImportAcceptsUnstoredColumns:
-    """T012 — FR-009: the reviewer columns are accepted without being
-    stored, and their presence is not an error. ``ID`` is a declared child
-    field (``ghfdb_id``), exercised throughout this file; this covers the
-    three reviewer columns specifically.
-
-    Does not use this module's ``import_parents()`` helper: it calls
-    ``import_data()`` without ``fairdm_dataset``, which T008 now refuses
-    (decisions.md D11). This test names its dataset throughout instead.
-    """
+    # FS-003 FR-009: the reviewer columns are accepted without being stored, and their
+    # presence is not an error. ``ID`` (``ghfdb_id``) is covered elsewhere; this covers
+    # the three reviewer columns specifically.
 
     def test_reviewer_columns_do_not_cause_an_error(self, dataset):
-        """Reviewer_name/Reviewer_comment/Review_date are not CHILD_COLUMNS
-        fields, so their presence in the row must not raise or block the
-        import."""
+        # Reviewer_name/Reviewer_comment/Review_date are not CHILD_COLUMNS fields, so
+        # their presence in the row must not raise or block the import.
         from heat_flow.models import HeatFlow
 
         from project.ghfdb.resources import (
@@ -465,10 +420,7 @@ class TestGHFDBChildImportAcceptsUnstoredColumns:
 
 @pytest.mark.django_db
 class TestGHFDBChildProbeMetadata:
-    """T030 — ProbeMetadata creation."""
-
     def test_probe_metadata_created_when_penetration_set(self, dataset):
-        """ProbeMetadata is created when probe_penetration is non-empty."""
         import_parents(dataset)
         from heat_flow.models import HeatFlow, ProbeMetadata
 
@@ -487,7 +439,6 @@ class TestGHFDBChildProbeMetadata:
         assert ProbeMetadata.objects.filter(interval=child.sample).exists()
 
     def test_probe_metadata_not_created_when_empty(self, dataset):
-        """ProbeMetadata is not created when all probe columns are empty."""
         import_parents(dataset)
         from heat_flow.models import HeatFlow, ProbeMetadata
 
@@ -505,10 +456,9 @@ class TestGHFDBChildProbeMetadata:
 
 @pytest.mark.django_db
 class TestGHFDBChildTemplateNoIdRegression:
-    """T068/T030 regression coverage for standard uploads without ID columns."""
+    # Regression coverage for standard uploads without ID columns.
 
     def test_no_id_rows_reimport_upserts_via_natural_key(self, dataset):
-        """Rows missing ID/ID_parent upsert via location + interval + publication key."""
         from heat_flow.models import HeatFlow
 
         from project.ghfdb.resources import (
@@ -557,7 +507,6 @@ class TestGHFDBChildTemplateNoIdRegression:
         assert float(child.value.magnitude) == pytest.approx(75.2)
 
     def test_no_id_rows_keep_distinct_publication_references(self, dataset):
-        """Different publication_reference values remain distinct child records."""
         from heat_flow.models import HeatFlow
 
         from project.ghfdb.resources import (
@@ -600,10 +549,7 @@ class TestGHFDBChildTemplateNoIdRegression:
 
 @pytest.mark.django_db
 class TestGHFDBChildAbsentHeaderRegression:
-    """T068 — Absent ID/ID_parent header must not raise header-validation error."""
-
     def test_absent_id_and_id_parent_headers_do_not_raise_header_error(self, dataset):
-        """Import succeeds when ID and ID_parent columns are entirely absent."""
         from heat_flow.models import HeatFlow
 
         from project.ghfdb.resources import (
@@ -635,7 +581,7 @@ class TestGHFDBChildAbsentHeaderRegression:
         assert HeatFlow.objects.count() == 1
 
     def test_absent_id_headers_reimport_upserts_via_natural_key(self, dataset):
-        """Re-import without ID/ID_parent headers updates rather than duplicates."""
+        # Re-import without ID/ID_parent headers updates rather than duplicates.
         from heat_flow.models import HeatFlow
 
         from project.ghfdb.resources import (
@@ -681,10 +627,10 @@ class TestGHFDBChildAbsentHeaderRegression:
 
 @pytest.mark.django_db
 class TestGHFDBAutoChildKeyRegression:
-    """T075 — BUG-005 regression: synthetic key must not pollute HeatFlow fields after no-ID import."""
+    # BUG-005 regression: synthetic key must not pollute HeatFlow fields after no-ID
+    # import.
 
     def test_no_auto_child_in_name_after_no_id_import(self, dataset):
-        """No HeatFlow.name should contain 'AUTO_CHILD:' after importing a row without ID."""
         from heat_flow.models import HeatFlow
 
         from project.ghfdb.resources import (
@@ -719,7 +665,6 @@ class TestGHFDBAutoChildKeyRegression:
             )
 
     def test_no_auto_child_in_dry_run_id_column(self, dataset):
-        """Dry-run result ID column must show real ghfdb_id or natural key, not AUTO_CHILD:."""
         from project.ghfdb.resources import (
             GHFDBChildImportResource,
             GHFDBParentImportResource,
@@ -754,10 +699,9 @@ class TestGHFDBAutoChildKeyRegression:
 
 
 class TestGHFDBChildColumnOrderRegression:
-    """T077 — BUG-006 regression: get_user_visible_fields() must follow GHFDB_COLUMN_ORDER."""
+    # BUG-006 regression: get_user_visible_fields() must follow GHFDB_COLUMN_ORDER.
 
     def test_get_user_visible_fields_follows_ghfdb_column_order(self):
-        """GHFDBChildImportResource.get_user_visible_fields() returns fields in GHFDB_COLUMN_ORDER order."""
         from project.ghfdb.constants import GHFDB_COLUMN_ORDER
         from project.ghfdb.resources import GHFDBChildImportResource
 
@@ -775,27 +719,18 @@ class TestGHFDBChildColumnOrderRegression:
         )
 
 
-# ---------------------------------------------------------------------------
-# T093 — BUG-010: case-sensitive column-name ordering regression
-# ---------------------------------------------------------------------------
+# FS-003 BUG-010: case-sensitive column-name ordering regression
 
 
 class TestBUG010ColumnOrderCaseSensitivity:
-    """T093 — BUG-010: get_user_visible_fields() must lowercase both dict keys and column_name.
-
-    With the old code ``order = {col: i for i, col in enumerate(GHFDB_COLUMN_ORDER)}``,
-    mixed-case keys like 'T_grad_mean' or 'lat_NS' are stored as-is. When the lookup
-    uses ``order.get(f.column_name.lower(), len(GHFDB_COLUMN_ORDER))``, the lowercased
-    't_grad_mean' / 'lat_ns' never match the mixed-case keys, so those fields are
-    sorted to the end. The fix (T098) lowercases both sides.
-
-    These tests FAIL until T098 is implemented.
-    """
+    # Get_user_visible_fields() must lowercase both dict keys and column_name. With the
+    # old code ``order = {col: i for i, col in enumerate(GHFDB_COLUMN_ORDER)}``,
+    # mixed-case keys like 'T_grad_mean' or 'lat_NS' are stored as-is.
 
     def test_mixed_case_columns_not_sorted_to_end(self):
-        """Fields with mixed-case column_name (T_grad_mean, lat_NS) must not accumulate
-        at the tail of get_user_visible_fields() — they must appear in GHFDB_COLUMN_ORDER
-        relative order, before later columns in the same order (BUG-010)."""
+        # Fields with mixed-case column_name (T_grad_mean, lat_NS) must not accumulate
+        # at the tail of get_user_visible_fields() — they must appear in
+        # GHFDB_COLUMN_ORDER relative order, before later columns in the same order .
         from project.ghfdb.constants import GHFDB_COLUMN_ORDER
         from project.ghfdb.resources import GHFDBChildImportResource
 
@@ -825,16 +760,13 @@ class TestBUG010ColumnOrderCaseSensitivity:
                 assert idx < sentinel_idx, (
                     f"Field '{mixed_case_col}' is at position {idx} but sentinel '{late_sentinel}' "
                     f"is at {sentinel_idx}. Mixed-case field must come before '{late_sentinel}' "
-                    f"according to GHFDB_COLUMN_ORDER (BUG-010 T098)."
+                    f"according to GHFDB_COLUMN_ORDER."
                 )
 
     def test_t_grad_mean_not_last(self):
-        """T_grad_mean must not be sorted to the end of get_user_visible_fields() (BUG-010).
-
-        With the old bug, mixed-case columns sorted to position len(GHFDB_COLUMN_ORDER) (the
-        fallback value), landing at the very tail of the list.  After T098, T_grad_mean must
-        appear before tc_strategy (a later child column that IS correctly sorted).
-        """
+        # T_grad_mean must not be sorted to the end of get_user_visible_fields(). With
+        # the old bug, mixed-case columns sorted to position len(GHFDB_COLUMN_ORDER)
+        # (the fallback value), landing at the very tail of the list.
         from project.ghfdb.resources import GHFDBChildImportResource
 
         resource = GHFDBChildImportResource()
@@ -852,16 +784,13 @@ class TestBUG010ColumnOrderCaseSensitivity:
         sentinel_idx = col_names.index(late_sentinel)
         assert idx < sentinel_idx, (
             f"'T_grad_mean' sorted to position {idx} (after sentinel '{late_sentinel}' at {sentinel_idx}). "
-            f"Lookup dict must lowercase keys: {{col.lower(): i for i, col in enumerate(GHFDB_COLUMN_ORDER)}} (BUG-010)"
+            f"Lookup dict must lowercase keys: {{col.lower(): i for i, col in enumerate(GHFDB_COLUMN_ORDER)}} (FS-003 BUG-010)"
         )
 
 
 @pytest.mark.django_db
 class TestGHFDBChildPrivateDatasetRegression:
-    """The child import must find its target dataset even when that dataset is private."""
-
     def test_import_attaches_records_to_a_private_dataset(self, dataset):
-        """A row imports into the only dataset available, whether or not it is public."""
         from fairdm.utils.choices import Visibility
         from heat_flow.models import HeatFlow
 
@@ -887,9 +816,8 @@ class TestGHFDBChildPrivateDatasetRegression:
 
 @pytest.mark.django_db
 class TestGHFDBChildMultipleDeterminationsPerSite:
-    """T014 — US-3: rows describing two determinations at one coordinate pair
-    produce two determinations beneath one site, each with its own depth
-    interval (FR-007)."""
+    # FS-003 US-3: rows describing two determinations at one coordinate pair produce
+    # two determinations beneath one site, each with its own depth interval (FR-007).
 
     def test_two_child_rows_produce_two_determinations_with_distinct_intervals(
         self, dataset
@@ -936,9 +864,9 @@ class TestGHFDBChildMultipleDeterminationsPerSite:
 
 @pytest.mark.django_db
 class TestGHFDBChildSubMeasurementsPerDetermination:
-    """T016 — US-3: gradient, conductivity, correction and probe values land
-    against their own determination, using the template's real column names
-    (T_grad_*, tc_*, corr_*_flag, probe_*) rather than invented ones (FR-007)."""
+    # FS-003 US-3: gradient, conductivity, correction and probe values land against
+    # their own determination, using the template's real column names (T_grad_*, tc_*,
+    # corr_*_flag, probe_*) rather than invented ones (FR-007).
 
     def test_two_determinations_keep_distinct_sub_measurement_values(self, dataset):
         import_parents(dataset)
@@ -1007,8 +935,8 @@ class TestGHFDBChildSubMeasurementsPerDetermination:
 
 @pytest.mark.django_db
 class TestGHFDBChildRelevantChildFlag:
-    """T018 — US-3: `relevant_child` names exactly the children that fed the
-    parent value, and no others (FR-006)."""
+    # FS-003 US-3: `relevant_child` names exactly the children that fed the parent
+    # value, and no others (FR-006).
 
     def test_relevant_child_marks_exactly_the_contributing_children(self, dataset):
         import_parents(dataset)
@@ -1049,9 +977,9 @@ class TestGHFDBChildRelevantChildFlag:
 
 @pytest.mark.django_db
 class TestGHFDBChildObjectsAttachToNamedDataset:
-    """T020 — US-3: every child object the import creates is attached to the
-    dataset the caller named, not to whatever the parent pass happened to
-    resolve, proven against a database holding a second, decoy dataset."""
+    # US-3: every child object the import creates is attached to the dataset the caller
+    # named, not to whatever the parent pass happened to resolve, proven against a
+    # database holding a second, decoy dataset.
 
     def test_child_objects_attach_to_named_dataset_not_a_decoy(self, dataset):
         from fairdm.factories import DatasetFactory
@@ -1101,8 +1029,8 @@ VALID_IGSN = "10.60516/AU1101"
 
 @pytest.mark.django_db
 class TestGHFDBChildImportResourceIGSN:
-    """A child row's ``Ref_IGSN`` becomes a ``SampleIdentifier`` on that
-    row's interval (D26, specs/004-import-upload-template/decisions.md)."""
+    # A child row's ``Ref_IGSN`` becomes a ``SampleIdentifier`` on that row's interval
+    # (FS-004).
 
     def test_a_valid_igsn_is_stored_on_the_intervals_identifiers(self, dataset):
         import_parents(dataset)
@@ -1164,12 +1092,9 @@ class TestGHFDBChildImportResourceIGSN:
         assert child.sample.identifiers.get(type="IGSN").value == VALID_IGSN
 
     def test_reimporting_the_same_row_does_not_fail_or_duplicate(self, dataset):
-        """The reader upserts HeatFlow by ghfdb_id, but before_save_instance
-        rebuilds a fresh HeatFlowInterval on every save (T035/D18), so the
-        interval a re-imported row resolves to is never the same row twice.
-        A second import of an unchanged file must still be a no-op rather
-        than an integrity error against the identifier's own uniqueness
-        constraint (D26)."""
+        # The reader upserts HeatFlow by ghfdb_id, but before_save_instance rebuilds a
+        # fresh HeatFlowInterval on every save (FS-004), so the interval a re-imported
+        # row resolves to is never the same row twice.
         import_parents(dataset)
         from heat_flow.models import HeatFlow
 
@@ -1209,14 +1134,8 @@ class TestGHFDBChildImportResourceIGSN:
         assert "IGSN" in str(result.error_rows[0].errors[0].error)
 
     def test_two_intervals_in_one_file_cannot_claim_the_same_igsn(self, dataset):
-        """An IGSN names one physical sample, so two depth intervals sharing
-        one is a contributor's mistake and has to be reported.
-
-        Worth pinning because the failure it guards against is silent: the
-        identifier is re-attached rather than duplicated, so without this
-        check the later row simply takes the identifier and the earlier
-        interval is left with none, on an import that reports success.
-        """
+        # An IGSN names one physical sample, so two depth intervals sharing one is a
+        # contributor's mistake and has to be reported.
         import_parents(dataset)
         from heat_flow.models import HeatFlow
 
@@ -1236,9 +1155,7 @@ class TestGHFDBChildImportResourceIGSN:
         )
 
         assert result.has_errors()
-        assert "already used by another interval" in str(
-            result.error_rows[0].errors[0].error
-        )
+        assert VALID_IGSN in str(result.error_rows[0].errors[0].error)
 
         # The file is refused whole, so neither row lands and no identifier
         # is left behind from the row that was read first.
@@ -1248,8 +1165,8 @@ class TestGHFDBChildImportResourceIGSN:
         assert not SampleIdentifier.objects.filter(value=VALID_IGSN).exists()
 
     def test_the_same_file_imported_twice_keeps_one_identifier(self, dataset):
-        """The interval is rebuilt on every import, so the identifier moves
-        to the new one rather than colliding with itself."""
+        # The interval is rebuilt on every import, so the identifier moves to the new
+        # one rather than colliding with itself.
         import_parents(dataset)
         from heat_flow.models import HeatFlow
 

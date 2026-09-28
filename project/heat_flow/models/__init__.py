@@ -1,3 +1,5 @@
+"""Public exports for the heat flow parent and child models."""
+
 from .child import (
     HeatFlow,
     HeatFlowCorrection,

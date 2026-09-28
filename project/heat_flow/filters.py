@@ -1,3 +1,5 @@
+"""Filter sets for heat flow sites and measurements."""
+
 from fairdm.core.measurement.filters import MeasurementFilter
 from fairdm.core.sample.filters import SampleFilter
 
@@ -5,6 +7,8 @@ from .models import HeatFlow, HeatFlowSite
 
 
 class HeatFlowSiteFilter(SampleFilter):
+    """Filter heat flow sites by location and geological attributes."""
+
     class Meta:
         model = HeatFlowSite
         fields = [
@@ -23,6 +27,8 @@ class HeatFlowSiteFilter(SampleFilter):
 
 
 class HeatFlowFilter(MeasurementFilter):
+    """Filter heat flow measurements, excluding internal bookkeeping fields."""
+
     class Meta:
         model = HeatFlow
         exclude = [

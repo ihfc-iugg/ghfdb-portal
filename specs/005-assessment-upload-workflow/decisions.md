@@ -145,7 +145,7 @@ it is raised there rather than worked around here.
 
 
 The specification as signed off asked the `review` application to meet "the coverage floor the
-constitution sets". The constitution sets none: Article VI says in terms that coverage is a guide to
+constitution sets". The constitution sets none: Article I says in terms that coverage is a guide to
 find untested paths, not a merge gate.
 
 The criterion is amended to what the constitution actually requires, which is that every behaviour

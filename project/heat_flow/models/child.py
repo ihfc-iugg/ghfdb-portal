@@ -1,5 +1,4 @@
-"""
-Child-level heat flow models for the Global Heat Flow Database (GHFDB).
+"""Child-level heat flow models for the Global Heat Flow Database (GHFDB).
 
 This module contains HeatFlowInterval (the depth interval within a borehole),
 the child HeatFlow record, and all directly associated sub-measurement models
@@ -57,6 +56,7 @@ class HeatFlowInterval(Interval, AbstractGeoDepthInterval):
         return f"{self.__class__.__name__}({top}-{bottom})"
 
     def clean(self):
+        """Reject an interval whose bottom depth is not below its top depth."""
         super().clean()
         if self.top is not None and self.bottom is not None:
             top = getattr(self.top, "magnitude", self.top)
@@ -68,14 +68,14 @@ class HeatFlowInterval(Interval, AbstractGeoDepthInterval):
 
 
 class HeatFlow(Measurement):
-    """Child heat flow as part of the Global Heat Flow Database. This is
-    the "child" schema outlined in the formal structure of the database put
-    forth by Fuchs et al (2021).
+    """Child heat flow as part of the Global Heat Flow Database.
+
+    This is the "child" schema outlined in the formal structure of the
+    database put forth by Fuchs et al (2021).
     """
 
     U_SCORE_CHOICES = UScoreOptions
 
-    # HEAT FLOW DENSITY FIELDS
     value = models.QuantityField(
         base_units="mW / m^2",
         verbose_name=_("heat flow"),
@@ -229,14 +229,9 @@ class HeatFlow(Measurement):
             models.Index(fields=["U_score"]),
             models.Index(fields=["M_score"]),
         ]
-        constraints: list[models.BaseConstraint] = [
-            # Note: Constraints with Quantity fields are commented out due to SQLite compatibility issues
-            # The validators on the fields themselves provide the same validation
-            # models.CheckConstraint(
-            #     condition=models.Q(uncertainty__gte=0) | models.Q(uncertainty__isnull=True),
-            #     name="non_negative_uncertainty",
-            # ),
-        ]
+        # A CheckConstraint on uncertainty is not usable with Quantity fields on SQLite;
+        # the field's own validators enforce the same non-negative rule instead.
+        constraints: list[models.BaseConstraint] = []
 
     @cached_property
     def is_probe(self):
@@ -244,6 +239,7 @@ class HeatFlow(Measurement):
         return self.sample is not None and hasattr(self.sample, "probe_metadata")
 
     def save(self, *args, **kwargs):
+        """Reject a sample that is not a HeatFlowInterval before saving."""
         if self.sample_id and not isinstance(self.sample, HeatFlowInterval):
             raise ValidationError(
                 _("HeatFlow sample must be a HeatFlowInterval instance.")
@@ -264,8 +260,6 @@ class HeatFlow(Measurement):
 
     def get_M_score(self):
         """From Fuchs et al 2023 - Quality-assurance of heat-flow data: The new structure and evaluation scheme of the IHFC Global Heat Flow Database, 3.2. Methodological quality evaluation of thermal conductivity and temperature gradient (M-score)."""
-
-        # Set both scores to default low values if data is missing
         T_score = self.thermal_gradient.score if self.thermal_gradient else 0.4
         TC_score = self.thermal_conductivity.score if self.thermal_conductivity else 0.1
 
@@ -352,6 +346,7 @@ class ProbeMetadata(django_models.Model):
         db_table_comment = "Metadata for marine heat flow probe measurements"
 
     def __str__(self):
+        """Return the interval this probe metadata belongs to."""
         return f"Probe metadata for {self.interval}"
 
 
@@ -423,7 +418,7 @@ class HeatFlowCorrection(django_models.Model):
             models.Index(fields=["status"]),
         ]
 
-    # T056: Valid status values per correction type (FR-021)
+    # Valid status values per correction type.
     VALID_STATUS_FOR_TYPE: dict[str, set[str]] = {
         "IS": {
             "present_corrected",
@@ -461,9 +456,11 @@ class HeatFlowCorrection(django_models.Model):
     )
 
     def __str__(self):
+        """Return the correction type's label and its status."""
         return f"{self.get_correction_type_display()} - {self.status}"
 
     def save(self, *args, **kwargs):
+        """Reject a status that is not valid for this correction's type."""
         valid: set[str] | None = None
         if self.correction_type in self.VALID_STATUS_FOR_TYPE:
             valid = self.VALID_STATUS_FOR_TYPE[self.correction_type]
@@ -479,6 +476,8 @@ class HeatFlowCorrection(django_models.Model):
 
 
 class ThermalGradient(Measurement):
+    """Temperature gradient measured over a depth interval."""
+
     value = models.DecimalQuantityField(
         base_units="K/km",
         max_digits=7,
@@ -665,13 +664,9 @@ class ThermalGradient(Measurement):
             models.Index(fields=["score"]),
             models.Index(fields=["number"]),
         ]
+        # A CheckConstraint on corrected_uncertainty is not usable with Quantity fields on
+        # SQLite; the field's own validators enforce the same non-negative rule instead.
         constraints: list[models.BaseConstraint] = [
-            # Note: Constraints with Quantity fields are commented out due to SQLite compatibility issues
-            # The validators on the fields themselves provide the same validation
-            # models.CheckConstraint(
-            #     condition=models.Q(corrected_uncertainty__gte=0) | models.Q(corrected_uncertainty__isnull=True),
-            #     name="non_negative_corrected_gradient_uncertainty",
-            # ),
             models.CheckConstraint(
                 condition=models.Q(number__gt=0) | models.Q(number__isnull=True),
                 name="positive_temperature_recordings",
@@ -691,24 +686,13 @@ class ThermalGradient(Measurement):
         """
         # TODO: Implement score calculation
         pass
-        # score = 1.0
-
-        # # Number of measurements
-        # if self.number:
-        #     if self.number >= 10:
-        #         score += 0.1
-        #     elif self.number >= 5:
-        #         score += 0.05
-        #     elif self.number < 3:
-        #         score -= 0.1
-
-        # return max(0.2, min(1.2, score))
 
     def is_corrected(self):
         """Check if the thermal gradient has been corrected."""
         return self.corrected_value is not None
 
     def save(self, *args, **kwargs):
+        """Reject a sample that is not a HeatFlowInterval before saving."""
         if self.sample_id and not isinstance(self.sample, HeatFlowInterval):
             raise ValidationError(
                 _("ThermalGradient sample must be a HeatFlowInterval instance.")
@@ -717,6 +701,8 @@ class ThermalGradient(Measurement):
 
 
 class IntervalConductivity(Measurement):
+    """Thermal conductivity measured over a depth interval."""
+
     value = models.DecimalQuantityField(
         base_units="W/mK",
         max_digits=4,
@@ -822,17 +808,9 @@ class IntervalConductivity(Measurement):
         indexes = [
             models.Index(fields=["number"]),
         ]
-        constraints: list[models.BaseConstraint] = [
-            # Note: Constraints with Quantity fields are commented out due to SQLite compatibility issues
-            # The validators on the fields themselves provide the same validation
-            # models.CheckConstraint(
-            #     condition=models.Q(value__gt=0) | models.Q(value__isnull=True), name="positive_thermal_conductivity"
-            # ),
-            # models.CheckConstraint(
-            #     condition=models.Q(uncertainty__gte=0) | models.Q(uncertainty__isnull=True),
-            #     name="non_negative_conductivity_uncertainty",
-            # ),
-        ]
+        # CheckConstraints on value and uncertainty are not usable with Quantity fields on
+        # SQLite; the fields' own validators enforce the same rules instead.
+        constraints: list[models.BaseConstraint] = []
 
     def __str__(self):
         """String representation of the thermal conductivity."""
@@ -847,7 +825,6 @@ class IntervalConductivity(Measurement):
         """
         score = 1.0
 
-        # Source quality assessment
         if self.source.exists():
             source_ids = list(self.source.values_list("id", flat=True))
             if "lab" in source_ids:
@@ -857,7 +834,6 @@ class IntervalConductivity(Measurement):
             elif "outcrop" in source_ids:
                 score -= 0.2
 
-        # Number of measurements
         if self.number:
             if self.number >= 10:
                 score += 0.1
@@ -866,7 +842,6 @@ class IntervalConductivity(Measurement):
             elif self.number < 3:
                 score -= 0.1
 
-        # Location quality
         if self.location.exists():
             location_ids = list(self.location.values_list("id", flat=True))
             if "actual" in location_ids:
@@ -874,7 +849,6 @@ class IntervalConductivity(Measurement):
             elif "literature" in location_ids:
                 score -= 0.2
 
-        # pT conditions consideration
         if self.pT_conditions.exists():
             pt_ids = list(self.pT_conditions.values_list("id", flat=True))
             if "in_situ" in pt_ids:
@@ -888,13 +862,11 @@ class IntervalConductivity(Measurement):
         """Validate thermal conductivity data."""
         super().clean()
 
-        # Validate uncertainty relative to value
         if self.value and self.uncertainty and self.uncertainty > self.value:
             raise ValidationError(
                 _("Uncertainty cannot be greater than the conductivity value.")
             )
 
-        # Validate reasonable conductivity range
         if self.value and (self.value < 0.1 or self.value > 50):
             raise ValidationError(
                 _(
@@ -903,6 +875,7 @@ class IntervalConductivity(Measurement):
             )
 
     def save(self, *args, **kwargs):
+        """Reject a sample that is not a HeatFlowInterval before saving."""
         if self.sample_id and not isinstance(self.sample, HeatFlowInterval):
             raise ValidationError(
                 _("IntervalConductivity sample must be a HeatFlowInterval instance.")

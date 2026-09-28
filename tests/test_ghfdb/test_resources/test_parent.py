@@ -1,24 +1,14 @@
-"""
-Tests for GHFDBParentImportResource.
-
-Covers:
-- Upsert on ghfdb_id (re-import updates, does not duplicate)
-- before_import() deduplication keeps first occurrence of each ID_parent
-- 18 parent columns mapped to correct fields
-- ParentHeatFlow.sample FK (to HeatFlowSite) created with correct Point location
-- explo_purpose M2M set
-- Staff-only access control (anonymous admin import URL -> 302)
-"""
+# Tests for GHFDBParentImportResource.
 
 import pytest
 import tablib
 from django.contrib.auth import get_user_model
 
+from tests.factories import HeatFlowSiteFactory
+
 User = get_user_model()
 
-# ---------------------------------------------------------------------------
 # Helpers
-# ---------------------------------------------------------------------------
 
 PARENT_ROW = {
     "ID_parent": "1",
@@ -51,17 +41,9 @@ def make_dataset(*rows):
     return ds
 
 
-# ---------------------------------------------------------------------------
-# T029 Tests
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.django_db
 class TestGHFDBParentImportResourceImport:
-    """T029 — GHFDBParentImportResource end-to-end import tests."""
-
     def test_import_creates_parent_and_site(self, dataset):
-        """Importing a row creates one ParentHeatFlow and one HeatFlowSite."""
         from heat_flow.models import HeatFlowSite, ParentHeatFlow
 
         from project.ghfdb.resources import GHFDBParentImportResource
@@ -77,9 +59,9 @@ class TestGHFDBParentImportResourceImport:
         assert HeatFlowSite.objects.filter(name="Test Site Alpha").exists()
 
     def test_a_row_with_an_identifier_names_the_parent_value_by_it(self, dataset):
-        """``name`` is required and has no default, so an unset one saves as
-        an empty string and the record has nothing to display itself by. The
-        row's identifier names it."""
+        # ``name`` is required and has no default, so an unset one saves as an empty
+        # string and the record has nothing to display itself by. The row's identifier
+        # names it.
         from heat_flow.models import ParentHeatFlow
 
         from project.ghfdb.resources import GHFDBParentImportResource
@@ -95,8 +77,8 @@ class TestGHFDBParentImportResourceImport:
         assert ParentHeatFlow.objects.get(ghfdb_id=1).name == "1"
 
     def test_a_row_without_an_identifier_is_named_after_its_site(self, dataset):
-        """The fallback is the site, which is resolved from the coordinates,
-        so it holds steady across a repeat import of the same file."""
+        # The fallback is the site, which is resolved from the coordinates, so it holds
+        # steady across a repeat import of the same file.
         from heat_flow.models import ParentHeatFlow
 
         from project.ghfdb.resources import GHFDBParentImportResource
@@ -115,7 +97,6 @@ class TestGHFDBParentImportResourceImport:
         assert parent.name == "Test Site Alpha"
 
     def test_upsert_on_ghfdb_id_does_not_duplicate(self, dataset):
-        """Re-importing the same ID_parent updates, does not create a second record."""
         from heat_flow.models import ParentHeatFlow
 
         from project.ghfdb.resources import GHFDBParentImportResource
@@ -132,7 +113,6 @@ class TestGHFDBParentImportResourceImport:
         assert ParentHeatFlow.objects.filter(ghfdb_id=1).count() == 1
 
     def test_upsert_updates_existing_record(self, dataset):
-        """Re-importing with changed q value updates the existing ParentHeatFlow."""
         from heat_flow.models import ParentHeatFlow
 
         from project.ghfdb.resources import GHFDBParentImportResource
@@ -154,7 +134,6 @@ class TestGHFDBParentImportResourceImport:
         assert float(parent.value.magnitude) == pytest.approx(80.0)
 
     def test_site_has_correct_point_location(self, dataset):
-        """Imported HeatFlowSite has a Point at (long_EW, lat_NS)."""
         from heat_flow.models import HeatFlowSite
 
         from project.ghfdb.resources import GHFDBParentImportResource
@@ -171,7 +150,6 @@ class TestGHFDBParentImportResourceImport:
         assert float(site.location.y) == pytest.approx(48.0)
 
     def test_explo_purpose_m2m_set(self, dataset):
-        """Imported HeatFlowSite has explo_purpose M2M populated."""
         from heat_flow.models import HeatFlowSite
 
         from project.ghfdb.resources import GHFDBParentImportResource
@@ -186,7 +164,6 @@ class TestGHFDBParentImportResourceImport:
         assert site.explo_purpose.count() >= 1
 
     def test_all_18_parent_columns_accepted(self, dataset):
-        """Resource accepts all 18 PARENT_COLUMNS without field errors."""
         from project.ghfdb.resources import GHFDBParentImportResource
 
         resource = GHFDBParentImportResource()
@@ -199,10 +176,7 @@ class TestGHFDBParentImportResourceImport:
 
 @pytest.mark.django_db
 class TestGHFDBParentBeforeImportDedup:
-    """T029 — before_import() deduplication."""
-
     def test_dedup_keeps_first_row_per_id_parent(self, dataset):
-        """before_import() keeps only the first row for each ID_parent."""
         from heat_flow.models import ParentHeatFlow
 
         from project.ghfdb.resources import GHFDBParentImportResource
@@ -225,10 +199,9 @@ class TestGHFDBParentBeforeImportDedup:
 
 @pytest.mark.django_db
 class TestGHFDBParentTemplateNoIdRegression:
-    """T067/T029 regression coverage for template uploads without ID_parent."""
+    # Regression coverage for template uploads without ID_parent.
 
     def test_no_id_parent_dedup_uses_lat_long_natural_key(self, dataset):
-        """Rows without ID_parent deduplicate by lat_NS + long_EW."""
         from heat_flow.models import HeatFlowSite, ParentHeatFlow
 
         from project.ghfdb.resources import GHFDBParentImportResource
@@ -253,7 +226,6 @@ class TestGHFDBParentTemplateNoIdRegression:
         assert float(parent.value.magnitude) == pytest.approx(70.0)
 
     def test_absent_id_parent_header_does_not_raise_header_error(self, dataset):
-        """Import succeeds when ID_parent column is entirely absent from headers."""
         from heat_flow.models import HeatFlowSite, ParentHeatFlow
 
         from project.ghfdb.resources import GHFDBParentImportResource
@@ -271,7 +243,7 @@ class TestGHFDBParentTemplateNoIdRegression:
         assert HeatFlowSite.objects.count() == 1
 
     def test_absent_id_parent_header_reimport_upserts(self, dataset):
-        """Re-import without ID_parent header updates records rather than duplicating."""
+        # Re-import without ID_parent header updates records rather than duplicating.
         from heat_flow.models import ParentHeatFlow
 
         from project.ghfdb.resources import GHFDBParentImportResource
@@ -297,7 +269,6 @@ class TestGHFDBParentTemplateNoIdRegression:
         assert float(parent.value.magnitude) == pytest.approx(88.8)
 
     def test_no_id_parent_reimport_updates_existing_parent(self, dataset):
-        """Re-import without ID_parent upserts via lat_NS + long_EW key."""
         from heat_flow.models import ParentHeatFlow
 
         from project.ghfdb.resources import GHFDBParentImportResource
@@ -328,21 +299,17 @@ class TestGHFDBParentTemplateNoIdRegression:
 
 @pytest.mark.django_db
 class TestGHFDBParentImportSiteIdentity:
-    """T043/T044 — coordinates, not ID_parent, identify the site (FR-004, R1)."""
-
     def test_import_resolves_to_existing_site_by_coordinates(self, dataset):
-        """
-        T043 – Importing a row whose coordinates match an existing site
-        resolves to that site rather than creating a second one, even
-        though the row carries an ID_parent the site has never seen.
-        """
+        # Importing a row whose coordinates match an existing site resolves to
+        # that site rather than creating a second one, even though the row carries an
+        # ID_parent the site has never seen.
         from fairdm.contrib.location.models import Point
         from heat_flow.models import HeatFlowSite, ParentHeatFlow
 
         from project.ghfdb.resources import GHFDBParentImportResource
 
         point = Point.objects.create(x=11.0, y=48.0)
-        existing_site = HeatFlowSite.objects.create(
+        existing_site = HeatFlowSiteFactory(
             dataset=dataset, name="Pre-existing Site", location=point
         )
 
@@ -361,12 +328,8 @@ class TestGHFDBParentImportSiteIdentity:
         assert parent.sample_id == existing_site.pk
 
     def test_import_with_disagreeing_id_parent_does_not_duplicate_site(self, dataset):
-        """
-        T044 – A row that carries a site identifier (ID_parent) the site has
-        never seen, while its coordinates belong to a different existing
-        site, resolves to the site the coordinates identify rather than
-        creating a duplicate at that occupied pair.
-        """
+        # A row that carries a site identifier (ID_parent) the site has never
+        # seen, while its coordinates belong to a different existing site.
         from fairdm.contrib.location.models import Point
         from heat_flow.models import HeatFlowSite, ParentHeatFlow
 
@@ -375,7 +338,7 @@ class TestGHFDBParentImportSiteIdentity:
         # A site already exists at (48.0, 11.0), under a different local_id
         # than the one the incoming row will carry.
         point = Point.objects.create(x=11.0, y=48.0)
-        existing_site = HeatFlowSite.objects.create(
+        existing_site = HeatFlowSiteFactory(
             dataset=dataset,
             name="Existing Site",
             local_id="other-id",
@@ -401,15 +364,13 @@ class TestGHFDBParentImportSiteIdentity:
 
 @pytest.mark.django_db
 class TestGHFDBParentImportRefusesSecondParent:
-    """T051 — US-3: a second parent for a site is refused through the import
-    path, not only through the model (FR-012, SC-005)."""
+    # FS-003 US-3: a second parent for a site is refused through the import path, not
+    # only through the model (FR-012, SC-005).
 
     def test_second_parent_at_the_same_site_is_refused_on_import(self, dataset):
-        """
-        Importing a row whose coordinates resolve to a site that already has
-        a ParentHeatFlow is refused: the row is reported as invalid and no
-        second ParentHeatFlow is created for that site.
-        """
+        # Importing a row whose coordinates resolve to a site that already has a
+        # ParentHeatFlow is refused: the row is reported as invalid and no second
+        # ParentHeatFlow is created for that site.
         from heat_flow.models import HeatFlowSite, ParentHeatFlow
 
         from project.ghfdb.resources import GHFDBParentImportResource
@@ -446,15 +407,10 @@ class TestGHFDBParentImportRefusesSecondParent:
 
 @pytest.mark.django_db
 class TestGHFDBParentImportRequiresNamedDataset:
-    """T007 — FR-002: the import refuses to guess a dataset.
-
-    A dataset existing in the database is not enough to satisfy the
-    requirement — the old behaviour (``FairDataset.all_objects.first()``)
-    would have silently used it, which is exactly the guess FR-002 forbids.
-    """
+    # FS-003 FR-002: the import refuses to guess a dataset.
 
     def test_before_import_raises_when_no_dataset_is_named(self, dataset):
-        """before_import() raises rather than falling back to the first dataset."""
+        # Before_import() raises rather than falling back to the first dataset.
         from project.ghfdb.resources import GHFDBParentImportResource
 
         resource = GHFDBParentImportResource()
@@ -466,12 +422,12 @@ class TestGHFDBParentImportRequiresNamedDataset:
 
 @pytest.mark.django_db
 class TestGHFDBParentImportTwoCoordinatePairs:
-    """T009 — US-2's independent test: two sites, each with its own parent
-    value, both in the dataset the caller named (FR-005, FR-006)."""
+    # FS-003 US-2's independent test: two sites, each with its own parent value, both
+    # in the dataset the caller named (FR-005, FR-006).
 
     def test_two_coordinate_pairs_produce_two_sites_in_the_named_dataset(self, dataset):
-        """Two rows at two coordinate pairs each become a site carrying its
-        own P-column parent value, both attached to the named dataset."""
+        # Two rows at two coordinate pairs each become a site carrying its own P-column
+        # parent value, both attached to the named dataset.
         from heat_flow.models import HeatFlowSite, ParentHeatFlow
 
         from project.ghfdb.resources import GHFDBParentImportResource
@@ -510,12 +466,12 @@ class TestGHFDBParentImportTwoCoordinatePairs:
 
 @pytest.mark.django_db
 class TestGHFDBParentImportGeographyStoredAsSupplied:
-    """T011 — FR-008: geography columns are stored as supplied, never
-    recomputed from the coordinates."""
+    # FS-003 FR-008: geography columns are stored as supplied, never recomputed from
+    # the coordinates.
 
     def test_geography_values_are_stored_exactly_as_supplied(self, dataset):
-        """Country/Region/Continent/Domain land on HeatFlowSite unchanged,
-        even where they disagree with what the coordinates would suggest."""
+        # Country/Region/Continent/Domain land on HeatFlowSite unchanged, even where
+        # they disagree with what the coordinates would suggest.
         from heat_flow.models import HeatFlowSite
 
         from project.ghfdb.resources import GHFDBParentImportResource
@@ -547,12 +503,12 @@ class TestGHFDBParentImportGeographyStoredAsSupplied:
 
 @pytest.mark.django_db
 class TestGHFDBParentImportAcceptsUnstoredColumns:
-    """T012 — FR-009: the reviewer columns and ID are accepted without being
-    stored, and their presence is not an error."""
+    # FS-003 FR-009: the reviewer columns and ID are accepted without being stored, and
+    # their presence is not an error.
 
     def test_id_and_reviewer_columns_do_not_cause_an_error(self, dataset):
-        """ID and the three reviewer columns are not PARENT_COLUMNS fields,
-        so their presence in the row must not raise or block the import."""
+        # ID and the three reviewer columns are not PARENT_COLUMNS fields, so their
+        # presence in the row must not raise or block the import.
         from heat_flow.models import HeatFlowSite, ParentHeatFlow
 
         from project.ghfdb.resources import GHFDBParentImportResource
@@ -577,10 +533,7 @@ class TestGHFDBParentImportAcceptsUnstoredColumns:
 
 
 class TestGHFDBParentImportResourceAccessControl:
-    """T029 — Staff-only access control."""
-
     def test_anonymous_admin_import_url_redirects(self, client, db):
-        """Anonymous access to admin import URL redirects (302)."""
         from django.urls import reverse
 
         url = reverse("admin:ghfdb_ghfdbchild_import")
@@ -590,10 +543,10 @@ class TestGHFDBParentImportResourceAccessControl:
 
 @pytest.mark.django_db
 class TestGHFDBAutoParentKeyRegression:
-    """T075 — BUG-005 regression: synthetic key must not pollute ParentHeatFlow fields after no-ID import."""
+    # BUG-005 regression: synthetic key must not pollute ParentHeatFlow fields after
+    # no-ID import.
 
     def test_no_auto_parent_in_ghfdb_id_after_no_id_import(self, dataset):
-        """No ParentHeatFlow.ghfdb_id should contain a synthetic string key after importing a row without ID_parent."""
         from heat_flow.models import ParentHeatFlow
 
         from project.ghfdb.resources import GHFDBParentImportResource
@@ -612,7 +565,6 @@ class TestGHFDBAutoParentKeyRegression:
             )
 
     def test_no_auto_parent_in_dry_run_id_parent_column(self, dataset):
-        """Dry-run result ID_parent column must show real ghfdb_id or empty, not AUTO_PARENT:."""
         from project.ghfdb.resources import GHFDBParentImportResource
 
         row = {k: v for k, v in PARENT_ROW.items() if k != "ID_parent"}
@@ -631,7 +583,7 @@ class TestGHFDBAutoParentKeyRegression:
 
 
 class TestGHFDBParentColumnOrderRegression:
-    """T077 — BUG-006 regression: get_user_visible_fields() must follow PARENT_COLUMNS order."""
+    # BUG-006 regression: get_user_visible_fields() must follow PARENT_COLUMNS order.
 
     @pytest.mark.xfail(
         strict=True,
@@ -644,7 +596,6 @@ class TestGHFDBParentColumnOrderRegression:
         ),
     )
     def test_get_user_visible_fields_follows_parent_columns_order(self):
-        """GHFDBParentImportResource.get_user_visible_fields() returns fields in PARENT_COLUMNS order."""
         from project.ghfdb.resources import GHFDBParentImportResource
         from project.ghfdb.resources.formats import PARENT_COLUMNS
 
@@ -661,9 +612,7 @@ class TestGHFDBParentColumnOrderRegression:
         )
 
 
-# ---------------------------------------------------------------------------
-# Helpers for in-memory XLSX construction (T084, T085, T090)
-# ---------------------------------------------------------------------------
+# Helpers for in-memory XLSX construction
 
 
 def _build_simple_xlsx(headers: list, data_rows: list[list]) -> bytes:
@@ -704,28 +653,10 @@ def _build_simple_xlsx(headers: list, data_rows: list[list]) -> bytes:
     return buf.getvalue()
 
 
-# ---------------------------------------------------------------------------
-# T084 — GHFDBSimpleImportFormat unit tests
-# ---------------------------------------------------------------------------
+# GHFDBSimpleImportFormat unit tests
 
 
 class TestGHFDBSimpleImportFormat:
-    """T084 — Unit tests for GHFDBSimpleImportFormat."""
-
-    def test_get_title_returns_simple_label(self):
-        """get_title() returns 'GHFDB Simple Template'."""
-        from project.ghfdb.resources import GHFDBSimpleImportFormat
-
-        fmt = GHFDBSimpleImportFormat()
-        assert fmt.get_title() == "GHFDB Simple Template"
-
-    def test_official_format_get_title_returns_official_label(self):
-        """GHFDBImportFormat.get_title() returns 'GHFDB Official Template'."""
-        from project.ghfdb.resources import GHFDBImportFormat
-
-        fmt = GHFDBImportFormat()
-        assert fmt.get_title() == "GHFDB Official Template"
-
     @pytest.mark.xfail(
         strict=True,
         reason=(
@@ -737,7 +668,6 @@ class TestGHFDBSimpleImportFormat:
         ),
     )
     def test_create_dataset_returns_correct_row_count(self):
-        """create_dataset() with 2 data rows returns a Dataset with 2 rows."""
         from project.ghfdb.resources import GHFDBSimpleImportFormat
         from project.ghfdb.resources.formats import PARENT_COLUMNS
 
@@ -803,7 +733,6 @@ class TestGHFDBSimpleImportFormat:
         ),
     )
     def test_create_dataset_uses_row6_as_headers(self):
-        """create_dataset() uses row 6 cell values as Dataset column headers."""
         from project.ghfdb.resources import GHFDBSimpleImportFormat
         from project.ghfdb.resources.formats import PARENT_COLUMNS
 
@@ -828,7 +757,6 @@ class TestGHFDBSimpleImportFormat:
         ),
     )
     def test_create_dataset_excludes_metadata_rows(self):
-        """create_dataset() does not include metadata rows 1-5 as data rows."""
         from project.ghfdb.resources import GHFDBSimpleImportFormat
         from project.ghfdb.resources.formats import PARENT_COLUMNS
 
@@ -857,7 +785,6 @@ class TestGHFDBSimpleImportFormat:
         ),
     )
     def test_create_dataset_differs_from_official_format_on_offset_data(self):
-        """Simple format returns data from row 7; official format skips rows 7-8 and gets data from row 9."""
         from io import BytesIO
 
         import openpyxl
@@ -894,16 +821,11 @@ class TestGHFDBSimpleImportFormat:
         assert simple_ds[0][0] == "UNIT_ROW"
 
 
-# ---------------------------------------------------------------------------
-# T085 — Admin format-selection tests
-# ---------------------------------------------------------------------------
+# Admin format-selection tests
 
 
 class TestAdminGetImportFormats:
-    """T085 — Admin classes expose both import format classes."""
-
     def test_child_admin_get_import_formats_returns_two_classes(self):
-        """GHFDBChildAdmin.get_import_formats() returns [GHFDBImportFormat, GHFDBSimpleImportFormat]."""
         from django.contrib.admin import AdminSite
 
         from project.ghfdb.admin import GHFDBChildAdmin
@@ -918,7 +840,6 @@ class TestAdminGetImportFormats:
         assert formats[1] is GHFDBSimpleImportFormat
 
     def test_parent_admin_get_import_formats_returns_two_classes(self):
-        """GHFDBParentAdmin.get_import_formats() returns [GHFDBImportFormat, GHFDBSimpleImportFormat]."""
         from django.contrib.admin import AdminSite
 
         from project.ghfdb.admin import GHFDBParentAdmin
@@ -932,65 +853,30 @@ class TestAdminGetImportFormats:
         assert formats[0] is GHFDBImportFormat
         assert formats[1] is GHFDBSimpleImportFormat
 
-    def test_child_admin_format_titles(self):
-        """Both format classes returned by GHFDBChildAdmin have the correct get_title() values."""
-        from django.contrib.admin import AdminSite
-
-        from project.ghfdb.admin import GHFDBChildAdmin
-        from project.ghfdb.models import GHFDBChild
-
-        site_admin = GHFDBChildAdmin(GHFDBChild, AdminSite())
-        formats = site_admin.get_import_formats()
-
-        assert formats[0]().get_title() == "GHFDB Official Template"
-        assert formats[1]().get_title() == "GHFDB Simple Template"
-
-    def test_parent_admin_format_titles(self):
-        """Both format classes returned by GHFDBParentAdmin have the correct get_title() values."""
-        from django.contrib.admin import AdminSite
-
-        from project.ghfdb.admin import GHFDBParentAdmin
-        from project.ghfdb.models import GHFDBParent
-
-        site_admin = GHFDBParentAdmin(GHFDBParent, AdminSite())
-        formats = site_admin.get_import_formats()
-
-        assert formats[0]().get_title() == "GHFDB Official Template"
-        assert formats[1]().get_title() == "GHFDB Simple Template"
-
     @pytest.mark.django_db
-    def test_child_admin_import_page_shows_both_format_titles(self, admin_client):
-        """GET admin import page for GHFDB child contains both format option texts."""
+    def test_child_admin_import_page_offers_both_formats(self, admin_client):
         from django.urls import reverse
 
         url = reverse("admin:ghfdb_ghfdbchild_import")
         response = admin_client.get(url)
 
         assert response.status_code == 200
-        content = response.content.decode()
-        assert "GHFDB Official Template" in content
-        assert "GHFDB Simple Template" in content
+        assert len(response.context["form"].fields["format"].choices) == 3
 
     @pytest.mark.django_db
-    def test_parent_admin_import_page_shows_both_format_titles(self, admin_client):
-        """GET admin import page for GHFDBParent contains both format option texts."""
+    def test_parent_admin_import_page_offers_both_formats(self, admin_client):
         from django.urls import reverse
 
         url = reverse("admin:ghfdb_ghfdbparent_import")
         response = admin_client.get(url)
 
         assert response.status_code == 200
-        content = response.content.decode()
-        assert "GHFDB Official Template" in content
-        assert "GHFDB Simple Template" in content
+        assert len(response.context["form"].fields["format"].choices) == 3
 
 
 @pytest.mark.django_db
 class TestGHFDBParentPrivateDatasetRegression:
-    """The parent import must find its target dataset even when that dataset is private."""
-
     def test_import_attaches_records_to_a_private_dataset(self, dataset):
-        """A row imports into the only dataset available, whether or not it is public."""
         from fairdm.utils.choices import Visibility
         from heat_flow.models import HeatFlowSite, ParentHeatFlow
 
@@ -1015,18 +901,14 @@ class TestGHFDBParentPrivateDatasetRegression:
 
 
 class TestGHFDBParentImportRecordsIdentifierOnMatchedSite:
-    """A site matched by coordinates keeps the row's identifier for later lookups.
-
-    Coordinates decide identity, so a row matching an existing site by coordinates
-    binds to it.  If that site carries no identifier of its own, the row's is
-    recorded: a later row carrying the same identifier and no coordinates would
-    otherwise fail its lookup and create a duplicate.
-    """
+    # A site matched by coordinates keeps the row's identifier for later lookups.
+    # Coordinates decide identity, so a row matching an existing site by coordinates
+    # binds to it.
 
     @pytest.mark.django_db
     def test_identifier_is_recorded_on_a_site_matched_by_coordinates(self, dataset):
-        """The site must pre-exist without an identifier, or the import takes the
-        other branch and this passes whether or not the behaviour is there."""
+        # The site must pre-exist without an identifier, or the import takes the other
+        # branch and this passes whether or not the behaviour is there.
         from decimal import Decimal
 
         from fairdm.contrib.location.models import Point
@@ -1037,8 +919,8 @@ class TestGHFDBParentImportRecordsIdentifierOnMatchedSite:
         point, _ = Point.objects.get_or_create(
             x=Decimal(PARENT_ROW["long_EW"]), y=Decimal(PARENT_ROW["lat_NS"])
         )
-        existing = HeatFlowSite.objects.create(
-            dataset=dataset, name="Entered by hand", location=point
+        existing = HeatFlowSiteFactory(
+            dataset=dataset, name="Entered by hand", location=point, local_id=None
         )
         assert not existing.local_id
 

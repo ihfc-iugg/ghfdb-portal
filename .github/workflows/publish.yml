@@ -25,7 +25,7 @@ on:
     paths:
       - 'deploy/Dockerfile'
       - 'pyproject.toml'
-      - 'poetry.lock'
+      - 'uv.lock'
       - '.github/workflows/publish.yml'
   workflow_dispatch:
 

@@ -34,6 +34,6 @@ as an external one.
 
 ## Local development
 
-Don't use this stack to work on the portal. Run `poetry install` and then
-`python manage.py runserver`. The development environment comes from
+Don't use this stack to work on the portal. Run `uv sync` and then
+`uv run python manage.py runserver`. The development environment comes from
 `stack.development.env` in the repository root.

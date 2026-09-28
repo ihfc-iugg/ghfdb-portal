@@ -9,8 +9,8 @@
 # run failed as a result.
 version: 2
 updates:
-  # Python dependencies (Poetry)
-  - package-ecosystem: "pip"
+  # Python dependencies (uv.lock)
+  - package-ecosystem: "uv"
     directory: "/"
     schedule:
       interval: "weekly"
@@ -23,6 +23,12 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    # mvp-shared is a git dependency pinned to a tag, and the same tag is
+    # pinned again in every workflow that calls django-mvp/shared. The two have
+    # to move together, which a Dependabot bump to pyproject.toml and uv.lock
+    # alone cannot do, so the tag is bumped by hand when a shared release lands.
+    ignore:
+      - dependency-name: "mvp-shared"
     groups:
       python-dependencies:
         patterns:

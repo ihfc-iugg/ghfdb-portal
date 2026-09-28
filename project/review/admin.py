@@ -1,3 +1,5 @@
+"""Admin registration for the review app."""
+
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
@@ -8,17 +10,20 @@ from review.models import Review
 
 
 class RelatedPersonFilter(admin.SimpleListFilter):
+    """Filter the admin changelist by a person who reviews at least one assessment."""
+
     title = _("person")
     parameter_name = "person"
 
     def lookups(self, request, model_admin):
-        # Get only Person instances linked to at least one MyModel instance
+        """List only people who review at least one assessment."""
         linked_people = (
             Person.objects.real().filter(heat_flow_reviews__isnull=False).distinct()
         )
         return [(person.id, str(person)) for person in linked_people]
 
     def queryset(self, request, queryset):
+        """Restrict the changelist to assessments reviewed by the selected person."""
         if self.value():
             return queryset.filter(reviewers__id=self.value())
         return queryset
@@ -51,6 +56,7 @@ class ReviewAdmin(admin.ModelAdmin):
 
     @admin.display(description="Dataset")
     def dataset_link(self, obj):
+        """Display the dataset's UUID as a link."""
         url = obj.dataset.get_absolute_url()
         return format_html('<a href="{}">{}</a>', url, obj.dataset.uuid)
 

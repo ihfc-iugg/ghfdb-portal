@@ -2,7 +2,7 @@
 
 **Branch**: `004-import-upload-template` | **Spec**: [spec.md](spec.md) | **Plan**: [plan.md](plan.md)
 
-Every task is written test first, per constitution Article VI. A task is done when its test fails for
+Every task is written test first, per constitution Article I. A task is done when its test fails for
 the stated reason before the change and passes after, and the class it belongs to is green.
 
 ## Foundational

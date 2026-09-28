@@ -217,7 +217,7 @@ the refusal narrows to a migration aid for files produced against older template
 workbook fixture moved with them, from `tests/test_ghfdb/test_resources/conftest.py` up to
 `tests/test_ghfdb/conftest.py`.
 
-**Why**: constitution Article X requires the test tree to mirror the source tree, and the mechanical
+**Why**: constitution Article I requires the test tree to mirror the source tree, and the mechanical
 structure check reads it that way — a test file under `test_resources/` is taken to be about a module
 under `resources/`, and no `resources/template_columns.py` exists or should. The plan named a path
 that no module backs. Moving the tests also returned `test_resources/conftest.py` to its committed

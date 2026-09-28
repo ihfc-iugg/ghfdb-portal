@@ -1,27 +1,20 @@
-"""Tests for review.states (T003).
-
-Four states, five transitions (data-model.md): every legal transition
-succeeds, and at least one illegal transition per state is refused —
-including the one rule enforced by actor rather than by state alone: only a
-Data Curator may reach COMPLETE from AWAITING_DECISION.
-"""
+# Tests for review.states .
 
 import pytest
 from django.contrib.auth.models import Group
-
-from tests.test_review.factories import ClaimedPersonFactory
+from fairdm.factories import PersonFactory
 
 
 @pytest.fixture
 def curator(db):
-    person = ClaimedPersonFactory()
+    person = PersonFactory(is_claimed=True, password="test-pass-123")
     person.groups.add(Group.objects.get_or_create(name="Data Curator")[0])
     return person
 
 
 @pytest.fixture
 def assessor(db):
-    person = ClaimedPersonFactory()
+    person = PersonFactory(is_claimed=True, password="test-pass-123")
     person.groups.add(Group.objects.get_or_create(name="Data Assessor")[0])
     return person
 
@@ -29,8 +22,8 @@ def assessor(db):
 class _AssessmentStub:
     """A stand-in carrying just the one attribute the state machine reads
     and writes. ``states.py`` operates on any object shaped like this — it
-    does not import ``Review`` — so this task's tests do not depend on
-    ``Review`` growing a ``state`` field, which is T006's job."""
+    does not import ``Review`` — so these tests do not depend on
+    ``Review`` growing a ``state`` field."""
 
     def __init__(self, state):
         self.state = state
@@ -43,9 +36,9 @@ def review_in(state):
 @pytest.mark.django_db
 @pytest.mark.review
 class TestConfirmUpload:
-    """DESCRIBED or CHANGES_REQUESTED -> AWAITING_DECISION (assessor) or
-    COMPLETE (curator) — FR-017/FR-018 hold regardless of which of the two
-    origin states the confirmation started from."""
+    # DESCRIBED or CHANGES_REQUESTED -> AWAITING_DECISION (assessor) or COMPLETE
+    # (curator) — FS-005 FR-017/FR-018 hold regardless of which of the two origin
+    # states the confirmation started from.
 
     def test_assessor_confirming_from_described_reaches_awaiting_decision(
         self, assessor
@@ -95,8 +88,6 @@ class TestConfirmUpload:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestApprove:
-    """AWAITING_DECISION -> COMPLETE, curator only."""
-
     def test_curator_approves_a_waiting_assessment(self, curator):
         from review.states import States, approve
 
@@ -106,8 +97,8 @@ class TestApprove:
         assert review.state == States.COMPLETE
 
     def test_a_non_curator_cannot_approve(self, assessor):
-        """The one rule T003's acceptance names explicitly: a non-curator
-        must not reach COMPLETE from AWAITING_DECISION."""
+        # The one rule FS-005's acceptance criteria name explicitly: a non-curator must
+        # not reach COMPLETE from AWAITING_DECISION.
         from review.states import IllegalTransition, States, approve
 
         review = review_in(States.AWAITING_DECISION)
@@ -129,8 +120,6 @@ class TestApprove:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestSendBack:
-    """AWAITING_DECISION -> CHANGES_REQUESTED, curator only."""
-
     def test_curator_sends_a_waiting_assessment_back(self, curator):
         from review.states import States, send_back
 

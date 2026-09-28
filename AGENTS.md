@@ -11,24 +11,27 @@ package index.
 
 ## Stack & commands
 
-- **Stack:** Python 3.13, Django 5.x on the FairDM framework, Poetry-managed, PostgreSQL with
+- **Stack:** Python 3.13, Django 5.x on the FairDM framework, uv-managed, PostgreSQL with
   PostGIS in production
-- **Install:** `poetry install --with dev,docs`
-- **Test:** `poetry run pytest`
-- **Lint:** `poetry run pre-commit run --all-files`. This is *not* the gate CI enforces. CI runs
-  `poetry run ruff check .` and `poetry run ruff format --check .` directly, and the two differ in
-  both scope and version: `.pre-commit-config.yaml` excludes `docs/`, `migrations/` and `tests/`,
-  and pins ruff at v0.3.2 while `pyproject.toml` resolves ^0.15.10. Run raw ruff to predict CI.
-- **Format:** `poetry run ruff format .`
-- **Type-check:** `poetry run mypy project`
-- **Templates:** `poetry run djlint templates/ --check`
-- **Docs:** `poetry run sphinx-build -b html docs docs/_build/html -W --keep-going`
-- **Task runner:** `poetry run invoke --list` (`check`, `test`, `docs`, `create_fixtures`, others)
+- **Install:** `uv sync --group docs` (the `dev` group installs by default)
+- **Test:** `uv run pytest`
+- **Lint:** `uv run pre-commit run --all-files`, which is what CI's Code Quality job runs.
+  `.pre-commit-config.yaml` excludes `docs/`, `migrations/` and `tests/`, so a bare
+  `uv run ruff check .` reports findings in paths the gate does not cover.
+- **Format:** `uv run ruff format .`
+- **Type-check:** `uv run mypy project`
+- **Templates:** `uv run djlint templates/ --check`
+- **Docs:** `uv run sphinx-build -b html docs docs/_build/html -W --keep-going`
+- **Task runner:** `uv run invoke --list` (`check`, `test`, `docs`, `create_fixtures`, others)
 
-**Python version matters here.** `pyproject.toml` allows `>=3.13,<4.0`, so Poetry will pick 3.14 if
+**Python version matters here.** `pyproject.toml` allows `>=3.13,<4.0`, so uv will pick 3.14 if
 that is the default interpreter, and psycopg2-binary, pyproj and lxml have no 3.14 wheels — they
 fall back to source builds and fail without system development packages. Pin the environment with
-`poetry env use python3.13`, which is also what CI uses.
+`uv sync --python 3.13`, which is also what CI uses.
+
+**Versions:** bump the version with `uv version`, never by editing `pyproject.toml` alone, because
+`uv.lock` records the project's own version too. The FairDM packages are pinned to commits in
+`[tool.uv.sources]`. Move a pin deliberately, not by re-locking.
 
 There is no PostgreSQL in the local test path: pytest runs with `--nomigrations --reuse-db` against
 SQLite, while `main-integration.yml` runs the full suite against PostgreSQL 15.
@@ -80,7 +83,7 @@ by Watchtower, and `deploy/README.md` describes the path a release takes from a 
 running site.
 
 Code Quality runs `pre-commit run --all-files`, so ruff, mypy, deptry and djlint all come from the
-Poetry environment and their versions follow the single `mvp-shared` pin in `pyproject.toml`.
+project environment and their versions follow the single `mvp-shared` pin in `pyproject.toml`.
 
 Coverage is reported to Codecov with a 90% project floor and 85% on changed lines. Neither is a
 required check. Project coverage is below the floor today, so that status reads red — it is a

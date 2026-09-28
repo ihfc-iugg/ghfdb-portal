@@ -1,13 +1,9 @@
-"""
-Shared instance validation for the GHFDB import resources.
+"""Shared instance validation for the GHFDB import resources.
 
 Both import resources set ``sample``, ``dataset`` and ``name`` in
 ``before_save_instance()``, which django-import-export runs *after*
 ``validate_instance()``. Validating those three fields at validation time
 would refuse every row on relations the resource is about to set correctly.
-
-References:
-    - ``specs/004-import-upload-template/decisions.md`` D15
 """
 
 from django.core.exceptions import ValidationError
@@ -16,7 +12,9 @@ FIELDS_SET_AFTER_VALIDATION = ("sample", "dataset", "name")
 
 
 class ExcludeFieldsSetAfterValidation:
-    """Validate the instance as django-import-export does, minus the fields
+    """Validate the instance minus the fields set after validation.
+
+    Validates as django-import-export does, minus the fields
     ``before_save_instance()`` fills in later.
 
     ``sample`` and ``dataset`` are foreign keys, so the database's own NOT
@@ -30,6 +28,7 @@ class ExcludeFieldsSetAfterValidation:
     def validate_instance(
         self, instance, import_validation_errors=None, validate_unique=True
     ):
+        """Exclude ``FIELDS_SET_AFTER_VALIDATION`` from full_clean()."""
         errors = (
             {} if import_validation_errors is None else import_validation_errors.copy()
         )

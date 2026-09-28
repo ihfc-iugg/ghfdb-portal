@@ -1,13 +1,12 @@
 """Published-column mapping for the GHFDB flat admin views.
 
-R1 (``specs/002-ghfdb-proxy/research.md``) found that a published column's
-value is reached one of four ways, and one trap: Django resolves a
-``list_display`` string entry against the model's fields *before* the
-admin's attributes, and reads a callable's ``short_description`` only when
-no field matches. A callable bound under a name that is also a field name is
-therefore silently ignored, and the field's own ``verbose_name`` is shown
-instead — measured on the current changelists for ``expedition``,
-``c_comment``, ``water_temperature`` and the leading identifier (D2).
+Django resolves a ``list_display`` string entry against the model's fields
+*before* the admin's attributes, and reads a callable's
+``short_description`` only when no field matches. A callable bound under a
+name that is also a field name is therefore silently ignored, and the
+field's own ``verbose_name`` is shown instead — measured on the current
+changelists for ``expedition``, ``c_comment``, ``water_temperature`` and the
+leading identifier.
 
 ``PublishedColumns`` holds one entry per published column — its group and
 its accessor — and is the only place a published column name appears in
@@ -35,7 +34,7 @@ class DisplayCallable(Protocol):
 
     ``short_description`` is the column heading, and every callable
     ``ColumnDisplay.build`` returns carries it. ``admin_order_field`` — the
-    sort key — is deliberately not part of this protocol (F11): it is set
+    sort key — is deliberately not part of this protocol: it is set
     only on a sortable scalar column's callable, so declaring it here as
     always present would claim an attribute the many-valued and empty
     builders never set, exactly what the ``hasattr`` check in
@@ -45,7 +44,9 @@ class DisplayCallable(Protocol):
 
     short_description: str
 
-    def __call__(self, obj: Any) -> Any: ...
+    def __call__(self, obj: Any) -> Any:
+        """Return the value to display for *obj*."""
+        ...
 
 
 class ColumnEntry(NamedTuple):
@@ -54,7 +55,7 @@ class ColumnEntry(NamedTuple):
     ``accessor`` defaults to the published name itself where the two
     coincide; it is set explicitly only where the value is read from a
     different attribute (``quality_child`` and ``quality_parent`` both read
-    the single field ``quality`` — D2) or reached by a dotted path to a
+    the single field ``quality``) or reached by a dotted path to a
     many-valued relationship.
     """
 
@@ -65,21 +66,21 @@ class ColumnEntry(NamedTuple):
 class PublishedColumns:
     """One entry per published column name: its group and its accessor.
 
-    Two groups, per R1:
+    Two groups:
 
     * ``SCALAR`` — a single value read straight off the row: a queryset
       annotation, already keyed under the published name by
       ``project/ghfdb/managers.py``, or a field on the proxy model itself.
       Both are read identically here — ``getattr(obj, accessor, None)`` does
       not care which one put the value on the row — so this mapping does not
-      carry the distinction as two groups (F10). This also covers the two
+      carry the distinction as two groups. This also covers the two
       columns nothing resolves (``publication_reference``,
-      ``data_reference``, R4, D3), ``Ref_IGSN`` (a correlated subquery
-      reading the interval's sample identifier, specs/004-import-upload-template/decisions.md
-      D26), and the two quality columns (``quality_child``,
-      ``quality_parent``): each is kept under its own published name by
-      ``managers.py``, so this mapping reads it exactly like any other
-      scalar rather than deciding a second time what it resolves to (F12).
+      ``data_reference``), ``Ref_IGSN`` (a correlated subquery
+      reading the interval's sample identifier), and the two quality columns
+      (``quality_child``, ``quality_parent``): each is kept under its own
+      published name by ``managers.py``, so this mapping reads it exactly
+      like any other scalar rather than deciding a second time what it
+      resolves to.
     * ``MANY_VALUED`` — the value is a related manager, reached by a
       dot-separated attribute path from the row, and rendered as its
       members' labels joined with "; ".
@@ -89,8 +90,7 @@ class PublishedColumns:
     MANY_VALUED = "many_valued"
 
     ENTRIES: dict[str, ColumnEntry] = {
-        # --- child: scalar columns -------------------------------------------
-        # Most of these are queryset annotations GHFDBChildQuerySet.as_ghfdb_flat()
+        # Most child scalars are queryset annotations GHFDBChildQuerySet.as_ghfdb_flat()
         # keys under the published name; a few are fields on the proxy itself.
         "qc": ColumnEntry(SCALAR),
         "qc_uncertainty": ColumnEntry(SCALAR),
@@ -120,16 +120,14 @@ class PublishedColumns:
         "tc_mean": ColumnEntry(SCALAR),
         "tc_uncertainty": ColumnEntry(SCALAR),
         "tc_number": ColumnEntry(SCALAR),
-        # --- child: fields on the proxy itself (also SCALAR — see class docstring) ---
+        # Fields on the proxy itself (also SCALAR — see class docstring).
         "c_comment": ColumnEntry(SCALAR),
         "expedition": ColumnEntry(SCALAR),
-        # US-7: the submission template renamed the underlying field to
+        # The submission template renamed the underlying field to
         # ``surface_temperature`` because the value is not marine-only; the
-        # published column keeps the released name (D-c,
-        # specs/004-import-upload-template/decisions.md).
+        # published column keeps the released name.
         "water_temperature": ColumnEntry(SCALAR, "surface_temperature"),
         "quality_child": ColumnEntry(SCALAR),
-        # --- child: many-valued relationships -------------------------------
         "q_method": ColumnEntry(MANY_VALUED, "method"),
         "probe_type": ColumnEntry(
             MANY_VALUED, "sample.heatflowinterval.probe_metadata.probe_type"
@@ -151,21 +149,18 @@ class PublishedColumns:
         ),
         "tc_pT_function": ColumnEntry(MANY_VALUED, "thermal_conductivity.pT_function"),
         "tc_strategy": ColumnEntry(MANY_VALUED, "thermal_conductivity.strategy"),
-        # --- child: columns nothing resolves (R4, D3) -----------------------
         # Value("") annotations in managers.py, kept under their own
         # published names — this mapping reads them like any other scalar
-        # rather than hardcoding a second, competing "always empty" (F12).
+        # rather than hardcoding a second, competing "always empty".
         "publication_reference": ColumnEntry(SCALAR),
         "data_reference": ColumnEntry(SCALAR),
         # Reads the interval's IGSN identifier through a correlated
-        # subquery in managers.py (D26) — empty when the interval carries
-        # none, not a column nothing resolves.
+        # subquery in managers.py — empty when the interval carries none,
+        # not a column nothing resolves.
         "Ref_IGSN": ColumnEntry(SCALAR),
-        # --- parent: scalar columns ----------------------------------------------
-        # Most of these are queryset annotations GHFDBParentQuerySet.as_ghfdb_flat()
+        # Most parent scalars are queryset annotations GHFDBParentQuerySet.as_ghfdb_flat()
         # keys under the published name; the published ``name`` is annotated as
-        # ``site_name`` because the framework's base class already declares
-        # ``name`` (T048).
+        # ``site_name`` because the framework's base class already declares ``name``.
         "ID_parent": ColumnEntry(SCALAR),
         "q": ColumnEntry(SCALAR),
         "q_uncertainty": ColumnEntry(SCALAR),
@@ -178,21 +173,22 @@ class PublishedColumns:
         "total_depth_MD": ColumnEntry(SCALAR),
         "total_depth_TVD": ColumnEntry(SCALAR),
         "explo_method": ColumnEntry(SCALAR),
-        # --- parent: fields on the proxy itself (also SCALAR — see class docstring) --
+        # Fields on the proxy itself (also SCALAR — see class docstring).
         "corr_HP_flag": ColumnEntry(SCALAR),
         "quality_parent": ColumnEntry(SCALAR),
-        # --- parent: many-valued relationships ------------------------------------
         "explo_purpose": ColumnEntry(MANY_VALUED, "sample.heatflowsite.explo_purpose"),
     }
 
 
 class ColumnDisplay:
-    """Builds a display callable for one published column, per
-    ``PublishedColumns``'s three groups, and the ordered tuple a
-    changelist's ``list_display`` takes.
+    """Builds display callables for published columns.
+
+    Turns a ``PublishedColumns`` entry into a display callable, and a
+    canonical column list into the ordered tuple a changelist's
+    ``list_display`` takes.
 
     A callable's ``short_description`` is always the published name
-    verbatim (D2). Every callable returned here is a fresh closure named
+    verbatim. Every callable returned here is a fresh closure named
     ``display`` — never named after the published column it renders — so
     nothing built here can fall into the trap this module exists to avoid.
     """
@@ -204,9 +200,15 @@ class ColumnDisplay:
 
     @staticmethod
     def scalar(accessor: str) -> DisplayCallable:
-        """A callable reading *accessor* straight off the row — an
-        annotation or a field, whichever ``managers.py`` happens to carry it
-        as (F10, D14's ``PublishedColumns`` docstring)."""
+        """Build a callable reading *accessor* straight off the row.
+
+        Args:
+            accessor: Attribute name — an annotation or a field, whichever
+                ``managers.py`` happens to carry it as.
+
+        Returns:
+            A display callable for that accessor.
+        """
 
         def display(obj):
             return getattr(obj, accessor, None)
@@ -215,11 +217,16 @@ class ColumnDisplay:
 
     @staticmethod
     def many_valued(path: str) -> DisplayCallable:
-        """A callable joining the labels of the related rows reached by
-        *path*, a dot-separated attribute path from the row.
+        """Build a callable joining the labels of related rows.
 
-        A missing relationship anywhere along the path renders empty rather
+        A missing relationship anywhere along *path* renders empty rather
         than raising.
+
+        Args:
+            path: Dot-separated attribute path from the row to the related manager.
+
+        Returns:
+            A display callable for that path.
         """
         segments = path.split(".")
 
@@ -237,8 +244,14 @@ class ColumnDisplay:
     def build(name: str) -> DisplayCallable:
         """Return the display callable for the published column *name*.
 
-        Raises ``ValueError`` naming *name* if ``PublishedColumns`` holds no
-        entry for it — the refusal SC-007 requires.
+        Args:
+            name: Published column name.
+
+        Returns:
+            A display callable for that column.
+
+        Raises:
+            ValueError: If ``PublishedColumns`` holds no entry for *name*.
         """
         entry = PublishedColumns.ENTRIES.get(name)
         if entry is None:
@@ -250,11 +263,9 @@ class ColumnDisplay:
         }
         accessor = entry.accessor or name
         # Typed loosely until the two attributes below are set, then cast to
-        # the narrower ``DisplayCallable`` on return: ``admin_order_field``
-        # is deliberately not part of that protocol (F11), since it is never
-        # present on a many-valued column's callable, so assigning it
-        # through the protocol type would be a claim the protocol itself
-        # does not make.
+        # the narrower DisplayCallable on return: admin_order_field is
+        # deliberately not part of that protocol, since a many-valued
+        # column's callable never sets it.
         display: Any = builders[entry.group](accessor)
         display.short_description = name
 
@@ -270,8 +281,10 @@ class ColumnDisplay:
     def list_display_for(columns: Iterable[str]) -> tuple[DisplayCallable, ...]:
         """Return *columns* as display callables, in that order.
 
-        Refuses — at call time, which for a caller building ``list_display``
-        at class-body scope is import time — a column ``PublishedColumns``
-        does not hold, naming it in the message (SC-007).
+        Args:
+            columns: Published column names, in ``list_display`` order.
+
+        Returns:
+            The corresponding display callables, in the same order.
         """
         return tuple(ColumnDisplay.build(name) for name in columns)

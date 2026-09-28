@@ -1,4 +1,4 @@
-"""Create the Data Assessor group (T005, data-model.md "Groups").
+"""Create the Data Assessor group (FS-005 data-model.md "Groups").
 
 A data migration rather than a fixture, so the group exists in every
 environment without a load step and without pinning ``auth.permission`` rows by

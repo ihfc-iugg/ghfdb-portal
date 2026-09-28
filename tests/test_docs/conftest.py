@@ -1,5 +1,3 @@
-"""Fixtures shared by the documentation tests."""
-
 import subprocess
 import sys
 from pathlib import Path
@@ -13,13 +11,7 @@ DIAGRAM_PAGE = DOCS_DIR / "data_models" / "ghfdb-erd.md"
 
 @pytest.fixture(scope="session")
 def built_diagram_page(tmp_path_factory) -> str:
-    """The HTML Sphinx produces for the entity relationship page.
-
-    Built rather than read from source because the failure this guards against is a
-    diagram source that is perfectly valid and never rendered: without a Mermaid
-    extension configured, MyST emits the diagram as a highlighted code block and the
-    page still builds without error.
-    """
+    # The HTML Sphinx produces for the entity relationship page.
     pytest.importorskip(
         "sphinxcontrib.mermaid",
         reason="building the documentation needs the documentation dependency group",

@@ -1,9 +1,6 @@
-"""Tests for ``project/heat_flow/vocabularies.py``.
-
-The vocabularies themselves are declarative. What is worth guarding is how
-their concepts reach the test database: written once when the session starts,
-and never again while tests are running.
-"""
+# Tests for ``project/heat_flow/vocabularies.py``. The vocabularies themselves are
+# declarative. What is worth guarding is how their concepts reach the test database:
+# written once when the session starts, and never again while tests are running.
 
 import pytest
 
@@ -12,20 +9,14 @@ from tests.conftest import concept_preload_record, flushes_the_database
 
 @pytest.fixture(scope="module")
 def preload_calls_at_module_start():
-    """How many times the concepts had been written when this module began."""
     return concept_preload_record.calls
 
 
 class TestConceptPreload:
-    """The vocabulary concepts are written once per session, not per test."""
-
     def test_concepts_are_present_without_a_per_test_fixture(self, db):
-        """Nothing in this module loads concepts, and they are there anyway.
-
-        Each test runs inside a transaction that is rolled back afterwards, so
-        this only holds because the concepts were written before that
-        transaction opened.
-        """
+        # Nothing in this module loads concepts, and they are there anyway. Each test
+        # runs inside a transaction that is rolled back afterwards, so this only holds
+        # because the concepts were written before that transaction opened.
         from research_vocabs.models import Concept
 
         assert Concept.objects.exists()
@@ -34,33 +25,15 @@ class TestConceptPreload:
     def test_no_concepts_are_written_while_tests_run(
         self, db, run, preload_calls_at_module_start
     ):
-        """Writing them costs roughly a second and several hundred queries.
-
-        Spent once for the session that is unremarkable; spent per test it is
-        most of the suite's runtime. Counting the writes catches that where a
-        stopwatch cannot, since the count is the same on a fast machine and a
-        slow one. Three runs rather than one because a per-test write only
-        shows up as a difference between two tests.
-        """
+        # Writing them costs roughly a second and several hundred queries. Spent once
+        # for the session that is unremarkable; spent per test it is most of the suite's
+        # runtime.
         assert concept_preload_record.calls == preload_calls_at_module_start
 
 
 class TestWhichTestsEmptyTheDatabase:
-    """A test that runs in a real transaction cannot be rolled back, so
-    Django empties every table when it finishes — the concepts loaded at
-    session start among them. ``tests/conftest.py`` writes them again after
-    such a test, and recognising which tests those are is the whole of what
-    it has to get right.
-
-    Left unrecognised, the concepts go for the rest of that worker's run,
-    and which tests then fail depends on how xdist happened to spread the
-    suite: the same commit passed at eight workers and failed at two.
-
-    Pinned here because the rule reads pytest-django's own fixture names,
-    which a version of it is free to rename. When that happens this fails
-    with the reason, rather than the suite failing somewhere else at some
-    worker counts and not others.
-    """
+    # A test that runs in a real transaction cannot be rolled back, so Django empties
+    # every table when it finishes — the concepts loaded at session start among them.
 
     class Node:
         """The parts of a test node the rule reads."""
@@ -93,13 +66,9 @@ class TestWhichTestsEmptyTheDatabase:
 
 
 class TestEveryConceptDeclaredIsAConcept:
-    """A vocabulary declares each of its concepts under its own name.
-
-    Two concepts sharing an attribute name is silent: the class body binds
-    the last one and the first never exists. It cost this vocabulary the
-    two temperature-dependent conductivity functions, which the upload
-    template offers and the portal then refused.
-    """
+    # A vocabulary declares each of its concepts under its own name. Two concepts
+    # sharing an attribute name is silent: the class body binds the last one and the
+    # first never exists.
 
     @pytest.mark.parametrize(
         "vocabulary_name",
@@ -121,12 +90,7 @@ class TestEveryConceptDeclaredIsAConcept:
         ],
     )
     def test_no_two_concepts_share_a_label(self, vocabulary_name):
-        """A repeated label is the symptom a shadowed declaration leaves.
-
-        Reading the source rather than the class, because the shadowing
-        happens before the class object exists — by the time the vocabulary
-        can be imported, the lost concept is already gone.
-        """
+        # A repeated label is the symptom a shadowed declaration leaves.
         import ast
         import pathlib
 
@@ -154,14 +118,9 @@ class TestEveryConceptDeclaredIsAConcept:
 
 
 class TestTheVocabulariesCarryWhatTheTemplateOffers:
-    """The upload template's dropdowns and the portal's vocabularies name
-    the same concepts the same way.
-
-    Each value below is one the assessment team's completed templates
-    actually carry. A file naming one the portal spells differently is
-    refused on a value its own template supplied, which is how the portal
-    came to reject every file the team produced.
-    """
+    # The upload template's dropdowns and the portal's vocabularies name the same
+    # concepts the same way. Each value below is one the assessment team's completed
+    # templates actually carry.
 
     @pytest.mark.parametrize(
         ("vocabulary_name", "label"),
@@ -205,11 +164,8 @@ class TestTheVocabulariesCarryWhatTheTemplateOffers:
         assert MultiConceptWidget(vocabulary).clean(f"[{label}]", row={}).count() == 1
 
     def test_heat_flow_method_carries_an_unspecified_concept(self, db):
-        """The 2026.03 template adds an explicit "Unspecified" option to its
-        heat-flow method dropdown. Checked by stored label rather than
-        through ``MultiConceptWidget``: every "unspecified" token is a
-        sentinel for "no value" there, by design, regardless of vocabulary,
-        so a cell naming it never resolves to a concept."""
+        # The 2026.03 template adds an explicit "Unspecified" option to its heat-flow
+        # method dropdown.
         from heat_flow.vocabularies import HeatFlowMethod
         from research_vocabs.models import Concept
 
@@ -220,8 +176,8 @@ class TestTheVocabulariesCarryWhatTheTemplateOffers:
         assert "unspecified" in labels
 
     def test_the_three_ratcliffe_functions_are_three_concepts(self, db):
-        """The surname was spelled two different wrong ways, and the
-        pressure-dependent function was missing outright."""
+        # The surname was spelled two different wrong ways, and the pressure-dependent
+        # function was missing outright.
         from heat_flow.vocabularies import ConductivityPTFunction
         from research_vocabs.models import Concept
 

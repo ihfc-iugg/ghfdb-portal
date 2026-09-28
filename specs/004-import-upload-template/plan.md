@@ -50,14 +50,14 @@ located by row and column
 
 ## Constitution Check
 
-| Principle | Bearing on this feature |
+| Article | Bearing on this feature |
 |---|---|
-| II. GHFDB Schema Fidelity | Column names come from the published template and are preserved exactly. US-1 is this principle applied to input. ADR 0002 and ADR 0003 already settle the misspelling question: a misspelled published name is corrected internally and rejected on input |
-| III. FairDM-First | The dataset is a FairDM `Dataset`; nothing here reimplements dataset ownership |
-| VI. Test-First (non-negotiable) | Every story is written test first. US-4 additionally requires the guard test proven against the reinstated defect |
-| V. Internationalisation | Fault messages are user-facing strings and go through `gettext_lazy` |
-| IX. Simplicity | The entry point is one function. No import framework, no plugin layer, no configuration surface the spec does not ask for |
-| VII. Documentation | `docs/guides/importing-data.md` describes importing and is updated in the same pull request |
+| I. Testing (non-negotiable) | Every story is written test first. US-4 additionally requires the guard test proven against the reinstated defect |
+| II. Simplicity | The entry point is one function. No import framework, no plugin layer, no configuration surface the spec does not ask for |
+| VI. Documentation | `docs/guides/importing-data.md` describes importing and is updated in the same pull request |
+| VIII. Internationalization | Fault messages are user-facing strings and go through `gettext_lazy` |
+| XII. GHFDB Schema Fidelity | Column names come from the published template and are preserved exactly. US-1 is this article applied to input. ADR 0002 and ADR 0003 already settle the misspelling question: a misspelled published name is corrected internally and rejected on input |
+| XIII. FairDM-First | The dataset is a FairDM `Dataset`; nothing here reimplements dataset ownership |
 
 No violation requiring an entry in Complexity Tracking.
 
