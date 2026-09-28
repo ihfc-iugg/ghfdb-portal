@@ -100,23 +100,19 @@ page of several.
 ## R8 — Identifier uniqueness
 
 Neither `ParentHeatFlow.ghfdb_id` nor `HeatFlow.ghfdb_id` is unique in the database. Both import
-resources upsert on it (`import_id_fields`), so a duplicate cannot arise through an import, but the
-database does not forbid one. A single-record route that matched two records would raise
-`MultipleObjectsReturned` and answer with a server error. The detail routes resolve a duplicate to
-the earliest record by primary key rather than failing, and the flat and determination lists carry
-both rows as they are.
+resources upsert on it (`import_id_fields`), so no import creates a second record under an
+identifier. The viewsets keep DRF's own `get_object()`, which runs the visibility filter and the
+object permission check on the single-record route (D12).
 
 A non-numeric identifier never reaches the view: the route's lookup pattern is digits only, so it
 is a 404 from the resolver.
 
-## R9 — Child counts count published determinations
+## R9 — Child counts
 
 `with_child_counts()` counts every child of a parent, including a determination with no published
-identifier (possible since ADR-0014: a determination without an identifier is its row). The
-proxies exclude such a determination everywhere else, so a parent would report more determinations
-than a consumer can reach through its attached list. The proxy is by definition the published view,
-so both counts are narrowed to children carrying a published identifier. The admin's parent list
-reads the same annotation and becomes consistent with its own child list as a result.
+identifier (ADR-0014) and one in a dataset the requester cannot see. The counts are left as the
+proxy computes them (D13). The admin reads the same annotation, and a curator relies on it to see
+new determinations arriving at a site.
 
 ## R10 — The disputed column vocabulary (#122)
 
@@ -135,14 +131,14 @@ None of the three changes a published column name, so no story is gated on #122.
 carries a comment recommending its removal. Removing it would remove the key from these responses,
 which the registry-driven serializers follow without a code change here.
 
-## R11 — The flat row and the determination's own identifier
+## R11 — The determination's own identifier
 
 The published release carries an `ID` column, the determination's own identifier, which the portal
-stores as `HeatFlow.ghfdb_id`. `constants.py` holds it in `META_FIELDS`, not `CHILD_COLUMNS`. The
-spec defines the flat row as every published parent column followed by every published child
-column in the order `constants.py` holds, and SC-006 bounds every key to that set plus four named
-additions. The flat row therefore does not carry `ID`. A consumer reaches a single row by it (the
-route is addressed by it), and every flat row carries `ID_parent`.
+stores as `HeatFlow.ghfdb_id`. `constants.py` holds it in `META_FIELDS`, after the child columns in
+`GHFDB_COLUMN_ORDER`. Clarification Q2 names the release columns the flat endpoint does not carry
+(review status, year, quality code), and `ID` is not among them. It is carried, in the position
+`GHFDB_COLUMN_ORDER` gives it (D15). `PublishedColumns.ENTRIES` has no entry for it, so the
+serializer builder reaches it through an override to `ghfdb_id`.
 
 ## R12 — FR-009 and the released row
 
@@ -150,3 +146,18 @@ FR-009 asks every record on a list route to carry a link to its own route. FR-01
 2 say a flat row carries published columns and nothing else, naming links explicitly. The specific
 rule governs the general one: a flat row carries no link, and FR-009 holds on the parent and
 determination routes.
+
+## R13 — Visibility across the parent–determination relation
+
+The visibility filter and the object permission check both act on the queryset or object a view
+serves, not on anything reached through it (`fairdm/api/filters.py`, `fairdm/api/permissions.py`).
+A determination and its parent can sit in different datasets. The child import resolves `ID_parent`
+against every parent regardless of dataset, and falls back to the site at the row's coordinates
+(`project/ghfdb/resources/child.py`). An uploaded dataset stays private until a curator approves it
+(`project/review/views.py`). Both directions are reachable: an unapproved determination under a
+public parent, and a public determination attached to an unapproved site.
+
+The parent route's own queryset, passed through the visibility filter for the requester, is the set
+of parents that may be served. The determination and flat querysets are narrowed to determinations
+whose parent is in that set, as a subquery, which keeps the query count constant. A parent's
+attached determinations are the determination queryset passed through the same filter (D16).

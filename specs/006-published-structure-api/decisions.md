@@ -106,18 +106,21 @@ anonymous consumer. The framework's ordering backend would offer ordering on the
 columns, which repeats a record once per related value, so it is dropped with the field-filter
 backend. Pages are ordered by published identifier.
 
-## D12 — A duplicated published identifier resolves to the earliest record
+## D12 — A single record is found by the framework's own lookup
 
-Decided at planning. The database does not make a published identifier unique, though both import
-paths upsert on it. A single-record route matching two records answers with the one created first
-rather than a server error. List routes carry both records as they are.
+Decided at planning. The published identifier is not unique in the database, but both import paths
+upsert on it, so no import can create a second record under an identifier. The viewsets keep DRF's
+own `get_object()`, which is also where the visibility filter and the object permission check run
+on a single-record route. Overriding it to guard a state nothing produces would put both checks at
+risk.
 
-## D13 — The child counts count published determinations
+## D13 — The child counts are the proxy's
 
-Decided at planning. A determination with no published identifier is outside the published
-database and unreachable through these endpoints, so a parent counting it would report more
-determinations than its attached list holds. Both counts narrow to determinations carrying a
-published identifier, in the proxy, so the admin's parent list agrees with its own child list too.
+Decided at planning, after the design review. The counts are what the proxy computes, as the spec
+was approved on (D6): every determination at the site, and every one of those that contributed.
+That includes a determination not yet carrying a published identifier, which a curator sees
+arriving in the admin. The consumer guide says so, because a parent's counts can then exceed the
+determinations its own route lists.
 
 ## D14 — An empty scalar is `null`
 
@@ -125,13 +128,38 @@ Decided at planning. D7 settles that an absent value is present and empty. For a
 `null`, and an empty string is emitted as `null` too: the two columns nothing resolves are annotated
 as empty strings, and a consumer gains nothing from telling the two apart.
 
-## D15 — The released row carries no identifier of its own
+## D15 — A determination's own identifier is carried as `ID`
 
-Decided at planning, as a reading of the spec rather than a change to it. The spec defines the flat
-row as the published parent columns followed by the published child columns, in the order the
-constants module holds, and SC-006 admits no other key. The determination's own identifier is held
-there as a meta column, outside both lists, so the row carries `ID_parent` but not `ID`. A consumer
-still reaches a single row by `ID`, which addresses the route.
+Decided at planning, after the design review. The flat endpoint mirrors the release format
+(clarification Q1). Clarification Q2 names the release columns the endpoint does not carry: the
+review status, the year and the quality code. The determination's own identifier is none of those.
+Clarification Q3 calls it the identifier a published file carries as the row's own. So it is
+carried, as `ID`, where the canonical order in the constants module puts it: after the child
+columns. The determination record carries it in the same place. Without it a consumer paging the
+flat rows could not tell two determinations at one site apart, or reach a row's own route.
+
+## D16 — A determination is served only through a parent that is served
+
+Decided at planning, after the design review. Visibility is decided per record, and a determination
+and its parent can sit in different datasets: an upload under review can name a public parent, and
+a determination can attach by its coordinates to a site that is not yet public. Served naively,
+the first leaks an unapproved determination through its public parent's route, and the second leaks
+an unapproved parent's values through the determination's parent columns.
+
+So the published structure is served whole or not at all. The determination and flat routes serve
+a determination only when its parent is one the parent route would serve to the same requester. A
+parent's attached determinations are the ones the determination route would serve to that
+requester. A determination with no parent, or with a parent carrying no published identifier, is
+outside the two-level structure and is not served.
+
+## D17 — The count aggregate is not measured at release size here
+
+Decided at planning. D6 asks for the parent page's count aggregate to be measured against a
+realistic row count. The portal holds a sample, and the development environment has no PostgreSQL,
+so a measurement here would be of SQLite on a few hundred rows and would say nothing about
+production. The query is one grouped join of parents to their determinations on an indexed foreign
+key, which PostgreSQL answers with a single hash aggregate. D6's fallback stands if it proves
+expensive once the database is loaded: the counts move onto the record, not out of the response.
 
 ## Open, and carried rather than resolved
 

@@ -14,9 +14,8 @@ from the proxy managers, which already annotate every scalar column and prefetch
 one in a constant number of queries.
 
 The work is almost all new code in `project/ghfdb/`: `serializers.py` grows, `viewsets.py` is new,
-and `urls.py` registers the three. Two small changes land in `managers.py`, both found in research:
-the child queryset gains `quality_parent`, and the parent child-counts narrow to published
-determinations. A consumer guide lands in `docs/guides/`.
+and `urls.py` registers the three. One small change lands in `managers.py`: the child queryset gains
+`quality_parent`, which the released row needs. A consumer guide lands in `docs/guides/`.
 
 ## Technical Context
 
@@ -42,7 +41,8 @@ on it (FR-018, SC-003).
 route.
 
 **Scale/Scope**: the portal holds a sample of the database today. The full release is roughly
-90,000 determinations, which the constant-query design is sized for.
+90,000 determinations. The query count per page is constant by design. The time the parent page's
+count aggregate takes at that size is not measured here (D17).
 
 ## Constitution Check
 
@@ -87,32 +87,36 @@ array of strings) so the schema describes their types.
 
 ### Parents (US1)
 
-- Record keys: `url`, `total_children`, `relevant_children`, then `PARENT_COLUMNS`.
-- Detail adds `children` ahead of the published columns: the parent's published determinations.
-  US1 attaches them as a list of links to their determination routes' identifiers, because the
-  determination record shape does not exist until US2. US2 replaces each link with the
-  determination list record.
+- Record keys: `url`, `total_children`, `relevant_children`, then `PARENT_COLUMNS`. The counts are
+  the proxy's, unchanged (D13).
+- US1's detail route returns the same record. US2 adds `children` to it, ahead of the published
+  columns: the parent's determinations, in the determination list shape, taken from the
+  determination queryset passed through the visibility filter for the requester, so the attached
+  list is exactly what the determination route would serve them (D16, research R13).
 - Queryset: `GHFDBParent.objects.as_ghfdb_flat().with_child_counts()` with the exploration-purpose
   prefetch, ordered by `ghfdb_id, pk`.
-- `with_child_counts()` narrows both counts to determinations carrying a published identifier
-  (research R9).
 
 ### Determinations (US2)
 
-- List record keys: `url`, `parent` (a link to the parent's detail route, `null` if the parent has
-  no published identifier), `lat_NS`, `long_EW`, then `CHILD_COLUMNS`.
+- List record keys: `url`, `parent` (a link to the parent's detail route), `lat_NS`, `long_EW`, then
+  `CHILD_COLUMNS`, then `ID` (D15).
 - Detail record: the same keys, with `parent` as the parent's full record (the US1 parent record
   shape, without its attached determinations, so the nesting stops at one level).
-- Queryset: `GHFDBChild.objects.for_export()`, ordered by `ghfdb_id, pk`. The detail route loads
-  the parent through the parent queryset of US1 in one further query.
+- Queryset: `GHFDBChild.objects.for_export()`, narrowed to determinations whose parent is in the
+  parent route's queryset after the visibility filter for the requester, as a subquery (D16,
+  research R13). Every served determination therefore has a served parent, so `parent` is never
+  `null`. Ordered by `ghfdb_id, pk`. The detail route loads the parent through the parent queryset
+  of US1 in one further query.
 
 ### Released row (US3)
 
-- Row keys: `PARENT_COLUMNS` then `CHILD_COLUMNS`, nothing else. No `url` (FR-010).
+- Row keys: `PARENT_COLUMNS`, then `CHILD_COLUMNS`, then `ID`, which is `GHFDB_COLUMN_ORDER` with
+  the meta columns the portal does not hold left out (D15). Nothing else. No `url` (FR-010,
+  research R12).
 - `explo_purpose` overridden to `sample.heatflowinterval.site.explo_purpose`.
 - `as_ghfdb_flat()` on the child queryset gains `quality_parent` from `parent__quality`.
-- Queryset: `GHFDBChild.objects.for_export()`, ordered by `ghfdb_id, pk`. Detail addressed by the
-  determination's `ghfdb_id`.
+- Queryset: the determination route's queryset (the same narrowing by served parent). Detail
+  addressed by the determination's `ghfdb_id`.
 
 ### Viewsets and registration
 
@@ -121,8 +125,9 @@ In `project/ghfdb/viewsets.py`, three `ReadOnlyModelViewSet` subclasses sharing 
 - `lookup_field = "ghfdb_id"`, `lookup_value_regex = "[0-9]+"`.
 - `filter_backends = [FairDMVisibilityFilter]` (research R4).
 - Permission, pagination and throttling inherited from the framework's settings.
-- `get_object()` resolves a duplicated identifier to the earliest record by primary key (research
-  R8).
+- DRF's own `get_object()`, not overridden, so the visibility filter and the object permission
+  check run on the single-record route (D12).
+- Hyperlinked fields name their view with the `api:` namespace (`api:ghfdb-parents-detail`).
 - `extend_schema_view` gives each action a summary and the `ghfdb` tag. The determination detail
   action declares its own response serializer so the schema carries both shapes.
 
@@ -132,14 +137,14 @@ and `ghfdb/flat` with basenames `ghfdb-parents`, `ghfdb-children` and `ghfdb-fla
 ### Documentation
 
 `docs/guides/published-structure-api.md`, linked from the docs index: what each endpoint is for, how
-paging works, and one worked request and response per endpoint (FR-019). Each story writes its own
-endpoint's section.
+paging works, the anonymous request limit and what it means for reading the whole database, and one
+worked request and response per endpoint (FR-019). Each story writes its own endpoint's section.
 
 ## Project Structure
 
 ```text
 project/ghfdb/
-├── managers.py          # quality_parent on the child queryset; published-only child counts
+├── managers.py          # quality_parent on the child queryset
 ├── serializers.py       # field classes, published_fields(), the record serializers
 ├── viewsets.py          # new: the three viewsets
 └── urls.py              # router registration
