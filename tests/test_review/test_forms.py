@@ -8,15 +8,11 @@ import json
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
-from fairdm.factories import LiteratureItemFactory
+from fairdm.factories import LiteratureItemFactory, PersonFactory
 from literature.models import LiteratureItem
 from review.forms import ReviewDescriptionForm
 
-from tests.test_review.factories import (
-    ClaimedPersonFactory,
-    GhostPersonFactory,
-    ReviewFactory,
-)
+from tests.factories import ReviewFactory
 
 
 @pytest.mark.django_db
@@ -24,7 +20,7 @@ from tests.test_review.factories import (
 class TestReviewDescriptionFormValidation:
     def test_valid_with_catalogued_publication_assessors_and_dates(self):
         literature = LiteratureItemFactory()
-        assessor = ClaimedPersonFactory()
+        assessor = PersonFactory(is_claimed=True, password="test-pass-123")
 
         form = ReviewDescriptionForm(
             data={
@@ -39,7 +35,7 @@ class TestReviewDescriptionFormValidation:
 
     def test_end_date_before_start_date_is_refused_naming_the_dates(self):
         literature = LiteratureItemFactory()
-        assessor = ClaimedPersonFactory()
+        assessor = PersonFactory(is_claimed=True, password="test-pass-123")
 
         form = ReviewDescriptionForm(
             data={
@@ -57,7 +53,7 @@ class TestReviewDescriptionFormValidation:
 
     def test_a_ghost_profile_is_accepted_as_an_assessor(self):
         literature = LiteratureItemFactory()
-        ghost = GhostPersonFactory()
+        ghost = PersonFactory(email=None, is_claimed=False)
 
         form = ReviewDescriptionForm(
             data={
@@ -79,7 +75,7 @@ class TestReviewDescriptionFormBibliographyFile:
     scenario 2, FR-004)."""
 
     def test_a_bibliography_file_adds_the_publication_and_links_it(self):
-        assessor = ClaimedPersonFactory()
+        assessor = PersonFactory(is_claimed=True, password="test-pass-123")
         bibliography_file = SimpleUploadedFile(
             "publication.json",
             json.dumps({"title": "A New Paper", "type": "article-journal"}).encode(),
@@ -108,7 +104,7 @@ class TestReviewDescriptionFormBibliographyFile:
         publication for every rejected submission — one nobody asked for and
         nobody afterwards knows to remove.
         """
-        assessor = ClaimedPersonFactory()
+        assessor = PersonFactory(is_claimed=True, password="test-pass-123")
         bibliography_file = SimpleUploadedFile(
             "publication.json",
             json.dumps(
@@ -132,7 +128,7 @@ class TestReviewDescriptionFormBibliographyFile:
         assert not LiteratureItem.objects.filter(title="Never Asked For").exists()
 
     def test_neither_a_publication_nor_a_file_is_refused(self):
-        assessor = ClaimedPersonFactory()
+        assessor = PersonFactory(is_claimed=True, password="test-pass-123")
 
         form = ReviewDescriptionForm(
             data={
@@ -146,7 +142,7 @@ class TestReviewDescriptionFormBibliographyFile:
         assert "literature" in form.errors
 
     def test_an_invalid_bibliography_file_is_refused(self):
-        assessor = ClaimedPersonFactory()
+        assessor = PersonFactory(is_claimed=True, password="test-pass-123")
         bibliography_file = SimpleUploadedFile(
             "publication.json", b"not json", content_type="application/json"
         )
@@ -172,7 +168,7 @@ class TestReviewDescriptionFormDuplicateLiterature:
 
     def test_a_publication_with_an_existing_assessment_is_refused(self):
         existing = ReviewFactory()
-        assessor = ClaimedPersonFactory()
+        assessor = PersonFactory(is_claimed=True, password="test-pass-123")
 
         form = ReviewDescriptionForm(
             data={

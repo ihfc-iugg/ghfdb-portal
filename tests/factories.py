@@ -4,12 +4,14 @@ import factory
 from factory.declarations import LazyAttribute
 from factory.faker import Faker
 from factory.fuzzy import FuzzyChoice
-from fairdm.factories import MeasurementFactory, SampleFactory
-from research_vocabs.models import Concept
-
+from fairdm.factories import (
+    DatasetFactory,
+    LiteratureItemFactory,
+    MeasurementFactory,
+    SampleFactory,
+)
 from heat_flow import vocabularies
-
-from .models import (
+from heat_flow.models import (
     HeatFlow,
     HeatFlowCorrection,
     HeatFlowInterval,
@@ -19,6 +21,8 @@ from .models import (
     ProbeMetadata,
     ThermalGradient,
 )
+from research_vocabs.models import Concept
+from review.models import Review
 
 
 def attach_random_concept(instance, field_name, vocabulary):
@@ -267,3 +271,11 @@ class HeatFlowCorrectionFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = HeatFlowCorrection
+
+
+class ReviewFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Review
+
+    literature = factory.SubFactory(LiteratureItemFactory)
+    dataset = factory.SubFactory(DatasetFactory)

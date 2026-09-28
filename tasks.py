@@ -1,3 +1,5 @@
+"""Invoke tasks for local development: install, check, test, docs, release."""
+
 import datetime
 
 from invoke import task
@@ -5,9 +7,7 @@ from invoke import task
 
 @task
 def install(c):
-    """
-    Install the project dependencies
-    """
+    """Create the virtual environment and install pre-commit hooks."""
     print("🚀 Creating virtual environment using uv")
     c.run("uv sync")
     c.run("uv run pre-commit install")
@@ -15,9 +15,7 @@ def install(c):
 
 @task
 def check(c):
-    """
-    Check the consistency of the project using various tools
-    """
+    """Run lock, lint, type, and dependency checks."""
     print(
         "🚀 Checking lock file consistency with 'pyproject.toml': Running uv lock --check"
     )
@@ -35,17 +33,18 @@ def check(c):
 
 @task
 def test(c):
-    """
-    Run the test suite
-    """
+    """Run the test suite with coverage."""
     print("🚀 Testing code: Running pytest")
     c.run("uv run pytest --cov --cov-config=pyproject.toml --cov-report=html")
 
 
 @task
 def docs(c, live=False):
-    """
-    Build the documentation
+    """Build the documentation, or serve it live when ``live`` is set.
+
+    Args:
+        c: The invoke context.
+        live: Serve the docs with autobuild instead of a one-off build.
     """
     if live:
         c.run(
@@ -57,8 +56,11 @@ def docs(c, live=False):
 
 @task(help={"overwrite": "Re-release the current version (overwrite tag if needed)"})
 def release(c, overwrite=False):
-    """
-    Release a new version of the app using year.release-number versioning.
+    """Release a new version using year.release-number versioning.
+
+    Args:
+        c: The invoke context.
+        overwrite: Re-release the current version instead of bumping it.
     """
     if overwrite:
         version = c.run("uv version --short", hide=True).stdout.strip()
@@ -94,6 +96,7 @@ def release(c, overwrite=False):
 
 @task
 def dumpdata(c):
+    """Dump core app data to ``fairdm.json.gz`` inside the Docker container."""
     c.run(
         "docker compose -f local.yml run django python manage.py dumpdata users organizations contributors projects"
         " datasets samples core --natural-foreign --natural-primary --output=fairdm.json.gz"
@@ -102,6 +105,7 @@ def dumpdata(c):
 
 @task
 def loaddata(c):
+    """Load core fairdm app data inside the Docker container."""
     c.run(
         "docker compose -f local.yml run django python manage.py loaddata core --app fairdm"
     )
@@ -109,8 +113,13 @@ def loaddata(c):
 
 @task
 def create_fixtures(c, users=75, orgs=25, projects=12):
-    """
-    Build the documentation and open it in a live browser
+    """Create demo fixtures inside the Docker container.
+
+    Args:
+        c: The invoke context.
+        users: Number of demo users to create.
+        orgs: Number of demo organizations to create.
+        projects: Number of demo projects to create.
     """
     c.run(
         f"docker compose -f local.yml run django python manage.py create_fixtures --users {users} --orgs {orgs} --projects {projects}"
@@ -119,7 +128,7 @@ def create_fixtures(c, users=75, orgs=25, projects=12):
 
 @task
 def savedemo(c):
-    """Save the initial data for the core fairdm app"""
+    """Save the initial data for the core fairdm app."""
     c.run(
         " ".join(
             [
@@ -139,9 +148,7 @@ def savedemo(c):
 
 @task
 def update_deps(c):
-    """
-    Update the project dependencies
-    """
+    """Upgrade the pinned FAIR-DM ecosystem packages in the lock file."""
     packages = [
         "django-easy-icons",
         "django-literature",
@@ -165,14 +172,13 @@ def update_deps(c):
 
 @task
 def build_image(c):
+    """Build the project's Docker image."""
     c.run("docker build -t ghcr.io/ihfc-iugg/ghfd-portal .")
 
 
 @task
 def screenshots(c):
-    """
-    Take screenshots of the application
-    """
+    """Take documentation screenshots of the application."""
     c.run(
         "cd docs/_static/screenshots && shot-scraper multi shots.yml -a auth.json --auth-password admin --auth-username super.user@example.com"
     )

@@ -61,8 +61,6 @@ extend-ignore = [
     # project/review/admin.py builds this HTML from a list of vetted links, not
     # user input.
     "S308",
-    # project/heat_flow/factories.py uses random for test-data generation only.
-    "S311",
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -72,7 +70,8 @@ extend-ignore = [
 # S101/S105/S106: asserts and placeholder credentials are the point of a test.
 # RUF002/RUF003: prose punctuation in test docstrings and comments is not a defect
 # (the rules stay enabled for the package itself).
-"tests/**" = ["S101", "S105", "S106", "RUF002", "RUF003"]
+# S311: tests/factories.py uses random for test-data generation only.
+"tests/**" = ["S101", "S105", "S106", "RUF002", "RUF003", "S311"]
 # fairdm.setup() injects its settings into this module's namespace at runtime,
 # so names it defines (MVP_CONFIG, EASY_ICONS, INSTALLED_APPS, ALLOWED_HOSTS)
 # have no visible binding here. Every F821 in this file is that pattern.

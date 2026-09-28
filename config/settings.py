@@ -1,3 +1,5 @@
+"""Project settings: wires fairdm, then applies project-specific overrides."""
+
 import os
 
 import fairdm
@@ -27,47 +29,6 @@ MVP_CONFIG["layout"]["sidebar"]["title"] = "Heatflow.world"
 
 
 EASY_ICONS["svg"]["icons"]["ihfc"] = "ihfc.svg"
-
-
-# FAIRDM_CONFIG = {
-#     "home": {
-#         "Explore": [
-#             "home.map-viewer",
-#             "home.ghfdb_projects",
-#             "home.whfdb_project",
-#             # "fdm.dashboard.latest-activity",
-#         ],
-#         "Create": [
-#             "fdm.dashboard.login-signup",
-#             "fdm.dashboard.create-project",
-#             "fdm.dashboard.create-dataset",
-#         ],
-#         "Feedback & More": [
-#             "home.issues",
-#             "home.feedback",
-#             "home.digitize",
-#             "fdm.dashboard.user-guide",
-#             "fdm.dashboard.fairdm-framework",
-#         ],
-#     },
-#     "sponsors": [
-#         {
-#             "name": "GFZ German Research Centre for Geosciences",
-#             "url": "https://www.gfz.de/en/",
-#             "image": "img/web_logo_box_GFZ-min.png",
-#         },
-#         {
-#             "name": "International Heat Flow Commission",
-#             "url": "https://www.ihfc-iugg.org",
-#             "image": "img/web_logo_box_IHFC-min.png",
-#         },
-#         {
-#             "name": "DFG - Deutsche Forschungsgemeinschaft",
-#             "url": "https://www.dfg.de/en/",
-#             "image": "img/web_logo_box_DFG-min.png",
-#         },
-#     ],
-# }
 
 CSRF_TRUSTED_ORIGINS = [
     f"https://{domain}" for domain in globals().get("ALLOWED_HOSTS", [])

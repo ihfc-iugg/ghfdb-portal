@@ -1,7 +1,10 @@
-# Defer Celery import to avoid circular import when Django loads settings.
-# The celery app is imported lazily to prevent fairdm → django_tables2 → settings
-# circular dependency during manage.py commands.
+"""Expose the Celery app lazily to avoid a settings import cycle."""
+
+
+# fairdm -> django_tables2 -> settings would circular-import if celery_app
+# were imported eagerly here.
 def __getattr__(name):
+    """Resolve ``celery_app`` on first access instead of at import time."""
     if name == "celery_app":
         from fairdm.conf.celery import app as celery_app
 

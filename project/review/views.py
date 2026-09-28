@@ -40,7 +40,7 @@ from .states import States, approve, confirm_upload, send_back
 
 
 class ReviewListView(FairDMListView):
-    """The assessment list (FR-001, FR-002, D36).
+    """The assessment list.
 
     Served to anyone: what it shows is which publications the team has
     assessed and how far each has got, which is what the portal exists to
@@ -62,9 +62,11 @@ class ReviewListView(FairDMListView):
     directory = ["create"]
 
     def show_create_action(self, user):
+        """Show the create link only to assessment team members."""
         return is_assessment_team_member(user)
 
     def get_queryset(self):
+        """Prefetch the columns and roster the list template reads."""
         return (
             super()
             .get_queryset()
@@ -74,7 +76,7 @@ class ReviewListView(FairDMListView):
 
 
 class ReviewDetailView(FairDMDetailView):
-    """One assessment's own page (T046, FR-027 through FR-029, US-7).
+    """One assessment's own page.
 
     Served to anyone, like the list: it describes an assessment, and the
     dataset it produced enforces its own visibility separately.
@@ -90,6 +92,7 @@ class ReviewDetailView(FairDMDetailView):
     context_object_name = "review"
 
     def get_queryset(self):
+        """Prefetch the relations the detail template reads."""
         return (
             super()
             .get_queryset()
@@ -98,6 +101,7 @@ class ReviewDetailView(FairDMDetailView):
         )
 
     def get_context_data(self, **kwargs):
+        """Add the viewer's manage/decide permissions for this assessment."""
         context = super().get_context_data(**kwargs)
         user = self.request.user
         review = self.object

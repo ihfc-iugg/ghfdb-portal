@@ -18,7 +18,7 @@ from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.template.loader import render_to_string
 from django.urls import reverse
-from fairdm.factories import LiteratureItemFactory
+from fairdm.factories import LiteratureItemFactory, PersonFactory
 from guardian.shortcuts import get_perms
 from review.models import Review, SubmittedFile
 from review.states import STATE_VARIANTS, States
@@ -29,8 +29,8 @@ from review.views import (
     ReviewUploadView,
 )
 
+from tests.factories import ReviewFactory
 from tests.test_ghfdb.test_importers import ROW, _build_official_xlsx, make_dataset
-from tests.test_review.factories import ClaimedPersonFactory, ReviewFactory
 
 _XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
@@ -177,7 +177,9 @@ class TestReviewCreateView:
 
     def _post(self, rf, user, **overrides):
         literature = overrides.pop("literature", None) or LiteratureItemFactory()
-        assessor = overrides.pop("assessor", None) or ClaimedPersonFactory()
+        assessor = overrides.pop("assessor", None) or PersonFactory(
+            is_claimed=True, password="test-pass-123"
+        )
         data = {
             "literature": literature.pk,
             "reviewers": [assessor.pk],
@@ -307,7 +309,10 @@ class TestReviewListItemAssessors:
 
     def test_every_assessor_is_named_and_linked(self, assessor):
         review = ReviewFactory(uploaded_by=assessor)
-        first, second = ClaimedPersonFactory(), ClaimedPersonFactory()
+        first, second = (
+            PersonFactory(is_claimed=True, password="test-pass-123"),
+            PersonFactory(is_claimed=True, password="test-pass-123"),
+        )
         review.reviewers.set([first, second])
 
         html = render_to_string("review/review_list_item.html", {"review": review})
@@ -318,7 +323,7 @@ class TestReviewListItemAssessors:
 
     def test_a_row_with_no_assessors_names_none(self, assessor):
         review = ReviewFactory(uploaded_by=assessor)
-        stranger = ClaimedPersonFactory()
+        stranger = PersonFactory(is_claimed=True, password="test-pass-123")
 
         html = render_to_string("review/review_list_item.html", {"review": review})
 
@@ -389,7 +394,7 @@ class TestReviewDetailViewContent:
         self, client, assessor
     ):
         review = ReviewFactory(uploaded_by=assessor, state=States.AWAITING_DECISION)
-        named = ClaimedPersonFactory()
+        named = PersonFactory(is_claimed=True, password="test-pass-123")
         review.reviewers.set([named])
 
         html = client.get(review.get_absolute_url()).content.decode()
@@ -516,7 +521,7 @@ class TestReviewDetailViewOffersOnlyWhatTheReaderMayDo:
         self, client, assessor, data_assessor_group
     ):
         review = ReviewFactory(uploaded_by=assessor, state=States.AWAITING_DECISION)
-        stranger = ClaimedPersonFactory()
+        stranger = PersonFactory(is_claimed=True, password="test-pass-123")
         stranger.groups.add(data_assessor_group)
         client.force_login(stranger)
 
@@ -551,7 +556,7 @@ class TestReviewUpdateView:
 
     def test_the_uploader_may_correct_it(self, client, assessor):
         review = ReviewFactory(uploaded_by=assessor)
-        review.reviewers.set([ClaimedPersonFactory()])
+        review.reviewers.set([PersonFactory(is_claimed=True, password="test-pass-123")])
         client.force_login(assessor)
 
         response = self._post(client, review)
@@ -562,7 +567,7 @@ class TestReviewUpdateView:
 
     def test_it_returns_to_the_assessments_own_page(self, client, assessor):
         review = ReviewFactory(uploaded_by=assessor)
-        review.reviewers.set([ClaimedPersonFactory()])
+        review.reviewers.set([PersonFactory(is_claimed=True, password="test-pass-123")])
         client.force_login(assessor)
 
         response = self._post(client, review)
@@ -573,7 +578,7 @@ class TestReviewUpdateView:
         self, client, curator, assessor
     ):
         review = ReviewFactory(uploaded_by=assessor)
-        review.reviewers.set([ClaimedPersonFactory()])
+        review.reviewers.set([PersonFactory(is_claimed=True, password="test-pass-123")])
         client.force_login(curator)
 
         response = client.get(reverse("review-update", kwargs={"pk": review.pk}))
@@ -584,7 +589,7 @@ class TestReviewUpdateView:
         self, client, assessor, data_assessor_group
     ):
         review = ReviewFactory(uploaded_by=assessor)
-        stranger = ClaimedPersonFactory()
+        stranger = PersonFactory(is_claimed=True, password="test-pass-123")
         stranger.groups.add(data_assessor_group)
         client.force_login(stranger)
 
@@ -621,16 +626,20 @@ class TestTheListNarrows:
         assert self._listed(client, state=States.AWAITING_DECISION.value) == [waiting]
 
     def test_by_assessor(self, client):
-        named = ClaimedPersonFactory()
+        named = PersonFactory(is_claimed=True, password="test-pass-123")
         theirs = ReviewFactory()
         theirs.reviewers.set([named])
-        ReviewFactory().reviewers.set([ClaimedPersonFactory()])
+        ReviewFactory().reviewers.set(
+            [PersonFactory(is_claimed=True, password="test-pass-123")]
+        )
 
         assert self._listed(client, reviewers=named.pk) == [theirs]
 
     def test_by_uploader(self, client, assessor):
         theirs = ReviewFactory(uploaded_by=assessor)
-        ReviewFactory(uploaded_by=ClaimedPersonFactory())
+        ReviewFactory(
+            uploaded_by=PersonFactory(is_claimed=True, password="test-pass-123")
+        )
 
         assert self._listed(client, uploaded_by=assessor.pk) == [theirs]
 
@@ -679,9 +688,9 @@ class TestTheListNarrows:
         assert self._listed(client, q="Rhine") == [wanted]
 
     def test_a_person_filter_offers_only_people_who_hold_that_role(self, client):
-        uploader = ClaimedPersonFactory()
+        uploader = PersonFactory(is_claimed=True, password="test-pass-123")
         ReviewFactory(uploaded_by=uploader)
-        bystander = ClaimedPersonFactory()
+        bystander = PersonFactory(is_claimed=True, password="test-pass-123")
 
         response = client.get(reverse("review-list"))
         offered = response.context["filter"].form.fields["uploaded_by"].queryset
@@ -929,7 +938,7 @@ class TestReviewUploadViewAccess:
         self, client, assessor, data_assessor_group
     ):
         review = ReviewFactory(uploaded_by=assessor)
-        other = ClaimedPersonFactory()
+        other = PersonFactory(is_claimed=True, password="test-pass-123")
         other.groups.add(data_assessor_group)
         client.force_login(other)
 
@@ -1340,7 +1349,7 @@ class TestReviewConfirmViewAccess:
     ):
         review = ReviewFactory(uploaded_by=assessor)
         _submitted_file(review, assessor, valid_upload_bytes)
-        other = ClaimedPersonFactory()
+        other = PersonFactory(is_claimed=True, password="test-pass-123")
         other.groups.add(data_assessor_group)
         client.force_login(other)
 

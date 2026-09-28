@@ -17,7 +17,7 @@ from review.menus import (
 )
 from review.states import States
 
-from tests.test_review.factories import ReviewFactory
+from tests.factories import ReviewFactory
 
 
 @pytest.mark.review

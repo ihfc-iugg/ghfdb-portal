@@ -8,20 +8,19 @@ Data Curator may reach COMPLETE from AWAITING_DECISION.
 
 import pytest
 from django.contrib.auth.models import Group
-
-from tests.test_review.factories import ClaimedPersonFactory
+from fairdm.factories import PersonFactory
 
 
 @pytest.fixture
 def curator(db):
-    person = ClaimedPersonFactory()
+    person = PersonFactory(is_claimed=True, password="test-pass-123")
     person.groups.add(Group.objects.get_or_create(name="Data Curator")[0])
     return person
 
 
 @pytest.fixture
 def assessor(db):
-    person = ClaimedPersonFactory()
+    person = PersonFactory(is_claimed=True, password="test-pass-123")
     person.groups.add(Group.objects.get_or_create(name="Data Assessor")[0])
     return person
 

@@ -7,8 +7,7 @@ call these two functions rather than testing group names inline.
 
 import pytest
 from django.contrib.auth.models import Group
-
-from tests.test_review.factories import ClaimedPersonFactory
+from fairdm.factories import PersonFactory
 
 
 @pytest.fixture
@@ -27,7 +26,7 @@ class TestIsDataAssessor:
     def test_true_for_a_user_in_the_data_assessor_group(self, data_assessor_group):
         from review.permissions import is_data_assessor
 
-        person = ClaimedPersonFactory()
+        person = PersonFactory(is_claimed=True, password="test-pass-123")
         person.groups.add(data_assessor_group)
 
         assert is_data_assessor(person) is True
@@ -35,7 +34,7 @@ class TestIsDataAssessor:
     def test_false_for_a_user_in_neither_group(self):
         from review.permissions import is_data_assessor
 
-        person = ClaimedPersonFactory()
+        person = PersonFactory(is_claimed=True, password="test-pass-123")
 
         assert is_data_assessor(person) is False
 
@@ -44,7 +43,7 @@ class TestIsDataAssessor:
     ):
         from review.permissions import is_data_assessor
 
-        person = ClaimedPersonFactory()
+        person = PersonFactory(is_claimed=True, password="test-pass-123")
         person.groups.add(data_assessor_group, data_curator_group)
 
         assert is_data_assessor(person) is True
@@ -61,9 +60,9 @@ class TestCanManageUpload:
     def test_the_uploader_may_manage_their_own_upload(self):
         from review.permissions import can_manage_upload
 
-        from tests.test_review.factories import ReviewFactory
+        from tests.factories import ReviewFactory
 
-        uploader = ClaimedPersonFactory()
+        uploader = PersonFactory(is_claimed=True, password="test-pass-123")
         review = ReviewFactory(uploaded_by=uploader)
 
         assert can_manage_upload(uploader, review) is True
@@ -73,11 +72,11 @@ class TestCanManageUpload:
     ):
         from review.permissions import can_manage_upload
 
-        from tests.test_review.factories import ReviewFactory
+        from tests.factories import ReviewFactory
 
-        uploader = ClaimedPersonFactory()
+        uploader = PersonFactory(is_claimed=True, password="test-pass-123")
         review = ReviewFactory(uploaded_by=uploader)
-        curator = ClaimedPersonFactory()
+        curator = PersonFactory(is_claimed=True, password="test-pass-123")
         curator.groups.add(data_curator_group)
 
         assert can_manage_upload(curator, review) is True
@@ -85,11 +84,11 @@ class TestCanManageUpload:
     def test_a_different_assessor_may_not_manage_it(self, data_assessor_group):
         from review.permissions import can_manage_upload
 
-        from tests.test_review.factories import ReviewFactory
+        from tests.factories import ReviewFactory
 
-        uploader = ClaimedPersonFactory()
+        uploader = PersonFactory(is_claimed=True, password="test-pass-123")
         review = ReviewFactory(uploaded_by=uploader)
-        other = ClaimedPersonFactory()
+        other = PersonFactory(is_claimed=True, password="test-pass-123")
         other.groups.add(data_assessor_group)
 
         assert can_manage_upload(other, review) is False
@@ -98,7 +97,7 @@ class TestCanManageUpload:
         from django.contrib.auth.models import AnonymousUser
         from review.permissions import can_manage_upload
 
-        from tests.test_review.factories import ReviewFactory
+        from tests.factories import ReviewFactory
 
         review = ReviewFactory()
 
@@ -111,7 +110,7 @@ class TestIsDataCurator:
     def test_true_for_a_user_in_the_data_curator_group(self, data_curator_group):
         from review.permissions import is_data_curator
 
-        person = ClaimedPersonFactory()
+        person = PersonFactory(is_claimed=True, password="test-pass-123")
         person.groups.add(data_curator_group)
 
         assert is_data_curator(person) is True
@@ -119,7 +118,7 @@ class TestIsDataCurator:
     def test_false_for_a_user_in_neither_group(self):
         from review.permissions import is_data_curator
 
-        person = ClaimedPersonFactory()
+        person = PersonFactory(is_claimed=True, password="test-pass-123")
 
         assert is_data_curator(person) is False
 
@@ -128,7 +127,7 @@ class TestIsDataCurator:
     ):
         from review.permissions import is_data_curator
 
-        person = ClaimedPersonFactory()
+        person = PersonFactory(is_claimed=True, password="test-pass-123")
         person.groups.add(data_assessor_group, data_curator_group)
 
         assert is_data_curator(person) is True
@@ -144,7 +143,7 @@ class TestIsAssessmentTeamMember:
     def test_true_for_a_data_assessor(self, data_assessor_group):
         from review.permissions import is_assessment_team_member
 
-        person = ClaimedPersonFactory()
+        person = PersonFactory(is_claimed=True, password="test-pass-123")
         person.groups.add(data_assessor_group)
 
         assert is_assessment_team_member(person) is True
@@ -152,7 +151,7 @@ class TestIsAssessmentTeamMember:
     def test_true_for_a_data_curator(self, data_curator_group):
         from review.permissions import is_assessment_team_member
 
-        person = ClaimedPersonFactory()
+        person = PersonFactory(is_claimed=True, password="test-pass-123")
         person.groups.add(data_curator_group)
 
         assert is_assessment_team_member(person) is True
@@ -162,7 +161,7 @@ class TestIsAssessmentTeamMember:
     ):
         from review.permissions import is_assessment_team_member
 
-        person = ClaimedPersonFactory()
+        person = PersonFactory(is_claimed=True, password="test-pass-123")
         person.groups.add(data_assessor_group, data_curator_group)
 
         assert is_assessment_team_member(person) is True
@@ -170,7 +169,7 @@ class TestIsAssessmentTeamMember:
     def test_false_for_a_user_in_neither_group(self):
         from review.permissions import is_assessment_team_member
 
-        person = ClaimedPersonFactory()
+        person = PersonFactory(is_claimed=True, password="test-pass-123")
 
         assert is_assessment_team_member(person) is False
 
@@ -179,7 +178,7 @@ class TestIsAssessmentTeamMember:
     ):
         from review.permissions import is_assessment_team_member
 
-        person = ClaimedPersonFactory()
+        person = PersonFactory(is_claimed=True, password="test-pass-123")
         person.groups.add(data_assessor_group)
 
         with django_assert_num_queries(1):

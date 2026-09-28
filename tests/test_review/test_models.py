@@ -9,11 +9,9 @@ from pathlib import Path
 
 import pytest
 from django.core.exceptions import FieldDoesNotExist
-from fairdm.factories import DatasetFactory, LiteratureItemFactory
+from fairdm.factories import DatasetFactory, LiteratureItemFactory, PersonFactory
 from review.models import Review
 from review.states import States
-
-from tests.test_review.factories import ClaimedPersonFactory
 
 
 @pytest.fixture
@@ -39,7 +37,7 @@ class TestReviewWorkflowFields:
         assert review.state == States.DESCRIBED
 
     def test_uploaded_by_can_be_set_at_creation(self, literature, dataset):
-        uploader = ClaimedPersonFactory()
+        uploader = PersonFactory(is_claimed=True, password="test-pass-123")
 
         review = Review.objects.create(
             literature=literature, dataset=dataset, uploaded_by=uploader
@@ -50,7 +48,7 @@ class TestReviewWorkflowFields:
     def test_decision_fields_accept_a_curators_decision(self, literature, dataset):
         from django.utils import timezone
 
-        curator = ClaimedPersonFactory()
+        curator = PersonFactory(is_claimed=True, password="test-pass-123")
         now = timezone.now()
 
         review = Review.objects.create(
@@ -93,7 +91,7 @@ class TestSubmittedFile:
 
         settings.MEDIA_ROOT = str(tmp_path)
         review = Review.objects.create(literature=literature, dataset=dataset)
-        uploader = ClaimedPersonFactory()
+        uploader = PersonFactory(is_claimed=True, password="test-pass-123")
 
         SubmittedFile.objects.create(
             review=review,
@@ -116,7 +114,7 @@ class TestSubmittedFile:
 
         settings.MEDIA_ROOT = str(tmp_path)
         review = Review.objects.create(literature=literature, dataset=dataset)
-        uploader = ClaimedPersonFactory()
+        uploader = PersonFactory(is_claimed=True, password="test-pass-123")
 
         first = SubmittedFile.objects.create(
             review=review,

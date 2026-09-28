@@ -1,5 +1,4 @@
-"""
-GHFDB export resource — produces a GHFDB-format XLSX from HeatFlow data.
+"""GHFDB export resource — produces a GHFDB-format XLSX from HeatFlow data.
 
 Implements GHFDBExportResource which serialises the normalised relational
 model back to the flat GHFDB spreadsheet format with:
@@ -19,10 +18,6 @@ from import_export import fields
 from import_export.resources import ModelResource
 
 from ..constants import GHFDB_COLUMN_ORDER
-
-# ---------------------------------------------------------------------------
-# Rendering helpers
-# ---------------------------------------------------------------------------
 
 
 def _mag(value) -> float | str:
@@ -53,14 +48,8 @@ def _labels(qs) -> str:
         return ""
 
 
-# ---------------------------------------------------------------------------
-# GHFDBExportResource
-# ---------------------------------------------------------------------------
-
-
 class GHFDBExportResource(ModelResource):
-    """
-    Export resource for GHFDB flat-format XLSX.
+    """Export resource for GHFDB flat-format XLSX.
 
     Produces a tablib Dataset containing one row per HeatFlow record with all
     62 GHFDB columns in ``GHFDB_COLUMN_ORDER`` sequence.  Pint quantity fields
@@ -88,9 +77,7 @@ class GHFDBExportResource(ModelResource):
         - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
     """
 
-    # -----------------------------------------------------------------------
     # Parent-level scalar fields
-    # -----------------------------------------------------------------------
     q = fields.Field(attribute="q")
     q_uncertainty = fields.Field(attribute="q_uncertainty")
 
@@ -111,9 +98,7 @@ class GHFDBExportResource(ModelResource):
     # Site-level M2M
     explo_purpose = fields.Field(attribute=None)
 
-    # -----------------------------------------------------------------------
     # Child-level scalar fields
-    # -----------------------------------------------------------------------
     qc = fields.Field(attribute="value")
     qc_uncertainty = fields.Field(attribute="uncertainty")
 
@@ -152,8 +137,7 @@ class GHFDBExportResource(ModelResource):
     probe_type = fields.Field(attribute=None)
     probe_length = fields.Field(attribute="probe_length")
     probe_tilt = fields.Field(attribute="probe_tilt")
-    # US-7: the published column keeps the released name
-    # "water_temperature" (D-c, specs/004-import-upload-template/decisions.md)
+    # The published column keeps the released name "water_temperature"
     # while the underlying field is now HeatFlow.surface_temperature.
     water_temperature = fields.Field(attribute="surface_temperature")
 
@@ -161,9 +145,7 @@ class GHFDBExportResource(ModelResource):
     geo_lithology = fields.Field(attribute=None)
     geo_stratigraphy = fields.Field(attribute=None)
 
-    # -----------------------------------------------------------------------
     # Thermal gradient scalars and M2M
-    # -----------------------------------------------------------------------
     t_grad_mean = fields.Field(attribute="T_grad_mean")
     t_grad_uncertainty = fields.Field(attribute="T_grad_uncertainty")
     t_grad_mean_cor = fields.Field(attribute="T_grad_mean_cor")
@@ -178,9 +160,7 @@ class GHFDBExportResource(ModelResource):
 
     q_date = fields.Field(attribute="date_acquired")
 
-    # -----------------------------------------------------------------------
     # Thermal conductivity scalars and M2M
-    # -----------------------------------------------------------------------
     tc_mean = fields.Field(attribute="tc_mean")
     tc_uncertainty = fields.Field(attribute="tc_uncertainty")  # annotation name matches
     tc_source = fields.Field(attribute=None)
@@ -193,82 +173,95 @@ class GHFDBExportResource(ModelResource):
     tc_strategy = fields.Field(attribute=None)
 
     # Reads the interval's IGSN identifier through the Ref_IGSN annotation
-    # (managers.py, D26 specs/004-import-upload-template/decisions.md); ""
-    # when the interval carries none.
+    # in managers.py; "" when the interval carries none.
     Ref_IGSN = fields.Field(attribute="Ref_IGSN")
 
-    # -----------------------------------------------------------------------
-    # T043: Pint quantity dehydrate methods
-    # -----------------------------------------------------------------------
-
     def dehydrate_q(self, obj) -> float | str:
+        """Render the Pint quantity as a plain SI magnitude."""
         return _mag(getattr(obj, "q", None))
 
     def dehydrate_q_uncertainty(self, obj) -> float | str:
+        """Render the Pint quantity as a plain SI magnitude."""
         return _mag(getattr(obj, "q_uncertainty", None))
 
     def dehydrate_elevation(self, obj) -> float | str:
+        """Render the Pint quantity as a plain SI magnitude."""
         return _mag(getattr(obj, "elevation", None))
 
     def dehydrate_total_depth_md(self, obj) -> float | str:
+        """Render the Pint quantity as a plain SI magnitude."""
         return _mag(getattr(obj, "total_depth_MD", None))
 
     def dehydrate_total_depth_tvd(self, obj) -> float | str:
+        """Render the Pint quantity as a plain SI magnitude."""
         return _mag(getattr(obj, "total_depth_TVD", None))
 
     def dehydrate_qc(self, obj) -> float | str:
+        """Render the Pint quantity as a plain SI magnitude."""
         return _mag(getattr(obj, "value", None))
 
     def dehydrate_qc_uncertainty(self, obj) -> float | str:
+        """Render the Pint quantity as a plain SI magnitude."""
         return _mag(getattr(obj, "uncertainty", None))
 
     def dehydrate_q_top(self, obj) -> float | str:
+        """Render the Pint quantity as a plain SI magnitude."""
         return _mag(getattr(obj, "q_top", None))
 
     def dehydrate_q_bottom(self, obj) -> float | str:
+        """Render the Pint quantity as a plain SI magnitude."""
         return _mag(getattr(obj, "q_bottom", None))
 
     def dehydrate_probe_penetration(self, obj) -> float | str:
+        """Render the Pint quantity as a plain SI magnitude."""
         return _mag(getattr(obj, "probe_penetration", None))
 
     def dehydrate_probe_length(self, obj) -> float | str:
+        """Render the Pint quantity as a plain SI magnitude."""
         return _mag(getattr(obj, "probe_length", None))
 
     def dehydrate_probe_tilt(self, obj) -> float | str:
+        """Render the Pint quantity as a plain SI magnitude."""
         return _mag(getattr(obj, "probe_tilt", None))
 
     def dehydrate_water_temperature(self, obj) -> float | str:
+        """Render the Pint quantity as a plain SI magnitude."""
         return _mag(getattr(obj, "surface_temperature", None))
 
     def dehydrate_t_grad_mean(self, obj) -> float | str:
+        """Render the Pint quantity as a plain SI magnitude."""
         return _mag(getattr(obj, "T_grad_mean", None))
 
     def dehydrate_t_grad_uncertainty(self, obj) -> float | str:
+        """Render the Pint quantity as a plain SI magnitude."""
         return _mag(getattr(obj, "T_grad_uncertainty", None))
 
     def dehydrate_t_grad_mean_cor(self, obj) -> float | str:
+        """Render the Pint quantity as a plain SI magnitude."""
         return _mag(getattr(obj, "T_grad_mean_cor", None))
 
     def dehydrate_t_grad_uncertainty_cor(self, obj) -> float | str:
+        """Render the Pint quantity as a plain SI magnitude."""
         return _mag(getattr(obj, "T_grad_uncertainty_cor", None))
 
     def dehydrate_t_shutin_top(self, obj) -> float | str:
+        """Render the Pint quantity as a plain SI magnitude."""
         return _mag(getattr(obj, "T_shutin_top", None))
 
     def dehydrate_t_shutin_bottom(self, obj) -> float | str:
+        """Render the Pint quantity as a plain SI magnitude."""
         return _mag(getattr(obj, "T_shutin_bottom", None))
 
     def dehydrate_tc_mean(self, obj) -> float | str:
+        """Render the Pint quantity as a plain SI magnitude."""
         return _mag(getattr(obj, "tc_mean", None))
 
     def dehydrate_tc_uncertainty(self, obj) -> float | str:
+        """Render the Pint quantity as a plain SI magnitude."""
         return _mag(getattr(obj, "tc_uncertainty", None))
 
-    # -----------------------------------------------------------------------
-    # T044: M2M dehydrate methods
-    # -----------------------------------------------------------------------
-
     def dehydrate_explo_purpose(self, obj) -> str:
+        """Render related-row labels, semicolon-joined."""
         try:
             qs = obj.sample.heatflowinterval.site.explo_purpose.all()
             return _labels(qs)
@@ -276,18 +269,21 @@ class GHFDBExportResource(ModelResource):
             return ""
 
     def dehydrate_q_method(self, obj) -> str:
+        """Render related-row labels, semicolon-joined."""
         try:
             return _labels(obj.method.all())
         except AttributeError:
             return ""
 
     def dehydrate_probe_type(self, obj) -> str:
+        """Render related-row labels, semicolon-joined."""
         try:
             return _labels(obj.sample.heatflowinterval.probe_metadata.probe_type.all())
         except AttributeError:
             return ""
 
     def dehydrate_t_method_top(self, obj) -> str:
+        """Render related-row labels, semicolon-joined."""
         try:
             if obj.thermal_gradient is None:
                 return ""
@@ -296,6 +292,7 @@ class GHFDBExportResource(ModelResource):
             return ""
 
     def dehydrate_t_method_bottom(self, obj) -> str:
+        """Render related-row labels, semicolon-joined."""
         try:
             if obj.thermal_gradient is None:
                 return ""
@@ -304,6 +301,7 @@ class GHFDBExportResource(ModelResource):
             return ""
 
     def dehydrate_t_corr_top(self, obj) -> str:
+        """Render related-row labels, semicolon-joined."""
         try:
             if obj.thermal_gradient is None:
                 return ""
@@ -312,6 +310,7 @@ class GHFDBExportResource(ModelResource):
             return ""
 
     def dehydrate_t_corr_bottom(self, obj) -> str:
+        """Render related-row labels, semicolon-joined."""
         try:
             if obj.thermal_gradient is None:
                 return ""
@@ -320,6 +319,7 @@ class GHFDBExportResource(ModelResource):
             return ""
 
     def dehydrate_tc_source(self, obj) -> str:
+        """Render related-row labels, semicolon-joined."""
         try:
             if obj.thermal_conductivity is None:
                 return ""
@@ -328,6 +328,7 @@ class GHFDBExportResource(ModelResource):
             return ""
 
     def dehydrate_tc_location(self, obj) -> str:
+        """Render related-row labels, semicolon-joined."""
         try:
             if obj.thermal_conductivity is None:
                 return ""
@@ -336,6 +337,7 @@ class GHFDBExportResource(ModelResource):
             return ""
 
     def dehydrate_tc_method(self, obj) -> str:
+        """Render related-row labels, semicolon-joined."""
         try:
             if obj.thermal_conductivity is None:
                 return ""
@@ -344,6 +346,7 @@ class GHFDBExportResource(ModelResource):
             return ""
 
     def dehydrate_tc_saturation(self, obj) -> str:
+        """Render related-row labels, semicolon-joined."""
         try:
             if obj.thermal_conductivity is None:
                 return ""
@@ -352,6 +355,7 @@ class GHFDBExportResource(ModelResource):
             return ""
 
     def dehydrate_tc_pT_conditions(self, obj) -> str:
+        """Render related-row labels, semicolon-joined."""
         try:
             if obj.thermal_conductivity is None:
                 return ""
@@ -360,6 +364,7 @@ class GHFDBExportResource(ModelResource):
             return ""
 
     def dehydrate_tc_pT_function(self, obj) -> str:
+        """Render related-row labels, semicolon-joined."""
         try:
             if obj.thermal_conductivity is None:
                 return ""
@@ -368,6 +373,7 @@ class GHFDBExportResource(ModelResource):
             return ""
 
     def dehydrate_tc_strategy(self, obj) -> str:
+        """Render related-row labels, semicolon-joined."""
         try:
             if obj.thermal_conductivity is None:
                 return ""
@@ -377,37 +383,32 @@ class GHFDBExportResource(ModelResource):
 
     # Unimplemented / placeholder columns
     def dehydrate_publication_reference(self, obj) -> str:
+        """Return empty: not yet mapped to a model field."""
         return ""
 
     def dehydrate_data_reference(self, obj) -> str:
+        """Return empty: not yet mapped to a model field."""
         return ""
 
     def dehydrate_geo_lithology(self, obj) -> str:
+        """Return empty: not yet mapped to a model field."""
         return ""
 
     def dehydrate_geo_stratigraphy(self, obj) -> str:
+        """Return empty: not yet mapped to a model field."""
         return ""
 
-    # -----------------------------------------------------------------------
-    # Queryset
-    # -----------------------------------------------------------------------
-
     def get_queryset(self):
+        """Use the annotated, prefetched export queryset."""
         from ..models import GHFDBChild
 
         return GHFDBChild.objects.for_export()
-
-    # -----------------------------------------------------------------------
-    # Meta
-    # -----------------------------------------------------------------------
 
     class Meta:
         from ..models import GHFDBChild as _GHFDBChild
 
         model = _GHFDBChild
-        # All GHFDB columns are declared explicitly above; no whitelist restriction.
-        # export_order controls the column sequence using GHFDB_COLUMN_ORDER names.
-        # Note: django-import-export matches export_order entries against Python
-        # attribute names (lowercase); canonical-case names like "T_grad_mean" may
-        # not sort perfectly for mixed-case fields until those are renamed (follow-up).
+        # django-import-export matches export_order against Python attribute
+        # names (lowercase), so mixed-case names like "T_grad_mean" may not
+        # sort perfectly here until those fields are renamed.
         export_order = GHFDB_COLUMN_ORDER
