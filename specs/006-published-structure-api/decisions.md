@@ -161,6 +161,28 @@ production. The query is one grouped join of parents to their determinations on 
 key, which PostgreSQL answers with a single hash aggregate. D6's fallback stands if it proves
 expensive once the database is loaded: the counts move onto the record, not out of the response.
 
+## D18 — `published_fields()` omits `source` when the accessor equals the column name
+
+Decided during US1 implementation (T001). DRF's `Field.bind()` refuses a `source` argument equal to
+the field name it is bound under, and most `PublishedColumns.ENTRIES` accessors equal the published
+column name by design (the entry's `accessor` defaults to `None` for exactly that reason). Passing
+`source=accessor` unconditionally would raise `AssertionError` for every one of those columns the
+first time `published_fields()`'s output was bound into a real serializer. `published_fields()`
+passes `source` only when the accessor differs from the column name, and lets `Field.bind()` default
+the rest to the field name itself, which is the same value. **Revisit if**: DRF changes `bind()`'s
+redundant-source check, or `PublishedColumns.ENTRIES` stops using `None` to mean "same as the name".
+
+## D19 — The query-count test builds to a literal page of 100, not the fixture default
+
+Decided during US1 implementation (T002). `tests/test_ghfdb/conftest.py`'s `constant_query_count`
+defaults to `low=2, high=4`, which every other caller in this suite uses unchanged. SC-003 states the
+comparison literally — "a page of one record and a page of the maximum size" — so
+`test_query_count_is_constant_between_a_page_of_one_and_a_full_page` calls it with `low=1, high=99`
+(cumulative 100) and a fixed `page_size=100`, so the final `call()` genuinely renders a full
+100-record page rather than a handful of rows under a page size nothing constrains. **Revisit if**:
+building 100 site+parent chains per test run becomes a measured cost problem — `low=2, high=4` still
+proves query-count invariance, just not at SC-003's literal page size.
+
 ## Open, and carried rather than resolved
 
 **The canonical column vocabulary is disputed in one place** ([#122](https://github.com/ihfc-iugg/ghfdb-portal/issues/122)):
