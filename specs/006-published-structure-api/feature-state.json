@@ -64,26 +64,49 @@
       "priority": "P1",
       "issue": 222,
       "worktree": null,
-      "status": "todo",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
           "id": "T001",
           "status": "done",
           "attempts": 1,
-          "evidence": "5e7b31a; uv run pytest tests/test_ghfdb/test_serializers.py -n0 -q — 8 passed"
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_serializers.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_ghfdb/test_serializers.py -n0 -q (8 passed)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T002",
           "status": "done",
           "attempts": 1,
-          "evidence": "c0d24ea; uv run pytest tests/test_ghfdb/test_viewsets.py tests/test_ghfdb/test_urls.py tests/test_ghfdb/test_serializers.py -n0 -q — 26 passed"
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_viewsets.py",
+              "tests/test_ghfdb/test_urls.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_ghfdb/test_viewsets.py tests/test_ghfdb/test_urls.py tests/test_ghfdb/test_serializers.py -n0 -q (26 passed)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T003",
           "status": "done",
           "attempts": 1,
-          "evidence": "de07856; forge verify --repo . --base origin/main — conformance/docs/uv:lint/uv:typecheck/uv:test/uv:build all passed"
+          "evidence": {
+            "tests": [],
+            "commands": [
+              "forge verify --base origin/main at fee496c (all six steps green)"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
