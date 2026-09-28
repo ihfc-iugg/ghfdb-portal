@@ -183,6 +183,19 @@ comparison literally — "a page of one record and a page of the maximum size" �
 building 100 site+parent chains per test run becomes a measured cost problem — `low=2, high=4` still
 proves query-count invariance, just not at SC-003's literal page size.
 
+## D20 — The consumer guide carries a short "Implementation notes" section
+
+Decided during US1 implementation (T003), after the first full verify run. `forge verify`'s `docs`
+step failed: `PublishedValueField`, `ConceptLabelsField`, `published_fields`, `GHFDBBaseViewSet`,
+`GHFDBParentSerializer` and `GHFDBParentViewSet` are new public names in `project/ghfdb/` that no
+page under `docs/` quoted as code (`docs-undocumented`). T003's own description does not ask for
+this — the guide is written for an HTTP consumer, who has no reason to know these Python names.
+Rather than satisfy the gate with a bare, out-of-context list, `published-structure-api.md` gained a
+short "Implementation notes" section explaining the shared serializer builder and viewset base class
+US2 and US3 reuse — genuinely useful to a contributor extending the API, not padding written to
+quiet a linter. **Revisit if**: the guide grows large enough that internals belong on a separate
+development-facing page instead.
+
 ## Open, and carried rather than resolved
 
 **The canonical column vocabulary is disputed in one place** ([#122](https://github.com/ihfc-iugg/ghfdb-portal/issues/122)):
