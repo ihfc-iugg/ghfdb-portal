@@ -1,11 +1,6 @@
-"""
-Tests for project.ghfdb.importers.
-
-Covers:
-- import_ghfdb_template() runs the parent pass then the child pass against
-  the dataset the caller names, from either raw XLSX bytes or an
-  already-parsed tablib.Dataset.
-"""
+# Tests for project.ghfdb.importers. Covers: - import_ghfdb_template() runs the parent
+# pass then the child pass against the dataset the caller names, from either raw XLSX
+# bytes or an already-parsed tablib.Dataset.
 
 import pytest
 import tablib
@@ -154,9 +149,9 @@ def _corrected_official_template_bytes() -> bytes:
 
 @pytest.mark.django_db
 class TestTheHeaderRefusesABeforeAnythingIsRead:
-    """FR-003/FR-010: the entry point refuses a file whose header is not the
-    official template's, before it reads a row and before it opens the
-    transaction, so nothing from a refused file lands."""
+    # FR-003/FR-010: the entry point refuses a file whose header is not the official
+    # template's, before it reads a row and before it opens the transaction, so nothing
+    # from a refused file lands.
 
     def test_a_file_missing_a_template_column_is_refused_and_the_column_named(
         self, dataset
@@ -191,9 +186,9 @@ class TestTheHeaderRefusesABeforeAnythingIsRead:
     def test_the_misspelled_columns_of_the_distributed_template_are_refused(
         self, dataset
     ):
-        """ADR 0003: a file produced from the currently distributed template
-        carries ``tc_pT_fuction`` and ``Ref_ISGN`` and is refused on them,
-        rather than silently mapped."""
+        # ADR 0003: a file produced from the currently distributed template carries
+        # ``tc_pT_fuction`` and ``Ref_ISGN`` and is refused on them, rather than
+        # silently mapped.
         from project.ghfdb.importers import import_ghfdb_template
 
         outdated = {
@@ -214,10 +209,9 @@ class TestTheHeaderRefusesABeforeAnythingIsRead:
         assert "Ref_ISGN" in message
 
     def test_the_official_template_itself_is_read(self, dataset):
-        """The refusal is narrow enough to let the real thing through: a
-        corrected copy of the official template, header row and row label
-        cell exactly as the template carries them, is read rather than
-        refused (FR-017)."""
+        # The refusal is narrow enough to let the real thing through: a corrected copy
+        # of the official template, header row and row label cell exactly as the
+        # template carries them, is read rather than refused (FR-017).
         from project.ghfdb.importers import import_ghfdb_template
 
         # Returning at all is the assertion: a refused header raises before a
@@ -231,12 +225,12 @@ class TestTheHeaderRefusesABeforeAnythingIsRead:
 
 @pytest.mark.django_db
 class TestImportGHFDBTemplate:
-    """T013 — one callable, taking a file and a dataset, running both
-    resources in the right order inside one transaction."""
+    # One callable, taking a file and a dataset, running both resources in the right
+    # order inside one transaction.
 
     def test_runs_parent_then_child_pass_from_raw_file_bytes(self, dataset):
-        """A raw XLSX file produces both the site+parent and the
-        determination beneath it, both attached to the named dataset."""
+        # A raw XLSX file produces both the site+parent and the determination beneath
+        # it, both attached to the named dataset.
         from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
 
         from project.ghfdb.importers import import_ghfdb_template
@@ -260,8 +254,8 @@ class TestImportGHFDBTemplate:
         assert child.parent_id == parent.pk
 
     def test_accepts_an_already_parsed_dataset(self, dataset):
-        """A caller already holding a parsed tablib.Dataset (the admin
-        import wizard, for instance) can pass it straight through."""
+        # A caller already holding a parsed tablib.Dataset (the admin import wizard, for
+        # instance) can pass it straight through.
         from heat_flow.models import HeatFlow, ParentHeatFlow
 
         from project.ghfdb.importers import import_ghfdb_template
@@ -276,10 +270,9 @@ class TestImportGHFDBTemplate:
         assert HeatFlow.objects.filter(ghfdb_id=1).exists()
 
     def test_a_second_row_at_a_different_coordinate_pair_is_not_lost(self, dataset):
-        """The parent resource's before_import() deduplicates its own
-        working copy of the rows; the child pass must still see every row,
-        proving each pass gets its own copy rather than sharing one that
-        the parent pass has already mutated."""
+        # The parent resource's before_import() deduplicates its own working copy of the
+        # rows; the child pass must still see every row, proving each pass gets its own
+        # copy rather than sharing one that the parent pass has already mutated.
         from heat_flow.models import HeatFlow
 
         from project.ghfdb.importers import import_ghfdb_template
@@ -301,13 +294,8 @@ class TestImportGHFDBTemplate:
         assert HeatFlow.objects.filter(ghfdb_id=2).exists()
 
     def test_refuses_when_no_dataset_is_named(self, dataset):
-        """FR-002 holds through the entry point too: a dataset existing in
-        the database is not enough, the caller must name it. Reported as a
-        base error on the outcome — the same channel every other
-        ``import_data()`` fault in this codebase is read from — rather than
-        a raised exception, since ``import_ghfdb_template`` does not pass
-        ``raise_errors=True`` (T007/T008 already cover the raise at the
-        ``before_import`` level directly)."""
+        # FR-002 holds through the entry point too: a dataset existing in the database
+        # is not enough, the caller must name it.
         from heat_flow.models import HeatFlow, ParentHeatFlow
 
         from project.ghfdb.importers import import_ghfdb_template
@@ -321,15 +309,13 @@ class TestImportGHFDBTemplate:
 
 @pytest.mark.django_db
 class TestGHFDBTemplateRefusedWhole:
-    """T021 — US-4/#203, reproducing #190: a fault on a later row must not
-    leave an earlier row's data written. ``rollback_on_validation_errors``
-    is declared today inside both resources' ``Meta``, a place
-    ``import_data()`` never reads it from, so nothing enforces it."""
+    # US-4/#203, reproducing #190: a fault on a later row must not leave an earlier
+    # row's data written.
 
     def test_a_later_row_fault_does_not_roll_back_an_earlier_row(self, dataset):
-        """Two child rows; the second (later) row carries a value the model
-        cannot store. The first row's determination must not survive the
-        import once the second row faults — today it does."""
+        # Two child rows; the second (later) row carries a value the model cannot store.
+        # The first row's determination must not survive the import once the second row
+        # faults — today it does.
         from heat_flow.models import HeatFlow
 
         from project.ghfdb.importers import import_ghfdb_template
@@ -353,13 +339,9 @@ class TestGHFDBTemplateRefusedWhole:
     def test_two_widely_separated_faults_are_both_reported_and_nothing_lands(
         self, dataset
     ):
-        """T024 — three rows: the first is entirely clean, the second and
-        third each carry their own fault on the child side only — the
-        parent side (site, parent heat flow) has no fault on any row at
-        all. Both faults must be reported, each naming its own row and
-        column, and nothing from either pass may land: a resource with no
-        fault of its own must not commit just because the other resource
-        failed (FR-010, FR-012)."""
+        # three rows: the first is entirely clean, the second and third each carry their
+        # own fault on the child side only — the parent side (site, parent heat flow)
+        # has no fault on any row at all.
         from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
 
         from project.ghfdb.importers import import_ghfdb_template
@@ -402,9 +384,9 @@ class TestGHFDBTemplateRefusedWhole:
         assert not HeatFlow.objects.exists()
 
     def test_a_clean_file_reports_nothing_and_every_row_lands(self, dataset):
-        """T026 — three rows, no fault anywhere: nothing is reported, and
-        the count of every kind of record this file describes matches the
-        row count exactly, not merely "something exists"."""
+        # Three rows, no fault anywhere: nothing is reported, and the count of every
+        # kind of record this file describes matches the row count exactly, not merely
+        # "something exists".
         from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
 
         from project.ghfdb.importers import import_ghfdb_template
@@ -438,17 +420,8 @@ class TestGHFDBTemplateRefusedWhole:
     def test_an_empty_mandatory_model_field_names_its_row_and_column_and_refuses_the_file(
         self, dataset
     ):
-        """T026a — FR-011's fourth fault type: a row leaving a mandatory
-        model field empty. Before T022 this had no enforcement path at all
-        (DR-002): the widget silently sets the attribute to ``None`` and,
-        with ``clean_model_instances`` false, nothing ever called
-        ``full_clean()`` to catch it — the row wrote with a blank value, or
-        the database raised an unnamed, untranslated ``IntegrityError``
-        (SQLite has no ``value``/``unit`` split column pair to violate
-        here; the parent heat-flow ``value`` is what is left empty). The
-        fault must name its row and column, in a translated message
-        (Django's own ``full_clean()`` messages are already
-        ``gettext``-translated), and refuse the whole file."""
+        # T026a — FR-011's fourth fault type: a row leaving a mandatory model field
+        # empty.
         from django.utils.translation import gettext as _
         from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
 
@@ -475,11 +448,9 @@ class TestGHFDBTemplateRefusedWhole:
     def test_a_named_row_without_its_coordinate_pair_names_its_row_and_refuses_the_file(
         self, dataset
     ):
-        """A site is its coordinates (ADR 0006), so a row that names a site
-        but leaves the coordinate pair empty has nowhere to put it: the fault
-        names the row and the empty columns, and the file is refused. A blank
-        cell must not become zero, which would file the site in the Gulf of
-        Guinea and report nothing."""
+        # A site is its coordinates (ADR 0006), so a row that names a site but leaves
+        # the coordinate pair empty has nowhere to put it: the fault names the row and
+        # the empty columns, and the file is refused.
         from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
 
         from project.ghfdb.importers import import_ghfdb_template
@@ -502,7 +473,6 @@ class TestGHFDBTemplateRefusedWhole:
         assert not HeatFlow.objects.exists()
 
     def test_a_row_missing_only_its_latitude_is_refused_too(self, dataset):
-        """Half a coordinate pair places nothing either."""
         from heat_flow.models import HeatFlowSite
 
         from project.ghfdb.importers import import_ghfdb_template
@@ -519,16 +489,15 @@ class TestGHFDBTemplateRefusedWhole:
 
 @pytest.mark.django_db
 class TestControlledVocabularyDecides:
-    """T027 — US-5/#204: the portal's own concepts decide what a controlled-
-    vocabulary column accepts, not the template's own vocabulary sheet."""
+    # US-5/#204: the portal's own concepts decide what a controlled- vocabulary column
+    # accepts, not the template's own vocabulary sheet.
 
     def test_an_unrecognised_vocabulary_value_names_row_column_and_value_and_refuses_the_file(
         self, dataset
     ):
-        """A single-valued controlled-vocabulary column (``environment``)
-        carrying a value the portal holds no concept for refuses the whole
-        file, and the fault names the row, the column and the unrecognised
-        value."""
+        # A single-valued controlled-vocabulary column (``environment``) carrying a
+        # value the portal holds no concept for refuses the whole file, and the fault
+        # names the row, the column and the unrecognised value.
         from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
 
         from project.ghfdb.importers import import_ghfdb_template
@@ -552,14 +521,7 @@ class TestControlledVocabularyDecides:
     def test_an_unrecognised_value_in_a_many_valued_column_refuses_the_file(
         self, dataset
     ):
-        """T028b — the rule holds through the many-valued path too. Every
-        many-valued controlled-vocabulary column reaches
-        ``MultiConceptWidget.clean`` through
-        ``RelatedModelWidget.set_m2m_relations``, not through the scalar
-        path T027/T028 cover — ``tc_method`` is one of the thirteen columns
-        that path serves. Deliberately not a single-valued column like
-        ``environment``: a test written against one of those would pass
-        over the top of the defect T028a fixes (D6/DR-001)."""
+        # T028b — the rule holds through the many-valued path too.
         from heat_flow.models import (
             HeatFlow,
             HeatFlowSite,
@@ -588,10 +550,8 @@ class TestControlledVocabularyDecides:
         assert not IntervalConductivity.objects.exists()
 
     def test_an_unrecognised_q_method_value_names_its_column(self, dataset):
-        """``q_method`` is set in ``after_save_instance`` by a direct
-        ``MultiConceptWidget.clean()`` call rather than through
-        ``set_m2m_relations``, so it is the one many-valued column that
-        skipped the column name T028b proved for the other twelve."""
+        # ``q_method`` is set in ``after_save_instance`` by a direct
+        # ``MultiConceptWidget.clean()`` call rather than through ``set_m2m_relations``.
         from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
 
         from project.ghfdb.importers import import_ghfdb_template
@@ -615,12 +575,9 @@ class TestControlledVocabularyDecides:
     def test_a_value_the_templates_sheet_lists_but_the_portal_does_not_hold_is_still_refused(
         self, dataset, official_upload_template_workbook
     ):
-        """T029 — FR-014, stated backwards on purpose: a value straight
-        from the official template's own 'controlled vocabulary' sheet —
-        the sheet lists it, the portal holds no concept for it — still
-        refuses the file. The value is read from the real fixture's sheet
-        at test time, never hard-coded, so the test cannot pass by
-        accident on a value absent from both."""
+        # FR-014, stated backwards on purpose: a value straight from the official
+        # template's own 'controlled vocabulary' sheet — the sheet lists it, the portal
+        # holds no concept for it — still refuses the file.
         from heat_flow import vocabularies
         from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
         from research_vocabs.models import Concept
@@ -661,10 +618,9 @@ class TestControlledVocabularyDecides:
     def test_a_value_the_portal_holds_but_the_templates_sheet_does_not_list_is_accepted(
         self, dataset, official_upload_template_workbook
     ):
-        """T030 — the other half of FR-013/FR-014: a value the portal
-        holds a concept for, which the template's own sheet does not
-        list, is accepted and the row lands. The value is read from the
-        real fixture's sheet, the same way T029's is."""
+        # the other half of FR-013/FR-014: a value the portal holds a concept for, which
+        # the template's own sheet does not list, is accepted and the row lands. The
+        # value is read from the real fixture's sheet, the same way T029's is.
         from heat_flow import vocabularies
         from heat_flow.models import HeatFlow
         from research_vocabs.models import Concept
@@ -707,11 +663,9 @@ class TestControlledVocabularyDecides:
         }
 
     def test_the_import_never_opens_the_controlled_vocabulary_sheet(self, dataset):
-        """T031 — proven by sheet name, not by hoping: wraps the real
-        ``openpyxl.load_workbook()`` call the reader makes while importing
-        the real template fixture, and records every sheet name reached
-        through ``Workbook.__getitem__``. A future change that starts
-        honouring the sheet fails here."""
+        # Proven by sheet name, not by hoping: wraps the real
+        # ``openpyxl.load_workbook()`` call the reader makes while importing the real
+        # template fixture, and records every sheet name reached through
         from unittest import mock
 
         import openpyxl
@@ -746,17 +700,12 @@ class TestControlledVocabularyDecides:
 
 @pytest.mark.django_db
 class TestGHFDBTemplateRepeatImport:
-    """T032/T033 — US-6: re-importing a file the dataset already holds
-    updates what is there instead of duplicating it. The upload template
-    never carries ``ID`` or ``ID_parent`` columns, so both passes match
-    purely through the fallback each resource derives from the row — the
-    parent pass through site coordinates, the child pass through the
-    parent it resolves via those same coordinates."""
+    # T032/T033 — US-6: re-importing a file the dataset already holds updates what is
+    # there instead of duplicating it.
 
     def test_reimporting_an_unchanged_file_leaves_counts_identical(self, dataset):
-        """FR-016: the same file imported twice produces the same number
-        of sites and determinations both times, not double the second
-        time."""
+        # FR-016: the same file imported twice produces the same number of sites and
+        # determinations both times, not double the second time.
         from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
 
         from project.ghfdb.importers import import_ghfdb_template
@@ -785,10 +734,8 @@ class TestGHFDBTemplateRepeatImport:
     def test_the_second_import_matches_the_existing_site_and_parent_rather_than_inserting(
         self, dataset
     ):
-        """The parent pass's coordinate fallback must resolve to the same
-        ``HeatFlowSite``/``ParentHeatFlow`` the first import created, and
-        the child pass must resolve its ``parent`` FK to that same
-        ``ParentHeatFlow`` — not a second one at the same coordinates."""
+        # The parent pass's coordinate fallback must resolve to the same
+        # ``HeatFlowSite``/``ParentHeatFlow`` the first import created.
         from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
 
         from project.ghfdb.importers import import_ghfdb_template
@@ -816,11 +763,8 @@ class TestGHFDBTemplateRepeatImport:
         assert child_after.parent_id == parent_after.pk
 
     def test_a_changed_depth_interval_updates_the_determination_in_place(self, dataset):
-        """T034 — DR-003: ``q_top``/``q_bottom`` are ingredients of the
-        child's natural key (``_child_natural_key``, child.py). A file
-        identical except for a corrected depth interval — the single most
-        plausible real correction — must update the existing
-        determination rather than write a second one at the same site."""
+        # DR-003: ``q_top``/``q_bottom`` are ingredients of the child's natural key
+        # (``_child_natural_key``, child.py).
         from heat_flow.models import HeatFlow
 
         from project.ghfdb.importers import import_ghfdb_template
@@ -853,11 +797,9 @@ class TestGHFDBTemplateRepeatImport:
     def test_two_distinct_determinations_at_one_site_stay_distinct_across_reimport(
         self, dataset
     ):
-        """T035: the match strategy that lets a depth correction update in
-        place must not also merge two rows that are genuinely separate
-        determinations at the same site and publication reference — they
-        differ only by depth interval, exactly the case narrowing the key
-        to drop q_top/q_bottom entirely would have collided."""
+        # the match strategy that lets a depth correction update in place must not also
+        # merge two rows that are genuinely separate determinations at the same site and
+        # publication reference — they differ only by depth interval.
         from heat_flow.models import HeatFlow
 
         from project.ghfdb.importers import import_ghfdb_template
@@ -892,17 +834,13 @@ class TestGHFDBTemplateRepeatImport:
 
 @pytest.mark.django_db
 class TestARowInTheShapeARealSubmissionCarries:
-    """One row per cell shape taken from the assessment team's completed
-    templates, driven through the entry point end to end.
-
-    The values are transcribed from files the team produced; no submitted
-    spreadsheet is stored in the repository. Each of these refused a real
-    file before the reader was corrected.
-    """
+    # One row per cell shape taken from the assessment team's completed templates,
+    # driven through the entry point end to end. The values are transcribed from files
+    # the team produced; no submitted spreadsheet is stored in the repository.
 
     def test_a_row_of_template_supplied_values_lands(self, dataset):
-        """Bracketed vocabulary tokens, a numeric site name, a lithology
-        named by its key and an unspecified acquisition date, together."""
+        # Bracketed vocabulary tokens, a numeric site name, a lithology named by its key
+        # and an unspecified acquisition date, together.
         from heat_flow.models import HeatFlow, HeatFlowSite
 
         from project.ghfdb.importers import import_ghfdb_template
@@ -941,11 +879,9 @@ class TestARowInTheShapeARealSubmissionCarries:
         assert [c.name for c in child.sample.age.all()] == ["CambrianSeries2"]
 
     def test_a_misspelled_lithology_still_refuses_the_file(self, dataset):
-        """``Aluvium`` appears in a submitted file and in no vocabulary.
-
-        Reading keys as well as labels widens what the portal accepts; it
-        must not stop the portal reporting a value nothing resolves.
-        """
+        # ``Aluvium`` appears in a submitted file and in no vocabulary. Reading keys as
+        # well as labels widens what the portal accepts; it must not stop the portal
+        # reporting a value nothing resolves.
         from heat_flow.models import HeatFlowSite
 
         from project.ghfdb.importers import import_ghfdb_template
@@ -964,11 +900,9 @@ class TestARowInTheShapeARealSubmissionCarries:
 
 @pytest.mark.django_db
 class TestCheckOnlyMode:
-    """T008 — the checking mode both passes run for real inside the outer
-    transaction, then the transaction is always rolled back
-    (specs/004-import-upload-template/decisions.md D16). Neither pass is
-    ever called with ``dry_run=True``: that hides the parent pass's rows
-    from the child pass and refuses every file, clean ones included."""
+    # The checking mode both passes run for real inside the outer transaction, then the
+    # transaction is always rolled back (specs/004-import-upload-template/decisions.md
+    # D16).
 
     def test_a_clean_multi_site_file_reports_no_failures_and_writes_nothing(
         self, dataset
@@ -1001,8 +935,8 @@ class TestCheckOnlyMode:
     def test_a_clean_multi_site_file_reports_what_would_have_been_created(
         self, dataset
     ):
-        """FR-009: the report still names what would have been written, even
-        though nothing was."""
+        # FR-009: the report still names what would have been written, even though
+        # nothing was.
         from project.ghfdb.importers import import_ghfdb_template
 
         row1 = dict(ROW)
@@ -1024,8 +958,8 @@ class TestCheckOnlyMode:
         assert all(row.is_new() for row in outcome.child.rows)
 
     def test_a_failing_file_still_reports_its_faults_and_writes_nothing(self, dataset):
-        """The checking mode must not hide a real fault — a file that would
-        be refused on confirmation is refused here too."""
+        # The checking mode must not hide a real fault — a file that would be refused on
+        # confirmation is refused here too.
         from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
 
         from project.ghfdb.importers import import_ghfdb_template
@@ -1041,10 +975,9 @@ class TestCheckOnlyMode:
         assert not HeatFlow.objects.exists()
 
     def test_neither_pass_is_ever_called_with_dry_run_true(self, dataset):
-        """D16 — the one mistake this brief exists to prevent. Spies on both
-        resources' real ``import_data`` rather than asserting on written
-        rows, so a regression is caught even if it happened to leave the
-        right rows behind."""
+        # The one mistake this brief exists to prevent. Spies on both resources' real
+        # ``import_data`` rather than asserting on written rows, so a regression is
+        # caught even if it happened to leave the right rows behind.
         from unittest import mock
 
         from import_export.resources import ModelResource
@@ -1064,8 +997,7 @@ class TestCheckOnlyMode:
         assert seen_dry_run == [False, False], seen_dry_run
 
     def test_check_only_defaults_to_false(self, dataset):
-        """The existing callers are unaffected (plan.md "The checking
-        mode")."""
+        # The existing callers are unaffected (plan.md "The checking mode").
         from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
 
         from project.ghfdb.importers import import_ghfdb_template

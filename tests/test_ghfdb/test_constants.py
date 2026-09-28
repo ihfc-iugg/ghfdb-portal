@@ -1,14 +1,7 @@
-"""Reconciles the official upload template's header against the canonical
-column constants (US-1, T001-T006).
+# Reconciles the official upload template's header against the canonical column
+# constants (US-1, T001-T006).
 
-``tests/fixtures/official_upload_template.xlsx`` is the published template
-(``docs/constitution/references/data_upload_template.xlsx``, the file the
-assessment team actually fills in) with exactly the two ADR 0003
-misspellings corrected — ``tc_pT_fuction`` to ``tc_pT_function`` and
-``Ref_ISGN`` to ``Ref_IGSN`` — and nothing else different (D3,
-``specs/004-import-upload-template/decisions.md``).
-"""
-
+import json
 from pathlib import Path
 
 import openpyxl
@@ -17,6 +10,7 @@ import pytest
 from project.ghfdb.constants import (
     ACCEPTED_UNSTORED_COLUMNS,
     CHILD_COLUMNS,
+    GHFDB_COLUMN_ORDER,
     META_FIELDS,
     OFFICIAL_TEMPLATE_HEADER,
     OPTIONAL_TEMPLATE_COLUMNS,
@@ -43,20 +37,13 @@ PUBLISHED_TEMPLATE_PATH = (
 
 
 class TestOfficialUploadTemplateFixture:
-    """T001: the fixture differs from the published template in exactly the
-    two ADR 0003 misspellings, and nowhere else."""
+    # The fixture differs from the published template in exactly the two ADR 0003
+    # misspellings, and nowhere else.
 
     def test_fixture_differs_from_the_published_template_in_exactly_the_two_corrected_cells(
         self, official_upload_template_workbook
     ):
-        """Every cell of every sheet, not only the header row.
-
-        The correction is made against the workbook's string table, so a
-        misspelling that also appeared on the readme or the vocabulary sheet
-        would have been corrected there too and would never show up in a
-        header-row comparison. Walking both workbooks whole is what makes
-        "and nothing else" a claim the suite checks rather than asserts.
-        """
+        # Every cell of every sheet, not only the header row.
         published_workbook = openpyxl.load_workbook(
             PUBLISHED_TEMPLATE_PATH, data_only=True
         )
@@ -99,15 +86,8 @@ def _read_header_row(workbook):
 
 
 class TestTemplateColumnsMatchTheCanonicalConstants:
-    """T002/T004: every column the official template carries must be
-    recognised — either by ``PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS``,
-    or by one of the documented exceptions in ``constants.py`` (US-1 D7):
-    the two ADR 0003 misspellings the portal rejects rather than maps, the
-    four D8 portal-addition geography columns, and the template-only columns
-    the 2026.03 revision added, which feed the relational model directly
-    without a published-column name of their own. A column the template
-    carries that resolves through neither is exactly the disagreement FR-004
-    exists to catch."""
+    # T002/T004: every column the official template carries must be recognised — either
+    # by ``PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS``.
 
     def test_every_template_column_resolves_to_a_canonical_constant(
         self, official_upload_template_workbook
@@ -129,11 +109,9 @@ class TestTemplateColumnsMatchTheCanonicalConstants:
 
 
 class TestEveryTemplateColumnIsMappedOrAccepted:
-    """T005: every template column the portal is expected to actually
-    process — that is, excluding the two ADR 0003 misspellings T006 refuses
-    outright — must be either mapped by a resource field's ``column_name``
-    or a member of ``ACCEPTED_UNSTORED_COLUMNS``. Without this, "unmatched"
-    (a real defect) and "deliberately ignored" look the same."""
+    # Every template column the portal is expected to actually process — that is,
+    # excluding the two ADR 0003 misspellings T006 refuses outright — must be either
+    # mapped by a resource field's ``column_name`` or a member of
 
     def test_every_template_column_is_mapped_or_accepted(
         self, official_upload_template_workbook
@@ -152,11 +130,8 @@ class TestEveryTemplateColumnIsMappedOrAccepted:
 
 
 class TestTheHeaderConstantIsTheTemplatesOwnHeader:
-    """FR-017: ``UPLOAD_TEMPLATE_HEADER_ROW`` is the template's header row,
-    in the template's order, with only the two ADR 0003 misspellings
-    corrected. Pinned to an unmodified copy of the template so a revised
-    template shows up as a failure here rather than as a refused submission
-    in production."""
+    # FR-017: ``UPLOAD_TEMPLATE_HEADER_ROW`` is the template's header row, in the
+    # template's order, with only the two ADR 0003 misspellings corrected.
 
     def test_it_matches_the_templates_header_row_corrected(
         self, official_upload_template_workbook
@@ -170,10 +145,8 @@ class TestTheHeaderConstantIsTheTemplatesOwnHeader:
         assert header == UPLOAD_TEMPLATE_HEADER_ROW
 
     def test_the_optional_columns_are_the_identifiers_and_assessment_columns(self):
-        """Everything else the template carries is required, so a file that
-        drops one is a different template. The optional set is small and
-        deliberate: identifiers a first submission cannot have, and the
-        columns filled in after a submission is read."""
+        # Everything else the template carries is required, so a file that drops one is
+        # a different template.
         assert (
             frozenset(
                 {
@@ -195,9 +168,9 @@ class TestTheHeaderConstantIsTheTemplatesOwnHeader:
         assert "ID" not in REQUIRED_TEMPLATE_COLUMNS
 
     def test_the_new_2026_03_temperature_columns_are_required(self):
-        """The four columns the 2026.03 template adds carry the absolute
-        temperatures a determination's gradient is calculated from, not an
-        identifier or an assessment field, so they are not optional."""
+        # The four columns the 2026.03 template adds carry the absolute temperatures a
+        # determination's gradient is calculated from, not an identifier or an
+        # assessment field, so they are not optional.
         for column in (
             "T_top_mean",
             "T_top_uncertainty",
@@ -208,21 +181,16 @@ class TestTheHeaderConstantIsTheTemplatesOwnHeader:
 
 
 class TestOfficialHeaderRefusal:
-    """T006 (FR-003): a spreadsheet whose header row is not the official
-    template's is refused whole, naming the header, rather than partially
-    read. ``validate_official_header`` is pure — it inspects only the header
-    it is given — so a refusal here happens before any row is read and
-    before anything could be written."""
+    # T006 (FR-003): a spreadsheet whose header row is not the official template's is
+    # refused whole, naming the header, rather than partially read.
 
     def test_a_header_with_the_corrected_spellings_validates(self):
         validate_official_header(list(OFFICIAL_TEMPLATE_HEADER))  # must not raise
 
     def test_the_currently_distributed_template_is_refused_and_named(self):
-        """ADR 0003: the currently distributed template itself carries the
-        two misspellings (``tc_pT_fuction``, ``Ref_ISGN``) and is refused,
-        naming them, rather than silently mapped. Read from the published
-        file directly, since the fixture used elsewhere in this module has
-        those two cells corrected."""
+        # ADR 0003: the currently distributed template itself carries the two
+        # misspellings (``tc_pT_fuction``, ``Ref_ISGN``) and is refused, naming them,
+        # rather than silently mapped.
         published_workbook = openpyxl.load_workbook(
             PUBLISHED_TEMPLATE_PATH, data_only=True
         )
@@ -241,3 +209,163 @@ class TestOfficialHeaderRefusal:
             validate_official_header(foreign_header)
 
         assert repr(foreign_header) in str(excinfo.value)
+
+
+@pytest.fixture(scope="module")
+def colmeta():
+    data_dir = Path(__file__).resolve().parents[2] / "project" / "ghfdb" / "data"
+    colmeta_path = data_dir / "ghfdb_colmeta.json"
+    with colmeta_path.open() as f:
+        raw = json.load(f)
+    if isinstance(raw, list):
+        return {entry["name"]: entry for entry in raw}
+    return raw
+
+
+class TestSchemaColumnOrder:
+    def test_column_order_has_expected_entries(self):
+        expected_count = len(PARENT_COLUMNS) + len(CHILD_COLUMNS) + len(META_FIELDS)
+        assert len(GHFDB_COLUMN_ORDER) == expected_count, (
+            f"Expected {expected_count} columns in GHFDB_COLUMN_ORDER, got {len(GHFDB_COLUMN_ORDER)}"
+        )
+
+    def test_column_order_no_duplicates(self):
+        seen = set()
+        duplicates = []
+        for col in GHFDB_COLUMN_ORDER:
+            if col in seen:
+                duplicates.append(col)
+            seen.add(col)
+        assert not duplicates, f"Duplicate columns in GHFDB_COLUMN_ORDER: {duplicates}"
+
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "Half-landed GHFDB canonical column work: the constants moved to the "
+            "published spreadsheet casing, but ghfdb_colmeta.json, the resource "
+            "field declarations and one manager annotation key did not follow. "
+            "Needs debugging, and a decision on the published column vocabulary, "
+            "before it can pass. See issue #122."
+        ),
+    )
+    def test_core_62_columns_in_colmeta_json(self, colmeta):
+        # Case-insensitive comparison since colmeta uses lowercase keys.
+        colmeta_lower = {k.lower() for k in colmeta}
+        missing = [
+            col for col in GHFDB_COLUMN_ORDER if col.lower() not in colmeta_lower
+        ]
+        if len(missing) > len(GHFDB_COLUMN_ORDER) - 62:
+            assert not missing, (
+                f"Too many columns missing from ghfdb_colmeta.json: {missing}"
+            )
+
+
+class TestParentResourceFieldCoverage:
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "Half-landed GHFDB canonical column work: the constants moved to the "
+            "published spreadsheet casing, but ghfdb_colmeta.json, the resource "
+            "field declarations and one manager annotation key did not follow. "
+            "Needs debugging, and a decision on the published column vocabulary, "
+            "before it can pass. See issue #122."
+        ),
+    )
+    def test_parent_resource_declares_all_parent_columns(self):
+        resource = GHFDBParentImportResource()
+        declared_fields = set(resource.fields.keys())
+
+        expected = set(PARENT_COLUMNS)
+        missing = expected - declared_fields
+        assert not missing, (
+            f"GHFDBParentImportResource missing fields for parent columns: {missing}"
+        )
+
+
+class TestChildResourceFieldCoverage:
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "Half-landed GHFDB canonical column work: the constants moved to the "
+            "published spreadsheet casing, but ghfdb_colmeta.json, the resource "
+            "field declarations and one manager annotation key did not follow. "
+            "Needs debugging, and a decision on the published column vocabulary, "
+            "before it can pass. See issue #122."
+        ),
+    )
+    def test_child_resource_declares_all_child_columns(self):
+        resource = GHFDBChildImportResource()
+        declared_fields = set(resource.fields.keys())
+
+        parent_only = set(PARENT_COLUMNS) - {"ID_parent"}
+        child_columns = [col for col in GHFDB_COLUMN_ORDER if col not in parent_only]
+
+        missing = set(child_columns) - declared_fields
+        assert not missing, (
+            f"GHFDBChildImportResource missing fields for columns: {missing}"
+        )
+
+
+class TestCombinedColumnCoverage:
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "Half-landed GHFDB canonical column work: the constants moved to the "
+            "published spreadsheet casing, but ghfdb_colmeta.json, the resource "
+            "field declarations and one manager annotation key did not follow. "
+            "Needs debugging, and a decision on the published column vocabulary, "
+            "before it can pass. See issue #122."
+        ),
+    )
+    def test_all_columns_covered_by_parent_or_child(self):
+        parent_fields = set(GHFDBParentImportResource().fields.keys())
+        child_fields = set(GHFDBChildImportResource().fields.keys())
+        all_covered = parent_fields | child_fields
+
+        missing = [col for col in GHFDB_COLUMN_ORDER if col not in all_covered]
+        assert not missing, (
+            f"Columns in GHFDB_COLUMN_ORDER not covered by any resource: {missing}"
+        )
+
+
+class TestBUG010CanonicalConstants:
+    def test_column_order_is_list_not_tuple(self):
+        assert isinstance(GHFDB_COLUMN_ORDER, list), (
+            f"GHFDB_COLUMN_ORDER must be a list, got {type(GHFDB_COLUMN_ORDER).__name__}"
+        )
+
+    def test_column_order_equals_derived_combination(self):
+        assert GHFDB_COLUMN_ORDER == PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS, (
+            "GHFDB_COLUMN_ORDER is not equal to PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS"
+        )
+
+    def test_canonical_case_sensitive_names_present(self):
+        for col in (
+            "lat_NS",
+            "long_EW",
+            "T_grad_mean",
+            "corr_HP_flag",
+            "corr_IS_flag",
+            "total_depth_MD",
+            "total_depth_TVD",
+            "T_number",
+            "Ref_IGSN",
+        ):
+            assert col in GHFDB_COLUMN_ORDER, (
+                f"'{col}' not found in GHFDB_COLUMN_ORDER — check case (BUG-010)"
+            )
+
+    def test_stale_lowercase_names_absent(self):
+        stale = (
+            "lat_ns",
+            "long_ew",
+            "t_grad_mean",
+            "corr_hp_flag",
+            "corr_is_flag",
+            "total_depth_md",
+            "total_depth_tvd",
+        )
+        found = [c for c in stale if c in GHFDB_COLUMN_ORDER]
+        assert not found, (
+            f"Stale lowercase names still in GHFDB_COLUMN_ORDER: {found} (BUG-010)"
+        )

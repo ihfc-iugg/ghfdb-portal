@@ -1,13 +1,4 @@
-"""Tests for tests/factories.py.
-
-Every test needing an assessment, a claimed person, a ghost person or a
-publication gets one from a factory here — reusing the framework's own
-factories (``DatasetFactory``, ``LiteratureItemFactory``, ``PersonFactory``)
-rather than redefining them.
-
-T076–T081 — US6: every model has test data, including its vocabulary fields
-(FR-035–FR-037).
-"""
+# Tests for tests/factories.py.
 
 import pytest
 from fairdm.factories import LiteratureItemFactory, PersonFactory
@@ -50,8 +41,8 @@ class TestReviewFactories:
         assert person.email is None
 
     def test_literature_item_factory_is_reused_from_the_framework(self):
-        """A publication is supplied by the framework's own factory, not a
-        review-specific redefinition of it."""
+        # A publication is supplied by the framework's own factory, not a
+        # review-specific redefinition of it.
         item = LiteratureItemFactory()
 
         assert item.pk is not None
@@ -74,14 +65,10 @@ def concepts_of(model, field_name):
 
 
 class TestHeatFlowFactories:
-    """T076 — every factory called with no arguments returns a saved instance."""
-
     @pytest.mark.django_db
     def test_all_factories_produce_saved_instances(self):
-        """
-        T076 – Each of the 8 factory classes creates a saved instance with a
-        non-null PK in a single call (FR-035).
-        """
+        # T076 – Each of the 8 factory classes creates a saved instance with a non-null
+        # PK in a single call (FR-035).
         from tests.factories import (
             HeatFlowCorrectionFactory,
             HeatFlowFactory,
@@ -104,14 +91,12 @@ class TestHeatFlowFactories:
 
     @pytest.mark.django_db
     def test_heat_flow_site_factory_save(self):
-        """T076 – HeatFlowSiteFactory smoke test."""
         from tests.factories import HeatFlowSiteFactory
 
         assert HeatFlowSiteFactory().pk is not None
 
     @pytest.mark.django_db
     def test_heat_flow_interval_factory_save(self):
-        """T076 – HeatFlowIntervalFactory smoke test; site FK populated via SubFactory."""
         from tests.factories import HeatFlowIntervalFactory
 
         interval = HeatFlowIntervalFactory()
@@ -120,7 +105,6 @@ class TestHeatFlowFactories:
 
     @pytest.mark.django_db
     def test_parent_heat_flow_factory_save(self):
-        """T076 – ParentHeatFlowFactory smoke test; creates a ParentHeatFlow with a HeatFlowSite sample."""
         from tests.factories import ParentHeatFlowFactory
 
         parent = ParentHeatFlowFactory()
@@ -131,7 +115,6 @@ class TestHeatFlowFactories:
 
     @pytest.mark.django_db
     def test_probe_metadata_factory_save(self):
-        """T076 – ProbeMetadataFactory smoke test; interval SubFactory creates linked interval."""
         from tests.factories import ProbeMetadataFactory
 
         probe = ProbeMetadataFactory()
@@ -140,7 +123,6 @@ class TestHeatFlowFactories:
 
     @pytest.mark.django_db
     def test_heat_flow_correction_factory_save(self):
-        """T076/T080 – HeatFlowCorrectionFactory smoke test; heat_flow SubFactory creates the parent record."""
         from tests.factories import HeatFlowCorrectionFactory
 
         correction = HeatFlowCorrectionFactory()
@@ -149,8 +131,6 @@ class TestHeatFlowFactories:
 
 
 class TestFactoriesCreateRequiredRelations:
-    """T077 — every factory creates whatever related records its model requires."""
-
     @pytest.mark.django_db
     def test_heat_flow_factory_creates_its_interval_sample(self):
         from heat_flow.models import HeatFlowInterval
@@ -207,12 +187,8 @@ class TestFactoriesCreateRequiredRelations:
 
 
 class TestFactoryVocabularyPopulation:
-    """T078/T081 — factories populate controlled-vocabulary fields with concepts
-    drawn from each field's own vocabulary.
-
-    Membership is asserted against ``Concept.get_for_vocabulary()`` — the same
-    lookup the factories use — never merely that the field is non-empty.
-    """
+    # T078/T081 — factories populate controlled-vocabulary fields with concepts drawn
+    # from each field's own vocabulary.
 
     @pytest.mark.django_db
     def test_heat_flow_site_scalar_concept_fields_are_members_of_their_vocabularies(
@@ -308,9 +284,8 @@ class TestFactoryVocabularyPopulation:
 
 
 class TestCompleteFactoryGraph:
-    """T079 — the complete graph is buildable from factory calls alone, and the
-    relationships resolve.
-    """
+    # The complete graph is buildable from factory calls alone, and the relationships
+    # resolve.
 
     @pytest.mark.django_db
     def test_site_through_parent_graph_resolves_via_factories_alone(self):

@@ -1,8 +1,6 @@
-"""Tests for review.forms.ReviewDescriptionForm (T015, spec.md User Story 2).
-
-Publication, assessors, dates and an optional title, collected before any
-file is chosen (FR-003 through FR-007).
-"""
+# Tests for review.forms.ReviewDescriptionForm (T015, spec.md User Story 2).
+# Publication, assessors, dates and an optional title, collected before any file is
+# chosen (FR-003 through FR-007).
 
 import json
 
@@ -70,9 +68,8 @@ class TestReviewDescriptionFormValidation:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewDescriptionFormBibliographyFile:
-    """T016: a publication absent from the catalogue is added from a
-    bibliography file supplied through the same form (spec.md User Story 2
-    scenario 2, FR-004)."""
+    # A publication absent from the catalogue is added from a bibliography file supplied
+    # through the same form (spec.md User Story 2 scenario 2, FR-004).
 
     def test_a_bibliography_file_adds_the_publication_and_links_it(self):
         assessor = PersonFactory(is_claimed=True, password="test-pass-123")
@@ -97,13 +94,7 @@ class TestReviewDescriptionFormBibliographyFile:
         assert LiteratureItem.objects.filter(pk=literature.pk).exists()
 
     def test_a_rejected_form_leaves_no_publication_behind(self):
-        """A publication is written only once the rest of the form is sound.
-
-        Django runs every field's own cleaning and then calls ``clean()``
-        regardless of what that found, so an unguarded create here would add a
-        publication for every rejected submission — one nobody asked for and
-        nobody afterwards knows to remove.
-        """
+        # A publication is written only once the rest of the form is sound.
         assessor = PersonFactory(is_claimed=True, password="test-pass-123")
         bibliography_file = SimpleUploadedFile(
             "publication.json",
@@ -163,8 +154,8 @@ class TestReviewDescriptionFormBibliographyFile:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewDescriptionFormDuplicateLiterature:
-    """T018: a publication that already has an assessment is refused, naming
-    the existing assessment (spec.md User Story 2 scenario 4, FR-007)."""
+    # A publication that already has an assessment is refused, naming the existing
+    # assessment (spec.md User Story 2 scenario 4, FR-007).
 
     def test_a_publication_with_an_existing_assessment_is_refused(self):
         existing = ReviewFactory()

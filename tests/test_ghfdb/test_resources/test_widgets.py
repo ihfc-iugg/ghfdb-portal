@@ -1,28 +1,14 @@
-"""
-Tests for GHFDB custom import/export widgets.
-
-Covers:
-- ConceptWidget: case-insensitive lookup, invalid-value ValueError
-- MultiConceptWidget: semicolon split, batched error for multiple invalid values
-- QuantityWidget: returns Quantity on clean, returns plain magnitude on render
-- YesNoWidget: "Yes" → True, "No" → False, empty → None
-- RelatedModelWidget: sentinel-column check, full_clean error, set_m2m_relations
-- ParentWidget: creates HeatFlowSite + Point from lat/long columns
-- IntervalWidget: creates HeatFlowInterval
-- GradientWidget: skips when T_grad_mean is empty
-- ConductivityWidget: skips when tc_mean is empty
-"""
+# Tests for GHFDB custom import/export widgets.
 
 import pytest
+
+from tests.factories import HeatFlowIntervalFactory, HeatFlowSiteFactory
 
 # ---- T027: Leaf widget tests -----------------------------------------------
 
 
 class TestConceptWidget:
-    """T027 — ConceptWidget clean() and render()."""
-
     def test_clean_case_insensitive(self, db):
-        """clean() matches label case-insensitively and returns a Concept."""
         from heat_flow import vocabularies
 
         from project.ghfdb.resources.widgets import ConceptWidget
@@ -32,7 +18,6 @@ class TestConceptWidget:
         assert result is not None
 
     def test_clean_case_insensitive_lowercase(self, db):
-        """clean() works with all-lowercase input."""
         from heat_flow import vocabularies
 
         from project.ghfdb.resources.widgets import ConceptWidget
@@ -43,7 +28,6 @@ class TestConceptWidget:
         assert result is not None
 
     def test_clean_empty_returns_none(self, db):
-        """clean() returns None for empty/blank input."""
         from heat_flow import vocabularies
 
         from project.ghfdb.resources.widgets import ConceptWidget
@@ -53,7 +37,6 @@ class TestConceptWidget:
         assert widget.clean(None, row={}) is None
 
     def test_clean_invalid_raises_valueerror(self, db):
-        """clean() raises ValueError listing valid options for invalid input."""
         from heat_flow import vocabularies
 
         from project.ghfdb.resources.widgets import ConceptWidget
@@ -69,10 +52,7 @@ class TestConceptWidget:
 
 
 class TestMultiConceptWidget:
-    """T027 — MultiConceptWidget clean() with semicolon splitting."""
-
     def test_clean_semicolon_split(self, db):
-        """clean() splits semicolon-separated values and returns list."""
         from heat_flow import vocabularies
 
         from project.ghfdb.resources.widgets import MultiConceptWidget
@@ -82,7 +62,6 @@ class TestMultiConceptWidget:
         assert result is not None  # should return empty list, not raise
 
     def test_clean_empty_returns_empty(self, db):
-        """clean() returns empty list for empty input."""
         from heat_flow import vocabularies
 
         from project.ghfdb.resources.widgets import MultiConceptWidget
@@ -92,7 +71,6 @@ class TestMultiConceptWidget:
         assert result == [] or result is None or hasattr(result, "__iter__")
 
     def test_clean_invalid_batched_error(self, db):
-        """clean() raises ValueError listing all invalid values."""
         from heat_flow import vocabularies
 
         from project.ghfdb.resources.widgets import MultiConceptWidget
@@ -106,10 +84,7 @@ class TestMultiConceptWidget:
 
 
 class TestQuantityWidget:
-    """T027 — QuantityWidget clean() and render()."""
-
     def test_clean_returns_quantity(self):
-        """clean() returns a Pint Quantity instance."""
         from project.ghfdb.resources.widgets import QuantityWidget
 
         widget = QuantityWidget(unit="mW/m**2")
@@ -120,7 +95,6 @@ class TestQuantityWidget:
         assert float(magnitude) == pytest.approx(70.0)
 
     def test_clean_empty_returns_none(self):
-        """clean() returns None for empty input."""
         from project.ghfdb.resources.widgets import QuantityWidget
 
         widget = QuantityWidget(unit="mW/m**2")
@@ -128,7 +102,6 @@ class TestQuantityWidget:
         assert widget.clean(None, row={}) is None
 
     def test_render_returns_plain_magnitude(self):
-        """render() returns plain numeric magnitude without unit symbol."""
         from project.ghfdb.resources.widgets import QuantityWidget
 
         widget = QuantityWidget(unit="mW/m**2")
@@ -142,7 +115,6 @@ class TestQuantityWidget:
         assert "70.5" in str(result) or float(result) == pytest.approx(70.5)
 
     def test_render_none_returns_empty(self):
-        """render() returns empty string for None."""
         from project.ghfdb.resources.widgets import QuantityWidget
 
         widget = QuantityWidget(unit="mW/m**2")
@@ -150,31 +122,25 @@ class TestQuantityWidget:
 
 
 class TestYesNoWidget:
-    """T027 — YesNoWidget clean() maps Yes/No strings to bool."""
-
     def test_clean_yes_returns_true(self):
-        """'Yes' maps to True."""
         from project.ghfdb.resources.widgets import YesNoWidget
 
         widget = YesNoWidget()
         assert widget.clean("Yes", row={}) is True
 
     def test_clean_no_returns_false(self):
-        """'No' maps to False."""
         from project.ghfdb.resources.widgets import YesNoWidget
 
         widget = YesNoWidget()
         assert widget.clean("No", row={}) is False
 
     def test_clean_empty_returns_none(self):
-        """Empty string maps to None."""
         from project.ghfdb.resources.widgets import YesNoWidget
 
         widget = YesNoWidget()
         assert widget.clean("", row={}) is None
 
     def test_clean_case_insensitive(self):
-        """'yes'/'no' (lowercase) also work."""
         from project.ghfdb.resources.widgets import YesNoWidget
 
         widget = YesNoWidget()
@@ -186,10 +152,7 @@ class TestYesNoWidget:
 
 
 class TestRelatedModelWidget:
-    """T028 — RelatedModelWidget base class behaviour."""
-
     def test_sentinel_column_empty_returns_none(self, db):
-        """When sentinel column is empty, clean() returns None."""
         from project.ghfdb.resources.widgets import GradientWidget
 
         widget = GradientWidget()
@@ -198,7 +161,6 @@ class TestRelatedModelWidget:
         assert result is None
 
     def test_full_clean_error_prefixed_with_model_name(self, db):
-        """ValidationError from full_clean() is re-raised as ValueError prefixed with model name."""
         from project.ghfdb.resources.widgets import GradientWidget
 
         widget = GradientWidget()
@@ -215,13 +177,10 @@ class TestRelatedModelWidget:
         )
 
     def test_set_m2m_relations_sets_m2m(self, db, dataset):
-        """set_m2m_relations() sets M2M relationships on the related model."""
-        from heat_flow.models import HeatFlowInterval, HeatFlowSite
-
         from project.ghfdb.resources.widgets import IntervalWidget
 
-        site = HeatFlowSite.objects.create(dataset=dataset, name="Test")
-        interval = HeatFlowInterval.objects.create(
+        site = HeatFlowSiteFactory(dataset=dataset, name="Test")
+        interval = HeatFlowIntervalFactory(
             dataset=dataset,
             site=site,
             name="Test Interval",
@@ -234,11 +193,8 @@ class TestRelatedModelWidget:
 
 
 class TestParentWidget:
-    """T028 — ParentWidget creates HeatFlowSite + Point from parent columns."""
-
     @pytest.mark.django_db
     def test_creates_heatflowsite_and_point(self, dataset):
-        """clean() creates HeatFlowSite + Point from lat/long columns."""
         from project.ghfdb.resources.widgets import ParentWidget
 
         widget = ParentWidget()
@@ -268,7 +224,6 @@ class TestParentWidget:
 
     @pytest.mark.django_db
     def test_sentinel_empty_returns_none(self):
-        """When site name (sentinel) is empty, clean() returns None."""
         from project.ghfdb.resources.widgets import ParentWidget
 
         widget = ParentWidget()
@@ -277,11 +232,8 @@ class TestParentWidget:
 
 
 class TestIntervalWidget:
-    """T028 — IntervalWidget creates HeatFlowInterval."""
-
     @pytest.mark.django_db
     def test_creates_heatflowinterval(self, dataset):
-        """clean() creates a HeatFlowInterval with depth data."""
         from heat_flow.models import HeatFlowInterval
 
         from project.ghfdb.resources.widgets import IntervalWidget
@@ -299,19 +251,14 @@ class TestIntervalWidget:
 
     @pytest.mark.django_db
     def test_geo_stratigraphy_stored_on_age_not_stratigraphy(self, dataset):
-        """BUG-009 regression: geo_stratigraphy → HeatFlowInterval.age (ConceptManyToManyField),
-        NOT HeatFlowInterval.stratigraphy (M2M to stratigraphy.StratigraphicUnit).
-
-        set_m2m_relations() must populate interval.age with the matched GeologicalTimescale
-        Concept object.  interval.stratigraphy must remain empty.
-        """
-        from heat_flow.models import HeatFlowInterval, HeatFlowSite
-
+        # BUG-009 regression: geo_stratigraphy → HeatFlowInterval.age
+        # (ConceptManyToManyField), NOT HeatFlowInterval.stratigraphy (M2M to
+        # stratigraphy.StratigraphicUnit).
         from project.ghfdb.resources.widgets import IntervalWidget
 
         # Prepare a saved interval (set_m2m_relations requires instance.pk)
-        site = HeatFlowSite.objects.create(dataset=dataset, name="BUG009 Site")
-        interval = HeatFlowInterval.objects.create(
+        site = HeatFlowSiteFactory(dataset=dataset, name="BUG009 Site")
+        interval = HeatFlowIntervalFactory(
             dataset=dataset,
             site=site,
             name="BUG009 Interval",
@@ -341,11 +288,8 @@ class TestIntervalWidget:
 
 
 class TestGradientWidget:
-    """T028 — GradientWidget sentinel behaviour (BUG-008: numeric sentinel treated as present)."""
-
     @pytest.mark.django_db
     def test_skips_when_sentinel_empty(self):
-        """clean() returns None when T_grad_mean is empty."""
         from project.ghfdb.resources.widgets import GradientWidget
 
         widget = GradientWidget()
@@ -355,7 +299,6 @@ class TestGradientWidget:
 
     @pytest.mark.django_db
     def test_creates_gradient_when_sentinel_set(self, dataset):
-        """clean() creates ThermalGradient when T_grad_mean has a value."""
         from heat_flow.models import ThermalGradient
 
         from project.ghfdb.resources.widgets import GradientWidget
@@ -380,7 +323,6 @@ class TestGradientWidget:
 
     @pytest.mark.django_db
     def test_numeric_sentinel_treated_as_present(self, dataset):
-        """BUG-008: native int from openpyxl as T_grad_mean is treated as present."""
         from heat_flow.models import ThermalGradient
 
         from project.ghfdb.resources.widgets import GradientWidget
@@ -405,11 +347,8 @@ class TestGradientWidget:
 
 
 class TestConductivityWidget:
-    """T028 — ConductivityWidget sentinel behaviour (BUG-008: numeric sentinel treated as present)."""
-
     @pytest.mark.django_db
     def test_skips_when_sentinel_empty(self):
-        """clean() returns None when tc_mean is empty."""
         from project.ghfdb.resources.widgets import ConductivityWidget
 
         widget = ConductivityWidget()
@@ -419,7 +358,6 @@ class TestConductivityWidget:
 
     @pytest.mark.django_db
     def test_creates_conductivity_when_sentinel_set(self, dataset):
-        """clean() creates IntervalConductivity when tc_mean has a value."""
         from heat_flow.models import IntervalConductivity
 
         from project.ghfdb.resources.widgets import ConductivityWidget
@@ -443,7 +381,6 @@ class TestConductivityWidget:
 
     @pytest.mark.django_db
     def test_numeric_sentinel_treated_as_present(self, dataset):
-        """BUG-008: native float from openpyxl as tc_mean is treated as present."""
         from heat_flow.models import IntervalConductivity
 
         from project.ghfdb.resources.widgets import ConductivityWidget
@@ -470,9 +407,9 @@ class TestConductivityWidget:
 
 
 class TestBlankCellSentinel:
-    """The corpus of completed submissions writes ``-`` for "nothing entered
-    here yet" in reference columns filled in during assessment, such as
-    ``Ref_IGSN`` (D26, specs/004-import-upload-template/decisions.md)."""
+    # The corpus of completed submissions writes ``-`` for "nothing entered here yet" in
+    # reference columns filled in during assessment, such as ``Ref_IGSN`` (D26,
+    # specs/004-import-upload-template/decisions.md).
 
     def test_none_empty_whitespace_and_hyphen_are_blank(self):
         from project.ghfdb.resources.widgets import is_blank_cell
@@ -488,10 +425,7 @@ class TestBlankCellSentinel:
 
 
 class TestVocabNormalisation:
-    """T072 — FR-016: bracket-wrapped and mixed-case vocab tokens are normalised before matching."""
-
     def test_normalize_vocab_token_strips_brackets(self):
-        """normalize_vocab_token() strips surrounding [ ] and lowercases the token."""
         from project.ghfdb.resources.widgets import normalize_vocab_token
 
         assert (
@@ -503,7 +437,6 @@ class TestVocabNormalisation:
         assert normalize_vocab_token("Onshore (continental)") == "onshore (continental)"
 
     def test_concept_widget_accepts_bracketed_value(self, db):
-        """ConceptWidget.clean('[Onshore (continental)]') resolves without error (FR-016)."""
         from heat_flow import vocabularies
 
         from project.ghfdb.resources.widgets import ConceptWidget
@@ -513,7 +446,6 @@ class TestVocabNormalisation:
         assert result is not None
 
     def test_concept_widget_accepts_bracketed_uppercase(self, db):
-        """ConceptWidget.clean('[OFFSHORE (MARINE)]') resolves via bracket + case normalisation."""
         from heat_flow import vocabularies
 
         from project.ghfdb.resources.widgets import ConceptWidget
@@ -523,7 +455,6 @@ class TestVocabNormalisation:
         assert result is not None
 
     def test_concept_widget_invalid_bracketed_reports_original(self, db):
-        """ValueError for an invalid bracketed token includes the original bracket-wrapped text."""
         from heat_flow import vocabularies
 
         from project.ghfdb.resources.widgets import ConceptWidget
@@ -535,7 +466,6 @@ class TestVocabNormalisation:
         assert "[NOT_VALID]" in str(exc_info.value)
 
     def test_multi_concept_widget_normalizes_bracketed_tokens(self, db):
-        """MultiConceptWidget normalises each bracket-wrapped semicolon-separated token (FR-016)."""
         from heat_flow import vocabularies
 
         from project.ghfdb.resources.widgets import MultiConceptWidget
@@ -547,7 +477,6 @@ class TestVocabNormalisation:
         assert result.count() >= 1
 
     def test_multi_concept_widget_invalid_bracketed_reports_original(self, db):
-        """MultiConceptWidget error for invalid bracketed token includes the original text."""
         from heat_flow import vocabularies
 
         from project.ghfdb.resources.widgets import MultiConceptWidget
@@ -563,21 +492,9 @@ class TestVocabNormalisation:
 
 
 class TestNumericCellInputGuards:
-    """T079 — BUG-007 / BUG-008: numeric cell value type-guard behaviour.
-
-    BUG-007: widgets whose sentinel / value column expects TEXT must convert
-    AttributeError (from int.strip()) to a descriptive ValueError naming the
-    column and value — ConceptWidget (vocabulary columns) and ParentWidget
-    ('name' column) are affected.
-
-    BUG-008: widgets whose sentinel column expects a NUMERIC QUANTITY (e.g.
-    GradientWidget sentinel 'T_grad_mean', ConductivityWidget sentinel 'tc_mean')
-    MUST treat a native int/float as "present" and proceed to create the
-    sub-record.  They MUST NOT raise ValueError for a valid numeric sentinel.
-    """
+    # BUG-007 / BUG-008: numeric cell value type-guard behaviour.
 
     def test_concept_widget_int_raises_valueerror_not_attributeerror(self, db):
-        """ConceptWidget.clean(42) raises ValueError with vocab name — not bare AttributeError."""
         from heat_flow import vocabularies
 
         from project.ghfdb.resources.widgets import ConceptWidget
@@ -592,7 +509,6 @@ class TestNumericCellInputGuards:
         assert "42" in error_msg
 
     def test_concept_widget_float_raises_valueerror_not_attributeerror(self, db):
-        """ConceptWidget.clean(3.14) raises ValueError — floats are also non-text."""
         from heat_flow import vocabularies
 
         from project.ghfdb.resources.widgets import ConceptWidget
@@ -604,11 +520,9 @@ class TestNumericCellInputGuards:
         assert "GeographicEnvironment" in error_msg
 
     def test_gradient_widget_numeric_sentinel_succeeds(self, db):
-        """BUG-008: GradientWidget with a numeric T_grad_mean proceeds — returns ThermalGradient.
-
-        openpyxl delivers numeric cells as int/float.  T_grad_mean is a quantity
-        column: a native number is valid input and MUST NOT raise ValueError.
-        """
+        # GradientWidget with a numeric T_grad_mean proceeds — returns ThermalGradient.
+        # openpyxl delivers numeric cells as int/float. T_grad_mean is a quantity
+        # column: a native number is valid input and MUST NOT raise ValueError.
         from heat_flow.models import ThermalGradient
 
         from project.ghfdb.resources.widgets import GradientWidget
@@ -634,10 +548,9 @@ class TestNumericCellInputGuards:
         assert isinstance(result, ThermalGradient)
 
     def test_conductivity_widget_numeric_sentinel_succeeds(self, db):
-        """BUG-008: ConductivityWidget with a numeric tc_mean proceeds — returns IntervalConductivity.
-
-        A float tc_mean from openpyxl is valid input and MUST NOT raise ValueError.
-        """
+        # ConductivityWidget with a numeric tc_mean proceeds — returns
+        # IntervalConductivity. A float tc_mean from openpyxl is valid input and MUST
+        # NOT raise ValueError.
         from heat_flow.models import IntervalConductivity
 
         from project.ghfdb.resources.widgets import ConductivityWidget
@@ -662,13 +575,9 @@ class TestNumericCellInputGuards:
         assert isinstance(result, IntervalConductivity)
 
     def test_parent_widget_reads_a_numeric_site_name_as_text(self, db):
-        """A numbered site is a named site.
-
-        Submissions whose sites are numbered rather than titled arrive with
-        integer cells in the ``name`` column, and a spreadsheet gives no way
-        to say otherwise. Refusing them refused 2,338 rows of the assessment
-        team's own files, so the cell is read as text.
-        """
+        # A numbered site is a named site. Submissions whose sites are numbered rather
+        # than titled arrive with integer cells in the ``name`` column, and a
+        # spreadsheet gives no way to say otherwise.
         from project.ghfdb.resources.widgets import ParentWidget
 
         widget = ParentWidget()
@@ -684,23 +593,16 @@ class TestNumericCellInputGuards:
         assert site.name == "3"
 
 
-# ---------------------------------------------------------------------------
 # Shapes taken from the assessment team's completed templates.
-#
 # Every case below reproduces a value that refused a real submission. The
 # values are transcribed; no submitted file is stored in the repository.
-# ---------------------------------------------------------------------------
 
 
 class TestValuesRealSubmissionsCarry:
-    """Cell shapes the published template produces that the reader refused."""
-
     def test_a_sentinel_padded_with_whitespace_is_still_the_sentinel(self):
-        """``' [unspecified]'`` — a leading space defeats a bare ``strip('[]')``.
-
-        The first character is not a bracket, so stripping stops there and
-        the token never matches. 6,612 cells across the corpus carry it.
-        """
+        # ``' [unspecified]'`` — a leading space defeats a bare ``strip('[]')``. The
+        # first character is not a bracket, so stripping stops there and the token never
+        # matches. 6,612 cells across the corpus carry it.
         from project.ghfdb.resources.widgets import normalize_vocab_token
 
         assert normalize_vocab_token(" [unspecified]") == "unspecified"
@@ -709,13 +611,9 @@ class TestValuesRealSubmissionsCarry:
         assert normalize_vocab_token("[unspecified]") == "unspecified"
 
     def test_a_lithology_named_by_its_key_is_matched(self, db):
-        """The template's lithology column offers keys, not labels.
-
-        ``alkali_feldspar_granite`` is the cell value the template's own
-        dropdown supplies; ``alkali feldspar granite`` is the portal's label
-        for the same concept. Matching on the label alone left 174 of the
-        265 lithologies the template offers unreachable.
-        """
+        # The template's lithology column offers keys, not labels.
+        # ``alkali_feldspar_granite`` is the cell value the template's own dropdown
+        # supplies; ``alkali feldspar granite`` is the portal's label for the same
         from fairdm_geo.vocabularies.cgi.geosciml import SimpleLithology
 
         from project.ghfdb.resources.widgets import MultiConceptWidget
@@ -727,7 +625,6 @@ class TestValuesRealSubmissionsCarry:
         assert [concept.name for concept in result] == ["alkali_feldspar_granite"]
 
     def test_a_stratigraphic_age_named_by_its_key_is_matched(self, db):
-        """The same, for the 29 ages whose key differs from their label."""
         from fairdm_geo.vocabularies.stratigraphy import GeologicalTimescale
 
         from project.ghfdb.resources.widgets import MultiConceptWidget
@@ -739,7 +636,6 @@ class TestValuesRealSubmissionsCarry:
         assert [concept.name for concept in result] == ["CambrianSeries2"]
 
     def test_labels_still_match_after_keys_are_accepted(self, db):
-        """Reading keys does not stop the reader reading labels."""
         from fairdm_geo.vocabularies.cgi.geosciml import SimpleLithology
 
         from project.ghfdb.resources.widgets import MultiConceptWidget
@@ -751,10 +647,8 @@ class TestValuesRealSubmissionsCarry:
         assert sorted(concept.name for concept in result) == ["andesite", "basalt"]
 
     def test_a_value_in_neither_the_keys_nor_the_labels_is_still_refused(self, db):
-        """``Aluvium`` is a misspelling in a submitted file, not a concept.
-
-        Accepting keys must not turn the vocabulary check into a pass.
-        """
+        # ``Aluvium`` is a misspelling in a submitted file, not a concept. Accepting
+        # keys must not turn the vocabulary check into a pass.
         from fairdm_geo.vocabularies.cgi.geosciml import SimpleLithology
 
         from project.ghfdb.resources.widgets import MultiConceptWidget
@@ -771,19 +665,14 @@ class TestValuesRealSubmissionsCarry:
         "cell", ["[unspecified]", " [unspecified]", "[Unspecified]"]
     )
     def test_an_unspecified_acquisition_date_is_read_as_no_date(self, cell):
-        """The template offers ``[unspecified]`` in the date column itself.
-
-        Its vocabulary sheet lists exactly two things for ``q_date``: a
-        ``years-months`` date, and this sentinel. Putting the sentinel to
-        the date field made it 'not a valid date string' and refused the
-        file — 87,523 cells across the corpus carry it.
-        """
+        # The template offers ``[unspecified]`` in the date column itself. Its
+        # vocabulary sheet lists exactly two things for ``q_date``: a ``years-months``
+        # date, and this sentinel.
         from project.ghfdb.resources.widgets import AcquisitionDateWidget
 
         assert AcquisitionDateWidget().clean(cell) is None
 
     def test_a_real_acquisition_date_is_still_read(self):
-        """The sentinel is the only thing the widget absorbs."""
         from project.ghfdb.resources.widgets import AcquisitionDateWidget
 
         assert AcquisitionDateWidget().clean("1979-12") == "1979-12"

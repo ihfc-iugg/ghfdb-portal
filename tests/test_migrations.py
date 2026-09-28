@@ -1,15 +1,4 @@
-"""The portal's own applications must have no unrecorded model changes.
-
-``GHFDBParent`` was written, registered in the admin and left without a
-migration, so ``makemigrations`` reported pending changes for months and the
-model's admin permissions were never created.  Nothing failed, because nothing
-looked.
-
-The check is scoped to ``heat_flow``, ``ghfdb`` and ``review``.  Installed
-packages are excluded deliberately: at least one third-party application ships
-model state its own migrations do not cover, and we cannot add a migration to
-someone else's package.
-"""
+# The portal's own applications must have no unrecorded model changes.
 
 import os
 from io import StringIO
@@ -28,7 +17,6 @@ class TestMigrationState:
     # compare against.
     @override_settings(MIGRATION_MODULES={})
     def test_no_unrecorded_model_changes(self):
-        """Every model change in the portal's applications has a migration."""
         out = StringIO()
         try:
             call_command(
@@ -48,14 +36,9 @@ class TestMigrationState:
 
 
 class TestGHFDBChildProxyMigrations:
-    """T029 (FR-001): the migrations recording ``GHFDBChild`` touch no table.
-
-    A proxy model adds no table, so an ``AddField``, ``AlterField`` or
-    ``RemoveField`` operation in either migration would be the defect.
-    Scoped to the operations that concern ``GHFDBChild`` — the
-    ``GHFDBParent`` ``CreateModel`` carried in the same file as the rename
-    belongs to a different story.
-    """
+    # T029 (FR-001): the migrations recording ``GHFDBChild`` touch no table. A proxy
+    # model adds no table, so an ``AddField``, ``AlterField`` or ``RemoveField``
+    # operation in either migration would be the defect.
 
     def test_the_initial_migration_is_a_bare_proxy_create_model(self):
         import importlib
@@ -96,10 +79,9 @@ class TestGHFDBChildProxyMigrations:
 
 
 class TestGHFDBParentProxyMigrations:
-    """T057 (FR-001): the migration recording ``GHFDBParent`` is a bare
-    proxy ``CreateModel`` and no other operation. A proxy adds no table, so
-    an ``AddField`` or ``AlterField`` naming ``GHFDBParent`` would be the
-    defect."""
+    # T057 (FR-001): the migration recording ``GHFDBParent`` is a bare proxy
+    # ``CreateModel`` and no other operation. A proxy adds no table, so an ``AddField``
+    # or ``AlterField`` naming ``GHFDBParent`` would be the defect.
 
     def test_the_create_model_is_a_bare_proxy(self):
         import importlib
@@ -124,19 +106,9 @@ class TestGHFDBParentProxyMigrations:
 
 
 class TestMigrationsApplyToAnEmptyDatabase:
-    """The migrations must actually run, not merely exist.
-
-    The suite runs with ``--nomigrations``, which points every app at a stub module, so
-    no test in this repository has ever applied a migration.  ``makemigrations --check``
-    above proves the migrations describe the models; it cannot prove they execute.  A
-    migration that is unrecorded and one that is recorded and broken look identical from
-    inside a test database built straight from model state.
-
-    So this migrates into an empty file, in a subprocess, and asserts on the tables that
-    come out rather than on a return code.  The subprocess is not incidental: the
-    development settings hard-wire the SQLite path, so the only way to redirect it is a
-    second connection the settings define when the environment names a file for it.
-    """
+    # The migrations must actually run, not merely exist. The suite runs with
+    # ``--nomigrations``, which points every app at a stub module, so no test in this
+    # repository has ever applied a migration.
 
     HEAT_FLOW_TABLES = [
         "heat_flow_heatflowsite",
@@ -162,7 +134,6 @@ class TestMigrationsApplyToAnEmptyDatabase:
         )
     )
     def test_migrations_build_every_heat_flow_table(self, tmp_path):
-        """Applying the whole migration graph to an empty database builds all eight tables."""
         import sqlite3
         import subprocess
         import sys

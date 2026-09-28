@@ -1,9 +1,6 @@
-"""Tests for review.permissions (T004).
-
-``is_data_assessor``/``is_data_curator`` are the only place group membership
-is tested — every view, navigation check and template condition is meant to
-call these two functions rather than testing group names inline.
-"""
+# ``is_data_assessor``/``is_data_curator`` are the only place group membership is
+# tested — every view, navigation check and template condition is meant to call
+# these two functions rather than testing group names inline.
 
 import pytest
 from django.contrib.auth.models import Group
@@ -52,10 +49,9 @@ class TestIsDataAssessor:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestCanManageUpload:
-    """T020, plan.md "The pages": the upload and confirm routes are open to
-    the assessment's own uploader, or to any Data Curator, and refused to
-    everyone else — including a signed-in Data Assessor who did not create
-    the assessment."""
+    # T020, plan.md "The pages": the upload and confirm routes are open to the
+    # assessment's own uploader, or to any Data Curator, and refused to everyone else —
+    # including a signed-in Data Assessor who did not create the assessment.
 
     def test_the_uploader_may_manage_their_own_upload(self):
         from review.permissions import can_manage_upload
@@ -136,9 +132,9 @@ class TestIsDataCurator:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestIsAssessmentTeamMember:
-    """Either role is on the team; nobody else is. The list, the description
-    form and the navigation entry all ask this one question rather than
-    testing the two roles in turn."""
+    # Either role is on the team; nobody else is. The list, the description form and the
+    # navigation entry all ask this one question rather than testing the two roles in
+    # turn.
 
     def test_true_for_a_data_assessor(self, data_assessor_group):
         from review.permissions import is_assessment_team_member

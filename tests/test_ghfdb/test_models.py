@@ -1,5 +1,3 @@
-"""Smoke tests for the GHFDB proxy models and the fixtures every story takes."""
-
 import pathlib
 
 import pytest
@@ -8,10 +6,7 @@ pytestmark = pytest.mark.ghfdb
 
 
 class TestGHFDBProxyModels:
-    """GHFDB proxy models must expose the correct Meta configuration."""
-
     def test_ghfdb_proxy_meta(self):
-        """T018: GHFDBChild must be a proxy model with the correct verbose_name."""
         from project.ghfdb.models import GHFDBChild
 
         assert GHFDBChild._meta.proxy is True
@@ -19,7 +14,6 @@ class TestGHFDBProxyModels:
         assert str(GHFDBChild._meta.verbose_name_plural) == "GHFDB Children"
 
     def test_ghfdb_parent_proxy_meta(self):
-        """T074 (US1b): GHFDBParent must be a proxy model with the correct verbose_name."""
         from project.ghfdb.models import GHFDBParent
 
         assert GHFDBParent._meta.proxy is True
@@ -28,11 +22,8 @@ class TestGHFDBProxyModels:
 
 
 class TestGHFDBChildModel:
-    """The ``GHFDBChild`` proxy's ``Meta`` configuration (T011, T012)."""
-
     def test_proxy_adds_no_table(self):
-        """T011: the proxy shares ``HeatFlow``'s table and declares no
-        local field of its own."""
+        # The proxy shares ``HeatFlow``'s table and declares no local field of its own.
         from heat_flow.models import HeatFlow
 
         from project.ghfdb.models import GHFDBChild
@@ -42,9 +33,8 @@ class TestGHFDBChildModel:
         assert GHFDBChild._meta.local_fields == []
 
     def test_meta_carries_translated_verbose_names(self):
-        """T012: both verbose names are lazy translations that name the
-        published determination view rather than repeating ``HeatFlow``'s
-        own name."""
+        # Both verbose names are lazy translations that name the published determination
+        # view rather than repeating ``HeatFlow``'s own name.
         from django.utils.functional import Promise
         from heat_flow.models import HeatFlow
 
@@ -61,11 +51,9 @@ class TestGHFDBChildModel:
 
 
 class TestGHFDBParentModel:
-    """The ``GHFDBParent`` proxy's ``Meta`` configuration (T042, T043)."""
-
     def test_proxy_adds_no_table(self):
-        """T042: the proxy shares ``ParentHeatFlow``'s table and declares no
-        local field of its own."""
+        # The proxy shares ``ParentHeatFlow``'s table and declares no local field of its
+        # own.
         from heat_flow.models import ParentHeatFlow
 
         from project.ghfdb.models import GHFDBParent
@@ -75,9 +63,8 @@ class TestGHFDBParentModel:
         assert GHFDBParent._meta.local_fields == []
 
     def test_meta_carries_translated_verbose_names(self):
-        """T043: both verbose names are lazy translations that name the
-        published site view rather than repeating ``ParentHeatFlow``'s own
-        name."""
+        # Both verbose names are lazy translations that name the published site view
+        # rather than repeating ``ParentHeatFlow``'s own name.
         from django.utils.functional import Promise
         from heat_flow.models import ParentHeatFlow
 
@@ -93,19 +80,16 @@ class TestGHFDBParentModel:
         assert str(verbose_name) != str(ParentHeatFlow._meta.verbose_name)
 
     def test_no_dictionary_accessor(self):
-        """T122 (D7): ``as_dict()`` has no caller and raises on every
-        published column that exists only as an annotation. Removed."""
+        # T122 : ``as_dict()`` has no caller and raises on every published column that
+        # exists only as an annotation. Removed.
         from project.ghfdb.models import GHFDBParent
 
         assert not hasattr(GHFDBParent, "as_dict")
 
 
 class TestFixtures:
-    """The Phase 1 fixture contracts every later phase is held to (T002-T010)."""
-
     def test_vocabulary_concepts_are_present(self, db):
-        """T002: the session concept load covers every vocabulary this
-        feature filters on."""
+        # The session concept load covers every vocabulary this feature filters on.
         from heat_flow.vocabularies import (
             ExplorationMethod,
             ExplorationPurpose,
@@ -123,12 +107,11 @@ class TestFixtures:
             )
 
     def test_dataset_fixture_is_saved(self, dataset):
-        """T003: ``dataset`` wraps ``DatasetFactory`` and is persisted."""
         assert dataset.pk is not None
 
     def test_published_chain_is_complete(self, published_chain):
-        """T004: every relationship the chain names resolves, and both
-        published identifiers are set."""
+        # Every relationship the chain names resolves, and both published identifiers
+        # are set.
         child = published_chain
         parent = child.parent
         interval = child.sample
@@ -143,8 +126,8 @@ class TestFixtures:
         assert child.ghfdb_id is not None
 
     def test_published_chains_builds_the_number_asked_for(self, published_chains):
-        """T005: the callable builds exactly as many chains as it is asked
-        for, at two different sizes (R2)."""
+        # The callable builds exactly as many chains as it is asked for, at two
+        # different sizes (R2).
         from heat_flow.models import HeatFlow
 
         first_batch = published_chains(2)
@@ -156,7 +139,6 @@ class TestFixtures:
         assert HeatFlow.objects.count() == 6
 
     def test_unpublished_chain_has_no_published_identifier(self, unpublished_chain):
-        """T006: neither level carries a published identifier (SC-005)."""
         assert unpublished_chain.ghfdb_id is None
         assert unpublished_chain.parent.ghfdb_id is None
 
@@ -167,8 +149,8 @@ class TestFixtures:
         chain_without_probe_metadata,
         chain_missing_correction,
     ):
-        """T007: each partial-chain fixture omits exactly the one piece it
-        names, and every other relationship still resolves."""
+        # each partial-chain fixture omits exactly the one piece it names, and every
+        # other relationship still resolves.
         assert chain_without_gradient.thermal_gradient is None
         assert chain_without_gradient.thermal_conductivity is not None
         assert hasattr(chain_without_gradient.sample, "probe_metadata")
@@ -192,9 +174,8 @@ class TestFixtures:
         assert hasattr(missing.sample, "probe_metadata")
 
     def test_sites_by_contribution_covers_the_four_shapes(self, sites_by_contribution):
-        """T008: the four contribution shapes SC-004 names, and one site
-        carrying two exploration purposes so the many-valued parent column
-        is exercised."""
+        # The four contribution shapes SC-004 names, and one site carrying two
+        # exploration purposes so the many-valued parent column is exercised.
         all_contributing = sites_by_contribution["all_contributing"]
         some_contributing = sites_by_contribution["some_contributing"]
         none_contributing = sites_by_contribution["none_contributing"]
@@ -218,8 +199,7 @@ class TestFixtures:
         assert 2 in purpose_counts
 
     def test_staff_client_reaches_the_admin_index(self, staff_client):
-        """T009: the staff client holds enough permission to reach the admin
-        index."""
+        # The staff client holds enough permission to reach the admin index.
         from django.urls import reverse
 
         response = staff_client.get(reverse("admin:index"))
@@ -227,12 +207,11 @@ class TestFixtures:
 
 
 class TestConstantQueryCount:
-    """T010: the query-constancy gate (R2), proven against the defect it
-    exists to catch rather than only against the passing case."""
+    # The query-constancy gate (R2), proven against the defect it exists to catch rather
+    # than only against the passing case.
 
     def test_a_linear_callable_is_rejected(self, constant_query_count, db):
-        """A callable whose query count grows with row count must fail the
-        gate."""
+        # A callable whose query count grows with row count must fail the gate.
         from django.contrib.contenttypes.models import ContentType
 
         state = {"rows": 0}
@@ -248,8 +227,7 @@ class TestConstantQueryCount:
             constant_query_count(build, call)
 
     def test_a_constant_callable_is_accepted(self, constant_query_count, db):
-        """A callable whose query count does not depend on row count must
-        pass the gate."""
+        # A callable whose query count does not depend on row count must pass the gate.
         from django.contrib.contenttypes.models import ContentType
 
         def build(count):
@@ -262,20 +240,14 @@ class TestConstantQueryCount:
 
 
 class TestSuiteHealth:
-    """SC-011 is a statement about the suite, so it needs an assertion about
-    the suite rather than about any one test.
+    # SC-011 is a statement about the suite, so it needs an assertion about the suite
+    # rather than about any one test. The decorators are found by parsing each module
+    # rather than by searching its text.
 
-    The decorators are found by parsing each module rather than by searching
-    its text. A text search would match this module's own assertions, and
-    excluding this module to work around that would leave the gate with a hole
-    exactly where someone would put an expected failure to quiet it.
-    """
-
-    #: Import and export are `003-ghfdb-import-export`'s, and thirteen of its
-    #: tests are expected to fail until the published column vocabulary is
-    #: settled there. Named rather than silently swept up, so a new expected
-    #: failure in this feature's own modules cannot hide among them.
-    OTHER_FEATURES = ("test_resources",)
+    #: Import and export's own thirteen expected failures, named rather than
+    #: silently swept up. `test_constants.py` carries four of them, moved out
+    #: of `test_resources/` to sit beside their subject module.
+    OTHER_FEATURES = ("test_resources", "test_constants.py")
 
     @staticmethod
     def mark_names(expr):
@@ -334,18 +306,17 @@ class TestSuiteHealth:
         ]
 
     def test_no_test_in_this_feature_is_expected_to_fail(self):
-        """T120: an expected failure records a defect someone chose to live
-        with. This feature is not allowed to leave one behind."""
+        # An expected failure records a defect someone chose to live with. This feature
+        # is not allowed to leave one behind.
         offenders = [
             path.name for path in self.modules() if "xfail" in self.marks(path)
         ]
         assert offenders == []
 
     def test_no_test_in_this_feature_is_unconditionally_skipped(self):
-        """T120: a skip that can never fire reads as coverage and is not —
-        checked against both spellings, ``skip`` and the conditional
-        ``skipif``, either of which reads as coverage while proving nothing
-        if it can never fire (F8)."""
+        # A skip that can never fire reads as coverage and is not — checked against both
+        # spellings, ``skip`` and the conditional ``skipif``, either of which reads as
+        # coverage while proving nothing if it can never fire .
         offenders = [
             path.name
             for path in self.modules()
@@ -354,19 +325,14 @@ class TestSuiteHealth:
         assert offenders == []
 
     def test_the_gate_catches_a_module_level_expected_failure(self):
-        """F8: proves the gate against the exact defect it exists to catch.
-        ``marks()`` used to walk decorator lists only, so a module-level
-        ``pytestmark = pytest.mark.xfail(...)`` — the shape every module in
-        this suite actually uses for its own marker — slipped past it
-        silently. A gate with no proof against its own defect is what T010
-        exists to avoid."""
+        # Proves the gate against the exact defect it exists to catch.
         source = "import pytest\n\npytestmark = pytest.mark.xfail(reason='x')\n"
         assert "xfail" in self.marks_in_source(source)
 
     def test_the_named_exclusion_is_real(self):
-        """The exclusion above is honest only if it names something that
-        exists. If import and export stop carrying expected failures, this
-        fails and the exclusion comes out rather than sitting unexplained."""
+        # The exclusion above is honest only if it names something that exists. If
+        # import and export stop carrying expected failures, this fails and the
+        # exclusion comes out rather than sitting unexplained.
         resources = pathlib.Path(__file__).parent / "test_resources"
         carriers = [
             path for path in resources.rglob("*.py") if "xfail" in self.marks(path)

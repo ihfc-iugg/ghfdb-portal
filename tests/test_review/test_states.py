@@ -1,10 +1,4 @@
-"""Tests for review.states (T003).
-
-Four states, five transitions (data-model.md): every legal transition
-succeeds, and at least one illegal transition per state is refused —
-including the one rule enforced by actor rather than by state alone: only a
-Data Curator may reach COMPLETE from AWAITING_DECISION.
-"""
+# Tests for review.states .
 
 import pytest
 from django.contrib.auth.models import Group
@@ -42,9 +36,9 @@ def review_in(state):
 @pytest.mark.django_db
 @pytest.mark.review
 class TestConfirmUpload:
-    """DESCRIBED or CHANGES_REQUESTED -> AWAITING_DECISION (assessor) or
-    COMPLETE (curator) — FR-017/FR-018 hold regardless of which of the two
-    origin states the confirmation started from."""
+    # DESCRIBED or CHANGES_REQUESTED -> AWAITING_DECISION (assessor) or COMPLETE
+    # (curator) — FR-017/FR-018 hold regardless of which of the two origin states the
+    # confirmation started from.
 
     def test_assessor_confirming_from_described_reaches_awaiting_decision(
         self, assessor
@@ -94,8 +88,6 @@ class TestConfirmUpload:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestApprove:
-    """AWAITING_DECISION -> COMPLETE, curator only."""
-
     def test_curator_approves_a_waiting_assessment(self, curator):
         from review.states import States, approve
 
@@ -105,8 +97,8 @@ class TestApprove:
         assert review.state == States.COMPLETE
 
     def test_a_non_curator_cannot_approve(self, assessor):
-        """The one rule T003's acceptance names explicitly: a non-curator
-        must not reach COMPLETE from AWAITING_DECISION."""
+        # The one rule T003's acceptance names explicitly: a non-curator must not reach
+        # COMPLETE from AWAITING_DECISION.
         from review.states import IllegalTransition, States, approve
 
         review = review_in(States.AWAITING_DECISION)
@@ -128,8 +120,6 @@ class TestApprove:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestSendBack:
-    """AWAITING_DECISION -> CHANGES_REQUESTED, curator only."""
-
     def test_curator_sends_a_waiting_assessment_back(self, curator):
         from review.states import States, send_back
 
