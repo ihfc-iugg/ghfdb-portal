@@ -69,18 +69,21 @@
       "tasks": [
         {
           "id": "T001",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": "5e7b31a; uv run pytest tests/test_ghfdb/test_serializers.py -n0 -q — 8 passed"
         },
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": "c0d24ea; uv run pytest tests/test_ghfdb/test_viewsets.py tests/test_ghfdb/test_urls.py tests/test_ghfdb/test_serializers.py -n0 -q — 26 passed"
         },
         {
           "id": "T003",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": "de07856; forge verify --repo . --base origin/main — conformance/docs/uv:lint/uv:typecheck/uv:test/uv:build all passed"
         }
       ]
     },
