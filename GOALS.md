@@ -5,7 +5,7 @@ quality to steer by, not a task that gets ticked off. Whether any goal has been 
 is decided in the roadmap, the feature specs, and review, never by the goal itself.
 
 This file carries no version numbers or release plan; that lives in the roadmap. For what the
-portal is and the principles behind it, read [about](docs/about.md). For what the terms below
+portal is and the principles behind it, read [about](docs/index.md). For what the terms below
 mean, read [CONTEXT.md](CONTEXT.md).
 
 Importance is a tag on each goal, not a ranking:

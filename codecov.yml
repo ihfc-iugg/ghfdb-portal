@@ -1,4 +1,4 @@
-# Family coverage gating — materialized into each repo at onboarding.
+# Coverage gating for CI: enforces the floors in docs/contributing/standards/testing.md.
 # 100% is brittle (it fails a PR over a single defensive branch or unreachable
 # guard). These are floors with headroom, not a ratchet.
 #   project — overall coverage floor for the package.

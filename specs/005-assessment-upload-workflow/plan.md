@@ -46,16 +46,16 @@ write must be safe to trigger twice.
 
 | Article | Bearing on this feature | Verdict |
 |---|---|---|
-| I. FAIR-First Scientific Data | The submitted file is retained against the assessment, so every dataset traces to its source spreadsheet. Assessors are credited as contributors. | Advances it |
-| II. GHFDB Schema Fidelity | No column mapping, vocabulary resolution or schema behaviour changes. The reader is called, not modified, apart from a checking parameter. | No impact |
-| III. FairDM-First Integration | Pages are built on the framework's own view classes, plugin registration and navigation. No parallel UI stack. | Conforms |
-| IV. Open Science, Provenance & Review Governance | The article the feature serves: the decision, its maker and its date are recorded, and nothing an assessor uploads is public without a curator. | Advances it |
-| V. Internationalisation | Every user-facing string uses `gettext_lazy`. Every model field carries `verbose_name` and `help_text`. | Conforms, enforced per task |
-| VI. Test-First (non-negotiable) | The application has no tests. Each task writes its failing test first, and the test tree is established in the foundational phase. | Conforms |
-| VII. Documentation Critical | New pages and the two roles are documented in `docs/` in this pull request. `CONTEXT.md` gains the role vocabulary. | Conforms, own tasks |
-| VIII. Spec-Driven Workflow | This plan follows an approved specification. | Conforms |
-| IX. Simplicity & Maintainability | The largest simplicity decision is refusing to add a notification framework for one use. Recorded in `decisions.md`. | Conforms |
-| X. WHDB Mission | The assessment team is the portal's primary internal user, and this takes the Django admin out of their path. | Advances it |
+| I. Testing (non-negotiable) | The application has no tests. Each task writes its failing test first, and the test tree is established in the foundational phase. | Conforms |
+| II. Simplicity | The largest simplicity decision is refusing to add a notification framework for one use. Recorded in `decisions.md`. | Conforms |
+| VI. Documentation | New pages and the two roles are documented in `docs/` in this pull request. `CONTEXT.md` gains the role vocabulary. | Conforms, own tasks |
+| VIII. Internationalization | Every user-facing string uses `gettext_lazy`. Every model field carries `verbose_name` and `help_text`. | Conforms, enforced per task |
+| XI. FAIR-First Scientific Data | The submitted file is retained against the assessment, so every dataset traces to its source spreadsheet. Assessors are credited as contributors. | Advances it |
+| XII. GHFDB Schema Fidelity | No column mapping, vocabulary resolution or schema behaviour changes. The reader is called, not modified, apart from a checking parameter. | No impact |
+| XIII. FairDM-First Integration | Pages are built on the framework's own view classes, plugin registration and navigation. No parallel UI stack. | Conforms |
+| XIV. Open Science, Provenance & Review Governance | The article the feature serves: the decision, its maker and its date are recorded, and nothing an assessor uploads is public without a curator. | Advances it |
+| XV. Spec-Driven Workflow | This plan follows an approved specification. | Conforms |
+| XVI. WHDB Mission | The assessment team is the portal's primary internal user, and this takes the Django admin out of their path. | Advances it |
 
 No violations to justify.
 

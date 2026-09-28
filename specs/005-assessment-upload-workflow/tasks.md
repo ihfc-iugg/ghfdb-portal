@@ -4,7 +4,7 @@
 
 **Prerequisites**: plan.md, spec.md, research.md, data-model.md
 
-**Tests**: required. Constitution Article VI is non-negotiable and the `review` application has no
+**Tests**: required. Constitution Article I is non-negotiable and the `review` application has no
 tests at all today, so every task writes its failing test first.
 
 ## Format: `[ID] [P?] [Story] Description`
@@ -19,7 +19,7 @@ tests at all today, so every task writes its failing test first.
 **Purpose**: everything every story needs. No story task starts until this phase is green.
 
 - [ ] T001 Create `tests/test_review/` mirroring `project/review/`, with `conftest.py` and an
-      `__init__.py` at each level, per Article VI's test-organisation rule.
+      `__init__.py` at each level, per Article I's test-organisation rule.
 - [ ] T002 [P] Write `tests/test_review/factories.py`: factory-boy factories for `Review`, a
       claimed `Person`, a ghost `Person`, and a `LiteratureItem`. Reuse the framework's own
       factories where they exist rather than redefining them.
