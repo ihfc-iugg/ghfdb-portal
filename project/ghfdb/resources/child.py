@@ -157,7 +157,7 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
     # ------------------------------------------------------------------
 
     def before_import_row(self, row, **kwargs):
-        """Record this row's position in the file (T035).
+        """Record this row's position in the file.
 
         ``_child_natural_key`` uses it in place of ``q_top``/``q_bottom``,
         so a no-ID row's identity survives a corrected depth interval.
@@ -170,7 +170,7 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
     def before_import(self, dataset, **kwargs):
         """Store the caller's named FairDM dataset for use during row processing.
 
-        FR-002: the import refuses to guess a dataset. A caller passing an
+        FS-004 FR-002: the import refuses to guess a dataset. A caller passing an
         already-resolved ``Dataset`` instance as ``fairdm_dataset`` reaches a
         private dataset the same as a public one — there is no lookup here
         to narrow to the default manager in the first place.
@@ -383,7 +383,7 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         """Attach this row's IGSN reference to the interval as a SampleIdentifier.
 
         ``-``, blank and whitespace-only cells mean no identifier was given
-        (D26, specs/004-import-upload-template/decisions.md) — every one of
+        (FS-004) — every one of
         the 430 rows in the assessment team's own corpus that carries
         anything at all in this column carries the single value ``-``.
         Reads both column spellings the template has used, ``Ref_IGSN`` and
@@ -392,8 +392,8 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
 
         Looked up by (``value``, ``type``) rather than by the interval:
         ``_build_interval`` saves a new ``HeatFlowInterval`` on every call
-        (T035/D18), so a re-imported row's interval is never the same row
-        twice. An IGSN identifies one physical sample regardless of which
+        (docs/adr/0014-a-determination-without-an-identifier-is-its-row.md), so
+        a re-imported row's interval is never the same row twice. An IGSN identifies one physical sample regardless of which
         interval currently represents it, so re-attaching the existing
         identifier to the row's current interval — rather than keying on
         the interval and creating a second row for the same value — is what
@@ -474,8 +474,9 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         """Return a stable natural key for no-ID child rows (no synthetic prefix).
 
         Keyed on site location, publication reference and this row's
-        position in the file — not on ``q_top``/``q_bottom`` (T035,
-        DR-003): those are exactly the values a corrected depth interval
+        position in the file — not on ``q_top``/``q_bottom`` (see
+        docs/adr/0014-a-determination-without-an-identifier-is-its-row.md):
+        those are exactly the values a corrected depth interval
         changes, so keying on them turned a correction into a second
         determination. Position holds steady across a repeat import of
         the same rows in the same order, which is what "the same

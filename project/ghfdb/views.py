@@ -35,12 +35,9 @@ def can_publish_dataset(request, instance, **kwargs):
     responses=MyJSONSchemaSerializer,
 )
 class GHFDBMetaDataAPIView(APIView):
-    """Serve the GHFDB column metadata JSON file as a DRF endpoint."""
-
     permission_classes = [AllowAny]
 
     def get(self, request, file_format=None):
-        """Return the contents of ``ghfdb_colmeta.json``."""
         file_path = data_dir / "ghfdb_colmeta.json"
         try:
             with open(file_path) as f:

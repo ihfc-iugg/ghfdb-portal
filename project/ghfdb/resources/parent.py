@@ -90,7 +90,7 @@ class GHFDBParentImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
     def before_import(self, dataset, **kwargs):
         """Store the caller's named FairDM dataset and dedupe rows by effective key.
 
-        FR-002: the import refuses to guess a dataset. A caller passing an
+        FS-004 FR-002: the import refuses to guess a dataset. A caller passing an
         already-resolved ``Dataset`` instance as ``fairdm_dataset`` reaches a
         private dataset the same as a public one — there is no lookup here
         to narrow to the default manager in the first place.
@@ -178,7 +178,7 @@ class GHFDBParentImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
     def _get_or_create_site(self, id_parent: str, row: dict) -> HeatFlowSite:
         """Return the HeatFlowSite for this parent row, creating it if needed.
 
-        Coordinates identify the site (R1, FR-004): the row's location is
+        Coordinates identify the site (FS-004 FR-004): the row's location is
         looked up first, whether or not the row carries an ``ID_parent``.
         ``ID_parent`` is consulted only when the coordinates do not already
         resolve to an existing site, so the two lookups cannot disagree and

@@ -41,9 +41,6 @@ def make_dataset(*rows):
     return ds
 
 
-# T029 Tests
-
-
 @pytest.mark.django_db
 class TestGHFDBParentImportResourceImport:
     def test_import_creates_parent_and_site(self, dataset):
@@ -202,7 +199,7 @@ class TestGHFDBParentBeforeImportDedup:
 
 @pytest.mark.django_db
 class TestGHFDBParentTemplateNoIdRegression:
-    # T067/T029 regression coverage for template uploads without ID_parent.
+    # Regression coverage for template uploads without ID_parent.
 
     def test_no_id_parent_dedup_uses_lat_long_natural_key(self, dataset):
         from heat_flow.models import HeatFlowSite, ParentHeatFlow
@@ -303,7 +300,7 @@ class TestGHFDBParentTemplateNoIdRegression:
 @pytest.mark.django_db
 class TestGHFDBParentImportSiteIdentity:
     def test_import_resolves_to_existing_site_by_coordinates(self, dataset):
-        # T043 – Importing a row whose coordinates match an existing site resolves to
+        # Importing a row whose coordinates match an existing site resolves to
         # that site rather than creating a second one, even though the row carries an
         # ID_parent the site has never seen.
         from fairdm.contrib.location.models import Point
@@ -331,7 +328,7 @@ class TestGHFDBParentImportSiteIdentity:
         assert parent.sample_id == existing_site.pk
 
     def test_import_with_disagreeing_id_parent_does_not_duplicate_site(self, dataset):
-        # T044 – A row that carries a site identifier (ID_parent) the site has never
+        # A row that carries a site identifier (ID_parent) the site has never
         # seen, while its coordinates belong to a different existing site.
         from fairdm.contrib.location.models import Point
         from heat_flow.models import HeatFlowSite, ParentHeatFlow
@@ -367,8 +364,8 @@ class TestGHFDBParentImportSiteIdentity:
 
 @pytest.mark.django_db
 class TestGHFDBParentImportRefusesSecondParent:
-    # US-3: a second parent for a site is refused through the import path, not only
-    # through the model (FR-012, SC-005).
+    # FS-003 US-3: a second parent for a site is refused through the import path, not
+    # only through the model (FR-012, SC-005).
 
     def test_second_parent_at_the_same_site_is_refused_on_import(self, dataset):
         # Importing a row whose coordinates resolve to a site that already has a
@@ -410,7 +407,7 @@ class TestGHFDBParentImportRefusesSecondParent:
 
 @pytest.mark.django_db
 class TestGHFDBParentImportRequiresNamedDataset:
-    # FR-002: the import refuses to guess a dataset.
+    # FS-003 FR-002: the import refuses to guess a dataset.
 
     def test_before_import_raises_when_no_dataset_is_named(self, dataset):
         # Before_import() raises rather than falling back to the first dataset.
@@ -425,8 +422,8 @@ class TestGHFDBParentImportRequiresNamedDataset:
 
 @pytest.mark.django_db
 class TestGHFDBParentImportTwoCoordinatePairs:
-    # US-2's independent test: two sites, each with its own parent value, both in the
-    # dataset the caller named (FR-005, FR-006).
+    # FS-003 US-2's independent test: two sites, each with its own parent value, both
+    # in the dataset the caller named (FR-005, FR-006).
 
     def test_two_coordinate_pairs_produce_two_sites_in_the_named_dataset(self, dataset):
         # Two rows at two coordinate pairs each become a site carrying its own P-column
@@ -469,8 +466,8 @@ class TestGHFDBParentImportTwoCoordinatePairs:
 
 @pytest.mark.django_db
 class TestGHFDBParentImportGeographyStoredAsSupplied:
-    # FR-008: geography columns are stored as supplied, never recomputed from the
-    # coordinates.
+    # FS-003 FR-008: geography columns are stored as supplied, never recomputed from
+    # the coordinates.
 
     def test_geography_values_are_stored_exactly_as_supplied(self, dataset):
         # Country/Region/Continent/Domain land on HeatFlowSite unchanged, even where
@@ -506,8 +503,8 @@ class TestGHFDBParentImportGeographyStoredAsSupplied:
 
 @pytest.mark.django_db
 class TestGHFDBParentImportAcceptsUnstoredColumns:
-    # FR-009: the reviewer columns and ID are accepted without being stored, and their
-    # presence is not an error.
+    # FS-003 FR-009: the reviewer columns and ID are accepted without being stored, and
+    # their presence is not an error.
 
     def test_id_and_reviewer_columns_do_not_cause_an_error(self, dataset):
         # ID and the three reviewer columns are not PARENT_COLUMNS fields, so their
@@ -615,7 +612,7 @@ class TestGHFDBParentColumnOrderRegression:
         )
 
 
-# Helpers for in-memory XLSX construction (T084, T085, T090)
+# Helpers for in-memory XLSX construction
 
 
 def _build_simple_xlsx(headers: list, data_rows: list[list]) -> bytes:
@@ -656,7 +653,7 @@ def _build_simple_xlsx(headers: list, data_rows: list[list]) -> bytes:
     return buf.getvalue()
 
 
-# T084 — GHFDBSimpleImportFormat unit tests
+# GHFDBSimpleImportFormat unit tests
 
 
 class TestGHFDBSimpleImportFormat:
@@ -824,7 +821,7 @@ class TestGHFDBSimpleImportFormat:
         assert simple_ds[0][0] == "UNIT_ROW"
 
 
-# T085 — Admin format-selection tests
+# Admin format-selection tests
 
 
 class TestAdminGetImportFormats:

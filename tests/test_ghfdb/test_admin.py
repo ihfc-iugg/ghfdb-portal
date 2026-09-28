@@ -1,5 +1,4 @@
-# Tests for GHFDB admin changelist configuration and rendering (T013, T063, T066,
-# T078-T089, T098-T110, T123).
+# Tests for GHFDB admin changelist configuration and rendering (FS-002).
 
 import pytest
 from django.contrib import admin
@@ -55,9 +54,9 @@ class TestGHFDBAdminChangelist:
         response = admin_client.get(url)
         assert response.status_code == 200
 
-        # T079: the tail of list_display is read from constants.py, never
+        # The tail of list_display is read from constants.py, never
         # restated as a literal here — that restatement is what let three of
-        # the published names drift from the canonical definitions (D1, D2).
+        # the published names drift from the canonical definitions (FS-002).
         headings = [
             str(header["text"]) for header in result_headers(response.context["cl"])
         ]
@@ -234,7 +233,7 @@ class TestGHFDBParentAdminListFilters:
         assert lookup_values == vocab_values
 
 
-# Phase 3b: GHFDBParent admin tests (T070–T071)
+# GHFDBParent admin tests
 
 
 class TestGHFDBParentAdmin:
@@ -249,7 +248,7 @@ class TestGHFDBParentAdmin:
 
     @pytest.mark.django_db
     def test_ghfdb_parent_admin_import_resource_only(self, admin_client):
-        # T071 (US1b): GHFDBParentAdmin.get_import_resource_classes() returns only
+        # FS-002 US-1b: GHFDBParentAdmin.get_import_resource_classes() returns only
         # GHFDBParentImportResource — no child or export resource attached.
         from project.ghfdb.models import GHFDBParent
         from project.ghfdb.resources import (
@@ -291,7 +290,7 @@ class TestGHFDBParentAdmin:
 
         assert result == "OUTCOME-SENTINEL"
         assert called["file"] is ds
-        assert called["dataset"] is None  # no dataset-selection surface yet (D12)
+        assert called["dataset"] is None  # no dataset-selection surface yet (FS-004)
 
     @pytest.mark.django_db
     def test_changelist_renders_for_a_staff_user(self, staff_client, published_chain):
@@ -303,8 +302,8 @@ class TestGHFDBParentAdmin:
     def test_published_parent_columns_appear_in_the_canonical_order(
         self, staff_client, published_chain
     ):
-        # T099 (SC-007): the rendered headings, read from ``PARENT_COLUMNS``, asserted
-        # as T079 asserts them for the determination changelist.
+        # FS-002 SC-007: the rendered headings, read from ``PARENT_COLUMNS``, asserted
+        # the same way as for the determination changelist.
         from project.ghfdb.models import GHFDBParent
 
         url = reverse("admin:ghfdb_ghfdbparent_changelist")
@@ -319,7 +318,7 @@ class TestGHFDBParentAdmin:
     def test_the_geography_follows_the_published_block(
         self, staff_client, published_chain
     ):
-        # T100 : country, region, continent and geological domain, in that order,
+        # Country, region, continent and geological domain, in that order,
         # immediately after the published columns.
         from project.ghfdb.models import GHFDBParent
 
@@ -356,7 +355,7 @@ class TestGHFDBParentAdmin:
     def test_search_matches_site_name_and_published_site_identifier(
         self, staff_client, published_chain
     ):
-        # T102 (FR-016): exercised through the rendered changelist with a query string,
+        # FS-002 FR-016: exercised through the rendered changelist with a query string,
         # not against the search attribute — a search matching nothing must return no
         # rows, not just a 200 status.
         url = reverse("admin:ghfdb_ghfdbparent_changelist")
@@ -374,7 +373,7 @@ class TestGHFDBParentAdmin:
 
     @pytest.mark.django_db
     def test_the_eight_filters_are_offered(self, staff_client, published_chain):
-        # T103 (FR-017): environment, heat production correction flag, exploration
+        # FS-002 FR-017: environment, heat production correction flag, exploration
         # method, exploration purpose, country, region, continent and geological domain,
         # each producing matching rows when applied.
         from heat_flow.vocabularies import ExplorationMethod, ExplorationPurpose
@@ -414,7 +413,7 @@ class TestGHFDBParentAdmin:
 
     @pytest.mark.django_db
     def test_each_vocabulary_filter_offers_exactly_its_own_terms_as_labels(self):
-        # T104 (FR-018, SC-009): SC-009 requires this proven on both changelists, not
+        # FS-002 FR-018, SC-009: SC-009 requires this proven on both changelists, not
         # once.
         from heat_flow.vocabularies import (
             ExplorationMethod,
@@ -455,8 +454,8 @@ class TestGHFDBParentAdmin:
     def test_there_is_no_route_to_add_change_or_delete(
         self, staff_client, published_chain
     ):
-        # T105 (FR-012, SC-008): as T085, with the same note about the import route — a
-        # separate surface, covered by T123.
+        # FS-002 FR-012, SC-008: as the determination changelist's equivalent test, with
+        # the same note about the import route — a separate surface.
         from project.ghfdb.models import GHFDBParent
 
         model_admin = admin.site._registry[GHFDBParent]
@@ -527,7 +526,7 @@ class TestGHFDBParentAdmin:
     def test_query_count_is_equal_at_two_row_counts(
         self, staff_client, published_chains, constant_query_count
     ):
-        # T107 (FR-019, SC-003), measured on the rendered changelist.
+        # FS-002 FR-019, SC-003, measured on the rendered changelist.
         url = reverse("admin:ghfdb_ghfdbparent_changelist")
 
         def call():
@@ -538,8 +537,8 @@ class TestGHFDBParentAdmin:
             constant_query_count(published_chains, call)
 
     def test_every_declared_path_resolves_on_the_model(self):
-        # T108 (FR-020): Django's own admin checks report nothing for this registration,
-        # covering the display, filter and search declarations together.
+        # FS-002 FR-020: Django's own admin checks report nothing for this
+        # registration, covering the display, filter and search declarations together.
         from django.contrib.admin.checks import ModelAdminChecks
 
         from project.ghfdb.models import GHFDBParent
@@ -549,7 +548,7 @@ class TestGHFDBParentAdmin:
         assert errors == []
 
     def test_it_carries_the_site_import_resource_and_no_export_resource(self):
-        # T109 (FR-021, SC-010). The negative half is as much of the requirement as the
+        # FS-002 FR-021, SC-010. The negative half is as much of the requirement as the
         # positive.
         from project.ghfdb.models import GHFDBParent
         from project.ghfdb.resources import GHFDBParentImportResource
@@ -575,7 +574,7 @@ class TestGHFDBChildAdmin:
     def test_published_child_columns_appear_in_the_canonical_order(
         self, staff_client, published_chain
     ):
-        # T079 (SC-007): the headings Django renders for the tail of ``list_display``
+        # FS-002 SC-007: the headings Django renders for the tail of ``list_display``
         # equal ``CHILD_COLUMNS``, read from ``constants.py`` and never from a literal
         # here.
         url = reverse("admin:ghfdb_ghfdbchild_changelist")
@@ -589,7 +588,7 @@ class TestGHFDBChildAdmin:
     def test_the_leading_columns_are_the_four_orientation_columns_and_nothing_else(
         self, staff_client, published_chain
     ):
-        # T080 (US-3 acceptance scenario 2): the record's published identifier, the
+        # FS-002 US-3 acceptance scenario 2: the record's published identifier, the
         # site's published identifier, the site name and the site's two coordinate
         # columns, in that order, and no sixth.
         url = reverse("admin:ghfdb_ghfdbchild_changelist")
@@ -612,7 +611,7 @@ class TestGHFDBChildAdmin:
 
     def test_site_values_are_not_restated_on_every_row(self):
         # The intersection of ``list_display`` with the published parent columns is
-        # exactly the four orientation columns T080 names, and nothing further — the
+        # exactly the four orientation columns FS-002 names, and nothing further — the
         # familiarity being protected is the child block's, per the 2026-08-23
         model_admin = admin.site._registry[GHFDBChild]
         headings = set()
@@ -633,7 +632,7 @@ class TestGHFDBChildAdmin:
     def test_search_matches_site_name_and_published_site_identifier(
         self, staff_client, published_chain
     ):
-        # T082 (FR-016): exercised through the rendered changelist with a query string,
+        # FS-002 FR-016: exercised through the rendered changelist with a query string,
         # not against the search attribute — a search matching nothing must return no
         # rows, not just a 200 status.
         url = reverse("admin:ghfdb_ghfdbchild_changelist")
@@ -650,7 +649,7 @@ class TestGHFDBChildAdmin:
 
     @pytest.mark.django_db
     def test_the_eight_filters_are_offered(self, staff_client, published_chain):
-        # T083 (FR-017): environment, heat production correction flag, exploration
+        # FS-002 FR-017: environment, heat production correction flag, exploration
         # method, exploration purpose, country, region, continent and geological domain,
         # each producing matching rows when applied.
         from heat_flow.vocabularies import ExplorationMethod, ExplorationPurpose
@@ -687,7 +686,7 @@ class TestGHFDBChildAdmin:
 
     @pytest.mark.django_db
     def test_each_vocabulary_filter_offers_exactly_its_own_terms_as_labels(self):
-        # T084 (FR-018, SC-009): every term of its own vocabulary is offered, no term of
+        # FS-002 FR-018, SC-009: every term of its own vocabulary is offered, no term of
         # another vocabulary is, and the choice text is the label rather than the stored
         # key.
         from heat_flow.vocabularies import (
@@ -727,9 +726,9 @@ class TestGHFDBChildAdmin:
     def test_there_is_no_route_to_add_change_or_delete(
         self, staff_client, published_chain
     ):
-        # T085 (FR-012, SC-008): the three permission hooks refuse, and the rendered
+        # FS-002 FR-012, SC-008: the three permission hooks refuse, and the rendered
         # page carries no add link and no per-row change link. The import route is a
-        # separate surface, covered by T123, out of this dispatch's scope.
+        # separate surface, out of this dispatch's scope.
         model_admin = admin.site._registry[GHFDBChild]
         request = RequestFactory().get("/")
         assert model_admin.has_add_permission(request) is False
@@ -748,8 +747,8 @@ class TestGHFDBChildAdmin:
     def test_an_unpublished_determination_is_absent_from_the_rendered_rows(
         self, staff_client, published_chain, unpublished_chain
     ):
-        # T086 (FR-002, SC-005): the assertion R6 records as catching an override that
-        # stopped going through the scoped manager.
+        # FS-002 FR-002, SC-005: the assertion FS-002 R6 records as catching an
+        # override that stopped going through the scoped manager.
         url = reverse("admin:ghfdb_ghfdbchild_changelist")
         response = staff_client.get(url)
         result_list = list(response.context["cl"].result_list)
@@ -788,7 +787,7 @@ class TestGHFDBChildAdmin:
     def test_query_count_is_equal_at_two_row_counts(
         self, staff_client, published_chains, constant_query_count
     ):
-        # T087 (FR-019, SC-003; US-3 acceptance scenario 8), measured on the rendered
+        # FS-002 FR-019, SC-003, US-3 acceptance scenario 8, measured on the rendered
         # changelist.
         url = reverse("admin:ghfdb_ghfdbchild_changelist")
 
@@ -800,8 +799,8 @@ class TestGHFDBChildAdmin:
             constant_query_count(published_chains, call)
 
     def test_every_declared_path_resolves_on_the_model(self):
-        # T088 (FR-020): Django's own admin checks report nothing for this registration,
-        # covering the display, filter and search declarations together.
+        # FS-002 FR-020: Django's own admin checks report nothing for this
+        # registration, covering the display, filter and search declarations together.
         from django.contrib.admin.checks import ModelAdminChecks
 
         model_admin = admin.site._registry[GHFDBChild]
@@ -824,7 +823,7 @@ class TestGHFDBChildAdmin:
 
 
 class TestResourceAttachment:
-    # T110 (FR-021, SC-010): the negative half of the export requirement proven across
+    # FS-002 FR-021, SC-010: the negative half of the export requirement proven across
     # both changelists at once — no resource, import or export, is attached to both.
 
     def test_no_resource_is_attached_to_both_changelists(self):
@@ -844,7 +843,7 @@ class TestResourceAttachment:
 
 
 class TestImportPermission:
-    # T123 (FR-012): ``django-import-export`` grants the import route to any staff user
+    # FS-002 FR-012: ``django-import-export`` grants the import route to any staff user
     # while ``IMPORT_EXPORT_IMPORT_PERMISSION_CODE`` is unset — verified unset in this
     # project — so both registrations, which declare no add, no change and no delete.
 

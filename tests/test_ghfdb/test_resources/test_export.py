@@ -8,7 +8,7 @@ import pytest
 
 from project.ghfdb.constants import GHFDB_COLUMN_ORDER
 
-# T041: Resource class structure tests
+# Resource class structure tests
 
 
 class TestGHFDBExportResourceDeclaration:
@@ -54,7 +54,7 @@ class TestGHFDBExportResourceDeclaration:
         assert list(GHFDBExportResource.Meta.export_order) == list(GHFDB_COLUMN_ORDER)
 
 
-# T041: Queryset tests
+# Queryset tests
 
 
 class TestGHFDBExportQueryset:
@@ -99,7 +99,7 @@ class TestGHFDBExportQueryset:
         assert list(dataset.headers) == list(GHFDB_COLUMN_ORDER)
 
 
-# T041: Column order tests
+# Column order tests
 
 
 class TestGHFDBExportColumnOrder:
@@ -124,7 +124,7 @@ class TestGHFDBExportColumnOrder:
         assert list(dataset.headers) == list(GHFDB_COLUMN_ORDER)
 
 
-# T041: Pint quantity rendering tests
+# Pint quantity rendering tests
 
 
 class TestGHFDBExportQuantityFields:
@@ -195,7 +195,7 @@ class TestGHFDBExportQuantityFields:
         assert float(row["water_temperature"]) == pytest.approx(4.5)
 
 
-# T041: M2M rendering tests
+# M2M rendering tests
 
 
 class TestGHFDBExportM2MFields:
@@ -222,7 +222,7 @@ class TestGHFDBExportM2MFields:
         assert row["t_method_top"] in ("", None)
 
 
-# Ref_IGSN column tests (D26, specs/004-import-upload-template/decisions.md)
+# Ref_IGSN column tests (FS-004)
 
 
 class TestGHFDBExportRefIGSN:
@@ -262,7 +262,7 @@ class TestGHFDBExportRefIGSN:
         assert row["Ref_IGSN"] == ""
 
 
-# T041: Staff-only access control
+# Staff-only access control
 
 
 class TestGHFDBExportAccessControl:
@@ -275,12 +275,12 @@ class TestGHFDBExportAccessControl:
         assert response.status_code == 302
 
 
-# T094 — BUG-010: Export attribute= values must match canonical annotation keys
+# FS-003 BUG-010: Export attribute= values must match canonical annotation keys
 
 
 class TestBUG010ExportAttributeValues:
-    # GHFDBExportResource field attribute= values must match renamed annotation keys .
-    # After T096 renames the annotation keys in GHFDBChildQuerySet.as_ghfdb_flat(), the
+    # GHFDBExportResource field attribute= values must match renamed annotation keys.
+    # After GHFDBChildQuerySet.as_ghfdb_flat() renames the annotation keys, the
     # export resource's attribute= values must use the new key names.
 
     def test_q_attribute_is_canonical(self):
@@ -288,7 +288,7 @@ class TestBUG010ExportAttributeValues:
 
         resource = GHFDBExportResource()
         assert resource.fields["q"].attribute == "q", (
-            f"Field 'q' has attribute '{resource.fields['q'].attribute}', expected 'q' (BUG-010 T099)"
+            f"Field 'q' has attribute '{resource.fields['q'].attribute}', expected 'q'"
         )
 
     def test_q_uncertainty_attribute_is_canonical(self):
@@ -296,18 +296,18 @@ class TestBUG010ExportAttributeValues:
 
         resource = GHFDBExportResource()
         assert resource.fields["q_uncertainty"].attribute == "q_uncertainty", (
-            "Field 'q_uncertainty' has stale attribute (BUG-010 T099)"
+            "Field 'q_uncertainty' has stale attribute"
         )
 
     def test_name_attribute_reads_site_name_annotation(self):
         # Field 'name' must read from 'site_name' annotation (model-field conflict
-        # workaround, BUG-010). 'name' cannot be used as the annotate() key because
+        # workaround, FS-003 BUG-010). 'name' cannot be used as the annotate() key because
         # Measurement base class already has a 'name' field.
         from project.ghfdb.resources.export import GHFDBExportResource
 
         resource = GHFDBExportResource()
         assert resource.fields["name"].attribute == "site_name", (
-            f"Field 'name' has attribute '{resource.fields['name'].attribute}', expected 'site_name' (BUG-010 T099)"
+            f"Field 'name' has attribute '{resource.fields['name'].attribute}', expected 'site_name'"
         )
 
     def test_elevation_attribute_is_canonical(self):
@@ -315,7 +315,7 @@ class TestBUG010ExportAttributeValues:
 
         resource = GHFDBExportResource()
         assert resource.fields["elevation"].attribute == "elevation", (
-            f"Field 'elevation' has attribute '{resource.fields['elevation'].attribute}', expected 'elevation' (BUG-010)"
+            f"Field 'elevation' has attribute '{resource.fields['elevation'].attribute}', expected 'elevation' (FS-003 BUG-010)"
         )
 
     def test_environment_attribute_is_canonical(self):
@@ -323,7 +323,7 @@ class TestBUG010ExportAttributeValues:
 
         resource = GHFDBExportResource()
         assert resource.fields["environment"].attribute == "environment", (
-            "Field 'environment' has stale attribute (BUG-010 T099)"
+            "Field 'environment' has stale attribute"
         )
 
     def test_corr_hp_flag_attribute_is_canonical(self):
@@ -331,7 +331,7 @@ class TestBUG010ExportAttributeValues:
 
         resource = GHFDBExportResource()
         assert resource.fields["corr_hp_flag"].attribute == "corr_HP_flag", (
-            f"Field 'corr_hp_flag' has attribute '{resource.fields['corr_hp_flag'].attribute}', expected 'corr_HP_flag' (BUG-010)"
+            f"Field 'corr_hp_flag' has attribute '{resource.fields['corr_hp_flag'].attribute}', expected 'corr_HP_flag' (FS-003 BUG-010)"
         )
 
     def test_total_depth_md_attribute_is_canonical(self):
@@ -339,7 +339,7 @@ class TestBUG010ExportAttributeValues:
 
         resource = GHFDBExportResource()
         assert resource.fields["total_depth_md"].attribute == "total_depth_MD", (
-            f"Field 'total_depth_md' has attribute '{resource.fields['total_depth_md'].attribute}', expected 'total_depth_MD' (BUG-010)"
+            f"Field 'total_depth_md' has attribute '{resource.fields['total_depth_md'].attribute}', expected 'total_depth_MD' (FS-003 BUG-010)"
         )
 
     def test_total_depth_tvd_attribute_is_canonical(self):
@@ -347,7 +347,7 @@ class TestBUG010ExportAttributeValues:
 
         resource = GHFDBExportResource()
         assert resource.fields["total_depth_tvd"].attribute == "total_depth_TVD", (
-            f"Field 'total_depth_tvd' has attribute '{resource.fields['total_depth_tvd'].attribute}', expected 'total_depth_TVD' (BUG-010)"
+            f"Field 'total_depth_tvd' has attribute '{resource.fields['total_depth_tvd'].attribute}', expected 'total_depth_TVD' (FS-003 BUG-010)"
         )
 
     def test_explo_method_attribute_is_canonical(self):
@@ -355,7 +355,7 @@ class TestBUG010ExportAttributeValues:
 
         resource = GHFDBExportResource()
         assert resource.fields["explo_method"].attribute == "explo_method", (
-            f"Field 'explo_method' has attribute '{resource.fields['explo_method'].attribute}', expected 'explo_method' (BUG-010)"
+            f"Field 'explo_method' has attribute '{resource.fields['explo_method'].attribute}', expected 'explo_method' (FS-003 BUG-010)"
         )
 
     def test_water_temperature_attribute_reads_surface_temperature(self):
@@ -437,8 +437,9 @@ def _build_simple_xlsx_from_official(official_xlsx_bytes: bytes) -> bytes:
 class TestGHFDBExportRoundTrip:
     @pytest.mark.django_db
     def test_roundtrip_import_then_export_preserves_values(self, dataset):
-        # SC-001: 1) Import fixture XLSX using parent + child resources 2) Export using
-        # GHFDBExportResource 3) Verify text/vocabulary equality and numeric closeness
+        # FS-003 SC-001: 1) Import fixture XLSX using parent + child resources 2) Export
+        # using GHFDBExportResource 3) Verify text/vocabulary equality and numeric
+        # closeness
         from project.ghfdb.models import GHFDBChild
         from project.ghfdb.resources import (
             GHFDBChildImportResource,
@@ -606,7 +607,7 @@ class TestGHFDBExportRoundTrip:
 
     @pytest.mark.django_db
     def test_roundtrip_simple_format_import_then_export_preserves_values(self, dataset):
-        # SC-001 (simple template variant): 1) Convert fixture XLSX to simple layout
+        # FS-003 SC-001 (simple template variant): 1) Convert fixture XLSX to simple layout
         # (remove unit/range rows 7-8) 2) Import using GHFDBSimpleImportFormat (parent +
         # child resources) 3) Export using GHFDBExportResource 4) Verify identical.
         from project.ghfdb.models import GHFDBChild

@@ -144,7 +144,7 @@ class TestReviewCreateViewAccess:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewCreateView:
-    # Submitting the description form writes the assessment (spec.md User Story 2
+    # Submitting the description form writes the assessment (FS-005 User Story 2
     # scenarios 1, 3 and 5, FR-003 through FR-007, FR-016).
 
     def _post(self, rf, user, **overrides):
@@ -285,7 +285,7 @@ class TestReviewListItemAssessors:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestTheListNarrowsToWhatIsWaiting:
-    # FR-025, spec.md User Story 6 scenario 1: what used to be a decision queue of its
+    # FS-005 FR-025, User Story 6 scenario 1: what used to be a decision queue of its
     # own is the assessment list with one filter chosen.
 
     def test_only_awaiting_decision_assessments_remain(self, client, curator):
@@ -338,8 +338,8 @@ class TestReviewDetailViewAccess:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewDetailViewContent:
-    # FR-027, FR-028, US-7 scenarios 1 to 3: what the page says about the assessment, to
-    # anyone who opens it.
+    # FS-005 FR-027, FR-028, US-7 scenarios 1 to 3: what the page says about the
+    # assessment, to anyone who opens it.
 
     def test_it_names_the_publication_uploader_assessors_and_state(
         self, client, assessor
@@ -422,9 +422,9 @@ class TestReviewDetailViewContent:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewDetailViewOffersOnlyWhatTheReaderMayDo:
-    # FR-029, US-7 scenarios 4 to 6. A route is drawn only for a reader who may follow
-    # it — and the page behind each one refuses everyone else in its own right, which
-    # the access tests for those pages prove separately.
+    # FS-005 FR-029, US-7 scenarios 4 to 6. A route is drawn only for a reader who may
+    # follow it — and the page behind each one refuses everyone else in its own right,
+    # which the access tests for those pages prove separately.
 
     def _routes(self, response, review):
         html = response.content.decode()
@@ -485,8 +485,8 @@ class TestReviewDetailViewOffersOnlyWhatTheReaderMayDo:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewUpdateView:
-    # FR-030, US-7 scenario 4: whoever may upload against an assessment may correct what
-    # it says.
+    # FS-005 FR-030, US-7 scenario 4: whoever may upload against an assessment may
+    # correct what it says.
 
     def _post(self, client, review, **overrides):
         data = {
@@ -557,8 +557,8 @@ class TestReviewUpdateView:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestTheListNarrows:
-    # FR-025, FR-026, US-1 scenario 6: one list, narrowed by the question the reader is
-    # asking.
+    # FS-005 FR-025, FR-026, US-1 scenario 6: one list, narrowed by the question the
+    # reader is asking.
 
     def _listed(self, client, **params):
         response = client.get(reverse("review-list"), params)
@@ -647,7 +647,7 @@ class TestTheListNarrows:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewDecideViewAccess:
-    # T034, plan.md's access table: the decide route is curators only, POST only.
+    # FS-005, plan.md's access table: the decide route is curators only, POST only.
 
     def _approve(self, rf, user, review):
         request = rf.post(
@@ -677,7 +677,7 @@ class TestReviewDecideViewAccess:
     def test_the_uploader_who_is_an_assessor_is_refused_to_approve_their_own(
         self, client, assessor
     ):
-        # T036, spec.md User Story 6 scenario 5: being the assessment's own uploader is
+        # FS-005 User Story 6 scenario 5: being the assessment's own uploader is
         # what grants access to upload and confirm (``can_manage_upload``) — it grants
         # nothing here.
         review = ReviewFactory(uploaded_by=assessor, state=States.AWAITING_DECISION)
@@ -698,9 +698,9 @@ class TestReviewDecideViewAccess:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewDecideViewApprove:
-    # T034, spec.md User Story 6 scenario 2, FR-019, D27: approving a waiting assessment
-    # makes its dataset public through the same mechanism T029's curator confirmation
-    # uses, completes the assessment, and records who decided it and when.
+    # FS-005 FR-019, User Story 6 scenario 2: approving a waiting assessment makes its
+    # dataset public through the same mechanism the curator's confirmation uses,
+    # completes the assessment, and records who decided it and when.
 
     def _approve(self, rf, user, review):
         request = rf.post(
@@ -734,7 +734,7 @@ class TestReviewDecideViewApprove:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewDecideViewSendBack:
-    # T035, spec.md User Story 6 scenario 3, FR-020: sending a waiting assessment back
+    # FS-005 FR-020, User Story 6 scenario 3: sending a waiting assessment back
     # keeps its dataset private, records the comment and who made the decision, and
     # moves it to ``CHANGES_REQUESTED``.
 
@@ -772,7 +772,7 @@ class TestReviewDecideViewSendBack:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewSendBackRoundTrip:
-    # T035, spec.md User Story 6 scenario 4: a sent-back assessment's uploader can
+    # FS-005 User Story 6 scenario 4: a sent-back assessment's uploader can
     # supply a replacement file.
 
     def _send_back(self, rf, user, review, comment="Please fix the coordinates."):
@@ -818,7 +818,7 @@ class TestReviewSendBackRoundTrip:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewUploadViewShowsSendBackComment:
-    # T035, spec.md User Story 6 scenario 3, FR-020: the curator's comment reaches the
+    # FS-005 FR-020, User Story 6 scenario 3: the curator's comment reaches the
     # uploader on the page they use to supply a replacement.
 
     def test_the_comment_is_in_context_when_changes_are_requested(self, rf, assessor):
@@ -849,7 +849,7 @@ class TestReviewUploadViewShowsSendBackComment:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewUploadViewAccess:
-    # T020, plan.md's access table: the upload route is open to the assessment's own
+    # FS-005, plan.md's access table: the upload route is open to the assessment's own
     # uploader or to any Data Curator, and refused to everyone else.
 
     def test_the_uploader_is_granted_entry(self, rf, assessor):
@@ -898,9 +898,9 @@ class TestReviewUploadViewAccess:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewUploadViewChecking:
-    # T020, spec.md User Story 3 scenarios 1-2, FR-008/FR-010: a valid file is checked
+    # FS-005 FR-008/FR-010, User Story 3 scenarios 1-2: a valid file is checked
     # and reported without writing to the dataset, and a non-spreadsheet file is refused
-    # by the form before the reader ever sees it .
+    # by the form before the reader ever sees it.
 
     def _post(self, rf, user, review, file):
         request = rf.post(f"/assessments/{review.pk}/upload/", data={"file": file})
@@ -948,9 +948,9 @@ class TestReviewUploadViewChecking:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewUploadViewHeaderRefusal:
-    # T026, spec.md User Story 4 scenario 3, ADR 0003, research.md "The blocker nothing
-    # here can fix": a file whose header carries the two misspellings the currently
-    # distributed template ships with is refused on the header alone.
+    # FS-005 User Story 4 scenario 3, ADR 0003: a file whose header carries the two
+    # misspellings the currently distributed template ships with is refused on the
+    # header alone.
 
     def _post(self, rf, user, review, file):
         request = rf.post(f"/assessments/{review.pk}/upload/", data={"file": file})
@@ -1005,7 +1005,7 @@ class TestReviewUploadReportTemplateHeaderRefusal:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewUploadReportTemplate:
-    # T021, spec.md User Story 3 scenario 1, FR-009: a clean file's report names how
+    # FS-005 FR-009, User Story 3 scenario 1: a clean file's report names how
     # many sites and determinations would be created, and how many existing records
     # would be updated — asserted against the rendered HTML.
 
@@ -1034,7 +1034,7 @@ class TestReviewUploadReportTemplate:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewUploadReportTemplateFailures:
-    # T025, spec.md User Story 4 scenarios 1-2, FR-011/FR-012: every failure is listed
+    # FS-005 FR-011/FR-012, User Story 4 scenarios 1-2: every failure is listed
     # with its row, the template's own column heading and the reason.
 
     def test_every_failure_is_listed_with_its_row_column_and_reason(self):
@@ -1100,7 +1100,7 @@ class TestReviewUploadReportTemplateFailures:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewUploadViewReupload:
-    # T027, spec.md User Story 4 scenario 4.
+    # FS-005 User Story 4 scenario 4.
 
     def _post(self, rf, user, review, file):
         request = rf.post(f"/assessments/{review.pk}/upload/", data={"file": file})
@@ -1136,7 +1136,7 @@ class TestReviewUploadViewReupload:
         assert submissions[0].file.read() == failing_bytes
 
 
-#: T028, spec.md User Story 4 scenario 5, FR-013: none of these may appear
+#: FS-005 FR-013, User Story 4 scenario 5: none of these may appear
 #: in a rendered failure report — internal field/model names, resource and
 #: widget class names, exception type names, or a traceback marker.
 _DENY_LIST = (
@@ -1165,7 +1165,7 @@ _DENY_LIST = (
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewUploadReportDenyList:
-    # T028, spec.md User Story 4 scenario 5, FR-013: no internal field name, model name
+    # FS-005 FR-013, User Story 4 scenario 5: no internal field name, model name
     # or traceback marker reaches a rendered failure report — asserted against a deny
     # list rather than by inspection.
 
@@ -1233,9 +1233,9 @@ def _submitted_file(review, user, content, name="assessment.xlsx"):
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewConfirmViewAccess:
-    # T022, plan.md's access table: the confirm route is open to the assessment's own
+    # FS-005, plan.md's access table: the confirm route is open to the assessment's own
     # uploader or to any Data Curator, and refused to everyone else, the same as the
-    # upload route .
+    # upload route.
 
     def _confirm(self, rf, user, review):
         request = rf.post(f"/assessments/{review.pk}/confirm/")
@@ -1278,7 +1278,7 @@ class TestReviewConfirmViewAccess:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewConfirmViewWriting:
-    # T022, spec.md User Story 3 scenario 4, FR-008/FR-010, D6: confirming re-runs the
+    # FS-005 FR-008/FR-010, User Story 3 scenario 4: confirming re-runs the
     # check against the stored file and writes in the same transaction.
 
     def _confirm(self, rf, user, review):
@@ -1363,7 +1363,7 @@ class TestReviewConfirmViewWriting:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewConfirmViewIdempotency:
-    # T023, spec.md User Story 3 scenario 6, FR-024, D6: a second confirmation for an
+    # FS-005 FR-024, User Story 3 scenario 6: a second confirmation for an
     # assessment already written is a no-op redirect — the assessment's own state is the
     # idempotency key, so nothing is written twice.
 
@@ -1405,8 +1405,8 @@ class TestReviewConfirmViewIdempotency:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestAssessorDatasetVisibility:
-    # T029/T030, spec.md User Story 5 scenario 1, SC-004: an assessor's confirmation
-    # writes nothing to ``Dataset.visibility`` — the framework's own default (PRIVATE.
+    # FS-005 SC-004, User Story 5 scenario 1: an assessor's confirmation
+    # writes nothing to ``Dataset.visibility`` — the framework's own default (PRIVATE).
 
     def _confirm(self, rf, user, review):
         request = rf.post(f"/assessments/{review.pk}/confirm/")
@@ -1440,7 +1440,7 @@ class TestAssessorDatasetVisibility:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestCuratorConfirmationVisibility:
-    # T029, spec.md User Story 5 scenario 2: a Data Curator's own confirmation makes the
+    # FS-005 User Story 5 scenario 2: a Data Curator's own confirmation makes the
     # dataset public on both of the framework's fields (data-model.md "Dataset
     # visibility") — asserted directly against each, so removing either write fails this
 
@@ -1466,9 +1466,9 @@ class TestCuratorConfirmationVisibility:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewSubmissionsRetrievability:
-    # T031, spec.md User Story 5 scenario 4, SC-005: every file submitted against an
+    # FS-005 SC-005, User Story 5 scenario 4: every file submitted against an
     # assessment stays retrievable, including one superseded by a later submission, and
-    # each stays distinguishable from the current one (``Review.current``.
+    # each stays distinguishable from the current one (``Review.current``).
 
     def _confirm(self, rf, user, review):
         request = rf.post(f"/assessments/{review.pk}/confirm/")
@@ -1507,7 +1507,7 @@ class TestReviewSubmissionsRetrievability:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewConfirmViewIgnoresReviewerColumns:
-    # T032, spec.md User Story 5 scenario 6, FR-023: the template's own reviewer columns
+    # FS-005 FR-023, User Story 5 scenario 6: the template's own reviewer columns
     # (Reviewer_name/Reviewer_comment/Review_date) contribute nothing on confirmation.
 
     def _confirm(self, rf, user, review):

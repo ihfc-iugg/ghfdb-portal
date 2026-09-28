@@ -14,7 +14,7 @@ def dataset(db):
 
 @pytest.fixture
 def official_upload_template_workbook():
-    # The official GHFDB upload template, opened unmodified (US-1, T001).
+    # The official GHFDB upload template, opened unmodified (FS-004 US-1).
     path = (
         Path(__file__).resolve().parents[1]
         / "fixtures"
@@ -291,7 +291,7 @@ def build_child(
 
 
 def build_published_chain(dataset, *, published=True, ghfdb_id=1, **child_kwargs):
-    """Build one complete site -> parent -> child chain (T004)."""
+    """Build one complete site -> parent -> child chain (FS-002)."""
     parent = build_site_and_parent(dataset, published=published, ghfdb_id=ghfdb_id)
     return build_child(
         dataset, parent, published=published, ghfdb_id=ghfdb_id, **child_kwargs
@@ -305,7 +305,7 @@ def published_chain(dataset):
 
 @pytest.fixture
 def published_chains(dataset):
-    # Callable building *n* complete, published record chains (T005, R2).
+    # Callable building *n* complete, published record chains (FS-002).
 
     def build(count):
         return [
@@ -319,7 +319,7 @@ def published_chains(dataset):
 @pytest.fixture
 def unpublished_chain(dataset):
     # One complete chain with no published identifier at either level. This is what
-    # SC-005 is proven against .
+    # FS-002 SC-005 is proven against.
     return build_published_chain(dataset, published=False)
 
 
@@ -350,8 +350,8 @@ def chain_missing_correction(dataset):
 
 @pytest.fixture
 def sites_by_contribution(dataset):
-    # Four sites covering SC-004's contribution shapes. Returns a dict keyed by shape
-    # name: every determination contributing, some, none, and one site with no
+    # Four sites covering FS-002 SC-004's contribution shapes. Returns a dict keyed by
+    # shape name: every determination contributing, some, none, and one site with no
     # determinations at all.
     from heat_flow.vocabularies import ExplorationPurpose
     from research_vocabs.models import Concept
@@ -408,7 +408,7 @@ def staff_client(client, db):
 
 @pytest.fixture
 def constant_query_count(django_assert_num_queries):
-    # Assert a callable's query count does not grow with row count (R2, T010).
+    # Assert a callable's query count does not grow with row count (FS-002).
 
     def assert_constant(build, call, low=2, high=4):
         from django.db import connection

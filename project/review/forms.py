@@ -1,7 +1,7 @@
-"""The assessment description form (T015, plan.md "The pages", spec.md User Story 2).
+"""The assessment description form (FS-005 plan.md "The pages", spec.md User Story 2).
 
 Publication, assessors, dates and an optional title, collected before any
-file is chosen (FR-003 through FR-007).
+file is chosen (FS-005 FR-003 through FR-007).
 """
 
 import json

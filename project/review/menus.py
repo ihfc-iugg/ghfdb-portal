@@ -1,4 +1,4 @@
-"""The assessment workflow's navigation entries (T013, plan.md "Notification").
+"""The assessment workflow's navigation entries (FS-005 plan.md "Notification").
 
 Two entries under one heading. The first leads to the assessments and is
 shown to everyone, because the page it leads to is public. The second is a
@@ -23,7 +23,10 @@ def awaiting_decision_count():
 
 
 class AwaitingDecisionMenuItem(MenuItem):
-    """What is waiting on the signed-in Data Curator (FR-022, D8: no notification framework, this entry and its count are how a curator is told there is something to look at).
+    """What is waiting on the signed-in Data Curator (FS-005 FR-022;
+    docs/adr/0020-a-count-in-the-navigation-is-the-notification.md — no
+    notification framework, this entry and its count are how a curator is
+    told there is something to look at).
 
     Shown to Data Curators alone, because it leads to work only they can do.
     It points at the assessment list narrowed to the one state, which is

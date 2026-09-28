@@ -95,7 +95,7 @@ class TestBuildReportFailures:
     def test_a_scalar_vocabulary_failure_names_the_value_and_the_vocabulary(
         self, dataset
     ):
-        # T010/FR-012: a bare 'invalid value' does not satisfy this — the reason must
+        # FS-004 FR-012: a bare 'invalid value' does not satisfy this — the reason must
         # name both the supplied value and the vocabulary it was checked against.
         from project.ghfdb.importers import import_ghfdb_template
         from project.ghfdb.report import build_report
@@ -134,7 +134,6 @@ class TestBuildReportFailures:
         assert "ConductivityMethod" in failure.reason
 
     def test_a_related_widget_failure_does_not_name_the_model_it_wraps(self, dataset):
-        # T028.
         from project.ghfdb.importers import import_ghfdb_template
         from project.ghfdb.report import build_report
 
@@ -152,7 +151,7 @@ class TestBuildReportFailures:
     def test_a_downstream_parent_resolution_failure_does_not_name_the_model_class(
         self, dataset
     ):
-        # T028, FR-013: when a row's parent failed to import, the child pass's own
+        # FS-004 FR-013: when a row's parent failed to import, the child pass's own
         # ``ForeignKeyWidget`` cannot resolve it and raises Django's own
         # ``DoesNotExist``.
         from project.ghfdb.importers import import_ghfdb_template

@@ -11,9 +11,9 @@ from fairdm.contrib.location.models import Point
 class TestHeatFlowSite:
     @pytest.mark.django_db
     def test_heat_flow_site_persistence(self, dataset):
-        # T005 – HeatFlowSite persists every field FR-001 lists and reads back with
-        # correct values and types, including an optional location FK (FR-001, FR-002,
-        # FR-003, SC-003).
+        # HeatFlowSite persists every field the spec lists and reads back with
+        # correct values and types, including an optional location FK
+        # (FS-001 FR-001, FR-002, FR-003, SC-003).
         from fairdm.contrib.location.models import Point
         from heat_flow.models import HeatFlowSite
 
@@ -58,7 +58,7 @@ class TestHeatFlowSite:
         assert hasattr(site_db.inclination, "magnitude")
         assert float(site_db.inclination.magnitude) == pytest.approx(85.0)
 
-        # "borehole depth" (FR-001) is the inherited GenericHole.length field,
+        # "borehole depth" (FS-001 FR-001) is the inherited GenericHole.length field,
         # exposed under that name via the total_depth_MD property.
         assert hasattr(site_db.length, "magnitude")
         assert float(site_db.length.magnitude) == pytest.approx(1200.0)
@@ -81,7 +81,7 @@ class TestHeatFlowSite:
 class TestHeatFlowSiteLocationUniqueness:
     @pytest.mark.django_db
     def test_second_site_at_an_occupied_pair_is_refused(self, dataset):
-        # T038 – A second HeatFlowSite saved at a coordinate pair another site already
+        # A second HeatFlowSite saved at a coordinate pair another site already
         # holds is refused via save(), and the error names the pair.
         from heat_flow.models import HeatFlowSite
 
@@ -98,7 +98,7 @@ class TestHeatFlowSiteLocationUniqueness:
 
     @pytest.mark.django_db
     def test_second_site_at_an_occupied_pair_is_refused_by_clean(self, dataset):
-        # T045 – The rule also fires from clean(), so the admin reports a duplicate as a
+        # The rule also fires from clean(), so the admin reports a duplicate as a
         # field error rather than a server error.
         from heat_flow.models import HeatFlowSite
 
@@ -111,7 +111,7 @@ class TestHeatFlowSiteLocationUniqueness:
 
     @pytest.mark.django_db
     def test_one_point_row_per_coordinate_pair(self):
-        # T042 – The rule is written against ``location``, not against coordinate
+        # The rule is written against ``location``, not against coordinate
         # values, and that is only equivalent to "one site per coordinate pair" because
         # the framework holds one Point row per pair.
         first, created = Point.objects.get_or_create(
@@ -127,7 +127,7 @@ class TestHeatFlowSiteLocationUniqueness:
 
     @pytest.mark.django_db
     def test_saving_an_existing_site_again_is_accepted(self, dataset):
-        # T039 – Saving an already-stored site again does not trip the uniqueness rule
+        # Saving an already-stored site again does not trip the uniqueness rule
         # against itself.
         from heat_flow.models import HeatFlowSite
 
@@ -144,7 +144,7 @@ class TestHeatFlowSiteLocationUniqueness:
 
     @pytest.mark.django_db
     def test_two_sites_with_no_location_are_both_accepted(self, dataset):
-        # T040 – The rule binds only where a location is set: two sites without
+        # The rule binds only where a location is set: two sites without
         # coordinates are both accepted.
         from heat_flow.models import HeatFlowSite
 
@@ -155,7 +155,7 @@ class TestHeatFlowSiteLocationUniqueness:
 
     @pytest.mark.django_db
     def test_two_sites_a_few_metres_apart_are_both_accepted(self, dataset):
-        # T041 – Coordinates are taken exactly as supplied: two distinct pairs a few
+        # Coordinates are taken exactly as supplied: two distinct pairs a few
         # metres apart are two sites, not one.
         from heat_flow.models import HeatFlowSite
 
@@ -183,8 +183,8 @@ class TestParentHeatFlow:
 
     @pytest.mark.django_db
     def test_parent_children_aggregation(self, dataset, site_fixture, interval_fixture):
-        # T026 – ParentHeatFlow.children reverse relation returns correct counts;
-        # is_relevant filter works (US2 scenarios 1–2).
+        # ParentHeatFlow.children reverse relation returns correct counts;
+        # is_relevant filter works (FS-001 US-2 scenarios 1-2).
         from heat_flow.models import HeatFlow, ParentHeatFlow
 
         parent = ParentHeatFlow.objects.create(
@@ -222,8 +222,8 @@ class TestParentHeatFlow:
     def test_parent_delete_sets_child_null(
         self, dataset, site_fixture, interval_fixture
     ):
-        # T027 – Deleting a ParentHeatFlow sets child.parent_id to NULL via SET_NULL
-        # (US2 scenario 3, SC-004).
+        # Deleting a ParentHeatFlow sets child.parent_id to NULL via SET_NULL
+        # (FS-001 US-2 scenario 3, SC-004).
         from heat_flow.models import HeatFlow, ParentHeatFlow
 
         parent = ParentHeatFlow.objects.create(
@@ -245,7 +245,7 @@ class TestParentHeatFlow:
 
     @pytest.mark.django_db
     def test_unique_parent_per_site_app_level(self, dataset, site_fixture):
-        # T028 – Creating a second ParentHeatFlow for the same HeatFlowSite via .save()
+        # Creating a second ParentHeatFlow for the same HeatFlowSite via .save()
         # raises ValidationError from the app-layer uniqueness guard (H1).
         from heat_flow.models import ParentHeatFlow
 
@@ -271,9 +271,9 @@ class TestParentHeatFlow:
     def test_parent_persists_uncertainty_flag_comment_id_and_quality(
         self, dataset, site_fixture
     ):
-        # T054 – A ParentHeatFlow persists its uncertainty, its heat production
+        # A ParentHeatFlow persists its uncertainty, its heat production
         # correction flag, its comment, its published identifier (ghfdb_id) and its
-        # quality code (FR-010).
+        # quality code (FS-001 FR-010).
         from heat_flow.models import ParentHeatFlow
 
         parent = ParentHeatFlow.objects.create(
@@ -301,8 +301,8 @@ class TestParentHeatFlow:
     def test_parent_save_rejects_wrong_sample(
         self, dataset, interval_fixture, parent_fixture
     ):
-        # T029 – ParentHeatFlow.save() raises ValidationError when sample is a
-        # HeatFlowInterval rather than HeatFlowSite (FR-008a).
+        # ParentHeatFlow.save() raises ValidationError when sample is a
+        # HeatFlowInterval rather than HeatFlowSite (FS-001 FR-008a).
         with pytest.raises(ValidationError):
             parent_fixture.sample = interval_fixture
             parent_fixture.save()

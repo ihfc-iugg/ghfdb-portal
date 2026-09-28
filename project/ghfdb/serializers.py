@@ -8,7 +8,5 @@ from rest_framework import serializers
     examples=[OpenApiExample(name="GHFDB Column Metadata", value={})]
 )
 class MyJSONSchemaSerializer(serializers.Serializer):
-    """Placeholder schema for the GHFDB column metadata endpoint."""
-
     class Meta:
         ref_name = "MyJSONSchema"

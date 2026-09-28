@@ -22,8 +22,8 @@ def assessor(db):
 class _AssessmentStub:
     """A stand-in carrying just the one attribute the state machine reads
     and writes. ``states.py`` operates on any object shaped like this — it
-    does not import ``Review`` — so this task's tests do not depend on
-    ``Review`` growing a ``state`` field, which is T006's job."""
+    does not import ``Review`` — so these tests do not depend on
+    ``Review`` growing a ``state`` field."""
 
     def __init__(self, state):
         self.state = state
@@ -37,8 +37,8 @@ def review_in(state):
 @pytest.mark.review
 class TestConfirmUpload:
     # DESCRIBED or CHANGES_REQUESTED -> AWAITING_DECISION (assessor) or COMPLETE
-    # (curator) — FR-017/FR-018 hold regardless of which of the two origin states the
-    # confirmation started from.
+    # (curator) — FS-005 FR-017/FR-018 hold regardless of which of the two origin
+    # states the confirmation started from.
 
     def test_assessor_confirming_from_described_reaches_awaiting_decision(
         self, assessor
@@ -97,8 +97,8 @@ class TestApprove:
         assert review.state == States.COMPLETE
 
     def test_a_non_curator_cannot_approve(self, assessor):
-        # The one rule T003's acceptance names explicitly: a non-curator must not reach
-        # COMPLETE from AWAITING_DECISION.
+        # The one rule FS-005's acceptance criteria name explicitly: a non-curator must
+        # not reach COMPLETE from AWAITING_DECISION.
         from review.states import IllegalTransition, States, approve
 
         review = review_in(States.AWAITING_DECISION)

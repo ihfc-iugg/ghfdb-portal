@@ -1,4 +1,4 @@
-# Tests for review.models.Review (T006, data-model.md "review.Review"). Fixtures use
+# Tests for review.models.Review (FS-005, data-model.md "review.Review"). Fixtures use
 # direct ORM calls, deliberately (tests/README.md): factories fill fields with generated
 # values, which would hide whether ``uploaded_by`` etc.
 
@@ -76,9 +76,9 @@ class TestReviewWorkflowFields:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestSubmittedFile:
-    # T007, data-model.md "review.SubmittedFile" — a file per submission, not a field on
-    # the assessment, because a curator can send an assessment back and the replacement
-    # must not erase what was rejected.
+    # FS-005, data-model.md "review.SubmittedFile" — a file per submission, not a field
+    # on the assessment, because a curator can send an assessment back and the
+    # replacement must not erase what was rejected.
 
     def test_current_returns_the_most_recent_submission(
         self, literature, dataset, tmp_path, settings

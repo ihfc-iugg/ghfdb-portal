@@ -80,7 +80,7 @@ class TestGHFDBParentModel:
         assert str(verbose_name) != str(ParentHeatFlow._meta.verbose_name)
 
     def test_no_dictionary_accessor(self):
-        # T122 : ``as_dict()`` has no caller and raises on every published column that
+        # ``as_dict()`` has no caller and raises on every published column that
         # exists only as an annotation. Removed.
         from project.ghfdb.models import GHFDBParent
 
@@ -174,7 +174,7 @@ class TestFixtures:
         assert hasattr(missing.sample, "probe_metadata")
 
     def test_sites_by_contribution_covers_the_four_shapes(self, sites_by_contribution):
-        # The four contribution shapes SC-004 names, and one site carrying two
+        # The four contribution shapes FS-002 SC-004 names, and one site carrying two
         # exploration purposes so the many-valued parent column is exercised.
         all_contributing = sites_by_contribution["all_contributing"]
         some_contributing = sites_by_contribution["some_contributing"]
@@ -240,9 +240,9 @@ class TestConstantQueryCount:
 
 
 class TestSuiteHealth:
-    # SC-011 is a statement about the suite, so it needs an assertion about the suite
-    # rather than about any one test. The decorators are found by parsing each module
-    # rather than by searching its text.
+    # FS-002 SC-011 is a statement about the suite, so it needs an assertion about the
+    # suite rather than about any one test. The decorators are found by parsing each
+    # module rather than by searching its text.
 
     #: Import and export's own thirteen expected failures, named rather than
     #: silently swept up. `test_constants.py` carries four of them, moved out

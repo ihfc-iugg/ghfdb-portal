@@ -1,5 +1,5 @@
 # Reconciles the official upload template's header against the canonical column
-# constants (US-1, T001-T006).
+# constants (FS-004 US-1).
 
 import json
 from pathlib import Path
@@ -86,7 +86,7 @@ def _read_header_row(workbook):
 
 
 class TestTemplateColumnsMatchTheCanonicalConstants:
-    # T002/T004: every column the official template carries must be recognised — either
+    # Every column the official template carries must be recognised — either
     # by ``PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS``.
 
     def test_every_template_column_resolves_to_a_canonical_constant(
@@ -110,8 +110,8 @@ class TestTemplateColumnsMatchTheCanonicalConstants:
 
 class TestEveryTemplateColumnIsMappedOrAccepted:
     # Every template column the portal is expected to actually process — that is,
-    # excluding the two ADR 0003 misspellings T006 refuses outright — must be either
-    # mapped by a resource field's ``column_name`` or a member of
+    # excluding the two ADR 0003 misspellings this feature refuses outright — must be
+    # either mapped by a resource field's ``column_name`` or a member of
 
     def test_every_template_column_is_mapped_or_accepted(
         self, official_upload_template_workbook
@@ -130,7 +130,7 @@ class TestEveryTemplateColumnIsMappedOrAccepted:
 
 
 class TestTheHeaderConstantIsTheTemplatesOwnHeader:
-    # FR-017: ``UPLOAD_TEMPLATE_HEADER_ROW`` is the template's header row, in the
+    # FS-004 FR-017: ``UPLOAD_TEMPLATE_HEADER_ROW`` is the template's header row, in the
     # template's order, with only the two ADR 0003 misspellings corrected.
 
     def test_it_matches_the_templates_header_row_corrected(
@@ -181,7 +181,7 @@ class TestTheHeaderConstantIsTheTemplatesOwnHeader:
 
 
 class TestOfficialHeaderRefusal:
-    # T006 (FR-003): a spreadsheet whose header row is not the official template's is
+    # FS-004 FR-003: a spreadsheet whose header row is not the official template's is
     # refused whole, naming the header, rather than partially read.
 
     def test_a_header_with_the_corrected_spellings_validates(self):
@@ -352,7 +352,7 @@ class TestBUG010CanonicalConstants:
             "Ref_IGSN",
         ):
             assert col in GHFDB_COLUMN_ORDER, (
-                f"'{col}' not found in GHFDB_COLUMN_ORDER — check case (BUG-010)"
+                f"'{col}' not found in GHFDB_COLUMN_ORDER — check case (FS-003 BUG-010)"
             )
 
     def test_stale_lowercase_names_absent(self):
@@ -367,5 +367,5 @@ class TestBUG010CanonicalConstants:
         )
         found = [c for c in stale if c in GHFDB_COLUMN_ORDER]
         assert not found, (
-            f"Stale lowercase names still in GHFDB_COLUMN_ORDER: {found} (BUG-010)"
+            f"Stale lowercase names still in GHFDB_COLUMN_ORDER: {found} (FS-003 BUG-010)"
         )

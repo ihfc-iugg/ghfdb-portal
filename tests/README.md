@@ -55,7 +55,7 @@ Two of the vocabularies are registered by hand in that fixture. Registration is 
 
 **Fixtures live in `conftest.py`,** at the narrowest level that serves them. Construction shared by one app's tests goes in that app's `conftest.py`, not repeated in each module.
 
-**Fixtures for the models under test use direct ORM calls, deliberately.** Factories fill fields with generated values, which hides whether a field was required and masks the validation paths several of these tests exist to exercise. Factories are used for supporting objects that are infrastructure rather than subject — `DatasetFactory` is the usual one. `project/heat_flow/factories.py` holds the app's own factories, subclassing FairDM's `SampleFactory` and `MeasurementFactory`.
+**Fixtures for the models under test use direct ORM calls, deliberately.** Factories fill fields with generated values, which hides whether a field was required and masks the validation paths several of these tests exist to exercise. Factories are used for supporting objects that are infrastructure rather than subject — `DatasetFactory` is the usual one. `tests/factories.py` holds one factory per model, subclassing FairDM's `SampleFactory` and `MeasurementFactory`.
 
 ## Running them
 

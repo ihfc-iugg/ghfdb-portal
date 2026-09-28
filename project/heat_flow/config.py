@@ -31,7 +31,7 @@ class IHFCConfig(ModelConfiguration):
 
     The commission's authority and citation are declared once here, as the
     `metadata` the registry reads, and inherited by every subclass so that each
-    model describes and credits itself (FR-030).  Each model's own description
+    model describes and credits itself (FS-001 FR-030).  Each model's own description
     stays on the model's own configuration, which the registry reads directly.
     """
 

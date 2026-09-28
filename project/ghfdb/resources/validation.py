@@ -4,9 +4,6 @@ Both import resources set ``sample``, ``dataset`` and ``name`` in
 ``before_save_instance()``, which django-import-export runs *after*
 ``validate_instance()``. Validating those three fields at validation time
 would refuse every row on relations the resource is about to set correctly.
-
-References:
-    - ``specs/004-import-upload-template/decisions.md`` D15
 """
 
 from django.core.exceptions import ValidationError

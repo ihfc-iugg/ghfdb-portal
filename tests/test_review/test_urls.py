@@ -1,6 +1,6 @@
-# Tests for review.urls (T014, plan.md "The pages"). review-list's production wiring
-# landed in T011's commit, because the list view's own access-control tests need a
-# resolvable URL to exercise through the test client (see T011's completion notes).
+# Tests for review.urls (FS-005, plan.md "The pages"). review-list's production
+# wiring landed alongside the list view, because its own access-control tests need a
+# resolvable URL to exercise through the test client.
 
 import inspect
 
@@ -67,8 +67,8 @@ class TestReviewUpdateRoute:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestTheDecisionQueueHasNoRouteOfItsOwn:
-    # The waiting list is the assessment list narrowed to one state (FR-025), so it is a
-    # filter rather than a page.
+    # The waiting list is the assessment list narrowed to one state (FS-005 FR-025), so
+    # it is a filter rather than a page.
 
     def test_no_route_is_registered_under_that_name(self):
         from django.urls import NoReverseMatch
@@ -88,7 +88,7 @@ class TestTheDecisionQueueHasNoRouteOfItsOwn:
 
 @pytest.mark.review
 class TestReviewDecideRoute:
-    # T037, plan.md's access table: the decide route resolves by the name plan.md's
+    # FS-005, plan.md's access table: the decide route resolves by the name plan.md's
     # access table gives it.
 
     def test_review_decide_resolves_by_name_to_the_documented_path(self):
@@ -102,11 +102,11 @@ class TestReviewDecideRoute:
 
 @pytest.mark.review
 class TestNoRouteWritesWithoutChecking:
-    # T024, spec.md SC-002.
+    # FS-005 SC-002.
 
     #: Symbols that write GHFDB rows directly. A view referencing one of
     #: these, rather than calling ``import_ghfdb_template``, writes without
-    #: the check FR-008 requires.
+    #: the check FS-005 FR-008 requires.
     _WRITE_CAPABLE_SYMBOLS = (
         "GHFDBParentImportResource",
         "GHFDBChildImportResource",

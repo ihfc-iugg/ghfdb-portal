@@ -67,8 +67,8 @@ def concepts_of(model, field_name):
 class TestHeatFlowFactories:
     @pytest.mark.django_db
     def test_all_factories_produce_saved_instances(self):
-        # T076 – Each of the 8 factory classes creates a saved instance with a non-null
-        # PK in a single call (FR-035).
+        # FS-001 FR-035: each of the 8 factory classes creates a saved instance with a
+        # non-null PK in a single call.
         from tests.factories import (
             HeatFlowCorrectionFactory,
             HeatFlowFactory,
@@ -187,8 +187,8 @@ class TestFactoriesCreateRequiredRelations:
 
 
 class TestFactoryVocabularyPopulation:
-    # T078/T081 — factories populate controlled-vocabulary fields with concepts drawn
-    # from each field's own vocabulary.
+    # Factories populate controlled-vocabulary fields with concepts drawn from each
+    # field's own vocabulary.
 
     @pytest.mark.django_db
     def test_heat_flow_site_scalar_concept_fields_are_members_of_their_vocabularies(

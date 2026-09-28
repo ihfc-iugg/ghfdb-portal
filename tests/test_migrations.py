@@ -36,7 +36,7 @@ class TestMigrationState:
 
 
 class TestGHFDBChildProxyMigrations:
-    # T029 (FR-001): the migrations recording ``GHFDBChild`` touch no table. A proxy
+    # FS-002 FR-001: the migrations recording ``GHFDBChild`` touch no table. A proxy
     # model adds no table, so an ``AddField``, ``AlterField`` or ``RemoveField``
     # operation in either migration would be the defect.
 
@@ -79,7 +79,7 @@ class TestGHFDBChildProxyMigrations:
 
 
 class TestGHFDBParentProxyMigrations:
-    # T057 (FR-001): the migration recording ``GHFDBParent`` is a bare proxy
+    # FS-002 FR-001: the migration recording ``GHFDBParent`` is a bare proxy
     # ``CreateModel`` and no other operation. A proxy adds no table, so an ``AddField``
     # or ``AlterField`` naming ``GHFDBParent`` would be the defect.
 

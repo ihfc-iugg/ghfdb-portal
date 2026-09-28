@@ -149,9 +149,9 @@ def _corrected_official_template_bytes() -> bytes:
 
 @pytest.mark.django_db
 class TestTheHeaderRefusesABeforeAnythingIsRead:
-    # FR-003/FR-010: the entry point refuses a file whose header is not the official
-    # template's, before it reads a row and before it opens the transaction, so nothing
-    # from a refused file lands.
+    # FS-004 FR-003, FR-010: the entry point refuses a file whose header is not the
+    # official template's, before it reads a row and before it opens the transaction,
+    # so nothing from a refused file lands.
 
     def test_a_file_missing_a_template_column_is_refused_and_the_column_named(
         self, dataset
@@ -211,7 +211,7 @@ class TestTheHeaderRefusesABeforeAnythingIsRead:
     def test_the_official_template_itself_is_read(self, dataset):
         # The refusal is narrow enough to let the real thing through: a corrected copy
         # of the official template, header row and row label cell exactly as the
-        # template carries them, is read rather than refused (FR-017).
+        # template carries them, is read rather than refused (FS-004 FR-017).
         from project.ghfdb.importers import import_ghfdb_template
 
         # Returning at all is the assertion: a refused header raises before a
@@ -294,8 +294,8 @@ class TestImportGHFDBTemplate:
         assert HeatFlow.objects.filter(ghfdb_id=2).exists()
 
     def test_refuses_when_no_dataset_is_named(self, dataset):
-        # FR-002 holds through the entry point too: a dataset existing in the database
-        # is not enough, the caller must name it.
+        # FS-004 FR-002 holds through the entry point too: a dataset existing in the
+        # database is not enough, the caller must name it.
         from heat_flow.models import HeatFlow, ParentHeatFlow
 
         from project.ghfdb.importers import import_ghfdb_template
@@ -420,7 +420,7 @@ class TestGHFDBTemplateRefusedWhole:
     def test_an_empty_mandatory_model_field_names_its_row_and_column_and_refuses_the_file(
         self, dataset
     ):
-        # T026a — FR-011's fourth fault type: a row leaving a mandatory model field
+        # FS-004 FR-011's fourth fault type: a row leaving a mandatory model field
         # empty.
         from django.utils.translation import gettext as _
         from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
@@ -575,7 +575,7 @@ class TestControlledVocabularyDecides:
     def test_a_value_the_templates_sheet_lists_but_the_portal_does_not_hold_is_still_refused(
         self, dataset, official_upload_template_workbook
     ):
-        # FR-014, stated backwards on purpose: a value straight from the official
+        # FS-004 FR-014, stated backwards on purpose: a value straight from the official
         # template's own 'controlled vocabulary' sheet — the sheet lists it, the portal
         # holds no concept for it — still refuses the file.
         from heat_flow import vocabularies
@@ -618,9 +618,9 @@ class TestControlledVocabularyDecides:
     def test_a_value_the_portal_holds_but_the_templates_sheet_does_not_list_is_accepted(
         self, dataset, official_upload_template_workbook
     ):
-        # the other half of FR-013/FR-014: a value the portal holds a concept for, which
-        # the template's own sheet does not list, is accepted and the row lands. The
-        # value is read from the real fixture's sheet, the same way T029's is.
+        # The other half of FS-004 FR-013/FR-014: a value the portal holds a concept
+        # for, which the template's own sheet does not list, is accepted and the row
+        # lands. The value is read from the real fixture's sheet.
         from heat_flow import vocabularies
         from heat_flow.models import HeatFlow
         from research_vocabs.models import Concept
@@ -700,12 +700,12 @@ class TestControlledVocabularyDecides:
 
 @pytest.mark.django_db
 class TestGHFDBTemplateRepeatImport:
-    # T032/T033 — US-6: re-importing a file the dataset already holds updates what is
+    # FS-004 US-6: re-importing a file the dataset already holds updates what is
     # there instead of duplicating it.
 
     def test_reimporting_an_unchanged_file_leaves_counts_identical(self, dataset):
-        # FR-016: the same file imported twice produces the same number of sites and
-        # determinations both times, not double the second time.
+        # FS-004 FR-016: the same file imported twice produces the same number of sites
+        # and determinations both times, not double the second time.
         from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
 
         from project.ghfdb.importers import import_ghfdb_template
@@ -901,8 +901,7 @@ class TestARowInTheShapeARealSubmissionCarries:
 @pytest.mark.django_db
 class TestCheckOnlyMode:
     # The checking mode both passes run for real inside the outer transaction, then the
-    # transaction is always rolled back (specs/004-import-upload-template/decisions.md
-    # D16).
+    # transaction is always rolled back (FS-004).
 
     def test_a_clean_multi_site_file_reports_no_failures_and_writes_nothing(
         self, dataset
@@ -935,8 +934,8 @@ class TestCheckOnlyMode:
     def test_a_clean_multi_site_file_reports_what_would_have_been_created(
         self, dataset
     ):
-        # FR-009: the report still names what would have been written, even though
-        # nothing was.
+        # FS-004 FR-009: the report still names what would have been written, even
+        # though nothing was.
         from project.ghfdb.importers import import_ghfdb_template
 
         row1 = dict(ROW)

@@ -129,7 +129,7 @@ class HeatFlowSite(GenericHole, AbstractGeoDepthInterval, GenericEarthSample):
         ]
 
     def _check_location_uniqueness(self):
-        """Refuse a location already held by another HeatFlowSite (FR-004, FR-005).
+        """Refuse a location already held by another HeatFlowSite (FS-001 FR-004, FR-005).
 
         Binds only where ``location`` is set, and never rejects a site
         against itself.

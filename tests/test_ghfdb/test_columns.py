@@ -1,4 +1,4 @@
-# Tests for the published-column mapping (``project/ghfdb/columns.py``). T063 to T070.
+# Tests for the published-column mapping (``project/ghfdb/columns.py``). FS-002.
 
 import pytest
 from django.contrib.admin.utils import label_for_field
@@ -22,7 +22,7 @@ class TestPublishedColumns:
         assert missing == []
 
     def test_a_column_the_map_does_not_cover_is_refused_and_named(self):
-        # T064 (SC-007): the gate is proven against the defect it exists to catch, not
+        # FS-002 SC-007: the gate is proven against the defect it exists to catch, not
         # only against the passing case.
         with pytest.raises(ValueError) as excinfo:
             ColumnDisplay.list_display_for([*CHILD_COLUMNS, "q_unmapped"])
@@ -53,7 +53,7 @@ class TestPublishedColumns:
         assert ColumnDisplay.build("qc")(Row()) == 42.0
 
     def test_quality_child_and_quality_parent_each_read_their_own_annotation(self):
-        # T067, revised under F12: ``quality_child`` and ``quality_parent`` both trace
+        # Revised under F12: ``quality_child`` and ``quality_parent`` both trace
         # back to the one ``quality`` field.
 
         class Row:
@@ -72,7 +72,7 @@ class TestPublishedColumns:
     def test_a_many_valued_column_joins_its_labels_and_issues_no_query_when_prefetched(
         self, django_assert_num_queries, sites_by_contribution
     ):
-        # R1 group three, and the N+1 this feature exists to avoid.
+        # FS-002 R1 group three, and the N+1 this feature exists to avoid.
         from project.ghfdb.models import GHFDBParent
 
         site = sites_by_contribution["all_contributing"]
@@ -91,7 +91,7 @@ class TestPublishedColumns:
 
     def test_a_many_valued_column_renders_empty_when_the_path_breaks(self):
         # A missing relationship anywhere along the path renders empty rather than
-        # raising, which is FR-006 applied to the changelist.
+        # raising, which is FS-002 FR-006 applied to the changelist.
 
         class Row:
             thermal_gradient = None
@@ -99,8 +99,8 @@ class TestPublishedColumns:
         assert ColumnDisplay.build("T_method_top")(Row()) == ""
 
     def test_the_columns_nothing_resolves_read_the_annotation_managers_py_sets(self):
-        # T069, revised under F12: ``publication_reference`` and ``data_reference`` are
-        # present and empty by decision (R4, D3), but that decision is made once.
+        # Revised under F12: ``publication_reference`` and ``data_reference`` are
+        # present and empty by decision (FS-002), but that decision is made once.
 
         class Row:
             publication_reference = ""
@@ -141,7 +141,7 @@ class TestPublishedColumns:
         assert ColumnDisplay.build("quality_child").admin_order_field == "quality_child"
         # F12: Ref_IGSN is in the SCALAR group like any other scalar column,
         # so it stays sortable — first because sorting on a column that was
-        # always "" was harmless, and now (D26) because it is a real value.
+        # always "" was harmless, and now (FS-004) because it is a real value.
         assert ColumnDisplay.build("Ref_IGSN").admin_order_field == "Ref_IGSN"
 
         for unsortable in ("q_method", "corr_IS_flag"):
@@ -166,7 +166,7 @@ class TestBuiltCallablesAvoidTheFieldNameTrap:
     def test_a_column_named_after_a_model_field_still_renders_its_published_heading(
         self,
     ):
-        # T077. ``expedition`` and ``c_comment`` are fields on the determination model
+        # ``expedition`` and ``c_comment`` are fields on the determination model
         # whose ``verbose_name`` differs from the published column name.
         from django.contrib import admin
 

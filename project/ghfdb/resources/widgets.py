@@ -46,7 +46,7 @@ def _validate_concept(values, vocabulary):
 
 
 def normalize_vocab_token(raw: str) -> str:
-    """Strip surrounding square brackets and lowercase a vocabulary token (FR-016).
+    """Strip surrounding square brackets and lowercase a vocabulary token (FS-003 FR-016).
 
     GHFDB upload templates wrap vocabulary cell values in square brackets,
     e.g. '[Onshore (continental)]'. This helper normalises such tokens so they
@@ -331,9 +331,8 @@ class RelatedModelWidget(Widget):
         ``after_save_instance``, which is where every caller of this method
         invokes it) — a raised error here still reaches ``import_row``'s own
         exception handling the same way a ``before_save_instance`` error
-        does (D17, ``specs/004-import-upload-template/decisions.md``), so it
-        refuses the file the same as any other located fault rather than
-        being lost after the instance is already saved.
+        does, so it refuses the file the same as any other located fault
+        rather than being lost after the instance is already saved.
         """
         if instance is None or instance.pk is None or self._last_row is None:
             return

@@ -49,7 +49,7 @@ class TestIsDataAssessor:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestCanManageUpload:
-    # T020, plan.md "The pages": the upload and confirm routes are open to the
+    # FS-005, plan.md "The pages": the upload and confirm routes are open to the
     # assessment's own uploader, or to any Data Curator, and refused to everyone else —
     # including a signed-in Data Assessor who did not create the assessment.
 

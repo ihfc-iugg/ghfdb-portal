@@ -1,4 +1,4 @@
-"""Turn a ``GHFDBImportOutcome`` into a checking report (T009, FR-009, FR-011, FR-012).
+"""Turn a ``GHFDBImportOutcome`` into a checking report (FS-005 FR-009, FR-011, FR-012).
 
 Counts separate sites from determinations and created from updated
 records, and each failure carries its row number, the template's own
@@ -37,7 +37,7 @@ _LEADING_COLUMN_PREFIX = re.compile(r"^([A-Za-z][A-Za-z0-9_]*): ")
 #: ``RelatedModelWidget.clean()``/``set_m2m_relations()`` (widgets.py)
 #: prefixes a sub-field's error with the Django model it is building —
 #: ``"HeatFlowSite: Column 'environment': ..."`` — to help a developer
-#: place the fault. That model name is internal (FR-013) and never reaches
+#: place the fault. That model name is internal (FS-005 FR-013) and never reaches
 #: the report: the useful part of the message already starts at the
 #: embedded ``Column '...'`` marker, so everything before it is dropped.
 _DJANGO_DOES_NOT_EXIST = re.compile(
@@ -46,7 +46,7 @@ _DJANGO_DOES_NOT_EXIST = re.compile(
 
 
 def _sanitize_reason(message: str) -> str:
-    """Strip an internal Django model or class name out of *message* (FR-013).
+    """Strip an internal Django model or class name out of *message* (FS-005 FR-013).
 
     Applies before *message* becomes a ``RowFailure.reason``.
 

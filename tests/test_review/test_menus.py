@@ -1,4 +1,4 @@
-# Tests for review.menus (T013, plan.md "Notification").
+# Tests for review.menus (FS-005, plan.md "Notification").
 
 import pytest
 from django.contrib.auth.models import AnonymousUser

@@ -1,6 +1,6 @@
 """The callable entry point for importing one GHFDB upload template file.
 
-FR-001: importing is callable from code, taking one file and one dataset
+FS-004 FR-001: importing is callable from code, taking one file and one dataset
 named by the caller — a script or management command has no admin request
 to hand the resources, so this is the surface that does not need one.
 
@@ -61,16 +61,15 @@ def import_ghfdb_template(
     Runs the parent pass — sites and their parent heat flow values — before
     the child pass — the determinations beneath them — since a child row
     resolves its parent from the site the parent pass has already created
-    (plan.md "Sequencing"). Each pass gets its own copy of the parsed rows:
+    (FS-004 plan.md "Sequencing"). Each pass gets its own copy of the parsed rows:
     the parent resource's ``before_import`` deduplicates rows in place, and
     the child pass needs every row that dedup would otherwise have removed.
     Both passes run inside one transaction and are wired to *dataset*
     through the ``fairdm_dataset`` keyword every resource hook reads.
 
-    *check_only* (US-3, FR-008/FR-010): when true, both passes still run for
+    *check_only* (US-3, FS-004 FR-008/FR-010): when true, both passes still run for
     real — nothing here calls either resource with ``dry_run=True``. Doing
-    so was tried and rejected (specs/004-import-upload-template/decisions.md
-    D16): ``import_data()`` wraps each resource in its own savepoint, and a
+    so was tried and rejected: ``import_data()`` wraps each resource in its own savepoint, and a
     literal ``dry_run=True`` rolls that savepoint back at the end of that
     same call, before the next pass starts — so the child pass, which
     resolves its parent through ``ID_parent`` and coordinates, can no longer
@@ -86,9 +85,9 @@ def import_ghfdb_template(
         content = file.read() if hasattr(file, "read") else file
         rows = GHFDBImportFormat().create_dataset(content)
 
-    # FR-003: a file that is not the official template is refused on its
+    # FS-004 FR-003: a file that is not the official template is refused on its
     # header, before a single row is read and before the transaction opens,
-    # so nothing is written for it (FR-010).
+    # so nothing is written for it (FS-004 FR-010).
     validate_official_header(list(rows.headers or []))
 
     with transaction.atomic():
@@ -111,10 +110,10 @@ def import_ghfdb_template(
             # (rollback_on_validation_errors above). This covers the cases
             # that cannot: one pass faults while the other has nothing
             # wrong with it and would otherwise commit its rows on its own
-            # (FR-010) — both passes share this transaction, so marking it
+            # (FS-004 FR-010) — both passes share this transaction, so marking it
             # here discards both once either one is at fault — and the
             # checking mode, which must write nothing at all regardless of
-            # whether either pass found a fault (FR-010, D16 above).
+            # whether either pass found a fault (FS-004 FR-010).
             transaction.set_rollback(True)
 
     return outcome

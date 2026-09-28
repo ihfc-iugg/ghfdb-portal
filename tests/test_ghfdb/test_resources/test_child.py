@@ -101,9 +101,6 @@ def import_parents(dataset):
     resource.import_data(ds, dry_run=False, raise_errors=True, fairdm_dataset=dataset)
 
 
-# T030 Tests
-
-
 @pytest.mark.django_db
 class TestGHFDBChildImportResourceImport:
     def test_import_creates_heatflow(self, dataset):
@@ -383,9 +380,9 @@ class TestGHFDBChildImportResourceImport:
 
 @pytest.mark.django_db
 class TestGHFDBChildImportAcceptsUnstoredColumns:
-    # FR-009: the reviewer columns are accepted without being stored, and their presence
-    # is not an error. ``ID`` is a declared child field (``ghfdb_id``), exercised
-    # throughout this file; this covers the three reviewer columns specifically.
+    # FS-003 FR-009: the reviewer columns are accepted without being stored, and their
+    # presence is not an error. ``ID`` (``ghfdb_id``) is covered elsewhere; this covers
+    # the three reviewer columns specifically.
 
     def test_reviewer_columns_do_not_cause_an_error(self, dataset):
         # Reviewer_name/Reviewer_comment/Review_date are not CHILD_COLUMNS fields, so
@@ -459,7 +456,7 @@ class TestGHFDBChildProbeMetadata:
 
 @pytest.mark.django_db
 class TestGHFDBChildTemplateNoIdRegression:
-    # T068/T030 regression coverage for standard uploads without ID columns.
+    # Regression coverage for standard uploads without ID columns.
 
     def test_no_id_rows_reimport_upserts_via_natural_key(self, dataset):
         from heat_flow.models import HeatFlow
@@ -722,7 +719,7 @@ class TestGHFDBChildColumnOrderRegression:
         )
 
 
-# T093 — BUG-010: case-sensitive column-name ordering regression
+# FS-003 BUG-010: case-sensitive column-name ordering regression
 
 
 class TestBUG010ColumnOrderCaseSensitivity:
@@ -763,7 +760,7 @@ class TestBUG010ColumnOrderCaseSensitivity:
                 assert idx < sentinel_idx, (
                     f"Field '{mixed_case_col}' is at position {idx} but sentinel '{late_sentinel}' "
                     f"is at {sentinel_idx}. Mixed-case field must come before '{late_sentinel}' "
-                    f"according to GHFDB_COLUMN_ORDER (BUG-010 T098)."
+                    f"according to GHFDB_COLUMN_ORDER."
                 )
 
     def test_t_grad_mean_not_last(self):
@@ -787,7 +784,7 @@ class TestBUG010ColumnOrderCaseSensitivity:
         sentinel_idx = col_names.index(late_sentinel)
         assert idx < sentinel_idx, (
             f"'T_grad_mean' sorted to position {idx} (after sentinel '{late_sentinel}' at {sentinel_idx}). "
-            f"Lookup dict must lowercase keys: {{col.lower(): i for i, col in enumerate(GHFDB_COLUMN_ORDER)}} (BUG-010)"
+            f"Lookup dict must lowercase keys: {{col.lower(): i for i, col in enumerate(GHFDB_COLUMN_ORDER)}} (FS-003 BUG-010)"
         )
 
 
@@ -819,8 +816,8 @@ class TestGHFDBChildPrivateDatasetRegression:
 
 @pytest.mark.django_db
 class TestGHFDBChildMultipleDeterminationsPerSite:
-    # US-3: rows describing two determinations at one coordinate pair produce two
-    # determinations beneath one site, each with its own depth interval (FR-007).
+    # FS-003 US-3: rows describing two determinations at one coordinate pair produce
+    # two determinations beneath one site, each with its own depth interval (FR-007).
 
     def test_two_child_rows_produce_two_determinations_with_distinct_intervals(
         self, dataset
@@ -867,8 +864,8 @@ class TestGHFDBChildMultipleDeterminationsPerSite:
 
 @pytest.mark.django_db
 class TestGHFDBChildSubMeasurementsPerDetermination:
-    # US-3: gradient, conductivity, correction and probe values land against their own
-    # determination, using the template's real column names (T_grad_*, tc_*,
+    # FS-003 US-3: gradient, conductivity, correction and probe values land against
+    # their own determination, using the template's real column names (T_grad_*, tc_*,
     # corr_*_flag, probe_*) rather than invented ones (FR-007).
 
     def test_two_determinations_keep_distinct_sub_measurement_values(self, dataset):
@@ -938,8 +935,8 @@ class TestGHFDBChildSubMeasurementsPerDetermination:
 
 @pytest.mark.django_db
 class TestGHFDBChildRelevantChildFlag:
-    # US-3: `relevant_child` names exactly the children that fed the parent value, and
-    # no others (FR-006).
+    # FS-003 US-3: `relevant_child` names exactly the children that fed the parent
+    # value, and no others (FR-006).
 
     def test_relevant_child_marks_exactly_the_contributing_children(self, dataset):
         import_parents(dataset)
@@ -1033,7 +1030,7 @@ VALID_IGSN = "10.60516/AU1101"
 @pytest.mark.django_db
 class TestGHFDBChildImportResourceIGSN:
     # A child row's ``Ref_IGSN`` becomes a ``SampleIdentifier`` on that row's interval
-    # (D26, specs/004-import-upload-template/decisions.md).
+    # (FS-004).
 
     def test_a_valid_igsn_is_stored_on_the_intervals_identifiers(self, dataset):
         import_parents(dataset)
@@ -1096,7 +1093,7 @@ class TestGHFDBChildImportResourceIGSN:
 
     def test_reimporting_the_same_row_does_not_fail_or_duplicate(self, dataset):
         # The reader upserts HeatFlow by ghfdb_id, but before_save_instance rebuilds a
-        # fresh HeatFlowInterval on every save (T035/D18), so the interval a re-imported
+        # fresh HeatFlowInterval on every save (FS-004), so the interval a re-imported
         # row resolves to is never the same row twice.
         import_parents(dataset)
         from heat_flow.models import HeatFlow

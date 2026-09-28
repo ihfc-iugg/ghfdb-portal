@@ -1,4 +1,4 @@
-"""Narrowing the assessment list (FR-025).
+"""Narrowing the assessment list (FS-005 FR-025).
 
 One list serves every question asked of the assessments — a reader looking
 for a publication, an assessor looking at their own, a curator looking at

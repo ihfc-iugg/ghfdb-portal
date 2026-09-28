@@ -1,4 +1,4 @@
-"""Assessment upload workflow routes (T011/T014/T019/T046/T047, plan.md "The pages").
+"""Assessment upload workflow routes (FS-005 plan.md "The pages").
 
 Three pages and three actions. The list is the way in, an assessment's own
 page is where everything about one of them is reached, and uploading keeps

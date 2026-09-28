@@ -418,7 +418,7 @@ class HeatFlowCorrection(django_models.Model):
             models.Index(fields=["status"]),
         ]
 
-    # Valid status values per correction type (T027).
+    # Valid status values per correction type.
     VALID_STATUS_FOR_TYPE: dict[str, set[str]] = {
         "IS": {
             "present_corrected",

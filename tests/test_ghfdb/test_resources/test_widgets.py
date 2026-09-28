@@ -4,7 +4,7 @@ import pytest
 
 from tests.factories import HeatFlowIntervalFactory, HeatFlowSiteFactory
 
-# ---- T027: Leaf widget tests -----------------------------------------------
+# ---- Leaf widget tests -------------------------------------------------------
 
 
 class TestConceptWidget:
@@ -148,7 +148,7 @@ class TestYesNoWidget:
         assert widget.clean("no", row={}) is False
 
 
-# ---- T028: RelatedModelWidget and subclass tests ---------------------------
+# ---- RelatedModelWidget and subclass tests ------------------------------------
 
 
 class TestRelatedModelWidget:
@@ -403,13 +403,12 @@ class TestConductivityWidget:
         assert isinstance(result, IntervalConductivity)
 
 
-# ---- T072: FR-016 Vocabulary normalisation regression tests ----------------
+# ---- FS-003 FR-016 Vocabulary normalisation regression tests ------------------
 
 
 class TestBlankCellSentinel:
     # The corpus of completed submissions writes ``-`` for "nothing entered here yet" in
-    # reference columns filled in during assessment, such as ``Ref_IGSN`` (D26,
-    # specs/004-import-upload-template/decisions.md).
+    # reference columns filled in during assessment, such as ``Ref_IGSN`` (FS-004).
 
     def test_none_empty_whitespace_and_hyphen_are_blank(self):
         from project.ghfdb.resources.widgets import is_blank_cell
@@ -488,7 +487,7 @@ class TestVocabNormalisation:
         assert "[COMPLETELY_INVALID]" in str(exc_info.value)
 
 
-# ---- T079: BUG-007/BUG-008 numeric cell value regression tests -------------
+# ---- BUG-007/BUG-008 numeric cell value regression tests ----------------------
 
 
 class TestNumericCellInputGuards:

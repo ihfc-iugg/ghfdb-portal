@@ -86,7 +86,7 @@ class TestGHFDBChildQuerySet:
 
 
 class TestChildExportQuerySet:
-    # ``for_export()``'s complete row. R3: fifteen published child columns are
+    # ``for_export()``'s complete row. FS-002 R3: fifteen published child columns are
     # many-valued and cannot be annotated, so the complete row is read after
     # ``for_export()`` rather than after ``as_ghfdb_flat()`` alone.
 
@@ -106,7 +106,7 @@ class TestChildExportQuerySet:
     def test_every_published_child_column_resolves_on_the_complete_row(
         self, published_chain
     ):
-        # T024 (SC-001): every CHILD_COLUMNS entry — scalar, many-valued and the two
+        # FS-002 SC-001: every CHILD_COLUMNS entry — scalar, many-valued and the two
         # that resolve to nothing — is readable on the row after ``for_export()``.
         from project.ghfdb.constants import CHILD_COLUMNS
         from project.ghfdb.models import GHFDBChild
@@ -135,7 +135,7 @@ class TestChildExportQuerySet:
     def test_many_valued_columns_read_without_further_queries(
         self, django_assert_num_queries, published_chains
     ):
-        # T026 (FR-007): after the queryset is evaluated, reading every many-valued
+        # FS-002 FR-007: after the queryset is evaluated, reading every many-valued
         # column on every row costs nothing further.
         from project.ghfdb.models import GHFDBChild
 
@@ -150,8 +150,8 @@ class TestChildExportQuerySet:
 
     @pytest.mark.django_db
     def test_columns_nothing_resolves_are_present_and_empty(self, published_chain):
-        # T027 (FR-006): publication_reference and data_reference are on the row and
-        # empty, per R4 and D3. ``Ref_IGSN`` moved out of this group under D26 — see
+        # FS-002 FR-006: publication_reference and data_reference are on the row and
+        # empty. ``Ref_IGSN`` moved out of this group under FS-004 — see
         # ``TestRefIgsnAnnotation``.
         from project.ghfdb.models import GHFDBChild
 
@@ -162,9 +162,8 @@ class TestChildExportQuerySet:
 
 
 class TestRefIgsnAnnotation:
-    # ``Ref_IGSN`` resolves through the interval's sample identifier relationship (D26,
-    # specs/004-import-upload-template/decisions.md) rather than the constant empty
-    # string it used to be.
+    # ``Ref_IGSN`` resolves through the interval's sample identifier relationship
+    # (FS-004) rather than the constant empty string it used to be.
 
     @pytest.mark.django_db
     def test_empty_when_the_interval_carries_no_identifier(self, published_chain):
@@ -208,7 +207,7 @@ class TestGHFDBChildManager:
     def test_determination_without_a_published_identifier_is_absent(
         self, unpublished_chain
     ):
-        # T013 (FR-002, SC-005): the unpublished chain's determination is absent from
+        # FS-002 FR-002, SC-005: the unpublished chain's determination is absent from
         # ``GHFDBChild.objects``, and present on ``HeatFlow.objects`` so the fixture is
         # proven to exist.
         from heat_flow.models import HeatFlow
@@ -222,9 +221,9 @@ class TestGHFDBChildManager:
     def test_scope_survives_filtering_ordering_counting_slicing_and_chaining(
         self, published_chain, unpublished_chain
     ):
-        # T014 (FR-002, FR-003, SC-005): the published-only restriction holds after each
-        # operation, and after two chained together. R6 records that the manager alone
-        # proves less than it appears to.
+        # FS-002 FR-002, FR-003, SC-005: the published-only restriction holds after each
+        # operation, and after two chained together. FS-002 R6 records that the manager
+        # alone proves less than it appears to.
         from project.ghfdb.models import GHFDBChild
 
         unpublished_pk = unpublished_chain.pk
@@ -249,7 +248,7 @@ class TestGHFDBChildManager:
     def test_ordinary_operations_match_the_model_it_stands_in_for(
         self, published_chain, unpublished_chain
     ):
-        # T015 (FR-003): filtering, ordering, counting and slicing through the proxy
+        # FS-002 FR-003: filtering, ordering, counting and slicing through the proxy
         # return what the same operations return on ``HeatFlow`` restricted to published
         # rows.
         from heat_flow.models import HeatFlow
@@ -294,8 +293,8 @@ class TestChildFlattening:
         }
     )
 
-    # Published CHILD_COLUMNS with no data behind them at all (R4, D3).
-    # ``Ref_IGSN`` moved out of this group under D26.
+    # Published CHILD_COLUMNS with no data behind them at all (FS-002).
+    # ``Ref_IGSN`` moved out of this group under FS-004.
     NOTHING_RESOLVES_CHILD_COLUMNS = frozenset(
         {"publication_reference", "data_reference"}
     )
@@ -304,7 +303,7 @@ class TestChildFlattening:
     def test_every_scalar_published_child_column_resolves_on_every_row(
         self, published_chains
     ):
-        # T016 (FR-004): every CHILD_COLUMNS entry that is neither many-valued nor one
+        # FS-002 FR-004: every CHILD_COLUMNS entry that is neither many-valued nor one
         # of the two that resolve to nothing is readable, without error, on every row.
         from project.ghfdb.constants import CHILD_COLUMNS
         from project.ghfdb.models import GHFDBChild
@@ -325,7 +324,7 @@ class TestChildFlattening:
     def test_the_sites_representative_value_is_restated_on_every_row(
         self, published_chain
     ):
-        # T017 (FR-004): the parent/site block reaches the child row, because the
+        # FS-002 FR-004: the parent/site block reaches the child row, because the
         # published file restates it per row.
         from project.ghfdb.models import GHFDBChild
 
@@ -360,7 +359,7 @@ class TestChildFlattening:
     def test_a_row_without_a_gradient_is_returned_with_those_columns_empty(
         self, chain_without_gradient
     ):
-        # T019 (FR-006, SC-006): a missing gradient empties its own columns without
+        # FS-002 FR-006, SC-006: a missing gradient empties its own columns without
         # dropping the row or raising.
         from project.ghfdb.models import GHFDBChild
 
@@ -407,7 +406,7 @@ class TestChildFlattening:
     def test_a_missing_correction_leaves_only_its_own_column_empty(
         self, chain_missing_correction, column_name
     ):
-        # T022 (FR-006, SC-006), parametrised over the nine correction types: SC-006
+        # FS-002 FR-006, SC-006, parametrised over the nine correction types: SC-006
         # requires each one proven independently.
         from project.ghfdb.models import GHFDBChild
 
@@ -423,7 +422,7 @@ class TestChildFlattening:
 
     @pytest.mark.django_db
     def test_annotations_carry_their_published_names(self):
-        # T023 (FR-011): every annotation key equals its published column name, except a
+        # FS-002 FR-011: every annotation key equals its published column name, except a
         # declared collision list, and each name on that list is checked to be a field
         # the framework's base class actually declares.
         from heat_flow.models import HeatFlow
@@ -436,7 +435,7 @@ class TestChildFlattening:
             GHFDBChild.objects.as_ghfdb_flat().query.annotations.keys()
         )
 
-        # FR-011: an annotation is prefixed only when the published name
+        # FS-002 FR-011: an annotation is prefixed only when the published name
         # collides with a field the base class (Measurement, via HeatFlow)
         # already declares.
         collision_list = {"site_name": "name"}
@@ -453,7 +452,7 @@ class TestChildFlattening:
             )
 
         # Annotations with no published-column counterpart at all: the
-        # site geography columns D8 keeps outside the published shape,
+        # site geography columns FS-002 keeps outside the published shape,
         # added here only to support admin filtering.
         internal_only_annotations = {
             "site_country",
@@ -478,7 +477,7 @@ class TestGHFDBParentManager:
     def test_scope_survives_filtering_ordering_counting_slicing_and_chaining(
         self, published_chain, unpublished_chain
     ):
-        # T045 (FR-002, FR-003, SC-005): the published-only restriction holds after each
+        # FS-002 FR-002, FR-003, SC-005: the published-only restriction holds after each
         # operation, and after two chained together.
         from project.ghfdb.models import GHFDBParent
 
@@ -502,14 +501,14 @@ class TestGHFDBParentManager:
 
 
 class TestParentFlattening:
-    # ``GHFDBParentQuerySet.as_ghfdb_flat()``'s scalar annotation set (T046-T049, T059).
+    # ``GHFDBParentQuerySet.as_ghfdb_flat()``'s scalar annotation set (FS-002).
 
     # The one published PARENT_COLUMNS entry reached only through a many-to-many
     # relation: annotating it with F() would return one row per value, so it is
     # prefetched alongside the determinations instead.
     MANY_VALUED_PARENT_COLUMNS = frozenset({"explo_purpose"})
 
-    # FR-011: the published ``name`` column collides with a field the
+    # FS-002 FR-011: the published ``name`` column collides with a field the
     # framework's base class declares, so it is annotated under a distinct
     # key. Every other PARENT_COLUMNS entry keeps its published name.
     COLLIDING_PARENT_COLUMNS = {"name": "site_name"}
@@ -518,7 +517,7 @@ class TestParentFlattening:
     def test_every_scalar_published_parent_column_resolves_on_every_row(
         self, sites_by_contribution
     ):
-        # T046 (FR-008), T059: every PARENT_COLUMNS entry other than the one many-valued
+        # FS-002 FR-008: every PARENT_COLUMNS entry other than the one many-valued
         # column is readable, without error.
         from project.ghfdb.constants import PARENT_COLUMNS
         from project.ghfdb.models import GHFDBParent
@@ -550,7 +549,7 @@ class TestParentFlattening:
 
     @pytest.mark.django_db
     def test_the_colliding_site_name_is_annotated_distinctly(self, published_chain):
-        # T048 (FR-011): the published ``name`` column is annotated under a distinct
+        # FS-002 FR-011: the published ``name`` column is annotated under a distinct
         # name because the framework's base class declares ``name``, and the published
         # name is restored at the surface that presents it.
         from heat_flow.models import ParentHeatFlow
@@ -567,9 +566,9 @@ class TestParentFlattening:
     def test_a_column_that_does_not_collide_keeps_its_published_name(
         self, published_chain
     ):
-        # T049 (FR-011): elevation is annotated as ``elevation``, not under a prefix. D6
-        # settles this, and the rule is only readable if a non-colliding case is pinned
-        # alongside a colliding one.
+        # FS-002 FR-011: elevation is annotated as ``elevation``, not under a prefix.
+        # The rule is only readable if a non-colliding case is pinned alongside a
+        # colliding one.
         from project.ghfdb.models import GHFDBParent
 
         site = published_chain.parent.sample
@@ -586,7 +585,7 @@ class TestParentCounts:
     def test_counts_are_correct_for_all_some_and_no_contributing_determinations(
         self, sites_by_contribution
     ):
-        # T050 (FR-009, SC-004): the counts are correct across the four contribution
+        # FS-002 FR-009, SC-004: the counts are correct across the four contribution
         # shapes SC-004 names.
         from project.ghfdb.models import GHFDBParent
 
@@ -611,7 +610,7 @@ class TestParentCounts:
     def test_a_site_with_no_determinations_counts_zero_rather_than_empty(
         self, sites_by_contribution
     ):
-        # T051 (FR-009, SC-004): the distinction between a count of zero and a null is
+        # FS-002 FR-009, SC-004: the distinction between a count of zero and a null is
         # the assertion.
         from project.ghfdb.models import GHFDBParent
 
@@ -640,7 +639,7 @@ class TestParentChildAttachment:
     def test_reading_each_sites_determinations_costs_no_query_per_site(
         self, django_assert_num_queries, published_chains
     ):
-        # T053 (FR-010): iterating every site's determinations after evaluation costs no
+        # FS-002 FR-010: iterating every site's determinations after evaluation costs no
         # query per site.
         from project.ghfdb.models import GHFDBParent
 
@@ -671,8 +670,8 @@ class TestParentPublishedColumns:
     def test_every_published_parent_column_resolves_on_the_complete_row(
         self, sites_by_contribution
     ):
-        # T055 (SC-002): every PARENT_COLUMNS entry — scalar and the one many-valued
-        # column — is readable on the row after flattening and attachment together (R3),
+        # FS-002 SC-002: every PARENT_COLUMNS entry — scalar and the one many-valued
+        # column — is readable on the row after flattening and attachment together,
         # since the many-valued column cannot be annotated.
         from project.ghfdb.constants import PARENT_COLUMNS
         from project.ghfdb.models import GHFDBParent
@@ -694,13 +693,13 @@ class TestParentPublishedColumns:
                 getattr(record, collision.get(column, column))
 
 
-# Phase 3b: GHFDBParent proxy queryset tests (T066–T069)
+# GHFDBParent proxy queryset tests
 
 
 class TestGHFDBParentQuerySet:
     @pytest.mark.django_db
     def test_parent_with_child_counts_correctness(self, heat_flow_chain):
-        # T067 (US1b): total_children and relevant_children counts must be correct. The
+        # FS-002 US-1b: total_children and relevant_children counts must be correct. The
         # heat_flow_chain fixture creates exactly 1 HeatFlow child; is_relevant defaults
         # to True on HeatFlow, so relevant_children should also be 1.
         from project.ghfdb.models import GHFDBParent
@@ -747,7 +746,7 @@ class TestGHFDBParentQuerySet:
             assert key in annotations, key
 
 
-# Phase 8: Queryset scoping tests (T094) — FR-001b
+# Queryset scoping tests — FS-002 FR-001b
 
 
 class TestGHFDBManagerScoping:

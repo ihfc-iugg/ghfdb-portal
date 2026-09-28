@@ -1,4 +1,4 @@
-"""Assessment upload workflow views (plan.md "The pages").
+"""Assessment upload workflow views (FS-005 plan.md "The pages").
 
 Five pages and two actions. The list is the way in and is public, an
 assessment's own page is public too and is where everything about one of
@@ -113,7 +113,7 @@ class ReviewDetailView(FairDMDetailView):
 
 
 class ReviewUpdateView(UserPassesTestMixin, FairDMUpdateView):
-    """Correct an assessment's description after it was created (T047, FR-030).
+    """Correct an assessment's description after it was created (FS-005 FR-030).
 
     The same people who may upload against an assessment may correct what it
     says: its own uploader, or any Data Curator. The form is the one the
@@ -135,7 +135,7 @@ class ReviewUpdateView(UserPassesTestMixin, FairDMUpdateView):
 
 
 class ReviewCreateView(UserPassesTestMixin, FairDMCreateView):
-    """Start an assessment (FR-003 through FR-007, FR-016; T017).
+    """Start an assessment (FS-005 FR-003 through FR-007, FR-016).
 
     Object permissions on the new dataset follow ``uploaded_by`` — the
     submitting user — never the assessor list: an assessor may be a
@@ -180,14 +180,15 @@ class ReviewCreateView(UserPassesTestMixin, FairDMCreateView):
 
 
 class ReviewUploadView(UserPassesTestMixin, DetailView):
-    """Upload a file and see its check report (T020, plan.md "The pages", FR-008 through FR-010, D5).
+    """Upload a file and see its check report (FS-005 plan.md "The pages",
+    FR-008 through FR-010; docs/adr/0018-an-upload-is-checked-before-it-is-written.md).
 
     The upload form and its check report share one route and one response:
     a GET shows the blank form, and a POST stores the submission, runs the
     reader in ``check_only`` mode and renders the report in the same
-    response — the dataset is never written to here (D6 leaves that to
-    confirmation). The submitted file is kept regardless of whether the
-    check passes, per FR-015.
+    response — the dataset is never written to here (confirmation does
+    that). The submitted file is kept regardless of whether the check
+    passes, per FS-005 FR-015.
     """
 
     model = Review
@@ -237,7 +238,7 @@ class ReviewUploadView(UserPassesTestMixin, DetailView):
 
 
 def _publish_if_complete(review):
-    """Write the dataset public exactly when the assessment's own state reached ``COMPLETE`` (T029/T034, data-model.md "Dataset visibility").
+    """Write the dataset public exactly when the assessment's own state reached ``COMPLETE`` (FS-005 data-model.md "Dataset visibility").
 
     A curator's confirmation and a curator's approval both make a dataset
     public through this one path rather than each writing the fields for
@@ -255,14 +256,15 @@ def _publish_if_complete(review):
 
 
 class ReviewConfirmView(UserPassesTestMixin, SingleObjectMixin, View):
-    """Confirm a checked upload, POST only (T022/T023, plan.md "Confirmation safety", FR-024, D6).
+    """Confirm a checked upload, POST only (FS-005 plan.md "Confirmation safety",
+    FR-024; docs/adr/0018-an-upload-is-checked-before-it-is-written.md).
 
     Re-runs the check against the assessment's stored file rather than
     trusting the report the uploader saw, and writes in the same
     transaction. The assessment's own state is the idempotency key: a
     confirmation for an assessment that has already moved past ``DESCRIBED``
     or ``CHANGES_REQUESTED`` is a no-op redirect, which covers both a
-    doubled submission (T023) and a report that has gone stale.
+    doubled submission and a report that has gone stale.
     """
 
     model = Review
@@ -299,7 +301,8 @@ class ReviewConfirmView(UserPassesTestMixin, SingleObjectMixin, View):
 
 
 class ReviewDecideView(UserPassesTestMixin, SingleObjectMixin, View):
-    """Approve or send back a waiting assessment, POST only (T034, plan.md "The pages", FR-019, FR-021, spec.md User Story 6 scenarios 2 and 5).
+    """Approve or send back a waiting assessment, POST only (FS-005 plan.md
+    "The pages", spec.md User Story 6 scenarios 2 and 5; FR-019, FR-021).
 
     Curators only — ``approve`` raises ``IllegalTransition`` for anyone else
     too (states.py's own rule), but ``test_func`` refuses the request before

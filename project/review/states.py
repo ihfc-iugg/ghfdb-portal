@@ -1,4 +1,4 @@
-"""The assessment state vocabulary and its transitions (T003, data-model.md "review.states").
+"""The assessment state vocabulary and its transitions (FS-005 data-model.md "review.states").
 
 Four states, five transitions, and every one of them is an action a person
 takes — nothing here transitions on a timer or a signal. Transitions take
@@ -45,7 +45,7 @@ class IllegalTransition(Exception):
 def confirm_upload(assessment, actor):
     """DESCRIBED or CHANGES_REQUESTED -> AWAITING_DECISION or COMPLETE.
 
-    FR-017/FR-018: a Data Curator's confirmation is always public
+    FS-005 FR-017/FR-018: a Data Curator's confirmation is always public
     immediately, regardless of which of the two origin states it started
     from; anyone else's confirmation always waits for a decision.
     """

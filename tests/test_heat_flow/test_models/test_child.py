@@ -19,8 +19,8 @@ class TestHeatFlowInterval:
 
     @pytest.mark.django_db
     def test_interval_links_to_site(self, dataset, site_fixture):
-        # T014 – HeatFlowInterval.site FK resolves to site; reverse 'intervals' accessor
-        # works (US1 scenario 2, A9).
+        # HeatFlowInterval.site FK resolves to site; reverse 'intervals' accessor
+        # works (FS-001 US-1 scenario 2, A9).
         from heat_flow.models import HeatFlowInterval
 
         interval = HeatFlowInterval.objects.create(
@@ -38,9 +38,9 @@ class TestHeatFlowInterval:
     def test_sub_measurements_on_interval(
         self, dataset, interval_fixture, gradient_fixture, conductivity_fixture
     ):
-        # T015 – ThermalGradient and IntervalConductivity link to interval and appear in
+        # ThermalGradient and IntervalConductivity link to interval and appear in
         # interval.measurements; Pint Quantity attributes present on value and depth
-        # fields (FR-006, A5, US1 scenario 3).
+        # fields (FS-001 FR-006, A5, US-1 scenario 3).
         measurements = list(interval_fixture.measurements.all())
         pks = [m.pk for m in measurements]
         assert gradient_fixture.pk in pks
@@ -59,7 +59,7 @@ class TestHeatFlowInterval:
 
     @pytest.mark.django_db
     def test_zero_thickness_interval_rejected(self, dataset, site_fixture):
-        # T053 – HeatFlowInterval.full_clean() raises ValidationError when top >= bottom
+        # HeatFlowInterval.full_clean() raises ValidationError when top >= bottom
         # (EC-001, M4).
         from heat_flow.models import HeatFlowInterval
 
@@ -90,7 +90,7 @@ class TestHeatFlowInterval:
     def test_deleting_a_site_deletes_its_intervals(
         self, dataset, site_fixture, interval_fixture
     ):
-        # T029 – Deleting a HeatFlowSite deletes its HeatFlowInterval records (FR-007,
+        # Deleting a HeatFlowSite deletes its HeatFlowInterval records (FS-001 FR-007,
         # site FK is on_delete=CASCADE).
         from heat_flow.models import HeatFlowInterval
 
@@ -113,9 +113,9 @@ class TestHeatFlow:
         parent_fixture,
         child_fixture,
     ):
-        # T016 – Forward and reverse FK relationships on HeatFlow child resolve
-        # correctly; default US/MS score values are Ux/Mx on a fresh instance (FR-014,
-        # A11, US1 scenario 4).
+        # Forward and reverse FK relationships on HeatFlow child resolve
+        # correctly; default US/MS score values are Ux/Mx on a fresh instance
+        # (FS-001 FR-014, A11, US-1 scenario 4).
         from heat_flow.models import HeatFlow
         from heat_flow.utils import MScoreOptions, UScoreOptions
 
@@ -159,8 +159,8 @@ class TestHeatFlow:
 
     @pytest.mark.django_db
     def test_heat_flow_save_rejects_wrong_sample(self, site_fixture, child_fixture):
-        # T018 – HeatFlow.save() raises ValidationError when sample is a HeatFlowSite
-        # (wrong type); only HeatFlowInterval is valid (FR-010a).
+        # HeatFlow.save() raises ValidationError when sample is a HeatFlowSite
+        # (wrong type); only HeatFlowInterval is valid (FS-001 FR-010a).
         with pytest.raises(ValidationError):
             child_fixture.sample = site_fixture
             child_fixture.save()
@@ -169,8 +169,8 @@ class TestHeatFlow:
     def test_multiple_heatflow_can_share_gradient(
         self, dataset, interval_fixture, gradient_fixture, parent_fixture
     ):
-        # T020 – Two HeatFlow children may reference the same ThermalGradient FK without
-        # IntegrityError (FR-013 / R5).
+        # Two HeatFlow children may reference the same ThermalGradient FK without
+        # IntegrityError (FS-001 FR-013).
         from heat_flow.models import HeatFlow
 
         hf1 = HeatFlow.objects.create(
@@ -195,8 +195,8 @@ class TestHeatFlow:
     def test_multiple_heatflow_can_share_conductivity(
         self, dataset, interval_fixture, conductivity_fixture, parent_fixture
     ):
-        # T022 – Two HeatFlow children may reference the same IntervalConductivity FK
-        # without IntegrityError (FR-017), the conductivity half of T022 alongside the
+        # Two HeatFlow children may reference the same IntervalConductivity FK
+        # without IntegrityError (FS-001 FR-017), the conductivity half alongside the
         # gradient case above.
         from heat_flow.models import HeatFlow
 
@@ -222,8 +222,8 @@ class TestHeatFlow:
     def test_gradient_referenced_by_a_child_cannot_be_deleted(
         self, dataset, interval_fixture, gradient_fixture
     ):
-        # T023 – A ThermalGradient referenced by a HeatFlow child is protected from
-        # deletion (FR-017, on_delete=PROTECT).
+        # A ThermalGradient referenced by a HeatFlow child is protected from
+        # deletion (FS-001 FR-017, on_delete=PROTECT).
         from django.db.models import ProtectedError
         from heat_flow.models import HeatFlow
 
@@ -242,8 +242,8 @@ class TestHeatFlow:
     def test_conductivity_referenced_by_a_child_cannot_be_deleted(
         self, dataset, interval_fixture, conductivity_fixture
     ):
-        # T023 – An IntervalConductivity referenced by a HeatFlow child is protected
-        # from deletion (FR-017, on_delete=PROTECT).
+        # An IntervalConductivity referenced by a HeatFlow child is protected
+        # from deletion (FS-001 FR-017, on_delete=PROTECT).
         from django.db.models import ProtectedError
         from heat_flow.models import HeatFlow
 
@@ -262,7 +262,7 @@ class TestHeatFlow:
     def test_heat_flow_allows_null_gradient_and_conductivity(
         self, dataset, interval_fixture
     ):
-        # T020 – A HeatFlow with neither gradient nor conductivity is valid; incomplete
+        # A HeatFlow with neither gradient nor conductivity is valid; incomplete
         # records must not be blocked at entry time (EC-002, M2).
         from heat_flow.models import HeatFlow
 
@@ -280,8 +280,8 @@ class TestHeatFlow:
     def test_heat_flow_is_probe_property(
         self, dataset, site_fixture, interval_fixture, child_fixture
     ):
-        # T038 – HeatFlow.is_probe is True when the linked interval has probe metadata;
-        # False otherwise (US3 independent test).
+        # HeatFlow.is_probe is True when the linked interval has probe metadata;
+        # False otherwise (FS-001 US-3 independent test).
         from heat_flow.models import HeatFlow, HeatFlowInterval, ProbeMetadata
 
         # Attach probe metadata to the existing interval
@@ -310,8 +310,8 @@ class TestHeatFlow:
 class TestHeatFlowCorrection:
     @pytest.mark.django_db
     def test_heat_flow_corrections(self, dataset, interval_fixture, child_fixture):
-        # T017 – HeatFlowCorrection records link via FK and are accessible via
-        # child.corrections (US1 scenario 5).
+        # HeatFlowCorrection records link via FK and are accessible via
+        # child.corrections (FS-001 US-1 scenario 5).
         from heat_flow.models import HeatFlowCorrection
 
         HeatFlowCorrection.objects.create(
@@ -338,8 +338,8 @@ class TestHeatFlowCorrection:
 
     @pytest.mark.django_db
     def test_correction_invalid_status_rejected(self, child_fixture):
-        # T057 – Invalid status/type combinations raise ValidationError from save()
-        # (FR-021): - IS + considered_p (considered_p only valid for environmental
+        # Invalid status/type combinations raise ValidationError from save()
+        # (FS-001 FR-021): - IS + considered_p (considered_p only valid for environmental
         # types) - S + tilt_corrected (tilt_corrected only valid for IS) - T +.
         from heat_flow.models import HeatFlowCorrection
 
@@ -372,8 +372,9 @@ class TestHeatFlowCorrection:
 
     @pytest.mark.django_db
     def test_second_correction_of_the_same_type_rejected(self, child_fixture):
-        # T026 – A second HeatFlowCorrection of the same correction_type on one child is
-        # rejected: Meta.unique_together = ("heat_flow", "correction_type") (FR-027).
+        # A second HeatFlowCorrection of the same correction_type on one child is
+        # rejected: Meta.unique_together = ("heat_flow", "correction_type")
+        # (FS-001 FR-027).
         from heat_flow.models import HeatFlowCorrection
 
         HeatFlowCorrection.objects.create(
@@ -388,7 +389,7 @@ class TestHeatFlowCorrection:
 
     @pytest.mark.django_db
     def test_correction_invalid_type_rejected(self, child_fixture):
-        # T057 – A correction with an unrecognised correction_type is rejected by
+        # A correction with an unrecognised correction_type is rejected by
         # Django's field-level choices validation when full_clean() is called (EC-004,
         # L1).
         from heat_flow.models import HeatFlowCorrection
@@ -405,16 +406,16 @@ class TestThermalGradient:
     def test_thermal_gradient_save_rejects_wrong_sample(
         self, site_fixture, gradient_fixture
     ):
-        # T018 – ThermalGradient.save() raises ValidationError when sample is a
-        # HeatFlowSite (FR-016a).
+        # ThermalGradient.save() raises ValidationError when sample is a
+        # HeatFlowSite (FS-001 FR-016a).
         with pytest.raises(ValidationError):
             gradient_fixture.sample = site_fixture
             gradient_fixture.save()
 
     @pytest.mark.django_db
     def test_value_non_nullable_thermal_gradient(self, dataset, interval_fixture):
-        # T019 – ThermalGradient.value is non-nullable; omitting it raises an
-        # IntegrityError at the database layer (R3).
+        # ThermalGradient.value is non-nullable; omitting it raises an
+        # IntegrityError at the database layer.
         from heat_flow.models import ThermalGradient
 
         with pytest.raises((IntegrityError, ValidationError)):
@@ -426,8 +427,9 @@ class TestThermalGradient:
     def test_gradient_corrected_value_methods_shutin_and_count_persist(
         self, dataset, interval_fixture
     ):
-        # T017 – A gradient's corrected value, its top and bottom temperature methods,
-        # its shut-in times and its recording count persist and read back (FR-019).
+        # A gradient's corrected value, its top and bottom temperature methods,
+        # its shut-in times and its recording count persist and read back
+        # (FS-001 FR-019).
         from heat_flow import vocabularies
         from heat_flow.models import ThermalGradient
         from research_vocabs.models import Concept
@@ -513,16 +515,16 @@ class TestIntervalConductivity:
     def test_interval_conductivity_save_rejects_wrong_sample(
         self, site_fixture, conductivity_fixture
     ):
-        # T018 – IntervalConductivity.save() raises ValidationError when sample is a
-        # HeatFlowSite (FR-018a).
+        # IntervalConductivity.save() raises ValidationError when sample is a
+        # HeatFlowSite (FS-001 FR-018a).
         with pytest.raises(ValidationError):
             conductivity_fixture.sample = site_fixture
             conductivity_fixture.save()
 
     @pytest.mark.django_db
     def test_value_non_nullable_interval_conductivity(self, dataset, interval_fixture):
-        # T019 – IntervalConductivity.value is non-nullable; omitting it raises an
-        # IntegrityError at the database layer (R3).
+        # IntervalConductivity.value is non-nullable; omitting it raises an
+        # IntegrityError at the database layer.
         from heat_flow.models import IntervalConductivity
 
         with pytest.raises((IntegrityError, ValidationError)):
@@ -534,8 +536,8 @@ class TestIntervalConductivity:
     def test_conductivity_vocabulary_fields_count_and_score_persist(
         self, dataset, interval_fixture
     ):
-        # T018 – A conductivity's vocabulary fields, its determination count and its
-        # score persist and read back (FR-021).
+        # A conductivity's vocabulary fields, its determination count and its
+        # score persist and read back (FS-001 FR-021).
         from heat_flow import vocabularies
         from heat_flow.models import IntervalConductivity
         from research_vocabs.models import Concept
@@ -580,8 +582,8 @@ class TestProbeMetadata:
     def test_probe_metadata_linked_to_interval(
         self, dataset, site_fixture, interval_fixture
     ):
-        # T035 – ProbeMetadata can be created for an interval; all fields readable via
-        # interval.probe_metadata (US3 scenario 1).
+        # ProbeMetadata can be created for an interval; all fields readable via
+        # interval.probe_metadata (FS-001 US-3 scenario 1).
         from heat_flow.models import ProbeMetadata
 
         ProbeMetadata.objects.create(
@@ -601,8 +603,8 @@ class TestProbeMetadata:
     def test_probe_metadata_accepts_several_probe_type_concepts(
         self, dataset, interval_fixture
     ):
-        # T059 – ProbeMetadata.probe_type accepts several probe type concepts and reads
-        # them back (FR-023, many-to-many vocabulary field).
+        # ProbeMetadata.probe_type accepts several probe type concepts and reads
+        # them back (FS-001 FR-023, many-to-many vocabulary field).
         from heat_flow import vocabularies
         from heat_flow.models import ProbeMetadata
         from research_vocabs.models import Concept
@@ -619,8 +621,8 @@ class TestProbeMetadata:
 
     @pytest.mark.django_db
     def test_interval_without_probe_raises(self, dataset, site_fixture):
-        # T036 – Accessing probe_metadata on an interval with none raises
-        # RelatedObjectDoesNotExist (US3 scenario 2).
+        # Accessing probe_metadata on an interval with none raises
+        # RelatedObjectDoesNotExist (FS-001 US-3 scenario 2).
         from heat_flow.models import HeatFlowInterval, ProbeMetadata
 
         fresh_interval = HeatFlowInterval.objects.create(
@@ -637,7 +639,7 @@ class TestProbeMetadata:
     def test_probe_metadata_cascade_on_interval_delete(
         self, dataset, site_fixture, interval_fixture
     ):
-        # T037 – Deleting the interval also deletes its ProbeMetadata (CASCADE; US3
+        # Deleting the interval also deletes its ProbeMetadata (CASCADE; FS-001 US-3
         # scenario 3, SC-004).
         from heat_flow.models import ProbeMetadata
 
@@ -648,8 +650,8 @@ class TestProbeMetadata:
 
 
 class TestCorrectionStatusDocumentation:
-    # The documented status table must match the one the code enforces. FR-028 requires
-    # the valid combinations to be documented.
+    # The documented status table must match the one the code enforces. FS-001 FR-028
+    # requires the valid combinations to be documented.
 
     DOC = "docs/ghfdb_fields.md"
     HEADING = "##### Valid status per disturbance type"

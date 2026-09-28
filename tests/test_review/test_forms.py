@@ -1,4 +1,4 @@
-# Tests for review.forms.ReviewDescriptionForm (T015, spec.md User Story 2).
+# Tests for review.forms.ReviewDescriptionForm (FS-005 User Story 2).
 # Publication, assessors, dates and an optional title, collected before any file is
 # chosen (FR-003 through FR-007).
 
@@ -69,7 +69,7 @@ class TestReviewDescriptionFormValidation:
 @pytest.mark.review
 class TestReviewDescriptionFormBibliographyFile:
     # A publication absent from the catalogue is added from a bibliography file supplied
-    # through the same form (spec.md User Story 2 scenario 2, FR-004).
+    # through the same form (FS-005 User Story 2 scenario 2, FR-004).
 
     def test_a_bibliography_file_adds_the_publication_and_links_it(self):
         assessor = PersonFactory(is_claimed=True, password="test-pass-123")
@@ -155,7 +155,7 @@ class TestReviewDescriptionFormBibliographyFile:
 @pytest.mark.review
 class TestReviewDescriptionFormDuplicateLiterature:
     # A publication that already has an assessment is refused, naming the existing
-    # assessment (spec.md User Story 2 scenario 4, FR-007).
+    # assessment (FS-005 User Story 2 scenario 4, FR-007).
 
     def test_a_publication_with_an_existing_assessment_is_refused(self):
         existing = ReviewFactory()

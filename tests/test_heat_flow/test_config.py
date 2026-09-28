@@ -1,5 +1,5 @@
-# Tests for heat_flow FairDM registry configuration – User Story US-5. US-5: every model
-# is served by the framework, without custom view code (FR-029–FR-032, FR-034, SC-001,
+# Tests for heat_flow FairDM registry configuration – FS-001 User Story 5: every model
+# is served by the framework, without custom view code (FR-029-FR-032, FR-034, SC-001,
 # SC-007, SC-007a).
 
 import inspect
@@ -41,7 +41,7 @@ def _get_all_models():
 
 
 def _recognised_attribute_names() -> set[str]:
-    """The data attribute names `ModelConfiguration` itself recognises (R4).
+    """The data attribute names `ModelConfiguration` itself recognises (FS-001).
 
     Derived from the framework's own class body rather than hard-coded, so that a
     change to the framework's contract changes what this test allows without a
@@ -67,8 +67,8 @@ class TestHeatFlowRegistryConfig:
             assert bool(config.fields), f"{model.__name__} config.fields is empty"
 
     def test_metadata_carries_authority_and_citation(self):
-        # T068 – Every configuration's metadata carries the commission's authority and
-        # its citation (FR-030, SC-007). The registry reads `metadata`, not the bare
+        # FS-001 FR-030, SC-007: every configuration's metadata carries the commission's
+        # authority and its citation. The registry reads `metadata`, not the bare
         # `authority`/`citation` class attributes a configuration might declare.
         from heat_flow.config import IHFCConfig
 
@@ -85,8 +85,8 @@ class TestHeatFlowRegistryConfig:
             assert config.metadata.citation.text == IHFCConfig.metadata.citation.text
 
     def test_filterset_and_table_classes_are_usable(self):
-        # T069 – Every configuration resolves to a usable filter set class and a usable
-        # table class, whether supplied or generated (FR-032, SC-007).
+        # FS-001 FR-032, SC-007: every configuration resolves to a usable filter set
+        # class and a usable table class, whether supplied or generated.
         for model in _get_all_models():
             config = fairdm.registry.get_for_model(model)
             filterset_class = config.get_filterset_class()
@@ -99,8 +99,8 @@ class TestHeatFlowRegistryConfig:
             )
 
     def test_no_configuration_declares_an_unread_attribute(self):
-        # T070 – No configuration in this app declares an attribute the registry does
-        # not read (FR-031, SC-007a). Checked against the framework's own recognised
+        # FS-001 FR-031, SC-007a: no configuration in this app declares an attribute
+        # the registry does not read. Checked against the framework's own recognised
         # set, so the class of defect is closed rather than today's three instances.
         recognised = _recognised_attribute_names()
 
@@ -121,8 +121,8 @@ class TestHeatFlowRegistryConfig:
                 )
 
     def test_probe_metadata_and_correction_are_not_registered(self):
-        # T072 – Models extending neither `Sample` nor `Measurement` are absent from the
-        # registry (FR-029).
+        # FS-001 FR-029: models extending neither `Sample` nor `Measurement` are
+        # absent from the registry.
         from heat_flow.models import HeatFlowCorrection, ProbeMetadata
 
         assert not fairdm.registry.is_registered(ProbeMetadata)
@@ -130,7 +130,7 @@ class TestHeatFlowRegistryConfig:
 
     @pytest.mark.django_db
     def test_system_checks_pass(self):
-        # T071 – Django system checks report no errors and no warnings (FR-034, SC-001).
+        # FS-001 FR-034, SC-001: Django system checks report no errors and no warnings.
         # The default failure level only fails on ERROR; raised to WARNING here so a
         # warning cannot hide behind an exit code of zero.
         from django.core.management import call_command
