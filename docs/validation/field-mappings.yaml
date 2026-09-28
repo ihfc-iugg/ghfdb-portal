@@ -191,7 +191,7 @@ extensions:
     django_field: review_status
     justification: |
       Track internal editorial review state for publication approval workflow.
-      Required to implement multi-stage review process defined in Constitution VI.
+      Required to implement multi-stage review process defined in Constitution Article XIV.
       Not part of IHFC GHFDB specification but necessary for data curation.
     lifecycle: permanent
     non_canonical: true

@@ -1,10 +1,5 @@
-"""The entity relationship diagram is held to the models, and to being a diagram.
-
-Two separate failures are guarded against. The diagram had drifted from the schema —
-it carried a junction table that was never built and named a depth interval by its
-abstract base class. And it reached readers as source text: the Mermaid source was
-valid, no extension was configured to render it, and the build reported no problem.
-"""
+# The entity relationship diagram is held to the models, and to being a diagram. Two
+# separate failures are guarded against.
 
 import re
 from pathlib import Path
@@ -52,8 +47,6 @@ def project_models() -> list[str]:
 
 
 class TestDiagramCoversTheModels:
-    """Acceptance: the diagram shows every model this portal defines."""
-
     def test_every_project_model_is_an_entity(self):
         entities = set(ENTITY.findall(entity_diagram()))
         missing = [name for name in project_models() if name not in entities]
@@ -78,8 +71,6 @@ class TestDiagramCoversTheModels:
 
 
 class TestDiagramRenders:
-    """Acceptance: the diagram reaches a reader as a diagram, not as source text."""
-
     @pytest.mark.slow
     def test_the_built_page_carries_a_diagram_rather_than_a_code_block(
         self, built_diagram_page: str

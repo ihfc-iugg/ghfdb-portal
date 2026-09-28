@@ -14,7 +14,6 @@
       <tr>
         <th>{% trans "Row" %}</th>
         <th>{% trans "Errors" %}</th>
-        {% comment %} {% for field in result.diff_headers %}<th>{{ field }}</th>{% endfor %} {% endcomment %}
       </tr>
     </thead>
     <tbody>
@@ -44,7 +43,6 @@
               </ul>
             </div>
           </td>
-          {% comment %} {% for field in row.values %}<td>{{ field }}</td>{% endfor %} {% endcomment %}
         </tr>
       {% endfor %}
     </tbody>

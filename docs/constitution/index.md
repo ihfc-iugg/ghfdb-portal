@@ -70,10 +70,10 @@ references/README
 ## How governance is applied
 
 Non-trivial changes go through the spec-driven workflow. A feature starts as a specification, gains
-an implementation plan that is checked against the constitution's principles, and is reviewed
-against those same principles before it merges. Where a principle has to be broken for a practical
+an implementation plan that is checked against the constitution's articles, and is reviewed
+against those same articles before it merges. Where an article has to be broken for a practical
 reason, the plan records the violation and the justification rather than leaving it unstated.
 
-See the [spec-driven workflow](../development/spec-driven-workflow) for the full process, and
+See the [spec-driven workflow](../development/spec-driven-development) for the full process, and
 [documentation conventions](../development/documentation-conventions) for how the artefacts are
 written.

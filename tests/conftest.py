@@ -1,7 +1,3 @@
-"""
-Configuration for pytest.
-"""
-
 import importlib.util
 import os
 from pathlib import Path
@@ -137,25 +133,9 @@ def pytest_runtest_teardown(item):
 
 @pytest.fixture(scope="session")
 def django_db_setup(django_db_setup, django_db_blocker):
-    """Load every vocabulary concept once, for the whole session.
-
-    Each test runs inside a transaction that is rolled back afterwards, so
-    anything written from inside a test is gone before the next one starts.
-    Writing the concepts here instead — outside that transaction, while the
-    database is unblocked — puts them in the database the tests roll back
-    *to*, where they survive every rollback and are written once rather than
-    once per test.
-
-    ``Concept.preload()`` writes the vocabularies registered in
-    ``research_vocabs``' global registry, and registration is normally a side
-    effect of a model field's own ``__init__``. ``ConceptManyToManyField``
-    does this; the single-valued ``ConceptField`` does not, because its
-    registration call is commented out upstream in
-    ``research_vocabs.fields.BaseConceptField.__init__``. ``environment`` and
-    ``explo_method`` on ``HeatFlowSite`` are both ``ConceptField``, so their
-    two vocabularies are registered by hand here. Without that, their concepts
-    never load and every filter or fixture depending on them finds nothing.
-    """
+    # Load every vocabulary concept once, for the whole session. Each test runs inside a
+    # transaction that is rolled back afterwards, so anything written from inside a test
+    # is gone before the next one starts.
     from heat_flow.vocabularies import ExplorationMethod, GeographicEnvironment
     from research_vocabs import registry
     from research_vocabs.models import Concept

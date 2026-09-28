@@ -5,7 +5,7 @@
 **Input**: Feature specification from `/specs/003-ghfdb-import-export/spec.md`
 **Propagated**: 2026-04-23 — Updated from spec.md refinement (BUG-010): canonical constants in `constants.py` require four code changes — see Technical Context and Key Design Decisions for constraints, and Phase 4b for tasks.
 **Bugfix**: 2026-04-23 — [BUG-010] Canonical constants alignment: `constants.py` now defines `PARENT_COLUMNS`, `CHILD_COLUMNS`, `META_FIELDS`, and `GHFDB_COLUMN_ORDER = PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS` as the single source of truth. The old hardcoded lowercase tuple MUST be removed; `GHFDBChildQuerySet.as_ghfdb_flat()` annotation keys MUST be renamed to match canonical names (including case); `GHFDBParentQuerySet.as_ghfdb_flat()` MUST be added; `GHFDBChildImportResource.get_user_visible_fields()` column-order lookup MUST lowercase BOTH sides; `GHFDBExportResource` `attribute=` values MUST be updated to match the renamed annotation keys.
-**Propagated**: 2026-04-20 — Added second import format (`GHFDBSimpleImportFormat`: 5 metadata rows, header row 6, data from row 7) and admin format-selection requirement; updated Summary, Technical Context, Project Structure, Key Design Decisions, and Constitution Check VI (Acceptance Scenarios 11–12).
+**Propagated**: 2026-04-20 — Added second import format (`GHFDBSimpleImportFormat`: 5 metadata rows, header row 6, data from row 7) and admin format-selection requirement; updated Summary, Technical Context, Project Structure, Key Design Decisions, and Constitution Check I (Acceptance Scenarios 11–12).
 **Propagated**: 2026-04-15 — Added controlled-vocabulary import normalization (FR-016): strip square brackets and lowercase before vocabulary matching.
 **Propagated**: 2026-04-14 — Updated from spec.md refinement
 **Bugfix**: 2026-04-14 — [BUG-002] Added framework-hook compatibility requirement for admin import integration.
@@ -43,16 +43,16 @@ The export uses the `GHFDB` proxy model's `for_export()` queryset (from `002-ghf
 
 ## Constitution Check
 
-| Principle | Status |
+| Article | Status |
 |-----------|--------|
-| I. FAIR-First | **PASS** — Import preserves `local_id` (GHFDB identifier) for both parent and child. Export produces the IHFC-canonical flat format. No identifier degradation. |
-| II. GHFDB Schema Fidelity | **PASS** — All 62 GHFDB columns mapped in contracts. Field mapping tables in contracts reference `docs/ghfdb_fields.md`. No schema divergence; all data stored at correct hierarchy level. Fuchs et al. citations in all resource docstrings. |
-| III. FairDM-First | **PASS** — Resources use existing FairDM-derived models without modification. Custom resources justified: FairDM provides no GHFDB-specific import/export. |
-| IV. Open Science & Provenance | **PASS** — Import/export is staff-only admin action. Imported data enters as unpublished; review workflow is not bypassed. Contributor fields preserved in round-trip. |
-| V. Internationalisation | **PASS** — All user-facing error messages, admin labels, and widget error strings use `gettext_lazy()`. |
-| VI. Test-First Quality | **PASS** — Tests written first (TDD). Round-trip import/export tests with known GHFDB sample data are pinned regression tests. Each resource tested independently. Simple-template format and admin format-selection tests added (Phase 4a: T084, T085, T090). |
-| VII. Documentation | **PASS** — Import/export column mapping documented via contracts and `docs/ghfdb_fields.md`. Large-export row limit documented in `GHFDBExportResource` docstring. |
-| VIII. Spec-Driven Workflow | **PASS** — Following spec.md → plan.md → tasks.md. User stories ordered P2 (import) → P2 (export). |
+| I. Testing | **PASS** — Tests written first (TDD). Round-trip import/export tests with known GHFDB sample data are pinned regression tests. Each resource tested independently. Simple-template format and admin format-selection tests added (Phase 4a: T084, T085, T090). |
+| VI. Documentation | **PASS** — Import/export column mapping documented via contracts and `docs/ghfdb_fields.md`. Large-export row limit documented in `GHFDBExportResource` docstring. |
+| VIII. Internationalization | **PASS** — All user-facing error messages, admin labels, and widget error strings use `gettext_lazy()`. |
+| XI. FAIR-First Scientific Data | **PASS** — Import preserves `local_id` (GHFDB identifier) for both parent and child. Export produces the IHFC-canonical flat format. No identifier degradation. |
+| XII. GHFDB Schema Fidelity | **PASS** — All 62 GHFDB columns mapped in contracts. Field mapping tables in contracts reference `docs/ghfdb_fields.md`. No schema divergence; all data stored at correct hierarchy level. Fuchs et al. citations in all resource docstrings. |
+| XIII. FairDM-First | **PASS** — Resources use existing FairDM-derived models without modification. Custom resources justified: FairDM provides no GHFDB-specific import/export. |
+| XIV. Open Science & Provenance | **PASS** — Import/export is staff-only admin action. Imported data enters as unpublished; review workflow is not bypassed. Contributor fields preserved in round-trip. |
+| XV. Spec-Driven Workflow | **PASS** — Following spec.md → plan.md → tasks.md. User stories ordered P2 (import) → P2 (export). |
 
 ## Project Structure
 

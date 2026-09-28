@@ -35,8 +35,7 @@ class GHFDBRelease(models.Model):
 
 
 class GHFDBChild(HeatFlow):
-    """Proxy model over ``HeatFlow`` providing a flat read-oriented view of the
-    Global Heat Flow Database.
+    """Proxy model over ``HeatFlow``: a flat read-oriented view of the GHFDB.
 
     Provides a custom manager (``GHFDBChildManager``) with two key methods:
     - ``as_ghfdb_flat()`` — annotates all scalar GHFDB columns (≤2 queries).
@@ -60,8 +59,7 @@ class GHFDBChild(HeatFlow):
 
 
 class GHFDBParent(ParentHeatFlow):
-    """Proxy model over ``ParentHeatFlow`` providing a parent-site view of the
-    Global Heat Flow Database.
+    """Proxy model over ``ParentHeatFlow``: a parent-site view of the GHFDB.
 
     Provides a custom manager (``GHFDBParentManager``) with:
     - ``with_child_counts()`` — annotates ``total_children`` and
@@ -73,9 +71,9 @@ class GHFDBParent(ParentHeatFlow):
     only. It does not participate in the FairDM sample/measurement registry.
 
     References:
-            - Fuchs et al. (2021). A new database structure for the IHFC Global Heat
-                Flow Database. Earth System Science Data.
-            - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
+        - Fuchs et al. (2021). A new database structure for the IHFC Global Heat
+          Flow Database. Earth System Science Data.
+        - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
     """
 
     objects = GHFDBParentManager()

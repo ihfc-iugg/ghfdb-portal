@@ -82,6 +82,13 @@ development/getting-started
 development/documentation-conventions
 development/feature-documentation-checklist
 development/spec-driven-development
-development/testing-standards
 adr/index
+:::
+
+:::{toctree}
+:maxdepth: 1
+:caption: Contributing
+
+contributing/standards/testing
+contributing/standards/code-documentation
 :::

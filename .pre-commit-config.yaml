@@ -1,4 +1,4 @@
-# Family-standard pre-commit configuration.
+# Pre-commit configuration for lint, format and file hygiene checks.
 #
 # The Python tools (ruff, mypy, deptry, djlint) run as *local* hooks through
 # `uv run`, so their versions come from the mvp-shared[dev] bundle — one version

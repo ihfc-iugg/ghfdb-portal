@@ -1,5 +1,4 @@
-"""
-Public API for GHFDB import/export resources.
+"""Public API for GHFDB import/export resources.
 
 Provides:
 - GHFDBParentImportResource: Import parent-level GHFDB data (HeatFlowSite + ParentHeatFlow)

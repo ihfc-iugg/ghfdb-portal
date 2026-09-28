@@ -1,22 +1,16 @@
-"""Tests for review.forms.ReviewDescriptionForm (T015, spec.md User Story 2).
-
-Publication, assessors, dates and an optional title, collected before any
-file is chosen (FR-003 through FR-007).
-"""
+# Tests for review.forms.ReviewDescriptionForm (FS-005 User Story 2).
+# Publication, assessors, dates and an optional title, collected before any file is
+# chosen (FR-003 through FR-007).
 
 import json
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
-from fairdm.factories import LiteratureItemFactory
+from fairdm.factories import LiteratureItemFactory, PersonFactory
 from literature.models import LiteratureItem
 from review.forms import ReviewDescriptionForm
 
-from tests.test_review.factories import (
-    ClaimedPersonFactory,
-    GhostPersonFactory,
-    ReviewFactory,
-)
+from tests.factories import ReviewFactory
 
 
 @pytest.mark.django_db
@@ -24,7 +18,7 @@ from tests.test_review.factories import (
 class TestReviewDescriptionFormValidation:
     def test_valid_with_catalogued_publication_assessors_and_dates(self):
         literature = LiteratureItemFactory()
-        assessor = ClaimedPersonFactory()
+        assessor = PersonFactory(is_claimed=True, password="test-pass-123")
 
         form = ReviewDescriptionForm(
             data={
@@ -39,7 +33,7 @@ class TestReviewDescriptionFormValidation:
 
     def test_end_date_before_start_date_is_refused_naming_the_dates(self):
         literature = LiteratureItemFactory()
-        assessor = ClaimedPersonFactory()
+        assessor = PersonFactory(is_claimed=True, password="test-pass-123")
 
         form = ReviewDescriptionForm(
             data={
@@ -57,7 +51,7 @@ class TestReviewDescriptionFormValidation:
 
     def test_a_ghost_profile_is_accepted_as_an_assessor(self):
         literature = LiteratureItemFactory()
-        ghost = GhostPersonFactory()
+        ghost = PersonFactory(email=None, is_claimed=False)
 
         form = ReviewDescriptionForm(
             data={
@@ -74,12 +68,11 @@ class TestReviewDescriptionFormValidation:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewDescriptionFormBibliographyFile:
-    """T016: a publication absent from the catalogue is added from a
-    bibliography file supplied through the same form (spec.md User Story 2
-    scenario 2, FR-004)."""
+    # A publication absent from the catalogue is added from a bibliography file supplied
+    # through the same form (FS-005 User Story 2 scenario 2, FR-004).
 
     def test_a_bibliography_file_adds_the_publication_and_links_it(self):
-        assessor = ClaimedPersonFactory()
+        assessor = PersonFactory(is_claimed=True, password="test-pass-123")
         bibliography_file = SimpleUploadedFile(
             "publication.json",
             json.dumps({"title": "A New Paper", "type": "article-journal"}).encode(),
@@ -101,14 +94,8 @@ class TestReviewDescriptionFormBibliographyFile:
         assert LiteratureItem.objects.filter(pk=literature.pk).exists()
 
     def test_a_rejected_form_leaves_no_publication_behind(self):
-        """A publication is written only once the rest of the form is sound.
-
-        Django runs every field's own cleaning and then calls ``clean()``
-        regardless of what that found, so an unguarded create here would add a
-        publication for every rejected submission — one nobody asked for and
-        nobody afterwards knows to remove.
-        """
-        assessor = ClaimedPersonFactory()
+        # A publication is written only once the rest of the form is sound.
+        assessor = PersonFactory(is_claimed=True, password="test-pass-123")
         bibliography_file = SimpleUploadedFile(
             "publication.json",
             json.dumps(
@@ -132,7 +119,7 @@ class TestReviewDescriptionFormBibliographyFile:
         assert not LiteratureItem.objects.filter(title="Never Asked For").exists()
 
     def test_neither_a_publication_nor_a_file_is_refused(self):
-        assessor = ClaimedPersonFactory()
+        assessor = PersonFactory(is_claimed=True, password="test-pass-123")
 
         form = ReviewDescriptionForm(
             data={
@@ -146,7 +133,7 @@ class TestReviewDescriptionFormBibliographyFile:
         assert "literature" in form.errors
 
     def test_an_invalid_bibliography_file_is_refused(self):
-        assessor = ClaimedPersonFactory()
+        assessor = PersonFactory(is_claimed=True, password="test-pass-123")
         bibliography_file = SimpleUploadedFile(
             "publication.json", b"not json", content_type="application/json"
         )
@@ -167,12 +154,12 @@ class TestReviewDescriptionFormBibliographyFile:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestReviewDescriptionFormDuplicateLiterature:
-    """T018: a publication that already has an assessment is refused, naming
-    the existing assessment (spec.md User Story 2 scenario 4, FR-007)."""
+    # A publication that already has an assessment is refused, naming the existing
+    # assessment (FS-005 User Story 2 scenario 4, FR-007).
 
     def test_a_publication_with_an_existing_assessment_is_refused(self):
         existing = ReviewFactory()
-        assessor = ClaimedPersonFactory()
+        assessor = PersonFactory(is_claimed=True, password="test-pass-123")
 
         form = ReviewDescriptionForm(
             data={

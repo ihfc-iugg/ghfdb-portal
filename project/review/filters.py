@@ -1,4 +1,4 @@
-"""Narrowing the assessment list (FR-025).
+"""Narrowing the assessment list (FS-005 FR-025).
 
 One list serves every question asked of the assessments — a reader looking
 for a publication, an assessor looking at their own, a curator looking at
@@ -35,6 +35,8 @@ def _people_who(field_name):
 
 
 class ReviewFilter(django_filters.FilterSet):
+    """Narrow the assessment list by state, assessor, uploader or decider."""
+
     state = django_filters.ChoiceFilter(
         choices=States.choices,
         label=_("State"),

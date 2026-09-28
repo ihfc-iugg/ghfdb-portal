@@ -1,13 +1,11 @@
-"""
-GHFDB admin registration.
+"""GHFDB admin registration.
 
 Registers the ``GHFDBChild`` and ``GHFDBParent`` proxy models as read-only
-changelists reading the published Global Heat Flow Database structure
-(US-3), each with an XLSX import action gated on the model's add permission.
-Both changelists' published columns are built from
+changelists reading the published Global Heat Flow Database structure, each
+with an XLSX import action gated on the model's add permission. Both
+changelists' published columns are built from
 ``project/ghfdb/columns.py``'s published-column mapping rather than
-restated here — see that module's docstring and
-``specs/002-ghfdb-proxy/decisions.md`` D1 and D2.
+restated here.
 
 References:
     - Fuchs et al. (2021). A new database structure for the IHFC Global Heat
@@ -35,7 +33,7 @@ from .resources import (
 
 
 class VocabularyListFilter(SimpleListFilter):
-    """A ``SimpleListFilter`` scoped to one controlled vocabulary (FR-018).
+    """A ``SimpleListFilter`` scoped to one controlled vocabulary.
 
     Parametrised by subclass on the vocabulary, the lookup path from the
     changelist's model to the filtered field, and the lookup mode. Two modes
@@ -63,6 +61,7 @@ class VocabularyListFilter(SimpleListFilter):
         raise NotImplementedError
 
     def lookups(self, request, model_admin):
+        """Build filter choices from the vocabulary's concepts or field choices."""
         vocabulary = self.get_vocabulary()
         if self.mode == self.CONCEPT:
             from research_vocabs.models import Concept
@@ -72,15 +71,18 @@ class VocabularyListFilter(SimpleListFilter):
         return vocabulary().choices
 
     def queryset(self, request, queryset):
+        """Filter the changelist queryset by the selected concept or value."""
         if self.value():
             return queryset.filter(**{self.lookup_path: self.value()})
         return queryset
 
 
 class ExplorePurposeListFilter(VocabularyListFilter):
-    """Exploration-purpose filter for the determination changelist, scoped to
-    the ``ExplorationPurpose`` vocabulary (FR-018). Many-valued, so it
-    matches on the concept row's primary key rather than a stored value."""
+    """Exploration-purpose filter for the determination changelist.
+
+    Scoped to the ``ExplorationPurpose`` vocabulary. Many-valued, so it
+    matches on the concept row's primary key rather than a stored value.
+    """
 
     title = _("exploration purpose")
     parameter_name = "explo_purpose"
@@ -88,34 +90,41 @@ class ExplorePurposeListFilter(VocabularyListFilter):
     lookup_path = "sample__heatflowinterval__site__explo_purpose__pk"
 
     def get_vocabulary(self):
+        """Return the ``ExplorationPurpose`` vocabulary class."""
         from heat_flow.vocabularies import ExplorationPurpose
 
         return ExplorationPurpose
 
 
 class EnvironmentListFilter(VocabularyListFilter):
-    """Environment filter for the determination changelist, scoped to the
-    ``GeographicEnvironment`` vocabulary (FR-018)."""
+    """Environment filter for the determination changelist.
+
+    Scoped to the ``GeographicEnvironment`` vocabulary.
+    """
 
     title = _("environment")
     parameter_name = "environment"
     lookup_path = "sample__heatflowinterval__site__environment"
 
     def get_vocabulary(self):
+        """Return the ``GeographicEnvironment`` vocabulary class."""
         from heat_flow.vocabularies import GeographicEnvironment
 
         return GeographicEnvironment
 
 
 class ChildExplorationMethodListFilter(VocabularyListFilter):
-    """Exploration-method filter for the determination changelist, scoped to
-    the ``ExplorationMethod`` vocabulary (FR-018)."""
+    """Exploration-method filter for the determination changelist.
+
+    Scoped to the ``ExplorationMethod`` vocabulary.
+    """
 
     title = _("exploration method")
     parameter_name = "explo_method"
     lookup_path = "sample__heatflowinterval__site__explo_method"
 
     def get_vocabulary(self):
+        """Return the ``ExplorationMethod`` vocabulary class."""
         from heat_flow.vocabularies import ExplorationMethod
 
         return ExplorationMethod
@@ -123,13 +132,15 @@ class ChildExplorationMethodListFilter(VocabularyListFilter):
 
 @admin.register(GHFDBRelease)
 class GHFDBReleaseAdmin(admin.ModelAdmin):
+    """Admin changelist for GHFDB release records."""
+
     list_display = ("version", "release_date", "description")
     ordering = ("-release_date",)
 
 
 @admin.register(GHFDBChild)
 class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
-    """Read-only changelist for the published determination view (US-3).
+    """Read-only changelist for the published determination view.
 
     Columns come entirely from ``project/ghfdb/columns.py``'s published-column
     mapping (see ``list_display`` below), so a column added to
@@ -143,15 +154,8 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
         - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
     """
 
-    # The four orientation columns the assessment team reads a row by — the
-    # determination's own published identifier, the site's published
-    # identifier, the site name and the site's two coordinate columns (D1) —
-    # followed by the canonical child block. Built from `ColumnDisplay`, the
-    # same mapping the tail is built from: `ID_parent`, `name`, `lat_NS` and
-    # `long_EW` are all published parent columns already restated as
-    # annotations on this proxy's own queryset (T081). No column list is
-    # written out here beyond these four names and `ghfdb_id` itself, which
-    # is not a published column.
+    # Leads with the four columns the assessment team orients a row by, then
+    # the canonical child block built from ColumnDisplay.
     list_display = (
         "ghfdb_id",
         ColumnDisplay.build("ID_parent"),
@@ -178,27 +182,27 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
     list_display_links = None  # enforce read-only (no edit links)
     ordering = ("parent__ghfdb_id", "ghfdb_id")
 
-    # --- Import configuration -------------------------------------------------------
-
     def get_import_resource_classes(self, request):
+        """Use the determination import resource for the import action."""
         return [GHFDBChildImportResource]
 
     def get_import_formats(self):
+        """Accept both the full and simplified XLSX import formats."""
         return [GHFDBImportFormat, GHFDBSimpleImportFormat]
 
-    # --- Export configuration ---------------------------------------------------
-
     def get_export_resource_classes(self, request):
+        """Use the shared export resource for the export action."""
         return [GHFDBExportResource]
 
     def get_export_formats(self):
+        """Offer XLSX as the only export format."""
         return [XLSX]
 
     def has_import_permission(self, request):
-        """Gate the import route on the model's add permission at the user
-        level (T123): the framework's own hook is a no-op whenever
-        ``IMPORT_EXPORT_IMPORT_PERMISSION_CODE`` is unset, which it is in
-        this project, so a user holding only view permission could
+        """Gate the import route on the model's add permission.
+
+        ``IMPORT_EXPORT_IMPORT_PERMISSION_CODE`` is unset in this project, so
+        the framework's own hook is a no-op and a view-only user could
         otherwise reach a route that writes through a changelist declared
         read-only.
         """
@@ -207,31 +211,35 @@ class GHFDBChildAdmin(ImportExportMixin, admin.ModelAdmin):
         return request.user.has_perm(f"{opts.app_label}.{codename}")
 
     def get_queryset(self, request):
-        """Return the published determinations as complete rows: scoped to
-        published records by the manager, and ready for every many-valued
-        column without a query per row (FR-002, FR-019)."""
+        """Scope to published records and prefetch every many-valued column."""
         return GHFDBChild.objects.for_export()
 
     def has_add_permission(self, request):
+        """Disable add: this changelist is read-only; data enters via import."""
         return False
 
     def has_change_permission(self, request, obj=None):
+        """Disable change: this changelist is read-only; data enters via import."""
         return False
 
     def has_delete_permission(self, request, obj=None):
+        """Disable delete: this changelist is read-only; data enters via import."""
         return False
 
 
 def geography_display(field_name):
-    """Build a ``GHFDBParentAdmin`` display method for one geography field,
-    read directly off ``obj.sample.heatflowsite`` (D15).
+    """Build a ``GHFDBParentAdmin`` display method for one geography field.
 
-    The site changelist's own queryset ``select_related``s both ``sample``
-    and ``sample__heatflowsite`` (``GHFDBParentQuerySet.as_ghfdb_flat()``),
-    so no accessor built here can fail to resolve, and a defensive
-    ``getattr`` guard would be exactly the kind of accessor a reader could
-    mistake for a working one when it never triggers — R4's concern,
-    applied to a relationship walk rather than a missing field.
+    Reads directly off ``obj.sample.heatflowsite``: the site changelist's own
+    queryset ``select_related``s both ``sample`` and ``sample__heatflowsite``
+    (``GHFDBParentQuerySet.as_ghfdb_flat()``), so this never needs a
+    defensive fallback for an unresolved relationship.
+
+    Args:
+        field_name: Name of the geography field on ``heatflowsite`` to display.
+
+    Returns:
+        An admin display method bound to that field.
     """
 
     @admin.display(
@@ -244,9 +252,11 @@ def geography_display(field_name):
 
 
 class ParentExplorePurposeListFilter(VocabularyListFilter):
-    """Exploration-purpose filter for the site changelist, scoped to the
-    ``ExplorationPurpose`` vocabulary (FR-018). Many-valued, so it matches
-    on the concept row's primary key rather than a stored value (T118)."""
+    """Exploration-purpose filter for the site changelist.
+
+    Scoped to the ``ExplorationPurpose`` vocabulary. Many-valued, so it
+    matches on the concept row's primary key rather than a stored value.
+    """
 
     title = _("exploration purpose")
     parameter_name = "explo_purpose"
@@ -254,34 +264,41 @@ class ParentExplorePurposeListFilter(VocabularyListFilter):
     lookup_path = "sample__heatflowsite__explo_purpose__pk"
 
     def get_vocabulary(self):
+        """Return the ``ExplorationPurpose`` vocabulary class."""
         from heat_flow.vocabularies import ExplorationPurpose
 
         return ExplorationPurpose
 
 
 class ParentEnvironmentListFilter(VocabularyListFilter):
-    """Environment filter for the site changelist, scoped to the
-    ``GeographicEnvironment`` vocabulary (FR-018, T118)."""
+    """Environment filter for the site changelist.
+
+    Scoped to the ``GeographicEnvironment`` vocabulary.
+    """
 
     title = _("environment")
     parameter_name = "environment"
     lookup_path = "sample__heatflowsite__environment"
 
     def get_vocabulary(self):
+        """Return the ``GeographicEnvironment`` vocabulary class."""
         from heat_flow.vocabularies import GeographicEnvironment
 
         return GeographicEnvironment
 
 
 class ParentExplorationMethodListFilter(VocabularyListFilter):
-    """Exploration-method filter for the site changelist, scoped to the
-    ``ExplorationMethod`` vocabulary (FR-018, T118)."""
+    """Exploration-method filter for the site changelist.
+
+    Scoped to the ``ExplorationMethod`` vocabulary.
+    """
 
     title = _("exploration method")
     parameter_name = "explo_method"
     lookup_path = "sample__heatflowsite__explo_method"
 
     def get_vocabulary(self):
+        """Return the ``ExplorationMethod`` vocabulary class."""
         from heat_flow.vocabularies import ExplorationMethod
 
         return ExplorationMethod
@@ -289,18 +306,18 @@ class ParentExplorationMethodListFilter(VocabularyListFilter):
 
 @admin.register(GHFDBParent)
 class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
-    """Read-only changelist for the published site view (US-3).
+    """Read-only changelist for the published site view.
 
     The published block of ``list_display`` comes entirely from
     ``project/ghfdb/columns.py``'s published-column mapping (see
     ``list_display`` below), so a column added to ``constants.PARENT_COLUMNS``
     and not to that mapping is a startup failure rather than a silently
     missing column. Four geography columns follow it — portal additions, not
-    part of the published structure (D8) — and the two determination-count
+    part of the published structure — and the two determination-count
     columns come last. Mutation of existing records is disabled; data enters
     only via the import action, gated to staff holding the model's add
-    permission (T123). Only ``GHFDBParentImportResource`` is attached; no
-    export resource is present (FR-021).
+    permission. Only ``GHFDBParentImportResource`` is attached; no
+    export resource is present.
 
     References:
         - Fuchs et al. (2021). A new database structure for the IHFC Global
@@ -335,20 +352,20 @@ class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
     ordering = ("ghfdb_id",)
 
     def get_import_resource_classes(self, request):
+        """Use the site import resource for the import action."""
         return [GHFDBParentImportResource]
 
     def get_import_formats(self):
+        """Accept both the full and simplified XLSX import formats."""
         return [GHFDBImportFormat, GHFDBSimpleImportFormat]
 
     def process_dataset(self, dataset, form, request, **kwargs):
-        """Commit through the shared entry point (T013) rather than
-        re-implementing the parent-then-child sequence here.
+        """Commit an imported dataset through the shared entry point.
 
-        No dataset-selection surface exists on this admin route yet
-        (decisions.md D12 — out of this feature's scope), so
+        No dataset-selection surface exists on this admin route yet, so
         ``fairdm_dataset`` is never supplied and this always raises the
-        located error T008 added, the same as it always silently wrote to
-        whichever dataset happened to be first before this story.
+        located error, the same as it always silently wrote to whichever
+        dataset happened to be first before this was caught.
         """
         from .importers import import_ghfdb_template
 
@@ -356,18 +373,18 @@ class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
         return import_ghfdb_template(dataset, imp_kwargs.get("fairdm_dataset"))
 
     def get_export_resource_classes(self, request):
-        """No export resource on this changelist (FR-021): ``ImportExportMixin``
-        overrides only the import side, so without this the framework's
-        default export path is live with a generated resource that would
-        emit the site model's own fields rather than the published
-        structure (T119)."""
+        """Disable export.
+
+        ``ImportExportMixin`` would otherwise expose the site model's raw
+        fields rather than the published structure.
+        """
         return []
 
     def has_import_permission(self, request):
-        """Gate the import route on the model's add permission at the user
-        level (T123): the framework's own hook is a no-op whenever
-        ``IMPORT_EXPORT_IMPORT_PERMISSION_CODE`` is unset, which it is in
-        this project, so a user holding only view permission could
+        """Gate the import route on the model's add permission.
+
+        ``IMPORT_EXPORT_IMPORT_PERMISSION_CODE`` is unset in this project, so
+        the framework's own hook is a no-op and a view-only user could
         otherwise reach a route that writes through a changelist declared
         read-only.
         """
@@ -382,24 +399,30 @@ class GHFDBParentAdmin(ImportExportMixin, admin.ModelAdmin):
 
     @admin.display(description=_("total_children"), ordering="total_children")
     def total_children(self, obj):
+        """Show the site's total determination count."""
         return getattr(obj, "total_children", None)
 
     @admin.display(description=_("relevant_children"), ordering="relevant_children")
     def relevant_children(self, obj):
+        """Show the site's relevant determination count."""
         return getattr(obj, "relevant_children", None)
 
     def get_queryset(self, request):
-        """Return the published sites as complete rows: scoped to published
-        records by the manager, flattened onto every published column, and
-        carrying the determination counts and the attached children without
-        a query per site (FR-002, FR-019)."""
+        """Scope to published sites, flattened and annotated with counts.
+
+        Every published column and both determination counts are ready
+        without a query per site.
+        """
         return GHFDBParent.objects.as_ghfdb_flat().with_child_counts().with_children()
 
     def has_add_permission(self, request):
+        """Disable add: this changelist is read-only; data enters via import."""
         return False
 
     def has_change_permission(self, request, obj=None):
+        """Disable change: this changelist is read-only; data enters via import."""
         return False
 
     def has_delete_permission(self, request, obj=None):
+        """Disable delete: this changelist is read-only; data enters via import."""
         return False

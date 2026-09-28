@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+"""Run administrative tasks via Django's command line."""
+
 import os
 import sys
 

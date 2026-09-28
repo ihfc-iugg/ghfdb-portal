@@ -1,5 +1,4 @@
-"""
-GHFDB child-level import resource (HeatFlow + related measurements).
+"""GHFDB child-level import resource (HeatFlow + related measurements).
 
 Implements GHFDBChildImportResource which reads the GHFDB XLSX spreadsheet
 and creates/updates child-level records:
@@ -40,8 +39,7 @@ from .widgets import (
 
 
 class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
-    """
-    Import resource for GHFDB child-level data.
+    """Import resource for GHFDB child-level data.
 
     Processes all child columns from the GHFDB spreadsheet and upserts
     ``HeatFlow`` records keyed on ``ID``.  Related objects (HeatFlowInterval,
@@ -159,7 +157,7 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
     # ------------------------------------------------------------------
 
     def before_import_row(self, row, **kwargs):
-        """Record this row's position in the file (T035).
+        """Record this row's position in the file.
 
         ``_child_natural_key`` uses it in place of ``q_top``/``q_bottom``,
         so a no-ID row's identity survives a corrected depth interval.
@@ -170,10 +168,9 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         self._current_row_number = kwargs.get("row_number")
 
     def before_import(self, dataset, **kwargs):
-        """Store the caller's named FairDM dataset for use during row
-        processing.
+        """Store the caller's named FairDM dataset for use during row processing.
 
-        FR-002: the import refuses to guess a dataset. A caller passing an
+        FS-004 FR-002: the import refuses to guess a dataset. A caller passing an
         already-resolved ``Dataset`` instance as ``fairdm_dataset`` reaches a
         private dataset the same as a public one — there is no lookup here
         to narrow to the default manager in the first place.
@@ -224,9 +221,9 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         )
 
     def before_save_instance(self, instance, row, **kwargs):
-        """
-        Save the HeatFlowInterval and optional sub-measurements, then link them
-        to the HeatFlow instance.
+        """Save the HeatFlowInterval and optional sub-measurements.
+
+        Links them to the HeatFlow instance.
         """
         if not instance.dataset_id:
             instance.dataset = self._fairdm_dataset
@@ -235,12 +232,8 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         if instance.parent is None and not str(row.get("ID_parent") or "").strip():
             instance.parent = self._resolve_parent_by_location(row)
 
-        # Every determination is named. A row that carries an ID is named by
-        # it — the identifier the submission itself gives the determination —
-        # and a row without one falls back to the stable natural key. Leaving
-        # name unset is not an option: it is a required CharField, so an
-        # unset one saves as an empty string without the database objecting,
-        # and the determination then has nothing to display itself by.
+        # name is a required CharField with no default, so leaving it unset
+        # would silently save as "" rather than fail (#206).
         ghfdb_id = str(row.get("ID") or "").strip()
         if ghfdb_id:
             instance.name = ghfdb_id
@@ -249,19 +242,15 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
             if natural_key:
                 instance.name = natural_key
 
-        # Determine the parent HeatFlowSite for the interval
         parent_hf = instance.parent
         heat_flow_site = parent_hf.site if parent_hf else None
 
-        # --- HeatFlowInterval ---
         interval = self._build_interval(row, heat_flow_site)
         instance.sample = interval
 
-        # --- ThermalGradient (sentinel: T_grad_mean) ---
         gradient = self._build_gradient(row, interval)
         instance.thermal_gradient = gradient
 
-        # --- IntervalConductivity (sentinel: tc_mean) ---
         conductivity = self._build_conductivity(row, interval)
         instance.thermal_conductivity = conductivity
 
@@ -394,7 +383,7 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         """Attach this row's IGSN reference to the interval as a SampleIdentifier.
 
         ``-``, blank and whitespace-only cells mean no identifier was given
-        (D26, specs/004-import-upload-template/decisions.md) — every one of
+        (FS-004) — every one of
         the 430 rows in the assessment team's own corpus that carries
         anything at all in this column carries the single value ``-``.
         Reads both column spellings the template has used, ``Ref_IGSN`` and
@@ -403,8 +392,8 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
 
         Looked up by (``value``, ``type``) rather than by the interval:
         ``_build_interval`` saves a new ``HeatFlowInterval`` on every call
-        (T035/D18), so a re-imported row's interval is never the same row
-        twice. An IGSN identifies one physical sample regardless of which
+        (docs/adr/0014-a-determination-without-an-identifier-is-its-row.md), so
+        a re-imported row's interval is never the same row twice. An IGSN identifies one physical sample regardless of which
         interval currently represents it, so re-attaching the existing
         identifier to the row's current interval — rather than keying on
         the interval and creating a second row for the same value — is what
@@ -485,8 +474,9 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         """Return a stable natural key for no-ID child rows (no synthetic prefix).
 
         Keyed on site location, publication reference and this row's
-        position in the file — not on ``q_top``/``q_bottom`` (T035,
-        DR-003): those are exactly the values a corrected depth interval
+        position in the file — not on ``q_top``/``q_bottom`` (see
+        docs/adr/0014-a-determination-without-an-identifier-is-its-row.md):
+        those are exactly the values a corrected depth interval
         changes, so keying on them turned a correction into a second
         determination. Position holds steady across a repeat import of
         the same rows in the same order, which is what "the same

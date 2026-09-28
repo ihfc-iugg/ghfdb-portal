@@ -20,13 +20,9 @@ ALLOWED_HOSTS = ["*"]
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 
-# The framework's baseline points CACHES at a placeholder Redis host
-# (`unconfigured.invalid`) whenever REDIS_URL is unset, rather than degrading
-# like DATABASES and CELERY_BROKER_URL do. django-redis swallows the
-# resulting connection failure silently — until allauth's login rate limiter
-# fails to acquire its cache lock and reads that as a permanent block on
-# every login attempt, working credentials or not. Degrade to LocMemCache
-# here instead, so a Redis-less dev server can still log in.
+# Without REDIS_URL the baseline CACHES points at a placeholder host that
+# django-redis fails to reach silently, which allauth's login rate limiter
+# then reads as a permanent block on every login attempt (#216).
 if not os.environ.get("REDIS_URL"):
     CACHES = {
         alias: {

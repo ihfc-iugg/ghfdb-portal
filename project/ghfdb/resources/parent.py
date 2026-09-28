@@ -1,5 +1,4 @@
-"""
-GHFDB parent-level import resource (HeatFlowSite + ParentHeatFlow).
+"""GHFDB parent-level import resource (HeatFlowSite + ParentHeatFlow).
 
 Implements GHFDBParentImportResource which reads the GHFDB XLSX spreadsheet
 and creates/updates parent-level records:
@@ -27,8 +26,7 @@ from .widgets import ParentWidget, QuantityWidget, YesNoWidget
 
 
 class GHFDBParentImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
-    """
-    Import resource for GHFDB parent-level data.
+    """Import resource for GHFDB parent-level data.
 
     Parses the 18 PARENT_COLUMNS from the GHFDB spreadsheet and upserts
     ``ParentHeatFlow`` + ``HeatFlowSite`` records keyed on ``ID_parent``.
@@ -90,10 +88,9 @@ class GHFDBParentImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
     # ------------------------------------------------------------------
 
     def before_import(self, dataset, **kwargs):
-        """Store the caller's named FairDM dataset and deduplicate rows by
-        effective parent key.
+        """Store the caller's named FairDM dataset and dedupe rows by effective key.
 
-        FR-002: the import refuses to guess a dataset. A caller passing an
+        FS-004 FR-002: the import refuses to guess a dataset. A caller passing an
         already-resolved ``Dataset`` instance as ``fairdm_dataset`` reaches a
         private dataset the same as a public one — there is no lookup here
         to narrow to the default manager in the first place.
@@ -165,13 +162,8 @@ class GHFDBParentImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         site = self._get_or_create_site(id_parent, row)
         instance.sample = site
 
-        # Every parent value carries a name, for the same reason each
-        # determination beneath it does: name is required, an unset one saves
-        # as an empty string without the database objecting, and the record
-        # then has nothing to display itself by. The row's own identifier
-        # names it where the row has one, and the site names it where the row
-        # has not — the site is resolved from the coordinates, so that
-        # fallback holds steady across a repeat import.
+        # name is a required field; fall back to the resolved site's name
+        # when the row carries no identifier of its own (#206).
         instance.name = str(id_parent).strip() or site.name
 
     def after_save_instance(self, instance, row, **kwargs):
@@ -186,7 +178,7 @@ class GHFDBParentImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
     def _get_or_create_site(self, id_parent: str, row: dict) -> HeatFlowSite:
         """Return the HeatFlowSite for this parent row, creating it if needed.
 
-        Coordinates identify the site (R1, FR-004): the row's location is
+        Coordinates identify the site (FS-004 FR-004): the row's location is
         looked up first, whether or not the row carries an ``ID_parent``.
         ``ID_parent`` is consulted only when the coordinates do not already
         resolve to an existing site, so the two lookups cannot disagree and
@@ -194,7 +186,6 @@ class GHFDBParentImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         """
         from fairdm.contrib.location.models import Point
 
-        # Parse the new site data from the row
         new_site = self._parent_widget.clean(row.get("name"), row=row)
 
         existing_by_location = None
@@ -206,11 +197,9 @@ class GHFDBParentImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
 
         if existing_by_location is not None:
             site = existing_by_location
-            # Record the row's identifier on a site that has none, so that a later
-            # row carrying that identifier and no coordinates still resolves here
-            # rather than creating a duplicate. Never overwrite one already set:
-            # coordinates decide identity, and a disagreeing identifier is the
-            # row's problem, not this site's.
+            # Record the identifier on a site that has none, so a later row
+            # with that identifier and no coordinates resolves here instead
+            # of creating a duplicate; never overwrite one already set (#206).
             if id_parent and not site.local_id:
                 site.local_id = id_parent
         elif id_parent:
@@ -224,7 +213,6 @@ class GHFDBParentImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         else:
             site = new_site or HeatFlowSite()
 
-        # Apply field updates from the row data
         if new_site is not None:
             for field_name in [
                 "name",
@@ -240,7 +228,6 @@ class GHFDBParentImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
             ]:
                 setattr(site, field_name, getattr(new_site, field_name))
 
-            # Get or create the Point for the coordinates
             if new_site.location is not None:
                 point, _ = Point.objects.get_or_create(
                     x=new_site.location.x,

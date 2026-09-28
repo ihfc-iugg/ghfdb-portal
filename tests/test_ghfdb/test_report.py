@@ -1,10 +1,4 @@
-"""Tests for project.ghfdb.report (T009).
-
-Turns a ``GHFDBImportOutcome`` into the counts and per-row failures FR-009
-and FR-012 need: sites separated from determinations, created separated
-from updated, and each failure naming its row, its column and a specific
-reason.
-"""
+# Tests for project.ghfdb.report .
 
 import pytest
 
@@ -82,9 +76,8 @@ class TestBuildReportFailures:
     def test_an_empty_mandatory_field_failure_carries_the_templates_column_name(
         self, dataset
     ):
-        """The full_clean() validation error names the Django model field
-        ("value"); the report must translate that back to the template's
-        own column heading ("q")."""
+        # The full_clean() validation error names the Django model field ("value"); the
+        # report must translate that back to the template's own column heading ("q").
         from project.ghfdb.importers import import_ghfdb_template
         from project.ghfdb.report import build_report
 
@@ -102,9 +95,8 @@ class TestBuildReportFailures:
     def test_a_scalar_vocabulary_failure_names_the_value_and_the_vocabulary(
         self, dataset
     ):
-        """T010/FR-012: a bare 'invalid value' does not satisfy this — the
-        reason must name both the supplied value and the vocabulary it was
-        checked against."""
+        # FS-004 FR-012: a bare 'invalid value' does not satisfy this — the reason must
+        # name both the supplied value and the vocabulary it was checked against.
         from project.ghfdb.importers import import_ghfdb_template
         from project.ghfdb.report import build_report
 
@@ -114,10 +106,9 @@ class TestBuildReportFailures:
         outcome = import_ghfdb_template(make_dataset(row1), dataset, check_only=True)
         report = build_report(outcome)
 
-        # The child pass also reports a fault of its own here — it cannot
-        # resolve the parent the environment fault kept from being created —
-        # so this asserts on the environment failure specifically rather
-        # than assuming it is the only one.
+        # The child pass also faults here — it cannot resolve the parent the
+        # environment fault kept from being created — so this asserts on the
+        # environment failure specifically rather than assuming it is the only one.
         failure = next(f for f in report.failures if f.column == "environment")
         assert "not_a_real_value" in failure.reason
         assert "GeographicEnvironment" in failure.reason
@@ -125,9 +116,9 @@ class TestBuildReportFailures:
     def test_a_many_valued_vocabulary_failure_names_the_value_and_the_vocabulary(
         self, dataset
     ):
-        """The many-valued path (``tc_method``, via
-        ``RelatedModelWidget.set_m2m_relations``) must carry the same two
-        facts as the scalar path."""
+        # The many-valued path (``tc_method``, via
+        # ``RelatedModelWidget.set_m2m_relations``) must carry the same two facts as the
+        # scalar path.
         from project.ghfdb.importers import import_ghfdb_template
         from project.ghfdb.report import build_report
 
@@ -143,10 +134,6 @@ class TestBuildReportFailures:
         assert "ConductivityMethod" in failure.reason
 
     def test_a_related_widget_failure_does_not_name_the_model_it_wraps(self, dataset):
-        """T028, FR-013: ``RelatedModelWidget`` wraps a sub-field's error
-        with its own Django model's class name (``ParentWidget`` ->
-        ``HeatFlowSite``) so a developer reading raw output can place the
-        fault — that name is internal and must not reach the report."""
         from project.ghfdb.importers import import_ghfdb_template
         from project.ghfdb.report import build_report
 
@@ -164,10 +151,9 @@ class TestBuildReportFailures:
     def test_a_downstream_parent_resolution_failure_does_not_name_the_model_class(
         self, dataset
     ):
-        """T028, FR-013: when a row's parent failed to import, the child
-        pass's own ``ForeignKeyWidget`` cannot resolve it and raises
-        Django's own ``DoesNotExist``, whose default message names the
-        model class directly — that must not reach the report either."""
+        # FS-004 FR-013: when a row's parent failed to import, the child pass's own
+        # ``ForeignKeyWidget`` cannot resolve it and raises Django's own
+        # ``DoesNotExist``.
         from project.ghfdb.importers import import_ghfdb_template
         from project.ghfdb.report import build_report
 

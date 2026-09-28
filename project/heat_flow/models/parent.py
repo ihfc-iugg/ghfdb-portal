@@ -1,5 +1,4 @@
-"""
-Parent-level models for the Global Heat Flow Database (GHFDB).
+"""Parent-level models for the Global Heat Flow Database (GHFDB).
 
 Contains HeatFlowSite (the geographic measurement location) and ParentHeatFlow
 (the aggregated, quality-controlled surface heat flow for that site).
@@ -130,7 +129,7 @@ class HeatFlowSite(GenericHole, AbstractGeoDepthInterval, GenericEarthSample):
         ]
 
     def _check_location_uniqueness(self):
-        """Refuse a location already held by another HeatFlowSite (FR-004, FR-005).
+        """Refuse a location already held by another HeatFlowSite (FS-001 FR-004, FR-005).
 
         Binds only where ``location`` is set, and never rejects a site
         against itself.
@@ -149,10 +148,12 @@ class HeatFlowSite(GenericHole, AbstractGeoDepthInterval, GenericEarthSample):
                 )
 
     def clean(self):
+        """Reject a location already held by another HeatFlowSite."""
         super().clean()
         self._check_location_uniqueness()
 
     def save(self, *args, **kwargs):
+        """Default an unset top depth to 0 and enforce location uniqueness."""
         if not self.top:
             self.top = 0
         self._check_location_uniqueness()
@@ -162,9 +163,11 @@ class HeatFlowSite(GenericHole, AbstractGeoDepthInterval, GenericEarthSample):
 
 
 class ParentHeatFlow(Measurement):
-    """Database table that stores terrestrial heat flow data. This is the
-    'parent' schema outlined in the formal structure of the database put
-    forth by Fuchs et al (2021)."""
+    """Database table that stores terrestrial heat flow data.
+
+    This is the 'parent' schema outlined in the formal structure of the
+    database put forth by Fuchs et al (2021).
+    """
 
     value = models.QuantityField(
         verbose_name=_("heat flow"),
@@ -239,6 +242,7 @@ class ParentHeatFlow(Measurement):
         ]
 
     def save(self, *args, **kwargs):
+        """Enforce one parent record per site before saving."""
         if self.sample_id:
             if not isinstance(self.sample, HeatFlowSite):
                 raise ValidationError(
@@ -258,10 +262,12 @@ class ParentHeatFlow(Measurement):
         super().save(*args, **kwargs)
 
     def __str__(self):
+        """Return the parent heat flow value."""
         return f"{self.value}"
 
     @property
     def site(self):
+        """Return the HeatFlowSite this parent record belongs to."""
         return self.sample
 
     def get_quality(self):

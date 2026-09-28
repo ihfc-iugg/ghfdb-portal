@@ -1,19 +1,14 @@
-"""Tests for review.models.Review (T006, data-model.md "review.Review").
-
-Fixtures use direct ORM calls, deliberately (tests/README.md): factories fill
-fields with generated values, which would hide whether ``uploaded_by`` etc.
-behave the way the model declares.
-"""
+# Tests for review.models.Review (FS-005, data-model.md "review.Review"). Fixtures use
+# direct ORM calls, deliberately (tests/README.md): factories fill fields with generated
+# values, which would hide whether ``uploaded_by`` etc.
 
 from pathlib import Path
 
 import pytest
 from django.core.exceptions import FieldDoesNotExist
-from fairdm.factories import DatasetFactory, LiteratureItemFactory
+from fairdm.factories import DatasetFactory, LiteratureItemFactory, PersonFactory
 from review.models import Review
 from review.states import States
-
-from tests.test_review.factories import ClaimedPersonFactory
 
 
 @pytest.fixture
@@ -39,7 +34,7 @@ class TestReviewWorkflowFields:
         assert review.state == States.DESCRIBED
 
     def test_uploaded_by_can_be_set_at_creation(self, literature, dataset):
-        uploader = ClaimedPersonFactory()
+        uploader = PersonFactory(is_claimed=True, password="test-pass-123")
 
         review = Review.objects.create(
             literature=literature, dataset=dataset, uploaded_by=uploader
@@ -50,7 +45,7 @@ class TestReviewWorkflowFields:
     def test_decision_fields_accept_a_curators_decision(self, literature, dataset):
         from django.utils import timezone
 
-        curator = ClaimedPersonFactory()
+        curator = PersonFactory(is_claimed=True, password="test-pass-123")
         now = timezone.now()
 
         review = Review.objects.create(
@@ -81,9 +76,9 @@ class TestReviewWorkflowFields:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestSubmittedFile:
-    """T007, data-model.md "review.SubmittedFile" — a file per submission,
-    not a field on the assessment, because a curator can send an assessment
-    back and the replacement must not erase what was rejected."""
+    # FS-005, data-model.md "review.SubmittedFile" — a file per submission, not a field
+    # on the assessment, because a curator can send an assessment back and the
+    # replacement must not erase what was rejected.
 
     def test_current_returns_the_most_recent_submission(
         self, literature, dataset, tmp_path, settings
@@ -93,7 +88,7 @@ class TestSubmittedFile:
 
         settings.MEDIA_ROOT = str(tmp_path)
         review = Review.objects.create(literature=literature, dataset=dataset)
-        uploader = ClaimedPersonFactory()
+        uploader = PersonFactory(is_claimed=True, password="test-pass-123")
 
         SubmittedFile.objects.create(
             review=review,
@@ -116,7 +111,7 @@ class TestSubmittedFile:
 
         settings.MEDIA_ROOT = str(tmp_path)
         review = Review.objects.create(literature=literature, dataset=dataset)
-        uploader = ClaimedPersonFactory()
+        uploader = PersonFactory(is_claimed=True, password="test-pass-123")
 
         first = SubmittedFile.objects.create(
             review=review,
@@ -146,15 +141,9 @@ class TestSubmittedFile:
         assert str(field.help_text).strip()
 
 
-# T010a: the tree must never hold two answers at once. Asserted by a grep-style
-# test rather than by eye: no reference to ``STATUS_CHOICES``, ``review__status``
-# or the old "Reviewers" group may survive anywhere in ``project/`` once the code
-# the new record supersedes is retired.
-#
-# Migrations are excluded deliberately: a migration is a historical record of what
-# the schema used to be and is never edited once written, so the mapping comment in
-# ``0003_review_workflow_fields.py`` is expected to name the old ``STATUS_CHOICES``
-# values it translates away from.
+# Asserted by a grep-style test rather than by eye: no reference to
+# ``STATUS_CHOICES``, ``review__status`` or the old "Reviewers" group may survive
+# anywhere in ``project/``. Migrations are excluded: a migration never edits its history.
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2] / "project"
 
@@ -198,14 +187,8 @@ class TestOldRecordVocabularyIsRetired:
 
 
 class TestTheRecordIsCalledAnAssessment:
-    """D3: the class keeps the name the database and the code use, and
-    everywhere a reader can see it the portal says "assessment".
-
-    Worth pinning because the framework builds page furniture from these two
-    names — the "showing n of m" line on the list, the empty state — so a
-    regression here reads to the assessment team as the portal using a word
-    they retired, in a place nobody thinks to look at.
-    """
+    # The class keeps the name the database and the code use, and everywhere a reader
+    # can see it the portal says "assessment".
 
     def test_the_names_a_reader_sees_are_assessment(self):
         meta = Review._meta

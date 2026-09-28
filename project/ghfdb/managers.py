@@ -1,5 +1,4 @@
-"""
-GHFDB proxy queryset and manager.
+"""GHFDB proxy queryset and manager.
 
 Provides ``GHFDBChildQuerySet`` with two key methods:
 
@@ -80,9 +79,7 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
     """QuerySet for the ``GHFDBChild`` proxy model with flat-row annotation helpers."""
 
     def as_ghfdb_flat(self) -> "GHFDBChildQuerySet":
-        """
-        Annotate the queryset with all 40 scalar GHFDB columns and 9
-        correction-flag subqueries.
+        """Annotate the queryset with every scalar GHFDB column.
 
         Executes ≤2 DB queries total (main query + optional content-type
         lookup), regardless of the number of rows returned.
@@ -90,8 +87,6 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
         Scalar columns are sourced via ``select_related`` traversal and
         ``F()`` expressions; correction flags via correlated subqueries.
 
-        Implementation note — MTI traversal
-        ------------------------------------
         ``HeatFlow.sample`` (FK on ``Measurement``) points to the
         ``Sample`` polymorphic root, NOT directly to ``HeatFlowInterval``.
         To reach ``HeatFlowInterval``-specific fields (depth columns,
@@ -124,14 +119,13 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
             "relevant_child": F("is_relevant"),
             "q_date": F("date_acquired"),
             "quality_child": F("quality"),
-            # US-7: the submission template renamed this field to
+            # The submission template renamed this field to
             # ``surface_temperature``; the published column keeps the
-            # released name ``water_temperature`` (D-c,
-            # specs/004-import-upload-template/decisions.md).
+            # released name ``water_temperature``.
             "water_temperature": F("surface_temperature"),
-            # Site-level scalars (from HeatFlowSite via interval → site)
-            # NOTE: 'name' conflicts with a Measurement base-class field; use
-            # 'site_name' as the annotation key and export it via column_name.
+            # Site-level scalars (from HeatFlowSite via interval → site).
+            # 'name' conflicts with a Measurement base-class field, hence
+            # the 'site_name' annotation key.
             "site_name": F("sample__heatflowinterval__site__name"),
             "lat_NS": F("sample__heatflowinterval__site__location__y"),
             "long_EW": F("sample__heatflowinterval__site__location__x"),
@@ -171,10 +165,9 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
             "probe_length": F("sample__heatflowinterval__probe_metadata__length"),
             "probe_tilt": F("sample__heatflowinterval__probe_metadata__tilt"),
             # Ref_IGSN resolves through the interval's sample identifier
-            # relationship (D26, specs/004-import-upload-template/decisions.md):
-            # empty when the interval carries no IGSN.
+            # relationship: empty when the interval carries no IGSN.
             "Ref_IGSN": _ref_igsn_annotation(),
-            # Columns nothing resolves (R4, D3): HeatFlow has no reference
+            # Columns nothing resolves: HeatFlow has no reference
             # relationship at all. Explicitly empty rather than a
             # defensive getattr, so a reader cannot mistake a guard for a
             # working accessor.
@@ -187,10 +180,9 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
         return cast("GHFDBChildQuerySet", qs)
 
     def for_export(self) -> "GHFDBChildQuerySet":
-        """
-        Return a queryset ready for XLSX export: flat scalar annotations plus
-        all 16 M2M relations pre-fetched.
+        """Return a queryset ready for XLSX export.
 
+        Flat scalar annotations plus all 16 M2M relations pre-fetched.
         Executes 18 DB queries total (1 main + 16 prefetch-related queries,
         one per M2M relation, plus 1 content-type lookup), all constant
         regardless of row count.
@@ -219,11 +211,12 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
 class GHFDBChildManager(PolymorphicManager):
     """Custom manager for the ``GHFDBChild`` proxy model.
 
-    Default queryset is scoped to records where ``ghfdb_id`` is set
-    (FR-001b) — i.e. only published GHFDB entries are visible.
+    Default queryset is scoped to records where ``ghfdb_id`` is set — i.e.
+    only published GHFDB entries are visible.
     """
 
     def get_queryset(self) -> GHFDBChildQuerySet:
+        """Scope the default queryset to published GHFDB entries."""
         # cast: PolymorphicQuerySet is untyped, so .filter() erases to Any.
         return cast(
             GHFDBChildQuerySet,
@@ -270,17 +263,17 @@ class GHFDBParentQuerySet(PolymorphicQuerySet):
         )
 
     def with_children(self) -> "GHFDBParentQuerySet":
-        """Prefetch linked child ``HeatFlow`` records, and the site's
-        exploration purposes (T062, FR-010) — the one many-valued published
-        parent column, excluded from ``as_ghfdb_flat()``'s annotations for
-        the reason recorded there.
+        """Prefetch linked child records and the site's exploration purposes.
+
+        Exploration purpose is the one many-valued published parent column,
+        excluded from ``as_ghfdb_flat()``'s annotations for the reason
+        recorded there.
 
         After calling this, accessing ``parent.children.all()`` and
         ``parent.sample.heatflowsite.explo_purpose.all()`` will not fire
-        additional queries. A fixed cost that does not grow with row count,
-        not the ``~2`` this docstring used to claim: measured at 7 queries
-        for one site, through the polymorphic inheritance chain the second
-        prefetch walks.
+        additional queries. A fixed cost that does not grow with row count:
+        measured at 7 queries for one site, through the polymorphic
+        inheritance chain the second prefetch walks.
         """
         return cast(
             "GHFDBParentQuerySet",
@@ -313,10 +306,10 @@ class GHFDBParentQuerySet(PolymorphicQuerySet):
             "q": F("value"),
             "q_uncertainty": F("uncertainty"),
             "p_comment": F("comment"),
-            # NOTE: corr_HP_flag is a direct model field on HeatFlowParent;
-            # it is accessible as obj.corr_HP_flag without annotation.
-            # NOTE: 'name' conflicts with a Measurement base-class field; use
-            # 'site_name' as the annotation key.
+            # corr_HP_flag is a direct model field on HeatFlowParent;
+            # accessible as obj.corr_HP_flag without annotation.
+            # 'name' conflicts with a Measurement base-class field, hence
+            # the 'site_name' annotation key.
             "site_name": F("sample__name"),
             "lat_NS": F("sample__location__y"),
             "long_EW": F("sample__location__x"),
@@ -333,11 +326,12 @@ class GHFDBParentQuerySet(PolymorphicQuerySet):
 class GHFDBParentManager(PolymorphicManager):
     """Custom manager for the ``GHFDBParent`` proxy model.
 
-    Default queryset is scoped to records where ``ghfdb_id`` is set
-    (FR-001b) — i.e. only published GHFDB parent entries are visible.
+    Default queryset is scoped to records where ``ghfdb_id`` is set — i.e.
+    only published GHFDB parent entries are visible.
     """
 
     def get_queryset(self) -> GHFDBParentQuerySet:
+        """Scope the default queryset to published GHFDB parent entries."""
         # cast: PolymorphicQuerySet is untyped, so .filter() erases to Any.
         return cast(
             GHFDBParentQuerySet,

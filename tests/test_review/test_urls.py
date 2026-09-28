@@ -1,11 +1,6 @@
-"""Tests for review.urls (T014, plan.md "The pages").
-
-review-list's production wiring landed in T011's commit, because the
-list view's own access-control tests need a resolvable URL to exercise
-through the test client (see T011's completion notes). This is T014's own
-confirming test: the route resolves by name, at the path plan.md's access
-table gives the assessment list.
-"""
+# Tests for review.urls (FS-005, plan.md "The pages"). review-list's production
+# wiring landed alongside the list view, because its own access-control tests need a
+# resolvable URL to exercise through the test client.
 
 import inspect
 
@@ -36,8 +31,7 @@ class TestReviewListRoute:
 
 @pytest.mark.review
 class TestReviewCreateRoute:
-    """T019: the description route resolves by the name plan.md's access
-    table gives it."""
+    # The description route resolves by the name plan.md's access table gives it.
 
     def test_review_create_resolves_by_name_to_the_documented_path(self):
         assert reverse("review-create") == "/assessments/new/"
@@ -50,8 +44,6 @@ class TestReviewCreateRoute:
 
 @pytest.mark.review
 class TestReviewDetailRoute:
-    """T046, plan.md's access table: an assessment's own page."""
-
     def test_review_detail_resolves_by_name_to_the_documented_path(self):
         assert reverse("review-detail", kwargs={"pk": 1}) == "/assessments/1/"
 
@@ -63,8 +55,6 @@ class TestReviewDetailRoute:
 
 @pytest.mark.review
 class TestReviewUpdateRoute:
-    """T047, plan.md's access table: correcting an assessment."""
-
     def test_review_update_resolves_by_name_to_the_documented_path(self):
         assert reverse("review-update", kwargs={"pk": 1}) == "/assessments/1/edit/"
 
@@ -77,10 +67,8 @@ class TestReviewUpdateRoute:
 @pytest.mark.django_db
 @pytest.mark.review
 class TestTheDecisionQueueHasNoRouteOfItsOwn:
-    """The waiting list is the assessment list narrowed to one state
-    (FR-025), so it is a filter rather than a page. Asserted rather than
-    merely deleted: a route quietly reinstated would leave two ways to ask
-    the same question, one of which nothing maintains."""
+    # The waiting list is the assessment list narrowed to one state (FS-005 FR-025), so
+    # it is a filter rather than a page.
 
     def test_no_route_is_registered_under_that_name(self):
         from django.urls import NoReverseMatch
@@ -100,8 +88,8 @@ class TestTheDecisionQueueHasNoRouteOfItsOwn:
 
 @pytest.mark.review
 class TestReviewDecideRoute:
-    """T037, plan.md's access table: the decide route resolves by the name
-    plan.md's access table gives it."""
+    # FS-005, plan.md's access table: the decide route resolves by the name plan.md's
+    # access table gives it.
 
     def test_review_decide_resolves_by_name_to_the_documented_path(self):
         assert reverse("review-decide", kwargs={"pk": 1}) == "/assessments/1/decide/"
@@ -114,25 +102,11 @@ class TestReviewDecideRoute:
 
 @pytest.mark.review
 class TestNoRouteWritesWithoutChecking:
-    """T024, spec.md SC-002, decisions.md D5: every route registered in
-    ``review.urls`` is proven to reach a checked import through
-    ``import_ghfdb_template`` — the one function that always validates
-    before it writes — rather than the underlying GHFDB import resources
-    directly. A view that re-implemented the write without going through it
-    would pass every other test in this story and still violate SC-002, so
-    this test inspects the route table's own view classes rather than one
-    view's behaviour.
-
-    Verified as a real guard, not a tautology (T024's own instruction):
-    temporarily reinstating a bypass — a view calling
-    ``GHFDBParentImportResource().import_data(...)`` directly instead of
-    going through ``import_ghfdb_template`` — makes
-    ``test_every_routed_view_avoids_the_import_resources_directly`` fail.
-    """
+    # FS-005 SC-002.
 
     #: Symbols that write GHFDB rows directly. A view referencing one of
     #: these, rather than calling ``import_ghfdb_template``, writes without
-    #: the check FR-008 requires.
+    #: the check FS-005 FR-008 requires.
     _WRITE_CAPABLE_SYMBOLS = (
         "GHFDBParentImportResource",
         "GHFDBChildImportResource",

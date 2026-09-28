@@ -4,12 +4,14 @@ import factory
 from factory.declarations import LazyAttribute
 from factory.faker import Faker
 from factory.fuzzy import FuzzyChoice
-from fairdm.factories import MeasurementFactory, SampleFactory
-from research_vocabs.models import Concept
-
+from fairdm.factories import (
+    DatasetFactory,
+    LiteratureItemFactory,
+    MeasurementFactory,
+    SampleFactory,
+)
 from heat_flow import vocabularies
-
-from .models import (
+from heat_flow.models import (
     HeatFlow,
     HeatFlowCorrection,
     HeatFlowInterval,
@@ -19,11 +21,13 @@ from .models import (
     ProbeMetadata,
     ThermalGradient,
 )
+from research_vocabs.models import Concept
+from review.models import Review
 
 
 def attach_random_concept(instance, field_name, vocabulary):
     """Attach one concept drawn from *vocabulary* to *instance*'s *field_name*
-    many-to-many field (R2, FR-036). Requires ``Concept.preload()`` to have run
+    many-to-many field (FS-001 FR-036). Requires ``Concept.preload()`` to have run
     for the vocabulary's concepts to exist.
     """
     concepts = list(Concept.get_for_vocabulary(vocabulary))
@@ -39,7 +43,7 @@ class HeatFlowSiteFactory(SampleFactory):
 
     @factory.post_generation
     def explo_purpose(obj, create, extracted, **kwargs):
-        """Attach an exploration-purpose concept (ConceptManyToManyField; FR-036)."""
+        """Attach an exploration-purpose concept (ConceptManyToManyField; FS-001 FR-036)."""
         if not create:
             return
         if extracted is not None:
@@ -66,7 +70,7 @@ class HeatFlowFactory(MeasurementFactory):
 
     @factory.post_generation
     def method(obj, create, extracted, **kwargs):
-        """Attach a heat-flow-method concept (ConceptManyToManyField; FR-036)."""
+        """Attach a heat-flow-method concept (ConceptManyToManyField; FS-001 FR-036)."""
         if not create:
             return
         if extracted is not None:
@@ -98,7 +102,7 @@ class ThermalGradientFactory(MeasurementFactory):
 
     @factory.post_generation
     def method_top(obj, create, extracted, **kwargs):
-        """Attach a temperature-method concept for the interval top (FR-036)."""
+        """Attach a temperature-method concept for the interval top (FS-001 FR-036)."""
         if not create:
             return
         if extracted is not None:
@@ -108,7 +112,7 @@ class ThermalGradientFactory(MeasurementFactory):
 
     @factory.post_generation
     def method_bottom(obj, create, extracted, **kwargs):
-        """Attach a temperature-method concept for the interval bottom (FR-036)."""
+        """Attach a temperature-method concept for the interval bottom (FS-001 FR-036)."""
         if not create:
             return
         if extracted is not None:
@@ -118,7 +122,7 @@ class ThermalGradientFactory(MeasurementFactory):
 
     @factory.post_generation
     def correction_top(obj, create, extracted, **kwargs):
-        """Attach a temperature-correction concept for the interval top (FR-036)."""
+        """Attach a temperature-correction concept for the interval top (FS-001 FR-036)."""
         if not create:
             return
         if extracted is not None:
@@ -128,7 +132,7 @@ class ThermalGradientFactory(MeasurementFactory):
 
     @factory.post_generation
     def correction_bottom(obj, create, extracted, **kwargs):
-        """Attach a temperature-correction concept for the interval bottom (FR-036)."""
+        """Attach a temperature-correction concept for the interval bottom (FS-001 FR-036)."""
         if not create:
             return
         if extracted is not None:
@@ -151,7 +155,7 @@ class IntervalConductivityFactory(MeasurementFactory):
 
     @factory.post_generation
     def source(obj, create, extracted, **kwargs):
-        """Attach a conductivity-source concept (FR-036)."""
+        """Attach a conductivity-source concept (FS-001 FR-036)."""
         if not create:
             return
         if extracted is not None:
@@ -161,7 +165,7 @@ class IntervalConductivityFactory(MeasurementFactory):
 
     @factory.post_generation
     def location(obj, create, extracted, **kwargs):
-        """Attach a conductivity-location concept (FR-036)."""
+        """Attach a conductivity-location concept (FS-001 FR-036)."""
         if not create:
             return
         if extracted is not None:
@@ -171,7 +175,7 @@ class IntervalConductivityFactory(MeasurementFactory):
 
     @factory.post_generation
     def method(obj, create, extracted, **kwargs):
-        """Attach a conductivity-method concept (FR-036)."""
+        """Attach a conductivity-method concept (FS-001 FR-036)."""
         if not create:
             return
         if extracted is not None:
@@ -181,7 +185,7 @@ class IntervalConductivityFactory(MeasurementFactory):
 
     @factory.post_generation
     def saturation(obj, create, extracted, **kwargs):
-        """Attach a conductivity-saturation concept (FR-036)."""
+        """Attach a conductivity-saturation concept (FS-001 FR-036)."""
         if not create:
             return
         if extracted is not None:
@@ -191,7 +195,7 @@ class IntervalConductivityFactory(MeasurementFactory):
 
     @factory.post_generation
     def pT_conditions(obj, create, extracted, **kwargs):
-        """Attach a conductivity pT-conditions concept (FR-036)."""
+        """Attach a conductivity pT-conditions concept (FS-001 FR-036)."""
         if not create:
             return
         if extracted is not None:
@@ -203,7 +207,7 @@ class IntervalConductivityFactory(MeasurementFactory):
 
     @factory.post_generation
     def pT_function(obj, create, extracted, **kwargs):
-        """Attach a conductivity pT-function concept (FR-036)."""
+        """Attach a conductivity pT-function concept (FS-001 FR-036)."""
         if not create:
             return
         if extracted is not None:
@@ -213,7 +217,7 @@ class IntervalConductivityFactory(MeasurementFactory):
 
     @factory.post_generation
     def strategy(obj, create, extracted, **kwargs):
-        """Attach a conductivity-strategy concept (FR-036)."""
+        """Attach a conductivity-strategy concept (FS-001 FR-036)."""
         if not create:
             return
         if extracted is not None:
@@ -246,7 +250,7 @@ class ProbeMetadataFactory(factory.django.DjangoModelFactory):
 
     @factory.post_generation
     def probe_type(obj, create, extracted, **kwargs):
-        """Attach a probe-type concept (ConceptManyToManyField; FR-036)."""
+        """Attach a probe-type concept (ConceptManyToManyField; FS-001 FR-036)."""
         if not create:
             return
         if extracted is not None:
@@ -256,7 +260,7 @@ class ProbeMetadataFactory(factory.django.DjangoModelFactory):
 
 
 class HeatFlowCorrectionFactory(factory.django.DjangoModelFactory):
-    """Factory for HeatFlowCorrection (T080).  heat_flow SubFactory is the only
+    """Factory for HeatFlowCorrection. heat_flow SubFactory is the only
     relation the model requires; correction_type/status are plain choice
     fields, not vocabulary fields.
     """
@@ -267,3 +271,11 @@ class HeatFlowCorrectionFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = HeatFlowCorrection
+
+
+class ReviewFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Review
+
+    literature = factory.SubFactory(LiteratureItemFactory)
+    dataset = factory.SubFactory(DatasetFactory)

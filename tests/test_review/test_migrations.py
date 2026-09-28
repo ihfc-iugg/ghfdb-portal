@@ -1,13 +1,4 @@
-"""Tests for the review app's data migration creating its own group (T005).
-
-The suite runs with ``--nomigrations`` (tests/README.md), so the migration's
-``RunPython`` function is imported and called directly against the real
-model classes, the same pattern
-``tests/test_ghfdb/migrations/0003_ghfdbchild_ghfdbparent.py`` established.
-
-Only Data Assessor is this migration's business. Data Curator is one of the
-framework's own portal roles, which it installs and refuses to delete.
-"""
+# Tests for the review app's data migration creating its own group .
 
 import importlib
 
@@ -54,9 +45,9 @@ class TestCreateDataAssessorGroup:
         assert not Group.objects.filter(name="Data Assessor").exists()
 
     def test_it_does_not_touch_the_frameworks_own_curator_role(self):
-        """The framework installs Data Curator with real permissions and
-        refuses to delete it. A second group of that name would either collide
-        or quietly produce a role holding none of them."""
+        # The framework installs Data Curator with real permissions and refuses to
+        # delete it. A second group of that name would either collide or quietly produce
+        # a role holding none of them.
         module = importlib.import_module(MIGRATION_MODULE)
 
         module.create_group(real_apps, None)
@@ -69,11 +60,7 @@ WORKFLOW_FIELDS_MODULE = "project.review.migrations.0003_review_workflow_fields"
 
 
 class TestStatusToStateMapping:
-    """T006: the old three-value ``status`` maps onto the new four-value
-    ``state``. The suite runs with ``--nomigrations`` (tests/README.md), so
-    the test database is built straight from the current model and has no
-    ``status`` column left to migrate data out of — the mapping table this
-    migration's ``RunPython`` reads from is what a test can pin directly."""
+    # The old three-value ``status`` maps onto the new four-value ``state``.
 
     def test_every_old_status_value_maps_to_its_new_state(self):
         from review.states import States

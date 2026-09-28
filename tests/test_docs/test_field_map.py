@@ -1,14 +1,4 @@
-"""The published-column map in ``docs/ghfdb_fields.md`` is held to the models.
-
-Constitution principle VII makes that page the authoritative record of how the flat
-GHFDB columns map onto relational model fields, and requires it to stay current with
-every schema change. Nothing checked that it was, and it had drifted: a column pointing
-at a field renamed two migrations earlier still resolved, because the old name survives
-on a base class.
-
-The canonical published columns are ``PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS`` in
-``project/ghfdb/constants.py``.
-"""
+# The published-column map in ``docs/ghfdb_fields.md`` is held to the models.
 
 import re
 from dataclasses import dataclass
@@ -159,8 +149,6 @@ def storage_table(model: type[Model], attribute: str) -> str:
 
 
 class TestFieldMapCoverage:
-    """Every published column has a row."""
-
     def test_every_published_column_appears_in_the_map(self):
         mapped = {mapping.column for mapping in MAPPINGS}
         missing = [column for column in published_columns() if column not in mapped]
@@ -183,8 +171,6 @@ class TestFieldMapCoverage:
 
 @pytest.mark.parametrize("mapping", MAPPINGS, ids=str)
 class TestFieldMapResolves:
-    """Every row names a model, an accessor that resolves on it, and a real declarer."""
-
     def test_accessed_from_names_a_model(self, mapping: Mapping):
         assert model_named(mapping.accessed_from) is not None, (
             f"{mapping} is reached from {mapping.accessed_from}, which is not a model"
@@ -198,13 +184,8 @@ class TestFieldMapResolves:
         )
 
     def test_the_declaring_model_declares_it(self, mapping: Mapping):
-        """The named declarer must declare the field, not merely inherit it.
-
-        This is the clause that catches a renamed field. ``ID`` pointed at
-        ``local_id`` on the child long after migration 0011 replaced it with
-        ``ghfdb_id``, and an existence check passed: ``local_id`` still resolves,
-        because it is declared on a FairDM base class.
-        """
+        # The named declarer must declare the field, not merely inherit it. This is the
+        # clause that catches a renamed field.
         model, attribute = owner_and_attribute(mapping)
         declarers = declaring_classes(model, attribute)
         named = mapping.declared_by.split(".")[-1]

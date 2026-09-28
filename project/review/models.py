@@ -1,12 +1,4 @@
-"""
-Global Heat Flow Database (GHFDB) models for Django. The models are defined using the Django ORM and are used to create the database schema. The models are defined using the following sources:
-
-    - Fuchs et. al., (2021). A new database structure for the IHFC Global Heat Flow Database. International Journal of
-    Terrestrial Heat Flow and Applications, 4(1), pp.1-14.
-
-    - Fuchs et. al. (2023). The Global Heat Flow Database: Update 2023.
-
-"""
+"""Models for the assessment upload workflow: ``Review`` and its submitted files."""
 
 from pathlib import PurePosixPath
 
@@ -20,6 +12,8 @@ from .states import STATE_VARIANTS, States
 
 
 class Review(models.Model):
+    """A dataset's assessment: who uploaded it, its state, and its curator decision."""
+
     uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_("uploaded by"),
@@ -112,20 +106,19 @@ class Review(models.Model):
         # "Assessment" is what the portal calls this everywhere a reader can
         # see it, and the framework builds its own page furniture — the
         # "showing n of m" line, the empty state — from these two names. The
-        # class keeps the name the database and the code already use (D3).
+        # class keeps the name the database and the code already use (#216).
         verbose_name = _("Assessment")
         verbose_name_plural = _("Assessments")
         ordering = ["-end_date"]
 
     def save(self, *args, **kwargs):
-        # if not kwargs.get("pk") and not self.dataset_id:
-        # self.dataset = Dataset.objects.create(name=self.literature.title)
+        """Reject a start date that falls after the end date."""
         if self.start_date and self.end_date and self.start_date > self.end_date:
             raise ValueError(_("Start date cannot be after end date."))
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        """The assessment's own page (FR-027)."""
+        """The assessment's own page (FS-005 FR-027)."""
         return reverse("review-detail", kwargs={"pk": self.pk})
 
     @property
@@ -145,8 +138,7 @@ class Review(models.Model):
 
     @property
     def current(self):
-        """The most recent submitted file, or ``None`` if none has been
-        submitted yet (data-model.md "review.SubmittedFile")."""
+        """The most recent submitted file, or ``None`` if none has been submitted yet (FS-005 data-model.md "review.SubmittedFile")."""
         return self.submissions.order_by("-submitted_at", "-pk").first()
 
 
@@ -156,12 +148,11 @@ def submission_upload_path(instance, filename):
 
 
 class SubmittedFile(models.Model):
-    """One completed upload template as supplied, kept against its
-    assessment (T007, data-model.md "review.SubmittedFile").
+    """One completed upload template as supplied, kept against its assessment (FS-005 data-model.md "review.SubmittedFile").
 
     A row per submission rather than a field on ``Review``: a curator can
     send an assessment back, and the replacement must not erase what was
-    rejected (FR-015).
+    rejected (FS-005 FR-015).
     """
 
     review = models.ForeignKey(

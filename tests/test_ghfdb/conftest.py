@@ -1,14 +1,4 @@
-"""
-Shared pytest fixtures for the test_ghfdb test suite.
-
-Constructs the complete object graph used across all GHFDB tests:
-  HeatFlowSite → HeatFlowInterval (with ProbeMetadata) → ParentHeatFlow
-  → HeatFlow (linked to ThermalGradient, IntervalConductivity, and
-    HeatFlowCorrection instances for all 9 correction types).
-
-Also provides a ``sample_ghfdb_row`` fixture with a minimal valid dict of
-GHFDB flat-column values for import testing.
-"""
+# Shared pytest fixtures for the test_ghfdb test suite.
 
 from pathlib import Path
 
@@ -19,18 +9,12 @@ from fairdm.factories import DatasetFactory
 
 @pytest.fixture
 def dataset(db):
-    """A minimal Dataset — infrastructure, not under test."""
     return DatasetFactory()
 
 
 @pytest.fixture
 def official_upload_template_workbook():
-    """The official GHFDB upload template, opened unmodified (US-1, T001).
-
-    ``tests/fixtures/official_upload_template.xlsx`` is
-    ``docs/constitution/references/data_upload_template.xlsx`` with the two
-    ADR 0003 misspellings corrected, and nothing else changed.
-    """
+    # The official GHFDB upload template, opened unmodified (FS-004 US-1).
     path = (
         Path(__file__).resolve().parents[1]
         / "fixtures"
@@ -41,12 +25,9 @@ def official_upload_template_workbook():
 
 @pytest.fixture
 def heat_flow_chain(dataset):
-    """
-    Complete GHFDB record chain required by all GHFDB tests.
-
-    Returns the child ``HeatFlow`` instance; related objects are accessible
-    via its FK/reverse-FK relations.
-    """
+    # Complete GHFDB record chain required by all GHFDB tests. Returns the child
+    # ``HeatFlow`` instance; related objects are accessible via its FK/reverse-FK
+    # relations.
     from heat_flow.models import (
         HeatFlow,
         HeatFlowCorrection,
@@ -125,11 +106,8 @@ def heat_flow_chain(dataset):
 
 @pytest.fixture
 def sample_ghfdb_row():
-    """
-    Minimal valid dict of GHFDB flat-column values for import testing.
-
-    Column names match the official GHFDB spreadsheet headers.
-    """
+    # Minimal valid dict of GHFDB flat-column values for import testing. Column names
+    # match the official GHFDB spreadsheet headers.
     return {
         "ID": "1",
         "ID_parent": "1",
@@ -201,14 +179,9 @@ def sample_ghfdb_row():
     }
 
 
-# ---------------------------------------------------------------------------
-# Phase 1 foundations (T004-T010) for 002-ghfdb-proxy.
-#
-# Distinct from ``heat_flow_chain`` above, which the pre-existing test suite
-# still depends on and which this run leaves alone. These fixtures use the
-# naming ``tasks.md`` specifies, and are built by direct ORM calls, per
-# ``tests/README.md``.
-# ---------------------------------------------------------------------------
+# Distinct from ``heat_flow_chain`` above, which the pre-existing test suite still
+# depends on and which this run leaves alone. Named per ``tasks.md``, and built by
+# direct ORM calls, per ``tests/README.md``.
 
 
 def build_site_and_parent(dataset, *, name="Test Site", published=True, ghfdb_id=1):
@@ -318,7 +291,7 @@ def build_child(
 
 
 def build_published_chain(dataset, *, published=True, ghfdb_id=1, **child_kwargs):
-    """Build one complete site -> parent -> child chain (T004)."""
+    """Build one complete site -> parent -> child chain (FS-002)."""
     parent = build_site_and_parent(dataset, published=published, ghfdb_id=ghfdb_id)
     return build_child(
         dataset, parent, published=published, ghfdb_id=ghfdb_id, **child_kwargs
@@ -327,18 +300,12 @@ def build_published_chain(dataset, *, published=True, ghfdb_id=1, **child_kwargs
 
 @pytest.fixture
 def published_chain(dataset):
-    """One complete record chain with the published identifier set (T004)."""
     return build_published_chain(dataset)
 
 
 @pytest.fixture
 def published_chains(dataset):
-    """Callable building *n* complete, published record chains (T005, R2).
-
-    Every query-constancy test takes this at two sizes rather than one, per
-    R2's decision — a bound satisfied at one row is satisfied by a linear
-    query plan as well as by a constant one.
-    """
+    # Callable building *n* complete, published record chains (FS-002).
 
     def build(count):
         return [
@@ -351,35 +318,29 @@ def published_chains(dataset):
 
 @pytest.fixture
 def unpublished_chain(dataset):
-    """One complete chain with no published identifier at either level.
-
-    This is what SC-005 is proven against (T006).
-    """
+    # One complete chain with no published identifier at either level. This is what
+    # FS-002 SC-005 is proven against.
     return build_published_chain(dataset, published=False)
 
 
 @pytest.fixture
 def chain_without_gradient(dataset):
-    """A published chain missing only its thermal gradient (T007)."""
     return build_published_chain(dataset, include_gradient=False)
 
 
 @pytest.fixture
 def chain_without_conductivity(dataset):
-    """A published chain missing only its interval conductivity (T007)."""
     return build_published_chain(dataset, include_conductivity=False)
 
 
 @pytest.fixture
 def chain_without_probe_metadata(dataset):
-    """A published chain missing only its probe metadata (T007)."""
     return build_published_chain(dataset, include_probe_metadata=False)
 
 
 @pytest.fixture
 def chain_missing_correction(dataset):
-    """Callable building a published chain missing one named correction type
-    (T007)."""
+    # Callable building a published chain missing one named correction type .
 
     def build(correction_type):
         return build_published_chain(dataset, missing_correction=correction_type)
@@ -389,14 +350,9 @@ def chain_missing_correction(dataset):
 
 @pytest.fixture
 def sites_by_contribution(dataset):
-    """Four sites covering SC-004's contribution shapes (T008).
-
-    Returns a dict keyed by shape name: every determination contributing,
-    some, none, and one site with no determinations at all. The
-    ``all_contributing`` site also carries two exploration purposes, so the
-    one many-valued parent column is exercised — without it nothing would
-    notice a site rendering twice.
-    """
+    # Four sites covering FS-002 SC-004's contribution shapes. Returns a dict keyed by
+    # shape name: every determination contributing, some, none, and one site with no
+    # determinations at all.
     from heat_flow.vocabularies import ExplorationPurpose
     from research_vocabs.models import Concept
 
@@ -431,13 +387,8 @@ def sites_by_contribution(dataset):
 
 @pytest.fixture
 def staff_client(client, db):
-    """A logged-in staff user holding view permission on both GHFDB proxies
-    and nothing more (T009).
-
-    ``Person`` (the project's user model) uses ``email`` as
-    ``USERNAME_FIELD`` and has no ``username`` field at all, so
-    ``create_user`` takes ``email`` rather than ``username``.
-    """
+    # A logged-in staff user holding view permission on both GHFDB proxies and nothing
+    # more .
     from django.contrib.auth import get_user_model
     from django.contrib.auth.models import Permission
 
@@ -457,23 +408,15 @@ def staff_client(client, db):
 
 @pytest.fixture
 def constant_query_count(django_assert_num_queries):
-    """Assert a callable's query count does not grow with row count (R2, T010).
-
-    Runs *build(low)* then measures *call*'s query count, runs *build(high)*
-    and asserts *call* issues the same count again — the two counts are
-    compared to each other, never to a literal, which is what distinguishes
-    a constant query plan from a linear one satisfied at a single row count.
-    """
+    # Assert a callable's query count does not grow with row count (FS-002).
 
     def assert_constant(build, call, low=2, high=4):
         from django.db import connection
         from django.test.utils import CaptureQueriesContext
 
         build(low)
-        # A cold process pays a one-off ContentType lookup the first time a
-        # polymorphic queryset resolves its ctype; call() once, uncounted,
-        # so the baseline below measures steady-state cost rather than
-        # whichever of the two builds happens to run first in the worker.
+        # A cold process pays a one-off ContentType lookup on the first call, so
+        # call() once, uncounted, before the baseline measures steady-state cost.
         call()
         with CaptureQueriesContext(connection) as baseline:
             call()

@@ -1,5 +1,4 @@
-"""
-Shared constants for the GHFDB app.
+"""Shared constants for the GHFDB app.
 
 Defines the canonical GHFDB spreadsheet column structure as four lists:
 
@@ -18,12 +17,8 @@ References:
     - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
 """
 
-# ---------------------------------------------------------------------------
-# CORRECTION_COL_MAP
 # Maps the GHFDB correction-flag spreadsheet column headers to the
 # corresponding HeatFlowCorrection.CorrectionTypeChoices value.
-# Keys use actual spreadsheet header names; values are TextChoices values.
-# ---------------------------------------------------------------------------
 CORRECTION_COL_MAP: dict[str, str] = {
     "corr_IS_flag": "IS",
     "corr_T_flag": "T",
@@ -37,14 +32,10 @@ CORRECTION_COL_MAP: dict[str, str] = {
 }
 
 
-# ---------------------------------------------------------------------------
-# PARENT_COLUMNS
-# The spreadsheet column names that belong to the parent level.
-# Used by GHFDBParentImportResource.before_import() to deduplicate rows and
-# extract unique parent records from the flat GHFDB XLSX.
-# Note: Uses actual spreadsheet header names (case-sensitive as in row 6 of
-# the official GHFDB XLSX template).
-# ---------------------------------------------------------------------------
+# The spreadsheet column names that belong to the parent level, used by
+# GHFDBParentImportResource.before_import() to deduplicate rows and extract
+# unique parent records. Case-sensitive, as in row 6 of the official
+# GHFDB XLSX template.
 PARENT_COLUMNS: list[str] = [
     "ID_parent",
     "q",
@@ -63,14 +54,9 @@ PARENT_COLUMNS: list[str] = [
     "quality_parent",
 ]
 
-# ---------------------------------------------------------------------------
-# CHILD_COLUMNS
-# The spreadsheet column names that belong to the child level.
-# Used by GHFDBChildImportResource to extract child records from the flat
-# GHFDB XLSX.
-# Note: Uses actual spreadsheet header names (case-sensitive as in row 6 of
-# the official GHFDB XLSX template).
-# ---------------------------------------------------------------------------
+# The spreadsheet column names that belong to the child level, used by
+# GHFDBChildImportResource to extract child records from the flat GHFDB
+# XLSX. Case-sensitive, as in row 6 of the official GHFDB XLSX template.
 CHILD_COLUMNS: list[str] = [
     "qc",
     "qc_uncertainty",
@@ -127,8 +113,8 @@ CHILD_COLUMNS: list[str] = [
 # Quality/meta columns appended after PARENT_COLUMNS + CHILD_COLUMNS.
 # Do NOT include names already present in PARENT_COLUMNS or CHILD_COLUMNS.
 # ID, Reviewer_name, Reviewer_comment and Review_date are published-template
-# columns the portal accepts without storing (FR-009, US-1 D7). They belong
-# here rather than in PARENT_COLUMNS/CHILD_COLUMNS because those two feed
+# columns the portal accepts without storing. They belong here rather than
+# in PARENT_COLUMNS/CHILD_COLUMNS because those two feed
 # admin.py's ColumnDisplay.list_display_for(), which requires a matching
 # entry in columns.py's PublishedColumns.ENTRIES for every member.
 META_FIELDS: list[str] = [
@@ -143,38 +129,22 @@ META_FIELDS: list[str] = [
 
 GHFDB_COLUMN_ORDER: list[str] = PARENT_COLUMNS + CHILD_COLUMNS + META_FIELDS
 
-# ---------------------------------------------------------------------------
-# Documented exceptions to "the template's spelling wins" (US-1 D7,
-# specs/004-import-upload-template/decisions.md).
-# ---------------------------------------------------------------------------
+# Documented exceptions to "the template's spelling wins".
 
-# ADR 0003 (docs/adr/0003): the currently distributed template carries these
-# two misspellings. The portal keeps the corrected spelling internally
-# (Ref_IGSN, tc_pT_function, both already present above) and refuses a file
-# whose header carries either misspelled form, rather than silently mapping
-# it. They therefore never resolve against PARENT_COLUMNS/CHILD_COLUMNS/
-# META_FIELDS, by design.
+# The currently distributed template carries these two misspellings (see
+# docs/adr/0003). The portal keeps the corrected spelling internally and
+# refuses a file whose header carries either misspelled form.
 REJECTED_MISSPELLED_COLUMNS: list[str] = ["Ref_ISGN", "tc_pT_fuction"]
 
-# D8 (specs/002-ghfdb-proxy/decisions.md): site geography columns are portal
-# additions, not part of the published GHFDB structure. Stored on
-# HeatFlowSite (FR-008) and rendered by GHFDBParentAdmin after the published
-# block, but deliberately never a member of PARENT_COLUMNS — adding them
-# there would route them through ColumnDisplay.list_display_for(PARENT_COLUMNS)
-# ahead of that separate block.
+# Site geography columns are portal additions, not part of the published
+# GHFDB structure. Stored on HeatFlowSite and rendered by GHFDBParentAdmin
+# after the published block, but deliberately never a member of PARENT_COLUMNS.
 PORTAL_ADDITION_COLUMNS: list[str] = ["Country", "Region", "Continent", "Domain"]
 
-# specs/004-import-upload-template/decisions.md: the 2026.03 template
-# revision renamed one column and added four more that the published GHFDB
-# release format does not carry as columns of its own. The submission
-# template and the published release are separate contracts (D-c) — the
-# released structure keeps the name ``water_temperature`` (CHILD_COLUMNS,
-# GHFDB_COLUMN_ORDER), so the template's own spelling of it, and the four
-# brand-new temperature columns the template adds, resolve through this
-# exception rather than through PARENT_COLUMNS/CHILD_COLUMNS/META_FIELDS.
-# ``Surface_temperature`` maps onto ``HeatFlow.surface_temperature``; the
-# four ``T_top``/``T_bot`` columns feed the new ``ThermalGradient`` absolute
-# temperature fields.
+# The submission template and the published release are separate contracts:
+# the released structure keeps the name ``water_temperature``, so the
+# template's own spelling of it, and the four brand-new temperature columns
+# the template adds, resolve through this exception instead.
 TEMPLATE_ONLY_COLUMNS: list[str] = [
     "Surface_temperature",
     "T_top_mean",
@@ -183,15 +153,10 @@ TEMPLATE_ONLY_COLUMNS: list[str] = [
     "T_bot_uncertainty",
 ]
 
-# ---------------------------------------------------------------------------
-# T005: accepted-and-not-stored.
-# ---------------------------------------------------------------------------
-
-# FR-009: the reviewer columns and ID are accepted without being stored.
-# Declared as their own collection, distinct from PARENT_COLUMNS/
-# CHILD_COLUMNS/META_FIELDS membership, so a column the reader recognises
-# but deliberately does not store cannot be confused with one nothing
-# resolves at all.
+# The reviewer columns and ID are accepted without being stored. Declared as
+# their own collection, distinct from PARENT_COLUMNS/CHILD_COLUMNS/
+# META_FIELDS membership, so a column the reader recognises but deliberately
+# does not store cannot be confused with one nothing resolves at all.
 ACCEPTED_UNSTORED_COLUMNS: list[str] = [
     "ID",
     "Reviewer_name",
@@ -199,24 +164,11 @@ ACCEPTED_UNSTORED_COLUMNS: list[str] = [
     "Review_date",
 ]
 
-
-# ---------------------------------------------------------------------------
-# T006: refuse a header that is not the official template's (FR-003).
-# ---------------------------------------------------------------------------
-
 # The header row of the official upload template, in the order the template
-# carries it — row 6 of its "data list" sheet — with the two ADR 0003
-# misspellings written in their corrected form, which is the spelling the
-# portal uses everywhere and the spelling a file has to carry to be read.
-#
-# Written out rather than assembled from the lists above, because the
-# submission template is not the published database structure that
-# GHFDB_COLUMN_ORDER describes: the template has no ID_parent and none of the
-# quality columns the portal computes for itself, and it carries the four
-# geography columns the portal adds. ``tests/test_ghfdb/test_constants.py``
-# holds this list to an unmodified copy of the template (FR-017), so a
-# revised template surfaces as a failing test here rather than as a refused
-# submission in production.
+# carries it (row 6 of its "data list" sheet), with the two ADR 0003
+# misspellings written in their corrected form. Written out rather than
+# assembled from the lists above, because the submission template is not the
+# published database structure GHFDB_COLUMN_ORDER describes.
 UPLOAD_TEMPLATE_HEADER_ROW: list[str] = [
     "q",
     "q_uncertainty",
@@ -301,22 +253,11 @@ OFFICIAL_TEMPLATE_HEADER: frozenset[str] = frozenset(UPLOAD_TEMPLATE_HEADER_ROW)
 # in the header list alongside the real columns.
 TEMPLATE_ROW_LABEL_CELL = "Short Name"
 
-# Columns a file may carry or leave out without being a different template.
-# Two groups, and nothing else is optional:
-#
-#   - identifiers. ``ID`` and ``ID_parent`` name a determination and its
-#     parent so a later file can correct them (FR-016). A first submission
-#     has no identifiers to give, and both import resources inject the
-#     columns when they are absent, so requiring them would refuse exactly
-#     the files the portal most expects.
-#   - the assessment columns. The reviewer fields resolve to nothing the
-#     portal stores (FR-009); the IGSN reference is stored (D26,
-#     specs/004-import-upload-template/decisions.md), but is still optional
-#     because it is filled in during assessment — after the submission has
-#     been read, a first submission has none to give.
-#
-# ``igsn`` is the spelling the 2024 release file uses for the same reference;
-# the child resource reads either.
+# A first submission has no identifiers to give (both import resources
+# inject them when absent) and no assessment yet, so identifiers and
+# assessment columns are optional rather than required. ``igsn`` is the
+# spelling the 2024 release file uses for ``Ref_IGSN``; the child resource
+# reads either.
 OPTIONAL_TEMPLATE_COLUMNS: frozenset[str] = frozenset(
     {
         "ID",
@@ -339,8 +280,7 @@ RECOGNISED_TEMPLATE_COLUMNS: frozenset[str] = (
 
 
 def validate_official_header(header: list[str]) -> None:
-    """Raise ``ValueError`` unless *header* is the official upload template's
-    header: every column the template asks for, and no column it does not.
+    """Validate that *header* is the official upload template's header.
 
     A file may leave out the identifier and assessment columns
     (``OPTIONAL_TEMPLATE_COLUMNS``) and still be the official template — a
@@ -353,8 +293,12 @@ def validate_official_header(header: list[str]) -> None:
     name, and a contributor who moved a column has still sent every value
     the template asks for.
 
-    Pure: inspects only the header it is given, so a caller that validates
-    before reading any row never writes anything for a refused file.
+    Args:
+        header: The uploaded file's header row.
+
+    Raises:
+        ValueError: If *header* is missing a required column or carries one
+            the template does not.
     """
     supplied = {
         str(column).strip()

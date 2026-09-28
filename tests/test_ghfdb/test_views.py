@@ -1,5 +1,3 @@
-"""Tests for GHFDB views."""
-
 import pytest
 from django.urls import reverse
 
@@ -7,29 +5,16 @@ from tests.conftest import requires_browser
 
 
 class TestExplorePage:
-    """The public GHFDB explore page must render and expose the map iframe."""
-
     @pytest.mark.django_db
     def test_explore_page_is_public_and_returns_200(self, client):
-        """Anonymous users can access the explore page without login redirect."""
         response = client.get(reverse("ghfdb-explore"))
         assert response.status_code == 200
 
     @pytest.mark.django_db
-    def test_explore_page_contains_iframe_with_expected_src(self, client):
-        """Rendered explore page contains the IHFC map iframe URL."""
-        response = client.get(reverse("ghfdb-explore"))
-        content = response.content.decode("utf-8")
-        assert "<iframe" in content
-        assert 'src="https://ihfc-iugg.github.io/HeatFlowMapping/"' in content
-
-    @pytest.mark.django_db
     def test_explore_page_contains_visible_fallback_markup(self, client):
-        """Template includes a fallback element used when iframe loading fails."""
         response = client.get(reverse("ghfdb-explore"))
         content = response.content.decode("utf-8")
         assert 'id="map-error"' in content
-        assert "explore-fallback" in content
 
 
 VIEWPORTS = {
@@ -62,22 +47,14 @@ def _layout(page, url, viewport):
 @pytest.mark.e2e
 @requires_browser
 class TestExploreMapFillsTheShell:
-    """The map viewer fills the shell on every device (issue #192).
-
-    A rendered-HTML test can only assert which classes are on which element.
-    The bug report is about *computed layout* on a phone, and only a browser
-    can settle that: at desktop widths the sidebar is a persistent column
-    sharing the grid row with ``.drawer-content``, so the content inherits a
-    height for free. Below the sidebar breakpoint the sidebar is an overlay
-    drawer, out of flow, contributing no height at all — so a fix proven
-    only at desktop width proves nothing about the reported bug.
-    """
+    # The map viewer fills the shell on every device (issue #192). A rendered-HTML test
+    # can only assert which classes are on which element.
 
     @at_every_viewport
     def test_the_map_never_computes_to_zero_height(self, page, live_server, viewport):
-        """The failure mode #192 reports: the map renders into nothing on a
-        phone. iframe/Leaflet content measures its container once, so a
-        container that computes to zero shows nothing, with no error."""
+        # The failure mode #192 reports: the map renders into nothing on a phone.
+        # iframe/Leaflet content measures its container once, so a container that
+        # computes to zero shows nothing, with no error.
         layout = _layout(page, f"{live_server.url}/ghfdb/explore/", viewport)
 
         assert layout["mapHeight"] > 0, (

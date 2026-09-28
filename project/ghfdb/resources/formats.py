@@ -1,5 +1,4 @@
-"""
-Import format classes for GHFDB import/export resources.
+"""Import format classes for GHFDB import/export resources.
 
 Defines:
 - GHFDBImportFormat: Custom XLSX reader for the GHFDB spreadsheet template
