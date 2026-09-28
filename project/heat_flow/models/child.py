@@ -1,5 +1,4 @@
-"""
-Child-level heat flow models for the Global Heat Flow Database (GHFDB).
+"""Child-level heat flow models for the Global Heat Flow Database (GHFDB).
 
 This module contains HeatFlowInterval (the depth interval within a borehole),
 the child HeatFlow record, and all directly associated sub-measurement models
@@ -264,7 +263,6 @@ class HeatFlow(Measurement):
 
     def get_M_score(self):
         """From Fuchs et al 2023 - Quality-assurance of heat-flow data: The new structure and evaluation scheme of the IHFC Global Heat Flow Database, 3.2. Methodological quality evaluation of thermal conductivity and temperature gradient (M-score)."""
-
         # Set both scores to default low values if data is missing
         T_score = self.thermal_gradient.score if self.thermal_gradient else 0.4
         TC_score = self.thermal_conductivity.score if self.thermal_conductivity else 0.1

@@ -1,5 +1,4 @@
-"""
-Heat Flow Quality Assessment Module
+"""Heat Flow Quality Assessment Module
 
 This file implements the quality assessment scheme for heat flow measurements
 as described in Fuchs et al. (2023) following the decision tree structure:
@@ -56,8 +55,7 @@ class MScoreOptions(models.TextChoices):
 
 
 def calculate_U_score(heat_flow):
-    """
-    Calculate the U-score for a heat flow measurement based on its uncertainty.
+    """Calculate the U-score for a heat flow measurement based on its uncertainty.
 
     Args:
         heat_flow: HeatFlow model instance
@@ -419,8 +417,7 @@ class BoreholeQualityCalculator:
 
 
 def calculate_perturbation_flags(heat_flow):
-    """
-    Calculate perturbation flags (p-flags) for a heat flow measurement.
+    """Calculate perturbation flags (p-flags) for a heat flow measurement.
 
     Returns:
         str: 7-character string representing perturbation effects
@@ -463,8 +460,7 @@ def calculate_perturbation_flags(heat_flow):
 
 
 def calculate_heat_flow_quality(heat_flow):
-    """
-    Calculate complete quality assessment for a heat flow measurement.
+    """Calculate complete quality assessment for a heat flow measurement.
 
     Args:
         heat_flow: HeatFlow model instance
@@ -495,8 +491,7 @@ def calculate_heat_flow_quality(heat_flow):
 
 
 def calculate_parent_quality(parent_heat_flow):
-    """
-    Calculate quality for parent level (ParentHeatFlow) based on children.
+    """Calculate quality for parent level (ParentHeatFlow) based on children.
 
     Args:
         parent_heat_flow: ParentHeatFlow model instance (from ghfdb app)

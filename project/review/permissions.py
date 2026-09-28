@@ -39,7 +39,8 @@ def is_assessment_team_member(user) -> bool:
 def can_manage_upload(user, review) -> bool:
     """Whether *user* may upload against or confirm *review* (T020, plan.md
     "The pages"): its own uploader, or any Data Curator, and no one else —
-    including a Data Assessor who did not create it."""
+    including a Data Assessor who did not create it.
+    """
     return user.is_authenticated and (
         review.uploaded_by_id == user.pk or is_data_curator(user)
     )

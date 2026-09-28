@@ -39,7 +39,8 @@ STATE_VARIANTS = {
 
 class IllegalTransition(Exception):
     """Raised when a transition's origin state or acting person is not one
-    the state machine allows."""
+    the state machine allows.
+    """
 
 
 def confirm_upload(assessment, actor):
@@ -73,7 +74,8 @@ def approve(assessment, actor):
 
 def send_back(assessment, actor):
     """AWAITING_DECISION -> CHANGES_REQUESTED. Only a Data Curator may send
-    an assessment back."""
+    an assessment back.
+    """
     if assessment.state != States.AWAITING_DECISION:
         raise IllegalTransition(
             f"Cannot send back an assessment in {States(assessment.state).label}."

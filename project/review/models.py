@@ -1,10 +1,9 @@
-"""
-Global Heat Flow Database (GHFDB) models for Django. The models are defined using the Django ORM and are used to create the database schema. The models are defined using the following sources:
+"""Global Heat Flow Database (GHFDB) models for Django. The models are defined using the Django ORM and are used to create the database schema. The models are defined using the following sources:
 
-    - Fuchs et. al., (2021). A new database structure for the IHFC Global Heat Flow Database. International Journal of
-    Terrestrial Heat Flow and Applications, 4(1), pp.1-14.
+- Fuchs et. al., (2021). A new database structure for the IHFC Global Heat Flow Database. International Journal of
+Terrestrial Heat Flow and Applications, 4(1), pp.1-14.
 
-    - Fuchs et. al. (2023). The Global Heat Flow Database: Update 2023.
+- Fuchs et. al. (2023). The Global Heat Flow Database: Update 2023.
 
 """
 
@@ -146,7 +145,8 @@ class Review(models.Model):
     @property
     def current(self):
         """The most recent submitted file, or ``None`` if none has been
-        submitted yet (data-model.md "review.SubmittedFile")."""
+        submitted yet (data-model.md "review.SubmittedFile").
+        """
         return self.submissions.order_by("-submitted_at", "-pk").first()
 
 

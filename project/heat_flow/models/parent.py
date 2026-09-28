@@ -1,5 +1,4 @@
-"""
-Parent-level models for the Global Heat Flow Database (GHFDB).
+"""Parent-level models for the Global Heat Flow Database (GHFDB).
 
 Contains HeatFlowSite (the geographic measurement location) and ParentHeatFlow
 (the aggregated, quality-controlled surface heat flow for that site).
@@ -164,7 +163,8 @@ class HeatFlowSite(GenericHole, AbstractGeoDepthInterval, GenericEarthSample):
 class ParentHeatFlow(Measurement):
     """Database table that stores terrestrial heat flow data. This is the
     'parent' schema outlined in the formal structure of the database put
-    forth by Fuchs et al (2021)."""
+    forth by Fuchs et al (2021).
+    """
 
     value = models.QuantityField(
         verbose_name=_("heat flow"),

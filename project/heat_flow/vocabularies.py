@@ -355,8 +355,7 @@ class ExplorationPurpose(VocabularyBuilder):
 
 
 class TemperatureMethod(VocabularyBuilder):
-    """
-    The allowed temperature methods for the T_method_top and T_method_bottom fields at the heat flow child level.
+    """The allowed temperature methods for the T_method_top and T_method_bottom fields at the heat flow child level.
     """
 
     LOGeq = Concept(
@@ -812,8 +811,7 @@ class ConductivityLocation(VocabularyBuilder):
 
 
 class ConductivitySaturation(VocabularyBuilder):
-    """
-    Specification of the saturation state of the rocks during the thermal conductivity measurement.
+    """Specification of the saturation state of the rocks during the thermal conductivity measurement.
     """
 
     saturatedInSitu = Concept(
@@ -869,8 +867,7 @@ class ConductivitySaturation(VocabularyBuilder):
 
 
 class ConductivityPTConditions(VocabularyBuilder):
-    """
-    Specification of the conditions under which the thermal conductivity was measured.
+    """Specification of the conditions under which the thermal conductivity was measured.
     """
 
     unrecordedAmbient = Concept(
@@ -978,8 +975,7 @@ class ConductivityPTConditions(VocabularyBuilder):
 
 
 class ConductivityStrategy(VocabularyBuilder):
-    """
-    Specification of the strategy used to determine the thermal conductivity.
+    """Specification of the strategy used to determine the thermal conductivity.
     """
 
     random = Concept(
@@ -1025,8 +1021,7 @@ class ConductivityStrategy(VocabularyBuilder):
 
 
 class ConductivityPTFunction(VocabularyBuilder):
-    """
-    Specification of the function used to determine the thermal conductivity.
+    """Specification of the function used to determine the thermal conductivity.
     """
 
     BirchClark1940 = Concept(
