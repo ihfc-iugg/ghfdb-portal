@@ -2,7 +2,7 @@
   "feature": "006-published-structure-api",
   "branch": "006-published-structure-api",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "DESIGN_REVIEW",
+  "state": "IMPLEMENT",
   "state_history": [
     {
       "state": "GATE_SPEC",
@@ -23,6 +23,11 @@
       "state": "DESIGN_REVIEW",
       "at": "2026-09-28T23:00:39Z",
       "note": "plan committed, draft PR #231 open, dispatching one design reviewer"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-09-28T23:12:20Z",
+      "note": "design review applied; plan notification sent; US1 dispatching"
     }
   ],
   "gates": {
