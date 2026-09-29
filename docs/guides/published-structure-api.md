@@ -17,8 +17,8 @@ answers an unauthenticated request with the records it may show.
 ## Paging
 
 Every list route is paged. `?page=<n>` selects a page, and `?page_size=<n>` sets how many records it
-carries — 25 by default, 100 at the most. Asking for more than 100 is not refused; it is served at
-100. Asking for a page past the last one is refused with `404 Not Found`, the same way a single
+carries — 100 by default, 1,000 at the most. Asking for more than 1,000 is not refused; it is
+served at 1,000. Asking for a page past the last one is refused with `404 Not Found`, the same way a single
 record that does not exist is.
 
 A paged response carries the page's records under `results`, alongside `count` (how many records
@@ -35,10 +35,10 @@ exist in total), and `next` and `previous` (the adjacent pages' URLs, or `null` 
 
 ## Reading the whole database
 
-An unauthenticated client is limited to 100 requests an hour. At the maximum page size, reading the
-full published database — currently on the order of 90,000 determinations — takes on the order of
-hours, not minutes, spread across enough requests to stay under that limit. A signed-in request is
-limited to 1,000 an hour instead, which shortens that considerably.
+An unauthenticated client is limited to 100 requests an hour. At the maximum page size of 1,000,
+reading the full published database — currently on the order of 90,000 determinations — takes
+about 90 requests, which fits inside that limit. A page that large takes a few seconds to answer.
+A signed-in request is limited to 1,000 an hour instead.
 
 Signing in can also change which records a route serves: alongside every publicly visible record, a
 signed-in request also sees one it holds an explicit view grant on — directly, or on the underlying
@@ -399,7 +399,9 @@ published-identifier lookup, keeps the framework's own visibility filter for lis
 `GHFDBObjectPermissions` — a permission class checking `measurement.view_measurement` for a
 single-record request, the permission the visibility filter already resolves a list request to,
 rather than the proxy's own permission, which has no row on the concrete model these routes serve.
-`GHFDBParentViewSet` and `GHFDBChildViewSet` are two of the three; each's single-record route
+It also sets `GHFDBPagination`, the framework's own paginator with the larger default and maximum
+described under Paging, so these three routes page differently from every other route the portal
+serves. `GHFDBParentViewSet` and `GHFDBChildViewSet` are two of the three; each's single-record route
 overrides `retrieve()` to load the nested record it carries. A determination is narrowed to parents
 the requester is served, as a subquery, and a parent's attached determinations are that same narrowed
 queryset filtered to the one parent, so `children` never diverges from what a request to the

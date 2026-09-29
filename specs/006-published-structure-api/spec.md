@@ -179,8 +179,7 @@ sequence, nothing added.
 
 - A page requested beyond the last one reports that it does not exist rather than returning an empty
   page as though it were data.
-- A page size larger than the maximum the framework allows is served at the maximum rather than
-  refused.
+- A page size larger than the maximum is served at the maximum rather than refused.
 - A many-valued column with no related records is an empty list, which is distinct from a scalar
   column with no value.
 - A published column the portal holds no value for at all is present and empty on every record,
@@ -294,9 +293,10 @@ sequence, nothing added.
 - The published identifier a consumer holds from a release file is the identifier these endpoints
   are addressed by, rather than the portal's own internal identifier. A consumer never needs to see
   the portal's identifiers at all.
-- The framework's paging behaviour — its page parameter, its page size parameter, its default and
-  its maximum — is inherited rather than redefined, so these endpoints page like every other
-  endpoint the portal serves.
+- The framework's page parameter and page size parameter are inherited, so these endpoints are
+  addressed like every other endpoint the portal serves. The default page size is 100 and the
+  maximum 1,000, larger than the framework's own, so a consumer can read the whole published
+  database within one hour of the anonymous request limit.
 - Records are scoped to the published database by the proxy models, which already refuse anything
   without a published identifier. This feature adds no scoping rule of its own.
 - Two published child columns resolve to nothing in the portal today, because no field holds them.

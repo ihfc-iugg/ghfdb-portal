@@ -216,9 +216,12 @@ defaults to `low=2, high=4`, which every other caller in this suite uses unchang
 comparison literally — "a page of one record and a page of the maximum size" — so
 `test_query_count_is_constant_between_a_page_of_one_and_a_full_page` calls it with `low=1, high=99`
 (cumulative 100) and a fixed `page_size=100`, so the final `call()` genuinely renders a full
-100-record page rather than a handful of rows under a page size nothing constrains. **Revisit if**:
-building 100 site+parent chains per test run becomes a measured cost problem — `low=2, high=4` still
-proves query-count invariance, just not at SC-003's literal page size.
+100-record page rather than a handful of rows under a page size nothing constrains. Since D25 the
+maximum is 1,000, and building 1,000 complete determination chains per test is too slow for the
+suite, so the tests hold at 100 and the 1,000-record page was measured instead: the same query
+count as a page of 25 on all three endpoints (D25). **Revisit if**: building 100 site+parent chains
+per test run becomes a measured cost problem — `low=2, high=4` still proves query-count invariance,
+just not at a full page.
 
 **ADR:** none — a test-construction choice.
 
@@ -279,6 +282,17 @@ parents whose site is visible to the requester, and the determination and flat r
 through D16.
 
 **ADR:** docs/adr/0021-a-determination-is-served-only-through-a-served-parent.md
+
+## D25 — Pages of 100 by default and 1,000 at most
+
+Decided by the product owner at the walkthrough. The framework pages at 25 by default and 100 at
+most, which puts a full read of the ~90,000 published determinations at 900 requests, nine hours
+under the anonymous limit of 100 an hour. These endpoints page at 100 by default and 1,000 at most,
+which brings it to 90 requests. Measured on the development database, a 1,000-record page of
+determinations or flat rows renders in about four seconds with the same query count as a page of
+25. The time is spent serialising, not querying.
+
+**ADR:** none — a paging setting local to these viewsets.
 
 ## Open, and carried rather than resolved
 

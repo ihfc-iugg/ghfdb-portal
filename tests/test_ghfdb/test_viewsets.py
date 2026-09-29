@@ -197,18 +197,27 @@ class TestGHFDBParentViewSet:
 
         assert response.status_code == 404
 
-    def test_an_oversized_page_size_is_capped_at_the_framework_maximum(
+    def test_a_page_without_a_page_size_carries_100_records(
         self, client, public_dataset
     ):
-        for ghfdb_id in range(1, 106):
+        for ghfdb_id in range(1, 102):
             build_site_and_parent(public_dataset, ghfdb_id=ghfdb_id)
 
-        response = client.get(
-            reverse("api:ghfdb-parents-list"), {"page_size": 1000}
-        )
+        response = client.get(reverse("api:ghfdb-parents-list"))
 
         assert response.status_code == 200
         assert len(response.json()["results"]) == 100
+
+    def test_an_oversized_page_size_is_capped_at_1000(self, client, public_dataset):
+        for ghfdb_id in range(1, 1002):
+            build_site_and_parent(public_dataset, ghfdb_id=ghfdb_id)
+
+        response = client.get(
+            reverse("api:ghfdb-parents-list"), {"page_size": 5000}
+        )
+
+        assert response.status_code == 200
+        assert len(response.json()["results"]) == 1000
 
     def test_a_non_numeric_identifier_is_404(self, client):
         response = client.get("/api/v1/ghfdb/parents/abc/")

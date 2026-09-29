@@ -3,6 +3,7 @@
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from fairdm.api.filters import FairDMVisibilityFilter
+from fairdm.api.pagination import FairDMPagination
 from fairdm.api.permissions import FairDMObjectPermissions
 from heat_flow.models import HeatFlowSite
 from rest_framework.permissions import SAFE_METHODS
@@ -39,6 +40,18 @@ class GHFDBObjectPermissions(FairDMObjectPermissions):
         return super().get_required_object_permissions(method, model_cls)
 
 
+class GHFDBPagination(FairDMPagination):
+    """Larger pages than the framework's own, for reading the published database in bulk.
+
+    A consumer reading all ~90,000 published determinations at the framework's
+    100-record maximum needs 900 requests, nine hours under the anonymous
+    100-an-hour throttle. At 1,000 it needs 90, which fits inside one hour.
+    """
+
+    page_size = 100
+    max_page_size = 1000
+
+
 def served_parents_for(request, view):
     """Parents visible to *request*, narrowed to ones whose site is visible too.
 
@@ -61,13 +74,15 @@ class GHFDBBaseViewSet(ReadOnlyModelViewSet):
 
     Keeps DRF's own ``get_object()`` unmodified, so the visibility filter and
     the object permission check run on the single-record route too.
-    Pagination and throttling are the framework's own settings; the
-    permission class is narrowed to :class:`GHFDBObjectPermissions`.
+    Throttling is the framework's own setting; pagination is
+    :class:`GHFDBPagination` and the permission class is narrowed to
+    :class:`GHFDBObjectPermissions`.
     """
 
     lookup_field = "ghfdb_id"
     lookup_value_regex = "[0-9]+"
     filter_backends = [FairDMVisibilityFilter]
+    pagination_class = GHFDBPagination
     permission_classes = [GHFDBObjectPermissions]
 
 
