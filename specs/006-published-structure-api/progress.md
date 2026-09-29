@@ -120,3 +120,11 @@
   the full verify's `docs` step is the first point this run can confirm the build.
 - Next: none — US2 (T004–T006) is complete, T005 blocked pending the fix to one pre-existing test
   (see its own entry above).
+
+## 2026-09-29 · US2 · T005 completion
+
+- The parent self-link test from US1 compared the detail response with the list record verbatim.
+  The detail now carries `children`, so the test compares the two with `children` removed. The
+  attached list itself is covered by the test beside it. A one-line change, made directly.
+- Orbit switched off for the test suite (D22). The API tests ran green three times in a row with
+  all three files together.

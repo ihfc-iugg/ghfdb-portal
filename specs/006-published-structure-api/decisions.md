@@ -185,8 +185,7 @@ proves query-count invariance, just not at SC-003's literal page size.
 
 ## D20 — The consumer guide carries a short "Implementation notes" section
 
-Decided during US1 implementation (T003), after the first full verify run. `forge verify`'s `docs`
-step failed: `PublishedValueField`, `ConceptLabelsField`, `published_fields`, `GHFDBBaseViewSet`,
+Decided during US1 implementation (T003). The documentation check failed: `PublishedValueField`, `ConceptLabelsField`, `published_fields`, `GHFDBBaseViewSet`,
 `GHFDBParentSerializer` and `GHFDBParentViewSet` are new public names in `project/ghfdb/` that no
 page under `docs/` quoted as code (`docs-undocumented`). T003's own description does not ask for
 this — the guide is written for an HTTP consumer, who has no reason to know these Python names.
@@ -209,19 +208,13 @@ reads a differently-named attribute (`children_list`) the view sets on the insta
 serializing. **Revisit if**: DRF or the model gains a field of either name for an unrelated reason,
 since either add would collide with the same names again.
 
-## D22 — A pre-existing test carried into US2, not fixed by this story
+## D22 — Orbit is switched off for the test suite
 
-`TestGHFDBParentViewSet::test_following_the_self_link_returns_the_same_parent`
-(`tests/test_ghfdb/test_viewsets.py`), from US1, asserts the parent detail response equals the list
-record verbatim. T005 gives the parent detail route an additional `children` key (spec FR-006,
-plan.md Design > Parents — the "interim parent-detail attachment removed from US1; T005 builds the
-real shape" design-review note), so that assertion no longer holds. A story does not modify a test
-it did not author, so this one is left as it is. The fix is small and already proven by
-`test_following_the_self_link_returns_the_parent_with_its_determinations_attached`, added alongside
-it in the same commit: replace the final assertion with one that accounts for the attached
-`children`, e.g. comparing the two responses with `children` removed, plus a separate assertion on
-`children` itself. **Revisit if**: never — this is carried for the next stage of this story to apply,
-not a standing policy.
+Decided during US2. The framework installs Orbit, which records every request by writing rows on
+the same database connection. A test that counts the queries behind a page counted those rows
+too, and how many there were depended on cache state, so the query-count tests failed
+intermittently when files ran together. `tests/conftest.py` sets `ENABLED: False` in
+`ORBIT_CONFIG` before Django is set up, which also skips installing Orbit's watchers.
 
 ## Open, and carried rather than resolved
 

@@ -74,7 +74,9 @@ class TestGHFDBParentViewSet:
         detail_response = client.get(record["url"])
 
         assert detail_response.status_code == 200
-        assert detail_response.json() == record
+        detail = detail_response.json()
+        del detail["children"]
+        assert detail == record
 
     def test_following_the_self_link_returns_the_parent_with_its_determinations_attached(
         self, client, public_dataset
