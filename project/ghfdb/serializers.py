@@ -1,5 +1,6 @@
 """DRF serializers for the GHFDB API endpoints."""
 
+import decimal
 from collections.abc import Iterable
 
 from drf_spectacular.utils import (
@@ -7,6 +8,7 @@ from drf_spectacular.utils import (
     extend_schema_field,
     extend_schema_serializer,
 )
+from research_vocabs.core import Concept
 from rest_framework import serializers
 
 from .columns import PublishedColumns
@@ -25,10 +27,13 @@ class MyJSONSchemaSerializer(serializers.Serializer):
 class PublishedValueField(serializers.Field):
     """Read-only field for one scalar published GHFDB column.
 
-    A Pint quantity renders as its float magnitude. Both ``None`` and the
-    empty string render as ``null`` — the two ways a published scalar can
-    hold no value are the same thing to a consumer (FS-006 FR-012).
-    Anything else passes through unchanged.
+    A Pint quantity renders as its float magnitude, a ``research_vocabs``
+    ``Concept`` as its stored code, and a ``Decimal`` as a float — every
+    numeric or concept-valued published column is a JSON number or a plain
+    string, never a type ``orjson`` cannot encode (COR-001, COR-002). Both
+    ``None`` and the empty string render as ``null`` — the two ways a
+    published scalar can hold no value are the same thing to a consumer
+    (FS-006 FR-012). Anything else passes through unchanged.
     """
 
     def __init__(self, **kwargs):
@@ -41,6 +46,10 @@ class PublishedValueField(serializers.Field):
             return None
         if hasattr(value, "magnitude"):
             return float(value.magnitude)
+        if isinstance(value, Concept):
+            return str(value)
+        if isinstance(value, decimal.Decimal):
+            return float(value)
         return value
 
 

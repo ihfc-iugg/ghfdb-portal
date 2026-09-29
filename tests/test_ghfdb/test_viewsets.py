@@ -61,6 +61,32 @@ class TestGHFDBParentViewSet:
         assert record["total_children"] == 0
         assert record["relevant_children"] == 0
 
+    def test_a_concept_column_renders_as_its_stored_code_and_a_coordinate_as_a_float(
+        self, client, public_dataset
+    ):
+        from decimal import Decimal
+
+        from fairdm.contrib.location.models import Point
+        from heat_flow.models import HeatFlowSite
+
+        parent = build_site_and_parent(public_dataset, ghfdb_id=1)
+        site = HeatFlowSite.objects.get(pk=parent.sample_id)
+        site.explo_method = "drilling"
+        site.location = Point.objects.create(
+            x=Decimal("11.56780"), y=Decimal("48.12340")
+        )
+        site.save()
+
+        response = client.get(reverse("api:ghfdb-parents-list"))
+
+        record = response.json()["results"][0]
+        assert record["environment"] == "onshore_continental"
+        assert record["explo_method"] == "drilling"
+        assert record["lat_NS"] == 48.1234
+        assert record["long_EW"] == 11.5678
+        assert isinstance(record["lat_NS"], float)
+        assert isinstance(record["long_EW"], float)
+
     def test_following_the_self_link_returns_the_same_parent(
         self, client, public_dataset
     ):
@@ -259,6 +285,32 @@ class TestGHFDBChildViewSet:
         record = response.json()["results"][0]
         assert record["lat_NS"] is None
         assert record["long_EW"] is None
+
+    def test_a_determination_carries_its_sites_coordinates_as_floats(
+        self, client, public_dataset
+    ):
+        from decimal import Decimal
+
+        from fairdm.contrib.location.models import Point
+        from heat_flow.models import HeatFlowSite
+
+        parent = build_site_and_parent(public_dataset, ghfdb_id=1)
+        build_child(public_dataset, parent, ghfdb_id=11)
+        site = HeatFlowSite.objects.get(pk=parent.sample_id)
+        site.location = Point.objects.create(
+            x=Decimal("11.56780"), y=Decimal("48.12340")
+        )
+        site.save()
+
+        response = client.get(
+            reverse("api:ghfdb-children-detail", kwargs={"ghfdb_id": 11})
+        )
+
+        record = response.json()
+        assert record["lat_NS"] == 48.1234
+        assert record["long_EW"] == 11.5678
+        assert isinstance(record["lat_NS"], float)
+        assert isinstance(record["long_EW"], float)
 
     def test_a_many_valued_column_with_several_members_renders_as_a_list(
         self, client, public_dataset
@@ -531,6 +583,35 @@ class TestGHFDBFlatViewSet:
             client.get(reverse("api:ghfdb-flat-list"), {"page_size": 100})
 
         constant_query_count(build, call, low=1, high=99)
+
+    def test_the_concept_and_coordinate_columns_render_with_their_real_types(
+        self, client, public_dataset
+    ):
+        from decimal import Decimal
+
+        from fairdm.contrib.location.models import Point
+        from heat_flow.models import HeatFlowSite
+
+        parent = build_site_and_parent(public_dataset, ghfdb_id=1)
+        build_child(public_dataset, parent, ghfdb_id=11)
+        site = HeatFlowSite.objects.get(pk=parent.sample_id)
+        site.explo_method = "drilling"
+        site.location = Point.objects.create(
+            x=Decimal("11.56780"), y=Decimal("48.12340")
+        )
+        site.save()
+
+        response = client.get(
+            reverse("api:ghfdb-flat-detail", kwargs={"ghfdb_id": 11})
+        )
+
+        record = response.json()
+        assert record["environment"] == "onshore_continental"
+        assert record["explo_method"] == "drilling"
+        assert record["lat_NS"] == 48.1234
+        assert record["long_EW"] == 11.5678
+        assert isinstance(record["lat_NS"], float)
+        assert isinstance(record["long_EW"], float)
 
     def test_the_detail_route_returns_the_same_row_the_list_carries(
         self, client, public_dataset

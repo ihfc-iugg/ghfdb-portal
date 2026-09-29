@@ -1,3 +1,4 @@
+from decimal import Decimal
 from types import SimpleNamespace
 
 from quantityfield.units import ureg
@@ -51,6 +52,35 @@ class TestPublishedValueField:
             field.to_representation(field.get_attribute(instance))
             == "onshore_continental"
         )
+
+    def test_a_concept_renders_as_its_stored_code(self):
+        # The annotation for a concept-valued column (e.g. `environment`) returns a
+        # `research_vocabs.core.Concept`, the same object the field's `to_python()`
+        # produces from its stored code (COR-001).
+        from heat_flow.models import HeatFlowSite
+
+        concept = HeatFlowSite._meta.get_field("environment").to_python(
+            "onshore_continental"
+        )
+        field = _bound(PublishedValueField(source="value"), field_name="environment")
+        instance = SimpleNamespace(value=concept)
+
+        assert (
+            field.to_representation(field.get_attribute(instance))
+            == "onshore_continental"
+        )
+
+    def test_a_decimal_renders_as_a_float(self):
+        # A coordinate column annotates a Decimal field; every other numeric column
+        # is a JSON number, so a Decimal renders the same way a Pint quantity does
+        # (COR-002).
+        field = _bound(PublishedValueField(source="value"), field_name="lat_NS")
+        instance = SimpleNamespace(value=Decimal("48.12340"))
+
+        representation = field.to_representation(field.get_attribute(instance))
+
+        assert representation == 48.1234
+        assert isinstance(representation, float)
 
 
 class TestConceptLabelsField:

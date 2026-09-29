@@ -176,3 +176,18 @@
 - Cleanup: docstrings cite the feature's requirements rather than planning notes, test modules
   drop their docstrings, and the determination query narrows by parent keys alone.
 - D16 graduated to ADR 0021. Every other decision records why it did not.
+
+## 2026-09-29T01:18:26Z · Review fix cycle · T010
+
+- Did: fixed `PublishedValueField.to_representation` (`project/ghfdb/serializers.py`) to render a
+  `research_vocabs` `Concept` as its stored code (`str(value)`) and a `Decimal` as a float, instead
+  of passing both through unchanged — a concept-valued published column (`environment`,
+  `explo_method`) rendered `null` on every record, and a coordinate (`lat_NS`, `long_EW`) rendered
+  as a string of the stored Decimal, on all three routes.
+- Verified: reinstated the prior `to_representation` body and reran the new tests — all five failed
+  for the reported reason (a `Concept`/`Decimal` compared unequal to the expected string/float).
+  Restored the fix; `uv run pytest tests/test_ghfdb/test_serializers.py
+  tests/test_ghfdb/test_viewsets.py -n0 -q` — 68 passed. `uv run pre-commit run --files
+  project/ghfdb/serializers.py tests/test_ghfdb/test_serializers.py
+  tests/test_ghfdb/test_viewsets.py` — all hooks passed.
+- Next: T011 (SEC-001).
