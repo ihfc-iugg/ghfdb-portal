@@ -267,8 +267,5 @@ six columns have no agreed metadata, and one site column's annotation key disagr
 This feature reads the canonical column list rather than restating it, so it inherits whatever that
 dispute settles on. It does not settle it, and it must not publish a column name that #122 later
 changes — the planning stage checks which of the disputed names this feature's responses would
-expose, and that check gates the story that exposes them.
-
-**T005 is blocked on one pre-existing test needing a fix it cannot make itself** (D22): the code and
-its own new tests are complete and committed; only
-`test_following_the_self_link_returns_the_same_parent`'s final assertion needs updating.
+expose, and that check gates the story that exposes them. Planning found that none of the
+disputed items is a published column name (research R10), so no story was gated on it.

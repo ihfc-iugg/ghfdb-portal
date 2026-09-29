@@ -2,7 +2,7 @@
   "feature": "006-published-structure-api",
   "branch": "006-published-structure-api",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "CONVERGE",
+  "state": "REVIEW",
   "state_history": [
     {
       "state": "GATE_SPEC",
@@ -33,6 +33,11 @@
       "state": "CONVERGE",
       "at": "2026-09-29T00:48:20Z",
       "note": "all three stories accepted; converging"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-09-29T00:53:04Z",
+      "note": "converged; S5 gates green; dispatching reviewer"
     }
   ],
   "gates": {
@@ -225,7 +230,7 @@
       "max": 2
     },
     "review_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 1
     },
     "design_review_cycles": {
