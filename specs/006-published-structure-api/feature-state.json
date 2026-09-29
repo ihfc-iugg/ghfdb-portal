@@ -171,18 +171,45 @@
       "tasks": [
         {
           "id": "T007",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_managers.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_ghfdb/test_managers.py -n0 -q (50 passed)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T008",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_viewsets.py",
+              "tests/test_ghfdb/test_urls.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_ghfdb/test_viewsets.py::TestGHFDBFlatViewSet tests/test_ghfdb/test_urls.py -n0 -q (21 passed)",
+              "uv run pytest tests/test_ghfdb/ -n0 -q (403 passed, 13 pre-existing xfailed)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T009",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [],
+            "commands": [
+              "uv run pre-commit run --files docs/guides/published-structure-api.md (deptry passed, other hooks skipped)"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     }
