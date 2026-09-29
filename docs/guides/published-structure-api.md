@@ -38,8 +38,12 @@ exist in total), and `next` and `previous` (the adjacent pages' URLs, or `null` 
 An unauthenticated client is limited to 100 requests an hour. At the maximum page size, reading the
 full published database — currently on the order of 90,000 determinations — takes on the order of
 hours, not minutes, spread across enough requests to stay under that limit. A signed-in request is
-limited to 1,000 an hour instead, which shortens that considerably, but every route still answers
-with the same records either way — signing in changes nothing about what a request can see.
+limited to 1,000 an hour instead, which shortens that considerably.
+
+Signing in can also change which records a route serves: alongside every publicly visible record, a
+signed-in request also sees one it holds an explicit view grant on — directly, or on the underlying
+measurement. A grant on the dataset that contains a record does not, on its own, surface that
+dataset's published records.
 
 ## Parents
 
@@ -84,9 +88,9 @@ GET /api/v1/ghfdb/parents/?page_size=1
 ```
 
 `total_children` and `relevant_children` count every determination beneath the site, including one
-the `children` endpoint does not list — an unpublished determination, or one whose dataset is not
-public — so the counts can be larger than the number of determinations a consumer can actually read
-through the API.
+the requester cannot see through the `children` endpoint — an unpublished determination, one whose
+dataset is not public, or one belonging to an upload a curator has not yet approved — so the counts
+can be larger than the number of determinations a consumer can actually read through the API.
 
 A published column the site holds no value for is still present on the record, empty rather than
 missing — `null` for a column with no value, `[]` for a many-valued column with no members — so
@@ -94,7 +98,9 @@ every record's key set is identical.
 
 Reading a single parent additionally carries `children` — the determinations belonging to that site,
 in the same shape the `children` endpoint's list route carries them, and limited to the same records
-a request to that endpoint could reach:
+a request to that endpoint could reach. Below, `total_children` still counts all four determinations
+beneath the site, but `children` lists only the one this requester can see — the other three belong
+to an upload not yet approved:
 
 ```
 GET /api/v1/ghfdb/parents/1/
@@ -103,8 +109,8 @@ GET /api/v1/ghfdb/parents/1/
 ```json
 {
   "url": "https://portal.heatflow.world/api/v1/ghfdb/parents/1/",
-  "total_children": 1,
-  "relevant_children": 1,
+  "total_children": 4,
+  "relevant_children": 3,
   "children": [
     {
       "url": "https://portal.heatflow.world/api/v1/ghfdb/children/11/",
@@ -389,11 +395,17 @@ one override — `explo_purpose` reads through the determination's own interval 
 directly, since the registry's own path to it only resolves on a parent record.
 
 The three viewsets share `GHFDBBaseViewSet`, in `project/ghfdb/viewsets.py`, which fixes the
-published-identifier lookup and keeps the framework's own visibility filter.
+published-identifier lookup, keeps the framework's own visibility filter for list requests, and sets
+`GHFDBObjectPermissions` — a permission class checking `measurement.view_measurement` for a
+single-record request, the permission the visibility filter already resolves a list request to,
+rather than the proxy's own permission, which has no row on the concrete model these routes serve.
 `GHFDBParentViewSet` and `GHFDBChildViewSet` are two of the three; each's single-record route
 overrides `retrieve()` to load the nested record it carries. A determination is narrowed to parents
-the parent route's own queryset serves to the requester, as a subquery, and a parent's attached
-determinations are that same narrowed queryset filtered to the one parent, so `children` never
-diverges from what a request to the `children` endpoint would itself return. `GHFDBFlatViewSet` is
-the third viewset, and its own `get_queryset()` reuses `GHFDBChildViewSet`'s queryset rather than
-restating that subquery, so `flat` never diverges from `children` either.
+the requester is served, as a subquery, and a parent's attached determinations are that same narrowed
+queryset filtered to the one parent, so `children` never diverges from what a request to the
+`children` endpoint would itself return. A parent is served only where the site it describes is also
+visible to the requester, not only the parent's own dataset — the two subqueries share one helper,
+`_served_parents()`, so the parent and determination routes never disagree about which parent is
+served. `GHFDBFlatViewSet` is the third viewset, and its own `get_queryset()` reuses
+`GHFDBChildViewSet`'s queryset rather than restating that subquery, so `flat` never diverges from
+`children` either.

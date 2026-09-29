@@ -228,3 +228,32 @@
   tests/test_ghfdb/ -q` — 412 passed, 13 pre-existing xfailed, no regressions. `uv run pre-commit
   run --files project/ghfdb/viewsets.py tests/test_ghfdb/test_viewsets.py` — all hooks passed.
 - Next: T013 (SEC-003 and doc accuracy).
+
+## 2026-09-29T01:36:00Z · Review fix cycle · T013
+
+- Did: added `TestGHFDBDatasetLevelGrant`, pinning that a signed-in user holding only a view grant
+  on a private dataset sees none of that dataset's published records on any route (SEC-003) — this
+  fails closed already and needed no code change, only coverage and a comment naming why. Corrected
+  `docs/guides/published-structure-api.md`: the "Reading the whole database" section no longer
+  claims signing in changes nothing about what a request can see; it now says a signed-in request
+  also sees a record (or its measurement) it holds a direct grant on, and that a dataset-level grant
+  alone does not surface that dataset's records. The counts paragraph now names an unapproved
+  upload as one reason `total_children`/`relevant_children` can exceed what `children` lists. The
+  parent list and parent-detail worked examples for `ID_parent: 1` previously disagreed on
+  `total_children`/`relevant_children` (4/3 vs 1/1) for what reads as the same record; the detail
+  example now carries the same counts as the list example, with a sentence explaining why
+  `children` still lists only one determination. The full-verify `docs` gate (below) flagged
+  `GHFDBObjectPermissions` (T011) as new public surface no page described; extended the
+  "Implementation notes" paragraph to name it and `_served_parents()` (T012), replacing its now-stale
+  claim that nothing beyond the framework's visibility filter governs these routes.
+- Verified: `uv run pytest tests/test_ghfdb/ -q` — 413 passed, 13 pre-existing xfailed, no
+  regressions. Every JSON code block in the guide parses with `json.loads` (excluding the one
+  pre-existing paging-example placeholder, per T009). `uv run pre-commit run --files
+  tests/test_ghfdb/test_viewsets.py docs/guides/published-structure-api.md` — deptry passed (ruff,
+  mypy and djlint skip `tests/` and `docs/` by the repo's own `.pre-commit-config.yaml` exclude,
+  matching T009/T003/T006). Full verify at HEAD:
+  `/home/sam/.openclaw/workspaces/forge/engineering-org/kit/forge verify --repo
+  /home/sam/projects/ihfc-iugg/ghfdb-portal-006 --base origin/main` — conformance, docs, uv:lint,
+  uv:typecheck, uv:test (92s), uv:build all passed (docs failed on the first run over the
+  undocumented `GHFDBObjectPermissions`; passed after the doc fix above).
+- Next: none — FIX-1 (T010-T013) is complete.

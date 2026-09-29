@@ -841,3 +841,44 @@ class TestGHFDBSiteVisibility:
             ).status_code
             == 404
         )
+
+
+@pytest.mark.django_db
+class TestGHFDBDatasetLevelGrant:
+    """SEC-003: a view grant on a dataset alone does not surface its records.
+
+    The list filter resolves a signed-in grant through ``get_objects_for_user``
+    against the record's own permission (or its measurement, via
+    ``fairdm.core.utils.get_objects_for_user``'s polymorphic-base
+    normalisation) — it never consults the dataset-to-measurement inheritance
+    ``MeasurementPermissionBackend.has_perm`` applies for an object-level
+    check, so a dataset-level grant alone stays invisible here.
+    """
+
+    def test_a_view_grant_on_the_dataset_alone_does_not_surface_its_records(
+        self, client, dataset
+    ):
+        from fairdm.core.utils import assign_perm
+        from fairdm.factories import UserFactory
+
+        user = UserFactory()
+        assign_perm("view_dataset", user, dataset)
+        parent = build_site_and_parent(dataset, ghfdb_id=1)
+        build_child(dataset, parent, ghfdb_id=11)
+        client.force_login(user)
+
+        assert client.get(reverse("api:ghfdb-parents-list")).json()["results"] == []
+        assert client.get(reverse("api:ghfdb-children-list")).json()["results"] == []
+        assert client.get(reverse("api:ghfdb-flat-list")).json()["results"] == []
+        assert (
+            client.get(
+                reverse("api:ghfdb-parents-detail", kwargs={"ghfdb_id": 1})
+            ).status_code
+            == 404
+        )
+        assert (
+            client.get(
+                reverse("api:ghfdb-children-detail", kwargs={"ghfdb_id": 11})
+            ).status_code
+            == 404
+        )
