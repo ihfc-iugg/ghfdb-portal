@@ -66,6 +66,17 @@
         "SPEC-004 low: FR-009 vs FR-010 resolved by the specific rule (research R12), no plan change",
         "SPEC-005 low: folded into D16"
       ]
+    },
+    "review": {
+      "approved_by": "review-panel",
+      "at": "2026-09-29T01:41:20Z",
+      "self_resolved": [
+        "COR-001 high verified: concept-valued columns rendered null; fixed, concept rendered as its code, value tests added",
+        "SEC-001 high verified: signed-in permitted user got a server error on single-record routes; fixed with a permission class checking measurement.view_measurement, tests for curator, record grant and no grant",
+        "COR-002 medium verified: coordinates rendered as strings; fixed, now numbers",
+        "SEC-002 medium: site visibility unchecked; fixed, parents narrowed to visible sites, ADR 0021 amended (D24)",
+        "SEC-003 low: dataset grant does not reach records; behaviour pinned by a test, research corrected"
+      ]
     }
   },
   "stories": [
