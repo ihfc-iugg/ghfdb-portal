@@ -14,6 +14,8 @@ The released row is still worth serving exactly as published — it is what a co
 published file recognises, and it is the shape an export writes — so it became an endpoint of its
 own rather than a property of the child endpoint.
 
+**ADR:** none — shapes this feature's endpoints only; the spec records it.
+
 ## D2 — A determination carries its coordinates, and no other parent column
 
 Coordinates are the one parent value a determination cannot be used without: an unplaced
@@ -25,6 +27,8 @@ This is a deliberate exception to "a child record carries child columns", taken 
 alternative — a consumer issuing one request per determination to discover where it was made —
 is the expensive shape for the commonest use.
 
+**ADR:** none — a field choice local to the determination record.
+
 ## D3 — The parent link is a link in a list and a record on a single determination
 
 A list route serves many records and is the common request; a single-record route serves one and is
@@ -35,6 +39,8 @@ job for information the portal already has in hand.
 The cost is that the schema describes two shapes for a determination. That is ordinary for a
 generated API and is visible in the documentation the framework produces.
 
+**ADR:** none — a response-shape choice local to the determination endpoint.
+
 ## D4 — Many-valued columns are lists, not the published file's joined cell
 
 The published file joins several values into one cell with a separator, because a spreadsheet cell
@@ -44,12 +50,16 @@ it reliably — some vocabulary labels contain a comma already.
 A consumer who wants the file's cell joins the list. A consumer who is given the string and needs
 the values cannot get back to them. The lossless direction is the one to serve.
 
+**ADR:** none — a serialisation choice local to these endpoints, recorded in the spec.
+
 ## D5 — Records are addressed by their published identifier
 
 The framework addresses its own records by their internal identifier. These endpoints address
 records by the identifier the published file carries, so that a consumer holding a row from a
 release can go straight to its record without a lookup. The portal's own identifiers do not appear
 in any of the three responses.
+
+**ADR:** none — the addressing is stated in the spec and visible in every route; nothing beyond these endpoints inherits it.
 
 ## D6 — The two determination counts stay on the parent list route
 
@@ -62,12 +72,16 @@ The risk is the query plan at full size — the portal holds a sample rather tha
 the aggregate has not been measured against a realistic row count. Measuring it is a planning task.
 If it proves expensive, the counts move onto the record rather than out of the response.
 
+**ADR:** none — local to the parent endpoint.
+
 ## D7 — An absent value is empty, never a missing key
 
 A consumer parsing a page needs the same column set on every record; a key that appears only when
 it has a value forces defensive handling of every column. A column with no value is emitted empty,
 and a many-valued column with no related records is an empty list — which is distinguishable from a
 scalar with no value, and deliberately so.
+
+**ADR:** none — a serialisation choice local to these endpoints, recorded in the spec.
 
 ## D8 — The flat endpoint is named for the shape it serves
 
@@ -76,6 +90,8 @@ will later generate and serve actual releases as citable artefacts (R11), and tw
 under one name is exactly the naming failure CONTEXT.md exists to prevent. "Spreadsheet" was
 rejected because CONTEXT.md names three spreadsheets and the word alone does not say which. "Flat"
 names the shape — one row, no nesting — and claims nothing it is not.
+
+**ADR:** none — a naming choice, recorded here and in the guide.
 
 ## D9 — The release format, not the upload template
 
@@ -87,6 +103,8 @@ supplied quality code the portal refuses on principle because it computes its ow
 assembled into a release file alongside the portal's data, which is R17's work. This endpoint serves
 what the portal holds, in the released row's shape and order.
 
+**ADR:** none — the spec's clarification records it.
+
 ## D10 — What is deliberately not in this feature
 
 - **A comma-separated download of the whole database.** The flat endpoint is where a second
@@ -97,6 +115,8 @@ what the portal holds, in the released row's shape and order.
   Both stay. Retiring the static download belongs to R8, which is what replaces it.
 - **Anything that writes.** The routes into the portal are the import paths.
 
+**ADR:** none — a scope boundary, not a design decision.
+
 ## D11 — The framework's visibility filter stays, ordering and field filtering do not
 
 Decided at planning. The proxies decide which records belong to the published database. The
@@ -106,6 +126,8 @@ anonymous consumer. The framework's ordering backend would offer ordering on the
 columns, which repeats a record once per related value, so it is dropped with the field-filter
 backend. Pages are ordered by published identifier.
 
+**ADR:** none — local to these viewsets; ADR 0021 carries the part that generalises.
+
 ## D12 — A single record is found by the framework's own lookup
 
 Decided at planning. The published identifier is not unique in the database, but both import paths
@@ -113,6 +135,8 @@ upsert on it, so no import can create a second record under an identifier. The v
 own `get_object()`, which is also where the visibility filter and the object permission check run
 on a single-record route. Overriding it to guard a state nothing produces would put both checks at
 risk.
+
+**ADR:** none — keeps the framework's default; nothing new to record.
 
 ## D13 — The child counts are the proxy's
 
@@ -122,11 +146,15 @@ That includes a determination not yet carrying a published identifier, which a c
 arriving in the admin. The consumer guide says so, because a parent's counts can then exceed the
 determinations its own route lists.
 
+**ADR:** none — leaves existing behaviour unchanged.
+
 ## D14 — An empty scalar is `null`
 
 Decided at planning. D7 settles that an absent value is present and empty. For a scalar, empty is
 `null`, and an empty string is emitted as `null` too: the two columns nothing resolves are annotated
 as empty strings, and a consumer gains nothing from telling the two apart.
+
+**ADR:** none — a serialisation choice local to these endpoints.
 
 ## D15 — A determination's own identifier is carried as `ID`
 
@@ -137,6 +165,8 @@ Clarification Q3 calls it the identifier a published file carries as the row's o
 carried, as `ID`, where the canonical order in the constants module puts it: after the child
 columns. The determination record carries it in the same place. Without it a consumer paging the
 flat rows could not tell two determinations at one site apart, or reach a row's own route.
+
+**ADR:** none — a reading of the spec's clarifications, local to two record shapes.
 
 ## D16 — A determination is served only through a parent that is served
 
@@ -152,6 +182,8 @@ parent's attached determinations are the ones the determination route would serv
 requester. A determination with no parent, or with a parent carrying no published identifier, is
 outside the two-level structure and is not served.
 
+**ADR:** docs/adr/0021-a-determination-is-served-only-through-a-served-parent.md
+
 ## D17 — The count aggregate is not measured at release size here
 
 Decided at planning. D6 asks for the parent page's count aggregate to be measured against a
@@ -160,6 +192,8 @@ so a measurement here would be of SQLite on a few hundred rows and would say not
 production. The query is one grouped join of parents to their determinations on an indexed foreign
 key, which PostgreSQL answers with a single hash aggregate. D6's fallback stands if it proves
 expensive once the database is loaded: the counts move onto the record, not out of the response.
+
+**ADR:** none — a deferred measurement, not a design decision.
 
 ## D18 — `published_fields()` omits `source` when the accessor equals the column name
 
@@ -172,6 +206,8 @@ passes `source` only when the accessor differs from the column name, and lets `F
 the rest to the field name itself, which is the same value. **Revisit if**: DRF changes `bind()`'s
 redundant-source check, or `PublishedColumns.ENTRIES` stops using `None` to mean "same as the name".
 
+**ADR:** none — an implementation detail of one helper.
+
 ## D19 — The query-count test builds to a literal page of 100, not the fixture default
 
 Decided during US1 implementation (T002). `tests/test_ghfdb/conftest.py`'s `constant_query_count`
@@ -183,17 +219,21 @@ comparison literally — "a page of one record and a page of the maximum size" �
 building 100 site+parent chains per test run becomes a measured cost problem — `low=2, high=4` still
 proves query-count invariance, just not at SC-003's literal page size.
 
+**ADR:** none — a test-construction choice.
+
 ## D20 — The consumer guide carries a short "Implementation notes" section
 
 Decided during US1 implementation (T003). The documentation check failed: `PublishedValueField`, `ConceptLabelsField`, `published_fields`, `GHFDBBaseViewSet`,
 `GHFDBParentSerializer` and `GHFDBParentViewSet` are new public names in `project/ghfdb/` that no
 page under `docs/` quoted as code (`docs-undocumented`). T003's own description does not ask for
 this — the guide is written for an HTTP consumer, who has no reason to know these Python names.
-Rather than satisfy the gate with a bare, out-of-context list, `published-structure-api.md` gained a
+Rather than satisfy the check with a bare, out-of-context list, `published-structure-api.md` gained a
 short "Implementation notes" section explaining the shared serializer builder and viewset base class
 US2 and US3 reuse — genuinely useful to a contributor extending the API, not padding written to
 quiet a linter. **Revisit if**: the guide grows large enough that internals belong on a separate
 development-facing page instead.
+
+**ADR:** none — a documentation choice local to one page.
 
 ## D21 — `parent` and `children` are built in `get_fields()`, never declared as class attributes
 
@@ -208,6 +248,8 @@ reads a differently-named attribute (`children_list`) the view sets on the insta
 serializing. **Revisit if**: DRF or the model gains a field of either name for an unrelated reason,
 since either add would collide with the same names again.
 
+**ADR:** none — an implementation detail forced by DRF's own names.
+
 ## D22 — Orbit is switched off for the test suite
 
 Decided during US2. The framework installs Orbit, which records every request by writing rows on
@@ -215,6 +257,8 @@ the same database connection. A test that counts the queries behind a page count
 too, and how many there were depended on cache state, so the query-count tests failed
 intermittently when files ran together. `tests/conftest.py` sets `ENABLED: False` in
 `ORBIT_CONFIG` before Django is set up, which also skips installing Orbit's watchers.
+
+**ADR:** none — test-suite configuration, applied under an existing project convention.
 
 ## Open, and carried rather than resolved
 

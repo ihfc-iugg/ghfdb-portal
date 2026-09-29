@@ -2,7 +2,7 @@
   "feature": "006-published-structure-api",
   "branch": "006-published-structure-api",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "IMPLEMENT",
+  "state": "CONVERGE",
   "state_history": [
     {
       "state": "GATE_SPEC",
@@ -28,6 +28,11 @@
       "state": "IMPLEMENT",
       "at": "2026-09-28T23:12:20Z",
       "note": "design review applied; plan notification sent; US1 dispatching"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-09-29T00:48:20Z",
+      "note": "all three stories accepted; converging"
     }
   ],
   "gates": {
@@ -216,7 +221,7 @@
   ],
   "budgets": {
     "converge_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 2
     },
     "review_cycles": {
