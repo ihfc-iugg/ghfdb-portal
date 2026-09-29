@@ -149,8 +149,15 @@
         },
         {
           "id": "T006",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [],
+            "commands": [
+              "uv run pre-commit run --files docs/guides/published-structure-api.md (all hooks passed)"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },

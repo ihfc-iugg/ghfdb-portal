@@ -104,3 +104,19 @@
   (`test_following_the_self_link_returns_the_parent_with_its_determinations_attached`): the old
   test's final assertion needs to compare the fields the two shapes still share, or assert `children`
   separately, rather than comparing the two response bodies for exact equality.
+
+## 2026-09-29T00:16:03Z · Implementer US2 · T006
+
+- Did: added a "Determinations" section to `docs/guides/published-structure-api.md`, with a worked
+  list request and a worked single-record response showing the nested parent; added a worked parent
+  single-record response to the "Parents" section showing its attached `children`; extended
+  "Implementation notes" with `GHFDBChildListSerializer`, `GHFDBChildDetailSerializer`,
+  `GHFDBParentDetailSerializer` and `GHFDBChildViewSet`.
+- Verified: `uv run pre-commit run --files docs/guides/published-structure-api.md` — all hooks
+  passed (deptry only; no markdown reformatting configured, matching T003). Every JSON block was
+  checked against the shapes the viewsets and serializers actually built in this story, and each
+  JSON code block parses (checked with `json.loads`, excluding the pre-existing paging example's
+  `[ ... ]` placeholder). Sphinx itself is not installed in this worktree's `.venv`, same as T003 —
+  the full verify's `docs` step is the first point this run can confirm the build.
+- Next: none — US2 (T004–T006) is complete, T005 blocked pending the fix to one pre-existing test
+  (see its own entry above).
