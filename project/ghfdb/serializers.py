@@ -30,7 +30,7 @@ class PublishedValueField(serializers.Field):
     A Pint quantity renders as its float magnitude, a ``research_vocabs``
     ``Concept`` as its stored code, and a ``Decimal`` as a float — every
     numeric or concept-valued published column is a JSON number or a plain
-    string, never a type ``orjson`` cannot encode (COR-001, COR-002). Both
+    string, never a type ``orjson`` cannot encode. Both
     ``None`` and the empty string render as ``null`` — the two ways a
     published scalar can hold no value are the same thing to a consumer
     (FS-006 FR-012). Anything else passes through unchanged.

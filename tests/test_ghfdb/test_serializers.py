@@ -56,7 +56,7 @@ class TestPublishedValueField:
     def test_a_concept_renders_as_its_stored_code(self):
         # The annotation for a concept-valued column (e.g. `environment`) returns a
         # `research_vocabs.core.Concept`, the same object the field's `to_python()`
-        # produces from its stored code (COR-001).
+        # produces from its stored code.
         from heat_flow.models import HeatFlowSite
 
         concept = HeatFlowSite._meta.get_field("environment").to_python(
@@ -72,8 +72,7 @@ class TestPublishedValueField:
 
     def test_a_decimal_renders_as_a_float(self):
         # A coordinate column annotates a Decimal field; every other numeric column
-        # is a JSON number, so a Decimal renders the same way a Pint quantity does
-        # (COR-002).
+        # is a JSON number, so a Decimal renders the same way a Pint quantity does.
         field = _bound(PublishedValueField(source="value"), field_name="lat_NS")
         instance = SimpleNamespace(value=Decimal("48.12340"))
 

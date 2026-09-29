@@ -714,12 +714,11 @@ class TestGHFDBFlatViewSet:
 
 @pytest.mark.django_db
 class TestGHFDBSingleRecordObjectPermissions:
-    """SEC-001: a single-record route decides visibility instead of crashing.
-
-    The proxy's own `ghfdb.view_ghfdb*` permission has no row on the concrete
-    `heat_flow` model these routes serve, so checking it against the object
-    raised an unhandled error rather than answering yes or no.
-    """
+    # A single-record route decides visibility instead of crashing.
+    #
+    # The proxy's own `ghfdb.view_ghfdb*` permission has no row on the concrete
+    # `heat_flow` model these routes serve, so checking it against the object
+    # raised an unhandled error rather than answering yes or no.
 
     def test_a_data_curator_reads_a_private_record_on_every_single_record_route(
         self, data_curator_client, dataset
@@ -778,7 +777,7 @@ class TestGHFDBSingleRecordObjectPermissions:
 
         # The site stays in the public dataset; only the parent (the measurement the
         # grant below targets) moves to the private one, so this scenario tests the
-        # object grant alone rather than also depending on site visibility (SEC-002).
+        # object grant alone rather than also depending on site visibility.
         site = HeatFlowSite.objects.create(
             dataset=public_dataset,
             name="Test Site",
@@ -802,12 +801,11 @@ class TestGHFDBSingleRecordObjectPermissions:
 
 @pytest.mark.django_db
 class TestGHFDBSiteVisibility:
-    """SEC-002: a parent is served only where its site is visible too (ADR 0021).
-
-    A published parent's own dataset can be public while the ``HeatFlowSite``
-    it describes sits in a dataset that is not — the parent-level check alone
-    does not close that path.
-    """
+    # A parent is served only where its site is visible too (ADR 0021).
+    #
+    # A published parent's own dataset can be public while the ``HeatFlowSite``
+    # it describes sits in a dataset that is not — the parent-level check alone
+    # does not close that path.
 
     def test_a_public_parent_whose_site_is_in_a_private_dataset_is_absent_everywhere(
         self, client, public_dataset, dataset
@@ -845,15 +843,14 @@ class TestGHFDBSiteVisibility:
 
 @pytest.mark.django_db
 class TestGHFDBDatasetLevelGrant:
-    """SEC-003: a view grant on a dataset alone does not surface its records.
-
-    The list filter resolves a signed-in grant through ``get_objects_for_user``
-    against the record's own permission (or its measurement, via
-    ``fairdm.core.utils.get_objects_for_user``'s polymorphic-base
-    normalisation) — it never consults the dataset-to-measurement inheritance
-    ``MeasurementPermissionBackend.has_perm`` applies for an object-level
-    check, so a dataset-level grant alone stays invisible here.
-    """
+    # A view grant on a dataset alone does not surface its records.
+    #
+    # The list filter resolves a signed-in grant through ``get_objects_for_user``
+    # against the record's own permission (or its measurement, via
+    # ``fairdm.core.utils.get_objects_for_user``'s polymorphic-base
+    # normalisation) — it never consults the dataset-to-measurement inheritance
+    # ``MeasurementPermissionBackend.has_perm`` applies for an object-level
+    # check, so a dataset-level grant alone stays invisible here.
 
     def test_a_view_grant_on_the_dataset_alone_does_not_surface_its_records(
         self, client, dataset

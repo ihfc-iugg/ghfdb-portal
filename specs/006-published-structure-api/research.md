@@ -44,10 +44,10 @@ From `fairdm/api/settings.py`:
 ## R4 — Visibility and ordering
 
 `FairDMVisibilityFilter` restricts a measurement queryset to records in a public dataset for an
-anonymous request, and adds the records a signed-in user holds a view permission on. The proxies
-scope to records carrying a published identifier. The two are complementary: the proxy says a
-record belongs to the published database, the visibility filter says its dataset may be shown. A
-record in a private dataset is not served to an anonymous consumer even if it carries an identifier.
+anonymous request, and adds the records a signed-in user holds a view permission on, whether a
+model-level permission or a grant on the record itself. A grant on a dataset does not carry to the
+records in it on the list routes: the filter never consults the dataset-to-measurement inheritance
+the permission backend applies. The routes follow that behaviour, and a test pins it.
 
 `OrderingFilter` with no `ordering_fields` offers ordering on every serializer field whose source
 is not `*`, which would include the many-valued columns. Ordering on a many-to-many path repeats a

@@ -421,7 +421,7 @@ def staff_client(client, db):
 def data_curator_client(client, db):
     # A logged-in user carrying the shipped Data Curator role, which holds
     # `measurement.view_measurement` at the model level rather than against any one
-    # record (SEC-001).
+    # record.
     from django.contrib.auth.models import Group
 
     from fairdm.factories import UserFactory

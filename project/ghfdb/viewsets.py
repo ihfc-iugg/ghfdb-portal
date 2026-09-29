@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from fairdm.api.filters import FairDMVisibilityFilter
 from fairdm.api.permissions import FairDMObjectPermissions
+from heat_flow.models import HeatFlowSite
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
@@ -28,25 +29,24 @@ class GHFDBObjectPermissions(FairDMObjectPermissions):
     type through its concrete model, ``heat_flow`` for both
     ``GHFDBParent``/``GHFDBChild``, so checking the proxy's own
     ``ghfdb``-labelled permission against the object raised
-    ``guardian.exceptions.WrongAppError`` instead of deciding (SEC-001).
+    ``guardian.exceptions.WrongAppError`` instead of deciding.
     """
 
     def get_required_object_permissions(self, method, model_cls):
+        """Ask for the measurement view permission on a read."""
         if method in SAFE_METHODS:
             return ["measurement.view_measurement"]
         return super().get_required_object_permissions(method, model_cls)
 
 
-def _served_parents(request, view):
+def served_parents_for(request, view):
     """Parents visible to *request*, narrowed to ones whose site is visible too.
 
     A parent's own visibility (via ``FairDMVisibilityFilter`` on its dataset)
     says nothing about the ``HeatFlowSite`` it describes — the two can sit in
     different datasets — so ADR 0021's second path (a determination attached
-    to a site that is not public) is only closed by checking both (SEC-002).
+    to a site that is not public) is only closed by checking both.
     """
-    from heat_flow.models import HeatFlowSite
-
     served = FairDMVisibilityFilter().filter_queryset(
         request, GHFDBParent.objects.all(), view
     )
@@ -62,7 +62,7 @@ class GHFDBBaseViewSet(ReadOnlyModelViewSet):
     Keeps DRF's own ``get_object()`` unmodified, so the visibility filter and
     the object permission check run on the single-record route too.
     Pagination and throttling are the framework's own settings; the
-    permission class is narrowed to :class:`GHFDBObjectPermissions` (SEC-001).
+    permission class is narrowed to :class:`GHFDBObjectPermissions`.
     """
 
     lookup_field = "ghfdb_id"
@@ -113,11 +113,11 @@ class GHFDBParentViewSet(GHFDBBaseViewSet):
     def get_queryset(self):
         """Return published parents, their counts and exploration purposes.
 
-        Narrowed to parents this requester is served (SEC-002, ADR 0021).
+        Narrowed to parents this requester is served (ADR 0021).
         Ordered by published identifier then primary key, so a page is
         stable. Constant query count regardless of row count.
         """
-        served = _served_parents(self.request, self)
+        served = served_parents_for(self.request, self)
         return (
             GHFDBParent.objects.as_ghfdb_flat()
             .with_child_counts()
@@ -172,11 +172,11 @@ class GHFDBChildViewSet(GHFDBBaseViewSet):
         Visibility is decided per record, and a determination and its parent
         can sit in different datasets, so a determination is narrowed to
         parents this requester is served, as a subquery — a determination
-        with no served parent is not served either (SEC-002, ADR 0021).
+        with no served parent is not served either (ADR 0021).
         Ordered by published identifier then primary key, so a page is
         stable, and constant query count regardless of row count.
         """
-        served_parents = _served_parents(self.request, self)
+        served_parents = served_parents_for(self.request, self)
         return (
             GHFDBChild.objects.for_export()
             .filter(parent__in=served_parents)

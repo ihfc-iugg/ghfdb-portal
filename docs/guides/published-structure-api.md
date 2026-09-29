@@ -405,7 +405,7 @@ the requester is served, as a subquery, and a parent's attached determinations a
 queryset filtered to the one parent, so `children` never diverges from what a request to the
 `children` endpoint would itself return. A parent is served only where the site it describes is also
 visible to the requester, not only the parent's own dataset — the two subqueries share one helper,
-`_served_parents()`, so the parent and determination routes never disagree about which parent is
+`served_parents_for()`, so the parent and determination routes never disagree about which parent is
 served. `GHFDBFlatViewSet` is the third viewset, and its own `get_queryset()` reuses
 `GHFDBChildViewSet`'s queryset rather than restating that subquery, so `flat` never diverges from
 `children` either.

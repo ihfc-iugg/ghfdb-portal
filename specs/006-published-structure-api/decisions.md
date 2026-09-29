@@ -143,7 +143,8 @@ risk.
 Decided at planning, after the design review. The counts are what the proxy computes, as the spec
 was approved on (D6): every determination at the site, and every one of those that contributed.
 That includes a determination not yet carrying a published identifier, which a curator sees
-arriving in the admin. The consumer guide says so, because a parent's counts can then exceed the
+arriving in the admin, and one in a dataset not yet approved, so the counts reveal that such a
+determination exists. The consumer guide says so, because a parent's counts can then exceed the
 determinations its own route lists.
 
 **ADR:** none — leaves existing behaviour unchanged.
@@ -259,6 +260,25 @@ intermittently when files ran together. `tests/conftest.py` sets `ENABLED: False
 `ORBIT_CONFIG` before Django is set up, which also skips installing Orbit's watchers.
 
 **ADR:** none — test-suite configuration, applied under an existing project convention.
+
+## D23 — A single record is checked against the measurement view permission
+
+Decided at code review. The framework's object permission check asked for the proxy model's own
+view permission, which guardian cannot check against an object whose concrete model lives in
+another app. A signed-in user allowed to see a private record got a server error on its route. The
+viewsets check `measurement.view_measurement` for a read, the same permission the list filter
+already resolves to, so a record's list entry and its own route agree.
+
+**ADR:** none — a correction local to these viewsets' permission class.
+
+## D24 — A parent is served only where its site is visible too
+
+Decided at code review. A parent's site columns are read from the site, which sits in a dataset of
+its own and can be updated by an upload that is not yet approved. The parent route narrows to
+parents whose site is visible to the requester, and the determination and flat routes inherit it
+through D16.
+
+**ADR:** docs/adr/0021-a-determination-is-served-only-through-a-served-parent.md
 
 ## Open, and carried rather than resolved
 

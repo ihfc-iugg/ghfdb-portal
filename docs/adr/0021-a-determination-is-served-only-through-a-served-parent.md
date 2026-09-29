@@ -5,8 +5,9 @@
 ## Decision
 
 Anything that serves the published structure outside the portal serves a determination only when
-its parent is served to the same person. A parent lists only the determinations that would be served
-on their own. A determination with no parent, or with a parent that has no published identifier, is
+its parent is served to the same person, and a parent is served only when the site it describes is
+visible to that person too. A parent lists only the determinations that would be served on their
+own. A determination with no parent, or with a parent that has no published identifier, is
 not part of the published structure and is not served.
 
 The first place this applies is the read API over the published structure (FS-006): the parent,
@@ -31,14 +32,20 @@ record would leak through the approved one. The first case would expose the unap
 determination's columns on its parent's route. The second would expose the unapproved parent's
 values, its coordinates among them, on every row of the determination.
 
-Requiring both sides of the pair to be visible closes both paths with one rule. It also keeps the
+A parent's site columns (its name, coordinates, environment and depths) are read from the site
+itself, which is a sample in a dataset of its own. The site import also finds an existing site by
+its coordinates across every dataset and updates it. So the parent's dataset being public says
+nothing about whether the site's values are approved, and the site is checked as well.
+
+Requiring every record in the chain to be visible closes all of these paths with one rule. It also keeps the
 structure consistent: every determination a consumer receives has a parent they can follow, and
 every parent lists only determinations they can reach.
 
 ## Consequences
 
 - A parent's `total_children` and `relevant_children` count every determination at the site. That
-  can include determinations these rules keep from the consumer, and the consumer guide says so.
+  can include determinations these rules keep from the consumer, uploads not yet approved among
+  them, so the counts reveal that such a determination exists. The consumer guide says so.
 - A determination becomes visible only once both its own dataset and its parent's are visible.
 
 ## Revisit if
