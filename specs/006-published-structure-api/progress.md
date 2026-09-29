@@ -139,3 +139,18 @@
   SC-002/SC-006. The pre-existing query-count test over the same queryset stayed green unmodified,
   so the added annotation costs no further query.
 - Next: T008, the flat serializer and viewset.
+
+## 2026-09-29T00:45:00Z · Implementer US3 · T008
+
+- Did: added `GHFDBFlatSerializer` to `serializers.py` — the parent columns (with `explo_purpose`
+  overridden to the determination's own path to its site), then the child columns, then `ID` — and
+  `GHFDBFlatViewSet` to `viewsets.py`, whose `get_queryset()` reuses `GHFDBChildViewSet`'s own
+  queryset the same way the parent detail route already does, rather than restating the
+  parent-visibility subquery. Registered `ghfdb/flat` on the framework's router in `urls.py`.
+- Verified: `uv run pytest tests/test_ghfdb/test_viewsets.py::TestGHFDBFlatViewSet
+  tests/test_ghfdb/test_urls.py -n0 -q` — 21 passed. `uv run pytest tests/test_ghfdb/ -n0 -q` — 403
+  passed, 13 pre-existing xfailed, no regressions. `uv run pre-commit run --files
+  project/ghfdb/serializers.py project/ghfdb/viewsets.py project/ghfdb/urls.py
+  tests/test_ghfdb/test_viewsets.py tests/test_ghfdb/test_urls.py` — all hooks passed. Covers US3
+  scenarios 1-9 and SC-001 through SC-006.
+- Next: T009, the flat section of the consumer guide.
