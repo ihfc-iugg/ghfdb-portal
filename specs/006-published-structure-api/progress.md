@@ -58,3 +58,24 @@
 - Watch: `docs/guides/published-structure-api.md` intentionally names `children` and `flat` as
   endpoints that do not exist yet ("get their own sections as they are built") — US2/US3 add to this
   same file rather than replacing it (tasks.md T006, T009).
+
+## 2026-09-29T00:04:02Z · Implementer US2 · T004
+
+- Did: added `GHFDBChildListSerializer` and `GHFDBChildDetailSerializer` to `serializers.py`
+  (`parent` built in `get_fields()` rather than declared as a class attribute — it would shadow
+  DRF's own `Field.parent`); added `GHFDBChildViewSet` to `viewsets.py`, narrowed to determinations
+  whose parent the parent route's own queryset serves to the requester, as a subquery (spec D16);
+  registered `ghfdb/children` on `fairdm_api_router` in `urls.py`.
+- Verified: `uv run pytest tests/test_ghfdb/test_viewsets.py tests/test_ghfdb/test_urls.py
+  tests/test_ghfdb/test_serializers.py -n0 -q` — 49 passed. `uv run pre-commit run --files
+  project/ghfdb/serializers.py project/ghfdb/viewsets.py project/ghfdb/urls.py
+  tests/test_ghfdb/test_viewsets.py tests/test_ghfdb/test_urls.py` — all hooks passed. Covers US2
+  scenarios 1-9 in `test_viewsets.py`; scenario 10 in `test_urls.py`.
+- Next: T005, attaching `children` to the parent detail.
+- Watch: `tests/test_ghfdb/conftest.py`'s `constant_query_count` fixture is flaky independent of
+  this story — reproduced on the unmodified US1 baseline too (2 failures in 4 repeated runs of
+  `test_viewsets.py` + `test_urls.py` + `test_serializers.py` together, none when run alone). An
+  installed request/query logger (`orbit_orbitentry`) writes a variable number of rows per request
+  depending on cache state, and those writes count toward `CaptureQueriesContext`'s total. Isolated,
+  repeated runs of this story's own query-count tests showed identical, matching query lists at both
+  measurement points. Not fixed here — outside this story's scope and predates it.

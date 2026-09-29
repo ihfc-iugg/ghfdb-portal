@@ -120,8 +120,18 @@
       "tasks": [
         {
           "id": "T004",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_viewsets.py",
+              "tests/test_ghfdb/test_urls.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_ghfdb/test_viewsets.py tests/test_ghfdb/test_urls.py tests/test_ghfdb/test_serializers.py -n0 -q (49 passed)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T005",
