@@ -128,3 +128,14 @@
   attached list itself is covered by the test beside it. A one-line change, made directly.
 - Orbit switched off for the test suite (D22). The API tests ran green three times in a row with
   all three files together.
+
+## 2026-09-29T00:34:30Z · Implementer US3 · T007
+
+- Did: annotated `quality_parent` on `GHFDBChildQuerySet.as_ghfdb_flat()` from `parent__quality`,
+  alongside the other parent-level scalars the child row already restates.
+- Verified: `uv run pytest tests/test_ghfdb/test_managers.py -n0 -q` — 50 passed. `uv run
+  pre-commit run --files project/ghfdb/managers.py tests/test_ghfdb/test_managers.py` — all hooks
+  passed. No success criterion names this task on its own; it is a building block for T008's
+  SC-002/SC-006. The pre-existing query-count test over the same queryset stayed green unmodified,
+  so the added annotation costs no further query.
+- Next: T008, the flat serializer and viewset.
