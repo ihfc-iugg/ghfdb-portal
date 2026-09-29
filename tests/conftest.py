@@ -10,6 +10,12 @@ def pytest_configure():
     """Configure Django for testing."""
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
     os.environ.setdefault("DJANGO_ENV", "development")
+    from django.conf import settings
+
+    # Orbit records every request by writing its own rows on the same connection,
+    # which any test counting queries would count too. Its app reads this at
+    # ready(), so it is switched off before setup.
+    settings.ORBIT_CONFIG = {**settings.ORBIT_CONFIG, "ENABLED": False}
     django.setup()
 
 

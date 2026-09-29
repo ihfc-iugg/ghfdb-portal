@@ -1,0 +1,265 @@
+{
+  "feature": "006-published-structure-api",
+  "branch": "006-published-structure-api",
+  "repo": "ihfc-iugg/ghfdb-portal",
+  "state": "PR_READY",
+  "state_history": [
+    {
+      "state": "GATE_SPEC",
+      "at": "2026-09-28T22:33:45Z",
+      "note": "specification PR #225 merged by SamuelJennings, merge commit 720f559f684574215b014ced6e4ca40d07bccb98"
+    },
+    {
+      "state": "QUEUED",
+      "at": "2026-09-28T22:33:45Z",
+      "note": "epic #221, stories #222-#224"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-09-28T23:00:06Z",
+      "note": "picked up by forge-implement off the queue; plan, research and tasks authored"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-09-28T23:00:39Z",
+      "note": "plan committed, draft PR #231 open, dispatching one design reviewer"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-09-28T23:12:20Z",
+      "note": "design review applied; plan notification sent; US1 dispatching"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-09-29T00:48:20Z",
+      "note": "all three stories accepted; converging"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-09-29T00:53:04Z",
+      "note": "converged; S5 gates green; dispatching reviewer"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-09-29T01:41:27Z",
+      "note": "review fixes verified; no walkthrough needed (nothing a person sees changed)"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "SamuelJennings",
+      "at": "2026-09-28T22:33:45Z"
+    },
+    "plan": {
+      "approved_by": "notified",
+      "at": "2026-09-28T23:12:19Z"
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    },
+    "design_review": {
+      "approved_by": "design-panel",
+      "at": "2026-09-28T23:12:05Z",
+      "self_resolved": [
+        "SEC-001 high verified: attached and nested records bypassed the visibility filter; D16 serves a determination only through a served parent, T004/T005 test both directions",
+        "SPEC-001 medium: flat row now carries ID after the child columns, per clarifications Q1-Q3 (D15)",
+        "SPEC-002 medium: counts stay the proxy's (D13); former count-narrowing task dropped, guide says so",
+        "SPEC-003 medium: release-size measurement of the count aggregate deferred with reason and D6 fallback (D17)",
+        "ARCH-001 medium: interim parent-detail attachment removed from US1; T005 builds the real shape",
+        "ARCH-002 low: duplicate-identifier override dropped, DRF get_object kept (D12)",
+        "SPEC-004 low: FR-009 vs FR-010 resolved by the specific rule (research R12), no plan change",
+        "SPEC-005 low: folded into D16"
+      ]
+    },
+    "review": {
+      "approved_by": "review-panel",
+      "at": "2026-09-29T01:41:20Z",
+      "self_resolved": [
+        "COR-001 high verified: concept-valued columns rendered null; fixed, concept rendered as its code, value tests added",
+        "SEC-001 high verified: signed-in permitted user got a server error on single-record routes; fixed with a permission class checking measurement.view_measurement, tests for curator, record grant and no grant",
+        "COR-002 medium verified: coordinates rendered as strings; fixed, now numbers",
+        "SEC-002 medium: site visibility unchecked; fixed, parents narrowed to visible sites, ADR 0021 amended (D24)",
+        "SEC-003 low: dataset grant does not reach records; behaviour pinned by a test, research corrected"
+      ]
+    }
+  },
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 222,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_serializers.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_ghfdb/test_serializers.py -n0 -q (8 passed)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T002",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_viewsets.py",
+              "tests/test_ghfdb/test_urls.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_ghfdb/test_viewsets.py tests/test_ghfdb/test_urls.py tests/test_ghfdb/test_serializers.py -n0 -q (26 passed)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T003",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [],
+            "commands": [
+              "forge verify --base origin/main at fee496c (all six steps green)"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P1",
+      "issue": 223,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T004",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_viewsets.py",
+              "tests/test_ghfdb/test_urls.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_ghfdb/test_viewsets.py tests/test_ghfdb/test_urls.py tests/test_ghfdb/test_serializers.py -n0 -q (49 passed)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T005",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_viewsets.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_ghfdb/test_viewsets.py tests/test_ghfdb/test_urls.py tests/test_ghfdb/test_serializers.py -q (52 passed, three consecutive runs)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T006",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [],
+            "commands": [
+              "uv run pre-commit run --files docs/guides/published-structure-api.md (all hooks passed)"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P1",
+      "issue": 224,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T007",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_managers.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_ghfdb/test_managers.py -n0 -q (50 passed)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T008",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_viewsets.py",
+              "tests/test_ghfdb/test_urls.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_ghfdb/test_viewsets.py::TestGHFDBFlatViewSet tests/test_ghfdb/test_urls.py -n0 -q (21 passed)",
+              "uv run pytest tests/test_ghfdb/ -n0 -q (403 passed, 13 pre-existing xfailed)"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T009",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [],
+            "commands": [
+              "uv run pre-commit run --files docs/guides/published-structure-api.md (deptry passed, other hooks skipped)"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 1,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "tokens": {
+      "used": 0,
+      "max": 120
+    }
+  },
+  "pr": {
+    "number": 231,
+    "draft": false
+  }
+}
