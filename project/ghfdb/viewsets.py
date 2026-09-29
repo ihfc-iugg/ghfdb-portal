@@ -20,9 +20,9 @@ class GHFDBBaseViewSet(ReadOnlyModelViewSet):
     """Shared read-only base for the GHFDB published-structure viewsets.
 
     Keeps DRF's own ``get_object()`` unmodified, so the visibility filter and
-    the object permission check run on the single-record route too (spec
-    D12). Permission, pagination and throttling are the framework's own
-    settings — nothing here overrides them.
+    the object permission check run on the single-record route too.
+    Permission, pagination and throttling are the framework's own settings —
+    nothing here overrides them.
     """
 
     lookup_field = "ghfdb_id"
@@ -39,16 +39,17 @@ class GHFDBBaseViewSet(ReadOnlyModelViewSet):
     ),
 )
 class GHFDBParentViewSet(GHFDBBaseViewSet):
-    """Published parent heat-flow records, one per site (FS-006 US1, US2)."""
+    """Published parent heat-flow records, one per site (FS-006)."""
 
     serializer_class = GHFDBParentSerializer
 
     @property
     def queryset(self):
+        """Expose ``get_queryset()`` as the attribute, as the framework's viewsets do."""
         return self.get_queryset()
 
     def get_serializer_class(self):
-        """Use the children-attached shape on the single-record route (FR-006)."""
+        """Use the children-attached shape on the single record (FS-006 FR-006)."""
         if self.action == "retrieve":
             return GHFDBParentDetailSerializer
         return super().get_serializer_class()
@@ -58,7 +59,7 @@ class GHFDBParentViewSet(GHFDBBaseViewSet):
 
         Reuses ``GHFDBChildViewSet``'s own queryset, narrowed to this parent,
         so the attached list is exactly what ``/children/`` would serve this
-        requester for this parent (spec D16).
+        requester for this parent.
         """
         instance = self.get_object()
         child_viewset = GHFDBChildViewSet()
@@ -72,8 +73,7 @@ class GHFDBParentViewSet(GHFDBBaseViewSet):
         """Return published parents, their counts and exploration purposes.
 
         Ordered by published identifier then primary key, so a page is
-        stable (research R4). Constant query count regardless of row count
-        (research R7).
+        stable. Constant query count regardless of row count.
         """
         return (
             GHFDBParent.objects.as_ghfdb_flat()
@@ -92,22 +92,23 @@ class GHFDBParentViewSet(GHFDBBaseViewSet):
     ),
 )
 class GHFDBChildViewSet(GHFDBBaseViewSet):
-    """Published heat-flow determinations, one per measurement (FS-006 US2)."""
+    """Published heat-flow determinations, one per measurement (FS-006)."""
 
     serializer_class = GHFDBChildListSerializer
 
     @property
     def queryset(self):
+        """Expose ``get_queryset()`` as the attribute, as the framework's viewsets do."""
         return self.get_queryset()
 
     def get_serializer_class(self):
-        """Use the parent-nesting shape on the single-record route (D3)."""
+        """Use the parent-nesting shape on the single record (FS-006 FR-008)."""
         if self.action == "retrieve":
             return GHFDBChildDetailSerializer
         return super().get_serializer_class()
 
     def retrieve(self, request, *args, **kwargs):
-        """Nest the parent's full US1 record, in one further query (D3).
+        """Nest the parent's full record, in one further query (FS-006 FR-008).
 
         ``get_queryset()``'s ``select_related("parent")`` on the underlying
         ``HeatFlow`` row carries no counts or column annotations, so the
@@ -126,12 +127,13 @@ class GHFDBChildViewSet(GHFDBBaseViewSet):
         can sit in different datasets, so a determination is narrowed to
         parents the parent route's own queryset serves to this requester, as
         a subquery — a determination with no served parent is not served
-        either (spec D16, research R13). Ordered by published identifier
-        then primary key, so a page is stable, and constant query count
-        regardless of row count (research R7).
+        either. Ordered by published identifier then primary key, so a page
+        is stable, and constant query count regardless of row count.
         """
+        # Only the parents' keys are read by the subquery, so the counts and
+        # column annotations the parent route adds would be wasted work here.
         served_parents = FairDMVisibilityFilter().filter_queryset(
-            self.request, GHFDBParentViewSet().get_queryset(), self
+            self.request, GHFDBParent.objects.all(), self
         )
         return (
             GHFDBChild.objects.for_export()
@@ -146,17 +148,18 @@ class GHFDBChildViewSet(GHFDBBaseViewSet):
 )
 class GHFDBFlatViewSet(GHFDBBaseViewSet):
     """The released row, one per determination, in the release's own shape
-    (FS-006 US3).
+    (FS-006).
     """
 
     serializer_class = GHFDBFlatSerializer
 
     @property
     def queryset(self):
+        """Expose ``get_queryset()`` as the attribute, as the framework's viewsets do."""
         return self.get_queryset()
 
     def get_queryset(self):
-        """Return the determination route's own queryset (spec D16).
+        """Return the determination route's own queryset.
 
         Reuses ``GHFDBChildViewSet.get_queryset()`` rather than restating the
         parent-visibility subquery it applies.

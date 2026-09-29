@@ -3,7 +3,7 @@
 Also registers the published-structure viewsets on the framework's own API
 router. That registration must run before ``fairdm.api.urls`` is imported —
 `config/urls.py` includes this module ahead of ``fairdm.conf.urls``, which is
-what makes the ordering here work (research R1).
+what makes the ordering here work.
 """
 
 from django.urls import path

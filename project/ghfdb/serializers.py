@@ -27,7 +27,7 @@ class PublishedValueField(serializers.Field):
 
     A Pint quantity renders as its float magnitude. Both ``None`` and the
     empty string render as ``null`` — the two ways a published scalar can
-    hold no value are the same thing to a consumer (spec D14, research R5).
+    hold no value are the same thing to a consumer (FS-006 FR-012).
     Anything else passes through unchanged.
     """
 
@@ -51,7 +51,7 @@ class ConceptLabelsField(serializers.Field):
     Reads a related manager by a dot-separated source path and renders the
     labels of its members, via ``.all()`` so a prefetched queryset serves
     from cache. A ``None`` anywhere on the path renders as ``[]`` rather
-    than raising (spec D14).
+    than raising (FS-006 FR-011, FR-012).
     """
 
     def __init__(self, **kwargs):
@@ -83,7 +83,7 @@ def published_fields(
         columns: Published column names, in the order the record should
             carry them — normally ``PARENT_COLUMNS`` or ``CHILD_COLUMNS``.
         overrides: A per-context accessor for a column whose registry
-            accessor does not hold here (research R6), keyed by published
+            accessor does not hold here, keyed by published
             name.
 
     Returns:
@@ -113,7 +113,7 @@ class GHFDBParentSerializer(serializers.Serializer):
 
     The non-published keys are declared here and so come first; the
     published parent columns are appended by ``get_fields()``, which
-    satisfies FR-003 by construction (plan.md Design > Parents).
+    satisfies FS-006 FR-003 by construction.
     """
 
     url = serializers.HyperlinkedIdentityField(
@@ -131,11 +131,11 @@ class GHFDBParentSerializer(serializers.Serializer):
 
 class GHFDBChildListSerializer(serializers.Serializer):
     """One published determination record: its link, its parent link, its
-    site's coordinates, then its columns, then its own identifier (spec D15).
+    site's coordinates, then its columns, then its own identifier.
 
     The registry carries no entry for the determination's own identifier
     (``ID``), so it is added beside ``published_fields()``'s output rather
-    than through it, reading the proxy's ``ghfdb_id`` (research R11).
+    than through it, reading the proxy's ``ghfdb_id``.
     """
 
     url = serializers.HyperlinkedIdentityField(
@@ -165,7 +165,7 @@ class GHFDBChildListSerializer(serializers.Serializer):
 class GHFDBChildDetailSerializer(GHFDBChildListSerializer):
     """A determination's single-record shape: ``parent`` nests the parent's
     full record instead of linking to it, so the nesting stops at one level
-    (spec D2/D3).
+    (FS-006 FR-008).
     """
 
     def get_fields(self):
@@ -177,7 +177,7 @@ class GHFDBChildDetailSerializer(GHFDBChildListSerializer):
 
 class GHFDBFlatSerializer(serializers.Serializer):
     """One released row: every published parent column, then every published
-    child column, then the determination's own identifier (spec D15).
+    child column, then the determination's own identifier.
 
     Carries no link, no counts and no portal identifier — the released row is
     published columns and nothing else.
@@ -188,7 +188,7 @@ class GHFDBFlatSerializer(serializers.Serializer):
 
         ``explo_purpose`` reads a different path than it does on a parent
         row, because a determination reaches its site through its own
-        interval rather than directly (research R6).
+        interval rather than directly.
         """
         fields = super().get_fields()
         fields.update(
@@ -207,7 +207,7 @@ class GHFDBFlatSerializer(serializers.Serializer):
 class GHFDBParentDetailSerializer(GHFDBParentSerializer):
     """A parent's single-record shape: ``children`` carries the
     determinations belonging to it, in the determination list shape, ahead
-    of the published columns (spec FR-006, plan.md Design > Parents).
+    of the published columns (FS-006 FR-006).
 
     ``get_fields()`` skips ``GHFDBParentSerializer.get_fields()`` and calls
     the base ``Serializer.get_fields()`` directly, so ``children`` can be

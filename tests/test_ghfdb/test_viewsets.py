@@ -1,5 +1,3 @@
-"""HTTP-level tests for the GHFDB published-structure viewsets (FS-006 US1, US2, US3)."""
-
 import pytest
 from django.urls import reverse
 
