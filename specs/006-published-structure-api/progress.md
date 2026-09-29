@@ -154,3 +154,17 @@
   tests/test_ghfdb/test_viewsets.py tests/test_ghfdb/test_urls.py` — all hooks passed. Covers US3
   scenarios 1-9 and SC-001 through SC-006.
 - Next: T009, the flat section of the consumer guide.
+
+## 2026-09-29T00:50:00Z · Implementer US3 · T009
+
+- Did: added a "Flat" section to `docs/guides/published-structure-api.md`, with a worked list
+  request and response and a note that the single-record route returns the same object; stated that
+  rows follow the released file's own column order with the review status, year and quality code a
+  release's assessment team adds left out; removed the "flat gets its own section as it is built"
+  placeholder from the overview now that all three sections exist; extended "Implementation notes"
+  with `GHFDBFlatSerializer` and `GHFDBFlatViewSet`.
+- Verified: `uv run pre-commit run --files docs/guides/published-structure-api.md` — deptry passed
+  (all other hooks skipped, no markdown reformatting configured, matching T003/T006). Every JSON
+  code block in the file was checked with `json.loads` (excluding the two pre-existing paging-example
+  placeholders) and parses.
+- Next: none — US3 (T007-T009) is complete.
