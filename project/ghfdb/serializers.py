@@ -10,7 +10,7 @@ from drf_spectacular.utils import (
 from rest_framework import serializers
 
 from .columns import PublishedColumns
-from .constants import PARENT_COLUMNS
+from .constants import CHILD_COLUMNS, PARENT_COLUMNS
 
 
 @extend_schema_serializer(
@@ -126,4 +126,50 @@ class GHFDBParentSerializer(serializers.Serializer):
         """Append the published parent columns after the declared keys."""
         fields = super().get_fields()
         fields.update(published_fields(PARENT_COLUMNS))
+        return fields
+
+
+class GHFDBChildListSerializer(serializers.Serializer):
+    """One published determination record: its link, its parent link, its
+    site's coordinates, then its columns, then its own identifier (spec D15).
+
+    The registry carries no entry for the determination's own identifier
+    (``ID``), so it is added beside ``published_fields()``'s output rather
+    than through it, reading the proxy's ``ghfdb_id`` (research R11).
+    """
+
+    url = serializers.HyperlinkedIdentityField(
+        view_name="api:ghfdb-children-detail", lookup_field="ghfdb_id"
+    )
+
+    def get_fields(self):
+        """Append the parent link, the site coordinates, the child columns,
+        then ``ID``.
+
+        ``parent`` is built here rather than declared as a class attribute
+        because ``Field.parent`` is DRF's own name for a field's owning
+        serializer; a class attribute of that name would shadow it.
+        """
+        fields = super().get_fields()
+        fields["parent"] = serializers.HyperlinkedRelatedField(
+            view_name="api:ghfdb-parents-detail",
+            lookup_field="ghfdb_id",
+            read_only=True,
+        )
+        fields.update(published_fields(["lat_NS", "long_EW"]))
+        fields.update(published_fields(CHILD_COLUMNS))
+        fields["ID"] = PublishedValueField(source="ghfdb_id")
+        return fields
+
+
+class GHFDBChildDetailSerializer(GHFDBChildListSerializer):
+    """A determination's single-record shape: ``parent`` nests the parent's
+    full record instead of linking to it, so the nesting stops at one level
+    (spec D2/D3).
+    """
+
+    def get_fields(self):
+        """Replace the ``parent`` link with the nested parent record."""
+        fields = super().get_fields()
+        fields["parent"] = GHFDBParentSerializer(read_only=True)
         return fields

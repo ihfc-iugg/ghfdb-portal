@@ -3,10 +3,15 @@
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from fairdm.api.filters import FairDMVisibilityFilter
+from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
-from .models import GHFDBParent
-from .serializers import GHFDBParentSerializer
+from .models import GHFDBChild, GHFDBParent
+from .serializers import (
+    GHFDBChildDetailSerializer,
+    GHFDBChildListSerializer,
+    GHFDBParentSerializer,
+)
 
 
 class GHFDBBaseViewSet(ReadOnlyModelViewSet):
@@ -47,5 +52,62 @@ class GHFDBParentViewSet(GHFDBBaseViewSet):
             GHFDBParent.objects.as_ghfdb_flat()
             .with_child_counts()
             .prefetch_related("sample__heatflowsite__explo_purpose")
+            .order_by("ghfdb_id", "pk")
+        )
+
+
+@extend_schema_view(
+    list=extend_schema(summary=_("List published determinations"), tags=["ghfdb"]),
+    retrieve=extend_schema(
+        summary=_("Retrieve a published determination"),
+        tags=["ghfdb"],
+        responses=GHFDBChildDetailSerializer,
+    ),
+)
+class GHFDBChildViewSet(GHFDBBaseViewSet):
+    """Published heat-flow determinations, one per measurement (FS-006 US2)."""
+
+    serializer_class = GHFDBChildListSerializer
+
+    @property
+    def queryset(self):
+        return self.get_queryset()
+
+    def get_serializer_class(self):
+        """Use the parent-nesting shape on the single-record route (D3)."""
+        if self.action == "retrieve":
+            return GHFDBChildDetailSerializer
+        return super().get_serializer_class()
+
+    def retrieve(self, request, *args, **kwargs):
+        """Nest the parent's full US1 record, in one further query (D3).
+
+        ``get_queryset()``'s ``select_related("parent")`` on the underlying
+        ``HeatFlow`` row carries no counts or column annotations, so the
+        nested parent is loaded through the parent route's own queryset
+        instead, the same shape ``GHFDBParentViewSet`` serves.
+        """
+        instance = self.get_object()
+        instance.parent = GHFDBParentViewSet().get_queryset().get(pk=instance.parent_id)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    def get_queryset(self):
+        """Return determinations whose parent the parent route also serves.
+
+        Visibility is decided per record, and a determination and its parent
+        can sit in different datasets, so a determination is narrowed to
+        parents the parent route's own queryset serves to this requester, as
+        a subquery — a determination with no served parent is not served
+        either (spec D16, research R13). Ordered by published identifier
+        then primary key, so a page is stable, and constant query count
+        regardless of row count (research R7).
+        """
+        served_parents = FairDMVisibilityFilter().filter_queryset(
+            self.request, GHFDBParentViewSet().get_queryset(), self
+        )
+        return (
+            GHFDBChild.objects.for_export()
+            .filter(parent__in=served_parents)
             .order_by("ghfdb_id", "pk")
         )
