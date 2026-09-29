@@ -79,3 +79,28 @@
   depending on cache state, and those writes count toward `CaptureQueriesContext`'s total. Isolated,
   repeated runs of this story's own query-count tests showed identical, matching query lists at both
   measurement points. Not fixed here — outside this story's scope and predates it.
+
+## 2026-09-29T00:12:40Z · Implementer US2 · T005
+
+- Did: added `GHFDBParentDetailSerializer` to `serializers.py`, inserting `children` between the
+  declared keys and the published columns (reads `children_list` — the proxy's own `children` is the
+  model's real reverse relation manager, which cannot be reassigned to a filtered queryset); wired it
+  onto `GHFDBParentViewSet`'s single-record route in `viewsets.py`, which now reuses
+  `GHFDBChildViewSet`'s own queryset (through its filter backends, then narrowed to this parent), so
+  the attached list matches what `/children/` would serve the same requester for that parent.
+- Verified: `uv run pytest tests/test_ghfdb/test_viewsets.py tests/test_ghfdb/test_urls.py
+  tests/test_ghfdb/test_serializers.py -n0 -q` — 51 passed, 1 failed (see below). `uv run pre-commit
+  run --files project/ghfdb/serializers.py project/ghfdb/viewsets.py
+  tests/test_ghfdb/test_viewsets.py` — all hooks passed. New tests cover US1 scenario 5 in full, the
+  cross-dataset case (a published determination in a private dataset under a public parent), and the
+  parent detail's query count against a growing number of attached determinations.
+- Next: T006, the consumer guide's determinations section.
+- Blocked: `TestGHFDBParentViewSet::test_following_the_self_link_returns_the_same_parent`, a
+  pre-existing test not authored in this story, now fails — it asserts the parent detail equals the
+  list record verbatim, which predates this story's requirement (this feature's own specification)
+  that the single-record route also carry the parent's determinations. Not modified, per the
+  standing rule against touching a test from an earlier story. The fix is small and already proven
+  by the new test added alongside it in the same commit
+  (`test_following_the_self_link_returns_the_parent_with_its_determinations_attached`): the old
+  test's final assertion needs to compare the fields the two shapes still share, or assert `children`
+  separately, rather than comparing the two response bodies for exact equality.

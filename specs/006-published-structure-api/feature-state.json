@@ -135,8 +135,17 @@
         },
         {
           "id": "T005",
-          "status": "todo",
-          "attempts": 0
+          "status": "blocked",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_viewsets.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_ghfdb/test_viewsets.py tests/test_ghfdb/test_urls.py tests/test_ghfdb/test_serializers.py -n0 -q (51 passed, 1 failed)"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T006",
