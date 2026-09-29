@@ -76,6 +76,54 @@ class TestGHFDBParentViewSet:
         assert detail_response.status_code == 200
         assert detail_response.json() == record
 
+    def test_following_the_self_link_returns_the_parent_with_its_determinations_attached(
+        self, client, public_dataset
+    ):
+        parent = build_site_and_parent(public_dataset, ghfdb_id=1)
+        build_child(public_dataset, parent, ghfdb_id=11)
+        build_child(public_dataset, parent, ghfdb_id=12)
+
+        list_response = client.get(reverse("api:ghfdb-parents-list"))
+        record = list_response.json()["results"][0]
+
+        detail_response = client.get(record["url"])
+
+        assert detail_response.status_code == 200
+        detail = detail_response.json()
+        assert list(detail)[:4] == ["url", "total_children", "relevant_children", "children"]
+        assert {child["ID"] for child in detail["children"]} == {11, 12}
+
+        children_response = client.get(reverse("api:ghfdb-children-list"))
+        assert detail["children"] == children_response.json()["results"]
+
+    def test_a_published_determination_in_a_private_dataset_under_a_public_parent_is_absent_from_the_anonymous_parent_detail(
+        self, client, public_dataset, dataset
+    ):
+        parent = build_site_and_parent(public_dataset, ghfdb_id=1)
+        build_child(dataset, parent, ghfdb_id=11)
+
+        response = client.get(
+            reverse("api:ghfdb-parents-detail", kwargs={"ghfdb_id": 1})
+        )
+
+        assert response.status_code == 200
+        assert response.json()["children"] == []
+
+    def test_the_parent_detail_query_count_does_not_grow_with_attached_determinations(
+        self, client, public_dataset, constant_query_count
+    ):
+        parent = build_site_and_parent(public_dataset, ghfdb_id=1)
+        counter = iter(range(1, 1000))
+
+        def build(count):
+            for _ in range(count):
+                build_child(public_dataset, parent, ghfdb_id=next(counter))
+
+        def call():
+            client.get(reverse("api:ghfdb-parents-detail", kwargs={"ghfdb_id": 1}))
+
+        constant_query_count(build, call, low=1, high=20)
+
     def test_an_unpublished_parent_is_absent_from_the_list_and_its_route_404s(
         self, client, public_dataset
     ):

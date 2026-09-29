@@ -173,3 +173,26 @@ class GHFDBChildDetailSerializer(GHFDBChildListSerializer):
         fields = super().get_fields()
         fields["parent"] = GHFDBParentSerializer(read_only=True)
         return fields
+
+
+class GHFDBParentDetailSerializer(GHFDBParentSerializer):
+    """A parent's single-record shape: ``children`` carries the
+    determinations belonging to it, in the determination list shape, ahead
+    of the published columns (spec FR-006, plan.md Design > Parents).
+
+    ``get_fields()`` skips ``GHFDBParentSerializer.get_fields()`` and calls
+    the base ``Serializer.get_fields()`` directly, so ``children`` can be
+    inserted before the published columns are appended, rather than after.
+    Read from ``children_list`` rather than the field's own name: the
+    proxy's ``children`` is the model's real reverse relation manager, which
+    the view cannot reassign to a filtered queryset.
+    """
+
+    def get_fields(self):
+        """Insert ``children`` between the declared keys and the columns."""
+        fields = serializers.Serializer.get_fields(self)
+        fields["children"] = GHFDBChildListSerializer(
+            many=True, read_only=True, source="children_list"
+        )
+        fields.update(published_fields(PARENT_COLUMNS))
+        return fields

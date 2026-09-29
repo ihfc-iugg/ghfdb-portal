@@ -10,6 +10,7 @@ from .models import GHFDBChild, GHFDBParent
 from .serializers import (
     GHFDBChildDetailSerializer,
     GHFDBChildListSerializer,
+    GHFDBParentDetailSerializer,
     GHFDBParentSerializer,
 )
 
@@ -30,16 +31,41 @@ class GHFDBBaseViewSet(ReadOnlyModelViewSet):
 
 @extend_schema_view(
     list=extend_schema(summary=_("List published parents"), tags=["ghfdb"]),
-    retrieve=extend_schema(summary=_("Retrieve a published parent"), tags=["ghfdb"]),
+    retrieve=extend_schema(
+        summary=_("Retrieve a published parent"),
+        tags=["ghfdb"],
+        responses=GHFDBParentDetailSerializer,
+    ),
 )
 class GHFDBParentViewSet(GHFDBBaseViewSet):
-    """Published parent heat-flow records, one per site (FS-006 US1)."""
+    """Published parent heat-flow records, one per site (FS-006 US1, US2)."""
 
     serializer_class = GHFDBParentSerializer
 
     @property
     def queryset(self):
         return self.get_queryset()
+
+    def get_serializer_class(self):
+        """Use the children-attached shape on the single-record route (FR-006)."""
+        if self.action == "retrieve":
+            return GHFDBParentDetailSerializer
+        return super().get_serializer_class()
+
+    def retrieve(self, request, *args, **kwargs):
+        """Attach the determinations the determination route would serve.
+
+        Reuses ``GHFDBChildViewSet``'s own queryset, narrowed to this parent,
+        so the attached list is exactly what ``/children/`` would serve this
+        requester for this parent (spec D16).
+        """
+        instance = self.get_object()
+        child_viewset = GHFDBChildViewSet()
+        child_viewset.request = request
+        children = child_viewset.filter_queryset(child_viewset.get_queryset())
+        instance.children_list = children.filter(parent=instance)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     def get_queryset(self):
         """Return published parents, their counts and exploration purposes.
