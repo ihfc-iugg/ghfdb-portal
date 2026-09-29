@@ -37,6 +37,25 @@ class GHFDBObjectPermissions(FairDMObjectPermissions):
         return super().get_required_object_permissions(method, model_cls)
 
 
+def _served_parents(request, view):
+    """Parents visible to *request*, narrowed to ones whose site is visible too.
+
+    A parent's own visibility (via ``FairDMVisibilityFilter`` on its dataset)
+    says nothing about the ``HeatFlowSite`` it describes — the two can sit in
+    different datasets — so ADR 0021's second path (a determination attached
+    to a site that is not public) is only closed by checking both (SEC-002).
+    """
+    from heat_flow.models import HeatFlowSite
+
+    served = FairDMVisibilityFilter().filter_queryset(
+        request, GHFDBParent.objects.all(), view
+    )
+    visible_sites = FairDMVisibilityFilter().filter_queryset(
+        request, HeatFlowSite.objects.all(), view
+    )
+    return served.filter(sample_id__in=visible_sites.values_list("pk", flat=True))
+
+
 class GHFDBBaseViewSet(ReadOnlyModelViewSet):
     """Shared read-only base for the GHFDB published-structure viewsets.
 
@@ -94,13 +113,16 @@ class GHFDBParentViewSet(GHFDBBaseViewSet):
     def get_queryset(self):
         """Return published parents, their counts and exploration purposes.
 
+        Narrowed to parents this requester is served (SEC-002, ADR 0021).
         Ordered by published identifier then primary key, so a page is
         stable. Constant query count regardless of row count.
         """
+        served = _served_parents(self.request, self)
         return (
             GHFDBParent.objects.as_ghfdb_flat()
             .with_child_counts()
             .prefetch_related("sample__heatflowsite__explo_purpose")
+            .filter(pk__in=served.values_list("pk", flat=True))
             .order_by("ghfdb_id", "pk")
         )
 
@@ -138,7 +160,9 @@ class GHFDBChildViewSet(GHFDBBaseViewSet):
         instead, the same shape ``GHFDBParentViewSet`` serves.
         """
         instance = self.get_object()
-        instance.parent = GHFDBParentViewSet().get_queryset().get(pk=instance.parent_id)
+        parent_viewset = GHFDBParentViewSet()
+        parent_viewset.request = request
+        instance.parent = parent_viewset.get_queryset().get(pk=instance.parent_id)
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
@@ -147,16 +171,12 @@ class GHFDBChildViewSet(GHFDBBaseViewSet):
 
         Visibility is decided per record, and a determination and its parent
         can sit in different datasets, so a determination is narrowed to
-        parents the parent route's own queryset serves to this requester, as
-        a subquery — a determination with no served parent is not served
-        either. Ordered by published identifier then primary key, so a page
-        is stable, and constant query count regardless of row count.
+        parents this requester is served, as a subquery — a determination
+        with no served parent is not served either (SEC-002, ADR 0021).
+        Ordered by published identifier then primary key, so a page is
+        stable, and constant query count regardless of row count.
         """
-        # Only the parents' keys are read by the subquery, so the counts and
-        # column annotations the parent route adds would be wasted work here.
-        served_parents = FairDMVisibilityFilter().filter_queryset(
-            self.request, GHFDBParent.objects.all(), self
-        )
+        served_parents = _served_parents(self.request, self)
         return (
             GHFDBChild.objects.for_export()
             .filter(parent__in=served_parents)

@@ -798,3 +798,46 @@ class TestGHFDBSingleRecordObjectPermissions:
         )
 
         assert response.status_code == 200
+
+
+@pytest.mark.django_db
+class TestGHFDBSiteVisibility:
+    """SEC-002: a parent is served only where its site is visible too (ADR 0021).
+
+    A published parent's own dataset can be public while the ``HeatFlowSite``
+    it describes sits in a dataset that is not — the parent-level check alone
+    does not close that path.
+    """
+
+    def test_a_public_parent_whose_site_is_in_a_private_dataset_is_absent_everywhere(
+        self, client, public_dataset, dataset
+    ):
+        from heat_flow.models import HeatFlowSite
+
+        parent = build_site_and_parent(public_dataset, ghfdb_id=1)
+        build_child(public_dataset, parent, ghfdb_id=11)
+        site = HeatFlowSite.objects.get(pk=parent.sample_id)
+        site.dataset = dataset
+        site.save()
+
+        assert client.get(reverse("api:ghfdb-parents-list")).json()["results"] == []
+        assert (
+            client.get(
+                reverse("api:ghfdb-parents-detail", kwargs={"ghfdb_id": 1})
+            ).status_code
+            == 404
+        )
+        assert client.get(reverse("api:ghfdb-children-list")).json()["results"] == []
+        assert (
+            client.get(
+                reverse("api:ghfdb-children-detail", kwargs={"ghfdb_id": 11})
+            ).status_code
+            == 404
+        )
+        assert client.get(reverse("api:ghfdb-flat-list")).json()["results"] == []
+        assert (
+            client.get(
+                reverse("api:ghfdb-flat-detail", kwargs={"ghfdb_id": 11})
+            ).status_code
+            == 404
+        )

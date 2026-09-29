@@ -210,3 +210,21 @@
   project/ghfdb/viewsets.py tests/test_ghfdb/test_viewsets.py tests/test_ghfdb/conftest.py` — all
   hooks passed.
 - Next: T012 (SEC-002).
+
+## 2026-09-29T01:30:00Z · Review fix cycle · T012
+
+- Did: added `_served_parents()` (`project/ghfdb/viewsets.py`), narrowing the visible-parents
+  subquery to parents whose ``HeatFlowSite`` is also visible to the requester, and used it in both
+  `GHFDBParentViewSet.get_queryset()` and `GHFDBChildViewSet.get_queryset()` in place of each
+  viewset's own inline visibility check. A published parent's own dataset could be public while the
+  site it describes sat in a dataset that was not, and only the parent's own visibility was
+  checked — the site's never was — so that record (and its determinations) served the site's
+  values regardless. Fixed a latent bug this change surfaced in `GHFDBChildViewSet.retrieve()`:
+  the bare `GHFDBParentViewSet()` it builds to load the nested parent record never carried a
+  `request`, which `get_queryset()` did not previously need but does now.
+- Verified: the new `TestGHFDBSiteVisibility` test failed (all three routes still served the
+  record) before the fix and passes after it. `uv run pytest tests/test_ghfdb/test_viewsets.py -n0
+  -q` — 62 passed, including every pre-existing query-count test unchanged. `uv run pytest
+  tests/test_ghfdb/ -q` — 412 passed, 13 pre-existing xfailed, no regressions. `uv run pre-commit
+  run --files project/ghfdb/viewsets.py tests/test_ghfdb/test_viewsets.py` — all hooks passed.
+- Next: T013 (SEC-003 and doc accuracy).
