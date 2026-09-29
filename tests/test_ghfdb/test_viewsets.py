@@ -710,3 +710,91 @@ class TestGHFDBFlatViewSet:
         assert response.status_code >= 400
         child.refresh_from_db()
         assert child.value.magnitude == 70.0
+
+
+@pytest.mark.django_db
+class TestGHFDBSingleRecordObjectPermissions:
+    """SEC-001: a single-record route decides visibility instead of crashing.
+
+    The proxy's own `ghfdb.view_ghfdb*` permission has no row on the concrete
+    `heat_flow` model these routes serve, so checking it against the object
+    raised an unhandled error rather than answering yes or no.
+    """
+
+    def test_a_data_curator_reads_a_private_record_on_every_single_record_route(
+        self, data_curator_client, dataset
+    ):
+        parent = build_site_and_parent(dataset, ghfdb_id=1)
+        build_child(dataset, parent, ghfdb_id=11)
+
+        parent_response = data_curator_client.get(
+            reverse("api:ghfdb-parents-detail", kwargs={"ghfdb_id": 1})
+        )
+        child_response = data_curator_client.get(
+            reverse("api:ghfdb-children-detail", kwargs={"ghfdb_id": 11})
+        )
+        flat_response = data_curator_client.get(
+            reverse("api:ghfdb-flat-detail", kwargs={"ghfdb_id": 11})
+        )
+
+        assert parent_response.status_code == 200
+        assert child_response.status_code == 200
+        assert flat_response.status_code == 200
+
+    def test_a_signed_in_user_with_no_grant_gets_404_on_every_single_record_route(
+        self, client, dataset
+    ):
+        from fairdm.factories import UserFactory
+
+        parent = build_site_and_parent(dataset, ghfdb_id=1)
+        build_child(dataset, parent, ghfdb_id=11)
+        client.force_login(UserFactory())
+
+        assert (
+            client.get(
+                reverse("api:ghfdb-parents-detail", kwargs={"ghfdb_id": 1})
+            ).status_code
+            == 404
+        )
+        assert (
+            client.get(
+                reverse("api:ghfdb-children-detail", kwargs={"ghfdb_id": 11})
+            ).status_code
+            == 404
+        )
+        assert (
+            client.get(
+                reverse("api:ghfdb-flat-detail", kwargs={"ghfdb_id": 11})
+            ).status_code
+            == 404
+        )
+
+    def test_a_guardian_object_grant_on_a_private_parent_allows_its_detail_route(
+        self, client, public_dataset, dataset
+    ):
+        from fairdm.core.utils import assign_perm
+        from fairdm.factories import UserFactory
+        from heat_flow.models import HeatFlowSite, ParentHeatFlow
+
+        # The site stays in the public dataset; only the parent (the measurement the
+        # grant below targets) moves to the private one, so this scenario tests the
+        # object grant alone rather than also depending on site visibility (SEC-002).
+        site = HeatFlowSite.objects.create(
+            dataset=public_dataset,
+            name="Test Site",
+            country="Germany",
+            continent="Europe",
+            environment="onshore_continental",
+        )
+        parent = ParentHeatFlow.objects.create(
+            dataset=dataset, sample=site, name="Test Parent", value=70.0, ghfdb_id=1
+        )
+        user = UserFactory()
+        assign_perm("view_measurement", user, ParentHeatFlow.objects.get(pk=parent.pk))
+        client.force_login(user)
+
+        response = client.get(
+            reverse("api:ghfdb-parents-detail", kwargs={"ghfdb_id": 1})
+        )
+
+        assert response.status_code == 200

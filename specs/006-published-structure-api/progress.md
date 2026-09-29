@@ -191,3 +191,22 @@
   project/ghfdb/serializers.py tests/test_ghfdb/test_serializers.py
   tests/test_ghfdb/test_viewsets.py` — all hooks passed.
 - Next: T011 (SEC-001).
+
+## 2026-09-29T01:24:00Z · Review fix cycle · T011
+
+- Did: added `GHFDBObjectPermissions` (`project/ghfdb/viewsets.py`), a `FairDMObjectPermissions`
+  subclass whose `get_required_object_permissions` returns `measurement.view_measurement` for a
+  safe method instead of the proxy's own `ghfdb.view_ghfdb*` codename, and wired it as
+  `GHFDBBaseViewSet.permission_classes`. Every single-record route (`parents/<ID_parent>/`,
+  `children/<ID>/`, `flat/<ID>/`) called `get_object()`, which checked the proxy's permission
+  against an object whose concrete model lives in `heat_flow` — guardian's content-type resolution
+  for a proxy raised `WrongAppError` (an unhandled 500) rather than deciding, for any signed-in
+  non-superuser the visibility filter would otherwise have let through (the shipped Data Curator
+  role, or a guardian object grant).
+- Verified: the three new tests in `TestGHFDBSingleRecordObjectPermissions`
+  (`tests/test_ghfdb/test_viewsets.py`) failed with `WrongAppError` before the fix (two of three;
+  the no-grant/404 case does not touch the crashing path) and pass after it. `uv run pytest
+  tests/test_ghfdb/test_viewsets.py -n0 -q` — 61 passed. `uv run pre-commit run --files
+  project/ghfdb/viewsets.py tests/test_ghfdb/test_viewsets.py tests/test_ghfdb/conftest.py` — all
+  hooks passed.
+- Next: T012 (SEC-002).

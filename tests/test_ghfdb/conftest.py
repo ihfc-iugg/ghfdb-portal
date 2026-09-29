@@ -418,6 +418,21 @@ def staff_client(client, db):
 
 
 @pytest.fixture
+def data_curator_client(client, db):
+    # A logged-in user carrying the shipped Data Curator role, which holds
+    # `measurement.view_measurement` at the model level rather than against any one
+    # record (SEC-001).
+    from django.contrib.auth.models import Group
+
+    from fairdm.factories import UserFactory
+
+    user = UserFactory()
+    user.groups.add(Group.objects.get(name="Data Curator"))
+    client.force_login(user)
+    return client
+
+
+@pytest.fixture
 def constant_query_count(django_assert_num_queries):
     # Assert a callable's query count does not grow with row count (FS-002).
 

@@ -3,6 +3,8 @@
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from fairdm.api.filters import FairDMVisibilityFilter
+from fairdm.api.permissions import FairDMObjectPermissions
+from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
@@ -16,18 +18,38 @@ from .serializers import (
 )
 
 
+class GHFDBObjectPermissions(FairDMObjectPermissions):
+    """Object-level permission for the GHFDB proxy viewsets.
+
+    A safe-method check asks for ``measurement.view_measurement`` — the
+    permission :class:`~fairdm.api.filters.FairDMVisibilityFilter` already
+    resolves a list request to — instead of the proxy's own
+    ``ghfdb.view_ghfdb*`` codename. Guardian resolves a proxy model's content
+    type through its concrete model, ``heat_flow`` for both
+    ``GHFDBParent``/``GHFDBChild``, so checking the proxy's own
+    ``ghfdb``-labelled permission against the object raised
+    ``guardian.exceptions.WrongAppError`` instead of deciding (SEC-001).
+    """
+
+    def get_required_object_permissions(self, method, model_cls):
+        if method in SAFE_METHODS:
+            return ["measurement.view_measurement"]
+        return super().get_required_object_permissions(method, model_cls)
+
+
 class GHFDBBaseViewSet(ReadOnlyModelViewSet):
     """Shared read-only base for the GHFDB published-structure viewsets.
 
     Keeps DRF's own ``get_object()`` unmodified, so the visibility filter and
     the object permission check run on the single-record route too.
-    Permission, pagination and throttling are the framework's own settings —
-    nothing here overrides them.
+    Pagination and throttling are the framework's own settings; the
+    permission class is narrowed to :class:`GHFDBObjectPermissions` (SEC-001).
     """
 
     lookup_field = "ghfdb_id"
     lookup_value_regex = "[0-9]+"
     filter_backends = [FairDMVisibilityFilter]
+    permission_classes = [GHFDBObjectPermissions]
 
 
 @extend_schema_view(
