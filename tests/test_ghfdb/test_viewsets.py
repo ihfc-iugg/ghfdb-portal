@@ -1,4 +1,4 @@
-"""HTTP-level tests for the GHFDB published-structure viewsets (FS-006 US1, US2)."""
+"""HTTP-level tests for the GHFDB published-structure viewsets (FS-006 US1, US2, US3)."""
 
 import pytest
 from django.urls import reverse
@@ -461,6 +461,170 @@ class TestGHFDBChildViewSet:
         parent = build_site_and_parent(public_dataset, ghfdb_id=1)
         child = build_child(public_dataset, parent, ghfdb_id=11)
         url = reverse("api:ghfdb-children-detail", kwargs={"ghfdb_id": 11})
+
+        response = getattr(client, method)(url, {}, content_type="application/json")
+
+        assert response.status_code >= 400
+        child.refresh_from_db()
+        assert child.value.magnitude == 70.0
+
+
+@pytest.mark.django_db
+class TestGHFDBFlatViewSet:
+    def test_list_returns_every_published_column_in_published_order(
+        self, client, public_dataset
+    ):
+        parent = build_site_and_parent(public_dataset, ghfdb_id=1)
+        build_child(public_dataset, parent, ghfdb_id=11)
+
+        response = client.get(reverse("api:ghfdb-flat-list"))
+
+        assert response.status_code == 200
+        record = response.json()["results"][0]
+        assert list(record) == [*PARENT_COLUMNS, *CHILD_COLUMNS, "ID"]
+
+    def test_a_row_carries_no_key_that_is_not_a_published_column(
+        self, client, public_dataset
+    ):
+        parent = build_site_and_parent(public_dataset, ghfdb_id=1)
+        build_child(public_dataset, parent, ghfdb_id=11)
+
+        response = client.get(reverse("api:ghfdb-flat-list"))
+
+        record = response.json()["results"][0]
+        assert set(record) == set(PARENT_COLUMNS) | set(CHILD_COLUMNS) | {"ID"}
+
+    def test_two_determinations_under_one_parent_repeat_its_values(
+        self, client, public_dataset
+    ):
+        from heat_flow.vocabularies import ExplorationPurpose
+        from research_vocabs.models import Concept
+
+        parent = build_site_and_parent(public_dataset, ghfdb_id=1)
+        parent.quality = "A1"
+        parent.save()
+        purposes = list(Concept.get_for_vocabulary(ExplorationPurpose)[:2])
+        parent.sample.explo_purpose.set(purposes)
+        build_child(public_dataset, parent, ghfdb_id=11)
+        build_child(public_dataset, parent, ghfdb_id=12)
+
+        response = client.get(reverse("api:ghfdb-flat-list"))
+
+        rows = response.json()["results"]
+        assert len(rows) == 2
+        for row in rows:
+            assert row["ID_parent"] == 1
+            assert row["name"] == parent.sample.name
+            assert set(row["explo_purpose"]) == {purpose.label for purpose in purposes}
+            assert row["quality_parent"] == "A1"
+
+    def test_query_count_is_constant_between_a_page_of_one_and_a_full_page(
+        self, client, public_dataset, constant_query_count
+    ):
+        counter = iter(range(1, 1000))
+
+        def build(count):
+            for _ in range(count):
+                next_id = next(counter)
+                parent = build_site_and_parent(public_dataset, ghfdb_id=next_id)
+                build_child(public_dataset, parent, ghfdb_id=next_id)
+
+        def call():
+            client.get(reverse("api:ghfdb-flat-list"), {"page_size": 100})
+
+        constant_query_count(build, call, low=1, high=99)
+
+    def test_the_detail_route_returns_the_same_row_the_list_carries(
+        self, client, public_dataset
+    ):
+        parent = build_site_and_parent(public_dataset, ghfdb_id=1)
+        build_child(public_dataset, parent, ghfdb_id=11)
+
+        list_response = client.get(reverse("api:ghfdb-flat-list"))
+        record = list_response.json()["results"][0]
+
+        detail_response = client.get(
+            reverse("api:ghfdb-flat-detail", kwargs={"ghfdb_id": 11})
+        )
+
+        assert detail_response.status_code == 200
+        assert detail_response.json() == record
+
+    def test_an_unpublished_determination_is_absent(self, client, public_dataset):
+        parent = build_site_and_parent(public_dataset, ghfdb_id=1)
+        build_child(public_dataset, parent, published=False, ghfdb_id=999999)
+
+        response = client.get(reverse("api:ghfdb-flat-list"))
+
+        assert response.json()["results"] == []
+
+    def test_a_determination_in_a_private_dataset_is_absent(
+        self, client, public_dataset, dataset
+    ):
+        parent = build_site_and_parent(public_dataset, ghfdb_id=1)
+        build_child(dataset, parent, ghfdb_id=11)
+
+        response = client.get(reverse("api:ghfdb-flat-list"))
+
+        assert response.json()["results"] == []
+
+    def test_a_determination_whose_parent_is_not_served_is_absent(
+        self, client, public_dataset, dataset
+    ):
+        parent = build_site_and_parent(dataset, ghfdb_id=1)
+        build_child(public_dataset, parent, ghfdb_id=11)
+
+        response = client.get(reverse("api:ghfdb-flat-list"))
+
+        assert response.json()["results"] == []
+
+    def test_neither_misspelled_column_appears_anywhere_in_the_response_body(
+        self, client, public_dataset
+    ):
+        parent = build_site_and_parent(public_dataset, ghfdb_id=1)
+        build_child(public_dataset, parent, ghfdb_id=11)
+
+        response = client.get(reverse("api:ghfdb-flat-list"))
+
+        body = response.content.decode()
+        for misspelled in REJECTED_MISSPELLED_COLUMNS:
+            assert misspelled not in body
+
+    def test_an_anonymous_request_is_served_not_refused(self, client, public_dataset):
+        parent = build_site_and_parent(public_dataset, ghfdb_id=1)
+        build_child(public_dataset, parent, ghfdb_id=11)
+
+        response = client.get(reverse("api:ghfdb-flat-list"))
+
+        assert response.status_code == 200
+
+    def test_a_signed_in_request_succeeds(self, staff_client, public_dataset):
+        parent = build_site_and_parent(public_dataset, ghfdb_id=1)
+        build_child(public_dataset, parent, ghfdb_id=11)
+
+        response = staff_client.get(reverse("api:ghfdb-flat-list"))
+
+        assert response.status_code == 200
+
+    def test_a_create_request_is_refused_and_nothing_changes(
+        self, client, public_dataset
+    ):
+        before = GHFDBChild.objects.count()
+
+        response = client.post(
+            reverse("api:ghfdb-flat-list"), {}, content_type="application/json"
+        )
+
+        assert response.status_code >= 400
+        assert GHFDBChild.objects.count() == before
+
+    @pytest.mark.parametrize("method", ["put", "patch", "delete"])
+    def test_a_modifying_request_is_refused_and_nothing_changes(
+        self, client, public_dataset, method
+    ):
+        parent = build_site_and_parent(public_dataset, ghfdb_id=1)
+        child = build_child(public_dataset, parent, ghfdb_id=11)
+        url = reverse("api:ghfdb-flat-detail", kwargs={"ghfdb_id": 11})
 
         response = getattr(client, method)(url, {}, content_type="application/json")
 

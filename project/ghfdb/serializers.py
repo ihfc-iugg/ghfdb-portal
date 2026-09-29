@@ -175,6 +175,35 @@ class GHFDBChildDetailSerializer(GHFDBChildListSerializer):
         return fields
 
 
+class GHFDBFlatSerializer(serializers.Serializer):
+    """One released row: every published parent column, then every published
+    child column, then the determination's own identifier (spec D15).
+
+    Carries no link, no counts and no portal identifier — the released row is
+    published columns and nothing else.
+    """
+
+    def get_fields(self):
+        """Append the parent columns, the child columns, then ``ID``.
+
+        ``explo_purpose`` reads a different path than it does on a parent
+        row, because a determination reaches its site through its own
+        interval rather than directly (research R6).
+        """
+        fields = super().get_fields()
+        fields.update(
+            published_fields(
+                PARENT_COLUMNS,
+                overrides={
+                    "explo_purpose": "sample.heatflowinterval.site.explo_purpose"
+                },
+            )
+        )
+        fields.update(published_fields(CHILD_COLUMNS))
+        fields["ID"] = PublishedValueField(source="ghfdb_id")
+        return fields
+
+
 class GHFDBParentDetailSerializer(GHFDBParentSerializer):
     """A parent's single-record shape: ``children`` carries the
     determinations belonging to it, in the determination list shape, ahead

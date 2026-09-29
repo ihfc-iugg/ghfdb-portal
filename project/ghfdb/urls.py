@@ -10,7 +10,7 @@ from django.urls import path
 from fairdm.api.router import fairdm_api_router
 
 from .views import GHFDBExploreView, GHFDBMetaDataAPIView, GHFDBPathDownloadView
-from .viewsets import GHFDBChildViewSet, GHFDBParentViewSet
+from .viewsets import GHFDBChildViewSet, GHFDBFlatViewSet, GHFDBParentViewSet
 
 fairdm_api_router.register(
     r"ghfdb/parents", GHFDBParentViewSet, basename="ghfdb-parents"
@@ -18,6 +18,7 @@ fairdm_api_router.register(
 fairdm_api_router.register(
     r"ghfdb/children", GHFDBChildViewSet, basename="ghfdb-children"
 )
+fairdm_api_router.register(r"ghfdb/flat", GHFDBFlatViewSet, basename="ghfdb-flat")
 
 urlpatterns = [
     path("api/ghfdb/", GHFDBPathDownloadView.as_view(), name="ghfdb-api"),

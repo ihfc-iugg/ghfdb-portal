@@ -1,4 +1,4 @@
-"""Registration tests for the GHFDB published-structure routes (FS-006 US1, US2)."""
+"""Registration tests for the GHFDB published-structure routes (FS-006 US1, US2, US3)."""
 
 import pytest
 from django.urls import reverse
@@ -43,3 +43,17 @@ class TestGHFDBAPIRegistration:
         ]["200"]["content"]["application/json"]["schema"]["$ref"]
 
         assert list_schema_ref != detail_schema_ref
+
+    def test_the_api_index_lists_the_flat_endpoint(self, client):
+        response = client.get(reverse("api:api-root"))
+
+        assert response.status_code == 200
+        assert "ghfdb/flat" in response.json()
+
+    def test_the_schema_describes_the_flat_routes(self, client):
+        response = client.get(reverse("api:api-schema"), {"format": "json"})
+
+        assert response.status_code == 200
+        paths = response.json()["paths"]
+        assert "/api/v1/ghfdb/flat/" in paths
+        assert "/api/v1/ghfdb/flat/{ghfdb_id}/" in paths

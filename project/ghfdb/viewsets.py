@@ -10,6 +10,7 @@ from .models import GHFDBChild, GHFDBParent
 from .serializers import (
     GHFDBChildDetailSerializer,
     GHFDBChildListSerializer,
+    GHFDBFlatSerializer,
     GHFDBParentDetailSerializer,
     GHFDBParentSerializer,
 )
@@ -137,3 +138,29 @@ class GHFDBChildViewSet(GHFDBBaseViewSet):
             .filter(parent__in=served_parents)
             .order_by("ghfdb_id", "pk")
         )
+
+
+@extend_schema_view(
+    list=extend_schema(summary=_("List published rows"), tags=["ghfdb"]),
+    retrieve=extend_schema(summary=_("Retrieve a published row"), tags=["ghfdb"]),
+)
+class GHFDBFlatViewSet(GHFDBBaseViewSet):
+    """The released row, one per determination, in the release's own shape
+    (FS-006 US3).
+    """
+
+    serializer_class = GHFDBFlatSerializer
+
+    @property
+    def queryset(self):
+        return self.get_queryset()
+
+    def get_queryset(self):
+        """Return the determination route's own queryset (spec D16).
+
+        Reuses ``GHFDBChildViewSet.get_queryset()`` rather than restating the
+        parent-visibility subquery it applies.
+        """
+        child_viewset = GHFDBChildViewSet()
+        child_viewset.request = self.request
+        return child_viewset.get_queryset()
