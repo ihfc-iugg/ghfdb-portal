@@ -345,6 +345,21 @@ class TestChildFlattening:
         assert getattr(record.q, "magnitude", record.q) == parent.value
 
     @pytest.mark.django_db
+    def test_quality_parent_reads_the_parents_own_quality(self, published_chain):
+        # FS-006 US3: the released row restates the parent's quality alongside
+        # the child's own, the same way the rest of the parent block is
+        # restated on every row.
+        from project.ghfdb.models import GHFDBChild
+
+        parent = published_chain.parent
+        parent.quality = "A1"
+        parent.save()
+
+        record = GHFDBChild.objects.as_ghfdb_flat().get(pk=published_chain.pk)
+
+        assert record.quality_parent == parent.quality
+
+    @pytest.mark.django_db
     def test_query_count_is_equal_at_two_row_counts(
         self, constant_query_count, published_chains
     ):

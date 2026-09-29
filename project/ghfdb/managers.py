@@ -143,6 +143,7 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
             "q_uncertainty": F("parent__uncertainty"),
             "corr_HP_flag": F("parent__corr_HP_flag"),
             "p_comment": F("parent__comment"),
+            "quality_parent": F("parent__quality"),
             # Depth interval scalars (via HeatFlowInterval MTI accessor)
             "q_top": F("sample__heatflowinterval__top"),
             "q_bottom": F("sample__heatflowinterval__bottom"),
