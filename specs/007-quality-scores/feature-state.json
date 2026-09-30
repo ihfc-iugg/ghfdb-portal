@@ -2,7 +2,7 @@
   "feature": "007-quality-scores",
   "branch": "007-quality-scores",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "DESIGN_REVIEW",
+  "state": "IMPLEMENT",
   "state_history": [
     {
       "state": "GATE_SPEC",
@@ -23,6 +23,11 @@
       "state": "DESIGN_REVIEW",
       "at": "2026-09-30T20:21:53Z",
       "note": "plan, research, tasks committed; draft PR #239"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-09-30T20:37:27Z",
+      "note": "design review applied; plan notified"
     }
   ],
   "gates": {
@@ -31,12 +36,30 @@
       "at": "2026-09-30T19:50:45Z"
     },
     "plan": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "notified",
+      "at": "2026-09-30T20:37:27Z"
     },
     "merge": {
       "approved_by": null,
       "at": null
+    },
+    "design_review": {
+      "approved_by": "design-panel",
+      "at": "2026-09-30T20:37:13Z",
+      "self_resolved": [
+        "SPEC-001 high verified: import discarded published correction labels; T005a resolves labels, falls back to '-' when the type refuses (D22)",
+        "SPEC-002 high verified: import stored [unspecified] concepts as empty; T001a stores the vocabulary's unspecified concept (D23), carried to the maintainer in the plan notification",
+        "SPEC-003 medium: two existing assertions FS-007's FRs change are named in T002 and T008 (D24)",
+        "SPEC-004 medium: testing.md reference-value rule amended in T004; Constitution Check row updated",
+        "ARCH-001 medium: delete receivers collect and refresh on commit (D24, plan)",
+        "SEC-001 medium: measurement page visibility is a pre-existing framework gap, recorded in D21, raise with FairDM",
+        "SPEC-005 low: uncorrected borehole pT rule tabulated in research R1",
+        "SPEC-006 low: probe metadata delete row added",
+        "ARCH-002 low: get_perturbation_effects deleted in T006",
+        "ARCH-003 low: evaluators on a Criterion class",
+        "ARCH-004 low: route() returns the rules class",
+        "ARCH-005 low: refresh command chunked and prefetched; first-run cost in deploy README"
+      ]
     }
   },
   "stories": [
@@ -50,6 +73,11 @@
       "tasks": [
         {
           "id": "T001",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T001a",
           "status": "todo",
           "attempts": 0
         },
@@ -80,6 +108,11 @@
         },
         {
           "id": "T005",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T005a",
           "status": "todo",
           "attempts": 0
         },

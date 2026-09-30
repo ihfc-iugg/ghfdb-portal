@@ -215,6 +215,10 @@ correction is recorded and agrees. The alternative reading, where no in-situ cor
 agreement rule, contradicts the toolbox and its worked example "CONTINUOUS_PERT + TC_OK": that
 example reaches its expected M2 only with the −0.2. Put to the maintainer with the plan.
 
+The file import writes all nine correction rows and turns an empty cell into `-` (D14). So an
+imported child is never missing its in-situ correction, and the marked case only arises for a child
+created outside the import.
+
 **ADR:** none. It settles how this feature reads the scheme, and the spec records it.
 
 ## D14 — A correction recorded as `-` is unspecified, a missing one is empty
@@ -322,4 +326,62 @@ point. The portal overrides that one template (`templates/measurement/detail.htm
 overrides the dataset page). It keeps the placeholder's content and adds a quality section for a
 child, a gradient and a conductivity, which reads only stored values.
 
+The framework serves this page for a measurement in any dataset, published or not, with no
+visibility check (`fairdm/core/measurement/views.py`, a plain `DetailView` over `Measurement`).
+Before this feature the page showed only a name, a UUID and two links. Now it also shows scores
+derived from the record. The gap is the framework's, and FS-007 widens what it exposes. It is
+recorded here and raised with FairDM, not patched per page in the portal. The UUID is not
+enumerable, which limits the exposure to someone already holding the link.
+
 **ADR:** none. Local to how this feature shows its scores.
+
+## D22 — The import reads a correction cell by its label
+
+`_parse_correction_status` accepted only the portal's internal status keys and "yes". A published
+file carries labels such as `[Present and corrected]`, so every imported correction was stored as
+`-`. The child rules and the perturbation flags would then read nothing from imported data
+(FR-004, FR-011). The parser now also resolves a label, normalised the way the vocabulary columns
+are. A status its type does not accept falls back to `-`, as an unrecognised cell always has, so a
+file that imports today still imports. Records imported before this change keep their `-` until
+they are re-imported.
+
+Raised at design review (SPEC-001).
+
+**ADR:** none. Local to the import's reading of one column group.
+
+## D23 — The import stores `[unspecified]` as the vocabulary's own concept
+
+The vocabulary columns treated an `[unspecified]` cell as blank. The scheme scores the two
+differently (FR-009): unspecified takes the largest penalty without the mark, empty takes it with
+the mark. Under the old reading every imported "unspecified" would carry the mark. Where a
+vocabulary defines an `unspecified` concept, the import now stores it. A blank cell stays empty, and
+an export writes the concept back. The single-valued columns and the acquisition date keep reading
+it as blank, because nothing in the scheme tells the two apart there. No recorded decision
+explained the old reading for concept columns, and no existing test pins it. It was put to the
+maintainer during the run with no reply, so it rides in the plan notification, where it can be
+vetoed.
+
+Raised at design review (SPEC-002).
+
+**ADR:** none. Local to the import's reading of vocabulary columns.
+
+## D24 — Existing assertions this feature changes, and why
+
+Two existing tests pin behaviour the approved specification changes. Each is adjusted in the task
+named, and nothing else in either test moves:
+
+- `test_conductivity_vocabulary_fields_count_and_score_persist` asserts that a conductivity
+  keeps a `score` supplied by hand. FR-002 and ADR-0004 require the score to be calculated, so the
+  assertion reads the calculated value instead (T002).
+- `test_two_determinations_under_one_parent_repeat_its_values` sets a parent's quality before
+  building its children. FR-012 makes the children's scores overwrite it, so the setup sets it after
+  them. The assertion is unchanged (T008).
+
+The correction-status assertion behind T005 is different in kind. No FS-007 requirement names that
+validation, so it waits on the maintainer.
+
+Also from design review: delete receivers collect and refresh on commit (ARCH-001). A dataset
+delete cascades through every correction, and refreshing per row would issue tens of thousands of
+queries for records that are being deleted anyway.
+
+**ADR:** none. It records this feature's test adjustments.

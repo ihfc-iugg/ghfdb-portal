@@ -39,8 +39,9 @@ which would make a score test flaky.
 
 **Project Type**: Django web application
 
-**Performance Goals**: an interactive save recalculates only the records that read what changed. An
-import of N children scores each record once.
+**Performance Goals**: an interactive save recalculates only the records that read what changed. The
+child pass of an import scores each record once. On a re-import, the parent pass's site saves
+cascade once per site, outside that deferral.
 
 **Constraints**:
 
@@ -56,7 +57,7 @@ single count when every record is current.
 
 | Article | Bearing on this feature | Verdict |
 |---|---|---|
-| I. Testing | Every task writes its failing test first. The scheme is checked against the toolbox's own output (research R3). | Conforms |
+| I. Testing | Every task writes its failing test first. The scheme is checked against the toolbox's own output (research R3), and T004 amends `testing.md`'s reference-value rule to say so (D10, D12). | Conforms after T004 |
 | II. Simplicity | The rules are tables of penalties read by a handful of small evaluators, and the 2023 implementation is deleted. | Conforms |
 | III. Anti-Abstraction | Two rule classes, probe and borehole, because there are two routes. Nothing else is layered. | Conforms |
 | VI. Documentation | The guide, the glossary and `docs/ghfdb_fields.md` are updated in the story that introduces each name. | Conforms, own tasks |
@@ -81,7 +82,8 @@ Replaces the whole module. `utils.py` keeps its re-export of the two choice list
   They keep their names so the model fields and existing imports do not move.
 - `SubScore`, a frozen dataclass holding `value: float | None` and `missing: bool`. A `None` value
   is "not determined".
-- `route(site) -> "probe" | "borehole" | None`, from the site's exploration-method concept (D17).
+- `route(site) -> ProbeRules | BoreholeRules | None`, from the site's exploration-method concept
+  (D17). Each measurement is routed by its own site: the gradient's for T, the conductivity's for TC.
 - `ProbeRules` and `BoreholeRules`, each with two class methods. Every table is a class attribute
   keyed by concept identifier, and every value comes from research R1:
   - `gradient(gradient, *, tilt_corrected=False, bottom_water_corrected=False) -> SubScore`
@@ -94,10 +96,12 @@ Replaces the whole module. `utils.py` keeps its re-export of the two choice list
     either is not determined
   - `perturbation_flags(statuses: dict[str, str])`
   - `code(u, m, flags)`
-  - `inherit(children)`: returns U, M and flags, per D9
+  - `inherit(children)`: returns U, M and flags, per D9. Children are taken in pk order, so a full
+    tie resolves the same way on every recalculation (FR-016).
 
-Small private evaluators shared by both route classes: numeric bins largest-first, a flat mapping,
-and cases that check every named field for emptiness first. Each returns `(penalty, missing)` with
+A small `Criterion` class holds, as static methods, the evaluators both route classes call: numeric
+bins largest-first, a flat mapping, and cases that check every named field for emptiness first.
+It is not a base class. Each returns `(penalty, missing)` with
 the empty/unmatched semantics of research R1. A multi-valued field contributes every concept, and
 the poorest penalty wins. The explicit `unspecified` concept counts as a value, never as empty
 (FR-009). An empty concept set is empty.
@@ -124,8 +128,8 @@ The fields are those in D18, in one migration, and `docs/ghfdb_fields.md` gets a
 
   It writes `U_score`, `T_score`, `T_score_missing`, `TC_score`, `TC_score_missing`, `M_score`,
   `quality` and `quality_scheme` by `update`. An absent gradient or conductivity, or a route of
-  `None`, gives a `None` sub-score and `Mx` (FR-008). `get_U_score`, `get_M_score` and
-  `get_quality` are deleted.
+  `None`, gives a `None` sub-score and `Mx` (FR-008). `get_U_score`, `get_M_score`, `get_quality`
+  and `get_perturbation_effects` are deleted.
 - `ParentHeatFlow.refresh_quality()` selects the children it rests on: its only child whatever the
   flag, else those marked relevant. It writes `U_score`, `M_score`, `quality` and `quality_scheme`
   from `QualityScheme.inherit`. With several children and none relevant, or none at all, it writes
@@ -142,13 +146,17 @@ records.
 |---|---|
 | Gradient or conductivity saved, or a concept added, removed or cleared on it | it, its children, their parents |
 | Interval saved (depths) | the conductivities and gradients on it, onward |
-| Probe metadata saved | the gradients on its interval, onward |
+| Probe metadata saved or deleted | the gradients on its interval, onward |
 | Site saved (elevation, exploration method) | every gradient and conductivity on its intervals, onward |
 | Child saved | it and its parent. Also the parent it left, read in `pre_save` when the parent changed. |
-| Child deleted | its former parent |
-| Correction saved or deleted | its child and the child's parent |
+| Child deleted | its former parent, collected and refreshed on commit if it still exists |
+| Correction saved | its child and the child's parent |
+| Correction deleted | its child and parent, collected and refreshed on commit if they still exist |
 
-Parents are never refreshed by their own save (D19). Deleting a gradient or conductivity is
+Parents are never refreshed by their own save (D19). The delete receivers never refresh inline.
+They add to the `Recalculation` collector, which refreshes once on `transaction.on_commit`, and only
+what still exists. Deleting a dataset therefore does not refresh once per cascaded correction
+(D24). Deleting a gradient or conductivity is
 refused by `PROTECT` while a child uses it, so it needs no receiver.
 
 **Deferral during import.** `Recalculation.deferred()` is a context manager on a `ContextVar`. While
@@ -157,16 +165,32 @@ in cascade order. `GHFDBChildImportResource` enters it in `before_import` and fl
 `after_import`, inside the import's transaction, and resets it in a `finally` around `import_data`
 so a failed import cannot leave recalculation switched off.
 
+### The import reads what the scheme needs (D22, D23)
+
+- `GHFDBChildImportResource._parse_correction_status` also resolves a correction cell by its status
+  label, normalised as the vocabulary widgets normalise (`[Present and corrected]` →
+  `present_corrected`). A resolved status the type does not accept falls back to `-`, as an
+  unrecognised cell does today, so no file that imports now starts failing.
+- `MultiConceptWidget` stores the vocabulary's own `unspecified` concept for an `[unspecified]` cell
+  wherever the vocabulary defines one. A blank cell stays empty. The single-valued `ConceptWidget`
+  and the date column are unchanged.
+
+Records imported before this feature keep what was stored then. Re-importing them is the repair,
+because the refresh command cannot recover a value that was never stored.
+
 ### Deploy-time scoring (`heat_flow` management command `refresh_quality`)
 
 With no option, it refreshes every gradient, conductivity, child and parent whose `quality_scheme`
 is not `SCHEME_REVISION`, in cascade order, and reports counts. With `--all` it refreshes every
-record. `deploy/Dockerfile` runs it right after `migrate`, and `deploy/README.md` says what it does
-on start. Running it twice gives the same stored values (FR-016).
+record. It walks the records in chunks, with the concept fields and corrections prefetched.
+`deploy/Dockerfile` runs it right after `migrate`. `deploy/README.md` says what it does on start,
+what the first run costs at release size, and that an error in it stops the container from
+starting. Running it twice gives the same stored values (FR-016).
 
 ### The measurement page (`templates/measurement/detail.html`)
 
-A copy of the framework's placeholder with one added card, included per model:
+The framework's placeholder without its "coming soon" alert, plus one added card, included per
+model:
 
 - **Child:** U-score, then T and TC each as "own score → corrected score" (the measurement's
   uncorrected value beside the child's corrected one), then the M-score, the seven flags with a
@@ -213,7 +237,7 @@ tests/test_heat_flow/
 ├── test_quality.py                         # new: rules, conformance cases (R3)
 ├── test_signals.py                         # new: every row of the recalculation table
 ├── test_models/test_child.py, test_parent.py   # refresh methods, stored fields
-└── test_management/test_refresh_quality.py     # new
+└── test_management/test_commands/test_refresh_quality.py   # new
 tests/test_ghfdb/test_resources/…           # import scores once, dry run leaves nothing
 tests/test_templates/test_measurement_detail.py   # the measurement page; tests/test_templates/
                                             # joins non-mirror-paths in pyproject.toml, since
@@ -228,6 +252,9 @@ tests/test_templates/test_measurement_detail.py   # the measurement page; tests/
   the maintainer's ruling. Until then the task is held and those two rules are tested at the scheme
   level only.
 - **US2 scenario 6 for borehole children (D13).** Put to the maintainer with the plan.
+- **Measurement page visibility (D21).** The framework serves `/measurement/<uuid>/` for records in
+  unpublished datasets. FS-007 adds scores to that page. This is recorded as a pre-existing gap to
+  raise with FairDM, and the page adds no permission logic of its own.
 
 ## Risks
 

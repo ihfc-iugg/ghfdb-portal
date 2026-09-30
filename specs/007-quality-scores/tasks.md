@@ -39,9 +39,16 @@ scheme's criteria and compare their stored scores with research R3.
       - the uncorrected T and TC for each R3 case, and the corrected T and TC that the three
         keyword arguments produce (tilt, bottom water, in-situ status or `None`)
 
+      Hold the evaluators on a `Criterion` class, and have `route()` return the rules class (plan.md).
       At this point the models still carry the old methods that import from the old module. Keep
       the tree importable: remove `HeatFlow.get_U_score` and `get_M_score` and their imports here,
       since nothing else calls them.
+- [ ] T001a [US1] Make `MultiConceptWidget` (`project/ghfdb/resources/widgets.py`) store the
+      vocabulary's own `unspecified` concept for an `[unspecified]` cell wherever the vocabulary
+      defines one. A blank cell stays empty (D23). Tests first in
+      `tests/test_ghfdb/test_resources/test_widgets.py`: both directions for a vocabulary with and
+      without an `unspecified` concept, and the export round trip writing it back. State the change
+      in `docs/guides/importing-data.md`.
 - [ ] T002 [US1] Add the gradient and conductivity fields from D18 (nullable `score` with no 0–1
       bound, `score_missing`, `quality_scheme`, and an index on the conductivity's `score`). Add
       `refresh_score()` on both models, writing by `update` and rounding to three places. Delete
@@ -54,6 +61,10 @@ scheme's criteria and compare their stored scores with research R3.
       - one gradient used by two children with different corrections keeps one score (US1-8,
         SC-003)
       - in `tests/test_heat_flow/test_signals.py`, the receivers do not re-enter
+      - the existing `test_conductivity_vocabulary_fields_count_and_score_persist`
+        (`test_child.py`) asserts that a supplied `score=0.9` persists. Replace that one assertion
+        with the calculated score, per FR-002 and ADR-0004 (D24). Leave the rest of the test
+        unchanged.
 - [ ] T003 [US1] Documentation for the measurement scores:
       - Write `docs/guides/quality-scores.md` with the introduction (toolbox V0.2, reference,
         ADR-0004), the T-score and TC-score sections (both routes, the missing-information mark,
@@ -75,6 +86,10 @@ scheme's criteria and compare their stored scores with research R3.
       `perturbation_flags` and `code`. Tests first in `tests/test_heat_flow/test_quality.py`:
       - U-score bands, zero and empty inputs, a negative value, the six-place rounding (US2-1,
         US2-2)
+
+      Also amend the *Project additions* bullet in `docs/contributing/standards/testing.md`: the
+      U-score and M-score reference values are toolbox V0.2's own output (research R3), and the
+      paper's examples are used only where they agree (D10, D12).
       - M classes, the boundary products 0.25, 0.5 and 0.75 taking the better class, the `x`
         suffix and `Mx` (US2-7 to US2-9, FR-007, FR-008)
       - every flag encoding (US2-10, FR-011)
@@ -83,8 +98,16 @@ scheme's criteria and compare their stored scores with research R3.
 - [ ] T005 [US2] **Held until the maintainer rules on research R5.** Make `HeatFlowCorrection` accept
       "tilt corrected" on type T and "considered – p/T/pT" on type IS, as ruled, update the valid-
       status table in `docs/ghfdb_fields.md`, and adjust the existing assertion the ruling names.
+- [ ] T005a [US2] Make `_parse_correction_status` (`project/ghfdb/resources/child.py`) resolve a
+      cell by its status label as well as its key, normalised the way the vocabulary widgets
+      normalise. A status the type does not accept falls back to `-` (D22). Tests first in
+      `tests/test_ghfdb/test_resources/test_child.py`: `[Present and corrected]`,
+      `[Present and not corrected]`, `[Present not significant]` and `[not recognized]` on S, SUR
+      and HR, plus a label the type refuses, which stores `-`. State the change in
+      `docs/guides/importing-data.md`, including that records imported earlier keep `-` until they
+      are re-imported.
 - [ ] T006 [US2] Add the child fields from D18 and `HeatFlow.refresh_quality()` per plan.md. Delete
-      `get_quality`, and the old scoring classes if T001 left any. Receivers: a child refreshes on
+      `get_quality` and `get_perturbation_effects`, and the old scoring classes if T001 left any. Receivers: a child refreshes on
       its own save, and on save or delete of one of its corrections. Parents are T008's. Migration
       changes fold into the feature's single migration. Tests first in
       `tests/test_heat_flow/test_models/test_child.py`:
@@ -120,6 +143,10 @@ scheme's criteria and compare their stored scores with research R3.
       - moving a child refreshes both parents
       - the parent's value is untouched
       - saving a parent does not recalculate it, so the existing persistence test still holds
+      - the existing `test_two_determinations_under_one_parent_repeat_its_values`
+        (`tests/test_ghfdb/test_viewsets.py`) sets the parent's quality before building its
+        children, which now overwrite it (FR-012). Set the quality after the children are built.
+        That changes the test's setup order, not its assertion (D24).
 - [ ] T009 [US3] Documentation: the guide's inheritance section (D9, the single-child rule) and the
       `CONTEXT.md` inheritance text. Update `docs/ghfdb_fields.md` and the ERD for the parent
       fields.
@@ -132,11 +159,13 @@ scheme's criteria and compare their stored scores with research R3.
 
 - [ ] T010 [US4] Complete the recalculation table in plan.md: interval, probe metadata and site
       saves cascade to their measurements, children and parents, and a measurement's own change
-      cascades to its children and their parents. Tests first in
+      cascades to its children and their parents. Delete receivers go through the collector and
+      refresh on commit (D24). Tests first in
       `tests/test_heat_flow/test_signals.py`, one per row of the table (US4-1 to US4-3). Each
       asserts that every score depending on the change moved and that one not depending on it did
-      not. Add a helper that recomputes every score into memory and compares it with what is stored,
-      and use it after each change (SC-004).
+      not. Include probe metadata deleted, and a whole dataset deleted: no error, no stale parent
+      and no per-correction refresh. Add a helper that recomputes every score into memory and
+      compares it with what is stored, and use it after each change (SC-004).
 - [ ] T011 [US4] Add `Recalculation.deferred()` and wire it into `GHFDBChildImportResource` per
       plan.md › *Deferral during import*. Tests first under `tests/test_ghfdb/test_resources/`:
       - an imported file leaves every record scored (US4-4)
@@ -146,14 +175,16 @@ scheme's criteria and compare their stored scores with research R3.
       - a quality code in the file is still refused (ADR-0004)
 - [ ] T012 [US4] Add the management command `refresh_quality` (stale-only by default, `--all`) and
       run it after `migrate` in `deploy/Dockerfile`. Tests first in
-      `tests/test_heat_flow/test_management/test_refresh_quality.py`:
+      `tests/test_heat_flow/test_management/test_commands/test_refresh_quality.py`. Iterate in
+      chunks, with the concept fields and corrections prefetched:
       - records written before scoring existed (revision null) are scored (US4-6, FR-015)
       - a second run changes nothing, and `--all` over unchanged inputs gives identical values
         (US4-7, FR-016)
       - every stored score reads back its revision (US4-5, SC-005)
-- [ ] T013 [US4] Documentation: the guide's "how scores stay current" section, naming the refresh
-      command as the repair for bulk writes (D19, D20). `deploy/README.md`: what the container
-      now runs on start.
+- [ ] T013 [US4] Documentation: the guide's "how scores stay current" section, naming
+      `refresh_quality --all` as the repair for bulk writes (D19, D20). `deploy/README.md`: what the
+      container now runs on start, the first run's cost at release size, and that an error in it
+      stops start-up.
 
 **Checkpoint**: no stored score can be stale without a write that bypasses the ORM.
 
@@ -161,7 +192,7 @@ scheme's criteria and compare their stored scores with research R3.
 
 ## Phase 5: User Story 5 — A reader sees how a child's quality was reached (P3)
 
-- [ ] T014 [US5] Override `templates/measurement/detail.html` per plan.md and add
+- [ ] T014 [US5] Override `templates/measurement/detail.html` per plan.md (placeholder alert dropped) and add
       `tests/test_templates/` to `non-mirror-paths` in `pyproject.toml` with a comment saying why.
       Tests first in `tests/test_templates/test_measurement_detail.py`, through the measurement
       page's URL:

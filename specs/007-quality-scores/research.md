@@ -75,7 +75,8 @@ the vocabulary spellings of the toolbox's misspelled tokens (D15).
 | Source | source | In-situ probe, core-log integration: +0.1 · core samples: 0 · cutting samples, outcrop samples, well-log interpretation: −0.1 · mineral computation, assumed from literature, unspecified, other: −0.2 |
 | Number | conductivity count | Not scored when location is literature. >15: 0 · ≤15: −0.1 |
 | Saturation | saturation | Saturated measured or measured in-situ: 0 · saturated calculated, recovered: −0.1 · dry measured, unspecified, other: −0.2 |
-| pT | pT conditions **and the child's in-situ correction** | In-situ pT (actual, replicated or corrected pT) with "considered – pT": 0. Replicated or corrected p or T with "considered – p" or "considered – T": −0.1. Ambient or unspecified with "not considered" or unspecified: −0.2. Anything else: −0.2. Either input empty: −0.2 with the mark. |
+| pT, uncorrected (D3) | pT conditions alone | Actual, replicated or corrected in-situ pT: 0 · replicated or corrected p or T: −0.1 · recorded or unrecorded ambient, unspecified: −0.2 · anything else: −0.2 · empty: −0.2 with the mark. This is the toolbox's case list without its in-situ condition, and the paper's Table 3 ordering. |
+| pT, corrected | pT conditions **and the child's in-situ correction** | In-situ pT (actual, replicated or corrected pT) with "considered – pT": 0. Replicated or corrected p or T with "considered – p" or "considered – T": −0.1. Ambient or unspecified with "not considered" or unspecified: −0.2. Anything else: −0.2. Either input empty: −0.2 with the mark. |
 
 **M-score**: T × TC, rounded to three decimals. ≥0.75 M1, ≥0.50 M2, ≥0.25 M3, else M4. Suffix `x`
 when either sub-score carried the mark.
@@ -88,7 +89,8 @@ HR, written `S E T P V C R`. Present and corrected gives the upper-case letter, 
 corrected gives lower case, present not significant gives `X`, not recognised gives `x`, and
 anything else gives `-`.
 
-**Inheritance** (`combine_scores.py` at the repository head, added after V0.2 and adopted by D9):
+**Inheritance** (the inheritance section of `combine_scores.py`, added after V0.2 in commit
+`19022ed` and adopted by D9; the file itself exists at V0.2):
 the poorest U (U1 < U2 < U3 < U4 < Ux), the poorest M (M1 < … < M4 < M1x < … < M4x < Mx), and the
 flags of the child with the poorest U, with the poorest M deciding a tie.
 
