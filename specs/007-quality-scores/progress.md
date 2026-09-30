@@ -17,7 +17,7 @@ Next: design review, plan notification, then US1.
 
 Watch: T005 held. D13 put to the maintainer.
 
-## 2026-09-30T21:10:00Z · Implementer US1 · T001
+## 2026-09-30T20:54:40Z · Implementer US1 · T001
 
 Did: rewrote `project/heat_flow/quality.py` to toolbox V0.2: `SCHEME_REVISION`, the two choice
 lists (M1x–M4x added), `SubScore`, `route()`, `Criterion`, `ProbeRules` and `BoreholeRules`.
@@ -33,7 +33,7 @@ Next: T001a, the `[unspecified]` cell in `MultiConceptWidget`.
 
 Watch: T002 regenerates `0014_quality_scores.py` (D25).
 
-## 2026-09-30T21:35:00Z · Implementer US1 · T001a
+## 2026-09-30T20:57:35Z · Implementer US1 · T001a
 
 Did: `MultiConceptWidget` resolves `[unspecified]` to the vocabulary's own `unspecified` concept
 and drops the token only where the vocabulary defines none. A blank cell stays an empty set.
@@ -48,7 +48,7 @@ Next: T002.
 Watch: the guide's link to `quality-scores.md` is written in T003, so the importing-data page
 names the scores in plain text until then.
 
-## 2026-09-30T22:05:00Z · Implementer US1 · T002
+## 2026-09-30T21:03:10Z · Implementer US1 · T002
 
 Did: `score` on the gradient and conductivity is nullable with no 0–1 bound, beside new
 `score_missing` and `quality_scheme`, and the conductivity's `score` is indexed. A `ScoredMeasurement`
@@ -70,7 +70,7 @@ Next: T003, the documentation.
 Watch: old rows keep their hand-set score and an empty `quality_scheme` until the US4 refresh
 command scores them.
 
-## 2026-09-30T22:40:00Z · Implementer US1 · T003
+## 2026-09-30T21:07:44Z · Implementer US1 · T003
 
 Did: wrote `docs/guides/quality-scores.md` (scheme and reference, the T-score and TC-score on both
 routes, the missing-information mark, not determined, and D1, D8, D10, D12, D15–D17) and linked it
@@ -99,7 +99,7 @@ green.
 Next: re-verify, then accept US1 and dispatch US2.
 Watch: D25–D27 need ADR verdicts at convergence.
 
-## 2026-09-30T23:45:00Z · Implementer US2 · T004
+## 2026-09-30T21:24:43Z · Implementer US2 · T004
 
 Did: added `QualityScheme` (`u_score`, `m_score`, `perturbation_flags`, `code`) to `quality.py`.
 Tests first in `test_quality.py`: U bands and the six-place rounding, zero, empty and negative
@@ -113,7 +113,7 @@ on the changed files clean.
 Next: T005a.
 Watch: the new names are quoted on a page in T007.
 
-## 2026-09-30T23:58:00Z · Implementer US2 · T005a
+## 2026-09-30T21:25:55Z · Implementer US2 · T005a
 
 Did: `_parse_correction_status` now also resolves a cell by its status label, normalised with
 `normalize_vocab_token`, and takes the correction type so a label the type refuses stores `-`. Keys
@@ -125,7 +125,7 @@ keys cases passed as regression guards), then `uv run pytest tests/test_ghfdb/te
 Next: T006.
 Watch: a key the type refuses (for example `considered_p` on IS) still raises at save, as before.
 
-## 2026-10-01T00:30:00Z · Implementer US2 · T006
+## 2026-09-30T21:32:15Z · Implementer US2 · T006
 
 Did: added `T_score`, `TC_score`, their two missing marks and `quality_scheme` to `HeatFlow` (the two
 scores indexed), widened `quality` to 14, made the calculated fields `editable=False`, and added
@@ -147,7 +147,7 @@ corrected on T or considered on IS). `ParentHeatFlow.get_quality` still calls th
 nothing calls it and US3 deletes it. Every correction saved on an import row refreshes the child, nine
 times per row, until US4 defers it.
 
-## 2026-10-01T00:55:00Z · Implementer US2 · T007
+## 2026-09-30T21:33:37Z · Implementer US2 · T007
 
 Did: `docs/guides/quality-scores.md` gains the child's scores, the U-score, corrected scores and the
 three child rules (D2, D3, D11, D13, D14), the M-score, the flags, the code, and how the portal's
@@ -171,7 +171,7 @@ Next: US3.
 Watch: the correction-delete collector reads Django's internal `connection.run_on_commit`.
 Replace it with a plain on-commit flag at the convergence cleanup.
 
-## 2026-09-30T21:52:00Z · Implementer US3 · T008
+## 2026-09-30T21:51:51Z · Implementer US3 · T008
 
 Did: tests first, each seen failing for the right reason (`AttributeError: ... no attribute
 'inherit'`, then the missing parent fields, `refresh_quality` and receivers). `QualityScheme.inherit`
@@ -190,7 +190,7 @@ Next: T009.
 Watch: the registry form for `ParentHeatFlow` still raises on `ghfdb_id` (D32). An unflushed
 `_deleted_child_parents` survives a rolled-back delete, as D28 notes for corrections.
 
-## 2026-09-30T21:58:00Z · Implementer US3 · T009
+## 2026-09-30T21:52:13Z · Implementer US3 · T009
 
 Did: `docs/guides/quality-scores.md` gains "What a parent inherits" (D9: which children count with the
 single-child rule, the U and M ranking with marked grades poorer than unmarked and `Mx` poorest, flags
@@ -208,7 +208,7 @@ Next: the full verify, then the report.
 Watch: the guide does not yet describe the cascades from measurement, interval and site changes
 (US4) or the refresh command (US5).
 
-## 2026-09-30T23:10:00Z · Implementer US4 · T010
+## 2026-09-30T22:12:44Z · Implementer US4 · T010
 
 Did: `Recalculation` is rebuilt around one collector and one `request()`; the refresh expands
 measurements, then their children, then the parents. New receivers for interval saves, probe
@@ -224,7 +224,7 @@ Next: T011.
 Watch: `.set()` on a concept field sends `post_remove` and `post_add`, so outside an import it
 refreshes twice. The deferral in T011 removes that for imports.
 
-## 2026-09-30T23:40:00Z · Implementer US4 · T011
+## 2026-09-30T22:16:44Z · Implementer US4 · T011
 
 Did: `GHFDBChildImportResource` defers recalculation from `before_import` and flushes it in
 `after_import`, inside the import's transaction, resetting it on failure (D35).
@@ -241,7 +241,7 @@ Next: T012.
 Watch: the parent pass's site saves are outside the deferral and cascade per site (documented in
 the plan).
 
-## 2026-10-01T00:20:00Z · Implementer US4 · T012
+## 2026-09-30T22:20:10Z · Implementer US4 · T012
 
 Did: `refresh_quality` (`project/heat_flow/management/commands/refresh_quality.py`): stale-only by
 default, `--all` for every record, in cascade order, in chunks with concept fields and corrections
@@ -258,7 +258,7 @@ Next: T013.
 Watch: the first run was not timed on PostgreSQL. A command `help` is a plain string, as Django's own
 commands are, because argparse does not format a lazy one.
 
-## 2026-10-01T00:40:00Z · Implementer US4 · T013
+## 2026-09-30T22:21:35Z · Implementer US4 · T013
 
 Did: `docs/guides/quality-scores.md` gains "How scores stay current" (the recalculation table, the
 order, deletes waiting for the commit, one recalculation per import, `refresh_quality --all` as the
@@ -280,7 +280,7 @@ Verified: `uv run pytest tests/test_docs -q -n0`; `uv run pre-commit run --files
 Next: the full verify, then the report.
 Watch: `CONTEXT.md` was not changed in this story.
 
-## 2026-10-01T00:55:00Z · Implementer US5 · T014
+## 2026-09-30T22:38:48Z · Implementer US5 · T014
 
 Did: `templates/measurement/detail.html` overrides the framework's placeholder (same name, UUID,
 dataset and sample, without the "coming soon" alert) and includes one quality card chosen by the
@@ -303,7 +303,7 @@ Next: T015.
 Watch: the card chooses its partial from `measurement.polymorphic_ctype.model`, which is one extra
 (constant) query per page. The unmarked T-score in the test child is 0.9 own and 1.1 corrected.
 
-## 2026-10-01T01:10:00Z · Implementer US5 · T015
+## 2026-09-30T22:41:37Z · Implementer US5 · T015
 
 Did: `docs/guides/quality-scores.md` gains "Where you see the scores": the page address, what a
 gradient or conductivity shows (its own, uncorrected score and the revision), what a child shows
