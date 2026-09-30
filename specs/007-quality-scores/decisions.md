@@ -385,3 +385,25 @@ delete cascades through every correction, and refreshing per row would issue ten
 queries for records that are being deleted anyway.
 
 **ADR:** none. It records this feature's test adjustments.
+
+## D25 — T001 widens `HeatFlow.M_score` and carries a placeholder migration
+
+`MScoreOptions` gains `M1x`–`M4x` in T001, as the task says. Three characters no longer fit the
+two-character field, and Django's system check refuses a field whose `max_length` is shorter than
+its longest choice. So T001 also widens `M_score` to three characters and records it in
+`0014_quality_scores.py`, which keeps `manage.py check` and the migration-state test green at the
+T001 commit. T002 regenerates that file to add the gradient and conductivity fields, so the
+feature still ends with one migration.
+
+**Revisit if:** T002 cannot regenerate the file, in which case it stacks a second migration and
+Forge squashes at convergence.
+
+## D26 — A not-determined measurement score is stored as null and unmarked
+
+When the site's exploration method routes to neither rule set, there is no score to reach and no
+input was missing, so `SubScore(None, False)` is what `refresh_score()` stores: `score` null and
+`score_missing` false. The mark means "an input the scheme needed was empty". Nothing was scored,
+so nothing needed one.
+
+**Revisit if:** the assessment team wants a not-determined score to be filterable apart from a
+scored one. A null `score` already is.

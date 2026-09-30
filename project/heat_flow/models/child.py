@@ -25,7 +25,7 @@ from research_vocabs.fields import ConceptManyToManyField
 
 from heat_flow import vocabularies
 
-from ..utils import MScoreOptions, UScoreOptions, calculate_U_score
+from ..utils import MScoreOptions, UScoreOptions
 
 
 class HeatFlowInterval(Interval, AbstractGeoDepthInterval):
@@ -171,7 +171,7 @@ class HeatFlow(Measurement):
         default=UScoreOptions.Ux,
     )
     M_score = models.CharField(
-        max_length=2,
+        max_length=3,
         choices=MScoreOptions.choices,
         verbose_name=_("M-score"),
         help_text=_(
@@ -245,33 +245,6 @@ class HeatFlow(Measurement):
                 _("HeatFlow sample must be a HeatFlowInterval instance.")
             )
         super().save(*args, **kwargs)
-
-    def get_U_score(self):
-        """From Fuchs et al 2023 - Quality-assurance of heat-flow data: The new structure and evaluation scheme of the IHFC Global Heat Flow Database, Section 3.1. Uncertainty quantification (U-score).
-
-        COV	U-score (Numerical uncertainty)	Ranking description
-        < 5%	U1	Excellent
-        5-15%	U2	Good
-        15-25%	U3	Ok
-        > 25%	U4	Poor
-        not applicable	Ux	not determined / missing data
-        """
-        return calculate_U_score(self)
-
-    def get_M_score(self):
-        """From Fuchs et al 2023 - Quality-assurance of heat-flow data: The new structure and evaluation scheme of the IHFC Global Heat Flow Database, 3.2. Methodological quality evaluation of thermal conductivity and temperature gradient (M-score)."""
-        T_score = self.thermal_gradient.score if self.thermal_gradient else 0.4
-        TC_score = self.thermal_conductivity.score if self.thermal_conductivity else 0.1
-
-        product = T_score * TC_score
-        if product >= 0.75:
-            return MScoreOptions.M1
-        elif product >= 0.5:
-            return MScoreOptions.M2
-        elif product >= 0.25:
-            return MScoreOptions.M3
-
-        return MScoreOptions.M4
 
     def get_perturbation_effects(self):
         """Return the perturbation effects of the interval based on correction flags."""
