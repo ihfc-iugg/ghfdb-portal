@@ -279,3 +279,26 @@ Verified: `uv run pytest tests/test_docs -q -n0`; `uv run pre-commit run --files
 `sphinx-build` is not installed in this worktree, so the docs build itself was not run.
 Next: the full verify, then the report.
 Watch: `CONTEXT.md` was not changed in this story.
+
+## 2026-10-01T00:55:00Z · Implementer US5 · T014
+
+Did: `templates/measurement/detail.html` overrides the framework's placeholder (same name, UUID,
+dataset and sample, without the "coming soon" alert) and includes one quality card chosen by the
+measurement's concrete model: `measurement/quality/child.html` for a heat flow child,
+`measurement/quality/own.html` for a gradient or a conductivity, nothing for any other type.
+`score.html` writes one stored sub-score (its own "not determined" and text missing-information
+mark), `flag.html` one perturbation flag, `legend.html` the note on both marks. The child card is a
+table of the gradient's and the conductivity's own scores beside the child's corrected ones, then
+U, M, the code, the scheme revision and the seven flags with a legend. The card reads stored fields
+only. Every element a test reads carries a `data-quality` hook with `data-value`, `data-state`
+(`determined` or `not-determined`) and, on scores, `data-missing`. `tests/test_templates/` joins
+`non-mirror-paths`.
+Verified: `uv run pytest tests/test_templates -n0 -q`, 15 passed. Red first: 14 of the 15 failed on
+the missing hooks (the other, that a parent shows no card, guards against the card leaking onto
+other types). Probed the two guards that passed or could pass for the wrong reason: a per-correction
+query in the child card fails the query-count test (16 against 10), and showing the corrected score
+in the "own" column fails the own-beside-corrected test. `uv run pre-commit run --all-files` clean
+(djlint reformatted the templates once).
+Next: T015.
+Watch: the card chooses its partial from `measurement.polymorphic_ctype.model`, which is one extra
+(constant) query per page. The unmarked T-score in the test child is 0.9 own and 1.1 corrected.

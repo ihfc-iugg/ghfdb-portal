@@ -571,3 +571,22 @@ reads of the interval and site, which cannot be prefetched here.
 **Revisit if:** the first run at release size is too slow on the server.
 
 **ADR:** none - local to the command.
+
+## D37 — The measurement page picks its card from the content type, and tests read `data-quality` hooks
+
+**Decision:** `templates/measurement/detail.html` selects the card with
+`measurement.polymorphic_ctype.model` (`heatflow`, `thermalgradient`, `intervalconductivity`) and
+an explicit `{% if %}` chain, with no view change and no model property. Each value a test needs is
+a `data-quality` element carrying `data-value` (the stored value, locale-free), `data-state`
+(`determined` or `not-determined`) and, for a score, `data-missing`; the missing-information mark is
+a nested `data-quality-mark` element with visible text. A score of `None` is written as "not
+determined" and never as a number.
+
+**Why:** the brief rules out view and model changes, `_meta` is not reachable from a template, and
+an `{% include %}` of a computed name raises when no partial exists for a type. The hooks keep the
+tests on values and states, never on wording or classes. The content type costs one query per page
+whatever the number of corrections.
+
+**Revisit if:** FairDM gives measurement pages a per-model template or extension point.
+
+**ADR:** none - local to one template.

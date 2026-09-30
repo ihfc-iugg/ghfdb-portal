@@ -325,8 +325,16 @@
       "tasks": [
         {
           "id": "T014",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templates/test_measurement_detail.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templates -n0 -q"
+            ]
+          }
         },
         {
           "id": "T015",
