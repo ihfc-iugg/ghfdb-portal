@@ -732,3 +732,52 @@ class TestRecordsLoadedFromTheDatabase:
 
         assert mine.child.T_score is not None
         assert loaded.quality == mine.child.quality
+
+
+class TestDeferral:
+    """``Recalculation.deferred()`` collects what changes and refreshes it once on exit."""
+
+    def test_nothing_is_refreshed_inside_the_block_and_each_record_once_after_it(self):
+        from heat_flow.signals import Recalculation
+
+        mine = Network()
+        with RefreshSpy() as spy:
+            with Recalculation.deferred():
+                mine.gradient.method_top.add(
+                    *concept_names(vocabularies.TemperatureMethod, "CPD")
+                )
+                mine.gradient.save()
+                mine.child.save()
+                assert spy.calls == []
+
+        assert spy.calls == keys(mine.gradient, mine.child, mine.parent)
+        assert StoredScores.differing() == []
+
+    def test_a_block_that_fails_leaves_recalculation_on_and_nothing_collected(self):
+        from heat_flow.signals import Recalculation
+
+        mine = Network()
+        with pytest.raises(RuntimeError):
+            with Recalculation.deferred():
+                mine.gradient.save()
+                raise RuntimeError
+
+        with RefreshSpy() as spy:
+            mine.gradient.save()
+        assert spy.calls == keys(mine.gradient, mine.child, mine.parent)
+
+    def test_a_block_inside_another_joins_it(self):
+        from heat_flow.signals import Recalculation
+
+        mine = Network()
+        with RefreshSpy() as spy:
+            with Recalculation.deferred():
+                with Recalculation.deferred():
+                    mine.gradient.save()
+                assert spy.calls == []
+                mine.conductivity.save()
+
+        assert len(spy.calls) == len(set(spy.calls))
+        assert spy.calls == keys(
+            mine.gradient, mine.conductivity, mine.child, mine.parent
+        )

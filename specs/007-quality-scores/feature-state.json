@@ -275,8 +275,17 @@
         },
         {
           "id": "T011",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py",
+              "tests/test_heat_flow/test_signals.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_ghfdb tests/test_heat_flow/test_signals.py -n auto --dist loadscope -q"
+            ]
+          }
         },
         {
           "id": "T012",

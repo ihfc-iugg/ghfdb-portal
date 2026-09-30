@@ -17,9 +17,12 @@ References:
     - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
 """
 
+from contextlib import ExitStack
+
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
+from heat_flow.signals import Recalculation
 from import_export import fields, widgets
 from import_export.resources import ModelResource
 from import_export.widgets import ForeignKeyWidget
@@ -152,6 +155,7 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         self._fairdm_dataset = None
         self._current_row_number = None
         self._igsn_claims: dict[str, int] = {}
+        self._recalculation = ExitStack()
 
     # ------------------------------------------------------------------
     # Hooks
@@ -168,8 +172,25 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         """
         self._current_row_number = kwargs.get("row_number")
 
+    def import_data(self, *args, **kwargs):
+        """Import the rows, leaving recalculation switched on whether or not it succeeds.
+
+        Stored scores are not refreshed row by row while the import runs
+        (``before_import``), but once, when it ends (``after_import``). A failure that
+        skips ``after_import`` leaves the collected refreshes unwritten, and they go
+        with the rows the transaction rolls back.
+        """
+        self._recalculation = ExitStack()
+        with self._recalculation:
+            return super().import_data(*args, **kwargs)
+
+    def after_import(self, dataset, result, **kwargs):
+        """Refresh every score the import touched, once each, inside its transaction."""
+        super().after_import(dataset, result, **kwargs)
+        self._recalculation.close()
+
     def before_import(self, dataset, **kwargs):
-        """Store the caller's named FairDM dataset for use during row processing.
+        """Defer score refreshes, and store the caller's named FairDM dataset.
 
         FS-004 FR-002: the import refuses to guess a dataset. A caller passing an
         already-resolved ``Dataset`` instance as ``fairdm_dataset`` reaches a
@@ -181,6 +202,7 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         file (see ``_create_igsn_identifier``).
         """
         self._igsn_claims = {}
+        self._recalculation.enter_context(Recalculation.deferred())
         fairdm_dataset = kwargs.get("fairdm_dataset")
         if fairdm_dataset is None:
             raise ValueError(

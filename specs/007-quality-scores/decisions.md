@@ -535,3 +535,21 @@ would overwrite every correct score with "not determined". Two tests in
 by deleting the two lines.
 
 **ADR:** none - a defect fix.
+
+## D35 — The child resource holds its deferral in an `ExitStack` it owns for one `import_data` call
+
+**Decision:** `GHFDBChildImportResource.before_import` enters `Recalculation.deferred()` on an
+`ExitStack` created in `import_data`; `after_import` closes the stack, which flushes. `import_data`
+runs `super().import_data` inside `with self._recalculation`, so an exception that skips
+`after_import` exits the deferral with the exception, which discards what was collected and switches
+recalculation on again.
+
+**Why:** the deferral has to start and end in two different hooks, inside the import's transaction
+(a dry run or check rolls the scores back with the rows), and still end on failure. Left to garbage
+collection it would only reset when the resource is collected. The test keeps the resource alive so
+that it fails without the `with`.
+
+**Revisit if:** FairDM or django-import-export gives resources a single hook around the whole
+import.
+
+**ADR:** none - local to the resource.

@@ -223,3 +223,20 @@ weak reference with a plain flag fails seven tests.
 Next: T011.
 Watch: `.set()` on a concept field sends `post_remove` and `post_add`, so outside an import it
 refreshes twice. The deferral in T011 removes that for imports.
+
+## 2026-09-30T23:40:00Z · Implementer US4 · T011
+
+Did: `GHFDBChildImportResource` defers recalculation from `before_import` and flushes it in
+`after_import`, inside the import's transaction, resetting it on failure (D35).
+`Recalculation.deferred()` itself landed with the collector in T010 (D33), so its three unit tests
+in `tests/test_heat_flow/test_signals.py` (`TestDeferral`) were written after the code and were not
+seen failing; I broke the flush instead and watched two of them fail. Import tests first in
+`tests/test_ghfdb/test_importers.py`: every record scored and equal to a fresh calculation, each
+record refreshed once (44 calls before, 0 repeats after), a check leaves nothing stored, a dry run
+of the child resource leaves nothing, a failed import leaves recalculation on (seen failing with the
+`with` removed), a `quality_child` column still refused.
+Verified: `uv run pytest tests/test_ghfdb tests/test_heat_flow/test_signals.py -n auto --dist
+loadscope -q`, 480 passed, 13 xfailed; `uv run pre-commit run --files <changed>` clean.
+Next: T012.
+Watch: the parent pass's site saves are outside the deferral and cascade per site (documented in
+the plan).
