@@ -146,3 +146,18 @@ Watch: P1, B1, B5, B7 and B8 reach the child only through the scheme until T005 
 corrected on T or considered on IS). `ParentHeatFlow.get_quality` still calls the deleted child method;
 nothing calls it and US3 deletes it. Every correction saved on an import row refreshes the child, nine
 times per row, until US4 defers it.
+
+## 2026-10-01T00:55:00Z · Implementer US2 · T007
+
+Did: `docs/guides/quality-scores.md` gains the child's scores, the U-score, corrected scores and the
+three child rules (D2, D3, D11, D13, D14), the M-score, the flags, the code, and how the portal's
+`T_score` and `TC_score` equal the toolbox's per-row T and TC (FR-020); the disagreement list adds
+D5, D6, D7, D11, D13 and D14, and "In the code" quotes `QualityScheme` with its four methods,
+`HeatFlow.refresh_quality()`, `Recalculation` and the three child receivers. `CONTEXT.md` has the
+dotted fourteen-character code, the flag letters and order, and "Corrected score".
+`docs/ghfdb_fields.md` and the ERD list the child fields and the two new indexes.
+Verified: `uv run pytest tests/test_docs -q -n0`, 304 passed, 1 skipped; `forge verify --steps
+docs,conformance --base ca1db49` passed.
+Next: the full verify, then the report.
+Watch: the guide says a stored child cannot yet hold tilt corrected or the considered statuses; it
+needs a line when T005 lands.

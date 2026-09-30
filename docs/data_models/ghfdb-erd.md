@@ -30,12 +30,13 @@ A child does not point at its site directly. It hangs off a depth interval, and 
 
 ### Quality Scoring
 
-The database implements a quality assurance scheme with two indicators:
+The database implements a quality assurance scheme with two grades and seven flags:
 
 - **U-score** (numerical uncertainty), from the coefficient of variation: U1 excellent, U2 good, U3 ok, U4 poor, Ux not determined
 - **M-score** (methodological quality), from the measurement methodology: M1 excellent, M2 good, M3 ok, M4 poor, Mx not determined. An `x` after the grade (M1x to M4x) marks a score reached with missing information
+- **Perturbation flags**, seven characters for the corrections S, E, TOPO, PAL, SUR, CONV and HR, written in the order `S E T P V C R`. They are the last seven characters of the quality code, `U.M.FLAGS`
 
-The M-score is built from a T-score on the thermal gradient and a TC-score on the thermal conductivity, which the portal stores on those two measurements. [Quality scores](../guides/quality-scores.md) explains how they are calculated.
+The M-score is built from a T-score on the thermal gradient and a TC-score on the thermal conductivity. The portal stores each measurement's own score on it, and the child's corrected T-score and TC-score on the child. [Quality scores](../guides/quality-scores.md) explains how they are calculated.
 
 ## Entity Relationship Diagram
 
@@ -147,8 +148,13 @@ erDiagram
         date date_acquired "Date of acquisition"
         boolean is_relevant "Used in the parent calculation"
         char U_score "Numerical uncertainty (U1-U4, Ux)"
+        float T_score "Corrected T-score (empty: not determined)"
+        boolean T_score_missing "Corrected T-score reached with missing information"
+        float TC_score "Corrected TC-score (empty: not determined)"
+        boolean TC_score_missing "Corrected TC-score reached with missing information"
         char M_score "Methodological quality (M1-M4, M1x-M4x, Mx)"
-        string quality "Overall quality assessment"
+        string quality "Quality code, for example U2.M3x.-e-PX--"
+        char quality_scheme "Scheme revision of the stored scores"
         text c_comment "General comments on the child level"
         int ghfdb_id "Published child identifier, the upsert key"
     }
@@ -331,7 +337,7 @@ An individual heat flow determination over a depth interval: the child level of 
 
 - Calculated from a thermal gradient and a thermal conductivity, each an optional foreign key
 - Points at its parent through the nullable `parent` foreign key, and `is_relevant` records whether it was used in the parent's value
-- Carries the U-score and M-score, both indexed, and the overall quality assessment
+- Carries the U-score, the corrected T-score and TC-score, and the M-score, all indexed, and the quality code. Each is calculated by the portal, from the value, the uncertainty, the two measurements and the child's corrections, and cannot be edited. `quality_scheme` records which scheme revision calculated them. See [Quality scores](../guides/quality-scores.md)
 - `ghfdb_id` is the published child identifier and the key imports upsert on
 - A determination is treated as a marine probe measurement when its interval carries probe metadata
 
@@ -546,7 +552,7 @@ The following fields are indexed:
 
 - **HeatFlowSite**: `country`, `continent`, `environment`
 - **ParentHeatFlow**: `ghfdb_id`, `corr_HP_flag`
-- **HeatFlow**: `U_score`, `M_score`, and `ghfdb_id` through the field's own index
+- **HeatFlow**: `U_score`, `M_score`, `T_score`, `TC_score`, and `ghfdb_id` through the field's own index
 - **HeatFlowCorrection**: `correction_type`, `status`
 - **ThermalGradient**: `score`, `number`
 - **IntervalConductivity**: `score`, `number`

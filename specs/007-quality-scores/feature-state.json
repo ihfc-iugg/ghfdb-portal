@@ -195,8 +195,18 @@
         },
         {
           "id": "T007",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_docs/test_data_model_diagram.py",
+              "tests/test_docs/test_field_map.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_docs -q -n0",
+              "forge verify --repo . --steps docs,conformance --base ca1db49"
+            ]
+          }
         }
       ]
     },

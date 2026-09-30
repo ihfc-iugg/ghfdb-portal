@@ -184,6 +184,12 @@ The three components of the heat flow quality scheme, after Fuchs et al. (2023) 
 applies it (see **scheme revision**). The **U-score** scores numerical uncertainty, the **M-score**
 scores methodological quality, and the **perturbation flags** record which disturbing effects
 apply. Each score runs from 1 (excellent) to 4 (poor), with `Ux` and `Mx` meaning not determined.
+The U-score grades the uncertainty as a percentage of the value. The M-score grades the product of
+the child's corrected T-score and TC-score, and an `x` after the grade marks a score reached with
+missing information. The seven flags are written `S E T P V C R`, for the corrections S, E, TOPO,
+PAL, SUR, CONV and HR: an upper-case letter is present and corrected, a lower-case letter present
+and not corrected, `X` present and not significant, `x` not recognised, `-` anything else. A
+child carries all three; a parent inherits them.
 
 ### T-score, TC-score
 
@@ -192,6 +198,14 @@ gradient was determined, and the **TC-score** how well a thermal conductivity wa
 numbers, not grades: each starts at 1.0 and takes a penalty per criterion, so they lie between 0.1
 and 1.2. A measurement is scored by the probe-sensing or the borehole and mine rules, chosen by its
 site's exploration method. Stored as `score` on `ThermalGradient` and `IntervalConductivity`.
+
+### Corrected score
+
+A child's T-score or TC-score after its own corrections are taken into account: the tilt and
+bottom-water corrections waive the probe criteria they cover, and its in-situ correction must agree
+with a borehole conductivity's pT conditions. Stored on the child as `T_score` and `TC_score`, so a
+query on them finds the children whose corrected score matches. These are the T and TC the toolbox
+reports for a row, and the M-score is made from them.
 
 ### Uncorrected score
 
@@ -215,8 +229,10 @@ which scored the 2024 release. A record whose revision is not the current one is
 
 ### Quality code
 
-The composite thirteen-character string combining the three components, for example `Ux.Mx.-------`.
-Stored on both children and parents.
+The composite string combining the U-score, the M-score and the seven perturbation flags, joined by
+full stops, for example `U2.M3x.-e-PX--`: at most fourteen characters, and `Ux.Mx.-------` when
+nothing can be determined. The flags are in the order `S E T P V C R` (see **U-score, M-score,
+perturbation flags**). Stored on both children and parents as `quality`.
 
 A parent inherits quality conservatively: with one child, its quality directly; with several, the
 poorest quality among the children marked relevant.

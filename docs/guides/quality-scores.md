@@ -1,8 +1,8 @@
 # Quality scores
 
-The portal scores the heat flow data it holds. This page explains the scores a single temperature
-gradient and a single thermal conductivity carry, and how they are reached, so that a data user can
-tell why a measurement scored what it did.
+The portal scores the heat flow data it holds. This page explains the scores a temperature gradient,
+a thermal conductivity and a child heat flow value carry, and how they are reached, so that a data
+user can tell why a value scored what it did.
 
 ## Which scheme
 
@@ -139,6 +139,141 @@ A measurement whose site has an exploration method that is empty, unspecified or
 to be scored by. Its `score` is stored empty, which means not determined, and it is not marked:
 nothing was scored, so no input was missing. It is never stored as 0.
 
+## The child's scores
+
+A child heat flow value (a determination) carries its own scores. They are the **U-score**, for its
+uncertainty, the **corrected T-score** and **corrected TC-score** of the gradient and the
+conductivity it was calculated from, the **M-score**, made from those two, the seven
+**perturbation flags**, and the **quality code** that joins them. The code is stored on the child as
+`quality`, and each part is stored on its own so that children can be found by it:
+
+| Field | Meaning |
+| --- | --- |
+| `U_score` | The grade for the uncertainty of the value. |
+| `T_score`, `T_score_missing` | The child's corrected T-score and its missing-information mark. Indexed. |
+| `TC_score`, `TC_score_missing` | The child's corrected TC-score and its mark. Indexed. |
+| `M_score` | The grade for the methodology. |
+| `quality` | The quality code. The seven flags are its last seven characters and are not stored apart. |
+| `quality_scheme` | The scheme revision the scores were calculated under. |
+
+None of these can be edited. A child is rescored when it is saved, and when one of its corrections
+is saved or deleted. A deletion is rescored once the transaction that made it commits, so deleting a
+whole dataset does not rescore each child once per correction. The fields are listed in
+[GHFDB Fields](../ghfdb_fields.md).
+
+## The U-score
+
+The U-score grades the uncertainty of the heat flow value, from the coefficient of variation: the
+uncertainty as a percentage of the value, rounded to six decimal places.
+
+| Coefficient of variation | U-score |
+| --- | --- |
+| Below 5 % | U1 |
+| 5 % up to and including 15 % | U2 |
+| Above 15 % up to and including 25 % | U3 |
+| Above 25 % | U4 |
+
+A value or an uncertainty that is empty or zero cannot be graded, and the U-score is `Ux`. The sign
+is ignored, because a heat flow can be negative: a value of −40 mW/m² with an uncertainty of 12
+mW/m² is a coefficient of 30 % and scores U4.
+
+## Corrected scores and the three child rules
+
+The T-score and TC-score stored on a gradient or a conductivity are its **uncorrected scores**, and
+they read nothing from any child. A child takes each of them through its own corrections to reach
+its **corrected score**, which is the value the M-score is made from. A corrected score can be lower
+than the uncorrected one as well as higher. Each of the child's two measurements is scored by the
+rules of its own site, so a child whose gradient and conductivity sit at sites with different
+exploration methods is scored by two different rule sets.
+
+Three rules read the child's corrections:
+
+- **Tilt.** When the child's temperature correction is recorded as tilt corrected, the probe tilt
+  criterion of the gradient is waived: it takes no penalty and no mark, even when the tilt is empty.
+  This applies to a probe gradient only.
+- **Bottom-water temperature.** When the child's surface and bottom-water correction (`SUR`) is
+  present and corrected, the water depth criterion of the gradient is waived in the same way. This
+  applies to a probe gradient only.
+- **In-situ agreement.** The toolbox scores a borehole conductivity's pT conditions only when the
+  child's in-situ correction agrees with them. In-situ pT, or replicated or corrected pT, agrees
+  with "considered, pT" and scores 0. Replicated or corrected p or T alone agrees with "considered,
+  p" or "considered, T" and scores −0.1. Ambient or unspecified conditions agree with "not
+  considered" or an unspecified correction and score −0.2. Anything else scores −0.2. The
+  uncorrected TC-score cannot read the child, so it scores the pT conditions on their own terms, and
+  the two can differ.
+
+A borehole child that records no in-situ correction at all takes −0.2 and the missing-information
+mark on the pT criterion, as the toolbox does. A correction whose status is `-` is recorded as
+unspecified, and it takes the same −0.2 without the mark. The file import writes every correction
+row, with `-` for an empty cell, so an imported child is never without one. The probe route reads
+nothing from the in-situ correction.
+
+## The M-score
+
+The M-score grades the methodology from the product of the corrected T-score and TC-score, rounded
+to three decimal places.
+
+| Product | M-score |
+| --- | --- |
+| 0.75 or more | M1 |
+| 0.50 or more, below 0.75 | M2 |
+| 0.25 or more, below 0.50 | M3 |
+| Below 0.25 | M4 |
+
+A product exactly on a boundary takes the better class. When either corrected score was reached
+with missing information, an `x` follows the grade (`M1x` to `M4x`). When either cannot be
+calculated, because the child has no gradient or no conductivity, or the measurement's site selects
+no rules, the M-score is `Mx`.
+
+## The perturbation flags
+
+Seven characters record how the child's environmental corrections stand, one for each of the
+corrections `S`, `E`, `TOPO`, `PAL`, `SUR`, `CONV` and `HR`, in that order. They are written as the
+letters `S E T P V C R`:
+
+| Letter | Correction |
+| --- | --- |
+| `S` | Sedimentation or subsidence |
+| `E` | Erosion |
+| `T` | Topography |
+| `P` | Paleoclimate |
+| `V` | Surface-temperature variation |
+| `C` | Convection |
+| `R` | Heat refraction |
+
+An upper-case letter means the effect is present and corrected, and a lower-case letter means it is
+present and not corrected. `X` means present and not significant, and `x` means not recognised.
+Anything else, including an unspecified status or no recorded correction, is `-`. The in-situ and
+temperature corrections write no flag.
+
+A status on the file import may be written as its label. See [Importing data](importing-data.md).
+
+## The quality code
+
+The code joins the three parts with full stops: the U-score, the M-score and the seven flags. It is
+at most fourteen characters:
+
+- `U1.M2.SxxxCxR`
+- `U2.M3x.-e-PX--`
+- `Ux.Mx.-------`
+
+The paper writes the code without the first full stop. The toolbox writes both, and the portal
+follows the toolbox.
+
+## How these match the toolbox
+
+For every row the toolbox scores, the T-score and TC-score it reports are the child's corrected
+scores here, not the uncorrected scores of the gradient and the conductivity. The portal's
+`T_score` and `TC_score` on a child equal the toolbox's per-row T and TC, and so do its U-score,
+M-score and flags. Filtering children by `T_score` or `TC_score` therefore finds the children the
+toolbox would, including where a correction changed the score. The portal is checked against the
+toolbox's own output for a set of cases covering each criterion, each child rule and the routing.
+
+The two child rules that need a correction the model cannot yet record (a tilt-corrected
+temperature, and the in-situ statuses "considered, p", "considered, t" and "considered, pT") are
+applied by the scheme whenever it is given them. Until the model accepts them, a stored child cannot
+hold those statuses.
+
 ## Where the sources disagree
 
 The paper, the toolbox's schema, the toolbox's code and the toolbox's own tests do not always
@@ -173,6 +308,25 @@ DTSeq appears only in the continuous-log case, and the surface case has no HT-FT
 **A method that fits no case is marked (D16).** When none of a borehole gradient's methods fits its
 case, the toolbox takes the case's largest penalty and sets the mark. The portal does the same.
 
+**The quality code is written with two full stops (D5).** The paper writes `U1M2.SxxxCxR` and the
+toolbox's code writes `U1.M2.SxxxCxR`, so the portal does.
+
+**Heat refraction is R, and the flags follow the paper's figure order (D6).** The paper's Table 5 is
+the outlier in both the letter and the order of the fifth and sixth flags.
+
+**A product on a class boundary takes the better class (D7).** The toolbox rounds the product to
+three places and compares with "at least".
+
+**The tilt correction is read from the temperature correction (D11).** The paper conditions the
+tilt rule on the in-situ correction. The toolbox, and the portal's own vocabulary, use the
+temperature correction.
+
+**A borehole child with no in-situ correction takes the agreement penalty (D13).** It takes −0.2
+with the mark, as the toolbox does.
+
+**A correction recorded as `-` is unspecified, and a missing one is empty (D14).** The flags write
+`-` for both.
+
 **Routing follows the site's exploration method (D17).** The vocabulary's concepts map onto the
 toolbox's routing words as the table under *Which rules apply* shows. Whether a
 child carries probe metadata is not how the scheme routes.
@@ -189,13 +343,25 @@ The scheme lives in `project/heat_flow/quality.py`, and nothing else in the port
   identifiers, quantities in a given unit, the site and the probe metadata.
 - `SubScore` is a T-score or TC-score with its missing-information mark. A `value` of `None` means
   not determined.
+- `QualityScheme` does the arithmetic of a child's code: `QualityScheme.u_score(value,
+  uncertainty)`, `QualityScheme.m_score(t, tc)`, `QualityScheme.perturbation_flags(statuses)` and
+  `QualityScheme.code(u, m, flags)`.
 - `SCHEME_REVISION` is the revision every stored score records.
 
 `ScoredMeasurement`, in `project/heat_flow/models/child.py`, is what a thermal gradient and an
 interval conductivity share to store their own score. `refresh_score()` recalculates and stores the
-score, the mark and the revision.
+score, the mark and the revision. `HeatFlow.refresh_quality()` does the same for a child: it reads
+the child's corrections, scores the gradient and the conductivity by the child rules, and stores
+the corrected scores, the M-score, the U-score, the code and the revision.
+
+The receivers in `project/heat_flow/signals.py` call them. `Recalculation.child()` refreshes a child,
+and `Recalculation.child_after_correction_deleted()` collects a child whose correction was deleted
+so that `Recalculation.refresh_collected()` refreshes it once, when the transaction commits. The
+receivers `refresh_child_on_save`, `refresh_child_on_correction_save` and
+`refresh_child_on_correction_delete` are connected in the app's `ready()`.
 
 ## Not covered here
 
-This page covers the scores of a single gradient or conductivity. The scores a child heat flow
-value and a parent carry are documented as they are built.
+This page covers the scores of a gradient, a conductivity and a child. The quality a parent inherits
+from its children, and how the scores are kept current after a change to a measurement, an interval
+or a site, are documented as they are built.
