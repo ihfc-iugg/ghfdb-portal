@@ -375,9 +375,7 @@ class BoreholeRules:
         ),
         (
             -0.3,
-            frozenset(
-                {"LOGpert", "DTSpert", "BHT", "HT_FTpert", "RTDpert", "BLK", "RTD"}
-            ),
+            frozenset({"LOGpert", "DTSpert", "BHT", "HT_FTpert", "RTDpert", "BLK"}),
         ),
         (-0.5, frozenset({"CPD", "XEN", "GTM", "BSR", "unspecified", "other"})),
     )
