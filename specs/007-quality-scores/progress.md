@@ -161,3 +161,12 @@ docs,conformance --base ca1db49` passed.
 Next: the full verify, then the report.
 Watch: the guide says a stored child cannot yet hold tilt corrected or the considered statuses; it
 needs a line when T005 lands.
+
+## 2026-09-30T21:38:59Z · Forge · US2 check
+
+Verified: the receipts check is green, the tamper-check against ca1db49 is clean, and forge verify
+at d594832 is green on all six steps. T004, T005a, T006 and T007 are done. T005 is blocked on the
+maintainer's ruling (research R5), so US2 stays open and its completion comment waits for it.
+Next: US3.
+Watch: the correction-delete collector reads Django's internal `connection.run_on_commit`.
+Replace it with a plain on-commit flag at the convergence cleanup.

@@ -140,7 +140,7 @@
       "priority": "P1",
       "issue": 235,
       "worktree": null,
-      "status": "todo",
+      "status": "in_progress",
       "replans": 0,
       "tasks": [
         {
@@ -159,7 +159,7 @@
         },
         {
           "id": "T005",
-          "status": "todo",
+          "status": "blocked",
           "attempts": 0
         },
         {
