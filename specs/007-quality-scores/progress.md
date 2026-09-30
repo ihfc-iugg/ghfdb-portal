@@ -257,3 +257,25 @@ runs. Query counts measured: 56 queries for 2 networks, 248 for 14 (about 18 per
 Next: T013.
 Watch: the first run was not timed on PostgreSQL. A command `help` is a plain string, as Django's own
 commands are, because argparse does not format a lazy one.
+
+## 2026-10-01T00:40:00Z · Implementer US4 · T013
+
+Did: `docs/guides/quality-scores.md` gains "How scores stay current" (the recalculation table, the
+order, deletes waiting for the commit, one recalculation per import, `refresh_quality --all` as the
+repair for writes that skip the ORM, what the command does without `--all`, and that re-importing is
+the repair for a value never stored); "In the code" now quotes `Recalculation.request()`,
+`.measurement()`, `.measurements_on()`, `.deferred()` and `.flush()`, the four new receivers,
+`GHFDBChildImportResource`'s two hooks and `Command.levels()`, `Command.refresh()` and
+`Command.CHUNK_SIZE`; the removed `Recalculation.child()`, `.parent()`,
+`.child_after_correction_deleted()`, `.parent_after_child_deleted()` and `.refresh_collected()` are
+gone from the page. The two earlier sentences about when a score is recalculated point to the new
+section. `docs/guides/importing-data.md` says scores are calculated when the import ends.
+`deploy/README.md` lists what the container runs on start in order, the first run's cost at release
+size (about 18 queries per determination measured in tests, on the order of 1.6 million at 90,000,
+not timed on PostgreSQL) and that an error in it stops the container from starting. Every new
+public name under `project/` was grepped as code on a page. The guide's T005 sentence is untouched
+(T005 has not landed).
+Verified: `uv run pytest tests/test_docs -q -n0`; `uv run pre-commit run --files <changed>`.
+`sphinx-build` is not installed in this worktree, so the docs build itself was not run.
+Next: the full verify, then the report.
+Watch: `CONTEXT.md` was not changed in this story.

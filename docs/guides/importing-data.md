@@ -235,6 +235,14 @@ imported before is refused now.
 Records imported before this change keep the `-` they were given. Importing the file again stores
 the status the cell says.
 
+## Scores are calculated when the import ends
+
+The import calculates the [quality scores](quality-scores.md) of every gradient, conductivity,
+child and parent it wrote, once each, after the last row and inside the same transaction. A check
+stores no scores, because it stores no rows, and a file that is refused leaves no score behind. The
+file cannot supply a quality code: a column such as `quality_child` is refused with the other
+columns the template does not have.
+
 ## Importing the same file again updates what is there
 
 Re-sending a file the dataset already holds the contents of does not add a second copy of

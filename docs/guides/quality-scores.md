@@ -41,8 +41,9 @@ Each measurement stores three values:
 | `score_missing` | The missing-information mark (below). |
 | `quality_scheme` | The scheme revision the score was calculated under. |
 
-They are recalculated when the measurement is saved and when a vocabulary value it reads is added,
-removed or cleared, so the stored value always matches the record. The fields are listed in
+They are recalculated when the measurement is saved, when a vocabulary value it reads is added,
+removed or cleared, and when its interval, its probe metadata or its site changes, so the stored
+value matches the record (see *How scores stay current*). The fields are listed in
 [GHFDB Fields](../ghfdb_fields.md).
 
 ## Which rules apply
@@ -299,7 +300,60 @@ each refresh the parent. Saving the parent itself does not, because its inputs a
 the choice of which are relevant stays with the curator. A deleted child's parent is refreshed
 once the deleting transaction commits, and only if it still exists.
 
-A queryset `update` or `bulk_create` sends no signal, so it leaves the parent as it was.
+A queryset `update` or `bulk_create` sends no signal, so it leaves the parent as it was. See *How
+scores stay current* for the repair.
+
+## How scores stay current
+
+A score is stored, never worked out when it is read, so the portal recalculates it when something
+it reads changes. A change reaches every score that depends on it and no other.
+
+| What changes | What is recalculated |
+|---|---|
+| A gradient or a conductivity is saved, or a vocabulary value it reads is added, removed or cleared | its own score, the children that use it, and those children's parents |
+| An interval is saved (its depths) | the gradients and conductivities on it, and onward |
+| Probe metadata is saved or deleted | the gradients on its interval, and onward |
+| A site is saved (its elevation or exploration method) | every gradient and conductivity on its intervals, and onward |
+| A child is saved | the child and its parent, and the parent it left if it moved |
+| A correction is saved or deleted | the child it belongs to, and that child's parent |
+| A child is deleted | the parent it belonged to |
+
+"Onward" means the children that use those measurements, and then their parents. The levels are
+recalculated from the bottom up, gradients and conductivities first, then children, then parents,
+so each level reads the fresh scores of the level below it. A parent is never recalculated by its
+own save.
+
+**A delete waits for the commit.** Deleting a dataset removes every child and correction in it, so
+recalculating after each one would rescore a parent once per row, and a parent that is about to go
+too would be scored for nothing. A delete instead notes what it touched, and the portal
+recalculates once when the transaction commits, and only the records that still exist. If the
+transaction is rolled back, nothing is recalculated and the next one is not affected.
+
+**An import recalculates once, when it ends.** Importing a file saves each row's interval,
+gradient, conductivity, child and corrections one after another. Recalculating at every save would
+score the same child many times over, so the import collects what it wrote and recalculates each
+record once, inside the import's own transaction. A check and a dry run therefore store no
+scores, since they store no rows, and an import that fails is rolled back with its scores and
+leaves recalculation switched on for the next write. The parent pass of a full-file import saves
+its sites outside this, so a re-import recalculates the measurements on each site as it saves it.
+A quality code in the file is still rejected (see *Which scheme*).
+
+**Writes that skip the portal's code skip the scores.** A queryset `update`, a `bulk_create` and a
+change made in the database directly send no signal, so they leave the scores as they were. Repair
+them by running the command that recalculates every record:
+
+```console
+python manage.py refresh_quality --all
+```
+
+Without `--all`, `refresh_quality` recalculates only the records whose stored revision is not the
+current one (see *Which scheme*), which is every record written before scoring existed and every
+record scored under an earlier revision. It reports how many of each it covered. Running it twice
+changes nothing, and `--all` over unchanged inputs stores the same values it found. The portal's
+container runs it on start, after the migrations, as `deploy/README.md` describes.
+
+A record imported before scoring existed keeps what was stored then. The command cannot recover a
+value that was never stored, so importing that file again is the repair for a missing input.
 
 ## How these match the toolbox
 
@@ -401,18 +455,29 @@ the corrected scores, the M-score, the U-score, the code and the revision.
 it picks the children the parent rests on, calls `QualityScheme.inherit()`, and stores `U_score`,
 `M_score`, `quality` and `quality_scheme`. Like the others it writes with a queryset `update`.
 
-The receivers in `project/heat_flow/signals.py` call them. `Recalculation.child()` refreshes a child
-and then its parent, and `Recalculation.parent()` refreshes a parent by its pk if it still exists.
-`Recalculation.child_after_correction_deleted()` collects a child whose correction was deleted, and
-`Recalculation.parent_after_child_deleted()` collects the parent of a deleted child, so that
-`Recalculation.refresh_collected()` refreshes each once, when the transaction commits. The
-receivers `remember_parent_before_save`, `refresh_child_on_save`,
-`refresh_child_on_correction_save`, `refresh_parent_on_child_delete` and
-`refresh_child_on_correction_delete` are connected in the app's `ready()`.
-`remember_parent_before_save` notes the parent a child is leaving, which `refresh_child_on_save`
-then refreshes along with the new one.
+The receivers in `project/heat_flow/signals.py` call them through `Recalculation`, which holds the
+cascade. `Recalculation.request()` names the records that changed and recalculates them and
+everything that reads them, in that order, or collects them: a request made with
+`when_committed=True` (every delete) waits for the transaction to commit, and one made inside
+`Recalculation.deferred()` waits for the end of the block. `Recalculation.flush()` recalculates what
+was collected, once each. `Recalculation.measurement()` names a gradient or a conductivity, and
+`Recalculation.measurements_on()` names those on some intervals. The receivers are
+`refresh_measurement_on_save`, `refresh_measurement_on_concepts`,
+`refresh_measurements_on_interval_save`, `refresh_measurements_on_probe_save`,
+`refresh_measurements_on_probe_delete`, `refresh_measurements_on_site_save`,
+`remember_parent_before_save`, `refresh_child_on_save`, `refresh_child_on_correction_save`,
+`refresh_parent_on_child_delete` and `refresh_child_on_correction_delete`, connected in the app's
+`ready()`. `remember_parent_before_save` notes the parent a child is leaving, which
+`refresh_child_on_save` then refreshes along with the new one.
+
+`GHFDBChildImportResource` enters `Recalculation.deferred()` in `before_import` and flushes it in
+`after_import`. Its `import_data` ends the deferral if the import fails.
+
+The command is `refresh_quality`, in `project/heat_flow/management/commands/refresh_quality.py`.
+`Command.levels()` returns the four levels in cascade order with what each refresh reads
+prefetched, and `Command.refresh()` walks one level in chunks of `Command.CHUNK_SIZE` records.
 
 ## Not covered here
 
-This page covers the scores of a gradient, a conductivity, a child and a parent. How the scores are
-kept current after a change to a measurement, an interval or a site is documented as it is built.
+This page covers the scores of a gradient, a conductivity, a child and a parent, and how they are
+kept current. How a measurement's page shows them is documented as it is built.
