@@ -11,6 +11,7 @@ References:
 """
 
 from functools import cached_property
+from typing import Any
 
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator as MaxVal
@@ -25,6 +26,7 @@ from research_vocabs.fields import ConceptManyToManyField
 
 from heat_flow import vocabularies
 
+from ..quality import SCHEME_REVISION, Reading, SubScore, route
 from ..utils import MScoreOptions, UScoreOptions
 
 
@@ -448,7 +450,41 @@ class HeatFlowCorrection(django_models.Model):
         super().save(*args, **kwargs)
 
 
-class ThermalGradient(Measurement):
+class ScoredMeasurement:
+    """Stores a measurement's own score, which reads nothing from any child.
+
+    The score is the uncorrected T-score or TC-score of the toolbox V0.2 scheme. Every child
+    that uses the measurement sees the same value, and the child applies its own corrections
+    when it calculates its corrected scores.
+    """
+
+    # Supplied by the model this mixin is combined with.
+    pk: Any
+    objects: Any
+
+    def score_with(self, rules) -> SubScore:
+        """Return this measurement's score under the rules of its route."""
+        raise NotImplementedError
+
+    def refresh_score(self) -> None:
+        """Recalculate and store the score, the missing-information mark and the revision.
+
+        The write is a queryset ``update``, so it sends no save signal and the receivers that
+        call this method do not re-enter.
+        """
+        rules = route(Reading.site(self))
+        sub_score = SubScore(None) if rules is None else self.score_with(rules)
+        self.score = sub_score.value
+        self.score_missing = sub_score.missing
+        self.quality_scheme = SCHEME_REVISION
+        type(self).objects.filter(pk=self.pk).update(
+            score=self.score,
+            score_missing=self.score_missing,
+            quality_scheme=self.quality_scheme,
+        )
+
+
+class ThermalGradient(ScoredMeasurement, Measurement):
     """Temperature gradient measured over a depth interval."""
 
     value = models.DecimalQuantityField(
@@ -620,12 +656,37 @@ class ThermalGradient(Measurement):
     score = models.FloatField(
         verbose_name=_("T-score"),
         help_text=_(
-            "Score of the temperature gradient measurement, ranging from 0.0 to 1.0. A score of 1.0 indicates a"
-            " high-quality measurement, while a score of 0.0 indicates a low-quality measurement."
+            "The gradient's own score under the toolbox V0.2 scheme (Dergunova et al. 2026), from 0.1"
+            " to 1.2. It is calculated from the gradient, its interval and its site, and reads no"
+            " child's corrections. Empty means not determined, because the site's exploration method"
+            " selects neither rule set."
         ),
-        default=1.0,
-        validators=[MinVal(0.0), MaxVal(1.0)],
+        null=True,
+        blank=True,
+        editable=False,
     )
+    score_missing = models.BooleanField(
+        verbose_name=_("T-score reached with missing information"),
+        help_text=_(
+            "True when an input the T-score needed was empty, so the score takes the criterion's"
+            " largest penalty without the information being known."
+        ),
+        default=False,
+        editable=False,
+    )
+    quality_scheme = models.CharField(
+        max_length=32,
+        verbose_name=_("scheme revision"),
+        help_text=_(
+            "The revision of the quality scheme that calculated the stored score, for example"
+            " hfqa_tool 0.2. Empty until the score has been calculated."
+        ),
+        blank=True,
+        default="",
+        editable=False,
+    )
+
+    SCORED_CONCEPT_FIELDS = ("method_top", "method_bottom")
 
     class Meta:
         verbose_name = _("Thermal Gradient")
@@ -652,13 +713,9 @@ class ThermalGradient(Measurement):
             return f"{self.value}"
         return "ThermalGradient(undefined)"
 
-    def calculate_score(self):
-        """Calculate quality score for thermal gradient measurement.
-
-        Based on Fuchs et al 2023 criteria for thermal gradient quality assessment.
-        """
-        # TODO: Implement score calculation
-        pass
+    def score_with(self, rules) -> SubScore:
+        """Return the gradient's T-score under *rules*, reading no correction."""
+        return rules.gradient(self)
 
     def is_corrected(self):
         """Check if the thermal gradient has been corrected."""
@@ -673,7 +730,7 @@ class ThermalGradient(Measurement):
         super().save(*args, **kwargs)
 
 
-class IntervalConductivity(Measurement):
+class IntervalConductivity(ScoredMeasurement, Measurement):
     """Thermal conductivity measured over a depth interval."""
 
     value = models.DecimalQuantityField(
@@ -768,10 +825,42 @@ class IntervalConductivity(Measurement):
     score = models.FloatField(
         verbose_name=_("TC-score"),
         help_text=_(
-            "Score of the thermal conductivity measurement, ranging from 0.0 to 1.0. A score of 1.0 indicates a high-quality measurement, while a score of 0.0 indicates a low-quality measurement."
+            "The conductivity's own score under the toolbox V0.2 scheme (Dergunova et al. 2026), from"
+            " 0.1 to 1.2. It is calculated from the conductivity, its interval and its site, and"
+            " reads no child's corrections. Empty means not determined, because the site's"
+            " exploration method selects neither rule set."
         ),
-        default=1.1,
-        validators=[MinVal(0.0), MaxVal(1.1)],
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    score_missing = models.BooleanField(
+        verbose_name=_("TC-score reached with missing information"),
+        help_text=_(
+            "True when an input the TC-score needed was empty, so the score takes the criterion's"
+            " largest penalty without the information being known."
+        ),
+        default=False,
+        editable=False,
+    )
+    quality_scheme = models.CharField(
+        max_length=32,
+        verbose_name=_("scheme revision"),
+        help_text=_(
+            "The revision of the quality scheme that calculated the stored score, for example"
+            " hfqa_tool 0.2. Empty until the score has been calculated."
+        ),
+        blank=True,
+        default="",
+        editable=False,
+    )
+
+    SCORED_CONCEPT_FIELDS = (
+        "source",
+        "location",
+        "method",
+        "saturation",
+        "pT_conditions",
     )
 
     class Meta:
@@ -780,6 +869,7 @@ class IntervalConductivity(Measurement):
         db_table_comment = "Thermal conductivity determined over a given length interval (as opposed to discrete thermal conductivity)"
         indexes = [
             models.Index(fields=["number"]),
+            models.Index(fields=["score"]),
         ]
         # CheckConstraints on value and uncertainty are not usable with Quantity fields on
         # SQLite; the fields' own validators enforce the same rules instead.
@@ -791,45 +881,9 @@ class IntervalConductivity(Measurement):
             return f"{self.value}"
         return "IntervalConductivity(undefined)"
 
-    def calculate_score(self):
-        """Calculate quality score for thermal conductivity measurement.
-
-        Based on Fuchs et al 2023 criteria for thermal conductivity quality assessment.
-        """
-        score = 1.0
-
-        if self.source.exists():
-            source_ids = list(self.source.values_list("id", flat=True))
-            if "lab" in source_ids:
-                score += 0.1  # Lab measurements are preferred
-            elif "core" in source_ids:
-                score -= 0.1
-            elif "outcrop" in source_ids:
-                score -= 0.2
-
-        if self.number:
-            if self.number >= 10:
-                score += 0.1
-            elif self.number >= 5:
-                score += 0.05
-            elif self.number < 3:
-                score -= 0.1
-
-        if self.location.exists():
-            location_ids = list(self.location.values_list("id", flat=True))
-            if "actual" in location_ids:
-                score += 0.1
-            elif "literature" in location_ids:
-                score -= 0.2
-
-        if self.pT_conditions.exists():
-            pt_ids = list(self.pT_conditions.values_list("id", flat=True))
-            if "in_situ" in pt_ids:
-                score += 0.1
-            elif "ambient" in pt_ids:
-                score -= 0.1
-
-        return max(0.2, min(1.2, score))
+    def score_with(self, rules) -> SubScore:
+        """Return the conductivity's TC-score under *rules*, reading no correction."""
+        return rules.conductivity(self)
 
     def clean(self):
         """Validate thermal conductivity data."""

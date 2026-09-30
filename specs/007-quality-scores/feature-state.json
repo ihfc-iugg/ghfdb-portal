@@ -104,8 +104,19 @@
         },
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_models/test_child.py",
+              "tests/test_heat_flow/test_signals.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow tests/test_migrations.py tests/test_factories.py -q",
+              "uv run pre-commit run --all-files",
+              "uv run python manage.py check"
+            ]
+          }
         },
         {
           "id": "T003",

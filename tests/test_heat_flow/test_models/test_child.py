@@ -574,7 +574,9 @@ class TestIntervalConductivity:
             ]
 
         assert reloaded.number == 12
-        assert reloaded.score == pytest.approx(0.9)
+        # The score is calculated (FR-002), not kept as supplied. This interval's site
+        # records no exploration method, so the score is not determined.
+        assert reloaded.score is None
 
 
 class TestProbeMetadata:
@@ -695,3 +697,252 @@ class TestCorrectionStatusDocumentation:
                 f"  documented: {sorted(documented[code])}\n"
                 f"  enforced:   {sorted(enforced)}"
             )
+
+
+class TestMeasurementScores:
+    """A gradient and a conductivity store their own uncorrected score (FS-007 US1)."""
+
+    @staticmethod
+    def concepts(vocabulary, *names):
+        from research_vocabs.models import Concept
+
+        return list(Concept.get_for_vocabulary(vocabulary).filter(name__in=names))
+
+    def probe_interval(self):
+        from tests.factories import (
+            HeatFlowIntervalFactory,
+            HeatFlowSiteFactory,
+            ProbeMetadataFactory,
+        )
+
+        site = HeatFlowSiteFactory(explo_method="probing_offshore", elevation=-3000)
+        interval = HeatFlowIntervalFactory(site=site)
+        ProbeMetadataFactory(
+            interval=interval, penetration=12, tilt=45, probe_type=[]
+        )
+        return interval
+
+    def borehole_interval(self, **depths):
+        from tests.factories import HeatFlowIntervalFactory, HeatFlowSiteFactory
+
+        site = HeatFlowSiteFactory(explo_method="drilling")
+        return HeatFlowIntervalFactory(site=site, **depths)
+
+    def reload(self, measurement):
+        return type(measurement).objects.get(pk=measurement.pk)
+
+    @pytest.mark.django_db
+    def test_a_saved_probe_gradient_stores_its_score_and_the_revision(self):
+        from tests.factories import ThermalGradientFactory
+
+        gradient = ThermalGradientFactory(
+            sample=self.probe_interval(), number=6, method_top=[], method_bottom=[]
+        )
+
+        stored = self.reload(gradient)
+        # 1.0, +0.1 penetration, +0.1 recordings, 0 water depth, -0.2 tilt: nothing is
+        # waived because the score reads no child.
+        assert stored.score == pytest.approx(1.0)
+        assert stored.score_missing is False
+        assert stored.quality_scheme == "hfqa_tool 0.2"
+
+    @pytest.mark.django_db
+    def test_a_saved_borehole_gradient_is_scored_by_the_borehole_rules(self):
+        from heat_flow import vocabularies
+        from tests.factories import ThermalGradientFactory
+
+        logs = self.concepts(vocabularies.TemperatureMethod, "LOGeq")
+        gradient = ThermalGradientFactory(
+            sample=self.borehole_interval(),
+            number=10,
+            method_top=logs,
+            method_bottom=logs,
+        )
+
+        stored = self.reload(gradient)
+        assert stored.score == pytest.approx(1.1)
+        assert stored.score_missing is False
+
+    @pytest.mark.django_db
+    def test_a_gradient_at_a_site_without_an_exploration_method_is_not_determined(
+        self,
+    ):
+        from tests.factories import (
+            HeatFlowIntervalFactory,
+            HeatFlowSiteFactory,
+            ThermalGradientFactory,
+        )
+
+        interval = HeatFlowIntervalFactory(
+            site=HeatFlowSiteFactory(explo_method=None)
+        )
+        gradient = ThermalGradientFactory(
+            sample=interval, score=0.7, method_top=[], method_bottom=[]
+        )
+
+        stored = self.reload(gradient)
+        assert stored.score is None
+        assert stored.score_missing is False
+        assert stored.quality_scheme == "hfqa_tool 0.2"
+
+    @pytest.mark.django_db
+    def test_adding_removing_and_clearing_a_method_recalculates_the_score(self):
+        from heat_flow import vocabularies
+        from tests.factories import ThermalGradientFactory
+
+        logs = self.concepts(vocabularies.TemperatureMethod, "LOGeq")
+        gradient = ThermalGradientFactory(
+            sample=self.borehole_interval(),
+            number=10,
+            method_top=[],
+            method_bottom=[],
+        )
+        assert self.reload(gradient).score_missing is True
+
+        gradient.method_top.add(*logs)
+        gradient.method_bottom.add(*logs)
+        assert self.reload(gradient).score == pytest.approx(1.1)
+        assert self.reload(gradient).score_missing is False
+
+        gradient.method_bottom.remove(*logs)
+        assert self.reload(gradient).score == pytest.approx(1.1)
+
+        gradient.method_top.clear()
+        emptied = self.reload(gradient)
+        assert emptied.score == pytest.approx(0.5)
+        assert emptied.score_missing is True
+
+    @pytest.mark.django_db
+    def test_one_gradient_used_by_two_children_keeps_one_score(self):
+        from heat_flow.models import HeatFlowCorrection
+        from tests.factories import (
+            HeatFlowCorrectionFactory,
+            HeatFlowFactory,
+            ThermalGradientFactory,
+        )
+
+        interval = self.probe_interval()
+        gradient = ThermalGradientFactory(
+            sample=interval, number=6, method_top=[], method_bottom=[]
+        )
+        corrected = HeatFlowFactory(sample=interval, thermal_gradient=gradient)
+        uncorrected = HeatFlowFactory(sample=interval, thermal_gradient=gradient)
+        HeatFlowCorrectionFactory(
+            heat_flow=corrected,
+            correction_type=HeatFlowCorrection.CorrectionTypeChoices.SUR,
+            status=HeatFlowCorrection.StatusChoices.PRESENT_CORRECTED,
+        )
+
+        scores = {
+            type(child).objects.get(pk=child.pk).thermal_gradient.score
+            for child in (corrected, uncorrected)
+        }
+
+        assert scores == {self.reload(gradient).score}
+        assert self.reload(gradient).score == pytest.approx(1.0)
+
+    @pytest.mark.django_db
+    def test_a_saved_borehole_conductivity_stores_its_score_and_the_revision(self):
+        from heat_flow import vocabularies
+        from tests.factories import IntervalConductivityFactory
+
+        conductivity = IntervalConductivityFactory(
+            sample=self.borehole_interval(top=0, bottom=500),
+            number=30,
+            source=self.concepts(vocabularies.ConductivitySource, "core_samples"),
+            location=self.concepts(vocabularies.ConductivityLocation, "actual"),
+            saturation=self.concepts(
+                vocabularies.ConductivitySaturation, "saturatedMeasured"
+            ),
+            pT_conditions=self.concepts(
+                vocabularies.ConductivityPTConditions, "actualInSitu"
+            ),
+        )
+
+        stored = self.reload(conductivity)
+        assert stored.score == pytest.approx(1.0)
+        assert stored.score_missing is False
+        assert stored.quality_scheme == "hfqa_tool 0.2"
+
+    @pytest.mark.django_db
+    def test_a_probe_conductivity_can_score_above_one(self):
+        from heat_flow import vocabularies
+        from tests.factories import IntervalConductivityFactory
+
+        conductivity = IntervalConductivityFactory(
+            sample=self.probe_interval(),
+            number=4,
+            source=self.concepts(vocabularies.ConductivitySource, "insitu_probe"),
+            location=self.concepts(vocabularies.ConductivityLocation, "actual"),
+            method=self.concepts(vocabularies.ConductivityMethod, "probePulse"),
+            saturation=self.concepts(
+                vocabularies.ConductivitySaturation, "saturatedInSitu"
+            ),
+            pT_conditions=self.concepts(
+                vocabularies.ConductivityPTConditions, "actualInSitu"
+            ),
+        )
+
+        assert self.reload(conductivity).score == pytest.approx(1.2)
+
+    @pytest.mark.django_db
+    def test_a_conductivity_without_interval_depths_takes_the_gate_score(self):
+        from tests.factories import IntervalConductivityFactory
+
+        conductivity = IntervalConductivityFactory(
+            sample=self.borehole_interval(),
+            number=30,
+            source=[],
+            location=[],
+            saturation=[],
+            pT_conditions=[],
+        )
+
+        stored = self.reload(conductivity)
+        assert stored.score == pytest.approx(0.1)
+        assert stored.score_missing is True
+
+    @pytest.mark.django_db
+    def test_changing_a_conductivity_concept_recalculates_the_score(self):
+        from heat_flow import vocabularies
+        from tests.factories import IntervalConductivityFactory
+
+        conductivity = IntervalConductivityFactory(
+            sample=self.borehole_interval(top=0, bottom=500),
+            number=30,
+            source=self.concepts(vocabularies.ConductivitySource, "core_samples"),
+            location=self.concepts(vocabularies.ConductivityLocation, "actual"),
+            saturation=self.concepts(
+                vocabularies.ConductivitySaturation, "saturatedMeasured"
+            ),
+            pT_conditions=[],
+        )
+        assert self.reload(conductivity).score_missing is True
+
+        conductivity.pT_conditions.add(
+            *self.concepts(vocabularies.ConductivityPTConditions, "recordedAmbient")
+        )
+        ambient = self.reload(conductivity)
+        assert ambient.score == pytest.approx(0.8)
+        assert ambient.score_missing is False
+
+        conductivity.source.clear()
+        assert self.reload(conductivity).score_missing is True
+
+    @pytest.mark.parametrize(
+        ("model_name", "field_name"),
+        [
+            (model_name, field_name)
+            for model_name in ("ThermalGradient", "IntervalConductivity")
+            for field_name in ("score", "score_missing", "quality_scheme")
+        ],
+    )
+    def test_every_new_score_field_has_a_verbose_name_and_help_text(
+        self, model_name, field_name
+    ):
+        from heat_flow import models
+
+        field = getattr(models, model_name)._meta.get_field(field_name)
+
+        assert str(field.verbose_name).strip()
+        assert str(field.help_text).strip()

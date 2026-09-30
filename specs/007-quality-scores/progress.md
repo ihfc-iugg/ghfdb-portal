@@ -47,3 +47,25 @@ Next: T002.
 
 Watch: the guide's link to `quality-scores.md` is written in T003, so the importing-data page
 names the scores in plain text until then.
+
+## 2026-09-30T22:05:00Z · Implementer US1 · T002
+
+Did: `score` on the gradient and conductivity is nullable with no 0–1 bound, beside new
+`score_missing` and `quality_scheme`, and the conductivity's `score` is indexed. A `ScoredMeasurement`
+mixin holds `refresh_score()` (queryset `update`, so no re-entry) and both `calculate_score()`
+methods are gone. `signals.py` has `Recalculation` and the two receivers, connected in
+`HeatFlowSchemaConfig.ready()` on save and on `post_add`, `post_remove` and `post_clear` of the
+concept fields each score reads. One migration, regenerated from D25's placeholder. Replaced the
+single assertion D24 names in `test_conductivity_vocabulary_fields_count_and_score_persist`: its
+site records no exploration method, so the score is `None` and the supplied 0.9 is not kept.
+
+Verified: `uv run pytest tests/test_heat_flow tests/test_migrations.py tests/test_factories.py -q`,
+307 passed, 1 skipped. Mutations: dropping `post_clear`, connecting one concept field only and
+ignoring `raw` each failed a test. Acting on `pre_add` as well survives, because the `post_add`
+refresh follows and writes the same values; it is wasted work, not a wrong result.
+`pre-commit` and `manage.py check` clean.
+
+Next: T003, the documentation.
+
+Watch: old rows keep their hand-set score and an empty `quality_scheme` until the US4 refresh
+command scores them.
