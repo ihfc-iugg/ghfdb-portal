@@ -317,3 +317,17 @@ Verified: `uv run pytest tests/test_docs -n0 -q`, 304 passed, 1 skipped (not min
 docs build itself was not run.
 Next: the full verify, then the report.
 Watch: `CONTEXT.md` was not changed in this story.
+
+## 2026-09-30T22:47:56Z · Forge · S5 converge
+
+Converge: every task in tasks.md is delivered except T005, which is held on the maintainer's
+ruling (research R5). Its only effect is that US2 scenarios 3 and 5 are demonstrated at the scheme
+level rather than on stored children. No other gap.
+Migrations: one file, `0014_quality_scores`. `makemigrations heat_flow ghfdb --check` finds no
+changes.
+Cleanup: a pass over the production diff (quality.py, signals.py, apps.py, both models, the
+command and the templates) found nothing that would be clearer after the change.
+ADRs: D19 and D20 graduate to ADR 0022, ADR 0004's "Revisit if" notes the gap is closed, and
+every other decision carries a verdict. check-adrs is green.
+Watch for review: the collector in `Recalculation` is class-level, shared by threads in one
+process (D33). The deployment runs sync workers today.
