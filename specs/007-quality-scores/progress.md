@@ -98,3 +98,17 @@ Verified: the tamper-check against e42524a flags only the D24 assertion. The rec
 green.
 Next: re-verify, then accept US1 and dispatch US2.
 Watch: D25–D27 need ADR verdicts at convergence.
+
+## 2026-09-30T23:45:00Z · Implementer US2 · T004
+
+Did: added `QualityScheme` (`u_score`, `m_score`, `perturbation_flags`, `code`) to `quality.py`.
+Tests first in `test_quality.py`: U bands and the six-place rounding, zero, empty and negative
+inputs; M classes, the boundary products and rounding before classing, the `x` suffix and `Mx`; every
+flag letter, place and status; the code format; and the U, M and flags of every R3 case against the
+conformance cases' T and TC. Amended the `testing.md` project addition: reference values are the
+toolbox's output.
+Verified: red first (`ImportError: cannot import name 'QualityScheme'`), then
+`uv run pytest tests/test_heat_flow/test_quality.py -n0 -q`, 230 passed; `pre-commit run --files`
+on the changed files clean.
+Next: T005a.
+Watch: the new names are quoted on a page in T007.

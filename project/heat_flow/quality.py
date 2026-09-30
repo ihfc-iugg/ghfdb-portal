@@ -538,6 +538,115 @@ class BoreholeRules:
         return SubScore.from_penalties(penalties)
 
 
+class QualityScheme:
+    """The arithmetic a child's quality code is built from (toolbox ``calculate_*``).
+
+    The U-score reads the child's own value and uncertainty. The M-score combines the
+    corrected T-score and TC-score. The flags read the child's environmental corrections.
+    """
+
+    # Coefficient of variation in percent: below 5 is U1, then up to and including 15, then 25.
+    U1_BELOW = 5.0
+    U_BANDS = (("U2", 15.0), ("U3", 25.0))
+    # Lower bound of each product class, best first. A product on the bound takes the better class.
+    M_BANDS = (("M1", 0.75), ("M2", 0.5), ("M3", 0.25))
+
+    # The correction behind each flag, in the order the code writes them, with its letter.
+    FLAGS = (
+        ("S", "S"),
+        ("E", "E"),
+        ("TOPO", "T"),
+        ("PAL", "P"),
+        ("SUR", "V"),
+        ("CONV", "C"),
+        ("HR", "R"),
+    )
+    # Status to flag letter: present and corrected is upper case, present and not corrected
+    # lower case. The other two statuses write a fixed character.
+    FLAG_STATUSES = {
+        "present_corrected": str.upper,
+        "present_not_corrected": str.lower,
+        "present_not_significant": lambda _letter: "X",
+        "not_recognized": lambda _letter: "x",
+    }
+    NO_FLAG = "-"
+
+    @classmethod
+    def u_score(cls, value: float | None, uncertainty: float | None) -> str:
+        """Grade the uncertainty of a heat flow value.
+
+        The grade follows the coefficient of variation, ``|uncertainty| / |value|`` in
+        percent, rounded to six places as the toolbox does. The sign of either number is
+        ignored, because a heat flow can be negative.
+
+        Args:
+            value: The heat flow, or ``None`` when empty.
+            uncertainty: Its uncertainty, or ``None`` when empty.
+
+        Returns:
+            ``U1`` to ``U4``, or ``Ux`` when either number is empty or zero.
+        """
+        if not value or not uncertainty:
+            return UScoreOptions.Ux.value
+        coefficient = round(abs(uncertainty) / abs(value) * 100.0, 6)
+        if coefficient < cls.U1_BELOW:
+            return UScoreOptions.U1.value
+        for grade, upper in cls.U_BANDS:
+            if coefficient <= upper:
+                return grade
+        return UScoreOptions.U4.value
+
+    @classmethod
+    def m_score(cls, t: SubScore, tc: SubScore) -> str:
+        """Grade the methodology from the corrected T-score and TC-score.
+
+        Args:
+            t: The child's corrected T-score.
+            tc: The child's corrected TC-score.
+
+        Returns:
+            ``M1`` to ``M4`` from the product rounded to three places, with an ``x`` suffix
+            when either score was reached with missing information, or ``Mx`` when either
+            cannot be calculated.
+        """
+        if t.value is None or tc.value is None:
+            return MScoreOptions.Mx.value
+        product = round(t.value * tc.value, 3)
+        grade = next((grade for grade, lower in cls.M_BANDS if product >= lower), "M4")
+        return f"{grade}x" if t.missing or tc.missing else grade
+
+    @classmethod
+    def perturbation_flags(cls, statuses: dict[str, str]) -> str:
+        """Write the seven perturbation flags of a child.
+
+        Args:
+            statuses: The child's correction statuses by correction type. A type with no
+                entry was not recorded.
+
+        Returns:
+            Seven characters, one per correction in the order ``S E T P V C R``.
+        """
+        flags = []
+        for correction, letter in cls.FLAGS:
+            write = cls.FLAG_STATUSES.get(statuses.get(correction, ""))
+            flags.append(cls.NO_FLAG if write is None else write(letter))
+        return "".join(flags)
+
+    @staticmethod
+    def code(u: str, m: str, flags: str) -> str:
+        """Join the U-score, M-score and flags into the quality code, e.g. ``U2.M3x.-e-PX--``.
+
+        Args:
+            u: The U-score.
+            m: The M-score.
+            flags: The seven perturbation flags.
+
+        Returns:
+            The dotted code.
+        """
+        return f"{u}.{m}.{flags}"
+
+
 # Exploration method concept to the route it selects.
 ROUTES: dict[str, type[ProbeRules] | type[BoreholeRules]] = {
     "probing_onshore": ProbeRules,

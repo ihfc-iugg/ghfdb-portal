@@ -1032,3 +1032,239 @@ class TestCriterion:
         assert Criterion.mapping(
             frozenset({"unknown"}), table, unmatched_missing=True
         ) == (-0.2, True)
+
+
+class TestUScore:
+    @pytest.mark.parametrize(
+        ("value", "uncertainty", "expected"),
+        [
+            (100, 4.9, "U1"),
+            (100, 5, "U2"),
+            (100, 15, "U2"),
+            (100, 15.1, "U3"),
+            (100, 25, "U3"),
+            (100, 25.1, "U4"),
+            (100, 80, "U4"),
+        ],
+    )
+    def test_bands_take_the_upper_bound_into_the_better_class(
+        self, value, uncertainty, expected
+    ):
+        from heat_flow.quality import QualityScheme
+
+        assert QualityScheme.u_score(value, uncertainty) == expected
+
+    @pytest.mark.parametrize(
+        ("uncertainty", "expected"),
+        [(4.9999996, "U2"), (15.0000004, "U2"), (25.0000004, "U3"), (25.000001, "U4")],
+    )
+    def test_the_coefficient_is_rounded_to_six_places_before_banding(
+        self, uncertainty, expected
+    ):
+        from heat_flow.quality import QualityScheme
+
+        assert QualityScheme.u_score(100, uncertainty) == expected
+
+    @pytest.mark.parametrize(
+        ("value", "uncertainty"),
+        [(None, 5), (0, 5), (100, None), (100, 0)],
+    )
+    def test_an_empty_or_zero_value_or_uncertainty_is_not_determined(
+        self, value, uncertainty
+    ):
+        from heat_flow.quality import QualityScheme
+
+        assert QualityScheme.u_score(value, uncertainty) == "Ux"
+
+    def test_a_negative_value_is_read_as_a_magnitude(self):
+        from heat_flow.quality import QualityScheme
+
+        assert QualityScheme.u_score(-40, 12) == "U4"
+        assert QualityScheme.u_score(40, -1.9) == "U1"
+
+
+class TestMScore:
+    @pytest.mark.parametrize(
+        ("t", "tc", "expected"),
+        [
+            (1.0, 0.76, "M1"),
+            (1.0, 0.75, "M1"),
+            (1.0, 0.74, "M2"),
+            (1.0, 0.5, "M2"),
+            (1.0, 0.49, "M3"),
+            (0.5, 0.5, "M3"),
+            (0.5, 0.49, "M4"),
+            (0.1, 0.1, "M4"),
+        ],
+    )
+    def test_classes_take_a_boundary_product_into_the_better_class(
+        self, t, tc, expected
+    ):
+        from heat_flow.quality import QualityScheme, SubScore
+
+        assert QualityScheme.m_score(SubScore(t), SubScore(tc)) == expected
+
+    def test_the_product_is_rounded_to_three_places_before_it_is_classed(self):
+        from heat_flow.quality import QualityScheme, SubScore
+
+        # 0.833 x 0.9 is 0.7497, which the toolbox rounds up to the M1 boundary.
+        assert QualityScheme.m_score(SubScore(0.833), SubScore(0.9)) == "M1"
+
+    @pytest.mark.parametrize("marked", ["t", "tc", "both"])
+    def test_either_marked_sub_score_adds_the_x_suffix(self, marked):
+        from heat_flow.quality import QualityScheme, SubScore
+
+        t = SubScore(0.9, marked in {"t", "both"})
+        tc = SubScore(0.9, marked in {"tc", "both"})
+
+        assert QualityScheme.m_score(t, tc) == "M1x"
+
+    def test_a_sub_score_that_cannot_be_calculated_gives_mx(self):
+        from heat_flow.quality import QualityScheme, SubScore
+
+        assert QualityScheme.m_score(SubScore(None), SubScore(0.9)) == "Mx"
+        assert QualityScheme.m_score(SubScore(0.9), SubScore(None)) == "Mx"
+        assert QualityScheme.m_score(SubScore(None, True), SubScore(None)) == "Mx"
+
+
+class TestPerturbationFlags:
+    ORDER = ["S", "E", "TOPO", "PAL", "SUR", "CONV", "HR"]
+
+    def test_no_corrections_give_seven_dashes(self):
+        from heat_flow.quality import QualityScheme
+
+        assert QualityScheme.perturbation_flags({}) == "-------"
+
+    @pytest.mark.parametrize(
+        ("status", "upper"),
+        [
+            ("present_corrected", True),
+            ("present_not_corrected", False),
+        ],
+    )
+    @pytest.mark.parametrize(
+        ("correction", "letter", "position"),
+        [
+            ("S", "S", 0),
+            ("E", "E", 1),
+            ("TOPO", "T", 2),
+            ("PAL", "P", 3),
+            ("SUR", "V", 4),
+            ("CONV", "C", 5),
+            ("HR", "R", 6),
+        ],
+    )
+    def test_each_correction_writes_its_own_letter_in_its_own_place(
+        self, correction, letter, position, status, upper
+    ):
+        from heat_flow.quality import QualityScheme
+
+        flags = QualityScheme.perturbation_flags({correction: status})
+
+        expected = letter if upper else letter.lower()
+        assert flags == "-" * position + expected + "-" * (6 - position)
+
+    @pytest.mark.parametrize(
+        ("status", "expected"),
+        [
+            ("present_not_significant", "X"),
+            ("not_recognized", "x"),
+            ("-", "-"),
+            ("not_considered", "-"),
+            ("considered_pt", "-"),
+            ("tilt_corrected", "-"),
+            ("", "-"),
+        ],
+    )
+    def test_the_remaining_statuses(self, status, expected):
+        from heat_flow.quality import QualityScheme
+
+        assert QualityScheme.perturbation_flags({"PAL": status}) == "---" + expected + "---"
+
+    def test_the_in_situ_and_temperature_corrections_write_no_flag(self):
+        from heat_flow.quality import QualityScheme
+
+        flags = QualityScheme.perturbation_flags(
+            {"IS": "present_corrected", "T": "present_corrected"}
+        )
+
+        assert flags == "-------"
+
+
+class TestQualityCode:
+    def test_the_code_joins_u_m_and_flags_with_dots(self):
+        from heat_flow.quality import QualityScheme
+
+        assert QualityScheme.code("U1", "M2", "SxxxCxR") == "U1.M2.SxxxCxR"
+
+    def test_a_marked_m_score_makes_the_longest_code_fourteen_characters(self):
+        from heat_flow.quality import QualityScheme
+
+        code = QualityScheme.code("U2", "M3x", "-e-PX--")
+
+        assert code == "U2.M3x.-e-PX--"
+        assert len(code) == 14
+
+
+# Per R3 case: the child's value and uncertainty, its corrections by type, and the
+# toolbox's U, M and flags. T and TC come from the conformance case of the same name.
+SCHEME_EXPECTATIONS = {
+    "X1-continuous-eq": (None, None, {}, "Ux", "M1x", "-------"),
+    "X2-continuous-pert": (None, None, {}, "Ux", "M2x", "-------"),
+    "X3-multiple-single-points": (None, None, {}, "Ux", "M3x", "-------"),
+    "X4-single-point-plus-surface": (None, None, {}, "Ux", "M4x", "-------"),
+    "X5-interval-gate": (None, None, {}, "Ux", "M4x", "-------"),
+    "P1-probe-with-waivers": (
+        80,
+        4,
+        {
+            "S": "present_corrected",
+            "E": "present_not_corrected",
+            "TOPO": "present_not_significant",
+            "PAL": "not_recognized",
+            "SUR": "present_corrected",
+            "CONV": "-",
+        },
+        "U2",
+        "M1",
+        "SeXxV--",
+    ),
+    "P2-probe-without-corrections": (80, 4, {}, "U2", "M1", "-------"),
+    "P3-onshore-lab": (60, 9, {}, "U2", "M4x", "-------"),
+    "P4-clustering-literature": (-40, 12, {}, "U4", "M4", "-------"),
+    "P5-no-saturation": (100, 30, {}, "U4", "M3x", "-------"),
+    "B1-agreeing-in-situ": (65, 3, {}, "U1", "M1", "-------"),
+    "B2-not-considered": (65, 3, {}, "U1", "M1", "-------"),
+    "B3-no-in-situ-correction": (65, 3, {}, "U1", "M1x", "-------"),
+    "B4-mining-ambient": (65, 3, {}, "U1", "M1", "-------"),
+    "B5-drilling-clustering": (50, 10, {}, "U3", "M3", "-------"),
+    "B6-tunnelling-literature": (90, 20, {}, "U3", "M4", "-------"),
+    "B7-unresolvable-surface-case": (90, 0, {}, "Ux", "M3x", "-------"),
+    "B8-indirect-no-methods": (70, None, {}, "Ux", "M4x", "-------"),
+    "B9-everything-unspecified": (70, 7, {}, "U2", "M4", "-------"),
+}
+
+
+class TestSchemeConformance:
+    """The U-score, M-score and flags against the toolbox's own (research R3)."""
+
+    @pytest.mark.parametrize("inputs", CONFORMANCE_CASES)
+    def test_u_m_and_flags_equal_the_toolbox_output(self, inputs, request):
+        from heat_flow.quality import UNCORRECTED, QualityScheme, route
+
+        name = request.node.callspec.id
+        value, uncertainty, statuses, u, m, flags = SCHEME_EXPECTATIONS[name]
+        site, gradient, conductivity = build_case(inputs)
+        rules = route(site)
+        t = rules.gradient(
+            gradient,
+            tilt_corrected=inputs.get("tilt_corrected", False),
+            bottom_water_corrected=inputs.get("bottom_water_corrected", False),
+        )
+        tc = rules.conductivity(
+            conductivity, in_situ=inputs.get("in_situ", UNCORRECTED)
+        )
+
+        assert QualityScheme.u_score(value, uncertainty) == u
+        assert QualityScheme.m_score(t, tc) == m
+        assert QualityScheme.perturbation_flags(statuses) == flags
