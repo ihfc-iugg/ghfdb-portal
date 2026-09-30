@@ -716,4 +716,6 @@ def route(site) -> type[ProbeRules] | type[BoreholeRules] | None:
         unspecified or empty, which leaves the measurement's score not determined.
     """
     method = getattr(site, "explo_method", None)
-    return None if method is None else ROUTES.get(method)
+    # A site read back from the database holds the concept, one built in memory the name.
+    name = getattr(method, "name", method)
+    return None if name is None else ROUTES.get(name)

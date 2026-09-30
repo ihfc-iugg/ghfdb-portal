@@ -496,3 +496,42 @@ this feature, so the registry form was not usable before and is still not. `ghfd
 read-only field list rather than the form's.
 
 **ADR:** none - follows D29.
+
+## D33 — One collector, and a weakly held flag instead of reading Django's commit list
+
+**Decision:** `Recalculation` keeps one collector (`gradients`, `conductivities`, `children`,
+`parents`) and one `request()` entry point. A request refreshes at once, or is collected when it
+comes from a delete (`when_committed`) or while `deferred()` is active. The refresh expands in
+cascade order: the named measurements, then the children that use them plus the named children,
+then those children's parents plus the named parents. The on-commit callback is an `_OnCommit`
+instance held by a `weakref`, so "already scheduled" means the weak reference is alive. It no longer
+reads `connection.run_on_commit`.
+
+**Why:** a plain boolean set on registration and cleared on run (the brief's wording) is never
+cleared when the transaction rolls back, because the callback is dropped unrun. The next
+transaction would then never schedule, and every later delete would leave its parent stale. The
+same wedge hit seven existing tests when tried, through `django_capture_on_commit_callbacks`
+(`execute=False`). A dropped callback is garbage collected, so a weak reference reads as cleared
+with no internal attribute read. `test_a_rolled_back_transaction_does_not_stop_the_next_one_scheduling`
+pins it.
+
+**Revisit if:** Django gains a public way to ask whether a callback is still registered.
+
+**ADR:** none - local to the receivers.
+
+## D34 — `route()` reads the exploration method's name when the site was read back from the database
+
+**Decision:** `quality.route` takes `getattr(method, "name", method)` before looking up `ROUTES`.
+This is a two-line change in `project/heat_flow/quality.py`, which the US4 brief does not list.
+
+**Why:** a `HeatFlowSite` read back from the database holds `explo_method` as a `Concept`, which
+is not a key of `ROUTES`, so every measurement scored from a stored record came out `None` (and
+every child `Mx`). US1 to US3 only scored instances built in memory, where the field still holds
+the string. The cascade and the refresh command always read records back, so without this they
+would overwrite every correct score with "not determined". Two tests in
+`tests/test_heat_flow/test_signals.py` (`TestRecordsLoadedFromTheDatabase`) failed before the change.
+
+**Revisit if:** Forge prefers to land it as a US1 fix. It is separate from the cascade and reverts
+by deleting the two lines.
+
+**ADR:** none - a defect fix.

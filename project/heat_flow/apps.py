@@ -21,7 +21,10 @@ class HeatFlowSchemaConfig(AppConfig):
         from .models import (
             HeatFlow,
             HeatFlowCorrection,
+            HeatFlowInterval,
+            HeatFlowSite,
             IntervalConductivity,
+            ProbeMetadata,
             ThermalGradient,
         )
 
@@ -62,4 +65,24 @@ class HeatFlowSchemaConfig(AppConfig):
             signals.refresh_child_on_correction_delete,
             sender=HeatFlowCorrection,
             dispatch_uid="refresh_quality_on_delete_HeatFlowCorrection",
+        )
+        post_save.connect(
+            signals.refresh_measurements_on_interval_save,
+            sender=HeatFlowInterval,
+            dispatch_uid="refresh_score_on_save_HeatFlowInterval",
+        )
+        post_save.connect(
+            signals.refresh_measurements_on_probe_save,
+            sender=ProbeMetadata,
+            dispatch_uid="refresh_score_on_save_ProbeMetadata",
+        )
+        post_delete.connect(
+            signals.refresh_measurements_on_probe_delete,
+            sender=ProbeMetadata,
+            dispatch_uid="refresh_score_on_delete_ProbeMetadata",
+        )
+        post_save.connect(
+            signals.refresh_measurements_on_site_save,
+            sender=HeatFlowSite,
+            dispatch_uid="refresh_score_on_save_HeatFlowSite",
         )

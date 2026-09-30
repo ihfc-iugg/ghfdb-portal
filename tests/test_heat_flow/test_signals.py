@@ -341,3 +341,394 @@ class TestParentReceivers:
             child.save()
 
         assert saves.calls == 0
+
+
+# --- Keeping every score current (FS-007 US4) -------------------------------------------
+
+BOREHOLE = dict(
+    gradient=dict(number=10, top=("LOGeq",), bottom=("LOGeq",)),
+    conductivity=dict(
+        number=30,
+        source=("core_samples",),
+        location=("actual",),
+        saturation=("saturatedMeasured",),
+        pT=("actualInSitu",),
+    ),
+)
+PROBE = dict(
+    gradient=dict(number=6),
+    conductivity=dict(
+        number=4,
+        source=("insitu_probe",),
+        location=("actual",),
+        method=("probePulse",),
+        saturation=("saturatedInSitu",),
+        pT=("actualInSitu",),
+    ),
+)
+
+
+class Network:
+    """One interval with a gradient and a conductivity, a child using both and its parent."""
+
+    def __init__(self, explo_method="drilling", *, top=0, bottom=1000, **interval):
+        from tests.factories import HeatFlowFactory, ParentHeatFlowFactory
+        from tests.test_heat_flow.test_quality import (
+            build_conductivity,
+            build_gradient,
+            build_interval,
+        )
+
+        inputs = PROBE if explo_method.startswith("probing") else BOREHOLE
+        self.interval = build_interval(
+            explo_method, top=top, bottom=bottom, **interval
+        )
+        self.site = self.interval.site
+        self.gradient = build_gradient(self.interval, **inputs["gradient"])
+        self.conductivity = build_conductivity(self.interval, **inputs["conductivity"])
+        self.parent = ParentHeatFlowFactory(sample=self.site)
+        self.child = self.child_using(self.gradient)
+
+    def child_using(self, gradient):
+        from tests.factories import HeatFlowFactory
+
+        return HeatFlowFactory(
+            sample=self.interval,
+            thermal_gradient=gradient,
+            thermal_conductivity=self.conductivity,
+            parent=self.parent,
+            is_relevant=True,
+            value=70,
+            uncertainty=7,
+        )
+
+    @property
+    def records(self):
+        return [self.gradient, self.conductivity, self.child, self.parent]
+
+    def stored(self):
+        """Every stored score of the network, keyed by record."""
+        return {
+            (type(record).__name__, record.pk): StoredScores.read(
+                type(record).objects.get(pk=record.pk)
+            )
+            for record in self.records
+        }
+
+
+class StoredScores:
+    """Recalculates every stored score in memory and finds those that differ (SC-004)."""
+
+    FIELDS = {
+        "ThermalGradient": ("score", "score_missing", "quality_scheme"),
+        "IntervalConductivity": ("score", "score_missing", "quality_scheme"),
+        "HeatFlow": (
+            "U_score",
+            "T_score",
+            "T_score_missing",
+            "TC_score",
+            "TC_score_missing",
+            "M_score",
+            "quality",
+            "quality_scheme",
+        ),
+        "ParentHeatFlow": ("U_score", "M_score", "quality", "quality_scheme"),
+    }
+
+    @classmethod
+    def read(cls, record):
+        return {
+            name: getattr(record, name) for name in cls.FIELDS[type(record).__name__]
+        }
+
+    @classmethod
+    def differing(cls):
+        """List the records whose stored scores differ from a fresh calculation.
+
+        The models write a refresh with a queryset ``update``, which is switched off here,
+        so a refresh leaves the new values on the instance and the database untouched.
+        """
+        from unittest import mock
+
+        from django.db.models.query import QuerySet
+        from heat_flow.models import (
+            HeatFlow,
+            IntervalConductivity,
+            ParentHeatFlow,
+            ThermalGradient,
+        )
+
+        found = []
+        with mock.patch.object(QuerySet, "update", return_value=1):
+            for model in (
+                ThermalGradient,
+                IntervalConductivity,
+                HeatFlow,
+                ParentHeatFlow,
+            ):
+                for stored in model.objects.all():
+                    fresh = model.objects.get(pk=stored.pk)
+                    if isinstance(fresh, ParentHeatFlow | HeatFlow):
+                        fresh.refresh_quality()
+                    else:
+                        fresh.refresh_score()
+                    if cls.read(fresh) != cls.read(stored):
+                        found.append((model.__name__, stored.pk))
+        return found
+
+
+class RefreshSpy:
+    """Records every refresh made while it is active, by model name and pk."""
+
+    METHODS = {
+        "ThermalGradient": "refresh_score",
+        "IntervalConductivity": "refresh_score",
+        "HeatFlow": "refresh_quality",
+        "ParentHeatFlow": "refresh_quality",
+    }
+
+    def __enter__(self):
+        from unittest import mock
+
+        import heat_flow.models as models
+
+        self.calls = []
+        self._patches = []
+        for name, method in self.METHODS.items():
+            model = getattr(models, name)
+            original = getattr(model, method)
+
+            def record(instance, *, _name=name, _original=original):
+                self.calls.append((_name, instance.pk))
+                _original(instance)
+
+            patch = mock.patch.object(model, method, record)
+            patch.start()
+            self._patches.append(patch)
+        return self
+
+    def __exit__(self, *exc):
+        for patch in self._patches:
+            patch.stop()
+
+    def of(self, *records):
+        """The refreshes made to *records*, in the order they happened."""
+        wanted = {(type(record).__name__, record.pk) for record in records}
+        return [call for call in self.calls if call in wanted]
+
+    def count(self, model_name):
+        return len([call for call in self.calls if call[0] == model_name])
+
+
+def keys(*records):
+    return [(type(record).__name__, record.pk) for record in records]
+
+
+def assert_moved(before, after, *records):
+    """Every record's stored score differs from what it was."""
+    for record in records:
+        key = keys(record)[0]
+        assert after[key] != before[key], f"{key} did not move"
+
+
+class TestRecalculationTable:
+    """Each row of the table: what depends on the input moves and the rest is left alone."""
+
+    def test_a_measurement_saved_refreshes_its_children_and_their_parents(self):
+        mine, other = Network(), Network()
+        before = mine.stored()
+        with RefreshSpy() as spy:
+            mine.gradient.method_top.add(
+                *concept_names(vocabularies.TemperatureMethod, "CPD")
+            )
+
+        assert spy.calls == keys(mine.gradient, mine.child, mine.parent)
+        assert_moved(before, mine.stored(), mine.gradient, mine.child, mine.parent)
+        assert spy.of(*other.records) == []
+        assert StoredScores.differing() == []
+
+    def test_a_shared_gradient_refreshes_every_child_using_it_and_the_parent_once(self):
+        mine = Network()
+        second = mine.child_using(mine.gradient)
+        with RefreshSpy() as spy:
+            mine.gradient.method_top.add(
+                *concept_names(vocabularies.TemperatureMethod, "CPD")
+            )
+
+        assert spy.calls == keys(mine.gradient, mine.child, second, mine.parent)
+        assert StoredScores.differing() == []
+
+    def test_a_concept_removed_from_a_gradient_refreshes_what_uses_it(self):
+        mine, other = Network(), Network()
+        poor = concept_names(vocabularies.TemperatureMethod, "CPD")
+        mine.gradient.method_top.add(*poor)
+        before = mine.stored()
+        with RefreshSpy() as spy:
+            mine.gradient.method_top.remove(*poor)
+
+        assert spy.calls == keys(mine.gradient, mine.child, mine.parent)
+        assert_moved(before, mine.stored(), mine.gradient, mine.child)
+        assert spy.of(*other.records) == []
+        assert StoredScores.differing() == []
+
+    def test_an_interval_saved_refreshes_the_measurements_on_it_and_onward(self):
+        mine, other = Network(top=None, bottom=None), Network()
+        before = mine.stored()
+        mine.interval.top, mine.interval.bottom = 0, 1000
+        with RefreshSpy() as spy:
+            mine.interval.save()
+
+        assert spy.calls == keys(
+            mine.gradient, mine.conductivity, mine.child, mine.parent
+        )
+        assert_moved(before, mine.stored(), mine.conductivity, mine.child)
+        assert spy.of(*other.records) == []
+        assert StoredScores.differing() == []
+
+    def test_probe_metadata_saved_refreshes_the_gradients_on_its_interval(self):
+        mine, other = Network("probing_offshore", penetration=12, tilt=5), Network(
+            "probing_offshore", penetration=12, tilt=5
+        )
+        before = mine.stored()
+        probe = mine.interval.probe_metadata
+        probe.penetration = 0.5
+        with RefreshSpy() as spy:
+            probe.save()
+
+        assert spy.calls == keys(mine.gradient, mine.child, mine.parent)
+        assert_moved(before, mine.stored(), mine.gradient, mine.child)
+        assert spy.of(*other.records) == []
+        assert StoredScores.differing() == []
+
+    def test_probe_metadata_deleted_refreshes_the_gradients_on_its_interval(
+        self, django_capture_on_commit_callbacks
+    ):
+        mine, other = Network("probing_offshore", penetration=12, tilt=5), Network(
+            "probing_offshore", penetration=12, tilt=5
+        )
+        before = mine.stored()
+        with RefreshSpy() as spy, django_capture_on_commit_callbacks(execute=True):
+            mine.interval.probe_metadata.delete()
+
+        assert spy.calls == keys(mine.gradient, mine.child, mine.parent)
+        assert_moved(before, mine.stored(), mine.gradient, mine.child)
+        assert spy.of(*other.records) == []
+        assert StoredScores.differing() == []
+
+    def test_a_site_elevation_changed_refreshes_every_measurement_on_its_intervals(
+        self,
+    ):
+        mine, other = (
+            Network("probing_offshore", elevation=-3000, penetration=12, tilt=5),
+            Network("probing_offshore", elevation=-3000, penetration=12, tilt=5),
+        )
+        before = mine.stored()
+        mine.site.elevation = -1000
+        with RefreshSpy() as spy:
+            mine.site.save()
+
+        assert spy.calls == keys(
+            mine.gradient, mine.conductivity, mine.child, mine.parent
+        )
+        assert_moved(before, mine.stored(), mine.gradient, mine.child)
+        assert spy.of(*other.records) == []
+        assert StoredScores.differing() == []
+
+    def test_a_site_exploration_method_changed_refreshes_every_measurement_on_it(self):
+        mine, other = Network(), Network()
+        before = mine.stored()
+        mine.site.explo_method = "other"
+        with RefreshSpy() as spy:
+            mine.site.save()
+
+        assert spy.calls == keys(
+            mine.gradient, mine.conductivity, mine.child, mine.parent
+        )
+        assert_moved(before, mine.stored(), mine.gradient, mine.conductivity)
+        assert spy.of(*other.records) == []
+        assert StoredScores.differing() == []
+
+
+def concept_names(vocabulary, *names):
+    from tests.test_heat_flow.test_quality import concepts
+
+    return concepts(vocabulary, *names)
+
+
+class TestDatasetDelete:
+    def test_deleting_a_dataset_leaves_no_stale_parent_and_no_refresh_per_correction(
+        self, django_capture_on_commit_callbacks
+    ):
+        from fairdm.factories import DatasetFactory
+        from heat_flow.models import HeatFlow, ParentHeatFlow
+        from tests.factories import HeatFlowCorrectionFactory, ParentHeatFlowFactory
+        from tests.test_heat_flow.test_models.test_parent import child_of
+
+        doomed, kept = DatasetFactory(), DatasetFactory()
+        parent = ParentHeatFlowFactory(dataset=kept)
+        child_of(parent, "U1", is_relevant=True)
+        leaving = child_of(parent, "U4", is_relevant=True)
+        HeatFlow.objects.filter(pk=leaving.pk).update(dataset=doomed)
+        for kind in ("S", "E", "SUR", "T", "IS"):
+            HeatFlowCorrectionFactory(heat_flow=leaving, correction_type=kind)
+        assert ParentHeatFlow.objects.get(pk=parent.pk).U_score == "U4"
+
+        with RefreshSpy() as spy, django_capture_on_commit_callbacks(execute=True):
+            doomed.delete()
+
+        assert not HeatFlow.objects.filter(pk=leaving.pk).exists()
+        assert spy.count("HeatFlow") == 0
+        assert spy.count("ParentHeatFlow") == 1
+        assert ParentHeatFlow.objects.get(pk=parent.pk).U_score == "U1"
+        assert StoredScores.differing() == []
+
+
+class TestScheduledRefresh:
+    def test_a_rolled_back_transaction_does_not_stop_the_next_one_scheduling(
+        self, django_capture_on_commit_callbacks
+    ):
+        from django.db import transaction
+        from tests.factories import HeatFlowCorrectionFactory
+
+        mine = Network()
+        first = HeatFlowCorrectionFactory(heat_flow=mine.child, correction_type="S")
+        second = HeatFlowCorrectionFactory(heat_flow=mine.child, correction_type="E")
+
+        with django_capture_on_commit_callbacks(execute=False) as callbacks:
+            try:
+                with transaction.atomic():
+                    first.delete()
+                    raise RuntimeError
+            except RuntimeError:
+                pass
+            second.delete()
+
+        assert len(callbacks) == 1
+
+
+class TestRecordsLoadedFromTheDatabase:
+    """The cascade and the refresh command score records they have just read back."""
+
+    def test_a_measurement_read_back_scores_as_the_one_built_in_memory(self):
+        mine = Network()
+        for built in (mine.gradient, mine.conductivity):
+            built.refresh_score()
+            loaded = type(built).objects.get(pk=built.pk)
+
+            loaded.refresh_score()
+
+            assert built.score is not None
+            assert (loaded.score, loaded.score_missing) == (
+                built.score,
+                built.score_missing,
+            )
+
+    def test_a_child_read_back_scores_as_the_one_built_in_memory(self):
+        mine = Network()
+        mine.child.refresh_quality()
+        loaded = type(mine.child).objects.get(pk=mine.child.pk)
+
+        loaded.refresh_quality()
+
+        assert mine.child.T_score is not None
+        assert loaded.quality == mine.child.quality

@@ -262,8 +262,16 @@
       "tasks": [
         {
           "id": "T010",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 3,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_signals.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_signals.py tests/test_heat_flow/test_quality.py -n0 -q"
+            ]
+          }
         },
         {
           "id": "T011",

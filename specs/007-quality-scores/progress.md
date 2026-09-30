@@ -207,3 +207,19 @@ docs build itself was not run.
 Next: the full verify, then the report.
 Watch: the guide does not yet describe the cascades from measurement, interval and site changes
 (US4) or the refresh command (US5).
+
+## 2026-09-30T23:10:00Z · Implementer US4 · T010
+
+Did: `Recalculation` is rebuilt around one collector and one `request()`; the refresh expands
+measurements, then their children, then the parents. New receivers for interval saves, probe
+metadata saves and deletes and site saves; every delete path collects and refreshes on commit. The
+collector no longer reads `connection.run_on_commit` (D33). Found and fixed a US1 defect that made
+every stored record score `None` when read back (D34, outside the listed scope). Tests first, one per
+row of the table, each with a refresh spy (what moved, what did not) and the SC-004 helper
+`StoredScores.differing()` after every change; a dataset delete; a rolled-back transaction.
+Verified: `uv run pytest tests/test_heat_flow/test_signals.py tests/test_heat_flow/test_quality.py
+-n0 -q`, 279 passed; `uv run pre-commit run --files <changed>` clean. Probed the flag: replacing the
+weak reference with a plain flag fails seven tests.
+Next: T011.
+Watch: `.set()` on a concept field sends `post_remove` and `post_add`, so outside an import it
+refreshes twice. The deferral in T011 removes that for imports.
