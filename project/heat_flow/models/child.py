@@ -320,7 +320,10 @@ class HeatFlow(Measurement):
         queryset ``update``, so it sends no save signal and the receivers that call this
         method do not re-enter.
         """
-        statuses = dict(self.corrections.values_list("correction_type", "status"))
+        statuses = {
+            correction.correction_type: correction.status
+            for correction in self.corrections.all()
+        }
         t = SubScore(None)
         rules = (
             route(Reading.site(self.thermal_gradient))

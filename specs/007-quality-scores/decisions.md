@@ -553,3 +553,21 @@ that it fails without the `with`.
 import.
 
 **ADR:** none - local to the resource.
+
+## D36 — The command reads pks first and refreshes in chunks; a child reads its corrections through `.all()`
+
+**Decision:** `refresh_quality` lists the pks of each level (stale-only, or every record with
+`--all`), then fetches `CHUNK_SIZE` (500) records at a time with the concept fields prefetched
+(for a child, through `thermal_gradient__…` and `thermal_conductivity__…` too) and its
+corrections, and refreshes each. `HeatFlow.refresh_quality` reads `self.corrections.all()` in place
+of `self.corrections.values_list(...)`, so the prefetch is used. A refresh with nothing prefetched
+makes the same one query as before.
+
+**Why:** walking a queryset that the refresh is shrinking (stale-only) risks skipping rows, and a
+`values_list` bypasses a prefetch (design review ARCH-005). About 18 queries per determination
+remain in the tests (its gradient, conductivity, child and parent), most of them the polymorphic
+reads of the interval and site, which cannot be prefetched here.
+
+**Revisit if:** the first run at release size is too slow on the server.
+
+**ADR:** none - local to the command.

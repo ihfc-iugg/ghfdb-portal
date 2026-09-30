@@ -289,8 +289,16 @@
         },
         {
           "id": "T012",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_management/test_commands/test_refresh_quality.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_management tests/test_heat_flow/test_models -n0 -q"
+            ]
+          }
         },
         {
           "id": "T013",

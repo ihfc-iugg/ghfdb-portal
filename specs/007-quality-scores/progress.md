@@ -240,3 +240,20 @@ loadscope -q`, 480 passed, 13 xfailed; `uv run pre-commit run --files <changed>`
 Next: T012.
 Watch: the parent pass's site saves are outside the deferral and cascade per site (documented in
 the plan).
+
+## 2026-10-01T00:20:00Z · Implementer US4 · T012
+
+Did: `refresh_quality` (`project/heat_flow/management/commands/refresh_quality.py`): stale-only by
+default, `--all` for every record, in cascade order, in chunks with concept fields and corrections
+prefetched, reporting counts (D36). `deploy/Dockerfile` runs it after `migrate --noinput`. Tests
+first (10, all failing with "unknown command" before): unscored and other-revision records are
+scored, a child reads its fresh measurements, a parent with no children is not determined, a second
+run refreshes nothing and changes nothing, `--all` gives identical values, a current record is left
+alone by default and repaired by `--all`, every record reads back `hfqa_tool 0.2`, chunking, and the
+`CMD` order (migrate, refresh_quality, gunicorn).
+Verified: `uv run pytest tests/test_heat_flow/test_management tests/test_heat_flow/test_models -n0
+-q`, 122 passed; `uv run pre-commit run --files <changed>` clean; `manage.py refresh_quality --help`
+runs. Query counts measured: 56 queries for 2 networks, 248 for 14 (about 18 per determination).
+Next: T013.
+Watch: the first run was not timed on PostgreSQL. A command `help` is a plain string, as Django's own
+commands are, because argparse does not format a lazy one.
