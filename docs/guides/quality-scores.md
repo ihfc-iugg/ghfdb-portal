@@ -355,6 +355,43 @@ container runs it on start, after the migrations, as `deploy/README.md` describe
 A record imported before scoring existed keeps what was stored then. The command cannot recover a
 value that was never stored, so importing that file again is the repair for a missing input.
 
+## Where you see the scores
+
+Each measurement's own page, at `/measurement/<uuid>/`, shows its scores in a *Quality score* card
+below its name, dataset and sample. The page reads the stored fields and calculates nothing, so it
+shows what a filter on those fields would find. Other measurement types, such as a parent heat
+flow, show no card on their page.
+
+**A temperature gradient or a thermal conductivity** shows its own score and the scheme revision it
+was scored under. This is the uncorrected score: it is the same for every child that uses the
+measurement.
+
+**A child heat flow** shows:
+
+- the T-score and the TC-score as a pair of columns, the gradient's or conductivity's own score
+  beside the score corrected for this child. A bottom-water correction that waives the water depth
+  criterion, for example, shows the corrected T-score above the own one. Where the two are equal,
+  none of the child's corrections changed the score.
+- the U-score and the M-score.
+- the quality code and the scheme revision.
+- the seven perturbation flags, one row for each correction with the state this child records for
+  it, and a note on how to read the characters (upper case, lower case, `X`, `x` and `-`, as in
+  *The perturbation flags*).
+
+**The mark.** A score reached with missing information carries a *Missing information* badge next
+to it. It has the same meaning as the mark described above: an input the scheme needed was empty,
+so that criterion took its largest penalty and the score is a floor. On the M-score the badge
+stands for the trailing `x`. The badge is text, not only a colour, and a score explicitly recorded
+as unspecified carries none.
+
+**Not determined.** A score with no value reads *Not determined*, for a measurement whose site has
+no rules to score it, for a child with no gradient or no conductivity, and for a `Ux` or `Mx`
+grade. It is never shown as 0 or left blank. A record that has not been scored yet shows *Not yet
+calculated* for its scheme revision.
+
+The page is served for any measurement whose address you hold, in a published dataset or not. That
+is how the framework serves measurement pages, and the portal adds no access check of its own to it.
+
 ## How these match the toolbox
 
 For every row the toolbox scores, the T-score and TC-score it reports are the child's corrected
@@ -479,5 +516,5 @@ prefetched, and `Command.refresh()` walks one level in chunks of `Command.CHUNK_
 
 ## Not covered here
 
-This page covers the scores of a gradient, a conductivity, a child and a parent, and how they are
-kept current. How a measurement's page shows them is documented as it is built.
+This page covers the scores of a gradient, a conductivity, a child and a parent, how they are kept
+current, and where a reader sees them. A parent's page does not show its scores yet.

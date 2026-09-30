@@ -302,3 +302,18 @@ in the "own" column fails the own-beside-corrected test. `uv run pre-commit run 
 Next: T015.
 Watch: the card chooses its partial from `measurement.polymorphic_ctype.model`, which is one extra
 (constant) query per page. The unmarked T-score in the test child is 0.9 own and 1.1 corrected.
+
+## 2026-10-01T01:10:00Z · Implementer US5 · T015
+
+Did: `docs/guides/quality-scores.md` gains "Where you see the scores": the page address, what a
+gradient or conductivity shows (its own, uncorrected score and the revision), what a child shows
+(own beside corrected T and TC, U, M, code, revision, the seven flags with their legend), what the
+missing-information badge means on the page (and on the M-score's trailing `x`), how "not
+determined" and "not yet calculated" read, and that the page is served for any measurement whose
+address is held (the framework's gap, D21). "Not covered here" now says a parent's page shows no
+scores. No new public name under `project/` was added, so "In the code" is unchanged.
+Verified: `uv run pytest tests/test_docs -n0 -q`, 304 passed, 1 skipped (not mine);
+`uv run pre-commit run --all-files` clean. `sphinx-build` is not installed in this worktree, so the
+docs build itself was not run.
+Next: the full verify, then the report.
+Watch: `CONTEXT.md` was not changed in this story.

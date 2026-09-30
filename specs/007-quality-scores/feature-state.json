@@ -338,8 +338,16 @@
         },
         {
           "id": "T015",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_docs"
+            ],
+            "commands": [
+              "uv run pytest tests/test_docs -n0 -q"
+            ]
+          }
         }
       ]
     }
