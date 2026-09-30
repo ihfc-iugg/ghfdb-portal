@@ -120,8 +120,18 @@
         },
         {
           "id": "T003",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_docs/test_data_model_diagram.py",
+              "tests/test_docs/test_field_map.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_docs tests/test_heat_flow/test_quality.py -q",
+              "uv run --group docs sphinx-build -b html docs <dir> -W --keep-going"
+            ]
+          }
         }
       ]
     },

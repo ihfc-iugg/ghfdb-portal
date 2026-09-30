@@ -180,10 +180,38 @@ tilt. Implemented by `ProbeMetadata`, attached to an interval.
 
 ### U-score, M-score, perturbation flags
 
-The three components of the heat flow quality scheme, after Fuchs et al. (2023). The **U-score**
-scores numerical uncertainty, the **M-score** scores methodological quality, and the
-**perturbation flags** record which disturbing effects apply. Each score runs from 1 (excellent) to
-4 (poor), with `Ux` and `Mx` meaning not determined.
+The three components of the heat flow quality scheme, after Fuchs et al. (2023) as the toolbox V0.2
+applies it (see **scheme revision**). The **U-score** scores numerical uncertainty, the **M-score**
+scores methodological quality, and the **perturbation flags** record which disturbing effects
+apply. Each score runs from 1 (excellent) to 4 (poor), with `Ux` and `Mx` meaning not determined.
+
+### T-score, TC-score
+
+The two sub-scores the M-score is made from. The **T-score** scores how well a temperature
+gradient was determined, and the **TC-score** how well a thermal conductivity was. They are
+numbers, not grades: each starts at 1.0 and takes a penalty per criterion, so they lie between 0.1
+and 1.2. A measurement is scored by the probe-sensing or the borehole and mine rules, chosen by its
+site's exploration method. Stored as `score` on `ThermalGradient` and `IntervalConductivity`.
+
+### Uncorrected score
+
+The T-score or TC-score stored on a gradient or conductivity. It reads nothing from any child, so
+it is the same for every child that uses the measurement. A child applies its own corrections to
+reach its corrected scores, which can be lower as well as higher. A null score means not
+determined, never zero.
+
+### Missing-information mark
+
+The `x` suffix on an M-score and the `score_missing` flag on a measurement. It is set when an input
+the scheme needed was **empty**, in which case that criterion takes its largest penalty. An input
+explicitly recorded as `unspecified` takes the same penalty and carries no mark, because nothing is
+missing. Stored on a measurement as `score_missing`.
+
+### Scheme revision
+
+The version of the scheme a stored score was calculated under, recorded in `quality_scheme`. It is
+currently `hfqa_tool 0.2`, the Heat Flow Quality Analysis Toolbox V0.2 (Dergunova et al. 2026),
+which scored the 2024 release. A record whose revision is not the current one is stale.
 
 ### Quality code
 
@@ -196,10 +224,6 @@ poorest quality among the children marked relevant.
 **The portal computes its own quality scores, and the value it computes is authoritative.** Quality
 codes present in an imported file are rejected rather than stored. This is a settled decision; do
 not add a code path that ingests a supplied quality code.
-
-Note one live gap: the implementation in `project/heat_flow/quality.py` follows Fuchs et al. (2023),
-while the community's current quality toolbox is Dergunova et al. (2026). Whether the portal should
-track that revision is open.
 
 ### Controlled vocabulary
 

@@ -199,6 +199,22 @@ Which of the two pairs the portal should treat as canonical on import and export
 It is tracked in [issue #122](https://github.com/ihfc-iugg/ghfdb-portal/issues/122) along with the
 rest of the published column vocabulary.
 
+The portal also stores the scores it calculates on the two measurements a child is made from. These
+are not published columns, so they have no GHFDB name and are not in the mapping tables above. See
+[Quality scores](guides/quality-scores.md) for how they are reached.
+
+| Field | Model | Database Table | Meaning |
+| --- | --- | --- | --- |
+| `score` | ThermalGradient | heat\_flow\_thermalgradient | The T-score: the gradient's own score, from 0.1 to 1.2. Null means not determined. Indexed. |
+| `score_missing` | ThermalGradient | heat\_flow\_thermalgradient | True when an input the T-score needed was empty. |
+| `quality_scheme` | ThermalGradient | heat\_flow\_thermalgradient | The scheme revision the score was calculated under, currently `hfqa_tool 0.2`. |
+| `score` | IntervalConductivity | heat\_flow\_intervalconductivity | The TC-score: the conductivity's own score, from 0.1 to 1.2. Null means not determined. Indexed. |
+| `score_missing` | IntervalConductivity | heat\_flow\_intervalconductivity | True when an input the TC-score needed was empty. |
+| `quality_scheme` | IntervalConductivity | heat\_flow\_intervalconductivity | The scheme revision the score was calculated under, currently `hfqa_tool 0.2`. |
+
+`HeatFlow.M_score` is three characters wide, to hold the four grades reached with missing
+information (`M1x` to `M4x`).
+
 #### Removed Fields
 
 The following fields existed in older versions of the data model but have been removed or relocated.

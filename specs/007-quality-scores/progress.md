@@ -69,3 +69,21 @@ Next: T003, the documentation.
 
 Watch: old rows keep their hand-set score and an empty `quality_scheme` until the US4 refresh
 command scores them.
+
+## 2026-09-30T22:40:00Z · Implementer US1 · T003
+
+Did: wrote `docs/guides/quality-scores.md` (scheme and reference, the T-score and TC-score on both
+routes, the missing-information mark, not determined, and D1, D8, D10, D12, D15–D17) and linked it
+from `docs/index.md` and `importing-data.md`. `CONTEXT.md` defines T-score, TC-score, uncorrected
+score, missing-information mark and scheme revision, and the "live gap" note is gone.
+`docs/ghfdb_fields.md` lists the six new fields and the widened `M_score`; `ghfdb-erd.md` carries
+them on the two entities and in the index list. Dropped the RTD entry from the borehole lists in a
+separate T001 commit: the vocabulary has no RTD concept.
+
+Verified: `uv run pytest tests/test_docs tests/test_heat_flow/test_quality.py -q`, 462 passed.
+`uv run --group docs sphinx-build -b html docs <dir> -W --keep-going` exits 1 with 32 warnings on
+this branch and the same 32 on e42524a (only one line number moved), so the story adds none. The
+build is not clean at the base commit.
+
+Watch: the guide says the child's corrected scores, the code and inheritance are documented as they
+are built (US2 onward).

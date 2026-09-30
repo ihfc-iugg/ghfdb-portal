@@ -33,7 +33,9 @@ A child does not point at its site directly. It hangs off a depth interval, and 
 The database implements a quality assurance scheme with two indicators:
 
 - **U-score** (numerical uncertainty), from the coefficient of variation: U1 excellent, U2 good, U3 ok, U4 poor, Ux not determined
-- **M-score** (methodological quality), from the measurement methodology: M1 excellent, M2 good, M3 ok, M4 poor, Mx not determined
+- **M-score** (methodological quality), from the measurement methodology: M1 excellent, M2 good, M3 ok, M4 poor, Mx not determined. An `x` after the grade (M1x to M4x) marks a score reached with missing information
+
+The M-score is built from a T-score on the thermal gradient and a TC-score on the thermal conductivity, which the portal stores on those two measurements. [Quality scores](../guides/quality-scores.md) explains how they are calculated.
 
 ## Entity Relationship Diagram
 
@@ -145,7 +147,7 @@ erDiagram
         date date_acquired "Date of acquisition"
         boolean is_relevant "Used in the parent calculation"
         char U_score "Numerical uncertainty (U1-U4, Ux)"
-        char M_score "Methodological quality (M1-M4, Mx)"
+        char M_score "Methodological quality (M1-M4, M1x-M4x, Mx)"
         string quality "Overall quality assessment"
         text c_comment "General comments on the child level"
         int ghfdb_id "Published child identifier, the upsert key"
@@ -180,7 +182,9 @@ erDiagram
         quantity temperature_bottom "Absolute temperature at the bottom of the interval"
         quantity temperature_bottom_uncertainty "Uncertainty of the bottom temperature"
         int number "Number of temperature recordings"
-        float score "Methodological score"
+        float score "T-score, the gradient's own score (empty: not determined)"
+        boolean score_missing "T-score reached with missing information"
+        char quality_scheme "Scheme revision of the stored score"
     }
 
     IntervalConductivity {
@@ -188,7 +192,9 @@ erDiagram
         quantity value "Mean thermal conductivity (W/mK)"
         quantity uncertainty "Conductivity uncertainty (W/mK)"
         int number "Number of measurements"
-        float score "Methodological score"
+        float score "TC-score, the conductivity's own score (empty: not determined)"
+        boolean score_missing "TC-score reached with missing information"
+        char quality_scheme "Scheme revision of the stored score"
     }
 
     %% ============================================================
@@ -380,7 +386,7 @@ A temperature gradient measured over a depth interval.
 - Reaches its interval through `Measurement.sample`
 - Stores both the measured and the corrected gradient, each with an uncertainty
 - Records the temperature method, shut-in time and correction method at the top and bottom of the interval
-- `score` is the methodological score used in the child's M-score, indexed alongside `number`
+- `score` is the gradient's own T-score under the toolbox V0.2 scheme, indexed alongside `number`. It is empty when the site's exploration method selects no rules, and `score_missing` and `quality_scheme` record whether an input was empty and which scheme revision calculated it. See [Quality scores](../guides/quality-scores.md)
 
 **Business Rules**
 
@@ -395,7 +401,7 @@ The mean thermal conductivity over a depth interval.
 
 - Reaches its interval through `Measurement.sample`
 - Records the sample source, the location the value came from, the determination method, the saturation state and the pressure-temperature conditions
-- `score` is computed from those properties following Fuchs et al. (2023) and lands between 0.2 and 1.2
+- `score` is the conductivity's own TC-score, calculated from those properties under the toolbox V0.2 scheme. It lies between 0.1 and 1.2, and is empty when the site's exploration method selects no rules. `score_missing` and `quality_scheme` record whether an input was empty and which scheme revision calculated it. See [Quality scores](../guides/quality-scores.md)
 
 **Business Rules**
 
@@ -543,7 +549,7 @@ The following fields are indexed:
 - **HeatFlow**: `U_score`, `M_score`, and `ghfdb_id` through the field's own index
 - **HeatFlowCorrection**: `correction_type`, `status`
 - **ThermalGradient**: `score`, `number`
-- **IntervalConductivity**: `number`
+- **IntervalConductivity**: `score`, `number`
 
 ## Key Constraints
 
