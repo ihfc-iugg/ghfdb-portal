@@ -170,3 +170,22 @@ maintainer's ruling (research R5), so US2 stays open and its completion comment 
 Next: US3.
 Watch: the correction-delete collector reads Django's internal `connection.run_on_commit`.
 Replace it with a plain on-commit flag at the convergence cleanup.
+
+## 2026-09-30T21:52:00Z · Implementer US3 · T008
+
+Did: tests first, each seen failing for the right reason (`AttributeError: ... no attribute
+'inherit'`, then the missing parent fields, `refresh_quality` and receivers). `QualityScheme.inherit`
+with `U_RANK`, `M_RANK` and `NOT_DETERMINED`; `ParentHeatFlow` gains `U_score`, `M_score` (indexed),
+`quality_scheme`, a non-editable 14-character `quality`, and `refresh_quality()`; `get_quality` is
+deleted. `Recalculation.child` now ends with the parent, `Recalculation.parent` and
+`parent_after_child_deleted` are new, and `remember_parent_before_save` and
+`refresh_parent_on_child_delete` are connected in `ready()`. `0014_quality_scores.py` was regenerated
+(the old file plus the parent operations only). `"quality"` left `ParentHeatFlowConfig.fields` (D32).
+D24: in `test_two_determinations_under_one_parent_repeat_its_values` only the setup order changed, the
+quality is set and saved after the children are built; its assertions are untouched.
+Verified: `uv run pytest tests/test_heat_flow tests/test_ghfdb -n auto --dist loadscope -q`, 869
+passed, 13 xfailed; `uv run pre-commit run --all-files` clean; `uv run python manage.py makemigrations
+heat_flow --check --dry-run` no changes.
+Next: T009.
+Watch: the registry form for `ParentHeatFlow` still raises on `ghfdb_id` (D32). An unflushed
+`_deleted_child_parents` survives a rolled-back delete, as D28 notes for corrections.

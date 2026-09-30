@@ -1206,6 +1206,110 @@ class TestQualityCode:
         assert len(code) == 14
 
 
+class TestInherit:
+    """A parent takes the poorest U and M of its children and the flags of the poorest."""
+
+    @staticmethod
+    def child(u="U1", m="M1", flags="-------"):
+        from types import SimpleNamespace
+
+        return SimpleNamespace(U_score=u, M_score=m, quality=f"{u}.{m}.{flags}")
+
+    def test_no_children_is_not_determined(self):
+        from heat_flow.quality import QualityScheme
+
+        assert QualityScheme.inherit([]) == ("Ux", "Mx", "-------")
+
+    def test_one_child_passes_its_scores_and_flags_up(self):
+        from heat_flow.quality import QualityScheme
+
+        child = self.child("U2", "M3x", "-e-PX--")
+
+        assert QualityScheme.inherit([child]) == ("U2", "M3x", "-e-PX--")
+
+    @pytest.mark.parametrize(
+        ("grades", "poorest"),
+        [
+            (["U1", "U2"], "U2"),
+            (["U3", "U1", "U2"], "U3"),
+            (["U4", "U3"], "U4"),
+            (["U4", "Ux", "U1"], "Ux"),
+        ],
+    )
+    def test_the_poorest_u_score_is_inherited(self, grades, poorest):
+        from heat_flow.quality import QualityScheme
+
+        children = [self.child(u=grade) for grade in grades]
+
+        assert QualityScheme.inherit(children)[0] == poorest
+
+    @pytest.mark.parametrize(
+        ("grades", "poorest"),
+        [
+            (["M1", "M3"], "M3"),
+            (["M4", "M1x"], "M1x"),
+            (["M1x", "M4x"], "M4x"),
+            (["M4x", "Mx", "M2"], "Mx"),
+        ],
+    )
+    def test_any_marked_m_score_is_poorer_than_any_unmarked_and_mx_is_poorest(
+        self, grades, poorest
+    ):
+        from heat_flow.quality import QualityScheme
+
+        children = [self.child(m=grade) for grade in grades]
+
+        assert QualityScheme.inherit(children)[1] == poorest
+
+    def test_the_u_and_m_scores_may_come_from_different_children(self):
+        from heat_flow.quality import QualityScheme
+
+        children = [self.child("U4", "M1"), self.child("U1", "M4")]
+
+        assert QualityScheme.inherit(children)[:2] == ("U4", "M4")
+
+    def test_the_flags_are_those_of_the_child_with_the_poorest_u_score(self):
+        from heat_flow.quality import QualityScheme
+
+        children = [
+            self.child("U1", "M4", "S------"),
+            self.child("U3", "M1", "-E-----"),
+        ]
+
+        assert QualityScheme.inherit(children)[2] == "-E-----"
+
+    def test_the_poorest_m_score_breaks_a_tie_on_the_u_score(self):
+        from heat_flow.quality import QualityScheme
+
+        children = [
+            self.child("U2", "M1", "S------"),
+            self.child("U2", "M3x", "-E-----"),
+            self.child("U2", "M2", "--T----"),
+        ]
+
+        assert QualityScheme.inherit(children)[2] == "-E-----"
+
+    def test_a_full_tie_takes_the_first_child_so_recalculation_is_stable(self):
+        from heat_flow.quality import QualityScheme
+
+        children = [
+            self.child("U2", "M2", "S------"),
+            self.child("U2", "M2", "-E-----"),
+        ]
+
+        assert QualityScheme.inherit(children)[2] == "S------"
+        assert QualityScheme.inherit(children[::-1])[2] == "-E-----"
+
+    def test_a_child_with_no_code_yet_contributes_no_flags(self):
+        from types import SimpleNamespace
+
+        from heat_flow.quality import QualityScheme
+
+        child = SimpleNamespace(U_score="Ux", M_score="Mx", quality=None)
+
+        assert QualityScheme.inherit([child]) == ("Ux", "Mx", "-------")
+
+
 # Per R3 case: the child's value and uncertainty, its corrections by type, and the
 # toolbox's U, M and flags. T and TC come from the conformance case of the same name.
 SCHEME_EXPECTATIONS = {

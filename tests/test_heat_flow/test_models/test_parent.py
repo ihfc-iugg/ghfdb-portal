@@ -306,3 +306,163 @@ class TestParentHeatFlow:
         with pytest.raises(ValidationError):
             parent_fixture.sample = interval_fixture
             parent_fixture.save()
+
+
+# Uncertainty of a child valued 100, graded U1, U2, U3, U4 by its share of the value.
+UNCERTAINTY_FOR_GRADE = {"U1": 3, "U2": 10, "U3": 20, "U4": 40, "Ux": None}
+
+
+def reload(record):
+    return type(record).objects.get(pk=record.pk)
+
+
+def child_of(parent, grade="U2", *, is_relevant=False):
+    """Build a child under *parent* whose U-score is *grade* and whose M-score is Mx."""
+    from tests.factories import HeatFlowFactory
+
+    return HeatFlowFactory(
+        parent=parent,
+        value=100,
+        uncertainty=UNCERTAINTY_FOR_GRADE[grade],
+        is_relevant=is_relevant,
+    )
+
+
+@pytest.mark.django_db
+class TestParentQuality:
+    """A parent stores the quality it inherits from its children (FS-007 US3)."""
+
+    def test_an_only_child_passes_its_quality_up_whether_or_not_it_is_relevant(self):
+        from tests.factories import ParentHeatFlowFactory
+
+        for is_relevant in (True, False):
+            parent = ParentHeatFlowFactory()
+            child = reload(child_of(parent, "U2", is_relevant=is_relevant))
+
+            stored = reload(parent)
+
+            assert stored.quality == child.quality
+            assert (stored.U_score, stored.M_score) == ("U2", "Mx")
+            assert stored.quality_scheme == "hfqa_tool 0.2"
+
+    def test_several_relevant_children_give_the_poorest_u_score_and_m_score(self):
+        from tests.factories import ParentHeatFlowFactory
+
+        parent = ParentHeatFlowFactory()
+        child_of(parent, "U1", is_relevant=True)
+        child_of(parent, "U3", is_relevant=True)
+
+        assert reload(parent).quality == "U3.Mx.-------"
+
+    def test_a_child_not_marked_relevant_plays_no_part_among_several(self):
+        from tests.factories import ParentHeatFlowFactory
+
+        parent = ParentHeatFlowFactory()
+        child_of(parent, "U1", is_relevant=True)
+        child_of(parent, "U2", is_relevant=True)
+        child_of(parent, "U4", is_relevant=False)
+
+        assert reload(parent).U_score == "U2"
+
+    def test_several_children_and_none_relevant_is_not_determined(self):
+        from tests.factories import ParentHeatFlowFactory
+
+        parent = ParentHeatFlowFactory()
+        child_of(parent, "U1")
+        child_of(parent, "U2")
+
+        stored = reload(parent)
+
+        assert stored.quality == "Ux.Mx.-------"
+        assert (stored.U_score, stored.M_score) == ("Ux", "Mx")
+
+    def test_a_parent_with_no_children_is_not_determined(self):
+        from tests.factories import ParentHeatFlowFactory
+
+        parent = ParentHeatFlowFactory()
+
+        parent.refresh_quality()
+
+        stored = reload(parent)
+        assert stored.quality == "Ux.Mx.-------"
+        assert stored.quality_scheme == "hfqa_tool 0.2"
+
+    def test_the_m_score_is_inherited_from_the_children_scored_methods(self):
+        from tests.factories import ParentHeatFlowFactory
+        from tests.test_heat_flow.test_models.test_child import TestChildScores
+
+        parent = ParentHeatFlowFactory()
+        children = []
+        for case_id, value, uncertainty in (
+            ("B2-not-considered", 65, 3),
+            ("B6-tunnelling-literature", 90, 20),
+        ):
+            inputs = TestChildScores.inputs_of(case_id)
+            children.append(
+                TestChildScores.build_child(
+                    inputs,
+                    value=value,
+                    uncertainty=uncertainty,
+                    corrections={"IS": inputs["in_situ"]},
+                )
+            )
+        for child in children:
+            child.parent = parent
+            child.is_relevant = True
+            child.save()
+
+        stored = reload(parent)
+
+        assert (stored.U_score, stored.M_score) == ("U3", "M4")
+
+    def test_inheritance_never_changes_the_parents_value(self):
+        from tests.factories import ParentHeatFlowFactory
+
+        parent = ParentHeatFlowFactory(value=70)
+        child_of(parent, "U4", is_relevant=True)
+
+        assert float(reload(parent).value.magnitude) == pytest.approx(70)
+
+    def test_saving_a_parent_alone_does_not_recalculate_it(self):
+        from tests.factories import ParentHeatFlowFactory
+
+        parent = ParentHeatFlowFactory()
+        child_of(parent, "U2")
+
+        parent.quality = "set by hand"
+        parent.save()
+
+        assert reload(parent).quality == "set by hand"
+
+    def test_refreshing_a_parent_sends_no_save_signal(self):
+        from django.db.models.signals import post_save
+        from heat_flow.models import ParentHeatFlow
+
+        from tests.factories import ParentHeatFlowFactory
+        from tests.test_heat_flow.test_signals import SignalCounter
+
+        parent = ParentHeatFlowFactory()
+
+        with SignalCounter(post_save, ParentHeatFlow) as saves:
+            parent.refresh_quality()
+
+        assert saves.calls == 0
+
+    def test_the_2023_accessor_is_gone(self):
+        from heat_flow.models import ParentHeatFlow
+
+        assert not hasattr(ParentHeatFlow, "get_quality")
+
+    @pytest.mark.parametrize(
+        "field_name", ["U_score", "M_score", "quality", "quality_scheme"]
+    )
+    def test_every_inherited_score_is_calculated_and_documented_on_the_field(
+        self, field_name
+    ):
+        from heat_flow.models import ParentHeatFlow
+
+        field = ParentHeatFlow._meta.get_field(field_name)
+
+        assert field.editable is False
+        assert str(field.verbose_name).strip()
+        assert str(field.help_text).strip()

@@ -201,3 +201,143 @@ class TestChildReceivers:
                 correction.delete()
 
         assert len(callbacks) == 1
+
+
+class TestParentReceivers:
+    """A parent is refreshed by its children's changes and never by its own save."""
+
+    @staticmethod
+    def parent_with(*grades, is_relevant=True):
+        from tests.factories import ParentHeatFlowFactory
+        from tests.test_heat_flow.test_models.test_parent import child_of
+
+        parent = ParentHeatFlowFactory()
+        children = [child_of(parent, grade, is_relevant=is_relevant) for grade in grades]
+        return parent, children
+
+    @staticmethod
+    def stored(parent):
+        from heat_flow.models import ParentHeatFlow
+
+        return ParentHeatFlow.objects.get(pk=parent.pk)
+
+    def test_changing_a_childs_uncertainty_moves_its_parent(self):
+        parent, (child,) = self.parent_with("U1")
+
+        child.uncertainty = 40
+        child.save()
+
+        assert self.stored(parent).U_score == "U4"
+
+    def test_marking_a_child_relevant_brings_it_into_the_parent(self):
+        parent, _ = self.parent_with("U1", "U4", is_relevant=False)
+        assert self.stored(parent).U_score == "Ux"
+        child = parent.children.get(U_score="U4")
+
+        child.is_relevant = True
+        child.save()
+
+        assert self.stored(parent).U_score == "U4"
+
+    def test_moving_a_child_refreshes_both_parents(self):
+        origin, (child,) = self.parent_with("U3")
+        destination, _ = self.parent_with("U1")
+        assert self.stored(origin).U_score == "U3"
+
+        child.parent = destination
+        child.save()
+
+        assert self.stored(origin).quality == "Ux.Mx.-------"
+        assert self.stored(destination).U_score == "U3"
+
+    def test_detaching_a_child_refreshes_the_parent_it_left(self):
+        parent, (child,) = self.parent_with("U3")
+
+        child.parent = None
+        child.save()
+
+        assert self.stored(parent).quality == "Ux.Mx.-------"
+
+    def test_deleting_the_last_child_leaves_the_parent_not_determined(
+        self, django_capture_on_commit_callbacks
+    ):
+        parent, (child,) = self.parent_with("U2")
+        assert self.stored(parent).U_score == "U2"
+
+        with django_capture_on_commit_callbacks(execute=True):
+            child.delete()
+
+        assert self.stored(parent).quality == "Ux.Mx.-------"
+
+    def test_deleting_one_of_several_children_refreshes_the_parent_from_the_rest(
+        self, django_capture_on_commit_callbacks
+    ):
+        parent, (kept, dropped) = self.parent_with("U1", "U4")
+        assert self.stored(parent).U_score == "U4"
+
+        with django_capture_on_commit_callbacks(execute=True):
+            dropped.delete()
+
+        assert self.stored(parent).U_score == "U1"
+
+    def test_deleting_children_schedules_one_refresh_on_commit(
+        self, django_capture_on_commit_callbacks
+    ):
+        parent, children = self.parent_with("U1", "U2", "U3")
+
+        with django_capture_on_commit_callbacks(execute=False) as callbacks:
+            for child in children:
+                child.delete()
+
+        assert len(callbacks) == 1
+
+    def test_a_parent_deleted_with_its_child_is_not_refreshed(
+        self, django_capture_on_commit_callbacks
+    ):
+        from heat_flow.models import ParentHeatFlow
+
+        parent, (child,) = self.parent_with("U2")
+
+        with django_capture_on_commit_callbacks(execute=True):
+            child.delete()
+            parent.delete()
+
+        assert not ParentHeatFlow.objects.filter(pk=parent.pk).exists()
+
+    def test_a_correction_saved_on_a_child_moves_its_parents_flags(self):
+        from tests.factories import HeatFlowCorrectionFactory
+
+        parent, (child,) = self.parent_with("U2")
+
+        HeatFlowCorrectionFactory(
+            heat_flow=child, correction_type="S", status="present_corrected"
+        )
+
+        assert self.stored(parent).quality == "U2.Mx.S------"
+
+    def test_a_correction_deleted_from_a_child_moves_its_parents_flags(
+        self, django_capture_on_commit_callbacks
+    ):
+        from tests.factories import HeatFlowCorrectionFactory
+
+        parent, (child,) = self.parent_with("U2")
+        correction = HeatFlowCorrectionFactory(
+            heat_flow=child, correction_type="S", status="present_corrected"
+        )
+        assert self.stored(parent).quality == "U2.Mx.S------"
+
+        with django_capture_on_commit_callbacks(execute=True):
+            correction.delete()
+
+        assert self.stored(parent).quality == "U2.Mx.-------"
+
+    def test_a_childs_save_sends_no_save_signal_for_its_parent(self):
+        from django.db.models.signals import post_save
+        from heat_flow.models import ParentHeatFlow
+
+        _, (child,) = self.parent_with("U2")
+
+        with SignalCounter(post_save, ParentHeatFlow) as saves:
+            child.save()
+
+        assert saves.calls == 0

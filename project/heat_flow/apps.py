@@ -1,7 +1,7 @@
 """App configuration for the heat flow schema."""
 
 from django.apps import AppConfig
-from django.db.models.signals import m2m_changed, post_delete, post_save
+from django.db.models.signals import m2m_changed, post_delete, post_save, pre_save
 from django.utils.translation import gettext_lazy as _
 
 
@@ -38,6 +38,11 @@ class HeatFlowSchemaConfig(AppConfig):
                     dispatch_uid=f"refresh_score_on_{model.__name__}_{name}",
                 )
 
+        pre_save.connect(
+            signals.remember_parent_before_save,
+            sender=HeatFlow,
+            dispatch_uid="remember_parent_before_save_HeatFlow",
+        )
         post_save.connect(
             signals.refresh_child_on_save,
             sender=HeatFlow,
@@ -47,6 +52,11 @@ class HeatFlowSchemaConfig(AppConfig):
             signals.refresh_child_on_correction_save,
             sender=HeatFlowCorrection,
             dispatch_uid="refresh_quality_on_save_HeatFlowCorrection",
+        )
+        post_delete.connect(
+            signals.refresh_parent_on_child_delete,
+            sender=HeatFlow,
+            dispatch_uid="refresh_parent_on_delete_HeatFlow",
         )
         post_delete.connect(
             signals.refresh_child_on_correction_delete,

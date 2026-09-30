@@ -539,10 +539,11 @@ class BoreholeRules:
 
 
 class QualityScheme:
-    """The arithmetic a child's quality code is built from (toolbox ``calculate_*``).
+    """The arithmetic a quality code is built from (toolbox ``calculate_*``).
 
     The U-score reads the child's own value and uncertainty. The M-score combines the
     corrected T-score and TC-score. The flags read the child's environmental corrections.
+    A parent inherits all three from its children.
     """
 
     # Coefficient of variation in percent: below 5 is U1, then up to and including 15, then 25.
@@ -570,6 +571,16 @@ class QualityScheme:
         "not_recognized": lambda _letter: "x",
     }
     NO_FLAG = "-"
+
+    # Poorest last. Any M-score marked as reached with missing information ranks below
+    # every unmarked one, and Mx, not determined, ranks below them all (toolbox inheritance).
+    U_RANK = tuple(UScoreOptions.values)
+    M_RANK = tuple(MScoreOptions.values)
+    NOT_DETERMINED = (
+        UScoreOptions.Ux.value,
+        MScoreOptions.Mx.value,
+        NO_FLAG * len(FLAGS),
+    )
 
     @classmethod
     def u_score(cls, value: float | None, uncertainty: float | None) -> str:
@@ -631,6 +642,40 @@ class QualityScheme:
             write = cls.FLAG_STATUSES.get(statuses.get(correction, ""))
             flags.append(cls.NO_FLAG if write is None else write(letter))
         return "".join(flags)
+
+    @classmethod
+    def inherit(cls, children) -> tuple[str, str, str]:
+        """Inherit a parent's U-score, M-score and flags from the children it rests on.
+
+        The parent takes the poorest U-score and the poorest M-score among the children, and
+        the flags whole from the child with the poorest U-score, the poorest M-score
+        deciding a tie (Fuchs et al. 2023, section 3.4; toolbox inheritance). On a full tie
+        the first child wins, so recalculating gives the same flags every time.
+
+        Args:
+            children: The children the parent rests on, in pk order. Each carries the
+                stored ``U_score``, ``M_score`` and ``quality`` of a scored ``HeatFlow``.
+
+        Returns:
+            The U-score, the M-score and the seven flags, or ``Ux``, ``Mx`` and ``-------``
+            when there are no children.
+        """
+        children = list(children)
+        if not children:
+            return cls.NOT_DETERMINED
+        poorest = max(
+            children,
+            key=lambda child: (
+                cls.U_RANK.index(child.U_score),
+                cls.M_RANK.index(child.M_score),
+            ),
+        )
+        code = poorest.quality or ".".join(cls.NOT_DETERMINED)
+        return (
+            max((child.U_score for child in children), key=cls.U_RANK.index),
+            max((child.M_score for child in children), key=cls.M_RANK.index),
+            code.rsplit(".", 1)[-1],
+        )
 
     @staticmethod
     def code(u: str, m: str, flags: str) -> str:

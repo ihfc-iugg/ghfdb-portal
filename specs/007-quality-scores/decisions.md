@@ -449,3 +449,50 @@ registry `fields` list names them.
 **Revisit if:** a maintainer needs to hand-set a quality code.
 
 **ADR:** none - follows D27.
+
+## D30 — A parent inherits from its children's stored scores, ranked by the choice lists' order
+
+**Decision:** `QualityScheme.inherit` reads each child's stored `U_score`, `M_score` and `quality`,
+and never recalculates a child. Ranking is the declared order of `UScoreOptions` and
+`MScoreOptions` (`QualityScheme.U_RANK`, `QualityScheme.M_RANK`), which is already best to poorest
+with the marked grades after the unmarked and `Mx` last. The flags are the last seven characters of
+the poorest child's code, and a child with no code yet contributes `-------`. `ParentHeatFlow`
+selects the children: its only child whatever the flag, else those marked relevant.
+
+**Why:** the cascade refreshes each child before its parent, so the stored values are current, and
+one place holds the ranking. A second ranking table would be a second thing to keep in step with the
+choice lists.
+
+**Revisit if:** a choice list is reordered or gains a grade. The ranking test would fail first.
+
+**ADR:** none - follows D9.
+
+## D31 — A child's refresh now ends with its parent's, and the delete collector carries parents
+
+**Decision:** `Recalculation.child` refreshes the child, then the parent it rests under, so a
+child's save and its corrections' saves and deletes all reach the parent. A `pre_save` receiver
+(`remember_parent_before_save`) reads the parent a saved child is leaving, and `refresh_child_on_save`
+refreshes that parent too when `parent` changed. A deleted child adds its parent to the same
+on-commit collector D28 built (`_deleted_child_parents`), and `refresh_collected` refreshes the
+parents that still exist after the children.
+
+**Why:** a dataset delete cascades through every child, so an inline refresh would rescore a
+parent once per child, or a parent that is about to go (D19, D24).
+
+**Revisit if:** US4 folds the collector into the import deferral.
+
+**ADR:** none - local to the receivers.
+
+## D32 — `quality` leaves `ParentHeatFlowConfig.fields`
+
+**Decision:** making `ParentHeatFlow.quality` non-editable made the registry's model form raise
+`FieldError` on it, so `"quality"` is removed from `ParentHeatFlowConfig.fields` (D18 allowed this).
+The form already raised the same error on `ghfdb_id`, which has been `editable=False` since before
+this feature, so the registry form was not usable before and is still not. `ghfdb_id` is left alone.
+
+**Why:** the field is calculated; a form that offered it would be overwritten by the next child save.
+
+**Revisit if:** the maintainer wants the parent's quality shown on its detail page, which needs a
+read-only field list rather than the form's.
+
+**ADR:** none - follows D29.

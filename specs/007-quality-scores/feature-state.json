@@ -220,8 +220,21 @@
       "tasks": [
         {
           "id": "T008",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_quality.py",
+              "tests/test_heat_flow/test_models/test_parent.py",
+              "tests/test_heat_flow/test_signals.py",
+              "tests/test_ghfdb/test_viewsets.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow tests/test_ghfdb -n auto --dist loadscope -q",
+              "uv run pre-commit run --all-files",
+              "uv run python manage.py makemigrations heat_flow --check --dry-run"
+            ]
+          }
         },
         {
           "id": "T009",
