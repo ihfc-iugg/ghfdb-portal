@@ -2,7 +2,7 @@
   "feature": "007-quality-scores",
   "branch": "007-quality-scores",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "IMPLEMENT",
+  "state": "CONVERGE",
   "state_history": [
     {
       "state": "GATE_SPEC",
@@ -28,6 +28,11 @@
       "state": "IMPLEMENT",
       "at": "2026-09-30T20:37:27Z",
       "note": "design review applied; plan notified"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-09-30T22:46:20Z",
+      "note": "US1, US3-US5 done; US2 built, T005 held on maintainer"
     }
   ],
   "gates": {
@@ -354,7 +359,7 @@
   ],
   "budgets": {
     "converge_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 2
     },
     "review_cycles": {
