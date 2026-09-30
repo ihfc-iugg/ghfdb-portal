@@ -675,3 +675,78 @@ class TestValuesRealSubmissionsCarry:
         from project.ghfdb.resources.widgets import AcquisitionDateWidget
 
         assert AcquisitionDateWidget().clean("1979-12") == "1979-12"
+
+
+class TestMultiConceptWidgetUnspecified:
+    # A cell reading ``[unspecified]`` is a value the scheme scores (FR-009), so where the
+    # vocabulary defines an ``unspecified`` concept the import stores it. A blank cell is
+    # empty and stores nothing.
+
+    def test_an_unspecified_cell_stores_the_vocabulary_concept(self, db):
+        from heat_flow import vocabularies
+
+        from project.ghfdb.resources.widgets import MultiConceptWidget
+
+        widget = MultiConceptWidget(vocabularies.ConductivitySource)
+
+        result = widget.clean("[unspecified]", row={})
+
+        assert [concept.name for concept in result] == ["unspecified"]
+
+    def test_unspecified_beside_another_concept_keeps_both(self, db):
+        from heat_flow import vocabularies
+
+        from project.ghfdb.resources.widgets import MultiConceptWidget
+
+        widget = MultiConceptWidget(vocabularies.ConductivitySource)
+
+        result = widget.clean("[Core samples]; [unspecified]", row={})
+
+        assert sorted(concept.name for concept in result) == [
+            "core_samples",
+            "unspecified",
+        ]
+
+    @pytest.mark.parametrize("cell", ["", "   ", " ; ", None])
+    def test_a_blank_cell_stores_an_empty_set(self, db, cell):
+        from heat_flow import vocabularies
+
+        from project.ghfdb.resources.widgets import MultiConceptWidget
+
+        widget = MultiConceptWidget(vocabularies.ConductivitySource)
+
+        assert list(widget.clean(cell, row={})) == []
+
+    def test_a_vocabulary_without_unspecified_still_stores_nothing_for_it(self, db):
+        from heat_flow import vocabularies
+
+        from project.ghfdb.resources.widgets import MultiConceptWidget
+
+        widget = MultiConceptWidget(vocabularies.ConductivityLocation)
+
+        assert list(widget.clean("[unspecified]", row={})) == []
+
+    def test_the_export_writes_the_stored_concept_back_and_it_imports_again(
+        self, dataset
+    ):
+        from heat_flow import vocabularies
+        from research_vocabs.models import Concept
+
+        from project.ghfdb.resources.export import GHFDBExportResource
+        from project.ghfdb.resources.widgets import MultiConceptWidget
+        from tests.factories import HeatFlowFactory, IntervalConductivityFactory
+
+        unspecified = Concept.get_for_vocabulary(vocabularies.ConductivitySource).get(
+            name="unspecified"
+        )
+        child = HeatFlowFactory(
+            thermal_conductivity=IntervalConductivityFactory(source=[unspecified])
+        )
+
+        exported = GHFDBExportResource().dehydrate_tc_source(child)
+        reimported = MultiConceptWidget(vocabularies.ConductivitySource).clean(
+            exported, row={}
+        )
+
+        assert exported != ""
+        assert list(reimported) == [unspecified]

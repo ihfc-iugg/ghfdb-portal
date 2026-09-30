@@ -89,8 +89,18 @@
         },
         {
           "id": "T001a",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_widgets.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_ghfdb/test_resources/test_widgets.py -n0 -q",
+              "uv run pytest tests/test_ghfdb -q",
+              "uv run pre-commit run --all-files"
+            ]
+          }
         },
         {
           "id": "T002",

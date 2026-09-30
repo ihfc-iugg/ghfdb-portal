@@ -32,3 +32,18 @@ after adding a direct test of `Criterion.mapping`. `test_child.py` 33 passed,
 Next: T001a, the `[unspecified]` cell in `MultiConceptWidget`.
 
 Watch: T002 regenerates `0014_quality_scores.py` (D25).
+
+## 2026-09-30T21:35:00Z · Implementer US1 · T001a
+
+Did: `MultiConceptWidget` resolves `[unspecified]` to the vocabulary's own `unspecified` concept
+and drops the token only where the vocabulary defines none. A blank cell stays an empty set.
+`docs/guides/importing-data.md` states the change.
+
+Verified: `uv run pytest tests/test_ghfdb/test_resources/test_widgets.py -n0 -q`, 58 passed, then
+`uv run pytest tests/test_ghfdb -q`, 422 passed and 13 xfailed (the xfails predate this story).
+Removing the vocabulary lookup made three of the new tests fail. `pre-commit` clean.
+
+Next: T002.
+
+Watch: the guide's link to `quality-scores.md` is written in T003, so the importing-data page
+names the scores in plain text until then.

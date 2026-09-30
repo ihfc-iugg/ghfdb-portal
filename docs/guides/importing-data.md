@@ -204,6 +204,20 @@ a concept for but the sheet does not list is still accepted. The two are expecte
 time to time; when they do, the portal's concepts are what matters, not the copy of the sheet
 travelling with the file.
 
+## A cell reading `[unspecified]` is a value, and a blank cell is not
+
+In a column that takes several vocabulary values, a cell reading `[unspecified]` is stored as the
+vocabulary's own `unspecified` concept wherever the vocabulary defines one. A blank cell stores
+nothing, and the record's field stays empty. The difference matters because the
+quality scores treat them differently: an input recorded as unspecified takes
+its largest penalty, and an empty input takes the same penalty and marks the score as reached with
+missing information. A vocabulary that defines no `unspecified` concept drops the token, as it did
+before. The export writes a stored `unspecified` concept back as the label "Unspecified", which
+the import reads as the same concept again.
+
+Single-valued vocabulary columns and the date-of-acquisition column are unchanged: `[unspecified]`
+there still reads as no value.
+
 ## Importing the same file again updates what is there
 
 Re-sending a file the dataset already holds the contents of does not add a second copy of
