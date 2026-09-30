@@ -177,6 +177,24 @@ case, the toolbox takes the case's largest penalty and sets the mark. The portal
 toolbox's routing words as the table under *Which rules apply* shows. Whether a
 child carries probe metadata is not how the scheme routes.
 
+## In the code
+
+The scheme lives in `project/heat_flow/quality.py`, and nothing else in the portal implements it.
+
+- `ProbeRules` and `BoreholeRules` hold one route's tables and score a gradient or a
+  conductivity. `route(site)` returns the one that applies to a site, or `None` when neither does.
+- `Criterion` holds the three ways a criterion is evaluated: numeric bins, a mapping of values to
+  penalties, and cases that combine several fields.
+- `Reading` reads what the scheme needs from a measurement, its interval and its site: concept
+  identifiers, quantities in a given unit, the site and the probe metadata.
+- `SubScore` is a T-score or TC-score with its missing-information mark. A `value` of `None` means
+  not determined.
+- `SCHEME_REVISION` is the revision every stored score records.
+
+`ScoredMeasurement`, in `project/heat_flow/models/child.py`, is what a thermal gradient and an
+interval conductivity share to store their own score. `refresh_score()` recalculates and stores the
+score, the mark and the revision.
+
 ## Not covered here
 
 This page covers the scores of a single gradient or conductivity. The scores a child heat flow
