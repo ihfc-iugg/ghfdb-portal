@@ -1,41 +1,40 @@
-"""Heat Flow Quality Assessment Module.
+"""Heat flow quality scheme, following the Heat Flow Quality Analysis Toolbox V0.2.
 
-This file implements the quality assessment scheme for heat flow measurements
-as described in Fuchs et al. (2023) following the decision tree structure:
+The toolbox (hfqa_tool, Dergunova et al. 2026) is the version of the scheme that scored the
+2024 GHFDB release. It refines the scheme of Fuchs et al. (2023), and where the two differ the
+toolbox's code is the definition. ``docs/guides/quality-scores.md`` explains each place where
+the portal had to choose.
 
-START: Heat Flow Quality Assessment
-│
-├─ **STEP 1: Determine Measurement Type**
-│  ├─ Probe Sensing (Marine/Shallow) → Go to PROBE PATH
-│  └─ Borehole/Mine → Go to BOREHOLE PATH
-│
-├─ **PROBE PATH**
-│  ├─ **1A: Calculate U-Score (Uncertainty)**
-│  ├─ **1B: Calculate M-Score (Methodological)**
-│  └─ **1C: Evaluate P-Flags (Perturbations)**
-│
-├─ **BOREHOLE PATH**
-│  ├─ **2A: Calculate U-Score** (Same as probe)
-│  ├─ **2B: Calculate M-Score (Methodological)**
-│  └─ **2C: Evaluate P-Flags** (Same as probe)
-│
-├─ **STEP 2: Combine Scores**
-│  └─ Child Level Quality = U-Score + M-Score + P-Flags
-│
-└─ **STEP 3: Parent Level Quality**
-   ├─ Single child → Inherit child quality
-   ├─ Multiple children (all used) → Worst quality among all
-   └─ Multiple children (some used) → Worst quality among relevant children only
-
-Reference: https://www.sciencedirect.com/science/article/pii/S0040195123002743
+A measurement is scored by the rules of the route its site's exploration method selects:
+probe sensing or borehole and mine. Each route scores a thermal gradient (the T-score) and a
+thermal conductivity (the TC-score), starting from 1.0 and adding a penalty per criterion.
 """
 
-import logging
+import operator
+from dataclasses import dataclass
 
 from django.db import models
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
-logger = logging.getLogger(__name__)
+SCHEME_REVISION = "hfqa_tool 0.2"
+
+# Stands for "score without reading anything from a child". It is not None, which means the
+# child records no in-situ correction at all.
+UNCORRECTED = object()
+
+# Conductivity location, shared by both routes.
+LOCATION_PENALTIES = {"actual": 0.0, "other": -0.1, "literature": -0.2}
+
+LAB_METHODS = frozenset(
+    {
+        "pointSource",
+        "lineSourceFull",
+        "lineSourceHalf",
+        "planeSourceFull",
+        "planeSourceHalf",
+        "laboratoryOther",
+    }
+)
 
 
 class UScoreOptions(models.TextChoices):
@@ -49,514 +48,674 @@ class UScoreOptions(models.TextChoices):
 
 
 class MScoreOptions(models.TextChoices):
-    """Quality grades for a heat flow measurement's M-score (methodology)."""
+    """Quality grades for a heat flow measurement's M-score (methodology).
+
+    A trailing ``x`` marks a grade reached with missing information.
+    """
 
     M1 = "M1", _("Excellent")
     M2 = "M2", _("Good")
     M3 = "M3", _("Acceptable")
     M4 = "M4", _("Poor")
+    M1x = "M1x", _("Excellent, with missing information")
+    M2x = "M2x", _("Good, with missing information")
+    M3x = "M3x", _("Acceptable, with missing information")
+    M4x = "M4x", _("Poor, with missing information")
     Mx = "Mx", _("Not determined / missing data")
 
 
-def calculate_U_score(heat_flow):
-    """Calculate the U-score for a heat flow measurement based on its uncertainty.
+@dataclass(frozen=True)
+class SubScore:
+    """A T-score or TC-score and whether it was reached with missing information.
 
-    Args:
-        heat_flow: HeatFlow model instance
-
-    Returns:
-        UScoreOptions: U1 (Excellent) to U4 (Poor) or Ux (Unknown)
-
-    COV-based classification:
-    - U1: Excellent (COV < 5%)
-    - U2: Good (COV 5-15%)
-    - U3: Acceptable (COV 15-25%)
-    - U4: Poor (COV > 25%)
-    - Ux: Not determined / missing data
+    Attributes:
+        value: The score, or ``None`` when it is not determined.
+        missing: True when an input the scheme needed was empty.
     """
-    # Check if we have both value and uncertainty
-    if not heat_flow.value or not heat_flow.uncertainty:
-        return UScoreOptions.Ux
 
-    try:
-        # Calculate coefficient of variation as percentage
-        cov_percent = (heat_flow.uncertainty / abs(heat_flow.value)) * 100
+    value: float | None
+    missing: bool = False
 
-        if cov_percent < 5:
-            return UScoreOptions.U1
-        elif cov_percent < 15:
-            return UScoreOptions.U2
-        elif cov_percent < 25:
-            return UScoreOptions.U3
-        else:
-            return UScoreOptions.U4
+    @classmethod
+    def from_penalties(cls, penalties: list[tuple[float, bool]]) -> "SubScore":
+        """Add the penalties of every criterion to the starting score of 1.0.
 
-    except (ZeroDivisionError, TypeError):
-        logger.warning(f"Could not calculate U-score for HeatFlow {heat_flow.pk}")
-        return UScoreOptions.Ux
+        Args:
+            penalties: One ``(penalty, missing)`` pair per criterion.
 
+        Returns:
+            The score rounded to three places, marked when any criterion was.
+        """
+        total = 1.0 + sum(penalty for penalty, _missing in penalties)
+        return cls(round(total, 3), any(missing for _penalty, missing in penalties))
 
-class ProbeQualityCalculator:
-    """Calculate quality scores for probe-sensing measurements."""
 
-    def __init__(self, heat_flow):
-        self.heat_flow = heat_flow
+class Reading:
+    """Reads what the scheme needs from a measurement, its interval and its site."""
 
-    def calculate_M_score(self):
-        """Calculate M-score for probe measurements."""
-        t_score = self.calculate_T_score()
-        tc_score = self.calculate_TC_score()
+    @staticmethod
+    def concepts(manager) -> frozenset[str]:
+        """Return the identifiers of every concept in a vocabulary field."""
+        return frozenset(concept.name for concept in manager.all())
 
-        # Final M-score is product of T and TC scores
-        final_score = t_score * tc_score
+    @staticmethod
+    def magnitude(quantity, unit: str) -> float | None:
+        """Return a quantity as a number in *unit*, or ``None`` when it is empty.
 
-        # Convert to categorical M-score
-        if final_score > 0.75:
-            return MScoreOptions.M1
-        elif final_score > 0.5:
-            return MScoreOptions.M2
-        elif final_score > 0.25:
-            return MScoreOptions.M3
-        else:
-            return MScoreOptions.M4
+        A record that has not been reloaded holds the plain number that was assigned, which
+        is already in the field's base unit.
+        """
+        if quantity is None:
+            return None
+        if hasattr(quantity, "to"):
+            return float(quantity.to(unit).magnitude)
+        return float(quantity)
 
-    def calculate_T_score(self):
-        """Calculate temperature gradient score for probe measurements."""
-        score = 1.0
+    @staticmethod
+    def site(measurement):
+        """Return the site of the measurement's interval, or ``None``."""
+        return getattr(measurement.sample, "site", None)
 
-        # Add individual penalties/bonuses
-        score += self._penetration_penalty()
-        score += self._temperature_points_penalty()
-        score += self._water_depth_penalty()
-        score += self._probe_tilt_penalty()
+    @staticmethod
+    def probe_metadata(measurement):
+        """Return the probe metadata of the measurement's interval, or ``None``."""
+        return getattr(measurement.sample, "probe_metadata", None)
 
-        # Ensure score stays within bounds
-        return max(0.2, min(1.2, score))
 
-    def calculate_TC_score(self):
-        """Calculate thermal conductivity score for probe measurements."""
-        if not self.heat_flow.thermal_conductivity:
-            return 0.2  # Minimum score if no TC data
+class Criterion:
+    """Evaluators shared by both routes.
 
-        score = 1.0
-        tc = self.heat_flow.thermal_conductivity
-
-        # Add individual penalties/bonuses
-        score += self._tc_location_penalty(tc)
-        score += self._tc_source_penalty(tc)
-        score += self._tc_number_penalty(tc)
-        score += self._tc_pt_conditions_penalty(tc)
-
-        # Ensure score stays within bounds
-        return max(0.2, min(1.2, score))
-
-    def _penetration_penalty(self):
-        """Penetration depth penalty/bonus."""
-        penetration = self.heat_flow.probe_penetration
-        if not penetration:
-            return -0.2  # Unspecified
-
-        if penetration > 10:
-            return 0.1
-        elif penetration > 3:
-            return 0.0
-        elif penetration > 1:
-            return -0.1
-        else:
-            return -0.2
-
-    def _temperature_points_penalty(self):
-        """Temperature points penalty/bonus."""
-        if not self.heat_flow.thermal_gradient:
-            return -0.2
-
-        number = self.heat_flow.thermal_gradient.number
-        if not number:
-            return -0.2
-
-        if number > 5:
-            return 0.1
-        elif number >= 3:
-            return 0.0
-        elif number >= 1:
-            return -0.1
-        else:
-            return -0.2
-
-    def _water_depth_penalty(self):
-        """Water depth penalty (for marine measurements)."""
-        # Get water depth from site elevation (negative for below sea level)
-        site = self.heat_flow.parent.sample if self.heat_flow.parent else None
-        if not site or not hasattr(site, "location") or not site.location:
-            return -0.2
-
-        # Check if corrected for bottom water temperature
-        corrected_for_bwt = (
-            hasattr(self.heat_flow, "corr_SUR_flag")
-            and self.heat_flow.corr_SUR_flag
-            and hasattr(self.heat_flow.corr_SUR_flag, "id")
-            and self.heat_flow.corr_SUR_flag.id == "present_corrected"
-        )
-
-        try:
-            water_depth = -site.location.y if hasattr(site.location, "y") else None
-
-            if water_depth is None and not corrected_for_bwt:
-                return -0.2
-            elif (water_depth and water_depth > 2500) or corrected_for_bwt:
-                return 0.0
-            elif water_depth and water_depth >= 1500:
-                return -0.1
-            else:
-                return -0.2
-        except (AttributeError, TypeError):
-            return -0.2
-
-    def _probe_tilt_penalty(self):
-        """Probe tilt penalty."""
-        tilt = self.heat_flow.probe_tilt
-
-        # Check if tilt corrected
-        corrected = (
-            hasattr(self.heat_flow, "corr_T_flag")
-            and self.heat_flow.corr_T_flag.exists()
-            and any(
-                "tilt" in str(flag).lower() for flag in self.heat_flow.corr_T_flag.all()
-            )
-        )
-
-        if tilt is None and not corrected:
-            return -0.2
-
-        if (tilt and tilt <= 10) or corrected:
-            return 0.0
-        elif tilt and tilt < 30:
-            return -0.1
-        else:
-            return -0.2
-
-    def _tc_location_penalty(self, tc):
-        """Thermal conductivity location penalty."""
-        if not tc.location.exists():
-            return -0.2
-
-        location_ids = list(tc.location.values_list("id", flat=True))
-        if "actual" in location_ids or "in_situ" in location_ids:
-            return 0.0
-        elif "other" in location_ids or "nearby" in location_ids:
-            return -0.1
-        else:  # literature or unknown
-            return -0.2
-
-    def _tc_source_penalty(self, tc):
-        """Thermal conductivity source penalty."""
-        if not tc.source.exists():
-            return -0.2
-
-        source_ids = list(tc.source.values_list("id", flat=True))
-        if "in_situ_probe" in source_ids:
-            return 0.1
-        elif "core" in source_ids:
-            return -0.1
-        else:  # literature or other
-            return -0.2
-
-    def _tc_number_penalty(self, tc):
-        """Thermal conductivity number of measurements penalty."""
-        if not tc.number:
-            return -0.1
-
-        if tc.number > 10:
-            return 0.1
-        elif tc.number >= 3:
-            return 0.0
-        else:
-            return -0.1
-
-    def _tc_pt_conditions_penalty(self, tc):
-        """Thermal conductivity pressure-temperature conditions penalty."""
-        if not tc.pT_conditions.exists():
-            return -0.2
-
-        pt_ids = list(tc.pT_conditions.values_list("id", flat=True))
-        if "in_situ" in pt_ids:
-            return 0.1
-        elif "ambient" in pt_ids:
-            return -0.1
-        else:
-            return -0.2
-
-
-class BoreholeQualityCalculator:
-    """Calculate quality scores for borehole/mine measurements."""
-
-    def __init__(self, heat_flow):
-        self.heat_flow = heat_flow
-
-    def calculate_M_score(self):
-        """Calculate M-score for borehole measurements."""
-        t_score = self.calculate_T_score()
-        tc_score = self.calculate_TC_score()
-
-        # Final M-score is product of T and TC scores
-        final_score = t_score * tc_score
-
-        # Convert to categorical M-score
-        if final_score > 0.75:
-            return MScoreOptions.M1
-        elif final_score > 0.5:
-            return MScoreOptions.M2
-        elif final_score > 0.25:
-            return MScoreOptions.M3
-        else:
-            return MScoreOptions.M4
-
-    def calculate_T_score(self):
-        """Calculate temperature gradient score for borehole measurements."""
-        if not self.heat_flow.thermal_gradient:
-            return 0.4  # Minimum for borehole
-
-        tg = self.heat_flow.thermal_gradient
-        score = 1.0
-
-        # Determine measurement type and correction status
-        score += self._temperature_method_penalty(tg)
-
-        return max(0.4, min(1.1, score))
-
-    def calculate_TC_score(self):
-        """Calculate thermal conductivity score for borehole measurements."""
-        if not self.heat_flow.thermal_conductivity:
-            return 0.1  # Minimum score
-
-        tc = self.heat_flow.thermal_conductivity
-        score = 1.0
-
-        # Check if interval depth is reported
-        if not self._has_interval_depth():
-            return 0.1  # Stop here with minimum score
-
-        score += self._tc_location_penalty_borehole(tc)
-        score += self._tc_source_penalty_borehole(tc)
-        score += self._tc_number_penalty_borehole(tc)
-        score += self._tc_saturation_pt_penalty(tc)
-
-        return max(0.1, min(1.2, score))
-
-    def _has_interval_depth(self):
-        """Check if interval depth is reported."""
-        # This should check if the heat flow has associated depth intervals
-        # For now, assume it's reported if thermal_conductivity exists
-        return bool(self.heat_flow.thermal_conductivity)
-
-    def _temperature_method_penalty(self, tg):
-        """Temperature measurement method penalty."""
-        # This is simplified - in reality would check method_top and method_bottom
-        # and determine if continuous log, multiple points, or single point
-
-        # Check if corrected/equilibrium vs perturbed
-        is_corrected = tg.is_corrected() if hasattr(tg, "is_corrected") else False
-
-        # Estimate measurement type from number of points
-        number = tg.number or 1
-
-        if number > 10:  # Continuous log
-            return -0.1
-        elif number > 3:  # Multiple points
-            return -0.1 if is_corrected else -0.5
-        else:  # Single point
-            return -0.3 if is_corrected else -0.6
-
-    def _tc_location_penalty_borehole(self, tc):
-        """Thermal conductivity location penalty for borehole."""
-        if not tc.location.exists():
-            return -0.1
-
-        location_ids = list(tc.location.values_list("id", flat=True))
-        if "actual" in location_ids:
-            return 0.0
-        elif "nearby" in location_ids or "other" in location_ids:
-            return -0.1
-        else:  # literature
-            return -0.2
-
-    def _tc_source_penalty_borehole(self, tc):
-        """Thermal conductivity source penalty for borehole."""
-        if not tc.source.exists():
-            return -0.2
-
-        source_ids = list(tc.source.values_list("id", flat=True))
-        if "in_situ" in source_ids or "core_log" in source_ids:
-            return 0.1
-        elif "core" in source_ids:
-            return 0.0
-        else:  # literature
-            return -0.2
-
-    def _tc_number_penalty_borehole(self, tc):
-        """Thermal conductivity number penalty for borehole."""
-        if not tc.number or tc.number <= 15:
-            return -0.1
-        else:
-            return 0.0
-
-    def _tc_saturation_pt_penalty(self, tc):
-        """Thermal conductivity saturation and p-T conditions penalty."""
-        # This is complex - simplified implementation
-        if not tc.saturation.exists() or not tc.pT_conditions.exists():
-            return -0.2
-
-        saturation_ids = list(tc.saturation.values_list("id", flat=True))
-        pt_ids = list(tc.pT_conditions.values_list("id", flat=True))
-
-        is_saturated = "saturated" in saturation_ids
-        is_in_situ = "in_situ" in pt_ids
-
-        if is_saturated and is_in_situ:
-            return 0.0
-        elif is_saturated or is_in_situ:
-            return -0.1
-        else:
-            return -0.2
-
-
-def calculate_perturbation_flags(heat_flow):
-    """Calculate perturbation flags (p-flags) for a heat flow measurement.
-
-    Flag meanings:
-    - Uppercase: Present and corrected
-    - Lowercase: Present but not corrected
-    - X: Present but insignificant
-    - x: Not present/not recognized
-    - -: Insufficient information
-
-    Args:
-        heat_flow: HeatFlow model instance.
-
-    Returns:
-        str: 7-character string representing perturbation effects.
+    Each returns ``(penalty, missing)``. An empty input takes the criterion's largest penalty
+    with the mark, and an explicit ``unspecified`` concept is a value, never empty (FR-009).
+    A multi-valued field contributes every concept and the poorest matching penalty wins.
     """
-    flags = []
 
-    # Define the seven perturbation effects
-    corrections = [
-        ("S", heat_flow.corr_S_flag),  # Sedimentation
-        ("E", heat_flow.corr_E_flag),  # Erosion
-        ("T", heat_flow.corr_TOPO_flag),  # Topography
-        ("P", heat_flow.corr_PAL_flag),  # Paleoclimate
-        ("V", heat_flow.corr_SUR_flag),  # Surface/bottom water variations
-        ("C", heat_flow.corr_CONV_flag),  # Convection
-        ("R", heat_flow.corr_HR_flag),  # Heat refraction
-    ]
-
-    for letter, flag in corrections:
-        if not flag or not hasattr(flag, "id"):
-            flags.append("-")  # Insufficient information
-        elif flag.id == "present_corrected":
-            flags.append(letter.upper())
-        elif flag.id == "present_uncorrected":
-            flags.append(letter.lower())
-        elif flag.id == "present_insignificant":
-            flags.append("X")
-        elif flag.id == "not_present":
-            flags.append("x")
-        else:
-            flags.append("-")  # Default for unknown states
-
-    return "".join(flags)
-
-
-def calculate_heat_flow_quality(heat_flow):
-    """Calculate complete quality assessment for a heat flow measurement.
-
-    Args:
-        heat_flow: HeatFlow model instance
-
-    Returns:
-        dict: Quality assessment with U-score, M-score, and P-flags
-    """
-    # Step 1: Calculate U-score
-    u_score = calculate_U_score(heat_flow)
-
-    # Step 2: Calculate M-score based on measurement type
-    if heat_flow.is_probe:
-        calculator = ProbeQualityCalculator(heat_flow)
-        m_score = calculator.calculate_M_score()
-    else:
-        calculator = BoreholeQualityCalculator(heat_flow)
-        m_score = calculator.calculate_M_score()
-
-    # Step 3: Calculate P-flags
-    p_flags = calculate_perturbation_flags(heat_flow)
-
-    return {
-        "u_score": u_score,
-        "m_score": m_score,
-        "p_flags": p_flags,
-        "quality_string": f"{u_score}{m_score}{p_flags}",
+    OPERATORS = {
+        ">": operator.gt,
+        ">=": operator.ge,
+        "<": operator.lt,
+        "<=": operator.le,
+        "==": operator.eq,
     }
 
+    @classmethod
+    def bins(cls, value: float | None, bins) -> tuple[float, bool]:
+        """Score a number against ``(operator, threshold, penalty)`` bins.
 
-def calculate_parent_quality(parent_heat_flow):
-    """Calculate quality for parent level (ParentHeatFlow) based on children.
+        Bins are tried in the order given, which is the largest threshold first. A number
+        that fits no bin takes the largest penalty without the mark.
+        """
+        worst = min(penalty for _op, _threshold, penalty in bins)
+        if value is None:
+            return worst, True
+        for op, threshold, penalty in bins:
+            if cls.OPERATORS[op](value, threshold):
+                return penalty, False
+        return worst, False
 
-    Args:
-        parent_heat_flow: ParentHeatFlow model instance (from ghfdb app)
+    @staticmethod
+    def mapping(
+        concepts: frozenset[str], table: dict[str, float], *, unmatched_missing: bool
+    ) -> tuple[float, bool]:
+        """Score a vocabulary field by the poorest of its concepts found in *table*.
 
-    Returns:
-        dict: Parent level quality assessment
-    """
-    children = parent_heat_flow.children.all()
+        Args:
+            concepts: The concept identifiers held by the field.
+            table: Penalty per concept identifier.
+            unmatched_missing: Whether a field that matches nothing carries the mark. An empty
+                field always does.
+        """
+        matched = [table[name] for name in concepts if name in table]
+        if matched:
+            return min(matched), False
+        return min(table.values()), unmatched_missing or not concepts
 
-    if not children.exists():
-        return {
-            "u_score": UScoreOptions.Ux,
-            "m_score": MScoreOptions.Mx,
-            "p_flags": "-------",
-            "quality_string": f"{UScoreOptions.Ux}{MScoreOptions.Mx}-------",
+    @staticmethod
+    def cases(
+        cases, fields: dict[str, frozenset[str]], *, fallback: float | None = None
+    ) -> tuple[float, bool]:
+        """Score fields against ``(penalty, conditions)`` cases.
+
+        Every field a case names is checked for emptiness first, and any empty one takes the
+        largest penalty with the mark. Otherwise every case whose conditions all hold counts
+        (a condition holds when the field holds any of its concepts) and the poorest wins.
+        With no match, *fallback* applies if given, else the largest penalty, unmarked.
+        """
+        penalties = [penalty for penalty, _when in cases]
+        if fallback is not None:
+            penalties.append(fallback)
+        worst = min(penalties)
+        named = {field for _penalty, when in cases for field in when}
+        if any(not fields[field] for field in named):
+            return worst, True
+        matched = [
+            penalty
+            for penalty, when in cases
+            if all(fields[field] & names for field, names in when.items())
+        ]
+        if matched:
+            return min(matched), False
+        return (worst if fallback is None else fallback), False
+
+    @staticmethod
+    def depth_reported(interval) -> bool:
+        """Return whether the interval reports a top or a bottom depth."""
+        return interval.top is not None or interval.bottom is not None
+
+
+class ProbeRules:
+    """Scores for a site explored by probe sensing (toolbox ``marine_logic``)."""
+
+    PENETRATION = (
+        (">", 10.0, 0.1),
+        (">", 3.0, 0.0),
+        (">", 1.0, -0.1),
+        ("<=", 1.0, -0.2),
+    )
+    RECORDINGS = ((">", 5, 0.1), (">=", 3, 0.0), ("==", 2, -0.1), ("<", 2, -0.2))
+    WATER_DEPTH = ((">", 2500.0, 0.0), (">", 1500.0, -0.1), ("<=", 1500.0, -0.2))
+    TILT = ((">", 30.0, -0.2), (">", 10.0, -0.1), (">=", 0.0, 0.0))
+    COUNT = ((">", 3, 0.0), (">=", 2, -0.1), ("<", 2, -0.2))
+
+    # One entry per toolbox case: its penalty and, per field, the concepts that satisfy it.
+    # A field a case names is required by every case of the block, so an empty one marks.
+    SATURATION = (
+        (
+            0.1,
+            {
+                "saturation": {"saturatedInSitu"},
+                "method": {"probePulse"},
+                "source": {"insitu_probe"},
+            },
+        ),
+        (
+            0.0,
+            {
+                "saturation": {"recovered", "saturatedMeasured"},
+                "method": {"probePulse"},
+                "source": {"insitu_probe"},
+            },
+        ),
+        (
+            0.0,
+            {
+                "saturation": {"recovered", "saturatedMeasured"},
+                "method": LAB_METHODS,
+            },
+        ),
+        (-0.1, {"saturation": {"saturatedCalculated"}, "method": LAB_METHODS}),
+        (
+            -0.2,
+            {
+                "saturation": {"dryMeasured", "unspecified", "other"},
+                "method": LAB_METHODS,
+            },
+        ),
+        (
+            -0.1,
+            {
+                "method": {"lithology", "wellLogDeterministic", "wellLogEmpirical"},
+                "location": {"literature"},
+            },
+        ),
+        (
+            -0.2,
+            {
+                "method": {
+                    "waterContent",
+                    "mineralComposition",
+                    "chlorineContent",
+                    "unspecified",
+                }
+            },
+        ),
+    )
+    PT_CONDITIONS = (
+        (0.1, {"pT": {"actualInSitu"}, "method": {"probePulse"}}),
+        (0.0, {"pT": {"replicatedPT", "correctedPT"}}),
+        (-0.1, {"pT": {"replicatedP", "correctedP", "replicatedT", "correctedT"}}),
+        (-0.2, {"pT": {"recordedAmbient", "unrecordedAmbient", "unspecified"}}),
+    )
+
+    @classmethod
+    def gradient(
+        cls, gradient, *, tilt_corrected=False, bottom_water_corrected=False
+    ) -> SubScore:
+        """Score a thermal gradient measured by probe sensing (the T-score).
+
+        Args:
+            gradient: The ``ThermalGradient``.
+            tilt_corrected: Waives the tilt criterion, for a child whose temperature
+                correction is recorded as tilt corrected.
+            bottom_water_corrected: Waives the water depth criterion, for a child whose
+                surface and bottom-water correction is present and corrected.
+
+        Returns:
+            The gradient's T-score.
+        """
+        probe = Reading.probe_metadata(gradient)
+        elevation = Reading.magnitude(
+            getattr(Reading.site(gradient), "elevation", None), "m"
+        )
+        penetration = Reading.magnitude(getattr(probe, "penetration", None), "m")
+        tilt = Reading.magnitude(getattr(probe, "tilt", None), "degree")
+
+        # Sea level or above cannot be a water depth, so it counts as not recorded.
+        depth = -elevation if elevation is not None and elevation < 0 else None
+        penalties = [
+            Criterion.bins(penetration, cls.PENETRATION),
+            Criterion.bins(gradient.number, cls.RECORDINGS),
+        ]
+        if not bottom_water_corrected:
+            penalties.append(Criterion.bins(depth, cls.WATER_DEPTH))
+        if not tilt_corrected:
+            penalties.append(Criterion.bins(tilt, cls.TILT))
+        return SubScore.from_penalties(penalties)
+
+    @classmethod
+    def conductivity(cls, conductivity, *, in_situ=UNCORRECTED) -> SubScore:
+        """Score a thermal conductivity determined by probe sensing (the TC-score).
+
+        Args:
+            conductivity: The ``IntervalConductivity``.
+            in_situ: Ignored. The probe route reads nothing from the child.
+
+        Returns:
+            The conductivity's TC-score.
+        """
+        fields = {
+            "source": Reading.concepts(conductivity.source),
+            "location": Reading.concepts(conductivity.location),
+            "method": Reading.concepts(conductivity.method),
+            "saturation": Reading.concepts(conductivity.saturation),
+            "pT": Reading.concepts(conductivity.pT_conditions),
         }
+        penalties = [
+            Criterion.mapping(
+                fields["location"], LOCATION_PENALTIES, unmatched_missing=False
+            ),
+            Criterion.cases(cls.SATURATION, fields),
+        ]
+        if "literature" not in fields["location"]:
+            penalties.append(Criterion.bins(conductivity.number, cls.COUNT))
+        penalties.append(Criterion.cases(cls.PT_CONDITIONS, fields))
+        return SubScore.from_penalties(penalties)
 
-    if children.count() == 1:
-        # Single child: inherit its quality
-        child = children.first()
-        return calculate_heat_flow_quality(child)
 
-    # Multiple children: use relevant ones or all if none marked as relevant
-    relevant_children = children.filter(relevant_child=True)
-    if not relevant_children.exists():
-        relevant_children = children
+class BoreholeRules:
+    """Scores for a site explored by drilling, mining, tunnelling or indirect methods."""
 
-    # Get quality for all relevant children
-    child_qualities = [
-        calculate_heat_flow_quality(child) for child in relevant_children
-    ]
+    GATE_SCORE = 0.1
 
-    # Inherit the worst quality (highest number/letter)
-    worst_u = max(
-        (q["u_score"] for q in child_qualities),
-        key=lambda x: ["U1", "U2", "U3", "U4", "Ux"].index(x),
+    # Temperature method groups. HT_FT and HT_FTpert are the vocabulary's HT-FTeq and
+    # HT-FTpert, which the toolbox's lists misspell.
+    CONTINUOUS = (
+        (0.1, frozenset({"LOGeq", "cLOG", "DTSeq", "cDTS"})),
+        (-0.1, frozenset({"LOGpert"})),
     )
-    worst_m = max(
-        (q["m_score"] for q in child_qualities),
-        key=lambda x: ["M1", "M2", "M3", "M4", "Mx"].index(x),
+    SINGLE_POINTS = (
+        (
+            -0.1,
+            frozenset(
+                {
+                    "LOGeq",
+                    "cLOG",
+                    "cBHT",
+                    "HT_FT",
+                    "cHT_FT",
+                    "RTDeq",
+                    "cRTD",
+                    "ODTT_PC",
+                    "ODTT_TP",
+                    "EGRT",
+                    "GRT",
+                    "cDTS",
+                }
+            ),
+        ),
+        (
+            -0.3,
+            frozenset({"LOGpert", "DTSpert", "BHT", "HT_FTpert", "RTDpert", "BLK"}),
+        ),
+        (-0.5, frozenset({"CPD", "XEN", "GTM", "BSR", "unspecified", "other"})),
+    )
+    SURFACE_PLUS_ONE_POINT = (
+        (
+            -0.3,
+            frozenset(
+                {
+                    "cBHT",
+                    "RTDeq",
+                    "cRTD",
+                    "ODTT_PC",
+                    "ODTT_TP",
+                    "cHT_FT",
+                    "EGRT",
+                    "GRT",
+                }
+            ),
+        ),
+        (-0.5, frozenset({"BHT", "HT_FTpert", "RTDpert"})),
+        (-0.6, frozenset({"CPD", "XEN", "GTM", "BSR", "unspecified", "other"})),
     )
 
-    # For P-flags, combine all flags (show worst case for each position)
-    combined_flags = list("-------")
-    for quality in child_qualities:
-        for i, flag in enumerate(quality["p_flags"]):
-            if flag.isupper():  # Corrected
-                if combined_flags[i] in ["-", "x", "X"]:
-                    combined_flags[i] = flag
-            elif flag.islower() or (flag == "X" and combined_flags[i] in ["-", "x"]):
-                # Uncorrected (worst case) or insignificant but better than nothing
-                combined_flags[i] = flag
+    COUNT = ((">", 15, 0.0), ("<=", 15, -0.1))
+    SOURCE = (
+        (0.1, {"source": {"insitu_probe", "core_log"}}),
+        (0.0, {"source": {"core_samples"}}),
+        (-0.1, {"source": {"cutting_samples", "outcrop_samples", "well_log"}}),
+        (
+            -0.2,
+            {
+                "source": {
+                    "mineral_computation",
+                    "assumed_from_literature",
+                    "unspecified",
+                    "other",
+                }
+            },
+        ),
+    )
+    SATURATION = (
+        (0.0, {"saturation": {"saturatedMeasured", "saturatedInSitu"}}),
+        (-0.1, {"saturation": {"saturatedCalculated", "recovered"}}),
+        (-0.2, {"saturation": {"dryMeasured", "unspecified", "other"}}),
+    )
+    # The paper's Table 3, reading the pT conditions on their own terms.
+    PT_UNCORRECTED = (
+        (0.0, {"pT": {"actualInSitu", "replicatedPT", "correctedPT"}}),
+        (
+            -0.1,
+            {"pT": {"replicatedP", "replicatedT", "correctedP", "correctedT"}},
+        ),
+        (-0.2, {"pT": {"recordedAmbient", "unrecordedAmbient", "unspecified"}}),
+    )
+    # The toolbox's case list: the pT conditions must agree with the in-situ correction.
+    PT_CORRECTED = (
+        (
+            0.0,
+            {
+                "pT": {"actualInSitu", "replicatedPT", "correctedPT"},
+                "in_situ": {"considered_pt"},
+            },
+        ),
+        (
+            -0.1,
+            {
+                "pT": {"replicatedP", "correctedP", "replicatedT", "correctedT"},
+                "in_situ": {"considered_p", "considered_t"},
+            },
+        ),
+        (
+            -0.2,
+            {
+                "pT": {"recordedAmbient", "unrecordedAmbient", "unspecified"},
+                "in_situ": {"not_considered", "-"},
+            },
+        ),
+    )
+    PT_FALLBACK = -0.2
 
-    p_flags = "".join(combined_flags)
+    @classmethod
+    def gradient(cls, gradient, **_corrections) -> SubScore:
+        """Score a thermal gradient from a borehole or mine (the T-score).
 
-    return {
-        "u_score": worst_u,
-        "m_score": worst_m,
-        "p_flags": p_flags,
-        "quality_string": f"{worst_u}{worst_m}{p_flags}",
+        Args:
+            gradient: The ``ThermalGradient``.
+            **_corrections: Ignored. The borehole route reads no correction for the gradient.
+
+        Returns:
+            The gradient's T-score.
+        """
+        top = Reading.concepts(gradient.method_top)
+        bottom = Reading.concepts(gradient.method_bottom)
+        if "SUR" in top:
+            return SubScore.from_penalties(
+                [cls.method_penalty(cls.SURFACE_PLUS_ONE_POINT, bottom)]
+            )
+        continuous = {name for _penalty, names in cls.CONTINUOUS for name in names}
+        if (
+            gradient.number is not None
+            and gradient.number > 3
+            and (top | bottom)
+            and (top | bottom) <= continuous
+        ):
+            return SubScore.from_penalties(
+                [cls.method_penalty(cls.CONTINUOUS, top | bottom)]
+            )
+        return SubScore.from_penalties(
+            [cls.method_penalty(cls.SINGLE_POINTS, top | bottom)]
+        )
+
+    @staticmethod
+    def method_penalty(groups, methods: frozenset[str]) -> tuple[float, bool]:
+        """Return the poorest matching group's penalty for *methods*.
+
+        A set of methods that fits no group takes the case's largest penalty with the mark.
+        """
+        matched = [penalty for penalty, names in groups if methods & names]
+        if matched:
+            return min(matched), False
+        return min(penalty for penalty, _names in groups), True
+
+    @classmethod
+    def conductivity(cls, conductivity, *, in_situ=UNCORRECTED) -> SubScore:
+        """Score a thermal conductivity from a borehole or mine (the TC-score).
+
+        Args:
+            conductivity: The ``IntervalConductivity``.
+            in_situ: By default the pT conditions are scored on their own terms. Pass the
+                status of the child's in-situ correction, or ``None`` when it records none,
+                to apply the toolbox's agreement rule.
+
+        Returns:
+            The conductivity's TC-score.
+        """
+        if not Criterion.depth_reported(conductivity.sample):
+            return SubScore(cls.GATE_SCORE, True)
+        fields = {
+            "source": Reading.concepts(conductivity.source),
+            "location": Reading.concepts(conductivity.location),
+            "saturation": Reading.concepts(conductivity.saturation),
+            "pT": Reading.concepts(conductivity.pT_conditions),
+        }
+        penalties = [
+            Criterion.mapping(
+                fields["location"], LOCATION_PENALTIES, unmatched_missing=True
+            ),
+            Criterion.cases(cls.SOURCE, fields),
+        ]
+        if "literature" not in fields["location"]:
+            penalties.append(Criterion.bins(conductivity.number, cls.COUNT))
+        penalties.append(Criterion.cases(cls.SATURATION, fields))
+        if in_situ is UNCORRECTED:
+            penalties.append(Criterion.cases(cls.PT_UNCORRECTED, fields))
+        else:
+            fields["in_situ"] = frozenset() if in_situ is None else frozenset({in_situ})
+            penalties.append(
+                Criterion.cases(cls.PT_CORRECTED, fields, fallback=cls.PT_FALLBACK)
+            )
+        return SubScore.from_penalties(penalties)
+
+
+class QualityScheme:
+    """The arithmetic a quality code is built from (toolbox ``calculate_*``).
+
+    The U-score reads the child's own value and uncertainty. The M-score combines the
+    corrected T-score and TC-score. The flags read the child's environmental corrections.
+    A parent inherits all three from its children.
+    """
+
+    # Coefficient of variation in percent: below 5 is U1, then up to and including 15, then 25.
+    U1_BELOW = 5.0
+    U_BANDS = (("U2", 15.0), ("U3", 25.0))
+    # Lower bound of each product class, best first. A product on the bound takes the better class.
+    M_BANDS = (("M1", 0.75), ("M2", 0.5), ("M3", 0.25))
+
+    # The correction behind each flag, in the order the code writes them, with its letter.
+    FLAGS = (
+        ("S", "S"),
+        ("E", "E"),
+        ("TOPO", "T"),
+        ("PAL", "P"),
+        ("SUR", "V"),
+        ("CONV", "C"),
+        ("HR", "R"),
+    )
+    # Status to flag letter: present and corrected is upper case, present and not corrected
+    # lower case. The other two statuses write a fixed character.
+    FLAG_STATUSES = {
+        "present_corrected": str.upper,
+        "present_not_corrected": str.lower,
+        "present_not_significant": lambda _letter: "X",
+        "not_recognized": lambda _letter: "x",
     }
+    NO_FLAG = "-"
+
+    # Poorest last. Any M-score marked as reached with missing information ranks below
+    # every unmarked one, and Mx, not determined, ranks below them all (toolbox inheritance).
+    U_RANK = tuple(UScoreOptions.values)
+    M_RANK = tuple(MScoreOptions.values)
+    NOT_DETERMINED = (
+        UScoreOptions.Ux.value,
+        MScoreOptions.Mx.value,
+        NO_FLAG * len(FLAGS),
+    )
+
+    @classmethod
+    def u_score(cls, value: float | None, uncertainty: float | None) -> str:
+        """Grade the uncertainty of a heat flow value.
+
+        The grade follows the coefficient of variation, ``|uncertainty| / |value|`` in
+        percent, rounded to six places as the toolbox does. The sign of either number is
+        ignored, because a heat flow can be negative.
+
+        Args:
+            value: The heat flow, or ``None`` when empty.
+            uncertainty: Its uncertainty, or ``None`` when empty.
+
+        Returns:
+            ``U1`` to ``U4``, or ``Ux`` when either number is empty or zero.
+        """
+        if not value or not uncertainty:
+            return UScoreOptions.Ux.value
+        coefficient = round(abs(uncertainty) / abs(value) * 100.0, 6)
+        if coefficient < cls.U1_BELOW:
+            return UScoreOptions.U1.value
+        for grade, upper in cls.U_BANDS:
+            if coefficient <= upper:
+                return grade
+        return UScoreOptions.U4.value
+
+    @classmethod
+    def m_score(cls, t: SubScore, tc: SubScore) -> str:
+        """Grade the methodology from the corrected T-score and TC-score.
+
+        Args:
+            t: The child's corrected T-score.
+            tc: The child's corrected TC-score.
+
+        Returns:
+            ``M1`` to ``M4`` from the product rounded to three places, with an ``x`` suffix
+            when either score was reached with missing information, or ``Mx`` when either
+            cannot be calculated.
+        """
+        if t.value is None or tc.value is None:
+            return MScoreOptions.Mx.value
+        product = round(t.value * tc.value, 3)
+        grade = next((grade for grade, lower in cls.M_BANDS if product >= lower), "M4")
+        return f"{grade}x" if t.missing or tc.missing else grade
+
+    @classmethod
+    def perturbation_flags(cls, statuses: dict[str, str]) -> str:
+        """Write the seven perturbation flags of a child.
+
+        Args:
+            statuses: The child's correction statuses by correction type. A type with no
+                entry was not recorded.
+
+        Returns:
+            Seven characters, one per correction in the order ``S E T P V C R``.
+        """
+        flags = []
+        for correction, letter in cls.FLAGS:
+            write = cls.FLAG_STATUSES.get(statuses.get(correction, ""))
+            flags.append(cls.NO_FLAG if write is None else write(letter))
+        return "".join(flags)
+
+    @classmethod
+    def inherit(cls, children) -> tuple[str, str, str]:
+        """Inherit a parent's U-score, M-score and flags from the children it rests on.
+
+        The parent takes the poorest U-score and the poorest M-score among the children, and
+        the flags whole from the child with the poorest U-score, the poorest M-score
+        deciding a tie (Fuchs et al. 2023, section 3.4; toolbox inheritance). On a full tie
+        the first child wins, so recalculating gives the same flags every time.
+
+        Args:
+            children: The children the parent rests on, in pk order. Each carries the
+                stored ``U_score``, ``M_score`` and ``quality`` of a scored ``HeatFlow``.
+
+        Returns:
+            The U-score, the M-score and the seven flags, or ``Ux``, ``Mx`` and ``-------``
+            when there are no children.
+        """
+        children = list(children)
+        if not children:
+            return cls.NOT_DETERMINED
+        poorest = max(
+            children,
+            key=lambda child: (
+                cls.U_RANK.index(child.U_score),
+                cls.M_RANK.index(child.M_score),
+            ),
+        )
+        code = poorest.quality or ".".join(cls.NOT_DETERMINED)
+        return (
+            max((child.U_score for child in children), key=cls.U_RANK.index),
+            max((child.M_score for child in children), key=cls.M_RANK.index),
+            code.rsplit(".", 1)[-1],
+        )
+
+    @staticmethod
+    def code(u: str, m: str, flags: str) -> str:
+        """Join the U-score, M-score and flags into the quality code, e.g. ``U2.M3x.-e-PX--``.
+
+        Args:
+            u: The U-score.
+            m: The M-score.
+            flags: The seven perturbation flags.
+
+        Returns:
+            The dotted code.
+        """
+        return f"{u}.{m}.{flags}"
+
+
+# Exploration method concept to the route it selects.
+ROUTES: dict[str, type[ProbeRules] | type[BoreholeRules]] = {
+    "probing_onshore": ProbeRules,
+    "probing_offshore": ProbeRules,
+    "probing_clustering": ProbeRules,
+    "drilling": BoreholeRules,
+    "drilling_clustering": BoreholeRules,
+    "mining": BoreholeRules,
+    "tunneling": BoreholeRules,
+    "indirect": BoreholeRules,
+}
+
+
+def route(site) -> type[ProbeRules] | type[BoreholeRules] | None:
+    """Return the rules a site's exploration method selects.
+
+    Args:
+        site: The ``HeatFlowSite`` a measurement belongs to, or ``None``.
+
+    Returns:
+        ``ProbeRules`` or ``BoreholeRules``, or ``None`` when the method is other,
+        unspecified or empty, which leaves the measurement's score not determined.
+    """
+    method = getattr(site, "explo_method", None)
+    # A site read back from the database holds the concept, one built in memory the name.
+    name = getattr(method, "name", method)
+    return None if name is None else ROUTES.get(name)

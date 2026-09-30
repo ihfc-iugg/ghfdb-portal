@@ -1192,3 +1192,65 @@ class TestGHFDBChildImportResourceIGSN:
         assert [identifier.value for identifier in child.sample.identifiers.all()] == [
             VALID_IGSN
         ]
+
+
+@pytest.mark.django_db
+class TestGHFDBChildCorrectionLabels:
+    """A correction cell may carry the published status label as well as the key."""
+
+    def import_row(self, dataset, **cells):
+        import_parents(dataset)
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        result = GHFDBChildImportResource().import_data(
+            make_dataset({**CHILD_ROW, **cells}),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=dataset,
+        )
+        assert not result.has_errors(), result.invalid_rows
+        child = HeatFlow.objects.get(ghfdb_id=1)
+        return {c.correction_type: c.status for c in child.corrections.all()}
+
+    @pytest.mark.parametrize(
+        ("label", "status"),
+        [
+            ("[Present and corrected]", "present_corrected"),
+            ("[Present and not corrected]", "present_not_corrected"),
+            ("[Present not significant]", "present_not_significant"),
+            ("[not recognized]", "not_recognized"),
+        ],
+    )
+    @pytest.mark.parametrize("flag", ["corr_S_flag", "corr_SUR_flag", "corr_HR_flag"])
+    def test_a_published_label_stores_its_status(self, dataset, flag, label, status):
+        statuses = self.import_row(dataset, **{flag: label})
+
+        correction_type = flag.removeprefix("corr_").removesuffix("_flag")
+        assert statuses[correction_type] == status
+
+    def test_a_label_is_read_like_a_vocabulary_cell(self, dataset):
+        statuses = self.import_row(dataset, corr_E_flag="  [PRESENT and Corrected] ")
+
+        assert statuses["E"] == "present_corrected"
+
+    def test_a_label_the_type_refuses_stores_unspecified(self, dataset):
+        # The temperature correction has no "present not significant".
+        statuses = self.import_row(dataset, corr_T_flag="[Present not significant]")
+
+        assert statuses["T"] == "-"
+
+    def test_keys_and_yes_no_shorthands_still_work(self, dataset):
+        statuses = self.import_row(
+            dataset,
+            corr_S_flag="present_not_corrected",
+            corr_E_flag="Yes",
+            corr_TOPO_flag="No",
+            corr_PAL_flag="not_recognized",
+        )
+
+        assert statuses["S"] == "present_not_corrected"
+        assert statuses["E"] == "present_corrected"
+        assert statuses["TOPO"] == "-"
+        assert statuses["PAL"] == "not_recognized"

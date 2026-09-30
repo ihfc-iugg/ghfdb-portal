@@ -185,3 +185,414 @@ portal's own vocabulary agrees with the toolbox, so the portal reads the child's
 correction.
 
 **ADR:** none. It settles how this feature reads the scheme, and the spec records it.
+
+## D12 — The toolbox's code is the oracle where its own tests disagree with it
+
+Running the toolbox's scoring tests against its V0.2 code shows two failures. A borehole test
+expects no missing-information mark on a row that records "unspecified" everywhere, but the row
+leaves the in-situ correction empty, and the code marks that. A probe test reads a `source_type`
+block the probe schema does not have. Its worked-example spreadsheet (`m_score_tests.xlsx`) also
+gives `M1`, `M2`, `M3` and `M4` where the code gives `M1x`, `M2x`, `M3x` and `M4x`, for the same
+reason: none of its rows carries an in-situ correction. The classes agree. Only the mark differs.
+
+The code is what scored the 2024 release, so the portal's conformance cases are the code's output
+for each input, recorded in [research.md](research.md) R3. Where the spreadsheet's expected column
+differs, it differs by that mark and nothing else.
+
+**ADR:** none. It settles how this feature reads the scheme, and the spec records it.
+
+## D13 — A borehole child with no in-situ correction takes the agreement penalty
+
+The toolbox's pT rule for a borehole conductivity needs the child's in-situ correction. When the
+child records none, the code applies the criterion's largest penalty (−0.2) and the
+missing-information mark. The portal does the same, because the corrected TC-score applies the
+toolbox's agreement requirement (D3, and the spec's second clarification). An empty input the
+score needed carries the mark (FR-009).
+
+This narrows US2 scenario 6 for borehole children. A child "with none of those three
+corrections" keeps its conductivity's own TC-score only if it is a probe child, or if its in-situ
+correction is recorded and agrees. The alternative reading, where no in-situ correction means no
+agreement rule, contradicts the toolbox and its worked example "CONTINUOUS_PERT + TC_OK": that
+example reaches its expected M2 only with the −0.2. Put to the maintainer with the plan.
+
+The file import writes all nine correction rows and turns an empty cell into `-` (D14). So an
+imported child is never missing its in-situ correction, and the marked case only arises for a child
+created outside the import.
+
+**ADR:** none. It settles how this feature reads the scheme, and the spec records it.
+
+## D14 — A correction recorded as `-` is unspecified, a missing one is empty
+
+The scheme tells an empty input (largest penalty, marked) from one recorded as unspecified
+(largest penalty, not marked). A child's corrections are stored one row per disturbance type, and
+the file import writes an empty cell as a row with status `-`, whose label is "unspecified". So the
+portal cannot tell those two apart for a correction. It reads `-` as recorded unspecified and a
+missing row as empty. Only the in-situ correction's pT agreement is affected. The perturbation
+flags write `-` for both, as the toolbox does.
+
+**ADR:** none. It settles how this feature reads the scheme, and the spec records it.
+
+## D15 — Four misspelled method tokens in the toolbox are read as the methods they name
+
+The toolbox's borehole temperature lists spell three methods in ways that match no value of the
+published vocabulary: `[HFT-FTeq]` (for HT-FTeq), and `[HF-FTpert]` and `[HFT-FTpert]` (for
+HT-FTpert). One entry also carries a leading space (`" [cHT-FT]"`, listed correctly beside it).
+Read literally, a gradient measured with either method matches nothing and is scored as
+unresolvable. The lists place them in the equilibrium and perturbed groups by name, and that is
+what the portal does.
+
+Other gaps in the lists are kept as the toolbox has them. DTSeq appears only in the continuous-log
+case, and the surface-plus-single-point case has no HT-FTeq. The toolbox decides (D1), and nothing
+in its documentation says otherwise.
+
+**ADR:** none. It settles how this feature reads the scheme, and the spec records it.
+
+## D16 — A borehole temperature method that fits no case is marked
+
+When none of a borehole gradient's temperature methods fits its case's groups, the toolbox takes
+the case's largest penalty and sets the missing-information mark. Its schema names this as
+"apply max penalty for unresolvable case and flag x". FR-009 allows the mark "where the scheme
+names a specific case", so the portal marks it too. It is the second such case, beside a borehole
+conductivity's location.
+
+**ADR:** none. It settles how this feature reads the scheme, and the spec records it.
+
+## D17 — Measurements are routed by the site's exploration method
+
+The portal's exploration-method vocabulary maps onto the toolbox's routing words as follows.
+Probe-sensing: probing onshore, probing offshore, probing clustering. Borehole and mine: drilling,
+drilling clustering, mining, tunnelling, indirect. Not determined: other, unspecified, empty. The
+`is_probe` property on the child, which tested for probe metadata, is not how the scheme routes and
+is no longer used for scoring.
+
+**ADR:** none. It settles how this feature reads the scheme, and the spec records it.
+
+## D18 — What is stored, and which fields are indexed
+
+- **Thermal gradient, interval conductivity:** the existing `score` becomes nullable, and null
+  means not determined. It loses its 0–1 bounds, because the scheme's scores run from 0.1 to 1.2.
+  New `score_missing` (boolean) and `quality_scheme` (the revision). `score` is indexed on both,
+  since the assessment team filters measurements by it. The conductivity has no index on it today.
+  `score_missing` and `quality_scheme` are not indexed: no page or query filters on them, and the
+  refresh command's stale check (D20) is a single scan at deploy time.
+- **Child:** new `T_score` and `TC_score` (the corrected scores, nullable floats, indexed, per
+  FR-005 and D4), `T_score_missing`, `TC_score_missing` and `quality_scheme`. `M_score` widens to
+  three characters for `M1x`–`M4x`. `quality` widens to fourteen for the longest code,
+  `Ux.M4x.SETPVCR`. `U_score` and `M_score` keep their indexes.
+- **Parent:** new `U_score` and `M_score` (indexed, like the child's) and `quality_scheme`.
+  `quality` widens to fourteen.
+- **Perturbation flags are not stored separately.** They are the last seven characters of the
+  quality code. A second copy would be a second thing to keep current.
+
+The choice lists keep their names (`UScoreOptions`, `MScoreOptions`), and `MScoreOptions` gains the
+four marked classes.
+
+**ADR:** none. Field-level storage for this feature, recorded in `docs/ghfdb_fields.md`.
+
+## D19 — Scores are recalculated when their inputs are written
+
+Signal receivers recalculate a score when one of its inputs is saved, deleted or has a vocabulary
+value added or removed. They recalculate the measurement's own score, then every child using the
+measurement, then each of those children's parents. Each refresh writes with a queryset `update`,
+so it does not fire the receivers again. Saving a parent does not recalculate it: its inputs are
+its children, and the choice of which are relevant stays manual.
+
+A file import writes one child with a dozen saves and vocabulary additions. Recalculating after
+each would score every record many times over. So the child import holds recalculation back while
+it runs and scores everything it wrote once, at the end and inside the import's own transaction,
+so a dry run leaves nothing behind.
+
+A queryset `update` or `bulk_create` bypasses the receivers, as it does every Django signal. The
+refresh command (D20) is the repair for that, and the documentation says so.
+
+**ADR:** docs/adr/0022-stored-quality-scores-are-recalculated-when-their-inputs-are-written.md
+
+## D20 — Records are scored at deployment by a refresh that runs on start
+
+FR-015 asks for every existing record to be scored as part of the deployment. A data migration
+would have to call the scoring code through historical models, which do not carry it, or through
+the live ones, which breaks the moment a later migration changes a field. Instead a management
+command, `refresh_quality`, recalculates every record whose stored scheme revision is not the
+current one. The container runs it after `migrate` on every start. Once everything is current it is
+a count and nothing else. The same command adopts a later scheme revision (the spec's last
+assumption), and `--all` recalculates regardless.
+
+**ADR:** docs/adr/0022-stored-quality-scores-are-recalculated-when-their-inputs-are-written.md
+
+## D21 — Measurement pages show quality through a template override
+
+The framework's measurement page is a placeholder. It shows no fields at all and has no extension
+point. The portal overrides that one template (`templates/measurement/detail.html`, as it already
+overrides the dataset page). It keeps the placeholder's content and adds a quality section for a
+child, a gradient and a conductivity, which reads only stored values.
+
+The framework serves this page for a measurement in any dataset, published or not, with no
+visibility check (`fairdm/core/measurement/views.py`, a plain `DetailView` over `Measurement`).
+Before this feature the page showed only a name, a UUID and two links. Now it also shows scores
+derived from the record. The gap is the framework's, and FS-007 widens what it exposes. It is
+recorded here and raised with FairDM, not patched per page in the portal. The UUID is not
+enumerable, which limits the exposure to someone already holding the link.
+
+**ADR:** none. Local to how this feature shows its scores.
+
+## D22 — The import reads a correction cell by its label
+
+`_parse_correction_status` accepted only the portal's internal status keys and "yes". A published
+file carries labels such as `[Present and corrected]`, so every imported correction was stored as
+`-`. The child rules and the perturbation flags would then read nothing from imported data
+(FR-004, FR-011). The parser now also resolves a label, normalised the way the vocabulary columns
+are. A status its type does not accept falls back to `-`, as an unrecognised cell always has, so a
+file that imports today still imports. Records imported before this change keep their `-` until
+they are re-imported.
+
+Raised at design review (SPEC-001).
+
+**ADR:** none. Local to the import's reading of one column group.
+
+## D23 — The import stores `[unspecified]` as the vocabulary's own concept
+
+The vocabulary columns treated an `[unspecified]` cell as blank. The scheme scores the two
+differently (FR-009): unspecified takes the largest penalty without the mark, empty takes it with
+the mark. Under the old reading every imported "unspecified" would carry the mark. Where a
+vocabulary defines an `unspecified` concept, the import now stores it. A blank cell stays empty, and
+an export writes the concept back. The single-valued columns and the acquisition date keep reading
+it as blank, because nothing in the scheme tells the two apart there. No recorded decision
+explained the old reading for concept columns, and no existing test pins it. It was put to the
+maintainer during the run with no reply, so it rides in the plan notification, where it can be
+vetoed.
+
+Raised at design review (SPEC-002).
+
+**ADR:** none. Local to the import's reading of vocabulary columns.
+
+## D24 — Existing assertions this feature changes, and why
+
+Two existing tests pin behaviour the approved specification changes. Each is adjusted in the task
+named, and nothing else in either test moves:
+
+- `test_conductivity_vocabulary_fields_count_and_score_persist` asserts that a conductivity
+  keeps a `score` supplied by hand. FR-002 and ADR-0004 require the score to be calculated, so the
+  assertion reads the calculated value instead (T002).
+- `test_two_determinations_under_one_parent_repeat_its_values` sets a parent's quality before
+  building its children. FR-012 makes the children's scores overwrite it, so the setup sets it after
+  them. The assertion is unchanged (T008).
+
+The correction-status assertion behind T005 is different in kind. No FS-007 requirement names that
+validation, so it waits on the maintainer.
+
+Also from design review: delete receivers collect and refresh on commit (ARCH-001). A dataset
+delete cascades through every correction, and refreshing per row would issue tens of thousands of
+queries for records that are being deleted anyway.
+
+**ADR:** none. It records this feature's test adjustments.
+
+## D25 — T001 widens `HeatFlow.M_score` and carries a placeholder migration
+
+`MScoreOptions` gains `M1x`–`M4x` in T001, as the task says. Three characters no longer fit the
+two-character field, and Django's system check refuses a field whose `max_length` is shorter than
+its longest choice. So T001 also widens `M_score` to three characters and records it in
+`0014_quality_scores.py`, which keeps `manage.py check` and the migration-state test green at the
+T001 commit. T002 regenerates that file to add the gradient and conductivity fields, so the
+feature still ends with one migration.
+
+**Revisit if:** T002 cannot regenerate the file, in which case it stacks a second migration and
+Forge squashes at convergence.
+
+**ADR:** none. A sequencing note for one migration, superseded when T002 regenerated it.
+
+## D26 — A not-determined measurement score is stored as null and unmarked
+
+When the site's exploration method routes to neither rule set, there is no score to reach and no
+input was missing, so `SubScore(None, False)` is what `refresh_score()` stores: `score` null and
+`score_missing` false. The mark means "an input the scheme needed was empty". Nothing was scored,
+so nothing needed one.
+
+**Revisit if:** the assessment team wants a not-determined score to be filterable apart from a
+scored one. A null `score` already is.
+
+**ADR:** none. It settles how this feature stores a score, and the spec records it.
+
+## D27 — The stored score fields are not editable, and the receivers ignore the concept side
+
+`score`, `score_missing` and `quality_scheme` on the gradient and the conductivity are calculated,
+so they are `editable=False`: no form offers a value the next save would overwrite. The factory and
+the ORM can still assign them. The concept receivers act on a change made from the measurement's
+own field. Adding a measurement from a concept's reverse accessor (`reverse=True`) names no
+instance to refresh and is ignored. Nothing in the portal writes that way, and the refresh command
+(US4) repairs any record written some other way.
+
+D25's placeholder migration is regenerated by T002 into the feature's single `0014_quality_scores`.
+
+**Revisit if:** something starts attaching concepts through the reverse accessor.
+
+**ADR:** none. Local to how this feature stores and refreshes scores.
+
+## D28 — Deleted corrections are collected per process and flushed by one on-commit callback
+
+**Decision:** `Recalculation.child_after_correction_deleted` adds the child's pk to a class-level
+set and registers `Recalculation.refresh_collected` with `transaction.on_commit` unless one is
+already registered on the connection. The callback refreshes the children that still exist. A
+child's own save and a correction's save refresh the child inline.
+
+**Why:** a dataset delete cascades through every correction of every child, and a child delete
+through its own. One callback per delete would rescore each child up to nine times, or rescore a
+child that is gone. The set can hold a pk whose transaction rolled back. The next flush then
+refreshes that child once more, which is idempotent.
+
+**Revisit if:** US4 folds this into the import deferral, or the project runs on several databases.
+
+**ADR:** none - local to the receivers.
+
+## D29 — The child's calculated fields are not editable, including the existing three
+
+**Decision:** `U_score`, `M_score` and `quality` gain `editable=False` along with the new child
+fields, as D27 did for the measurements. `HeatFlow.refresh_quality` is the only writer, and the
+ORM and the factories can still assign them.
+
+**Why:** a value a form offered would be overwritten by the next save. No form, import column or
+registry `fields` list names them.
+
+**Revisit if:** a maintainer needs to hand-set a quality code.
+
+**ADR:** none - follows D27.
+
+## D30 — A parent inherits from its children's stored scores, ranked by the choice lists' order
+
+**Decision:** `QualityScheme.inherit` reads each child's stored `U_score`, `M_score` and `quality`,
+and never recalculates a child. Ranking is the declared order of `UScoreOptions` and
+`MScoreOptions` (`QualityScheme.U_RANK`, `QualityScheme.M_RANK`), which is already best to poorest
+with the marked grades after the unmarked and `Mx` last. The flags are the last seven characters of
+the poorest child's code, and a child with no code yet contributes `-------`. `ParentHeatFlow`
+selects the children: its only child whatever the flag, else those marked relevant.
+
+**Why:** the cascade refreshes each child before its parent, so the stored values are current, and
+one place holds the ranking. A second ranking table would be a second thing to keep in step with the
+choice lists.
+
+**Revisit if:** a choice list is reordered or gains a grade. The ranking test would fail first.
+
+**ADR:** none - follows D9.
+
+## D31 — A child's refresh now ends with its parent's, and the delete collector carries parents
+
+**Decision:** `Recalculation.child` refreshes the child, then the parent it rests under, so a
+child's save and its corrections' saves and deletes all reach the parent. A `pre_save` receiver
+(`remember_parent_before_save`) reads the parent a saved child is leaving, and `refresh_child_on_save`
+refreshes that parent too when `parent` changed. A deleted child adds its parent to the same
+on-commit collector D28 built (`_deleted_child_parents`), and `refresh_collected` refreshes the
+parents that still exist after the children.
+
+**Why:** a dataset delete cascades through every child, so an inline refresh would rescore a
+parent once per child, or a parent that is about to go (D19, D24).
+
+**Revisit if:** US4 folds the collector into the import deferral.
+
+**ADR:** none - local to the receivers.
+
+## D32 — `quality` leaves `ParentHeatFlowConfig.fields`
+
+**Decision:** making `ParentHeatFlow.quality` non-editable made the registry's model form raise
+`FieldError` on it, so `"quality"` is removed from `ParentHeatFlowConfig.fields` (D18 allowed this).
+The form already raised the same error on `ghfdb_id`, which has been `editable=False` since before
+this feature, so the registry form was not usable before and is still not. `ghfdb_id` is left alone.
+
+**Why:** the field is calculated; a form that offered it would be overwritten by the next child save.
+
+**Revisit if:** the maintainer wants the parent's quality shown on its detail page, which needs a
+read-only field list rather than the form's.
+
+**ADR:** none - follows D29.
+
+## D33 — One collector, and a weakly held flag instead of reading Django's commit list
+
+**Decision:** `Recalculation` keeps one collector (`gradients`, `conductivities`, `children`,
+`parents`) and one `request()` entry point. A request refreshes at once, or is collected when it
+comes from a delete (`when_committed`) or while `deferred()` is active. The refresh expands in
+cascade order: the named measurements, then the children that use them plus the named children,
+then those children's parents plus the named parents. The on-commit callback is an `_OnCommit`
+instance held by a `weakref`, so "already scheduled" means the weak reference is alive. It no longer
+reads `connection.run_on_commit`.
+
+**Why:** a plain boolean set on registration and cleared on run (the brief's wording) is never
+cleared when the transaction rolls back, because the callback is dropped unrun. The next
+transaction would then never schedule, and every later delete would leave its parent stale. The
+same wedge hit seven existing tests when tried, through `django_capture_on_commit_callbacks`
+(`execute=False`). A dropped callback is garbage collected, so a weak reference reads as cleared
+with no internal attribute read. `test_a_rolled_back_transaction_does_not_stop_the_next_one_scheduling`
+pins it.
+
+**Revisit if:** Django gains a public way to ask whether a callback is still registered.
+
+**ADR:** none - local to the receivers.
+
+## D34 — `route()` reads the exploration method's name when the site was read back from the database
+
+**Decision:** `quality.route` takes `getattr(method, "name", method)` before looking up `ROUTES`.
+This is a two-line change in `project/heat_flow/quality.py`, which the US4 brief does not list.
+
+**Why:** a `HeatFlowSite` read back from the database holds `explo_method` as a `Concept`, which
+is not a key of `ROUTES`, so every measurement scored from a stored record came out `None` (and
+every child `Mx`). US1 to US3 only scored instances built in memory, where the field still holds
+the string. The cascade and the refresh command always read records back, so without this they
+would overwrite every correct score with "not determined". Two tests in
+`tests/test_heat_flow/test_signals.py` (`TestRecordsLoadedFromTheDatabase`) failed before the change.
+
+**Revisit if:** Forge prefers to land it as a US1 fix. It is separate from the cascade and reverts
+by deleting the two lines.
+
+**ADR:** none - a defect fix.
+
+## D35 — The child resource holds its deferral in an `ExitStack` it owns for one `import_data` call
+
+**Decision:** `GHFDBChildImportResource.before_import` enters `Recalculation.deferred()` on an
+`ExitStack` created in `import_data`; `after_import` closes the stack, which flushes. `import_data`
+runs `super().import_data` inside `with self._recalculation`, so an exception that skips
+`after_import` exits the deferral with the exception, which discards what was collected and switches
+recalculation on again.
+
+**Why:** the deferral has to start and end in two different hooks, inside the import's transaction
+(a dry run or check rolls the scores back with the rows), and still end on failure. Left to garbage
+collection it would only reset when the resource is collected. The test keeps the resource alive so
+that it fails without the `with`.
+
+**Revisit if:** FairDM or django-import-export gives resources a single hook around the whole
+import.
+
+**ADR:** none - local to the resource.
+
+## D36 — The command reads pks first and refreshes in chunks; a child reads its corrections through `.all()`
+
+**Decision:** `refresh_quality` lists the pks of each level (stale-only, or every record with
+`--all`), then fetches `CHUNK_SIZE` (500) records at a time with the concept fields prefetched
+(for a child, through `thermal_gradient__…` and `thermal_conductivity__…` too) and its
+corrections, and refreshes each. `HeatFlow.refresh_quality` reads `self.corrections.all()` in place
+of `self.corrections.values_list(...)`, so the prefetch is used. A refresh with nothing prefetched
+makes the same one query as before.
+
+**Why:** walking a queryset that the refresh is shrinking (stale-only) risks skipping rows, and a
+`values_list` bypasses a prefetch (design review ARCH-005). About 18 queries per determination
+remain in the tests (its gradient, conductivity, child and parent), most of them the polymorphic
+reads of the interval and site, which cannot be prefetched here.
+
+**Revisit if:** the first run at release size is too slow on the server.
+
+**ADR:** none - local to the command.
+
+## D37 — The measurement page picks its card from the content type, and tests read `data-quality` hooks
+
+**Decision:** `templates/measurement/detail.html` selects the card with
+`measurement.polymorphic_ctype.model` (`heatflow`, `thermalgradient`, `intervalconductivity`) and
+an explicit `{% if %}` chain, with no view change and no model property. Each value a test needs is
+a `data-quality` element carrying `data-value` (the stored value, locale-free), `data-state`
+(`determined` or `not-determined`) and, for a score, `data-missing`; the missing-information mark is
+a nested `data-quality-mark` element with visible text. A score of `None` is written as "not
+determined" and never as a number.
+
+**Why:** the brief rules out view and model changes, `_meta` is not reachable from a template, and
+an `{% include %}` of a computed name raises when no partial exists for a type. The hooks keep the
+tests on values and states, never on wording or classes. The content type costs one query per page
+whatever the number of corrections.
+
+**Revisit if:** FairDM gives measurement pages a per-model template or extension point.
+
+**ADR:** none - local to one template.

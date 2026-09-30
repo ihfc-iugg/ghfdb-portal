@@ -65,4 +65,4 @@ EXPOSE 5000
 # Port 5000 is what the traefik labels in docker-compose.yml route to.
 # collectstatic and compress run at start because they need the runtime
 # environment injected by Compose, not the values present at build time.
-CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --noinput && python manage.py compress && exec gunicorn config.wsgi:application --bind 0.0.0.0:5000 --workers 4"]
+CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py refresh_quality && python manage.py collectstatic --noinput && python manage.py compress && exec gunicorn config.wsgi:application --bind 0.0.0.0:5000 --workers 4"]

@@ -1,0 +1,19 @@
+{% load i18n %}
+<tr>
+  <th scope="row">{{ letter }}</th>
+  <td>{{ name }}</td>
+  <td data-quality="flag-{{ letter }}"
+      data-value="{{ char }}">
+    {% if char == "-" %}
+      {% trans "None, or not recorded" %}
+    {% elif char == "X" %}
+      {% trans "Present, not significant" %}
+    {% elif char == "x" %}
+      {% trans "Not recognised" %}
+    {% elif char|upper == char %}
+      {% trans "Present, corrected" %}
+    {% else %}
+      {% trans "Present, not corrected" %}
+    {% endif %}
+  </td>
+</tr>

@@ -1,0 +1,144 @@
+{% load i18n %}
+<section class="card mt-4"
+         data-quality-card="child"
+         aria-labelledby="quality-heading">
+  <div class="card-body">
+    <h2 class="h5 card-title" id="quality-heading">{% trans "Quality score" %}</h2>
+    <p class="text-muted">
+      {% blocktrans %}Scores run from 1 (excellent) to 4 (poor). The temperature gradient and the thermal conductivity are scored on their own, and this heat flow value then applies its own corrections to reach the corrected score its M-score is made from.{% endblocktrans %}
+    </p>
+    <table class="table table-sm align-middle">
+      <caption class="visually-hidden">{% trans "Temperature gradient and thermal conductivity scores" %}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{% trans "Score" %}</th>
+          <th scope="col">{% trans "Own score" %}</th>
+          <th scope="col">{% trans "Corrected for this heat flow" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">{% trans "T-score (temperature gradient)" %}</th>
+          <td>
+            {% with gradient=child.thermal_gradient %}
+              {% if gradient %}
+                {% include "measurement/quality/score.html" with hook="t-own" score=gradient.score missing=gradient.score_missing %}
+              {% else %}
+                {% include "measurement/quality/score.html" with hook="t-own" score=None %}
+              {% endif %}
+            {% endwith %}
+          </td>
+          <td>
+            {% include "measurement/quality/score.html" with hook="t-corrected" score=child.T_score missing=child.T_score_missing %}
+          </td>
+        </tr>
+        <tr>
+          <th scope="row">{% trans "TC-score (thermal conductivity)" %}</th>
+          <td>
+            {% with conductivity=child.thermal_conductivity %}
+              {% if conductivity %}
+                {% include "measurement/quality/score.html" with hook="tc-own" score=conductivity.score missing=conductivity.score_missing %}
+              {% else %}
+                {% include "measurement/quality/score.html" with hook="tc-own" score=None %}
+              {% endif %}
+            {% endwith %}
+          </td>
+          <td>
+            {% include "measurement/quality/score.html" with hook="tc-corrected" score=child.TC_score missing=child.TC_score_missing %}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <dl class="row mt-3">
+      <dt class="col-sm-3">{% trans "U-score" %}:</dt>
+      <dd class="col-sm-9">
+        {% if child.U_score == "Ux" %}
+          <span data-quality="u"
+                data-state="not-determined"
+                data-value="{{ child.U_score }}">{% trans "Not determined" %}</span>
+        {% else %}
+          <span data-quality="u"
+                data-state="determined"
+                data-value="{{ child.U_score }}">{{ child.U_score }}</span>
+        {% endif %}
+      </dd>
+      <dt class="col-sm-3">{% trans "M-score" %}:</dt>
+      <dd class="col-sm-9">
+        {% if child.M_score == "Mx" %}
+          <span data-quality="m"
+                data-state="not-determined"
+                data-value="{{ child.M_score }}"
+                data-missing="false">{% trans "Not determined" %}</span>
+        {% elif child.M_score|last == "x" %}
+          <span data-quality="m"
+                data-state="determined"
+                data-value="{{ child.M_score }}"
+                data-missing="true">{{ child.M_score }} <span class="badge text-bg-warning"
+       data-quality-mark="missing">{% trans "Missing information" %}</span></span>
+        {% else %}
+          <span data-quality="m"
+                data-state="determined"
+                data-value="{{ child.M_score }}"
+                data-missing="false">{{ child.M_score }}</span>
+        {% endif %}
+      </dd>
+      <dt class="col-sm-3">{% trans "Quality code" %}:</dt>
+      <dd class="col-sm-9">
+        {% if child.quality %}
+          <code data-quality="code"
+                data-state="determined"
+                data-value="{{ child.quality }}">{{ child.quality }}</code>
+        {% else %}
+          <span data-quality="code"
+                data-state="not-determined"
+                data-value="">{% trans "Not determined" %}</span>
+        {% endif %}
+      </dd>
+      <dt class="col-sm-3">{% trans "Scheme revision" %}:</dt>
+      <dd class="col-sm-9">
+        {% if child.quality_scheme %}
+          <span data-quality="scheme"
+                data-state="determined"
+                data-value="{{ child.quality_scheme }}">{{ child.quality_scheme }}</span>
+        {% else %}
+          <span data-quality="scheme"
+                data-state="not-determined"
+                data-value="">{% trans "Not yet calculated" %}</span>
+        {% endif %}
+      </dd>
+    </dl>
+    <h3 class="h6">{% trans "Perturbation flags" %}</h3>
+    {% with flags=child.quality|slice:"-7:" %}
+      <table class="table table-sm align-middle">
+        <caption class="visually-hidden">{% trans "The seven perturbation flags, one for each correction" %}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{% trans "Flag" %}</th>
+            <th scope="col">{% trans "Correction" %}</th>
+            <th scope="col">{% trans "State" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% trans "Sedimentation" as name %}
+          {% include "measurement/quality/flag.html" with letter="S" name=name char=flags|slice:"0:1" %}
+          {% trans "Erosion" as name %}
+          {% include "measurement/quality/flag.html" with letter="E" name=name char=flags|slice:"1:2" %}
+          {% trans "Topography" as name %}
+          {% include "measurement/quality/flag.html" with letter="T" name=name char=flags|slice:"2:3" %}
+          {% trans "Paleoclimate" as name %}
+          {% include "measurement/quality/flag.html" with letter="P" name=name char=flags|slice:"3:4" %}
+          {% trans "Surface and bottom-water temperature variation" as name %}
+          {% include "measurement/quality/flag.html" with letter="V" name=name char=flags|slice:"4:5" %}
+          {% trans "Convection" as name %}
+          {% include "measurement/quality/flag.html" with letter="C" name=name char=flags|slice:"5:6" %}
+          {% trans "Heat refraction" as name %}
+          {% include "measurement/quality/flag.html" with letter="R" name=name char=flags|slice:"6:7" %}
+        </tbody>
+      </table>
+    {% endwith %}
+    <p class="small text-muted">
+      {% blocktrans %}In the quality code the flags are written in this order. An upper-case letter means the effect is present and corrected, a lower-case letter present and not corrected, <code>X</code> present and not significant, <code>x</code> not recognised, and <code>-</code> none or not recorded.{% endblocktrans %}
+    </p>
+    {% include "measurement/quality/legend.html" %}
+  </div>
+</section>

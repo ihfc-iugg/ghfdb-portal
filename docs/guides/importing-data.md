@@ -204,6 +204,45 @@ a concept for but the sheet does not list is still accepted. The two are expecte
 time to time; when they do, the portal's concepts are what matters, not the copy of the sheet
 travelling with the file.
 
+## A cell reading `[unspecified]` is a value, and a blank cell is not
+
+In a column that takes several vocabulary values, a cell reading `[unspecified]` is stored as the
+vocabulary's own `unspecified` concept wherever the vocabulary defines one. A blank cell stores
+nothing, and the record's field stays empty. The difference matters because the
+[quality scores](quality-scores.md) treat them differently: an input recorded as unspecified takes
+its largest penalty, and an empty input takes the same penalty and marks the score as reached with
+missing information. A vocabulary that defines no `unspecified` concept drops the token, as it did
+before. The export writes a stored `unspecified` concept back as the label "Unspecified", which
+the import reads as the same concept again.
+
+Single-valued vocabulary columns and the date-of-acquisition column are unchanged: `[unspecified]`
+there still reads as no value.
+
+## A correction cell may carry the status label
+
+The nine correction columns (`corr_IS_flag` to `corr_HR_flag`) take a status key such as
+`present_corrected`, the shorthands `Yes`, `1` and `true`, or the published status label. The label
+is read the way a vocabulary cell is, ignoring case, the square brackets and the spaces around
+them, so `[Present and corrected]`, `[Present and not corrected]`, `[Present not significant]` and
+`[not recognized]` store `present_corrected`, `present_not_corrected`,
+`present_not_significant` and `not_recognized`. The [quality scores](quality-scores.md) read these
+statuses to write the perturbation flags.
+
+A label the correction does not accept, such as `[Present not significant]` on the temperature
+correction, and a cell that matches nothing, both store `-`, which is "unspecified". No file that
+imported before is refused now.
+
+Records imported before this change keep the `-` they were given. Importing the file again stores
+the status the cell says.
+
+## Scores are calculated when the import ends
+
+The import calculates the [quality scores](quality-scores.md) of every gradient, conductivity,
+child and parent it wrote, once each, after the last row and inside the same transaction. A check
+stores no scores, because it stores no rows, and a file that is refused leaves no score behind. The
+file cannot supply a quality code: a column such as `quality_child` is refused with the other
+columns the template does not have.
+
 ## Importing the same file again updates what is there
 
 Re-sending a file the dataset already holds the contents of does not add a second copy of

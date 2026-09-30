@@ -17,9 +17,12 @@ References:
     - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
 """
 
+from contextlib import ExitStack
+
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
+from heat_flow.signals import Recalculation
 from import_export import fields, widgets
 from import_export.resources import ModelResource
 from import_export.widgets import ForeignKeyWidget
@@ -35,6 +38,7 @@ from .widgets import (
     QuantityWidget,
     YesNoWidget,
     is_blank_cell,
+    normalize_vocab_token,
 )
 
 
@@ -151,6 +155,7 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         self._fairdm_dataset = None
         self._current_row_number = None
         self._igsn_claims: dict[str, int] = {}
+        self._recalculation = ExitStack()
 
     # ------------------------------------------------------------------
     # Hooks
@@ -167,8 +172,25 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         """
         self._current_row_number = kwargs.get("row_number")
 
+    def import_data(self, *args, **kwargs):
+        """Import the rows, leaving recalculation switched on whether or not it succeeds.
+
+        Stored scores are not refreshed row by row while the import runs
+        (``before_import``), but once, when it ends (``after_import``). A failure that
+        skips ``after_import`` leaves the collected refreshes unwritten, and they go
+        with the rows the transaction rolls back.
+        """
+        self._recalculation = ExitStack()
+        with self._recalculation:
+            return super().import_data(*args, **kwargs)
+
+    def after_import(self, dataset, result, **kwargs):
+        """Refresh every score the import touched, once each, inside its transaction."""
+        super().after_import(dataset, result, **kwargs)
+        self._recalculation.close()
+
     def before_import(self, dataset, **kwargs):
-        """Store the caller's named FairDM dataset for use during row processing.
+        """Defer score refreshes, and store the caller's named FairDM dataset.
 
         FS-004 FR-002: the import refuses to guess a dataset. A caller passing an
         already-resolved ``Dataset`` instance as ``fairdm_dataset`` reaches a
@@ -180,6 +202,7 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         file (see ``_create_igsn_identifier``).
         """
         self._igsn_claims = {}
+        self._recalculation.enter_context(Recalculation.deferred())
         fairdm_dataset = kwargs.get("fairdm_dataset")
         if fairdm_dataset is None:
             raise ValueError(
@@ -325,15 +348,25 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
 
         for col_name, correction_type in CORRECTION_COL_MAP.items():
             raw = row.get(col_name, "")
-            status = self._parse_correction_status(raw)
+            status = self._parse_correction_status(raw, correction_type)
             HeatFlowCorrection.objects.update_or_create(
                 heat_flow=instance,
                 correction_type=correction_type,
                 defaults={"status": status},
             )
 
-    def _parse_correction_status(self, raw: str) -> str:
-        """Map a raw correction flag value to a HeatFlowCorrection.StatusChoices key."""
+    def _parse_correction_status(self, raw: str, correction_type: str) -> str:
+        """Map a raw correction flag value to a HeatFlowCorrection.StatusChoices key.
+
+        Args:
+            raw: The cell: a status key, a yes shorthand or a published status label such as
+                ``[Present and corrected]``.
+            correction_type: The correction the cell belongs to.
+
+        Returns:
+            The status key. A label the correction type does not accept, and any cell that
+            matches nothing, give the unspecified key.
+        """
         from heat_flow.models import HeatFlowCorrection
 
         StatusChoices = HeatFlowCorrection.StatusChoices
@@ -349,6 +382,15 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         # Map Yes/No shorthands
         if raw.lower() in ("yes", "1", "true"):
             return present_corrected
+        # The published templates carry the status label, which the vocabulary widgets read
+        # the same way.
+        accepted = HeatFlowCorrection.VALID_STATUS_FOR_TYPE.get(
+            correction_type, HeatFlowCorrection.ENVIRONMENTAL_VALID
+        )
+        token = normalize_vocab_token(raw)
+        for value, label in StatusChoices.choices:
+            if value in accepted and normalize_vocab_token(str(label)) == token:
+                return str(value)
         return unspecified
 
     def _create_probe_metadata(self, instance, row):

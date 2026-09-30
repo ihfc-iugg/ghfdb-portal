@@ -199,6 +199,48 @@ Which of the two pairs the portal should treat as canonical on import and export
 It is tracked in [issue #122](https://github.com/ihfc-iugg/ghfdb-portal/issues/122) along with the
 rest of the published column vocabulary.
 
+The portal also stores the scores it calculates on the two measurements a child is made from. These
+are not published columns, so they have no GHFDB name and are not in the mapping tables above. See
+[Quality scores](guides/quality-scores.md) for how they are reached.
+
+| Field | Model | Database Table | Meaning |
+| --- | --- | --- | --- |
+| `score` | ThermalGradient | heat\_flow\_thermalgradient | The T-score: the gradient's own score, from 0.1 to 1.2. Null means not determined. Indexed. |
+| `score_missing` | ThermalGradient | heat\_flow\_thermalgradient | True when an input the T-score needed was empty. |
+| `quality_scheme` | ThermalGradient | heat\_flow\_thermalgradient | The scheme revision the score was calculated under, currently `hfqa_tool 0.2`. |
+| `score` | IntervalConductivity | heat\_flow\_intervalconductivity | The TC-score: the conductivity's own score, from 0.1 to 1.2. Null means not determined. Indexed. |
+| `score_missing` | IntervalConductivity | heat\_flow\_intervalconductivity | True when an input the TC-score needed was empty. |
+| `quality_scheme` | IntervalConductivity | heat\_flow\_intervalconductivity | The scheme revision the score was calculated under, currently `hfqa_tool 0.2`. |
+
+A child stores the scores it calculates from its own value and corrections. None of them can be
+edited.
+
+| Field | Model | Database Table | Meaning |
+| --- | --- | --- | --- |
+| `U_score` | HeatFlow | heat\_flow\_heatflow | The U-score, from the coefficient of variation. Indexed. |
+| `T_score` | HeatFlow | heat\_flow\_heatflow | The child's corrected T-score, equal to the toolbox's per-row T. Null means not determined. Indexed. |
+| `T_score_missing` | HeatFlow | heat\_flow\_heatflow | True when an input the corrected T-score needed was empty. |
+| `TC_score` | HeatFlow | heat\_flow\_heatflow | The child's corrected TC-score, equal to the toolbox's per-row TC. Null means not determined. Indexed. |
+| `TC_score_missing` | HeatFlow | heat\_flow\_heatflow | True when an input the corrected TC-score needed was empty. |
+| `M_score` | HeatFlow | heat\_flow\_heatflow | The M-score, from the product of the corrected T-score and TC-score. Indexed. |
+| `quality` | HeatFlow | heat\_flow\_heatflow | The quality code, for example `U2.M3x.-e-PX--`: the U-score, the M-score and the seven perturbation flags. At most 14 characters. |
+| `quality_scheme` | HeatFlow | heat\_flow\_heatflow | The scheme revision the scores were calculated under, currently `hfqa_tool 0.2`. |
+
+A parent inherits its scores from its children (see [Quality scores](guides/quality-scores.md),
+*What a parent inherits*). None of them can be edited, and inheritance never changes the parent's
+`value`.
+
+| Field | Model | Database Table | Meaning |
+| --- | --- | --- | --- |
+| `U_score` | ParentHeatFlow | heat\_flow\_parentheatflow | The poorest U-score among the children the parent rests on. Indexed. |
+| `M_score` | ParentHeatFlow | heat\_flow\_parentheatflow | The poorest M-score among them. Indexed. |
+| `quality` | ParentHeatFlow | heat\_flow\_parentheatflow | The inherited quality code, for example `U3.M1x.-E-----`. At most 14 characters. |
+| `quality_scheme` | ParentHeatFlow | heat\_flow\_parentheatflow | The scheme revision the inherited scores were calculated under, currently `hfqa_tool 0.2`. |
+
+`M_score` is three characters wide on both, to hold the four grades reached with missing
+information (`M1x` to `M4x`). The perturbation flags are the last seven characters of `quality` and
+are not stored apart.
+
 #### Removed Fields
 
 The following fields existed in older versions of the data model but have been removed or relocated.

@@ -1007,3 +1007,136 @@ class TestCheckOnlyMode:
         assert HeatFlowSite.objects.exists()
         assert ParentHeatFlow.objects.exists()
         assert HeatFlow.objects.exists()
+
+
+SCORED_ROW = {
+    **ROW,
+    "explo_method": "[Drilling]",
+    "T_grad_mean": "25.0",
+    "T_number": "10",
+    "tc_mean": "2.5",
+    "tc_number": "30",
+    "corr_S_flag": "Yes",
+}
+
+
+def second_site_row():
+    return {
+        **SCORED_ROW,
+        "ID_parent": "2",
+        "ID": "2",
+        "name": "Test Site Beta",
+        "lat_NS": "50.0",
+        "long_EW": "8.0",
+    }
+
+
+@pytest.mark.django_db
+class TestAnImportScoresWhatItWrote:
+    # FS-007 US4-4: scores are calculated once, when the import ends.
+
+    def test_every_record_the_file_wrote_carries_its_scores(self, dataset):
+        from heat_flow.models import (
+            HeatFlow,
+            IntervalConductivity,
+            ParentHeatFlow,
+            ThermalGradient,
+        )
+
+        from project.ghfdb.importers import import_ghfdb_template
+        from tests.test_heat_flow.test_signals import StoredScores
+
+        outcome = import_ghfdb_template(
+            make_dataset(SCORED_ROW, second_site_row()), dataset
+        )
+
+        assert not outcome.has_errors()
+        for model in (ThermalGradient, IntervalConductivity, HeatFlow, ParentHeatFlow):
+            records = list(model.objects.all())
+            assert records
+            assert {record.quality_scheme for record in records} == {"hfqa_tool 0.2"}
+        child = HeatFlow.objects.get(ghfdb_id=1)
+        assert child.quality.endswith(".S------")
+        assert child.T_score is not None
+        assert StoredScores.differing() == []
+
+    def test_each_record_is_refreshed_once_not_once_per_save(self, dataset):
+        from project.ghfdb.importers import import_ghfdb_template
+        from tests.test_heat_flow.test_signals import RefreshSpy
+
+        with RefreshSpy() as spy:
+            import_ghfdb_template(
+                make_dataset(SCORED_ROW, second_site_row()), dataset
+            )
+
+        assert spy.calls
+        assert len(spy.calls) == len(set(spy.calls))
+
+    def test_a_check_leaves_nothing_stored_and_the_next_import_is_scored(self, dataset):
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.importers import import_ghfdb_template
+        from tests.test_heat_flow.test_signals import StoredScores
+
+        import_ghfdb_template(make_dataset(SCORED_ROW), dataset, check_only=True)
+        assert not HeatFlow.objects.exists()
+
+        import_ghfdb_template(make_dataset(SCORED_ROW), dataset)
+
+        assert HeatFlow.objects.get().quality_scheme == "hfqa_tool 0.2"
+        assert StoredScores.differing() == []
+
+    def test_a_dry_run_of_the_child_resource_leaves_nothing_stored(self, dataset):
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.importers import import_ghfdb_template
+        from project.ghfdb.resources import GHFDBChildImportResource
+
+        import_ghfdb_template(make_dataset(ROW), dataset)
+        HeatFlow.objects.all().delete()
+
+        result = GHFDBChildImportResource().import_data(
+            make_dataset(SCORED_ROW), dry_run=True, fairdm_dataset=dataset
+        )
+
+        assert not result.has_errors()
+        assert not HeatFlow.objects.exists()
+
+    def test_a_failed_import_leaves_recalculation_switched_on(self, dataset):
+        from heat_flow.models import ThermalGradient
+
+        from project.ghfdb.resources import GHFDBChildImportResource
+        from tests.factories import ThermalGradientFactory
+
+        resource = GHFDBChildImportResource()
+        with pytest.raises(Exception):  # noqa: B017, PT011 - any fault in the file
+            resource.import_data(
+                make_dataset({**SCORED_ROW, "qc": "not a number"}),
+                dry_run=False,
+                raise_errors=True,
+                fairdm_dataset=dataset,
+            )
+
+        # The resource is still alive here, so nothing but the import itself can have
+        # switched recalculation back on.
+        gradient = ThermalGradientFactory()
+        assert (
+            ThermalGradient.objects.get(pk=gradient.pk).quality_scheme
+            == "hfqa_tool 0.2"
+        )
+        assert resource
+
+    def test_a_quality_code_in_the_file_is_still_refused(self, dataset):
+        # ADR 0004: the portal calculates the code, so a file cannot supply one.
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        with pytest.raises(ValueError) as excinfo:
+            import_ghfdb_template(
+                make_dataset({**SCORED_ROW, "quality_child": "U1.M1.-------"}),
+                dataset,
+            )
+
+        assert "quality_child" in str(excinfo.value)
+        assert not HeatFlow.objects.exists()

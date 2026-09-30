@@ -163,8 +163,10 @@ code to make a test pass.
   verifying the mapping end-to-end: model → serialiser/export → flat row, and flat row → importer
   → model. Reference the row in `docs/ghfdb_fields.md` the test covers.
 - **Quality-score regression tests.** `U-score` and `M-score` calculations are tested against
-  known reference values from Fuchs et al. (2021, 2023), pinned as regression tests with at least
-  two example inputs each. Assert coordinate precision to 0.0001 degrees and heat flow values to
+  reference values pinned as regression tests, with at least two example inputs each. The
+  reference values are the output of the Heat Flow Quality Analysis Toolbox V0.2 itself, which
+  scored the release, and the examples in Fuchs et al. (2021, 2023) are used only where they
+  agree with it. Assert coordinate precision to 0.0001 degrees and heat flow values to
   0.01 mW/m².
 
 ---
