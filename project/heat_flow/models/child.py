@@ -26,7 +26,7 @@ from research_vocabs.fields import ConceptManyToManyField
 
 from heat_flow import vocabularies
 
-from ..quality import SCHEME_REVISION, Reading, SubScore, route
+from ..quality import SCHEME_REVISION, QualityScheme, Reading, SubScore, route
 from ..utils import MScoreOptions, UScoreOptions
 
 
@@ -167,29 +167,89 @@ class HeatFlow(Measurement):
         choices=UScoreOptions.choices,
         verbose_name=_("U-score"),
         help_text=_(
-            "Numerical uncertainty of the heat-flow value, as defined in Fuchs et al. (2023)."
+            "Numerical uncertainty of the heat-flow value, graded from the uncertainty as a"
+            " percentage of the value (Fuchs et al. 2023; Dergunova et al. 2026)."
             " U1 = Excellent, U2 = Good, U3 = Ok, U4 = Poor, Ux = not determined / missing data."
+            " Calculated by the portal."
         ),
         default=UScoreOptions.Ux,
+        editable=False,
+    )
+    T_score = models.FloatField(
+        verbose_name=_("T-score (corrected)"),
+        help_text=_(
+            "The child's temperature-gradient score after its own corrections are applied, from"
+            " 0.1 to 1.2. It equals the T-score the Heat Flow Quality Analysis Toolbox gives the"
+            " same row. Empty means not determined. Calculated by the portal."
+        ),
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    T_score_missing = models.BooleanField(
+        verbose_name=_("T-score reached with missing information"),
+        help_text=_(
+            "True when an input the corrected T-score needed was empty. Calculated by the portal."
+        ),
+        default=False,
+        editable=False,
+    )
+    TC_score = models.FloatField(
+        verbose_name=_("TC-score (corrected)"),
+        help_text=_(
+            "The child's thermal-conductivity score after its own corrections are applied, from"
+            " 0.1 to 1.2. It equals the TC-score the Heat Flow Quality Analysis Toolbox gives"
+            " the same row. Empty means not determined. Calculated by the portal."
+        ),
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    TC_score_missing = models.BooleanField(
+        verbose_name=_("TC-score reached with missing information"),
+        help_text=_(
+            "True when an input the corrected TC-score needed was empty. Calculated by the"
+            " portal."
+        ),
+        default=False,
+        editable=False,
     )
     M_score = models.CharField(
         max_length=3,
         choices=MScoreOptions.choices,
         verbose_name=_("M-score"),
         help_text=_(
-            "Methodological quality of the heat-flow value, as defined in Fuchs et al. (2023)."
+            "Methodological quality of the heat-flow value, graded from the product of the"
+            " corrected T-score and TC-score (Fuchs et al. 2023; Dergunova et al. 2026)."
             " M1 = Excellent, M2 = Good, M3 = Ok, M4 = Poor, Mx = not determined / missing data."
+            " A trailing x marks a grade reached with missing information. Calculated by the"
+            " portal."
         ),
         default=MScoreOptions.Mx,
+        editable=False,
     )
     quality = models.CharField(
-        max_length=13,
+        max_length=14,
         verbose_name=_("quality score"),
         help_text=_(
-            "Overall quality assessment of the heat-flow value, based on a combination of U-score and M-score, as well as expert judgment on the reliability of the data."
+            "The quality code: the U-score, the M-score and the seven perturbation flags"
+            " (S E T P V C R), joined by dots, for example U2.M3x.-e-PX--. Calculated by the"
+            " portal."
         ),
         null=True,
         blank=True,
+        editable=False,
+    )
+    quality_scheme = models.CharField(
+        max_length=32,
+        verbose_name=_("scheme revision"),
+        help_text=_(
+            "The revision of the quality scheme that calculated the stored scores, for example"
+            " hfqa_tool 0.2. Empty until the scores have been calculated."
+        ),
+        blank=True,
+        default="",
+        editable=False,
     )
 
     parent = models.ForeignKey(
@@ -230,6 +290,8 @@ class HeatFlow(Measurement):
         indexes = [
             models.Index(fields=["U_score"]),
             models.Index(fields=["M_score"]),
+            models.Index(fields=["T_score"]),
+            models.Index(fields=["TC_score"]),
         ]
         # A CheckConstraint on uncertainty is not usable with Quantity fields on SQLite;
         # the field's own validators enforce the same non-negative rule instead.
@@ -248,25 +310,63 @@ class HeatFlow(Measurement):
             )
         super().save(*args, **kwargs)
 
-    def get_perturbation_effects(self):
-        """Return the perturbation effects of the interval based on correction flags."""
-        effects = []
+    def refresh_quality(self) -> None:
+        """Recalculate and store the child's scores, the quality code and the revision.
 
-        for correction in self.corrections.all():
-            correction_type = correction.get_correction_type_display()
-            status = (
-                correction.get_status_display()
-                if hasattr(correction.status, "label")
-                else str(correction.status)
+        Each measurement is scored by the route of its own site, then corrected by this
+        child's corrections: a tilt-corrected temperature and a corrected surface and
+        bottom-water correction waive the probe criteria they cover, and the in-situ
+        correction must agree with a borehole conductivity's pT conditions. The write is a
+        queryset ``update``, so it sends no save signal and the receivers that call this
+        method do not re-enter.
+        """
+        statuses = dict(self.corrections.values_list("correction_type", "status"))
+        t = SubScore(None)
+        rules = (
+            route(Reading.site(self.thermal_gradient))
+            if self.thermal_gradient
+            else None
+        )
+        if rules is not None:
+            t = rules.gradient(
+                self.thermal_gradient,
+                tilt_corrected=statuses.get("T") == "tilt_corrected",
+                bottom_water_corrected=statuses.get("SUR") == "present_corrected",
             )
-            if correction.status in ["present_corrected", "present_uncorrected"]:
-                effects.append(f"{correction_type} ({status})")
+        tc = SubScore(None)
+        rules = (
+            route(Reading.site(self.thermal_conductivity))
+            if self.thermal_conductivity
+            else None
+        )
+        if rules is not None:
+            tc = rules.conductivity(
+                self.thermal_conductivity, in_situ=statuses.get("IS")
+            )
 
-        return effects if effects else None
-
-    def get_quality(self):
-        """Calculate overall quality score for the heat flow measurement."""
-        return None
+        u = QualityScheme.u_score(
+            Reading.magnitude(self.value, "mW / m^2"),
+            Reading.magnitude(self.uncertainty, "mW / m^2"),
+        )
+        m = QualityScheme.m_score(t, tc)
+        self.U_score = u
+        self.T_score, self.T_score_missing = t.value, t.missing
+        self.TC_score, self.TC_score_missing = tc.value, tc.missing
+        self.M_score = m
+        self.quality = QualityScheme.code(
+            u, m, QualityScheme.perturbation_flags(statuses)
+        )
+        self.quality_scheme = SCHEME_REVISION
+        type(self).objects.filter(pk=self.pk).update(
+            U_score=self.U_score,
+            T_score=self.T_score,
+            T_score_missing=self.T_score_missing,
+            TC_score=self.TC_score,
+            TC_score_missing=self.TC_score_missing,
+            M_score=self.M_score,
+            quality=self.quality,
+            quality_scheme=self.quality_scheme,
+        )
 
 
 class ProbeMetadata(django_models.Model):

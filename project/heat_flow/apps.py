@@ -1,7 +1,7 @@
 """App configuration for the heat flow schema."""
 
 from django.apps import AppConfig
-from django.db.models.signals import m2m_changed, post_save
+from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.utils.translation import gettext_lazy as _
 
 
@@ -18,7 +18,12 @@ class HeatFlowSchemaConfig(AppConfig):
     def ready(self):
         """Connect the receivers that keep stored quality scores current."""
         from . import signals
-        from .models import IntervalConductivity, ThermalGradient
+        from .models import (
+            HeatFlow,
+            HeatFlowCorrection,
+            IntervalConductivity,
+            ThermalGradient,
+        )
 
         for model in (ThermalGradient, IntervalConductivity):
             post_save.connect(
@@ -32,3 +37,19 @@ class HeatFlowSchemaConfig(AppConfig):
                     sender=getattr(model, name).through,
                     dispatch_uid=f"refresh_score_on_{model.__name__}_{name}",
                 )
+
+        post_save.connect(
+            signals.refresh_child_on_save,
+            sender=HeatFlow,
+            dispatch_uid="refresh_quality_on_save_HeatFlow",
+        )
+        post_save.connect(
+            signals.refresh_child_on_correction_save,
+            sender=HeatFlowCorrection,
+            dispatch_uid="refresh_quality_on_save_HeatFlowCorrection",
+        )
+        post_delete.connect(
+            signals.refresh_child_on_correction_delete,
+            sender=HeatFlowCorrection,
+            dispatch_uid="refresh_quality_on_delete_HeatFlowCorrection",
+        )

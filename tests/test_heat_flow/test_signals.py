@@ -140,3 +140,64 @@ class TestMeasurementReceivers:
         assert ThermalGradient.objects.get(pk=gradient.pk).score == pytest.approx(
             0.123
         )
+
+
+class TestChildReceivers:
+    def child(self):
+        from tests.factories import HeatFlowFactory
+
+        site = HeatFlowSiteFactory(explo_method="drilling")
+        interval = HeatFlowIntervalFactory(site=site, top=0, bottom=500)
+        return HeatFlowFactory(sample=interval, value=70, uncertainty=7)
+
+    def test_saving_a_child_saves_it_once(self):
+        from heat_flow.models import HeatFlow
+
+        child = self.child()
+
+        with SignalCounter(post_save, HeatFlow) as saves:
+            child.save()
+
+        assert saves.calls == 1
+
+    def test_refreshing_a_child_sends_no_save_signal(self):
+        from heat_flow.models import HeatFlow, HeatFlowCorrection
+
+        child = self.child()
+
+        with (
+            SignalCounter(post_save, HeatFlow) as child_saves,
+            SignalCounter(post_save, HeatFlowCorrection) as correction_saves,
+        ):
+            child.refresh_quality()
+
+        assert child_saves.calls == 0
+        assert correction_saves.calls == 0
+
+    def test_a_fixture_load_does_not_score_the_child(self):
+        from heat_flow.models import HeatFlow
+        from heat_flow.signals import refresh_child_on_save
+
+        child = self.child()
+        HeatFlow.objects.filter(pk=child.pk).update(quality="stale")
+
+        refresh_child_on_save(sender=HeatFlow, instance=child, created=False, raw=True)
+
+        assert HeatFlow.objects.get(pk=child.pk).quality == "stale"
+
+    def test_deleting_several_corrections_of_a_child_schedules_one_refresh(
+        self, django_capture_on_commit_callbacks
+    ):
+        from tests.factories import HeatFlowCorrectionFactory
+
+        child = self.child()
+        corrections = [
+            HeatFlowCorrectionFactory(heat_flow=child, correction_type=kind)
+            for kind in ("S", "E", "SUR")
+        ]
+
+        with django_capture_on_commit_callbacks(execute=False) as callbacks:
+            for correction in corrections:
+                correction.delete()
+
+        assert len(callbacks) == 1

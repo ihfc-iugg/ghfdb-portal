@@ -178,8 +178,20 @@
         },
         {
           "id": "T006",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_models/test_child.py",
+              "tests/test_heat_flow/test_signals.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow tests/test_migrations.py tests/test_factories.py -q",
+              "uv run pytest tests/test_heat_flow/test_signals.py tests/test_heat_flow/test_models/test_child.py -n0 -q",
+              "uv run python manage.py makemigrations heat_flow --check --dry-run",
+              "uv run pre-commit run --files project/heat_flow/apps.py project/heat_flow/models/child.py project/heat_flow/signals.py tests/test_heat_flow/test_signals.py tests/test_heat_flow/test_models/test_child.py"
+            ]
+          }
         },
         {
           "id": "T007",

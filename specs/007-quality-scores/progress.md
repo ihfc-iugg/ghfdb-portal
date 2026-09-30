@@ -124,3 +124,25 @@ keys cases passed as regression guards), then `uv run pytest tests/test_ghfdb/te
 -n0 -q`, 55 passed; `pre-commit run --files` on the changed files clean.
 Next: T006.
 Watch: a key the type refuses (for example `considered_p` on IS) still raises at save, as before.
+
+## 2026-10-01T00:30:00Z · Implementer US2 · T006
+
+Did: added `T_score`, `TC_score`, their two missing marks and `quality_scheme` to `HeatFlow` (the two
+scores indexed), widened `quality` to 14, made the calculated fields `editable=False`, and added
+`HeatFlow.refresh_quality()`: corrected T and TC under the child's rules (tilt waiver from T
+`tilt_corrected`, bottom-water waiver from SUR `present_corrected`, the IS status or `None` to the
+borehole agreement rule), then U, M, flags and code, stored by `update`. Deleted `get_quality` and
+`get_perturbation_effects`. Receivers: a child's save, a correction's save, and a correction's delete
+through one deduplicated on-commit refresh. Regenerated the single `0014_quality_scores` migration.
+Tests first: the stored scores of every R3 case whose corrections the model accepts (X1-X5, P2-P5,
+B2-B4, B6, B9), N1 and N2, both marks, the seven flags, a correction's save and delete, the bottom-water
+waiver, a delete of the child itself, and a query on `T_score` and `TC_score`.
+Verified: red first (`AttributeError: 'HeatFlow' object has no attribute 'T_score'` and `FieldError`),
+then `uv run pytest tests/test_heat_flow tests/test_migrations.py tests/test_factories.py -q`, 419 passed,
+1 skipped; two mutations (dropping the IS argument, dropping the delete receiver's collection or
+its de-duplication) each failed the matching test; `makemigrations heat_flow --check` clean.
+Next: T007.
+Watch: P1, B1, B5, B7 and B8 reach the child only through the scheme until T005 lands (they need tilt
+corrected on T or considered on IS). `ParentHeatFlow.get_quality` still calls the deleted child method;
+nothing calls it and US3 deletes it. Every correction saved on an import row refreshes the child, nine
+times per row, until US4 defers it.
