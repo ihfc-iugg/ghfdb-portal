@@ -218,6 +218,23 @@ the import reads as the same concept again.
 Single-valued vocabulary columns and the date-of-acquisition column are unchanged: `[unspecified]`
 there still reads as no value.
 
+## A correction cell may carry the status label
+
+The nine correction columns (`corr_IS_flag` to `corr_HR_flag`) take a status key such as
+`present_corrected`, the shorthands `Yes`, `1` and `true`, or the published status label. The label
+is read the way a vocabulary cell is, ignoring case, the square brackets and the spaces around
+them, so `[Present and corrected]`, `[Present and not corrected]`, `[Present not significant]` and
+`[not recognized]` store `present_corrected`, `present_not_corrected`,
+`present_not_significant` and `not_recognized`. The [quality scores](quality-scores.md) read these
+statuses to write the perturbation flags.
+
+A label the correction does not accept, such as `[Present not significant]` on the temperature
+correction, and a cell that matches nothing, both store `-`, which is "unspecified". No file that
+imported before is refused now.
+
+Records imported before this change keep the `-` they were given. Importing the file again stores
+the status the cell says.
+
 ## Importing the same file again updates what is there
 
 Re-sending a file the dataset already holds the contents of does not add a second copy of

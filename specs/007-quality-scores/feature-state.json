@@ -164,8 +164,17 @@
         },
         {
           "id": "T005a",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_child.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_ghfdb/test_resources/test_child.py -n0 -q",
+              "uv run pre-commit run --files project/ghfdb/resources/child.py tests/test_ghfdb/test_resources/test_child.py docs/guides/importing-data.md"
+            ]
+          }
         },
         {
           "id": "T006",

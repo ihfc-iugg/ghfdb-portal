@@ -112,3 +112,15 @@ Verified: red first (`ImportError: cannot import name 'QualityScheme'`), then
 on the changed files clean.
 Next: T005a.
 Watch: the new names are quoted on a page in T007.
+
+## 2026-09-30T23:58:00Z · Implementer US2 · T005a
+
+Did: `_parse_correction_status` now also resolves a cell by its status label, normalised with
+`normalize_vocab_token`, and takes the correction type so a label the type refuses stores `-`. Keys
+and the yes shorthands go through the same branches as before. `importing-data.md` states the change
+and that earlier imports keep `-` until re-imported.
+Verified: red first (the twelve label cases and the whitespace case stored `-`; the refused-label and
+keys cases passed as regression guards), then `uv run pytest tests/test_ghfdb/test_resources/test_child.py
+-n0 -q`, 55 passed; `pre-commit run --files` on the changed files clean.
+Next: T006.
+Watch: a key the type refuses (for example `considered_p` on IS) still raises at save, as before.

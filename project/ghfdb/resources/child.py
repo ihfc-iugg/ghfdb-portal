@@ -35,6 +35,7 @@ from .widgets import (
     QuantityWidget,
     YesNoWidget,
     is_blank_cell,
+    normalize_vocab_token,
 )
 
 
@@ -325,15 +326,25 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
 
         for col_name, correction_type in CORRECTION_COL_MAP.items():
             raw = row.get(col_name, "")
-            status = self._parse_correction_status(raw)
+            status = self._parse_correction_status(raw, correction_type)
             HeatFlowCorrection.objects.update_or_create(
                 heat_flow=instance,
                 correction_type=correction_type,
                 defaults={"status": status},
             )
 
-    def _parse_correction_status(self, raw: str) -> str:
-        """Map a raw correction flag value to a HeatFlowCorrection.StatusChoices key."""
+    def _parse_correction_status(self, raw: str, correction_type: str) -> str:
+        """Map a raw correction flag value to a HeatFlowCorrection.StatusChoices key.
+
+        Args:
+            raw: The cell: a status key, a yes shorthand or a published status label such as
+                ``[Present and corrected]``.
+            correction_type: The correction the cell belongs to.
+
+        Returns:
+            The status key. A label the correction type does not accept, and any cell that
+            matches nothing, give the unspecified key.
+        """
         from heat_flow.models import HeatFlowCorrection
 
         StatusChoices = HeatFlowCorrection.StatusChoices
@@ -349,6 +360,15 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         # Map Yes/No shorthands
         if raw.lower() in ("yes", "1", "true"):
             return present_corrected
+        # The published templates carry the status label, which the vocabulary widgets read
+        # the same way.
+        accepted = HeatFlowCorrection.VALID_STATUS_FOR_TYPE.get(
+            correction_type, HeatFlowCorrection.ENVIRONMENTAL_VALID
+        )
+        token = normalize_vocab_token(raw)
+        for value, label in StatusChoices.choices:
+            if value in accepted and normalize_vocab_token(str(label)) == token:
+                return str(value)
         return unspecified
 
     def _create_probe_metadata(self, instance, row):
