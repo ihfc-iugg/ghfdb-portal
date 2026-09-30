@@ -189,3 +189,21 @@ heat_flow --check --dry-run` no changes.
 Next: T009.
 Watch: the registry form for `ParentHeatFlow` still raises on `ghfdb_id` (D32). An unflushed
 `_deleted_child_parents` survives a rolled-back delete, as D28 notes for corrections.
+
+## 2026-09-30T21:58:00Z · Implementer US3 · T009
+
+Did: `docs/guides/quality-scores.md` gains "What a parent inherits" (D9: which children count with the
+single-child rule, the U and M ranking with marked grades poorer than unmarked and `Mx` poorest, flags
+from the poorest-U child, the pk-order tie, the value untouched, and when a parent is refreshed),
+with a worked example run against `QualityScheme.inherit` (`U3.M1x.-E-----`); "In the code" quotes
+`QualityScheme.inherit`, `U_RANK`, `M_RANK`, `NOT_DETERMINED`, `ParentHeatFlow.refresh_quality()`,
+`Recalculation.parent()`, `Recalculation.parent_after_child_deleted()` and the two new receivers.
+`CONTEXT.md`'s quality-code text and its "a parent is never updated automatically" line now say the
+value is designated and the quality inherited. `docs/ghfdb_fields.md` lists the four parent fields
+and `docs/data_models/ghfdb-erd.md` the parent fields, the inheritance rules and the two indexes.
+Verified: `uv run pytest tests/test_docs -q -n0`, 304 passed, 1 skipped. Every new public name under
+`project/` was grepped as code on a page. `sphinx-build` is not installed in this worktree, so the
+docs build itself was not run.
+Next: the full verify, then the report.
+Watch: the guide does not yet describe the cascades from measurement, interval and site changes
+(US4) or the refresh command (US5).

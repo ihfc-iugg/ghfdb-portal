@@ -129,7 +129,10 @@ erDiagram
         boolean corr_HP_flag "Heat production correction considered"
         text comment "General comments on the parent level"
         int ghfdb_id "Published parent identifier, the upsert key"
-        string quality "Overall quality assessment"
+        char U_score "Poorest child U-score (U1-U4, Ux)"
+        char M_score "Poorest child M-score (M1-M4, M1x-M4x, Mx)"
+        string quality "Inherited quality code, for example U2.M3x.-e-PX--"
+        char quality_scheme "Scheme revision of the stored scores"
     }
 
     %% ============================================================
@@ -327,7 +330,7 @@ The aggregated surface heat flow for a site: the parent level of the published s
 **Business Rules**
 
 - Its sample must be a `HeatFlowSite`, and only one parent may exist per site. Both are raised on `save()`
-- Quality is inherited from the children: one child passes its own score up, several pass the poorest of the relevant ones
+- Quality is inherited from the children, not edited: one child passes its own quality up whether or not it is marked relevant, and several pass the poorest of the relevant ones. `refresh_quality()` calculates it, and saving a parent never does. See [Quality scores](../guides/quality-scores.md)
 
 ### HeatFlow
 
@@ -539,19 +542,20 @@ flowchart TD
 
 ### Quality Score Inheritance
 
-The parent heat flow quality is determined by:
+The parent heat flow quality is inherited from its children:
 
-1. **One relevant child**: the parent takes that child's quality directly
-2. **Several relevant children**: the parent takes the poorest of them
+1. **One child**: the parent takes that child's quality directly, whether or not the child is marked relevant
+2. **Several children, some relevant**: the parent takes the poorest U-score and the poorest M-score of the relevant ones, and the flags of the child with the poorest U-score
+3. **Several children, none relevant, or no children**: the parent is not determined, `Ux.Mx.-------`
 
-Children marked as not relevant are left out of the calculation entirely, which is how an outlier or a poor determination is kept in the record without dragging the site's value down.
+Children marked as not relevant are left out of the calculation when there are several, which is how an outlier or a poor determination is kept in the record without dragging the site's value down. [Quality scores](../guides/quality-scores.md) gives the ranking.
 
 ## Database Indices
 
 The following fields are indexed:
 
 - **HeatFlowSite**: `country`, `continent`, `environment`
-- **ParentHeatFlow**: `ghfdb_id`, `corr_HP_flag`
+- **ParentHeatFlow**: `ghfdb_id`, `corr_HP_flag`, `U_score`, `M_score`
 - **HeatFlow**: `U_score`, `M_score`, `T_score`, `TC_score`, and `ghfdb_id` through the field's own index
 - **HeatFlowCorrection**: `correction_type`, `status`
 - **ThermalGradient**: `score`, `number`

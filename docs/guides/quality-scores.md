@@ -1,8 +1,8 @@
 # Quality scores
 
 The portal scores the heat flow data it holds. This page explains the scores a temperature gradient,
-a thermal conductivity and a child heat flow value carry, and how they are reached, so that a data
-user can tell why a value scored what it did.
+a thermal conductivity, a child heat flow value and a parent heat flow value carry, and how they are
+reached, so that a data user can tell why a value scored what it did.
 
 ## Which scheme
 
@@ -260,6 +260,47 @@ at most fourteen characters:
 The paper writes the code without the first full stop. The toolbox writes both, and the portal
 follows the toolbox.
 
+## What a parent inherits
+
+A parent heat flow value is designated by a curator, not calculated, but its quality is not chosen.
+It is inherited from the children it rests on, as Fuchs et al. (2023, section 3.4) describe, using
+the toolbox's ranking for the two points the paper leaves open.
+
+**Which children count.**
+
+- A parent with exactly one child rests on it, whether or not the child is marked relevant. The
+  paper's single-child case does not depend on the flag, so the portal's does not either.
+- A parent with several children rests on those marked relevant. The children not marked take no
+  part, which is how a poor determination stays in the record without lowering the site's quality.
+- A parent with several children of which none is marked relevant, or with no children, is not
+  determined: `Ux`, `Mx` and `-------`, which is the code `Ux.Mx.-------`.
+
+**What it takes from them.**
+
+- The U-score is the poorest among them, ranked `U1`, `U2`, `U3`, `U4`, then `Ux` as the poorest.
+- The M-score is the poorest among them, ranked `M1` to `M4`, then `M1x` to `M4x`, then `Mx`. Any
+  grade marked as reached with missing information is poorer than any unmarked grade, so `M1x` is
+  poorer than `M4`.
+- The perturbation flags are taken whole from the child with the poorest U-score, the child with
+  the poorest M-score deciding a tie. They are not merged flag by flag. When two children tie on both
+  scores, the one with the lower primary key wins, so recalculating gives the same flags every time.
+
+For example, a parent with two relevant children coded `U1.M4.S------` and `U3.M1x.-E-----`
+inherits `U3.M1x.-E-----`. `U3` is the poorer U-score, `M1x` is the poorer M-score because a marked
+grade is poorer than `M4`, and the flags are those of the child with the poorer U-score.
+
+A parent's **value** is never changed by inheritance. Only `U_score`, `M_score`, `quality` and
+`quality_scheme` are written.
+
+**When it is recalculated.** A parent is refreshed only when something on the child side changes,
+never by saving the parent. Saving a child, changing whether it is relevant, moving it to another
+parent (which refreshes both parents), deleting it, and saving or deleting one of its corrections
+each refresh the parent. Saving the parent itself does not, because its inputs are its children and
+the choice of which are relevant stays with the curator. A deleted child's parent is refreshed
+once the deleting transaction commits, and only if it still exists.
+
+A queryset `update` or `bulk_create` sends no signal, so it leaves the parent as it was.
+
 ## How these match the toolbox
 
 For every row the toolbox scores, the T-score and TC-score it reports are the child's corrected
@@ -345,7 +386,10 @@ The scheme lives in `project/heat_flow/quality.py`, and nothing else in the port
   not determined.
 - `QualityScheme` does the arithmetic of a child's code: `QualityScheme.u_score(value,
   uncertainty)`, `QualityScheme.m_score(t, tc)`, `QualityScheme.perturbation_flags(statuses)` and
-  `QualityScheme.code(u, m, flags)`.
+  `QualityScheme.code(u, m, flags)`. It also does a parent's: `QualityScheme.inherit(children)`
+  returns the inherited U-score, M-score and flags. `QualityScheme.U_RANK` and
+  `QualityScheme.M_RANK` list the grades from best to poorest, and `QualityScheme.NOT_DETERMINED`
+  is the `Ux`, `Mx`, `-------` it returns for no children.
 - `SCHEME_REVISION` is the revision every stored score records.
 
 `ScoredMeasurement`, in `project/heat_flow/models/child.py`, is what a thermal gradient and an
@@ -353,15 +397,22 @@ interval conductivity share to store their own score. `refresh_score()` recalcul
 score, the mark and the revision. `HeatFlow.refresh_quality()` does the same for a child: it reads
 the child's corrections, scores the gradient and the conductivity by the child rules, and stores
 the corrected scores, the M-score, the U-score, the code and the revision.
+`ParentHeatFlow.refresh_quality()`, in `project/heat_flow/models/parent.py`, does it for a parent:
+it picks the children the parent rests on, calls `QualityScheme.inherit()`, and stores `U_score`,
+`M_score`, `quality` and `quality_scheme`. Like the others it writes with a queryset `update`.
 
-The receivers in `project/heat_flow/signals.py` call them. `Recalculation.child()` refreshes a child,
-and `Recalculation.child_after_correction_deleted()` collects a child whose correction was deleted
-so that `Recalculation.refresh_collected()` refreshes it once, when the transaction commits. The
-receivers `refresh_child_on_save`, `refresh_child_on_correction_save` and
+The receivers in `project/heat_flow/signals.py` call them. `Recalculation.child()` refreshes a child
+and then its parent, and `Recalculation.parent()` refreshes a parent by its pk if it still exists.
+`Recalculation.child_after_correction_deleted()` collects a child whose correction was deleted, and
+`Recalculation.parent_after_child_deleted()` collects the parent of a deleted child, so that
+`Recalculation.refresh_collected()` refreshes each once, when the transaction commits. The
+receivers `remember_parent_before_save`, `refresh_child_on_save`,
+`refresh_child_on_correction_save`, `refresh_parent_on_child_delete` and
 `refresh_child_on_correction_delete` are connected in the app's `ready()`.
+`remember_parent_before_save` notes the parent a child is leaving, which `refresh_child_on_save`
+then refreshes along with the new one.
 
 ## Not covered here
 
-This page covers the scores of a gradient, a conductivity and a child. The quality a parent inherits
-from its children, and how the scores are kept current after a change to a measurement, an interval
-or a site, are documented as they are built.
+This page covers the scores of a gradient, a conductivity, a child and a parent. How the scores are
+kept current after a change to a measurement, an interval or a site is documented as it is built.

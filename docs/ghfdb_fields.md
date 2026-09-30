@@ -226,7 +226,18 @@ edited.
 | `quality` | HeatFlow | heat\_flow\_heatflow | The quality code, for example `U2.M3x.-e-PX--`: the U-score, the M-score and the seven perturbation flags. At most 14 characters. |
 | `quality_scheme` | HeatFlow | heat\_flow\_heatflow | The scheme revision the scores were calculated under, currently `hfqa_tool 0.2`. |
 
-`HeatFlow.M_score` is three characters wide, to hold the four grades reached with missing
+A parent inherits its scores from its children (see [Quality scores](guides/quality-scores.md),
+*What a parent inherits*). None of them can be edited, and inheritance never changes the parent's
+`value`.
+
+| Field | Model | Database Table | Meaning |
+| --- | --- | --- | --- |
+| `U_score` | ParentHeatFlow | heat\_flow\_parentheatflow | The poorest U-score among the children the parent rests on. Indexed. |
+| `M_score` | ParentHeatFlow | heat\_flow\_parentheatflow | The poorest M-score among them. Indexed. |
+| `quality` | ParentHeatFlow | heat\_flow\_parentheatflow | The inherited quality code, for example `U3.M1x.-E-----`. At most 14 characters. |
+| `quality_scheme` | ParentHeatFlow | heat\_flow\_parentheatflow | The scheme revision the inherited scores were calculated under, currently `hfqa_tool 0.2`. |
+
+`M_score` is three characters wide on both, to hold the four grades reached with missing
 information (`M1x` to `M4x`). The perturbation flags are the last seven characters of `quality` and
 are not stored apart.
 

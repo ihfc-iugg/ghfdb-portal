@@ -132,7 +132,8 @@ cannot be renamed.
 Selecting a parent is knowledge-intensive and deliberately manual. Where a site has one child, that
 child's value becomes the parent. Where it has several, curators choose, typically averaging
 selected children and favouring corrected values. New children arriving at an existing site trigger
-a manual review; **a parent is never updated automatically**.
+a manual review; **a parent's value is never updated automatically**. Its quality is a different
+matter: it is inherited from its children and kept current by the portal (see **Quality code**).
 
 `is_relevant` on a child records whether it was used in deriving its parent's value. It is a
 curatorial statement about how a measurement was used, not a property of the measurement itself.
@@ -234,8 +235,12 @@ full stops, for example `U2.M3x.-e-PX--`: at most fourteen characters, and `Ux.M
 nothing can be determined. The flags are in the order `S E T P V C R` (see **U-score, M-score,
 perturbation flags**). Stored on both children and parents as `quality`.
 
-A parent inherits quality conservatively: with one child, its quality directly; with several, the
-poorest quality among the children marked relevant.
+A parent inherits quality conservatively. With exactly one child it takes that child's quality,
+whether or not the child is marked relevant. With several it rests on the children marked
+relevant: the poorest U-score, the poorest M-score (any marked M-score is poorer than any unmarked
+one, and `Mx` is the poorest) and the flags of the child with the poorest U-score, the poorest
+M-score breaking a tie. Several children and none relevant, or no children, is `Ux.Mx.-------`.
+Inheritance never changes the parent's value, and saving a parent does not recalculate it.
 
 **The portal computes its own quality scores, and the value it computes is authoritative.** Quality
 codes present in an imported file are rejected rather than stored. This is a settled decision; do
