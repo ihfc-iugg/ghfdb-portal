@@ -87,3 +87,14 @@ build is not clean at the base commit.
 
 Watch: the guide says the child's corrected scores, the code and inheritance are documented as they
 are built (US2 onward).
+
+## 2026-09-30T21:13:49Z · Forge · US1 acceptance
+
+Did: the independent verify at 37531f4 was red on the docs step. Six public names in
+`quality.py` and `models/child.py` were quoted on no page. Added an "In the code" section to
+`docs/guides/quality-scores.md` that names each one. It is a documentation-only fix made directly
+rather than by re-dispatch.
+Verified: the tamper-check against e42524a flags only the D24 assertion. The receipts check is
+green.
+Next: re-verify, then accept US1 and dispatch US2.
+Watch: D25–D27 need ADR verdicts at convergence.
