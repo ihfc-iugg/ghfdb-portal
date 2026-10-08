@@ -2,7 +2,7 @@
   "feature": "002-ghfdb-proxy",
   "branch": "002-ghfdb-proxy",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "GATE_MERGE",
+  "state": "MERGED",
   "state_history": [
     {
       "state": "SPECIFY",
@@ -52,6 +52,11 @@
       "state": "GATE_MERGE",
       "at": "2026-08-24T12:38:31Z",
       "note": "awaiting Sam"
+    },
+    {
+      "state": "MERGED",
+      "at": "2026-08-24T15:04:27Z",
+      "note": "PR #182 merged; approved by SamuelJennings"
     }
   ],
   "gates": {
@@ -64,8 +69,8 @@
       "at": null
     },
     "merge": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "SamuelJennings",
+      "at": "2026-08-24T15:04:13Z"
     },
     "design_review": {
       "approved_by": "design-panel",
@@ -1745,6 +1750,6 @@
   },
   "pr": {
     "number": 182,
-    "draft": true
+    "draft": false
   }
 }
