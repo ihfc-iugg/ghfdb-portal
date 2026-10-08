@@ -2,7 +2,7 @@
   "feature": "001-heat-flow-data-model",
   "branch": "001-heat-flow-data-model",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "IMPLEMENT",
+  "state": "MERGED",
   "gates": {
     "spec": {
       "approved_by": "sam",
@@ -14,7 +14,7 @@
     },
     "merge": {
       "approved_by": null,
-      "at": null
+      "at": "2026-08-20T17:46:38Z"
     }
   },
   "stories": [
@@ -1200,6 +1200,13 @@
   },
   "pr": {
     "number": 173,
-    "draft": true
-  }
+    "draft": false
+  },
+  "state_history": [
+    {
+      "state": "MERGED",
+      "at": "2026-08-20T17:46:38Z",
+      "note": "PR #173 merged; no approving review found"
+    }
+  ]
 }
