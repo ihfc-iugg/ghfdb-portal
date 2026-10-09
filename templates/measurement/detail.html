@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{{ measurement.name }} - {{ measurement.verbose_name }}{% endblock %}
+{% block content %}
+  <div class="container py-4">
+    <c-section title="{{ measurement.name }}" level="1">
+      <p class="lead text-muted">{{ measurement.verbose_name }}</p>
+      <div class="card mt-4">
+        <div class="card-body">
+          <h2 class="h5 card-title">{% trans "Measurement Details" %}</h2>
+          <dl class="row mt-3">
+            <dt class="col-sm-3">{% trans "Name" %}:</dt>
+            <dd class="col-sm-9">
+              {{ measurement.name }}
+            </dd>
+            <dt class="col-sm-3">{% trans "UUID" %}:</dt>
+            <dd class="col-sm-9">
+              <code>{{ measurement.uuid }}</code>
+            </dd>
+            <dt class="col-sm-3">{% trans "Dataset" %}:</dt>
+            <dd class="col-sm-9">
+              {% if measurement.dataset %}
+                <a href="{{ measurement.dataset.get_absolute_url }}">{{ measurement.dataset.title }}</a>
+              {% else %}
+                <span class="text-muted">{% trans "No dataset" %}</span>
+              {% endif %}
+            </dd>
+            <dt class="col-sm-3">{% trans "Sample" %}:</dt>
+            <dd class="col-sm-9">
+              {% if measurement.sample %}
+                <a href="{{ measurement.sample.get_absolute_url }}">{{ measurement.sample.name }}</a>
+              {% else %}
+                <span class="text-muted">{% trans "No sample" %}</span>
+              {% endif %}
+            </dd>
+          </dl>
+        </div>
+      </div>
+      {% with kind=measurement.polymorphic_ctype.model %}
+        {% if kind == "heatflow" %}
+          {% include "measurement/quality/child.html" with child=measurement %}
+        {% elif kind == "thermalgradient" %}
+          {% trans "Temperature gradient" as title %}
+          {% include "measurement/quality/own.html" with kind="gradient" title=title %}
+        {% elif kind == "intervalconductivity" %}
+          {% trans "Thermal conductivity" as title %}
+          {% include "measurement/quality/own.html" with kind="conductivity" title=title %}
+        {% endif %}
+      {% endwith %}
+    </c-section>
+  </div>
+{% endblock %}

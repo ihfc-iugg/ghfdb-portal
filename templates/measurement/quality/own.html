@@ -1,0 +1,30 @@
+{% load i18n %}
+<section class="card mt-4"
+         data-quality-card="{{ kind }}"
+         aria-labelledby="quality-heading">
+  <div class="card-body">
+    <h2 class="h5 card-title" id="quality-heading">{% trans "Quality score" %}</h2>
+    <p class="text-muted">
+      {% blocktrans %}The score of this measurement on its own, before any heat flow value that uses it applies its corrections. The heat flow's page shows the corrected score.{% endblocktrans %}
+    </p>
+    <dl class="row mt-3 mb-0">
+      <dt class="col-sm-3">{{ title }}:</dt>
+      <dd class="col-sm-9">
+        {% include "measurement/quality/score.html" with hook="own" score=measurement.score missing=measurement.score_missing %}
+      </dd>
+      <dt class="col-sm-3">{% trans "Scheme revision" %}:</dt>
+      <dd class="col-sm-9">
+        {% if measurement.quality_scheme %}
+          <span data-quality="scheme"
+                data-state="determined"
+                data-value="{{ measurement.quality_scheme }}">{{ measurement.quality_scheme }}</span>
+        {% else %}
+          <span data-quality="scheme"
+                data-state="not-determined"
+                data-value="">{% trans "Not yet calculated" %}</span>
+        {% endif %}
+      </dd>
+    </dl>
+    {% include "measurement/quality/legend.html" %}
+  </div>
+</section>

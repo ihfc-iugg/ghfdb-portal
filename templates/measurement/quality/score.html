@@ -1,0 +1,21 @@
+{% load i18n %}
+{% comment %}
+A stored sub-score: hook, score (None when not determined) and missing (reached with missing information).
+{% endcomment %}
+{% if score is None %}
+  <span data-quality="{{ hook }}"
+        data-state="not-determined"
+        data-value=""
+        data-missing="false">{% trans "Not determined" %}</span>
+{% else %}
+  <span data-quality="{{ hook }}"
+        data-state="determined"
+        data-value="{{ score|floatformat:'1u' }}"
+        data-missing="{{ missing|yesno:'true,false' }}">
+    {{ score|floatformat:1 }}
+    {% if missing %}
+      <span class="badge text-bg-warning"
+            data-quality-mark="missing">{% trans "Missing information" %}</span>
+    {% endif %}
+  </span>
+{% endif %}

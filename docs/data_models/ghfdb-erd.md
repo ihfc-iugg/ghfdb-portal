@@ -30,10 +30,13 @@ A child does not point at its site directly. It hangs off a depth interval, and 
 
 ### Quality Scoring
 
-The database implements a quality assurance scheme with two indicators:
+The database implements a quality assurance scheme with two grades and seven flags:
 
 - **U-score** (numerical uncertainty), from the coefficient of variation: U1 excellent, U2 good, U3 ok, U4 poor, Ux not determined
-- **M-score** (methodological quality), from the measurement methodology: M1 excellent, M2 good, M3 ok, M4 poor, Mx not determined
+- **M-score** (methodological quality), from the measurement methodology: M1 excellent, M2 good, M3 ok, M4 poor, Mx not determined. An `x` after the grade (M1x to M4x) marks a score reached with missing information
+- **Perturbation flags**, seven characters for the corrections S, E, TOPO, PAL, SUR, CONV and HR, written in the order `S E T P V C R`. They are the last seven characters of the quality code, `U.M.FLAGS`
+
+The M-score is built from a T-score on the thermal gradient and a TC-score on the thermal conductivity. The portal stores each measurement's own score on it, and the child's corrected T-score and TC-score on the child. [Quality scores](../guides/quality-scores.md) explains how they are calculated.
 
 ## Entity Relationship Diagram
 
@@ -126,7 +129,10 @@ erDiagram
         boolean corr_HP_flag "Heat production correction considered"
         text comment "General comments on the parent level"
         int ghfdb_id "Published parent identifier, the upsert key"
-        string quality "Overall quality assessment"
+        char U_score "Poorest child U-score (U1-U4, Ux)"
+        char M_score "Poorest child M-score (M1-M4, M1x-M4x, Mx)"
+        string quality "Inherited quality code, for example U2.M3x.-e-PX--"
+        char quality_scheme "Scheme revision of the stored scores"
     }
 
     %% ============================================================
@@ -145,8 +151,13 @@ erDiagram
         date date_acquired "Date of acquisition"
         boolean is_relevant "Used in the parent calculation"
         char U_score "Numerical uncertainty (U1-U4, Ux)"
-        char M_score "Methodological quality (M1-M4, Mx)"
-        string quality "Overall quality assessment"
+        float T_score "Corrected T-score (empty: not determined)"
+        boolean T_score_missing "Corrected T-score reached with missing information"
+        float TC_score "Corrected TC-score (empty: not determined)"
+        boolean TC_score_missing "Corrected TC-score reached with missing information"
+        char M_score "Methodological quality (M1-M4, M1x-M4x, Mx)"
+        string quality "Quality code, for example U2.M3x.-e-PX--"
+        char quality_scheme "Scheme revision of the stored scores"
         text c_comment "General comments on the child level"
         int ghfdb_id "Published child identifier, the upsert key"
     }
@@ -180,7 +191,9 @@ erDiagram
         quantity temperature_bottom "Absolute temperature at the bottom of the interval"
         quantity temperature_bottom_uncertainty "Uncertainty of the bottom temperature"
         int number "Number of temperature recordings"
-        float score "Methodological score"
+        float score "T-score, the gradient's own score (empty: not determined)"
+        boolean score_missing "T-score reached with missing information"
+        char quality_scheme "Scheme revision of the stored score"
     }
 
     IntervalConductivity {
@@ -188,7 +201,9 @@ erDiagram
         quantity value "Mean thermal conductivity (W/mK)"
         quantity uncertainty "Conductivity uncertainty (W/mK)"
         int number "Number of measurements"
-        float score "Methodological score"
+        float score "TC-score, the conductivity's own score (empty: not determined)"
+        boolean score_missing "TC-score reached with missing information"
+        char quality_scheme "Scheme revision of the stored score"
     }
 
     %% ============================================================
@@ -315,7 +330,7 @@ The aggregated surface heat flow for a site: the parent level of the published s
 **Business Rules**
 
 - Its sample must be a `HeatFlowSite`, and only one parent may exist per site. Both are raised on `save()`
-- Quality is inherited from the children: one child passes its own score up, several pass the poorest of the relevant ones
+- Quality is inherited from the children, not edited: one child passes its own quality up whether or not it is marked relevant, and several pass the poorest of the relevant ones. `refresh_quality()` calculates it, and saving a parent never does. See [Quality scores](../guides/quality-scores.md)
 
 ### HeatFlow
 
@@ -325,7 +340,7 @@ An individual heat flow determination over a depth interval: the child level of 
 
 - Calculated from a thermal gradient and a thermal conductivity, each an optional foreign key
 - Points at its parent through the nullable `parent` foreign key, and `is_relevant` records whether it was used in the parent's value
-- Carries the U-score and M-score, both indexed, and the overall quality assessment
+- Carries the U-score, the corrected T-score and TC-score, and the M-score, all indexed, and the quality code. Each is calculated by the portal, from the value, the uncertainty, the two measurements and the child's corrections, and cannot be edited. `quality_scheme` records which scheme revision calculated them. See [Quality scores](../guides/quality-scores.md)
 - `ghfdb_id` is the published child identifier and the key imports upsert on
 - A determination is treated as a marine probe measurement when its interval carries probe metadata
 
@@ -380,7 +395,7 @@ A temperature gradient measured over a depth interval.
 - Reaches its interval through `Measurement.sample`
 - Stores both the measured and the corrected gradient, each with an uncertainty
 - Records the temperature method, shut-in time and correction method at the top and bottom of the interval
-- `score` is the methodological score used in the child's M-score, indexed alongside `number`
+- `score` is the gradient's own T-score under the toolbox V0.2 scheme, indexed alongside `number`. It is empty when the site's exploration method selects no rules, and `score_missing` and `quality_scheme` record whether an input was empty and which scheme revision calculated it. See [Quality scores](../guides/quality-scores.md)
 
 **Business Rules**
 
@@ -395,7 +410,7 @@ The mean thermal conductivity over a depth interval.
 
 - Reaches its interval through `Measurement.sample`
 - Records the sample source, the location the value came from, the determination method, the saturation state and the pressure-temperature conditions
-- `score` is computed from those properties following Fuchs et al. (2023) and lands between 0.2 and 1.2
+- `score` is the conductivity's own TC-score, calculated from those properties under the toolbox V0.2 scheme. It lies between 0.1 and 1.2, and is empty when the site's exploration method selects no rules. `score_missing` and `quality_scheme` record whether an input was empty and which scheme revision calculated it. See [Quality scores](../guides/quality-scores.md)
 
 **Business Rules**
 
@@ -527,23 +542,24 @@ flowchart TD
 
 ### Quality Score Inheritance
 
-The parent heat flow quality is determined by:
+The parent heat flow quality is inherited from its children:
 
-1. **One relevant child**: the parent takes that child's quality directly
-2. **Several relevant children**: the parent takes the poorest of them
+1. **One child**: the parent takes that child's quality directly, whether or not the child is marked relevant
+2. **Several children, some relevant**: the parent takes the poorest U-score and the poorest M-score of the relevant ones, and the flags of the child with the poorest U-score
+3. **Several children, none relevant, or no children**: the parent is not determined, `Ux.Mx.-------`
 
-Children marked as not relevant are left out of the calculation entirely, which is how an outlier or a poor determination is kept in the record without dragging the site's value down.
+Children marked as not relevant are left out of the calculation when there are several, which is how an outlier or a poor determination is kept in the record without dragging the site's value down. [Quality scores](../guides/quality-scores.md) gives the ranking.
 
 ## Database Indices
 
 The following fields are indexed:
 
 - **HeatFlowSite**: `country`, `continent`, `environment`
-- **ParentHeatFlow**: `ghfdb_id`, `corr_HP_flag`
-- **HeatFlow**: `U_score`, `M_score`, and `ghfdb_id` through the field's own index
+- **ParentHeatFlow**: `ghfdb_id`, `corr_HP_flag`, `U_score`, `M_score`
+- **HeatFlow**: `U_score`, `M_score`, `T_score`, `TC_score`, and `ghfdb_id` through the field's own index
 - **HeatFlowCorrection**: `correction_type`, `status`
 - **ThermalGradient**: `score`, `number`
-- **IntervalConductivity**: `number`
+- **IntervalConductivity**: `score`, `number`
 
 ## Key Constraints
 
