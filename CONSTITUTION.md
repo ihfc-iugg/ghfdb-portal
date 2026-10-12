@@ -109,6 +109,9 @@ class: a `QuerySet`/`Manager` method instead of a function taking a queryset, a 
 property instead of a function taking an instance, a `Form`/`Serializer` method instead of a free
 validation function, a `TemplateView` method instead of a helper called by a view.
 
+**Django standards.** Where code lives in a Django codebase, and when a new abstraction is worth
+adding, is set out in [`docs/contributing/standards/django.md`](docs/contributing/standards/django.md).
+
 **Exceptions — narrow, and stated rather than assumed.** A genuinely standalone pure function with
 no siblings. Framework-dictated module shapes: `conftest.py` fixtures, migrations, `urls.py`,
 `apps.py`, decorator-registered template tags and filters, signal receivers, management-command
@@ -348,4 +351,4 @@ The constitution defines how the GHFDB Portal is evolved and how compliance is e
 
 ---
 
-**Version**: 2.0.0 | **Ratified**: TODO(RATIFICATION_DATE): confirm project inception date | **Last Amended**: 2026-09-28
+**Version**: 2.1.0 | **Ratified**: TODO(RATIFICATION_DATE): confirm project inception date | **Last Amended**: 2026-10-12
