@@ -15,14 +15,14 @@ from typing import ClassVar
 from django.db import transaction
 
 
-class _OnCommit:
+class OnCommit:
     """The one callback registered for a transaction, so that it can be told from none."""
 
     def __call__(self) -> None:
         Recalculation.flush()
 
 
-class _Pending(threading.local):
+class Pending(threading.local):
     """The pks one thread has collected for refresh, and whether that refresh is scheduled.
 
     Each thread builds its own, because a commit can only refresh what its own thread
@@ -51,7 +51,7 @@ class Recalculation:
     collected and refreshed once when the deferral ends or the transaction commits.
     """
 
-    _pending: ClassVar[_Pending] = _Pending()
+    _pending: ClassVar[Pending] = Pending()
     _deferred: ClassVar[ContextVar[bool]] = ContextVar(
         "heat_flow_recalculation_deferred", default=False
     )
@@ -174,7 +174,7 @@ class Recalculation:
         scheduled = cls._pending.scheduled
         if scheduled is not None and scheduled() is not None:
             return
-        callback = _OnCommit()
+        callback = OnCommit()
         cls._pending.scheduled = weakref.ref(callback)
         transaction.on_commit(callback)
 
