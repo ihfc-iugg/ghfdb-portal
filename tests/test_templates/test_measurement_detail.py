@@ -111,6 +111,8 @@ class TestChildCard:
         card = page(child)
 
         assert card.hooks["scheme"].state == "not-determined"
+        for letter in "SETPVCR":
+            assert card.hooks[f"flag-{letter}"].value == "-"
 
     def test_the_page_makes_the_same_queries_for_any_number_of_corrections(
         self, query_count, child

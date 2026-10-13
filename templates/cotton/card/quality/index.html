@@ -8,7 +8,7 @@
         aria-label="{% trans "Quality score" %}"
         data-quality-card="child">
   <p class="text-base-content/70">
-    {% blocktrans %}Scores run from 1 (excellent) to 4 (poor). The temperature gradient and the thermal conductivity are scored on their own, and this heat flow value then applies its own corrections to reach the corrected score its M-score is made from.{% endblocktrans %}
+    {% blocktrans %}The U-score and M-score are grades from 1 (excellent) to 4 (poor). The T-score and TC-score are numbers from 0.1 to 1.2, and higher is better. The temperature gradient and the thermal conductivity are scored on their own, and this heat flow value then applies its own corrections to reach the corrected scores its M-score is made from.{% endblocktrans %}
   </p>
   <div class="overflow-x-auto">
     <table class="table table-sm">
@@ -118,7 +118,7 @@
     </c-data_field>
   </div>
   <h3 class="font-semibold mt-2">{% trans "Perturbation flags" %}</h3>
-  {% with flags=child.quality|slice:"-7:" %}
+  {% with flags=child.quality|default:"-------"|slice:"-7:" %}
     <div class="overflow-x-auto">
       <table class="table table-sm">
         <caption class="sr-only">{% trans "The seven perturbation flags, one for each correction" %}</caption>
