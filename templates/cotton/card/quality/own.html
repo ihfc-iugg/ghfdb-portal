@@ -1,0 +1,36 @@
+{# @description The quality card on a temperature gradient's or a thermal conductivity's page: its own stored score and the scheme revision. #}
+{# @prop measurement:object | description:"The temperature gradient or thermal conductivity whose stored score the card shows." #}
+{# @prop kind:string | description:"Which measurement it is, gradient or conductivity. Written to the card as its data-quality-card value." #}
+{# @prop label:string | description:"The name of the score, already translated." #}
+{% load i18n %}
+<c-vars measurement kind label />
+<c-card title="{% trans "Quality score" %}"
+        class="mt-4"
+        role="region"
+        aria-label="{% trans "Quality score" %}"
+        data-quality-card="{{ kind }}">
+  <p class="text-base-content/70">
+    {% blocktrans %}The score of this measurement on its own, before any heat flow value that uses it applies its corrections. The heat flow's page shows the corrected score.{% endblocktrans %}
+  </p>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 mt-2">
+    {# A badge is a div, which ends the paragraph <c-data_field> puts its value in, so this pair is written out. #}
+    <div class="mb-3">
+      <h6 class="text-base-content/60 text-xs uppercase font-semibold">{{ label }}</h6>
+      <c-card.quality.score hook="own"
+                            :score="measurement.score"
+                            :missing="measurement.score_missing" />
+    </div>
+    <c-data_field label="{% trans "Scheme revision" %}">
+      {% if measurement.quality_scheme %}
+        <span data-quality="scheme"
+              data-state="determined"
+              data-value="{{ measurement.quality_scheme }}">{{ measurement.quality_scheme }}</span>
+      {% else %}
+        <span data-quality="scheme"
+              data-state="not-determined"
+              data-value="">{% trans "Not yet calculated" %}</span>
+      {% endif %}
+    </c-data_field>
+  </div>
+  <c-card.quality.legend />
+</c-card>
