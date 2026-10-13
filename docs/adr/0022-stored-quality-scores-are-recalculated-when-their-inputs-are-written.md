@@ -41,6 +41,16 @@ write that changed an input, where it belongs. Holding recalculation back during
 collecting deletes until commit, stop that cost from multiplying: an imported row writes a child
 through a dozen saves, and a dataset delete cascades through every correction.
 
+The repository's Django standard asks for a step an operation depends on to be called by name,
+and keeps signals for code that must not know its sender. Receivers are used here all the same. A
+vocabulary value added to or removed from a measurement sends `m2m_changed` and calls no method
+on the record, and a record removed by a cascade is deleted without its `delete()` running. Only
+a receiver sees those writes. Calling the refresh from `save()` while those two stay in receivers
+would leave one rule in two mechanisms.
+
+The records collected for a refresh are held per thread, because a commit can only refresh what
+its own connection can see.
+
 Scoring existing records at deploy could have been a data migration. But a migration sees
 historical models, which do not carry the scoring code, and calling the live code from a migration
 breaks as soon as a later migration changes a field. A command keyed on the stored revision avoids

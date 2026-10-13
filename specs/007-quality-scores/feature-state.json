@@ -142,6 +142,37 @@
               "uv run --group docs sphinx-build -b html docs <dir> -W --keep-going"
             ]
           }
+        },
+        {
+          "id": "T020",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_quality.py::TestProbeConductivity::test_any_empty_saturation_input_takes_the_largest_penalty_and_the_mark"
+            ],
+            "commands": [
+              "mutation: location dropped from the fields Criterion.cases checks for emptiness -> assert 1.0 == 0.7 on the location case; restored"
+            ],
+            "code": [
+              "tests/test_heat_flow/test_quality.py:679"
+            ]
+          }
+        },
+        {
+          "id": "T022",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "project/heat_flow/quality.py:102",
+              "project/ghfdb/resources/child.py:175",
+              "project/heat_flow/management/commands/refresh_quality.py:54"
+            ]
+          }
         }
       ]
     },
@@ -210,6 +241,22 @@
             "commands": [
               "uv run pytest tests/test_docs -q -n0",
               "forge verify --repo . --steps docs,conformance --base ca1db49"
+            ]
+          }
+        },
+        {
+          "id": "T021",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "manage.py makemigrations heat_flow ghfdb --check --dry-run: No changes detected",
+              "uv run pytest tests/test_docs -n0 -q"
+            ],
+            "code": [
+              "docs/guides/published-structure-api.md:84",
+              "docs/guides/quality-scores.md:395",
+              "project/heat_flow/models/child.py:181"
             ]
           }
         }
@@ -317,6 +364,39 @@
               "uv run pytest tests/test_docs -q -n0"
             ]
           }
+        },
+        {
+          "id": "T018",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_signals.py::TestDeferral::test_a_thread_flushes_only_what_it_collected"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_signals.py -n0 -q",
+              "mutation: Pending made an ordinary class shared by threads -> assert {101, 102} == set(); restored"
+            ],
+            "code": [
+              "project/heat_flow/signals.py:25"
+            ]
+          }
+        },
+        {
+          "id": "T019",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_signals.py::TestMeasurementReceivers::test_a_concept_change_refreshes_without_saving_the_record_again"
+            ],
+            "commands": [
+              "mutation: refresh_measurement_on_concepts returns at once -> assert 0.5 == 1.1; restored"
+            ],
+            "code": [
+              "tests/test_heat_flow/test_signals.py:81"
+            ]
+          }
         }
       ]
     },
@@ -351,6 +431,43 @@
             ],
             "commands": [
               "uv run pytest tests/test_docs -n0 -q"
+            ]
+          }
+        },
+        {
+          "id": "T016",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templates/test_measurement_detail.py::TestChildCard",
+              "tests/test_templates/test_measurement_detail.py::TestMeasurementCard"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templates -n0 -q",
+              "every class in templates/measurement and templates/cotton/card/quality checked against django-mvp.css and fairdm.css: 20 used, 0 undefined"
+            ],
+            "code": [
+              "templates/cotton/card/quality/index.html:1",
+              "templates/cotton/card/quality/own.html:1",
+              "templates/measurement/detail.html:8"
+            ]
+          }
+        },
+        {
+          "id": "T017",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templates/test_measurement_detail.py::TestChildCard::test_a_child_that_has_not_been_scored_says_so"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templates/test_measurement_detail.py::TestChildCard::test_a_child_that_has_not_been_scored_says_so -n0 -q",
+              "mutation: default filter removed from the flags slice -> AssertionError: assert '' == '-'; restored"
+            ],
+            "code": [
+              "templates/cotton/card/quality/index.html:121"
             ]
           }
         }

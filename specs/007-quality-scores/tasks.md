@@ -211,6 +211,24 @@ scheme's criteria and compare their stored scores with research R3.
 
 ---
 
+## Phase 6: Fixes from the code review
+
+- [ ] T016 [US5] Build the measurement page's cards as Cotton components under
+      `templates/cotton/card/quality/`, on the component library's card, badge and data field,
+      using only classes the page's stylesheets define (D40).
+- [ ] T017 [US5] Show the flags of a child that has not been scored as not recorded, with a test
+      on each flag. Name both scales in the card's opening sentence.
+- [ ] T018 [US4] Hold the collected records and the scheduled flag per thread, with a test in
+      which one thread flushes while another collects (D41).
+- [ ] T019 [US4] Assert the score a concept change produces in
+      `test_a_concept_change_refreshes_without_saving_the_record_again`.
+- [ ] T020 [US1] Assert the value, not only the mark, for each empty saturation input.
+- [ ] T021 [US2] Correct the API guide's quality examples, limit the claim that stored T and TC
+      equal the toolbox's to rows the model can store, and use an example code the scheme writes.
+- [ ] T022 [US1] Complete the docstrings that lack `Args:` and `Returns:`.
+
+---
+
 ## Dependencies
 
 US1 → US2 → US3 → US4 → US5, sequential, one worktree. The correction-status change has moved to

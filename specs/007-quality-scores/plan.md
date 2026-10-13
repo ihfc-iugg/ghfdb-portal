@@ -189,7 +189,7 @@ starting. Running it twice gives the same stored values (FR-016).
 
 ### The measurement page (`templates/measurement/detail.html`)
 
-The framework's placeholder without its "coming soon" alert, plus one added card, included per
+The framework's placeholder without its "coming soon" alert, plus one added card, a component chosen per
 model:
 
 - **Child:** U-score, then T and TC each as "own score → corrected score" (the measurement's

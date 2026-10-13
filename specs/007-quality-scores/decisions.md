@@ -321,8 +321,8 @@ assumption), and `--all` recalculates regardless.
 
 ## D21 — Measurement pages show quality through a template override
 
-The framework's measurement page is a placeholder. It shows no fields at all and has no extension
-point. The portal overrides that one template (`templates/measurement/detail.html`, as it already
+The framework's measurement page is a placeholder. It shows a name, a UUID and two links, and has
+no extension point. The portal overrides that one template (`templates/measurement/detail.html`, as it already
 overrides the dataset page). It keeps the placeholder's content and adds a quality section for a
 child, a gradient and a conductivity, which reads only stored values.
 
@@ -396,7 +396,7 @@ T001 commit. T002 regenerates that file to add the gradient and conductivity fie
 feature still ends with one migration.
 
 **Revisit if:** T002 cannot regenerate the file, in which case it stacks a second migration and
-Forge squashes at convergence.
+the two are squashed at convergence.
 
 **ADR:** none. A sequencing note for one migration, superseded when T002 regenerated it.
 
@@ -509,11 +509,11 @@ read-only field list rather than the form's.
 `parents`) and one `request()` entry point. A request refreshes at once, or is collected when it
 comes from a delete (`when_committed`) or while `deferred()` is active. The refresh expands in
 cascade order: the named measurements, then the children that use them plus the named children,
-then those children's parents plus the named parents. The on-commit callback is an `_OnCommit`
+then those children's parents plus the named parents. The on-commit callback is an `OnCommit`
 instance held by a `weakref`, so "already scheduled" means the weak reference is alive. It no longer
 reads `connection.run_on_commit`.
 
-**Why:** a plain boolean set on registration and cleared on run (the brief's wording) is never
+**Why:** a plain boolean set on registration and cleared on run (the task's wording) is never
 cleared when the transaction rolls back, because the callback is dropped unrun. The next
 transaction would then never schedule, and every later delete would leave its parent stale. The
 same wedge hit seven existing tests when tried, through `django_capture_on_commit_callbacks`
@@ -528,7 +528,7 @@ pins it.
 ## D34 — `route()` reads the exploration method's name when the site was read back from the database
 
 **Decision:** `quality.route` takes `getattr(method, "name", method)` before looking up `ROUTES`.
-This is a two-line change in `project/heat_flow/quality.py`, which the US4 brief does not list.
+This is a two-line change in `project/heat_flow/quality.py`, which the US4 tasks do not list.
 
 **Why:** a `HeatFlowSite` read back from the database holds `explo_method` as a `Concept`, which
 is not a key of `ROUTES`, so every measurement scored from a stored record came out `None` (and
@@ -537,7 +537,7 @@ the string. The cascade and the refresh command always read records back, so wit
 would overwrite every correct score with "not determined". Two tests in
 `tests/test_heat_flow/test_signals.py` (`TestRecordsLoadedFromTheDatabase`) failed before the change.
 
-**Revisit if:** Forge prefers to land it as a US1 fix. It is separate from the cascade and reverts
+**Revisit if:** the maintainers prefer to land it as a US1 fix. It is separate from the cascade and reverts
 by deleting the two lines.
 
 **ADR:** none - a defect fix.
@@ -588,8 +588,7 @@ a `data-quality` element carrying `data-value` (the stored value, locale-free), 
 a nested `data-quality-mark` element with visible text. A score of `None` is written as "not
 determined" and never as a number.
 
-**Why:** the brief rules out view and model changes, `_meta` is not reachable from a template, and
-an `{% include %}` of a computed name raises when no partial exists for a type. The hooks keep the
+**Why:** the task rules out view and model changes, and `_meta` is not reachable from a template. The hooks keep the
 tests on values and states, never on wording or classes. The content type costs one query per page
 whatever the number of corrections.
 
@@ -616,3 +615,93 @@ nothing here has to change when the issue is settled.
 `tests/test_heat_flow/test_models/test_child.py`.
 
 **ADR:** none - it records where an open question went.
+
+## D39 — Three review findings are recorded and not changed here
+
+**Decision:** The code review raised three points this feature leaves as they are.
+
+- A parent's quality code is inherited from every child attached to it, including one written by
+  an upload no curator has approved yet. Issue #262 carries the question of which children a
+  public parent rests on.
+- The measurement page shows the new scores for a record in an unpublished dataset to anyone who
+  holds its address. That is the gap D21 records, and issue #261 carries it.
+- Saving a parent writes back the quality the instance held when it was loaded. D19 stands:
+  saving a parent does not recalculate it.
+
+**Why:** the first is a decision about visibility that the specification never took, and it
+depends on what issue #243 settles about uploads that write into another dataset. The second is
+the framework's view, which this feature does not own. For the third, no path in the portal saves
+a parent it loaded before one of its children changed, except the import's parent pass, and the
+child pass that follows it in the same transaction recalculates every parent it touched.
+
+**Revisit if:** code is added that holds a parent across a change to its children and then saves
+it. Then a parent's own save must end with its inherited values.
+
+**ADR:** none - it records where three review findings went.
+
+## D40 — The measurement page is built from the component library's cards
+
+**Decision:** The quality cards are Cotton components under `templates/cotton/card/quality/`,
+built on the library's card, badge and data field components. The page's own "Measurement
+Details" card uses the same components. Every class the page uses is one the stylesheets it loads
+define. This replaces the include partials and the Bootstrap class names D21 started from.
+
+**Why:** the page loads the component library's stylesheet and no other framework, so the
+Bootstrap names matched no rule: the definition lists had no layout, the mark had no colour and
+the captions meant for screen readers were visible. The repository's Django standard also makes a
+reused piece of template a component and never an include. Two label and value pairs are written
+out with the data field's markup, because a badge is a `div` and would end the paragraph the data
+field wraps its value in.
+
+**Revisit if:** the badge component can be placed inside a data field.
+
+**ADR:** none - it follows the repository's template standard.
+
+## D41 — Each thread keeps its own collector
+
+**Decision:** The pks collected for a refresh, and the flag that says a refresh is scheduled, are
+held per thread. D33's single entry point, cascade order and weakly held callback are unchanged.
+
+**Why:** D33 kept them on the class, shared by every thread in a process. A commit in one thread
+then flushed what an import in another thread had collected, on a connection that could not see
+the import's uncommitted rows, and those records stayed unscored. The deployment runs one request
+per process, so it was not reachable there. It was reachable on any threaded server, Django's
+development server included. `test_a_thread_flushes_only_what_it_collected` pins it.
+
+**Revisit if:** the portal moves to an asynchronous server, where one thread serves several
+requests.
+
+**ADR:** none - local to the receivers.
+
+## D42 — Recalculation stays in signal receivers, against the Django standard's default
+
+**Decision:** The receivers D19 describes stay. The repository's Django standard, added after this
+feature was planned, says a step an operation is wrong without is called by name and never from a
+signal, and that a signal is for code that must not know about the sender. This feature keeps
+receivers inside one app as a recorded exception.
+
+**Why:** two of the writes a score depends on call no method on the record. A vocabulary value
+added to or removed from a many-to-many field sends `m2m_changed` and nothing else. A record
+removed by a cascade is deleted without its `delete()` running. The standard itself says `save()`
+and `delete()` cannot carry anything that must hold on every write. Only a receiver sees those
+two, and calling the refresh from `save()` while they stay in receivers would leave two
+mechanisms for one rule.
+
+**Revisit if:** Django gives many-to-many changes and cascade deletes a model-level hook.
+
+**ADR:** docs/adr/0022-stored-quality-scores-are-recalculated-when-their-inputs-are-written.md
+
+## D43 — The review fixes strengthen three assertions in tests this feature wrote
+
+**Decision:** Three tests written earlier on this branch are edited by the review fixes. In
+`test_signals.py`, a concept change now asserts the score it produces, where it asserted only that
+a score existed. In `test_quality.py`, an empty saturation input now asserts the value as well as
+the mark, and the example code in the formatting test is one the scheme can write. Nothing is
+removed and no assertion is loosened.
+
+**Why:** the first two could not fail. Each was run against the change it guards (the concept
+receiver switched off, the saturation rule no longer reading the location) and went red.
+
+**Revisit if:** never. It records why existing tests changed.
+
+**ADR:** none - it records a change to tests.
