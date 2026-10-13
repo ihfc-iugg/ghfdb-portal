@@ -331,3 +331,10 @@ ADRs: D19 and D20 graduate to ADR 0022, ADR 0004's "Revisit if" notes the gap is
 every other decision carries a verdict. check-adrs is green.
 Watch for review: the collector in `Recalculation` is class-level, shared by threads in one
 process (D33). The deployment runs sync workers today.
+
+## 2026-10-13T19:38:26Z · Forge · S5 converge, resumed
+
+T005 moved out to issue #258 (D38). The other open points went to #259, #260 and #261. The branch
+is brought up to date with main (three record and standards commits, no code). US2 is accepted on
+what is built.
+Next: the full verify, then review.

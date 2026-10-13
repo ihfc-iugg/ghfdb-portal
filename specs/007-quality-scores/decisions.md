@@ -596,3 +596,23 @@ whatever the number of corrections.
 **Revisit if:** FairDM gives measurement pages a per-model template or extension point.
 
 **ADR:** none - local to one template.
+
+## D38 — The correction-status change leaves this feature and is decided on its own issue
+
+**Decision:** T005 is not built here. Issue #258 carries the question, with the evidence from
+research R5 and the two possible fixes. US2 is accepted without it: scenarios 3 and 5 are
+demonstrated through `QualityScheme` and the rule classes, and their model-level cases follow that
+issue. Three other open points are tracked the same way: the borehole reading of scenario 6 (D13)
+on #259, the untimed first scoring run (D20) on #260, and measurement page visibility (D21) on
+#261.
+
+**Why:** the change alters an assertion FS-001 pins, and no FS-007 requirement names that
+validation (D24). It needs someone who knows the data to choose between widening the accepted
+values and replacing them. That choice was not available while the feature was being built, and
+holding five finished stories on it helps nobody. The scoring code already handles both cases, so
+nothing here has to change when the issue is settled.
+
+**Revisit if:** issue #258 is settled. Then add the two model-level cases to
+`tests/test_heat_flow/test_models/test_child.py`.
+
+**ADR:** none - it records where an open question went.

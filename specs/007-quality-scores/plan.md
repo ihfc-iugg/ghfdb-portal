@@ -246,15 +246,18 @@ tests/test_templates/test_measurement_detail.py   # the measurement page; tests/
 
 ## Open items
 
-- **Correction-status validation (research R5).** The tilt waiver and the borehole pT agreement
-  need `HeatFlowCorrection` to accept "tilt corrected" on the temperature type and the three
-  "considered" values on the in-situ type. Changing that alters a pinned behaviour, so it waits on
-  the maintainer's ruling. Until then the task is held and those two rules are tested at the scheme
-  level only.
-- **US2 scenario 6 for borehole children (D13).** Put to the maintainer with the plan.
-- **Measurement page visibility (D21).** The framework serves `/measurement/<uuid>/` for records in
-  unpublished datasets. FS-007 adds scores to that page. This is recorded as a pre-existing gap to
-  raise with FairDM, and the page adds no permission logic of its own.
+Each of these is tracked on its own issue and none holds the feature up.
+
+- **Correction-status validation (research R5), issue #258.** The tilt waiver and the borehole pT
+  agreement need `HeatFlowCorrection` to accept "tilt corrected" on the temperature type and the
+  three "considered" values on the in-situ type. Changing that alters a behaviour FS-001 pins, so
+  it is decided there. Those two rules are tested at the scheme level only.
+- **US2 scenario 6 for borehole children (D13), issue #259.** The portal follows the toolbox. The
+  issue asks whether it should.
+- **The first scoring run at release size (D20), issue #260.** Not timed on PostgreSQL.
+- **Measurement page visibility (D21), issue #261.** The framework serves `/measurement/<uuid>/`
+  for records in unpublished datasets. FS-007 adds scores to that page and no permission logic of
+  its own.
 
 ## Risks
 
