@@ -78,7 +78,7 @@ class TestMeasurementReceivers:
             gradient.method_top.add(logs)
 
         assert saves.calls == 0
-        assert ThermalGradient.objects.get(pk=gradient.pk).score is not None
+        assert ThermalGradient.objects.get(pk=gradient.pk).score == pytest.approx(1.1)
 
     def test_a_concept_field_the_score_does_not_read_leaves_it_alone(self):
         from heat_flow.models import ThermalGradient
