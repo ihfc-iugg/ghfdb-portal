@@ -95,10 +95,10 @@ scheme's criteria and compare their stored scores with research R3.
       - every flag encoding (US2-10, FR-011)
       - the code format (FR-010)
       - the U, M and flags of every R3 case (SC-001)
-- [ ] T005 [US2] **Moved out of this feature to issue #258.** Make `HeatFlowCorrection` accept
-      "tilt corrected" on type T and "considered – p/T/pT" on type IS, update the valid-status table
-      in `docs/ghfdb_fields.md`, and adjust the existing assertion. The change alters a behaviour
-      FS-001 pins and no FS-007 requirement names it, so it is decided on that issue (D38).
+- **Moved out of this feature to issue #258** (it was T005). Make `HeatFlowCorrection` accept
+  "tilt corrected" on type T and "considered – p/T/pT" on type IS, update the valid-status table in
+  `docs/ghfdb_fields.md`, and adjust the existing assertion. The change alters a behaviour FS-001
+  pins and no FS-007 requirement names it, so it is decided on that issue (D38).
 - [ ] T005a [US2] Make `_parse_correction_status` (`project/ghfdb/resources/child.py`) resolve a
       cell by its status label as well as its key, normalised the way the vocabulary widgets
       normalise. A status the type does not accept falls back to `-` (D22). Tests first in
@@ -115,7 +115,7 @@ scheme's criteria and compare their stored scores with research R3.
       - US2-1 to US2-12 through stored fields, including a query on `T_score` and `TC_score`
         returning exactly the children whose corrected score matches (US2-12, FR-005)
       - the R3 child cases end to end from factories, which covers X1–X5, P1–P5, B1–B9, N1 and N2
-      - US2-3 and US2-5 need T005, which is now issue #258. Cover the waiver and the agreement
+      - US2-3 and US2-5 need the change on issue #258. Cover the waiver and the agreement
         through `QualityScheme` and the rule classes. The two model-level cases follow that issue.
       - the existing fresh-child assertion (`Ux`, `Mx`) must still hold unchanged
 - [ ] T007 [US2] Documentation for the child's scores: the guide sections on the U-score, corrected
@@ -213,5 +213,5 @@ scheme's criteria and compare their stored scores with research R3.
 
 ## Dependencies
 
-US1 → US2 → US3 → US4 → US5, sequential, one worktree. T005 has moved to issue #258 and
-is not part of this feature.
+US1 → US2 → US3 → US4 → US5, sequential, one worktree. The correction-status change has moved to
+issue #258 and is not part of this feature.

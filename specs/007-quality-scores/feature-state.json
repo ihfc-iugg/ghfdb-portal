@@ -163,11 +163,6 @@
           }
         },
         {
-          "id": "T005",
-          "status": "blocked",
-          "attempts": 0
-        },
-        {
           "id": "T005a",
           "status": "done",
           "attempts": 1,
