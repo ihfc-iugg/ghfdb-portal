@@ -2,7 +2,7 @@
   "feature": "006-published-structure-api",
   "branch": "006-published-structure-api",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "PR_READY",
+  "state": "MERGED",
   "state_history": [
     {
       "state": "GATE_SPEC",
@@ -43,6 +43,11 @@
       "state": "PR_READY",
       "at": "2026-09-29T01:41:27Z",
       "note": "review fixes verified; no walkthrough needed (nothing a person sees changed)"
+    },
+    {
+      "state": "MERGED",
+      "at": "2026-09-29T10:06:02Z",
+      "note": "PR #231 merged; approved by SamuelJennings"
     }
   ],
   "gates": {
@@ -55,8 +60,8 @@
       "at": "2026-09-28T23:12:19Z"
     },
     "merge": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "SamuelJennings",
+      "at": "2026-09-29T10:05:53Z"
     },
     "design_review": {
       "approved_by": "design-panel",
@@ -254,7 +259,7 @@
       "max": 1
     },
     "tokens": {
-      "used": 0,
+      "used": 94.1,
       "max": 120
     }
   },

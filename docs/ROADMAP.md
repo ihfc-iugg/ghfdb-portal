@@ -171,11 +171,11 @@ What a complete and dependable portal has.
 
 ### R10 — The published structure reachable through the API
 
-*feature · advances G8*
+*delivered in [#221](https://github.com/ihfc-iugg/ghfdb-portal/issues/221) · advances G8*
 
-The framework already generates and documents an API over the portal's own models. What it does
-not offer is the database in its published parent and child shape, which is what an outside
-consumer expects and what the map viewer will read.
+The framework generates and documents an API over the portal's own models. Alongside it, the API
+now offers the database in its published parent and child shape, which is what an outside consumer
+expects and what the map viewer reads.
 
 Serves G8.
 
