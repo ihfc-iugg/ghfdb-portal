@@ -254,7 +254,7 @@ A status on the file import may be written as its label. See [Importing data](im
 The code joins the three parts with full stops: the U-score, the M-score and the seven flags. It is
 at most fourteen characters:
 
-- `U1.M2.SxxxCxR`
+- `U1.M2.SxxxxCR`
 - `U2.M3x.-e-PX--`
 - `Ux.Mx.-------`
 
@@ -395,16 +395,21 @@ is how the framework serves measurement pages, and the portal adds no access che
 ## How these match the toolbox
 
 For every row the toolbox scores, the T-score and TC-score it reports are the child's corrected
-scores here, not the uncorrected scores of the gradient and the conductivity. The portal's
-`T_score` and `TC_score` on a child equal the toolbox's per-row T and TC, and so do its U-score,
-M-score and flags. Filtering children by `T_score` or `TC_score` therefore finds the children the
-toolbox would, including where a correction changed the score. The portal is checked against the
-toolbox's own output for a set of cases covering each criterion, each child rule and the routing.
+scores here, not the uncorrected scores of the gradient and the conductivity. For a row whose file
+records neither a tilt-corrected temperature correction nor a "considered" in-situ correction, the
+portal's `T_score` and `TC_score` on a child equal the toolbox's per-row T and TC, and so do its
+U-score, M-score and flags. For those rows, filtering children by `T_score` or `TC_score` finds the
+children the toolbox would, including where a correction changed the score. The portal is checked
+against the toolbox's own output for a set of cases covering each criterion, each child rule and the
+routing.
 
 The two child rules that need a correction the model cannot yet record (a tilt-corrected
 temperature, and the in-situ statuses "considered, p", "considered, t" and "considered, pT") are
 applied by the scheme whenever it is given them. Until the model accepts them, a stored child cannot
-hold those statuses.
+hold those statuses, and the import stores them as `-`. A row that records one of them can
+therefore differ from the toolbox in its stored `T_score` or `TC_score`, and through them in its
+M-score and quality code. A borehole conductivity with corrected pT conditions and a considered
+in-situ correction, for example, scores 1.0 in the toolbox and is stored as 0.8.
 
 ## Where the sources disagree
 

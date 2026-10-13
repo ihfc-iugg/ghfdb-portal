@@ -218,9 +218,9 @@ edited.
 | Field | Model | Database Table | Meaning |
 | --- | --- | --- | --- |
 | `U_score` | HeatFlow | heat\_flow\_heatflow | The U-score, from the coefficient of variation. Indexed. |
-| `T_score` | HeatFlow | heat\_flow\_heatflow | The child's corrected T-score, equal to the toolbox's per-row T. Null means not determined. Indexed. |
+| `T_score` | HeatFlow | heat\_flow\_heatflow | The child's corrected T-score, equal to the toolbox's per-row T for a row that records neither a tilt-corrected temperature correction nor a considered in-situ correction. Null means not determined. Indexed. |
 | `T_score_missing` | HeatFlow | heat\_flow\_heatflow | True when an input the corrected T-score needed was empty. |
-| `TC_score` | HeatFlow | heat\_flow\_heatflow | The child's corrected TC-score, equal to the toolbox's per-row TC. Null means not determined. Indexed. |
+| `TC_score` | HeatFlow | heat\_flow\_heatflow | The child's corrected TC-score, equal to the toolbox's per-row TC for a row that records neither a tilt-corrected temperature correction nor a considered in-situ correction. Null means not determined. Indexed. |
 | `TC_score_missing` | HeatFlow | heat\_flow\_heatflow | True when an input the corrected TC-score needed was empty. |
 | `M_score` | HeatFlow | heat\_flow\_heatflow | The M-score, from the product of the corrected T-score and TC-score. Indexed. |
 | `quality` | HeatFlow | heat\_flow\_heatflow | The quality code, for example `U2.M3x.-e-PX--`: the U-score, the M-score and the seven perturbation flags. At most 14 characters. |

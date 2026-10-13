@@ -179,8 +179,9 @@ class HeatFlow(Measurement):
         verbose_name=_("T-score (corrected)"),
         help_text=_(
             "The child's temperature-gradient score after its own corrections are applied, from"
-            " 0.1 to 1.2. It equals the T-score the Heat Flow Quality Analysis Toolbox gives the"
-            " same row. Empty means not determined. Calculated by the portal."
+            " 0.1 to 1.2. It is the T-score the Heat Flow Quality Analysis Toolbox reports for a"
+            " row when the child holds the same corrections. Empty means not determined."
+            " Calculated by the portal."
         ),
         null=True,
         blank=True,
@@ -198,8 +199,9 @@ class HeatFlow(Measurement):
         verbose_name=_("TC-score (corrected)"),
         help_text=_(
             "The child's thermal-conductivity score after its own corrections are applied, from"
-            " 0.1 to 1.2. It equals the TC-score the Heat Flow Quality Analysis Toolbox gives"
-            " the same row. Empty means not determined. Calculated by the portal."
+            " 0.1 to 1.2. It is the TC-score the Heat Flow Quality Analysis Toolbox reports for"
+            " a row when the child holds the same corrections. Empty means not determined."
+            " Calculated by the portal."
         ),
         null=True,
         blank=True,

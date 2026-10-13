@@ -81,11 +81,14 @@ GET /api/v1/ghfdb/parents/?page_size=1
       "total_depth_TVD": 500.0,
       "explo_method": "borehole",
       "explo_purpose": ["Hydrocarbon", "Scientific"],
-      "quality_parent": "good"
+      "quality_parent": "U2.M3x.-e-PX--"
     }
   ]
 }
 ```
+
+Both `quality_parent` and `quality_child` hold the quality code the portal calculates for the
+record, and [Quality scores](quality-scores.md) explains how to read it.
 
 `total_children` and `relevant_children` count every determination beneath the site, including one
 the requester cannot see through the `children` endpoint — an unpublished determination, one whose
@@ -137,7 +140,7 @@ GET /api/v1/ghfdb/parents/1/
   "total_depth_TVD": 500.0,
   "explo_method": "borehole",
   "explo_purpose": ["Hydrocarbon", "Scientific"],
-  "quality_parent": "good"
+  "quality_parent": "U2.M3x.-e-PX--"
 }
 ```
 
@@ -214,7 +217,7 @@ GET /api/v1/ghfdb/children/?page_size=1
       "tc_number": null,
       "tc_strategy": [],
       "Ref_IGSN": null,
-      "quality_child": null,
+      "quality_child": "U2.M3x.-e-PX--",
       "ID": 11
     }
   ]
@@ -255,7 +258,7 @@ GET /api/v1/ghfdb/children/11/
     "total_depth_TVD": 500.0,
     "explo_method": "borehole",
     "explo_purpose": ["Hydrocarbon", "Scientific"],
-    "quality_parent": "good"
+    "quality_parent": "U2.M3x.-e-PX--"
   },
   "lat_NS": 48.1234,
   "long_EW": 11.5678,
@@ -309,7 +312,7 @@ GET /api/v1/ghfdb/flat/?page_size=1
       "total_depth_TVD": 500.0,
       "explo_method": "borehole",
       "explo_purpose": ["Hydrocarbon", "Scientific"],
-      "quality_parent": "good",
+      "quality_parent": "U2.M3x.-e-PX--",
       "qc": 70.5,
       "qc_uncertainty": 5.2,
       "q_method": ["Bullard"],
@@ -359,7 +362,7 @@ GET /api/v1/ghfdb/flat/?page_size=1
       "tc_number": null,
       "tc_strategy": [],
       "Ref_IGSN": null,
-      "quality_child": null,
+      "quality_child": "U2.M3x.-e-PX--",
       "ID": 11
     }
   ]

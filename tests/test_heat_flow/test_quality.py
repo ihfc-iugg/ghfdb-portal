@@ -1208,7 +1208,7 @@ class TestQualityCode:
     def test_the_code_joins_u_m_and_flags_with_dots(self):
         from heat_flow.quality import QualityScheme
 
-        assert QualityScheme.code("U1", "M2", "SxxxCxR") == "U1.M2.SxxxCxR"
+        assert QualityScheme.code("U1", "M2", "SxxxxCR") == "U1.M2.SxxxxCR"
 
     def test_a_marked_m_score_makes_the_longest_code_fourteen_characters(self):
         from heat_flow.quality import QualityScheme

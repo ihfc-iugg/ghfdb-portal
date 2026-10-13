@@ -206,7 +206,8 @@ A child's T-score or TC-score after its own corrections are taken into account: 
 bottom-water corrections waive the probe criteria they cover, and its in-situ correction must agree
 with a borehole conductivity's pT conditions. Stored on the child as `T_score` and `TC_score`, so a
 query on them finds the children whose corrected score matches. These are the T and TC the toolbox
-reports for a row, and the M-score is made from them.
+reports for a row that records neither a tilt-corrected temperature correction nor a "considered"
+in-situ correction, and the M-score is made from them.
 
 ### Uncorrected score
 

@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='heatflow',
             name='TC_score',
-            field=models.FloatField(blank=True, editable=False, help_text="The child's thermal-conductivity score after its own corrections are applied, from 0.1 to 1.2. It equals the TC-score the Heat Flow Quality Analysis Toolbox gives the same row. Empty means not determined. Calculated by the portal.", null=True, verbose_name='TC-score (corrected)'),
+            field=models.FloatField(blank=True, editable=False, help_text="The child's thermal-conductivity score after its own corrections are applied, from 0.1 to 1.2. It is the TC-score the Heat Flow Quality Analysis Toolbox reports for a row when the child holds the same corrections. Empty means not determined. Calculated by the portal.", null=True, verbose_name='TC-score (corrected)'),
         ),
         migrations.AddField(
             model_name='heatflow',
@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='heatflow',
             name='T_score',
-            field=models.FloatField(blank=True, editable=False, help_text="The child's temperature-gradient score after its own corrections are applied, from 0.1 to 1.2. It equals the T-score the Heat Flow Quality Analysis Toolbox gives the same row. Empty means not determined. Calculated by the portal.", null=True, verbose_name='T-score (corrected)'),
+            field=models.FloatField(blank=True, editable=False, help_text="The child's temperature-gradient score after its own corrections are applied, from 0.1 to 1.2. It is the T-score the Heat Flow Quality Analysis Toolbox reports for a row when the child holds the same corrections. Empty means not determined. Calculated by the portal.", null=True, verbose_name='T-score (corrected)'),
         ),
         migrations.AddField(
             model_name='heatflow',
