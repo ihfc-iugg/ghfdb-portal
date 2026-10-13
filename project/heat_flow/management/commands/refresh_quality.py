@@ -57,6 +57,10 @@ class Command(BaseCommand):
         Gradients and conductivities come first, then the children that read them, then the
         parents that read the children. The concept fields and the corrections are fetched
         with each chunk, so a refresh does not query them one record at a time.
+
+        Returns:
+            Four ``(name, queryset, method)`` tuples, for the gradients, the conductivities,
+            the children and the parents, in the order they are refreshed.
         """
         child_concepts = [
             f"{relation}__{field}"
@@ -102,6 +106,9 @@ class Command(BaseCommand):
             queryset: The level's records, with what a refresh reads prefetched.
             method: The name of the model method that recalculates and stores a record.
             every_record: Refresh every record, not only those another revision scored.
+
+        Returns:
+            The number of records refreshed.
         """
         if not every_record:
             queryset = queryset.exclude(quality_scheme=SCHEME_REVISION)

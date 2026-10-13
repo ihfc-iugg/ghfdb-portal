@@ -104,6 +104,13 @@ class Reading:
 
         A record that has not been reloaded holds the plain number that was assigned, which
         is already in the field's base unit.
+
+        Args:
+            quantity: The stored quantity, a plain number, or ``None``.
+            unit: The unit to express the quantity in.
+
+        Returns:
+            The quantity as a number in *unit*, or ``None`` when it is empty.
         """
         if quantity is None:
             return None
@@ -144,6 +151,14 @@ class Criterion:
 
         Bins are tried in the order given, which is the largest threshold first. A number
         that fits no bin takes the largest penalty without the mark.
+
+        Args:
+            value: The number to score, or ``None`` when it is empty.
+            bins: The ``(operator, threshold, penalty)`` bins, largest threshold first.
+
+        Returns:
+            The penalty, and whether it carries the mark. An empty number takes the largest
+            penalty with the mark.
         """
         worst = min(penalty for _op, _threshold, penalty in bins)
         if value is None:
@@ -180,6 +195,15 @@ class Criterion:
         largest penalty with the mark. Otherwise every case whose conditions all hold counts
         (a condition holds when the field holds any of its concepts) and the poorest wins.
         With no match, *fallback* applies if given, else the largest penalty, unmarked.
+
+        Args:
+            cases: The ``(penalty, conditions)`` cases. Each condition maps a field name to
+                the concepts that satisfy it.
+            fields: The concept identifiers held by each field the cases name.
+            fallback: The penalty when no case matches, in place of the largest penalty.
+
+        Returns:
+            The penalty, and whether it carries the mark.
         """
         penalties = [penalty for penalty, _when in cases]
         if fallback is not None:
@@ -492,6 +516,13 @@ class BoreholeRules:
         """Return the poorest matching group's penalty for *methods*.
 
         A set of methods that fits no group takes the case's largest penalty with the mark.
+
+        Args:
+            groups: The ``(penalty, concept names)`` groups of the case.
+            methods: The temperature method concepts the gradient holds.
+
+        Returns:
+            The penalty, and whether it carries the mark.
         """
         matched = [penalty for penalty, names in groups if methods & names]
         if matched:

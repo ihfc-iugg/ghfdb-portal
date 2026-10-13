@@ -179,6 +179,14 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         (``before_import``), but once, when it ends (``after_import``). A failure that
         skips ``after_import`` leaves the collected refreshes unwritten, and they go
         with the rows the transaction rolls back.
+
+        Args:
+            *args: The dataset and the options of the import, passed on unchanged.
+            **kwargs: The keyword options of the import, passed on unchanged.
+                ``fairdm_dataset`` must be among them.
+
+        Returns:
+            The result of the import.
         """
         self._recalculation = ExitStack()
         with self._recalculation:
