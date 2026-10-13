@@ -676,14 +676,27 @@ class TestProbeConductivity:
         assert score.value == pytest.approx(1.0)
         assert score.missing is False
 
-    @pytest.mark.parametrize("empty", ["saturation", "method", "source", "location"])
+    @pytest.mark.parametrize(
+        ("empty", "value"),
+        [
+            # Saturation -0.2, pT +0.1.
+            ("saturation", 0.9),
+            # Saturation -0.2, and pT -0.2 because its cases name the method too.
+            ("method", 0.6),
+            # Saturation -0.2, pT +0.1.
+            ("source", 0.9),
+            # Location -0.2, saturation -0.2, pT +0.1.
+            ("location", 0.7),
+        ],
+    )
     def test_any_empty_saturation_input_takes_the_largest_penalty_and_the_mark(
-        self, empty
+        self, empty, value
     ):
         conductivity = self.probe_conductivity(**{empty: ()})
 
         score = self.score(conductivity)
 
+        assert score.value == pytest.approx(value)
         assert score.missing is True
 
     def test_an_empty_saturation_scores_the_largest_saturation_penalty(self):
