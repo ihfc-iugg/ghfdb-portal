@@ -781,3 +781,38 @@ class TestDeferral:
         assert spy.calls == keys(
             mine.gradient, mine.conductivity, mine.child, mine.parent
         )
+
+    def test_a_thread_flushes_only_what_it_collected(self, monkeypatch):
+        import threading
+        from collections import defaultdict
+
+        from heat_flow.signals import Recalculation
+
+        refreshed = defaultdict(set)
+        monkeypatch.setattr(
+            Recalculation,
+            "_refresh",
+            staticmethod(
+                lambda named: refreshed[threading.get_ident()].update(named["children"])
+            ),
+        )
+        collected = threading.Event()
+        may_leave = threading.Event()
+
+        def import_records():
+            with Recalculation.deferred():
+                Recalculation.request(children=[101, 102])
+                collected.set()
+                may_leave.wait(timeout=5)
+
+        importing = threading.Thread(target=import_records)
+        importing.start()
+        try:
+            assert collected.wait(timeout=5)
+            Recalculation.flush()
+            assert refreshed[threading.get_ident()] == set()
+        finally:
+            may_leave.set()
+            importing.join(timeout=5)
+
+        assert refreshed[importing.ident] == {101, 102}

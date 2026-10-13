@@ -5,6 +5,7 @@ Every refresh writes with a queryset ``update``, which sends no signal, so a rec
 re-enters itself.
 """
 
+import threading
 import weakref
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
@@ -21,6 +22,25 @@ class _OnCommit:
         Recalculation.flush()
 
 
+class _Pending(threading.local):
+    """The pks one thread has collected for refresh, and whether that refresh is scheduled.
+
+    Each thread builds its own, because a commit can only refresh what its own thread
+    collected: another thread's uncommitted rows are invisible to its connection.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.collected: dict[str, set[int]] = {
+            "gradients": set(),
+            "conductivities": set(),
+            "children": set(),
+            "parents": set(),
+        }
+        # Weakly held, so a callback dropped by a rolled-back transaction counts as not scheduled.
+        self.scheduled: weakref.ref | None = None
+
+
 class Recalculation:
     """Decides which stored scores to refresh when an input changes.
 
@@ -31,14 +51,7 @@ class Recalculation:
     collected and refreshed once when the deferral ends or the transaction commits.
     """
 
-    _collected: ClassVar[dict[str, set[int]]] = {
-        "gradients": set(),
-        "conductivities": set(),
-        "children": set(),
-        "parents": set(),
-    }
-    # Weakly held, so a callback dropped by a rolled-back transaction counts as not scheduled.
-    _scheduled: ClassVar[weakref.ref | None] = None
+    _pending: ClassVar[_Pending] = _Pending()
     _deferred: ClassVar[ContextVar[bool]] = ContextVar(
         "heat_flow_recalculation_deferred", default=False
     )
@@ -73,7 +86,7 @@ class Recalculation:
             cls._refresh(named)
             return
         for key, pks in named.items():
-            cls._collected[key] |= pks
+            cls._pending.collected[key] |= pks
         if not cls._deferred.get():
             cls._schedule()
 
@@ -144,24 +157,25 @@ class Recalculation:
     @classmethod
     def flush(cls) -> None:
         """Refresh everything collected, once each, and forget it."""
-        cls._scheduled = None
+        cls._pending.scheduled = None
         cls._refresh(cls._take())
 
     @classmethod
     def _take(cls) -> dict[str, set[int]]:
         """Return the collected pks and forget them."""
-        taken = {key: pks.copy() for key, pks in cls._collected.items()}
-        for pks in cls._collected.values():
+        taken = {key: pks.copy() for key, pks in cls._pending.collected.items()}
+        for pks in cls._pending.collected.values():
             pks.clear()
         return taken
 
     @classmethod
     def _schedule(cls) -> None:
         """Register the refresh for the end of the current transaction, once."""
-        if cls._scheduled is not None and cls._scheduled() is not None:
+        scheduled = cls._pending.scheduled
+        if scheduled is not None and scheduled() is not None:
             return
         callback = _OnCommit()
-        cls._scheduled = weakref.ref(callback)
+        cls._pending.scheduled = weakref.ref(callback)
         transaction.on_commit(callback)
 
     @staticmethod
