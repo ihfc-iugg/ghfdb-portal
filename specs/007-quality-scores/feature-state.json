@@ -2,7 +2,7 @@
   "feature": "007-quality-scores",
   "branch": "007-quality-scores",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "REVIEW",
+  "state": "PR_READY",
   "state_history": [
     {
       "state": "GATE_SPEC",
@@ -38,6 +38,11 @@
       "state": "REVIEW",
       "at": "2026-10-13T19:46:20Z",
       "note": "convergence green at 1607201; the correction-status change moved to issue #258"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-13T21:45:11Z",
+      "note": "code review approved, seven fixes verified, walkthrough laid out on the pull request"
     }
   ],
   "gates": {
@@ -70,6 +75,11 @@
         "ARCH-004 low: route() returns the rules class",
         "ARCH-005 low: refresh command chunked and prefetched; first-run cost in deploy README"
       ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-13T21:45:05Z",
+      "self_resolved": []
     }
   },
   "stories": [
@@ -488,7 +498,7 @@
       "max": 1
     },
     "tokens": {
-      "used": 49.12,
+      "used": 102.24,
       "max": 120
     }
   },
