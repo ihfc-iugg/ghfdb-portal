@@ -192,6 +192,17 @@ class TestReviewCreateView:
         assert assessor.has_perm("dataset.change_dataset", review.dataset)
         assert assessor.has_perm("dataset.delete_dataset", review.dataset)
 
+    def test_the_uploader_is_credited_as_data_manager_and_not_as_creator(
+        self, rf, assessor
+    ):
+        self._post(rf, assessor)
+
+        review = Review.objects.get()
+        credit = review.dataset.contributors.get(contributor=assessor)
+        roles = set(credit.roles.values_list("name", flat=True))
+        assert "DataManager" in roles
+        assert "Creator" not in roles
+
     def test_each_named_assessor_is_credited_as_a_contributor(self, rf, assessor):
         _, _, named_assessor = self._post(rf, assessor)
 

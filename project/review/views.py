@@ -139,8 +139,9 @@ class ReviewCreateView(UserPassesTestMixin, FairDMCreateView):
 
     Access to the new dataset follows ``uploaded_by`` — the submitting user —
     never the assessor list: an assessor may be a contributor profile with no
-    account, for whom access would be meaningless. The uploader is listed as
-    the dataset's creator, at the manage level. Assessors are credited as
+    account, for whom access would be meaningless. The uploader is listed on
+    the dataset as its Data Manager, at the manage level, and holds no Creator
+    role. Assessors are credited as
     dataset contributors at the view level the framework starts a person at.
 
     The dataset is left private: neither ``visibility`` nor ``published`` is
@@ -168,7 +169,7 @@ class ReviewCreateView(UserPassesTestMixin, FairDMCreateView):
         self.object.save()
         form.save_m2m()
 
-        Crediting(dataset).make_creator(self.request.user)
+        Crediting(dataset).make_creator(self.request.user, roles=["DataManager"])
 
         for assessor in self.object.reviewers.all():
             dataset.add_contributor(assessor, with_roles=["DataCollector"])

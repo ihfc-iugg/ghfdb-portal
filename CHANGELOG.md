@@ -44,7 +44,7 @@ Releases before that used `<year>.<release>` and are recorded in the
 - The GHFDB API serves a record only when its dataset is public and published,
   or to a signed-in person listed on the record, its dataset or its project.
   Being listed on a dataset now reaches every record in it.
-- The person who starts an assessment is listed on its dataset as its creator,
+- The person who starts an assessment is listed on its dataset as its Data Manager,
   and can open, edit and delete it.
 - The quality score card is not shown on measurement pages for now. The
   framework replaced the page it was placed on.
