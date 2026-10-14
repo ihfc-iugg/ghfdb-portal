@@ -33,6 +33,21 @@ Releases before that used `<year>.<release>` and are recorded in the
   the framework's own migration, because the vocabulary behind that field was
   replaced and no old term maps onto a new one. The portal has never set or
   displayed it.
+- FairDM is updated to its current version, which brings django-mvp 0.28.
+  Upgrading converts the permissions stored on projects, datasets, samples and
+  measurements into access levels and deletes the stored permissions. That
+  migration does not reverse, so take a database backup before deploying.
+- An anonymous API caller may now make 30 requests a minute and 2,000 a day,
+  and a signed-in caller 120 a minute and 20,000 a day, in place of 100 and
+  1,000 an hour. API tokens issued before this release stop working. New ones
+  are created from the account pages.
+- The GHFDB API serves a record only when its dataset is public and published,
+  or to a signed-in person listed on the record, its dataset or its project.
+  Being listed on a dataset now reaches every record in it.
+- The person who starts an assessment is listed on its dataset as its Data Manager,
+  and can open, edit and delete it.
+- The quality score card is not shown on measurement pages for now. The
+  framework replaced the page it was placed on.
 
 ### Fixed
 
@@ -42,11 +57,17 @@ Releases before that used `<year>.<release>` and are recorded in the
 - The map viewer no longer collapses to a sliver on narrow screens. It filled
   the page correctly on desktop only by accident, through hand-rolled CSS that
   had no floor for a viewport where the sidebar contributes no height.
+- The edit page of a parent heat flow no longer fails with a server error.
 
 ### Removed
 
 - The vendored spec-driven-development toolchain, which was a copy of software
   maintained elsewhere.
+- The `/map/` address, which named a page that does not exist and always failed.
+  The interactive map is at `/ghfdb/explore/`.
+- Page templates nothing rendered any more, and the portal's own server error
+  page, which drew nothing of its own. The framework's server error page is shown
+  instead.
 
 ## [2025.21] - 2025-08-14
 

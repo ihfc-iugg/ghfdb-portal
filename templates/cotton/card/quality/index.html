@@ -2,11 +2,11 @@
 {# @prop child:object | description:"The heat flow value whose stored quality scores the card shows." #}
 {% load i18n %}
 <c-vars child />
-<c-card title="{% trans "Quality score" %}"
-        class="mt-4"
-        role="region"
-        aria-label="{% trans "Quality score" %}"
-        data-quality-card="child">
+<c-mvp.card title="{% trans "Quality score" %}"
+            class="mt-4"
+            role="region"
+            aria-label="{% trans "Quality score" %}"
+            data-quality-card="child">
   <p class="text-base-content/70">
     {% blocktrans %}The U-score and M-score are grades from 1 (excellent) to 4 (poor). The T-score and TC-score are numbers from 0.1 to 1.2, and higher is better. The temperature gradient and the thermal conductivity are scored on their own, and this heat flow value then applies its own corrections to reach the corrected scores its M-score is made from.{% endblocktrans %}
   </p>
@@ -159,4 +159,4 @@
     {% blocktrans %}In the quality code the flags are written in this order. An upper-case letter means the effect is present and corrected, a lower-case letter present and not corrected, <code>X</code> present and not significant, <code>x</code> not recognised, and <code>-</code> none or not recorded.{% endblocktrans %}
   </p>
   <c-card.quality.legend />
-</c-card>
+</c-mvp.card>

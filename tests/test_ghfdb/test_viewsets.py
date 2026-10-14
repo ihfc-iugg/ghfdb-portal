@@ -777,16 +777,16 @@ class TestGHFDBSingleRecordObjectPermissions:
             == 404
         )
 
-    def test_a_guardian_object_grant_on_a_private_parent_allows_its_detail_route(
+    def test_a_view_level_on_a_private_parent_allows_its_detail_route(
         self, client, public_dataset, dataset
     ):
-        from fairdm.core.utils import assign_perm
+        from fairdm.contrib.contributors.services.crediting import Crediting
         from fairdm.factories import UserFactory
         from heat_flow.models import HeatFlowSite, ParentHeatFlow
 
         # The site stays in the public dataset; only the parent (the measurement the
-        # grant below targets) moves to the private one, so this scenario tests the
-        # object grant alone rather than also depending on site visibility.
+        # level below is given on) moves to the private one, so this scenario tests the
+        # level alone rather than also depending on site visibility.
         site = HeatFlowSite.objects.create(
             dataset=public_dataset,
             name="Test Site",
@@ -798,7 +798,7 @@ class TestGHFDBSingleRecordObjectPermissions:
             dataset=dataset, sample=site, name="Test Parent", value=70.0, ghfdb_id=1
         )
         user = UserFactory()
-        assign_perm("view_measurement", user, ParentHeatFlow.objects.get(pk=parent.pk))
+        Crediting(parent).add(user)
         client.force_login(user)
 
         response = client.get(
@@ -851,40 +851,32 @@ class TestGHFDBSiteVisibility:
 
 
 @pytest.mark.django_db
-class TestGHFDBDatasetLevelGrant:
-    # A view grant on a dataset alone does not surface its records.
-    #
-    # The list filter resolves a signed-in grant through ``get_objects_for_user``
-    # against the record's own permission (or its measurement, via
-    # ``fairdm.core.utils.get_objects_for_user``'s polymorphic-base
-    # normalisation) — it never consults the dataset-to-measurement inheritance
-    # ``MeasurementPermissionBackend.has_perm`` applies for an object-level
-    # check, so a dataset-level grant alone stays invisible here.
+class TestGHFDBDatasetLevel:
+    # A view level on a dataset reaches the records in it: the framework reads a
+    # person's level up from a measurement or sample through its dataset.
 
-    def test_a_view_grant_on_the_dataset_alone_does_not_surface_its_records(
-        self, client, dataset
-    ):
-        from fairdm.core.utils import assign_perm
+    def test_a_view_level_on_the_dataset_surfaces_its_records(self, client, dataset):
+        from fairdm.contrib.contributors.services.crediting import Crediting
         from fairdm.factories import UserFactory
 
         user = UserFactory()
-        assign_perm("view_dataset", user, dataset)
+        Crediting(dataset).add(user)
         parent = build_site_and_parent(dataset, ghfdb_id=1)
         build_child(dataset, parent, ghfdb_id=11)
         client.force_login(user)
 
-        assert client.get(reverse("api:ghfdb-parents-list")).json()["results"] == []
-        assert client.get(reverse("api:ghfdb-children-list")).json()["results"] == []
-        assert client.get(reverse("api:ghfdb-flat-list")).json()["results"] == []
+        assert len(client.get(reverse("api:ghfdb-parents-list")).json()["results"]) == 1
+        assert len(client.get(reverse("api:ghfdb-children-list")).json()["results"]) == 1
+        assert len(client.get(reverse("api:ghfdb-flat-list")).json()["results"]) == 1
         assert (
             client.get(
                 reverse("api:ghfdb-parents-detail", kwargs={"ghfdb_id": 1})
             ).status_code
-            == 404
+            == 200
         )
         assert (
             client.get(
                 reverse("api:ghfdb-children-detail", kwargs={"ghfdb_id": 11})
             ).status_code
-            == 404
+            == 200
         )

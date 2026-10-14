@@ -7,7 +7,7 @@
         <p>{% trans "A curator sent this back" %}: {{ review.decision_comment }}</p>
       </c-alert>
     {% endif %}
-    <c-card title="{% trans "The assessment" %}">
+    <c-mvp.card title="{% trans "The assessment" %}">
       <c-slot name="badges">
         <c-badge text="{{ review.get_state_display }}"
                  variant="{{ review.state_variant }}"
@@ -43,9 +43,9 @@
             <a class="link link-hover"
                href="{{ assessor.get_absolute_url }}">{{ assessor }}</a>{% if not forloop.last %},{% endif %}
           {% empty %}
-            <c-text size="sm" muted tight>
+            <c-mvp.text size="sm" muted tight>
               {% trans "Nobody is named" %}
-            </c-text>
+            </c-mvp.text>
           {% endfor %}
         </dd>
         <dt class="font-semibold">{% trans "Uploaded by" %}</dt>
@@ -73,9 +73,9 @@
           </dd>
         {% endif %}
       </dl>
-    </c-card>
+    </c-mvp.card>
     {% if may_decide %}
-      <c-card title="{% trans "Decision" %}" icon="verified">
+      <c-mvp.card title="{% trans "Decision" %}" icon="verified">
         <form method="post"
               action="{% url 'review-decide' pk=review.pk %}">
           {% csrf_token %}
@@ -97,16 +97,16 @@
                     text="{% trans "Send back" %}"
                     variant="secondary" />
         </form>
-      </c-card>
+      </c-mvp.card>
     {% endif %}
-    <c-card title="{% trans "Submitted files" %}" icon="file">
+    <c-mvp.card title="{% trans "Submitted files" %}" icon="file">
       {% for submission in review.submissions.all %}
         <div class="flex flex-wrap items-center gap-2 py-1">
           <c-icon name="file" />
           <span>{{ submission.filename }}</span>
-          <c-text size="sm" muted tight>
+          <c-mvp.text size="sm" muted tight>
             {{ submission.submitted_by }}, {{ submission.submitted_at|date:"j F Y, H:i" }}
-          </c-text>
+          </c-mvp.text>
           {% if submission.imported_at %}
             <c-badge text="{% trans "Written" %}"
                      variant="success"
@@ -118,10 +118,10 @@
           {% endif %}
         </div>
       {% empty %}
-        <c-text size="sm" muted tight>
+        <c-mvp.text size="sm" muted tight>
           {% trans "No file has been supplied yet" %}
-        </c-text>
+        </c-mvp.text>
       {% endfor %}
-    </c-card>
+    </c-mvp.card>
   </div>
 {% endblock page.content %}
