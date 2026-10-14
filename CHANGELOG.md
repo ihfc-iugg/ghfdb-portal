@@ -33,6 +33,14 @@ Releases before that used `<year>.<release>` and are recorded in the
   the framework's own migration, because the vocabulary behind that field was
   replaced and no old term maps onto a new one. The portal has never set or
   displayed it.
+- FairDM is updated to its current version, which brings django-mvp 0.28.
+  Upgrading converts the permissions stored on projects, datasets, samples and
+  measurements into access levels and deletes the stored permissions. That
+  migration does not reverse, so take a database backup before deploying.
+- An anonymous API caller may now make 30 requests a minute and 2,000 a day,
+  and a signed-in caller 120 a minute and 20,000 a day, in place of 100 and
+  1,000 an hour. API tokens issued before this release stop working. New ones
+  are created from the account pages.
 
 ### Fixed
 

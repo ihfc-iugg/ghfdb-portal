@@ -1,7 +1,7 @@
 {% extends "page_view.html" %}
 {% block content %}
-  <c-page fill>
-    <c-page.content>
+  <c-mvp.page fill>
+    <c-mvp.page.content>
       <div class="w-full h-full">
         <iframe src="https://ihfc-iugg.github.io/HeatFlowMapping/"
                 title="{% trans "Interactive heat flow map" %}"
@@ -24,8 +24,8 @@
           {% trans "The interactive map is temporarily unavailable. Please try again later." %}
         </div>
       </div>
-    </c-page.content>
-  </c-page>
+    </c-mvp.page.content>
+  </c-mvp.page>
 {% endblock content %}
 {% block app.footer %}
 {% endblock app.footer %}

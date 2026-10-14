@@ -1,5 +1,5 @@
 {% load i18n %}
-<c-card.wrapper class="h-full">
+<c-mvp.card.wrapper class="h-full">
   <div class="card-body gap-2">
     <div>
       <c-badge text="{{ review.get_state_display }}"
@@ -15,24 +15,24 @@
         <div class="flex items-center gap-2">
           <div class="avatar-group -space-x-2">
             {% for assessor in assessors %}
-              <c-avatar :for="assessor"
-                        src="{% if assessor.image %}{{ assessor.profile_image }}{% endif %}"
-                        placeholder="{{ assessor.get_initials }}"
-                        alt="{{ assessor }}"
-                        size="xs" />
+              <c-mvp.avatar :for="assessor"
+                            src="{% if assessor.image %}{{ assessor.profile_image }}{% endif %}"
+                            placeholder="{{ assessor.get_initials }}"
+                            alt="{{ assessor }}"
+                            size="xs" />
             {% endfor %}
           </div>
-          <c-text size="sm" tight>
+          <c-mvp.text size="sm" tight>
             {% for assessor in assessors %}
               <a class="link link-hover"
                  href="{{ assessor.get_absolute_url }}">{{ assessor }}</a>{% if not forloop.last %},{% endif %}
             {% endfor %}
-          </c-text>
+          </c-mvp.text>
         </div>
       {% endif %}
     {% endwith %}
-    <c-text size="sm" muted tight>
+    <c-mvp.text size="sm" muted tight>
       {% trans "Uploaded by" %} {{ review.uploaded_by|default:_("Unknown") }}
-    </c-text>
+    </c-mvp.text>
   </div>
-</c-card.wrapper>
+</c-mvp.card.wrapper>

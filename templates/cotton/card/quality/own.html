@@ -4,11 +4,11 @@
 {# @prop label:string | description:"The name of the score, already translated." #}
 {% load i18n %}
 <c-vars measurement kind label />
-<c-card title="{% trans "Quality score" %}"
-        class="mt-4"
-        role="region"
-        aria-label="{% trans "Quality score" %}"
-        data-quality-card="{{ kind }}">
+<c-mvp.card title="{% trans "Quality score" %}"
+            class="mt-4"
+            role="region"
+            aria-label="{% trans "Quality score" %}"
+            data-quality-card="{{ kind }}">
   <p class="text-base-content/70">
     {% blocktrans %}The score of this measurement on its own, before any heat flow value that uses it applies its corrections. The heat flow's page shows the corrected score.{% endblocktrans %}
   </p>
@@ -33,4 +33,4 @@
     </c-data_field>
   </div>
   <c-card.quality.legend />
-</c-card>
+</c-mvp.card>

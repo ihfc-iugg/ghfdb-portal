@@ -35,10 +35,12 @@ exist in total), and `next` and `previous` (the adjacent pages' URLs, or `null` 
 
 ## Reading the whole database
 
-An unauthenticated client is limited to 100 requests an hour. At the maximum page size of 1,000,
-reading the full published database — currently on the order of 90,000 determinations — takes
-about 90 requests, which fits inside that limit. A page that large takes a few seconds to answer.
-A signed-in request is limited to 1,000 an hour instead.
+An unauthenticated client may make 30 requests a minute and 2,000 a day. At the maximum page size
+of 1,000, reading the full published database — currently on the order of 90,000 determinations —
+takes about 90 requests, which is well inside the daily limit and about three minutes at the
+per-minute one. A page that large takes a few seconds to answer. A signed-in request may make 120
+requests a minute and 20,000 a day. A request past either limit is refused with
+`429 Too Many Requests`, and its `Retry-After` header says how many seconds to wait.
 
 Signing in can also change which records a route serves: alongside every publicly visible record, a
 signed-in request also sees one it holds an explicit view grant on — directly, or on the underlying
