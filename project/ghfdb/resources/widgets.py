@@ -125,7 +125,12 @@ class ConceptWidget(CharWidget):
 
 
 class MultiConceptWidget(ManyToManyWidget):
-    """Maps semicolon-separated concept labels to a research_vocabs Concept QuerySet."""
+    """Maps semicolon-separated concept labels to a research_vocabs Concept QuerySet.
+
+    A ``[unspecified]`` token resolves to the vocabulary's own ``unspecified`` concept,
+    because the quality scheme scores it as a value. A vocabulary without one drops the
+    token, and a blank cell is an empty set.
+    """
 
     def __init__(self, vocabulary, separator=";", **kwargs):
         self._vocab_class = (
@@ -138,15 +143,12 @@ class MultiConceptWidget(ManyToManyWidget):
         """Resolve semicolon-separated labels or keys to a Concept QuerySet."""
         if not value:
             return self.queryset.none()
-        # Build (original, normalised) pairs; skip blank and "unspecified" tokens
-        pairs = []
-        for v in str(value).split(self.separator):
-            raw = v.strip()
-            if not raw:
-                continue
-            norm = normalize_vocab_token(raw)
-            if norm != "unspecified":
-                pairs.append((raw, norm))
+        # Build (original, normalised) pairs; skip blank tokens
+        pairs = [
+            (raw, normalize_vocab_token(raw))
+            for raw in (v.strip() for v in str(value).split(self.separator))
+            if raw
+        ]
         if not pairs:
             return self.queryset.none()
         # A cell names a concept by its label or by its key — the lithology
@@ -159,6 +161,8 @@ class MultiConceptWidget(ManyToManyWidget):
         matched, invalid_originals = [], []
         for orig, norm in pairs:
             pk = by_label.get(norm, by_key.get(norm))
+            if pk is None and norm == "unspecified":
+                continue
             if pk is None:
                 invalid_originals.append(orig)
             else:

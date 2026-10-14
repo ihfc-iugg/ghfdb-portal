@@ -1,0 +1,5 @@
+{# @description The note at the foot of a quality card on what "Missing information" and "Not determined" mean. Takes no attributes. #}
+{% load i18n %}
+<p class="text-xs text-base-content/70 mt-2">
+  {% blocktrans %}<strong>Missing information</strong> means an input the scheme needed was empty, so that criterion took its largest penalty. The score is a floor for what the record could deserve if the input were added. <strong>Not determined</strong> means the scheme could not score the record. It is not zero.{% endblocktrans %}
+</p>

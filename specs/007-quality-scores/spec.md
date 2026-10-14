@@ -280,7 +280,7 @@ both the uncorrected and the corrected value are present in the rendered page.
   needed is empty, or where the scheme names a specific case. An input explicitly recorded as
   unspecified MUST take the largest penalty without the mark.
 - **FR-010**: The quality code MUST be written as the U-score, the M-score and the seven
-  perturbation flags separated by full stops, for example `U1.M2.SxxxCxR` or `U2.M3x.-e-PX--`.
+  perturbation flags separated by full stops, for example `U1.M2.SxxxxCR` or `U2.M3x.-e-PX--`.
 - **FR-011**: The perturbation flags MUST be, in order, sedimentation, erosion, topography,
   paleoclimate, surface and bottom-water temperature variation, convection, and heat refraction,
   written `S E T P V C R`. Each MUST be the upper-case letter when the effect is present and

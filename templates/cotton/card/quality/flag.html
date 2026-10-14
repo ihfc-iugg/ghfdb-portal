@@ -1,0 +1,24 @@
+{# @description One row of the perturbation-flag table: the flag's letter, the correction it stands for and what its character in the quality code says. #}
+{# @prop letter:string | description:"The flag's letter in the quality code: S, E, T, P, V, C or R." #}
+{# @prop name:string | description:"The correction the flag records, already translated." #}
+{# @prop char:string | description:"The flag's character in the quality code: a letter, X, x or a hyphen." #}
+{% load i18n %}
+<c-vars letter name char />
+<tr>
+  <th scope="row">{{ letter }}</th>
+  <td>{{ name }}</td>
+  <td data-quality="flag-{{ letter }}"
+      data-value="{{ char }}">
+    {% if char == "-" %}
+      {% trans "None, or not recorded" %}
+    {% elif char == "X" %}
+      {% trans "Present, not significant" %}
+    {% elif char == "x" %}
+      {% trans "Not recognised" %}
+    {% elif char|upper == char %}
+      {% trans "Present, corrected" %}
+    {% else %}
+      {% trans "Present, not corrected" %}
+    {% endif %}
+  </td>
+</tr>

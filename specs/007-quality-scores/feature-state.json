@@ -1,0 +1,509 @@
+{
+  "feature": "007-quality-scores",
+  "branch": "007-quality-scores",
+  "repo": "ihfc-iugg/ghfdb-portal",
+  "state": "PR_READY",
+  "state_history": [
+    {
+      "state": "GATE_SPEC",
+      "at": "2026-09-30T19:50:45Z",
+      "note": "specification PR #233 merged by SamuelJennings, merge commit 2b691e7be49bfcbc57d0a5a50be8323b6ff39b24"
+    },
+    {
+      "state": "QUEUED",
+      "at": "2026-09-30T19:50:45Z",
+      "note": "epic #232, stories #234-#238"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-09-30T20:20:30Z",
+      "note": "picked up by forge-implement off the queue; plan, research and tasks authored"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-09-30T20:21:53Z",
+      "note": "plan, research, tasks committed; draft PR #239"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-09-30T20:37:27Z",
+      "note": "design review applied; plan notified"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-09-30T22:46:20Z",
+      "note": "US1, US3-US5 done; US2 built, T005 held on maintainer"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-13T19:46:20Z",
+      "note": "convergence green at 1607201; the correction-status change moved to issue #258"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-13T21:45:11Z",
+      "note": "code review approved, seven fixes verified, walkthrough laid out on the pull request"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "SamuelJennings",
+      "at": "2026-09-30T19:50:45Z"
+    },
+    "plan": {
+      "approved_by": "notified",
+      "at": "2026-09-30T20:37:27Z"
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    },
+    "design_review": {
+      "approved_by": "design-panel",
+      "at": "2026-09-30T20:37:13Z",
+      "self_resolved": [
+        "SPEC-001 high verified: import discarded published correction labels; T005a resolves labels, falls back to '-' when the type refuses (D22)",
+        "SPEC-002 high verified: import stored [unspecified] concepts as empty; T001a stores the vocabulary's unspecified concept (D23), carried to the maintainer in the plan notification",
+        "SPEC-003 medium: two existing assertions FS-007's FRs change are named in T002 and T008 (D24)",
+        "SPEC-004 medium: testing.md reference-value rule amended in T004; Constitution Check row updated",
+        "ARCH-001 medium: delete receivers collect and refresh on commit (D24, plan)",
+        "SEC-001 medium: measurement page visibility is a pre-existing framework gap, recorded in D21, raise with FairDM",
+        "SPEC-005 low: uncorrected borehole pT rule tabulated in research R1",
+        "SPEC-006 low: probe metadata delete row added",
+        "ARCH-002 low: get_perturbation_effects deleted in T006",
+        "ARCH-003 low: evaluators on a Criterion class",
+        "ARCH-004 low: route() returns the rules class",
+        "ARCH-005 low: refresh command chunked and prefetched; first-run cost in deploy README"
+      ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-13T21:45:05Z",
+      "self_resolved": []
+    }
+  },
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 234,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_quality.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_quality.py -n0 -q",
+              "uv run pytest tests/test_heat_flow/test_models/test_child.py -n0 -q",
+              "uv run pre-commit run --all-files",
+              "uv run python manage.py check"
+            ]
+          }
+        },
+        {
+          "id": "T001a",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_widgets.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_ghfdb/test_resources/test_widgets.py -n0 -q",
+              "uv run pytest tests/test_ghfdb -q",
+              "uv run pre-commit run --all-files"
+            ]
+          }
+        },
+        {
+          "id": "T002",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_models/test_child.py",
+              "tests/test_heat_flow/test_signals.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow tests/test_migrations.py tests/test_factories.py -q",
+              "uv run pre-commit run --all-files",
+              "uv run python manage.py check"
+            ]
+          }
+        },
+        {
+          "id": "T003",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_docs/test_data_model_diagram.py",
+              "tests/test_docs/test_field_map.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_docs tests/test_heat_flow/test_quality.py -q",
+              "uv run --group docs sphinx-build -b html docs <dir> -W --keep-going"
+            ]
+          }
+        },
+        {
+          "id": "T020",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_quality.py::TestProbeConductivity::test_any_empty_saturation_input_takes_the_largest_penalty_and_the_mark"
+            ],
+            "commands": [
+              "mutation: location dropped from the fields Criterion.cases checks for emptiness -> assert 1.0 == 0.7 on the location case; restored"
+            ],
+            "code": [
+              "tests/test_heat_flow/test_quality.py:679"
+            ]
+          }
+        },
+        {
+          "id": "T022",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "project/heat_flow/quality.py:102",
+              "project/ghfdb/resources/child.py:175",
+              "project/heat_flow/management/commands/refresh_quality.py:54"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P1",
+      "issue": 235,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T004",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_quality.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_quality.py -n0 -q",
+              "uv run pre-commit run --files project/heat_flow/quality.py tests/test_heat_flow/test_quality.py docs/contributing/standards/testing.md"
+            ]
+          }
+        },
+        {
+          "id": "T005a",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_resources/test_child.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_ghfdb/test_resources/test_child.py -n0 -q",
+              "uv run pre-commit run --files project/ghfdb/resources/child.py tests/test_ghfdb/test_resources/test_child.py docs/guides/importing-data.md"
+            ]
+          }
+        },
+        {
+          "id": "T006",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_models/test_child.py",
+              "tests/test_heat_flow/test_signals.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow tests/test_migrations.py tests/test_factories.py -q",
+              "uv run pytest tests/test_heat_flow/test_signals.py tests/test_heat_flow/test_models/test_child.py -n0 -q",
+              "uv run python manage.py makemigrations heat_flow --check --dry-run",
+              "uv run pre-commit run --files project/heat_flow/apps.py project/heat_flow/models/child.py project/heat_flow/signals.py tests/test_heat_flow/test_signals.py tests/test_heat_flow/test_models/test_child.py"
+            ]
+          }
+        },
+        {
+          "id": "T007",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_docs/test_data_model_diagram.py",
+              "tests/test_docs/test_field_map.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_docs -q -n0",
+              "forge verify --repo . --steps docs,conformance --base ca1db49"
+            ]
+          }
+        },
+        {
+          "id": "T021",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "manage.py makemigrations heat_flow ghfdb --check --dry-run: No changes detected",
+              "uv run pytest tests/test_docs -n0 -q"
+            ],
+            "code": [
+              "docs/guides/published-structure-api.md:84",
+              "docs/guides/quality-scores.md:395",
+              "project/heat_flow/models/child.py:181"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P2",
+      "issue": 236,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T008",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_quality.py",
+              "tests/test_heat_flow/test_models/test_parent.py",
+              "tests/test_heat_flow/test_signals.py",
+              "tests/test_ghfdb/test_viewsets.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow tests/test_ghfdb -n auto --dist loadscope -q",
+              "uv run pre-commit run --all-files",
+              "uv run python manage.py makemigrations heat_flow --check --dry-run"
+            ]
+          }
+        },
+        {
+          "id": "T009",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_docs/test_field_map.py",
+              "tests/test_docs/test_data_model_diagram.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_docs -q -n0"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US4",
+      "priority": "P2",
+      "issue": 237,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T010",
+          "status": "done",
+          "attempts": 3,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_signals.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_signals.py tests/test_heat_flow/test_quality.py -n0 -q"
+            ]
+          }
+        },
+        {
+          "id": "T011",
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_ghfdb/test_importers.py",
+              "tests/test_heat_flow/test_signals.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_ghfdb tests/test_heat_flow/test_signals.py -n auto --dist loadscope -q"
+            ]
+          }
+        },
+        {
+          "id": "T012",
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_management/test_commands/test_refresh_quality.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_management tests/test_heat_flow/test_models -n0 -q"
+            ]
+          }
+        },
+        {
+          "id": "T013",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_docs"
+            ],
+            "commands": [
+              "uv run pytest tests/test_docs -q -n0"
+            ]
+          }
+        },
+        {
+          "id": "T018",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_signals.py::TestDeferral::test_a_thread_flushes_only_what_it_collected"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_signals.py -n0 -q",
+              "mutation: Pending made an ordinary class shared by threads -> assert {101, 102} == set(); restored"
+            ],
+            "code": [
+              "project/heat_flow/signals.py:25"
+            ]
+          }
+        },
+        {
+          "id": "T019",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_signals.py::TestMeasurementReceivers::test_a_concept_change_refreshes_without_saving_the_record_again"
+            ],
+            "commands": [
+              "mutation: refresh_measurement_on_concepts returns at once -> assert 0.5 == 1.1; restored"
+            ],
+            "code": [
+              "tests/test_heat_flow/test_signals.py:81"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US5",
+      "priority": "P3",
+      "issue": 238,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T014",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templates/test_measurement_detail.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templates -n0 -q"
+            ]
+          }
+        },
+        {
+          "id": "T015",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_docs"
+            ],
+            "commands": [
+              "uv run pytest tests/test_docs -n0 -q"
+            ]
+          }
+        },
+        {
+          "id": "T016",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templates/test_measurement_detail.py::TestChildCard",
+              "tests/test_templates/test_measurement_detail.py::TestMeasurementCard"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templates -n0 -q",
+              "every class in templates/measurement and templates/cotton/card/quality checked against django-mvp.css and fairdm.css: 20 used, 0 undefined"
+            ],
+            "code": [
+              "templates/cotton/card/quality/index.html:1",
+              "templates/cotton/card/quality/own.html:1",
+              "templates/measurement/detail.html:8"
+            ]
+          }
+        },
+        {
+          "id": "T017",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templates/test_measurement_detail.py::TestChildCard::test_a_child_that_has_not_been_scored_says_so"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templates/test_measurement_detail.py::TestChildCard::test_a_child_that_has_not_been_scored_says_so -n0 -q",
+              "mutation: default filter removed from the flags slice -> AssertionError: assert '' == '-'; restored"
+            ],
+            "code": [
+              "templates/cotton/card/quality/index.html:121"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 1,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "tokens": {
+      "used": 102.24,
+      "max": 120
+    }
+  },
+  "pr": {
+    "number": 239,
+    "draft": true
+  }
+}

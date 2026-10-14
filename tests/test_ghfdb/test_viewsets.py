@@ -560,12 +560,12 @@ class TestGHFDBFlatViewSet:
         from research_vocabs.models import Concept
 
         parent = build_site_and_parent(public_dataset, ghfdb_id=1)
-        parent.quality = "A1"
-        parent.save()
         purposes = list(Concept.get_for_vocabulary(ExplorationPurpose)[:2])
         parent.sample.explo_purpose.set(purposes)
         build_child(public_dataset, parent, ghfdb_id=11)
         build_child(public_dataset, parent, ghfdb_id=12)
+        parent.quality = "A1"
+        parent.save()
 
         response = client.get(reverse("api:ghfdb-flat-list"))
 

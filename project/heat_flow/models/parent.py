@@ -21,6 +21,8 @@ from research_vocabs.fields import ConceptField, ConceptManyToManyField
 
 from heat_flow import vocabularies
 
+from ..quality import SCHEME_REVISION, MScoreOptions, QualityScheme, UScoreOptions
+
 
 class HeatFlowSite(GenericHole, AbstractGeoDepthInterval, GenericEarthSample):
     """A heat flow site: a borehole with geological context and geographic information."""
@@ -219,14 +221,53 @@ class ParentHeatFlow(Measurement):
         editable=False,
         db_index=True,
     )
+    U_score = models.CharField(
+        max_length=2,
+        choices=UScoreOptions.choices,
+        verbose_name=_("U-score"),
+        help_text=_(
+            "The poorest U-score among the children this parent rests on (Fuchs et al. 2023)."
+            " U1 = Excellent, U2 = Good, U3 = Ok, U4 = Poor, Ux = not determined / missing data."
+            " Calculated by the portal."
+        ),
+        default=UScoreOptions.Ux,
+        editable=False,
+    )
+    M_score = models.CharField(
+        max_length=3,
+        choices=MScoreOptions.choices,
+        verbose_name=_("M-score"),
+        help_text=_(
+            "The poorest M-score among the children this parent rests on (Fuchs et al. 2023)."
+            " M1 = Excellent, M2 = Good, M3 = Ok, M4 = Poor, Mx = not determined / missing data."
+            " A trailing x marks a grade reached with missing information. Calculated by the"
+            " portal."
+        ),
+        default=MScoreOptions.Mx,
+        editable=False,
+    )
     quality = models.CharField(
-        max_length=13,
+        max_length=14,
         verbose_name=_("quality score"),
         help_text=_(
-            "Overall quality assessment of the heat-flow value, based on a combination of U-score and M-score, as well as expert judgment on the reliability of the data."
+            "The quality code inherited from the children: the poorest U-score, the poorest"
+            " M-score and the seven perturbation flags (S E T P V C R) of the poorest child,"
+            " joined by dots, for example U2.M3x.-e-PX--. Calculated by the portal."
         ),
         null=True,
         blank=True,
+        editable=False,
+    )
+    quality_scheme = models.CharField(
+        max_length=32,
+        verbose_name=_("scheme revision"),
+        help_text=_(
+            "The revision of the quality scheme that calculated the inherited scores, for"
+            " example hfqa_tool 0.2. Empty until the scores have been calculated."
+        ),
+        blank=True,
+        default="",
+        editable=False,
     )
 
     class Meta:
@@ -239,6 +280,8 @@ class ParentHeatFlow(Measurement):
         indexes = [
             models.Index(fields=["ghfdb_id"]),
             models.Index(fields=["corr_HP_flag"]),
+            models.Index(fields=["U_score"]),
+            models.Index(fields=["M_score"]),
         ]
 
     def save(self, *args, **kwargs):
@@ -270,19 +313,24 @@ class ParentHeatFlow(Measurement):
         """Return the HeatFlowSite this parent record belongs to."""
         return self.sample
 
-    def get_quality(self):
-        """From Fuchs et al 2023, Section 3.4.
+    def refresh_quality(self) -> None:
+        """Recalculate and store the quality this parent inherits from its children.
 
-        If only one child: pass its score to parent.
-        If multiple children all used: poorest ranking inherited.
-        If multiple but not all used: poorest of relevant children inherited.
-        Children accessed via reverse FK related_name="children" on HeatFlow.parent.
+        A parent rests on its only child, marked relevant or not, because a single
+        determination cannot be weighed against another. With several children it rests on
+        those marked relevant, and with none of those, or no children at all, it is not
+        determined. The parent's value is never written (the value is designated, not
+        calculated). The write is a queryset ``update``, so it sends no save signal.
         """
-        relevant = self.children.filter(is_relevant=True)
-        count = relevant.count()
-        if count == 0:
-            return None
-        elif count == 1:
-            return relevant.first().get_quality()
-        else:
-            return relevant.order_by("quality").first().get_quality()
+        children = list(self.children.all())
+        if len(children) > 1:
+            children = [child for child in children if child.is_relevant]
+        self.U_score, self.M_score, flags = QualityScheme.inherit(children)
+        self.quality = QualityScheme.code(self.U_score, self.M_score, flags)
+        self.quality_scheme = SCHEME_REVISION
+        type(self).objects.filter(pk=self.pk).update(
+            U_score=self.U_score,
+            M_score=self.M_score,
+            quality=self.quality,
+            quality_scheme=self.quality_scheme,
+        )

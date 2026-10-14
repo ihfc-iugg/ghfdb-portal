@@ -27,3 +27,7 @@ The portal's scoring falls behind the published scheme far enough that its outpu
 of this decision the implementation follows Fuchs et al. (2023) while the community's current
 toolbox is Dergunova et al. (2026); closing that gap is open work, and it is a reason to update the
 computation, not to import someone else's result.
+
+The gap was closed by FS-007: the portal now follows toolbox V0.2, and
+[ADR 0022](0022-stored-quality-scores-are-recalculated-when-their-inputs-are-written.md) records how
+the calculated scores are kept current.

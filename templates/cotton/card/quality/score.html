@@ -1,0 +1,26 @@
+{# @description One stored sub-score as text: the number, with a "Missing information" mark when an input it was reached from was empty, or "Not determined" when the scheme could not score it. #}
+{# @prop hook:string | description:"The name the score is found by in the page, such as t-own or tc-corrected." #}
+{# @prop score:number | description:"The stored score, or none when it is not determined." #}
+{# @prop missing:boolean | description:"The score was reached from an empty input, so it carries the mark." #}
+{% load i18n %}
+<c-vars hook score missing />
+{% if score is None %}
+  <span data-quality="{{ hook }}"
+        data-state="not-determined"
+        data-value=""
+        data-missing="false">{% trans "Not determined" %}</span>
+{% else %}
+  <span data-quality="{{ hook }}"
+        data-state="determined"
+        data-value="{{ score|floatformat:'1u' }}"
+        data-missing="{{ missing|yesno:'true,false' }}">
+    {{ score|floatformat:1 }}
+    {% if missing %}
+      <span data-quality-mark="missing">
+        <c-badge variant="warning" size="sm">
+          {% trans "Missing information" %}
+        </c-badge>
+      </span>
+    {% endif %}
+  </span>
+{% endif %}

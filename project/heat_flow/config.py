@@ -177,5 +177,4 @@ class ParentHeatFlowConfig(IHFCConfig):
         "corr_HP_flag",
         "comment",
         "ghfdb_id",
-        "quality",
     ]
