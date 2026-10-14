@@ -164,3 +164,17 @@ def django_db_setup(django_db_setup, django_db_blocker):
 
     with django_db_blocker.unblock():
         Concept.preload()
+
+
+@pytest.fixture(autouse=True)
+def fresh_api_rate_limits(monkeypatch):
+    # The API's rate limits count requests per caller in a cache that outlives a
+    # test, so a worker that runs many anonymous API tests within a minute is
+    # refused with 429 by tests that came before it. Each test counts from zero
+    # in a cache of its own. The vocabulary graphs stay in the shared cache.
+    from django.core.cache.backends.locmem import LocMemCache
+    from rest_framework.throttling import SimpleRateThrottle
+
+    monkeypatch.setattr(
+        SimpleRateThrottle, "cache", LocMemCache(f"throttle-{id(object())}", {})
+    )
