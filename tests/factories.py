@@ -65,7 +65,7 @@ class HeatFlowFactory(MeasurementFactory):
 
     sample = factory.SubFactory(HeatFlowIntervalFactory)
     value = LazyAttribute(lambda _: round(random.gauss(mu=50, sigma=30), 2))
-    uncertainty = LazyAttribute(lambda o: o.value * random.uniform(0.05, 0.25))
+    uncertainty = LazyAttribute(lambda o: abs(o.value) * random.uniform(0.05, 0.25))
     expedition = Faker("text", max_nb_chars=100)
 
     @factory.post_generation
@@ -86,11 +86,11 @@ class ThermalGradientFactory(MeasurementFactory):
     sample = factory.SubFactory(HeatFlowIntervalFactory)
 
     value = LazyAttribute(lambda _: round(random.gauss(mu=25, sigma=10), 2))
-    uncertainty = LazyAttribute(lambda o: o.value * random.uniform(0.05, 0.25))
+    uncertainty = LazyAttribute(lambda o: abs(o.value) * random.uniform(0.05, 0.25))
     corrected_value = LazyAttribute(lambda _: round(random.gauss(mu=25, sigma=10), 2))
     corrected_uncertainty = LazyAttribute(
         lambda o: (
-            o.corrected_value * random.uniform(0.05, 0.25)
+            abs(o.corrected_value) * random.uniform(0.05, 0.25)
             if o.corrected_value
             else None
         )
@@ -150,7 +150,7 @@ class IntervalConductivityFactory(MeasurementFactory):
     sample = factory.SubFactory(HeatFlowIntervalFactory)
 
     value = LazyAttribute(lambda _: round(random.gauss(mu=2.5, sigma=1.0), 2))
-    uncertainty = LazyAttribute(lambda o: o.value * random.uniform(0.05, 0.25))
+    uncertainty = LazyAttribute(lambda o: abs(o.value) * random.uniform(0.05, 0.25))
     number = Faker("pyint", min_value=1, max_value=10000)
 
     @factory.post_generation

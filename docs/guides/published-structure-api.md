@@ -42,10 +42,10 @@ per-minute one. A page that large takes a few seconds to answer. A signed-in req
 requests a minute and 20,000 a day. A request past either limit is refused with
 `429 Too Many Requests`, and its `Retry-After` header says how many seconds to wait.
 
-Signing in can also change which records a route serves: alongside every publicly visible record, a
-signed-in request also sees one it holds an explicit view grant on — directly, or on the underlying
-measurement. A grant on the dataset that contains a record does not, on its own, surface that
-dataset's published records.
+A record is publicly visible when the dataset it belongs to is both public and published. Signing in
+can also change which records a route serves: alongside every publicly visible record, a signed-in
+request also sees one the person is listed on, at any access level, on the record itself or on the
+dataset or project it sits in.
 
 ## Parents
 
@@ -271,9 +271,9 @@ GET /api/v1/ghfdb/children/11/
 }
 ```
 
-A determination is served only where its parent is too — a determination whose site is in a dataset
-that is not public, or whose parent carries no published identifier, is absent from both `children`
-routes even if the determination's own dataset is public.
+A determination is served only where its parent is too — a determination whose site is not publicly
+visible, or whose parent carries no published identifier, is absent from both `children` routes even
+if the determination itself is publicly visible.
 
 ## Flat
 
@@ -403,10 +403,9 @@ The three viewsets share `GHFDBBaseViewSet`, in `project/ghfdb/viewsets.py`, whi
 published-identifier lookup, keeps the framework's own visibility filter for list requests, and sets
 `GHFDBObjectPermissions` — a permission class checking `measurement.view_measurement` for a
 single-record request, the permission the visibility filter already resolves a list request to,
-rather than the proxy's own permission, which has no row on the concrete model these routes serve.
-It also sets `GHFDBPagination`, the framework's own paginator with the larger default and maximum
-described under Paging, so these three routes page differently from every other route the portal
-serves. `GHFDBParentViewSet` and `GHFDBChildViewSet` are two of the three; each's single-record route
+rather than the proxy's own permission, which the framework maps to no access level and so refuses.
+Paging is the framework's own, at the default and maximum described under Paging.
+`GHFDBParentViewSet` and `GHFDBChildViewSet` are two of the three; each's single-record route
 overrides `retrieve()` to load the nested record it carries. A determination is narrowed to parents
 the requester is served, as a subquery, and a parent's attached determinations are that same narrowed
 queryset filtered to the one parent, so `children` never diverges from what a request to the

@@ -357,10 +357,11 @@ value that was never stored, so importing that file again is the repair for a mi
 
 ## Where you see the scores
 
-Each measurement's own page, at `/measurement/<uuid>/`, shows its scores in a *Quality score* card
-below its name, dataset and sample. The page reads the stored fields and calculates nothing, so it
-shows what a filter on those fields would find. Other measurement types, such as a parent heat
-flow, show no card on their page.
+The scores are shown in a *Quality score* card. The card is not on any page at present: the
+measurement page it was placed on has been replaced by the framework's own measurement overview,
+and the card returns with the portal's measurement pages. The card reads the stored fields and
+calculates nothing, so it shows what a filter on those fields would find. Other measurement types,
+such as a parent heat flow, have no card.
 
 **A temperature gradient or a thermal conductivity** shows its own score and the scheme revision it
 was scored under. This is the uncorrected score: it is the same for every child that uses the
@@ -388,9 +389,6 @@ as unspecified carries none.
 no rules to score it, for a child with no gradient or no conductivity, and for a `Ux` or `Mx`
 grade. It is never shown as 0 or left blank. A record that has not been scored yet shows *Not yet
 calculated* for its scheme revision.
-
-The page is served for any measurement whose address you hold, in a published dataset or not. That
-is how the framework serves measurement pages, and the portal adds no access check of its own to it.
 
 ## How these match the toolbox
 
@@ -522,4 +520,4 @@ prefetched, and `Command.refresh()` walks one level in chunks of `Command.CHUNK_
 ## Not covered here
 
 This page covers the scores of a gradient, a conductivity, a child and a parent, how they are kept
-current, and where a reader sees them. A parent's page does not show its scores yet.
+current, and how the card shows them. A parent's page does not show its scores yet.

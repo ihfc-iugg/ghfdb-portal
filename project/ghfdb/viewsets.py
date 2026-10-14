@@ -3,7 +3,6 @@
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from fairdm.api.filters import FairDMVisibilityFilter
-from fairdm.api.pagination import FairDMPagination
 from fairdm.api.permissions import FairDMObjectPermissions
 from heat_flow.models import HeatFlowSite
 from rest_framework.permissions import SAFE_METHODS
@@ -26,11 +25,9 @@ class GHFDBObjectPermissions(FairDMObjectPermissions):
     A safe-method check asks for ``measurement.view_measurement`` — the
     permission :class:`~fairdm.api.filters.FairDMVisibilityFilter` already
     resolves a list request to — instead of the proxy's own
-    ``ghfdb.view_ghfdb*`` codename. Guardian resolves a proxy model's content
-    type through its concrete model, ``heat_flow`` for both
-    ``GHFDBParent``/``GHFDBChild``, so checking the proxy's own
-    ``ghfdb``-labelled permission against the object raised
-    ``guardian.exceptions.WrongAppError`` instead of deciding.
+    ``ghfdb.view_ghfdb*`` codename. The framework decides a measurement's
+    permissions from the viewer's level on it and refuses a codename it does
+    not map to a level, which the proxy's own codename is.
     """
 
     def get_required_object_permissions(self, method, model_cls):
@@ -38,18 +35,6 @@ class GHFDBObjectPermissions(FairDMObjectPermissions):
         if method in SAFE_METHODS:
             return ["measurement.view_measurement"]
         return super().get_required_object_permissions(method, model_cls)
-
-
-class GHFDBPagination(FairDMPagination):
-    """Larger pages than the framework's own, for reading the published database in bulk.
-
-    A consumer reading all ~90,000 published determinations at the framework's
-    100-record maximum needs 900 requests, nine hours under the anonymous
-    100-an-hour throttle. At 1,000 it needs 90, which fits inside one hour.
-    """
-
-    page_size = 100
-    max_page_size = 1000
 
 
 def served_parents_for(request, view):
@@ -74,15 +59,14 @@ class GHFDBBaseViewSet(ReadOnlyModelViewSet):
 
     Keeps DRF's own ``get_object()`` unmodified, so the visibility filter and
     the object permission check run on the single-record route too.
-    Throttling is the framework's own setting; pagination is
-    :class:`GHFDBPagination` and the permission class is narrowed to
-    :class:`GHFDBObjectPermissions`.
+    Throttling and pagination are the framework's own settings, so a list is
+    paged with ``?page=`` and ``?page_size=`` at the framework's default and
+    maximum. The permission class is narrowed to :class:`GHFDBObjectPermissions`.
     """
 
     lookup_field = "ghfdb_id"
     lookup_value_regex = "[0-9]+"
     filter_backends = [FairDMVisibilityFilter]
-    pagination_class = GHFDBPagination
     permission_classes = [GHFDBObjectPermissions]
 
 

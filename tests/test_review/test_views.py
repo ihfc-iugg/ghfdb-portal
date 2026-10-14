@@ -9,7 +9,6 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.template.loader import render_to_string
 from django.urls import reverse
 from fairdm.factories import LiteratureItemFactory, PersonFactory
-from guardian.shortcuts import get_perms
 from review.models import Review, SubmittedFile
 from review.states import STATE_VARIANTS, States
 from review.views import (
@@ -185,14 +184,13 @@ class TestReviewCreateView:
         review = Review.objects.get()
         assert review.uploaded_by_id == assessor.pk
 
-    def test_the_uploader_holds_object_permissions_on_the_dataset(self, rf, assessor):
+    def test_the_uploader_can_view_change_and_delete_the_dataset(self, rf, assessor):
         self._post(rf, assessor)
 
         review = Review.objects.get()
-        perms = get_perms(assessor, review.dataset)
-        assert "view_dataset" in perms
-        assert "change_dataset" in perms
-        assert "delete_dataset" in perms
+        assert assessor.has_perm("dataset.view_dataset", review.dataset)
+        assert assessor.has_perm("dataset.change_dataset", review.dataset)
+        assert assessor.has_perm("dataset.delete_dataset", review.dataset)
 
     def test_each_named_assessor_is_credited_as_a_contributor(self, rf, assessor):
         _, _, named_assessor = self._post(rf, assessor)

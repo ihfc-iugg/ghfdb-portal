@@ -15,8 +15,8 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, View
 from django.views.generic.detail import SingleObjectMixin
+from fairdm.contrib.contributors.services.crediting import Crediting
 from fairdm.core.dataset.models import Dataset
-from fairdm.utils.permissions import assign_all_model_perms
 from fairdm.views import (
     FairDMCreateView,
     FairDMDetailView,
@@ -137,14 +137,11 @@ class ReviewUpdateView(UserPassesTestMixin, FairDMUpdateView):
 class ReviewCreateView(UserPassesTestMixin, FairDMCreateView):
     """Start an assessment (FS-005 FR-003 through FR-007, FR-016).
 
-    Object permissions on the new dataset follow ``uploaded_by`` — the
-    submitting user — never the assessor list: an assessor may be a
-    contributor profile with no account, for whom object permissions would
-    be meaningless. The retired ``ReviewCreateView`` (``git show
-    78c12d1``) called ``assign_all_model_perms`` once per reviewer instead;
-    that same helper is called once here, for the uploader alone. Assessors
-    are credited as dataset contributors, which is attribution rather than
-    access.
+    Access to the new dataset follows ``uploaded_by`` — the submitting user —
+    never the assessor list: an assessor may be a contributor profile with no
+    account, for whom access would be meaningless. The uploader is listed as
+    the dataset's creator, at the manage level. Assessors are credited as
+    dataset contributors at the view level the framework starts a person at.
 
     The dataset is left private: neither ``visibility`` nor ``published`` is
     set, so the framework's own defaults (both private) are what take
@@ -171,7 +168,7 @@ class ReviewCreateView(UserPassesTestMixin, FairDMCreateView):
         self.object.save()
         form.save_m2m()
 
-        assign_all_model_perms(self.request.user, dataset)
+        Crediting(dataset).make_creator(self.request.user)
 
         for assessor in self.object.reviewers.all():
             dataset.add_contributor(assessor, with_roles=["DataCollector"])

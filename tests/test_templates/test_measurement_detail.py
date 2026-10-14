@@ -1,5 +1,5 @@
-# Tests for the measurement page's quality card. The subject is the template
-# ``templates/measurement/detail.html``, not a Python module, so the directory is
+# Tests for the measurement page's quality card. The subject is the card's templates
+# under ``templates/cotton/card/quality/``, not a Python module, so the directory is
 # declared under ``non-mirror-paths`` in pyproject.toml.
 
 import pytest
@@ -14,7 +14,15 @@ from tests.factories import (
     ThermalGradientFactory,
 )
 
-pytestmark = pytest.mark.django_db
+pytestmark = [
+    pytest.mark.django_db,
+    pytest.mark.skip(
+        reason=(
+            "FairDM replaced the measurement page the quality card was placed on. "
+            "The card returns with the portal's own measurement pages."
+        )
+    ),
+]
 
 
 def shown(score):

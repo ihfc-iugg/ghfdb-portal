@@ -15,12 +15,13 @@ def dataset(db):
 @pytest.fixture
 def public_dataset(db):
     # DatasetFactory defaults to Visibility.PRIVATE, which an anonymous API
-    # request never sees. The API tests need a dataset an anonymous consumer
-    # can actually read, so this is separate from `dataset` above rather than
-    # changing what that fixture builds (FS-006).
+    # request never sees, and a public dataset shows its samples and
+    # measurements only once it is published. The API tests need a dataset an
+    # anonymous consumer can actually read, so this is separate from `dataset`
+    # above rather than changing what that fixture builds (FS-006).
     from fairdm.utils.choices import Visibility
 
-    return DatasetFactory(visibility=Visibility.PUBLIC)
+    return DatasetFactory(visibility=Visibility.PUBLIC, published=True)
 
 
 @pytest.fixture

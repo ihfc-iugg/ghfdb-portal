@@ -178,3 +178,9 @@ class ParentHeatFlowConfig(IHFCConfig):
         "comment",
         "ghfdb_id",
     ]
+    # ghfdb_id is assigned on import and is not editable, so the form leaves it out.
+    form_fields = [
+        ("value", "uncertainty"),
+        "corr_HP_flag",
+        "comment",
+    ]

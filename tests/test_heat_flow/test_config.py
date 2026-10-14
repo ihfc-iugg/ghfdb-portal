@@ -98,6 +98,14 @@ class TestHeatFlowRegistryConfig:
                 f"{model.__name__} table class {table_class!r} is not usable"
             )
 
+    def test_form_classes_are_usable(self):
+        # Every configuration resolves to a form class the framework's editing page
+        # can build, whether supplied or generated.
+        for model in _get_all_models():
+            config = fairdm.registry.get_for_model(model)
+            form_class = config.get_form_class()
+            assert form_class().fields, f"{model.__name__} form has no fields"
+
     def test_no_configuration_declares_an_unread_attribute(self):
         # FS-001 FR-031, SC-007a: no configuration in this app declares an attribute
         # the registry does not read. Checked against the framework's own recognised
