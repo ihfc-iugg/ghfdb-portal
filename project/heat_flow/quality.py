@@ -349,7 +349,7 @@ class ProbeRules:
         """
         fields = {
             "source": Reading.concepts(conductivity.source),
-            "location": Reading.concepts(conductivity.location),
+            "location": Reading.concepts(conductivity.conductivity_location),
             "method": Reading.concepts(conductivity.method),
             "saturation": Reading.concepts(conductivity.saturation),
             "pT": Reading.concepts(conductivity.pT_conditions),
@@ -546,7 +546,7 @@ class BoreholeRules:
             return SubScore(cls.GATE_SCORE, True)
         fields = {
             "source": Reading.concepts(conductivity.source),
-            "location": Reading.concepts(conductivity.location),
+            "location": Reading.concepts(conductivity.conductivity_location),
             "saturation": Reading.concepts(conductivity.saturation),
             "pT": Reading.concepts(conductivity.pT_conditions),
         }

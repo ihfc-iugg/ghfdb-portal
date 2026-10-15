@@ -196,7 +196,7 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
             "thermal_gradient__correction_top",
             "thermal_gradient__correction_bottom",
             "thermal_conductivity__source",
-            "thermal_conductivity__location",
+            "thermal_conductivity__conductivity_location",
             "thermal_conductivity__method",
             "thermal_conductivity__saturation",
             "thermal_conductivity__pT_conditions",

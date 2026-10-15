@@ -68,7 +68,7 @@ This means the queryset is already flat — the resource simply maps annotation 
 | 38 | `tc_mean` | `conductivity__value` (annotated) | `QuantityWidget("W/(m·K)")` | |
 | 39 | `tc_uncertainty` | `conductivity__uncertainty` (annotated) | `QuantityWidget("W/(m·K)")` | |
 | 40 | `tc_source` | `conductivity__source` (prefetched) | `MultiConceptWidget` | |
-| 41 | `tc_location` | `conductivity__location` (prefetched) | `MultiConceptWidget` | |
+| 41 | `tc_location` | `conductivity__conductivity_location` (prefetched) | `MultiConceptWidget` | |
 | 42 | `tc_method` | `conductivity__method` (prefetched) | `MultiConceptWidget` | |
 | 43 | `tc_saturation` | `conductivity__saturation` (prefetched) | `MultiConceptWidget` | |
 | 44 | `tc_pT_conditions` | `conductivity__pT_conditions` (prefetched) | `MultiConceptWidget` | |

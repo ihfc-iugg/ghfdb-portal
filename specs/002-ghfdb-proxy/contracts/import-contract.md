@@ -115,7 +115,7 @@ Created **only if** `tc_mean` is non-empty.
 | 26 | `tc_mean` | numeric | sentinel | `IntervalConductivity` | `value` | `QuantityWidget("W/(m·K)")` | Mean conductivity. Sentinel: if empty, skip all tc fields. |
 | 27 | `tc_uncertainty` | numeric | O | `IntervalConductivity` | `uncertainty` | `QuantityWidget("W/(m·K)")` | |
 | 28 | `tc_source` | concepts | O | `IntervalConductivity` | `source` | `MultiConceptWidget(ConductivitySource)` | M2M. |
-| 29 | `tc_location` | concepts | O | `IntervalConductivity` | `location` | `MultiConceptWidget(ConductivityLocation)` | M2M. |
+| 29 | `tc_location` | concepts | O | `IntervalConductivity` | `conductivity_location` | `MultiConceptWidget(ConductivityLocation)` | M2M. |
 | 30 | `tc_method` | concepts | O | `IntervalConductivity` | `method` | `MultiConceptWidget(ConductivityMethod)` | M2M. |
 | 31 | `tc_saturation` | concepts | O | `IntervalConductivity` | `saturation` | `MultiConceptWidget(ConductivitySaturation)` | M2M. |
 | 32 | `tc_pT_conditions` | concepts | O | `IntervalConductivity` | `pT_conditions` | `MultiConceptWidget(ConductivityPTConditions)` | M2M. |

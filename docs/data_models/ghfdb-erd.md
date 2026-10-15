@@ -409,7 +409,7 @@ The mean thermal conductivity over a depth interval.
 **Key Features**
 
 - Reaches its interval through `Measurement.sample`
-- Records the sample source, the location the value came from, the determination method, the saturation state and the pressure-temperature conditions
+- Records the sample source, where the conductivity data was measured (`conductivity_location`), the determination method, the saturation state and the pressure-temperature conditions
 - `score` is the conductivity's own TC-score, calculated from those properties under the toolbox V0.2 scheme. It lies between 0.1 and 1.2, and is empty when the site's exploration method selects no rules. `score_missing` and `quality_scheme` record whether an input was empty and which scheme revision calculated it. See [Quality scores](../guides/quality-scores.md)
 
 **Business Rules**

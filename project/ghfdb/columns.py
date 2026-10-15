@@ -141,7 +141,9 @@ class PublishedColumns:
         "T_corr_top": ColumnEntry(MANY_VALUED, "thermal_gradient.correction_top"),
         "T_corr_bottom": ColumnEntry(MANY_VALUED, "thermal_gradient.correction_bottom"),
         "tc_source": ColumnEntry(MANY_VALUED, "thermal_conductivity.source"),
-        "tc_location": ColumnEntry(MANY_VALUED, "thermal_conductivity.location"),
+        "tc_location": ColumnEntry(
+            MANY_VALUED, "thermal_conductivity.conductivity_location"
+        ),
         "tc_method": ColumnEntry(MANY_VALUED, "thermal_conductivity.method"),
         "tc_saturation": ColumnEntry(MANY_VALUED, "thermal_conductivity.saturation"),
         "tc_pT_conditions": ColumnEntry(

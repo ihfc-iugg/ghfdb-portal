@@ -18,6 +18,10 @@ Releases before that used `<year>.<release>` and are recorded in the
 
 ### Changed
 
+- `IntervalConductivity.location` is renamed `conductivity_location`, so that it
+  no longer clashes with the `location` field FairDM is adding to every
+  measurement. Existing values are kept, and the published `tc_location` column
+  is unchanged.
 - The project is built and developed with uv instead of Poetry, and the shared
   workflows are pinned at v0.6.0. The container image installs its dependencies
   with uv from `uv.lock`. The FairDM packages stay at the commits the previous

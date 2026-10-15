@@ -95,7 +95,7 @@ Error messages include the **original** pre-normalisation token text for user tr
 | `ParentWidget` | `"name"` | `HeatFlowSite` + `Point` | `explo_purpose` |
 | `IntervalWidget` | None (always creates) | `HeatFlowInterval` | `geo_lithology` → `lithology`; `geo_stratigraphy` → `age` (⚠️ NOT `stratigraphy` — see BUG-009) |
 | `GradientWidget` | `"T_grad_mean"` | `ThermalGradient` | `method_top`, `method_bottom`, `correction_top`, `correction_bottom` |
-| `ConductivityWidget` | `"tc_mean"` | `IntervalConductivity` | `source`, `location`, `method`, `saturation`, `pT_conditions`, `pT_function`, `strategy` |
+| `ConductivityWidget` | `"tc_mean"` | `IntervalConductivity` | `source`, `conductivity_location`, `method`, `saturation`, `pT_conditions`, `pT_function`, `strategy` |
 
 ## Module: `parent.py` — `GHFDBParentImportResource`
 

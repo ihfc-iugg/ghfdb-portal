@@ -332,7 +332,7 @@ class GHFDBExportResource(ModelResource):
         try:
             if obj.thermal_conductivity is None:
                 return ""
-            return _labels(obj.thermal_conductivity.location.all())
+            return _labels(obj.thermal_conductivity.conductivity_location.all())
         except AttributeError:
             return ""
 

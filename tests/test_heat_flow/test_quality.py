@@ -71,7 +71,7 @@ def build_conductivity(
         sample=interval,
         number=number,
         source=concepts(vocabularies.ConductivitySource, *source),
-        location=concepts(vocabularies.ConductivityLocation, *location),
+        conductivity_location=concepts(vocabularies.ConductivityLocation, *location),
         method=concepts(vocabularies.ConductivityMethod, *method),
         saturation=concepts(vocabularies.ConductivitySaturation, *saturation),
         pT_conditions=concepts(vocabularies.ConductivityPTConditions, *pT),
