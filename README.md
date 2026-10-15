@@ -1,10 +1,11 @@
 # portal.heatflow.world
 
-[![Build](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/build.yml/badge.svg)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/build.yml)
 [![Tests](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/tests.yml/badge.svg)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/tests.yml)
-[![codecov](https://codecov.io/gh/ihfc-iugg/ghfdb-portal/branch/main/graph/badge.svg)](https://codecov.io/gh/ihfc-iugg/ghfdb-portal)
-![GitHub](https://img.shields.io/github/license/ihfc-iugg/ghfdb-portal)
-![GitHub last commit](https://img.shields.io/github/last-commit/ihfc-iugg/ghfdb-portal)
+[![Build](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/build.yml/badge.svg)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/build.yml)
+[![Publish](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/publish.yml/badge.svg)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/publish.yml)
+[![Coverage](https://codecov.io/gh/ihfc-iugg/ghfdb-portal/branch/main/graph/badge.svg)](https://codecov.io/gh/ihfc-iugg/ghfdb-portal)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Licence](https://img.shields.io/github/license/ihfc-iugg/ghfdb-portal)](https://github.com/ihfc-iugg/ghfdb-portal/blob/main/LICENSE)
 
 This repository hosts the codebase of [portal.heatflow.world](https://portal.heatflow.world). The portal is a custom-built webapp that allows users to access and contribute heat flow data to the Global Heat Flow Database (GHFDB). For more information on how the portal works, see the [documentation](https://heatflowworld.readthedocs.io/).
 
