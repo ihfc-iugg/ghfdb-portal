@@ -163,7 +163,43 @@ def django_db_setup(django_db_setup, django_db_blocker):
         registry.register(vocabulary())
 
     with django_db_blocker.unblock():
+        keep_autovacuum_off_the_test_tables()
         Concept.preload()
+
+
+def keep_autovacuum_off_the_test_tables():
+    """Stop PostgreSQL gathering planner statistics on the test database.
+
+    Autovacuum analyses a table once enough rows have changed, which in a test
+    run means whatever a test that committed happened to leave behind: a column
+    that was empty, or every row in one dataset. A later test that writes a
+    hundred rows inside its own transaction is then planned as if it had one,
+    and the nested loops the planner picks for the visibility subqueries take
+    minutes. Without statistics the planner falls back on its defaults, and the
+    same tests take seconds. A table the connecting user does not own
+    (PostGIS's ``spatial_ref_sys`` on some servers) is left alone.
+    """
+    from django.db import connection
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            DO $$
+            DECLARE test_table record;
+            BEGIN
+                FOR test_table IN
+                    SELECT schemaname, tablename FROM pg_tables
+                    WHERE schemaname = 'public' AND tableowner = current_user
+                LOOP
+                    EXECUTE format(
+                        'ALTER TABLE %I.%I SET (autovacuum_enabled = false)',
+                        test_table.schemaname,
+                        test_table.tablename
+                    );
+                END LOOP;
+            END $$;
+            """
+        )
 
 
 @pytest.fixture(autouse=True)

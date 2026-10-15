@@ -12,6 +12,8 @@ Before you begin, ensure that you have the following installed on your local mac
 
 - [Git](https://git-scm.com/downloads)
 - [uv](https://docs.astral.sh/uv/)
+- [Docker](https://docs.docker.com/get-docker/) with Compose, for the PostGIS database
+- The GDAL, GEOS and PROJ libraries, to run Django on your own machine rather than in Docker. On Debian and Ubuntu, `apt install gdal-bin` installs all three. Where they are not on the system library path, set `GDAL_LIBRARY_PATH` and `GEOS_LIBRARY_PATH` to the library files.
 
 ## Step 1: Fork the Repository and Clone it to Your Local Machine
 
@@ -43,6 +45,28 @@ Before you begin, ensure that you have the following installed on your local mac
 
    This command will create a new virtual environment and install the project's dependencies.
 
+## Step 2a: Start the Database
+
+The portal runs on PostgreSQL with the PostGIS extension, in development as in production. The repository's `docker-compose.yml` provides it.
+
+- To run everything in Docker, start the whole stack:
+
+  ```shell
+  docker compose up
+  ```
+
+  This starts PostGIS, Redis, a Celery worker and the development server, which applies the migrations to an empty database and serves the site on <http://localhost:8000>. The source is mounted into the container, so edits reload.
+
+- To run Django and the tests on your own machine, start the databases alone:
+
+  ```shell
+  docker compose up -d postgres redis
+  uv run python manage.py migrate
+  uv run python manage.py runserver
+  ```
+
+  `stack.development.env` points Django at the database on `localhost:5432`. A `POSTGRES_*` variable already set in your environment takes precedence over the file.
+
 ## Step 3: Create a New Branch for Your Contribution
 
 1. Run the following command to create a new branch:
@@ -62,7 +86,13 @@ Before you begin, ensure that you have the following installed on your local mac
 
 1. Ensure that the project has a testing framework in place.
 2. Write tests to cover your changes, ensuring that they pass successfully.
-3. Run the tests using the appropriate command (often provided in the project's documentation).
+3. With the database running (Step 2a), run the tests:
+
+   ```shell
+   uv run pytest
+   ```
+
+   The suite runs against PostGIS. `tests/README.md` describes how it is laid out and how to run part of it.
 
 ## Step 6: Commit Your Changes
 

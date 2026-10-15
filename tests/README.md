@@ -59,7 +59,10 @@ Two of the vocabularies are registered by hand in that fixture. Registration is 
 
 ## Running them
 
+The suite runs against PostgreSQL with PostGIS, and Django needs the GDAL, GEOS and PROJ libraries to start. Start the database from the repository root, then run the tests on the host:
+
 ```bash
+docker compose up -d postgres            # PostGIS on localhost:5432, as stack.development.env expects
 pytest                                   # everything
 pytest tests/test_heat_flow/             # one app
 pytest tests/test_heat_flow/test_models.py::TestHeatFlowInterval
@@ -67,6 +70,12 @@ pytest --cov --cov-report=html           # with coverage
 ```
 
 `--reuse-db` and `--nomigrations` are on by default, so the first run builds the test database and later runs reuse it. Pass `--create-db` after a migration change.
+
+The connection comes from the `POSTGRES_*` variables in `stack.development.env`. A variable already set in your environment wins over the file, so `POSTGRES_PORT=5433 uv run pytest` points the suite at a server on another port. If GDAL or GEOS is not on the system library path, set `GDAL_LIBRARY_PATH` and `GEOS_LIBRARY_PATH` to the libraries (on Debian and Ubuntu, `apt install gdal-bin` provides all three).
+
+The suite runs one worker per core, and each worker creates its test database in a single transaction. On a machine with many cores, a PostgreSQL server other than the compose one may refuse that with "out of shared memory"; raise its `max_locks_per_transaction` (the compose service sets 256) or run fewer workers with `-n 4`.
+
+`test_migrations.py` applies the real migrations to an empty database it creates on the same server and drops afterwards, so the database user has to be allowed to create databases. The compose `postgres` user is.
 
 ## Markers
 

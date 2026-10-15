@@ -1,0 +1,62 @@
+# The development stack. `docker compose up` starts PostGIS, Redis, the development server on
+# http://localhost:8000 and a Celery worker, with the source mounted so edits reload. To run
+# Django on the host instead, start the databases alone with `docker compose up postgres redis`;
+# stack.development.env points the host at them.
+#
+# The production stack is deploy/docker-compose.yml.
+name: ghfdb-portal
+
+services:
+  postgres:
+    # Major version 16, the same as production, so a dump from one restores into the other.
+    image: postgis/postgis:16-3.5
+    # The test suite runs one worker per core, and each worker creates the whole schema
+    # in a single transaction. On a machine with many cores that exhausts the default
+    # lock table (64 locks per connection) with "out of shared memory".
+    command: ["postgres", "-c", "max_locks_per_transaction=256"]
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ghfdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  django: &django
+    build:
+      context: .
+      dockerfile: compose/django/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      DJANGO_ENV: development
+      DJANGO_SETTINGS_MODULE: config.settings
+      POSTGRES_HOST: postgres
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - ./:/app
+    ports:
+      - "8000:8000"
+    command: sh -c "uv run python manage.py migrate && uv run python manage.py runserver 0.0.0.0:8000"
+
+  celeryworker:
+    <<: *django
+    ports: []
+    command: uv run celery --app fairdm.conf.celery worker --loglevel INFO
+
+volumes:
+  postgres: {}

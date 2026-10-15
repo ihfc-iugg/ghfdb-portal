@@ -92,8 +92,9 @@ def release(c, overwrite=False):
 def dumpdata(c):
     """Dump core app data to ``fairdm.json.gz`` inside the Docker container."""
     c.run(
-        "docker compose -f local.yml run django python manage.py dumpdata users organizations contributors projects"
-        " datasets samples core --natural-foreign --natural-primary --output=fairdm.json.gz"
+        "docker compose run --rm django uv run python manage.py dumpdata"
+        " users organizations contributors projects datasets samples core"
+        " --natural-foreign --natural-primary --output=fairdm.json.gz"
     )
 
 
@@ -101,7 +102,8 @@ def dumpdata(c):
 def loaddata(c):
     """Load core fairdm app data inside the Docker container."""
     c.run(
-        "docker compose -f local.yml run django python manage.py loaddata core --app fairdm"
+        "docker compose run --rm django"
+        " uv run python manage.py loaddata core --app fairdm"
     )
 
 
@@ -116,7 +118,8 @@ def create_fixtures(c, users=75, orgs=25, projects=12):
         projects: Number of demo projects to create.
     """
     c.run(
-        f"docker compose -f local.yml run django python manage.py create_fixtures --users {users} --orgs {orgs} --projects {projects}"
+        "docker compose run --rm django uv run python manage.py create_fixtures"
+        f" --users {users} --orgs {orgs} --projects {projects}"
     )
 
 
@@ -166,8 +169,8 @@ def update_deps(c):
 
 @task
 def build_image(c):
-    """Build the project's Docker image."""
-    c.run("docker build -t ghcr.io/ihfc-iugg/ghfd-portal .")
+    """Build the project's production Docker image."""
+    c.run("docker build -f deploy/Dockerfile -t ghcr.io/ihfc-iugg/ghfdb-portal .")
 
 
 @task

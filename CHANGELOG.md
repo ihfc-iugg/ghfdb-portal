@@ -18,6 +18,14 @@ Releases before that used `<year>.<release>` and are recorded in the
 
 ### Changed
 
+- Development and the test suite run on PostgreSQL 16 with PostGIS 3.5, as
+  production does, and FairDM moves to commit `c9c12314`, which requires PostGIS
+  in every environment and installs GeoDjango. `docker compose up` starts
+  PostGIS, Redis, the development server and a Celery worker. Running Django
+  outside Docker needs the GDAL, GEOS and PROJ libraries. The test that applies
+  every migration to an empty database runs again, and the migrations now apply
+  to one. The tests and the build checks run from workflows kept in this
+  repository, because the shared ones start no database and install no GDAL.
 - `IntervalConductivity.location` is renamed `conductivity_location`, so that it
   no longer clashes with the `location` field FairDM is adding to every
   measurement. Existing values are kept, and the published `tc_location` column
@@ -27,7 +35,8 @@ Releases before that used `<year>.<release>` and are recorded in the
   with uv from `uv.lock`. The FairDM packages stay at the commits the previous
   lockfile held.
 - Continuous integration now calls the shared workflows in `django-mvp/shared`
-  rather than maintaining its own copies. Tests run against the single
+  for everything but the tests and the build checks, rather than maintaining
+  its own copies. Tests run against the single
   Python 3.13 and Django 5.2 combination the portal is deployed on.
 - Releases are prepared by opening a release pull request. Merging it cuts the
   tag, the GitHub release and the container image.
