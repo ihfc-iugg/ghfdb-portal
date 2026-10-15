@@ -9,10 +9,8 @@ class Migration(migrations.Migration):
         ("measurement", "0007_alter_measurementdate_type_and_more"),
     ]
 
-    # 0009 and 0010 gave HeatFlow and ParentHeatFlow a local_id of their own, and
-    # this migration removes it. FairDM's measurement 0008 adds local_id to their base
-    # class, so it has to come after this one, or the two fields clash in an empty
-    # database. A database that already has both migrations applied is unaffected.
+    # Removes the local_id 0009 and 0010 added, which clashes with the one FairDM's
+    # measurement 0008 adds to the base class if that runs first on an empty database.
     run_before = [
         ("measurement", "0008_measurement_local_id"),
     ]

@@ -3,7 +3,6 @@
 import os
 import subprocess
 import sys
-import uuid
 from io import StringIO
 
 import psycopg2
@@ -112,9 +111,8 @@ class TestGHFDBParentProxyMigrations:
 
 class TestMigrationsApplyToAnEmptyDatabase:
     # The migrations must actually run, not merely exist. The suite runs with
-    # ``--nomigrations``, which points every app at a stub module, so this is the one
-    # test that applies them: in a subprocess, to a database created empty for it on
-    # the suite's own PostGIS server and dropped afterwards.
+    # ``--nomigrations``, so this is the one test that applies them, to a database
+    # created empty on the suite's own PostGIS server.
 
     HEAT_FLOW_TABLES = [
         "heat_flow_heatflowsite",
@@ -126,25 +124,6 @@ class TestMigrationsApplyToAnEmptyDatabase:
         "heat_flow_probemetadata",
         "heat_flow_heatflowcorrection",
     ]
-
-    @pytest.fixture
-    def empty_database(self):
-        server = settings.DATABASES["default"]
-        name = f"ghfdb_migrate_{uuid.uuid4().hex}"
-        maintenance = psycopg2.connect(
-            dbname="postgres",
-            user=server["USER"],
-            password=server["PASSWORD"],
-            host=server["HOST"],
-            port=server["PORT"],
-        )
-        maintenance.autocommit = True
-        with maintenance.cursor() as cursor:
-            cursor.execute(f'CREATE DATABASE "{name}"')
-        yield {**server, "NAME": name}
-        with maintenance.cursor() as cursor:
-            cursor.execute(f'DROP DATABASE IF EXISTS "{name}" WITH (FORCE)')
-        maintenance.close()
 
     @pytest.mark.slow
     def test_migrations_build_every_heat_flow_table(self, empty_database):

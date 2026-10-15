@@ -1,5 +1,6 @@
 import importlib.util
 import os
+import uuid
 from pathlib import Path
 
 import django
@@ -214,3 +215,31 @@ def fresh_api_rate_limits(monkeypatch):
     monkeypatch.setattr(
         SimpleRateThrottle, "cache", LocMemCache(f"throttle-{id(object())}", {})
     )
+
+
+@pytest.fixture
+def empty_database():
+    """Create an empty database on the suite's PostgreSQL server, and drop it after.
+
+    Yields:
+        The default connection's settings with ``NAME`` set to the new database.
+    """
+    import psycopg2
+    from django.conf import settings
+
+    server = settings.DATABASES["default"]
+    name = f"ghfdb_migrate_{uuid.uuid4().hex}"
+    maintenance = psycopg2.connect(
+        dbname="postgres",
+        user=server["USER"],
+        password=server["PASSWORD"],
+        host=server["HOST"],
+        port=server["PORT"],
+    )
+    maintenance.autocommit = True
+    with maintenance.cursor() as cursor:
+        cursor.execute(f'CREATE DATABASE "{name}"')
+    yield {**server, "NAME": name}
+    with maintenance.cursor() as cursor:
+        cursor.execute(f'DROP DATABASE IF EXISTS "{name}" WITH (FORCE)')
+    maintenance.close()
