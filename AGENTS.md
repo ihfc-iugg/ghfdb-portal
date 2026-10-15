@@ -37,10 +37,10 @@ fall back to source builds and fail without system development packages. Pin the
 `[tool.uv.sources]`. Move a pin deliberately, not by re-locking.
 
 **The tests need PostGIS and the GDAL, GEOS and PROJ libraries.** FairDM installs GeoDjango, so
-Django loads GDAL and GEOS as it starts, and that includes the test run and mypy's Django plugin.
-pytest runs with `--nomigrations --reuse-db` against the server `stack.development.env` names (the
-compose `postgres` service on localhost:5432); a variable already set in the environment wins over
-the file. `tests/test_migrations.py` applies the real migrations to a throwaway database on that
+Django loads GDAL and GEOS as it starts, and that includes the test run. pytest runs with
+`--nomigrations --reuse-db` against the server `stack.development.env` names (the compose
+`postgres` service on localhost:5432); a variable already set in the environment wins over the
+file. `tests/test_migrations.py` applies the real migrations to a throwaway database on that
 same server. Where the libraries are not on the system library path, set `GDAL_LIBRARY_PATH` and
 `GEOS_LIBRARY_PATH` to them.
 
@@ -81,7 +81,7 @@ the required check names:
 
 | Workflow | Runs |
 |---|---|
-| `build.yml` → `build-checks.yml` | code quality, security scan, package build, on every pull request; GDAL is installed for mypy |
+| `build.yml` → `build-checks.yml` | code quality, security scan, package build, on every pull request; Code Quality installs GDAL, as FairDM's does |
 | `tests.yml` → `test-suite.yml` | the suite against a `postgis/postgis:16-3.5` service container, on every pull request |
 | `docs.yml` | the Sphinx build, on demand |
 | `publish.yml` | the release image |
