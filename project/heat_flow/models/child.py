@@ -869,7 +869,7 @@ class IntervalConductivity(ScoredMeasurement, Measurement):
         ),
         blank=True,
     )
-    location = ConceptManyToManyField(
+    conductivity_location = ConceptManyToManyField(
         vocabulary=vocabularies.ConductivityLocation,
         verbose_name=_("location"),
         help_text=_("Location of conductivity data used for heat-flow calculation."),
@@ -962,7 +962,7 @@ class IntervalConductivity(ScoredMeasurement, Measurement):
 
     SCORED_CONCEPT_FIELDS = (
         "source",
-        "location",
+        "conductivity_location",
         "method",
         "saturation",
         "pT_conditions",

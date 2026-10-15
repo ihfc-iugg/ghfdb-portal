@@ -160,7 +160,7 @@ Access pattern: `heat_flow.sample.probe_metadata.<field>`.
 | tc\_mean | C39 | heat\_flow\_intervalconductivity | IntervalConductivity | value | IntervalConductivity |
 | tc\_uncertainty | C40 | heat\_flow\_intervalconductivity | IntervalConductivity | uncertainty | IntervalConductivity |
 | tc\_source | C41 | heat\_flow\_intervalconductivity\_source | IntervalConductivity | source | IntervalConductivity |
-| tc\_location | C42 | heat\_flow\_intervalconductivity\_location | IntervalConductivity | location | IntervalConductivity |
+| tc\_location | C42 | heat\_flow\_intervalconductivity\_conductivity\_location | IntervalConductivity | conductivity\_location | IntervalConductivity |
 | tc\_method | C43 | heat\_flow\_intervalconductivity\_method | IntervalConductivity | method | IntervalConductivity |
 | tc\_saturation | C44 | heat\_flow\_intervalconductivity\_saturation | IntervalConductivity | saturation | IntervalConductivity |
 | tc\_pT\_conditions | C45 | heat\_flow\_intervalconductivity\_pT\_conditions | IntervalConductivity | pT\_conditions | IntervalConductivity |

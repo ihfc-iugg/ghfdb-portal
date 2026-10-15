@@ -116,7 +116,7 @@ This document defines the proxy model design, queryset API, annotation names, an
 | `thermal_gradient__correction_top` | `T_corr_top` |
 | `thermal_gradient__correction_bottom` | `T_corr_bottom` |
 | `thermal_conductivity__source` | `tc_source` |
-| `thermal_conductivity__location` | `tc_location` |
+| `thermal_conductivity__conductivity_location` | `tc_location` |
 | `thermal_conductivity__method` | `tc_method` |
 | `thermal_conductivity__saturation` | `tc_saturation` |
 | `thermal_conductivity__pT_conditions` | `tc_pT_conditions` |

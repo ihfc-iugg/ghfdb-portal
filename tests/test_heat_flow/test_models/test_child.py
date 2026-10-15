@@ -553,7 +553,7 @@ class TestIntervalConductivity:
 
         vocab_fields = {
             "source": vocabularies.ConductivitySource,
-            "location": vocabularies.ConductivityLocation,
+            "conductivity_location": vocabularies.ConductivityLocation,
             "method": vocabularies.ConductivityMethod,
             "saturation": vocabularies.ConductivitySaturation,
             "pT_conditions": vocabularies.ConductivityPTConditions,
@@ -850,7 +850,9 @@ class TestMeasurementScores:
             sample=self.borehole_interval(top=0, bottom=500),
             number=30,
             source=self.concepts(vocabularies.ConductivitySource, "core_samples"),
-            location=self.concepts(vocabularies.ConductivityLocation, "actual"),
+            conductivity_location=self.concepts(
+                vocabularies.ConductivityLocation, "actual"
+            ),
             saturation=self.concepts(
                 vocabularies.ConductivitySaturation, "saturatedMeasured"
             ),
@@ -873,7 +875,9 @@ class TestMeasurementScores:
             sample=self.probe_interval(),
             number=4,
             source=self.concepts(vocabularies.ConductivitySource, "insitu_probe"),
-            location=self.concepts(vocabularies.ConductivityLocation, "actual"),
+            conductivity_location=self.concepts(
+                vocabularies.ConductivityLocation, "actual"
+            ),
             method=self.concepts(vocabularies.ConductivityMethod, "probePulse"),
             saturation=self.concepts(
                 vocabularies.ConductivitySaturation, "saturatedInSitu"
@@ -893,7 +897,7 @@ class TestMeasurementScores:
             sample=self.borehole_interval(),
             number=30,
             source=[],
-            location=[],
+            conductivity_location=[],
             saturation=[],
             pT_conditions=[],
         )
@@ -911,7 +915,9 @@ class TestMeasurementScores:
             sample=self.borehole_interval(top=0, bottom=500),
             number=30,
             source=self.concepts(vocabularies.ConductivitySource, "core_samples"),
-            location=self.concepts(vocabularies.ConductivityLocation, "actual"),
+            conductivity_location=self.concepts(
+                vocabularies.ConductivityLocation, "actual"
+            ),
             saturation=self.concepts(
                 vocabularies.ConductivitySaturation, "saturatedMeasured"
             ),

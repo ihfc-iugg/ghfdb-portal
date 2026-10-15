@@ -172,7 +172,7 @@ portal depends on the toolbox or on pandas.
 | C4, C5 interval depths | `HeatFlowInterval.top`, `.bottom` of the conductivity's interval |
 | C6, C23 penetration, tilt | `ProbeMetadata.penetration`, `.tilt` of the gradient's interval |
 | C31, C32, C37 | `ThermalGradient.method_top`, `.method_bottom` (concepts), `.number` |
-| C41–C45, C47 | `IntervalConductivity.source`, `.location`, `.method`, `.saturation`, `.pT_conditions` (concepts), `.number` |
+| C41–C45, C47 | `IntervalConductivity.source`, `.conductivity_location`, `.method`, `.saturation`, `.pT_conditions` (concepts), `.number` |
 | C1, C2 | `HeatFlow.value`, `.uncertainty` (quantities in mW/m²) |
 | C9 relevant | `HeatFlow.is_relevant` |
 | C11, C12, C13–C19 | `HeatFlowCorrection.status` for types IS, T, S, E, TOPO, PAL, SUR, CONV, HR |

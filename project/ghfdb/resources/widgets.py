@@ -564,7 +564,7 @@ class ConductivityWidget(RelatedModelWidget):
                     "tc_source",
                     MultiConceptWidget(vocabularies.ConductivitySource),
                 ),
-                "location": (
+                "conductivity_location": (
                     "tc_location",
                     MultiConceptWidget(vocabularies.ConductivityLocation),
                 ),

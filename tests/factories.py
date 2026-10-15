@@ -164,14 +164,16 @@ class IntervalConductivityFactory(MeasurementFactory):
         attach_random_concept(obj, "source", vocabularies.ConductivitySource)
 
     @factory.post_generation
-    def location(obj, create, extracted, **kwargs):
+    def conductivity_location(obj, create, extracted, **kwargs):
         """Attach a conductivity-location concept (FS-001 FR-036)."""
         if not create:
             return
         if extracted is not None:
-            obj.location.set(extracted)
+            obj.conductivity_location.set(extracted)
             return
-        attach_random_concept(obj, "location", vocabularies.ConductivityLocation)
+        attach_random_concept(
+            obj, "conductivity_location", vocabularies.ConductivityLocation
+        )
 
     @factory.post_generation
     def method(obj, create, extracted, **kwargs):

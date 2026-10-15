@@ -256,7 +256,7 @@ class TestFactoryVocabularyPopulation:
 
         for field_name in (
             "source",
-            "location",
+            "conductivity_location",
             "method",
             "saturation",
             "pT_conditions",
