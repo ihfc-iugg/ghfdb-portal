@@ -1,6 +1,7 @@
 import random
 
 import factory
+from django.contrib.gis.geos import Point
 from factory.declarations import LazyAttribute
 from factory.faker import Faker
 from factory.fuzzy import FuzzyChoice
@@ -37,6 +38,15 @@ def attach_random_concept(instance, field_name, vocabulary):
 class HeatFlowSiteFactory(SampleFactory):
     environment = FuzzyChoice(HeatFlowSite.environment_vocab.values)
     explo_method = FuzzyChoice(HeatFlowSite.explo_method_vocab.values)
+    # One site per coordinate pair, so each site gets a pair of its own, on a grid
+    # no test's own coordinates fall on.
+    location = factory.Sequence(
+        lambda n: Point(
+            round(-179.43217 + (n % 1000) * 0.3, 5),
+            round(-79.87654 + (n // 1000) * 0.3, 5),
+            srid=4326,
+        )
+    )
 
     class Meta:
         model = HeatFlowSite

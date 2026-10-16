@@ -13,7 +13,7 @@ This document defines the class hierarchy, field mappings, and data flow for the
 ```
 GHFDB Spreadsheet (flat, ~62 columns per row)
     │
-    ├── Parent Import Resource ──► ParentHeatFlow ──► HeatFlowSite ──► Point (location)
+    ├── Parent Import Resource ──► ParentHeatFlow ──► HeatFlowSite (location)
     │                                                    │
     │                                                    ├── explo_purpose (M2M)
     │                                                    └── geographic fields
@@ -92,7 +92,7 @@ Error messages include the **original** pre-normalisation token text for user tr
 
 | Widget | Sentinel Column | Target Models | M2M Fields |
 |--------|----------------|---------------|-----------|
-| `ParentWidget` | `"name"` | `HeatFlowSite` + `Point` | `explo_purpose` |
+| `ParentWidget` | `"name"` | `HeatFlowSite` | `explo_purpose` |
 | `IntervalWidget` | None (always creates) | `HeatFlowInterval` | `geo_lithology` → `lithology`; `geo_stratigraphy` → `age` (⚠️ NOT `stratigraphy` — see BUG-009) |
 | `GradientWidget` | `"T_grad_mean"` | `ThermalGradient` | `method_top`, `method_bottom`, `correction_top`, `correction_bottom` |
 | `ConductivityWidget` | `"tc_mean"` | `IntervalConductivity` | `source`, `conductivity_location`, `method`, `saturation`, `pT_conditions`, `pT_function`, `strategy` |
@@ -108,7 +108,7 @@ Error messages include the **original** pre-normalisation token text for user tr
 | `uncertainty` | `q_uncertainty` | `QuantityWidget("mW/m²")` | |
 | `comment` | `p_comment` | `CharWidget` | |
 | `corr_HP_flag` | `corr_HP_flag` | `YesNoWidget` | |
-| `sample` | `name` (sentinel) | `ParentWidget` | Creates/updates `HeatFlowSite` + `Point` |
+| `sample` | `name` (sentinel) | `ParentWidget` | Creates/updates `HeatFlowSite` |
 
 **Upsert strategy**: Template-aware. `import_id_fields` uses natural keys (`lat_NS` + `long_EW`) present in all templates. When `ID_parent` is present, it is stored in `local_id` for round-trip traceability.
 

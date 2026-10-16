@@ -2,8 +2,7 @@
 
 Implements GHFDBParentImportResource which reads the GHFDB XLSX spreadsheet
 and creates/updates parent-level records:
-  - HeatFlowSite (name, location, elevation, environment, etc.)
-  - Point (geographic coordinates from lat_NS / long_EW)
+  - HeatFlowSite (name, location from lat_NS / long_EW, elevation, environment, etc.)
   - ParentHeatFlow (value, uncertainty, comment, corr_HP_flag)
 
 Upsert key: ParentHeatFlow.ghfdb_id <- spreadsheet column ID_parent
@@ -140,10 +139,8 @@ class GHFDBParentImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         lon = str(row.get("long_EW") or "").strip()
         if lat and lon:
             try:
-                lat_f = float(lat)
-                lon_f = float(lon)
                 site = HeatFlowSite.objects.filter(
-                    location__x=lon_f, location__y=lat_f
+                    location=HeatFlowSite.point_at(lat, lon)
                 ).first()
                 if site is not None:
                     parent_hf = ParentHeatFlow.objects.filter(sample=site).first()
@@ -154,7 +151,7 @@ class GHFDBParentImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         return self.init_instance(row), True
 
     def before_save_instance(self, instance, row, **kwargs):
-        """Save the HeatFlowSite (+ Point) and link it to the ParentHeatFlow."""
+        """Save the HeatFlowSite and link it to the ParentHeatFlow."""
         if not instance.dataset_id:
             instance.dataset = self._fairdm_dataset
 
@@ -184,15 +181,12 @@ class GHFDBParentImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         resolve to an existing site, so the two lookups cannot disagree and
         a row cannot create a second site at an occupied coordinate pair.
         """
-        from fairdm.contrib.location.models import Point
-
         new_site = self._parent_widget.clean(row.get("name"), row=row)
 
         existing_by_location = None
         if new_site is not None and new_site.location is not None:
             existing_by_location = HeatFlowSite.objects.filter(
-                location__x=new_site.location.x,
-                location__y=new_site.location.y,
+                location=new_site.location
             ).first()
 
         if existing_by_location is not None:
@@ -229,11 +223,7 @@ class GHFDBParentImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
                 setattr(site, field_name, getattr(new_site, field_name))
 
             if new_site.location is not None:
-                point, _ = Point.objects.get_or_create(
-                    x=new_site.location.x,
-                    y=new_site.location.y,
-                )
-                site.location = point
+                site.location = new_site.location
 
         if not site.dataset_id:
             site.dataset = self._fairdm_dataset

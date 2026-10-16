@@ -177,12 +177,17 @@ class TestMigrationsApplyToAnEmptyDatabase:
 
 
 def run_in_database(database, script):
-    """Run a script with ``manage.py shell`` against a database and return its last line."""
+    """Run a script with ``manage.py shell`` against a database.
+
+    Returns:
+        The last line the script printed.
+    """
     environment = {
         key: value for key, value in os.environ.items() if key != "DATABASE_URL"
     }
     result = subprocess.run(
-        [sys.executable, "manage.py", "shell", "-c", script],
+        [sys.executable, "manage.py", "shell"],
+        input=script,
         cwd=settings.BASE_DIR,
         env={
             **environment,
@@ -201,8 +206,9 @@ def run_in_database(database, script):
     return result.stdout.strip().splitlines()[-1]
 
 
-# Builds the database as it stood before FairDM's located samples: samples linked to shared
-# Points, two of them at one Point and one with none. Prints each sample's coordinates.
+# Builds the database as it stood before FairDM's located samples: samples linked to
+# shared Points, two of them at one Point and one with none. Prints each sample's
+# coordinates.
 BEFORE_LOCATED_SAMPLES = """
 import json
 from django.core.management import call_command
@@ -239,13 +245,13 @@ Sample.objects.create(name="Nowhere", dataset=dataset)
 
 print(json.dumps({
     sample.name: [str(sample.location.x), str(sample.location.y)]
-    if sample.location_id else None
+    if sample.location else None
     for sample in Sample.objects.select_related("location")
 }))
 """
 
-# Applies every migration. Prints each sample's coordinates as five-decimal text with the
-# point's SRID, and whether the copy set aside before the upgrade is still there.
+# Applies every migration. Prints each sample's coordinates as five-decimal text with
+# the point's SRID, and whether the copy set aside before the upgrade is still there.
 AFTER_LOCATED_SAMPLES = """
 import json
 from django.core.management import call_command

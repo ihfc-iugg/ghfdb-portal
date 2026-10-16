@@ -95,6 +95,12 @@ and inclination. It also holds the geographic environment and the method and pur
 
 Do not treat "site" and "location" as different things. They are synonyms here, deliberately.
 
+**A site is a named location, a station.** It is the one record that holds coordinates, in its
+`location` point. FairDM holds a location as a value on each sample and measurement; this portal is
+the exception. A depth interval and the measurements made over it are placed at their site and hold
+no location of their own, and the site's `elevation` is its only elevation
+([ADR 0023](docs/adr/0023-a-site-holds-the-location-and-its-own-elevation.md)).
+
 Two cautions about coordinates:
 
 - Nothing currently enforces the uniqueness that the definition asserts. Tracked as

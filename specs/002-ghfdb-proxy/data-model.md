@@ -60,8 +60,8 @@ This document defines the proxy model design, queryset API, annotation names, an
 | Annotation Name | ORM Path | GHFDB Column |
 |---|---|---|
 | `site_name` | `sample__sample__name` | `name` |
-| `lat_ns` | `sample__sample__location__y` | `lat_NS` |
-| `long_ew` | `sample__sample__location__x` | `long_EW` |
+| `lat_ns` | `ST_Y` of `sample__sample__location` | `lat_NS` |
+| `long_ew` | `ST_X` of `sample__sample__location` | `long_EW` |
 | `site_elevation` | `sample__sample__elevation` | `elevation` |
 | `site_environment` | `sample__sample__environment` | `environment` |
 | `site_explo_method` | `sample__sample__explo_method` | `explo_method` |

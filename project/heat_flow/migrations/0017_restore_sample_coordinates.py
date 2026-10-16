@@ -1,9 +1,10 @@
-# Writes back the coordinates ``0016_set_aside_sample_coordinates`` copied before FairDM's
-# ``sample/0012_located_samples`` emptied the ``location`` column, as a WGS 84 point on each
-# sample, then drops the copy.
+# Writes back the coordinates ``0016_set_aside_sample_coordinates`` copied before
+# FairDM's ``sample/0012_located_samples`` emptied the ``location`` column, as a WGS 84
+# point on each sample, then drops the copy.
 #
 # Forward only. There is no way back: the reverse of ``sample/0012`` restores an empty
-# link, so undoing this step would lose every coordinate, and Django refuses to reverse it.
+# link, so undoing this step would lose every coordinate, and Django refuses to reverse
+# it.
 
 from django.db import migrations
 

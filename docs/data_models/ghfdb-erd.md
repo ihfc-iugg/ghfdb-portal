@@ -40,7 +40,7 @@ The M-score is built from a T-score on the thermal gradient and a TC-score on th
 
 ## Entity Relationship Diagram
 
-Entities drawn from FairDM — `Sample`, `Measurement`, `Point`, `Dataset` — are shown only where a
+Entities drawn from FairDM — `Sample`, `Measurement`, `Dataset` — are shown only where a
 relationship crosses into them, and only with the fields that relationship uses. Vocabulary
 relationships are left off: nearly every model has several, and each is a join table onto a shared
 concept table, so drawing them would triple the size of the diagram without saying anything about
@@ -56,16 +56,9 @@ erDiagram
     %% FAIRDM BASE MODELS (context only)
     %% ============================================================
 
-    Point {
-        int id PK "Primary key"
-        decimal x "X-coordinate (longitude)"
-        decimal y "Y-coordinate (latitude)"
-        string crs "Coordinate reference system"
-    }
-
     Sample {
         int id PK "Primary key"
-        int location_id FK "Geographic coordinates"
+        point location "WGS 84 point, set on a site only"
         string name "Sample or site name"
     }
 
@@ -254,7 +247,6 @@ erDiagram
     Measurement ||--|| IntervalConductivity : "specialises into"
 
     %% Sample context
-    Point ||--o{ Sample : "locates"
     Sample ||--o{ SampleIdentifier : "is identified by"
     Sample ||--o{ Measurement : "is measured by"
     Dataset ||--o{ Measurement : "collects"
@@ -290,7 +282,8 @@ A geographical location where heat flow data has been collected. It extends Fair
 
 **Key Features**
 
-- Reaches its geographic coordinates through `Sample.location`, a foreign key to `Point`
+- Holds its coordinates in `location`, a WGS 84 point it inherits from `Sample`. A site is a named location, so its intervals and their measurements hold none of their own and are placed at the site
+- `HeatFlowSite.point_at(latitude, longitude)` builds the point a site at a coordinate pair is stored as, from numbers or text, so a lookup by coordinates and the site it created compare equal
 - Tracks both measured depth (`length`) and true vertical depth (`vertical_depth`)
 - Categorises the setting through the geographic environment vocabulary
 - Carries country, region, continent and domain, each indexed for filtering

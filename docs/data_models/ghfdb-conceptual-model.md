@@ -13,7 +13,7 @@ The data model organizes its entities into two conceptual groups:
 1. **Parent-Related Entities** — Site-level metadata and aggregated heat flow values
 2. **Child-Related Entities** — Interval-level measurements and derived heat flow determinations
 
-A **spatial reference entity** (Point) supports geographic positioning across both groups.
+The site is the only entity with a place on the map. Every other entity is placed at the site it belongs to.
 
 ---
 
@@ -29,7 +29,7 @@ Represents a geographic location where heat flow measurements are acquired. A he
 **Attributes:**
 - **Identification**: Unique identifier, site name, and IGSN sample identifiers
 - **Geographic Context**: Country, region, continent, geological domain, and environment type (e.g., continental, oceanic, lake)
-- **Spatial Reference**: Link to geographic coordinates via a Point entity
+- **Spatial Reference**: Its latitude and longitude, held as one point on the site
 - **Exploration Metadata**: Exploration method (drilling, coring, etc.) and purpose (scientific research, resource exploration)
 - **Depth Information**: Total measured depth, true vertical depth, and surface elevation
 
@@ -41,13 +41,6 @@ Stores the aggregated, quality-controlled surface heat flow density for a given 
 - **Heat Flow Value**: Surface heat flow density (mW/m²) with uncertainty estimate (1-sigma)
 - **Correction Status**: Flag indicating whether heat production corrections have been applied
 - **Comments**: Textual annotations and metadata
-
-#### **Point**
-Defines geographic coordinates in a specified coordinate reference system. Points are reusable spatial references that can be shared across multiple heat flow sites.
-
-**Attributes:**
-- **Coordinates**: X-coordinate (longitude), Y-coordinate (latitude)
-- **Reference System**: Coordinate reference system identifier (e.g., WGS84, EPSG codes)
 
 ---
 
@@ -122,7 +115,7 @@ Documents corrections applied (or not applied) to heat flow values. Multiple cor
 ## Relationship Structure
 
 ### Spatial Foundation
-- **Point → HeatFlowSite** (one-to-one): A Point defines the geographic location of a site, and a site refuses a coordinate pair another site already holds. A site is its coordinates, as [ADR 0006](../adr/0006-a-site-is-its-coordinates.md) records.
+- **HeatFlowSite location**: A site holds its latitude and longitude itself, and refuses a coordinate pair another site already holds. Its intervals and measurements are placed at the site rather than holding coordinates of their own. A site is its coordinates, as [ADR 0006](../adr/0006-a-site-is-its-coordinates.md) records.
 
 ### Parent-Level Relationships
 - **HeatFlowSite → ParentHeatFlow** (one-to-one): Each site has at most one parent heat flow record, and a second one is refused when it is saved.
@@ -152,7 +145,7 @@ The child entities form a measurement-to-calculation cascade:
 
 The GHFDB data model supports the following conceptual workflow:
 
-1. **Site Establishment**: A HeatFlowSite is defined with geographic coordinates (Point) and metadata (location, exploration context, depth).
+1. **Site Establishment**: A HeatFlowSite is defined with geographic coordinates and metadata (location, exploration context, depth).
 
 2. **Interval Definition**: The site is subdivided into HeatFlowIntervals, each characterized by geological properties (lithology, age, stratigraphy).
 

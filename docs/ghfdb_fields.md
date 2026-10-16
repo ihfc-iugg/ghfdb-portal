@@ -13,8 +13,8 @@ Below is a mapping table that clarifies how each field in the GHFDB spreadsheet 
 | **GHFDB Name** | The original field name as it appears in the GHFDB spreadsheet (e.g., `q`, `lat_NS`, `elevation`). |
 | **Database Table** | The table the value is actually read from. It is often not the table of the model in "Accessed From": a field inherited from a concrete parent lives in the parent's table, and a many-to-many field lives in its own join table. An em dash means the value is computed rather than stored. |
 | **Accessed From** | The Django model used to access the value (e.g., `ParentHeatFlow`, `HeatFlowSite`). This is typically the model from which a queryset would be created. |
-| **Accessor** | The Django field name or property used to retrieve the value from the model listed in "Accessed From" (e.g., `value`, `x`, `name`). This can be a direct model field or a related field through a foreign key. |
-| **Declared By** | A model that declares the field itself, rather than inheriting it. This matters when "Accessed From" reaches the field through a related object or a base class (e.g., `fairdm.location.Point`, `fairdm.core.Sample`). |
+| **Accessor** | The Django field name or property used to retrieve the value from the model listed in "Accessed From" (e.g., `value`, `location`, `name`). This can be a direct model field or a related field through a foreign key. |
+| **Declared By** | A model that declares the field itself, rather than inheriting it. This matters when "Accessed From" reaches the field through a related object or a base class (e.g., `fairdm.core.Sample`, `fairdm_geo.GenericHole`). |
 
 Every row below is checked against the models by `tests/test_docs/test_field_map.py`: each of
 the published columns must appear, and each row must name a model that exists, an accessor that
@@ -38,8 +38,8 @@ It was previously named `SurfaceHeatFlow` in older versions of this codebase.
 | q | P01 | heat\_flow\_parentheatflow | ParentHeatFlow | value | ParentHeatFlow |
 | q\_uncertainty | P02 | heat\_flow\_parentheatflow | ParentHeatFlow | uncertainty | ParentHeatFlow |
 | name | P03 | sample\_sample | HeatFlowSite | name | fairdm.core.Sample |
-| lat\_NS | P04 | fairdm\_location\_point | HeatFlowSite | location.y | fairdm.location.Point |
-| long\_EW | P05 | fairdm\_location\_point | HeatFlowSite | location.x | fairdm.location.Point |
+| lat\_NS | P04 | sample\_sample | HeatFlowSite | location (its latitude, `y`) | fairdm.core.Sample |
+| long\_EW | P05 | sample\_sample | HeatFlowSite | location (its longitude, `x`) | fairdm.core.Sample |
 | elevation | P06 | heat\_flow\_heatflowsite | HeatFlowSite | elevation | HeatFlowSite |
 | environment | P07 | heat\_flow\_heatflowsite | HeatFlowSite | environment | HeatFlowSite |
 | p\_comment | P08 | heat\_flow\_parentheatflow | ParentHeatFlow | comment | ParentHeatFlow |

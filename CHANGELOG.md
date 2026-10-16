@@ -26,6 +26,15 @@ Releases before that used `<year>.<release>` and are recorded in the
   every migration to an empty database runs again, and the migrations now apply
   to one. The tests and the build checks run from workflows kept in this
   repository, because the shared ones start no database and install no GDAL.
+- FairDM moves to commit `b89656ae`, where a sample holds its own location as a
+  WGS 84 point and the shared `Point` table is removed. Upgrading copies every
+  sample's coordinates aside before FairDM's migration empties the column and
+  writes them back after it, so no site loses its coordinates. That migration
+  does not reverse, so take a database backup before deploying. A site is the
+  only record that holds coordinates; intervals and measurements are listed at
+  their site's coordinates, shown only to someone who may see that site. A
+  site's form takes a latitude and a longitude, and its `elevation` stays the
+  only elevation. The published `lat_NS` and `long_EW` values do not change.
 - `IntervalConductivity.location` is renamed `conductivity_location`, so that it
   no longer clashes with the `location` field FairDM is adding to every
   measurement. Existing values are kept, and the published `tc_location` column
@@ -64,6 +73,9 @@ Releases before that used `<year>.<release>` and are recorded in the
 
 ### Fixed
 
+- An imported row with a latitude outside -90 to 90 or a longitude outside -180
+  to 180 is refused, naming the row and the column, instead of being stored as a
+  site.
 - Spreadsheet imports no longer fail when every dataset on the portal is
   private. The importer looks up the dataset it should fill, and that lookup had
   started skipping private ones.

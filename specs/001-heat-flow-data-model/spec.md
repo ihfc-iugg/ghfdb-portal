@@ -292,8 +292,9 @@ map's test and confirm it fails when a column is removed from the map.
   base class through the geographic and borehole abstractions, storing site name, country, region,
   continent, geological domain, site type, environment, exploration method, exploration purpose,
   elevation, elevation datum, azimuth, inclination and borehole depth.
-- **FR-002**: A site MUST carry its geographic location as a point relationship provided by the
-  framework, storing longitude and latitude.
+- **FR-002**: A site MUST carry its geographic location as the WGS 84 point the framework declares
+  on every sample, storing longitude and latitude. A site is a named location: its intervals and
+  their measurements hold no location of their own and are placed at the site.
 - **FR-003**: Exploration purpose MUST be a many-to-many vocabulary field — several purposes may
   apply to one site.
 - **FR-004**: The system MUST refuse a `HeatFlowSite` whose location is a coordinate pair already
@@ -506,9 +507,9 @@ map's test and confirm it fails when a column is removed from the map.
 
 ## Assumptions
 
-- The framework's `Sample` and `Measurement` base classes, its polymorphic behaviour and its
-  point location model are stable and installed. `Point` already constrains its coordinate pair to
-  be unique, so a coordinate pair resolves to exactly one point record.
+- The framework's `Sample` and `Measurement` base classes and their polymorphic behaviour are
+  stable and installed, and each sample holds its own `location` point. Nothing in the framework
+  makes a coordinate pair unique, so FR-004 is the portal's own rule.
 - The geographic package provides the borehole, earth sample, interval and depth-interval
   abstractions that the site and interval models extend.
 - Physical quantity fields from the framework are used for every value carrying units.
@@ -516,7 +517,6 @@ map's test and confirm it fails when a column is removed from the map.
   vocabulary module is the canonical source of the database's own controlled terms.
 - The canonical published column definitions in the extraction app are the authority the field map
   is checked against.
-- The portal runs SQLite in development and PostgreSQL in production, so a constraint that only one
-  of them can express is not available to this feature.
+- The portal runs PostgreSQL with PostGIS in development, in the tests and in production.
 - Factories use `factory_boy`, one level deep, with multi-model graphs assembled by fixtures rather
   than by chained sub-factories.

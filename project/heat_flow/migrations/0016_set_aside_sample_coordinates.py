@@ -1,10 +1,11 @@
-# FairDM's ``sample/0012_located_samples`` replaces a sample's link to a shared ``Point``
-# with a point of its own, and does so by dropping the old column and adding an empty one.
-# Every site in this portal is placed by that link, so the coordinates are copied aside here,
-# before the column goes, and written back by ``0017_restore_sample_coordinates``.
+# FairDM's ``sample/0012_located_samples`` replaces a sample's link to a shared
+# ``Point`` with a point of its own, and does so by dropping the old column and adding
+# an empty one. Every site in this portal is placed by that link, so the coordinates are
+# copied aside here, before the column goes, and written back by
+# ``0017_restore_sample_coordinates``.
 #
-# Forward only in effect: going back drops the copy, which holds nothing the database does
-# not still have while ``sample/0012`` is unapplied.
+# Forward only in effect: going back drops the copy, which holds nothing the database
+# does not still have while ``sample/0012`` is unapplied.
 
 from django.db import migrations
 

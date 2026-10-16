@@ -357,9 +357,9 @@ class RelatedModelWidget(Widget):
 class ParentWidget(RelatedModelWidget):
     """Creates an unsaved HeatFlowSite from parent-level GHFDB columns.
 
-    Also attaches an unsaved Point (x=long_EW, y=lat_NS) to the site's
-    location attribute.  The resource is responsible for saving both the
-    Point and the site (after assigning a dataset FK).
+    Also places the site at its ``lat_NS`` and ``long_EW``, refusing a
+    coordinate outside -90 to 90 or -180 to 180.  The resource is
+    responsible for saving the site (after assigning a dataset FK).
     """
 
     def __init__(self):
@@ -415,8 +415,6 @@ class ParentWidget(RelatedModelWidget):
         if not (raw_name or "").strip():
             return None
 
-        from fairdm.contrib.location.models import Point
-
         # A site is its coordinates (ADR 0006), so a named row with no
         # coordinate pair has nowhere to be placed and is a fault reported
         # against the row. Defaulting a blank cell to zero would file the
@@ -437,13 +435,18 @@ class ParentWidget(RelatedModelWidget):
                 % {"columns": " and ".join(f"'{column}'" for column in missing)}
             )
 
-        lat = float(raw_lat)
-        lng = float(raw_lng)
+        # A coordinate out of range would place the site nowhere on Earth (#250).
+        for column, raw, limit in (("lat_NS", raw_lat, 90), ("long_EW", raw_lng, 180)):
+            if not -limit <= float(raw) <= limit:
+                raise ValueError(
+                    _("'%(column)s' is %(value)s, outside -%(limit)s to %(limit)s.")
+                    % {"column": column, "value": raw, "limit": limit}
+                )
 
         instance = super().clean(value, row=row, **kwargs)
         if instance is not None:
-            instance.location = Point(x=lng, y=lat)
-        return instance  # UNSAVED (Point also unsaved)
+            instance.location = instance.point_at(raw_lat, raw_lng)
+        return instance  # UNSAVED
 
 
 class IntervalWidget(RelatedModelWidget):
