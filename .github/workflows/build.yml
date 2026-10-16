@@ -11,6 +11,7 @@ on:
       - 'uv.lock'
       - '.pre-commit-config.yaml'
       - '.github/workflows/build.yml'
+      - '.github/workflows/build-checks.yml'
   # No paths filter on pull_request: these checks are ruleset-required, and a
   # path-filtered required check never reports on out-of-scope PRs, blocking merge.
   pull_request:
@@ -19,8 +20,5 @@ on:
 
 jobs:
   call-build:
-    uses: django-mvp/shared/.github/workflows/build.yml@v0.6.0
-    with:
-      source-dir: project
-      python-version: '3.13'
+    uses: ./.github/workflows/build-checks.yml
     secrets: inherit

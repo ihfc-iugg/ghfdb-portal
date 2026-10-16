@@ -1,0 +1,108 @@
+name: Test suite
+
+# The suite needs PostgreSQL with PostGIS and the GDAL, GEOS and PROJ libraries, which the
+# shared test workflow does not provide, so the portal keeps its own, modelled on FairDM's.
+# It is called from tests.yml as a reusable workflow so the check keeps its required name,
+# "call-tests / Test Python 3.13, Django 5.2".
+
+on:
+  workflow_call:
+    secrets:
+      CODECOV_TOKEN:
+        required: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Test Python ${{ matrix.python-version }}, Django ${{ matrix.django-version }}
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        # This is a deployed application, not a library, so it runs on exactly one
+        # combination — whatever is deployed. A support matrix would test versions
+        # nothing runs on.
+        python-version: ["3.13"]
+        django-version: ["5.2"]
+      fail-fast: false
+
+    services:
+      postgres:
+        # Major version 16, the same as production.
+        image: postgis/postgis:16-3.5
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ghfdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      # `uv run` would otherwise re-sync to uv.lock and undo the Django pinned below.
+      UV_NO_SYNC: "1"
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ghfdb
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Install GDAL, GEOS and PROJ
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends gdal-bin
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+          cache-suffix: ${{ matrix.django-version }}
+
+      # --locked fails the job when uv.lock is out of date with pyproject.toml,
+      # rather than re-resolving and testing whatever that happens to produce.
+      - name: Sync dependencies
+        run: uv sync --locked
+
+      - name: Pin Django version
+        env:
+          DJANGO_VERSION: ${{ matrix.django-version }}
+        run: |
+          uv pip install "django~=${DJANGO_VERSION}.0"
+          uv run python -c "import django, os, sys; want = os.environ['DJANGO_VERSION']; got = '.'.join(map(str, django.VERSION[:2])); print(f'Django {django.__version__}'); sys.exit(0 if got == want else f'expected Django {want}, got {got}')"
+
+      - name: Resolve Playwright version
+        id: playwright-version
+        run: echo "version=$(uv run python -c 'import importlib.metadata; print(importlib.metadata.version("playwright"))')" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+
+      - name: Install Playwright browsers
+        run: uv run playwright install --with-deps chromium
+
+      - name: Run tests
+        run: uv run pytest --cov=project --cov-report=xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: ${{ github.event.pull_request.head.repo.fork != true }}

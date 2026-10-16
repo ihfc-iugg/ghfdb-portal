@@ -12,6 +12,7 @@ on:
       - 'pyproject.toml'
       - 'uv.lock'
       - '.github/workflows/tests.yml'
+      - '.github/workflows/test-suite.yml'
   # No paths filter on pull_request: these checks are ruleset-required, and a
   # path-filtered required check never reports on out-of-scope PRs, blocking merge.
   pull_request:
@@ -20,13 +21,6 @@ on:
 
 jobs:
   call-tests:
-    uses: django-mvp/shared/.github/workflows/tests.yml@v0.6.0
-    with:
-      coverage-package: project
-      # This is a deployed application, not a library, so it runs on exactly one
-      # combination — whatever is deployed. A support matrix would test versions
-      # nothing runs on.
-      python-versions: '["3.13"]'
-      django-versions: '["5.2"]'
-      install-playwright: true
-    secrets: inherit
+    uses: ./.github/workflows/test-suite.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
