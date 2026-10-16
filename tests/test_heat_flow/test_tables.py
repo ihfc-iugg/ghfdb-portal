@@ -19,12 +19,18 @@ from tests.factories import (
 
 
 def coordinates(table_class, queryset):
-    """Render a table for a visitor and return each row's latitude and longitude."""
+    """Render a table for a visitor and return each row's latitude and longitude.
+
+    A cell left empty reads as None.
+    """
     request = RequestFactory().get("/")
     request.user = AnonymousUser()
     table = RequestConfig(request).configure(table_class(data=queryset))
     return [
-        (str(row.get_cell("latitude")), str(row.get_cell("longitude")))
+        tuple(
+            None if cell == table.default else str(cell)
+            for cell in (row.get_cell("latitude"), row.get_cell("longitude"))
+        )
         for row in table.rows
     ]
 
@@ -56,7 +62,7 @@ class TestHeatFlowSiteTable:
         from heat_flow.tables import HeatFlowSiteTable
 
         assert coordinates(HeatFlowSiteTable, HeatFlowSite.objects.all()) == [
-            ("—", "—")
+            (None, None)
         ]
 
     def test_the_raw_location_is_not_a_column(self):
@@ -87,7 +93,7 @@ class TestHeatFlowIntervalTable:
         HeatFlowIntervalFactory(dataset=public_site.dataset, site=private_site)
 
         assert coordinates(HeatFlowIntervalTable, HeatFlowInterval.objects.all()) == [
-            ("—", "—")
+            (None, None)
         ]
 
     def test_listing_more_intervals_takes_no_more_queries(self, public_site):

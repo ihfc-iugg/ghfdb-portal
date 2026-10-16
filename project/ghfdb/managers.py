@@ -44,6 +44,13 @@ def published_coordinate(function: str, location: str) -> Cast:
     ``long_EW``) reads the coordinate, and the cast keeps it to five
     decimal places, the precision and the ``Decimal`` type the published
     columns have always carried.
+
+    Args:
+        function: ``"ST_Y"`` for the latitude or ``"ST_X"`` for the longitude.
+        location: The lookup path to the site's ``location`` point.
+
+    Returns:
+        An expression giving the coordinate as a five-decimal ``Decimal``.
     """
     return Cast(
         Func(F(location), function=function, output_field=FloatField()),

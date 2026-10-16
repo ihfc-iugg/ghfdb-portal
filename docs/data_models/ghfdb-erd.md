@@ -283,7 +283,7 @@ A geographical location where heat flow data has been collected. It extends Fair
 **Key Features**
 
 - Holds its coordinates in `location`, a WGS 84 point it inherits from `Sample`. A site is a named location, so its intervals and their measurements hold none of their own and are placed at the site
-- `HeatFlowSite.point_at(latitude, longitude)` builds the point a site at a coordinate pair is stored as, from numbers or text, so a lookup by coordinates and the site it created compare equal
+- `HeatFlowSite.point_at(latitude, longitude)` builds the point a site at a coordinate pair is stored as, from numbers or text. Look a site up with `HeatFlowSite.objects.filter(location__equals=HeatFlowSite.point_at(lat, lon))`: `equals` compares the coordinates exactly, where a plain `location=` compares single-precision bounding boxes and treats points a fraction of a metre apart as one
 - The data collection tables show latitude and longitude from the site: `HeatFlowSiteTable` for the site itself, and `HeatFlowIntervalTable` and `IntervalConductivityTable` through the interval's `site`. All three build on `SiteCoordinatesTable`, which shows a site's coordinates only to a viewer who may see that site and otherwise leaves the cells empty
 - Tracks both measured depth (`length`) and true vertical depth (`vertical_depth`)
 - Categorises the setting through the geographic environment vocabulary

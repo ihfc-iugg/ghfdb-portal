@@ -135,9 +135,11 @@ class HeatFlowSite(GenericHole, AbstractGeoDepthInterval, GenericEarthSample):
     def point_at(latitude, longitude):
         """Return the point a site at these coordinates is stored as.
 
-        Coordinates are kept exactly as supplied (FS-001 FR-005), and a
-        lookup compares the stored point exactly, so the same text read
-        twice finds the same site.
+        Coordinates are kept exactly as supplied (FS-001 FR-005). Look a
+        site up with ``location__equals``, which compares the coordinates
+        exactly: the plain ``location=`` lookup compares bounding boxes held
+        in single precision, which at a longitude of 150 cannot tell the
+        fifth decimal place apart.
 
         Args:
             latitude: Decimal degrees north, as a number or text.
@@ -155,9 +157,9 @@ class HeatFlowSite(GenericHole, AbstractGeoDepthInterval, GenericEarthSample):
         against itself.
         """
         if self.location is not None:
-            existing = HeatFlowSite.objects.filter(location=self.location).exclude(
-                pk=self.pk
-            )
+            existing = HeatFlowSite.objects.filter(
+                location__equals=self.location
+            ).exclude(pk=self.pk)
             if existing.exists():
                 raise ValidationError(
                     _(

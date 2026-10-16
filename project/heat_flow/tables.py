@@ -42,14 +42,28 @@ class SiteCoordinatesTable(tables.Table):
         return self.default if location is None else location.x
 
     def site_of(self, record):
-        """Return the site a row is placed at, or None when it has none."""
+        """Return the site a row is placed at.
+
+        Args:
+            record: The row's object.
+
+        Returns:
+            The ``HeatFlowSite``, or None when the row has none.
+        """
         site = record
         for name in filter(None, self.site_path.split("__")):
             site = getattr(site, name, None)
         return site
 
     def site_location(self, record):
-        """Return the point of the row's site, or None where there is none to show."""
+        """Return the point of the row's site, for a viewer who may see the site.
+
+        Args:
+            record: The row's object.
+
+        Returns:
+            The site's ``location``, or None where there is none to show.
+        """
         site = self.site_of(record)
         if site is None or site.location is None:
             return None

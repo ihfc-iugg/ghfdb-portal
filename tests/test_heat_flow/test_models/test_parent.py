@@ -119,7 +119,7 @@ class TestHeatFlowSiteLocationUniqueness:
         )
 
         found = HeatFlowSite.objects.get(
-            location=HeatFlowSite.point_at("47.123456", "8.654321")
+            location__equals=HeatFlowSite.point_at("47.123456", "8.654321")
         )
 
         assert found.pk == site.pk
@@ -135,11 +135,30 @@ class TestHeatFlowSiteLocationUniqueness:
         )
 
         assert not HeatFlowSite.objects.filter(
-            location=HeatFlowSite.point_at("47.40001", "8.50000")
+            location__equals=HeatFlowSite.point_at("47.40001", "8.50000")
         ).exists()
         assert not HeatFlowSite.objects.filter(
-            location=HeatFlowSite.point_at("47.40000", "8.49999")
+            location__equals=HeatFlowSite.point_at("47.40000", "8.49999")
         ).exists()
+
+    @pytest.mark.django_db
+    def test_a_second_site_a_tenth_of_a_metre_away_is_accepted(self, dataset):
+        # Coordinates are taken exactly as supplied (FS-001 FR-005). A comparison of
+        # the points' single-precision bounding boxes would call these one site.
+        from heat_flow.models import HeatFlowSite
+
+        HeatFlowSite.objects.create(
+            dataset=dataset,
+            name="Sydney",
+            location=HeatFlowSite.point_at("-33.868820", "151.209300"),
+        )
+        HeatFlowSite.objects.create(
+            dataset=dataset,
+            name="Sydney, a little east",
+            location=HeatFlowSite.point_at("-33.868820", "151.209301"),
+        )
+
+        assert HeatFlowSite.objects.count() == 2
 
     @pytest.mark.django_db
     def test_saving_an_existing_site_again_is_accepted(self, dataset):

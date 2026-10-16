@@ -179,6 +179,10 @@ class TestMigrationsApplyToAnEmptyDatabase:
 def run_in_database(database, script):
     """Run a script with ``manage.py shell`` against a database.
 
+    Args:
+        database: The connection settings of the database to run against.
+        script: The Python source to run.
+
     Returns:
         The last line the script printed.
     """

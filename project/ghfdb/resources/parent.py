@@ -140,7 +140,7 @@ class GHFDBParentImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         if lat and lon:
             try:
                 site = HeatFlowSite.objects.filter(
-                    location=HeatFlowSite.point_at(lat, lon)
+                    location__equals=HeatFlowSite.point_at(lat, lon)
                 ).first()
                 if site is not None:
                     parent_hf = ParentHeatFlow.objects.filter(sample=site).first()
@@ -186,7 +186,7 @@ class GHFDBParentImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         existing_by_location = None
         if new_site is not None and new_site.location is not None:
             existing_by_location = HeatFlowSite.objects.filter(
-                location=new_site.location
+                location__equals=new_site.location
             ).first()
 
         if existing_by_location is not None:
