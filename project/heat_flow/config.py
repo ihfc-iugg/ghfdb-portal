@@ -8,6 +8,7 @@ from fairdm.registry.config import (
     ModelConfiguration,
     ModelMetadata,
 )
+from fairdm.utils.location.forms import LocationField
 
 from .filters import HeatFlowFilter, HeatFlowSiteFilter
 from .models import (
@@ -22,6 +23,7 @@ from .tables import (
     HeatFlowIntervalTable,
     HeatFlowSiteTable,
     HeatFlowTable,
+    IntervalConductivityTable,
     ThermalGradientTable,
 )
 
@@ -59,8 +61,10 @@ class HeatFlowSiteConfig(IHFCConfig):
     )
     filterset_class = HeatFlowSiteFilter
     table_class = HeatFlowSiteTable
+    # A site is a named location, the one record here that holds coordinates.
     fields = [
         "name",
+        "location",
         "country",
         "region",
         "continent",
@@ -74,6 +78,24 @@ class HeatFlowSiteConfig(IHFCConfig):
         "age",
         "stratigraphy",
     ]
+
+    def get_form_class(self):
+        """Return the site form, taking a latitude and a longitude and nothing more.
+
+        The site's elevation is its own ``elevation`` field, so FairDM's location
+        elevation and uncertainty are not offered (ADR 0023).
+        """
+        generated = super().get_form_class()
+
+        class HeatFlowSiteForm(generated):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                current = self.fields["location"]
+                self.fields["location"] = LocationField(
+                    full=False, label=current.label, help_text=current.help_text
+                )
+
+        return HeatFlowSiteForm
 
 
 @fairdm.register
@@ -148,6 +170,7 @@ class IntervalConductivityConfig(IHFCConfig):
     """FairDM registry configuration for the interval thermal conductivity model."""
 
     model = IntervalConductivity
+    table_class = IntervalConductivityTable
     # method, strategy, source, saturation, pT_conditions, pT_function are M2M and cannot be in list_display
     admin_list_display = ["value", "uncertainty", "number"]
     description = _(

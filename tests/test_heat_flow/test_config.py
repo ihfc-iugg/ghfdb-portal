@@ -144,3 +144,42 @@ class TestHeatFlowRegistryConfig:
         from django.core.management import call_command
 
         call_command("check", fail_level="WARNING")
+
+
+class TestLocationInput:
+    # A site is the one record that holds coordinates, and its elevation is its own
+    # `elevation` field (ADR 0023).
+
+    def test_only_the_site_form_takes_a_location(self):
+        from heat_flow.models import HeatFlowSite
+
+        for model in _get_all_models():
+            fields = fairdm.registry.get_for_model(model).get_form_class()().fields
+            assert ("location" in fields) == (model is HeatFlowSite), model.__name__
+
+    def test_the_site_location_takes_a_latitude_and_a_longitude(self):
+        from heat_flow.models import HeatFlowSite
+
+        form = fairdm.registry.get_for_model(HeatFlowSite).get_form_class()()
+
+        location = form.fields["location"].clean(["47.4", "8.5"])
+
+        assert (location.point.y, location.point.x) == (47.4, 8.5)
+
+    def test_the_site_location_keeps_no_elevation_or_uncertainty(self):
+        from heat_flow.models import HeatFlowSite
+
+        form = fairdm.registry.get_for_model(HeatFlowSite).get_form_class()()
+
+        location = form.fields["location"].clean(["47.4", "8.5", "350", "10"])
+
+        assert (location.elevation, location.uncertainty) == (None, None)
+
+    def test_a_site_location_out_of_range_is_refused(self):
+        from django.core.exceptions import ValidationError
+        from heat_flow.models import HeatFlowSite
+
+        form = fairdm.registry.get_for_model(HeatFlowSite).get_form_class()()
+
+        with pytest.raises(ValidationError):
+            form.fields["location"].clean(["91.5", "8.5"])

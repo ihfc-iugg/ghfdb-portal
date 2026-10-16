@@ -33,8 +33,8 @@ Both resources read the same XLSX file. The parent import deduplicates by `ID_pa
 | 2 | `q` | numeric | **M** | `ParentHeatFlow` | `value` | `QuantityWidget("mW/m²")` | Parent heat flow density. Validated ±10⁶. |
 | 3 | `q_uncertainty` | numeric | O | `ParentHeatFlow` | `uncertainty` | `QuantityWidget("mW/m²")` | 1σ uncertainty. |
 | 4 | `name` | string | **M** | `HeatFlowSite` | `name` | `CharWidget` | Site name. Via `ParentWidget`. |
-| 5 | `lat_NS` | numeric | **M** | `Point` | `y` | `DecimalWidget` | Latitude. Via `ParentWidget` → Point. |
-| 6 | `long_EW` | numeric | **M** | `Point` | `x` | `DecimalWidget` | Longitude. Via `ParentWidget` → Point. |
+| 5 | `lat_NS` | numeric | **M** | `HeatFlowSite` | `location` (y) | `ParentWidget` | Latitude, -90 to 90. |
+| 6 | `long_EW` | numeric | **M** | `HeatFlowSite` | `location` (x) | `ParentWidget` | Longitude, -180 to 180. |
 | 7 | `elevation` | numeric | O | `HeatFlowSite` | `elevation` | `QuantityWidget("m")` | Elevation above datum. |
 | 8 | `environment` | concept | **M** | `HeatFlowSite` | `environment` | `ConceptWidget(GeographicEnvironment)` | Required in model. |
 | 9 | `p_comment` | string | O | `ParentHeatFlow` | `comment` | `CharWidget` | Parent-level comments. |
@@ -58,7 +58,7 @@ When the spreadsheet contains multiple rows with the same `ID_parent` value, onl
 
 - **Lookup**: `ParentHeatFlow.objects.filter(ghfdb_id=row["ID_parent"])`
 - **If found**: Update all mapped fields
-- **If not found**: Create new `ParentHeatFlow` + `HeatFlowSite` + `Point`
+- **If not found**: Create new `ParentHeatFlow` + `HeatFlowSite`
 
 ---
 

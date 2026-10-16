@@ -488,6 +488,91 @@ class TestGHFDBTemplateRefusedWhole:
 
 
 @pytest.mark.django_db
+class TestCoordinatesOutOfRange:
+    # #250: a coordinate outside -90 to 90 or -180 to 180 names no place on Earth, so
+    # the row is refused rather than stored as a site.
+
+    @pytest.mark.parametrize(
+        ("column", "value"),
+        [("lat_NS", "91.5"), ("lat_NS", "-90.00001"), ("long_EW", "200")],
+    )
+    def test_a_coordinate_out_of_range_names_its_row_and_column_and_refuses_the_file(
+        self, dataset, column, value
+    ):
+        from heat_flow.models import HeatFlowSite
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        row1 = dict(ROW)
+        row1[column] = value
+
+        outcome = import_ghfdb_template(make_dataset(row1), dataset)
+
+        assert outcome.has_errors()
+        row_number, errors = outcome.parent.row_errors()[0]
+        assert row_number == 1
+        message = str(errors[0].error)
+        assert column in message
+        assert value in message
+        assert not HeatFlowSite.objects.exists()
+
+    def test_coordinates_on_the_limits_are_accepted(self, dataset):
+        from heat_flow.models import HeatFlowSite
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        row1 = dict(ROW)
+        row1["lat_NS"] = "-90"
+        row1["long_EW"] = "180"
+
+        outcome = import_ghfdb_template(make_dataset(row1), dataset)
+
+        assert not outcome.has_errors()
+        site = HeatFlowSite.objects.get()
+        assert (site.location.y, site.location.x) == (-90, 180)
+
+
+@pytest.mark.django_db
+class TestCoordinatesRoundTrip:
+    # A site's coordinates are published as they were imported, to five decimal places.
+
+    def test_exported_coordinates_are_the_imported_ones(self, dataset):
+        from decimal import Decimal
+
+        from project.ghfdb.importers import import_ghfdb_template
+        from project.ghfdb.models import GHFDBChild, GHFDBParent
+
+        row1 = dict(ROW)
+        row1["lat_NS"] = "-33.86882"
+        row1["long_EW"] = "151.20930"
+
+        assert not import_ghfdb_template(make_dataset(row1), dataset).has_errors()
+
+        child = GHFDBChild.objects.as_ghfdb_flat().get()
+        parent = GHFDBParent.objects.as_ghfdb_flat().get()
+        for exported in (child, parent):
+            assert exported.lat_NS == Decimal("-33.86882")
+            assert exported.long_EW == Decimal("151.20930")
+
+    def test_importing_the_same_coordinates_again_finds_the_same_site(self, dataset):
+        from heat_flow.models import HeatFlowSite
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        row1 = dict(ROW)
+        row1["lat_NS"] = "-33.86882"
+        row1["long_EW"] = "151.20930"
+        row2 = dict(row1)
+        row2["ID_parent"] = ""
+        row2["ID"] = "2"
+
+        assert not import_ghfdb_template(make_dataset(row1), dataset).has_errors()
+        assert not import_ghfdb_template(make_dataset(row2), dataset).has_errors()
+
+        assert HeatFlowSite.objects.count() == 1
+
+
+@pytest.mark.django_db
 class TestControlledVocabularyDecides:
     # US-5/#204: the portal's own concepts decide what a controlled- vocabulary column
     # accepts, not the template's own vocabulary sheet.

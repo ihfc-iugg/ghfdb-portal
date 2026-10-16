@@ -158,6 +158,10 @@ store, a controlled-vocabulary value the portal holds no concept for, or an empt
 field. If any row in either pass has one, nothing from the file is written — not just the faulty
 row, the whole file, including every row that was otherwise clean:
 
+A site's coordinates are a value the model cannot store unless `lat_NS` lies between -90 and 90 and
+`long_EW` between -180 and 180. A row outside those ranges is a fault naming the column and the
+value, as is a row that names a site and leaves either coordinate empty.
+
 ```python
 outcome = import_ghfdb_template(xlsx_bytes, dataset)
 
@@ -251,7 +255,8 @@ correction rather than a new one being written beside it.
 
 The published template carries neither an `ID` nor an `ID_parent` column, so this holds without the
 caller ever supplying one. The parent pass matches an existing site (and the parent heat-flow value
-beneath it) by coordinates; the child pass resolves its parent through those same coordinates, and
+beneath it) by coordinates, compared exactly as supplied, so `48.12345` and `48.12346` are two
+sites; the child pass resolves its parent through those same coordinates, and
 separately matches an existing determination by the site's coordinates, the determination's
 publication reference, and the determination's position within the file. That third piece is what
 lets correcting a depth interval (`q_top`/`q_bottom`) update the existing determination instead of

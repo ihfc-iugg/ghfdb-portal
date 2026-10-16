@@ -102,6 +102,19 @@ determinations counts zero rather than null.
 Attaches each site's determinations, and its exploration purposes, so reading them costs no query
 per site.
 
+### Coordinates
+
+`lat_NS` and `long_EW` are read from the site's `location` point with `published_coordinate()`,
+which applies `ST_Y` or `ST_X` and casts the result to a five-decimal `Decimal`. That is the type and
+precision the published columns have always carried, so a coordinate exported from the point reads
+the same as it did when sites were placed through a shared coordinate table.
+
+```python
+from project.ghfdb.managers import published_coordinate
+
+GHFDBParent.objects.annotate(lat_NS=published_coordinate("ST_Y", "sample__location"))
+```
+
 ### Query cost
 
 No method above issues a number of queries that grows with the number of rows returned. That is a

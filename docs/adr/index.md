@@ -32,6 +32,7 @@ The domain vocabulary these records use is defined in `CONTEXT.md` at the reposi
 | [0020](0020-a-count-in-the-navigation-is-the-notification.md) | A count in the navigation is how curators are told there is something waiting |
 | [0021](0021-a-determination-is-served-only-through-a-served-parent.md) | A determination is served only through a parent that is served |
 | [0022](0022-stored-quality-scores-are-recalculated-when-their-inputs-are-written.md) | Stored quality scores are recalculated when their inputs are written |
+| [0023](0023-a-site-holds-the-location-and-its-own-elevation.md) | A site holds the location, and its elevation stays its own |
 
 :::{toctree}
 :hidden:

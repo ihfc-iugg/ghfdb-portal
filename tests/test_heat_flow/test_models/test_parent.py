@@ -1,11 +1,9 @@
 # Tests for the site and the parent heat flow value. Mirrors
 # ``project/heat_flow/models/parent.py``.
 
-from decimal import Decimal
-
 import pytest
+from django.contrib.gis.geos import Point
 from django.core.exceptions import ValidationError
-from fairdm.contrib.location.models import Point
 
 
 class TestHeatFlowSite:
@@ -14,10 +12,9 @@ class TestHeatFlowSite:
         # HeatFlowSite persists every field the spec lists and reads back with
         # correct values and types, including an optional location FK
         # (FS-001 FR-001, FR-002, FR-003, SC-003).
-        from fairdm.contrib.location.models import Point
         from heat_flow.models import HeatFlowSite
 
-        point = Point.objects.create(x=Decimal("8.5"), y=Decimal("47.4"))
+        point = Point(8.5, 47.4, srid=4326)
         site = HeatFlowSite.objects.create(
             dataset=dataset,
             name="Schwarzwald Site",
@@ -46,8 +43,8 @@ class TestHeatFlowSite:
         assert str(site_db.environment) == "onshore_continental"
         assert str(site_db.explo_method) == "drilling"
         assert site_db.location is not None
-        assert site_db.location.x == Decimal("8.500000")
-        assert site_db.location.y == Decimal("47.400000")
+        assert site_db.location.x == 8.5
+        assert site_db.location.y == 47.4
 
         assert hasattr(site_db.elevation, "magnitude")
         assert float(site_db.elevation.magnitude) == pytest.approx(350.0)
@@ -85,7 +82,7 @@ class TestHeatFlowSiteLocationUniqueness:
         # holds is refused via save(), and the error names the pair.
         from heat_flow.models import HeatFlowSite
 
-        point = Point.objects.create(x=Decimal("8.5"), y=Decimal("47.4"))
+        point = Point(8.5, 47.4, srid=4326)
         HeatFlowSite.objects.create(dataset=dataset, name="First", location=point)
 
         with pytest.raises(ValidationError) as excinfo:
@@ -102,7 +99,7 @@ class TestHeatFlowSiteLocationUniqueness:
         # field error rather than a server error.
         from heat_flow.models import HeatFlowSite
 
-        point = Point.objects.create(x=Decimal("8.5"), y=Decimal("47.4"))
+        point = Point(8.5, 47.4, srid=4326)
         HeatFlowSite.objects.create(dataset=dataset, name="First", location=point)
 
         second = HeatFlowSite(dataset=dataset, name="Second", location=point)
@@ -110,20 +107,58 @@ class TestHeatFlowSiteLocationUniqueness:
             second.clean()
 
     @pytest.mark.django_db
-    def test_one_point_row_per_coordinate_pair(self):
-        # The rule is written against ``location``, not against coordinate
-        # values, and that is only equivalent to "one site per coordinate pair" because
-        # the framework holds one Point row per pair.
-        first, created = Point.objects.get_or_create(
-            x=Decimal("8.5"), y=Decimal("47.4")
-        )
-        assert created
+    def test_coordinates_read_twice_from_text_find_the_same_site(self, dataset):
+        # A lookup compares the stored point exactly, so the same text read
+        # again has to give the same point.
+        from heat_flow.models import HeatFlowSite
 
-        second, created_again = Point.objects.get_or_create(
-            x=Decimal("8.5"), y=Decimal("47.4")
+        site = HeatFlowSite.objects.create(
+            dataset=dataset,
+            name="Read once",
+            location=HeatFlowSite.point_at("47.123456", "8.654321"),
         )
-        assert not created_again
-        assert second.pk == first.pk
+
+        found = HeatFlowSite.objects.get(
+            location__equals=HeatFlowSite.point_at("47.123456", "8.654321")
+        )
+
+        assert found.pk == site.pk
+
+    @pytest.mark.django_db
+    def test_coordinates_differing_in_the_fifth_decimal_find_no_site(self, dataset):
+        from heat_flow.models import HeatFlowSite
+
+        HeatFlowSite.objects.create(
+            dataset=dataset,
+            name="Here",
+            location=HeatFlowSite.point_at("47.40000", "8.50000"),
+        )
+
+        assert not HeatFlowSite.objects.filter(
+            location__equals=HeatFlowSite.point_at("47.40001", "8.50000")
+        ).exists()
+        assert not HeatFlowSite.objects.filter(
+            location__equals=HeatFlowSite.point_at("47.40000", "8.49999")
+        ).exists()
+
+    @pytest.mark.django_db
+    def test_a_second_site_a_tenth_of_a_metre_away_is_accepted(self, dataset):
+        # Coordinates are taken exactly as supplied (FS-001 FR-005). A comparison of
+        # the points' single-precision bounding boxes would call these one site.
+        from heat_flow.models import HeatFlowSite
+
+        HeatFlowSite.objects.create(
+            dataset=dataset,
+            name="Sydney",
+            location=HeatFlowSite.point_at("-33.868820", "151.209300"),
+        )
+        HeatFlowSite.objects.create(
+            dataset=dataset,
+            name="Sydney, a little east",
+            location=HeatFlowSite.point_at("-33.868820", "151.209301"),
+        )
+
+        assert HeatFlowSite.objects.count() == 2
 
     @pytest.mark.django_db
     def test_saving_an_existing_site_again_is_accepted(self, dataset):
@@ -131,7 +166,7 @@ class TestHeatFlowSiteLocationUniqueness:
         # against itself.
         from heat_flow.models import HeatFlowSite
 
-        point = Point.objects.create(x=Decimal("8.5"), y=Decimal("47.4"))
+        point = Point(8.5, 47.4, srid=4326)
         site = HeatFlowSite.objects.create(
             dataset=dataset, name="Existing", location=point
         )
@@ -159,8 +194,8 @@ class TestHeatFlowSiteLocationUniqueness:
         # metres apart are two sites, not one.
         from heat_flow.models import HeatFlowSite
 
-        point_a = Point.objects.create(x=Decimal("8.500000"), y=Decimal("47.400000"))
-        point_b = Point.objects.create(x=Decimal("8.500010"), y=Decimal("47.400010"))
+        point_a = Point(8.5, 47.4, srid=4326)
+        point_b = Point(8.50001, 47.40001, srid=4326)
 
         first = HeatFlowSite.objects.create(
             dataset=dataset, name="Near A", location=point_a

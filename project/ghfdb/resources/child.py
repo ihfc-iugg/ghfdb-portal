@@ -512,10 +512,10 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         if not lat or not lon:
             return None
         try:
-            lat_f, lon_f = float(lat), float(lon)
+            point = HeatFlowSite.point_at(lat, lon)
         except ValueError:
             return None
-        site = HeatFlowSite.objects.filter(location__x=lon_f, location__y=lat_f).first()
+        site = HeatFlowSite.objects.filter(location__equals=point).first()
         if site is None:
             return None
         return ParentHeatFlow.objects.filter(sample=site).first()

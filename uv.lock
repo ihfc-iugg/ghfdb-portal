@@ -2052,7 +2052,7 @@ wheels = [
 [[package]]
 name = "fairdm"
 version = "0.0.1"
-source = { git = "https://github.com/FAIR-DM/fairdm?rev=c9c123142aea5e7181a4fdf5e73a8e85c8ee70fb#c9c123142aea5e7181a4fdf5e73a8e85c8ee70fb" }
+source = { git = "https://github.com/FAIR-DM/fairdm?rev=b89656ae3c268819270356622ffd600c23be02f0#b89656ae3c268819270356622ffd600c23be02f0" }
 dependencies = [
     { name = "celery" },
     { name = "daisy-cotton-ext" },
@@ -2277,7 +2277,7 @@ docs = [
 
 [package.metadata]
 requires-dist = [
-    { name = "fairdm", git = "https://github.com/FAIR-DM/fairdm?rev=c9c123142aea5e7181a4fdf5e73a8e85c8ee70fb" },
+    { name = "fairdm", git = "https://github.com/FAIR-DM/fairdm?rev=b89656ae3c268819270356622ffd600c23be02f0" },
     { name = "fairdm-discussions", git = "https://github.com/FAIR-DM/fairdm-discussions?rev=643d0af810feb687e41c499df6f6c0d510500b79" },
     { name = "fairdm-geo", git = "https://github.com/FAIR-DM/fairdm-geo?rev=a58d86a34b692d4a329b3cb37a02149ba9626e9f" },
 ]
@@ -3282,7 +3282,7 @@ name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ptyprocess" },
+    { name = "ptyprocess", marker = "python_full_version >= '3.15' or sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450, upload-time = "2023-11-25T09:07:26.339Z" }
 wheels = [

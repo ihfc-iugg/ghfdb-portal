@@ -64,17 +64,13 @@ class TestGHFDBParentViewSet:
     def test_a_concept_column_renders_as_its_stored_code_and_a_coordinate_as_a_float(
         self, client, public_dataset
     ):
-        from decimal import Decimal
-
-        from fairdm.contrib.location.models import Point
+        from django.contrib.gis.geos import Point
         from heat_flow.models import HeatFlowSite
 
         parent = build_site_and_parent(public_dataset, ghfdb_id=1)
         site = HeatFlowSite.objects.get(pk=parent.sample_id)
         site.explo_method = "drilling"
-        site.location = Point.objects.create(
-            x=Decimal("11.56780"), y=Decimal("48.12340")
-        )
+        site.location = Point(11.5678, 48.1234, srid=4326)
         site.save()
 
         response = client.get(reverse("api:ghfdb-parents-list"))
@@ -298,17 +294,13 @@ class TestGHFDBChildViewSet:
     def test_a_determination_carries_its_sites_coordinates_as_floats(
         self, client, public_dataset
     ):
-        from decimal import Decimal
-
-        from fairdm.contrib.location.models import Point
+        from django.contrib.gis.geos import Point
         from heat_flow.models import HeatFlowSite
 
         parent = build_site_and_parent(public_dataset, ghfdb_id=1)
         build_child(public_dataset, parent, ghfdb_id=11)
         site = HeatFlowSite.objects.get(pk=parent.sample_id)
-        site.location = Point.objects.create(
-            x=Decimal("11.56780"), y=Decimal("48.12340")
-        )
+        site.location = Point(11.5678, 48.1234, srid=4326)
         site.save()
 
         response = client.get(
@@ -596,18 +588,14 @@ class TestGHFDBFlatViewSet:
     def test_the_concept_and_coordinate_columns_render_with_their_real_types(
         self, client, public_dataset
     ):
-        from decimal import Decimal
-
-        from fairdm.contrib.location.models import Point
+        from django.contrib.gis.geos import Point
         from heat_flow.models import HeatFlowSite
 
         parent = build_site_and_parent(public_dataset, ghfdb_id=1)
         build_child(public_dataset, parent, ghfdb_id=11)
         site = HeatFlowSite.objects.get(pk=parent.sample_id)
         site.explo_method = "drilling"
-        site.location = Point.objects.create(
-            x=Decimal("11.56780"), y=Decimal("48.12340")
-        )
+        site.location = Point(11.5678, 48.1234, srid=4326)
         site.save()
 
         response = client.get(

@@ -21,9 +21,41 @@ References:
 
 from typing import Any, cast
 
-from django.db.models import CharField, Count, F, OuterRef, Q, Subquery, Value
-from django.db.models.functions import Coalesce
+from django.db.models import (
+    CharField,
+    Count,
+    DecimalField,
+    F,
+    FloatField,
+    Func,
+    OuterRef,
+    Q,
+    Subquery,
+    Value,
+)
+from django.db.models.functions import Cast, Coalesce
 from polymorphic.managers import PolymorphicManager, PolymorphicQuerySet
+
+
+def published_coordinate(function: str, location: str) -> Cast:
+    """Read one coordinate of a site's point as the GHFDB publishes it.
+
+    The database function (``ST_Y`` for ``lat_NS``, ``ST_X`` for
+    ``long_EW``) reads the coordinate, and the cast keeps it to five
+    decimal places, the precision and the ``Decimal`` type the published
+    columns have always carried.
+
+    Args:
+        function: ``"ST_Y"`` for the latitude or ``"ST_X"`` for the longitude.
+        location: The lookup path to the site's ``location`` point.
+
+    Returns:
+        An expression giving the coordinate as a five-decimal ``Decimal``.
+    """
+    return Cast(
+        Func(F(location), function=function, output_field=FloatField()),
+        DecimalField(max_digits=8, decimal_places=5),
+    )
 
 
 def _correction_subqueries() -> dict[str, Subquery]:
@@ -104,7 +136,6 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
             "sample",
             "sample__heatflowinterval",
             "sample__heatflowinterval__site",
-            "sample__heatflowinterval__site__location",
             "sample__heatflowinterval__probe_metadata",
             "parent",
             "thermal_gradient",
@@ -127,8 +158,12 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
             # 'name' conflicts with a Measurement base-class field, hence
             # the 'site_name' annotation key.
             "site_name": F("sample__heatflowinterval__site__name"),
-            "lat_NS": F("sample__heatflowinterval__site__location__y"),
-            "long_EW": F("sample__heatflowinterval__site__location__x"),
+            "lat_NS": published_coordinate(
+                "ST_Y", "sample__heatflowinterval__site__location"
+            ),
+            "long_EW": published_coordinate(
+                "ST_X", "sample__heatflowinterval__site__location"
+            ),
             "elevation": F("sample__heatflowinterval__site__elevation"),
             "environment": F("sample__heatflowinterval__site__environment"),
             "explo_method": F("sample__heatflowinterval__site__explo_method"),
@@ -299,7 +334,6 @@ class GHFDBParentQuerySet(PolymorphicQuerySet):
         """
         qs = self.select_related(
             "sample",
-            "sample__location",
             "sample__heatflowsite",
         )
         scalar_annotations = {
@@ -312,8 +346,8 @@ class GHFDBParentQuerySet(PolymorphicQuerySet):
             # 'name' conflicts with a Measurement base-class field, hence
             # the 'site_name' annotation key.
             "site_name": F("sample__name"),
-            "lat_NS": F("sample__location__y"),
-            "long_EW": F("sample__location__x"),
+            "lat_NS": published_coordinate("ST_Y", "sample__location"),
+            "long_EW": published_coordinate("ST_X", "sample__location"),
             "elevation": F("sample__heatflowsite__elevation"),
             "environment": F("sample__heatflowsite__environment"),
             "explo_method": F("sample__heatflowsite__explo_method"),

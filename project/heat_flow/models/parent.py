@@ -7,6 +7,7 @@ Child HeatFlow records link back to ParentHeatFlow via ForeignKey.
 Reference: Fuchs et al. (2021), Fuchs et al. (2023)
 """
 
+from django.contrib.gis.geos import Point
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator as MaxVal
 from django.core.validators import MinValueValidator as MinVal
@@ -130,16 +131,35 @@ class HeatFlowSite(GenericHole, AbstractGeoDepthInterval, GenericEarthSample):
             models.Index(fields=["environment"]),
         ]
 
+    @staticmethod
+    def point_at(latitude, longitude):
+        """Return the point a site at these coordinates is stored as.
+
+        Coordinates are kept exactly as supplied (FS-001 FR-005). Look a
+        site up with ``location__equals``, which compares the coordinates
+        exactly: the plain ``location=`` lookup compares bounding boxes held
+        in single precision, which at a longitude of 150 cannot tell the
+        fifth decimal place apart.
+
+        Args:
+            latitude: Decimal degrees north, as a number or text.
+            longitude: Decimal degrees east, as a number or text.
+
+        Returns:
+            A WGS 84 ``Point``.
+        """
+        return Point(float(longitude), float(latitude), srid=4326)
+
     def _check_location_uniqueness(self):
         """Refuse a location already held by another HeatFlowSite (FS-001 FR-004, FR-005).
 
         Binds only where ``location`` is set, and never rejects a site
         against itself.
         """
-        if self.location_id:
-            existing = HeatFlowSite.objects.filter(location=self.location).exclude(
-                pk=self.pk
-            )
+        if self.location is not None:
+            existing = HeatFlowSite.objects.filter(
+                location__equals=self.location
+            ).exclude(pk=self.pk)
             if existing.exists():
                 raise ValidationError(
                     _(

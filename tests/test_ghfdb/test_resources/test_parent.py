@@ -303,12 +303,12 @@ class TestGHFDBParentImportSiteIdentity:
         # Importing a row whose coordinates match an existing site resolves to
         # that site rather than creating a second one, even though the row carries an
         # ID_parent the site has never seen.
-        from fairdm.contrib.location.models import Point
+        from django.contrib.gis.geos import Point
         from heat_flow.models import HeatFlowSite, ParentHeatFlow
 
         from project.ghfdb.resources import GHFDBParentImportResource
 
-        point = Point.objects.create(x=11.0, y=48.0)
+        point = Point(11.0, 48.0, srid=4326)
         existing_site = HeatFlowSiteFactory(
             dataset=dataset, name="Pre-existing Site", location=point
         )
@@ -330,14 +330,14 @@ class TestGHFDBParentImportSiteIdentity:
     def test_import_with_disagreeing_id_parent_does_not_duplicate_site(self, dataset):
         # A row that carries a site identifier (ID_parent) the site has never
         # seen, while its coordinates belong to a different existing site.
-        from fairdm.contrib.location.models import Point
+        from django.contrib.gis.geos import Point
         from heat_flow.models import HeatFlowSite, ParentHeatFlow
 
         from project.ghfdb.resources import GHFDBParentImportResource
 
         # A site already exists at (48.0, 11.0), under a different local_id
         # than the one the incoming row will carry.
-        point = Point.objects.create(x=11.0, y=48.0)
+        point = Point(11.0, 48.0, srid=4326)
         existing_site = HeatFlowSiteFactory(
             dataset=dataset,
             name="Existing Site",
@@ -909,16 +909,11 @@ class TestGHFDBParentImportRecordsIdentifierOnMatchedSite:
     def test_identifier_is_recorded_on_a_site_matched_by_coordinates(self, dataset):
         # The site must pre-exist without an identifier, or the import takes the other
         # branch and this passes whether or not the behaviour is there.
-        from decimal import Decimal
-
-        from fairdm.contrib.location.models import Point
         from heat_flow.models import HeatFlowSite
 
         from project.ghfdb.resources import GHFDBParentImportResource
 
-        point, _ = Point.objects.get_or_create(
-            x=Decimal(PARENT_ROW["long_EW"]), y=Decimal(PARENT_ROW["lat_NS"])
-        )
+        point = HeatFlowSite.point_at(PARENT_ROW["lat_NS"], PARENT_ROW["long_EW"])
         existing = HeatFlowSiteFactory(
             dataset=dataset, name="Entered by hand", location=point, local_id=None
         )
