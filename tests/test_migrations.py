@@ -174,3 +174,116 @@ class TestMigrationsApplyToAnEmptyDatabase:
             f"Migrations left these tables unbuilt: {missing}."
             f"\n{result.stdout}\n{result.stderr}"
         )
+
+
+def run_in_database(database, script):
+    """Run a script with ``manage.py shell`` against a database and return its last line."""
+    environment = {
+        key: value for key, value in os.environ.items() if key != "DATABASE_URL"
+    }
+    result = subprocess.run(
+        [sys.executable, "manage.py", "shell", "-c", script],
+        cwd=settings.BASE_DIR,
+        env={
+            **environment,
+            "DJANGO_ENV": "development",
+            "POSTGRES_HOST": database["HOST"],
+            "POSTGRES_PORT": str(database["PORT"]),
+            "POSTGRES_USER": database["USER"],
+            "POSTGRES_PASSWORD": database["PASSWORD"],
+            "POSTGRES_DB": database["NAME"],
+        },
+        capture_output=True,
+        text=True,
+        timeout=900,
+    )
+    assert result.returncode == 0, f"{result.stdout}\n{result.stderr}"
+    return result.stdout.strip().splitlines()[-1]
+
+
+# Builds the database as it stood before FairDM's located samples: samples linked to shared
+# Points, two of them at one Point and one with none. Prints each sample's coordinates.
+BEFORE_LOCATED_SAMPLES = """
+import json
+from django.core.management import call_command
+from django.db import connection
+from django.db.migrations.executor import MigrationExecutor
+
+targets = [
+    ("heat_flow", "0015_rename_intervalconductivity_location"),
+    ("sample", "0011_index_modified"),
+    ("fairdm_location", "0001_initial"),
+]
+for app, name in targets:
+    call_command("migrate", app, name, verbosity=0)
+apps = MigrationExecutor(connection).loader.project_state(targets).apps
+Point = apps.get_model("fairdm_location", "Point")
+Sample = apps.get_model("sample", "Sample")
+HeatFlowSite = apps.get_model("heat_flow", "HeatFlowSite")
+dataset = apps.get_model("dataset", "Dataset").objects.create(name="Before")
+
+shared = Point.objects.create(x="-122.41942", y="37.77493")
+HeatFlowSite.objects.create(name="Shared one", dataset=dataset, location=shared)
+HeatFlowSite.objects.create(name="Shared two", dataset=dataset, location=shared)
+HeatFlowSite.objects.create(
+    name="South west",
+    dataset=dataset,
+    location=Point.objects.create(x="-179.99999", y="-89.99999"),
+)
+Sample.objects.create(
+    name="Plain sample",
+    dataset=dataset,
+    location=Point.objects.create(x="8.40417", y="49.00937"),
+)
+Sample.objects.create(name="Nowhere", dataset=dataset)
+
+print(json.dumps({
+    sample.name: [str(sample.location.x), str(sample.location.y)]
+    if sample.location_id else None
+    for sample in Sample.objects.select_related("location")
+}))
+"""
+
+# Applies every migration. Prints each sample's coordinates as five-decimal text with the
+# point's SRID, and whether the copy set aside before the upgrade is still there.
+AFTER_LOCATED_SAMPLES = """
+import json
+from django.core.management import call_command
+from django.db import connection
+
+call_command("migrate", verbosity=0)
+with connection.cursor() as cursor:
+    cursor.execute(
+        "SELECT name, round(ST_X(location)::numeric, 5)::text,"
+        " round(ST_Y(location)::numeric, 5)::text, ST_SRID(location)"
+        " FROM sample_sample"
+    )
+    rows = cursor.fetchall()
+    cursor.execute("SELECT to_regclass('heat_flow_sample_coordinates')")
+    (copy,) = cursor.fetchone()
+print(json.dumps({
+    "samples": {
+        name: [x, y, srid] if x is not None else None for name, x, y, srid in rows
+    },
+    "copy": copy,
+}))
+"""
+
+
+class TestLocatedSamplesKeepTheirCoordinates:
+    # FairDM's ``sample/0012_located_samples`` drops the link to ``Point`` and adds an
+    # empty point column. The portal's migrations around it carry every coordinate over.
+
+    @pytest.mark.slow
+    def test_every_sample_keeps_its_coordinates(self, empty_database):
+        import json
+
+        before = json.loads(run_in_database(empty_database, BEFORE_LOCATED_SAMPLES))
+        after = json.loads(run_in_database(empty_database, AFTER_LOCATED_SAMPLES))
+
+        assert after["samples"] == {
+            name: [*coordinates, 4326] if coordinates else None
+            for name, coordinates in before.items()
+        }
+        assert sum(value is not None for value in after["samples"].values()) == 4
+        assert after["copy"] is None

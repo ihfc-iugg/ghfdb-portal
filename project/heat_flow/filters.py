@@ -40,4 +40,8 @@ class HeatFlowFilter(MeasurementFilter):
             "image",
             "tags",
             "date_acquired",
+            # A measurement is placed at its site and holds no location of its own.
+            "location",
+            "location_elevation",
+            "location_uncertainty",
         ]
