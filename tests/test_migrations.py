@@ -1,9 +1,13 @@
 # The portal's own applications must have no unrecorded model changes.
 
 import os
+import subprocess
+import sys
 from io import StringIO
 
+import psycopg2
 import pytest
+from django.conf import settings
 from django.core.management import call_command
 from django.test import override_settings
 
@@ -107,8 +111,8 @@ class TestGHFDBParentProxyMigrations:
 
 class TestMigrationsApplyToAnEmptyDatabase:
     # The migrations must actually run, not merely exist. The suite runs with
-    # ``--nomigrations``, which points every app at a stub module, so no test in this
-    # repository has ever applied a migration.
+    # ``--nomigrations``, so this is the one test that applies them, to a database
+    # created empty on the suite's own PostGIS server.
 
     HEAT_FLOW_TABLES = [
         "heat_flow_heatflowsite",
@@ -122,55 +126,48 @@ class TestMigrationsApplyToAnEmptyDatabase:
     ]
 
     @pytest.mark.slow
-    @pytest.mark.skip(
-        reason=(
-            "Blocked upstream: the migration graph cannot be applied to an empty "
-            "database. contributors.0008_migrate_to_location_model, in the fairdm "
-            "package, reads contributors_organization.lat in a RunPython step and drops "
-            "the column in the step after it, so it passes against a database that "
-            "already carries the older schema and fails against one that never did. "
-            "Raised as FAIR-DM/fairdm#252. Nothing in this repository can fix it, and "
-            "nothing here works around it. Un-skip when that issue closes."
-        )
-    )
-    def test_migrations_build_every_heat_flow_table(self, tmp_path):
-        import sqlite3
-        import subprocess
-        import sys
-        from pathlib import Path
-
-        repo_root = Path(__file__).resolve().parents[1]
-        database = tmp_path / "migrated.sqlite3"
-
+    def test_migrations_build_every_heat_flow_table(self, empty_database):
+        # The database is named through POSTGRES_*, which stack.development.env never
+        # overwrites, and DATABASE_URL is dropped because it would take precedence.
+        environment = {
+            key: value for key, value in os.environ.items() if key != "DATABASE_URL"
+        }
         result = subprocess.run(
-            [
-                sys.executable,
-                "manage.py",
-                "migrate",
-                "--database",
-                "migration_check",
-                "--noinput",
-                "-v",
-                "0",
-            ],
-            cwd=repo_root,
-            env={**os.environ, "MIGRATION_CHECK_DATABASE": str(database)},
+            [sys.executable, "manage.py", "migrate", "--noinput", "-v", "0"],
+            cwd=settings.BASE_DIR,
+            env={
+                **environment,
+                "DJANGO_ENV": "development",
+                "POSTGRES_HOST": empty_database["HOST"],
+                "POSTGRES_PORT": str(empty_database["PORT"]),
+                "POSTGRES_USER": empty_database["USER"],
+                "POSTGRES_PASSWORD": empty_database["PASSWORD"],
+                "POSTGRES_DB": empty_database["NAME"],
+            },
             capture_output=True,
             text=True,
+            timeout=900,
         )
 
-        assert database.exists(), (
-            "migrate produced no database at the path it was given."
+        assert result.returncode == 0, (
+            "`manage.py migrate` failed against an empty database."
             f"\n{result.stdout}\n{result.stderr}"
         )
 
-        with sqlite3.connect(database) as connection:
-            built = {
-                row[0]
-                for row in connection.execute(
-                    "SELECT name FROM sqlite_master WHERE type = 'table'"
-                )
-            }
+        migrated = psycopg2.connect(
+            dbname=empty_database["NAME"],
+            user=empty_database["USER"],
+            password=empty_database["PASSWORD"],
+            host=empty_database["HOST"],
+            port=empty_database["PORT"],
+        )
+        with migrated, migrated.cursor() as cursor:
+            cursor.execute(
+                "SELECT table_name FROM information_schema.tables"
+                " WHERE table_schema = 'public'"
+            )
+            built = {row[0] for row in cursor.fetchall()}
+        migrated.close()
 
         missing = [table for table in self.HEAT_FLOW_TABLES if table not in built]
         assert not missing, (

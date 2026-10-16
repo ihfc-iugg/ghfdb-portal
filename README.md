@@ -17,6 +17,17 @@ For general feedback or suggestions, we encourage you to use the [discussion for
 
 There are currently two polls open in the discussion forum to determine what features to prioritize next. One poll is focused on [features for the portal in it's entirety](https://github.com/ihfc-iugg/ghfdb-portal/discussions/82), while the other is focused specifically on the [map viewer functionality](https://github.com/ihfc-iugg/ghfdb-portal/discussions/83). Your participation in these polls is invaluable as it helps us understand the needs and preferences of our users. By voting, you can influence the direction of the portal's development and ensure that we are working on features that matter most to you.
 
+## Development
+
+The portal runs on PostgreSQL with PostGIS. With [uv](https://docs.astral.sh/uv/) and Docker installed:
+
+```shell
+uv sync
+docker compose up
+```
+
+That starts PostGIS, Redis, a Celery worker and the development server on <http://localhost:8000>. To run the tests on your own machine, start the database alone with `docker compose up -d postgres` and run `uv run pytest`; Django then needs the GDAL, GEOS and PROJ libraries (`apt install gdal-bin` on Debian and Ubuntu). The [getting started guide](docs/development/getting-started.md) has the details.
+
 ## Acknowledgements
 
 This codebase is maintained by the [German Research Centre for Geosciences (GFZ)](https://www.gfz-potsdam.de/en/) as part of the [World Heat Flow Database Project](https://www.heatflow.world). This project is funded by the [Deutsche Forschungsgemeinschaft (DFG)](https://www.dfg.de) under the project number [491795283](https://gepris-extern.dfg.de/gepris/projekt/491795283).

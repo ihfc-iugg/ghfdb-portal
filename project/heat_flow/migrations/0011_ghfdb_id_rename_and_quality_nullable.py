@@ -9,6 +9,12 @@ class Migration(migrations.Migration):
         ("measurement", "0007_alter_measurementdate_type_and_more"),
     ]
 
+    # Removes the local_id 0009 and 0010 added, which clashes with the one FairDM's
+    # measurement 0008 adds to the base class if that runs first on an empty database.
+    run_before = [
+        ("measurement", "0008_measurement_local_id"),
+    ]
+
     operations = [
         migrations.RemoveIndex(
             model_name="parentheatflow",

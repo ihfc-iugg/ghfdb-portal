@@ -1,7 +1,5 @@
 """Project settings: wires fairdm, then applies project-specific overrides."""
 
-import os
-
 import fairdm
 
 fairdm.setup(
@@ -31,13 +29,3 @@ EASY_ICONS["svg"]["icons"]["ihfc"] = "ihfc.svg"
 CSRF_TRUSTED_ORIGINS = [
     f"https://{domain}" for domain in globals().get("ALLOWED_HOSTS", [])
 ]
-
-
-# A second connection, used only to migrate an empty database into for testing
-# without touching the developer's own; inert unless MIGRATION_CHECK_DATABASE
-# is set, which only tests/test_migrations.py does (#173).
-if os.environ.get("MIGRATION_CHECK_DATABASE"):
-    DATABASES["migration_check"] = {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.environ["MIGRATION_CHECK_DATABASE"],
-    }

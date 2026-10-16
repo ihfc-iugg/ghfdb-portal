@@ -295,8 +295,6 @@ class HeatFlow(Measurement):
             models.Index(fields=["T_score"]),
             models.Index(fields=["TC_score"]),
         ]
-        # A CheckConstraint on uncertainty is not usable with Quantity fields on SQLite;
-        # the field's own validators enforce the same non-negative rule instead.
         constraints: list[models.BaseConstraint] = []
 
     @cached_property
@@ -803,8 +801,6 @@ class ThermalGradient(ScoredMeasurement, Measurement):
             models.Index(fields=["score"]),
             models.Index(fields=["number"]),
         ]
-        # A CheckConstraint on corrected_uncertainty is not usable with Quantity fields on
-        # SQLite; the field's own validators enforce the same non-negative rule instead.
         constraints: list[models.BaseConstraint] = [
             models.CheckConstraint(
                 condition=models.Q(number__gt=0) | models.Q(number__isnull=True),
@@ -976,8 +972,6 @@ class IntervalConductivity(ScoredMeasurement, Measurement):
             models.Index(fields=["number"]),
             models.Index(fields=["score"]),
         ]
-        # CheckConstraints on value and uncertainty are not usable with Quantity fields on
-        # SQLite; the fields' own validators enforce the same rules instead.
         constraints: list[models.BaseConstraint] = []
 
     def __str__(self):
