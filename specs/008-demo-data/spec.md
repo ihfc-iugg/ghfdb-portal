@@ -29,7 +29,7 @@ compose file that no longer exist (#255).
 This feature adds one command that fills a development database with **demo data**: generated
 records shaped like real heat flow data, marked so nobody mistakes them for real ones. The
 developer chooses how much they get, from a handful of datasets to a database the size of the
-published GHFDB, and a large run still finishes in minutes. The data covers every state a person
+published GHFDB, and it stays practical to run at the large end. The data covers every state a person
 working on the portal needs to see, and it reads through the site and through both families of API
 endpoints exactly as imported data would.
 
@@ -94,41 +94,12 @@ size and keep the same proportions between models.
 
 1. **Given** an empty database, **When** the developer runs the command with a small size,
    **Then** the number of datasets matches that size.
-2. **Given** an empty database, **When** the developer runs it at the largest documented size,
-   **Then** it completes within the time stated in SC-002.
-3. **Given** a size of zero or a negative number, **When** the command runs, **Then** it refuses
+2. **Given** a size of zero or a negative number, **When** the command runs, **Then** it refuses
    with a message naming the accepted range and writes nothing.
 
 ---
 
-### User Story 3 — A developer gets the same data again (Priority: P2)
-
-A developer passes a seed and gets exactly the same records as anyone else who used that seed and
-size: the same sites, the same values and the same datasets. Running the command again replaces the
-demo data it made earlier. Records the developer created themselves, such as an uploaded dataset or
-their own account, are left alone.
-
-**Why this priority**: a bug report that says "seed 42, size 50, the third dataset" can be followed
-by somebody else. Without this, demo data is a one-off nobody can reproduce.
-
-**Independent Test**: load demo data twice with the same seed into two databases and compare them
-record for record. Then add a record by hand, rerun the command, and assert the hand-made record
-survives while the demo data is replaced, not duplicated.
-
-**Acceptance Scenarios**:
-
-1. **Given** two empty databases, **When** the command runs on each with the same seed and size,
-   **Then** they hold the same records with the same values.
-2. **Given** demo data is loaded, **When** the command runs again, **Then** the old demo data is
-   gone and the new demo data replaces it with no duplicates.
-3. **Given** a dataset that is not demo data exists, **When** the command runs, **Then** that
-   dataset and everything in it is unchanged.
-4. **Given** demo data is loaded, **When** the developer asks the command to remove it, **Then** it
-   is deleted and nothing else is.
-
----
-
-### User Story 4 — A developer sees the portal in every state (Priority: P2)
+### User Story 3 — A developer sees the portal in every state (Priority: P2)
 
 A developer signs in and finds the portal the way it looks in use, with every state present:
 
@@ -160,41 +131,11 @@ every workflow role are present. Then assert that each development account can s
 
 ---
 
-### User Story 5 — A developer outside the portal starts it with data and calls the API (Priority: P2)
-
-A developer building something that reads the portal's API, who has never worked on the portal
-itself, follows one page of documentation. They start the development stack with one command that
-loads demo data at a size they set, the first time the stack starts. A development account with an
-API token is ready, so they can call every endpoint the portal offers, the relational ones and the
-GHFDB-shaped ones, straight away.
-
-**Why this priority**: this is the "external projects" half of the request. It depends on Stories 1
-to 4 being in place, so it comes after them.
-
-**Independent Test**: start the stack from a clean checkout with a demo-data size set, then assert
-that the API returns demo records to a request carrying the development token, and that a second
-start loads nothing again.
-
-**Acceptance Scenarios**:
-
-1. **Given** a clean checkout and an empty database volume, **When** the developer starts the stack
-   with a demo-data size set, **Then** the database holds demo data at that size once it is up.
-2. **Given** the stack was started with demo data once, **When** it is started again, **Then** the
-   existing data is kept and nothing is loaded twice.
-3. **Given** demo data is loaded, **When** the developer calls a relational endpoint and a GHFDB
-   endpoint with the development API token, **Then** both return demo records.
-4. **Given** the developer starts the stack with no demo-data size set, **When** it comes up,
-   **Then** no demo data is loaded.
-
----
-
 ### Edge Cases
 
 - **A database already holding real data.** The command adds demo data beside it and never changes
   or deletes anything that is not demo data. Demo literature uses identifiers that cannot collide
   with a real publication.
-- **An interrupted run.** A run that fails or is stopped part way leaves no half-built dataset
-  behind. Running again from the start gives a complete result.
 - **Very large sizes.** Memory use stays bounded however large the size is. The command never holds
   the whole database in memory at once.
 - **A size that does not divide evenly.** Proportions round, and the dataset count is exact.
@@ -231,56 +172,35 @@ start loads nothing again.
 - **FR-009**: The command MUST accept a size that sets the number of datasets. The counts of every
   other model MUST scale from it in fixed proportions.
 - **FR-010**: The command MUST refuse a size outside its documented range and write nothing.
-- **FR-011**: The command MUST accept a seed. The same seed and size MUST produce the same records
-  and values.
-- **FR-012**: Every demo record MUST be identifiable as demo data, and demo literature MUST use
+- **FR-011**: Every demo record MUST be identifiable as demo data, and demo literature MUST use
   identifiers that cannot belong to a real publication.
-- **FR-013**: Running the command again MUST replace earlier demo data, without duplicating it.
-- **FR-014**: The command MUST be able to remove all demo data without loading more.
-- **FR-015**: The command MUST never change or delete a record that is not demo data.
-- **FR-016**: The command MUST refuse to run in production and write nothing there.
-- **FR-017**: A failed or interrupted run MUST leave no partially built dataset.
-- **FR-018**: Demo data MUST include public and private datasets, and assessments in every state of
+- **FR-012**: The command MUST never change or delete a record that is not demo data.
+- **FR-013**: Demo data MUST include public and private datasets, and assessments in every state of
   the assessment workflow.
-- **FR-019**: Demo data MUST include contributors in every workflow role. FairDM's development
+- **FR-014**: Demo data MUST include contributors in every workflow role. FairDM's development
   accounts, plus a Data Assessor and a Data Curator account, MUST exist and be able to sign in.
-- **FR-020**: Memory use MUST stay bounded as the size grows.
-- **FR-021**: The development stack MUST load demo data on its first start when a demo-data size is
-  set, and MUST NOT load it again on later starts or when no size is set.
-- **FR-022**: A development account MUST be given an API token that authenticates against every
-  API endpoint the portal offers.
-- **FR-023**: The documentation MUST include a page for developers outside the portal. It covers
-  starting the stack with demo data, signing in, and calling the API with the development token.
-- **FR-024**: The `create_fixtures` and `savedemo` invoke tasks MUST be replaced by a task that runs
-  the new command.
+- **FR-015**: Records MUST be written in bulk, and memory use MUST stay bounded as the size grows.
 
 ### Story mapping
 
 | Story | Requirements |
 |---|---|
-| US-1 | FR-001 – FR-008, FR-016 |
-| US-2 | FR-009, FR-010, FR-020 |
-| US-3 | FR-011 – FR-015, FR-017 |
-| US-4 | FR-018, FR-019 |
-| US-5 | FR-021 – FR-024 |
+| US-1 | FR-001 – FR-008, FR-011, FR-012 |
+| US-2 | FR-009, FR-010, FR-015 |
+| US-3 | FR-013, FR-014 |
 
 ### Key Entities
 
 - **Demo data**: generated records shaped like real heat flow data, identifiable as generated, and
   never published as real. New term for CONTEXT.md.
 - **Size**: the one number a developer sets, counted in datasets.
-- **Seed**: the number that makes a run reproducible.
 
 ## Success Criteria
 
 - **SC-001**: A developer with an empty, migrated database has browsable demo data after running one
   command with no options.
-- **SC-002**: A run producing at least 100,000 children completes in under ten minutes on the
-  development server, against the PostGIS version the pinned FairDM declares.
-- **SC-003**: The same seed and size produce databases that compare equal record for record.
-- **SC-004**: A developer outside the project, following only the new documentation page, gets
-  demo data back from an API call within one start of the stack.
-- **SC-005**: Rerunning the command never changes the count of non-demo records.
+- **SC-002**: The largest documented size produces at least 100,000 children.
+- **SC-003**: Running the command never changes the count of non-demo records.
 
 ## Clarifications
 
@@ -291,11 +211,8 @@ start loads nothing again.
   the release's licence or attribution.
 - Q: What does the size count? → A: Datasets, because one publication is one dataset and that is
   the unit a person browses. Every other count follows from it.
-- Q: What is the largest size the command must handle quickly? → A: At least 100,000 children, a
-  little above the published database's scale, so large-database behaviour shows at the largest
-  documented size.
-- Q: Does rerunning add to the old demo data or replace it? → A: Replace. Adding would make the
-  seed meaningless and grow the database without bound.
+- Q: How large must the largest size be? → A: At least 100,000 children, a little above the
+  published database's scale, so large-database behaviour shows. No run time is set.
 - Q: Do the generic records belong in FairDM? → A: Not in this feature. It builds on FairDM's
   existing development-account commands and keeps its own generation in the portal. Whether
   FairDM should generate generic projects, datasets and contributors for every portal is a
@@ -304,6 +221,4 @@ start loads nothing again.
 ## Assumptions
 
 - The database has been migrated before the command runs. The command does not migrate.
-- The development stack is the one in `docker-compose.yml`. Other ways of running the portal locally
-  can call the command directly.
 - FairDM's development-account commands stay available at the pinned FairDM version.

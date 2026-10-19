@@ -22,9 +22,3 @@ distributions that resemble the published database, which keeps it realistic.
 Sites, intervals and children vary too much per publication to make a good unit. A dataset is what
 a person browses and what the assessment workflow acts on, so it is the number a developer can
 reason about.
-
-## Demo data replaces itself, and only itself
-
-Adding to earlier demo data would make the seed meaningless. Wiping the database would destroy
-records a developer made by hand. So the command marks what it creates and removes only what is
-marked.
