@@ -115,3 +115,11 @@ defect is reported, not fixed.
 **Revisit if:** `clean()` is fixed to compare magnitudes.
 
 **ADR:** none — a testing workaround for an existing defect, reported separately.
+
+## D9. The pin move was made without a dispatched implementer
+
+**Decision:** T001, moving the `fairdm-docs` pin, was done by the orchestrator directly.
+
+**Why:** a one-line change to `pyproject.toml` and a relock, with no design content.
+
+**ADR:** none — a process note.
