@@ -88,3 +88,26 @@ them. The command refuses to run outside development, so the accounts only reach
 a copied database.
 
 **ADR:** none — local to this feature.
+
+## D7. The generator leaves temperatures and shut-in times that need an offset unit empty
+
+**Decision:** `DemoGraph` sets no `surface_temperature`, `temperature_top` or `temperature_bottom`.
+Shut-in time is set on borehole gradients only.
+
+**Why:** a stored gradient holding a temperature in °C makes `full_clean()` raise `ValueError`
+("Boolean value of PlainQuantity with offset unit is ambiguous") while Django validates the
+gradient's check constraint, so US1 scenario 2 could not be shown. The quality scheme reads none of
+these fields.
+
+**Revisit if:** the framework's quantity fields handle offset units in constraint validation.
+
+## D8. A stored conductivity is checked without `IntervalConductivity.clean()`
+
+**Decision:** the generator's tests run `clean_fields`, `validate_constraints` and
+`validate_unique` on conductivities, and assert the 0.1 to 50 range and the uncertainty rule directly.
+
+**Why:** `IntervalConductivity.clean()` compares a pint quantity with a float and raises `ValueError`
+on any record that has been saved and read back. The model is outside this story's scope, so the
+defect is reported, not fixed.
+
+**Revisit if:** `clean()` is fixed to compare magnitudes.
