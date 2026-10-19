@@ -91,7 +91,9 @@ For each site, `build()` does the following:
    - `type` and an `elevation` in the region's range
    - `explo_method` and `environment` from the region
    - `name` and `local_id` of the form `DEMO-<dataset pk>-<n>`
-2. **Create the parent.** `ParentHeatFlow.objects.create(sample=site, ...)`.
+2. **Draw the children's values first**, then create the parent with
+   `ParentHeatFlow.objects.create(sample=site, value=<mean of the relevant children>, ...)`, so the
+   parent is saved once with a value.
 3. **Create the children.** The number of children is taken from `CHILDREN_CYCLE = (1, 2, 3, 4)`
    by the site's position, which gives 50 per dataset. For each child:
    - Create a `HeatFlowInterval` with `site=site`. A borehole interval's top is at 0–1,500 m and it
@@ -101,7 +103,9 @@ For each site, `build()` does the following:
      `value` equal to the gradient times the conductivity.
    - Set `is_relevant` true, except on a parent with three or more children, where the last child
      is not relevant.
-4. **Set the parent's value** to the mean of its relevant children.
+
+Every multi-table record (site, interval, parent, child, gradient, conductivity) gets
+`dataset=self.dataset` and a name of the form `DEMO-<dataset pk>-<n>`.
 
 The values are drawn as research R3's table sets out, each rounded to the field's decimal places:
 
@@ -144,12 +148,14 @@ anything is written (FR-010).
    `CommandError` and write nothing (FR-016).
 2. **Load the vocabularies and licences.** `call_command("preload")`, then
    `call_command("seed_licenses")` (FR-006).
-3. **Create the accounts.** `call_command("create_dev_accounts")`, then `ensure_demo_accounts()`,
-   which creates or reuses the fleet accounts:
-   - `regular.user`, `staff.user` (`is_staff`) and `super.user` (superuser), all `@example.com`
-   - `data-assessor.user@example.com`, in the `Data Assessor` group
-   - `data-curator.user@example.com`, in the `Data Curator` group. That group is created by
-     `PortalRoles.reconcile()` on `post_migrate`, and by the conftest in tests.
+3. **Create the accounts.** `call_command("create_dev_accounts")`, then `ensure_demo_accounts()`.
+   It builds the accounts from FairDM's own constants in
+   `fairdm.management.commands.create_dev_accounts`: `EXAMPLE_ACCOUNTS` (regular, staff and super
+   user at `example.com`), the `data-curator.user` entry of `PROFILE_ACCOUNTS`, and
+   `DEV_ACCOUNT_PASSWORD`. The one new literal is `data-assessor.user@example.com`. Groups are looked
+   up with `Group.objects.get(name=...)` using `DATA_ASSESSOR_GROUP` and `DATA_CURATOR_GROUP` from
+   `review.permissions`, never created: the migration and `PortalRoles.reconcile()` create them,
+   and the test fixtures do so in tests.
 
    Each account has the password `password` and a confirmed `EmailAddress`, as
    `create_dev_accounts` sets them. An existing account is reused with its groups added and nothing
@@ -174,19 +180,24 @@ anything is written (FR-010).
       `<given>.<family>@demo.example` and is reused across datasets with `get_or_create`. Credit
       them with `Contribution.add_to`, with the roles `Creator`, `ContactPerson` and
       `DataCollector`.
-   6. Create the `Review`:
+   6. Credit the demo assessor on the dataset exactly as `ReviewCreateView.form_valid` does
+      (`review/views.py:172-175`): `Crediting(dataset).make_creator(assessor, roles=["DataManager"])`
+      and `dataset.add_contributor(assessor, with_roles=["DataCollector"])`. Without it no
+      sign-in can see a private demo dataset.
+   7. Create the `Review`:
       - `uploaded_by` is the demo assessor, who is also in `reviewers`
       - `state` is the state chosen in step 1
       - for CHANGES_REQUESTED and COMPLETE, `decided_by` is the demo curator and `decided_at` is
         now. CHANGES_REQUESTED also gets a `decision_comment`.
       - the start and end dates are set
-   7. Build the graph:
+   8. Build the graph:
       `DemoGraph(dataset, rng, next_ghfdb_id if state == COMPLETE else None).build()`.
 6. **Report.** Print one line per dataset at verbosity 2, and the totals of datasets, sites and
    children at the end.
 
-No `is_demo(dataset)` helper is needed. The mark is `options__demo_data=True`, and the tests query
-it directly.
+No `is_demo(dataset)` helper is needed. Demo datasets are
+`Dataset.all_objects.filter(options__demo_data=True)`. `Dataset.objects` hides private datasets, so
+every count goes through `all_objects`.
 
 ### Documentation
 
@@ -199,6 +210,8 @@ it directly.
 - the accounts and their password
 - that each run adds to what is already there
 - that it refuses outside development
+- that the demo accounts are for development only and must be removed before a copy of the database
+  leaves development
 
 It is linked from the Development toctree in `docs/index.md` and from step 2a of
 `docs/development/getting-started.md`. `CONTEXT.md` gets an entry for **demo data**.

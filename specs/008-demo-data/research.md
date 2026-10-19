@@ -130,8 +130,10 @@ The command only adds records, so nothing that is not demo data is ever touched 
 - Every account has the password `password`.
 - Email addresses are confirmed the way `create_dev_accounts` confirms them.
 
-FairDM's `seed_contributors`, `seed_overviews` and `seed_profiles` live in its `demo` package, which
-this portal does not install, so they are not used.
+FairDM's `seed_contributors`, `seed_overviews` and `seed_profiles` live in its `demo` package. The
+package is installed with FairDM but is not an installed app in this portal, so those commands are
+not available and are not used. Its account list and password are, as constants in
+`fairdm.management.commands.create_dev_accounts`.
 
 ## R7. Production refusal
 
@@ -201,7 +203,7 @@ data into a dataset. `ghfdb` is not involved, and standing constraint 4 is untou
 | contributor credit | 3 | FairDM `Contribution.add_to` |
 | assessment states | 2 | `review.states.States` |
 | random values | 4 | standard library `random` |
-| demo account creation (example.com set) | 7 | new code, a few lines following `create_dev_accounts` |
+| demo account creation (example.com set) | 3 | FairDM constants `EXAMPLE_ACCOUNTS`, `PROFILE_ACCOUNTS`, `DEV_ACCOUNT_PASSWORD`; one new address |
 | heat flow graph generator | 7 | new code: `heat_flow/demo.py` |
 | regional boxes | 7 | new code: a table in `heat_flow/demo.py` |
 | the command | 7 | new code: `review/management/commands/seed_demo_data.py` |

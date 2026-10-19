@@ -6,7 +6,8 @@
 
 **Tests**: required. Every task writes its failing test first. Test modules mirror the source module
 they exercise and group tests in `Test<Subject>` classes. The command's tests run at the smallest
-size (4 datasets) and share one seeded database per test class where the test only reads.
+size (4 datasets), seeded in a function-scoped fixture. Every dataset count uses
+`Dataset.all_objects`, because `Dataset.objects` hides private datasets.
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -33,8 +34,8 @@ recompute, and every concept field holds a concept of its vocabulary.
 - [ ] T002 [US1] `project/heat_flow/demo.py` per plan.md › *Design* › `demo.py`: `Region`,
       `REGIONS`, `SITES_PER_DATASET`, `CHILDREN_CYCLE`, `DemoGraph`. Tests in
       `tests/test_heat_flow/test_demo.py`:
-      - `TestRegions`: every environment and exploration method is a vocabulary value, and the
-        bounds are valid
+      - `TestRegions`: every environment and exploration method is a vocabulary value, the bounds
+        are valid, and about 40 % of the regions are marine
       - `TestDemoGraph`, building one graph into a `DatasetFactory` dataset:
         - every model has rows
         - every multi-table record passes `full_clean()`, and every child's value equals its
@@ -47,6 +48,10 @@ recompute, and every concept field holds a concept of its vocabulary.
           none when it is `None`
         - building a second graph raises no coordinate collision, and a forced collision is
           redrawn
+        - every generated quantity lies within its range in research R3 (one parametrised test)
+        - every correction's status is accepted by `save()` for its type, and no child has a type
+          twice
+        - every multi-table record carries the graph's dataset
 - [ ] T003 [US1] `project/review/management/commands/seed_demo_data.py`, steps 1, 2, 4, 5 and 6 of
       plan.md › *Design* › the command, with the size fixed at the default. Steps 3 (accounts) and
       the state plan belong to US3. Until then every dataset is COMPLETE, uploaded and decided by a
@@ -55,17 +60,14 @@ recompute, and every concept field holds a concept of its vocabulary.
       - `TestSeedDemoData`:
         - a run at the default size on an empty database fills every heat flow model, and every
           dataset is marked `options__demo_data=True`
-        - every child and parent `quality_scheme` equals `SCHEME_REVISION`, and the scores equal
+        - every child and parent `quality_scheme` equals `SCHEME_REVISION`, and the scores of
+          children, parents, gradients and conductivities (score, missing mark, scheme) equal
           those after `call_command("refresh_quality", "--all")`
+        - with the `Concept` rows deleted inside the test's own transaction, the command loads the
+          vocabularies and every concept field of the seeded records is populated
         - each dataset has its literature, with a `10.5072` DOI and a `demo-` key, and its
           contributors
-        - a dataset that existed before the run is unchanged afterwards
-      - `TestSeedDemoDataExport`: the GHFDB flat rows for the seeded published data pass the
-        import's own checks. Export a published demo dataset through the published-structure
-        resources and run `import_ghfdb_template(..., check_only=True)` on the result, following
-        `tests/test_ghfdb/test_resources/test_roundtrip.py`. If the roundtrip needs a file format
-        the export does not produce, assert `full_clean()` on every exported record and record the
-        reason in `decisions.md`.
+        - a private dataset that existed before the run is unchanged afterwards
       - `TestSeedDemoDataEnvironment`: with `DJANGO_ENV` resolved to `production` the command
         raises `CommandError` and the count of every model is unchanged
 - [ ] T004 [US1] Documentation: `docs/development/demo-data.md` per plan.md › *Documentation*,
@@ -114,7 +116,9 @@ adds beside the first.
         - the curator sees at least one assessment waiting for a decision (`is_data_curator` and
           `Review.objects.filter(state=AWAITING_DECISION)`)
       - `TestSeedDemoDataVisibility`: an anonymous request to the dataset list page and to the
-        API's dataset endpoint returns only the public demo datasets
+        API's dataset endpoint returns only the public demo datasets, and the demo assessor can
+        see its private demo datasets
+      Account tests request the `data_assessor_group` and `data_curator_group` fixtures.
       Update `docs/development/demo-data.md` with the accounts and what each sees.
 
 ## Dependencies

@@ -54,3 +54,37 @@ the password `password`.
 FairDM's `fairdm.org` accounts are kept because the spec names them.
 
 **ADR:** pending S5 verdict.
+
+## D4. An exported file is not re-imported in the tests
+
+**Decision:** US1 scenario 2 ("every row passes the checks an import applies") is shown by
+`full_clean()` on every multi-table record and by the correction-status check, not by exporting and
+re-importing.
+
+**Why:** the published-structure export is not the upload template. It lacks nine columns the import
+requires and carries five it rejects, so a round trip cannot run. The instance checks are what the
+import applies to each record.
+
+**ADR:** none — a testing choice local to this feature.
+
+## D5. "In bulk" covers the plain models
+
+**Decision:** FR-015's "records MUST be written in bulk" is met by bulk-writing corrections, probe
+metadata and the concept rows. Sites, intervals, parents, children, gradients and conductivities are
+saved one at a time.
+
+**Why:** those six are multi-table models, which Django cannot bulk-insert (research R1). To be
+raised with Sam at the merge gate.
+
+**ADR:** none — follows from Django's limits, recorded in research R1.
+
+## D6. Demo accounts are not caught by the deploy check
+
+**Decision:** documented, not built. The development docs say the demo accounts must be removed
+before a copy of the database leaves development.
+
+**Why:** FairDM's deploy check watches its own account lists, and `data-assessor.user` is not in
+them. The command refuses to run outside development, so the accounts only reach production through
+a copied database.
+
+**ADR:** none — local to this feature.
