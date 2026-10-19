@@ -1,0 +1,19 @@
+name: Image
+
+# Builds the root Dockerfile on every pull request and checks that it serves. A published release
+# also pushes the image to ghcr.io/ihfc-iugg/ghfdb-portal as the version and `latest`, which is
+# what deploy/docker-compose.yml runs.
+
+on:
+  pull_request:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  call-image:
+    uses: FAIR-DM/shared/.github/workflows/image.yml@v0.1.0

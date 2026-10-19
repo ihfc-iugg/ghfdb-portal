@@ -1,6 +1,6 @@
 # The development image: Python, uv, and the GDAL, GEOS and PROJ libraries GeoDjango needs.
 # The source is mounted at /app by docker-compose.yml, so the image holds the dependencies only.
-# The production image is deploy/Dockerfile.
+# The production image is the Dockerfile at the repository root.
 FROM python:3.13-slim
 
 # git because fairdm, fairdm-geo and fairdm-discussions are all VCS dependencies.

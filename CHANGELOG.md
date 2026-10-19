@@ -18,6 +18,22 @@ Releases before that used `<year>.<release>` and are recorded in the
 
 ### Changed
 
+- CI, the image build and the release flow call the reusable workflows in
+  `FAIR-DM/shared` v0.1.0. The tests, the browser tests and the code quality
+  checks run in the FairDM development image against the PostGIS version the
+  pinned FairDM declares. The required checks are now `call-tests / Tests`,
+  `call-browser-tests / Browser tests`, `call-build / Code Quality`,
+  `call-build / Security Scan` and `call-image / Build image`. The package
+  build check is gone: the portal ships as an image, not a package.
+- The production image is built from a `Dockerfile` at the repository root on
+  the FairDM base images, which include GDAL, GEOS and PROJ, instead of
+  `deploy/Dockerfile` on `python:3.13-slim`. It serves on port 8000 rather than
+  5000, and `deploy/docker-compose.yml` routes to 8000. `refresh_quality` now
+  runs after `collectstatic`, as a start step.
+- FairDM moves to commit `1c2e0819`, which declares the base image and PostGIS
+  version a portal runs on. django-compressor and django-libsass are no longer
+  installed, so the image no longer runs `manage.py compress` on start.
+
 - Development and the test suite run on PostgreSQL 16 with PostGIS 3.5, as
   production does, and FairDM moves to commit `c9c12314`, which requires PostGIS
   in every environment and installs GeoDjango. `docker compose up` starts

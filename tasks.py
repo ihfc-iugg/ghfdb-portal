@@ -168,9 +168,16 @@ def update_deps(c):
 
 
 @task
-def build_image(c):
-    """Build the project's production Docker image."""
-    c.run("docker build -f deploy/Dockerfile -t ghcr.io/ihfc-iugg/ghfdb-portal .")
+def build_image(c, image_version):
+    """Build the project's production Docker image.
+
+    ``image_version`` is the base image version the pinned FairDM declares as
+    ``image`` under ``[tool.fairdm.platform]`` in its pyproject.toml.
+    """
+    c.run(
+        f"docker build --build-arg FAIRDM_IMAGE_VERSION={image_version}"
+        " -t ghcr.io/ihfc-iugg/ghfdb-portal ."
+    )
 
 
 @task

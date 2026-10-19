@@ -1,5 +1,5 @@
 # Relaxations belong to an environment module, never to the shared one.
-# `deploy/Dockerfile` sets ``DJANGO_SETTINGS_MODULE=config.settings`` alongside
+# The production image sets ``DJANGO_SETTINGS_MODULE=config.settings`` alongside
 # ``DJANGO_ENV=production``, so ``config/settings.py`` is loaded on the public site as
 
 import ast

@@ -30,7 +30,7 @@ services:
       - traefik.http.routers.django.tls=true                   # Enable TLS for this service
       - traefik.http.routers.django.tls.certresolver=sectigo  # Specify the certificate resolver
       - traefik.http.routers.django.tls.domains[0].main=portal.heatflow.world
-      - traefik.http.services.django.loadbalancer.server.port=5000
+      - traefik.http.services.django.loadbalancer.server.port=8000
       - traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken
       - com.centurylinklabs.watchtower.enable=true
   postgres:
