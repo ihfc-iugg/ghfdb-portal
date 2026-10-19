@@ -2,7 +2,7 @@
   "feature": "008-demo-data",
   "branch": "008-demo-data",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "IMPLEMENT",
+  "state": "CONVERGE",
   "state_history": [
     {
       "state": "GATE_SPEC",
@@ -28,6 +28,11 @@
       "state": "IMPLEMENT",
       "at": "2026-10-19T22:53:12Z",
       "note": "design review applied (1 high, 6 medium, 7 low as plan edits); plan gate open"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-19T23:52:25Z",
+      "note": "US1-US3 accepted; independent verify green"
     }
   ],
   "gates": {
@@ -54,7 +59,7 @@
       "priority": "P1",
       "issue": null,
       "worktree": null,
-      "status": "todo",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
@@ -81,7 +86,7 @@
       "priority": "P1",
       "issue": 280,
       "worktree": null,
-      "status": "todo",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
@@ -136,7 +141,7 @@
       "priority": "P1",
       "issue": 281,
       "worktree": null,
-      "status": "todo",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
@@ -162,7 +167,7 @@
       "priority": "P2",
       "issue": 282,
       "worktree": null,
-      "status": "todo",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
@@ -186,7 +191,7 @@
   ],
   "budgets": {
     "converge_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 2
     },
     "review_cycles": {
@@ -198,7 +203,7 @@
       "max": 1
     },
     "tokens": {
-      "used": 0,
+      "used": 28.18,
       "max": 120
     }
   },

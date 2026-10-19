@@ -18,7 +18,7 @@ size (4 datasets), seeded in a function-scoped fixture. Every dataset count uses
 
 ## Phase 0: Foundational
 
-- [ ] T001 Move the `fairdm-docs` pin to `847fee1a27862e20c1fac1f7e4c9a4d2100473cd` in
+- [x] T001 Move the `fairdm-docs` pin to `847fee1a27862e20c1fac1f7e4c9a4d2100473cd` in
       `pyproject.toml`, `uv lock`, `uv sync --python 3.13 --group docs`, and build the docs with
       `uv run sphinx-build -b html docs docs/_build/html -W --keep-going`. Done directly by the
       orchestrator (one line, no design content).
@@ -31,7 +31,7 @@ size (4 datasets), seeded in a function-scoped fixture. Every dataset count uses
 every heat flow model holds records, every record passes `full_clean`, every score equals a fresh
 recompute, and every concept field holds a concept of its vocabulary.
 
-- [ ] T002 [US1] `project/heat_flow/demo.py` per plan.md › *Design* › `demo.py`: `Region`,
+- [x] T002 [US1] `project/heat_flow/demo.py` per plan.md › *Design* › `demo.py`: `Region`,
       `REGIONS`, `SITES_PER_DATASET`, `CHILDREN_CYCLE`, `DemoGraph`. Tests in
       `tests/test_heat_flow/test_demo.py`:
       - `TestRegions`: every environment and exploration method is a vocabulary value, the bounds
@@ -52,7 +52,7 @@ recompute, and every concept field holds a concept of its vocabulary.
         - every correction's status is accepted by `save()` for its type, and no child has a type
           twice
         - every multi-table record carries the graph's dataset
-- [ ] T003 [US1] `project/review/management/commands/seed_demo_data.py`, steps 1, 2, 4, 5 and 6 of
+- [x] T003 [US1] `project/review/management/commands/seed_demo_data.py`, steps 1, 2, 4, 5 and 6 of
       plan.md › *Design* › the command, with the size fixed at the default. Steps 3 (accounts) and
       the state plan belong to US3. Until then every dataset is COMPLETE, uploaded and decided by a
       plain demo user. Tests in
@@ -70,7 +70,7 @@ recompute, and every concept field holds a concept of its vocabulary.
         - a private dataset that existed before the run is unchanged afterwards
       - `TestSeedDemoDataEnvironment`: with `DJANGO_ENV` resolved to `production` the command
         raises `CommandError` and the count of every model is unchanged
-- [ ] T004 [US1] Documentation: `docs/development/demo-data.md` per plan.md › *Documentation*,
+- [x] T004 [US1] Documentation: `docs/development/demo-data.md` per plan.md › *Documentation*,
       the Development toctree entry in `docs/index.md`, a line in step 2a of
       `docs/development/getting-started.md`, and a **Demo data** entry in `CONTEXT.md`. The docs
       build with `-W` stays green.
@@ -82,7 +82,7 @@ recompute, and every concept field holds a concept of its vocabulary.
 **Independent test**: seed at 4 and at 8 and compare counts; seed twice and check the second run
 adds beside the first.
 
-- [ ] T005 [US2] `--size` with `DEFAULT_SIZE`, `MIN_SIZE`, `MAX_SIZE` (plan.md › the command ›
+- [x] T005 [US2] `--size` with `DEFAULT_SIZE`, `MIN_SIZE`, `MAX_SIZE` (plan.md › the command ›
       Options). Tests in the command's test module, `TestSeedDemoDataSize`:
       - size 4 gives exactly 4 demo datasets, 80 sites and 200 children
       - size 8 doubles each count
@@ -100,7 +100,7 @@ adds beside the first.
 
 **Independent test**: seed at size 4 and count by state and visibility, sign in as each account.
 
-- [ ] T006 [US3] Step 3 (accounts) and the state plan of plan.md › the command. Tests in the
+- [x] T006 [US3] Step 3 (accounts) and the state plan of plan.md › the command. Tests in the
       command's test module:
       - `TestSeedDemoDataStates`:
         - size 4 holds one assessment in each of the four states
