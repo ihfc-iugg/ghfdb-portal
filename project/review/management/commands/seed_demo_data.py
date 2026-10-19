@@ -29,6 +29,8 @@ from review.models import Review
 from review.states import States
 
 DEFAULT_SIZE = 20
+MIN_SIZE = 4
+MAX_SIZE = 200
 
 #: The assessment states in the order the first datasets of a run take them.
 STATE_PLAN = (
@@ -59,9 +61,26 @@ class Command(BaseCommand):
         "heat flow records, to a development database. Refuses to run in production."
     )
 
+    def add_arguments(self, parser):
+        """Add the number of datasets to create."""
+        parser.add_argument(
+            "--size",
+            type=int,
+            default=DEFAULT_SIZE,
+            help=(
+                f"The number of datasets to create, from {MIN_SIZE} to {MAX_SIZE}"
+                f" (default {DEFAULT_SIZE}). Four is the least that holds every assessment state."
+            ),
+        )
+
     def handle(self, *args, **options):
-        """Refuse production, load the vocabularies and licences, then create the datasets."""
+        """Refuse production or a size out of range, load the vocabularies and licences, then create the datasets."""
         self._refuse_production()
+        size = options["size"]
+        if not MIN_SIZE <= size <= MAX_SIZE:
+            raise CommandError(
+                f"--size must be from {MIN_SIZE} to {MAX_SIZE} datasets, not {size}."
+            )
         call_command("preload")
         call_command("seed_licenses")
 
@@ -70,7 +89,7 @@ class Command(BaseCommand):
         uploader = self._demo_person("Demo", "User", claimed=True)
         totals = {"datasets": 0, "sites": 0, "children": 0}
 
-        for position in range(DEFAULT_SIZE):
+        for position in range(size):
             with transaction.atomic(), Recalculation.deferred():
                 dataset = self._create_dataset(
                     position, rng, next_ghfdb_id, uploader=uploader

@@ -1,5 +1,5 @@
 # Tests for ``project/review/management/commands/seed_demo_data.py``. The command runs at
-# the smallest size: DEFAULT_SIZE is patched down to it.
+# the smallest size.
 
 from io import StringIO
 
@@ -18,6 +18,7 @@ from heat_flow.models import (
     ProbeMetadata,
     ThermalGradient,
 )
+from heat_flow.demo import CHILDREN_CYCLE, SITES_PER_DATASET
 from heat_flow.quality import SCHEME_REVISION
 from literature.models import LiteratureItem
 from research_vocabs.models import Concept
@@ -55,8 +56,12 @@ CONCEPT_FIELDS = (
 )
 
 
-def seed():
-    call_command("seed_demo_data", stdout=StringIO())
+def seed(*options):
+    call_command(
+        "seed_demo_data",
+        *(options or ("--size", str(SMALLEST_SIZE))),
+        stdout=StringIO(),
+    )
 
 
 def demo_datasets():
@@ -87,11 +92,6 @@ def stored_scores():
         )
         for pk, *row in model.objects.values_list("pk", *fields)
     }
-
-
-@pytest.fixture(autouse=True)
-def smallest_default_size(monkeypatch):
-    monkeypatch.setattr(seed_demo_data, "DEFAULT_SIZE", SMALLEST_SIZE)
 
 
 @pytest.fixture
@@ -139,7 +139,9 @@ class TestSeedDemoData:
             assert literature.citation_key.startswith("demo-")
             assert "10.5072/" in literature.get_doi()
             assert DatasetLiteratureRelation.objects.filter(
-                dataset=dataset, literature_item=literature, relationship_type="IsCitedBy"
+                dataset=dataset,
+                literature_item=literature,
+                relationship_type="IsCitedBy",
             ).exists()
             assert dataset.contributors.exists()
 
@@ -173,3 +175,84 @@ class TestSeedDemoDataEnvironment:
             seed()
 
         assert counts == {model: model.objects.count() for model in counts}
+
+
+def totals():
+    return (
+        demo_datasets().count(),
+        HeatFlowSite.objects.count(),
+        HeatFlow.objects.count(),
+    )
+
+
+class TestSeedDemoDataSize:
+    def test_the_smallest_size_gives_four_datasets_of_twenty_sites_and_fifty_children(
+        self, db
+    ):
+        seed("--size", "4")
+
+        assert totals() == (4, 80, 200)
+
+    def test_double_the_size_doubles_every_count(self, db):
+        seed("--size", "8")
+
+        assert totals() == (8, 160, 400)
+
+    @pytest.mark.parametrize("size", ["0", "-1", "3", "201"])
+    def test_a_size_outside_the_range_is_refused_and_nothing_is_written(self, db, size):
+        counts = {
+            model: model.objects.count()
+            for model in (Dataset, LiteratureItem, Review, Concept, HeatFlowSite)
+        }
+
+        with pytest.raises(CommandError) as refusal:
+            seed("--size", size)
+
+        assert str(seed_demo_data.MIN_SIZE) in str(refusal.value)
+        assert str(seed_demo_data.MAX_SIZE) in str(refusal.value)
+        assert counts == {model: model.objects.count() for model in counts}
+
+    def test_a_second_run_adds_beside_the_first(self, db):
+        seed("--size", "4")
+        first = {
+            dataset.pk: Dataset.all_objects.values().get(pk=dataset.pk)
+            for dataset in demo_datasets()
+        }
+
+        seed("--size", "4")
+
+        assert totals() == (8, 160, 400)
+        for pk, row in first.items():
+            assert Dataset.all_objects.values().get(pk=pk) == row
+
+    def test_coordinates_stay_distinct_across_runs(self, db):
+        seed("--size", "4")
+        seed("--size", "4")
+
+        points = [
+            (site.location.x, site.location.y) for site in HeatFlowSite.objects.all()
+        ]
+        assert len(set(points)) == len(points) == 160
+
+    def test_published_identifiers_stay_unique_across_runs(self, db):
+        seed("--size", "4")
+        seed("--size", "4")
+
+        parents = list(
+            ParentHeatFlow.objects.exclude(ghfdb_id=None).values_list(
+                "ghfdb_id", flat=True
+            )
+        )
+        children = list(
+            HeatFlow.objects.exclude(ghfdb_id=None).values_list("ghfdb_id", flat=True)
+        )
+        assert parents and children
+        assert len(set(parents)) == len(parents)
+        assert len(set(children)) == len(children)
+
+    def test_the_largest_size_gives_at_least_ten_thousand_children(self):
+        children_per_dataset = (
+            SITES_PER_DATASET * sum(CHILDREN_CYCLE) / len(CHILDREN_CYCLE)
+        )
+
+        assert seed_demo_data.MAX_SIZE * children_per_dataset >= 10_000

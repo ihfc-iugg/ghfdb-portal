@@ -28,9 +28,20 @@ not sampled from the published release.
 
    Add `--verbosity 2` to print one line per dataset as it is written.
 
+## Choose how much data you get
+
+Pass `--size` to set the number of datasets, from 4 to 200. The default is 20.
+
+```shell
+uv run python manage.py seed_demo_data --size 8
+```
+
+Four is the least that holds every assessment state. The largest size, 200 datasets, holds 10,000
+children. A size outside the range stops the command before it writes anything.
+
 ## What a run creates
 
-Each run adds 20 datasets. Every dataset holds:
+Each run adds the number of datasets you ask for. Every dataset holds:
 
 - a literature item with a test DOI (prefix `10.5072`, which no real publication can have) and a
   citation key that starts with `demo-`

@@ -19,3 +19,10 @@ Did: added docs/development/demo-data.md, the Development toctree entry, a point
 Verified: uv sync --group docs; sphinx-build -E -b html docs <outdir> -W --keep-going reports 32 warnings, all in files this task did not touch (ROADMAP.md, GOALS.md, constitution/, guides/ and others), none in the new page; pre-commit green.
 Next: T005 the --size option.
 Watch: the -W docs build exits 1 on those existing warnings, so it cannot be used as a gate for this task.
+
+## 2026-10-19T23:26:01Z · Implementer US1-US3 · T005
+
+Did: added --size (DEFAULT_SIZE 20, MIN_SIZE 4, MAX_SIZE 200) with a CommandError naming the range before anything is written; the tests now pass --size explicitly; documented the option.
+Verified: uv run pytest tests/test_review/test_management -n0 -> 21 passed; pre-commit and mypy project green.
+Next: T006 accounts and the state plan.
+Watch: none.
