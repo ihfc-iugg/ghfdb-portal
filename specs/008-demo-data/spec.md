@@ -28,8 +28,8 @@ compose file that no longer exist (#255).
 
 This feature adds one command that fills a development database with **demo data**: generated
 records shaped like real heat flow data, marked so nobody mistakes them for real ones. The
-developer chooses how much they get, from a handful of datasets to a database the size of the
-published GHFDB, and it stays practical to run at the large end. The data covers every state a person
+developer chooses how much they get, from a handful of datasets up to about 10,000 children in one
+run, and can run it again to add more. The data covers every state a person
 working on the portal needs to see, and it reads through the site and through both families of API
 endpoints exactly as imported data would.
 
@@ -80,12 +80,12 @@ the following:
 ### User Story 2 — A developer chooses how much data they get (Priority: P1)
 
 A developer passes a size to the command. A small size gives a few datasets, enough to page through
-a list by hand. A large one gives a database the size of the published GHFDB, enough to see how a
-page, a filter or an API endpoint behaves under real load. One number sets the scale. Everything
+a list by hand. A large one gives around 10,000 children, enough to see how a page, a filter or an
+API endpoint behaves with a realistic amount of data. A developer who needs more runs the command
+again, and each run adds to the demo data already there. One number sets the scale. Everything
 else, from sites per dataset to children per parent, grows with it in realistic proportion.
 
-**Why this priority**: the largest database is where slow queries and oversized responses show up,
-and an external consumer needs it to see what the real API will return.
+**Why this priority**: a larger database is where slow queries and oversized responses show up.
 
 **Independent Test**: run the command at two sizes and assert that the record counts scale with the
 size and keep the same proportions between models.
@@ -94,7 +94,9 @@ size and keep the same proportions between models.
 
 1. **Given** an empty database, **When** the developer runs the command with a small size,
    **Then** the number of datasets matches that size.
-2. **Given** a size of zero or a negative number, **When** the command runs, **Then** it refuses
+2. **Given** demo data is already loaded, **When** the developer runs the command again, **Then**
+   the new demo data is added beside the old, and every site still has its own coordinate pair.
+3. **Given** a size of zero or a negative number, **When** the command runs, **Then** it refuses
    with a message naming the accepted range and writes nothing.
 
 ---
@@ -140,7 +142,7 @@ every workflow role are present. Then assert that each development account can s
   the whole database in memory at once.
 - **A size that does not divide evenly.** Proportions round, and the dataset count is exact.
 - **Coordinates.** Every site gets a distinct coordinate pair, on land and at sea, in the
-  proportions the real database has. No two demo sites share a coordinate pair, at any size.
+  proportions the real database has. No two demo sites share a coordinate pair, at any size or across repeated runs.
 - **Quality scores.** The portal computes them after the records are written. Supplied quality is
   never generated.
 
@@ -180,13 +182,15 @@ every workflow role are present. Then assert that each development account can s
 - **FR-014**: Demo data MUST include contributors in every workflow role. FairDM's development
   accounts, plus a Data Assessor and a Data Curator account, MUST exist and be able to sign in.
 - **FR-015**: Records MUST be written in bulk, and memory use MUST stay bounded as the size grows.
+- **FR-016**: Running the command again MUST add demo data beside what earlier runs made, without
+  colliding with it.
 
 ### Story mapping
 
 | Story | Requirements |
 |---|---|
 | US-1 | FR-001 – FR-008, FR-011, FR-012 |
-| US-2 | FR-009, FR-010, FR-015 |
+| US-2 | FR-009, FR-010, FR-015, FR-016 |
 | US-3 | FR-013, FR-014 |
 
 ### Key Entities
@@ -199,7 +203,7 @@ every workflow role are present. Then assert that each development account can s
 
 - **SC-001**: A developer with an empty, migrated database has browsable demo data after running one
   command with no options.
-- **SC-002**: The largest documented size produces at least 100,000 children.
+- **SC-002**: The largest documented size produces about 10,000 children in one run.
 - **SC-003**: Running the command never changes the count of non-demo records.
 
 ## Clarifications
@@ -211,8 +215,8 @@ every workflow role are present. Then assert that each development account can s
   the release's licence or attribution.
 - Q: What does the size count? → A: Datasets, because one publication is one dataset and that is
   the unit a person browses. Every other count follows from it.
-- Q: How large must the largest size be? → A: At least 100,000 children, a little above the
-  published database's scale, so large-database behaviour shows. No run time is set.
+- Q: How large must the largest size be? → A: About 10,000 children in one run. A developer who
+  needs more runs the command several times, and each run adds to the last. No run time is set.
 - Q: Do the generic records belong in FairDM? → A: Not in this feature. It builds on FairDM's
   existing development-account commands and keeps its own generation in the portal. Whether
   FairDM should generate generic projects, datasets and contributors for every portal is a
