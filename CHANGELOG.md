@@ -30,6 +30,10 @@ Releases before that used `<year>.<release>` and are recorded in the
   `deploy/Dockerfile` on `python:3.13-slim`. It serves on port 8000 rather than
   5000, and `deploy/docker-compose.yml` routes to 8000. `refresh_quality` now
   runs after `collectstatic`, as a start step.
+- Development and CI run on PostgreSQL 17 with PostGIS 3.5, the version FairDM
+  `1c2e0819` declares. Production still runs 16 until its database is upgraded.
+  A local database created on 16 has to be dumped and restored, or recreated,
+  to start on 17.
 - FairDM moves to commit `1c2e0819`, which declares the base image and PostGIS
   version a portal runs on. django-compressor and django-libsass are no longer
   installed, so the image no longer runs `manage.py compress` on start.
