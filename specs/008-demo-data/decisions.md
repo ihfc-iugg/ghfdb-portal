@@ -22,3 +22,35 @@ distributions that resemble the published database, which keeps it realistic.
 Sites, intervals and children vary too much per publication to make a good unit. A dataset is what
 a person browses and what the assessment workflow acts on, so it is the number a developer can
 reason about.
+
+## D1. The command lives in `review`, the graph generator in `heat_flow`
+
+**Decision:** `project/heat_flow/demo.py` builds the heat flow graph for a dataset, and
+`project/review/management/commands/seed_demo_data.py` composes datasets, literature, assessments,
+accounts and the graph.
+
+**Why:** `heat_flow` owns the models it generates, and an assessment is the `review` app's. Putting
+the command in `heat_flow` would make the core model app import the workflow app. The reverse,
+`review` importing `heat_flow`, matches what an assessment is for. `ghfdb` stays out of it.
+
+**ADR:** pending S5 verdict.
+
+## D2. The smallest size is four datasets
+
+**Decision:** `--size` accepts 4 to 200.
+
+**Why:** FR-013 asks for every assessment state in demo data, and there are four. A smaller run could
+not hold them all. 200 datasets of 50 children is the 10,000 Sam set as the target for one run.
+
+**ADR:** pending S5 verdict.
+
+## D3. Development accounts follow the fleet's `example.com` shape
+
+**Decision:** besides FairDM's `create_dev_accounts`, the command creates `regular.user`,
+`staff.user`, `super.user`, `data-assessor.user` and `data-curator.user` at `example.com`, all with
+the password `password`.
+
+**Why:** these are the sign-ins every development server of Sam's uses, so nobody has to look them up.
+FairDM's `fairdm.org` accounts are kept because the spec names them.
+
+**ADR:** pending S5 verdict.
