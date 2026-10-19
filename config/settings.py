@@ -19,7 +19,6 @@ DJANGO_SETUP_TOOLS = globals().get("DJANGO_SETUP_TOOLS", {})
 
 # Only required during staging: no migrations are committed to the fairdm repo.
 DJANGO_SETUP_TOOLS[""]["always_run"].insert(0, ("makemigrations", "--no-input"))
-DJANGO_SETUP_TOOLS[""]["always_run"].append(("compress",))
 
 MVP_CONFIG["layout"]["sidebar"]["title"] = "Heatflow.world"
 

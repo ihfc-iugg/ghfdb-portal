@@ -170,15 +170,13 @@ class TestEveryScoreReadsBackItsRevision:
 
 
 class TestTheDeployedContainer:
-    def test_it_refreshes_quality_after_migrating_and_before_serving(self):
-        dockerfile = (
-            Path(__file__).resolve().parents[4] / "deploy" / "Dockerfile"
-        ).read_text()
+    # The FairDM base image's entrypoint migrates, collects static files, runs the start steps
+    # in /docker-entrypoint.d, then serves. A start step therefore refreshes after migrating and
+    # before serving.
+    def test_it_refreshes_quality_as_a_start_step(self):
+        root = Path(__file__).resolve().parents[4]
+        dockerfile = (root / "Dockerfile").read_text()
+        steps = (root / "deploy" / "start").iterdir()
 
-        command = dockerfile[dockerfile.index("CMD ") :]
-
-        assert (
-            command.index("migrate")
-            < command.index("refresh_quality")
-            < command.index("gunicorn")
-        )
+        assert "deploy/start/ /docker-entrypoint.d/" in dockerfile
+        assert any("manage.py refresh_quality" in step.read_text() for step in steps)

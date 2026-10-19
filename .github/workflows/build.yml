@@ -2,23 +2,10 @@ name: Build
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - 'project/**'
-      - 'config/**'
-      - 'pyproject.toml'
-      - 'uv.lock'
-      - '.pre-commit-config.yaml'
-      - '.github/workflows/build.yml'
-      - '.github/workflows/build-checks.yml'
-  # No paths filter on pull_request: these checks are ruleset-required, and a
-  # path-filtered required check never reports on out-of-scope PRs, blocking merge.
+    branches: [main]
   pull_request:
-    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 jobs:
   call-build:
-    uses: ./.github/workflows/build-checks.yml
-    secrets: inherit
+    uses: FAIR-DM/shared/.github/workflows/build-checks.yml@v0.1.0

@@ -2,7 +2,7 @@
 
 [![Tests](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/tests.yml/badge.svg)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/tests.yml)
 [![Build](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/build.yml/badge.svg)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/build.yml)
-[![Publish](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/publish.yml/badge.svg)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/publish.yml)
+[![Image](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/image.yml/badge.svg)](https://github.com/ihfc-iugg/ghfdb-portal/actions/workflows/image.yml)
 [![Coverage](https://codecov.io/gh/ihfc-iugg/ghfdb-portal/branch/main/graph/badge.svg)](https://codecov.io/gh/ihfc-iugg/ghfdb-portal)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Licence](https://img.shields.io/github/license/ihfc-iugg/ghfdb-portal)](https://github.com/ihfc-iugg/ghfdb-portal/blob/main/LICENSE)

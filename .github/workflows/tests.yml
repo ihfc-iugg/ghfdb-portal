@@ -2,25 +2,17 @@ name: Tests
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - 'project/**'
-      - 'config/**'
-      - 'tests/**'
-      - 'templates/**'
-      - 'pyproject.toml'
-      - 'uv.lock'
-      - '.github/workflows/tests.yml'
-      - '.github/workflows/test-suite.yml'
-  # No paths filter on pull_request: these checks are ruleset-required, and a
-  # path-filtered required check never reports on out-of-scope PRs, blocking merge.
+    branches: [main]
   pull_request:
-    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 jobs:
   call-tests:
-    uses: ./.github/workflows/test-suite.yml
+    uses: FAIR-DM/shared/.github/workflows/tests.yml@v0.1.0
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  call-browser-tests:
+    uses: FAIR-DM/shared/.github/workflows/browser-tests.yml@v0.1.0
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

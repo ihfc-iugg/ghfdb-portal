@@ -1,0 +1,4 @@
+#!/bin/sh
+# Score every record the current quality scheme has not scored yet (deploy/README.md).
+set -eu
+exec python manage.py refresh_quality

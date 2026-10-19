@@ -11,8 +11,8 @@ package index.
 
 ## Stack & commands
 
-- **Stack:** Python 3.13, Django 5.x on the FairDM framework, uv-managed, PostgreSQL 16 with
-  PostGIS 3.5 in every environment
+- **Stack:** Python 3.13, Django 5.x on the FairDM framework, uv-managed, PostgreSQL with
+  PostGIS in every environment, at the version the pinned FairDM declares (17 with PostGIS 3.5 today)
 - **Development stack:** `docker compose up` starts PostGIS, Redis, the development server on
   port 8000 and a Celery worker. `docker compose up postgres redis` starts the databases alone,
   for running Django and the tests on the host.
@@ -66,29 +66,32 @@ GHFDB structure itself is defined in published literature held under
 
 Required status checks (exact names, as they report on a pull request):
 
+- `call-tests / Tests`
+- `call-browser-tests / Browser tests`
 - `call-build / Code Quality`
 - `call-build / Security Scan`
-- `call-build / Build Package`
-- `call-tests / Test Python 3.13, Django 5.2`
+- `call-image / Build image`
 
-The `call-build` and `call-tests` prefixes come from the job names in `build.yml` and `tests.yml`.
-Branch protection has to name the prefixed context — the bare job name matches nothing.
+The prefixes come from the job names in the caller workflows. Branch protection has to name the
+prefixed context — the bare job name matches nothing.
 
-CI calls the shared workflows from `django-mvp/shared`, pinned to a tag, for everything except the
-tests and the build checks. Those two need PostGIS and GDAL, which the shared workflows do not
-provide, so the repository keeps its own copies and calls them as reusable workflows, which keeps
-the required check names:
+CI, the image build and the release flow call the reusable workflows in `FAIR-DM/shared`, pinned
+to a tag. They run on the platform the pinned FairDM declares under `[tool.fairdm.platform]` in
+its `pyproject.toml`: the FairDM base image version and the PostGIS version. Each also reports a
+`Platform` check, which reads those versions and fails when the pinned FairDM declares none.
+Moving the FairDM pin moves the test database, the development image the checks run in, and the
+production image together.
 
 | Workflow | Runs |
 |---|---|
-| `build.yml` → `build-checks.yml` | code quality, security scan, package build, on every pull request; Code Quality installs GDAL, as FairDM's does |
-| `tests.yml` → `test-suite.yml` | the suite against a `postgis/postgis:16-3.5` service container, on every pull request |
-| `docs.yml` | the Sphinx build, on demand |
-| `publish.yml` | the release image |
-| `prepare-release.yml` / `tag-release.yml` | the version-bump and tagging flow |
-| `auto-merge-dependabot.yml` | dependency updates, gated on the required checks |
+| `tests.yml` | the suite without browser tests (`-m "not e2e"`) and the browser tests (`-m e2e`), each against a PostGIS service, on every pull request |
+| `build.yml` | code quality and the security scan, on every pull request |
+| `image.yml` | builds the root `Dockerfile`, starts it and waits for a 200, on every pull request; pushes it to GHCR on a release |
+| `prepare-release.yml` / `tag-release.yml` | the calendar-versioned release flow |
+| `docs.yml` | the Sphinx build, on demand (from `django-mvp/shared`) |
+| `auto-merge-dependabot.yml` | dependency updates, gated on the required checks (from `django-mvp/shared`) |
 
-There is no deployment workflow. The image published by `publish.yml` is picked up on the server
+There is no deployment workflow. The image published by `image.yml` is picked up on the server
 by Watchtower, and `deploy/README.md` describes the path a release takes from a tag to the
 running site.
 

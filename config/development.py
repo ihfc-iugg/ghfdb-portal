@@ -2,7 +2,7 @@
 
 The framework resolves this module by name beside ``config/settings.py`` and
 applies it after its own layers, so nothing here can reach a deployed site. The
-deployed image sets ``DJANGO_ENV=production`` (``deploy/Dockerfile``), and the
+deployed image sets ``DJANGO_ENV=production`` (the FairDM base image), and the
 relaxations below exist purely so a development server is usable from another
 device on the local network.
 """

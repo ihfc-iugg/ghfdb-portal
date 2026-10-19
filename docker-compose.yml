@@ -8,8 +8,9 @@ name: ghfdb-portal
 
 services:
   postgres:
-    # Major version 16, the same as production, so a dump from one restores into the other.
-    image: postgis/postgis:16-3.5
+    # The PostGIS version the pinned FairDM declares under [tool.fairdm.platform], which is what
+    # CI tests on. Move it with the FairDM pin.
+    image: postgis/postgis:17-3.5
     # The test suite runs one worker per core, and each worker creates the whole schema
     # in a single transaction. On a machine with many cores that exhausts the default
     # lock table (64 locks per connection) with "out of shared memory".
