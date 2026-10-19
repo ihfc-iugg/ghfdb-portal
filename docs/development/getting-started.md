@@ -67,6 +67,8 @@ The portal runs on PostgreSQL with the PostGIS extension, in development as in p
 
   `stack.development.env` points Django at the database on `localhost:5432`. A `POSTGRES_*` variable already set in your environment takes precedence over the file.
 
+  To fill an empty database with demo datasets, follow [](demo-data.md).
+
 ## Step 3: Create a New Branch for Your Contribution
 
 1. Run the following command to create a new branch:

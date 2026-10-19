@@ -183,6 +183,17 @@ correction was needed and not applied".
 Instrument parameters for a marine probe deployment: probe type, length, penetration depth and
 tilt. Implemented by `ProbeMetadata`, attached to an interval.
 
+### Demo data
+
+Generated records for a development database, added by `manage.py seed_demo_data`
+(`project/review/management/commands/seed_demo_data.py`, with the heat flow graph built by
+`project/heat_flow/demo.py`). Each demo **dataset** holds `options["demo_data"] = True`, a literature
+item with a `10.5072` test DOI, and everything beneath it, so one mark identifies all of it. The
+command refuses to run outside development and only ever adds records.
+
+Never call it "fixtures" or "seed data": fixtures are files Django loads, and these are generated.
+Demo data is not the published GHFDB release and carries none of its licence or attribution.
+
 ## Quality
 
 ### U-score, M-score, perturbation flags

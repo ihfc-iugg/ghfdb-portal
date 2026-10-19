@@ -118,8 +118,16 @@
         },
         {
           "id": "T004",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "uv run sphinx-build -E -b html docs <outdir> -W --keep-going (exit 1: 32 existing warnings, none in touched files)"
+            ],
+            "code": [
+              "docs/development/demo-data.md:1"
+            ]
+          }
         }
       ]
     },
