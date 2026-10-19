@@ -18,7 +18,11 @@ RUN uv sync --locked --no-dev --no-editable
 # Run on the runtime image, which has neither. Its entrypoint migrates, collects static files,
 # runs the start steps in /docker-entrypoint.d, then serves with gunicorn on $PORT (8000).
 FROM ${FAIRDM_IMAGE}:${FAIRDM_IMAGE_VERSION}
-ENV GUNICORN_CMD_ARGS="--workers 4"
+# The base image sets the first two already. They are repeated because the site depends on them:
+# config/development.py, which relaxes the host and cookie settings, must never load here.
+ENV DJANGO_ENV=production \
+    DJANGO_SETTINGS_MODULE=config.settings \
+    GUNICORN_CMD_ARGS="--workers 4"
 COPY --from=build /opt/venv /opt/venv
 COPY --chmod=755 deploy/start/ /docker-entrypoint.d/
 COPY --chown=fairdm:fairdm . /app

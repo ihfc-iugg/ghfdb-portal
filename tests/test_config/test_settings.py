@@ -40,9 +40,7 @@ class TestSettingsEnvironmentSeparation:
     def test_the_dockerfile_still_loads_the_shared_module_in_production(self):
         # If this stops being true, the separation above is protecting nothing and the
         # reasoning needs revisiting rather than the test deleting.
-        dockerfile = (
-            Path(__file__).resolve().parents[2] / "deploy" / "Dockerfile"
-        ).read_text()
+        dockerfile = (Path(__file__).resolve().parents[2] / "Dockerfile").read_text()
         assert "DJANGO_SETTINGS_MODULE=config.settings" in dockerfile
         assert "DJANGO_ENV=production" in dockerfile
 
