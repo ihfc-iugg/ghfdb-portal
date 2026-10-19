@@ -102,8 +102,19 @@
         },
         {
           "id": "T003",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 3,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_management/test_commands/test_seed_demo_data.py::TestSeedDemoDataEnvironment"
+            ],
+            "commands": [
+              "uv run pytest tests/test_review/test_management -n0 (11 passed, exit 0)"
+            ],
+            "code": [
+              "project/review/management/commands/seed_demo_data.py:60"
+            ]
+          }
         },
         {
           "id": "T004",
