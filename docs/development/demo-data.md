@@ -54,6 +54,23 @@ About 40 % of the sites are marine and measured with a probe. The rest are on la
 boreholes. Gradients, conductivities, corrections, probe metadata and controlled vocabulary values
 are all filled in, and the quality scores are computed by the portal when each dataset is written.
 
+The heat flow records come from `DemoGraph` in `heat_flow/demo.py`, which builds the records
+beneath one dataset. A test that needs a realistic graph rather than a single record can use it
+directly:
+
+```python
+import random
+
+from heat_flow.demo import DemoGraph
+from heat_flow.signals import Recalculation
+
+with Recalculation.deferred():
+    DemoGraph(dataset, random.Random(1)).build(sites=4)
+```
+
+Wrap the build in `Recalculation.deferred()` so the quality scores are computed once, when the block
+ends.
+
 The command loads the controlled vocabularies and the recommended licences first, so it works on a
 freshly migrated database.
 
