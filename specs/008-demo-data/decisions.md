@@ -33,7 +33,7 @@ accounts and the graph.
 the command in `heat_flow` would make the core model app import the workflow app. The reverse,
 `review` importing `heat_flow`, matches what an assessment is for. `ghfdb` stays out of it.
 
-**ADR:** pending S5 verdict.
+**ADR:** none — where one command lives; the app boundary it follows is already recorded in CONTEXT.md's standing constraints.
 
 ## D2. The smallest size is four datasets
 
@@ -42,7 +42,7 @@ the command in `heat_flow` would make the core model app import the workflow app
 **Why:** FR-013 asks for every assessment state in demo data, and there are four. A smaller run could
 not hold them all. 200 datasets of 50 children is the 10,000 Sam set as the target for one run.
 
-**ADR:** pending S5 verdict.
+**ADR:** none — a bound on one command's option, documented with the command.
 
 ## D3. Development accounts follow the fleet's `example.com` shape
 
@@ -53,7 +53,7 @@ the password `password`.
 **Why:** these are the sign-ins every development server of Sam's uses, so nobody has to look them up.
 FairDM's `fairdm.org` accounts are kept because the spec names them.
 
-**ADR:** pending S5 verdict.
+**ADR:** none — local to the development accounts, documented on the demo data page.
 
 ## D4. An exported file is not re-imported in the tests
 
@@ -101,6 +101,8 @@ these fields.
 
 **Revisit if:** the framework's quantity fields handle offset units in constraint validation.
 
+**ADR:** none — a limit of what this generator fills, local to this feature.
+
 ## D8. A stored conductivity is checked without `IntervalConductivity.clean()`
 
 **Decision:** the generator's tests run `clean_fields`, `validate_constraints` and
@@ -111,3 +113,5 @@ on any record that has been saved and read back. The model is outside this story
 defect is reported, not fixed.
 
 **Revisit if:** `clean()` is fixed to compare magnitudes.
+
+**ADR:** none — a testing workaround for an existing defect, reported separately.
