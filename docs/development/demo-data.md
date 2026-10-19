@@ -57,8 +57,38 @@ are all filled in, and the quality scores are computed by the portal when each d
 The command loads the controlled vocabularies and the recommended licences first, so it works on a
 freshly migrated database.
 
-At this stage every dataset is public and its assessment is complete. Both are decided by one demo
-user.
+The first four datasets of every run take the four assessment states in turn: described, awaiting
+a decision, changes requested and complete. After that, four datasets in five are complete.
+
+- A complete dataset is public and published, and its parents and children carry published
+  identifiers, so the dataset list and the published-structure API serve them.
+- Every other dataset is private and unpublished, and its records carry no identifier.
+- The demo Data Assessor uploads every assessment and is credited on every dataset. The demo Data
+  Curator decides the assessments that are complete or have changes requested.
+
+## Sign in
+
+The command creates an account for each role and confirms its email address. Every account uses
+the password `password`.
+
+| Account | What it sees |
+| --- | --- |
+| `data-assessor.user@example.com` | The Data Assessor. Starts and uploads assessments, and opens its private demo datasets. |
+| `data-curator.user@example.com` | The Data Curator. Decides assessments, and has some waiting for a decision. |
+| `regular.user@example.com` | A signed-in user with no role, who sees public datasets only. |
+| `staff.user@example.com` | A staff user. |
+| `super.user@example.com` | A superuser. |
+
+The command also creates the five accounts FairDM ships for development, at `fairdm.org`. They
+are described in FairDM's documentation. A rerun reuses every account and adds no second one.
+
+The dataset list page leaves private datasets out for every visitor, so reach a private dataset
+from the assessments list, or through its own page.
+
+```{warning}
+These accounts share a published password. They are for development only. Remove them before a
+copy of the development database leaves your machine.
+```
 
 ## Run it again
 

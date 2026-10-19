@@ -26,3 +26,10 @@ Did: added --size (DEFAULT_SIZE 20, MIN_SIZE 4, MAX_SIZE 200) with a CommandErro
 Verified: uv run pytest tests/test_review/test_management -n0 -> 21 passed; pre-commit and mypy project green.
 Next: T006 accounts and the state plan.
 Watch: none.
+
+## 2026-10-19T23:36:51Z · Implementer US1-US3 · T006
+
+Did: the command now calls create_dev_accounts, creates the example.com accounts (regular, staff, super, data-assessor, data-curator) with confirmed addresses and the role groups, credits the assessor on every dataset as the review view does, and uses the assessor and curator as uploader and decider. Documented the accounts and states.
+Verified: uv run pytest tests/test_review/test_management -n0 -k "States or Accounts or Visibility" -> 23 passed, 1 failed on a wrong assumption (the list page hides private datasets for everyone); the test now opens each private dataset page and then 3 Visibility tests passed. pre-commit and mypy project green.
+Next: full verify and the report.
+Watch: FairDM dataset list reads Dataset.objects, which excludes private datasets for every user, so a contributor reaches a private dataset through its own page.

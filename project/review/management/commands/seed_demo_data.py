@@ -13,19 +13,27 @@ from typing import Any, cast
 
 from django.apps import apps
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.db.models import Max
 from django.utils import timezone
 from fairdm.contrib.contributors.models import Contribution
+from fairdm.contrib.contributors.services.crediting import Crediting
 from fairdm.core.dataset.models import Dataset, DatasetLiteratureRelation
+from fairdm.management.commands.create_dev_accounts import (
+    DEV_ACCOUNT_PASSWORD,
+    EXAMPLE_ACCOUNTS,
+    PROFILE_ACCOUNTS,
+)
 from heat_flow.demo import DemoGraph
 from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
 from heat_flow.signals import Recalculation
 from literature.models import LiteratureItem
 
 from review.models import Review
+from review.permissions import DATA_ASSESSOR_GROUP, DATA_CURATOR_GROUP
 from review.states import States
 
 DEFAULT_SIZE = 20
@@ -38,6 +46,24 @@ STATE_PLAN = (
     States.AWAITING_DECISION,
     States.CHANGES_REQUESTED,
     States.COMPLETE,
+)
+
+#: The assessment roles' accounts, in the shape of ``EXAMPLE_ACCOUNTS``, beside the group each
+#: one joins. The curator is the entry ``seed_profiles`` would add.
+DATA_ASSESSOR_ACCOUNT = (
+    "data-assessor.user@example.com",
+    "Data Assessor",
+    "User",
+    False,
+    False,
+)
+DATA_CURATOR_ACCOUNT = next(
+    account for account in PROFILE_ACCOUNTS if account[0].startswith("data-curator.")
+)
+DEMO_ACCOUNTS = (
+    *((account, None) for account in EXAMPLE_ACCOUNTS),
+    (DATA_ASSESSOR_ACCOUNT, DATA_ASSESSOR_GROUP),
+    (DATA_CURATOR_ACCOUNT, DATA_CURATOR_GROUP),
 )
 
 DEMO_EMAIL_DOMAIN = "demo.example"
@@ -86,13 +112,14 @@ class Command(BaseCommand):
 
         rng = random.Random()  # noqa: S311 - demo values, not secrets
         next_ghfdb_id = itertools.count(self._next_ghfdb_id()).__next__
-        uploader = self._demo_person("Demo", "User", claimed=True)
+        call_command("create_dev_accounts")
+        assessor, curator = self._ensure_accounts()
         totals = {"datasets": 0, "sites": 0, "children": 0}
 
         for position in range(size):
             with transaction.atomic(), Recalculation.deferred():
                 dataset = self._create_dataset(
-                    position, rng, next_ghfdb_id, uploader=uploader
+                    position, rng, next_ghfdb_id, assessor=assessor, curator=curator
                 )
             sites = HeatFlowSite.objects.filter(dataset=dataset).count()
             children = HeatFlow.objects.filter(dataset=dataset).count()
@@ -142,7 +169,42 @@ class Command(BaseCommand):
         return STATE_PLAN[position % len(STATE_PLAN)]
 
     @staticmethod
-    def _demo_person(given: str, family: str, *, claimed: bool = False) -> Any:
+    def _ensure_accounts() -> tuple[Any, Any]:
+        """Create the sign-in accounts the demo data uses, reusing any that exist.
+
+        An account that already exists keeps everything but its groups. The groups are never
+        created here: the migrations and the portal roles do that.
+
+        Returns:
+            The demo Data Assessor and the demo Data Curator.
+        """
+        Person = get_user_model()
+        EmailAddress = apps.get_model("account", "EmailAddress")
+        accounts: dict[str, Any] = {}
+        for (email, first, last, is_staff, is_superuser), group in DEMO_ACCOUNTS:
+            person: Any = Person.objects.filter(email__iexact=email).first()
+            if person is None:
+                person = Person(
+                    email=email,
+                    first_name=first,
+                    last_name=last,
+                    is_staff=is_staff,
+                    is_superuser=is_superuser,
+                    is_active=True,
+                    is_claimed=True,
+                )
+                person.set_password(DEV_ACCOUNT_PASSWORD)
+                person.save()
+            EmailAddress.objects.update_or_create(
+                user=person, email=email, defaults={"verified": True, "primary": True}
+            )
+            if group:
+                person.groups.add(Group.objects.get(name=group))
+            accounts[email] = person
+        return accounts[DATA_ASSESSOR_ACCOUNT[0]], accounts[DATA_CURATOR_ACCOUNT[0]]
+
+    @staticmethod
+    def _demo_person(given: str, family: str) -> Any:
         """Return the demo person with this name, creating them when absent."""
         Person = get_user_model()
         email = f"{given}.{family}@{DEMO_EMAIL_DOMAIN}".lower()
@@ -153,7 +215,7 @@ class Command(BaseCommand):
                 first_name=given,
                 last_name=family,
                 is_active=True,
-                is_claimed=claimed,
+                is_claimed=False,
             )
             person.set_unusable_password()
             person.save()
@@ -165,7 +227,8 @@ class Command(BaseCommand):
         rng: random.Random,
         next_ghfdb_id: Any,
         *,
-        uploader: Any,
+        assessor: Any,
+        curator: Any,
     ) -> Dataset:
         """Create one demo dataset with its literature, contributors, assessment and graph.
 
@@ -173,7 +236,8 @@ class Command(BaseCommand):
             position: The dataset's place in the run.
             rng: The source of every random choice.
             next_ghfdb_id: Returns the next published identifier.
-            uploader: The person who uploaded and decided the assessment.
+            assessor: The Data Assessor who uploaded the assessment and is credited on the dataset.
+            curator: The Data Curator who decides assessments.
 
         Returns:
             The dataset.
@@ -219,14 +283,17 @@ class Command(BaseCommand):
             )
             Contribution.add_to(person, dataset, [role])
 
+        Crediting(dataset).make_creator(assessor, roles=["DataManager"])
+        dataset.add_contributor(assessor, with_roles=["DataCollector"])
+
         today = timezone.now().date().isoformat()
         decided = state in (States.CHANGES_REQUESTED, States.COMPLETE)
         review = Review.objects.create(
             dataset=dataset,
             literature=literature,
-            uploaded_by=uploader,
+            uploaded_by=assessor,
             state=state,
-            decided_by=uploader if decided else None,
+            decided_by=curator if decided else None,
             decided_at=timezone.now() if decided else None,
             decision_comment=(
                 "Please check the conductivity sources."
@@ -236,7 +303,7 @@ class Command(BaseCommand):
             start_date=today,
             end_date=today,
         )
-        review.reviewers.add(uploader)
+        review.reviewers.add(assessor)
 
         DemoGraph(dataset, rng, next_ghfdb_id if complete else None).build()
         return dataset
