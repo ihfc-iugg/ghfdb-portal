@@ -69,7 +69,8 @@ with Recalculation.deferred():
 ```
 
 Wrap the build in `Recalculation.deferred()` so the quality scores are computed once, when the block
-ends.
+ends. `DemoGraph` reads its concepts from the database, so the controlled vocabularies must be loaded
+first (`manage.py preload`, which the test suite runs for you).
 
 The command loads the controlled vocabularies and the recommended licences first, so it works on a
 freshly migrated database.
