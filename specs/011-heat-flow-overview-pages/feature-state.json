@@ -127,8 +127,16 @@
         },
         {
           "id": "T004",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "UV_PROJECT_ENVIRONMENT=<scratch env> uv run --frozen --offline --group docs sphinx-build -E -b html docs <scratch out> (build succeeded, 32 warnings, all in pages this story did not touch); forge verify --steps docs --base origin/main (passed)"
+            ],
+            "code": [
+              "docs/guides/record-pages.md:1"
+            ]
+          }
         }
       ]
     },

@@ -30,3 +30,10 @@ Did: Added the child page's data hooks (`data-heat-flow` on gradient, conductivi
 Verified: `uv run pytest tests/test_templates/test_heatflow_overview.py -q -n0`: red first (28 failed, 7 passed, hooks absent), then 35 passed. Probe: reading the own scores through `child.thermal_gradient` again fails the hidden-gradient test.
 Next: T004, the docs.
 Watch: the moved card tests could not run as written. Their reader needed to be a superuser (the fixtures' datasets are not published), and the `conductivity` fixture passed `location=[]`, a field since renamed `conductivity_location`; both are fixture-only repairs in `tests/test_templates/conftest.py`.
+
+## 2026-10-20T14:23:59Z · Implementer US1 · T004
+
+Did: Wrote `docs/guides/record-pages.md` (the child page section and the developer section: `HeatFlowPage` and its members, the three tags, the template names, the hooks, one example of a type template filling a block) and added it to the guides toctree. `quality-scores.md` now says the card is on the child page and that a hidden gradient or conductivity contributes no score. FS-007's US-5 and FR-018 point at FS-011.
+Verified: Sphinx build succeeded (32 warnings, none in a page this story wrote or edited; the sphinx environment was built offline outside the worktree). `forge verify --steps docs --base origin/main` passed.
+Next: full verify, then the completion report.
+Watch: the sketch's twelve undocumented names are gone; the ported `for_site`, `for_interval`, `for_gradient_or_conductivity` and `for_parent` are documented in the developer section, to be rewritten by their stories.
