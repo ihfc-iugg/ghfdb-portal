@@ -485,3 +485,151 @@ class TestHeatFlowPageForSite:
         with_three = query_count(gather)
 
         assert with_three == with_one
+
+
+def add_users(page_records, dataset, count):
+    """Add ``count`` children that use the gradient and the conductivity of the records."""
+    return [
+        HeatFlowFactory(
+            dataset=dataset,
+            sample=page_records["interval"],
+            thermal_gradient=page_records["gradient"],
+            thermal_conductivity=page_records["conductivity"],
+        )
+        for _ in range(count)
+    ]
+
+
+class TestHeatFlowPageForGradientOrConductivity:
+    @pytest.fixture(params=["gradient", "conductivity"])
+    def measurement(self, request, page_records):
+        return page_records[request.param]
+
+    def test_it_returns_the_interval_and_the_site_the_visitor_may_open(
+        self, page_records, measurement, visitor
+    ):
+        page = HeatFlowPage(measurement, visitor)
+
+        context = page.for_gradient_or_conductivity()
+
+        assert context["interval"] == page_records["interval"]
+        assert context["site"] == page_records["site"]
+        assert context["location"]["visible"] is True
+
+    def test_the_interval_and_site_in_an_unpublished_dataset_are_not_returned(
+        self, page_records, measurement, hide, visitor
+    ):
+        hide(page_records["interval"])
+        hide(page_records["site"])
+
+        page = HeatFlowPage(measurement, visitor)
+        context = page.for_gradient_or_conductivity()
+
+        assert context["interval"] is None
+        assert context["site"] is None
+        assert context["location"]["visible"] is False
+
+    def test_it_returns_the_children_that_use_the_measurement(
+        self, page_records, published_dataset, measurement, visitor
+    ):
+        (other,) = add_users(page_records, published_dataset, 1)
+        unrelated = HeatFlowFactory(
+            dataset=published_dataset, sample=page_records["interval"]
+        )
+
+        page = HeatFlowPage(measurement, visitor)
+        children = page.for_gradient_or_conductivity()["children"]
+
+        assert set(children["rows"]) == {page_records["child"], other}
+        assert unrelated not in children["rows"]
+        assert children["total"] == 2
+        assert children["hidden"] == 0
+
+    def test_a_child_in_an_unpublished_dataset_is_counted_and_not_returned(
+        self, page_records, published_dataset, measurement, hide, visitor
+    ):
+        (concealed,) = add_users(page_records, published_dataset, 1)
+        hide(concealed)
+
+        page = HeatFlowPage(measurement, visitor)
+        children = page.for_gradient_or_conductivity()["children"]
+
+        assert children["rows"] == [page_records["child"]]
+        assert children["hidden"] == 1
+
+    def test_a_member_is_given_the_unpublished_child(
+        self, page_records, published_dataset, measurement, hide, member
+    ):
+        (concealed,) = add_users(page_records, published_dataset, 1)
+        hide(concealed)
+
+        page = HeatFlowPage(measurement, member)
+        children = page.for_gradient_or_conductivity()["children"]
+
+        assert concealed in children["rows"]
+        assert children["hidden"] == 0
+
+    def test_it_cuts_the_children_at_the_limit_and_counts_the_rest(
+        self, page_records, published_dataset, measurement, visitor
+    ):
+        add_users(page_records, published_dataset, 2)
+        page = HeatFlowPage(measurement, visitor)
+        page.children_shown = 2
+
+        children = page.for_gradient_or_conductivity()["children"]
+
+        assert len(children["rows"]) == 2
+        assert children["more"] == 1
+        assert children["total"] == 3
+
+    def test_show_all_lifts_the_cut(
+        self, page_records, published_dataset, measurement, visitor
+    ):
+        add_users(page_records, published_dataset, 2)
+        page = HeatFlowPage(measurement, visitor, show_all=True)
+        page.children_shown = 2
+
+        children = page.for_gradient_or_conductivity()["children"]
+
+        assert len(children["rows"]) == 3
+        assert children["more"] == 0
+
+    def test_it_prefetches_the_method_of_each_listed_child(
+        self,
+        page_records,
+        published_dataset,
+        measurement,
+        visitor,
+        django_assert_num_queries,
+    ):
+        add_users(page_records, published_dataset, 2)
+
+        page = HeatFlowPage(measurement, visitor)
+        children = page.for_gradient_or_conductivity()["children"]
+
+        with django_assert_num_queries(0):
+            for child in children["rows"]:
+                list(child.method.all())
+
+    def test_it_makes_the_same_queries_for_one_child_and_for_three(
+        self, page_records, published_dataset, measurement, visitor
+    ):
+        def gather():
+            return HeatFlowPage(measurement, visitor).for_gradient_or_conductivity()
+
+        with_one = query_count(gather)
+        add_users(page_records, published_dataset, 2)
+
+        assert query_count(gather) == with_one
+
+    def test_it_says_whether_the_measurements_score_is_stale(
+        self, measurement, visitor
+    ):
+        type(measurement).objects.filter(pk=measurement.pk).update(
+            quality_scheme="hfqa_tool 0.1"
+        )
+        measurement.refresh_from_db()
+
+        page = HeatFlowPage(measurement, visitor)
+
+        assert page.for_gradient_or_conductivity()["stale"] is True

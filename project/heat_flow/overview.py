@@ -250,16 +250,31 @@ class HeatFlowPage:
         }
 
     def for_gradient_or_conductivity(self):
-        """Gather the children that use a gradient or a conductivity."""
+        """Gather the children that use a gradient or a conductivity.
+
+        The cut at ``children_shown`` is lifted by ``show_all``.
+
+        Returns:
+            The ``interval`` and ``site`` the measurement was made over, each ``None`` when
+            the visitor may not open it, and the site's ``location``. The ``children`` that
+            use the measurement: the ``rows`` to show, the ``total`` the visitor may open,
+            how many ``more`` the cut leaves out and how many are ``hidden`` from the
+            visitor. Also whether the measurement's score is ``stale``.
+        """
         measurement = self.record
         interval = measurement.sample
         site = getattr(interval, "site", None)
+        placed = [record for record in (interval, site) if record is not None]
+        opened, _ = self.split(placed)
+        children = measurement.heat_flow_children.prefetch_related("method").order_by(
+            "pk"
+        )
         return {
-            "interval": interval if self.opens(interval) else None,
-            "site": site if self.opens(site) else None,
+            "interval": interval if interval in opened else None,
+            "site": site if site in opened else None,
             "location": self.site_location(),
             "children": self.listing(
-                measurement.heat_flow_children.order_by("pk"), self.children_shown
+                children, None if self.show_all else self.children_shown
             ),
             "stale": self.is_stale(measurement),
         }
