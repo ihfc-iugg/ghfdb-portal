@@ -183,8 +183,22 @@
         },
         {
           "id": "T007",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_management/test_commands/test_seed_demo_data.py::TestSeedDemoDataPageStates",
+              "tests/test_heat_flow/test_demo.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_review/test_management/test_commands/test_seed_demo_data.py -n 4 (56 passed)",
+              "guard removed: test_a_run_without_the_option_varies_nothing FAILED, restored"
+            ],
+            "code": [
+              "project/review/management/commands/seed_demo_data.py:164",
+              "project/heat_flow/demo.py:1"
+            ]
+          }
         },
         {
           "id": "T008",
