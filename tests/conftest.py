@@ -243,3 +243,36 @@ def empty_database():
     with maintenance.cursor() as cursor:
         cursor.execute(f'DROP DATABASE IF EXISTS "{name}" WITH (FORCE)')
     maintenance.close()
+
+
+@pytest.fixture
+def published_dataset(db):
+    """A dataset anyone may open: public and published."""
+    from fairdm.factories import DatasetFactory
+    from fairdm.utils.choices import Visibility
+
+    return DatasetFactory(visibility=Visibility.PUBLIC, published=True)
+
+
+@pytest.fixture
+def unpublished_dataset(db):
+    """A dataset only its team may open: public but not yet published."""
+    from fairdm.factories import DatasetFactory
+    from fairdm.utils.choices import Visibility
+
+    return DatasetFactory(visibility=Visibility.PUBLIC, published=False)
+
+
+@pytest.fixture
+def member(unpublished_dataset):
+    """A signed-in person who may view the unpublished dataset."""
+    from fairdm.contrib.contributors.choices import ContributionLevel
+    from fairdm.factories import ContributionFactory, PersonFactory
+
+    person = PersonFactory(is_claimed=True, password="test-pass-123")
+    ContributionFactory(
+        contributor=person,
+        content_object=unpublished_dataset,
+        level=ContributionLevel.VIEW,
+    )
+    return person

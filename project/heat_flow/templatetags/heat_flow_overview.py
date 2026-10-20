@@ -14,10 +14,8 @@ register = template.Library()
 def heat_flow_page(context, record):
     """Return what the heat flow page of ``record`` shows beyond FairDM's shared page."""
     request = context["request"]
-    gather = overview.CONTEXT[type(record)]
-    if gather is overview.site_context:
-        return gather(record, request.user, show_all=request.GET.get("intervals") == "all")
-    return gather(record, request.user)
+    show_all = request.GET.get("intervals") == "all"
+    return overview.HeatFlowPage(record, request.user, show_all=show_all).context()
 
 
 @register.filter
@@ -27,7 +25,13 @@ def quantity(value, digits=None):
         return ""
     magnitude = getattr(value, "magnitude", value)
     units = getattr(value, "units", None)
-    number = f"{magnitude:.{digits}f}" if digits is not None else f"{magnitude:g}" if isinstance(magnitude, float) else f"{magnitude}"
+    number = (
+        f"{magnitude:.{digits}f}"
+        if digits is not None
+        else f"{magnitude:g}"
+        if isinstance(magnitude, float)
+        else f"{magnitude}"
+    )
     return f"{number} {units:~P}" if units is not None else number
 
 

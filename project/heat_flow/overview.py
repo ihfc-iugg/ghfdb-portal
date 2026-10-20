@@ -1,7 +1,4 @@
-"""What the heat flow overview pages read beyond FairDM's shared sample and measurement pages.
-
-SKETCH: this module gathers each heat flow page's context for the prototype. Where it lives and
-how it reaches the page (plugin methods, a template tag) is for the plan to decide.
+"""What a heat flow record's overview page lists beyond FairDM's shared page.
 
 Every related record a page lists passes FairDM's own visibility rule, ``visible_to``, so a
 record a visitor may not open is counted and never named.
@@ -20,183 +17,247 @@ from heat_flow.models import (
 )
 from heat_flow.quality import SCHEME_REVISION
 
-INTERVALS_SHOWN = 20
-CHILDREN_SHOWN = 20
 
+class HeatFlowPage:
+    """What a heat flow record's overview page lists, for one visitor.
 
-def visible_ids(model, ids, user):
-    """Return the ids among ``ids`` whose own page would open for ``user``."""
-    base = Sample if issubclass(model, Sample) else Measurement
-    return set(
-        base.objects.filter(pk__in=ids).visible_to(user).values_list("pk", flat=True)
-    )
+    Attributes:
+        intervals_shown: How many of a site's intervals its page lists before the cut.
+        children_shown: How many children a list shows before the cut.
+    """
 
+    intervals_shown = 20
+    children_shown = 20
 
-def is_visible(record, user):
-    """Say whether ``record``'s own page would open for ``user``."""
-    if record is None:
-        return False
-    return bool(visible_ids(type(record), [record.pk], user))
+    def __init__(self, record, user, show_all=False):
+        """Hold the record a page is for and the visitor reading it.
 
+        Args:
+            record: The heat flow record whose overview page is being rendered.
+            user: The visitor, signed in or anonymous.
+            show_all: Lift the cut on a site's list of intervals.
+        """
+        self.record = record
+        self.user = user
+        self.show_all = show_all
 
-def is_stale(record):
-    """Say whether a stored score came from a scheme revision other than the current one."""
-    return bool(record.quality_scheme) and record.quality_scheme != SCHEME_REVISION
+    def context(self):
+        """Gather what the record's page shows, by the record's type.
 
+        Returns:
+            The page's content, as the type's ``for_*`` method describes it.
+        """
+        gather = {
+            HeatFlowSite: self.for_site,
+            HeatFlowInterval: self.for_interval,
+            HeatFlow: self.for_child,
+            ThermalGradient: self.for_gradient_or_conductivity,
+            IntervalConductivity: self.for_gradient_or_conductivity,
+            ParentHeatFlow: self.for_parent,
+        }[type(self.record)]
+        return gather()
 
-def site_of(record):
-    """Return the heat flow site a record belongs to, or ``None``."""
-    if isinstance(record, HeatFlowSite):
-        return record
-    if isinstance(record, HeatFlowInterval):
-        return record.site
-    sample = getattr(record, "sample", None)
-    if sample is None:
-        return None
-    return site_of(sample)
+    def opens(self, record):
+        """Say whether a record's own page would open for the visitor.
 
+        Args:
+            record: A sample or measurement, or ``None``.
 
-def site_location(record, user):
-    """Return the site's location as a page shows it, with whether the visitor may see it."""
-    site = site_of(record)
-    if site is None:
-        return {"site": None, "visible": False, "point": None}
-    visible = is_visible(site, user)
-    return {
-        "site": site if visible else None,
-        "visible": visible,
-        "point": site.location if visible else None,
-        "elevation": site.location_elevation if visible else None,
-        "uncertainty": site.location_uncertainty if visible else None,
-    }
+        Returns:
+            ``True`` when the record exists and FairDM lets the visitor open it.
+        """
+        return record is not None and bool(self.split([record])[0])
 
+    def split(self, records):
+        """Separate the records the visitor may open from those they may not.
 
-def child_rows(children, user, limit=CHILDREN_SHOWN):
-    """Return the children the visitor may open, up to ``limit``, and the counts."""
-    children = list(children)
-    shown_ids = visible_ids(HeatFlow, [c.pk for c in children], user)
-    visible = [c for c in children if c.pk in shown_ids]
-    return {
-        "rows": visible[:limit] if limit else visible,
-        "total": len(visible),
-        "more": max(len(visible) - limit, 0) if limit else 0,
-        "hidden": len(children) - len(visible),
-    }
+        Makes one query however many records it is given. The records must all be
+        samples or all be measurements.
 
+        Args:
+            records: The records to check, samples or measurements.
 
-def site_context(site, user, show_all=False):
-    """Gather a site's parent value and its intervals with their children."""
-    parent = ParentHeatFlow.objects.filter(sample=site).first()
-    intervals = list(
-        HeatFlowInterval.objects.filter(site=site).order_by("top", "bottom", "pk")
-    )
-    shown_ids = visible_ids(HeatFlowInterval, [i.pk for i in intervals], user)
-    visible = [i for i in intervals if i.pk in shown_ids]
-    shown = visible if show_all else visible[:INTERVALS_SHOWN]
-    children = HeatFlow.objects.filter(sample__in=shown).order_by("pk")
-    by_interval = {}
-    for child in children:
-        by_interval.setdefault(child.sample_id, []).append(child)
-    rows = []
-    for interval in shown:
-        rows.append(
-            {
-                "interval": interval,
-                "children": child_rows(by_interval.get(interval.pk, []), user, None),
-            }
+        Returns:
+            The records the visitor may open, in the order given, and how many they may not.
+        """
+        records = list(records)
+        if not records:
+            return [], 0
+        base = Sample if isinstance(records[0], Sample) else Measurement
+        opened = set(
+            base.objects.filter(pk__in=[record.pk for record in records])
+            .visible_to(self.user)
+            .values_list("pk", flat=True)
         )
-    return {
-        "parent": parent if is_visible(parent, user) else None,
-        "parent_hidden": parent is not None and not is_visible(parent, user),
-        "intervals": {
+        shown = [record for record in records if record.pk in opened]
+        return shown, len(records) - len(shown)
+
+    def listing(self, children, limit=None):
+        """Cut a list of children to the ones the visitor may open.
+
+        Args:
+            children: The child heat flow values a page would list.
+            limit: How many to show; every one the visitor may open when ``None``.
+
+        Returns:
+            The ``rows`` to show, the ``total`` the visitor may open, how many ``more`` the
+            cut leaves out, and how many are ``hidden`` from the visitor.
+        """
+        visible, hidden = self.split(children)
+        rows = visible[:limit] if limit else visible
+        return {
             "rows": rows,
             "total": len(visible),
-            "more": len(visible) - len(shown),
-            "hidden": len(intervals) - len(visible),
-            "children": HeatFlow.objects.filter(sample__in=visible).count(),
-        },
-    }
+            "more": len(visible) - len(rows),
+            "hidden": hidden,
+        }
 
+    def site_location(self):
+        """Gather the location of the record's site, as the site's.
 
-def interval_context(interval, user):
-    """Gather an interval's site and probe metadata."""
-    site = interval.site
-    return {
-        "site": site if is_visible(site, user) else None,
-        "site_hidden": site is not None and not is_visible(site, user),
-        "probe": getattr(interval, "probe_metadata", None),
-        "location": site_location(interval, user),
-    }
+        Returns:
+            The ``site``, whether the visitor may see it (``visible``), and its ``point``,
+            ``elevation`` and ``uncertainty``. Nothing of the site when the visitor may not
+            open it.
+        """
+        record = self.record
+        if isinstance(record, (HeatFlowInterval, ParentHeatFlow)):
+            site = record.site
+        else:
+            site = getattr(record.sample, "site", None)
+        if site is None:
+            return {"site": None, "visible": False, "point": None}
+        visible = self.opens(site)
+        return {
+            "site": site if visible else None,
+            "visible": visible,
+            "point": site.location if visible else None,
+            "elevation": site.location_elevation if visible else None,
+            "uncertainty": site.location_uncertainty if visible else None,
+        }
 
+    @staticmethod
+    def is_stale(record):
+        """Say whether a stored score came from a scheme revision other than the current one.
 
-def measured_on(measurement, user):
-    """Gather the interval and site a measurement was made on."""
-    interval = measurement.sample
-    site = interval.site if isinstance(interval, HeatFlowInterval) else None
-    return {
-        "interval": interval if is_visible(interval, user) else None,
-        "site": site if is_visible(site, user) else None,
-        "location": site_location(measurement, user),
-    }
+        Args:
+            record: A record carrying a ``quality_scheme``.
 
+        Returns:
+            ``True`` when the record was scored under another revision. A record not yet
+            scored is not stale.
+        """
+        return bool(record.quality_scheme) and record.quality_scheme != SCHEME_REVISION
 
-def child_context(child, user):
-    """Gather what a child heat flow value was calculated from and belongs to."""
-    gradient, conductivity, parent = (
-        child.thermal_gradient,
-        child.thermal_conductivity,
-        child.parent,
-    )
-    return {
-        **measured_on(child, user),
-        "gradient": gradient if is_visible(gradient, user) else None,
-        "gradient_hidden": gradient is not None and not is_visible(gradient, user),
-        "conductivity": conductivity if is_visible(conductivity, user) else None,
-        "conductivity_hidden": conductivity is not None
-        and not is_visible(conductivity, user),
-        "corrections": list(child.corrections.all()),
-        "parent": parent if is_visible(parent, user) else None,
-        "parent_hidden": parent is not None and not is_visible(parent, user),
-        "stale": is_stale(child),
-    }
+    def for_site(self):
+        """Gather a site's parent value and its intervals with their children."""
+        site = self.record
+        parent = ParentHeatFlow.objects.filter(sample=site).first()
+        intervals = list(
+            HeatFlowInterval.objects.filter(site=site).order_by("top", "bottom", "pk")
+        )
+        visible, hidden = self.split(intervals)
+        shown = visible if self.show_all else visible[: self.intervals_shown]
+        by_interval = {}
+        for child in HeatFlow.objects.filter(sample__in=shown).order_by("pk"):
+            by_interval.setdefault(child.sample_id, []).append(child)
+        rows = [
+            {
+                "interval": interval,
+                "children": self.listing(by_interval.get(interval.pk, [])),
+            }
+            for interval in shown
+        ]
+        return {
+            "parent": parent if self.opens(parent) else None,
+            "parent_hidden": parent is not None and not self.opens(parent),
+            "intervals": {
+                "rows": rows,
+                "total": len(visible),
+                "more": len(visible) - len(shown),
+                "hidden": hidden,
+                "children": HeatFlow.objects.filter(sample__in=visible).count(),
+            },
+        }
 
+    def for_interval(self):
+        """Gather an interval's site and probe metadata."""
+        interval = self.record
+        site = interval.site
+        return {
+            "site": site if self.opens(site) else None,
+            "site_hidden": site is not None and not self.opens(site),
+            "probe": getattr(interval, "probe_metadata", None),
+            "location": self.site_location(),
+        }
 
-def source_context(measurement, user):
-    """Gather the children that use a gradient or a conductivity."""
-    return {
-        **measured_on(measurement, user),
-        "children": child_rows(measurement.heat_flow_children.order_by("pk"), user),
-        "stale": is_stale(measurement),
-    }
+    def for_child(self):
+        """Gather what a child heat flow value was calculated from and belongs to.
 
+        Returns:
+            The ``gradient``, ``conductivity`` and ``parent`` the visitor may open, each
+            ``None`` when absent or hidden, with ``gradient_hidden``, ``conductivity_hidden``
+            and ``parent_hidden`` set when it exists but the visitor may not open it. Also the
+            child's ``corrections``, the ``interval`` and ``site`` it was made on, the site's
+            ``location`` and whether its scores are ``stale``.
+        """
+        child = self.record
+        related = {
+            "gradient": child.thermal_gradient,
+            "conductivity": child.thermal_conductivity,
+            "parent": child.parent,
+        }
+        measurements = [record for record in related.values() if record is not None]
+        opened, _ = self.split(measurements)
+        interval = child.sample
+        site = getattr(interval, "site", None)
+        placed = [record for record in (interval, site) if record is not None]
+        samples, _ = self.split(placed)
+        context = {}
+        for name, record in related.items():
+            context[name] = record if record in opened else None
+            context[f"{name}_hidden"] = record is not None and record not in opened
+        return {
+            **context,
+            "corrections": list(child.corrections.all()),
+            "interval": interval if interval in samples else None,
+            "site": site if site in samples else None,
+            "location": self.site_location(),
+            "stale": self.is_stale(child),
+        }
 
-def parent_context(parent, user):
-    """Gather a parent's children and the ones its quality rests on."""
-    children = list(parent.children.order_by("-is_relevant", "pk"))
-    if len(children) == 1:
-        rests_on = {children[0].pk}
-        basis = "single"
-    else:
-        rests_on = {c.pk for c in children if c.is_relevant}
-        basis = "relevant" if rests_on else ("none" if children else "empty")
-    for child in children:
-        child.rests_on = child.pk in rests_on
-    rows = child_rows(children, user)
-    return {
-        "children": rows,
-        "rests_on": rests_on,
-        "basis": basis,
-        "site": parent.sample if is_visible(parent.sample, user) else None,
-        "location": site_location(parent, user),
-        "stale": is_stale(parent),
-    }
+    def for_gradient_or_conductivity(self):
+        """Gather the children that use a gradient or a conductivity."""
+        measurement = self.record
+        interval = measurement.sample
+        site = getattr(interval, "site", None)
+        return {
+            "interval": interval if self.opens(interval) else None,
+            "site": site if self.opens(site) else None,
+            "location": self.site_location(),
+            "children": self.listing(
+                measurement.heat_flow_children.order_by("pk"), self.children_shown
+            ),
+            "stale": self.is_stale(measurement),
+        }
 
-
-CONTEXT = {
-    HeatFlowSite: site_context,
-    HeatFlowInterval: interval_context,
-    HeatFlow: child_context,
-    ThermalGradient: source_context,
-    IntervalConductivity: source_context,
-    ParentHeatFlow: parent_context,
-}
+    def for_parent(self):
+        """Gather a parent's children and the ones its quality rests on."""
+        parent = self.record
+        children = list(parent.children.order_by("-is_relevant", "pk"))
+        if len(children) == 1:
+            rests_on = {children[0].pk}
+            basis = "single"
+        else:
+            rests_on = {child.pk for child in children if child.is_relevant}
+            basis = "relevant" if rests_on else ("none" if children else "empty")
+        for child in children:
+            child.rests_on = child.pk in rests_on
+        return {
+            "children": self.listing(children, self.children_shown),
+            "rests_on": rests_on,
+            "basis": basis,
+            "site": parent.sample if self.opens(parent.sample) else None,
+            "location": self.site_location(),
+            "stale": self.is_stale(parent),
+        }
