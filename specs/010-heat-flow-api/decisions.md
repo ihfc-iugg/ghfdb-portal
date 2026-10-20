@@ -130,3 +130,62 @@ newer FairDM.
 
 The feature changes no page a person looks at. Its output is API responses, which tests can assert
 in full, so there is nothing for a sketch to settle.
+
+## D13 — Re-read against the feature delivered since
+
+FS-011 (the overview pages) merged after this specification was written. It changes the pages
+and shares no surface with the API, as D10 expected. Nothing in this specification contradicts it.
+Its `HeatFlowPage.split` rule for which related records a visitor may see is the one these
+endpoints apply too.
+
+**ADR:** none — a check of one specification against another, nothing to inherit
+
+## D14 — A registration names a declared serializer
+
+Each of the six registrations names its serializer with `serializer_class`, declared in
+`project/heat_flow/serializers.py`, rather than one built inside `get_serializer_class()`
+(research.md). Its `Meta.fields` keeps every writable field the generated serializer has today.
+
+**ADR:** pending S5
+
+## D15 — A list holds the summary, a single record the whole record
+
+The full serializer's `many_init` builds a list from the type's summary serializer, and a schema
+extension gives the list operation the summary's shape. The generated viewsets stay FairDM's own,
+so paging, ordering, filtering and visibility are unchanged (FR-015).
+
+**ADR:** pending S5
+
+## D16 — Units are a `units` object beside plain numbers
+
+A quantity is a plain number in its stored unit, and the record carries a `units` object naming
+each quantity's unit in pint's compact form. An empty value is `null` and its unit is still stated
+(spec US4 scenario 4). A `{magnitude, unit}` object per value would lose the unit exactly when the
+value is empty.
+
+**ADR:** pending S5
+
+## D17 — The conductivity's declared unit is served as declared
+
+`IntervalConductivity` declares `W/mK`, which a unit library reads as watts per millikelvin. The
+stored numbers are right, because the whole portal uses the declaration consistently. Correcting
+it touches the model, the import and the quality scheme, so it is an issue of its own, and the
+API's unit text follows the declaration when it changes.
+
+**ADR:** none — follows the model's own declaration, nothing new to inherit
+
+## D18 — Undetermined grades are served as stored
+
+`U_score` and `M_score` hold `Ux` and `Mx` when not determined, the scheme's own grades, and are
+served as those codes (SC-005: every score served equals the stored one). Numeric scores not
+determined are stored empty and served `null` (FR-012).
+
+**ADR:** none — the stored value, served as it is
+
+## D19 — Five of the six lists answered 500
+
+The generated serializers map a quantity to a plain number field, which cannot read a pint
+quantity, so every list but the site's answered 500 before this feature. Serving quantities in
+their stored unit (FR-011) ends it, and US4's first test is each list answering 200.
+
+**ADR:** none — a defect this feature's own requirement removes
