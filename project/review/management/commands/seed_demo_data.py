@@ -148,7 +148,11 @@ class Command(BaseCommand):
 
     @staticmethod
     def _next_ghfdb_id() -> int:
-        """Return one above the highest published identifier on any parent or child."""
+        """Return one above the highest published identifier on any parent or child.
+
+        Returns:
+            The next free published identifier.
+        """
         highest = [
             model.objects.aggregate(highest=Max("ghfdb_id"))["highest"] or 0
             for model in (ParentHeatFlow, HeatFlow)
@@ -161,6 +165,12 @@ class Command(BaseCommand):
 
         The first four datasets take each state once. Later ones are complete four times in
         five and take the other states in turn otherwise.
+
+        Args:
+            position: The dataset's zero-based place in the run.
+
+        Returns:
+            The state the dataset's assessment is created in.
         """
         if position < len(STATE_PLAN):
             return STATE_PLAN[position]
@@ -205,7 +215,15 @@ class Command(BaseCommand):
 
     @staticmethod
     def _demo_person(given: str, family: str) -> Any:
-        """Return the demo person with this name, creating them when absent."""
+        """Return the demo person with this name, creating them when absent.
+
+        Args:
+            given: The person's first name.
+            family: The person's last name.
+
+        Returns:
+            The existing or new person, who cannot sign in.
+        """
         Person = get_user_model()
         email = f"{given}.{family}@{DEMO_EMAIL_DOMAIN}".lower()
         person = Person.objects.filter(email__iexact=email).first()

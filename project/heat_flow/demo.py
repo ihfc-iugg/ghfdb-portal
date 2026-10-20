@@ -55,10 +55,30 @@ class Region(NamedTuple):
 
 
 def _land(name: str, lat: tuple[float, float], lon: tuple[float, float]) -> Region:
+    """Describe an onshore region measured by drilling.
+
+    Args:
+        name: A readable label.
+        lat: The southern and northern edges in decimal degrees.
+        lon: The western and eastern edges in decimal degrees.
+
+    Returns:
+        The region, with the onshore environment and the drilling exploration method.
+    """
     return Region(name, *lat, *lon, False, "onshore_continental", "drilling")
 
 
 def _sea(name: str, lat: tuple[float, float], lon: tuple[float, float]) -> Region:
+    """Describe an offshore region measured by marine probing.
+
+    Args:
+        name: A readable label.
+        lat: The southern and northern edges in decimal degrees.
+        lon: The western and eastern edges in decimal degrees.
+
+    Returns:
+        The region, with the offshore environment and the marine probing exploration method.
+    """
     return Region(name, *lat, *lon, True, "offshore_marine", "probing_offshore")
 
 
@@ -95,6 +115,12 @@ class DemoGraph:
     Sites, intervals, parents, children, gradients and conductivities are multi-table models
     that Django cannot bulk-insert, so they are saved one at a time. Corrections, probe
     metadata and the concept rows are collected and written in bulk when ``build`` ends.
+
+    Args:
+        dataset: The dataset every record is created in.
+        rng: The source of every random draw.
+        next_ghfdb_id: Returns the next published identifier, or ``None`` for an
+            unpublished dataset, whose records carry no identifier.
     """
 
     def __init__(
@@ -103,14 +129,6 @@ class DemoGraph:
         rng: random.Random,
         next_ghfdb_id: Callable[[], int] | None = None,
     ) -> None:
-        """Prepare a build into *dataset*.
-
-        Args:
-            dataset: The dataset every record is created in.
-            rng: The source of every random draw.
-            next_ghfdb_id: Returns the next published identifier, or ``None`` for an
-                unpublished dataset, whose records carry no identifier.
-        """
         self.dataset = dataset
         self.rng = rng
         self.next_ghfdb_id = next_ghfdb_id
@@ -134,16 +152,43 @@ class DemoGraph:
         self._write_bulk()
 
     def _label(self) -> str:
+        """Return the next record name, unique within this build.
+
+        Returns:
+            A name and local identifier of the form ``DEMO-<dataset pk>-<n>``.
+        """
         self._label_count += 1
         return f"DEMO-{self.dataset.pk}-{self._label_count}"
 
     def _published_id(self) -> int | None:
+        """Return the next published identifier for a record.
+
+        Returns:
+            The identifier, or ``None`` when the dataset is unpublished.
+        """
         return None if self.next_ghfdb_id is None else self.next_ghfdb_id()
 
     def _round(self, value: float, places: int = 2) -> float:
+        """Round *value* to *places* decimal places.
+
+        Args:
+            value: The number to round.
+            places: The decimal places to keep.
+
+        Returns:
+            The rounded number.
+        """
         return round(value, places)
 
     def _uncertainty(self, value: float) -> float:
+        """Draw an uncertainty of 5 to 25 percent of *value*.
+
+        Args:
+            value: The measurement the uncertainty belongs to.
+
+        Returns:
+            A positive uncertainty, rounded to two places.
+        """
         return self._round(abs(value) * self.rng.uniform(0.05, 0.25))
 
     def _place_site(self) -> tuple[HeatFlowSite, Region]:
@@ -180,11 +225,26 @@ class DemoGraph:
         raise AssertionError("unreachable")  # pragma: no cover
 
     def _elevation(self, region: Region) -> float:
+        """Draw an elevation that suits the region's medium.
+
+        Args:
+            region: The region the site lies in.
+
+        Returns:
+            A depth below sea level for a marine region, a height above it otherwise.
+        """
         low, high = (-6000, -200) if region.marine else (0, 3000)
         return self._round(self.rng.uniform(low, high), 1)
 
     def _plan_child(self, region: Region) -> dict[str, float]:
-        """Draw one child's values so that its heat flow is its gradient times its conductivity."""
+        """Draw one child's values so that its heat flow is its gradient times its conductivity.
+
+        Args:
+            region: The region the child's site lies in.
+
+        Returns:
+            The child's ``conductivity``, ``gradient`` and ``value``.
+        """
         rng = self.rng
         conductivity = self._round(
             min(max(rng.lognormvariate(math.log(2.5), 0.3), 0.8), 6)
@@ -200,6 +260,12 @@ class DemoGraph:
         }
 
     def _build_site(self, child_count: int) -> None:
+        """Create a site, its parent and the children beneath the parent.
+
+        Args:
+            child_count: The number of children. From three up, the last is not relevant
+                to the parent.
+        """
         site, region = self._place_site()
         plans = [self._plan_child(region) for _ in range(child_count)]
         relevant = [True] * child_count
@@ -229,6 +295,17 @@ class DemoGraph:
         plan: dict[str, float],
         is_relevant: bool,
     ) -> None:
+        """Create one child with its interval, gradient and conductivity.
+
+        Corrections, probe metadata and concepts are queued for ``build`` to write.
+
+        Args:
+            site: The site the child is measured at.
+            region: The region the site lies in.
+            parent: The parent the child belongs to.
+            plan: The values drawn by ``_plan_child``.
+            is_relevant: Whether the child counts towards the parent's value.
+        """
         rng = self.rng
         dataset = self.dataset
         if region.marine:
@@ -299,7 +376,12 @@ class DemoGraph:
             self._collect_probe(interval)
 
     def _collect_corrections(self, child: HeatFlow, probed: bool) -> None:
-        """Queue valid corrections for *child*, always a temperature one on a probe."""
+        """Queue valid corrections for *child*, always a temperature one on a probe.
+
+        Args:
+            child: The heat flow the corrections apply to.
+            probed: Whether the child was measured by a marine probe.
+        """
         types = set(self.rng.sample(CORRECTION_TYPES, self.rng.randint(0, 3)))
         if probed:
             types.add("T")
@@ -318,6 +400,11 @@ class DemoGraph:
             )
 
     def _collect_probe(self, interval: HeatFlowInterval) -> None:
+        """Queue probe metadata for a marine interval.
+
+        Args:
+            interval: The interval the probe measured.
+        """
         penetration = self._round(self.rng.uniform(1, 10))
         probe = ProbeMetadata(
             interval=interval,
@@ -328,7 +415,12 @@ class DemoGraph:
         self._probes.append(probe)
 
     def _add_concepts(self, instance: Any, field_name: str) -> None:
-        """Queue one concept of the field's own vocabulary for *instance*."""
+        """Queue one concept of the field's own vocabulary for *instance*.
+
+        Args:
+            instance: The record that carries the field.
+            field_name: The vocabulary field to give a concept.
+        """
         field = instance._meta.get_field(field_name)
         vocabulary = field.vocabulary
         if vocabulary not in self._concepts:
