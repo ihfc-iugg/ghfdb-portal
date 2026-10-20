@@ -23,6 +23,7 @@ from heat_flow.models import (
     ProbeMetadata,
     ThermalGradient,
 )
+from heat_flow.overview import HeatFlowPage
 from heat_flow.quality import SCHEME_REVISION
 from literature.models import LiteratureItem
 from research_vocabs.models import Concept
@@ -464,3 +465,58 @@ class TestSeedDemoDataProjects:
 
         for project in demo_projects():
             assert project.uuid in content
+
+
+class TestSeedDemoDataPageStates:
+    def varied_dataset(self):
+        """The one published dataset with a site that has no location."""
+        return Dataset.all_objects.get(
+            pk__in=HeatFlowSite.objects.filter(location=None).values("dataset")
+        )
+
+    def test_a_run_varies_one_published_dataset(self, seeded):
+        dataset = self.varied_dataset()
+
+        assert dataset.published is True
+        assert dataset.visibility == Dataset.VISIBILITY_CHOICES.PUBLIC
+
+    def test_that_dataset_holds_every_state_a_record_page_answers_for(self, seeded):
+        dataset = self.varied_dataset()
+        sites = HeatFlowSite.objects.filter(dataset=dataset)
+        parents = ParentHeatFlow.objects.filter(sample__in=sites, dataset=dataset)
+
+        assert sites.exclude(pk__in=ParentHeatFlow.objects.values("sample")).exists()
+        assert parents.filter(children__isnull=True).exists()
+        assert HeatFlow.objects.filter(
+            dataset=dataset, thermal_gradient=None, parent=None
+        ).exists()
+        assert HeatFlow.objects.filter(dataset=dataset, quality_scheme="").exists()
+        assert (
+            HeatFlow.objects.filter(dataset=dataset)
+            .exclude(quality_scheme__in=["", SCHEME_REVISION])
+            .exists()
+        )
+        assert max(site.intervals.count() for site in sites) > (
+            HeatFlowPage.intervals_shown
+        )
+
+    def test_the_first_dataset_holds_the_records_it_hides_beside_published_ones(
+        self, seeded
+    ):
+        dataset = self.varied_dataset()
+        hidden = Dataset.all_objects.get(review__state=States.DESCRIBED)
+
+        moved = HeatFlowInterval.objects.filter(site__dataset=dataset, dataset=hidden)
+
+        assert moved.exists()
+        assert hidden.published is False
+
+    def test_a_second_run_varies_another_dataset_and_fails_on_nothing(self, db):
+        seed()
+        seed()
+
+        varied = Dataset.all_objects.filter(
+            pk__in=HeatFlowSite.objects.filter(location=None).values("dataset")
+        )
+
+        assert varied.count() == 2
