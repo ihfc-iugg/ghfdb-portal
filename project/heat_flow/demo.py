@@ -23,6 +23,7 @@ from .models import (
     ProbeMetadata,
     ThermalGradient,
 )
+from .overview import HeatFlowPage
 
 SITES_PER_DATASET = 20
 CHILDREN_CYCLE = (1, 2, 3, 4)
@@ -151,6 +152,98 @@ class DemoGraph:
         for position in range(sites):
             self._build_site(CHILDREN_CYCLE[position % len(CHILDREN_CYCLE)])
         self._write_bulk()
+
+    def vary_page_states(self, unpublished: Any) -> None:
+        """Vary the first six sites of the dataset so every state a record page answers for exists.
+
+        The sites keep their order, so the six states fall on sites with one, two, three,
+        four, one and two children:
+
+        1. A parent with no children, and a child with no gradient, conductivity,
+           corrections or parent.
+        2. A site with no parent.
+        3. A parent with children and none marked relevant.
+        4. A site with more intervals than its page lists, one interval and one child of
+           another interval in the unpublished dataset.
+        5. Scores stored under another scheme revision, and a site with no location.
+        6. A child not yet scored, a gradient and a parent in the unpublished dataset.
+
+        A record moved to the unpublished dataset loses its published identifier, as every
+        record of an unpublished dataset does. Running it again varies the same sites
+        further and never fails.
+
+        Args:
+            unpublished: A dataset the visitor may not open, which receives the records
+                that must be hidden beside published ones.
+
+        Raises:
+            ValueError: The dataset has fewer than six sites.
+        """
+        sites = list(
+            HeatFlowSite.objects.filter(dataset=self.dataset).order_by("pk")[:6]
+        )
+        if len(sites) < 6:
+            raise ValueError("vary_page_states needs a dataset of at least six sites.")
+        alone, unparented, unrelated, lengthy, stale, unscored = sites
+
+        def children_of(site: HeatFlowSite):
+            return HeatFlow.objects.filter(sample__in=site.intervals.all()).order_by(
+                "pk"
+            )
+
+        bare = children_of(alone)
+        HeatFlowCorrection.objects.filter(heat_flow__in=bare).delete()
+        bare.update(parent=None, thermal_gradient=None, thermal_conductivity=None)
+        for child in bare:
+            child.refresh_quality()
+
+        ParentHeatFlow.objects.filter(sample=unparented).delete()
+
+        children_of(unrelated).update(is_relevant=False)
+        for parent in ParentHeatFlow.objects.filter(sample=unrelated):
+            parent.refresh_quality()
+
+        for position in range(HeatFlowPage.intervals_shown):
+            HeatFlowInterval.objects.create(
+                dataset=self.dataset,
+                name=self._label(),
+                site=lengthy,
+                top=3000 + position * 50,
+                bottom=3040 + position * 50,
+            )
+        first, second = HeatFlowInterval.objects.filter(
+            pk__in=children_of(lengthy).values("sample")
+        ).order_by("pk")[:2]
+        HeatFlowInterval.objects.filter(pk=first.pk).update(dataset=unpublished)
+        HeatFlow.objects.filter(sample=first).update(dataset=unpublished, ghfdb_id=None)
+        HeatFlow.objects.filter(sample=second).update(
+            dataset=unpublished, ghfdb_id=None
+        )
+
+        scheme = "hfqa_tool 0.1"
+        HeatFlowSite.objects.filter(pk=stale.pk).update(location=None)
+        children = children_of(stale)
+        ThermalGradient.objects.filter(
+            pk__in=children.values("thermal_gradient")
+        ).update(quality_scheme=scheme)
+        children.update(quality_scheme=scheme)
+        ParentHeatFlow.objects.filter(sample=stale).update(quality_scheme=scheme)
+
+        first, second = children_of(unscored)[:2]
+        HeatFlow.objects.filter(pk=first.pk).update(
+            U_score="Ux",
+            M_score="Mx",
+            T_score=None,
+            TC_score=None,
+            quality=None,
+            quality_scheme="",
+        )
+        ThermalGradient.objects.filter(pk=second.thermal_gradient_id).update(
+            dataset=unpublished
+        )
+        ParentHeatFlow.objects.filter(sample=unscored).update(
+            dataset=unpublished, ghfdb_id=None
+        )
 
     def _label(self) -> str:
         """Return the next record name, unique within this build.

@@ -14,7 +14,8 @@ from heat_flow.models import (
     ProbeMetadata,
     ThermalGradient,
 )
-from heat_flow.quality import Reading
+from heat_flow.overview import HeatFlowPage
+from heat_flow.quality import SCHEME_REVISION, Reading
 
 MULTI_TABLE_MODELS = (
     HeatFlowSite,
@@ -339,3 +340,123 @@ class TestDemoGraphRanges:
         for site in HeatFlowSite.objects.all():
             assert site.name.startswith(f"DEMO-{graph.pk}-")
             assert site.local_id == site.name
+
+
+@pytest.fixture
+def varied(dataset, unpublished_dataset):
+    """A dataset's graph after ``vary_page_states``, with the unpublished dataset beside it."""
+    counter = iter(range(500, 10_000))
+    DemoGraph(dataset, random.Random(8), lambda: next(counter)).build(sites=8)
+    DemoGraph(dataset, random.Random(8)).vary_page_states(unpublished_dataset)
+    return dataset
+
+
+class TestVaryPageStates:
+    def test_a_site_has_no_parent(self, varied):
+        sites = HeatFlowSite.objects.filter(dataset=varied)
+
+        assert sites.exclude(pk__in=ParentHeatFlow.objects.values("sample")).exists()
+
+    def test_a_parent_has_no_children(self, varied):
+        parents = ParentHeatFlow.objects.filter(dataset=varied)
+
+        assert parents.filter(children__isnull=True).exists()
+
+    def test_a_parent_has_children_and_none_is_relevant(self, varied):
+        for parent in ParentHeatFlow.objects.filter(dataset=varied):
+            children = parent.children.all()
+            if children and not children.filter(is_relevant=True).exists():
+                return
+        pytest.fail("no parent has children and none relevant")
+
+    def test_a_child_has_no_gradient_conductivity_corrections_or_parent(self, varied):
+        bare = HeatFlow.objects.filter(
+            dataset=varied,
+            thermal_gradient=None,
+            thermal_conductivity=None,
+            parent=None,
+            corrections__isnull=True,
+        )
+
+        assert bare.exists()
+
+    def test_a_score_is_stored_under_another_scheme_revision(self, varied):
+        stale = HeatFlow.objects.filter(dataset=varied).exclude(
+            quality_scheme__in=["", SCHEME_REVISION]
+        )
+
+        assert stale.exists()
+
+    def test_a_child_has_not_been_scored(self, varied):
+        unscored = HeatFlow.objects.filter(dataset=varied, quality_scheme="")
+
+        assert unscored.filter(quality=None).exists()
+
+    def test_a_site_has_no_location(self, varied):
+        assert HeatFlowSite.objects.filter(dataset=varied, location=None).exists()
+
+    def test_a_site_has_more_intervals_than_its_page_lists(self, varied):
+        counts = [
+            site.intervals.count()
+            for site in HeatFlowSite.objects.filter(dataset=varied)
+        ]
+
+        assert max(counts) > HeatFlowPage.intervals_shown
+
+    def test_records_of_an_unpublished_dataset_sit_beside_published_ones(
+        self, varied, unpublished_dataset
+    ):
+        site_intervals = HeatFlowInterval.objects.filter(
+            site__dataset=varied, dataset=unpublished_dataset
+        )
+        children = HeatFlow.objects.filter(
+            sample__in=HeatFlowInterval.objects.filter(site__dataset=varied),
+            dataset=unpublished_dataset,
+        )
+        parents = ParentHeatFlow.objects.filter(
+            sample__in=HeatFlowSite.objects.filter(dataset=varied),
+            dataset=unpublished_dataset,
+        )
+        gradients = HeatFlow.objects.filter(
+            dataset=varied, thermal_gradient__dataset=unpublished_dataset
+        )
+
+        assert site_intervals.exists()
+        assert children.exists()
+        assert parents.exists()
+        assert gradients.exists()
+
+    def test_a_site_lists_a_published_child_beside_an_unpublished_one(
+        self, varied, unpublished_dataset
+    ):
+        for site in HeatFlowSite.objects.filter(dataset=varied):
+            children = HeatFlow.objects.filter(sample__in=site.intervals.all())
+            if (
+                children.filter(dataset=varied).exists()
+                and children.filter(dataset=unpublished_dataset).exists()
+            ):
+                return
+        pytest.fail("no site has a published and an unpublished child")
+
+    def test_a_record_moved_to_an_unpublished_dataset_carries_no_published_id(
+        self, varied, unpublished_dataset
+    ):
+        for model in (ParentHeatFlow, HeatFlow):
+            assert not model.objects.filter(
+                dataset=unpublished_dataset, ghfdb_id__isnull=False
+            ).exists()
+
+    def test_records_left_in_the_dataset_keep_their_published_id(self, varied):
+        for model in (ParentHeatFlow, HeatFlow):
+            assert not model.objects.filter(dataset=varied, ghfdb_id=None).exists()
+
+    def test_it_can_run_twice(self, varied, unpublished_dataset):
+        DemoGraph(varied, random.Random(9)).vary_page_states(unpublished_dataset)
+
+    def test_a_dataset_with_too_few_sites_is_refused(
+        self, dataset, unpublished_dataset
+    ):
+        DemoGraph(dataset, random.Random(8)).build(sites=3)
+
+        with pytest.raises(ValueError, match="six"):
+            DemoGraph(dataset, random.Random(8)).vary_page_states(unpublished_dataset)
