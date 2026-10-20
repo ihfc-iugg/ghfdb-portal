@@ -146,7 +146,7 @@ Each of the six registrations names its serializer with `serializer_class`, decl
 `project/heat_flow/serializers.py`, rather than one built inside `get_serializer_class()`
 (research.md). Its `Meta.fields` keeps every writable field the generated serializer has today.
 
-**ADR:** pending S5
+**ADR:** docs/adr/0025-a-heat-flow-type-serves-a-summary-in-a-list-and-the-whole-record-on-its-own.md
 
 ## D15 — A list holds the summary, a single record the whole record
 
@@ -154,7 +154,7 @@ The full serializer's `many_init` builds a list from the type's summary serializ
 extension gives the list operation the summary's shape. The generated viewsets stay FairDM's own,
 so paging, ordering, filtering and visibility are unchanged (FR-015).
 
-**ADR:** pending S5
+**ADR:** docs/adr/0025-a-heat-flow-type-serves-a-summary-in-a-list-and-the-whole-record-on-its-own.md
 
 ## D16 — Units are a `units` object beside plain numbers
 
@@ -163,13 +163,13 @@ each quantity's unit in pint's compact form. An empty value is `null` and its un
 (spec US4 scenario 4). A `{magnitude, unit}` object per value would lose the unit exactly when the
 value is empty.
 
-**ADR:** pending S5
+**ADR:** docs/adr/0026-a-quantity-is-a-number-in-its-stored-unit-and-the-record-names-the-unit.md
 
 ## D17 — The conductivity's declared unit is served as declared
 
 `IntervalConductivity` declares `W/mK`, which a unit library reads as watts per millikelvin. The
 stored numbers are right, because the whole portal uses the declaration consistently. Correcting
-it touches the model, the import and the quality scheme, so it is an issue of its own, and the
+it touches the model, the import and the quality scheme, so it is an issue of its own (#306), and the
 API's unit text follows the declaration when it changes.
 
 **ADR:** none — follows the model's own declaration, nothing new to inherit
