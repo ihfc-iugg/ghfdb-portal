@@ -2,7 +2,7 @@
   "feature": "008-demo-data",
   "branch": "008-demo-data",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "REVIEW",
+  "state": "PR_READY",
   "state_history": [
     {
       "state": "GATE_SPEC",
@@ -38,6 +38,11 @@
       "state": "REVIEW",
       "at": "2026-10-19T23:53:30Z",
       "note": "converge green; 8 decisions verdicted, none graduate"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-20T00:46:56Z",
+      "note": "review fixes verified (mutation on T009); FairDM moved to f69c9cb1"
     }
   ],
   "gates": {
