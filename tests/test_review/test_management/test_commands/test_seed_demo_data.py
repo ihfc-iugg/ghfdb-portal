@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from fairdm.core.dataset.models import Dataset, DatasetLiteratureRelation
+from fairdm.core.project.models import Project
 from fairdm.factories import DatasetFactory
 from fairdm.management.commands.create_dev_accounts import DEV_ACCOUNTS
 from heat_flow.demo import CHILDREN_CYCLE, SITES_PER_DATASET
@@ -427,3 +428,39 @@ class TestSeedDemoDataVisibility:
         assert private
         assert set(signed_in) == {200}
         assert 200 not in anonymous
+
+
+def demo_projects():
+    return Project.objects.filter(options__demo_data=True)
+
+
+class TestSeedDemoDataProjects:
+    def test_a_run_creates_projects_marked_as_demo_data(self, seeded):
+        assert demo_projects().exists()
+
+    def test_some_datasets_belong_to_a_project_and_some_to_none(self, seeded):
+        assert demo_datasets().filter(project__isnull=False).exists()
+        assert demo_datasets().filter(project__isnull=True).exists()
+
+    def test_every_demo_project_holds_demo_datasets(self, seeded):
+        for project in demo_projects():
+            assert demo_datasets().filter(project=project).exists()
+
+    def test_every_demo_project_is_public_owned_and_credited(self, seeded):
+        for project in demo_projects():
+            assert project.visibility == Project.VISIBILITY.PUBLIC
+            assert project.owner is not None
+            assert project.contributors.exists()
+
+    def test_a_second_run_adds_projects_beside_the_first(self, db):
+        seed()
+        first = set(demo_projects().values_list("pk", flat=True))
+        seed()
+
+        assert first < set(demo_projects().values_list("pk", flat=True))
+
+    def test_an_anonymous_request_lists_the_demo_projects(self, seeded, client):
+        content = client.get("/projects/").content.decode()
+
+        for project in demo_projects():
+            assert project.uuid in content

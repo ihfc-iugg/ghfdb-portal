@@ -1,9 +1,10 @@
 """Add demo data to a development database (FS-008).
 
 Each run adds datasets that carry a literature item, contributors, an assessment and a
-generated heat flow graph beneath them. Nothing that is not demo data is touched. Every demo
-dataset holds ``options["demo_data"] = True``, so ``Dataset.all_objects`` filtered on it finds
-them all.
+generated heat flow graph beneath them. Most datasets are grouped into a few projects, and the
+rest belong to none. Nothing that is not demo data is touched. Every demo dataset and project
+holds ``options["demo_data"] = True``, so ``Dataset.all_objects`` and ``Project.objects``
+filtered on it find them all.
 """
 
 import itertools
@@ -19,9 +20,11 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.db.models import Max
 from django.utils import timezone
-from fairdm.contrib.contributors.models import Contribution
+from fairdm.contrib.contributors.models import Contribution, Organization
 from fairdm.contrib.contributors.services.crediting import Crediting
+from fairdm.core.choices import ProjectStatus
 from fairdm.core.dataset.models import Dataset, DatasetLiteratureRelation
+from fairdm.core.project.models import Project, ProjectDescription
 from fairdm.management.commands.create_dev_accounts import (
     DEV_ACCOUNT_PASSWORD,
     EXAMPLE_ACCOUNTS,
@@ -69,6 +72,19 @@ DEMO_ACCOUNTS = (
 DEMO_EMAIL_DOMAIN = "demo.example"
 GIVEN_NAMES = ("Aiko", "Bruno", "Chidi", "Dara", "Elif", "Farid", "Greta", "Hugo")
 FAMILY_NAMES = ("Okafor", "Lindqvist", "Moreau", "Tanaka", "Silva", "Novak", "Haddad")
+#: Datasets per project. The last dataset of every group belongs to no project.
+DATASETS_PER_PROJECT = 4
+ORGANIZATIONS = (
+    "Demo Institute of Geothermics",
+    "Demo Marine Geophysics Laboratory",
+    "Demo Geological Survey",
+)
+PROJECT_THEMES = (
+    "Regional heat flow compilation",
+    "Marine heat flow survey",
+    "Borehole temperature programme",
+    "Geothermal resource assessment",
+)
 SURVEY_SUBJECTS = (
     "Continental margin",
     "Rift basin",
@@ -114,12 +130,24 @@ class Command(BaseCommand):
         next_ghfdb_id = itertools.count(self._next_ghfdb_id()).__next__
         call_command("create_dev_accounts")
         assessor, curator = self._ensure_accounts()
-        totals = {"datasets": 0, "sites": 0, "children": 0}
+        totals = {"datasets": 0, "projects": 0, "sites": 0, "children": 0}
+        project = None
 
         for position in range(size):
+            group_position = position % DATASETS_PER_PROJECT
             with transaction.atomic(), Recalculation.deferred():
+                if group_position == 0:
+                    project = self._create_project(rng, creator=assessor)
+                    totals["projects"] += 1
                 dataset = self._create_dataset(
-                    position, rng, next_ghfdb_id, assessor=assessor, curator=curator
+                    position,
+                    rng,
+                    next_ghfdb_id,
+                    assessor=assessor,
+                    curator=curator,
+                    project=(
+                        project if group_position < DATASETS_PER_PROJECT - 1 else None
+                    ),
                 )
             sites = HeatFlowSite.objects.filter(dataset=dataset).count()
             children = HeatFlow.objects.filter(dataset=dataset).count()
@@ -130,7 +158,8 @@ class Command(BaseCommand):
                 self.stdout.write(f"{dataset.name}: {sites} sites, {children} children")
 
         self.stdout.write(
-            f"Created {totals['datasets']} datasets, {totals['sites']} sites"
+            f"Created {totals['datasets']} datasets in {totals['projects']} projects,"
+            f" {totals['sites']} sites"
             f" and {totals['children']} children."
         )
 
@@ -239,6 +268,39 @@ class Command(BaseCommand):
             person.save()
         return person
 
+    @staticmethod
+    def _create_project(rng: random.Random, *, creator: Any) -> Project:
+        """Create one public demo project, owned by a demo organization.
+
+        Args:
+            rng: The source of every random choice.
+            creator: The person credited as the project's creator.
+
+        Returns:
+            The project.
+        """
+        owner_name = rng.choice(ORGANIZATIONS)
+        owner = Organization.objects.filter(name=owner_name).first()
+        if owner is None:
+            owner = Organization.objects.create(name=owner_name)
+        project = Project.objects.create(
+            name=f"{rng.choice(PROJECT_THEMES)} {uuid.uuid4().hex[:6]}",
+            owner=owner,
+            visibility=Project.VISIBILITY.PUBLIC,
+            status=rng.choice(ProjectStatus.values),
+            options={"demo_data": True},
+        )
+        ProjectDescription.objects.create(
+            related=project,
+            type="Abstract",
+            value=(
+                "Demo data: a generated project grouping heat flow datasets for"
+                " development. None of it describes real measurements."
+            ),
+        )
+        Crediting(project).make_creator(creator, roles=["ProjectLeader"])
+        return project
+
     def _create_dataset(
         self,
         position: int,
@@ -247,6 +309,7 @@ class Command(BaseCommand):
         *,
         assessor: Any,
         curator: Any,
+        project: Project | None = None,
     ) -> Dataset:
         """Create one demo dataset with its literature, contributors, assessment and graph.
 
@@ -256,6 +319,7 @@ class Command(BaseCommand):
             next_ghfdb_id: Returns the next published identifier.
             assessor: The Data Assessor who uploaded the assessment and is credited on the dataset.
             curator: The Data Curator who decides assessments.
+            project: The project the dataset belongs to, or ``None``.
 
         Returns:
             The dataset.
@@ -282,6 +346,7 @@ class Command(BaseCommand):
         dataset = Dataset.objects.create(
             name=f"{rng.choice(SURVEY_SUBJECTS)} heat flow {token[:6]}",
             reference=literature,
+            project=project,
             options={"demo_data": True},
             visibility=(
                 Dataset.VISIBILITY_CHOICES.PUBLIC
