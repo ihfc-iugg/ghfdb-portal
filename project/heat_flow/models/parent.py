@@ -307,7 +307,7 @@ class ParentHeatFlow(Measurement):
     def save(self, *args, **kwargs):
         """Enforce one parent record per site before saving."""
         if self.sample_id:
-            if not isinstance(self.sample, HeatFlowSite):
+            if not issubclass(self.sample.get_real_instance_class(), HeatFlowSite):
                 raise ValidationError(
                     _("ParentHeatFlow sample must be a HeatFlowSite instance.")
                 )

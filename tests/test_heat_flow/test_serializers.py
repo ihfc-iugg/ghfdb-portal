@@ -10,7 +10,9 @@ from tests.factories import (
     HeatFlowFactory,
     HeatFlowIntervalFactory,
     HeatFlowSiteFactory,
+    IntervalConductivityFactory,
     ParentHeatFlowFactory,
+    ThermalGradientFactory,
 )
 
 SITES = "/api/v1/samples/heat-flow-sites/"
@@ -799,6 +801,29 @@ class TestHeatFlowChildWrites:
         assert (child.T_score, child.TC_score) == (None, None)
         assert (child.T_score_missing, child.TC_score_missing) == (False, False)
         assert child.is_relevant is False
+
+    @pytest.mark.parametrize(
+        ("route", "factory"),
+        [
+            (GRADIENTS, ThermalGradientFactory),
+            (CONDUCTIVITIES, IntervalConductivityFactory),
+            (PARENTS, ParentHeatFlowFactory),
+        ],
+    )
+    def test_an_update_of_a_measurement_placed_on_its_sample_is_saved(
+        self, editor, public_dataset, route, factory
+    ):
+        record = factory(dataset=public_dataset)
+
+        response = editor.patch(
+            f"{route}{record.uuid}/",
+            {"name": "Renamed"},
+            content_type="application/json",
+        )
+
+        assert response.status_code == 200, response.content
+        record.refresh_from_db()
+        assert record.name == "Renamed"
 
     def test_an_update_supplying_scores_and_an_identifier_stores_none_of_them(
         self, editor, public_dataset

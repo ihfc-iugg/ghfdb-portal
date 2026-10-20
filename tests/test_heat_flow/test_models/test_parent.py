@@ -208,6 +208,31 @@ class TestHeatFlowSiteLocationUniqueness:
 
 
 class TestParentHeatFlow:
+    @pytest.mark.django_db
+    def test_a_parent_whose_site_is_loaded_as_a_plain_sample_saves(
+        self, parent_fixture
+    ):
+        from fairdm.core.models import Sample
+        from heat_flow.models import ParentHeatFlow
+
+        parent = ParentHeatFlow.objects.get(pk=parent_fixture.pk)
+        parent.sample = Sample.objects.non_polymorphic().get(pk=parent.sample_id)
+        parent.comment = "Checked"
+
+        parent.save()
+
+        parent.refresh_from_db()
+        assert parent.comment == "Checked"
+
+    @pytest.mark.django_db
+    def test_a_parent_placed_on_an_interval_is_refused(
+        self, parent_fixture, interval_fixture
+    ):
+        parent_fixture.sample = interval_fixture
+
+        with pytest.raises(ValidationError):
+            parent_fixture.save()
+
     def test_table_name_follows_the_owning_application(self):
         # ``ParentHeatFlow`` lives in ``heat_flow``, so its table is named for
         # ``heat_flow``. The old ``ghfdb_`` name came from a move into the ``ghfdb``

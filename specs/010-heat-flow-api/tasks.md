@@ -138,3 +138,5 @@ read on its own.
 
 - [x] T011 [US1] Serve a site's `type`, `elevation` and `elevation_datum` in its summary, with
       `elevation` in its `units` (D27).
+- [x] T012 [US2] Check a measurement's sample by its real type in the four models' `save`, so an
+      update through the API is saved, and drop the child serializer's own workaround (D29).

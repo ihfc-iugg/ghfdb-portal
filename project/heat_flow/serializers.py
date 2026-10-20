@@ -720,22 +720,6 @@ class HeatFlowSummarySerializer(HeatFlowRecordSerializer, BaseMeasurementSeriali
         """
         self.prime_sites(records)
 
-    def update(self, instance: HeatFlow, validated_data: dict[str, Any]) -> HeatFlow:
-        """Save the child against its interval, which the model's save requires.
-
-        Args:
-            instance: The child being changed.
-            validated_data: The validated fields to set.
-
-        Returns:
-            The changed child.
-        """
-        sample: Any = validated_data.get("sample") or instance.sample
-        if not isinstance(sample, HeatFlowInterval):
-            sample = sample.heatflowinterval
-        validated_data["sample"] = sample
-        return super().update(instance, validated_data)
-
 
 class ThermalGradientSummarySerializer(
     HeatFlowRecordSerializer, BaseMeasurementSerializer

@@ -322,19 +322,20 @@ reached through the reverse one-to-one link, which `select_related` follows in o
 
 **ADR:** none — follows D20
 
-## D29 — A child's update is saved against its interval
+## D29 — A measurement's sample is checked by its real type
 
-**Decision:** `HeatFlowSummarySerializer.update` swaps the base sample row for its interval before
-the model saves.
+**Decision:** `HeatFlow.save`, `ThermalGradient.save`, `IntervalConductivity.save` and
+`ParentHeatFlow.save` check the sample's real type with `get_real_instance_class()`, not with
+`isinstance` on the loaded row.
 
-**Why:** `HeatFlow.save` refuses a sample that is not a `HeatFlowInterval`, and the API loads the
-sample as the base row, so every update of a child answered 500 before this. Spec scenario 7 asks
-for the update to be tested.
+**Why:** the API loads a measurement's sample as the base sample row, so the `isinstance` check
+refused it, and every update of a child, gradient, conductivity or parent through the API
+answered 500. The polymorphic row records its real type, so the check reads it without a query,
+and a sample of the wrong type is still refused. A first fix swapped the row inside the child's
+serializer. It covered one of the four models and hid the fault from the other three, so it was
+replaced with this one (task T012).
 
-**Revisit if:** the model's check learns to accept the base row, or the API loads the real
-interval.
-
-**ADR:** none — a workaround inside this story's file
+**ADR:** none — a defect fixed where it lives
 
 ## D30 — The child's expected units gain surface temperature
 
