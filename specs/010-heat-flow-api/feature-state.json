@@ -99,8 +99,17 @@
         },
         {
           "id": "T003",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "commands": [
+              "uv run --group docs sphinx-build -b html docs <scratch dir> (page builds, no warning on it; 36 pre-existing warnings elsewhere)",
+              "kit/forge verify --repo . --base origin/main --steps docs (red: 18 undocumented names; green: passed)"
+            ],
+            "code": [
+              "docs/guides/heat-flow-records-api.md:1"
+            ]
+          }
         }
       ]
     },

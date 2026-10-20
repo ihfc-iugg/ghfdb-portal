@@ -16,3 +16,10 @@ Did: Added project/heat_flow/schema.py with TermFieldSchema (a single term and, 
 Verified: uv run pytest tests/test_heat_flow/test_schema.py -q -n0 -> 6 passed; serializers and schema together 38 passed; ruff and mypy clean. The nullable test passed before the change and guards it.
 Next: T003 the guide.
 Watch: D24 in decisions.md.
+
+## 2026-10-20T19:47:53Z · Implementer US4 · T003
+
+Did: Wrote docs/guides/heat-flow-records-api.md (the six addresses, terms, quantities and units, empty values, references, hidden records, a child heat flow example, and a short section on how the serializers are built) and listed it in docs/index.md after the published structure guide.
+Verified: sphinx-build -b html docs built the page and its toctree entry with no warning about it, using a separate docs environment; the 36 warnings the build gives come from pages this branch does not touch, so a -W build fails on the base as well. forge verify --steps docs passed (it needs each new public name quoted in a page).
+Next: full verify, then the report.
+Watch: the guide's example values come from a response read in the tests, not typed in.

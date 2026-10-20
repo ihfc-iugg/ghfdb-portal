@@ -74,6 +74,7 @@ guides/assessment-uploads
 guides/record-pages
 guides/quality-scores
 guides/published-structure-api
+guides/heat-flow-records-api
 :::
 
 :::{toctree}
