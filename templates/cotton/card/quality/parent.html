@@ -8,7 +8,9 @@
             role="region"
             aria-label="{% trans "Quality score" %}"
             data-quality-card="parent">
-  <p class="text-base-content/70" data-quality="basis" data-value="{{ basis }}">
+  <p class="text-base-content/70"
+     data-quality="basis"
+     data-value="{{ basis }}">
     {% if basis == "single" %}
       {% blocktrans %}This parent has one heat flow value, so its quality is that value's quality, whether or not it is marked relevant.{% endblocktrans %}
     {% elif basis == "relevant" %}

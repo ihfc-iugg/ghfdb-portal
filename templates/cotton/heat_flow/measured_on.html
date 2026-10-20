@@ -3,13 +3,15 @@
 {# @prop site:object | description:"The site, or none when the visitor may not open it." #}
 {% load i18n heat_flow_overview %}
 <c-vars interval site />
-<c-mvp.card title="{% translate 'Measured over' %}" class="bg-base-100">
+<c-mvp.card title="{% translate 'Measured over' %}"
+            class="bg-base-100">
   <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
     <div>
       <dt class="text-base-content/60 text-xs uppercase font-semibold">{% translate "Depth interval" %}</dt>
       <dd>
         {% if interval %}
-          <a href="{{ interval.get_absolute_url }}" class="link link-hover font-medium tabular-nums">{{ interval.top|quantity }} – {{ interval.bottom|quantity }}</a>
+          <a href="{{ interval.get_absolute_url }}"
+             class="link link-hover font-medium tabular-nums">{{ interval.top|quantity }} – {{ interval.bottom|quantity }}</a>
           {% if interval.name %}<span class="block text-xs text-base-content/70">{{ interval.name }}</span>{% endif %}
         {% else %}
           <span class="text-sm text-base-content/70">{% translate "The interval belongs to a dataset that hasn't been published yet." %}</span>
@@ -20,7 +22,8 @@
       <dt class="text-base-content/60 text-xs uppercase font-semibold">{% translate "Site" %}</dt>
       <dd>
         {% if site %}
-          <a href="{{ site.get_absolute_url }}" class="link link-hover font-medium break-words">{{ site }}</a>
+          <a href="{{ site.get_absolute_url }}"
+             class="link link-hover font-medium break-words">{{ site }}</a>
         {% else %}
           <span class="text-sm text-base-content/70">{% translate "The site belongs to a dataset that hasn't been published yet." %}</span>
         {% endif %}

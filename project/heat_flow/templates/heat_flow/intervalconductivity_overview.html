@@ -4,13 +4,11 @@
   An interval conductivity's page: its value, how and where it was determined, its own score, and
   the heat flow values that use it.
 {% endcomment %}
-
 {% block overview.notices %}
   {{ block.super }}
   {% heat_flow_page measurement as hf %}
   {% if hf.stale %}<c-heat_flow.stale revision="{{ measurement.quality_scheme }}" />{% endif %}
 {% endblock overview.notices %}
-
 {% block overview.result %}
   <c-mvp.card.wrapper class="bg-base-100">
     <div class="card-body gap-2">
@@ -20,39 +18,48 @@
     </div>
   </c-mvp.card.wrapper>
 {% endblock overview.result %}
-
 {% block overview.properties %}
   {% heat_flow_page measurement as hf %}
-  <c-mvp.card title="{% translate 'How it was determined' %}" class="bg-base-100">
+  <c-mvp.card title="{% translate 'How it was determined' %}"
+              class="bg-base-100">
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
-      <c-heat_flow.field label="{% translate 'Source' %}" value="{{ measurement.source|labels|capfirst }}" />
-      <c-heat_flow.field label="{% translate 'Location of samples' %}" value="{{ measurement.conductivity_location|labels|capfirst }}" />
-      <c-heat_flow.field label="{% translate 'Method' %}" value="{{ measurement.method|labels|capfirst }}" />
-      <c-heat_flow.field label="{% translate 'Averaging strategy' %}" value="{{ measurement.strategy|labels|capfirst }}" />
-      <c-heat_flow.field label="{% translate 'Saturation' %}" value="{{ measurement.saturation|labels|capfirst }}" />
-      <c-heat_flow.field label="{% translate 'pT conditions' %}" value="{{ measurement.pT_conditions|labels|capfirst }}" />
-      <c-heat_flow.field label="{% translate 'pT function' %}" value="{{ measurement.pT_function|labels|capfirst }}" />
-      <c-heat_flow.field label="{% translate 'Number of measurements' %}" value="{{ measurement.number|default_if_none:'' }}" />
+      <c-heat_flow.field label="{% translate 'Source' %}"
+                         value="{{ measurement.source|labels|capfirst }}" />
+      <c-heat_flow.field label="{% translate 'Location of samples' %}"
+                         value="{{ measurement.conductivity_location|labels|capfirst }}" />
+      <c-heat_flow.field label="{% translate 'Method' %}"
+                         value="{{ measurement.method|labels|capfirst }}" />
+      <c-heat_flow.field label="{% translate 'Averaging strategy' %}"
+                         value="{{ measurement.strategy|labels|capfirst }}" />
+      <c-heat_flow.field label="{% translate 'Saturation' %}"
+                         value="{{ measurement.saturation|labels|capfirst }}" />
+      <c-heat_flow.field label="{% translate 'pT conditions' %}"
+                         value="{{ measurement.pT_conditions|labels|capfirst }}" />
+      <c-heat_flow.field label="{% translate 'pT function' %}"
+                         value="{{ measurement.pT_function|labels|capfirst }}" />
+      <c-heat_flow.field label="{% translate 'Number of measurements' %}"
+                         value="{{ measurement.number|default_if_none:'' }}" />
     </div>
   </c-mvp.card>
-
-  <c-card.quality.own :measurement="measurement" kind="conductivity" label="{% translate 'TC-score (thermal conductivity)' %}" />
-
-  <c-heat_flow.children title="{% translate 'Heat flow values using this conductivity' %}" :children="hf.children" empty="{% translate 'No heat flow value uses this conductivity.' %}" />
+  <c-card.quality.own :measurement="measurement"
+                      kind="conductivity"
+                      label="{% translate 'TC-score (thermal conductivity)' %}" />
+  <c-heat_flow.children title="{% translate 'Heat flow values using this conductivity' %}"
+                        :children="hf.children"
+                        empty="{% translate 'No heat flow value uses this conductivity.' %}" />
 {% endblock overview.properties %}
-
 {% block overview.sample %}
   {% heat_flow_page measurement as hf %}
   <c-heat_flow.measured_on :interval="hf.interval" :site="hf.site" />
 {% endblock overview.sample %}
-
 {% block overview.location %}
   {% heat_flow_page measurement as hf %}
   <c-heat_flow.site_location :place="hf.location" />
 {% endblock overview.location %}
-
 {% block extra_js %}
   {{ block.super }}
   {% heat_flow_page measurement as hf %}
-  {% if hf.location.point and not effective_location %}{% include "overview/includes/map_library.html" %}{% endif %}
+  {% if hf.location.point and not effective_location %}
+    {% include "overview/includes/map_library.html" %}
+  {% endif %}
 {% endblock extra_js %}

@@ -3,11 +3,15 @@
 {% load i18n %}
 <c-vars place />
 {% if place.point %}
-  <c-card.location :location="place.point" :elevation="place.elevation" :uncertainty="place.uncertainty"
+  <c-card.location :location="place.point"
+                   :elevation="place.elevation"
+                   :uncertainty="place.uncertainty"
                    title="{% translate 'Site location' %}"
                    label="{% blocktranslate with x=place.point.x y=place.point.y %}Map of the site, at longitude {{ x }} and latitude {{ y }}{% endblocktranslate %}" />
 {% elif place.visible %}
-  <c-card.location title="{% translate 'Site location' %}" empty="{% translate 'No location is recorded for the site.' %}" />
+  <c-card.location title="{% translate 'Site location' %}"
+                   empty="{% translate 'No location is recorded for the site.' %}" />
 {% else %}
-  <c-card.location title="{% translate 'Site location' %}" empty="{% translate 'The site belongs to a dataset that has not been published, so its location is not shown.' %}" />
+  <c-card.location title="{% translate 'Site location' %}"
+                   empty="{% translate 'The site belongs to a dataset that has not been published, so its location is not shown.' %}" />
 {% endif %}

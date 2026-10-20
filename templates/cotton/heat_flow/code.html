@@ -3,7 +3,11 @@
 {% load i18n %}
 <c-vars code />
 {% if code %}
-  <code class="badge badge-ghost badge-sm font-mono whitespace-nowrap" data-quality="code" data-value="{{ code }}">{{ code }}</code>
+  <code class="badge badge-ghost badge-sm font-mono whitespace-nowrap"
+        data-quality="code"
+        data-value="{{ code }}">{{ code }}</code>
 {% else %}
-  <span class="badge badge-outline badge-sm whitespace-nowrap" data-quality="code" data-value="">{% translate "Quality not determined" %}</span>
+  <span class="badge badge-outline badge-sm whitespace-nowrap"
+        data-quality="code"
+        data-value="">{% translate "Quality not determined" %}</span>
 {% endif %}

@@ -10,7 +10,9 @@
   {% if children.rows %}
     <ul class="list">
       {% for child in children.rows %}
-        <c-heat_flow.child_row :child="child" :relevance="relevance" :rests_on="child.rests_on" />
+        <c-heat_flow.child_row :child="child"
+                               :relevance="relevance"
+                               :rests_on="child.rests_on" />
       {% endfor %}
     </ul>
   {% elif not children.hidden %}
@@ -20,7 +22,10 @@
     <div class="flex flex-wrap items-center gap-2 text-sm text-base-content/70">
       {% blocktranslate count counter=children.more %}and {{ counter }} more{% plural %}and {{ counter }} more{% endblocktranslate %}
       {% translate "All heat flow values" as label %}{% translate "Every heat flow value listed here, as a filterable table." as reason %}
-      <c-actions.pending label="{{ label }}" icon="data" reason="{{ reason }}" size="xs" />
+      <c-actions.pending label="{{ label }}"
+                         icon="data"
+                         reason="{{ reason }}"
+                         size="xs" />
     </div>
   {% endif %}
   {% if children.hidden %}

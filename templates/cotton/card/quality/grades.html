@@ -2,58 +2,58 @@
 {# @prop record:object | description:"The child or parent heat flow value whose stored grades are shown." #}
 {% load i18n %}
 <c-vars record />
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 mt-2">
-    <c-mvp.data_field label="{% trans "U-score" %}">
-      {% if record.U_score == "Ux" %}
-        <span data-quality="u"
-              data-state="not-determined"
-              data-value="{{ record.U_score }}">{% trans "Not determined" %}</span>
-      {% else %}
-        <span data-quality="u"
-              data-state="determined"
-              data-value="{{ record.U_score }}">{{ record.U_score }}</span>
-      {% endif %}
-    </c-mvp.data_field>
-    {# A badge is a div, which ends the paragraph <c-mvp.data_field> puts its value in, so this pair is written out. #}
-    <div class="mb-3">
-      <h6 class="text-base-content/60 text-xs uppercase font-semibold">{% trans "M-score" %}</h6>
-      {% if record.M_score == "Mx" %}
-        <span data-quality="m"
-              data-state="not-determined"
-              data-value="{{ record.M_score }}"
-              data-missing="false">{% trans "Not determined" %}</span>
-      {% elif record.M_score|last == "x" %}
-        <span data-quality="m"
-              data-state="determined"
-              data-value="{{ record.M_score }}"
-              data-missing="true">{{ record.M_score }} <span data-quality-mark="missing"><c-badge variant="warning" size="sm">{% trans "Missing information" %}</c-badge></span></span>
-      {% else %}
-        <span data-quality="m"
-              data-state="determined"
-              data-value="{{ record.M_score }}"
-              data-missing="false">{{ record.M_score }}</span>
-      {% endif %}
-    </div>
-    <c-mvp.data_field label="{% trans "Quality code" %}">
-      {% if record.quality %}
-        <code data-quality="code"
-              data-state="determined"
-              data-value="{{ record.quality }}">{{ record.quality }}</code>
-      {% else %}
-        <span data-quality="code"
-              data-state="not-determined"
-              data-value="">{% trans "Not determined" %}</span>
-      {% endif %}
-    </c-mvp.data_field>
-    <c-mvp.data_field label="{% trans "Scheme revision" %}">
-      {% if record.quality_scheme %}
-        <span data-quality="scheme"
-              data-state="determined"
-              data-value="{{ record.quality_scheme }}">{{ record.quality_scheme }}</span>
-      {% else %}
-        <span data-quality="scheme"
-              data-state="not-determined"
-              data-value="">{% trans "Not yet calculated" %}</span>
-      {% endif %}
-    </c-mvp.data_field>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 mt-2">
+  <c-mvp.data_field label="{% trans "U-score" %}">
+    {% if record.U_score == "Ux" %}
+      <span data-quality="u"
+            data-state="not-determined"
+            data-value="{{ record.U_score }}">{% trans "Not determined" %}</span>
+    {% else %}
+      <span data-quality="u"
+            data-state="determined"
+            data-value="{{ record.U_score }}">{{ record.U_score }}</span>
+    {% endif %}
+  </c-mvp.data_field>
+  {# A badge is a div, which ends the paragraph <c-mvp.data_field> puts its value in, so this pair is written out. #}
+  <div class="mb-3">
+    <h6 class="text-base-content/60 text-xs uppercase font-semibold">{% trans "M-score" %}</h6>
+    {% if record.M_score == "Mx" %}
+      <span data-quality="m"
+            data-state="not-determined"
+            data-value="{{ record.M_score }}"
+            data-missing="false">{% trans "Not determined" %}</span>
+    {% elif record.M_score|last == "x" %}
+      <span data-quality="m"
+            data-state="determined"
+            data-value="{{ record.M_score }}"
+            data-missing="true">{{ record.M_score }} <span data-quality-mark="missing"><c-badge variant="warning" size="sm">{% trans "Missing information" %}</c-badge></span></span>
+    {% else %}
+      <span data-quality="m"
+            data-state="determined"
+            data-value="{{ record.M_score }}"
+            data-missing="false">{{ record.M_score }}</span>
+    {% endif %}
   </div>
+  <c-mvp.data_field label="{% trans "Quality code" %}">
+    {% if record.quality %}
+      <code data-quality="code"
+            data-state="determined"
+            data-value="{{ record.quality }}">{{ record.quality }}</code>
+    {% else %}
+      <span data-quality="code"
+            data-state="not-determined"
+            data-value="">{% trans "Not determined" %}</span>
+    {% endif %}
+  </c-mvp.data_field>
+  <c-mvp.data_field label="{% trans "Scheme revision" %}">
+    {% if record.quality_scheme %}
+      <span data-quality="scheme"
+            data-state="determined"
+            data-value="{{ record.quality_scheme }}">{{ record.quality_scheme }}</span>
+    {% else %}
+      <span data-quality="scheme"
+            data-state="not-determined"
+            data-value="">{% trans "Not yet calculated" %}</span>
+    {% endif %}
+  </c-mvp.data_field>
+</div>

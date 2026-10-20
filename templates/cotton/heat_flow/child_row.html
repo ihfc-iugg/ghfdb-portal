@@ -5,19 +5,30 @@
 {% load i18n heat_flow_overview %}
 <c-vars child relevance rests_on />
 <li class="list-row px-0 items-center">
-  <span class="stat-icon stat-icon-sm" style="--stat-color: var(--color-accent)" aria-hidden="true"><c-icon name="measurement" only /></span>
+  <span class="stat-icon stat-icon-sm"
+        style="--stat-color: var(--color-accent)"
+        aria-hidden="true">
+    <c-icon name="measurement" only />
+  </span>
   <div class="list-col-grow min-w-0 flex flex-col gap-1">
-    <a href="{{ child.get_absolute_url }}" class="link link-hover font-medium tabular-nums break-words">{{ child.print_value }}</a>
+    <a href="{{ child.get_absolute_url }}"
+       class="link link-hover font-medium tabular-nums break-words">{{ child.print_value }}</a>
     <span class="text-xs text-base-content/70 flex flex-wrap gap-x-3">
       {% with methods=child.method|labels %}{% if methods %}<span>{{ methods|capfirst }}</span>{% endif %}{% endwith %}
       {% if child.name %}<span>{{ child.name }}</span>{% endif %}
       {% if relevance %}
-        {% if child.is_relevant %}<span>{% translate "Marked relevant" %}</span>{% else %}<span>{% translate "Not marked relevant" %}</span>{% endif %}
+        {% if child.is_relevant %}
+          <span>{% translate "Marked relevant" %}</span>
+        {% else %}
+          <span>{% translate "Not marked relevant" %}</span>
+        {% endif %}
       {% endif %}
     </span>
   </div>
   <span class="flex flex-wrap justify-end gap-1">
-    {% if rests_on %}<span class="badge badge-soft badge-primary badge-sm whitespace-nowrap">{% translate "Quality rests on this" %}</span>{% endif %}
+    {% if rests_on %}
+      <span class="badge badge-soft badge-primary badge-sm whitespace-nowrap">{% translate "Quality rests on this" %}</span>
+    {% endif %}
     <c-heat_flow.code :code="child.quality" />
   </span>
 </li>

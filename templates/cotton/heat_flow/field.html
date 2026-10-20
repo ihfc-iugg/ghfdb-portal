@@ -5,4 +5,7 @@
 {% load i18n %}
 <c-vars label value help_text />
 {% translate "Not recorded" as not_recorded %}
-<c-mvp.data_field label="{{ label }}" value="{{ value }}" help_text="{{ help_text }}" missing="{{ not_recorded }}" />
+<c-mvp.data_field label="{{ label }}"
+                  value="{{ value }}"
+                  help_text="{{ help_text }}"
+                  missing="{{ not_recorded }}" />

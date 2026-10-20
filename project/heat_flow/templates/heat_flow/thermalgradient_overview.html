@@ -4,13 +4,11 @@
   A thermal gradient's page: its measured and corrected values, the temperatures it was read from,
   its own score, and the heat flow values that use it.
 {% endcomment %}
-
 {% block overview.notices %}
   {{ block.super }}
   {% heat_flow_page measurement as hf %}
   {% if hf.stale %}<c-heat_flow.stale revision="{{ measurement.quality_scheme }}" />{% endif %}
 {% endblock overview.notices %}
-
 {% block overview.result %}
   <c-mvp.card.wrapper class="bg-base-100">
     <div class="card-body gap-2">
@@ -31,19 +29,37 @@
     </div>
   </c-mvp.card.wrapper>
 {% endblock overview.result %}
-
 {% block overview.properties %}
   {% heat_flow_page measurement as hf %}
-  <c-mvp.card title="{% translate 'Temperatures' %}" class="bg-base-100">
+  <c-mvp.card title="{% translate 'Temperatures' %}"
+              class="bg-base-100">
     <div class="overflow-x-auto">
       <table class="table table-sm">
         <caption class="sr-only">{% translate "The temperatures at the top and bottom of the interval and how they were read" %}</caption>
-        <thead><tr><th scope="col"><span class="sr-only">{% translate "Reading" %}</span></th><th scope="col">{% translate "Top of interval" %}</th><th scope="col">{% translate "Bottom of interval" %}</th></tr></thead>
+        <thead>
+          <tr>
+            <th scope="col"><span class="sr-only">{% translate "Reading" %}</span></th>
+            <th scope="col">{% translate "Top of interval" %}</th>
+            <th scope="col">{% translate "Bottom of interval" %}</th>
+          </tr>
+        </thead>
         <tbody>
           <tr>
             <th scope="row">{% translate "Temperature" %}</th>
-            <td class="tabular-nums">{% if measurement.temperature_top is not None %}{% plus_minus measurement.temperature_top measurement.temperature_top_uncertainty %}{% else %}<span class="text-base-content/60">{% translate "Not recorded" %}</span>{% endif %}</td>
-            <td class="tabular-nums">{% if measurement.temperature_bottom is not None %}{% plus_minus measurement.temperature_bottom measurement.temperature_bottom_uncertainty %}{% else %}<span class="text-base-content/60">{% translate "Not recorded" %}</span>{% endif %}</td>
+            <td class="tabular-nums">
+              {% if measurement.temperature_top is not None %}
+                {% plus_minus measurement.temperature_top measurement.temperature_top_uncertainty %}
+              {% else %}
+                <span class="text-base-content/60">{% translate "Not recorded" %}</span>
+              {% endif %}
+            </td>
+            <td class="tabular-nums">
+              {% if measurement.temperature_bottom is not None %}
+                {% plus_minus measurement.temperature_bottom measurement.temperature_bottom_uncertainty %}
+              {% else %}
+                <span class="text-base-content/60">{% translate "Not recorded" %}</span>
+              {% endif %}
+            </td>
           </tr>
           <tr>
             <th scope="row">{% translate "Method" %}</th>
@@ -63,26 +79,28 @@
         </tbody>
       </table>
     </div>
-    <c-heat_flow.field label="{% translate 'Number of temperature recordings' %}" value="{{ measurement.number|default_if_none:'' }}" />
+    <c-heat_flow.field label="{% translate 'Number of temperature recordings' %}"
+                       value="{{ measurement.number|default_if_none:'' }}" />
   </c-mvp.card>
-
-  <c-card.quality.own :measurement="measurement" kind="gradient" label="{% translate 'T-score (temperature gradient)' %}" />
-
-  <c-heat_flow.children title="{% translate 'Heat flow values using this gradient' %}" :children="hf.children" empty="{% translate 'No heat flow value uses this gradient.' %}" />
+  <c-card.quality.own :measurement="measurement"
+                      kind="gradient"
+                      label="{% translate 'T-score (temperature gradient)' %}" />
+  <c-heat_flow.children title="{% translate 'Heat flow values using this gradient' %}"
+                        :children="hf.children"
+                        empty="{% translate 'No heat flow value uses this gradient.' %}" />
 {% endblock overview.properties %}
-
 {% block overview.sample %}
   {% heat_flow_page measurement as hf %}
   <c-heat_flow.measured_on :interval="hf.interval" :site="hf.site" />
 {% endblock overview.sample %}
-
 {% block overview.location %}
   {% heat_flow_page measurement as hf %}
   <c-heat_flow.site_location :place="hf.location" />
 {% endblock overview.location %}
-
 {% block extra_js %}
   {{ block.super }}
   {% heat_flow_page measurement as hf %}
-  {% if hf.location.point and not effective_location %}{% include "overview/includes/map_library.html" %}{% endif %}
+  {% if hf.location.point and not effective_location %}
+    {% include "overview/includes/map_library.html" %}
+  {% endif %}
 {% endblock extra_js %}
