@@ -212,3 +212,45 @@ nine were applied to plan.md, research.md and tasks.md, because each was a parag
   and the expected `units` in tests is a literal mapping from the model declarations.
 
 **ADR:** none — corrections to this feature's plan
+
+## D21 — A quantity and a term are read from what a request has just written
+
+**Decision:** `QuantityNumber.to_representation` accepts a plain number as well as a pint
+quantity, and `TermChoiceField.get_attribute` turns a stored name into its concept through the
+model field's own `to_python`.
+
+**Why:** after a create or update the response is built from the instance the request filled,
+which still holds the numbers and names as they were written, not the values read back from the
+database. A field that handled only the read-back shape answered 500 on the response of a
+write that had succeeded.
+
+**Revisit if:** the viewsets refresh the instance before building a write response.
+
+**ADR:** none — implementation detail of D16
+
+## D22 — Many-valued vocabulary fields are read-only, which accepts more writes than before
+
+**Decision:** `TermRelatedField` and the read-only text field for `stratigraphy` ignore any
+value a request supplies for them.
+
+**Why:** the generated serializers declared these as required, writable many-valued fields whose
+child could not read an input, so a create had to send each as an empty list and anything else
+answered 500. Read-only fields keep every request that was accepted accepted (an empty list is
+ignored) and no field becomes more writable (D20).
+
+**Revisit if:** a story makes the many-valued terms writable.
+
+**ADR:** none — follows D20
+
+## D23 — The unit is written as pint's compact form gives it
+
+**Decision:** `units` carries `f"{field.ureg(field.base_units).units:~C}"` as the plan states,
+which writes the heat flow unit as `mW/m²` and the conductivity unit as `W/mK`.
+
+**Why:** the plan and D17 name the formula, and a unit written by hand in the serializer could
+drift from the model's declaration. The brief's example `mW/m**2` is the unit as the model
+spells it, not what the formula returns.
+
+**Revisit if:** a consumer needs a machine-parseable unit string instead.
+
+**ADR:** none — follows D16

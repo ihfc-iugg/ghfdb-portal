@@ -19,6 +19,14 @@ from .models import (
     ParentHeatFlow,
     ThermalGradient,
 )
+from .serializers import (
+    HeatFlowIntervalSummarySerializer,
+    HeatFlowSiteSummarySerializer,
+    HeatFlowSummarySerializer,
+    IntervalConductivitySummarySerializer,
+    ParentHeatFlowSummarySerializer,
+    ThermalGradientSummarySerializer,
+)
 from .tables import (
     HeatFlowIntervalTable,
     HeatFlowSiteTable,
@@ -60,6 +68,7 @@ class HeatFlowSiteConfig(IHFCConfig):
         "A heat flow site is a specific geological location where measurements of subsurface temperature gradients and thermal conductivity are conducted to determine the heat flow, or the rate of heat transfer from the Earth's interior to its surface."
     )
     filterset_class = HeatFlowSiteFilter
+    serializer_class = HeatFlowSiteSummarySerializer
     table_class = HeatFlowSiteTable
     # A site is a named location, the one record here that holds coordinates.
     fields = [
@@ -109,6 +118,7 @@ class HeatFlowIntervalConfig(IHFCConfig):
     # lithology, age, stratigraphy are M2M and cannot be in list_display
     admin_list_display = ["top", "bottom", "vertical_depth", "vertical_datum"]
     table_class = HeatFlowIntervalTable
+    serializer_class = HeatFlowIntervalSummarySerializer
     fields = [
         ("top", "bottom"),
         ("vertical_depth", "vertical_datum"),
@@ -130,6 +140,7 @@ class HeatFlowConfig(IHFCConfig):
     admin_list_display = ["value", "uncertainty", "expedition"]
     table_class = HeatFlowTable
     filterset_class = HeatFlowFilter
+    serializer_class = HeatFlowSummarySerializer
     fields = [
         ("value", "uncertainty"),
         "method",
@@ -155,6 +166,7 @@ class ThermalGradientConfig(IHFCConfig):
         "Geothermal gradient refers to the rate of temperature change over a given length interval (typically a depth interval). It reflects how heat flows from the Earth's hot interior toward its cooler surface, driven by conduction, convection, and sometimes advection. Thermal gradient is measured in Kelvin per kilometer (K/km) and varies depending on local geological conditions, such as rock composition and tectonic activity. In regions with high geothermal activity, the thermal gradient is larger, whereas stable cratons tend to have lower gradients. Understanding geothermal gradients helps geoscientists study Earth's geothermal energy potential and processes like plate tectonics and mantle convection."
     )
     table_class = ThermalGradientTable
+    serializer_class = ThermalGradientSummarySerializer
     fields = [
         ("value", "uncertainty"),
         ("corrected_value", "corrected_uncertainty"),
@@ -171,6 +183,7 @@ class IntervalConductivityConfig(IHFCConfig):
 
     model = IntervalConductivity
     table_class = IntervalConductivityTable
+    serializer_class = IntervalConductivitySummarySerializer
     # method, strategy, source, saturation, pT_conditions, pT_function are M2M and cannot be in list_display
     admin_list_display = ["value", "uncertainty", "number"]
     description = _(
@@ -190,6 +203,7 @@ class ParentHeatFlowConfig(IHFCConfig):
     """FairDM registry configuration for the aggregated, quality-controlled parent heat flow record."""
 
     model = ParentHeatFlow
+    serializer_class = ParentHeatFlowSummarySerializer
     description = _(
         "Parent heat flow represents the aggregated, quality-controlled surface heat flow value for a given "
         "HeatFlowSite, derived from one or more child HeatFlow measurements. Each site has at most one "

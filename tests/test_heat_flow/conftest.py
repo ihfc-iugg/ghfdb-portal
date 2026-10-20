@@ -88,3 +88,80 @@ def child_fixture(
         thermal_gradient=gradient_fixture,
         thermal_conductivity=conductivity_fixture,
     )
+
+
+@pytest.fixture
+def public_dataset(db):
+    # An anonymous API request reads only a public, published dataset's records.
+    from fairdm.utils.choices import Visibility
+
+    return DatasetFactory(visibility=Visibility.PUBLIC, published=True)
+
+
+@pytest.fixture
+def full_records(public_dataset):
+    # One record of each of the six types with every vocabulary field and every
+    # quantity filled, in a public, published dataset (FS-010).
+    from heat_flow.models import HeatFlowSite
+    from quantityfield.units import ureg
+    from research_vocabs.models import Concept
+
+    from tests.factories import (
+        HeatFlowFactory,
+        HeatFlowIntervalFactory,
+        HeatFlowSiteFactory,
+        IntervalConductivityFactory,
+        ParentHeatFlowFactory,
+        ThermalGradientFactory,
+    )
+
+    def concepts(model, field_name, count):
+        vocabulary = model._meta.get_field(field_name).vocabulary
+        return list(Concept.get_for_vocabulary(vocabulary).order_by("name")[:count])
+
+    site = HeatFlowSiteFactory(
+        dataset=public_dataset,
+        environment="onshore_continental",
+        azimuth=45.5,
+        inclination=10.25,
+        length=ureg.Quantity(1000, "ft"),
+        explo_purpose=concepts(HeatFlowSite, "explo_purpose", 2),
+    )
+    site.lithology.set(concepts(HeatFlowSite, "lithology", 2))
+    site.age.set(concepts(HeatFlowSite, "age", 1))
+    interval = HeatFlowIntervalFactory(
+        dataset=public_dataset, site=site, top=10.5, bottom=200.5, vertical_depth=190
+    )
+    gradient = ThermalGradientFactory(
+        dataset=public_dataset,
+        sample=interval,
+        value="25.50",
+        uncertainty="1.25",
+        corrected_value="26.50",
+        corrected_uncertainty="1.50",
+        shutin_top=12,
+        shutin_bottom=24,
+    )
+    conductivity = IntervalConductivityFactory(
+        dataset=public_dataset, sample=interval, value="2.50", uncertainty="0.25"
+    )
+    parent = ParentHeatFlowFactory(
+        dataset=public_dataset, sample=site, value=65.5, uncertainty=4.5
+    )
+    child = HeatFlowFactory(
+        dataset=public_dataset,
+        sample=interval,
+        parent=parent,
+        thermal_gradient=gradient,
+        thermal_conductivity=conductivity,
+        value=70.5,
+        uncertainty=5.5,
+    )
+    return {
+        "site": site,
+        "interval": interval,
+        "gradient": gradient,
+        "conductivity": conductivity,
+        "parent": parent,
+        "child": child,
+    }
