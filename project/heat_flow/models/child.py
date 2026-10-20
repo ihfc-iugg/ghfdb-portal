@@ -304,7 +304,9 @@ class HeatFlow(Measurement):
 
     def save(self, *args, **kwargs):
         """Reject a sample that is not a HeatFlowInterval before saving."""
-        if self.sample_id and not isinstance(self.sample, HeatFlowInterval):
+        if self.sample_id and not issubclass(
+            self.sample.get_real_instance_class(), HeatFlowInterval
+        ):
             raise ValidationError(
                 _("HeatFlow sample must be a HeatFlowInterval instance.")
             )
@@ -824,7 +826,9 @@ class ThermalGradient(ScoredMeasurement, Measurement):
 
     def save(self, *args, **kwargs):
         """Reject a sample that is not a HeatFlowInterval before saving."""
-        if self.sample_id and not isinstance(self.sample, HeatFlowInterval):
+        if self.sample_id and not issubclass(
+            self.sample.get_real_instance_class(), HeatFlowInterval
+        ):
             raise ValidationError(
                 _("ThermalGradient sample must be a HeatFlowInterval instance.")
             )
@@ -1007,7 +1011,9 @@ class IntervalConductivity(ScoredMeasurement, Measurement):
 
     def save(self, *args, **kwargs):
         """Reject a sample that is not a HeatFlowInterval before saving."""
-        if self.sample_id and not isinstance(self.sample, HeatFlowInterval):
+        if self.sample_id and not issubclass(
+            self.sample.get_real_instance_class(), HeatFlowInterval
+        ):
             raise ValidationError(
                 _("IntervalConductivity sample must be a HeatFlowInterval instance.")
             )

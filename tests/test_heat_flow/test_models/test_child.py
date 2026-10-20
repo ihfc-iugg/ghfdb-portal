@@ -103,6 +103,29 @@ class TestHeatFlowInterval:
 
 class TestHeatFlow:
     @pytest.mark.django_db
+    def test_a_child_whose_interval_is_loaded_as_a_plain_sample_saves(
+        self, child_fixture
+    ):
+        from fairdm.core.models import Sample
+        from heat_flow.models import HeatFlow
+
+        child = HeatFlow.objects.get(pk=child_fixture.pk)
+        child.sample = Sample.objects.non_polymorphic().get(pk=child.sample_id)
+        child.expedition = "Cruise 7"
+
+        child.save()
+
+        child.refresh_from_db()
+        assert child.expedition == "Cruise 7"
+
+    @pytest.mark.django_db
+    def test_a_child_placed_on_a_site_is_refused(self, child_fixture, site_fixture):
+        child_fixture.sample = site_fixture
+
+        with pytest.raises(ValidationError):
+            child_fixture.save()
+
+    @pytest.mark.django_db
     def test_heat_flow_child_relationships(
         self,
         dataset,

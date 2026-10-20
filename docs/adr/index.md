@@ -34,6 +34,8 @@ The domain vocabulary these records use is defined in `CONTEXT.md` at the reposi
 | [0022](0022-stored-quality-scores-are-recalculated-when-their-inputs-are-written.md) | Stored quality scores are recalculated when their inputs are written |
 | [0023](0023-a-site-holds-the-location-and-its-own-elevation.md) | A site holds the location, and its elevation stays its own |
 | [0024](0024-a-heat-flow-pages-content-comes-through-a-template-tag.md) | A heat flow page's content comes through a template tag |
+| [0025](0025-a-heat-flow-type-serves-a-summary-in-a-list-and-the-whole-record-on-its-own.md) | A heat flow type serves a summary in a list and the whole record on its own |
+| [0026](0026-a-quantity-is-a-number-in-its-stored-unit-and-the-record-names-the-unit.md) | A quantity is a number in its stored unit, and the record names the unit |
 
 :::{toctree}
 :hidden:
