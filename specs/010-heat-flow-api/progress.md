@@ -37,3 +37,10 @@ Did: Added HeatFlowRecordSchema to project/heat_flow/schema.py. For a list opera
 Verified: uv run pytest tests/test_heat_flow/test_schema.py -q -n0 -> 10 passed, after 5 failed first. Removing get_identity makes the no-component-warnings test fail with the identical-names warning, so it guards the extension.
 Next: T006 the guide.
 Watch: T004's commit alone leaves those three US4 schema tests red; T005 closes it.
+
+## 2026-10-20T20:16:49Z · Implementer US1 · T006
+
+Did: Added the site and parent sections to docs/guides/heat-flow-records-api.md, each with the list and single-record shape and one example request and response taken from a response read in a throwaway test (then deleted), with the host and the empty metadata lists changed or noted. Added the hidden-list rule to the Hidden records section and the new serializers and schema extension to the developer section.
+Verified: forge verify --repo . --base origin/main --steps docs -> passed (it failed first, because the table no longer named the two summary serializers; the paragraph names them now).
+Next: full verify, then the report.
+Watch: the examples use real factory output, so the numbers are made up but consistent with each other.
