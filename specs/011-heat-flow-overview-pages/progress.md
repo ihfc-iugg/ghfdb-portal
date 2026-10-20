@@ -114,3 +114,10 @@ Did: Wrote the parent section of `docs/guides/record-pages.md` (designation, qua
 Verified: see the full verify run in the completion report.
 Next: full verify, then the completion report.
 Watch: none.
+
+## 2026-10-20T17:10:25Z · Implementer US5 · T016
+
+Did: Rebuilt `HeatFlowPage.for_interval` test-first: it reads the site and its visibility from `site_location()` instead of asking `opens` three times, so the site is checked once. Added `TestHeatFlowPageForInterval` (site, hidden, member, probe present and absent, location, query count) and a `site_location` test for elevation and uncertainty; the site-with-location, without-location and unpublished cases were already in `TestHeatFlowPageSiteLocation` from US1.
+Verified: `uv run pytest tests/test_heat_flow/test_overview.py -k "ForInterval or SiteLocation" -n0 -q`: red first (the query-count test: 4 queries against 2; the elevation test was red on a stale cached site and fixed in the test), then 12 passed, whole module 90 passed. Probes, each failing its test and restored: probe returned as None (2 failed), `site_hidden` held False (1), elevation None (1), uncertainty None (1).
+Next: T017, the interval page and location hooks, then the SC-001 test.
+Watch: none.

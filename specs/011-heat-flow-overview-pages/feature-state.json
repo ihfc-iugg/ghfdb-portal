@@ -376,8 +376,20 @@
       "tasks": [
         {
           "id": "T016",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_overview.py::TestHeatFlowPageForInterval",
+              "tests/test_heat_flow/test_overview.py::TestHeatFlowPageSiteLocation"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_overview.py -n0 -q"
+            ],
+            "code": [
+              "project/heat_flow/overview.py:226"
+            ]
+          }
         },
         {
           "id": "T017",
