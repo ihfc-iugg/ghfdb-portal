@@ -206,3 +206,30 @@ record it links to, and a test reads the columns from the export resource and fi
 its page. The spec's wording is the orchestrator's to settle under the open spec gate.
 
 **ADR:** none — reading of a success criterion.
+
+## D16. US1 ports the other pages onto `HeatFlowPage` unchanged
+
+The sketch's module functions are deleted with the module, but the other five pages still need
+their content until their own stories rebuild them test-first. `HeatFlowPage` therefore carries
+`for_site`, `for_interval`, `for_gradient_or_conductivity` and `for_parent` with the sketch's
+logic, now reading the shared `opens`, `split` and `listing`. One test asserts that `context()`
+reaches a method for every type. The tag still reads `?intervals=all` so the site template's
+link keeps working; the site story moves it to `?show=all` with its template. The four methods
+are documented in `docs/guides/record-pages.md` so the docs check is clean, and each story that
+rebuilds one updates that row.
+
+**ADR:** none — a stage in building the feature.
+
+## D17. Repairs to the pages and fixtures the sketch and FS-007 left behind
+
+- `heatflowinterval_overview.html` named the icons `arrow-up` and `arrow-down`; the registry has
+  `arrow_up` and `arrow_down`, and the page raised `IconNotFoundError` when rendered. Fixed in
+  passing, since the page could not otherwise be rendered by the smoke test of the tag library.
+- FS-007's card fixtures could not run against the page: they built records in datasets that
+  are not published, and the `conductivity` fixture passed `location=[]`, a field since renamed
+  `conductivity_location`. The `page` and `query_count` fixtures now read the page signed in as a
+  superuser, who may open every record; the field name is corrected. No test body changed.
+- The `field` component's `data-field` and `not-recorded` state moved from T002 to T003, because
+  the page test that drives them is a child-page test.
+
+**ADR:** none — repairs to test support and a sketch template.
