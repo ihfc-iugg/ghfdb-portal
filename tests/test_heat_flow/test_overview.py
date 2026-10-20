@@ -20,6 +20,7 @@ from tests.factories import (
     HeatFlowCorrectionFactory,
     HeatFlowFactory,
     HeatFlowIntervalFactory,
+    ProbeMetadataFactory,
 )
 
 pytestmark = pytest.mark.django_db
@@ -151,6 +152,21 @@ class TestHeatFlowPageSiteLocation:
         place = HeatFlowPage(page_records["interval"], visitor).site_location()
 
         assert place["point"] == page_records["site"].location
+
+    def test_it_returns_the_elevation_and_uncertainty_of_the_sites_location(
+        self, page_records, visitor
+    ):
+        HeatFlowSite.objects.filter(pk=page_records["site"].pk).update(
+            location_elevation=125, location_uncertainty=40
+        )
+        interval = HeatFlowInterval.objects.get(pk=page_records["interval"].pk)
+
+        place = HeatFlowPage(interval, visitor).site_location()
+
+        assert place["elevation"] == interval.site.location_elevation
+        assert place["uncertainty"] == interval.site.location_uncertainty
+        assert place["elevation"] is not None
+        assert place["uncertainty"] is not None
 
     def test_a_site_the_visitor_may_not_open_gives_no_location(
         self, page_records, hide, visitor
@@ -290,6 +306,62 @@ class TestHeatFlowPageForChild:
         child.refresh_from_db()
 
         assert HeatFlowPage(child, visitor).for_child()["stale"] is True
+
+
+class TestHeatFlowPageForInterval:
+    def test_it_returns_the_site_the_visitor_may_open(self, page_records, visitor):
+        context = HeatFlowPage(page_records["interval"], visitor).for_interval()
+
+        assert context["site"] == page_records["site"]
+        assert context["site_hidden"] is False
+
+    def test_a_site_in_an_unpublished_dataset_is_marked_hidden_and_not_returned(
+        self, page_records, hide, visitor
+    ):
+        hide(page_records["site"])
+
+        context = HeatFlowPage(page_records["interval"], visitor).for_interval()
+
+        assert context["site"] is None
+        assert context["site_hidden"] is True
+
+    def test_a_member_is_given_the_unpublished_site(self, page_records, hide, member):
+        hide(page_records["site"])
+
+        context = HeatFlowPage(page_records["interval"], member).for_interval()
+
+        assert context["site"] == page_records["site"]
+        assert context["site_hidden"] is False
+
+    def test_it_returns_the_probe_metadata_recorded_for_the_interval(
+        self, page_records, visitor
+    ):
+        probe = ProbeMetadataFactory(interval=page_records["interval"])
+        interval = HeatFlowInterval.objects.get(pk=page_records["interval"].pk)
+
+        context = HeatFlowPage(interval, visitor).for_interval()
+
+        assert context["probe"] == probe
+
+    def test_an_interval_without_probe_metadata_gets_none(self, page_records, visitor):
+        context = HeatFlowPage(page_records["interval"], visitor).for_interval()
+
+        assert context["probe"] is None
+
+    def test_it_returns_the_location_of_the_intervals_site(self, page_records, visitor):
+        page = HeatFlowPage(page_records["interval"], visitor)
+
+        assert page.for_interval()["location"] == page.site_location()
+
+    def test_it_checks_the_site_once_and_reads_the_probe_once(
+        self, page_records, visitor
+    ):
+        interval = HeatFlowInterval.objects.select_related("site").get(
+            pk=page_records["interval"].pk
+        )
+        page = HeatFlowPage(interval, visitor)
+
+        assert query_count(page.for_interval) == 2
 
 
 def add_interval(site, top, bottom, dataset, children=0):

@@ -204,14 +204,19 @@ class HeatFlowPage:
         }
 
     def for_interval(self):
-        """Gather an interval's site and probe metadata."""
-        interval = self.record
-        site = interval.site
+        """Gather an interval's site and probe metadata.
+
+        Returns:
+            The ``site``, ``None`` when the visitor may not open it, and ``site_hidden``
+            when it exists but the visitor may not. The interval's ``probe`` metadata,
+            ``None`` where no marine probe was used, and the site's ``location``.
+        """
+        location = self.site_location()
         return {
-            "site": site if self.opens(site) else None,
-            "site_hidden": site is not None and not self.opens(site),
-            "probe": getattr(interval, "probe_metadata", None),
-            "location": self.site_location(),
+            "site": location["site"],
+            "site_hidden": not location["visible"],
+            "probe": getattr(self.record, "probe_metadata", None),
+            "location": location,
         }
 
     def for_child(self):
