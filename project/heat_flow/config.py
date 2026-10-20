@@ -21,10 +21,10 @@ from .models import (
 )
 from .serializers import (
     HeatFlowIntervalSummarySerializer,
-    HeatFlowSiteSummarySerializer,
+    HeatFlowSiteSerializer,
     HeatFlowSummarySerializer,
     IntervalConductivitySummarySerializer,
-    ParentHeatFlowSummarySerializer,
+    ParentHeatFlowSerializer,
     ThermalGradientSummarySerializer,
 )
 from .tables import (
@@ -68,7 +68,7 @@ class HeatFlowSiteConfig(IHFCConfig):
         "A heat flow site is a specific geological location where measurements of subsurface temperature gradients and thermal conductivity are conducted to determine the heat flow, or the rate of heat transfer from the Earth's interior to its surface."
     )
     filterset_class = HeatFlowSiteFilter
-    serializer_class = HeatFlowSiteSummarySerializer
+    serializer_class = HeatFlowSiteSerializer
     table_class = HeatFlowSiteTable
     # A site is a named location, the one record here that holds coordinates.
     fields = [
@@ -203,7 +203,7 @@ class ParentHeatFlowConfig(IHFCConfig):
     """FairDM registry configuration for the aggregated, quality-controlled parent heat flow record."""
 
     model = ParentHeatFlow
-    serializer_class = ParentHeatFlowSummarySerializer
+    serializer_class = ParentHeatFlowSerializer
     description = _(
         "Parent heat flow represents the aggregated, quality-controlled surface heat flow value for a given "
         "HeatFlowSite, derived from one or more child HeatFlow measurements. Each site has at most one "

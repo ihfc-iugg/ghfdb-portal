@@ -23,3 +23,10 @@ Did: Wrote docs/guides/heat-flow-records-api.md (the six addresses, terms, quant
 Verified: sphinx-build -b html docs built the page and its toctree entry with no warning about it, using a separate docs environment; the 36 warnings the build gives come from pages this branch does not touch, so a -W build fails on the base as well. forge verify --steps docs passed (it needs each new public name quoted in a page).
 Next: full verify, then the report.
 Watch: the guide's example values come from a response read in the tests, not typed in.
+
+## 2026-10-20T20:14:39Z · Implementer US1 · T004
+
+Did: Added the list/single split and the site and parent shapes in project/heat_flow/serializers.py: reference(), RequesterVisibility (records, narrow, mark_visible, can_see), HeatFlowListSerializer, summary_serializer and many_init on the base, load_related prefetching many-valued terms with their vocabulary (the US4 watch item), SiteParentSerializer, SiteIntervalSerializer, HeatFlowSiteSerializer and ParentHeatFlowSerializer; the parent summary gained its scores, quality and site reference. The site and parent registrations name the full serializers. Tests first: 12 of 15 failed on the first run (missing parent, intervals, children, scores, and a list whose query count grew), then 47 passed.
+Verified: uv run pytest tests/test_heat_flow/test_serializers.py -q -n0 -> 47 passed; ruff, ruff format and mypy clean on the changed files.
+Next: T005 the schema extension; three US4 schema tests are red until it lands, since the site list now serializes the full record in the generated document.
+Watch: D25-D27 in decisions.md.

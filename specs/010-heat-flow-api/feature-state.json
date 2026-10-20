@@ -123,8 +123,21 @@
       "tasks": [
         {
           "id": "T004",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_serializers.py::TestHeatFlowSiteSerializer",
+              "tests/test_heat_flow/test_serializers.py::TestParentHeatFlowSerializer"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_serializers.py -q -n0 (red: 12 failed, 3 passed; green: 47 passed)"
+            ],
+            "code": [
+              "project/heat_flow/serializers.py:648",
+              "project/heat_flow/serializers.py:705"
+            ]
+          }
         },
         {
           "id": "T005",

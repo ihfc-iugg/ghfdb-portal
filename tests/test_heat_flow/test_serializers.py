@@ -5,6 +5,13 @@ from fairdm.factories import UserFactory
 from heat_flow.models import HeatFlowSite
 from research_vocabs.models import Concept
 
+from tests.factories import (
+    HeatFlowFactory,
+    HeatFlowIntervalFactory,
+    HeatFlowSiteFactory,
+    ParentHeatFlowFactory,
+)
+
 SITES = "/api/v1/samples/heat-flow-sites/"
 INTERVALS = "/api/v1/samples/depth-intervals/"
 CHILDREN = "/api/v1/measurements/heat-flow/"
@@ -246,3 +253,215 @@ class TestHeatFlowWrites:
         errors = [error for error in run_checks() if error.id == "fairdm.E600"]
 
         assert errors == []
+
+
+def detail(client, route, record):
+    response = client.get(f"{route}{record.uuid}/")
+
+    assert response.status_code == 200
+    return response.json()
+
+
+def uuids(entries):
+    return {entry["uuid"] for entry in entries}
+
+
+@pytest.mark.django_db
+class TestHeatFlowSiteSerializer:
+    def test_the_single_site_carries_its_parent_whole(self, client, site_graph):
+        parent = site_graph["parent"]
+
+        record = detail(client, SITES, site_graph["site"])
+
+        assert record["parent"]["uuid"] == parent.uuid
+        assert record["parent"]["value"] == 65.5
+        assert record["parent"]["uncertainty"] == 4.5
+        assert record["parent"]["quality"] == parent.quality
+        assert record["parent"]["ghfdb_id"] == parent.ghfdb_id
+
+    def test_the_single_site_carries_every_interval_with_its_children(
+        self, client, site_graph
+    ):
+        record = detail(client, SITES, site_graph["site"])
+
+        assert uuids(record["intervals"]) == {
+            interval.uuid for interval in site_graph["intervals"]
+        }
+        for entry, interval in zip(
+            sorted(record["intervals"], key=lambda entry: entry["top"]),
+            site_graph["intervals"],
+            strict=True,
+        ):
+            assert uuids(entry["children"]) == {
+                child.uuid for child in site_graph["children"][interval.pk]
+            }
+
+    def test_an_interval_with_two_children_lists_both_whole(self, client, site_graph):
+        record = detail(client, SITES, site_graph["site"])
+
+        shallow = min(record["intervals"], key=lambda entry: entry["top"])
+        assert {child["uuid"]: child["value"] for child in shallow["children"]} == {
+            child.uuid: child.value for child in site_graph["all_children"][:2]
+        }
+
+    def test_the_site_list_carries_position_and_the_parents_headline(
+        self, client, site_graph
+    ):
+        parent = site_graph["parent"]
+
+        record = only_record(client, SITES)
+
+        assert record["location"]["type"] == "Point"
+        assert record["parent"] == {
+            "uuid": parent.uuid,
+            "url": record["parent"]["url"],
+            "value": 65.5,
+            "uncertainty": 4.5,
+            "quality": parent.quality,
+            "units": {"value": "mW/m²", "uncertainty": "mW/m²"},
+        }
+        assert record["parent"]["url"].endswith(f"{PARENTS}{parent.uuid}/")
+        assert "intervals" not in record
+
+    def test_a_site_with_no_parent_is_listed_with_a_null_parent(
+        self, client, public_dataset
+    ):
+        site = HeatFlowSiteFactory(dataset=public_dataset)
+
+        listed = only_record(client, SITES)
+        single = detail(client, SITES, site)
+
+        assert listed["parent"] is None
+        assert single["parent"] is None
+        assert single["intervals"] == []
+
+    def test_a_hidden_parent_is_null_on_the_site_in_both_shapes(
+        self, client, site_graph, private_dataset
+    ):
+        type(site_graph["parent"]).objects.filter(pk=site_graph["parent"].pk).update(
+            dataset=private_dataset
+        )
+
+        listed = only_record(client, SITES)
+        single = detail(client, SITES, site_graph["site"])
+
+        assert listed["parent"] is None
+        assert single["parent"] is None
+
+    def test_a_hidden_interval_and_a_hidden_child_are_absent_from_the_site(
+        self, client, site_graph, private_dataset
+    ):
+        deep = site_graph["intervals"][1]
+        hidden_child = site_graph["children"][site_graph["intervals"][0].pk][1]
+        type(deep).objects.filter(pk=deep.pk).update(dataset=private_dataset)
+        type(hidden_child).objects.filter(pk=hidden_child.pk).update(
+            dataset=private_dataset
+        )
+
+        record = detail(client, SITES, site_graph["site"])
+
+        assert uuids(record["intervals"]) == {site_graph["intervals"][0].uuid}
+        assert uuids(record["intervals"][0]["children"]) == {
+            site_graph["children"][site_graph["intervals"][0].pk][0].uuid
+        }
+
+    def test_the_site_list_costs_the_same_for_one_site_as_for_several(
+        self, client, public_dataset, constant_query_count
+    ):
+        def build(count):
+            for _ in range(count):
+                site = HeatFlowSiteFactory(dataset=public_dataset)
+                ParentHeatFlowFactory(dataset=public_dataset, sample=site)
+
+        constant_query_count(build, lambda: client.get(SITES, {"page_size": 100}))
+
+    def test_a_single_site_costs_the_same_with_more_intervals_and_children(
+        self, client, public_dataset, constant_query_count
+    ):
+        site = HeatFlowSiteFactory(dataset=public_dataset)
+        parent = ParentHeatFlowFactory(dataset=public_dataset, sample=site)
+
+        def build(count):
+            for _ in range(count):
+                interval = HeatFlowIntervalFactory(dataset=public_dataset, site=site)
+                for _ in range(2):
+                    HeatFlowFactory(
+                        dataset=public_dataset, sample=interval, parent=parent
+                    )
+
+        constant_query_count(
+            build, lambda: client.get(f"{SITES}{site.uuid}/"), low=1, high=3
+        )
+
+
+@pytest.mark.django_db
+class TestParentHeatFlowSerializer:
+    def test_the_single_parent_carries_its_values_scores_site_and_children(
+        self, client, site_graph
+    ):
+        parent = site_graph["parent"]
+
+        record = detail(client, PARENTS, parent)
+
+        assert record["value"] == 65.5
+        assert record["uncertainty"] == 4.5
+        assert record["U_score"] == parent.U_score
+        assert record["M_score"] == parent.M_score
+        assert record["quality"] == parent.quality
+        assert record["quality_scheme"] == parent.quality_scheme
+        assert record["ghfdb_id"] == parent.ghfdb_id
+        assert record["site"]["uuid"] == site_graph["site"].uuid
+
+    def test_every_child_is_listed_with_whether_it_is_relevant(
+        self, client, site_graph
+    ):
+        record = detail(client, PARENTS, site_graph["parent"])
+
+        assert {
+            child["uuid"]: child["is_relevant"] for child in record["children"]
+        } == {child.uuid: child.is_relevant for child in site_graph["all_children"]}
+        assert False in {child["is_relevant"] for child in record["children"]}
+        assert all(child["url"] for child in record["children"])
+
+    def test_a_hidden_child_is_absent_from_the_parents_children(
+        self, client, site_graph, private_dataset
+    ):
+        hidden = site_graph["all_children"][0]
+        type(hidden).objects.filter(pk=hidden.pk).update(dataset=private_dataset)
+
+        record = detail(client, PARENTS, site_graph["parent"])
+
+        assert uuids(record["children"]) == {
+            child.uuid for child in site_graph["all_children"][1:]
+        }
+
+    def test_the_parent_list_carries_the_site_and_scores_but_no_children(
+        self, client, site_graph
+    ):
+        record = only_record(client, PARENTS)
+
+        assert record["site"]["uuid"] == site_graph["site"].uuid
+        assert record["quality"] == site_graph["parent"].quality
+        assert "children" not in record
+
+    def test_the_parent_list_costs_the_same_for_one_parent_as_for_several(
+        self, client, public_dataset, constant_query_count
+    ):
+        def build(count):
+            for _ in range(count):
+                site = HeatFlowSiteFactory(dataset=public_dataset)
+                ParentHeatFlowFactory(dataset=public_dataset, sample=site)
+
+        constant_query_count(build, lambda: client.get(PARENTS, {"page_size": 100}))
+
+    def test_a_single_parent_costs_the_same_with_more_children(
+        self, client, public_dataset, constant_query_count
+    ):
+        parent = ParentHeatFlowFactory(dataset=public_dataset)
+        interval = HeatFlowIntervalFactory(dataset=public_dataset, site=parent.sample)
+
+        def build(count):
+            for _ in range(count):
+                HeatFlowFactory(dataset=public_dataset, sample=interval, parent=parent)
+
+        constant_query_count(build, lambda: client.get(f"{PARENTS}{parent.uuid}/"))

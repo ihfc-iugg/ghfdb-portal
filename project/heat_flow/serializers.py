@@ -5,15 +5,26 @@ is a JSON number in the unit its field is stored in, and each record names those
 in ``units`` (FS-010).
 """
 
+from collections import defaultdict
 from typing import Any, cast
 
-from fairdm.api.serializers import BaseMeasurementSerializer, BaseSampleSerializer
+from django.db.models import Prefetch
+from drf_spectacular.utils import extend_schema_field
+from fairdm.api.filters import FairDMVisibilityFilter
+from fairdm.api.serializers import (
+    BaseMeasurementSerializer,
+    BaseSampleSerializer,
+    RecordListSerializer,
+    RecordReferenceField,
+)
+from fairdm.api.viewsets import load_relations
 from quantityfield import fields as quantity_fields
 from quantityfield.fields import QuantityFieldMixin
 from quantityfield.units import ureg
 from research_vocabs import models as vocabulary_models
 from research_vocabs.fields import BaseConceptField, ConceptManyToManyField
 from rest_framework import serializers
+from rest_framework.reverse import reverse
 
 from .models import (
     HeatFlow,
@@ -189,8 +200,124 @@ class UnitsField(serializers.Field):
         }
 
 
-class HeatFlowRecordSerializer(serializers.ModelSerializer):
-    """Gives a heat flow record its terms, its numbers and its units."""
+def reference(record: Any, request: Any) -> dict[str, str]:
+    """Refer to a record by its identifier and its address in the API.
+
+    Args:
+        record: A sample or measurement the requester may see.
+        request: The request being served, which makes the address absolute.
+
+    Returns:
+        The record's ``uuid`` and ``url``.
+    """
+    url = reverse(
+        RecordReferenceField.route_name(record),
+        kwargs={"uuid": record.uuid},
+        request=request,
+    )
+    return {"uuid": record.uuid, "url": url}
+
+
+class RequesterVisibility(serializers.BaseSerializer):
+    """Asks the visibility filter of the API's own routes what the requester may see.
+
+    A record, a list of records and the lists nested in a record share one serializer
+    context, which keeps the answers for the length of the request.
+    """
+
+    @staticmethod
+    def records(model: Any) -> Any:
+        """Give every record of a model, before any check of who may see it.
+
+        Args:
+            model: A sample or measurement model.
+
+        Returns:
+            A queryset of the model that reads no subclass rows.
+        """
+        queryset = model._default_manager.all()
+        if hasattr(queryset, "non_polymorphic"):
+            queryset = queryset.non_polymorphic()
+        return queryset
+
+    def shared(self) -> dict[str, Any]:
+        """Give the context every serializer of the request shares.
+
+        Returns:
+            The context, which answers kept in it outlast the one serializer.
+        """
+        return cast(dict[str, Any], self.context)
+
+    def narrow(self, queryset: Any) -> Any:
+        """Keep the records the requester may see, by the rule of the record's own route.
+
+        Args:
+            queryset: Samples or measurements of one model.
+
+        Returns:
+            The queryset limited to what the requester may see.
+        """
+        return FairDMVisibilityFilter().filter_queryset(
+            self.context["request"], queryset, cast(Any, None)
+        )
+
+    def mark_visible(self, records: list[Any]) -> None:
+        """Ask once which of the records the requester may see, and remember it.
+
+        Args:
+            records: Samples or measurements, of any mix of models.
+        """
+        seen = self.shared().setdefault("visibility", {})
+        by_model: dict[Any, list[int]] = defaultdict(list)
+        for record in records:
+            by_model[record._meta.concrete_model].append(record.pk)
+        for model, pks in by_model.items():
+            visible = set(
+                self.narrow(self.records(model).filter(pk__in=pks)).values_list(
+                    "pk", flat=True
+                )
+            )
+            seen.update({(model, pk): pk in visible for pk in pks})
+
+    def can_see(self, record: Any) -> bool:
+        """Say whether the requester may see a sample or measurement.
+
+        Args:
+            record: The record, checked in one query unless its page already was.
+
+        Returns:
+            True when the requester may see it.
+        """
+        key = (record._meta.concrete_model, record.pk)
+        if key not in self.context.get("visibility", {}):
+            self.mark_visible([record])
+        return bool(self.context["visibility"][key])
+
+
+class HeatFlowListSerializer(RequesterVisibility, RecordListSerializer):
+    """A page of heat flow records, with what the page needs read once."""
+
+    def to_representation(self, data: Any) -> Any:
+        """Prime the page's shared context, then serialize each record.
+
+        Args:
+            data: The page of records, or a manager or queryset of them.
+
+        Returns:
+            One entry for each record.
+        """
+        records = list(data.all() if hasattr(data, "all") else data)
+        cast(Any, self.child).prime_context(records)
+        return super().to_representation(records)
+
+
+class HeatFlowRecordSerializer(RequesterVisibility, serializers.ModelSerializer):
+    """Gives a heat flow record its terms, its numbers and its units.
+
+    Attributes:
+        summary_serializer: The shorter shape a list of this record gives, or ``None``
+            when the list gives the record itself.
+    """
 
     serializer_field_mapping = {
         **serializers.ModelSerializer.serializer_field_mapping,
@@ -199,7 +326,77 @@ class HeatFlowRecordSerializer(serializers.ModelSerializer):
         quantity_fields.PositiveIntegerQuantityField: QuantityIntegerField,
     }
 
+    summary_serializer: type[serializers.ModelSerializer] | None = None
+
     units = UnitsField()
+
+    @classmethod
+    def many_init(cls, *args: Any, **kwargs: Any) -> HeatFlowListSerializer:
+        """Build a list of this record's summary, or of the record when it has none.
+
+        Args:
+            *args: Passed to the child serializer and the list.
+            **kwargs: Passed to the child serializer, and those a list takes to the list.
+
+        Returns:
+            The list serializer, whatever the ``Meta`` of the serializer says.
+        """
+        child_class = cls.summary_serializer or cls
+        list_kwargs: dict[str, Any] = {
+            key: kwargs.pop(key)
+            for key in ("allow_empty", "max_length", "min_length")
+            if key in kwargs
+        }
+        list_kwargs["child"] = child_class(*args, **kwargs)
+        list_kwargs.update(
+            {
+                key: value
+                for key, value in kwargs.items()
+                if key in serializers.LIST_SERIALIZER_KWARGS
+            }
+        )
+        return HeatFlowListSerializer(*args, **list_kwargs)
+
+    @classmethod
+    def load_related(cls, queryset: Any) -> Any:
+        """Load the parents, metadata and terms a serialized record reads.
+
+        Args:
+            queryset: The records about to be serialized.
+
+        Returns:
+            The queryset with each many-valued vocabulary field prefetched with the
+            vocabulary its terms name.
+        """
+        terms = [
+            Prefetch(
+                field.name,
+                queryset=vocabulary_models.Concept.objects.select_related("vocabulary"),
+            )
+            for field in queryset.model._meta.many_to_many
+            if isinstance(field, ConceptManyToManyField)
+            and field.name in cls.Meta.fields
+        ]
+        return super().load_related(queryset).prefetch_related(*terms)  # type: ignore[misc]
+
+    @classmethod
+    def loaded(cls, queryset: Any) -> Any:
+        """Load everything a list of this serializer reads from the database.
+
+        Args:
+            queryset: The records about to be serialized.
+
+        Returns:
+            The queryset with its parents selected and its relations prefetched.
+        """
+        return load_relations(cls.load_related(queryset), cls)
+
+    def prime_context(self, records: list[Any]) -> None:
+        """Read in one query what a page of these records needs, when it needs any.
+
+        Args:
+            records: The page about to be serialized.
+        """
 
     def build_standard_field(
         self, field_name: str, model_field: Any
@@ -247,8 +444,25 @@ class HeatFlowRecordSerializer(serializers.ModelSerializer):
         }
 
 
+class SiteParentSerializer(HeatFlowRecordSerializer, BaseMeasurementSerializer):
+    """The parent's headline, as a list of sites gives it."""
+
+    class Meta(BaseMeasurementSerializer.Meta):
+        model = ParentHeatFlow
+        fields = ["url", "uuid", "value", "uncertainty", "quality", "units"]
+
+
 class HeatFlowSiteSummarySerializer(HeatFlowRecordSerializer, BaseSampleSerializer):
-    """A heat flow site."""
+    """A heat flow site.
+
+    Attributes:
+        parent_serializer: The shape the site's parent is given in.
+    """
+
+    parent_serializer: type[HeatFlowRecordSerializer] = SiteParentSerializer
+
+    # A serializer field is declared by assignment, so mypy reads this as Field.parent.
+    parent = serializers.SerializerMethodField()  # type: ignore[assignment]
 
     class Meta(BaseSampleSerializer.Meta):
         model = HeatFlowSite
@@ -267,9 +481,45 @@ class HeatFlowSiteSummarySerializer(HeatFlowRecordSerializer, BaseSampleSerializ
             "lithology",
             "age",
             "stratigraphy",
+            "parent",
             *BaseSampleSerializer.metadata_fields,
             "units",
         ]
+
+    def prime_context(self, records: list[Any]) -> None:
+        """Read the parents of a page of sites in one query, and who may see them.
+
+        Args:
+            records: The page of sites about to be serialized.
+        """
+        parents = self.shared().setdefault("parents", {})
+        missing = [site.pk for site in records if site.pk not in parents]
+        if not missing:
+            return
+        found = list(
+            self.parent_serializer.loaded(
+                self.records(ParentHeatFlow).filter(sample__in=missing)
+            )
+        )
+        self.mark_visible(found)
+        parents.update(dict.fromkeys(missing))
+        parents.update({parent.sample_id: parent for parent in found})
+
+    @extend_schema_field(SiteParentSerializer(allow_null=True))
+    def get_parent(self, site: HeatFlowSite) -> Any:
+        """Give the site's parent, or ``None`` when it has none or it is hidden.
+
+        Args:
+            site: The site being serialized.
+
+        Returns:
+            The parent in ``parent_serializer``'s shape.
+        """
+        self.prime_context([site])
+        parent = self.context["parents"][site.pk]
+        if parent is None or not self.can_see(parent):
+            return None
+        return self.parent_serializer(parent, context=self.context).data
 
 
 class HeatFlowIntervalSummarySerializer(HeatFlowRecordSerializer, BaseSampleSerializer):
@@ -360,6 +610,8 @@ class ParentHeatFlowSummarySerializer(
 ):
     """A parent heat flow."""
 
+    site = RecordReferenceField(source="sample", read_only=True)
+
     class Meta(BaseMeasurementSerializer.Meta):
         model = ParentHeatFlow
         fields = [
@@ -368,7 +620,126 @@ class ParentHeatFlowSummarySerializer(
             "uncertainty",
             "corr_HP_flag",
             "comment",
+            "U_score",
+            "M_score",
+            "quality",
+            "quality_scheme",
             "ghfdb_id",
+            "site",
             *BaseMeasurementSerializer.metadata_fields,
             "units",
+        ]
+
+
+@extend_schema_field(HeatFlowSummarySerializer(many=True))
+class ChildSummaries(serializers.ReadOnlyField):
+    """The summaries of the children made over an interval, read from the interval."""
+
+
+class SiteIntervalSerializer(HeatFlowIntervalSummarySerializer):
+    """A depth interval as its site gives it: the summary and the children over it."""
+
+    children = ChildSummaries()
+
+    class Meta(HeatFlowIntervalSummarySerializer.Meta):
+        fields = [*HeatFlowIntervalSummarySerializer.Meta.fields, "children"]
+
+
+class HeatFlowSiteSerializer(HeatFlowSiteSummarySerializer):
+    """A heat flow site with its whole parent and every interval with its children."""
+
+    summary_serializer = HeatFlowSiteSummarySerializer
+    parent_serializer = ParentHeatFlowSummarySerializer
+
+    intervals = serializers.SerializerMethodField()
+
+    class Meta(HeatFlowSiteSummarySerializer.Meta):
+        fields = [*HeatFlowSiteSummarySerializer.Meta.fields, "intervals"]
+
+    @extend_schema_field(ParentHeatFlowSummarySerializer(allow_null=True))
+    def get_parent(self, site: HeatFlowSite) -> Any:
+        """Give the whole parent in the shape its own list gives.
+
+        Args:
+            site: The site being serialized.
+
+        Returns:
+            The parent, or ``None`` when it has none or it is hidden.
+        """
+        return super().get_parent(site)
+
+    @extend_schema_field(SiteIntervalSerializer(many=True))
+    def get_intervals(self, site: HeatFlowSite) -> Any:
+        """Give every interval the requester may see, each with its children.
+
+        The children of every interval are read and serialized together, then
+        handed to the interval they were made over.
+
+        Args:
+            site: The site being serialized.
+
+        Returns:
+            The site's intervals, shallowest first.
+        """
+        intervals = list(
+            SiteIntervalSerializer.loaded(
+                self.narrow(self.records(HeatFlowInterval).filter(site=site))
+            ).order_by("top", "bottom", "pk")
+        )
+        children = list(
+            HeatFlowSummarySerializer.loaded(
+                self.narrow(self.records(HeatFlow).filter(sample__in=intervals))
+            ).order_by("pk")
+        )
+        rendered = HeatFlowSummarySerializer(
+            children, many=True, context=self.context
+        ).data
+        grouped = defaultdict(list)
+        for child, data in zip(children, rendered, strict=True):
+            grouped[child.sample_id].append(data)
+        for interval in intervals:
+            interval.children = grouped[interval.pk]
+        return SiteIntervalSerializer(intervals, many=True, context=self.context).data
+
+
+class ParentHeatFlowSerializer(ParentHeatFlowSummarySerializer):
+    """A parent heat flow with each child made towards it."""
+
+    summary_serializer = ParentHeatFlowSummarySerializer
+
+    children = serializers.SerializerMethodField()
+
+    class Meta(ParentHeatFlowSummarySerializer.Meta):
+        fields = [*ParentHeatFlowSummarySerializer.Meta.fields, "children"]
+
+    @extend_schema_field(
+        {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "uuid": {"type": "string"},
+                    "url": {"type": "string", "format": "uri"},
+                    "is_relevant": {"type": "boolean"},
+                },
+                "required": ["uuid", "url", "is_relevant"],
+            },
+        }
+    )
+    def get_children(self, parent: ParentHeatFlow) -> list[dict[str, Any]]:
+        """Refer to every child the requester may see, relevant or not.
+
+        Args:
+            parent: The parent being serialized.
+
+        Returns:
+            Each child's ``uuid`` and ``url`` with whether it counts towards the parent.
+        """
+        children = self.narrow(self.records(HeatFlow).filter(parent=parent))
+        return [
+            {
+                **reference(child, self.context["request"]),
+                "is_relevant": child.is_relevant,
+            }
+            for child in children.order_by("pk")
         ]

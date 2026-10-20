@@ -267,3 +267,42 @@ takes the term's name, as before.
 **Revisit if:** the schema settings turn on separate request components.
 
 **ADR:** none — follows from the portal's schema settings
+
+## D25 — A site's parent is read once per page and checked for visibility once
+
+**Decision:** `HeatFlowSiteSummarySerializer.prime_context` reads the parents of a page of
+sites in one query and asks the visibility filter once which of them the requester may see;
+`can_see` reads the answer from the request context, or asks for the one record. The single
+site goes through the same path with a page of one.
+
+**Why:** one code path gives a list and a single record the same rule, and the list's query
+count does not depend on its length.
+
+**Revisit if:** a second kind of record needs the same priming; move the shared part to the
+base then.
+
+**ADR:** none — follows D20
+
+## D26 — The site list does not prime visible sites yet
+
+**Decision:** `HeatFlowListSerializer` primes only what US1 reads (the parents of a page of
+sites). Priming the sites a page of intervals, children, gradients and conductivities sit at,
+and `site_of`, arrive with the location field in US3.
+
+**Why:** nothing in this story reads a visible site, and code with no reader has no test that
+could fail.
+
+**Revisit if:** US3 finds the context key shape here does not fit its priming.
+
+**ADR:** none — follows from the brief's scope
+
+## D27 — The site summary leaves out type, elevation and elevation datum
+
+**Decision:** `type`, `elevation` and `elevation_datum` stay out of the site summary.
+
+**Why:** `elevation` is a quantity, so adding it adds a key to the site's `units`, which the
+US4 tests pin to azimuth, inclination and length. Changing those tests is outside this story.
+
+**Revisit if:** US4's shape is amended to include them.
+
+**ADR:** none — follows from the plan's shapes table

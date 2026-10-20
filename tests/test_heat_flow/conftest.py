@@ -174,3 +174,74 @@ def api_schema(db, client):
 
     assert response.status_code == 200
     return response.json()["components"]["schemas"]
+
+
+@pytest.fixture
+def constant_query_count(django_assert_num_queries):
+    # Assert a callable's query count does not grow with row count (FR-016).
+
+    def assert_constant(build, call, low=1, high=3):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        build(low)
+        # A cold process pays a one-off ContentType lookup on the first call, so
+        # call() once, uncounted, before the baseline measures steady-state cost.
+        call()
+        with CaptureQueriesContext(connection) as baseline:
+            call()
+
+        build(high)
+        with django_assert_num_queries(len(baseline.captured_queries)):
+            call()
+
+    return assert_constant
+
+
+@pytest.fixture
+def private_dataset(db):
+    # DatasetFactory defaults to a private dataset, which an anonymous request
+    # never sees.
+    return DatasetFactory()
+
+
+@pytest.fixture
+def site_graph(public_dataset):
+    # A public site with its parent, two intervals and three children: the first
+    # interval carries two (one not marked relevant), the second one.
+    from tests.factories import (
+        HeatFlowFactory,
+        HeatFlowIntervalFactory,
+        HeatFlowSiteFactory,
+        ParentHeatFlowFactory,
+    )
+
+    site = HeatFlowSiteFactory(dataset=public_dataset)
+    parent = ParentHeatFlowFactory(
+        dataset=public_dataset, sample=site, value=65.5, uncertainty=4.5
+    )
+    shallow = HeatFlowIntervalFactory(
+        dataset=public_dataset, site=site, top=0, bottom=100
+    )
+    deep = HeatFlowIntervalFactory(
+        dataset=public_dataset, site=site, top=100, bottom=200
+    )
+    relevant = HeatFlowFactory(
+        dataset=public_dataset, sample=shallow, parent=parent, is_relevant=True
+    )
+    other = HeatFlowFactory(
+        dataset=public_dataset, sample=shallow, parent=parent, is_relevant=False
+    )
+    lone = HeatFlowFactory(
+        dataset=public_dataset, sample=deep, parent=parent, is_relevant=True
+    )
+    # The children's saves recalculate the parent's stored quality.
+    parent.refresh_from_db()
+    return {
+        "site": site,
+        "parent": parent,
+        "intervals": [shallow, deep],
+        "children": {shallow.pk: [relevant, other], deep.pk: [lone]},
+        "all_children": [relevant, other, lone],
+    }
+
