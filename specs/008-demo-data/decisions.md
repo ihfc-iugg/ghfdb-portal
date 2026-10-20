@@ -123,3 +123,27 @@ defect is reported, not fixed.
 **Why:** a one-line change to `pyproject.toml` and a relock, with no design content.
 
 **ADR:** none — a process note.
+
+## D10. Demo assessments skip the file upload
+
+**Decision:** demo assessments in every state carry no submitted file, and a described assessment's
+dataset already holds heat flow records.
+
+**Why:** the code review noted that the real workflow cannot reach those combinations. Demo data is
+there to give every page and endpoint something to show, and an assessment's page reads its state,
+not its files. Generating upload files would add a spreadsheet writer to the seed for no screen that
+needs it.
+
+**Revisit if:** a page or endpoint starts depending on an assessment's submitted files.
+
+**ADR:** none — local to this feature.
+
+## D11. Review findings left as they are
+
+- An existing account whose names differ from the demo entry is reused unchanged rather than refused.
+  The seed only adds groups to it, and a development database is the developer's own.
+- The documented `DemoGraph` example labels records by dataset, so building twice into the same
+  dataset repeats labels. The example builds once into a fresh dataset, which is the documented use.
+- The demo assessor account is outside FairDM's deploy check, as D6 records.
+
+**ADR:** none — local to this feature.

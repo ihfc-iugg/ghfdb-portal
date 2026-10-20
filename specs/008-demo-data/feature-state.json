@@ -173,15 +173,13 @@
           "attempts": 1,
           "evidence": {
             "tests": [
-              "tests/test_review/test_management/test_commands/test_seed_demo_data.py::TestSeedDemoDataEnvironment::test_production_is_refused_and_nothing_is_written"
+              "tests/test_review/test_management/test_commands/test_seed_demo_data.py::TestSeedDemoDataEnvironment"
             ],
             "commands": [
-              "uv run pytest tests/test_review/test_management/test_commands/test_seed_demo_data.py::TestSeedDemoDataEnvironment -q (1 passed)",
-              "mutation: deleted self._refuse_production() from handle(); same command: 1 failed, Failed: DID NOT RAISE CommandError",
-              "restored; same command: 1 passed"
+              "orchestrator mutation: replaced self._refuse_production() with pass -> 1 failed; restored -> passing"
             ],
             "code": [
-              "tests/test_review/test_management/test_commands/test_seed_demo_data.py:177"
+              "project/review/management/commands/seed_demo_data.py:104"
             ]
           }
         },
