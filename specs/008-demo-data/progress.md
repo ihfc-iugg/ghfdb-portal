@@ -55,3 +55,10 @@ Did: shrank six region boxes (North Sea, Mediterranean, India, Canadian Shield, 
 Verified: TestRegions 5 passed.
 Next: T011.
 Watch: table change only.
+
+## 2026-10-20T00:14:01Z · Implementer US1 · T011
+
+Did: replaced every call of _round with the built-in round, keeping the two-place default explicit; deleted the module-level dataset fixture that duplicated tests/test_heat_flow/conftest.py.
+Verified: test_demo.py 56 passed.
+Next: full verify and report.
+Watch: none.
