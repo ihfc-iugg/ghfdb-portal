@@ -125,3 +125,13 @@ adds beside the first.
 
 T001 first. T002 → T003 → T004 → T005 → T006. Every task changes the command or its tests, so none
 run in parallel.
+
+## Phase 4: Fixes from the code review
+
+- [ ] T007 [US1] DOC-001: the compose command on `docs/development/demo-data.md` runs `uv run python`.
+- [ ] T008 [US1] DOC-002: docstrings with Args/Returns/Raises on every new function in
+      `heat_flow/demo.py` and the command; `DemoGraph`'s arguments in its class docstring.
+- [ ] T009 [US1] TEST-001: the production-refusal test fails when the command's own refusal is
+      removed (assert nothing is called before the refusal).
+- [ ] T010 [US1] COR-001: every region lies wholly on land or wholly at sea.
+- [ ] T011 [US1] SIMP-001, TEST-002: inline `_round`; delete the unused module-level fixture.

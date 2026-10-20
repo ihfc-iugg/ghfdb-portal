@@ -2,7 +2,7 @@
   "feature": "008-demo-data",
   "branch": "008-demo-data",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "CONVERGE",
+  "state": "REVIEW",
   "state_history": [
     {
       "state": "GATE_SPEC",
@@ -33,6 +33,11 @@
       "state": "CONVERGE",
       "at": "2026-10-19T23:52:25Z",
       "note": "US1-US3 accepted; independent verify green"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-19T23:53:30Z",
+      "note": "converge green; 8 decisions verdicted, none graduate"
     }
   ],
   "gates": {
@@ -133,6 +138,31 @@
               "docs/development/demo-data.md:1"
             ]
           }
+        },
+        {
+          "id": "T007",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T008",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T009",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T010",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T011",
+          "status": "todo",
+          "attempts": 0
         }
       ]
     },
@@ -195,7 +225,7 @@
       "max": 2
     },
     "review_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 1
     },
     "design_review_cycles": {
