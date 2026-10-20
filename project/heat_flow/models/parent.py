@@ -333,18 +333,36 @@ class ParentHeatFlow(Measurement):
         """Return the HeatFlowSite this parent record belongs to."""
         return self.sample
 
-    def refresh_quality(self) -> None:
-        """Recalculate and store the quality this parent inherits from its children.
+    def quality_basis(self):
+        """Say which children this parent's quality rests on.
 
         A parent rests on its only child, marked relevant or not, because a single
         determination cannot be weighed against another. With several children it rests on
-        those marked relevant, and with none of those, or no children at all, it is not
-        determined. The parent's value is never written (the value is designated, not
-        calculated). The write is a queryset ``update``, so it sends no save signal.
+        those marked relevant, and with none of those, or no children at all, it rests on
+        nothing and its quality is not determined.
+
+        Returns:
+            The basis, and the children it rests on. The basis is ``"single"`` for an only
+            child, ``"relevant"`` for the children marked relevant, ``"none"`` for several
+            children of which none is marked relevant, and ``"empty"`` for no children. The
+            last two come with no children.
         """
         children = list(self.children.all())
-        if len(children) > 1:
-            children = [child for child in children if child.is_relevant]
+        if not children:
+            return "empty", []
+        if len(children) == 1:
+            return "single", children
+        relevant = [child for child in children if child.is_relevant]
+        return ("relevant" if relevant else "none"), relevant
+
+    def refresh_quality(self) -> None:
+        """Recalculate and store the quality this parent inherits from its children.
+
+        The children it inherits from are those ``quality_basis`` names. The parent's value
+        is never written (the value is designated, not calculated). The write is a queryset
+        ``update``, so it sends no save signal.
+        """
+        children = self.quality_basis()[1]
         self.U_score, self.M_score, flags = QualityScheme.inherit(children)
         self.quality = QualityScheme.code(self.U_score, self.M_score, flags)
         self.quality_scheme = SCHEME_REVISION
