@@ -193,6 +193,7 @@ DEP003 = [
     "import_export",
     "literature",
     "markdownx",
+    "mvp",
     "openpyxl",
     "partial_date",
     "polymorphic",
