@@ -21,7 +21,7 @@ not sampled from the published release.
    Or run it inside the Docker development stack:
 
    ```shell
-   docker compose exec django python manage.py seed_demo_data
+   docker compose exec django uv run python manage.py seed_demo_data
    ```
 
 2. Wait for the totals line, which reports the datasets, sites and children created.
