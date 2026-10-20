@@ -44,3 +44,10 @@ Did: Added the site and parent sections to docs/guides/heat-flow-records-api.md,
 Verified: forge verify --repo . --base origin/main --steps docs -> passed (it failed first, because the table no longer named the two summary serializers; the paragraph names them now).
 Next: full verify, then the report.
 Watch: the examples use real factory output, so the numbers are made up but consistent with each other.
+
+## 2026-10-20T20:57:27Z · Implementer US2 · T007
+
+Did: Gave the child its surface temperature, acquisition date, eight scores, ghfdb_id, relevance, references to parent, gradient, conductivity and site, and the location of its site (SiteLocationField, site_of, prime_sites). Added HeatFlowSerializer (registered for the child) nesting the gradient and conductivity whole or null and listing corrections through ChoiceLabelField, and ChoiceLabelFieldSchema. Tests first: 18 of 22 new serializer tests failed (missing fields, a 500 on update), then 94 passed with the schema and config tests.
+Verified: uv run pytest tests/test_heat_flow/test_serializers.py tests/test_heat_flow/test_schema.py tests/test_heat_flow/test_config.py -q -n0 -> 94 passed; ruff and mypy clean. Removing the page priming or the site select_related makes the child list's query-count test fail; removing the schema extension fails its test.
+Next: T008 the guide.
+Watch: D28-D30 in decisions.md; the corrections prefetch cannot be told from lazy loading by a count, since a lazy read is one query either way.

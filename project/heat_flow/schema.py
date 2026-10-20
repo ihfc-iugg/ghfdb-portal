@@ -134,3 +134,27 @@ class UnitsFieldSchema(OpenApiSerializerFieldExtension):
             },
             required=[],
         )
+
+
+class ChoiceLabelFieldSchema(OpenApiSerializerFieldExtension):
+    """Describes a stored choice as an object with its name and its label."""
+
+    target_class = "heat_flow.serializers.ChoiceLabelField"
+
+    def map_serializer_field(self, auto_schema: Any, direction: Direction) -> dict:
+        """Describe the choice the field gives.
+
+        Args:
+            auto_schema: The schema generator for the operation.
+            direction: Whether the field is read or written.
+
+        Returns:
+            An object with a ``name`` limited to the field's choices and a ``label``.
+        """
+        return build_object_type(
+            properties={
+                "name": {"type": "string", "enum": list(self.target.choices)},
+                "label": {"type": "string"},
+            },
+            required=["name", "label"],
+        )

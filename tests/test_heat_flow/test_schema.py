@@ -1,7 +1,7 @@
 import pytest
 from drf_spectacular.drainage import GENERATOR_STATS
 from drf_spectacular.generators import SchemaGenerator
-from heat_flow.models import HeatFlowSite, ThermalGradient
+from heat_flow.models import HeatFlowCorrection, HeatFlowSite, ThermalGradient
 
 TERM_PROPERTIES = {"name", "label", "uri", "vocabulary"}
 
@@ -127,3 +127,37 @@ class TestHeatFlowRecordSchema:
         emitted = capsys.readouterr().err
         assert "components with identical names" not in emitted
         assert "re-register" not in emitted
+
+
+CHILDREN = "/api/v1/measurements/heat-flow/"
+
+
+@pytest.mark.django_db
+class TestChoiceLabelFieldSchema:
+    def test_a_correction_type_and_status_are_objects_limited_to_their_choices(
+        self, api_document
+    ):
+        components = api_document["components"]["schemas"]
+        child = components[
+            component_name(response_schema(api_document, f"{CHILDREN}{{uuid}}/"))
+        ]
+        correction = components[
+            component_name(child["properties"]["corrections"]["items"])
+        ]["properties"]
+
+        assert correction["correction_type"]["type"] == "object"
+        assert set(correction["correction_type"]["properties"]) == {"name", "label"}
+        assert correction["correction_type"]["properties"]["name"]["enum"] == (
+            HeatFlowCorrection.CorrectionTypeChoices.values
+        )
+        assert correction["status"]["properties"]["name"]["enum"] == (
+            HeatFlowCorrection.StatusChoices.values
+        )
+
+    def test_the_child_list_item_has_the_site_and_no_corrections(self, api_document):
+        item = api_document["components"]["schemas"][
+            list_item_component(api_document, CHILDREN)
+        ]["properties"]
+
+        assert "site" in item
+        assert "corrections" not in item

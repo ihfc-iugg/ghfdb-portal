@@ -14,6 +14,7 @@ from fairdm.api.filters import FairDMVisibilityFilter
 from fairdm.api.serializers import (
     BaseMeasurementSerializer,
     BaseSampleSerializer,
+    GeoJSONPointField,
     RecordListSerializer,
     RecordReferenceField,
 )
@@ -28,12 +29,23 @@ from rest_framework.reverse import reverse
 
 from .models import (
     HeatFlow,
+    HeatFlowCorrection,
     HeatFlowInterval,
     HeatFlowSite,
     IntervalConductivity,
     ParentHeatFlow,
     ThermalGradient,
 )
+
+RECORD_REFERENCE = {
+    "type": "object",
+    "nullable": True,
+    "properties": {
+        "uuid": {"type": "string"},
+        "url": {"type": "string", "format": "uri"},
+    },
+    "required": ["uuid", "url"],
+}
 
 
 def term(concept: Any) -> dict[str, str] | None:
@@ -198,6 +210,50 @@ class UnitsField(serializers.Field):
             for name, field in cast(serializers.Serializer, self.parent).fields.items()
             if isinstance(field, QuantityNumber)
         }
+
+
+class ChoiceLabelField(serializers.ChoiceField):
+    """A stored choice, read as its name and its label."""
+
+    def __init__(self, **kwargs: Any) -> None:
+        """Read the choice and never write it.
+
+        Args:
+            **kwargs: Passed to ``ChoiceField``, including ``choices``.
+        """
+        kwargs["read_only"] = True
+        super().__init__(**kwargs)
+
+    def to_representation(self, value: Any) -> Any:
+        """Give the stored choice with the label it is shown under.
+
+        Args:
+            value: The stored choice.
+
+        Returns:
+            The choice's ``name`` and ``label``.
+        """
+        return {"name": value, "label": str(self.choices.get(value, value))}
+
+
+class SiteLocationField(GeoJSONPointField):
+    """The coordinates of the site a record is placed at, as a GeoJSON point."""
+
+    def to_representation(self, value: Any) -> dict | None:
+        """Give the point of the record's site, when the requester may see the site.
+
+        Args:
+            value: A record placed at a site, read through the serializer's ``site_of``.
+
+        Returns:
+            The site's point, or ``None`` when the record has no site, the site has no
+            location or the requester may not see the site.
+        """
+        parent = cast(Any, self.parent)
+        site = parent.site_of(value)
+        if site is None or not parent.can_see(site):
+            return None
+        return super().to_representation(site)
 
 
 def reference(record: Any, request: Any) -> dict[str, str]:
@@ -398,6 +454,57 @@ class HeatFlowRecordSerializer(RequesterVisibility, serializers.ModelSerializer)
             records: The page about to be serialized.
         """
 
+    @staticmethod
+    def site_of(record: Any) -> HeatFlowSite | None:
+        """Give the site a record is placed at.
+
+        Args:
+            record: A site, interval, parent, child, gradient or conductivity, loaded
+                with the path to its site selected.
+
+        Returns:
+            The site: the record itself for a site, the interval's for an interval, the
+            parent's own sample, and the site of the interval a child, gradient or
+            conductivity was made over. ``None`` when an interval has no site.
+        """
+        if isinstance(record, HeatFlowSite):
+            return record
+        if isinstance(record, HeatFlowInterval):
+            return record.site
+        sample = record.sample
+        if isinstance(record, ParentHeatFlow):
+            return sample if isinstance(sample, HeatFlowSite) else sample.heatflowsite
+        if not isinstance(sample, HeatFlowInterval):
+            sample = sample.heatflowinterval
+        return sample.site
+
+    def prime_sites(self, records: list[Any]) -> None:
+        """Ask once which of the sites a page of records sit at the requester may see.
+
+        Args:
+            records: The page about to be serialized.
+        """
+        seen = self.context.get("visibility", {})
+        sites = {site.pk: site for site in map(self.site_of, records) if site}
+        unseen = [site for pk, site in sites.items() if (HeatFlowSite, pk) not in seen]
+        if unseen:
+            self.mark_visible(unseen)
+
+    @extend_schema_field(RECORD_REFERENCE)
+    def get_site(self, record: Any) -> dict[str, str] | None:
+        """Refer to the site the record is placed at, when the requester may see it.
+
+        Args:
+            record: The record being serialized.
+
+        Returns:
+            The site's ``uuid`` and ``url``, or ``None``.
+        """
+        site = self.site_of(record)
+        if site is None or not self.can_see(site):
+            return None
+        return reference(site, self.context["request"])
+
     def build_standard_field(
         self, field_name: str, model_field: Any
     ) -> tuple[type, dict[str, Any]]:
@@ -547,18 +654,87 @@ class HeatFlowIntervalSummarySerializer(HeatFlowRecordSerializer, BaseSampleSeri
 class HeatFlowSummarySerializer(HeatFlowRecordSerializer, BaseMeasurementSerializer):
     """A child heat flow."""
 
+    location = SiteLocationField()
+    # A serializer field is declared by assignment, so mypy reads this as Field.parent.
+    parent = RecordReferenceField(read_only=True)  # type: ignore[assignment]
+    thermal_gradient = RecordReferenceField(read_only=True)
+    thermal_conductivity = RecordReferenceField(read_only=True)
+    site = serializers.SerializerMethodField()
+
     class Meta(BaseMeasurementSerializer.Meta):
         model = HeatFlow
         fields = [
             *BaseMeasurementSerializer.common_fields,
             "value",
             "uncertainty",
+            "surface_temperature",
+            "date_acquired",
             "method",
             "expedition",
             "c_comment",
+            "U_score",
+            "M_score",
+            "T_score",
+            "T_score_missing",
+            "TC_score",
+            "TC_score_missing",
+            "quality",
+            "quality_scheme",
+            "ghfdb_id",
+            "is_relevant",
+            "parent",
+            "thermal_gradient",
+            "thermal_conductivity",
+            "site",
             *BaseMeasurementSerializer.metadata_fields,
             "units",
         ]
+        read_only_fields = [
+            *BaseMeasurementSerializer.Meta.read_only_fields,
+            "surface_temperature",
+            "date_acquired",
+            "is_relevant",
+        ]
+
+    @classmethod
+    def load_related(cls, queryset: Any) -> Any:
+        """Select the interval and site a child is placed at.
+
+        Args:
+            queryset: The children about to be serialized.
+
+        Returns:
+            The queryset with the path to each child's site selected.
+        """
+        return (
+            super()
+            .load_related(queryset)
+            .select_related("sample__heatflowinterval__site")
+        )
+
+    def prime_context(self, records: list[Any]) -> None:
+        """Ask once which of the sites a page of children sit at the requester may see.
+
+        Args:
+            records: The page of children about to be serialized.
+        """
+        self.prime_sites(records)
+
+    def update(self, instance: HeatFlow, validated_data: dict[str, Any]) -> HeatFlow:
+        """Save the child against its interval, which the model's save requires.
+
+        Args:
+            instance: The child being changed.
+            validated_data: The validated fields to set.
+
+        Returns:
+            The changed child.
+        """
+        sample: Any = validated_data.get("sample") or instance.sample
+        if not isinstance(sample, HeatFlowInterval):
+            sample = sample.heatflowinterval
+        validated_data["sample"] = sample
+        return super().update(instance, validated_data)
 
 
 class ThermalGradientSummarySerializer(
@@ -703,6 +879,93 @@ class HeatFlowSiteSerializer(HeatFlowSiteSummarySerializer):
         for interval in intervals:
             interval.children = grouped[interval.pk]
         return SiteIntervalSerializer(intervals, many=True, context=self.context).data
+
+
+class HeatFlowCorrectionSerializer(serializers.ModelSerializer):
+    """A correction recorded against a child, with its type and status named."""
+
+    correction_type = ChoiceLabelField(
+        choices=HeatFlowCorrection.CorrectionTypeChoices.choices
+    )
+    status = ChoiceLabelField(choices=HeatFlowCorrection.StatusChoices.choices)
+
+    class Meta:
+        model = HeatFlowCorrection
+        fields = ["correction_type", "status", "comment"]
+
+
+class HeatFlowSerializer(HeatFlowSummarySerializer):
+    """A child heat flow with its gradient and conductivity whole and its corrections."""
+
+    summary_serializer = HeatFlowSummarySerializer
+
+    thermal_gradient = serializers.SerializerMethodField()
+    thermal_conductivity = serializers.SerializerMethodField()
+    corrections = HeatFlowCorrectionSerializer(many=True, read_only=True)
+
+    class Meta(HeatFlowSummarySerializer.Meta):
+        fields = [*HeatFlowSummarySerializer.Meta.fields, "corrections"]
+
+    @classmethod
+    def load_related(cls, queryset: Any) -> Any:
+        """Select the child's site and prefetch its corrections.
+
+        Args:
+            queryset: The children about to be serialized.
+
+        Returns:
+            The queryset with the corrections read in one query, in the order recorded.
+        """
+        corrections = Prefetch(
+            "corrections", queryset=HeatFlowCorrection.objects.order_by("pk")
+        )
+        return super().load_related(queryset).prefetch_related(corrections)
+
+    def nest(self, summary: type[HeatFlowRecordSerializer], pk: int | None) -> Any:
+        """Give a record the child was calculated from, whole, when it may be seen.
+
+        Args:
+            summary: The serializer that gives the record's own shape.
+            pk: The record's primary key, or ``None`` when the child has none.
+
+        Returns:
+            The record in the shape of ``summary``, or ``None`` when the child has none
+            or the requester may not see it.
+        """
+        if pk is None:
+            return None
+        meta = cast(Any, summary).Meta
+        visible = summary.loaded(self.narrow(self.records(meta.model).filter(pk=pk)))
+        record = visible.first()
+        if record is None:
+            return None
+        return summary(record, context=self.context).data
+
+    @extend_schema_field(ThermalGradientSummarySerializer(allow_null=True))
+    def get_thermal_gradient(self, child: HeatFlow) -> Any:
+        """Give the thermal gradient the child was calculated from, whole.
+
+        Args:
+            child: The child being serialized.
+
+        Returns:
+            The gradient, or ``None`` when the child has none or it is hidden.
+        """
+        return self.nest(ThermalGradientSummarySerializer, child.thermal_gradient_id)
+
+    @extend_schema_field(IntervalConductivitySummarySerializer(allow_null=True))
+    def get_thermal_conductivity(self, child: HeatFlow) -> Any:
+        """Give the interval conductivity the child was calculated from, whole.
+
+        Args:
+            child: The child being serialized.
+
+        Returns:
+            The conductivity, or ``None`` when the child has none or it is hidden.
+        """
+        return self.nest(
+            IntervalConductivitySummarySerializer, child.thermal_conductivity_id
+        )
 
 
 class ParentHeatFlowSerializer(ParentHeatFlowSummarySerializer):

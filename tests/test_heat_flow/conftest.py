@@ -249,6 +249,20 @@ def site_graph(public_dataset):
 
 
 @pytest.fixture
+def editor(client, public_dataset):
+    # A logged-in client allowed to create and change records in the public dataset.
+    from fairdm.contrib.contributors.choices import ContributionLevel
+    from fairdm.factories import UserFactory
+
+    user = UserFactory()
+    credit = public_dataset.add_contributor(user)
+    credit.level = ContributionLevel.EDIT
+    credit.save()
+    client.force_login(user)
+    return client
+
+
+@pytest.fixture
 def api_document(db, client):
     # The whole generated OpenAPI document, as the schema route serves it.
     response = client.get("/api/v1/schema/", {"format": "json"})

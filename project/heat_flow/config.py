@@ -21,8 +21,8 @@ from .models import (
 )
 from .serializers import (
     HeatFlowIntervalSummarySerializer,
+    HeatFlowSerializer,
     HeatFlowSiteSerializer,
-    HeatFlowSummarySerializer,
     IntervalConductivitySummarySerializer,
     ParentHeatFlowSerializer,
     ThermalGradientSummarySerializer,
@@ -140,7 +140,7 @@ class HeatFlowConfig(IHFCConfig):
     admin_list_display = ["value", "uncertainty", "expedition"]
     table_class = HeatFlowTable
     filterset_class = HeatFlowFilter
-    serializer_class = HeatFlowSummarySerializer
+    serializer_class = HeatFlowSerializer
     fields = [
         ("value", "uncertainty"),
         "method",

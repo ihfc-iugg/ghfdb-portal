@@ -307,3 +307,40 @@ US4 test held. That test belongs to this feature, so the orchestrator changed it
 with the shape, as task T011.
 
 **ADR:** none — follows the plan's shapes table
+
+## D28 — The child's site is read through its interval and primed per page
+
+**Decision:** `site_of` covers all five kinds of record and `prime_sites` asks once per page which
+of the sites the page sits at the requester may see, keeping the answer where `can_see` reads it.
+Only the child summary calls it so far. The child's `load_related` selects
+`sample__heatflowinterval__site`, so reading the site costs no query per record.
+
+**Why:** the sample of a measurement loads as the base sample row, so the interval and its site are
+reached through the reverse one-to-one link, which `select_related` follows in one join.
+
+**Revisit if:** gradients, conductivities and parents need a path other than the interval's.
+
+**ADR:** none — follows D20
+
+## D29 — A child's update is saved against its interval
+
+**Decision:** `HeatFlowSummarySerializer.update` swaps the base sample row for its interval before
+the model saves.
+
+**Why:** `HeatFlow.save` refuses a sample that is not a `HeatFlowInterval`, and the API loads the
+sample as the base row, so every update of a child answered 500 before this. Spec scenario 7 asks
+for the update to be tested.
+
+**Revisit if:** the model's check learns to accept the base row, or the API loads the real
+interval.
+
+**ADR:** none — a workaround inside this story's file
+
+## D30 — The child's expected units gain surface temperature
+
+**Decision:** the expected units of a child in `UNITS` now include `surface_temperature` in °C,
+and the child's shape in the plan carries that field.
+
+**Why:** the test belongs to this feature (D27), and the shape it pins changed.
+
+**ADR:** none — follows the plan's shapes table

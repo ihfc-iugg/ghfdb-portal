@@ -2,10 +2,11 @@ import pytest
 from django.core.checks import run_checks
 from fairdm.contrib.contributors.choices import ContributionLevel
 from fairdm.factories import UserFactory
-from heat_flow.models import HeatFlowSite
+from heat_flow.models import HeatFlow, HeatFlowCorrection, HeatFlowSite
 from research_vocabs.models import Concept
 
 from tests.factories import (
+    HeatFlowCorrectionFactory,
     HeatFlowFactory,
     HeatFlowIntervalFactory,
     HeatFlowSiteFactory,
@@ -38,7 +39,7 @@ UNITS = {
         "elevation": "m",
     },
     "interval": {"top": "m", "bottom": "m", "vertical_depth": "m"},
-    "child": {"value": "mW/m²", "uncertainty": "mW/m²"},
+    "child": {"value": "mW/m²", "uncertainty": "mW/m²", "surface_temperature": "°C"},
     "gradient": {
         "value": "K/km",
         "uncertainty": "K/km",
@@ -479,3 +480,342 @@ class TestParentHeatFlowSerializer:
                 HeatFlowFactory(dataset=public_dataset, sample=interval, parent=parent)
 
         constant_query_count(build, lambda: client.get(f"{PARENTS}{parent.uuid}/"))
+
+
+SCORES = (
+    "U_score",
+    "M_score",
+    "T_score",
+    "T_score_missing",
+    "TC_score",
+    "TC_score_missing",
+    "quality",
+    "quality_scheme",
+)
+
+CORRECTION_TYPES = HeatFlowCorrection.CorrectionTypeChoices
+CORRECTION_STATUSES = HeatFlowCorrection.StatusChoices
+
+
+def hide(record, dataset):
+    type(record).objects.filter(pk=record.pk).update(dataset=dataset)
+
+
+@pytest.mark.django_db
+class TestHeatFlowSummarySerializer:
+    def test_a_scored_child_carries_each_stored_score(self, client, full_records):
+        child = full_records["child"]
+        child.refresh_from_db()
+
+        record = only_record(client, CHILDREN)
+
+        assert child.quality_scheme
+        assert {name: record[name] for name in SCORES} == {
+            name: getattr(child, name) for name in SCORES
+        }
+
+    def test_an_unscored_child_has_null_numeric_scores(self, client, full_records):
+        child = full_records["child"]
+        type(child).objects.filter(pk=child.pk).update(T_score=None, TC_score=None)
+
+        record = only_record(client, CHILDREN)
+
+        assert record["T_score"] is None
+        assert record["TC_score"] is None
+
+    def test_the_child_carries_its_ghfdb_id_and_relevance(self, client, full_records):
+        child = full_records["child"]
+        type(child).objects.filter(pk=child.pk).update(ghfdb_id=4321, is_relevant=True)
+
+        record = only_record(client, CHILDREN)
+
+        assert record["ghfdb_id"] == 4321
+        assert record["is_relevant"] is True
+
+    def test_the_child_carries_its_surface_temperature_and_acquisition_date(
+        self, client, full_records
+    ):
+        child = full_records["child"]
+        type(child).objects.filter(pk=child.pk).update(
+            surface_temperature=4.5, date_acquired="2019-06-12"
+        )
+
+        record = only_record(client, CHILDREN)
+
+        assert record["surface_temperature"] == 4.5
+        assert "surface_temperature" in record["units"]
+        assert record["date_acquired"] == "2019-06-12"
+
+    def test_a_child_with_no_surface_temperature_or_date_gives_null(
+        self, client, full_records
+    ):
+        record = only_record(client, CHILDREN)
+
+        assert record["surface_temperature"] is None
+        assert record["date_acquired"] is None
+
+    def test_the_child_carries_its_sites_coordinates(self, client, full_records):
+        point = full_records["site"].location
+
+        record = only_record(client, CHILDREN)
+
+        assert record["location"]["type"] == "Point"
+        assert record["location"]["coordinates"][:2] == [point.x, point.y]
+
+    def test_the_child_refers_to_its_interval_parent_site_gradient_conductivity(
+        self, client, full_records
+    ):
+        record = only_record(client, CHILDREN)
+
+        assert record["sample"]["uuid"] == full_records["interval"].uuid
+        assert record["parent"]["uuid"] == full_records["parent"].uuid
+        assert record["site"]["uuid"] == full_records["site"].uuid
+        assert record["thermal_gradient"]["uuid"] == full_records["gradient"].uuid
+        assert (
+            record["thermal_conductivity"]["uuid"] == full_records["conductivity"].uuid
+        )
+        assert record["site"]["url"].endswith(f"{SITES}{full_records['site'].uuid}/")
+
+    def test_a_child_with_no_gradient_conductivity_or_parent_is_listed(
+        self, client, public_dataset
+    ):
+        HeatFlowFactory(dataset=public_dataset)
+
+        record = only_record(client, CHILDREN)
+
+        assert record["parent"] is None
+        assert record["thermal_gradient"] is None
+        assert record["thermal_conductivity"] is None
+
+    def test_a_negative_value_is_served_as_stored(self, client, full_records):
+        child = full_records["child"]
+        type(child).objects.filter(pk=child.pk).update(value=-12.5)
+
+        record = only_record(client, CHILDREN)
+
+        assert record["value"] == -12.5
+
+    def test_a_child_whose_site_is_hidden_has_no_location_and_no_site(
+        self, client, full_records, private_dataset
+    ):
+        hide(full_records["site"], private_dataset)
+
+        record = only_record(client, CHILDREN)
+
+        assert record["location"] is None
+        assert record["site"] is None
+        assert record["sample"]["uuid"] == full_records["interval"].uuid
+
+    def test_a_hidden_gradient_is_a_null_reference_in_the_list(
+        self, client, full_records, private_dataset
+    ):
+        hide(full_records["gradient"], private_dataset)
+
+        record = only_record(client, CHILDREN)
+
+        assert record["thermal_gradient"] is None
+        assert record["thermal_conductivity"]["uuid"] == (
+            full_records["conductivity"].uuid
+        )
+
+    def test_the_child_list_costs_the_same_for_one_child_as_for_several(
+        self, client, public_dataset, constant_query_count
+    ):
+        def build(count):
+            for _ in range(count):
+                interval = HeatFlowIntervalFactory(dataset=public_dataset)
+                HeatFlowFactory(
+                    dataset=public_dataset,
+                    sample=interval,
+                    parent=ParentHeatFlowFactory(
+                        dataset=public_dataset, sample=interval.site
+                    ),
+                )
+
+        constant_query_count(build, lambda: client.get(CHILDREN, {"page_size": 100}))
+
+    def test_a_site_nests_its_children_with_their_site_and_location(
+        self, client, full_records
+    ):
+        record = detail(client, SITES, full_records["site"])
+
+        child = record["intervals"][0]["children"][0]
+        assert child["site"]["uuid"] == full_records["site"].uuid
+        assert child["location"]["type"] == "Point"
+
+
+@pytest.mark.django_db
+class TestHeatFlowSerializer:
+    @pytest.fixture
+    def corrected(self, full_records):
+        child = full_records["child"]
+        HeatFlowCorrectionFactory(
+            heat_flow=child,
+            correction_type=CORRECTION_TYPES.IS,
+            status=CORRECTION_STATUSES.PRESENT_CORRECTED,
+            comment="Corrected for in-situ conditions.",
+        )
+        HeatFlowCorrectionFactory(
+            heat_flow=child,
+            correction_type=CORRECTION_TYPES.T,
+            status=CORRECTION_STATUSES.NOT_CORRECTED,
+        )
+        return full_records
+
+    def test_the_single_child_nests_its_gradient_and_conductivity_whole(
+        self, client, full_records
+    ):
+        record = detail(client, CHILDREN, full_records["child"])
+
+        assert record["thermal_gradient"]["uuid"] == full_records["gradient"].uuid
+        assert record["thermal_gradient"]["value"] == 25.5
+        assert record["thermal_gradient"]["units"]["value"] == "K/km"
+        assert record["thermal_conductivity"]["value"] == 2.5
+        assert record["thermal_conductivity"]["units"]["value"] == "W/mK"
+
+    def test_every_correction_is_listed_with_its_type_and_status(
+        self, client, corrected
+    ):
+        record = detail(client, CHILDREN, corrected["child"])
+
+        by_type = {
+            entry["correction_type"]["name"]: entry for entry in record["corrections"]
+        }
+        assert by_type[CORRECTION_TYPES.IS.value] == {
+            "correction_type": {
+                "name": CORRECTION_TYPES.IS.value,
+                "label": CORRECTION_TYPES.IS.label,
+            },
+            "status": {
+                "name": CORRECTION_STATUSES.PRESENT_CORRECTED.value,
+                "label": CORRECTION_STATUSES.PRESENT_CORRECTED.label,
+            },
+            "comment": "Corrected for in-situ conditions.",
+        }
+        assert by_type[CORRECTION_TYPES.T.value]["comment"] is None
+
+    def test_a_correction_not_applied_is_listed_and_an_unrecorded_type_is_absent(
+        self, client, corrected
+    ):
+        record = detail(client, CHILDREN, corrected["child"])
+
+        statuses = {
+            entry["correction_type"]["name"]: entry["status"]["name"]
+            for entry in record["corrections"]
+        }
+        assert statuses == {
+            CORRECTION_TYPES.IS.value: CORRECTION_STATUSES.PRESENT_CORRECTED.value,
+            CORRECTION_TYPES.T.value: CORRECTION_STATUSES.NOT_CORRECTED.value,
+        }
+
+    def test_a_child_with_no_gradient_conductivity_or_corrections_is_not_dropped(
+        self, client, public_dataset
+    ):
+        child = HeatFlowFactory(dataset=public_dataset)
+
+        record = detail(client, CHILDREN, child)
+
+        assert record["thermal_gradient"] is None
+        assert record["thermal_conductivity"] is None
+        assert record["corrections"] == []
+
+    def test_a_hidden_gradient_and_conductivity_are_null_on_the_single_child(
+        self, client, full_records, private_dataset
+    ):
+        hide(full_records["gradient"], private_dataset)
+        hide(full_records["conductivity"], private_dataset)
+
+        record = detail(client, CHILDREN, full_records["child"])
+
+        assert record["thermal_gradient"] is None
+        assert record["thermal_conductivity"] is None
+
+    def test_a_hidden_site_is_null_as_site_and_location_on_the_single_child(
+        self, client, full_records, private_dataset
+    ):
+        visible = detail(client, CHILDREN, full_records["child"])
+        hide(full_records["site"], private_dataset)
+        hidden = detail(client, CHILDREN, full_records["child"])
+
+        assert visible["site"]["uuid"] == full_records["site"].uuid
+        assert visible["location"]["type"] == "Point"
+        assert hidden["site"] is None
+        assert hidden["location"] is None
+
+    def test_a_single_child_costs_the_same_with_more_corrections(
+        self, client, public_dataset, constant_query_count
+    ):
+        child = HeatFlowFactory(dataset=public_dataset)
+        types = iter(CORRECTION_TYPES.values)
+
+        def build(count):
+            for _ in range(count):
+                HeatFlowCorrectionFactory(heat_flow=child, correction_type=next(types))
+
+        constant_query_count(
+            build, lambda: client.get(f"{CHILDREN}{child.uuid}/"), low=1, high=3
+        )
+
+
+@pytest.mark.django_db
+class TestHeatFlowChildWrites:
+    SUPPLIED = {
+        "U_score": "U4",
+        "M_score": "M1",
+        "T_score": 1.2,
+        "T_score_missing": True,
+        "TC_score": 1.2,
+        "TC_score_missing": True,
+        "quality": "BOGUS",
+        "quality_scheme": "BOGUS",
+        "ghfdb_id": 987654,
+        "is_relevant": True,
+    }
+
+    def test_a_create_supplying_scores_and_an_identifier_stores_none_of_them(
+        self, editor, public_dataset
+    ):
+        interval = HeatFlowIntervalFactory(dataset=public_dataset)
+
+        response = editor.post(
+            CHILDREN,
+            {
+                "name": "Written child",
+                "dataset": public_dataset.uuid,
+                "sample": interval.uuid,
+                "value": 61.5,
+                "method": [],
+                **self.SUPPLIED,
+            },
+            content_type="application/json",
+        )
+
+        assert response.status_code == 201, response.content
+        child = HeatFlow.objects.get(name="Written child")
+        assert child.ghfdb_id is None
+        assert child.quality != "BOGUS"
+        assert child.quality_scheme != "BOGUS"
+        assert (child.U_score, child.M_score) == ("Ux", "Mx")
+        assert (child.T_score, child.TC_score) == (None, None)
+        assert (child.T_score_missing, child.TC_score_missing) == (False, False)
+        assert child.is_relevant is False
+
+    def test_an_update_supplying_scores_and_an_identifier_stores_none_of_them(
+        self, editor, public_dataset
+    ):
+        child = HeatFlowFactory(dataset=public_dataset, value=70, uncertainty=3.5)
+        child.refresh_from_db()
+        stored = {name: getattr(child, name) for name in (*SCORES, "ghfdb_id")}
+
+        response = editor.patch(
+            f"{CHILDREN}{child.uuid}/",
+            {"expedition": "Cruise 7", **self.SUPPLIED},
+            content_type="application/json",
+        )
+
+        assert response.status_code == 200, response.content
+        child.refresh_from_db()
+        assert child.expedition == "Cruise 7"
+        assert {name: getattr(child, name) for name in stored} == stored
+        assert child.is_relevant is False
+        assert all(stored[name] != self.SUPPLIED[name] for name in stored)
