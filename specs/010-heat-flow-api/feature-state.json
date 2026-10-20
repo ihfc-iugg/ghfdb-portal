@@ -269,8 +269,19 @@
       "tasks": [
         {
           "id": "T009",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 3,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_serializers.py::TestPlacedAtSite,tests/test_heat_flow/test_serializers.py::TestHeatFlowIntervalSerializer,tests/test_heat_flow/test_serializers.py::TestThermalGradientSerializer,tests/test_heat_flow/test_serializers.py::TestIntervalConductivitySerializer,tests/test_heat_flow/test_serializers.py::TestScoredMeasurementWrites,tests/test_heat_flow/test_schema.py::TestPlacedRecordSchema"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_serializers.py -n0 -k 'PlacedAtSite or HeatFlowIntervalSerializer or ThermalGradientSerializer or IntervalConductivitySerializer or ScoredMeasurementWrites' (red: 31 failed, 11 passed); uv run pytest tests/test_heat_flow/test_serializers.py tests/test_heat_flow/test_schema.py tests/test_heat_flow/test_config.py -q -n0 (green: 143 passed)"
+            ],
+            "code": [
+              "project/heat_flow/serializers.py:1116"
+            ]
+          }
         },
         {
           "id": "T010",
