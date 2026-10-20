@@ -31,6 +31,8 @@ own. Leaving it out would leave one page in the record without heat flow content
 the location problem in D2 unsolved for the interval itself. It is the lowest priority because a
 reader usually reaches it from a page that already names its depth range.
 
+**ADR:** none — scope of this feature, recorded in the spec.
+
 ## D2. Interval and measurement pages show the site's location
 
 A site holds the location, and an interval and its measurements hold none (ADR 0023). FairDM's
@@ -38,6 +40,8 @@ measurement page falls back to the sample's location, and the sample of a child,
 conductivity is an interval, which has none, so every one of those pages would say no location is
 recorded. The pages show the site's location and say it is the site's, as FairDM does when it falls
 back to a sample.
+
+**ADR:** none — what the pages show; ADR 0023 already decides the site holds the location.
 
 ## D3. "How it was reached" means what FS-007's quality card showed
 
@@ -51,6 +55,8 @@ For a parent, its quality is inherited from its children, so the explanation is 
 rests on. Its value is designated by curators, and the page does not try to explain a designation
 beyond the curator's comment and the children listed.
 
+**ADR:** none — a reading of the request, recorded in the spec.
+
 ## D4. This feature takes over FS-007's page story
 
 FS-007 US-5 and FR-018 describe a child's page, and a gradient's and conductivity's page, showing
@@ -60,6 +66,8 @@ edits FS-007's spec so US-5 and FR-018 point at FS-011 and read as current, in t
 request, without strike-through. The tests FS-007 wrote for the card, skipped since #263, are either
 brought back against the new pages or replaced by this feature's own.
 
+**ADR:** none — a hand-over between two specs.
+
 ## D5. A list of related records shows only what the visitor may open
 
 FairDM already applies this rule to the records its shared pages list: a record in a dataset the
@@ -67,11 +75,15 @@ viewer may not see is counted and never named. The heat flow lists follow the sa
 for each listed record by whether its own page would open. A site and its records normally sit in
 one dataset, so this rarely shows, but nothing enforces that.
 
+**ADR:** none — FairDM's existing visibility rule, applied.
+
 ## D6. Long lists are cut and counted, not paged in place
 
 A site can carry hundreds of intervals. The spec asks that a page show part of a long list, say how
 many more there are and offer a way to see them, and leaves the cut-off and the route to planning.
 FairDM's own lists do the same (ten measurements on a sample, eight siblings on a measurement).
+
+**ADR:** none — superseded in detail by D10, a page detail.
 
 ## D7. Who the stories are about
 
@@ -79,11 +91,15 @@ FairDM's own lists do the same (ten measurements on a sample, eight siblings on 
 is the request's "most people outside the assessment team", and G7's "anyone, no account required".
 It is a word for this spec, not a role, so CONTEXT.md gains no entry.
 
+**ADR:** none — vocabulary of this spec only.
+
 ## D8. Success criteria come from the request's last sentence
 
 "It should answer their questions without a trip to the API or a download" is the measure. SC-001
 makes it checkable: every value in a release row is readable on one of the pages involved, with the
 publication's own columns on the dataset page FairDM already provides.
+
+**ADR:** none — how the success criteria were derived.
 
 ## FairDM
 
@@ -107,3 +123,51 @@ The quality card components FS-007 built are still in `templates/cotton/card/qua
 
 None open. FS-007 (quality scores) is delivered. The sibling requests #286 and #287 touch other
 surfaces and neither waits on this one.
+
+## Build decisions (2026-10-20)
+
+Made while planning and building, after the sketch was passed.
+
+## D9. Each type's content reaches FairDM's page through a template tag
+
+FairDM's overview has one plugin per base model and no hook for a type's own context, and its
+plugin registry cannot replace a registration (research R1). A type template is the one route
+that reaches the page, so the visitor-dependent lists are gathered by a template tag that hands
+the record and the visitor to `HeatFlowPage`, cached once per render.
+
+**ADR:** graduates at convergence (durable, cross-cutting, not visible in the code).
+
+## D10. Long lists show twenty and a "Show all" link
+
+Intervals on a site and children on a gradient, conductivity or parent are cut at twenty, say
+how many more there are, and link to the same page with `?show=all`, which lifts the cut. The cut
+of twenty was ruled by eye at the sketch. The link replaces FairDM's disabled placeholder, which
+would not meet FR-007. A site's children are listed under their interval and are not cut.
+
+**ADR:** none — a page detail, set by the sketch, that nothing else inherits.
+
+## D11. The parent's inheritance rule moves onto the model
+
+Which children a parent's quality rests on was worked out inside `refresh_quality`. The page has
+to name them (FR-019), and a second copy of the rule could disagree with the score, so it becomes
+`ParentHeatFlow.quality_basis()`, called by both.
+
+**ADR:** none — the rule is FS-007's (ADR 0004 covers the portal computing the scores); this
+moves it, it does not change it.
+
+## D12. The walkthrough states come from the demo data command
+
+The sketch's states were seeded by hand. The development seeding path makes them, on the first
+dataset of a run, so anyone with a development database can reach every state the pages answer
+for.
+
+**ADR:** none — development data only.
+
+## D13. FS-007's card tests move to the pages that now carry the card
+
+`tests/test_templates/test_measurement_detail.py` has been skipped since #263. Its child-card
+tests move to the child page's module and its measurement-card tests to the gradient and
+conductivity modules, unskipped, with fixtures pointed at the overview pages and assertions
+unchanged. The old module is deleted.
+
+**ADR:** none — test placement.

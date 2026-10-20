@@ -1,0 +1,213 @@
+{
+  "feature": "011-heat-flow-overview-pages",
+  "branch": "011-heat-flow-overview-pages",
+  "repo": "ihfc-iugg/ghfdb-portal",
+  "state": "PLAN",
+  "state_history": [
+    {
+      "state": "GATE_SPEC",
+      "at": "2026-10-20T13:00:00Z",
+      "note": "specification approved on PR #290 by delegated review at eb59f71"
+    },
+    {
+      "state": "QUEUED",
+      "at": "2026-10-20T13:00:04Z",
+      "note": "epic #288, stories #292-#296"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-20T13:40:00Z",
+      "note": "sketch passed by delegated review; research, plan and tasks authored"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "delegated review",
+      "at": "2026-10-20T13:00:00Z",
+      "self_resolved": [
+        "approved at eb59f7164ec2d6d41c5321bbe2a06c3182a36085 under the 2026-10-20 delegation (spec gate opened: All gates open.)"
+      ]
+    },
+    "sketch": {
+      "approved_by": "delegated review",
+      "at": "2026-10-20T13:18:24Z",
+      "self_resolved": [
+        "cut-off of 20 with Show all kept as built",
+        "site figures strip (parent value, interval count, heat flow count) kept as built"
+      ]
+    },
+    "plan": {
+      "approved_by": "open",
+      "at": "2026-10-20T13:40:00Z"
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    }
+  },
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 292,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T002",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T003",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T004",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P1",
+      "issue": 293,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T005",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T006",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T007",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T008",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P2",
+      "issue": 294,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T009",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T010",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T011",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US4",
+      "priority": "P2",
+      "issue": 295,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T012",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T013",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T014",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T015",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US5",
+      "priority": "P3",
+      "issue": 296,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T016",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T017",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T018",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 0,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 0,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 0,
+      "max": 1
+    },
+    "tokens": {
+      "used": 0,
+      "max": 120
+    }
+  },
+  "pr": {
+    "number": 290,
+    "draft": true
+  },
+  "escalations": []
+}
