@@ -350,8 +350,19 @@
         },
         {
           "id": "T015",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_docs"
+            ],
+            "commands": [
+              "forge verify --base origin/main (docs step)"
+            ],
+            "code": [
+              "docs/guides/record-pages.md:1"
+            ]
+          }
         }
       ]
     },

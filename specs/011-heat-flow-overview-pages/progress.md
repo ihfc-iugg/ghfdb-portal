@@ -107,3 +107,10 @@ Did: Data hooks on the parent page: `data-field` on the heat production correcti
 Verified: `uv run pytest tests/test_templates/test_parentheatflow_overview.py -n0 -q`: red first against the unchanged template (6 failed, 20 passed: no `data-field`, no site hook), then 26 passed. Probes, each failing its tests and restored: renaming `data-quality="basis"` (4 failed), removing the stale notice (1), hard-coding `data-rests-on` false (2).
 Next: T015, the guide.
 Watch: none.
+
+## 2026-10-20T16:47:16Z · Implementer US4 · T015
+
+Did: Wrote the parent section of `docs/guides/record-pages.md` (designation, quality, what the quality rests on by basis, the children, the stale state, the site, hidden children, Show all), a `ParentHeatFlow.quality_basis` subsection in the developer section with its four bases and a short example, the current `for_parent` row, and the parent's hooks (`data-relevant`, `data-rests-on`, `data-quality="basis"`).
+Verified: see the full verify run in the completion report.
+Next: full verify, then the completion report.
+Watch: none.
