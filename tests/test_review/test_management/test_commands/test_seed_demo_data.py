@@ -174,16 +174,23 @@ class TestSeedDemoData:
 
 
 class TestSeedDemoDataEnvironment:
-    def test_production_is_refused_and_nothing_is_written(self, db, settings):
+    def test_production_is_refused_and_nothing_is_written(
+        self, db, settings, monkeypatch
+    ):
         settings.DJANGO_ENV = "production"
         counts = {
             model: model.objects.count()
             for model in (*HEAT_FLOW_MODELS, Dataset, LiteratureItem, Review, Concept)
         }
+        called = []
+        monkeypatch.setattr(
+            seed_demo_data, "call_command", lambda *args, **kwargs: called.append(args)
+        )
 
-        with pytest.raises(CommandError):
+        with pytest.raises(CommandError, match="Refusing to add demo data"):
             seed()
 
+        assert called == []
         assert counts == {model: model.objects.count() for model in counts}
 
 

@@ -33,3 +33,11 @@ Did: the command now calls create_dev_accounts, creates the example.com accounts
 Verified: uv run pytest tests/test_review/test_management -n0 -k "States or Accounts or Visibility" -> 23 passed, 1 failed on a wrong assumption (the list page hides private datasets for everyone); the test now opens each private dataset page and then 3 Visibility tests passed. pre-commit and mypy project green.
 Next: full verify and the report.
 Watch: FairDM dataset list reads Dataset.objects, which excludes private datasets for every user, so a contributor reaches a private dataset through its own page.
+
+## 2026-10-20T00:08:17Z · Implementer US1 · T007
+
+Did: see commit. Verified: commands in ledger. Next: following task. Watch: none.
+
+## 2026-10-20T00:08:17Z · Implementer US1 · T008
+
+Did: see commit. Verified: commands in ledger. Next: following task. Watch: none.

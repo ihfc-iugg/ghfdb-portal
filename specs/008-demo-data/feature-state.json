@@ -141,13 +141,31 @@
         },
         {
           "id": "T007",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "grep -n 'exec django' docs/development/demo-data.md"
+            ],
+            "code": [
+              "docs/development/demo-data.md:24"
+            ]
+          }
         },
         {
           "id": "T008",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "python3 AST walk of demo.py and seed_demo_data.py for missing docstrings/Args/Returns (only __init__ and add_arguments, both exempt)",
+              "uv run ruff check; uv run ruff format --check"
+            ],
+            "code": [
+              "project/heat_flow/demo.py:37",
+              "project/review/management/commands/seed_demo_data.py:150"
+            ]
+          }
         },
         {
           "id": "T009",
