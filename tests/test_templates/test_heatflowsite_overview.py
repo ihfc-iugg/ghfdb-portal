@@ -39,7 +39,10 @@ def link_to(node, record):
 
 
 def term(concept):
-    """A vocabulary concept's label in English, as a graph concept gives it as a method."""
+    """A vocabulary concept's label in English, as a graph concept gives it as a method.
+
+    The page capitalises a label's first letter, so compare it ignoring case.
+    """
     label = concept.label
     return str(label("en") if callable(label) else label)
 
@@ -173,9 +176,15 @@ class TestSitePage:
 
         page = document(site)
 
-        assert term(site.environment) in page.find("data-field", "environment").text
-        assert term(site.explo_method) in page.find("data-field", "explo_method").text
-        assert term(purpose) in page.find("data-field", "explo_purpose").text
+        assert term(site.environment).casefold() in (
+            page.find("data-field", "environment").text.casefold()
+        )
+        assert term(site.explo_method).casefold() in (
+            page.find("data-field", "explo_method").text.casefold()
+        )
+        assert term(purpose).casefold() in (
+            page.find("data-field", "explo_purpose").text.casefold()
+        )
 
     def test_it_shows_the_access_geometry_and_where_it_lies(
         self, document, page_records
