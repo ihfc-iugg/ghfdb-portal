@@ -51,3 +51,17 @@ Did: Site page hooks in `heatflowsite_overview.html`: `data-heat-flow="parent"` 
 Verified: `uv run pytest tests/test_templates/test_heatflowsite_overview.py -q`: red first (18 failed, 4 passed: hooks absent), then 22 passed. Probes, restored after each: removing the lithology and method prefetch fails the query-count test; the tag reading another parameter fails the show-all test; extending the base template instead of FairDM's sample page fails the identifiers, citation and Manage menu tests.
 Next: T007, the development data.
 Watch: `document` in `tests/test_templates/conftest.py` gained `**query`; existing callers are unchanged.
+
+## 2026-10-20T15:24:44Z · Implementer US2 · T007
+
+Did: Added `DemoGraph.vary_page_states(unpublished)`: the first six sites of a dataset take the states of research R4 (a parent with no children and a bare child, no parent, no child relevant, more intervals than the page lists with records in the unpublished dataset, stale scores and no location, an unscored child with a hidden gradient and parent). `seed_demo_data` calls it on the first complete dataset of a run. Moved records lose their published identifier.
+Verified: `uv run pytest tests/test_heat_flow/test_demo.py -k VaryPageStates -q`: red first (no such method), then 14 passed. Probes, restored after each: keeping the identifiers on moved records, adding no intervals, not clearing relevance each fail their test. `uv run pytest tests/test_review/test_management/test_commands/test_seed_demo_data.py -q`: 51 passed, 4 failed, all four existing tests (see Watch).
+Next: T008, the site section of the guide.
+Watch: the task is not done. Four existing tests of the command assert the opposite of states R4 requires (every record on the current scheme revision, every child scored, a refresh changes nothing, every site has a point). I did not edit them; decision D19 names them. The step runs on the first complete dataset, not the first dataset, which is private.
+
+## 2026-10-20T15:24:45Z · Implementer US2 · T008
+
+Did: Wrote the site section of `docs/guides/record-pages.md` (parent, the site's fields, the intervals and their children, records the visitor may not open) and a Show all subsection; the developer row for `for_site` now describes what it returns, the cut is said to be lifted by `?show=all`, and the hooks section names `intervals`, `data-more`, `data-hidden` and `data-interval`. `docs/development/demo-data.md` documents the page states and `vary_page_states`.
+Verified: see the full verify run in the completion report.
+Next: full verify, then the completion report.
+Watch: none.
