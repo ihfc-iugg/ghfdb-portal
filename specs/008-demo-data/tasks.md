@@ -135,3 +135,6 @@ run in parallel.
       removed (assert nothing is called before the refusal).
 - [ ] T010 [US1] COR-001: every region lies wholly on land or wholly at sea.
 - [ ] T011 [US1] SIMP-001, TEST-002: inline `_round`; delete the unused module-level fixture.
+- [x] T012 Move the `fairdm` pin to `f69c9cb1`, its latest commit, which moves list pages onto
+      django-mvp 0.29 filtersets. The assessment list's title search moves from the view's
+      `search_fields` onto `ReviewFilter` as an `mvp.filters.SearchFilter`.

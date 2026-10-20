@@ -147,3 +147,14 @@ needs it.
 - The demo assessor account is outside FairDM's deploy check, as D6 records.
 
 **ADR:** none — local to this feature.
+
+## D12. FairDM moves to its latest commit in this pull request
+
+**Decision:** the `fairdm` pin moves from `1c2e0819` to `f69c9cb1`, which landed while this feature
+was being built. The assessment list's search is declared on its filterset, as django-mvp 0.29
+requires.
+
+**Why:** the feature was asked for together with moving FairDM to its latest version. The migration
+is two lines, and the existing search test covers it.
+
+**ADR:** none — a dependency update.
