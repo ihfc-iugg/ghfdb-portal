@@ -45,9 +45,11 @@ It shows:
   be stale. It is still shown as stored.
 - **The parent.** A link to the parent heat flow value the child belongs to and whether the child
   is marked relevant to it, or a statement that the child belongs to no parent.
-- **Where it was measured.** The depth interval, with its depth range, and the site, each linked.
+- **Where it was measured.** The depth interval, with its depth range, and the site, each linked,
+  and the site's location on a map ([the site's location](#the-sites-location)).
 - **The determination.** The surface temperature, the date acquired, the expedition or platform,
-  the GHFDB child ID and the comment.
+  the GHFDB child ID, the data reference and related publications of the dataset it belongs to,
+  and the comment.
 
 ## A site's page
 
@@ -73,6 +75,33 @@ The site's page answers what the database holds for a place. It shows:
 A site with many intervals lists the first twenty and says how many more there are. The **Show all**
 link beside that count opens the same page with `?show=all`, which lists every interval the visitor
 may open. The link is absent when the page already lists them all.
+
+## A depth interval's page
+
+An interval is the stretch of a borehole or a probe track that heat flow values were determined
+over, so its page answers where those values were measured and what rock is there. It shows:
+
+- **The depth range.** The top and the bottom of the interval, with their unit.
+- **The vertical depth and the depth datum.** A field with nothing recorded says so.
+- **The rock.** Its lithology and age as vocabulary terms, and its stratigraphy.
+- **The IGSN.** The interval's sample identifier, where one is recorded.
+- **The probe.** Where a marine probe was used: the probe type, length, penetration and tilt,
+  each with its unit. An interval with no probe metadata shows no probe card.
+- **The site.** A link to the site the interval belongs to. A site the visitor may not open is not
+  named: the page says that it belongs to a dataset that has not been published.
+- **The site's location.** An interval holds no location of its own, so the page shows the
+  site's. See [the site's location](#the-sites-location).
+
+FairDM lists the measurements made over the interval, as it does on every sample's page.
+
+### The site's location
+
+Only a site holds coordinates ([ADR 0023](../adr/0023-a-site-holds-the-location-and-its-own-elevation.md)).
+The pages of an interval, a child, a thermal gradient, an interval conductivity and a parent
+therefore show the site's location: a map with the point marked, the latitude and longitude, and
+the elevation and uncertainty where the site records them. The card is titled as the site's. A
+site with no location says that none is recorded, and a site in a dataset that has not been
+published is not named, located or linked: the card says its location is not shown.
 
 ## A thermal gradient's page
 
@@ -155,6 +184,81 @@ A parent with many children lists the first twenty and says how many more there 
 all** link beside that count opens the same page with `?show=all`, which lists every child the
 visitor may open. The link is absent when the page already lists them all.
 
+## Where each release column is shown
+
+Every column of the GHFDB release format that the export writes can be read on the page of the
+child or on the page of a record it links to, so a visitor needs no download to see a row. The
+table names the page each column is read on, and the field on it. A field is marked on the page by
+its `data-field` attribute, and a test reads the columns from the export itself and finds each one
+there. A column that several fields share, such as a value with its uncertainty, is read on the one
+field.
+
+| Column | Page | Field |
+| --- | --- | --- |
+| `q` | Parent | `value` |
+| `q_uncertainty` | Parent | `value` |
+| `name` | Depth interval | `site` |
+| `lat_NS` | Child | `location` |
+| `long_EW` | Child | `location` |
+| `elevation` | Site | `elevation` |
+| `environment` | Site | `environment` |
+| `p_comment` | Parent | `comment` |
+| `corr_HP_flag` | Parent | `corr_HP_flag` |
+| `total_depth_MD` | Site | `length` |
+| `total_depth_TVD` | Site | `vertical_depth` |
+| `explo_method` | Site | `explo_method` |
+| `explo_purpose` | Site | `explo_purpose` |
+| `ID` | Child | `ghfdb_id` |
+| `qc` | Child | `value` |
+| `qc_uncertainty` | Child | `value` |
+| `q_method` | Child | `method` |
+| `q_top` | Depth interval | `depth_range` |
+| `q_bottom` | Depth interval | `depth_range` |
+| `probe_penetration` | Depth interval | `probe_penetration` |
+| `publication_reference` | Child | `publication_reference` |
+| `data_reference` | Child | `data_reference` |
+| `relevant_child` | Child | `is_relevant` |
+| `c_comment` | Child | `comment` |
+| `corr_IS_flag` | Child | `corrections` |
+| `corr_T_flag` | Child | `corrections` |
+| `corr_S_flag` | Child | `corrections` |
+| `corr_E_flag` | Child | `corrections` |
+| `corr_TOPO_flag` | Child | `corrections` |
+| `corr_PAL_flag` | Child | `corrections` |
+| `corr_SUR_flag` | Child | `corrections` |
+| `corr_CONV_flag` | Child | `corrections` |
+| `corr_HR_flag` | Child | `corrections` |
+| `expedition` | Child | `expedition` |
+| `probe_type` | Depth interval | `probe_type` |
+| `probe_length` | Depth interval | `probe_length` |
+| `probe_tilt` | Depth interval | `probe_tilt` |
+| `water_temperature` | Child | `surface_temperature` |
+| `geo_lithology` | Depth interval | `lithology` |
+| `geo_stratigraphy` | Depth interval | `stratigraphy` |
+| `T_grad_mean` | Thermal gradient | `value` |
+| `T_grad_uncertainty` | Thermal gradient | `value` |
+| `T_grad_mean_cor` | Thermal gradient | `corrected_value` |
+| `T_grad_uncertainty_cor` | Thermal gradient | `corrected_value` |
+| `T_method_top` | Thermal gradient | `method_top` |
+| `T_method_bottom` | Thermal gradient | `method_bottom` |
+| `T_shutin_top` | Thermal gradient | `shutin_top` |
+| `T_shutin_bottom` | Thermal gradient | `shutin_bottom` |
+| `T_corr_top` | Thermal gradient | `correction_top` |
+| `T_corr_bottom` | Thermal gradient | `correction_bottom` |
+| `T_number` | Thermal gradient | `number` |
+| `q_date` | Child | `date_acquired` |
+| `tc_mean` | Interval conductivity | `value` |
+| `tc_uncertainty` | Interval conductivity | `value` |
+| `tc_source` | Interval conductivity | `source` |
+| `tc_location` | Interval conductivity | `conductivity_location` |
+| `tc_method` | Interval conductivity | `method` |
+| `tc_saturation` | Interval conductivity | `saturation` |
+| `tc_pT_conditions` | Interval conductivity | `pT_conditions` |
+| `tc_pT_function` | Interval conductivity | `pT_function` |
+| `tc_number` | Interval conductivity | `number` |
+| `tc_strategy` | Interval conductivity | `strategy` |
+| `Ref_IGSN` | Depth interval | `igsn` |
+
 ## For developers
 
 ### How the content reaches a page
@@ -166,7 +270,9 @@ FairDM defines. FairDM's page is extended, never replaced, so the shared header,
 identifiers and citation stay.
 
 What a page lists beyond FairDM's own context is gathered by `HeatFlowPage`, and reaches the
-template through the `heat_flow_page` tag.
+template through the `heat_flow_page` tag. FairDM offers no per-type context hook, which is why:
+[ADR 0024](../adr/0024-a-heat-flow-pages-content-comes-through-a-template-tag.md) records the
+choice.
 
 | Page | Template |
 | --- | --- |
@@ -192,7 +298,7 @@ and each method returns a dictionary the template reads.
 | --- | --- |
 | `for_child()` | The gradient, conductivity and parent the visitor may open, each with a `*_hidden` flag; the corrections; the interval and site; the site's location; whether the scores are stale. |
 | `for_site()` | The site's parent, or that it is hidden; its intervals from shallowest to deepest, each with its children; how many intervals and children the visitor may not open; and the children counted over every interval the visitor may open. |
-| `for_interval()` | The interval's site and probe metadata. |
+| `for_interval()` | The interval's site, `None` when the visitor may not open it, with `site_hidden`; its probe metadata, `None` where it has none; its `igsn`, empty where it has none; and the site's location. |
 | `for_gradient_or_conductivity()` | The measurement's interval and site, each `None` when the visitor may not open it, and the site's location; the children that use the measurement, with the cut at `children_shown` lifted by `show_all`, each child's method prefetched; whether the score is stale. |
 | `for_parent()` | The parent's children, the relevant ones first, with the cut at `children_shown` lifted by `show_all` and each child's method prefetched; the `basis` of the parent's quality and the keys of the children it `rests_on`, each listed child carrying its own `rests_on`; the site, `None` when the visitor may not open it, and its location; whether the score is stale. |
 
@@ -205,8 +311,10 @@ The members every method shares:
 - `listing(children, limit=None)` splits a list of children and cuts it to `limit`, returning
   the `rows`, the `total` the visitor may open, how many `more` the cut leaves out and how many are
   `hidden`.
-- `site_location()` gives the location of the record's site as the site's, with whether the
-  visitor may see it.
+- `site_location()` gives the location of the record's site as the site's. It reads `record.site`
+  for a parent or an interval and `record.sample.site` for the rest. It returns the `site` and
+  whether the visitor may see it (`visible`), and its `point`, `elevation` and `uncertainty`;
+  nothing of the site when the visitor may not open it.
 - `is_stale(record)` says whether a record's stored scheme revision is not the current one.
 
 A list shows its first rows and says how many more there are. `intervals_shown` and
@@ -277,7 +385,9 @@ the visitor may not open stays out of the page.
 
 Tests find a page's content by `data-` attributes and by the records' URLs, never by wording.
 `data-heat-flow="<what>"` marks each card or list (`gradient`, `conductivity`, `corrections`,
-`parent`, `intervals`, `children`, `interval`, `site`). A cut list carries `data-more`, the number it does not
+`parent`, `intervals`, `children`, `interval`, `site`, `probe`, `location`). The location card
+carries `data-source="site"`, and `data-state` is `not-recorded` for a site with no location and
+`hidden` for a site the visitor may not open; its map carries FairDM's `data-lon` and `data-lat`. A cut list carries `data-more`, the number it does not
 show, and a list that hides records carries `data-hidden`, how many; a site page's interval rows
 carry `data-interval` with the interval's key, and each child in a list `data-child` with the
 child's key; a child row on a parent's page also carries `data-relevant` and `data-rests-on`

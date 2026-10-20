@@ -11,6 +11,16 @@ Releases before that used `<year>.<release>` and are recorded in the
 
 ### Added
 
+- Every site, depth interval and measurement page now shows heat flow content as well as
+  FairDM's shared page. A child heat flow value shows its method, the thermal gradient and
+  interval conductivity it was calculated from, its corrections, its quality card and its parent.
+  A thermal gradient and an interval conductivity show their own fields, score and the values that
+  use them. A parent shows its heat production correction, comment and GHFDB id, and the children
+  its quality rests on. A site lists its depth intervals with the heat flow values determined over
+  each, and a depth interval shows its depth, rock, probe and IGSN. Every page made on an interval
+  shows the site's location, or says none is recorded. Records in datasets that have not been
+  published are counted and never named. Every column of the GHFDB export can be read on one of
+  these pages ([record pages](docs/guides/record-pages.md)).
 - Container images are published to `ghcr.io/ihfc-iugg/ghfdb-portal` on every
   release, tagged with the version and with `latest`.
 - Dependabot pull requests for a given ecosystem now arrive grouped as one pull
