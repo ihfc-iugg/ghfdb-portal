@@ -114,31 +114,38 @@ def query_count(client, admin_user):
 
 
 @pytest.fixture
-def probe_interval(db):
-    """An offshore probe interval 1000 m under water.
+def probe_interval(published_dataset):
+    """An offshore probe interval 1000 m under water, in a dataset anyone may open.
 
     The water depth costs the gradient 0.2, which a bottom-water correction waives, so a
     child that records that correction scores 0.2 above the gradient's own score.
     """
-    site = HeatFlowSiteFactory(explo_method="probing_offshore", elevation=-1000)
-    interval = HeatFlowIntervalFactory(site=site)
+    site = HeatFlowSiteFactory(
+        dataset=published_dataset, explo_method="probing_offshore", elevation=-1000
+    )
+    interval = HeatFlowIntervalFactory(dataset=published_dataset, site=site)
     ProbeMetadataFactory(interval=interval, penetration=5, tilt=0, probe_type=[])
     return interval
 
 
 @pytest.fixture
-def gradient(probe_interval):
+def gradient(probe_interval, published_dataset):
     gradient = ThermalGradientFactory(
-        sample=probe_interval, number=6, method_top=[], method_bottom=[]
+        dataset=published_dataset,
+        sample=probe_interval,
+        number=6,
+        method_top=[],
+        method_bottom=[],
     )
     gradient.refresh_from_db()
     return gradient
 
 
 @pytest.fixture
-def conductivity(probe_interval):
+def conductivity(probe_interval, published_dataset):
     """A conductivity whose scored concepts are all empty, so its TC-score is marked."""
     conductivity = IntervalConductivityFactory(
+        dataset=published_dataset,
         sample=probe_interval,
         number=4,
         source=[],
@@ -152,9 +159,10 @@ def conductivity(probe_interval):
 
 
 @pytest.fixture
-def child(probe_interval, gradient, conductivity):
+def child(probe_interval, gradient, conductivity, published_dataset):
     """A child whose bottom-water correction changes its T-score."""
     child = HeatFlowFactory(
+        dataset=published_dataset,
         sample=probe_interval,
         value=70,
         uncertainty=7,

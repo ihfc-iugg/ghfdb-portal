@@ -13,7 +13,8 @@
   <c-mvp.card.wrapper class="bg-base-100">
     <div class="card-body gap-2">
       <p class="text-xs uppercase font-semibold text-base-content/60">{% translate "Thermal conductivity" %}</p>
-      <p class="text-4xl font-semibold tabular-nums break-words">{{ measurement.print_value }}</p>
+      <p class="text-4xl font-semibold tabular-nums break-words"
+         data-field="value">{{ measurement.print_value }}</p>
       <p class="text-sm text-base-content/70">{% if measurement.number is not None %}{% blocktranslate count counter=measurement.number %}From {{ counter }} measurement{% plural %}From {{ counter }} measurements{% endblocktranslate %}{% else %}{% translate "Number of measurements not recorded" %}{% endif %}</p>
     </div>
   </c-mvp.card.wrapper>
@@ -23,21 +24,29 @@
   <c-mvp.card title="{% translate 'How it was determined' %}"
               class="bg-base-100">
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
-      <c-heat_flow.field label="{% translate 'Source' %}"
+      <c-heat_flow.field field="source"
+                         label="{% translate 'Source' %}"
                          value="{{ measurement.source|labels|capfirst }}" />
-      <c-heat_flow.field label="{% translate 'Location of samples' %}"
+      <c-heat_flow.field field="conductivity_location"
+                         label="{% translate 'Location of samples' %}"
                          value="{{ measurement.conductivity_location|labels|capfirst }}" />
-      <c-heat_flow.field label="{% translate 'Method' %}"
+      <c-heat_flow.field field="method"
+                         label="{% translate 'Method' %}"
                          value="{{ measurement.method|labels|capfirst }}" />
-      <c-heat_flow.field label="{% translate 'Averaging strategy' %}"
+      <c-heat_flow.field field="strategy"
+                         label="{% translate 'Averaging strategy' %}"
                          value="{{ measurement.strategy|labels|capfirst }}" />
-      <c-heat_flow.field label="{% translate 'Saturation' %}"
+      <c-heat_flow.field field="saturation"
+                         label="{% translate 'Saturation' %}"
                          value="{{ measurement.saturation|labels|capfirst }}" />
-      <c-heat_flow.field label="{% translate 'pT conditions' %}"
+      <c-heat_flow.field field="pT_conditions"
+                         label="{% translate 'pT conditions' %}"
                          value="{{ measurement.pT_conditions|labels|capfirst }}" />
-      <c-heat_flow.field label="{% translate 'pT function' %}"
+      <c-heat_flow.field field="pT_function"
+                         label="{% translate 'pT function' %}"
                          value="{{ measurement.pT_function|labels|capfirst }}" />
-      <c-heat_flow.field label="{% translate 'Number of measurements' %}"
+      <c-heat_flow.field field="number"
+                         label="{% translate 'Number of measurements' %}"
                          value="{{ measurement.number|default_if_none:'' }}" />
     </div>
   </c-mvp.card>

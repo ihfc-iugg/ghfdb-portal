@@ -13,11 +13,12 @@
   <c-mvp.card.wrapper class="bg-base-100">
     <div class="card-body gap-2">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
+        <div data-field="value">
           <p class="text-xs uppercase font-semibold text-base-content/60">{% translate "Measured gradient" %}</p>
           <p class="text-4xl font-semibold tabular-nums break-words">{{ measurement.print_value }}</p>
         </div>
-        <div>
+        <div data-field="corrected_value"
+             {% if measurement.corrected_value is None %}data-state="not-recorded"{% endif %}>
           <p class="text-xs uppercase font-semibold text-base-content/60">{% translate "Corrected gradient" %}</p>
           {% if measurement.corrected_value is not None %}
             <p class="text-4xl font-semibold tabular-nums break-words">{{ measurement.corrected_value|plus_minus:measurement.corrected_uncertainty }}</p>
@@ -46,14 +47,18 @@
         <tbody>
           <tr>
             <th scope="row">{% translate "Temperature" %}</th>
-            <td class="tabular-nums">
+            <td class="tabular-nums"
+                data-field="temperature_top"
+                {% if measurement.temperature_top is None %}data-state="not-recorded"{% endif %}>
               {% if measurement.temperature_top is not None %}
                 {{ measurement.temperature_top|plus_minus:measurement.temperature_top_uncertainty }}
               {% else %}
                 <span class="text-base-content/60">{% translate "Not recorded" %}</span>
               {% endif %}
             </td>
-            <td class="tabular-nums">
+            <td class="tabular-nums"
+                data-field="temperature_bottom"
+                {% if measurement.temperature_bottom is None %}data-state="not-recorded"{% endif %}>
               {% if measurement.temperature_bottom is not None %}
                 {{ measurement.temperature_bottom|plus_minus:measurement.temperature_bottom_uncertainty }}
               {% else %}
@@ -63,23 +68,36 @@
           </tr>
           <tr>
             <th scope="row">{% translate "Method" %}</th>
-            <td>{{ measurement.method_top|labels|capfirst|default:_("Not recorded") }}</td>
-            <td>{{ measurement.method_bottom|labels|capfirst|default:_("Not recorded") }}</td>
+            {% with top=measurement.method_top|labels bottom=measurement.method_bottom|labels %}
+              <td data-field="method_top"
+                  {% if not top %}data-state="not-recorded"{% endif %}>{{ top|capfirst|default:_("Not recorded") }}</td>
+              <td data-field="method_bottom"
+                  {% if not bottom %}data-state="not-recorded"{% endif %}>{{ bottom|capfirst|default:_("Not recorded") }}</td>
+            {% endwith %}
           </tr>
           <tr>
             <th scope="row">{% translate "Correction" %}</th>
-            <td>{{ measurement.correction_top|labels|capfirst|default:_("Not recorded") }}</td>
-            <td>{{ measurement.correction_bottom|labels|capfirst|default:_("Not recorded") }}</td>
+            {% with top=measurement.correction_top|labels bottom=measurement.correction_bottom|labels %}
+              <td data-field="correction_top"
+                  {% if not top %}data-state="not-recorded"{% endif %}>{{ top|capfirst|default:_("Not recorded") }}</td>
+              <td data-field="correction_bottom"
+                  {% if not bottom %}data-state="not-recorded"{% endif %}>{{ bottom|capfirst|default:_("Not recorded") }}</td>
+            {% endwith %}
           </tr>
           <tr>
             <th scope="row">{% translate "Shut-in time" %}</th>
-            <td class="tabular-nums">{{ measurement.shutin_top|default_if_none:_("Not recorded") }}</td>
-            <td class="tabular-nums">{{ measurement.shutin_bottom|default_if_none:_("Not recorded") }}</td>
+            <td class="tabular-nums"
+                data-field="shutin_top"
+                {% if measurement.shutin_top is None %}data-state="not-recorded"{% endif %}>{{ measurement.shutin_top|default_if_none:_("Not recorded") }}</td>
+            <td class="tabular-nums"
+                data-field="shutin_bottom"
+                {% if measurement.shutin_bottom is None %}data-state="not-recorded"{% endif %}>{{ measurement.shutin_bottom|default_if_none:_("Not recorded") }}</td>
           </tr>
         </tbody>
       </table>
     </div>
-    <c-heat_flow.field label="{% translate 'Number of temperature recordings' %}"
+    <c-heat_flow.field field="number"
+                       label="{% translate 'Number of temperature recordings' %}"
                        value="{{ measurement.number|default_if_none:'' }}" />
   </c-mvp.card>
   <c-card.quality.own :measurement="measurement"
