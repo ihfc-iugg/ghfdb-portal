@@ -189,3 +189,26 @@ quantity, so every list but the site's answered 500 before this feature. Serving
 their stored unit (FR-011) ends it, and US4's first test is each list answering 200.
 
 **ADR:** none — a defect this feature's own requirement removes
+
+## D20 — Design review applied
+
+The design review approved the plan with six medium and three low findings, none blocking. All
+nine were applied to plan.md, research.md and tasks.md, because each was a paragraph:
+
+- Nested records and coordinates follow `FairDMVisibilityFilter`, the rule of a record's own
+  route, not `visible_to`, which the overview pages use and which admits on dataset permissions
+  the API does not read (FR-013).
+- A child's, gradient's or conductivity's `site` reference is built from the primed site set,
+  since FairDM does not prime a reference with a dotted source.
+- Nested lists are built through the nested summary's `load_related`, and a site's children are
+  fetched once across its intervals.
+- Relations other than vocabulary fields keep the read-only fields FairDM gives them today
+  (`stratigraphy` among them), so nothing becomes writable.
+- A decimal quantity is served as a float, since the portal's orjson renderer would otherwise
+  give a string.
+- Tests added for hidden children on a parent, hidden gradients and conductivities on a child,
+  a conductivity's children, a hidden site's coordinates, and a child's `ghfdb_id`.
+- The schema extension sets `get_identity`, T001 is narrowed to the pieces its tests exercise,
+  and the expected `units` in tests is a literal mapping from the model declarations.
+
+**ADR:** none — corrections to this feature's plan

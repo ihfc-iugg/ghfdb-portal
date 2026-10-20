@@ -34,8 +34,10 @@ The generated fields, per type:
 
 - A single vocabulary field (`ConceptField`) becomes a writable `ChoiceField`: it takes the term's
   name and gives the bare name back.
-- A many-valued vocabulary field (`ConceptManyToManyField`) becomes a `ManyRelatedField` over a
-  `StringRelatedField`, which is read-only, so nothing is written through it today.
+- Every relation the base does not declare becomes read-only: a `StringRelatedField` (a
+  many-valued vocabulary field, and `stratigraphy`, a plain many-to-many to `StratigraphicUnit`),
+  or a `RecordReferenceField` for a record (`fairdm/registry/factories.py:961-984`). Nothing is
+  written through them today.
 - A quantity becomes a writable number field that cannot be read (above).
 - `location` is FairDM's `GeoJSONPointField`, read-only, reading the record's own location. Only a
   site holds one (ADR 0023), so every other type would serve `null`.
@@ -104,10 +106,11 @@ narrowed by visibility, so the count does not grow with the number of related re
 
 - References: `RecordReferenceField` already returns `null` for a record the requester may not see,
   using FairDM's own list rule (`FairDMVisibilityFilter`).
-- Lists of related records: `Sample.objects.visible_to(user)` and
-  `Measurement.objects.visible_to(user)`, the rule `HeatFlowPage.split` in
-  `project/heat_flow/overview.py` already applies to the same records on the overview pages. A
-  record the requester may not see is left out of the list, never given as `null`.
+- Lists of related records: `FairDMVisibilityFilter().filter_queryset`, the rule each record's own
+  route applies (`fairdm/api/filters.py:102`) and the call `RecordReferenceField.visible_pks`
+  makes. `visible_to` (`fairdm/core/managers.py:137`), which the overview pages use, admits on
+  dataset permissions the API's filter does not read, so it is not the rule of the record's own
+  route. A record the requester may not see is left out of the list, never given as `null`.
 - Coordinates: a record carries its site's coordinates only when the requester may see the site,
   as `HeatFlowPage.site_location` does on the pages. Otherwise `location` is `null`.
 
@@ -177,15 +180,19 @@ with the shape of each type and an example request and response (FR-019).
 
 | Piece | Stopped at | Found |
 |---|---|---|
-| Per-type serializer hook | an installed package | `ModelConfiguration.get_serializer_class()` (FairDM), used the same way as `HeatFlowSiteConfig.get_form_class()` here |
+| Per-type serializer hook | an installed package | the registration's `serializer_class` (FairDM) |
 | A list in a different shape from one record | an installed package | DRF `Serializer.many_init` |
 | Schema for the list shape | an installed package | drf-spectacular `OpenApiSerializerExtension` |
 | Schema for a term's vocabulary and a record's units | an installed package | drf-spectacular `OpenApiSerializerFieldExtension` |
 | References with visibility, one query per page | an installed package | FairDM `RecordReferenceField`, `RecordListSerializer.prime` |
-| Visibility of related lists | this repo | `Sample.objects.visible_to`, `Measurement.objects.visible_to`, as `HeatFlowPage.split` uses them |
+| Visibility of related lists and of the site | an installed package | FairDM `FairDMVisibilityFilter.filter_queryset` |
+| A page's sites and parents gathered once | new code | `HeatFlowListSerializer`, a `RecordListSerializer` subclass |
+| The site a record is placed at | new code | `site_of`, one method over the model relations |
+| A reference to an already-narrowed record | new code | `reference()`, built on `RecordReferenceField.route_name` |
+| The unit object of a record | new code | `UnitsField`, reading each quantity field's `base_units` |
 | A term with label and identifier | new code | one function and two small fields, in the shape of FairDM's `KeywordSerializer`, which cannot name a field's vocabulary in the schema and does not read a `core.Concept` |
 | A record's address and page | an installed package | FairDM `RecordURLField`, `PortalPageField` (already on the base serializers) |
-| GeoJSON point | an installed package | FairDM `GeoJSONPointField`, given the site instead of the record |
+| GeoJSON point | an installed package | FairDM `GeoJSONPointField`, subclassed as `SiteLocationField` to read the site instead of the record |
 | Quantity as a number in its stored unit | new code | number-field subclasses whose `to_representation` takes the magnitude in `base_units` |
 | The unit of a quantity field | an installed package | `quantityfield` field's `base_units` and `ureg`, formatted by pint |
 | Query-count assertions | an installed package | pytest-django `django_assert_num_queries`, as `tests/test_ghfdb/test_viewsets.py` uses it |

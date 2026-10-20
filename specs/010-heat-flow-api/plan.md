@@ -58,11 +58,18 @@ come from `tests/factories.py`. Test classes mirror the serializer classes they 
 - **`TermRelatedField(RelatedField)`**: read-only, `to_representation` gives `term(concept)`. A
   many-valued vocabulary field is `TermRelatedField(many=True, read_only=True)`, so each term is its
   own entry and the prefetched rows are read through `.all()`. It is used for every
-  `ConceptManyToManyField` named in `Meta.fields`, through `build_relational_field`.
-- **Quantity number fields**: `QuantityFloatField(FloatField)`, `QuantityDecimalField(DecimalField)`
-  with `coerce_to_string=False`, `QuantityIntegerField(IntegerField)`. Each writes as its parent does
-  today and gives, on read, the magnitude in the model field's `base_units`
-  (`value.to(field.base_units).magnitude`), or `None`. They replace the generated number fields
+  `ConceptManyToManyField` named in `Meta.fields`, through `build_relational_field`. Every other
+  relation keeps what FairDM's serializer factory gives it today: a read-only `StringRelatedField`,
+  or a read-only `RecordReferenceField` for a project, dataset, sample or measurement
+  (`fairdm/registry/factories.py`). `stratigraphy` is a plain many-to-many to
+  `StratigraphicUnit`, not a vocabulary field, and stays read-only text, as today. DRF's own
+  fallback, a writable `PrimaryKeyRelatedField`, would change what is accepted (FR-017).
+- **Quantity number fields**: `QuantityFloatField(FloatField)`, `QuantityDecimalField(DecimalField)`,
+  `QuantityIntegerField(IntegerField)`. Each writes as its parent does today and gives, on read,
+  the magnitude in the model field's `base_units` (`value.to(field.base_units).magnitude`), or
+  `None`. The decimal one gives `float(magnitude)`: the portal renders with orjson, which turns a
+  `Decimal` into a string under DRF's default `COERCE_DECIMAL_TO_STRING`, and every quantity must
+  be a JSON number. They replace the generated number fields
   for every `quantityfield` field through `serializer_field_mapping`.
 - **`UnitsField(Field)`**: read-only, `source="*"`. Gives `{name: unit}` for every quantity field
   among the serializer's own fields, the unit written `f"{field.ureg(field.base_units).units:~C}"`.
@@ -75,6 +82,12 @@ come from `tests/factories.py`. Test classes mirror the serializer classes they 
 - **`SiteLocationField(GeoJSONPointField)`**: gives the GeoJSON point of the record's site, read
   through the serializer's `site_of(record)`, or `None` when the record has no site or the requester
   may not see it.
+- **The `site` reference** on a child, gradient and conductivity is a method field built from
+  `site_of(record)`, the site set `HeatFlowListSerializer` primes into the context, and
+  `reference()`. A `RecordReferenceField` with a dotted source is not primed by FairDM
+  (`RecordReferenceField.prime` handles one-step sources only) and would query per record. An
+  interval's `site` and a parent's site (its `sample`) are one-step and stay
+  `RecordReferenceField`s.
 
 ## The base (`HeatFlowRecordSerializer`)
 
@@ -85,22 +98,24 @@ A mixin placed before the kind's base serializer
 - `units = UnitsField()`.
 - `summary_serializer = None`. `many_init` builds the list from `cls.summary_serializer` when it is
   set, and from `cls` otherwise.
-- `Meta.list_serializer_class = HeatFlowListSerializer`.
+- `many_init` constructs `HeatFlowListSerializer` directly, so it does not depend on each
+  concrete serializer's `Meta` inheriting the mixin's.
 - `site_of(record)`: the site a record is placed at. A site is its own, an interval's is
   `record.site`, a parent's is its sample, a child's, gradient's or conductivity's is its interval's
   site.
 - `can_see(record)`: whether the requester may see a sample or measurement, answered from the page
   set the list serializer primed into `self.context` when there is one, and with one query when there
-  is not. Built on `Sample.objects.visible_to(user)` and `Measurement.objects.visible_to(user)`, the
-  rule `HeatFlowPage.split` uses.
+  is not. Built on `FairDMVisibilityFilter().filter_queryset(request, queryset, None)`, the call
+  `RecordReferenceField.visible_pks` makes, so a nested record follows exactly the rule of its own
+  route (FR-013). `visible_to` is not used: it admits on dataset permissions the API's filter does
+  not read.
 
 **`HeatFlowListSerializer(RecordListSerializer)`**: before FairDM's own priming, gathers in one
 query each the sites the page's records are placed at that the requester may see, and the parents of
 a page of sites (with their visibility), and keeps both in the shared serializer context.
 
-**`visible(queryset, request)`**: a function narrowing a queryset of samples or measurements to what
-the requester may see, in one query. Used for every nested or listed related record on a single
-record.
+Every nested or listed related record on a single record is narrowed with the same
+`FairDMVisibilityFilter().filter_queryset` call, in one query. No separate helper.
 
 ## The shapes
 
@@ -131,15 +146,20 @@ nested under the interval they were made over (FR-001), all of them, never one p
   FairDM's `load_relations` adds the rest.
 - A list costs the same number of queries for a page of one record as for a full page: the page
   priming above, FairDM's reference priming, the prefetches.
-- A single record's related lists are each one query narrowed by `visible`, with their own terms
-  prefetched, so a site with more intervals and children costs the same number of queries.
+- A single record's related lists are each one query narrowed by the visibility filter, built
+  through the nested summary's own `load_related` and FairDM's `load_relations`, so their metadata,
+  terms and references are prefetched. A site's children are fetched in one query across its
+  visible intervals, serialized as one list and grouped by interval, as `HeatFlowPage.for_site`
+  does, so a site with more intervals and children costs the same number of queries.
 
 ## Schema (`schema.py`)
 
 - **`HeatFlowRecordSchema(OpenApiSerializerExtension)`**, `target_class` the base,
   `match_subclasses=True`: for a list operation on a serializer whose `summary_serializer` is set,
   `get_name` gives the summary's component name and `map_serializer` maps the summary. Every other
-  case maps the serializer itself (`bypass_extensions=True`).
+  case maps `self.target` itself (`bypass_extensions=True`). `get_identity` returns the summary
+  class for a list operation, so drf-spectacular does not see two serializers under one component
+  name.
 - **`TermFieldSchema(OpenApiSerializerFieldExtension)`** for `TermChoiceField` and
   `TermRelatedField`: an object with `name`, `label`, `uri` and `vocabulary`, the last given
   `enum: [<the field's vocabulary name>]`, nullable for a single field.
@@ -153,8 +173,9 @@ nested under the interval they were made over (FR-001), all of them, never one p
 
 Unchanged. `Meta.fields` keeps every writable model field the registration lists today, through the
 same ModelSerializer mapping, so a request accepted today is accepted after. Scores, quality codes,
-scheme revisions and `ghfdb_id` are `editable=False` on the models and read-only here. A test posts
-each of them and asserts the stored values are the portal's (US2 scenario 7).
+scheme revisions and `ghfdb_id` are `editable=False` on the models and read-only here. A test on
+the child posts each of them and asserts the stored values are the portal's (US2 scenario 7). The
+same `editable=False` guard covers a parent.
 
 ## Documentation
 
@@ -174,7 +195,8 @@ after another on the branch.
 ## Risks
 
 - `many_init` is called for any `many=True` use of a full serializer. Nested lists in this feature
-  use the summary serializers directly, so nothing else reaches it.
+  use the summary serializers directly, so nothing else reaches it. A site's nested intervals are a
+  third shape, the interval summary plus its `children`, not the interval list's summary.
 - A list page of sites still prefetches their parents. That is one query per page, and is what
   FR-002 asks a list to carry.
 - The conductivity's declared unit, `W/mK`, is stated as declared (research.md). The API follows

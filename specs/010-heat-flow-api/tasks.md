@@ -30,17 +30,21 @@ describes both.
 filled; each term carries a label and an identifier, each quantity a unit equal to the field's
 declared unit.
 
-- [ ] T001 [US4] Create `project/heat_flow/serializers.py` with the fields and base of plan.md
-      (*The fields*, *The base*) and a summary serializer for each of the six types holding the
+- [ ] T001 [US4] Create `project/heat_flow/serializers.py` with `term()`, `TermChoiceField`,
+      `TermRelatedField`, the quantity fields, `UnitsField` and the base's field mapping (plan.md ›
+      *The fields*, *The base*), and a summary serializer for each of the six types holding the
       common fields, the registration's own fields and `units`; name each in its registration with
       `serializer_class` in `project/heat_flow/config.py`. Tests first in
       `tests/test_heat_flow/test_serializers.py`: each list route answers 200 with a record of its
       type (today five answer 500); a single and a many-valued term each give `name`, `label`, `uri`
       and `vocabulary`, a many-valued field one entry per term; each quantity is a number equal to
-      the stored magnitude in its declared unit, and `units` names that unit for every quantity
-      field; an empty quantity is `null` with its unit still in `units`; a site created through the
+      the stored magnitude in its declared unit, and a JSON number in the parsed response for a
+      decimal quantity too; `units` equals, per type, a literal mapping written in the test from the
+      model declarations (child `value: mW/m**2`, `surface_temperature: °C`, …), so a missing or
+      extra field fails; an empty quantity is `null` with its unit still in `units`; a site created through the
       API today with a term's name for `environment` is still created and stores that term
-      (FR-017); FairDM's system checks report no `fairdm.E600`.
+      (FR-017); a write supplying `stratigraphy` leaves it unchanged; FairDM's system checks report
+      no `fairdm.E600`.
 - [ ] T002 [US4] Create `project/heat_flow/schema.py` with `TermFieldSchema` and `UnitsFieldSchema`
       of plan.md › *Schema*, imported from `HeatFlowSchemaConfig.ready()`. Tests first in
       `tests/test_heat_flow/test_schema.py`, from the generated schema: a single and a
@@ -61,13 +65,14 @@ anonymously in one request; the site list's query count does not grow with sites
 
 - [ ] T004 [US1] Site and parent shapes per plan.md › *The shapes*: the site summary's `parent`
       from the page priming in `HeatFlowListSerializer`; the full site and parent serializers;
-      `summary_serializer` and `many_init`; `visible`, `reference` and `can_see`. Tests first:
+      `summary_serializer` and `many_init`; `reference` and `can_see`. Tests first:
       spec US1 scenarios 1–7 — the single site carries its parent, every interval and each
       interval's children (all of them, when one interval carries several); the list carries
       position, parent value, uncertainty and quality code and no `intervals`; a site with no
       parent carries `parent: null` in both shapes and is listed; the parent's record carries its
       value, uncertainty, scores, `ghfdb_id`, its site and each child with `is_relevant`, a child
-      not marked relevant included; an interval or a child in a dataset the requester may not see
+      not marked relevant included; a child the requester may not see is absent from the parent's
+      `children`; an interval or a child in a dataset the requester may not see
       is absent from the site's record and is never a `null` entry; a parent the requester may not
       see is `null` on the site in both shapes; an anonymous request is served; query count of the
       site list and of the parent list is the same for one record as for several; the single
@@ -75,7 +80,7 @@ anonymously in one request; the site list's query count does not grow with sites
 - [ ] T005 [US1] Add `HeatFlowRecordSchema` to `project/heat_flow/schema.py`. Tests first in
       `tests/test_heat_flow/test_schema.py`: the site list operation's item component is the
       summary's (it has `parent` and no `intervals`) and the single-site operation's is the full
-      record's (it has `intervals`).
+      record's (it has `intervals`); the schema generates without component warnings.
 - [ ] T006 [US1] Guide: the site and parent sections, each with its list and single-record shape
       and one example request and response.
 
@@ -94,7 +99,8 @@ grow with children.
       eight score fields equal the stored values; an unscored child's numeric scores are `null`;
       the child carries its site's coordinates and references to its interval, parent and site, in
       the list and on its own; a child whose site the requester may not see carries
-      `location: null` and `site: null`; a child with no gradient, no conductivity or no
+      `location: null` and `site: null`; a gradient or conductivity the requester may not see is
+      `null` on the child's single record; the child's `ghfdb_id` equals the stored value; a child with no gradient, no conductivity or no
       corrections carries `null`, `null` and `[]` and is listed; a correction recorded as not
       corrected is listed and a correction type never recorded is absent; a negative value is
       served as stored; a request creating or changing a child that supplies scores, a quality
@@ -115,10 +121,13 @@ read on its own.
 - [ ] T009 [US3] Interval, gradient and conductivity shapes per plan.md › *The shapes*, and
       `location` from the site on the parent. Tests first: spec US3 scenarios 1–5 — a scored
       gradient's and conductivity's `score`, `score_missing` and `quality_scheme` equal the stored
-      values; a gradient's single record refers to each child calculated from it; an interval's
+      values; a gradient's and a conductivity's single record each refer to every child calculated
+      from it; an interval's
       single record carries its probe metadata with its terms and units, and refers to each child,
       gradient and conductivity made over it; an interval without probe metadata carries
-      `probe_metadata: null`; each carries its site's coordinates, and so does a parent; a related
+      `probe_metadata: null`; each carries its site's coordinates, and so does a parent; an
+      interval, gradient, conductivity or parent whose site the requester may not see carries
+      `location: null` and `site: null`; a related
       record the requester may not see is absent from those lists; query counts of the interval,
       gradient and conductivity lists are the same for one record as for several, and their single
       records' do not grow with what they refer to.
