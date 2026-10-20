@@ -15,6 +15,8 @@ That is a new way to work with the site, so this is a feature and not a change t
 No existing spec covers the relational model's own API shape: FS-006 covers the published
 structure only.
 
+**ADR:** none — classifies the request, nothing downstream inherits it
+
 ## D1 — The interpretation the spec is built on
 
 Issue #287 is read as: serve the six relational record types (sites, intervals, children, gradients,
@@ -22,6 +24,8 @@ conductivities, parents) in shapes designed for heat flow, for a consumer readin
 properties come straight from the issue: related records arrive with the record, vocabulary terms
 are readable, units are clear, and quality scores are present. Everything else in the spec is a
 consequence of those four or one of the decisions below.
+
+**ADR:** none — the reading the specification is built on, recorded in spec.md
 
 ## D2 — Nesting goes one level, and lists stay lean
 
@@ -38,6 +42,8 @@ request per interval.
 list and nests it on its own route, FS-006 D3). A consumer meets one rule across the API, and a list
 page does not grow by an order of magnitude.
 
+**ADR:** docs/adr/0025-a-heat-flow-type-serves-a-summary-in-a-list-and-the-whole-record-on-its-own.md
+
 ## D3 — Writing is not part of this feature
 
 **Ambiguous:** the framework's endpoints for these types accept writes, and the issue speaks only of
@@ -51,6 +57,8 @@ taken from a request.
 feature. The rule against taking calculated values from outside is a standing constraint
 (CONTEXT.md, "Quality is computed here"), not a new decision.
 
+**ADR:** none — writing stays as it was
+
 ## D4 — A unit is stated in the record, in the canonical unit
 
 **Ambiguous:** "units that are clear" could mean a unit in the schema only, a unit beside each
@@ -63,6 +71,8 @@ states that unit. The schema describes it too. Conversion is out of scope.
 FAIR reading of constitution article XI and the labelling rule of article XII. Conversion adds
 nothing the canonical unit cannot already give.
 
+**ADR:** docs/adr/0026-a-quantity-is-a-number-in-its-stored-unit-and-the-record-names-the-unit.md
+
 ## D5 — A vocabulary term carries a label and its identifier
 
 **Chosen:** a term is given with its label and the identifier that defines it, and a many-valued
@@ -72,6 +82,8 @@ field gives each term as its own entry.
 resolvable but not readable. The framework already gives a record's keywords this way, so it is the
 API's existing pattern. FS-006 gives labels only because the published structure fixes that shape.
 These endpoints are not bound by it.
+
+**ADR:** none — reuses the shape FairDM already gives a record's keywords
 
 ## D6 — Records placed at a site carry the site's coordinates
 
@@ -86,6 +98,8 @@ it is placed at. They are read from the site, not stored again.
 made for a determination carrying its site's coordinates. ADR 0023 is unchanged, since the site
 stays the one record holding them.
 
+**ADR:** none — follows ADR 0023, which is unchanged
+
 ## D7 — Nested records follow their own visibility
 
 **Chosen:** a related record is served inside another only where the requester may read it on its
@@ -95,12 +109,16 @@ own route, and otherwise it is left out entirely.
 determination can. ADR 0021 settled this for the published structure, and a nested record must not
 become a side door around it.
 
+**ADR:** docs/adr/0025-a-heat-flow-type-serves-a-summary-in-a-list-and-the-whole-record-on-its-own.md
+
 ## D8 — Addresses and identifiers do not change
 
 **Chosen:** each type keeps its current route and its current record identifier.
 
 **Why defensible:** the framework derives a type's route from its plural name, and changing it
 breaks every existing consumer. Nothing in the issue asks for new addresses.
+
+**ADR:** none — nothing changes
 
 ## D9 — Corrections and probe metadata are not types of their own
 
@@ -111,12 +129,16 @@ interval. Neither gets its own endpoint.
 neither means anything apart from its owner. The issue names six types, and these are not among
 them.
 
+**ADR:** none — local to this feature
+
 ## D10 — Boundary with the sibling features
 
 The forms for these records (#286) and their overview pages (#288) are written in parallel and own
 their own scope. The published-structure endpoints (FS-006) are not touched. This feature reads the
 same records the overview pages show, but it shares no surface with them, and neither depends on the
 other.
+
+**ADR:** none — a boundary between features of one release
 
 ## D11 — FairDM version
 
@@ -126,10 +148,14 @@ for that kind. FairDM's main branch has moved on since (latest `2bebf29b`), but 
 and new development accounts, with nothing in its API or registry. This feature needs nothing from a
 newer FairDM.
 
+**ADR:** none — no version change
+
 ## D12 — No sketch
 
 The feature changes no page a person looks at. Its output is API responses, which tests can assert
 in full, so there is nothing for a sketch to settle.
+
+**ADR:** none — a choice about this feature's process, local to it
 
 ## D13 — Re-read against the feature delivered since
 
