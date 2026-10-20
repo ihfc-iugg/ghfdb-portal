@@ -393,8 +393,21 @@
         },
         {
           "id": "T017",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 3,
+          "evidence": {
+            "tests": [
+              "tests/test_templates/test_heatflowinterval_overview.py",
+              "tests/test_heat_flow/test_overview.py::TestHeatFlowPageForInterval"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_overview.py tests/test_templates -n0 -q"
+            ],
+            "code": [
+              "templates/cotton/heat_flow/site_location.html:5",
+              "project/heat_flow/templates/heat_flow/heatflowinterval_overview.html:28"
+            ]
+          }
         },
         {
           "id": "T018",
