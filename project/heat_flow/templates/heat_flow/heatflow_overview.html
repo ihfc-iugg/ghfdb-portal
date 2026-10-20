@@ -70,32 +70,32 @@
     <c-slot name="badges">{% if hf.corrections %}<span class="badge badge-ghost badge-sm">{{ hf.corrections|length }}</span>{% endif %}</c-slot>
     <div data-heat-flow="corrections"
          {% if not hf.corrections %}data-state="empty"{% endif %}>
-    {% if hf.corrections %}
-      <div class="overflow-x-auto">
-        <table class="table table-sm">
-          <caption class="sr-only">{% translate "Corrections recorded for this heat flow value" %}</caption>
-          <thead>
-            <tr>
-              <th scope="col">{% translate "Correction" %}</th>
-              <th scope="col">{% translate "Status" %}</th>
-              <th scope="col">{% translate "Comment" %}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for correction in hf.corrections %}
-              <tr data-correction="{{ correction.correction_type }}"
-                  data-status="{{ correction.status }}">
-                <th scope="row" class="font-medium">{{ correction.get_correction_type_display }}</th>
-                <td>{{ correction.get_status_display|capfirst }}</td>
-                <td class="text-base-content/70">{{ correction.comment|default:"" }}</td>
+      {% if hf.corrections %}
+        <div class="overflow-x-auto">
+          <table class="table table-sm">
+            <caption class="sr-only">{% translate "Corrections recorded for this heat flow value" %}</caption>
+            <thead>
+              <tr>
+                <th scope="col">{% translate "Correction" %}</th>
+                <th scope="col">{% translate "Status" %}</th>
+                <th scope="col">{% translate "Comment" %}</th>
               </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    {% else %}
-      <p class="text-sm text-base-content/70">{% translate "No corrections are recorded for this heat flow value." %}</p>
-    {% endif %}
+            </thead>
+            <tbody>
+              {% for correction in hf.corrections %}
+                <tr data-correction="{{ correction.correction_type }}"
+                    data-status="{{ correction.status }}">
+                  <th scope="row" class="font-medium">{{ correction.get_correction_type_display }}</th>
+                  <td>{{ correction.get_status_display|capfirst }}</td>
+                  <td class="text-base-content/70">{{ correction.comment|default:"" }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-sm text-base-content/70">{% translate "No corrections are recorded for this heat flow value." %}</p>
+      {% endif %}
     </div>
   </c-mvp.card>
   <c-card.quality :child="measurement"
@@ -105,29 +105,29 @@
               class="bg-base-100">
     <div data-heat-flow="parent"
          {% if hf.parent %}data-relevant="{{ measurement.is_relevant|yesno:'true,false' }}"{% elif hf.parent_hidden %}data-state="hidden"{% else %}data-state="none"{% endif %}>
-    {% if hf.parent %}
-      <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <a href="{{ hf.parent.get_absolute_url }}"
-           class="link link-hover text-lg font-medium tabular-nums">{{ hf.parent.print_value }}</a>
-        <c-heat_flow.code :code="hf.parent.quality" />
-        {% if measurement.is_relevant %}
-          <span class="badge badge-soft badge-success badge-sm">{% translate "Marked relevant" %}</span>
-        {% else %}
-          <span class="badge badge-outline badge-sm">{% translate "Not marked relevant" %}</span>
-        {% endif %}
-      </div>
-      <p class="text-sm text-base-content/70 mt-2">
-        {% if measurement.is_relevant %}
-          {% translate "This value is marked as used in deriving the parent's value." %}
-        {% else %}
-          {% translate "This value is not marked as used in deriving the parent's value." %}
-        {% endif %}
-      </p>
-    {% elif hf.parent_hidden %}
-      <p class="text-sm text-base-content/70">{% translate "The parent belongs to a dataset that hasn't been published yet." %}</p>
-    {% else %}
-      <p class="text-sm text-base-content/70">{% translate "This heat flow value belongs to no parent." %}</p>
-    {% endif %}
+      {% if hf.parent %}
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <a href="{{ hf.parent.get_absolute_url }}"
+             class="link link-hover text-lg font-medium tabular-nums">{{ hf.parent.print_value }}</a>
+          <c-heat_flow.code :code="hf.parent.quality" />
+          {% if measurement.is_relevant %}
+            <span class="badge badge-soft badge-success badge-sm">{% translate "Marked relevant" %}</span>
+          {% else %}
+            <span class="badge badge-outline badge-sm">{% translate "Not marked relevant" %}</span>
+          {% endif %}
+        </div>
+        <p class="text-sm text-base-content/70 mt-2">
+          {% if measurement.is_relevant %}
+            {% translate "This value is marked as used in deriving the parent's value." %}
+          {% else %}
+            {% translate "This value is not marked as used in deriving the parent's value." %}
+          {% endif %}
+        </p>
+      {% elif hf.parent_hidden %}
+        <p class="text-sm text-base-content/70">{% translate "The parent belongs to a dataset that hasn't been published yet." %}</p>
+      {% else %}
+        <p class="text-sm text-base-content/70">{% translate "This heat flow value belongs to no parent." %}</p>
+      {% endif %}
     </div>
   </c-mvp.card>
   <c-mvp.card title="{% translate 'Determination' %}"
@@ -147,7 +147,7 @@
                          value="{{ measurement.ghfdb_id|default_if_none:'' }}" />
     </div>
     <c-heat_flow.field field="comment"
-                         label="{% translate 'Comment' %}"
+                       label="{% translate 'Comment' %}"
                        value="{{ measurement.c_comment|default_if_none:'' }}" />
   </c-mvp.card>
 {% endblock overview.properties %}
