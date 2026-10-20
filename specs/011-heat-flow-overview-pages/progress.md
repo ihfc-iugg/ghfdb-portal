@@ -93,3 +93,10 @@ Did: `ParentHeatFlow.quality_basis()` returns the basis (single, relevant, none,
 Verified: `uv run pytest tests/test_heat_flow/test_models/test_parent.py::TestQualityBasis -n0 -q`: red first (6 failed, AttributeError: no `quality_basis`), then `tests/test_heat_flow/test_models/test_parent.py -n0 -q` 37 passed, the existing `TestParentQuality` tests unchanged.
 Next: T013, `for_parent`.
 Watch: the factory's returned child holds default scores until reloaded, so a test that feeds a child to `QualityScheme.inherit` reloads it first.
+
+## 2026-10-20T16:42:14Z · Implementer US4 · T013
+
+Did: Rebuilt `HeatFlowPage.for_parent` test-first: the basis and the ids it rests on come from `ParentHeatFlow.quality_basis()`, the children (relevant first) are fetched with their method prefetched, the cut at `children_shown` is lifted by `show_all`, the site is read from the parent's `site` and checked with `opens`.
+Verified: `uv run pytest tests/test_heat_flow/test_overview.py -k ForParent -n0 -q`: red first (2 failed, 14 passed: `show_all` ignored, 3 queries reading the method), then 16 passed. Probes, each failing exactly its test and restored: returning the site without the visibility check, and taking `rests_on` from the relevant flag instead of the basis.
+Next: T014, the page hooks and tests.
+Watch: none.
