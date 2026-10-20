@@ -2,7 +2,7 @@
   "feature": "011-heat-flow-overview-pages",
   "branch": "011-heat-flow-overview-pages",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "DESIGN_REVIEW",
+  "state": "IMPLEMENT",
   "state_history": [
     {
       "state": "GATE_SPEC",
@@ -23,6 +23,11 @@
       "state": "DESIGN_REVIEW",
       "at": "2026-10-20T13:37:35Z",
       "note": "design review dispatched"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-20T13:54:11Z",
+      "note": "design review approved; plan gate open; plan comment posted"
     }
   ],
   "gates": {
@@ -61,8 +66,22 @@
       "tasks": [
         {
           "id": "T001",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_overview.py::TestHeatFlowPageSplit",
+              "tests/test_heat_flow/test_overview.py::TestHeatFlowPageForChild",
+              "tests/test_heat_flow/test_overview.py::TestHeatFlowPageOpens"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_overview.py -q -n0 (red: ImportError for HeatFlowPage, exit 2; green 32 passed, exit 0; probe: visible_to removed -> 8 failed)"
+            ],
+            "code": [
+              "project/heat_flow/overview.py:107",
+              "project/heat_flow/overview.py:119"
+            ]
+          }
         },
         {
           "id": "T002",
