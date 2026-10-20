@@ -8,9 +8,16 @@ from fairdm.registry.config import (
     ModelConfiguration,
     ModelMetadata,
 )
-from fairdm.utils.location.forms import LocationField
 
 from .filters import HeatFlowFilter, HeatFlowSiteFilter
+from .forms import (
+    HeatFlowForm,
+    HeatFlowIntervalForm,
+    HeatFlowSiteForm,
+    IntervalConductivityForm,
+    ParentHeatFlowForm,
+    ThermalGradientForm,
+)
 from .models import (
     HeatFlow,
     HeatFlowInterval,
@@ -64,6 +71,7 @@ class HeatFlowSiteConfig(IHFCConfig):
     """FairDM registry configuration for the heat flow site model."""
 
     model = HeatFlowSite
+    form_class = HeatFlowSiteForm
     description = _(
         "A heat flow site is a specific geological location where measurements of subsurface temperature gradients and thermal conductivity are conducted to determine the heat flow, or the rate of heat transfer from the Earth's interior to its surface."
     )
@@ -88,30 +96,13 @@ class HeatFlowSiteConfig(IHFCConfig):
         "stratigraphy",
     ]
 
-    def get_form_class(self):
-        """Return the site form, taking a latitude and a longitude and nothing more.
-
-        The site's elevation is its own ``elevation`` field, so FairDM's location
-        elevation and uncertainty are not offered (ADR 0023).
-        """
-        generated = super().get_form_class()
-
-        class HeatFlowSiteForm(generated):
-            def __init__(self, *args, **kwargs):
-                super().__init__(*args, **kwargs)
-                current = self.fields["location"]
-                self.fields["location"] = LocationField(
-                    full=False, label=current.label, help_text=current.help_text
-                )
-
-        return HeatFlowSiteForm
-
 
 @fairdm.register
 class HeatFlowIntervalConfig(IHFCConfig):
     """FairDM registry configuration for the heat flow depth interval model."""
 
     model = HeatFlowInterval
+    form_class = HeatFlowIntervalForm
     description = _(
         "A heat flow depth interval is a vertical depth interval within the Earth's subsurface, defined by top and bottom depth measurements, over which temperature measurements are taken to determine the terrestrial heat flow at a given location. This interval is used to assess the rate at which heat is conducted from the Earth's interior to the surface. The depth interval is characterized by its vertical extent, which allows for the analysis of temperature gradients and the calculation of heat flux. This data is crucial for understanding geothermal gradients, heat transfer processes, and the thermal structure of the Earth's crust at that location."
     )
@@ -133,6 +124,7 @@ class HeatFlowConfig(IHFCConfig):
     """FairDM registry configuration for the child heat flow measurement model."""
 
     model = HeatFlow
+    form_class = HeatFlowForm
     description = _(
         "A child heat flow measurement refers to the heat flow data obtained from a specific, typically vertical, depth interval within a larger dataset, such as that from a borehole. These measurements represent localized heat flow at particular depths, capturing the rate at which heat is conducted through the Earth at that specific interval. By averaging these child measurements across several depth intervals, scientists can determine the overall surface heat flow for the area. Child heat flow measurements are essential for capturing variations in thermal conductivity and temperature gradients within the subsurface, allowing for a more accurate assessment of the Earth's heat flow at the surface."
     )
@@ -154,6 +146,7 @@ class ThermalGradientConfig(IHFCConfig):
     """FairDM registry configuration for the thermal gradient model."""
 
     model = ThermalGradient
+    form_class = ThermalGradientForm
     # method_top, method_bottom, correction_top, correction_bottom are M2M and cannot be in list_display
     admin_list_display = [
         "value",
@@ -182,6 +175,7 @@ class IntervalConductivityConfig(IHFCConfig):
     """FairDM registry configuration for the interval thermal conductivity model."""
 
     model = IntervalConductivity
+    form_class = IntervalConductivityForm
     table_class = IntervalConductivityTable
     serializer_class = IntervalConductivitySerializer
     # method, strategy, source, saturation, pT_conditions, pT_function are M2M and cannot be in list_display
@@ -203,6 +197,7 @@ class ParentHeatFlowConfig(IHFCConfig):
     """FairDM registry configuration for the aggregated, quality-controlled parent heat flow record."""
 
     model = ParentHeatFlow
+    form_class = ParentHeatFlowForm
     serializer_class = ParentHeatFlowSerializer
     description = _(
         "Parent heat flow represents the aggregated, quality-controlled surface heat flow value for a given "
@@ -214,10 +209,4 @@ class ParentHeatFlowConfig(IHFCConfig):
         "corr_HP_flag",
         "comment",
         "ghfdb_id",
-    ]
-    # ghfdb_id is assigned on import and is not editable, so the form leaves it out.
-    form_fields = [
-        ("value", "uncertainty"),
-        "corr_HP_flag",
-        "comment",
     ]
