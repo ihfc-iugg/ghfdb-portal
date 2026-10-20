@@ -58,3 +58,10 @@ Did: Replaced the child section of docs/guides/heat-flow-records-api.md with the
 Verified: forge verify --repo . --base origin/main --steps docs -> passed.
 Next: full verify, then the report.
 Watch: the single-record example shortens the gradient to a few fields, and says so.
+
+## 2026-10-20T21:31:19Z · Implementer US3 · T009
+
+Did: site and location on interval, gradient, conductivity and parent summaries via SitePlacedSerializer; scores, temperatures, conductivity location and number on the summaries; full interval (probe metadata, children, gradients, conductivities), gradient and conductivity records with children, registered in config.py.
+Verified: uv run pytest tests/test_heat_flow/test_serializers.py tests/test_heat_flow/test_schema.py tests/test_heat_flow/test_config.py -n0: 143 passed. pre-commit run --all-files: all passed. Red run before code: 31 failed.
+Next: T010 guide sections.
+Watch: FairDM load_relations resets select_related when a serializer has no foreign key of its own (D31).
