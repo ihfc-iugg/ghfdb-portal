@@ -233,3 +233,14 @@ rebuilds one updates that row.
   the page test that drives them is a child-page test.
 
 **ADR:** none — repairs to test support and a sketch template.
+
+## D18. US1's changes to existing tests are formatting and fixture repairs
+
+The test-change check flagged seven existing test modules after US1. Four (`test_demo`,
+`test_refresh_quality`, `test_child`, `test_quality`) parse to the same syntax tree before and
+after: formatter output only. `test_signals` carries the linter's automatic fixes (nested `with`
+blocks joined, one unused import removed) with no assertion changed. `tests/test_templates/
+conftest.py` and `test_measurement_detail.py` are the fixture repairs and test moves of D13 and
+D17. Accepted.
+
+**ADR:** none — test housekeeping.
