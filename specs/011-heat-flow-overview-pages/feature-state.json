@@ -85,8 +85,24 @@
         },
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_templatetags/test_heat_flow_overview.py::TestLabels",
+              "tests/test_heat_flow/test_templatetags/test_heat_flow_overview.py::TestPlusMinus",
+              "tests/test_heat_flow/test_templatetags/test_heat_flow_overview.py::TestHeatFlowPage",
+              "tests/test_heat_flow/test_templatetags/test_heat_flow_overview.py::TestOverviewPages"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_templatetags -q -n0 (red: plus_minus not a filter, tag gathered twice; page smoke red against the old templates; green 18 passed)"
+            ],
+            "code": [
+              "project/heat_flow/templatetags/heat_flow_overview.py:12",
+              "project/heat_flow/templatetags/heat_flow_overview.py:36",
+              "project/heat_flow/templatetags/heat_flow_overview.py:56"
+            ]
+          }
         },
         {
           "id": "T003",
