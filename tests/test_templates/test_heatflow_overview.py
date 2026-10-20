@@ -1,7 +1,7 @@
 # Tests for the child heat flow value's overview page, read through its URL. The page's
 # content is found by the ``data-`` hooks its templates carry, never by wording. Mirrors
-# no Python module: the subject is the templates under ``project/heat_flow/templates/`` and
-# ``templates/cotton/``, declared under ``non-mirror-paths`` in pyproject.toml.
+# no Python module: the subject is the templates under ``project/heat_flow/templates/``
+# and ``templates/cotton/``, declared under ``non-mirror-paths`` in pyproject.toml.
 
 import pytest
 from fairdm.contrib.contributors.choices import ContributionLevel

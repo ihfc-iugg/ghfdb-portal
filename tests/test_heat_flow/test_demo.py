@@ -344,7 +344,7 @@ class TestDemoGraphRanges:
 
 @pytest.fixture
 def varied(dataset, unpublished_dataset):
-    """A dataset's graph after ``vary_page_states``, with the unpublished dataset beside it."""
+    """A dataset's graph after ``vary_page_states``, beside the unpublished dataset."""
     counter = iter(range(500, 10_000))
     DemoGraph(dataset, random.Random(8), lambda: next(counter)).build(sites=8)
     DemoGraph(dataset, random.Random(8)).vary_page_states(unpublished_dataset)

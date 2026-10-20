@@ -253,7 +253,8 @@ class Document(HTMLParser):
 def document(client, db):
     """Return a function that fetches a record's overview page and parses it.
 
-    Pass ``user`` to read the page signed in, and any other keyword as a query parameter.
+    Pass ``user`` to read the page signed in, and any other keyword as a query
+    parameter.
     """
 
     def fetch(record, user=None, **query):
@@ -268,7 +269,7 @@ def document(client, db):
 
 @pytest.fixture
 def quality_hooks(client, db):
-    """Return a function that fetches a record's page as a visitor and parses its quality hooks."""
+    """Return a function that fetches a record's page and parses its quality hooks."""
 
     def fetch(record):
         response = client.get(record.get_absolute_url())

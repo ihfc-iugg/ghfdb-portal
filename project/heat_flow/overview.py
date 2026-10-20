@@ -1,7 +1,7 @@
 """What a heat flow record's overview page lists beyond FairDM's shared page.
 
-Every related record a page lists passes FairDM's own visibility rule, ``visible_to``, so a
-record a visitor may not open is counted and never named.
+Every related record a page lists passes FairDM's own visibility rule, ``visible_to``,
+so a record a visitor may not open is counted and never named.
 """
 
 from fairdm.core.measurement.models import Measurement
@@ -78,7 +78,8 @@ class HeatFlowPage:
             records: The records to check, samples or measurements.
 
         Returns:
-            The records the visitor may open, in the order given, and how many they may not.
+            The records the visitor may open, in the order given, and how many they may
+            not.
         """
         records = list(records)
         if not records:
@@ -100,8 +101,8 @@ class HeatFlowPage:
             limit: How many to show; every one the visitor may open when ``None``.
 
         Returns:
-            The ``rows`` to show, the ``total`` the visitor may open, how many ``more`` the
-            cut leaves out, and how many are ``hidden`` from the visitor.
+            The ``rows`` to show, the ``total`` the visitor may open, how many ``more``
+            the cut leaves out, and how many are ``hidden`` from the visitor.
         """
         visible, hidden = self.split(children)
         rows = visible[:limit] if limit else visible
@@ -116,9 +117,9 @@ class HeatFlowPage:
         """Gather the location of the record's site, as the site's.
 
         Returns:
-            The ``site``, whether the visitor may see it (``visible``), and its ``point``,
-            ``elevation`` and ``uncertainty``. Nothing of the site when the visitor may not
-            open it.
+            The ``site``, whether the visitor may see it (``visible``), and its
+            ``point``, ``elevation`` and ``uncertainty``. Nothing of the site when the
+            visitor may not open it.
         """
         record = self.record
         if isinstance(record, (HeatFlowInterval, ParentHeatFlow)):
@@ -138,7 +139,7 @@ class HeatFlowPage:
 
     @staticmethod
     def is_stale(record):
-        """Say whether a stored score came from a scheme revision other than the current one.
+        """Say whether a stored score's scheme revision is not the current one.
 
         Args:
             record: A record carrying a ``quality_scheme``.
@@ -153,16 +154,16 @@ class HeatFlowPage:
         """Gather a site's parent value and its intervals with their children.
 
         Intervals run from shallowest to deepest, by top, then bottom, then primary key.
-        Each shown interval carries its children. The cut at ``intervals_shown`` is lifted
-        by ``show_all``.
+        Each shown interval carries its children. The cut at ``intervals_shown`` is
+        lifted by ``show_all``.
 
         Returns:
-            The ``parent`` the visitor may open, or ``None``, and ``parent_hidden`` when the
-            site has a parent the visitor may not open. The ``intervals``: the ``rows`` to
-            show, each an ``interval`` and its ``children`` (``rows`` and ``hidden``), the
-            ``total`` the visitor may open, how many ``more`` the cut leaves out, how many
-            are ``hidden`` from the visitor and the ``children`` counted over every
-            interval the visitor may open.
+            The ``parent`` the visitor may open, or ``None``, and ``parent_hidden`` when
+            the site has a parent the visitor may not open. The ``intervals``: the
+            ``rows`` to show, each an ``interval`` and its ``children`` (``rows`` and
+            ``hidden``), the ``total`` the visitor may open, how many ``more`` the cut
+            leaves out, how many are ``hidden`` from the visitor and the ``children``
+            counted over every interval the visitor may open.
         """
         site = self.record
         parent = ParentHeatFlow.objects.filter(sample=site).first()
@@ -209,8 +210,8 @@ class HeatFlowPage:
         Returns:
             The ``site``, ``None`` when the visitor may not open it, and ``site_hidden``
             when it exists but the visitor may not. The interval's ``probe`` metadata,
-            ``None`` where no marine probe was used, the interval's ``igsn`` (empty when it
-            has none) and the site's ``location``.
+            ``None`` where no marine probe was used, the interval's ``igsn`` (empty when
+            it has none) and the site's ``location``.
         """
         location = self.site_location()
         igsn = self.record.identifiers.filter(type="IGSN").first()
@@ -227,10 +228,11 @@ class HeatFlowPage:
 
         Returns:
             The ``gradient``, ``conductivity`` and ``parent`` the visitor may open, each
-            ``None`` when absent or hidden, with ``gradient_hidden``, ``conductivity_hidden``
-            and ``parent_hidden`` set when it exists but the visitor may not open it. Also the
-            child's ``corrections``, the ``interval`` and ``site`` it was made on, the site's
-            ``location`` and whether its scores are ``stale``.
+            ``None`` when absent or hidden, with ``gradient_hidden``,
+            ``conductivity_hidden`` and ``parent_hidden`` set when it exists but the
+            visitor may not open it. Also the child's ``corrections``, the ``interval``
+            and ``site`` it was made on, the site's ``location`` and whether its scores
+            are ``stale``.
         """
         child = self.record
         related = {
@@ -263,11 +265,12 @@ class HeatFlowPage:
         The cut at ``children_shown`` is lifted by ``show_all``.
 
         Returns:
-            The ``interval`` and ``site`` the measurement was made over, each ``None`` when
-            the visitor may not open it, and the site's ``location``. The ``children`` that
-            use the measurement: the ``rows`` to show, the ``total`` the visitor may open,
-            how many ``more`` the cut leaves out and how many are ``hidden`` from the
-            visitor. Also whether the measurement's score is ``stale``.
+            The ``interval`` and ``site`` the measurement was made over, each ``None``
+            when the visitor may not open it, and the site's ``location``. The
+            ``children`` that use the measurement: the ``rows`` to show, the ``total``
+            the visitor may open, how many ``more`` the cut leaves out and how many are
+            ``hidden`` from the visitor. Also whether the measurement's score is
+            ``stale``.
         """
         measurement = self.record
         interval = measurement.sample
@@ -290,17 +293,17 @@ class HeatFlowPage:
     def for_parent(self):
         """Gather a parent's children and the ones its quality rests on.
 
-        The children list the relevant ones first. The cut at ``children_shown`` is lifted
-        by ``show_all``. What the quality rests on is read from the parent's whole set of
-        children, those the visitor may not open included.
+        The children list the relevant ones first. The cut at ``children_shown`` is
+        lifted by ``show_all``. What the quality rests on is read from the parent's
+        whole set of children, those the visitor may not open included.
 
         Returns:
             The ``children``: the ``rows`` to show, each carrying ``rests_on``, the
-            ``total`` the visitor may open, how many ``more`` the cut leaves out and how many
-            are ``hidden`` from the visitor. The ``basis`` of the parent's quality and the
-            primary keys it ``rests_on``. The ``site`` the parent represents, ``None`` when
-            the visitor may not open it, the site's ``location`` and whether the parent's
-            score is ``stale``.
+            ``total`` the visitor may open, how many ``more`` the cut leaves out and how
+            many are ``hidden`` from the visitor. The ``basis`` of the parent's quality
+            and the primary keys it ``rests_on``. The ``site`` the parent represents,
+            ``None`` when the visitor may not open it, the site's ``location`` and
+            whether the parent's score is ``stale``.
         """
         parent = self.record
         basis, resting = parent.quality_basis()

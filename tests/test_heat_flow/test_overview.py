@@ -579,7 +579,7 @@ class TestHeatFlowPageForSite:
 
 
 def add_users(page_records, dataset, count):
-    """Add ``count`` children that use the gradient and the conductivity of the records."""
+    """Add ``count`` children using the records' gradient and conductivity."""
     return [
         HeatFlowFactory(
             dataset=dataset,

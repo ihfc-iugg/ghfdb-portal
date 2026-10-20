@@ -1,9 +1,9 @@
-# Tests for the depth interval's overview page, the site's location shown on every page made
-# on an interval, FairDM's shared page on all six heat flow types, and the release columns
-# (SC-001). Read through the pages' URLs; the content is found by the ``data-`` hooks the
-# templates carry, never by wording. Mirrors no Python module: the subject is the templates
-# under ``project/heat_flow/templates/`` and ``templates/cotton/``, declared under
-# ``non-mirror-paths`` in pyproject.toml.
+# Tests for the depth interval's overview page, the site's location shown on every page
+# made on an interval, FairDM's shared page on all six heat flow types, and the release
+# columns (SC-001). Read through the pages' URLs; the content is found by the ``data-``
+# hooks the templates carry, never by wording. Mirrors no Python module: the subject is
+# the templates under ``project/heat_flow/templates/`` and ``templates/cotton/``,
+# declared under ``non-mirror-paths`` in pyproject.toml.
 
 import pytest
 from fairdm.core.sample.models import SampleIdentifier
@@ -14,9 +14,9 @@ from tests.factories import ProbeMetadataFactory
 
 pytestmark = pytest.mark.django_db
 
-# The page each column of the release format is read on, and the ``data-field`` it is found
-# by there. Mirrors the column-to-page table in ``docs/guides/record-pages.md``. The columns
-# themselves come from the export resource, never from this table.
+# The page each column of the release format is read on, and the ``data-field`` it is
+# found by there. Mirrors the column-to-page table in ``docs/guides/record-pages.md``.
+# The columns themselves come from the export resource, never from this table.
 RELEASE_COLUMNS = {
     "q": ("parent", "value"),
     "q_uncertainty": ("parent", "value"),
@@ -82,8 +82,8 @@ RELEASE_COLUMNS = {
     "tc_strategy": ("conductivity", "strategy"),
     "ref_igsn": ("interval", "igsn"),
 }
-# The columns the resource writes: those its canonical order names that it carries a field
-# for. Compared ignoring case, as the resource spells some of them with capitals.
+# The columns the resource writes: those its canonical order names that it carries a
+# field for. Compared ignoring case, as the resource spells some of them with capitals.
 EXPORTED_COLUMNS = sorted(
     column.lower()
     for column in GHFDBExportResource.Meta.export_order
@@ -110,7 +110,7 @@ def shows_term(node, concept):
 
 @pytest.fixture
 def records(page_records):
-    """The records of a child's page, with probe metadata and an IGSN on the interval."""
+    """A child page's records, with probe metadata and an IGSN on the interval."""
     interval = page_records["interval"]
     ProbeMetadataFactory(interval=interval, length=5, penetration=3, tilt=2)
     SampleIdentifier.objects.create(
@@ -120,7 +120,7 @@ def records(page_records):
 
 
 def set_location(site, location=None):
-    """Replace ``site``'s location in the database, with none when ``location`` is None."""
+    """Replace ``site``'s location in the database, or clear it with ``None``."""
     HeatFlowSite.objects.filter(pk=site.pk).update(location=location)
     site.refresh_from_db()
 

@@ -1,7 +1,7 @@
 # Tests for the interval conductivity's overview page, read through its URL. The page's
-# content is found by the ``data-`` hooks its templates carry, never by wording. Mirrors no
-# Python module: the subject is the templates under ``project/heat_flow/templates/`` and
-# ``templates/cotton/``, declared under ``non-mirror-paths`` in pyproject.toml.
+# content is found by the ``data-`` hooks its templates carry, never by wording. Mirrors
+# no Python module: the subject is the templates under ``project/heat_flow/templates/``
+# and ``templates/cotton/``, declared under ``non-mirror-paths`` in pyproject.toml.
 
 import pytest
 from django.db import connection
@@ -309,7 +309,7 @@ class TestConductivityPageQueries:
 
 
 class TestMeasurementCard:
-    """The conductivity's own quality card, moved from FS-007's measurement page tests."""
+    """The conductivity's own quality card, moved from FS-007's page tests."""
 
     def test_a_conductivity_shows_its_own_score_and_its_mark(self, page, conductivity):
         card = page(conductivity)

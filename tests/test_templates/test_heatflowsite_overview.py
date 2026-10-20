@@ -1,7 +1,7 @@
-# Tests for the site's overview page, read through its URL. The page's content is found by
-# the ``data-`` hooks its templates carry, never by wording. Mirrors no Python module: the
-# subject is the templates under ``project/heat_flow/templates/`` and ``templates/cotton/``,
-# declared under ``non-mirror-paths`` in pyproject.toml.
+# Tests for the site's overview page, read through its URL. The page's content is found
+# by the ``data-`` hooks its templates carry, never by wording. Mirrors no Python
+# module: the subject is the templates under ``project/heat_flow/templates/`` and
+# ``templates/cotton/``, declared under ``non-mirror-paths`` in pyproject.toml.
 
 import pytest
 from django.db import connection

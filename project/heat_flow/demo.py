@@ -154,10 +154,10 @@ class DemoGraph:
         self._write_bulk()
 
     def vary_page_states(self, unpublished: Any) -> None:
-        """Vary the first six sites of the dataset so every state a record page answers for exists.
+        """Vary the dataset's first six sites so every state a record page shows exists.
 
-        The sites keep their order, so the six states fall on sites with one, two, three,
-        four, one and two children:
+        The sites keep their order, so the six states fall on sites with one, two,
+        three, four, one and two children:
 
         1. A parent with no children, and a child with no gradient, conductivity,
            corrections or parent.
@@ -168,9 +168,9 @@ class DemoGraph:
         5. Scores stored under another scheme revision, and a site with no location.
         6. A child not yet scored, a gradient and a parent in the unpublished dataset.
 
-        A record moved to the unpublished dataset loses its published identifier, as every
-        record of an unpublished dataset does. Running it again varies the same sites
-        further and never fails.
+        A record moved to the unpublished dataset loses its published identifier, as
+        every record of an unpublished dataset does. Running it again varies the same
+        sites further and never fails.
 
         Args:
             unpublished: A dataset the visitor may not open, which receives the records

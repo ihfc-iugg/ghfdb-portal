@@ -485,7 +485,9 @@ class TestSeedDemoDataPageStates:
         assert dataset.published is True
         assert dataset.visibility == Dataset.VISIBILITY_CHOICES.PUBLIC
 
-    def test_that_dataset_holds_every_state_a_record_page_answers_for(self, seeded_with_page_states):
+    def test_that_dataset_holds_every_state_a_record_page_answers_for(
+        self, seeded_with_page_states
+    ):
         dataset = self.varied_dataset()
         sites = HeatFlowSite.objects.filter(dataset=dataset)
         parents = ParentHeatFlow.objects.filter(sample__in=sites, dataset=dataset)

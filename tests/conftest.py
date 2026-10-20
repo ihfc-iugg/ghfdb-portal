@@ -290,8 +290,8 @@ def page_records(published_dataset):
         ThermalGradientFactory,
     )
 
-    # The exploration method decides whether a measurement can be scored at all, so it is
-    # set rather than left to the factory's random choice.
+    # The exploration method decides whether a measurement can be scored at all, so it
+    # is set rather than left to the factory's random choice.
     site = HeatFlowSiteFactory(dataset=published_dataset, explo_method="drilling")
     interval = HeatFlowIntervalFactory(
         dataset=published_dataset, site=site, top=0, bottom=500

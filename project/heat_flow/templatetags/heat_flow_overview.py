@@ -41,7 +41,8 @@ def plus_minus(value, uncertainty):
         uncertainty: Its uncertainty as a quantity, or ``None``.
 
     Returns:
-        The value alone when there is no uncertainty, and an empty string when there is no value.
+        The value alone when there is no uncertainty, and an empty string when there is
+        no value.
     """
     if value is None:
         return ""
