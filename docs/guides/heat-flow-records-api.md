@@ -56,7 +56,7 @@ Here are the units each type uses:
 |---|---|
 | Heat flow site | `azimuth` and `inclination` in `deg`, `length` in `m` |
 | Depth interval | `top`, `bottom` and `vertical_depth` in `m` |
-| Child heat flow | `value` and `uncertainty` in `mW/m²` |
+| Child heat flow | `value` and `uncertainty` in `mW/m²`, `surface_temperature` in `°C` |
 | Thermal gradient | `value`, `uncertainty`, `corrected_value` and `corrected_uncertainty` in `K/km`, `shutin_top` and `shutin_bottom` in `h` |
 | Interval conductivity | `value` and `uncertainty` in `W/mK` |
 | Parent heat flow | `value` and `uncertainty` in `mW/m²` |
@@ -478,6 +478,24 @@ GET /api/v1/measurements/parent-heat-flow/mgLFmNMQmYsjQ26EsMTkScb/
 
 ## A child heat flow
 
+A child is one heat flow value, made over one depth interval. Its list entry gives the value and
+its uncertainty, the surface temperature and the date the data was acquired, and the scores the
+portal calculated for it: `U_score`, `M_score`, the corrected `T_score` and `TC_score` with
+`T_score_missing` and `TC_score_missing` saying whether an input was empty, the `quality` code and
+the `quality_scheme` revision that calculated them. A score that could not be determined is `null`.
+`ghfdb_id` is the identifier the record had in the original database, and `is_relevant` says
+whether the child counted towards its parent. The scores, the quality code, the scheme revision
+and `ghfdb_id` are read-only: a request that creates or changes a child cannot set them.
+
+The entry refers to the child's interval as `sample`, and to its `parent`, `thermal_gradient`,
+`thermal_conductivity` and `site`. It carries the coordinates of its site as `location`. When the
+requester may not see the site, `location` and `site` are `null`. The record at the child's own
+address gives the thermal gradient and the interval conductivity whole, in the shape of their own
+records, in place of the references. It adds `corrections`, one entry for each correction recorded
+against the child, whatever its status, with the type and the status each given as a `name` and a
+`label`. A correction type that was never recorded is not in the list. A gradient or conductivity
+the requester may not see is `null`.
+
 ```
 GET /api/v1/measurements/heat-flow/
 ```
@@ -489,34 +507,65 @@ GET /api/v1/measurements/heat-flow/
   "previous": null,
   "results": [
     {
-      "url": "https://portal.heatflow.world/api/v1/measurements/heat-flow/mDthW8u8wnCEooYj9TWieLi/",
-      "html_url": "https://portal.heatflow.world/measurement/mDthW8u8wnCEooYj9TWieLi/",
-      "uuid": "mDthW8u8wnCEooYj9TWieLi",
-      "name": "Interval 1",
+      "url": "https://portal.heatflow.world/api/v1/measurements/heat-flow/mymJ5inhK9m89DkwZTvjEFS/",
+      "html_url": "https://portal.heatflow.world/measurement/mymJ5inhK9m89DkwZTvjEFS/",
+      "uuid": "mymJ5inhK9m89DkwZTvjEFS",
+      "name": "Hole A-1, 200 m",
       "sample": {
-        "uuid": "s4NLZQRe9mECKWY5GC3Xiun",
-        "url": "https://portal.heatflow.world/api/v1/samples/depth-intervals/s4NLZQRe9mECKWY5GC3Xiun/"
+        "uuid": "su4JiacdQpHDUD4wx32xbqL",
+        "url": "https://portal.heatflow.world/api/v1/samples/depth-intervals/su4JiacdQpHDUD4wx32xbqL/"
       },
       "dataset": {
-        "uuid": "da7HMUn55WPRbMfxKumMJBG",
-        "url": "https://portal.heatflow.world/api/v1/datasets/da7HMUn55WPRbMfxKumMJBG/"
+        "uuid": "db5GZfnvXHi2QFHN7NNE4P6",
+        "url": "https://portal.heatflow.world/api/v1/datasets/db5GZfnvXHi2QFHN7NNE4P6/"
       },
-      "location": null,
+      "location": {
+        "type": "Point",
+        "coordinates": [-179.43217, -79.87654]
+      },
       "location_uncertainty": null,
-      "added": "2026-10-20T19:45:35.609999Z",
-      "modified": "2026-10-20T19:45:35.663494Z",
+      "added": "2026-10-20T20:58:10.366190Z",
+      "modified": "2026-10-20T20:58:10.406596Z",
       "value": 70.5,
       "uncertainty": 5.5,
+      "surface_temperature": 4.5,
+      "date_acquired": "2019-06-12",
       "method": [
         {
-          "name": "unspecified",
-          "label": "Unspecified",
-          "uri": "https://heatflow.world/vocabularies/heat-flow-method/unspecified",
+          "name": "numerical",
+          "label": "Other numerical computations",
+          "uri": "https://heatflow.world/vocabularies/heat-flow-method/numerical",
           "vocabulary": "heat-flow-method"
         }
       ],
       "expedition": null,
       "c_comment": null,
+      "U_score": "U2",
+      "M_score": "M4",
+      "T_score": 0.5,
+      "T_score_missing": false,
+      "TC_score": 0.4,
+      "TC_score_missing": false,
+      "quality": "U2.M4.-------",
+      "quality_scheme": "hfqa_tool 0.2",
+      "ghfdb_id": 1021,
+      "is_relevant": true,
+      "parent": {
+        "uuid": "miTrRWyF2DEjPqyxJUYi2eC",
+        "url": "https://portal.heatflow.world/api/v1/measurements/parent-heat-flow/miTrRWyF2DEjPqyxJUYi2eC/"
+      },
+      "thermal_gradient": {
+        "uuid": "m9Lri4vWTof9DqfDCWjzv5V",
+        "url": "https://portal.heatflow.world/api/v1/measurements/thermal-gradients/m9Lri4vWTof9DqfDCWjzv5V/"
+      },
+      "thermal_conductivity": {
+        "uuid": "mogAH2nxj9YzJyjNbxYN955",
+        "url": "https://portal.heatflow.world/api/v1/measurements/thermal-conductivities/mogAH2nxj9YzJyjNbxYN955/"
+      },
+      "site": {
+        "uuid": "sEoijNefzuf7ySbQ9wR4qxb",
+        "url": "https://portal.heatflow.world/api/v1/samples/heat-flow-sites/sEoijNefzuf7ySbQ9wR4qxb/"
+      },
       "descriptions": [],
       "dates": [],
       "identifiers": [],
@@ -524,8 +573,57 @@ GET /api/v1/measurements/heat-flow/
       "contributors": [],
       "units": {
         "value": "mW/m²",
-        "uncertainty": "mW/m²"
+        "uncertainty": "mW/m²",
+        "surface_temperature": "°C"
       }
+    }
+  ]
+}
+```
+
+At the child's own address, `thermal_gradient` and `thermal_conductivity` are the whole records
+and `corrections` is added. The record's other fields are as in the list. Here the gradient is
+shortened to a few of its fields:
+
+```
+GET /api/v1/measurements/heat-flow/mymJ5inhK9m89DkwZTvjEFS/
+```
+
+```json
+{
+  "uuid": "mymJ5inhK9m89DkwZTvjEFS",
+  "thermal_gradient": {
+    "uuid": "m9Lri4vWTof9DqfDCWjzv5V",
+    "value": 25.5,
+    "uncertainty": 1.25,
+    "units": {
+      "value": "K/km",
+      "uncertainty": "K/km"
+    }
+  },
+  "thermal_conductivity": null,
+  "corrections": [
+    {
+      "correction_type": {
+        "name": "IS",
+        "label": "In-situ conditions"
+      },
+      "status": {
+        "name": "present_corrected",
+        "label": "Present and corrected"
+      },
+      "comment": "Corrected to in-situ pressure and temperature."
+    },
+    {
+      "correction_type": {
+        "name": "T",
+        "label": "Temperature"
+      },
+      "status": {
+        "name": "not_corrected",
+        "label": "not corrected"
+      },
+      "comment": null
     }
   ]
 }
@@ -540,20 +638,29 @@ The serializers are in `project/heat_flow/serializers.py`, and each type's regis
 |---|---|
 | `HeatFlowSiteSerializer` | Heat flow site |
 | `HeatFlowIntervalSummarySerializer` | Depth interval |
-| `HeatFlowSummarySerializer` | Child heat flow |
+| `HeatFlowSerializer` | Child heat flow |
 | `ThermalGradientSummarySerializer` | Thermal gradient |
 | `IntervalConductivitySummarySerializer` | Interval conductivity |
 | `ParentHeatFlowSerializer` | Parent heat flow |
 
-A site and a parent each have a longer single record than their list gives. Their serializer
-names the shorter shape as `summary_serializer` (`HeatFlowSiteSummarySerializer` and
-`ParentHeatFlowSummarySerializer`), and a list of it is a `HeatFlowListSerializer` of that summary. The other four give the same record in both. A list of sites also reads the
+A site, a parent and a child each have a longer single record than their list gives. Their
+serializer names the shorter shape as `summary_serializer` (`HeatFlowSiteSummarySerializer`,
+`ParentHeatFlowSummarySerializer` and `HeatFlowSummarySerializer`), and a list of it is a
+`HeatFlowListSerializer` of that summary. The other three give the same record in both. A list of sites also reads the
 parents of the whole page at once, and `RequesterVisibility.can_see` says whether the requester may
 see one of them, by the same rule as the parent's own address. The site's single record builds its
 intervals from `SiteIntervalSerializer`: the interval summary plus a `children` field, whose
 entries are child summaries (`ChildSummaries` documents that field in the schema). The parent's
 list entry on a site is `SiteParentSerializer`. `reference()` writes the `uuid` and `url` of a
 record the requester has already been allowed to see, as the parent's `children` do.
+
+A child's single record is `HeatFlowSerializer`. It gives the gradient and the conductivity
+through `IntervalConductivitySummarySerializer` and `ThermalGradientSummarySerializer`, each read
+only when the requester may see it, and lists the corrections with
+`HeatFlowCorrectionSerializer`, whose type and status are `ChoiceLabelField`s. The child's
+`location` is a `SiteLocationField`, and its `site` is read through `site_of`, which gives the
+site of a site, an interval, a parent, a child, a gradient or a conductivity. A list of children
+asks `prime_sites` once which of the sites on the page the requester may see.
 
 All six build on `HeatFlowRecordSerializer`, which chooses the field for each model field:
 
@@ -567,7 +674,7 @@ All six build on `HeatFlowRecordSerializer`, which chooses the field for each mo
 - `UnitsField` collects those units into the record's `units` object.
 - Any other many-valued relation, such as a site's `stratigraphy`, stays read-only text.
 
-`TermFieldSchema`, `TermRelatedFieldSchema` and `UnitsFieldSchema`, in `project/heat_flow/schema.py`,
+`TermFieldSchema`, `TermRelatedFieldSchema`, `ChoiceLabelFieldSchema` and `UnitsFieldSchema`, in `project/heat_flow/schema.py`,
 describe the term and `units` objects in the generated OpenAPI schema, with each term's
 `vocabulary` limited to that field's vocabulary.
 

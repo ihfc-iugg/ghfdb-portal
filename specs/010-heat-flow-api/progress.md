@@ -51,3 +51,10 @@ Did: Gave the child its surface temperature, acquisition date, eight scores, ghf
 Verified: uv run pytest tests/test_heat_flow/test_serializers.py tests/test_heat_flow/test_schema.py tests/test_heat_flow/test_config.py -q -n0 -> 94 passed; ruff and mypy clean. Removing the page priming or the site select_related makes the child list's query-count test fail; removing the schema extension fails its test.
 Next: T008 the guide.
 Watch: D28-D30 in decisions.md; the corrections prefetch cannot be told from lazy loading by a count, since a lazy read is one query either way.
+
+## 2026-10-20T20:58:50Z · Implementer US2 · T008
+
+Did: Replaced the child section of docs/guides/heat-flow-records-api.md with the list and single-record shapes, the scores, the references and the site location, the hidden cases, one example request and response from a response read in a throwaway test (deleted), and a shortened single-record example with the corrections. Added surface temperature to the units table and the new serializers and schema extension to the developer section.
+Verified: forge verify --repo . --base origin/main --steps docs -> passed.
+Next: full verify, then the report.
+Watch: the single-record example shortens the gradient to a few fields, and says so.
