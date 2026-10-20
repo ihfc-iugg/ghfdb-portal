@@ -69,6 +69,7 @@
               class="bg-base-100">
     <c-slot name="badges">{% if hf.corrections %}<span class="badge badge-ghost badge-sm">{{ hf.corrections|length }}</span>{% endif %}</c-slot>
     <div data-heat-flow="corrections"
+         data-field="corrections"
          {% if not hf.corrections %}data-state="empty"{% endif %}>
       {% if hf.corrections %}
         <div class="overflow-x-auto">
@@ -104,6 +105,7 @@
   <c-mvp.card title="{% translate 'Parent heat flow' %}"
               class="bg-base-100">
     <div data-heat-flow="parent"
+         data-field="is_relevant"
          {% if hf.parent %}data-relevant="{{ measurement.is_relevant|yesno:'true,false' }}"{% elif hf.parent_hidden %}data-state="hidden"{% else %}data-state="none"{% endif %}>
       {% if hf.parent %}
         <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -145,6 +147,12 @@
       <c-heat_flow.field field="ghfdb_id"
                          label="{% translate 'GHFDB child ID' %}"
                          value="{{ measurement.ghfdb_id|default_if_none:'' }}" />
+      <c-heat_flow.field field="data_reference"
+                         label="{% translate 'Data reference' %}"
+                         value="{{ measurement.dataset.reference|default_if_none:'' }}" />
+      <c-heat_flow.field field="publication_reference"
+                         label="{% translate 'Related publications' %}"
+                         value="{{ measurement.dataset.related_literature.all|join:'; ' }}" />
     </div>
     <c-heat_flow.field field="comment"
                        label="{% translate 'Comment' %}"

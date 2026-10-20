@@ -17,7 +17,8 @@
   <c-mvp.card.wrapper class="bg-base-100">
     <div class="card-body gap-2">
       <p class="text-xs uppercase font-semibold text-base-content/60">{% translate "Parent heat flow" %}</p>
-      <p class="text-4xl font-semibold tabular-nums break-words">{{ measurement.print_value }}</p>
+      <p class="text-4xl font-semibold tabular-nums break-words"
+         data-field="value">{{ measurement.print_value }}</p>
       <p class="text-sm text-base-content/70">{% translate "Designated by the database's curators from the heat flow values below." %}</p>
     </div>
   </c-mvp.card.wrapper>

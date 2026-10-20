@@ -209,13 +209,16 @@ class HeatFlowPage:
         Returns:
             The ``site``, ``None`` when the visitor may not open it, and ``site_hidden``
             when it exists but the visitor may not. The interval's ``probe`` metadata,
-            ``None`` where no marine probe was used, and the site's ``location``.
+            ``None`` where no marine probe was used, the interval's ``igsn`` (empty when it
+            has none) and the site's ``location``.
         """
         location = self.site_location()
+        igsn = self.record.identifiers.filter(type="IGSN").first()
         return {
             "site": location["site"],
             "site_hidden": not location["visible"],
             "probe": getattr(self.record, "probe_metadata", None),
+            "igsn": igsn.value if igsn else "",
             "location": location,
         }
 

@@ -5,6 +5,7 @@ import pytest
 from django.contrib.auth.models import AnonymousUser
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
+from fairdm.core.sample.models import SampleIdentifier
 from heat_flow.models import (
     HeatFlow,
     HeatFlowInterval,
@@ -353,7 +354,25 @@ class TestHeatFlowPageForInterval:
 
         assert page.for_interval()["location"] == page.site_location()
 
-    def test_it_checks_the_site_once_and_reads_the_probe_once(
+    def test_it_returns_the_igsn_recorded_for_the_interval(self, page_records, visitor):
+        SampleIdentifier.objects.create(
+            related=page_records["interval"], type="IGSN", value="10.60510/IEGHF0001"
+        )
+
+        context = HeatFlowPage(page_records["interval"], visitor).for_interval()
+
+        assert context["igsn"] == "10.60510/IEGHF0001"
+
+    def test_an_interval_without_an_igsn_gets_an_empty_one(self, page_records, visitor):
+        SampleIdentifier.objects.create(
+            related=page_records["interval"], type="DOI", value="10.1234/other"
+        )
+
+        context = HeatFlowPage(page_records["interval"], visitor).for_interval()
+
+        assert context["igsn"] == ""
+
+    def test_it_makes_one_query_each_for_the_site_the_probe_and_the_igsn(
         self, page_records, visitor
     ):
         interval = HeatFlowInterval.objects.select_related("site").get(
@@ -361,7 +380,7 @@ class TestHeatFlowPageForInterval:
         )
         page = HeatFlowPage(interval, visitor)
 
-        assert query_count(page.for_interval) == 2
+        assert query_count(page.for_interval) == 3
 
 
 def add_interval(site, top, bottom, dataset, children=0):

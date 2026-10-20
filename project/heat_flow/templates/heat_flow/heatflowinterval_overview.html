@@ -25,35 +25,53 @@
   <c-mvp.card title="{% translate 'Depth interval' %}"
               class="bg-base-100">
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
-      <c-heat_flow.field label="{% translate 'Site' %}"
+      <c-heat_flow.field field="site"
+                         label="{% translate 'Site' %}"
                          value="{% if hf.site %}{{ hf.site }}{% endif %}" />
-      <c-heat_flow.field label="{% translate 'Depth range' %}"
+      <c-heat_flow.field field="depth_range"
+                         label="{% translate 'Depth range' %}"
                          value="{% if sample.top is not None and sample.bottom is not None %}{{ sample.top|default_if_none:'' }} – {{ sample.bottom|default_if_none:'' }}{% endif %}" />
-      <c-heat_flow.field label="{% translate 'Vertical depth' %}"
+      <c-heat_flow.field field="vertical_depth"
+                         label="{% translate 'Vertical depth' %}"
                          value="{{ sample.vertical_depth|default_if_none:'' }}" />
-      <c-heat_flow.field label="{% translate 'Depth datum' %}"
+      <c-heat_flow.field field="vertical_datum"
+                         label="{% translate 'Depth datum' %}"
                          value="{{ sample.vertical_datum|default_if_none:'' }}" />
-      <c-heat_flow.field label="{% translate 'Lithology' %}"
+      <c-heat_flow.field field="lithology"
+                         label="{% translate 'Lithology' %}"
                          value="{{ sample.lithology|labels|capfirst }}" />
-      <c-heat_flow.field label="{% translate 'Stratigraphy' %}"
+      <c-heat_flow.field field="stratigraphy"
+                         label="{% translate 'Stratigraphy' %}"
                          value="{{ sample.stratigraphy|labels }}" />
-      <c-heat_flow.field label="{% translate 'Age' %}"
+      <c-heat_flow.field field="age"
+                         label="{% translate 'Age' %}"
                          value="{{ sample.age|labels|capfirst }}" />
+      <c-heat_flow.field field="igsn"
+                         label="{% translate 'IGSN' %}"
+                         value="{{ hf.igsn }}" />
     </div>
-    {% if hf.site %}<a href="{{ hf.site.get_absolute_url }}"
+    <div data-heat-flow="site"
+         {% if hf.site_hidden %}data-state="hidden"{% endif %}>
+      {% if hf.site %}<a href="{{ hf.site.get_absolute_url }}"
    class="link link-hover text-sm">{% blocktranslate with site=hf.site %}Go to {{ site }}{% endblocktranslate %}</a>{% elif hf.site_hidden %}<p class="text-sm text-base-content/70">{% translate "The site belongs to a dataset that hasn't been published yet." %}</p>{% endif %}
+    </div>
   </c-mvp.card>
   {% if hf.probe %}
     <c-mvp.card title="{% translate 'Marine probe' %}"
                 class="bg-base-100">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
-        <c-heat_flow.field label="{% translate 'Probe type' %}"
+      <div data-heat-flow="probe"
+           class="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
+        <c-heat_flow.field field="probe_type"
+                           label="{% translate 'Probe type' %}"
                            value="{{ hf.probe.probe_type|labels|capfirst }}" />
-        <c-heat_flow.field label="{% translate 'Probe length' %}"
+        <c-heat_flow.field field="probe_length"
+                           label="{% translate 'Probe length' %}"
                            value="{{ hf.probe.length|default_if_none:'' }}" />
-        <c-heat_flow.field label="{% translate 'Penetration' %}"
+        <c-heat_flow.field field="probe_penetration"
+                           label="{% translate 'Penetration' %}"
                            value="{{ hf.probe.penetration|default_if_none:'' }}" />
-        <c-heat_flow.field label="{% translate 'Tilt' %}"
+        <c-heat_flow.field field="probe_tilt"
+                           label="{% translate 'Tilt' %}"
                            value="{{ hf.probe.tilt|default_if_none:'' }}" />
       </div>
     </c-mvp.card>
