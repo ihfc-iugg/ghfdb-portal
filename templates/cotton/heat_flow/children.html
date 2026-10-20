@@ -1,0 +1,31 @@
+{# @description The card listing child heat flow values: those the visitor may open, how many more there are, and how many are hidden from them. #}
+{# @prop title:string | description:"The card's title, already translated." #}
+{# @prop children:object | description:"The rows, total, more and hidden counts." #}
+{# @prop empty:string | description:"What the card says when there are no children." #}
+{# @prop relevance:boolean | description:"Show each child's relevance to its parent." #}
+{% load i18n %}
+<c-vars title children empty relevance />
+<c-mvp.card title="{{ title }}" class="bg-base-100">
+  <c-slot name="badges">{% if children.total %}<span class="badge badge-ghost badge-sm">{{ children.total }}</span>{% endif %}</c-slot>
+  {% if children.rows %}
+    <ul class="list">
+      {% for child in children.rows %}
+        <c-heat_flow.child_row :child="child" :relevance="relevance" :rests_on="child.rests_on" />
+      {% endfor %}
+    </ul>
+  {% elif not children.hidden %}
+    <p class="text-sm text-base-content/70">{{ empty }}</p>
+  {% endif %}
+  {% if children.more %}
+    <div class="flex flex-wrap items-center gap-2 text-sm text-base-content/70">
+      {% blocktranslate count counter=children.more %}and {{ counter }} more{% plural %}and {{ counter }} more{% endblocktranslate %}
+      {% translate "All heat flow values" as label %}{% translate "Every heat flow value listed here, as a filterable table." as reason %}
+      <c-actions.pending label="{{ label }}" icon="data" reason="{{ reason }}" size="xs" />
+    </div>
+  {% endif %}
+  {% if children.hidden %}
+    <p class="text-sm text-base-content/70">
+      {% blocktranslate count counter=children.hidden %}{{ counter }} more heat flow value belongs to a dataset that hasn't been published yet.{% plural %}{{ counter }} more heat flow values belong to datasets that haven't been published yet.{% endblocktranslate %}
+    </p>
+  {% endif %}
+</c-mvp.card>

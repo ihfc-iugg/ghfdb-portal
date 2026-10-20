@@ -1,0 +1,9 @@
+{# @description A stored quality code as a badge, or "Not determined" when the record has not been scored. #}
+{# @prop code:string | description:"The stored quality code, for example U2.M3x.-e-PX--." #}
+{% load i18n %}
+<c-vars code />
+{% if code %}
+  <code class="badge badge-ghost badge-sm font-mono whitespace-nowrap" data-quality="code" data-value="{{ code }}">{{ code }}</code>
+{% else %}
+  <span class="badge badge-outline badge-sm whitespace-nowrap" data-quality="code" data-value="">{% translate "Quality not determined" %}</span>
+{% endif %}

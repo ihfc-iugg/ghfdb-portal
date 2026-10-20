@@ -1,0 +1,53 @@
+{% extends "sample/sample_overview.html" %}
+{% load i18n humanize heat_flow_overview %}
+{% comment %}
+  A depth interval's page: its depth range, the rock in it, the probe used where there was one, and
+  the site it belongs to. An interval holds no location of its own, so the page shows the site's.
+{% endcomment %}
+
+{% block overview.figures %}
+  <c-stats cols="1" lg="3" aria-label="{% translate 'Depth interval at a glance' %}">
+    <c-stats.item title="{% translate 'Top' %}" value="{{ sample.top|quantity|default:_('Not recorded') }}" icon="arrow-up" />
+    <c-stats.item title="{% translate 'Bottom' %}" value="{{ sample.bottom|quantity|default:_('Not recorded') }}" icon="arrow-down" />
+    <c-stats.item title="{% translate 'Measurements' %}" value="{{ counts.measurements|intcomma }}" variant="accent" icon="measurement" />
+  </c-stats>
+{% endblock overview.figures %}
+
+{% block overview.properties %}
+  {% heat_flow_page sample as hf %}
+  <c-mvp.card title="{% translate 'Depth interval' %}" class="bg-base-100">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
+      <c-heat_flow.field label="{% translate 'Site' %}" value="{% if hf.site %}{{ hf.site }}{% endif %}" />
+      <c-heat_flow.field label="{% translate 'Depth range' %}" value="{% if sample.top is not None and sample.bottom is not None %}{{ sample.top|quantity }} – {{ sample.bottom|quantity }}{% endif %}" />
+      <c-heat_flow.field label="{% translate 'Vertical depth' %}" value="{{ sample.vertical_depth|quantity }}" />
+      <c-heat_flow.field label="{% translate 'Depth datum' %}" value="{{ sample.vertical_datum|default_if_none:'' }}" />
+      <c-heat_flow.field label="{% translate 'Lithology' %}" value="{{ sample.lithology|labels|capfirst }}" />
+      <c-heat_flow.field label="{% translate 'Stratigraphy' %}" value="{{ sample.stratigraphy|labels }}" />
+      <c-heat_flow.field label="{% translate 'Age' %}" value="{{ sample.age|labels|capfirst }}" />
+    </div>
+    {% if hf.site %}<a href="{{ hf.site.get_absolute_url }}" class="link link-hover text-sm">{% blocktranslate with site=hf.site %}Go to {{ site }}{% endblocktranslate %}</a>{% elif hf.site_hidden %}<p class="text-sm text-base-content/70">{% translate "The site belongs to a dataset that hasn't been published yet." %}</p>{% endif %}
+  </c-mvp.card>
+
+  {% if hf.probe %}
+    <c-mvp.card title="{% translate 'Marine probe' %}" class="bg-base-100">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
+        <c-heat_flow.field label="{% translate 'Probe type' %}" value="{{ hf.probe.probe_type|labels|capfirst }}" />
+        <c-heat_flow.field label="{% translate 'Probe length' %}" value="{{ hf.probe.length|quantity }}" />
+        <c-heat_flow.field label="{% translate 'Penetration' %}" value="{{ hf.probe.penetration|quantity }}" />
+        <c-heat_flow.field label="{% translate 'Tilt' %}" value="{{ hf.probe.tilt|quantity }}" />
+      </div>
+    </c-mvp.card>
+  {% endif %}
+{% endblock overview.properties %}
+
+
+{% block overview.location %}
+  {% heat_flow_page sample as hf %}
+  <c-heat_flow.site_location :place="hf.location" />
+{% endblock overview.location %}
+
+{% block extra_js %}
+  {{ block.super }}
+  {% heat_flow_page sample as hf %}
+  {% if hf.location.point %}{% include "overview/includes/map_library.html" %}{% endif %}
+{% endblock extra_js %}
