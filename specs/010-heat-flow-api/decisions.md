@@ -369,3 +369,16 @@ and costs two queries however long the page is.
 **Why:** the test belongs to this feature (D27), and the shape it pins changed.
 
 **ADR:** none — follows the plan's shapes table
+
+## D33 — One mixin places a record at its site
+
+**Decision:** `SitePlacedSerializer` holds the `location`, the `site` reference, the page priming
+and the path to the site for the interval, child, gradient, conductivity and parent summaries. The
+parent's `site` is the same method field over `site_of`, not a `RecordReferenceField` on `sample`.
+
+**Why:** five serializers needed the same four things, and a parent's hidden site has to be null
+by the same answer as its `location`.
+
+**Revisit if:** a placed record needs a path to its site the mixin's one `site_path` cannot name.
+
+**ADR:** none — follows D28
