@@ -263,7 +263,7 @@ to make more children to show a cut list with children in every interval.
 
 **Open:** four existing tests in `tests/test_review/test_management/test_commands/
 test_seed_demo_data.py` assert the opposite of states research R4 asks for, and fail now:
-`test_every_record_carries_the_current_scheme_revision` (a stale score), 
+`test_every_record_carries_the_current_scheme_revision` (a stale score),
 `test_scores_are_computed_for_every_child` (a child not yet scored),
 `test_scores_equal_a_fresh_recalculation` (a refresh rewrites the stale score) and
 `test_coordinates_stay_distinct_across_runs` (a site with no location has no point). They are
