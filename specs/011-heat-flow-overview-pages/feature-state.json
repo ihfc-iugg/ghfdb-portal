@@ -238,6 +238,56 @@
               "tests/test_templates/test_heatflowsite_overview.py:41"
             ]
           }
+        },
+        {
+          "id": "T020",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_demo.py::TestVaryPageStates::test_the_parent_with_no_children_stores_no_inherited_quality"
+            ],
+            "commands": [
+              "uv run pytest -q -p no:randomly tests/test_heat_flow/test_demo.py::TestVaryPageStates (green)",
+              "parent refresh removed: the new test FAILED, restored"
+            ],
+            "code": [
+              "project/heat_flow/demo.py:199"
+            ]
+          }
+        },
+        {
+          "id": "T021",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_overview.py"
+            ],
+            "commands": [
+              "uv run pytest -q -p no:randomly tests/test_heat_flow/test_overview.py (green)",
+              "visible_to removed from the count: test_the_children_count_leaves_out_those_the_visitor_may_not_open FAILED, restored"
+            ],
+            "code": [
+              "project/heat_flow/overview.py:203"
+            ]
+          }
+        },
+        {
+          "id": "T023",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_management/test_commands/test_seed_demo_data.py"
+            ],
+            "commands": [
+              "uv run ruff check; uv run ruff format --check (clean)"
+            ],
+            "code": [
+              "project/review/management/commands/seed_demo_data.py:121"
+            ]
+          }
         }
       ]
     },
@@ -371,6 +421,23 @@
             ],
             "code": [
               "docs/guides/record-pages.md:1"
+            ]
+          }
+        },
+        {
+          "id": "T022",
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_models/test_parent.py"
+            ],
+            "commands": [
+              "uv run pytest -q -p no:randomly tests/test_heat_flow/test_models/test_parent.py (green)",
+              "refresh_quality inheriting from all children: the test FAILED, restored"
+            ],
+            "code": [
+              "tests/test_heat_flow/test_models/test_parent.py:553"
             ]
           }
         }
