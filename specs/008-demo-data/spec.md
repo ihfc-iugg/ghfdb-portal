@@ -184,6 +184,8 @@ every workflow role are present. Then assert that each development account can s
 - **FR-015**: Records MUST be written in bulk, and memory use MUST stay bounded as the size grows.
 - **FR-016**: Running the command again MUST add demo data beside what earlier runs made, without
   colliding with it.
+- **FR-017**: Demo data MUST include public projects, each holding several demo datasets, and
+  demo datasets that belong to no project.
 
 ### Story mapping
 
@@ -191,7 +193,7 @@ every workflow role are present. Then assert that each development account can s
 |---|---|
 | US-1 | FR-001 – FR-008, FR-011, FR-012 |
 | US-2 | FR-009, FR-010, FR-015, FR-016 |
-| US-3 | FR-013, FR-014 |
+| US-3 | FR-013, FR-014, FR-017 |
 
 ### Key Entities
 

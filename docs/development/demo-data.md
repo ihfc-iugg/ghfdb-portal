@@ -50,6 +50,11 @@ Each run adds the number of datasets you ask for. Every dataset holds:
 - 20 heat flow sites, each with one parent heat flow and between one and four children, which
   makes 50 children per dataset
 
+Datasets are grouped into projects, one for every four datasets. Three datasets of each four
+belong to the project and the fourth belongs to none, so both kinds appear. Every demo project is
+public and owned by one of three demo organizations. The demo Data Assessor is credited as its
+leader.
+
 About 40 % of the sites are marine and measured with a probe. The rest are on land and measured in
 boreholes. Gradients, conductivities, corrections, probe metadata and controlled vocabulary values
 are all filled in, and the quality scores are computed by the portal when each dataset is written.
