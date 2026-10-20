@@ -65,3 +65,10 @@ Did: site and location on interval, gradient, conductivity and parent summaries 
 Verified: uv run pytest tests/test_heat_flow/test_serializers.py tests/test_heat_flow/test_schema.py tests/test_heat_flow/test_config.py -n0: 143 passed. pre-commit run --all-files: all passed. Red run before code: 31 failed.
 Next: T010 guide sections.
 Watch: FairDM load_relations resets select_related when a serializer has no foreign key of its own (D31).
+
+## 2026-10-20T21:41:43Z · Implementer US3 · T010
+
+Did: guide sections for the depth interval, thermal gradient and interval conductivity (list and single-record shapes, one request and response each), the parent section shows location and site, units table and developer notes updated.
+Verified: kit/forge verify --repo . --base origin/main: conformance, docs, lint, typecheck, test (389s), build all passed, exit 0.
+Next: completion report.
+Watch: none.
