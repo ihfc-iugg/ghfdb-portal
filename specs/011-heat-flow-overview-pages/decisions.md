@@ -273,3 +273,27 @@ passed. A test asserts a default run varies nothing. The orchestrator made this 
 to finish T007: one option, one guard and the tests' fixture.
 
 **ADR:** none — development data only.
+
+## D21. Two of FS-007's measurement card tests could not move unchanged
+
+**Decision:** `TestMeasurementCard` moved into the gradient and conductivity page modules,
+unskipped. Two things changed to let it run:
+
+- The `child`, `gradient`, `conductivity` and `probe_interval` fixtures in
+  `tests/test_templates/conftest.py` now build their records in the published dataset. The
+  child page showed FairDM's "only people with access can see this" notice for a record in an
+  unpublished dataset, and `test_the_placeholder_alert_is_gone` counts every alert. No test
+  body changed for this one.
+- `test_a_measurement_of_another_type_shows_no_card` asserted `card.cards == []` for a parent.
+  The parent's page now carries its own quality card (`data-quality-card="parent"`), so the test
+  is renamed and asserts `["parent"]`: another type shows its own card and not the gradient's
+  or the conductivity's. This is a changed assertion in a test written for FS-007, made because
+  the premise (no other type has a card) stopped being true when the parent card was added.
+
+**Why:** the first is a fixture repair of the kind D17 made. The second cannot be satisfied
+without removing the parent's card, which US4 and plan.md › Templates and components require.
+
+**Revisit if:** Forge triage prefers the test dropped, or a measurement type with no card is
+added.
+
+**ADR:** none — test placement.

@@ -65,3 +65,24 @@ Did: Wrote the site section of `docs/guides/record-pages.md` (parent, the site's
 Verified: see the full verify run in the completion report.
 Next: full verify, then the completion report.
 Watch: none.
+
+## 2026-10-20T16:18:32Z · Implementer US3 · T009
+
+Did: Rebuilt `HeatFlowPage.for_gradient_or_conductivity` test-first: the interval and site split in one query, the children that use the measurement with their method prefetched, the cut at `children_shown` lifted by `show_all`, the hidden count, the stale flag.
+Verified: `uv run pytest tests/test_heat_flow/test_overview.py -k ForGradientOrConductivity -q`: red first (4 failed, 16 passed: `show_all` ignored, no prefetch), then 20 passed. Probes, each failing exactly its tests and restored: reading every child instead of the measurement's, and returning the interval without the visibility check.
+Next: T010, the page hooks and tests.
+Watch: the class is named `TestHeatFlowPageForGradientOrConductivity` to match the module's `TestHeatFlowPage<Method>` classes.
+
+## 2026-10-20T16:18:32Z · Implementer US3 · T010
+
+Did: Data hooks on the gradient page (`data-field` for the measured and corrected values, the eight temperature, method, correction and shut-in cells, the number) and the conductivity page (value and the eight fields); `children.html` carries `data-heat-flow="children"` with `data-state`, `data-more`, `data-hidden`, and "Show all" links to `?show=all#children` in place of the disabled placeholder. Two page modules written; `TestMeasurementCard` moved in unskipped; `test_measurement_detail.py` deleted.
+Verified: `uv run pytest tests/test_templates -q -n auto --dist loadscope`: red first (gradient 15 failed of 25 against the unchanged templates; conductivity 13 failed of 22 with its template and `children.html` restored to the base), then 170 passed three runs in a row with `tests/test_heat_flow/test_overview.py`. Probes, restored after each: removing the stale notice, passing the unfiltered interval and site to the measured-on card, dropping the method prefetch each fail their tests. A flake found and fixed: the page capitalises the first letter of a label, so the tests compare terms ignoring case.
+Next: T011, the guide.
+Watch: two moved FS-007 tests needed repairs, in decisions.md D21: the card fixtures now use the published dataset, and the "another type shows no card" test asserts the parent's own card.
+
+## 2026-10-20T16:18:33Z · Implementer US3 · T011
+
+Did: Wrote the gradient and conductivity sections of `docs/guides/record-pages.md`, a Show all subsection for the children lists, and updated the developer row for `for_gradient_or_conductivity` and the hooks paragraph (`children`, `data-child`).
+Verified: see the full verify run in the completion report.
+Next: full verify, then the completion report.
+Watch: none.
