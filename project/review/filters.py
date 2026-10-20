@@ -13,6 +13,7 @@ thousands of them and all but a handful would match nothing.
 
 import django_filters
 from django.utils.translation import gettext_lazy as _
+from mvp.filters import SearchFilter
 
 from .models import Review
 from .states import States
@@ -35,8 +36,9 @@ def _people_who(field_name):
 
 
 class ReviewFilter(django_filters.FilterSet):
-    """Narrow the assessment list by state, assessor, uploader or decider."""
+    """Search the assessment list by title, and narrow it by state, assessor, uploader or decider."""
 
+    q = SearchFilter(fields=["literature__title"])
     state = django_filters.ChoiceFilter(
         choices=States.choices,
         label=_("State"),

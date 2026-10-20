@@ -58,7 +58,6 @@ class ReviewListView(FairDMListView):
     list_item_template = "review/review_list_item.html"
     page_title = _("Assessments")
     filterset_class = ReviewFilter
-    search_fields = ["literature__title"]
     directory = ["create"]
 
     def show_create_action(self, user):

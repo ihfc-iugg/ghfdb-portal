@@ -988,12 +988,17 @@ class IntervalConductivity(ScoredMeasurement, Measurement):
         """Validate thermal conductivity data."""
         super().clean()
 
-        if self.value and self.uncertainty and self.uncertainty > self.value:
+        # A value read back from the database is a quantity, and one set in code may be
+        # a plain number, so both are compared as magnitudes in W/mK.
+        value = Reading.magnitude(self.value, "W/mK")
+        uncertainty = Reading.magnitude(self.uncertainty, "W/mK")
+
+        if value and uncertainty and uncertainty > value:
             raise ValidationError(
                 _("Uncertainty cannot be greater than the conductivity value.")
             )
 
-        if self.value and (self.value < 0.1 or self.value > 50):
+        if value and (value < 0.1 or value > 50):
             raise ValidationError(
                 _(
                     "Thermal conductivity value seems unrealistic (should be between 0.1 and 50 W/mK)."

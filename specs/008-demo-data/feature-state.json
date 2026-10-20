@@ -1,0 +1,342 @@
+{
+  "feature": "008-demo-data",
+  "branch": "008-demo-data",
+  "repo": "ihfc-iugg/ghfdb-portal",
+  "state": "PR_READY",
+  "state_history": [
+    {
+      "state": "GATE_SPEC",
+      "at": "2026-10-19T22:22:13Z",
+      "note": "specification approved by Sam in the session on draft PR #279 at a57ca1a"
+    },
+    {
+      "state": "QUEUED",
+      "at": "2026-10-19T22:24:00Z",
+      "note": "epic #278, stories #280-#282"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-19T22:38:56Z",
+      "note": "picked up in the specifying session; research, plan and tasks authored"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-19T22:39:18Z",
+      "note": "plan, research and tasks committed on PR #279"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-19T22:53:12Z",
+      "note": "design review applied (1 high, 6 medium, 7 low as plan edits); plan gate open"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-19T23:52:25Z",
+      "note": "US1-US3 accepted; independent verify green"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-19T23:53:30Z",
+      "note": "converge green; 8 decisions verdicted, none graduate"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-20T00:46:56Z",
+      "note": "review fixes verified (mutation on T009); FairDM moved to f69c9cb1"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "Sam",
+      "at": "2026-10-19T22:22:13Z"
+    },
+    "plan": {
+      "approved_by": "open",
+      "at": "2026-10-19T22:52:54Z"
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    },
+    "design_review": {
+      "approved_by": "design-panel",
+      "at": "2026-10-19T22:52:54Z"
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-20T00:47:37Z",
+      "self_resolved": []
+    }
+  },
+  "stories": [
+    {
+      "id": "US0",
+      "priority": "P1",
+      "issue": null,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "docs build"
+            ],
+            "commands": [
+              "uv lock",
+              "uv run sphinx-build -E -b html docs docs/_build/html --keep-going (32 warnings, identical to the old pin)"
+            ],
+            "code": [
+              "pyproject.toml:38"
+            ]
+          }
+        },
+        {
+          "id": "T012",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_views.py"
+            ],
+            "commands": [
+              "uv run pytest -q (1549 passed, 15 skipped, 13 xfailed)",
+              "uv run python manage.py check"
+            ],
+            "code": [
+              "project/review/filters.py:41"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 280,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T002",
+          "status": "done",
+          "attempts": 3,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_demo.py::TestDemoGraphRanges"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_demo.py -n0 (56 passed, exit 0)"
+            ],
+            "code": [
+              "project/heat_flow/demo.py:1"
+            ]
+          }
+        },
+        {
+          "id": "T003",
+          "status": "done",
+          "attempts": 3,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_management/test_commands/test_seed_demo_data.py::TestSeedDemoDataEnvironment"
+            ],
+            "commands": [
+              "uv run pytest tests/test_review/test_management -n0 (11 passed, exit 0)"
+            ],
+            "code": [
+              "project/review/management/commands/seed_demo_data.py:60"
+            ]
+          }
+        },
+        {
+          "id": "T004",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "uv run sphinx-build -E -b html docs <outdir> -W --keep-going (exit 1: 32 existing warnings, none in touched files)"
+            ],
+            "code": [
+              "docs/development/demo-data.md:1"
+            ]
+          }
+        },
+        {
+          "id": "T007",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "grep -n 'exec django' docs/development/demo-data.md"
+            ],
+            "code": [
+              "docs/development/demo-data.md:24"
+            ]
+          }
+        },
+        {
+          "id": "T008",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "python3 AST walk of demo.py and seed_demo_data.py for missing docstrings/Args/Returns (only __init__ and add_arguments, both exempt)",
+              "uv run ruff check; uv run ruff format --check"
+            ],
+            "code": [
+              "project/heat_flow/demo.py:37",
+              "project/review/management/commands/seed_demo_data.py:150"
+            ]
+          }
+        },
+        {
+          "id": "T009",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_management/test_commands/test_seed_demo_data.py::TestSeedDemoDataEnvironment"
+            ],
+            "commands": [
+              "orchestrator mutation: replaced self._refuse_production() with pass -> 1 failed; restored -> passing"
+            ],
+            "code": [
+              "project/review/management/commands/seed_demo_data.py:104"
+            ]
+          }
+        },
+        {
+          "id": "T010",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_demo.py::TestRegions"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_demo.py::TestRegions -q (5 passed)",
+              "uv run ruff check; uv run ruff format --check"
+            ],
+            "code": [
+              "project/heat_flow/demo.py:78"
+            ]
+          }
+        },
+        {
+          "id": "T011",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_demo.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_demo.py -q (56 passed)",
+              "uv run ruff check; uv run ruff format --check"
+            ],
+            "code": [
+              "project/heat_flow/demo.py:181",
+              "tests/test_heat_flow/test_demo.py:62"
+            ]
+          }
+        },
+        {
+          "id": "T013",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_models/test_child.py::TestIntervalConductivity",
+              "tests/test_heat_flow/test_demo.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow (532 passed); new tests failed with ValueError before the fix"
+            ],
+            "code": [
+              "project/heat_flow/models/child.py:987"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P1",
+      "issue": 281,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T005",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_management/test_commands/test_seed_demo_data.py::TestSeedDemoDataSize"
+            ],
+            "commands": [
+              "uv run pytest tests/test_review/test_management -n0 (21 passed, exit 0)"
+            ],
+            "code": [
+              "project/review/management/commands/seed_demo_data.py:73"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P2",
+      "issue": 282,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T006",
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_management/test_commands/test_seed_demo_data.py::TestSeedDemoDataVisibility"
+            ],
+            "commands": [
+              "uv run pytest tests/test_review/test_management -n0 -k 'States or Accounts or Visibility' (23 passed, then Visibility 3 passed, exit 0)"
+            ],
+            "code": [
+              "project/review/management/commands/seed_demo_data.py:170"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 1,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "tokens": {
+      "used": 28.18,
+      "max": 120
+    }
+  },
+  "pr": {
+    "number": 279,
+    "draft": true
+  }
+}

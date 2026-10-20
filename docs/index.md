@@ -81,6 +81,7 @@ guides/published-structure-api
 
 development/code-of-conduct
 development/getting-started
+development/demo-data
 development/documentation-conventions
 development/feature-documentation-checklist
 development/spec-driven-development

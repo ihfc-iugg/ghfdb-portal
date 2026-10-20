@@ -512,6 +512,45 @@ class TestThermalGradient:
 
 class TestIntervalConductivity:
     @pytest.mark.django_db
+    def test_a_saved_conductivity_in_range_passes_validation(
+        self, conductivity_fixture
+    ):
+        from heat_flow.models import IntervalConductivity
+
+        reloaded = IntervalConductivity.objects.get(pk=conductivity_fixture.pk)
+
+        reloaded.full_clean()
+
+    @pytest.mark.django_db
+    @pytest.mark.parametrize("value", [0.05, 60])
+    def test_a_saved_conductivity_out_of_range_is_rejected(
+        self, conductivity_fixture, value
+    ):
+        from heat_flow.models import IntervalConductivity
+
+        IntervalConductivity.objects.filter(pk=conductivity_fixture.pk).update(
+            value=value
+        )
+        reloaded = IntervalConductivity.objects.get(pk=conductivity_fixture.pk)
+
+        with pytest.raises(ValidationError):
+            reloaded.clean()
+
+    @pytest.mark.django_db
+    def test_a_saved_uncertainty_above_the_value_is_rejected(
+        self, conductivity_fixture
+    ):
+        from heat_flow.models import IntervalConductivity
+
+        IntervalConductivity.objects.filter(pk=conductivity_fixture.pk).update(
+            uncertainty=3
+        )
+        reloaded = IntervalConductivity.objects.get(pk=conductivity_fixture.pk)
+
+        with pytest.raises(ValidationError):
+            reloaded.clean()
+
+    @pytest.mark.django_db
     def test_interval_conductivity_save_rejects_wrong_sample(
         self, site_fixture, conductivity_fixture
     ):
