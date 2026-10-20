@@ -244,3 +244,29 @@ conftest.py` and `test_measurement_detail.py` are the fixture repairs and test m
 D17. Accepted.
 
 **ADR:** none — test housekeeping.
+
+## D19. The page states are made on the first complete dataset, from records moved, not added
+
+**Decision:** `seed_demo_data` calls `DemoGraph.vary_page_states` on the first dataset of the run
+whose assessment is complete (public and published), and passes the run's first dataset, which is
+private and unpublished, as the place hidden records go. The step moves existing records into
+that dataset and adds only empty intervals, so a run still makes the same number of datasets,
+sites and children.
+
+**Why:** the first dataset of a run is only described, so it is private. A visitor cannot open
+its sites, and a state such as "an interval in a dataset the visitor may not open" needs a site
+the visitor can open. Moving records leaves the counts that the command's size tests assert
+(four datasets, eighty sites, two hundred children) as they were.
+
+**Revisit if:** the order of assessment states in `STATE_PLAN` changes, or the command is asked
+to make more children to show a cut list with children in every interval.
+
+**Open:** four existing tests in `tests/test_review/test_management/test_commands/
+test_seed_demo_data.py` assert the opposite of states research R4 asks for, and fail now:
+`test_every_record_carries_the_current_scheme_revision` (a stale score), 
+`test_scores_are_computed_for_every_child` (a child not yet scored),
+`test_scores_equal_a_fresh_recalculation` (a refresh rewrites the stale score) and
+`test_coordinates_stay_distinct_across_runs` (a site with no location has no point). They are
+not edited here; they need Forge's triage.
+
+**ADR:** none — development data only.
