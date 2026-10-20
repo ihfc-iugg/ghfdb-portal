@@ -2,7 +2,7 @@
   "feature": "008-demo-data",
   "branch": "008-demo-data",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "PR_READY",
+  "state": "MERGED",
   "state_history": [
     {
       "state": "GATE_SPEC",
@@ -43,6 +43,11 @@
       "state": "PR_READY",
       "at": "2026-10-20T00:46:56Z",
       "note": "review fixes verified (mutation on T009); FairDM moved to f69c9cb1"
+    },
+    {
+      "state": "MERGED",
+      "at": "2026-10-20T08:10:22Z",
+      "note": "PR #279 merged; approved by SamuelJennings"
     }
   ],
   "gates": {
@@ -55,16 +60,16 @@
       "at": "2026-10-19T22:52:54Z"
     },
     "merge": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "SamuelJennings",
+      "at": "2026-10-20T08:09:30Z"
     },
     "design_review": {
       "approved_by": "design-panel",
       "at": "2026-10-19T22:52:54Z"
     },
     "walkthrough": {
-      "approved_by": null,
-      "at": "2026-10-20T00:47:37Z",
+      "approved_by": "SamuelJennings",
+      "at": "2026-10-20T08:09:30Z",
       "self_resolved": []
     }
   },
@@ -331,12 +336,12 @@
       "max": 1
     },
     "tokens": {
-      "used": 28.18,
+      "used": 42.28,
       "max": 120
     }
   },
   "pr": {
     "number": 279,
-    "draft": true
+    "draft": false
   }
 }
