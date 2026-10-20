@@ -245,13 +245,13 @@ class Document(HTMLParser):
 def document(client, db):
     """Return a function that fetches a record's overview page and parses it.
 
-    Pass ``user`` to read the page signed in.
+    Pass ``user`` to read the page signed in, and any other keyword as a query parameter.
     """
 
-    def fetch(record, user=None):
+    def fetch(record, user=None, **query):
         if user is not None:
             client.force_login(user)
-        response = client.get(record.get_absolute_url())
+        response = client.get(record.get_absolute_url(), query)
         assert response.status_code == 200
         return Document(response.content.decode())
 

@@ -26,7 +26,7 @@ def heat_flow_page(context, record):
     gathered = context.render_context.setdefault("heat_flow_page", {})
     key = (type(record), record.pk)
     if key not in gathered:
-        show_all = request.GET.get("intervals") == "all"
+        show_all = request.GET.get("show") == "all"
         page = overview.HeatFlowPage(record, request.user, show_all=show_all)
         gathered[key] = page.context()
     return gathered[key]
