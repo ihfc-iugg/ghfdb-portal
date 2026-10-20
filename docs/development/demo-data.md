@@ -89,6 +89,38 @@ a decision, changes requested and complete. After that, four datasets in five ar
 - The demo Data Assessor uploads every assessment and is credited on every dataset. The demo Data
   Curator decides the assessments that are complete or have changes requested.
 
+## Page states for the record pages
+
+The first complete dataset of every run is varied so each state a heat flow record's page answers
+for can be opened. Sign in as the demo Data Assessor to open its private neighbours, and read the
+pages as a visitor who is not signed in to see what an unpublished dataset hides. Its first six
+sites, in the order of their primary keys, hold:
+
+| Site | Children | State |
+| --- | --- | --- |
+| 1 | 1 | A parent with no children, and a child with no gradient, conductivity, corrections or parent. |
+| 2 | 2 | No parent designated. |
+| 3 | 3 | A parent whose children are all marked not relevant. |
+| 4 | 4 | More intervals than the page lists, an interval and its child, and another interval's child, in the unpublished dataset. |
+| 5 | 1 | Scores stored under another scheme revision, and no location. |
+| 6 | 2 | A child not yet scored, a gradient and the parent in the unpublished dataset. |
+
+The unpublished dataset is the first dataset of the run, the one whose assessment is only
+described. A record moved into it loses its published identifier, as every record of an
+unpublished dataset does. Site 5 has no location, so a test that reads every site's coordinates
+must skip it.
+
+The step is `DemoGraph.vary_page_states(unpublished)`. It raises `ValueError` for a dataset of
+fewer than six sites, and running it again varies the same sites further without failing:
+
+```python
+import random
+
+from heat_flow.demo import DemoGraph
+
+DemoGraph(dataset, random.Random(1)).vary_page_states(unpublished_dataset)
+```
+
 ## Sign in
 
 The command creates an account for each role and confirms its email address. Every account uses
