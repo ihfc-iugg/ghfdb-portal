@@ -411,8 +411,19 @@
         },
         {
           "id": "T018",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templates/test_heatflowinterval_overview.py::TestReleaseColumns"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templates/test_heatflowinterval_overview.py -n0 -q"
+            ],
+            "code": [
+              "docs/guides/record-pages.md:60"
+            ]
+          }
         }
       ]
     }

@@ -128,3 +128,10 @@ Did: Data hooks on the interval page (`data-field` on every field, `data-heat-fl
 Verified: `uv run pytest tests/test_templates/test_heatflowinterval_overview.py -n0 -q`: red first against the unchanged templates (84 failed, 50 passed), then green; `tests/test_heat_flow/test_overview.py tests/test_templates -n0 -q`: 323 passed. Probes, each failing its tests and restored: location state attribute renamed (10 failed), parent value hook removed (2), probe hook renamed (1).
 Next: T018, the guide, the ADR and the changelog.
 Watch: the resource's own field list includes every model field, so the columns are read as the canonical order's names that the resource carries a field for (56). The stratigraphy field can only be shown empty in a test: `StratigraphicUnit.save` reads a `parent` the model does not have.
+
+## 2026-10-20T17:26:57Z · Implementer US5 · T018
+
+Did: `docs/guides/record-pages.md` gained the depth interval section, "The site's location" paragraph, the table of every export column with its page and `data-field` (generated from the test module's dict), the interval row of `HeatFlowPage`, `site_location`'s return and the probe and location hooks, and the child's data reference and related publications. Wrote `docs/adr/0024-a-heat-flow-pages-content-comes-through-a-template-tag.md` and listed it in the ADR index. One `CHANGELOG.md` entry under Unreleased > Added for the whole feature.
+Verified: see the full verify run in the completion report.
+Next: full verify, then the completion report.
+Watch: the table and `RELEASE_COLUMNS` in the test are kept in step by hand.
