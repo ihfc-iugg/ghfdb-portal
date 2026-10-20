@@ -296,13 +296,14 @@ could fail.
 
 **ADR:** none — follows from the brief's scope
 
-## D27 — The site summary leaves out type, elevation and elevation datum
+## D27 — A site serves its elevation, elevation datum and type
 
-**Decision:** `type`, `elevation` and `elevation_datum` stay out of the site summary.
+**Decision:** the site summary carries `type`, `elevation` and `elevation_datum`, as the plan's
+shapes list them, and `elevation` is among the site's `units`.
 
-**Why:** `elevation` is a quantity, so adding it adds a key to the site's `units`, which the
-US4 tests pin to azimuth, inclination and length. Changing those tests is outside this story.
+**Why:** the site holds its own elevation (ADR 0023), and a site's position is incomplete without
+it. The implementer of the site shapes left them out rather than change the expected units a
+US4 test held. That test belongs to this feature, so the orchestrator changed its expected set
+with the shape, as task T011.
 
-**Revisit if:** US4's shape is amended to include them.
-
-**ADR:** none — follows from the plan's shapes table
+**ADR:** none — follows the plan's shapes table

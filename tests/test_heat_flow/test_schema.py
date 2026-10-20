@@ -56,6 +56,7 @@ class TestUnitsFieldSchema:
             "azimuth": ["deg"],
             "inclination": ["deg"],
             "length": ["m"],
+            "elevation": ["m"],
         }
 
     def test_a_type_without_quantities_beyond_its_own_lists_only_those(

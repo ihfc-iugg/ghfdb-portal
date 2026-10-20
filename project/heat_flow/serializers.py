@@ -468,6 +468,9 @@ class HeatFlowSiteSummarySerializer(HeatFlowRecordSerializer, BaseSampleSerializ
         model = HeatFlowSite
         fields = [
             *BaseSampleSerializer.common_fields,
+            "type",
+            "elevation",
+            "elevation_datum",
             "country",
             "region",
             "continent",

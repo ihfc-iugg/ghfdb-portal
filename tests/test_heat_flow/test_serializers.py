@@ -31,7 +31,12 @@ ROUTES = {
 # Written from the model declarations, so a quantity field that goes missing from
 # `units`, or one that appears without being declared, fails.
 UNITS = {
-    "site": {"azimuth": "deg", "inclination": "deg", "length": "m"},
+    "site": {
+        "azimuth": "deg",
+        "inclination": "deg",
+        "length": "m",
+        "elevation": "m",
+    },
     "interval": {"top": "m", "bottom": "m", "vertical_depth": "m"},
     "child": {"value": "mW/m²", "uncertainty": "mW/m²"},
     "gradient": {
@@ -134,6 +139,15 @@ class TestHeatFlowRecordSerializer:
         assert record["inclination"] == 10.25
         # Entered in feet, stored and given in metres.
         assert record["length"] == pytest.approx(304.8)
+
+    def test_a_site_carries_its_elevation_with_its_datum_and_type(
+        self, client, full_records
+    ):
+        record = only_record(client, SITES)
+
+        assert record["elevation"] == 250
+        assert record["elevation_datum"]["name"] == "MSL"
+        assert record["type"]["name"] == "unknown"
 
     @pytest.mark.parametrize(
         ("kind", "name", "expected"),

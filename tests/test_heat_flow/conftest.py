@@ -125,6 +125,8 @@ def full_records(public_dataset):
         azimuth=45.5,
         inclination=10.25,
         length=ureg.Quantity(1000, "ft"),
+        elevation=ureg.Quantity(250, "m"),
+        elevation_datum="MSL",
         explo_purpose=concepts(HeatFlowSite, "explo_purpose", 2),
     )
     site.lithology.set(concepts(HeatFlowSite, "lithology", 2))

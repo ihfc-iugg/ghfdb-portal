@@ -133,3 +133,8 @@ read on its own.
       records' do not grow with what they refer to.
 - [ ] T010 [US3] Guide: the interval, gradient and conductivity sections with their list and
       single-record shapes and one example request and response.
+
+## Fixes found after planning
+
+- [x] T011 [US1] Serve a site's `type`, `elevation` and `elevation_datum` in its summary, with
+      `elevation` in its `units` (D27).
