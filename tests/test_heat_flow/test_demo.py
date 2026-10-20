@@ -2,7 +2,6 @@ import random
 
 import pytest
 from django.core.exceptions import ValidationError
-from fairdm.factories import DatasetFactory
 from heat_flow import demo
 from heat_flow.demo import CHILDREN_CYCLE, REGIONS, SITES_PER_DATASET, DemoGraph, Region
 from heat_flow.models import (
@@ -61,11 +60,6 @@ def validate(record):
 
 def metres(quantity):
     return Reading.magnitude(quantity, "m")
-
-
-@pytest.fixture
-def dataset(db):
-    return DatasetFactory()
 
 
 @pytest.fixture

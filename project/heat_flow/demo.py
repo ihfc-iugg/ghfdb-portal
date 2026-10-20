@@ -169,18 +169,6 @@ class DemoGraph:
         """
         return None if self.next_ghfdb_id is None else self.next_ghfdb_id()
 
-    def _round(self, value: float, places: int = 2) -> float:
-        """Round *value* to *places* decimal places.
-
-        Args:
-            value: The number to round.
-            places: The decimal places to keep.
-
-        Returns:
-            The rounded number.
-        """
-        return round(value, places)
-
     def _uncertainty(self, value: float) -> float:
         """Draw an uncertainty of 5 to 25 percent of *value*.
 
@@ -190,7 +178,7 @@ class DemoGraph:
         Returns:
             A positive uncertainty, rounded to two places.
         """
-        return self._round(abs(value) * self.rng.uniform(0.05, 0.25))
+        return round(abs(value) * self.rng.uniform(0.05, 0.25), 2)
 
     def _place_site(self) -> tuple[HeatFlowSite, Region]:
         """Create a site at a point no other site holds.
@@ -203,8 +191,8 @@ class DemoGraph:
         """
         for attempt in range(MAX_PLACEMENT_ATTEMPTS):
             region = self.rng.choice(REGIONS)
-            latitude = self._round(self.rng.uniform(region.min_lat, region.max_lat), 5)
-            longitude = self._round(self.rng.uniform(region.min_lon, region.max_lon), 5)
+            latitude = round(self.rng.uniform(region.min_lat, region.max_lat), 5)
+            longitude = round(self.rng.uniform(region.min_lon, region.max_lon), 5)
             label = self._label()
             try:
                 site = HeatFlowSite.objects.create(
@@ -235,7 +223,7 @@ class DemoGraph:
             A depth below sea level for a marine region, a height above it otherwise.
         """
         low, high = (-6000, -200) if region.marine else (0, 3000)
-        return self._round(self.rng.uniform(low, high), 1)
+        return round(self.rng.uniform(low, high), 1)
 
     def _plan_child(self, region: Region) -> dict[str, float]:
         """Draw one child's values so that its heat flow is its gradient times its conductivity.
@@ -247,17 +235,17 @@ class DemoGraph:
             The child's ``conductivity``, ``gradient`` and ``value``.
         """
         rng = self.rng
-        conductivity = self._round(
-            min(max(rng.lognormvariate(math.log(2.5), 0.3), 0.8), 6)
+        conductivity = round(
+            min(max(rng.lognormvariate(math.log(2.5), 0.3), 0.8), 6), 2
         )
         target = min(
             max(rng.lognormvariate(math.log(95 if region.marine else 65), 0.4), 15), 400
         )
-        gradient = self._round(min(max(target / conductivity, 5), 300))
+        gradient = round(min(max(target / conductivity, 5), 300), 2)
         return {
             "conductivity": conductivity,
             "gradient": gradient,
-            "value": self._round(gradient * conductivity),
+            "value": round(gradient * conductivity, 2),
         }
 
     def _build_site(self, child_count: int) -> None:
@@ -275,7 +263,7 @@ class DemoGraph:
         used = [
             plan["value"] for plan, flag in zip(plans, relevant, strict=True) if flag
         ]
-        parent_value = self._round(sum(used) / len(used))
+        parent_value = round(sum(used) / len(used), 2)
 
         parent = ParentHeatFlow.objects.create(
             dataset=self.dataset,
@@ -310,16 +298,16 @@ class DemoGraph:
         rng = self.rng
         dataset = self.dataset
         if region.marine:
-            top, bottom = 0.0, self._round(rng.uniform(2, 10), 1)
+            top, bottom = 0.0, round(rng.uniform(2, 10), 1)
         else:
-            top = self._round(rng.uniform(0, 1500), 1)
-            bottom = self._round(top + rng.uniform(50, 1500), 1)
+            top = round(rng.uniform(0, 1500), 1)
+            bottom = round(top + rng.uniform(50, 1500), 1)
 
         interval = HeatFlowInterval.objects.create(
             dataset=dataset, name=self._label(), site=site, top=top, bottom=bottom
         )
         gradient_value = plan["gradient"]
-        corrected = self._round(gradient_value * rng.uniform(0.95, 1.1))
+        corrected = round(gradient_value * rng.uniform(0.95, 1.1), 2)
         gradient = ThermalGradient.objects.create(
             dataset=dataset,
             name=self._label(),
@@ -406,12 +394,12 @@ class DemoGraph:
         Args:
             interval: The interval the probe measured.
         """
-        penetration = self._round(self.rng.uniform(1, 10))
+        penetration = round(self.rng.uniform(1, 10), 2)
         probe = ProbeMetadata(
             interval=interval,
             penetration=Decimal(str(penetration)),
-            length=Decimal(str(self._round(self.rng.uniform(penetration, 10)))),
-            tilt=Decimal(str(self._round(self.rng.uniform(0, 20)))),
+            length=Decimal(str(round(self.rng.uniform(penetration, 10), 2))),
+            tilt=Decimal(str(round(self.rng.uniform(0, 20), 2))),
         )
         self._probes.append(probe)
 
