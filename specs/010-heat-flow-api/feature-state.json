@@ -79,8 +79,23 @@
         },
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 3,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_schema.py::TestTermFieldSchema",
+              "tests/test_heat_flow/test_schema.py::TestUnitsFieldSchema"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_schema.py -q -n0 (red: 5 failed, 1 passed)",
+              "uv run pytest tests/test_heat_flow/test_schema.py tests/test_heat_flow/test_serializers.py -q -n0 (green: 38 passed)"
+            ],
+            "code": [
+              "project/heat_flow/schema.py:12",
+              "project/heat_flow/schema.py:48",
+              "project/heat_flow/apps.py:25"
+            ]
+          }
         },
         {
           "id": "T003",

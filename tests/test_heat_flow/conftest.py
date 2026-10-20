@@ -165,3 +165,12 @@ def full_records(public_dataset):
         "parent": parent,
         "child": child,
     }
+
+
+@pytest.fixture
+def api_schema(db, client):
+    # The generated OpenAPI schema's components, as the schema route serves them.
+    response = client.get("/api/v1/schema/", {"format": "json"})
+
+    assert response.status_code == 200
+    return response.json()["components"]["schemas"]

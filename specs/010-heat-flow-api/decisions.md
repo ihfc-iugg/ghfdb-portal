@@ -254,3 +254,16 @@ spells it, not what the formula returns.
 **Revisit if:** a consumer needs a machine-parseable unit string instead.
 
 **ADR:** none — follows D16
+
+## D24 — One schema component describes what is read
+
+**Decision:** `TermFieldSchema` describes a term as the object a read gives, with no separate
+description of the name a write takes.
+
+**Why:** the portal's schema does not split request and response components, so a field has one
+description, and the object is the shape a consumer reads and needs documented. A write still
+takes the term's name, as before.
+
+**Revisit if:** the schema settings turn on separate request components.
+
+**ADR:** none — follows from the portal's schema settings

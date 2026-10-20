@@ -1,5 +1,7 @@
 """App configuration for the heat flow schema."""
 
+from importlib import import_module
+
 from django.apps import AppConfig
 from django.db.models.signals import m2m_changed, post_delete, post_save, pre_save
 from django.utils.translation import gettext_lazy as _
@@ -16,7 +18,11 @@ class HeatFlowSchemaConfig(AppConfig):
     repository_url = "https://github.com/ihfc-iugg/ghfdb-portal"
 
     def ready(self):
-        """Connect the receivers that keep stored quality scores current."""
+        """Connect the receivers that keep stored quality scores current.
+
+        Also loads the schema extensions, which drf-spectacular finds by import.
+        """
+        import_module(f"{self.name}.schema")
         from . import signals
         from .models import (
             HeatFlow,

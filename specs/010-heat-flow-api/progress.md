@@ -9,3 +9,10 @@ Did: Built project/heat_flow/serializers.py (term(), TermChoiceField, TermRelate
 Verified: uv run pytest tests/test_heat_flow/test_serializers.py tests/test_heat_flow/test_config.py -q -n0 -> 44 passed; ruff check, ruff format and mypy clean on the new module. The system-check test passes before and after by design, as a guard.
 Next: T002 the schema extensions for terms and units.
 Watch: a many-valued term reads its vocabulary per row, which is one query per term until US1 adds the prefetch; D21-D23 in decisions.md.
+
+## 2026-10-20T19:44:44Z · Implementer US4 · T002
+
+Did: Added project/heat_flow/schema.py with TermFieldSchema (a single term and, through TermRelatedFieldSchema, each entry of a many-valued term, as an object with name, label, uri and a vocabulary limited to the field's own) and UnitsFieldSchema (one property per quantity, limited to its unit). ready() in apps.py imports the module. Tests first in tests/test_heat_flow/test_schema.py: 5 of 6 failed (KeyError and string-not-object), then all 6 passed.
+Verified: uv run pytest tests/test_heat_flow/test_schema.py -q -n0 -> 6 passed; serializers and schema together 38 passed; ruff and mypy clean. The nullable test passed before the change and guards it.
+Next: T003 the guide.
+Watch: D24 in decisions.md.
