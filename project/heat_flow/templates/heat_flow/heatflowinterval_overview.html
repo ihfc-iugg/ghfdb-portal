@@ -9,11 +9,11 @@
            lg="3"
            aria-label="{% translate 'Depth interval at a glance' %}">
     <c-stats.item title="{% translate 'Top' %}"
-                  value="{{ sample.top|quantity|default:_("Not recorded") }}"
-                  icon="arrow-up" />
+                  value="{{ sample.top|default_if_none:_("Not recorded") }}"
+                  icon="arrow_up" />
     <c-stats.item title="{% translate 'Bottom' %}"
-                  value="{{ sample.bottom|quantity|default:_("Not recorded") }}"
-                  icon="arrow-down" />
+                  value="{{ sample.bottom|default_if_none:_("Not recorded") }}"
+                  icon="arrow_down" />
     <c-stats.item title="{% translate 'Measurements' %}"
                   value="{{ counts.measurements|intcomma }}"
                   variant="accent"
@@ -28,9 +28,9 @@
       <c-heat_flow.field label="{% translate 'Site' %}"
                          value="{% if hf.site %}{{ hf.site }}{% endif %}" />
       <c-heat_flow.field label="{% translate 'Depth range' %}"
-                         value="{% if sample.top is not None and sample.bottom is not None %}{{ sample.top|quantity }} – {{ sample.bottom|quantity }}{% endif %}" />
+                         value="{% if sample.top is not None and sample.bottom is not None %}{{ sample.top|default_if_none:'' }} – {{ sample.bottom|default_if_none:'' }}{% endif %}" />
       <c-heat_flow.field label="{% translate 'Vertical depth' %}"
-                         value="{{ sample.vertical_depth|quantity }}" />
+                         value="{{ sample.vertical_depth|default_if_none:'' }}" />
       <c-heat_flow.field label="{% translate 'Depth datum' %}"
                          value="{{ sample.vertical_datum|default_if_none:'' }}" />
       <c-heat_flow.field label="{% translate 'Lithology' %}"
@@ -50,11 +50,11 @@
         <c-heat_flow.field label="{% translate 'Probe type' %}"
                            value="{{ hf.probe.probe_type|labels|capfirst }}" />
         <c-heat_flow.field label="{% translate 'Probe length' %}"
-                           value="{{ hf.probe.length|quantity }}" />
+                           value="{{ hf.probe.length|default_if_none:'' }}" />
         <c-heat_flow.field label="{% translate 'Penetration' %}"
-                           value="{{ hf.probe.penetration|quantity }}" />
+                           value="{{ hf.probe.penetration|default_if_none:'' }}" />
         <c-heat_flow.field label="{% translate 'Tilt' %}"
-                           value="{{ hf.probe.tilt|quantity }}" />
+                           value="{{ hf.probe.tilt|default_if_none:'' }}" />
       </div>
     </c-mvp.card>
   {% endif %}

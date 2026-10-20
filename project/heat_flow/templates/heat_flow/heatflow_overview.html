@@ -36,7 +36,7 @@
           <a href="{{ hf.gradient.get_absolute_url }}"
              class="link link-hover text-lg font-medium tabular-nums">{{ hf.gradient.print_value }}</a>
           {% if hf.gradient.corrected_value is not None %}
-            <p class="text-sm text-base-content/70 tabular-nums">{% plus_minus hf.gradient.corrected_value hf.gradient.corrected_uncertainty as corrected %}{% blocktranslate %}Corrected {{ corrected }}{% endblocktranslate %}</p>
+            <p class="text-sm text-base-content/70 tabular-nums">{% blocktranslate with corrected=hf.gradient.corrected_value|plus_minus:hf.gradient.corrected_uncertainty %}Corrected {{ corrected }}{% endblocktranslate %}</p>
           {% endif %}
         {% elif hf.gradient_hidden %}
           <p class="text-sm text-base-content/70">{% translate "Recorded in a dataset that hasn't been published yet." %}</p>
@@ -118,7 +118,7 @@
               class="bg-base-100">
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
       <c-heat_flow.field label="{% translate 'Surface temperature' %}"
-                         value="{{ measurement.surface_temperature|quantity }}" />
+                         value="{{ measurement.surface_temperature|default_if_none:'' }}" />
       <c-heat_flow.field label="{% translate 'Date acquired' %}"
                          value="{{ measurement.date_acquired|default_if_none:'' }}" />
       <c-heat_flow.field label="{% translate 'Expedition or platform' %}"

@@ -11,7 +11,7 @@
       <dd>
         {% if interval %}
           <a href="{{ interval.get_absolute_url }}"
-             class="link link-hover font-medium tabular-nums">{{ interval.top|quantity }} – {{ interval.bottom|quantity }}</a>
+             class="link link-hover font-medium tabular-nums">{{ interval.top|default_if_none:'' }} – {{ interval.bottom|default_if_none:'' }}</a>
           {% if interval.name %}<span class="block text-xs text-base-content/70">{{ interval.name }}</span>{% endif %}
         {% else %}
           <span class="text-sm text-base-content/70">{% translate "The interval belongs to a dataset that hasn't been published yet." %}</span>

@@ -66,19 +66,19 @@
     <h3 class="text-sm font-semibold mt-2">{% translate "Access" %}</h3>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6">
       <c-heat_flow.field label="{% translate 'Top' %}"
-                         value="{{ sample.top|quantity }}" />
+                         value="{{ sample.top|default_if_none:'' }}" />
       <c-heat_flow.field label="{% translate 'Bottom' %}"
-                         value="{{ sample.bottom|quantity }}" />
+                         value="{{ sample.bottom|default_if_none:'' }}" />
       <c-heat_flow.field label="{% translate 'Length' %}"
-                         value="{{ sample.length|quantity }}" />
+                         value="{{ sample.length|default_if_none:'' }}" />
       <c-heat_flow.field label="{% translate 'Vertical depth' %}"
-                         value="{{ sample.vertical_depth|quantity }}" />
+                         value="{{ sample.vertical_depth|default_if_none:'' }}" />
       <c-heat_flow.field label="{% translate 'Inclination' %}"
-                         value="{{ sample.inclination|quantity }}" />
+                         value="{{ sample.inclination|default_if_none:'' }}" />
       <c-heat_flow.field label="{% translate 'Azimuth' %}"
-                         value="{{ sample.azimuth|quantity }}" />
+                         value="{{ sample.azimuth|default_if_none:'' }}" />
       <c-heat_flow.field label="{% translate 'Elevation' %}"
-                         value="{{ sample.elevation|quantity }}" />
+                         value="{{ sample.elevation|default_if_none:'' }}" />
       <c-heat_flow.field label="{% translate 'Elevation datum' %}"
                          value="{{ sample.elevation_datum|labels }}" />
     </div>
@@ -105,7 +105,7 @@
           <li class="py-3 flex flex-col gap-1">
             <div class="flex flex-wrap items-baseline justify-between gap-x-3">
               <a href="{{ row.interval.get_absolute_url }}"
-                 class="link link-hover font-semibold tabular-nums">{{ row.interval.top|quantity }} – {{ row.interval.bottom|quantity }}</a>
+                 class="link link-hover font-semibold tabular-nums">{{ row.interval.top|default_if_none:'' }} – {{ row.interval.bottom|default_if_none:'' }}</a>
               {% with lith=row.interval.lithology|labels %}{% if lith %}<span class="text-xs text-base-content/70">{{ lith|capfirst }}</span>{% endif %}{% endwith %}
             </div>
             {% if row.children.rows %}

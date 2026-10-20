@@ -53,7 +53,12 @@ def unscore(*, scheme):
     for model in (ThermalGradient, IntervalConductivity):
         model.objects.update(score=9.9, score_missing=True, quality_scheme=scheme)
     HeatFlow.objects.update(
-        U_score="U4", T_score=9.9, TC_score=9.9, M_score="M4", quality="stale", quality_scheme=scheme
+        U_score="U4",
+        T_score=9.9,
+        TC_score=9.9,
+        M_score="M4",
+        quality="stale",
+        quality_scheme=scheme,
     )
     ParentHeatFlow.objects.update(
         U_score="U4", M_score="M4", quality="stale", quality_scheme=scheme
@@ -69,7 +74,11 @@ class TestRecordsWrittenBeforeScoringExisted:
         output = run()
 
         assert StoredScores.differing() == []
-        assert {scheme for values in stored().values() for scheme in [values["quality_scheme"]]} == {REVISION}
+        assert {
+            scheme
+            for values in stored().values()
+            for scheme in [values["quality_scheme"]]
+        } == {REVISION}
         assert "2 gradients" in output
         assert "2 parents" in output
 

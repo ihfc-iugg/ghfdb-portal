@@ -43,7 +43,6 @@ CONCEPT_FIELDS = (
 )
 
 
-
 def metres(quantity):
     return Reading.magnitude(quantity, "m")
 
@@ -160,7 +159,9 @@ class TestDemoGraph:
             assert [child.is_relevant for child in children] == expected
 
     def test_coordinates_are_pairwise_distinct(self, graph):
-        points = [(site.location.x, site.location.y) for site in HeatFlowSite.objects.all()]
+        points = [
+            (site.location.x, site.location.y) for site in HeatFlowSite.objects.all()
+        ]
 
         assert len(set(points)) == len(points)
 
@@ -208,7 +209,9 @@ class TestDemoGraph:
         assert len(set(pairs)) == len(pairs)
 
     def test_probe_children_always_have_a_temperature_correction(self, graph):
-        probed = HeatFlow.objects.filter(sample__heatflowinterval__probe_metadata__isnull=False)
+        probed = HeatFlow.objects.filter(
+            sample__heatflowinterval__probe_metadata__isnull=False
+        )
 
         assert probed.exists()
         for child in probed:
@@ -257,7 +260,9 @@ class TestDemoGraph:
         assert first < set(points)
 
     def test_a_site_that_cannot_find_a_free_point_raises(self, dataset, monkeypatch):
-        fixed = Region("Fixed", 10.0, 10.0, 20.0, 20.0, False, "onshore_continental", "drilling")
+        fixed = Region(
+            "Fixed", 10.0, 10.0, 20.0, 20.0, False, "onshore_continental", "drilling"
+        )
         monkeypatch.setattr(demo, "REGIONS", (fixed,))
         DemoGraph(dataset, random.Random(1)).build(sites=1)
 
@@ -298,9 +303,9 @@ class TestDemoGraphRanges:
     @pytest.mark.parametrize("model", [HeatFlow, ParentHeatFlow])
     def test_heat_flow_uncertainty_is_five_to_twenty_five_percent(self, graph, model):
         for record in model.objects.all():
-            ratio = Reading.magnitude(record.uncertainty, "mW / m^2") / Reading.magnitude(
-                record.value, "mW / m^2"
-            )
+            ratio = Reading.magnitude(
+                record.uncertainty, "mW / m^2"
+            ) / Reading.magnitude(record.value, "mW / m^2")
 
             assert 0.048 <= ratio <= 0.252
 
