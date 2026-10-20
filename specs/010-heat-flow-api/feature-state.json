@@ -120,6 +120,19 @@
               "docs/guides/heat-flow-records-api.md:1"
             ]
           }
+        },
+        {
+          "id": "T015",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "awk 'length>88' over serializers.py and schema.py: none; uv run mypy project: no issues"
+            ],
+            "code": [
+              "project/heat_flow/serializers.py:187"
+            ]
+          }
         }
       ]
     },
@@ -196,6 +209,19 @@
             ],
             "code": [
               "project/heat_flow/serializers.py:455"
+            ]
+          }
+        },
+        {
+          "id": "T014",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "manage.py shell probe: GET /api/v1/samples/heat-flow-sites/<uuid>/ against the dev data; nested interval and child carry location and site, child 37 keys; pasted into docs/guides/heat-flow-records-api.md"
+            ],
+            "code": [
+              "docs/guides/heat-flow-records-api.md:204"
             ]
           }
         }
@@ -306,6 +332,22 @@
             ],
             "code": [
               "docs/guides/heat-flow-records-api.md:91"
+            ]
+          }
+        },
+        {
+          "id": "T013",
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_serializers.py::TestHeatFlowWrites::test_a_field_added_for_reading_is_not_written"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_serializers.py::TestHeatFlowWrites -q -n0 (read_only_fields stashed: 8 failed, each PATCH stored the supplied value; restored: 12 passed)"
+            ],
+            "code": [
+              "project/heat_flow/serializers.py:770"
             ]
           }
         }
