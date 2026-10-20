@@ -28,18 +28,21 @@
               class="bg-base-100">
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
       {% if measurement.corr_HP_flag is None %}
-        {% translate "Not recorded" as hp %}
+        {% comment %}Left empty, so the field says it is not recorded.{% endcomment %}
       {% elif measurement.corr_HP_flag %}
         {% translate "Applied" as hp %}
       {% else %}
         {% translate "Not applied" as hp %}
       {% endif %}
-      <c-heat_flow.field label="{% translate 'Heat production correction' %}"
+      <c-heat_flow.field field="corr_HP_flag"
+                         label="{% translate 'Heat production correction' %}"
                          value="{{ hp }}" />
-      <c-heat_flow.field label="{% translate 'GHFDB parent ID' %}"
+      <c-heat_flow.field field="ghfdb_id"
+                         label="{% translate 'GHFDB parent ID' %}"
                          value="{{ measurement.ghfdb_id|default_if_none:'' }}" />
     </div>
-    <c-heat_flow.field label="{% translate 'Curator comment' %}"
+    <c-heat_flow.field field="comment"
+                       label="{% translate 'Curator comment' %}"
                        value="{{ measurement.comment|default_if_none:'' }}" />
   </c-mvp.card>
   <c-card.quality.parent :parent="measurement" basis="{{ hf.basis }}" />
@@ -52,13 +55,16 @@
   {% heat_flow_page measurement as hf %}
   <c-mvp.card title="{% translate 'Site' %}"
               class="bg-base-100">
-    {% if hf.site %}
-      <a href="{{ hf.site.get_absolute_url }}"
-         class="link link-hover text-xl font-semibold leading-tight break-words">{{ hf.site }}</a>
-      <p class="text-sm text-base-content/70">{% translate "The parent heat flow is the value the database gives for this site." %}</p>
-    {% else %}
-      <p class="text-sm text-base-content/70">{% translate "The site belongs to a dataset that hasn't been published yet." %}</p>
-    {% endif %}
+    <div data-heat-flow="site"
+         {% if not hf.site %}data-state="hidden"{% endif %}>
+      {% if hf.site %}
+        <a href="{{ hf.site.get_absolute_url }}"
+           class="link link-hover text-xl font-semibold leading-tight break-words">{{ hf.site }}</a>
+        <p class="text-sm text-base-content/70">{% translate "The parent heat flow is the value the database gives for this site." %}</p>
+      {% else %}
+        <p class="text-sm text-base-content/70">{% translate "The site belongs to a dataset that hasn't been published yet." %}</p>
+      {% endif %}
+    </div>
   </c-mvp.card>
 {% endblock overview.sample %}
 {% block overview.location %}
