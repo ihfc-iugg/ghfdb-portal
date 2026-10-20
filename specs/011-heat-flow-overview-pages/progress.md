@@ -86,3 +86,10 @@ Did: Wrote the gradient and conductivity sections of `docs/guides/record-pages.m
 Verified: see the full verify run in the completion report.
 Next: full verify, then the completion report.
 Watch: none.
+
+## 2026-10-20T16:39:48Z · Implementer US4 · T012
+
+Did: `ParentHeatFlow.quality_basis()` returns the basis (single, relevant, none, empty) and the children it rests on; `refresh_quality` now calls it. Tests in `TestQualityBasis`.
+Verified: `uv run pytest tests/test_heat_flow/test_models/test_parent.py::TestQualityBasis -n0 -q`: red first (6 failed, AttributeError: no `quality_basis`), then `tests/test_heat_flow/test_models/test_parent.py -n0 -q` 37 passed, the existing `TestParentQuality` tests unchanged.
+Next: T013, `for_parent`.
+Watch: the factory's returned child holds default scores until reloaded, so a test that feeds a child to `QualityScheme.inherit` reloads it first.
