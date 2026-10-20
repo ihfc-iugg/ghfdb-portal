@@ -297,3 +297,39 @@ without removing the parent's card, which US4 and plan.md › Templates and comp
 added.
 
 **ADR:** none — test placement.
+
+## D22. The release columns the page test reads are the ones the export resource writes
+
+**Decision:** the SC-001 test takes the names in `GHFDBExportResource.Meta.export_order` that
+the resource also carries a field for, compared ignoring case. That is 63 columns. It does not
+take the resource's own field list, which includes every model field (`uuid`, `measurement_ptr`
+and so on), and it does not take the order's names alone, which list nine columns the resource
+has no field for (`ID_parent`, `quality_parent`, `quality_child`, `Quality_Code_Child`,
+`Quality_Score_Parent`, `Reviewer_name`, `Reviewer_comment`, `Review_date`, and `ID` as a
+published column). The model's `id` field matches `ID` by name, so `id` is mapped to the
+child's `ghfdb_id`, the child's own identifier.
+
+**Why:** the brief asks for the columns the resource writes, read from the resource. Neither list
+on its own is that, and a hand list is not allowed.
+
+**Revisit if:** the half-landed column work behind the xfailed tests in
+`tests/test_ghfdb/test_resources/test_export.py` is finished, and the resource declares the nine
+columns it lacks. The test then fails on each until the table names a page for it.
+
+**ADR:** none — test method.
+
+## D23. The release columns with no page of ours got a field on the page that could hold them
+
+**Decision:** `ref_igsn` is shown on the interval page (`for_interval` returns `igsn`).
+`data_reference` and `publication_reference` are shown on the child's determination card from the
+dataset's data reference and related literature. The child's corrections and its relevance carry
+`data-field`, as does the parent's value.
+
+**Why:** the table must name a page for every column. FairDM's shared page shows the identifiers
+and the citation but marks nothing a test can find. The two reference columns are always empty in
+the export, so the child's fields read the dataset's own references, the nearest stored source.
+
+**Revisit if:** the export fills those two columns from a stored value, or Forge triage prefers
+them named under the dataset page.
+
+**ADR:** none — placement of fields.
