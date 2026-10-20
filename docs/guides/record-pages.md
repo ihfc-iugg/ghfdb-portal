@@ -122,6 +122,39 @@ more there are. The **Show all** link beside that count opens the same page with
 lists every heat flow value the visitor may open. The link is absent when the page already lists
 them all.
 
+## A parent heat flow value's page
+
+A parent is designated by the database's curators, not calculated, so its page answers which heat
+flow values stand behind it. It shows:
+
+- **The designation.** The parent's value with its uncertainty and unit, whether a heat production
+  correction was applied, the curator's comment and the GHFDB parent ID. A field with nothing
+  recorded says so. A correction that was not decided is shown as not recorded, and a correction
+  recorded as not applied is shown as not applied.
+- **Quality.** The quality code, the U-score and M-score, the seven perturbation flags and the
+  scheme revision, as stored. [Quality scores](quality-scores.md) explains how the parent inherits
+  each from its children.
+- **What the quality rests on.** The card says which children the quality is inherited from. A
+  parent with one child rests on that child, whether or not it is marked relevant. A parent with
+  several children rests on the ones marked relevant. A parent with several children and none
+  marked relevant, or with no children, says that its quality could not be determined.
+- **The children.** Every child of the parent, each with its value, its quality code, its method,
+  whether it is marked relevant and a link to its page. The children the quality rests on are
+  marked as such. A parent with no children says so.
+- **A stale score.** A score stored under a scheme revision other than the current one is said to
+  be stale and is shown as stored.
+- **The site.** The site the parent represents, linked, and its location on a map.
+- **Records the visitor may not open.** A child in a dataset that has not been published is
+  counted and never named or linked. It still counts towards what the quality rests on, because
+  the quality is stored for the parent's whole set of children. The site is named only when the
+  visitor may open it.
+
+### Show all
+
+A parent with many children lists the first twenty and says how many more there are. The **Show
+all** link beside that count opens the same page with `?show=all`, which lists every child the
+visitor may open. The link is absent when the page already lists them all.
+
 ## For developers
 
 ### How the content reaches a page
@@ -161,7 +194,7 @@ and each method returns a dictionary the template reads.
 | `for_site()` | The site's parent, or that it is hidden; its intervals from shallowest to deepest, each with its children; how many intervals and children the visitor may not open; and the children counted over every interval the visitor may open. |
 | `for_interval()` | The interval's site and probe metadata. |
 | `for_gradient_or_conductivity()` | The measurement's interval and site, each `None` when the visitor may not open it, and the site's location; the children that use the measurement, with the cut at `children_shown` lifted by `show_all`, each child's method prefetched; whether the score is stale. |
-| `for_parent()` | The parent's children and the ones its quality rests on. |
+| `for_parent()` | The parent's children, the relevant ones first, with the cut at `children_shown` lifted by `show_all` and each child's method prefetched; the `basis` of the parent's quality and the keys of the children it `rests_on`, each listed child carrying its own `rests_on`; the site, `None` when the visitor may not open it, and its location; whether the score is stale. |
 
 The members every method shares:
 
@@ -178,8 +211,30 @@ The members every method shares:
 
 A list shows its first rows and says how many more there are. `intervals_shown` and
 `children_shown` set the cut for a site's intervals and for the children a page lists; `show_all`
-lifts the cut on the intervals and on the children a gradient's or a conductivity's page lists. A
-page asks for it with `?show=all`.
+lifts the cut on the intervals and on the children a gradient's, a conductivity's or a parent's
+page lists. A page asks for it with `?show=all`.
+
+### `ParentHeatFlow.quality_basis`
+
+`ParentHeatFlow.quality_basis()` says which children a parent's quality rests on. It is the one
+place the inheritance rule is written: `refresh_quality` stores the quality it names, and the
+parent's page shows the same basis. It returns the basis and the children it rests on.
+
+| Basis | When | Children it rests on |
+| --- | --- | --- |
+| `single` | The parent has one child, marked relevant or not. | That child. |
+| `relevant` | The parent has several children and some are marked relevant. | The children marked relevant. |
+| `none` | The parent has several children and none is marked relevant. | None. |
+| `empty` | The parent has no children. | None. |
+
+```python
+basis, children = parent.quality_basis()
+if basis == "none":
+    ...  # several children, none marked relevant: the quality is not determined
+```
+
+It reads all the parent's children, those the visitor may not open included, so the basis on the
+page is the one the stored quality was calculated from.
 
 ### Template tags
 
@@ -225,7 +280,9 @@ Tests find a page's content by `data-` attributes and by the records' URLs, neve
 `parent`, `intervals`, `children`, `interval`, `site`). A cut list carries `data-more`, the number it does not
 show, and a list that hides records carries `data-hidden`, how many; a site page's interval rows
 carry `data-interval` with the interval's key, and each child in a list `data-child` with the
-child's key. `data-state` marks an empty (`empty`, `none`, `not-recorded`),
+child's key; a child row on a parent's page also carries `data-relevant` and `data-rests-on`
+(`true` or `false`). The parent's quality card carries `data-quality="basis"`, whose `data-value`
+is the basis. `data-state` marks an empty (`empty`, `none`, `not-recorded`),
 hidden (`hidden`) or stale (`stale`) state. `<c-heat_flow.field>` carries `data-field="<name>"`,
 and `data-state="not-recorded"` when its value is empty; the gradient's table cells carry the same
 two attributes. A correction row carries
