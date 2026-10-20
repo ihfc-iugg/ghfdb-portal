@@ -2,7 +2,7 @@
   "feature": "010-heat-flow-api",
   "branch": "010-heat-flow-api",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "DESIGN_REVIEW",
+  "state": "IMPLEMENT",
   "state_history": [
     {
       "state": "GATE_SPEC",
@@ -23,6 +23,11 @@
       "state": "DESIGN_REVIEW",
       "at": "2026-10-20T19:18:33Z",
       "note": "design review dispatched"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-20T19:30:33Z",
+      "note": "design review approved; plan gate open; plan comment posted"
     }
   ],
   "gates": {
@@ -34,8 +39,8 @@
       ]
     },
     "plan": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "open",
+      "at": "2026-10-20T19:29:31Z"
     },
     "merge": {
       "approved_by": null,
