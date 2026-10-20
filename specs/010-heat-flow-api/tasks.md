@@ -140,3 +140,10 @@ read on its own.
       `elevation` in its `units` (D27).
 - [x] T012 [US2] Check a measurement's sample by its real type in the four models' `save`, so an
       update through the API is saved, and drop the child serializer's own workaround (D29).
+- [x] T013 [US3] Keep the seven fields added for reading read-only: a site's `type`,
+      `elevation` and `elevation_datum`, a gradient's four temperatures and a conductivity's
+      `number` (review REV-001).
+- [x] T014 [US1] Replace the guide's single-site example with a real response, carrying the
+      nested records' location and site and each child's full summary (review REV-002).
+- [x] T015 [US4] Wrap the added docstring lines at 88 characters and use the shared `editor`
+      fixture in the write tests (review REV-004, REV-005).

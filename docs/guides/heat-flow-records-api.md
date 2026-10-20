@@ -200,16 +200,18 @@ GET /api/v1/samples/heat-flow-sites/
 }
 ```
 
+The site below is cut to its first interval and that interval's first child.
+
 ```
-GET /api/v1/samples/heat-flow-sites/sQcrZXZsAnhtT5LyW55ALhs/
+GET /api/v1/samples/heat-flow-sites/sJkWMuWMhnS9i846rJtWrHN/
 ```
 
 ```json
 {
-  "url": "https://portal.heatflow.world/api/v1/samples/heat-flow-sites/sQcrZXZsAnhtT5LyW55ALhs/",
-  "uuid": "sQcrZXZsAnhtT5LyW55ALhs",
-  "name": "Hole A-1",
-  "local_id": "SAMPLE-2984",
+  "url": "https://portal.heatflow.world/api/v1/samples/heat-flow-sites/sJkWMuWMhnS9i846rJtWrHN/",
+  "uuid": "sJkWMuWMhnS9i846rJtWrHN",
+  "name": "Black Forest borehole",
+  "local_id": "1",
   "status": {
     "name": "unknown",
     "label": "Unknown",
@@ -217,35 +219,35 @@ GET /api/v1/samples/heat-flow-sites/sQcrZXZsAnhtT5LyW55ALhs/
     "vocabulary": "fairdm-sample-status"
   },
   "dataset": {
-    "uuid": "dGeJTczPv8dUTq6jGeMgE5Z",
-    "url": "https://portal.heatflow.world/api/v1/datasets/dGeJTczPv8dUTq6jGeMgE5Z/"
+    "uuid": "dkdeMQST7ux5RYv63mi775C",
+    "url": "https://portal.heatflow.world/api/v1/datasets/dkdeMQST7ux5RYv63mi775C/"
   },
   "location": {
     "type": "Point",
     "coordinates": [
-      -179.43217,
-      -79.87654
+      8.21345,
+      47.99012
     ]
   },
   "location_uncertainty": null,
-  "added": "2026-10-20T20:16:02.306569Z",
-  "modified": "2026-10-20T20:16:02.322409Z",
+  "added": "2026-10-16T09:14:27.609614Z",
+  "modified": "2026-10-16T09:14:27.609624Z",
   "type": {
     "name": "unknown",
     "label": "Unknown",
     "uri": "http://vocabulary.odm2.org/sitetype/unknown",
     "vocabulary": "sitetype"
   },
-  "elevation": 412.0,
+  "elevation": 500.0,
   "elevation_datum": {
     "name": "MSL",
     "label": "MSL",
     "uri": "http://vocabulary.odm2.org/elevationdatum/MSL",
     "vocabulary": "elevationdatum"
   },
-  "country": null,
+  "country": "Germany",
   "region": null,
-  "continent": null,
+  "continent": "Europe",
   "domain": null,
   "azimuth": null,
   "inclination": null,
@@ -256,44 +258,45 @@ GET /api/v1/samples/heat-flow-sites/sQcrZXZsAnhtT5LyW55ALhs/
     "uri": "https://heatflow.world/vocabularies/geographic-environments/onshore_continental",
     "vocabulary": "geographic-environments"
   },
-  "explo_method": {
-    "name": "drilling_clustering",
-    "label": "Drilling-Clustering",
-    "uri": "https://heatflow.world/vocabularies/exploration-methods/drilling_clustering",
-    "vocabulary": "exploration-methods"
-  },
+  "explo_method": null,
   "explo_purpose": [],
   "lithology": [],
   "age": [],
   "stratigraphy": [],
   "parent": {
-    "url": "https://portal.heatflow.world/api/v1/measurements/parent-heat-flow/mgLFmNMQmYsjQ26EsMTkScb/",
-    "uuid": "mgLFmNMQmYsjQ26EsMTkScb",
-    "name": "Hole A-1 parent",
+    "url": "https://portal.heatflow.world/api/v1/measurements/parent-heat-flow/mNnoHFFHGMS2Cpo52hvDRKt/",
+    "uuid": "mNnoHFFHGMS2Cpo52hvDRKt",
+    "name": "1",
     "sample": {
-      "uuid": "sQcrZXZsAnhtT5LyW55ALhs",
-      "url": "https://portal.heatflow.world/api/v1/samples/heat-flow-sites/sQcrZXZsAnhtT5LyW55ALhs/"
+      "uuid": "sJkWMuWMhnS9i846rJtWrHN",
+      "url": "https://portal.heatflow.world/api/v1/samples/heat-flow-sites/sJkWMuWMhnS9i846rJtWrHN/"
     },
     "dataset": {
-      "uuid": "dGeJTczPv8dUTq6jGeMgE5Z",
-      "url": "https://portal.heatflow.world/api/v1/datasets/dGeJTczPv8dUTq6jGeMgE5Z/"
+      "uuid": "dkdeMQST7ux5RYv63mi775C",
+      "url": "https://portal.heatflow.world/api/v1/datasets/dkdeMQST7ux5RYv63mi775C/"
     },
-    "location": null,
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        8.21345,
+        47.99012
+      ]
+    },
     "location_uncertainty": null,
-    "added": "2026-10-20T20:16:02.334121Z",
-    "modified": "2026-10-20T20:16:02.344461Z",
-    "value": 64.5,
-    "uncertainty": 6.1,
-    "corr_HP_flag": null,
-    "comment": null,
+    "added": "2026-10-16T09:14:27.626252Z",
+    "modified": "2026-10-16T09:14:27.626259Z",
+    "value": 70.0,
+    "uncertainty": 5.0,
+    "corr_HP_flag": false,
+    "comment": "",
     "U_score": "U2",
     "M_score": "Mx",
     "quality": "U2.Mx.-------",
     "quality_scheme": "hfqa_tool 0.2",
-    "ghfdb_id": null,
+    "ghfdb_id": 1,
     "site": {
-      "uuid": "sQcrZXZsAnhtT5LyW55ALhs",
-      "url": "https://portal.heatflow.world/api/v1/samples/heat-flow-sites/sQcrZXZsAnhtT5LyW55ALhs/"
+      "uuid": "sJkWMuWMhnS9i846rJtWrHN",
+      "url": "https://portal.heatflow.world/api/v1/samples/heat-flow-sites/sJkWMuWMhnS9i846rJtWrHN/"
     },
     "units": {
       "value": "mW/m²",
@@ -301,17 +304,17 @@ GET /api/v1/samples/heat-flow-sites/sQcrZXZsAnhtT5LyW55ALhs/
     }
   },
   "units": {
+    "elevation": "m",
     "azimuth": "deg",
     "inclination": "deg",
-    "length": "m",
-    "elevation": "m"
+    "length": "m"
   },
   "intervals": [
     {
-      "url": "https://portal.heatflow.world/api/v1/samples/depth-intervals/stemVCKGnvWzPRqqxXGuDRk/",
-      "uuid": "stemVCKGnvWzPRqqxXGuDRk",
-      "name": "Hole A-1 100-200 m",
-      "local_id": "SAMPLE-1680",
+      "url": "https://portal.heatflow.world/api/v1/samples/depth-intervals/sKhtqx2D3MpBQP6a9FJTTfH/",
+      "uuid": "sKhtqx2D3MpBQP6a9FJTTfH",
+      "name": "",
+      "local_id": null,
       "status": {
         "name": "unknown",
         "label": "Unknown",
@@ -319,20 +322,30 @@ GET /api/v1/samples/heat-flow-sites/sQcrZXZsAnhtT5LyW55ALhs/
         "vocabulary": "fairdm-sample-status"
       },
       "dataset": {
-        "uuid": "dGeJTczPv8dUTq6jGeMgE5Z",
-        "url": "https://portal.heatflow.world/api/v1/datasets/dGeJTczPv8dUTq6jGeMgE5Z/"
+        "uuid": "dkdeMQST7ux5RYv63mi775C",
+        "url": "https://portal.heatflow.world/api/v1/datasets/dkdeMQST7ux5RYv63mi775C/"
       },
-      "location": null,
+      "location": {
+        "type": "Point",
+        "coordinates": [
+          8.21345,
+          47.99012
+        ]
+      },
       "location_uncertainty": null,
-      "added": "2026-10-20T20:16:02.350163Z",
-      "modified": "2026-10-20T20:16:02.363405Z",
-      "top": 100.0,
-      "bottom": 200.0,
-      "vertical_depth": 100.0,
+      "added": "2026-10-16T09:14:27.783820Z",
+      "modified": "2026-10-16T09:14:27.783831Z",
+      "top": 0.0,
+      "bottom": 500.0,
+      "vertical_depth": 500.0,
       "vertical_datum": "MSL",
       "lithology": [],
       "age": [],
       "stratigraphy": [],
+      "site": {
+        "uuid": "sJkWMuWMhnS9i846rJtWrHN",
+        "url": "https://portal.heatflow.world/api/v1/samples/heat-flow-sites/sJkWMuWMhnS9i846rJtWrHN/"
+      },
       "units": {
         "top": "m",
         "bottom": "m",
@@ -340,29 +353,61 @@ GET /api/v1/samples/heat-flow-sites/sQcrZXZsAnhtT5LyW55ALhs/
       },
       "children": [
         {
-          "url": "https://portal.heatflow.world/api/v1/measurements/heat-flow/mevMsNs3mw3w6kFCmXQvMc4/",
-          "uuid": "mevMsNs3mw3w6kFCmXQvMc4",
-          "name": "Hole A-1 100-200 m heat flow",
+          "url": "https://portal.heatflow.world/api/v1/measurements/heat-flow/mk83wFcgUTynziyfjvgLp24/",
+          "uuid": "mk83wFcgUTynziyfjvgLp24",
+          "name": "1",
           "sample": {
-            "uuid": "stemVCKGnvWzPRqqxXGuDRk",
-            "url": "https://portal.heatflow.world/api/v1/samples/depth-intervals/stemVCKGnvWzPRqqxXGuDRk/"
+            "uuid": "sKhtqx2D3MpBQP6a9FJTTfH",
+            "url": "https://portal.heatflow.world/api/v1/samples/depth-intervals/sKhtqx2D3MpBQP6a9FJTTfH/"
           },
           "dataset": {
-            "uuid": "dGeJTczPv8dUTq6jGeMgE5Z",
-            "url": "https://portal.heatflow.world/api/v1/datasets/dGeJTczPv8dUTq6jGeMgE5Z/"
+            "uuid": "dkdeMQST7ux5RYv63mi775C",
+            "url": "https://portal.heatflow.world/api/v1/datasets/dkdeMQST7ux5RYv63mi775C/"
           },
-          "location": null,
+          "location": {
+            "type": "Point",
+            "coordinates": [
+              8.21345,
+              47.99012
+            ]
+          },
           "location_uncertainty": null,
-          "added": "2026-10-20T20:16:02.372638Z",
-          "modified": "2026-10-20T20:16:02.401317Z",
-          "value": 66.2,
+          "added": "2026-10-16T09:14:27.798722Z",
+          "modified": "2026-10-16T09:14:27.798729Z",
+          "value": 70.0,
           "uncertainty": 5.0,
+          "surface_temperature": null,
+          "date_acquired": null,
           "method": [],
-          "expedition": null,
-          "c_comment": null,
+          "expedition": "",
+          "c_comment": "",
+          "U_score": "U2",
+          "M_score": "Mx",
+          "T_score": null,
+          "T_score_missing": false,
+          "TC_score": null,
+          "TC_score_missing": false,
+          "quality": "U2.Mx.-------",
+          "quality_scheme": "hfqa_tool 0.2",
+          "ghfdb_id": 1,
+          "is_relevant": true,
+          "parent": {
+            "uuid": "mNnoHFFHGMS2Cpo52hvDRKt",
+            "url": "https://portal.heatflow.world/api/v1/measurements/parent-heat-flow/mNnoHFFHGMS2Cpo52hvDRKt/"
+          },
+          "thermal_gradient": null,
+          "thermal_conductivity": {
+            "uuid": "m5MQyqUMgxtJFMPGHh4p6r5",
+            "url": "https://portal.heatflow.world/api/v1/measurements/thermal-conductivities/m5MQyqUMgxtJFMPGHh4p6r5/"
+          },
+          "site": {
+            "uuid": "sJkWMuWMhnS9i846rJtWrHN",
+            "url": "https://portal.heatflow.world/api/v1/samples/heat-flow-sites/sJkWMuWMhnS9i846rJtWrHN/"
+          },
           "units": {
             "value": "mW/m²",
-            "uncertainty": "mW/m²"
+            "uncertainty": "mW/m²",
+            "surface_temperature": "°C"
           }
         }
       ]

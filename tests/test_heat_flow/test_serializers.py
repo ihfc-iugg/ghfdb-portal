@@ -225,16 +225,7 @@ class TestHeatFlowRecordSerializer:
 
 @pytest.mark.django_db
 class TestHeatFlowWrites:
-    @pytest.fixture
-    def writer(self, client, public_dataset):
-        user = UserFactory()
-        credit = public_dataset.add_contributor(user)
-        credit.level = ContributionLevel.EDIT
-        credit.save()
-        client.force_login(user)
-        return client
-
-    def create_site(self, writer, dataset, **extra):
+    def create_site(self, editor, dataset, **extra):
         # The many-valued fields are sent empty, as the generated serializer
         # requires them to be present and could not read anything else.
         body = {
@@ -247,12 +238,12 @@ class TestHeatFlowWrites:
             "stratigraphy": [],
             **extra,
         }
-        return writer.post(SITES, body, content_type="application/json")
+        return editor.post(SITES, body, content_type="application/json")
 
     def test_a_site_is_created_with_a_terms_name_and_stores_that_term(
-        self, writer, public_dataset
+        self, editor, public_dataset
     ):
-        response = self.create_site(writer, public_dataset)
+        response = self.create_site(editor, public_dataset)
 
         assert response.status_code == 201, response.content
         site = HeatFlowSite.objects.get(name="Written site")
@@ -260,18 +251,18 @@ class TestHeatFlowWrites:
         assert response.json()["environment"]["name"] == "onshore_continental"
 
     def test_a_quantity_written_as_a_number_is_stored_and_read_back(
-        self, writer, public_dataset
+        self, editor, public_dataset
     ):
-        response = self.create_site(writer, public_dataset, azimuth=30.5)
+        response = self.create_site(editor, public_dataset, azimuth=30.5)
 
         assert response.status_code == 201, response.content
         assert response.json()["azimuth"] == 30.5
         assert HeatFlowSite.objects.get(name="Written site").azimuth.magnitude == 30.5
 
     def test_a_write_supplying_stratigraphy_leaves_it_unchanged(
-        self, writer, public_dataset
+        self, editor, public_dataset
     ):
-        response = self.create_site(writer, public_dataset, stratigraphy=["Jurassic"])
+        response = self.create_site(editor, public_dataset, stratigraphy=["Jurassic"])
 
         assert response.status_code == 201, response.content
         site = HeatFlowSite.objects.get(name="Written site")
@@ -281,6 +272,39 @@ class TestHeatFlowWrites:
         errors = [error for error in run_checks() if error.id == "fairdm.E600"]
 
         assert errors == []
+
+    @pytest.mark.parametrize(
+        ("route", "factory", "supplied"),
+        [
+            (SITES, HeatFlowSiteFactory, {"elevation": 999}),
+            (SITES, HeatFlowSiteFactory, {"elevation_datum": "EGM96"}),
+            (SITES, HeatFlowSiteFactory, {"type": "cave"}),
+            (GRADIENTS, ThermalGradientFactory, {"temperature_top": 99}),
+            (GRADIENTS, ThermalGradientFactory, {"temperature_bottom": 99}),
+            (GRADIENTS, ThermalGradientFactory, {"temperature_top_uncertainty": 9}),
+            (
+                GRADIENTS,
+                ThermalGradientFactory,
+                {"temperature_bottom_uncertainty": 9},
+            ),
+            (CONDUCTIVITIES, IntervalConductivityFactory, {"number": 77}),
+        ],
+    )
+    def test_a_field_added_for_reading_is_not_written(
+        self, editor, public_dataset, route, factory, supplied
+    ):
+        record = factory(dataset=public_dataset)
+        record.refresh_from_db()
+        (name,) = supplied
+        stored = str(getattr(record, name))
+
+        response = editor.patch(
+            f"{route}{record.uuid}/", supplied, content_type="application/json"
+        )
+
+        assert response.status_code == 200, response.content
+        record.refresh_from_db()
+        assert str(getattr(record, name)) == stored
 
 
 def detail(client, route, record):

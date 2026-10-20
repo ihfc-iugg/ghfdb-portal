@@ -13,7 +13,7 @@ from .serializers import QuantityNumber
 
 
 class HeatFlowRecordSchema(OpenApiSerializerExtension):
-    """Describes a list of records as their summary and every other operation in full."""
+    """Describes a list of records as their summary and any other operation in full."""
 
     target_class = "heat_flow.serializers.HeatFlowRecordSerializer"
     match_subclasses = True
@@ -124,7 +124,7 @@ class UnitsFieldSchema(OpenApiSerializerFieldExtension):
             direction: Whether the field is read or written.
 
         Returns:
-            An object with one property for each quantity field, each limited to its unit.
+            An object with one property per quantity field, each limited to its unit.
         """
         return build_object_type(
             properties={

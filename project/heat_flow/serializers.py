@@ -184,7 +184,7 @@ class QuantityFloatField(QuantityNumber, serializers.FloatField):
 
 
 class QuantityDecimalField(QuantityNumber, serializers.DecimalField):
-    """A decimal quantity, given as a float because the renderer would write a string."""
+    """A decimal quantity, given as a float, as the renderer would write a string."""
 
 
 class QuantityIntegerField(QuantityNumber, serializers.IntegerField):
@@ -315,7 +315,7 @@ class RequesterVisibility(serializers.BaseSerializer):
         return cast(dict[str, Any], self.context)
 
     def narrow(self, queryset: Any) -> Any:
-        """Keep the records the requester may see, by the rule of the record's own route.
+        """Keep the records the requester may see, by the rule of their own route.
 
         Args:
             queryset: Samples or measurements of one model.
@@ -402,7 +402,7 @@ class HeatFlowRecordSerializer(RequesterVisibility, serializers.ModelSerializer)
 
         Args:
             *args: Passed to the child serializer and the list.
-            **kwargs: Passed to the child serializer, and those a list takes to the list.
+            **kwargs: Passed to the child serializer, and the list's own to the list.
 
         Returns:
             The list serializer, whatever the ``Meta`` of the serializer says.
@@ -443,7 +443,8 @@ class HeatFlowRecordSerializer(RequesterVisibility, serializers.ModelSerializer)
             if isinstance(field, ConceptManyToManyField)
             and field.name in cls.Meta.fields
         ]
-        return super().load_related(queryset).prefetch_related(*terms)  # type: ignore[misc]
+        loaded = super().load_related(queryset)  # type: ignore[misc]
+        return loaded.prefetch_related(*terms)
 
     @classmethod
     def loaded(cls, queryset: Any) -> Any:
@@ -577,7 +578,7 @@ class HeatFlowRecordSerializer(RequesterVisibility, serializers.ModelSerializer)
 
 
 class SitePlacedSerializer(HeatFlowRecordSerializer):
-    """A record placed at a site: it carries the site's coordinates and a reference to it.
+    """A record placed at a site, carrying the site's coordinates and a reference to it.
 
     Attributes:
         site_path: The relations from the record to its site, selected with the record.
@@ -656,6 +657,12 @@ class HeatFlowSiteSummarySerializer(HeatFlowRecordSerializer, BaseSampleSerializ
             "parent",
             *BaseSampleSerializer.metadata_fields,
             "units",
+        ]
+        read_only_fields = [
+            *BaseSampleSerializer.Meta.read_only_fields,
+            "type",
+            "elevation",
+            "elevation_datum",
         ]
 
     def prime_context(self, records: list[Any]) -> None:
@@ -789,6 +796,13 @@ class ThermalGradientSummarySerializer(SitePlacedSerializer, BaseMeasurementSeri
             *BaseMeasurementSerializer.metadata_fields,
             "units",
         ]
+        read_only_fields = [
+            *BaseMeasurementSerializer.Meta.read_only_fields,
+            "temperature_top",
+            "temperature_top_uncertainty",
+            "temperature_bottom",
+            "temperature_bottom_uncertainty",
+        ]
 
 
 class IntervalConductivitySummarySerializer(
@@ -816,6 +830,10 @@ class IntervalConductivitySummarySerializer(
             "site",
             *BaseMeasurementSerializer.metadata_fields,
             "units",
+        ]
+        read_only_fields = [
+            *BaseMeasurementSerializer.Meta.read_only_fields,
+            "number",
         ]
 
 
@@ -928,7 +946,7 @@ class HeatFlowCorrectionSerializer(serializers.ModelSerializer):
 
 
 class HeatFlowSerializer(HeatFlowSummarySerializer):
-    """A child heat flow with its gradient and conductivity whole and its corrections."""
+    """A child heat flow with its gradient, its conductivity and its corrections."""
 
     summary_serializer = HeatFlowSummarySerializer
 
