@@ -244,6 +244,23 @@
               "tests/test_heat_flow/test_demo.py:62"
             ]
           }
+        },
+        {
+          "id": "T013",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_models/test_child.py::TestIntervalConductivity",
+              "tests/test_heat_flow/test_demo.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow (532 passed); new tests failed with ValueError before the fix"
+            ],
+            "code": [
+              "project/heat_flow/models/child.py:987"
+            ]
+          }
         }
       ]
     },
