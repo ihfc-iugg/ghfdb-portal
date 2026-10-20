@@ -71,6 +71,7 @@ guides/introduction
 guides/map-exploration/index
 guides/importing-data
 guides/assessment-uploads
+guides/record-pages
 guides/quality-scores
 guides/published-structure-api
 :::

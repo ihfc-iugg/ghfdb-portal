@@ -243,3 +243,87 @@ def empty_database():
     with maintenance.cursor() as cursor:
         cursor.execute(f'DROP DATABASE IF EXISTS "{name}" WITH (FORCE)')
     maintenance.close()
+
+
+@pytest.fixture
+def published_dataset(db):
+    """A dataset anyone may open: public and published."""
+    from fairdm.factories import DatasetFactory
+    from fairdm.utils.choices import Visibility
+
+    return DatasetFactory(visibility=Visibility.PUBLIC, published=True)
+
+
+@pytest.fixture
+def unpublished_dataset(db):
+    """A dataset only its team may open: public but not yet published."""
+    from fairdm.factories import DatasetFactory
+    from fairdm.utils.choices import Visibility
+
+    return DatasetFactory(visibility=Visibility.PUBLIC, published=False)
+
+
+@pytest.fixture
+def member(unpublished_dataset):
+    """A signed-in person who may view the unpublished dataset."""
+    from fairdm.contrib.contributors.choices import ContributionLevel
+    from fairdm.factories import ContributionFactory, PersonFactory
+
+    person = PersonFactory(is_claimed=True, password="test-pass-123")
+    ContributionFactory(
+        contributor=person,
+        content_object=unpublished_dataset,
+        level=ContributionLevel.VIEW,
+    )
+    return person
+
+
+@pytest.fixture
+def page_records(published_dataset):
+    """A child with every record its page names, all in the published dataset."""
+    from tests.factories import (
+        HeatFlowFactory,
+        HeatFlowIntervalFactory,
+        HeatFlowSiteFactory,
+        IntervalConductivityFactory,
+        ParentHeatFlowFactory,
+        ThermalGradientFactory,
+    )
+
+    # The exploration method decides whether a measurement can be scored at all, so it
+    # is set rather than left to the factory's random choice.
+    site = HeatFlowSiteFactory(dataset=published_dataset, explo_method="drilling")
+    interval = HeatFlowIntervalFactory(
+        dataset=published_dataset, site=site, top=0, bottom=500
+    )
+    gradient = ThermalGradientFactory(dataset=published_dataset, sample=interval)
+    conductivity = IntervalConductivityFactory(
+        dataset=published_dataset, sample=interval
+    )
+    parent = ParentHeatFlowFactory(dataset=published_dataset, sample=site)
+    child = HeatFlowFactory(
+        dataset=published_dataset,
+        sample=interval,
+        thermal_gradient=gradient,
+        thermal_conductivity=conductivity,
+        parent=parent,
+    )
+    return {
+        "site": site,
+        "interval": interval,
+        "gradient": gradient,
+        "conductivity": conductivity,
+        "parent": parent,
+        "child": child,
+    }
+
+
+@pytest.fixture
+def hide(unpublished_dataset):
+    """Return a function that moves a record into the unpublished dataset."""
+
+    def move(record):
+        type(record).objects.filter(pk=record.pk).update(dataset=unpublished_dataset)
+        record.refresh_from_db()
+
+    return move

@@ -478,9 +478,7 @@ class TestRoute:
         assert route(site) is BoreholeRules
 
     @pytest.mark.parametrize("explo_method", ["other", "unspecified", None])
-    def test_other_unspecified_and_empty_methods_are_not_determined(
-        self, explo_method
-    ):
+    def test_other_unspecified_and_empty_methods_are_not_determined(self, explo_method):
         from heat_flow.quality import route
 
         site = HeatFlowSiteFactory(explo_method=explo_method)
@@ -529,9 +527,7 @@ class TestConformance:
         tc = rules.conductivity(conductivity)
 
         assert t.value == pytest.approx(inputs.get("T_uncorrected", inputs["T"]))
-        assert tc.value == pytest.approx(
-            inputs.get("TC_uncorrected", inputs["TC"])
-        )
+        assert tc.value == pytest.approx(inputs.get("TC_uncorrected", inputs["TC"]))
 
 
 class TestProbeGradient:
@@ -564,9 +560,7 @@ class TestProbeGradient:
         ("number", "penalty"),
         [(6, 0.1), (5, 0.0), (3, 0.0), (2, -0.1), (1, -0.2)],
     )
-    def test_recording_bins_distinguish_two_from_fewer_and_more(
-        self, number, penalty
-    ):
+    def test_recording_bins_distinguish_two_from_fewer_and_more(self, number, penalty):
         # Penetration 5 adds nothing.
         score = self.score(self.probe_gradient(number=number))
 
@@ -576,9 +570,7 @@ class TestProbeGradient:
         ("elevation", "penalty"),
         [(-2500.01, 0.0), (-2500, -0.1), (-1500.01, -0.1), (-1500, -0.2)],
     )
-    def test_water_depth_bins_read_the_depth_below_sea_level(
-        self, elevation, penalty
-    ):
+    def test_water_depth_bins_read_the_depth_below_sea_level(self, elevation, penalty):
         score = self.score(self.probe_gradient(elevation=elevation))
 
         assert score.value == pytest.approx(1.1 + penalty)
@@ -1192,7 +1184,10 @@ class TestPerturbationFlags:
     def test_the_remaining_statuses(self, status, expected):
         from heat_flow.quality import QualityScheme
 
-        assert QualityScheme.perturbation_flags({"PAL": status}) == "---" + expected + "---"
+        assert (
+            QualityScheme.perturbation_flags({"PAL": status})
+            == "---" + expected + "---"
+        )
 
     def test_the_in_situ_and_temperature_corrections_write_no_flag(self):
         from heat_flow.quality import QualityScheme

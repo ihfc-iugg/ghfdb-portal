@@ -501,3 +501,63 @@ class TestParentQuality:
         assert field.editable is False
         assert str(field.verbose_name).strip()
         assert str(field.help_text).strip()
+
+
+@pytest.mark.django_db
+class TestQualityBasis:
+    """A parent says which of its children its quality rests on (FS-011 US4)."""
+
+    @pytest.mark.parametrize("is_relevant", [True, False])
+    def test_an_only_child_is_the_basis_whether_or_not_it_is_relevant(
+        self, is_relevant
+    ):
+        from tests.factories import ParentHeatFlowFactory
+
+        parent = ParentHeatFlowFactory()
+        child = child_of(parent, "U2", is_relevant=is_relevant)
+
+        basis, children = parent.quality_basis()
+
+        assert basis == "single"
+        assert children == [child]
+
+    def test_several_children_rest_on_the_ones_marked_relevant(self):
+        from tests.factories import ParentHeatFlowFactory
+
+        parent = ParentHeatFlowFactory()
+        first = child_of(parent, "U1", is_relevant=True)
+        second = child_of(parent, "U3", is_relevant=True)
+        child_of(parent, "U4", is_relevant=False)
+
+        basis, children = parent.quality_basis()
+
+        assert basis == "relevant"
+        assert set(children) == {first, second}
+
+    def test_several_children_and_none_relevant_rest_on_nothing(self):
+        from tests.factories import ParentHeatFlowFactory
+
+        parent = ParentHeatFlowFactory()
+        child_of(parent, "U1")
+        child_of(parent, "U2")
+
+        assert parent.quality_basis() == ("none", [])
+
+    def test_a_parent_with_no_children_rests_on_nothing(self):
+        from tests.factories import ParentHeatFlowFactory
+
+        parent = ParentHeatFlowFactory()
+
+        assert parent.quality_basis() == ("empty", [])
+
+    def test_refresh_quality_inherits_from_the_children_the_basis_names(self):
+        from tests.factories import ParentHeatFlowFactory
+
+        parent = ParentHeatFlowFactory()
+        child_of(parent, "U1", is_relevant=True)
+        child_of(parent, "U4", is_relevant=False)
+
+        parent.refresh_quality()
+
+        assert parent.quality_basis()[0] == "relevant"
+        assert reload(parent).U_score == "U1"

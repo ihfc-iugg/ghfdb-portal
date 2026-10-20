@@ -1,0 +1,541 @@
+{
+  "feature": "011-heat-flow-overview-pages",
+  "branch": "011-heat-flow-overview-pages",
+  "repo": "ihfc-iugg/ghfdb-portal",
+  "state": "PR_READY",
+  "state_history": [
+    {
+      "state": "GATE_SPEC",
+      "at": "2026-10-20T13:00:00Z",
+      "note": "specification approved on PR #290 by delegated review at eb59f71"
+    },
+    {
+      "state": "QUEUED",
+      "at": "2026-10-20T13:00:04Z",
+      "note": "epic #288, stories #292-#296"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-20T13:24:26Z",
+      "note": "sketch passed by delegated review; research, plan and tasks authored"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-20T13:37:35Z",
+      "note": "design review dispatched"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-20T13:54:11Z",
+      "note": "design review approved; plan gate open; plan comment posted"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-20T17:43:14Z",
+      "note": "all five stories accepted"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-20T17:52:21Z",
+      "note": "converged: verify green, ADR 0024, story comments green"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-20T18:21:10Z",
+      "note": "review approved, fixes verified, walkthrough laid out"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "delegated review",
+      "at": "2026-10-20T13:00:00Z",
+      "self_resolved": [
+        "approved at eb59f7164ec2d6d41c5321bbe2a06c3182a36085 under the 2026-10-20 delegation (spec gate opened: All gates open.)"
+      ]
+    },
+    "sketch": {
+      "approved_by": "delegated review",
+      "at": "2026-10-20T13:18:24Z",
+      "self_resolved": [
+        "cut-off of 20 with Show all kept as built",
+        "site figures strip (parent value, interval count, heat flow count) kept as built"
+      ]
+    },
+    "plan": {
+      "approved_by": "open",
+      "at": "2026-10-20T13:24:26Z"
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-20T18:21:13Z",
+      "self_resolved": []
+    }
+  },
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 292,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_overview.py::TestHeatFlowPageSplit",
+              "tests/test_heat_flow/test_overview.py::TestHeatFlowPageForChild",
+              "tests/test_heat_flow/test_overview.py::TestHeatFlowPageOpens"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_overview.py -q -n0 (red: ImportError for HeatFlowPage, exit 2; green 32 passed, exit 0; probe: visible_to removed -> 8 failed)"
+            ],
+            "code": [
+              "project/heat_flow/overview.py:107",
+              "project/heat_flow/overview.py:119"
+            ]
+          }
+        },
+        {
+          "id": "T002",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_templatetags/test_heat_flow_overview.py::TestLabels",
+              "tests/test_heat_flow/test_templatetags/test_heat_flow_overview.py::TestPlusMinus",
+              "tests/test_heat_flow/test_templatetags/test_heat_flow_overview.py::TestHeatFlowPage",
+              "tests/test_heat_flow/test_templatetags/test_heat_flow_overview.py::TestOverviewPages"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_templatetags -q -n0 (red: plus_minus not a filter, tag gathered twice; page smoke red against the old templates; green 18 passed)"
+            ],
+            "code": [
+              "project/heat_flow/templatetags/heat_flow_overview.py:12",
+              "project/heat_flow/templatetags/heat_flow_overview.py:36",
+              "project/heat_flow/templatetags/heat_flow_overview.py:56"
+            ]
+          }
+        },
+        {
+          "id": "T003",
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_templates/test_heatflow_overview.py::TestChildPage",
+              "tests/test_templates/test_heatflow_overview.py::TestChildPageForARecordTheVisitorMayNotOpen",
+              "tests/test_templates/test_heatflow_overview.py::TestChildPageKeepsFairDMsPage",
+              "tests/test_templates/test_heatflow_overview.py::TestChildCard"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templates/test_heatflow_overview.py -q -n0 (red before the hooks: 28 failed 7 passed; green: 35 passed; probe: quality card reading through the child fails test_a_hidden_gradient_shows_no_score_in_the_quality_card)"
+            ],
+            "code": [
+              "templates/cotton/card/quality/index.html:12",
+              "templates/cotton/heat_flow/field.html:8",
+              "templates/cotton/heat_flow/measured_on.html:10"
+            ]
+          }
+        },
+        {
+          "id": "T004",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "UV_PROJECT_ENVIRONMENT=<scratch env> uv run --frozen --offline --group docs sphinx-build -E -b html docs <scratch out> (build succeeded, 32 warnings, all in pages this story did not touch); forge verify --steps docs --base origin/main (passed)"
+            ],
+            "code": [
+              "docs/guides/record-pages.md:1"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P1",
+      "issue": 293,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T005",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_overview.py::TestHeatFlowPageForSite"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_overview.py -k ForSite -q"
+            ],
+            "code": [
+              "project/heat_flow/overview.py:152"
+            ]
+          }
+        },
+        {
+          "id": "T006",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templates/test_heatflowsite_overview.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templates/test_heatflowsite_overview.py -q"
+            ],
+            "code": [
+              "project/heat_flow/templates/heat_flow/heatflowsite_overview.html:120",
+              "project/heat_flow/templatetags/heat_flow_overview.py:29"
+            ]
+          }
+        },
+        {
+          "id": "T007",
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_management/test_commands/test_seed_demo_data.py::TestSeedDemoDataPageStates",
+              "tests/test_heat_flow/test_demo.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_review/test_management/test_commands/test_seed_demo_data.py -n 4 (56 passed)",
+              "guard removed: test_a_run_without_the_option_varies_nothing FAILED, restored"
+            ],
+            "code": [
+              "project/review/management/commands/seed_demo_data.py:164",
+              "project/heat_flow/demo.py:1"
+            ]
+          }
+        },
+        {
+          "id": "T008",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "forge verify --base origin/main (docs step passed)"
+            ],
+            "code": [
+              "docs/guides/record-pages.md:52"
+            ]
+          }
+        },
+        {
+          "id": "T019",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templates/test_heatflowsite_overview.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templates/test_heatflowsite_overview.py (22 passed, three runs)"
+            ],
+            "code": [
+              "tests/test_templates/test_heatflowsite_overview.py:41"
+            ]
+          }
+        },
+        {
+          "id": "T020",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_demo.py::TestVaryPageStates::test_the_parent_with_no_children_stores_no_inherited_quality"
+            ],
+            "commands": [
+              "uv run pytest -q -p no:randomly tests/test_heat_flow/test_demo.py::TestVaryPageStates (green)",
+              "parent refresh removed: the new test FAILED, restored"
+            ],
+            "code": [
+              "project/heat_flow/demo.py:199"
+            ]
+          }
+        },
+        {
+          "id": "T021",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_overview.py"
+            ],
+            "commands": [
+              "uv run pytest -q -p no:randomly tests/test_heat_flow/test_overview.py (green)",
+              "visible_to removed from the count: test_the_children_count_leaves_out_those_the_visitor_may_not_open FAILED, restored"
+            ],
+            "code": [
+              "project/heat_flow/overview.py:203"
+            ]
+          }
+        },
+        {
+          "id": "T023",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_management/test_commands/test_seed_demo_data.py"
+            ],
+            "commands": [
+              "uv run ruff check; uv run ruff format --check (clean)"
+            ],
+            "code": [
+              "project/review/management/commands/seed_demo_data.py:121"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P2",
+      "issue": 294,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T009",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_overview.py::TestHeatFlowPageForGradientOrConductivity"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_overview.py -k ForGradientOrConductivity -q"
+            ],
+            "code": [
+              "project/heat_flow/overview.py:252"
+            ]
+          }
+        },
+        {
+          "id": "T010",
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_templates/test_thermalgradient_overview.py",
+              "tests/test_templates/test_intervalconductivity_overview.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templates tests/test_heat_flow/test_overview.py -q -n auto --dist loadscope"
+            ],
+            "code": [
+              "templates/cotton/heat_flow/children.html:11",
+              "project/heat_flow/templates/heat_flow/thermalgradient_overview.html:13",
+              "project/heat_flow/templates/heat_flow/intervalconductivity_overview.html:13"
+            ]
+          }
+        },
+        {
+          "id": "T011",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_docs"
+            ],
+            "commands": [
+              "forge verify --base origin/main"
+            ],
+            "code": [
+              "docs/guides/record-pages.md:1"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US4",
+      "priority": "P2",
+      "issue": 295,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T012",
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_models/test_parent.py::TestQualityBasis"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_models/test_parent.py -n0 -q"
+            ],
+            "code": [
+              "project/heat_flow/models/parent.py:336"
+            ]
+          }
+        },
+        {
+          "id": "T013",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_overview.py::TestHeatFlowPageForParent"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_overview.py -k ForParent -n0 -q"
+            ],
+            "code": [
+              "project/heat_flow/overview.py:282"
+            ]
+          }
+        },
+        {
+          "id": "T014",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templates/test_parentheatflow_overview.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templates/test_parentheatflow_overview.py -n0 -q"
+            ],
+            "code": [
+              "project/heat_flow/templates/heat_flow/parentheatflow_overview.html:36"
+            ]
+          }
+        },
+        {
+          "id": "T015",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_docs"
+            ],
+            "commands": [
+              "forge verify --base origin/main (docs step)"
+            ],
+            "code": [
+              "docs/guides/record-pages.md:1"
+            ]
+          }
+        },
+        {
+          "id": "T022",
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_models/test_parent.py"
+            ],
+            "commands": [
+              "uv run pytest -q -p no:randomly tests/test_heat_flow/test_models/test_parent.py (green)",
+              "refresh_quality inheriting from all children: the test FAILED, restored"
+            ],
+            "code": [
+              "tests/test_heat_flow/test_models/test_parent.py:553"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US5",
+      "priority": "P3",
+      "issue": 296,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T016",
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_overview.py::TestHeatFlowPageForInterval",
+              "tests/test_heat_flow/test_overview.py::TestHeatFlowPageSiteLocation"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_overview.py -n0 -q"
+            ],
+            "code": [
+              "project/heat_flow/overview.py:226"
+            ]
+          }
+        },
+        {
+          "id": "T017",
+          "status": "done",
+          "attempts": 3,
+          "evidence": {
+            "tests": [
+              "tests/test_templates/test_heatflowinterval_overview.py",
+              "tests/test_heat_flow/test_overview.py::TestHeatFlowPageForInterval"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_overview.py tests/test_templates -n0 -q"
+            ],
+            "code": [
+              "templates/cotton/heat_flow/site_location.html:5",
+              "project/heat_flow/templates/heat_flow/heatflowinterval_overview.html:28"
+            ]
+          }
+        },
+        {
+          "id": "T018",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templates/test_heatflowinterval_overview.py::TestReleaseColumns"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templates/test_heatflowinterval_overview.py -n0 -q"
+            ],
+            "code": [
+              "docs/guides/record-pages.md:60"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 1,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "tokens": {
+      "used": 58.51,
+      "max": 120
+    }
+  },
+  "pr": {
+    "number": 290,
+    "draft": false
+  },
+  "escalations": []
+}

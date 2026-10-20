@@ -357,11 +357,12 @@ value that was never stored, so importing that file again is the repair for a mi
 
 ## Where you see the scores
 
-The scores are shown in a *Quality score* card. The card is not on any page at present: the
-measurement page it was placed on has been replaced by the framework's own measurement overview,
-and the card returns with the portal's measurement pages. The card reads the stored fields and
-calculates nothing, so it shows what a filter on those fields would find. Other measurement types,
-such as a parent heat flow, have no card.
+The scores are shown in a *Quality score* card on a child heat flow value's page, described in
+[Record pages](record-pages.md). The card reads the stored fields and calculates nothing, so it
+shows what a filter on those fields would find. A gradient's, a conductivity's and a parent's
+page do not show a card yet. A gradient or conductivity the visitor may not open contributes no
+score to a child's card: its own score reads *Not determined*, and the child's corrected score is
+unchanged.
 
 **A temperature gradient or a thermal conductivity** shows its own score and the scheme revision it
 was scored under. This is the uncorrected score: it is the same for every child that uses the

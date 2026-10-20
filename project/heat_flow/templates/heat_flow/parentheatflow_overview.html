@@ -1,0 +1,74 @@
+{% extends "measurement/measurement_overview.html" %}
+{% load i18n heat_flow_overview %}
+{% comment %}
+  A parent heat flow value's page: the designated value, the quality it inherits and the children
+  that quality rests on, every child of the parent, and the site it represents.
+{% endcomment %}
+{% block overview.notices %}
+  {{ block.super }}
+  {% heat_flow_page measurement as hf %}
+  {% if hf.stale %}<c-heat_flow.stale revision="{{ measurement.quality_scheme }}" />{% endif %}
+{% endblock overview.notices %}
+{% block overview.badges %}
+  {{ block.super }}
+  <c-heat_flow.code :code="measurement.quality" />
+{% endblock overview.badges %}
+{% block overview.result %}
+  <c-mvp.card.wrapper class="bg-base-100">
+    <div class="card-body gap-2">
+      <p class="text-xs uppercase font-semibold text-base-content/60">{% translate "Parent heat flow" %}</p>
+      <p class="text-4xl font-semibold tabular-nums break-words"
+         data-field="value">{{ measurement.print_value }}</p>
+      <p class="text-sm text-base-content/70">{% translate "Designated by the database's curators from the heat flow values below." %}</p>
+    </div>
+  </c-mvp.card.wrapper>
+{% endblock overview.result %}
+{% block overview.properties %}
+  {% heat_flow_page measurement as hf %}
+  <c-mvp.card title="{% translate 'Designation' %}"
+              class="bg-base-100">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
+      {% if measurement.corr_HP_flag is None %}
+        {% comment %}Left empty, so the field says it is not recorded.{% endcomment %}
+      {% elif measurement.corr_HP_flag %}
+        {% translate "Applied" as hp %}
+      {% else %}
+        {% translate "Not applied" as hp %}
+      {% endif %}
+      <c-heat_flow.field field="corr_HP_flag"
+                         label="{% translate 'Heat production correction' %}"
+                         value="{{ hp }}" />
+      <c-heat_flow.field field="ghfdb_id"
+                         label="{% translate 'GHFDB parent ID' %}"
+                         value="{{ measurement.ghfdb_id|default_if_none:'' }}" />
+    </div>
+    <c-heat_flow.field field="comment"
+                       label="{% translate 'Curator comment' %}"
+                       value="{{ measurement.comment|default_if_none:'' }}" />
+  </c-mvp.card>
+  <c-card.quality.parent :parent="measurement" basis="{{ hf.basis }}" />
+  <c-heat_flow.children title="{% translate 'Heat flow values' %}"
+                        :children="hf.children"
+                        relevance
+                        empty="{% translate 'No heat flow values belong to this parent.' %}" />
+{% endblock overview.properties %}
+{% block overview.sample %}
+  {% heat_flow_page measurement as hf %}
+  <c-mvp.card title="{% translate 'Site' %}"
+              class="bg-base-100">
+    <div data-heat-flow="site"
+         {% if not hf.site %}data-state="hidden"{% endif %}>
+      {% if hf.site %}
+        <a href="{{ hf.site.get_absolute_url }}"
+           class="link link-hover text-xl font-semibold leading-tight break-words">{{ hf.site }}</a>
+        <p class="text-sm text-base-content/70">{% translate "The parent heat flow is the value the database gives for this site." %}</p>
+      {% else %}
+        <p class="text-sm text-base-content/70">{% translate "The site belongs to a dataset that hasn't been published yet." %}</p>
+      {% endif %}
+    </div>
+  </c-mvp.card>
+{% endblock overview.sample %}
+{% block overview.location %}
+  {% heat_flow_page measurement as hf %}
+  <c-heat_flow.site_location :place="hf.location" />
+{% endblock overview.location %}

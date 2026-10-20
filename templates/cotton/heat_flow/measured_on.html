@@ -1,0 +1,35 @@
+{# @description The card naming the depth interval a measurement was made over and the site it belongs to, each linked. #}
+{# @prop interval:object | description:"The depth interval, or none when the visitor may not open it." #}
+{# @prop site:object | description:"The site, or none when the visitor may not open it." #}
+{% load i18n heat_flow_overview %}
+<c-vars interval site />
+<c-mvp.card title="{% translate 'Measured over' %}"
+            class="bg-base-100">
+  <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+    <div>
+      <dt class="text-base-content/60 text-xs uppercase font-semibold">{% translate "Depth interval" %}</dt>
+      <dd data-heat-flow="interval"
+          {% if not interval %}data-state="hidden"{% endif %}>
+        {% if interval %}
+          <a href="{{ interval.get_absolute_url }}"
+             class="link link-hover font-medium tabular-nums">{{ interval.top|default_if_none:'' }} – {{ interval.bottom|default_if_none:'' }}</a>
+          {% if interval.name %}<span class="block text-xs text-base-content/70">{{ interval.name }}</span>{% endif %}
+        {% else %}
+          <span class="text-sm text-base-content/70">{% translate "The interval belongs to a dataset that hasn't been published yet." %}</span>
+        {% endif %}
+      </dd>
+    </div>
+    <div>
+      <dt class="text-base-content/60 text-xs uppercase font-semibold">{% translate "Site" %}</dt>
+      <dd data-heat-flow="site"
+          {% if not site %}data-state="hidden"{% endif %}>
+        {% if site %}
+          <a href="{{ site.get_absolute_url }}"
+             class="link link-hover font-medium break-words">{{ site }}</a>
+        {% else %}
+          <span class="text-sm text-base-content/70">{% translate "The site belongs to a dataset that hasn't been published yet." %}</span>
+        {% endif %}
+      </dd>
+    </div>
+  </dl>
+</c-mvp.card>

@@ -1,0 +1,165 @@
+{% extends "sample/sample_overview.html" %}
+{% load i18n humanize heat_flow_overview %}
+{% comment %}
+  A heat flow site's page: the parent heat flow the database gives for it, the site's own
+  description, and its depth intervals from shallowest to deepest with the heat flow values
+  determined over each.
+{% endcomment %}
+{% block overview.figures %}
+  {% heat_flow_page sample as hf %}
+  <c-stats cols="1"
+           lg="3"
+           aria-label="{% translate 'Site at a glance' %}">
+    {% if hf.parent %}
+      <c-stats.item title="{% translate 'Parent heat flow' %}"
+                    value="{{ hf.parent.print_value }}"
+                    href="{{ hf.parent.get_absolute_url }}"
+                    variant="accent"
+                    icon="measurement">
+        <c-slot name="desc">{% if hf.parent.quality %}<code class="font-mono">{{ hf.parent.quality }}</code>{% else %}{% translate "Quality not determined" %}{% endif %}</c-slot>
+      </c-stats.item>
+    {% else %}
+      <c-stats.item title="{% translate 'Parent heat flow' %}"
+                    value="—"
+                    desc="{% translate 'None designated' %}"
+                    icon="measurement" />
+    {% endif %}
+    <c-stats.item title="{% translate 'Depth intervals' %}"
+                  value="{{ hf.intervals.total|intcomma }}"
+                  variant="secondary"
+                  icon="sample" />
+    <c-stats.item title="{% translate 'Heat flow values' %}"
+                  value="{{ hf.intervals.children|intcomma }}"
+                  variant="accent"
+                  icon="measurement" />
+  </c-stats>
+{% endblock overview.figures %}
+{% block overview.properties %}
+  {% heat_flow_page sample as hf %}
+  <c-mvp.card title="{% translate 'Parent heat flow' %}"
+              class="bg-base-100">
+    <div data-heat-flow="parent"
+         {% if hf.parent_hidden %}data-state="hidden"{% elif not hf.parent %}data-state="none"{% endif %}>
+      {% if hf.parent %}
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <a href="{{ hf.parent.get_absolute_url }}"
+             class="link link-hover text-2xl font-semibold tabular-nums">{{ hf.parent.print_value }}</a>
+          <c-heat_flow.code :code="hf.parent.quality" />
+        </div>
+        <p class="text-sm text-base-content/70 mt-2">{% translate "The value the database gives for this site, designated by its curators from the heat flow values below." %}</p>
+      {% elif hf.parent_hidden %}
+        <p class="text-sm text-base-content/70">{% translate "The parent heat flow belongs to a dataset that hasn't been published yet." %}</p>
+      {% else %}
+        <p class="text-sm text-base-content/70">{% translate "No parent heat flow value has been designated for this site." %}</p>
+      {% endif %}
+    </div>
+  </c-mvp.card>
+  <c-mvp.card title="{% translate 'Site' %}"
+              class="bg-base-100">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
+      <c-heat_flow.field field="environment"
+                         label="{% translate 'Geographic environment' %}"
+                         value="{{ sample.environment|labels|capfirst }}" />
+      <c-heat_flow.field field="explo_method"
+                         label="{% translate 'Exploration method' %}"
+                         value="{{ sample.explo_method|labels|capfirst }}" />
+      <c-heat_flow.field field="explo_purpose"
+                         label="{% translate 'Exploration purpose' %}"
+                         value="{{ sample.explo_purpose|labels|capfirst }}" />
+      <c-heat_flow.field field="type"
+                         label="{% translate 'Site type' %}"
+                         value="{{ sample.type|labels|capfirst }}" />
+    </div>
+    <h3 class="text-sm font-semibold mt-2">{% translate "Access" %}</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6">
+      <c-heat_flow.field field="top"
+                         label="{% translate 'Top' %}"
+                         value="{{ sample.top|default_if_none:'' }}" />
+      <c-heat_flow.field field="bottom"
+                         label="{% translate 'Bottom' %}"
+                         value="{{ sample.bottom|default_if_none:'' }}" />
+      <c-heat_flow.field field="length"
+                         label="{% translate 'Length' %}"
+                         value="{{ sample.length|default_if_none:'' }}" />
+      <c-heat_flow.field field="vertical_depth"
+                         label="{% translate 'Vertical depth' %}"
+                         value="{{ sample.vertical_depth|default_if_none:'' }}" />
+      <c-heat_flow.field field="inclination"
+                         label="{% translate 'Inclination' %}"
+                         value="{{ sample.inclination|default_if_none:'' }}" />
+      <c-heat_flow.field field="azimuth"
+                         label="{% translate 'Azimuth' %}"
+                         value="{{ sample.azimuth|default_if_none:'' }}" />
+      <c-heat_flow.field field="elevation"
+                         label="{% translate 'Elevation' %}"
+                         value="{{ sample.elevation|default_if_none:'' }}" />
+      <c-heat_flow.field field="elevation_datum"
+                         label="{% translate 'Elevation datum' %}"
+                         value="{{ sample.elevation_datum|labels }}" />
+    </div>
+    <h3 class="text-sm font-semibold mt-2">{% translate "Where it lies" %}</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
+      <c-heat_flow.field field="country"
+                         label="{% translate 'Country' %}"
+                         value="{{ sample.country|default_if_none:'' }}" />
+      <c-heat_flow.field field="region"
+                         label="{% translate 'Region' %}"
+                         value="{{ sample.region|default_if_none:'' }}" />
+      <c-heat_flow.field field="continent"
+                         label="{% translate 'Continent' %}"
+                         value="{{ sample.continent|default_if_none:'' }}" />
+      <c-heat_flow.field field="domain"
+                         label="{% translate 'Domain' %}"
+                         value="{{ sample.domain|default_if_none:'' }}" />
+    </div>
+  </c-mvp.card>
+  <c-mvp.card title="{% translate 'Depth intervals' %}"
+              class="bg-base-100"
+              id="intervals">
+    <c-slot name="badges">{% if hf.intervals.total %}<span class="badge badge-ghost badge-sm">{{ hf.intervals.total }}</span>{% endif %}</c-slot>
+    <div data-heat-flow="intervals"
+         {% if not hf.intervals.rows and not hf.intervals.hidden %}data-state="empty"{% endif %}
+         {% if hf.intervals.more %}data-more="{{ hf.intervals.more }}"{% endif %}
+         {% if hf.intervals.hidden %}data-hidden="{{ hf.intervals.hidden }}"{% endif %}>
+      {% if hf.intervals.rows %}
+        <p class="text-sm text-base-content/70">{% translate "From shallowest to deepest, with the heat flow values determined over each." %}</p>
+        <ol class="flex flex-col divide-y divide-base-200">
+          {% for row in hf.intervals.rows %}
+            <li class="py-3 flex flex-col gap-1"
+                data-interval="{{ row.interval.pk }}"
+                {% if not row.children.rows and not row.children.hidden %}data-state="empty"{% endif %}
+                {% if row.children.hidden %}data-hidden="{{ row.children.hidden }}"{% endif %}>
+              <div class="flex flex-wrap items-baseline justify-between gap-x-3">
+                <a href="{{ row.interval.get_absolute_url }}"
+                   class="link link-hover font-semibold tabular-nums">{{ row.interval.top|default_if_none:'' }} – {{ row.interval.bottom|default_if_none:'' }}</a>
+                {% with lith=row.interval.lithology|labels %}{% if lith %}<span class="text-xs text-base-content/70">{{ lith|capfirst }}</span>{% endif %}{% endwith %}
+              </div>
+              {% if row.children.rows %}
+                <ul class="list">
+                  {% for child in row.children.rows %}<c-heat_flow.child_row :child="child" />{% endfor %}
+                </ul>
+              {% elif not row.children.hidden %}
+                <p class="text-xs text-base-content/60">{% translate "No heat flow value is determined over this interval." %}</p>
+              {% endif %}
+              {% if row.children.hidden %}
+                <p class="text-xs text-base-content/60">{% blocktranslate count counter=row.children.hidden %}{{ counter }} more heat flow value belongs to a dataset that hasn't been published yet.{% plural %}{{ counter }} more heat flow values belong to datasets that haven't been published yet.{% endblocktranslate %}</p>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ol>
+      {% elif not hf.intervals.hidden %}
+        <p class="text-sm text-base-content/70">{% translate "No depth intervals are recorded for this site." %}</p>
+      {% endif %}
+      {% if hf.intervals.more %}
+        <div class="flex flex-wrap items-center gap-2 text-sm text-base-content/70">
+          {% blocktranslate count counter=hf.intervals.more %}and {{ counter }} more interval{% plural %}and {{ counter }} more intervals{% endblocktranslate %}
+          <a href="?show=all#intervals"
+             class="btn btn-xs btn-outline">{% blocktranslate with total=hf.intervals.total %}Show all {{ total }}{% endblocktranslate %}</a>
+        </div>
+      {% endif %}
+      {% if hf.intervals.hidden %}
+        <p class="text-sm text-base-content/70">{% blocktranslate count counter=hf.intervals.hidden %}{{ counter }} more interval belongs to a dataset that hasn't been published yet.{% plural %}{{ counter }} more intervals belong to datasets that haven't been published yet.{% endblocktranslate %}</p>
+      {% endif %}
+    </div>
+  </c-mvp.card>
+{% endblock overview.properties %}

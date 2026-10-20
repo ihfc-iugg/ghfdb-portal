@@ -756,9 +756,7 @@ class TestMeasurementScores:
 
         site = HeatFlowSiteFactory(explo_method="probing_offshore", elevation=-3000)
         interval = HeatFlowIntervalFactory(site=site)
-        ProbeMetadataFactory(
-            interval=interval, penetration=12, tilt=45, probe_type=[]
-        )
+        ProbeMetadataFactory(interval=interval, penetration=12, tilt=45, probe_type=[])
         return interval
 
     def borehole_interval(self, **depths):
@@ -788,6 +786,7 @@ class TestMeasurementScores:
     @pytest.mark.django_db
     def test_a_saved_borehole_gradient_is_scored_by_the_borehole_rules(self):
         from heat_flow import vocabularies
+
         from tests.factories import ThermalGradientFactory
 
         logs = self.concepts(vocabularies.TemperatureMethod, "LOGeq")
@@ -812,9 +811,7 @@ class TestMeasurementScores:
             ThermalGradientFactory,
         )
 
-        interval = HeatFlowIntervalFactory(
-            site=HeatFlowSiteFactory(explo_method=None)
-        )
+        interval = HeatFlowIntervalFactory(site=HeatFlowSiteFactory(explo_method=None))
         gradient = ThermalGradientFactory(
             sample=interval, score=0.7, method_top=[], method_bottom=[]
         )
@@ -827,6 +824,7 @@ class TestMeasurementScores:
     @pytest.mark.django_db
     def test_adding_removing_and_clearing_a_method_recalculates_the_score(self):
         from heat_flow import vocabularies
+
         from tests.factories import ThermalGradientFactory
 
         logs = self.concepts(vocabularies.TemperatureMethod, "LOGeq")
@@ -854,6 +852,7 @@ class TestMeasurementScores:
     @pytest.mark.django_db
     def test_one_gradient_used_by_two_children_keeps_one_score(self):
         from heat_flow.models import HeatFlowCorrection
+
         from tests.factories import (
             HeatFlowCorrectionFactory,
             HeatFlowFactory,
@@ -883,6 +882,7 @@ class TestMeasurementScores:
     @pytest.mark.django_db
     def test_a_saved_borehole_conductivity_stores_its_score_and_the_revision(self):
         from heat_flow import vocabularies
+
         from tests.factories import IntervalConductivityFactory
 
         conductivity = IntervalConductivityFactory(
@@ -908,6 +908,7 @@ class TestMeasurementScores:
     @pytest.mark.django_db
     def test_a_probe_conductivity_can_score_above_one(self):
         from heat_flow import vocabularies
+
         from tests.factories import IntervalConductivityFactory
 
         conductivity = IntervalConductivityFactory(
@@ -948,6 +949,7 @@ class TestMeasurementScores:
     @pytest.mark.django_db
     def test_changing_a_conductivity_concept_recalculates_the_score(self):
         from heat_flow import vocabularies
+
         from tests.factories import IntervalConductivityFactory
 
         conductivity = IntervalConductivityFactory(
@@ -1166,6 +1168,7 @@ class TestChildScores:
     @pytest.mark.django_db
     def test_a_child_takes_the_bottom_water_waiver_from_its_own_correction(self):
         from heat_flow import vocabularies
+
         from tests.factories import (
             HeatFlowCorrectionFactory,
             HeatFlowFactory,
@@ -1178,9 +1181,7 @@ class TestChildScores:
 
         site = HeatFlowSiteFactory(explo_method="probing_offshore", elevation=-1000)
         interval = HeatFlowIntervalFactory(site=site)
-        ProbeMetadataFactory(
-            interval=interval, penetration=12, tilt=5, probe_type=[]
-        )
+        ProbeMetadataFactory(interval=interval, penetration=12, tilt=5, probe_type=[])
         gradient = ThermalGradientFactory(
             sample=interval,
             number=6,
@@ -1224,6 +1225,7 @@ class TestChildScores:
         self, django_capture_on_commit_callbacks
     ):
         from heat_flow.models import HeatFlow
+
         from tests.factories import HeatFlowCorrectionFactory
 
         child = self.build_child(self.inputs_of("B2-not-considered"))

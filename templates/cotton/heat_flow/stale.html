@@ -1,0 +1,10 @@
+{# @description The notice a page shows when a stored score came from an older revision of the quality scheme. #}
+{# @prop revision:string | description:"The scheme revision the stored score came from." #}
+{% load i18n %}
+<c-vars revision />
+<c-alert variant="warning"
+         icon="warning"
+         soft
+         data-state="stale">
+  <span>{% blocktranslate %}These scores were calculated under {{ revision }}, an earlier revision of the quality scheme, and have not been recalculated since. They are shown as stored.{% endblocktranslate %}</span>
+</c-alert>

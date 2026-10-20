@@ -212,7 +212,8 @@ only those, now reflects the change.
 
 A child's page shows its U-score, its gradient's and conductivity's own scores beside its corrected
 scores, its M-score, its perturbation flags and its quality code. A gradient's and a conductivity's
-pages show their own score.
+pages show their own score. FS-011 (heat flow content on the site and measurement overview pages)
+builds these pages: its US-1 the child's page and its US-3 the gradient's and conductivity's.
 
 **Why this priority**: the split between uncorrected and corrected scores exists so that the effect
 of a correction can be seen. Until it is shown, only someone querying the database can see it.
@@ -303,7 +304,8 @@ both the uncorrected and the corrected value are present in the rendered page.
   the scheme.
 - **FR-018**: A child's page MUST show its U-score, its measurements' own scores beside its
   corrected scores, its M-score, its perturbation flags and its quality code. A gradient's and a
-  conductivity's pages MUST show their own score.
+  conductivity's pages MUST show their own score. FS-011 builds these pages and meets this
+  requirement.
 - **FR-019**: The portal's glossary MUST define the T-score, the TC-score, uncorrected and corrected
   scores, the missing-information mark and the scheme revision, and its description of the quality
   code MUST match the code this feature writes.

@@ -90,9 +90,7 @@ class TestMeasurementReceivers:
             concept(vocabularies.TemperatureCorrection, "hornerPlot")
         )
 
-        assert ThermalGradient.objects.get(pk=gradient.pk).score == pytest.approx(
-            0.123
-        )
+        assert ThermalGradient.objects.get(pk=gradient.pk).score == pytest.approx(0.123)
 
     def test_a_conductivity_field_the_score_does_not_read_leaves_it_alone(self):
         from heat_flow.models import IntervalConductivity
@@ -103,9 +101,7 @@ class TestMeasurementReceivers:
         )
         IntervalConductivity.objects.filter(pk=conductivity.pk).update(score=0.123)
 
-        conductivity.strategy.add(
-            concept(vocabularies.ConductivityStrategy, "random")
-        )
+        conductivity.strategy.add(concept(vocabularies.ConductivityStrategy, "random"))
         conductivity.pT_function.add(
             concept(vocabularies.ConductivityPTFunction, "unspecified")
         )
@@ -127,8 +123,8 @@ class TestMeasurementReceivers:
         assert changes.calls == 2
 
     def test_a_fixture_load_does_not_score_the_record(self):
-        from heat_flow.signals import refresh_measurement_on_save
         from heat_flow.models import ThermalGradient
+        from heat_flow.signals import refresh_measurement_on_save
 
         gradient = borehole_gradient()
         ThermalGradient.objects.filter(pk=gradient.pk).update(score=0.123)
@@ -137,9 +133,7 @@ class TestMeasurementReceivers:
             sender=ThermalGradient, instance=gradient, created=False, raw=True
         )
 
-        assert ThermalGradient.objects.get(pk=gradient.pk).score == pytest.approx(
-            0.123
-        )
+        assert ThermalGradient.objects.get(pk=gradient.pk).score == pytest.approx(0.123)
 
 
 class TestChildReceivers:
@@ -212,7 +206,9 @@ class TestParentReceivers:
         from tests.test_heat_flow.test_models.test_parent import child_of
 
         parent = ParentHeatFlowFactory()
-        children = [child_of(parent, grade, is_relevant=is_relevant) for grade in grades]
+        children = [
+            child_of(parent, grade, is_relevant=is_relevant) for grade in grades
+        ]
         return parent, children
 
     @staticmethod
@@ -372,7 +368,7 @@ class Network:
     """One interval with a gradient and a conductivity, a child using both and its parent."""
 
     def __init__(self, explo_method="drilling", *, top=0, bottom=1000, **interval):
-        from tests.factories import HeatFlowFactory, ParentHeatFlowFactory
+        from tests.factories import ParentHeatFlowFactory
         from tests.test_heat_flow.test_quality import (
             build_conductivity,
             build_gradient,
@@ -380,9 +376,7 @@ class Network:
         )
 
         inputs = PROBE if explo_method.startswith("probing") else BOREHOLE
-        self.interval = build_interval(
-            explo_method, top=top, bottom=bottom, **interval
-        )
+        self.interval = build_interval(explo_method, top=top, bottom=bottom, **interval)
         self.site = self.interval.site
         self.gradient = build_gradient(self.interval, **inputs["gradient"])
         self.conductivity = build_conductivity(self.interval, **inputs["conductivity"])
@@ -586,8 +580,9 @@ class TestRecalculationTable:
         assert StoredScores.differing() == []
 
     def test_probe_metadata_saved_refreshes_the_gradients_on_its_interval(self):
-        mine, other = Network("probing_offshore", penetration=12, tilt=5), Network(
-            "probing_offshore", penetration=12, tilt=5
+        mine, other = (
+            Network("probing_offshore", penetration=12, tilt=5),
+            Network("probing_offshore", penetration=12, tilt=5),
         )
         before = mine.stored()
         probe = mine.interval.probe_metadata
@@ -603,8 +598,9 @@ class TestRecalculationTable:
     def test_probe_metadata_deleted_refreshes_the_gradients_on_its_interval(
         self, django_capture_on_commit_callbacks
     ):
-        mine, other = Network("probing_offshore", penetration=12, tilt=5), Network(
-            "probing_offshore", penetration=12, tilt=5
+        mine, other = (
+            Network("probing_offshore", penetration=12, tilt=5),
+            Network("probing_offshore", penetration=12, tilt=5),
         )
         before = mine.stored()
         with RefreshSpy() as spy, django_capture_on_commit_callbacks(execute=True):
@@ -661,6 +657,7 @@ class TestDatasetDelete:
     ):
         from fairdm.factories import DatasetFactory
         from heat_flow.models import HeatFlow, ParentHeatFlow
+
         from tests.factories import HeatFlowCorrectionFactory, ParentHeatFlowFactory
         from tests.test_heat_flow.test_models.test_parent import child_of
 
@@ -688,6 +685,7 @@ class TestScheduledRefresh:
         self, django_capture_on_commit_callbacks
     ):
         from django.db import transaction
+
         from tests.factories import HeatFlowCorrectionFactory
 
         mine = Network()
@@ -741,14 +739,13 @@ class TestDeferral:
         from heat_flow.signals import Recalculation
 
         mine = Network()
-        with RefreshSpy() as spy:
-            with Recalculation.deferred():
-                mine.gradient.method_top.add(
-                    *concept_names(vocabularies.TemperatureMethod, "CPD")
-                )
-                mine.gradient.save()
-                mine.child.save()
-                assert spy.calls == []
+        with RefreshSpy() as spy, Recalculation.deferred():
+            mine.gradient.method_top.add(
+                *concept_names(vocabularies.TemperatureMethod, "CPD")
+            )
+            mine.gradient.save()
+            mine.child.save()
+            assert spy.calls == []
 
         assert spy.calls == keys(mine.gradient, mine.child, mine.parent)
         assert StoredScores.differing() == []
@@ -757,10 +754,9 @@ class TestDeferral:
         from heat_flow.signals import Recalculation
 
         mine = Network()
-        with pytest.raises(RuntimeError):
-            with Recalculation.deferred():
-                mine.gradient.save()
-                raise RuntimeError
+        with pytest.raises(RuntimeError), Recalculation.deferred():
+            mine.gradient.save()
+            raise RuntimeError
 
         with RefreshSpy() as spy:
             mine.gradient.save()
@@ -770,12 +766,11 @@ class TestDeferral:
         from heat_flow.signals import Recalculation
 
         mine = Network()
-        with RefreshSpy() as spy:
+        with RefreshSpy() as spy, Recalculation.deferred():
             with Recalculation.deferred():
-                with Recalculation.deferred():
-                    mine.gradient.save()
-                assert spy.calls == []
-                mine.conductivity.save()
+                mine.gradient.save()
+            assert spy.calls == []
+            mine.conductivity.save()
 
         assert len(spy.calls) == len(set(spy.calls))
         assert spy.calls == keys(

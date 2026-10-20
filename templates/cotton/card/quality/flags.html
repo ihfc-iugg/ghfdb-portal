@@ -1,0 +1,45 @@
+{# @description The seven perturbation flags of a stored quality code, one row each, with what each character says. #}
+{# @prop code:string | description:"The stored quality code; its last seven characters are the flags." #}
+{% load i18n %}
+<c-vars code />
+<h3 class="font-semibold mt-2">{% trans "Perturbation flags" %}</h3>
+{% with flags=code|default:"-------"|slice:"-7:" %}
+  <div class="overflow-x-auto">
+    <table class="table table-sm">
+      <caption class="sr-only">{% trans "The seven perturbation flags, one for each correction" %}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{% trans "Flag" %}</th>
+          <th scope="col">{% trans "Correction" %}</th>
+          <th scope="col">{% trans "State" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <c-card.quality.flag letter="S"
+                             name="{% trans "Sedimentation" %}"
+                             :char="flags.0" />
+        <c-card.quality.flag letter="E"
+                             name="{% trans "Erosion" %}"
+                             :char="flags.1" />
+        <c-card.quality.flag letter="T"
+                             name="{% trans "Topography" %}"
+                             :char="flags.2" />
+        <c-card.quality.flag letter="P"
+                             name="{% trans "Paleoclimate" %}"
+                             :char="flags.3" />
+        <c-card.quality.flag letter="V"
+                             name="{% trans "Surface and bottom-water temperature variation" %}"
+                             :char="flags.4" />
+        <c-card.quality.flag letter="C"
+                             name="{% trans "Convection" %}"
+                             :char="flags.5" />
+        <c-card.quality.flag letter="R"
+                             name="{% trans "Heat refraction" %}"
+                             :char="flags.6" />
+      </tbody>
+    </table>
+  </div>
+{% endwith %}
+<p class="text-xs text-base-content/70">
+  {% blocktrans %}In the quality code the flags are written in this order. An upper-case letter means the effect is present and corrected, a lower-case letter present and not corrected, <code>X</code> present and not significant, <code>x</code> not recognised, and <code>-</code> none or not recorded.{% endblocktrans %}
+</p>

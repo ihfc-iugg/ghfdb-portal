@@ -1,0 +1,19 @@
+{# @description The location card on a page whose record holds no location of its own: the site's, said to be the site's. #}
+{# @prop place:object | description:"The site location: point, elevation, uncertainty and whether the visitor may see the site." #}
+{% load i18n %}
+<c-vars place />
+<div data-heat-flow="location" data-field="location" data-source="site" {% if not place.point %}data-state="{% if place.visible %}not-recorded{% else %}hidden{% endif %}"{% endif %}>
+  {% if place.point %}
+    <c-card.location :location="place.point"
+                     :elevation="place.elevation"
+                     :uncertainty="place.uncertainty"
+                     title="{% translate 'Site location' %}"
+                     label="{% blocktranslate with x=place.point.x y=place.point.y %}Map of the site, at longitude {{ x }} and latitude {{ y }}{% endblocktranslate %}" />
+  {% elif place.visible %}
+    <c-card.location title="{% translate 'Site location' %}"
+                     empty="{% translate 'No location is recorded for the site.' %}" />
+  {% else %}
+    <c-card.location title="{% translate 'Site location' %}"
+                     empty="{% translate 'The site belongs to a dataset that has not been published, so its location is not shown.' %}" />
+  {% endif %}
+</div>

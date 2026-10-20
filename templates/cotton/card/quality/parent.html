@@ -1,0 +1,27 @@
+{# @description The quality card on a parent heat flow value's page: the grades it inherits, the flags of its poorest child, the scheme revision, and which children its quality rests on. #}
+{# @prop parent:object | description:"The parent heat flow value whose stored, inherited quality the card shows." #}
+{# @prop basis:string | description:"Which children the quality rests on: single, relevant, none (several children, none relevant) or empty (no children)." #}
+{% load i18n %}
+<c-vars parent basis />
+<c-mvp.card title="{% trans "Quality score" %}"
+            class="bg-base-100"
+            role="region"
+            aria-label="{% trans "Quality score" %}"
+            data-quality-card="parent">
+  <p class="text-base-content/70"
+     data-quality="basis"
+     data-value="{{ basis }}">
+    {% if basis == "single" %}
+      {% blocktrans %}This parent has one heat flow value, so its quality is that value's quality, whether or not it is marked relevant.{% endblocktrans %}
+    {% elif basis == "relevant" %}
+      {% blocktrans %}This parent's quality is inherited from the heat flow values marked relevant to it: the poorest U-score and M-score among them, and the flags of the poorest.{% endblocktrans %}
+    {% elif basis == "none" %}
+      {% blocktrans %}None of this parent's heat flow values is marked relevant to it, so its quality could not be determined.{% endblocktrans %}
+    {% else %}
+      {% blocktrans %}This parent has no heat flow values, so its quality could not be determined.{% endblocktrans %}
+    {% endif %}
+  </p>
+  <c-card.quality.grades :record="parent" />
+  <c-card.quality.flags :code="parent.quality" />
+  <c-card.quality.legend />
+</c-mvp.card>
