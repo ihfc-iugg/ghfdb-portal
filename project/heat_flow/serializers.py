@@ -551,6 +551,39 @@ class HeatFlowRecordSerializer(RequesterVisibility, serializers.ModelSerializer)
         }
 
 
+class SitePlacedSerializer(HeatFlowRecordSerializer):
+    """A record placed at a site: it carries the site's coordinates and a reference to it.
+
+    Attributes:
+        site_path: The relations from the record to its site, selected with the record.
+    """
+
+    site_path = "sample__heatflowinterval__site"
+
+    location = SiteLocationField()
+    site = serializers.SerializerMethodField()
+
+    @classmethod
+    def load_related(cls, queryset: Any) -> Any:
+        """Select the site a record is placed at.
+
+        Args:
+            queryset: The records about to be serialized.
+
+        Returns:
+            The queryset with the path to each record's site selected.
+        """
+        return super().load_related(queryset).select_related(cls.site_path)
+
+    def prime_context(self, records: list[Any]) -> None:
+        """Ask once which of the sites a page of records sit at the requester may see.
+
+        Args:
+            records: The page of records about to be serialized.
+        """
+        self.prime_sites(records)
+
+
 class SiteParentSerializer(HeatFlowRecordSerializer, BaseMeasurementSerializer):
     """The parent's headline, as a list of sites gives it."""
 
@@ -651,15 +684,13 @@ class HeatFlowIntervalSummarySerializer(HeatFlowRecordSerializer, BaseSampleSeri
         ]
 
 
-class HeatFlowSummarySerializer(HeatFlowRecordSerializer, BaseMeasurementSerializer):
+class HeatFlowSummarySerializer(SitePlacedSerializer, BaseMeasurementSerializer):
     """A child heat flow."""
 
-    location = SiteLocationField()
     # A serializer field is declared by assignment, so mypy reads this as Field.parent.
     parent = RecordReferenceField(read_only=True)  # type: ignore[assignment]
     thermal_gradient = RecordReferenceField(read_only=True)
     thermal_conductivity = RecordReferenceField(read_only=True)
-    site = serializers.SerializerMethodField()
 
     class Meta(BaseMeasurementSerializer.Meta):
         model = HeatFlow
@@ -695,30 +726,6 @@ class HeatFlowSummarySerializer(HeatFlowRecordSerializer, BaseMeasurementSeriali
             "date_acquired",
             "is_relevant",
         ]
-
-    @classmethod
-    def load_related(cls, queryset: Any) -> Any:
-        """Select the interval and site a child is placed at.
-
-        Args:
-            queryset: The children about to be serialized.
-
-        Returns:
-            The queryset with the path to each child's site selected.
-        """
-        return (
-            super()
-            .load_related(queryset)
-            .select_related("sample__heatflowinterval__site")
-        )
-
-    def prime_context(self, records: list[Any]) -> None:
-        """Ask once which of the sites a page of children sit at the requester may see.
-
-        Args:
-            records: The page of children about to be serialized.
-        """
-        self.prime_sites(records)
 
 
 class ThermalGradientSummarySerializer(
