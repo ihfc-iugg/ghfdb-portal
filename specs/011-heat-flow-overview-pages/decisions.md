@@ -171,3 +171,38 @@ conductivity modules, unskipped, with fixtures pointed at the overview pages and
 unchanged. The old module is deleted.
 
 **ADR:** none — test placement.
+
+## D14. Design review: approved, findings carried into the plan
+
+The design review approved the plan with no critical or high finding. Each medium and low
+finding was a small edit and was made in `plan.md`, `tasks.md` and `research.md` rather than
+carried as a watch item:
+
+- The child's quality card reads its gradient's and conductivity's scores from the records the
+  visitor may open, so a hidden one shows no score (SEC-001, FR-006).
+- `<c-heat_flow.field>` carries `data-field` and a `not-recorded` state, and every page test
+  asserts its story's fields by it (SPEC-003).
+- Interval lithology and child methods are prefetched on every list (ARCH-001).
+- The stale notice, the interval and site links, and FairDM's shared page are tested on every
+  page that carries them (SPEC-002, SPEC-005, SPEC-006).
+- Cut-list tests set the cut small instead of pinning twenty (SPEC-007), and the parent's
+  relevant-first order is not asserted (SPEC-008).
+- A record's site is read from the existing `site` properties, with no helper (ARCH-002).
+- `for_source` is named `for_gradient_or_conductivity`, since `IntervalConductivity` already has
+  a `source` field.
+- T007 stays (D12) and the review app's command is named in the plan (SPEC-009).
+
+The stories build in order on the feature branch, one at a time, because all five extend one
+class and one guide page (SPEC-004).
+
+**ADR:** none — plan corrections local to this feature.
+
+## D15. SC-001 reads "on the child's page or a record it links to"
+
+SC-001 names the child's, parent's, site's and dataset's pages, while the spec's own stories put
+the gradient's, conductivity's and interval's release columns on those records' pages. The plan
+takes the reading the stories imply: every release column is shown on the child's page or on a
+record it links to, and a test reads the columns from the export resource and finds each one on
+its page. The spec's wording is the orchestrator's to settle under the open spec gate.
+
+**ADR:** none — reading of a success criterion.

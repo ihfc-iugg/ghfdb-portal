@@ -90,7 +90,7 @@ documented in `docs/development/demo-data.md`. Development-only, never a migrati
 
 | New piece | Search stopped at | Found |
 |---|---|---|
-| Type templates for six types | 7, new code | FairDM's lookup finds `heat_flow/<model>_overview.html` (`TypedOverviewPlugin.get_template_names`) |
+| Type templates for six types | 3, installed package | FairDM's lookup finds `heat_flow/<model>_overview.html` (`TypedOverviewPlugin.get_template_names`) |
 | `HeatFlowPage` (gathers a page's content) | 7, new code | No per-type context hook in FairDM (R1) |
 | `heat_flow_page` tag | 7, new code | as above |
 | Visibility of listed records | 3, installed package | `RecordVisibilityMixin.visible_to`, `fairdm/core/managers.py` |
@@ -106,3 +106,4 @@ documented in `docs/development/demo-data.md`. Development-only, never a migrati
 | List rows, stats strip | 3, installed package | daisyUI `list`, FairDM `<c-stats>` |
 | "Show all" | 5, the browser | a plain link with `?show=all` |
 | Seeded states | 2, this repo | `heat_flow.demo.DemoGraph`, extended |
+| A record's site | 2, this repo | `ParentHeatFlow.site`, `HeatFlowInterval.site`, `heat_flow.quality.site()`; no helper of its own |
