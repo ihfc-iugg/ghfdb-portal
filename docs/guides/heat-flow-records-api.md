@@ -55,9 +55,9 @@ Here are the units each type uses:
 | Record | Quantities and their units |
 |---|---|
 | Heat flow site | `azimuth` and `inclination` in `deg`, `length` in `m` |
-| Depth interval | `top`, `bottom` and `vertical_depth` in `m` |
+| Depth interval | `top`, `bottom` and `vertical_depth` in `m`. Its `probe_metadata` has its own `units`: `penetration` and `length` in `m`, `tilt` in `deg` |
 | Child heat flow | `value` and `uncertainty` in `mW/m²`, `surface_temperature` in `°C` |
-| Thermal gradient | `value`, `uncertainty`, `corrected_value` and `corrected_uncertainty` in `K/km`, `shutin_top` and `shutin_bottom` in `h` |
+| Thermal gradient | `value`, `uncertainty`, `corrected_value` and `corrected_uncertainty` in `K/km`, `shutin_top` and `shutin_bottom` in `h`, `temperature_top`, `temperature_bottom` and their uncertainties in `°C` |
 | Interval conductivity | `value` and `uncertainty` in `W/mK` |
 | Parent heat flow | `value` and `uncertainty` in `mW/m²` |
 
@@ -375,7 +375,8 @@ GET /api/v1/samples/heat-flow-sites/sQcrZXZsAnhtT5LyW55ALhs/
 
 A parent is the quality-controlled heat flow for one site. The list gives its value, uncertainty,
 the two scores that make up its `quality` code, the scheme revision that calculated them, its
-`ghfdb_id` and a reference to its `site`. The record at its own address adds `children`: a
+`ghfdb_id`, a reference to its `site` and the site's coordinates as `location`. When the requester
+may not see the site, `location` and `site` are `null`. The record at its own address adds `children`: a
 reference to each child heat flow made towards it, with `is_relevant` saying whether that child
 counted in the parent's value. A child that did not count is listed too. A child the requester may
 not see is left out.
@@ -402,7 +403,10 @@ GET /api/v1/measurements/parent-heat-flow/
         "uuid": "dGeJTczPv8dUTq6jGeMgE5Z",
         "url": "https://portal.heatflow.world/api/v1/datasets/dGeJTczPv8dUTq6jGeMgE5Z/"
       },
-      "location": null,
+      "location": {
+        "type": "Point",
+        "coordinates": [-179.43217, -79.87654]
+      },
       "location_uncertainty": null,
       "added": "2026-10-20T20:16:02.334121Z",
       "modified": "2026-10-20T20:16:02.344461Z",
@@ -445,7 +449,10 @@ GET /api/v1/measurements/parent-heat-flow/mgLFmNMQmYsjQ26EsMTkScb/
     "uuid": "dGeJTczPv8dUTq6jGeMgE5Z",
     "url": "https://portal.heatflow.world/api/v1/datasets/dGeJTczPv8dUTq6jGeMgE5Z/"
   },
-  "location": null,
+  "location": {
+    "type": "Point",
+    "coordinates": [-179.43217, -79.87654]
+  },
   "location_uncertainty": null,
   "added": "2026-10-20T20:16:02.334121Z",
   "modified": "2026-10-20T20:16:02.344461Z",
@@ -629,6 +636,351 @@ GET /api/v1/measurements/heat-flow/mymJ5inhK9m89DkwZTvjEFS/
 }
 ```
 
+## A depth interval
+
+An interval is a stretch of a site's hole or profile, between a `top` and a `bottom` depth. Its
+list entry gives the depths, the vertical depth and its datum, the lithology, age and stratigraphy,
+and a reference to its `site`. It carries the coordinates of the site as `location`, because an
+interval has no position of its own. When the requester may not see the site, `location` and `site`
+are `null`.
+
+The record at the interval's own address adds `probe_metadata`, which describes the marine heat flow
+probe used and has its own `units`, and three lists of references: the `children` made over the
+interval, its `thermal_gradients` and its `thermal_conductivities`. An interval with no probe
+metadata has `probe_metadata: null`. A record the requester may not see is left out of its list.
+
+```
+GET /api/v1/samples/depth-intervals/
+```
+
+```json
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "url": "https://portal.heatflow.world/api/v1/samples/depth-intervals/sAvai23dHxcyhKwmMz4sMZU/",
+      "html_url": "https://portal.heatflow.world/samples/sAvai23dHxcyhKwmMz4sMZU/overview/",
+      "uuid": "sAvai23dHxcyhKwmMz4sMZU",
+      "name": "Hole A-1, 10 to 200 m",
+      "local_id": "SAMPLE-0466",
+      "status": {
+        "name": "unknown",
+        "label": "Unknown",
+        "uri": "https://www.fairdm.org/vocabularies/unknown",
+        "vocabulary": "fairdm-sample-status"
+      },
+      "dataset": {
+        "uuid": "dSJt4XcaoCXHb8BfKdnVCAE",
+        "url": "https://portal.heatflow.world/api/v1/datasets/dSJt4XcaoCXHb8BfKdnVCAE/"
+      },
+      "location": {
+        "type": "Point",
+        "coordinates": [-179.43217, -79.87654]
+      },
+      "location_uncertainty": null,
+      "added": "2026-10-20T21:31:57.169995Z",
+      "modified": "2026-10-20T21:31:57.183888Z",
+      "top": 10.5,
+      "bottom": 200.5,
+      "vertical_depth": 190.0,
+      "vertical_datum": "MSL",
+      "lithology": [],
+      "age": [],
+      "stratigraphy": [],
+      "site": {
+        "uuid": "sufCcNuwVkhMwA8RJWumEft",
+        "url": "https://portal.heatflow.world/api/v1/samples/heat-flow-sites/sufCcNuwVkhMwA8RJWumEft/"
+      },
+      "descriptions": [],
+      "dates": [],
+      "identifiers": [],
+      "keywords": [],
+      "contributors": [],
+      "units": {
+        "top": "m",
+        "bottom": "m",
+        "vertical_depth": "m"
+      }
+    }
+  ]
+}
+```
+
+At the interval's own address the fields above are the same, and `probe_metadata` and the three
+lists are added. Here the record is shortened to those fields:
+
+```
+GET /api/v1/samples/depth-intervals/sAvai23dHxcyhKwmMz4sMZU/
+```
+
+```json
+{
+  "uuid": "sAvai23dHxcyhKwmMz4sMZU",
+  "probe_metadata": {
+    "penetration": 3.5,
+    "probe_type": [
+      {
+        "name": "outrigger_hybrid_lister_hylo",
+        "label": "Outrigger probe (Hybrid Lister) HyLO",
+        "uri": "https://heatflow.world/vocabularies/heat-flow-probes/outrigger_hybrid_lister_hylo",
+        "vocabulary": "heat-flow-probes"
+      }
+    ],
+    "length": 4.5,
+    "tilt": 1.5,
+    "units": {
+      "penetration": "m",
+      "length": "m",
+      "tilt": "deg"
+    }
+  },
+  "children": [
+    {
+      "uuid": "mPRRfWDjwicXHp6tuDZMUwR",
+      "url": "https://portal.heatflow.world/api/v1/measurements/heat-flow/mPRRfWDjwicXHp6tuDZMUwR/"
+    }
+  ],
+  "thermal_gradients": [
+    {
+      "uuid": "mprrvSq56QCmNiMAiVdmaKC",
+      "url": "https://portal.heatflow.world/api/v1/measurements/thermal-gradients/mprrvSq56QCmNiMAiVdmaKC/"
+    }
+  ],
+  "thermal_conductivities": [
+    {
+      "uuid": "mn67tXfcqEAVVzMqFoiSicR",
+      "url": "https://portal.heatflow.world/api/v1/measurements/thermal-conductivities/mn67tXfcqEAVVzMqFoiSicR/"
+    }
+  ]
+}
+```
+
+## A thermal gradient
+
+A thermal gradient is the temperature gradient measured over one depth interval. Its list entry
+gives the `value` and `uncertainty`, the `corrected_value` and `corrected_uncertainty`, the methods,
+shut-in times and corrections for the top and the bottom of the interval, the number of
+temperature readings it rests on (`number`), and the temperature at the `temperature_top` and
+`temperature_bottom` of the interval with an uncertainty for each.
+
+The portal calculates the gradient's own `score`, with `score_missing` saying whether an input was
+empty and `quality_scheme` naming the scheme revision that calculated it. A score that could not be
+determined is `null`. The score and the scheme revision are read-only: a request that creates or
+changes a gradient cannot set them.
+
+The entry refers to the gradient's interval as `sample` and to its `site`, and carries the site's
+coordinates as `location`. When the requester may not see the site, `location` and `site` are
+`null`. The record at the gradient's own address adds `children`, a reference to each child heat
+flow calculated from the gradient. A child the requester may not see is left out.
+
+```
+GET /api/v1/measurements/thermal-gradients/
+```
+
+```json
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "url": "https://portal.heatflow.world/api/v1/measurements/thermal-gradients/mprrvSq56QCmNiMAiVdmaKC/",
+      "html_url": "https://portal.heatflow.world/measurement/mprrvSq56QCmNiMAiVdmaKC/",
+      "uuid": "mprrvSq56QCmNiMAiVdmaKC",
+      "name": "Hole A-1 gradient",
+      "sample": {
+        "uuid": "sAvai23dHxcyhKwmMz4sMZU",
+        "url": "https://portal.heatflow.world/api/v1/samples/depth-intervals/sAvai23dHxcyhKwmMz4sMZU/"
+      },
+      "dataset": {
+        "uuid": "dSJt4XcaoCXHb8BfKdnVCAE",
+        "url": "https://portal.heatflow.world/api/v1/datasets/dSJt4XcaoCXHb8BfKdnVCAE/"
+      },
+      "location": {
+        "type": "Point",
+        "coordinates": [-179.43217, -79.87654]
+      },
+      "location_uncertainty": null,
+      "added": "2026-10-20T21:31:57.201118Z",
+      "modified": "2026-10-20T21:31:57.269387Z",
+      "value": 25.5,
+      "uncertainty": 1.25,
+      "corrected_value": 26.5,
+      "corrected_uncertainty": 1.5,
+      "method_top": [
+        {
+          "name": "ODTT_PC",
+          "label": "ODTT-PC",
+          "uri": "https://heatflow.world/vocabularies/temperature-method/ODTT_PC",
+          "vocabulary": "temperature-method"
+        }
+      ],
+      "method_bottom": [],
+      "shutin_top": 12,
+      "shutin_bottom": 24,
+      "correction_top": [],
+      "correction_bottom": [],
+      "number": 35,
+      "temperature_top": 14.2,
+      "temperature_top_uncertainty": null,
+      "temperature_bottom": 19.8,
+      "temperature_bottom_uncertainty": null,
+      "score": 0.5,
+      "score_missing": false,
+      "quality_scheme": "hfqa_tool 0.2",
+      "site": {
+        "uuid": "sufCcNuwVkhMwA8RJWumEft",
+        "url": "https://portal.heatflow.world/api/v1/samples/heat-flow-sites/sufCcNuwVkhMwA8RJWumEft/"
+      },
+      "descriptions": [],
+      "dates": [],
+      "identifiers": [],
+      "keywords": [],
+      "contributors": [],
+      "units": {
+        "value": "K/km",
+        "uncertainty": "K/km",
+        "corrected_value": "K/km",
+        "corrected_uncertainty": "K/km",
+        "shutin_top": "h",
+        "shutin_bottom": "h",
+        "temperature_top": "°C",
+        "temperature_top_uncertainty": "°C",
+        "temperature_bottom": "°C",
+        "temperature_bottom_uncertainty": "°C"
+      }
+    }
+  ]
+}
+```
+
+At the gradient's own address the record is the same, with `children` added:
+
+```
+GET /api/v1/measurements/thermal-gradients/mprrvSq56QCmNiMAiVdmaKC/
+```
+
+```json
+{
+  "uuid": "mprrvSq56QCmNiMAiVdmaKC",
+  "children": [
+    {
+      "uuid": "mPRRfWDjwicXHp6tuDZMUwR",
+      "url": "https://portal.heatflow.world/api/v1/measurements/heat-flow/mPRRfWDjwicXHp6tuDZMUwR/"
+    }
+  ]
+}
+```
+
+## An interval conductivity
+
+An interval conductivity is the mean thermal conductivity over one depth interval. Its list entry
+gives the `value` and `uncertainty`, the `method`, `strategy`, `source`, `saturation`, pressure and
+temperature conditions and function, the `conductivity_location` the samples came from and the
+number of measurements it rests on (`number`).
+
+Like a gradient, it carries the `score` the portal calculated for it, `score_missing` and the
+`quality_scheme` revision, all read-only and `null` when the score could not be determined. It
+refers to its interval as `sample` and to its `site`, and carries the site's coordinates as
+`location`. When the requester may not see the site, `location` and `site` are `null`. The record
+at its own address adds `children`, a reference to each child heat flow calculated from it. A child
+the requester may not see is left out.
+
+```
+GET /api/v1/measurements/thermal-conductivities/
+```
+
+```json
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "url": "https://portal.heatflow.world/api/v1/measurements/thermal-conductivities/mn67tXfcqEAVVzMqFoiSicR/",
+      "html_url": "https://portal.heatflow.world/measurement/mn67tXfcqEAVVzMqFoiSicR/",
+      "uuid": "mn67tXfcqEAVVzMqFoiSicR",
+      "name": "Hole A-1 conductivity",
+      "sample": {
+        "uuid": "sAvai23dHxcyhKwmMz4sMZU",
+        "url": "https://portal.heatflow.world/api/v1/samples/depth-intervals/sAvai23dHxcyhKwmMz4sMZU/"
+      },
+      "dataset": {
+        "uuid": "dSJt4XcaoCXHb8BfKdnVCAE",
+        "url": "https://portal.heatflow.world/api/v1/datasets/dSJt4XcaoCXHb8BfKdnVCAE/"
+      },
+      "location": {
+        "type": "Point",
+        "coordinates": [-179.43217, -79.87654]
+      },
+      "location_uncertainty": null,
+      "added": "2026-10-20T21:31:57.289558Z",
+      "modified": "2026-10-20T21:31:57.405852Z",
+      "value": 2.5,
+      "uncertainty": 0.25,
+      "method": [],
+      "strategy": [],
+      "source": [
+        {
+          "name": "assumed_from_literature",
+          "label": "Assumed from literature",
+          "uri": "https://heatflow.world/vocabularies/conductivity-sources/assumed_from_literature",
+          "vocabulary": "conductivity-sources"
+        }
+      ],
+      "saturation": [],
+      "pT_conditions": [],
+      "pT_function": [],
+      "conductivity_location": [
+        {
+          "name": "actual",
+          "label": "Actual heat-flow location",
+          "uri": "https://heatflow.world/vocabularies/conductivity-location/actual",
+          "vocabulary": "conductivity-location"
+        }
+      ],
+      "number": 12,
+      "score": 0.4,
+      "score_missing": false,
+      "quality_scheme": "hfqa_tool 0.2",
+      "site": {
+        "uuid": "sufCcNuwVkhMwA8RJWumEft",
+        "url": "https://portal.heatflow.world/api/v1/samples/heat-flow-sites/sufCcNuwVkhMwA8RJWumEft/"
+      },
+      "descriptions": [],
+      "dates": [],
+      "identifiers": [],
+      "keywords": [],
+      "contributors": [],
+      "units": {
+        "value": "W/mK",
+        "uncertainty": "W/mK"
+      }
+    }
+  ]
+}
+```
+
+At the conductivity's own address the record is the same, with `children` added:
+
+```
+GET /api/v1/measurements/thermal-conductivities/mn67tXfcqEAVVzMqFoiSicR/
+```
+
+```json
+{
+  "uuid": "mn67tXfcqEAVVzMqFoiSicR",
+  "children": [
+    {
+      "uuid": "mPRRfWDjwicXHp6tuDZMUwR",
+      "url": "https://portal.heatflow.world/api/v1/measurements/heat-flow/mPRRfWDjwicXHp6tuDZMUwR/"
+    }
+  ]
+}
+```
+
 ## For developers: how the serializers are built
 
 The serializers are in `project/heat_flow/serializers.py`, and each type's registration in
@@ -637,16 +989,17 @@ The serializers are in `project/heat_flow/serializers.py`, and each type's regis
 | Serializer | Record |
 |---|---|
 | `HeatFlowSiteSerializer` | Heat flow site |
-| `HeatFlowIntervalSummarySerializer` | Depth interval |
+| `HeatFlowIntervalSerializer` | Depth interval |
 | `HeatFlowSerializer` | Child heat flow |
-| `ThermalGradientSummarySerializer` | Thermal gradient |
-| `IntervalConductivitySummarySerializer` | Interval conductivity |
+| `ThermalGradientSerializer` | Thermal gradient |
+| `IntervalConductivitySerializer` | Interval conductivity |
 | `ParentHeatFlowSerializer` | Parent heat flow |
 
-A site, a parent and a child each have a longer single record than their list gives. Their
-serializer names the shorter shape as `summary_serializer` (`HeatFlowSiteSummarySerializer`,
-`ParentHeatFlowSummarySerializer` and `HeatFlowSummarySerializer`), and a list of it is a
-`HeatFlowListSerializer` of that summary. The other three give the same record in both. A list of sites also reads the
+Every type has a longer single record than its list gives. Its serializer names the shorter shape
+as `summary_serializer` (`HeatFlowSiteSummarySerializer`, `HeatFlowIntervalSummarySerializer`,
+`HeatFlowSummarySerializer`, `ThermalGradientSummarySerializer`,
+`IntervalConductivitySummarySerializer` and `ParentHeatFlowSummarySerializer`), and a list of it is
+a `HeatFlowListSerializer` of that summary. A list of sites also reads the
 parents of the whole page at once, and `RequesterVisibility.can_see` says whether the requester may
 see one of them, by the same rule as the parent's own address. The site's single record builds its
 intervals from `SiteIntervalSerializer`: the interval summary plus a `children` field, whose
@@ -657,10 +1010,19 @@ record the requester has already been allowed to see, as the parent's `children`
 A child's single record is `HeatFlowSerializer`. It gives the gradient and the conductivity
 through `IntervalConductivitySummarySerializer` and `ThermalGradientSummarySerializer`, each read
 only when the requester may see it, and lists the corrections with
-`HeatFlowCorrectionSerializer`, whose type and status are `ChoiceLabelField`s. The child's
-`location` is a `SiteLocationField`, and its `site` is read through `site_of`, which gives the
-site of a site, an interval, a parent, a child, a gradient or a conductivity. A list of children
-asks `prime_sites` once which of the sites on the page the requester may see.
+`HeatFlowCorrectionSerializer`, whose type and status are `ChoiceLabelField`s.
+
+The interval, child, gradient, conductivity and parent summaries all build on
+`SitePlacedSerializer`. Its `location` is a `SiteLocationField` and its `site` is read through
+`site_of`, which gives the site of a site, an interval, a parent, a child, a gradient or a
+conductivity. A list of any of them asks `prime_sites` once which of the sites on the page the
+requester may see, and the path to each record's site is prefetched with the page.
+
+An interval's single record, `HeatFlowIntervalSerializer`, adds `probe_metadata` through
+`ProbeMetadataSerializer` and lists the `children`, `thermal_gradients` and
+`thermal_conductivities` made over it. A gradient's, `ThermalGradientSerializer`, and a
+conductivity's, `IntervalConductivitySerializer`, add `children`. Each list is one query narrowed
+to what the requester may see, and `references()` writes its entries.
 
 All six build on `HeatFlowRecordSerializer`, which chooses the field for each model field:
 
