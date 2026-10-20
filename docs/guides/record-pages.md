@@ -297,7 +297,7 @@ and each method returns a dictionary the template reads.
 | Method | Gathers |
 | --- | --- |
 | `for_child()` | The gradient, conductivity and parent the visitor may open, each with a `*_hidden` flag; the corrections; the interval and site; the site's location; whether the scores are stale. |
-| `for_site()` | The site's parent, or that it is hidden; its intervals from shallowest to deepest, each with its children; how many intervals and children the visitor may not open; and the children counted over every interval the visitor may open. |
+| `for_site()` | The site's parent, or that it is hidden; its intervals from shallowest to deepest, each with its children; how many intervals and children the visitor may not open; and the children the visitor may open, counted over every interval the visitor may open. |
 | `for_interval()` | The interval's site, `None` when the visitor may not open it, with `site_hidden`; its probe metadata, `None` where it has none; its `igsn`, empty where it has none; and the site's location. |
 | `for_gradient_or_conductivity()` | The measurement's interval and site, each `None` when the visitor may not open it, and the site's location; the children that use the measurement, with the cut at `children_shown` lifted by `show_all`, each child's method prefetched; whether the score is stale. |
 | `for_parent()` | The parent's children, the relevant ones first, with the cut at `children_shown` lifted by `show_all` and each child's method prefetched; the `basis` of the parent's quality and the keys of the children it `rests_on`, each listed child carrying its own `rests_on`; the site, `None` when the visitor may not open it, and its location; whether the score is stale. |

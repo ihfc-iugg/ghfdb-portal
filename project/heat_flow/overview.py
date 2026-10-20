@@ -200,7 +200,9 @@ class HeatFlowPage:
                 "total": len(visible),
                 "more": len(visible) - len(shown),
                 "hidden": hidden,
-                "children": HeatFlow.objects.filter(sample__in=visible).count(),
+                "children": HeatFlow.objects.filter(sample__in=visible)
+                .visible_to(self.user)
+                .count(),
             },
         }
 

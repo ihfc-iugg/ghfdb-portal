@@ -547,6 +547,16 @@ class TestHeatFlowPageForSite:
 
         assert page.for_site()["intervals"]["children"] == 4
 
+    def test_the_children_count_leaves_out_those_the_visitor_may_not_open(
+        self, page_records, published_dataset, unpublished_dataset, visitor
+    ):
+        site = page_records["site"]
+        interval = add_interval(site, 100, 200, published_dataset, children=1)[0]
+        before = HeatFlowPage(site, visitor).for_site()["intervals"]["children"]
+        HeatFlowFactory(sample=interval, dataset=unpublished_dataset)
+
+        assert HeatFlowPage(site, visitor).for_site()["intervals"]["children"] == before
+
     def test_it_prefetches_what_the_page_reads_from_each_interval_and_child(
         self, page_records, published_dataset, visitor, django_assert_num_queries
     ):
