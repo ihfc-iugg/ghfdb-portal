@@ -201,8 +201,24 @@
       "tasks": [
         {
           "id": "T007",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 3,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_serializers.py::TestHeatFlowSummarySerializer",
+              "tests/test_heat_flow/test_serializers.py::TestHeatFlowSerializer",
+              "tests/test_heat_flow/test_serializers.py::TestHeatFlowChildWrites",
+              "tests/test_heat_flow/test_schema.py::TestChoiceLabelFieldSchema"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_serializers.py tests/test_heat_flow/test_schema.py tests/test_heat_flow/test_config.py -q -n0"
+            ],
+            "code": [
+              "project/heat_flow/serializers.py:239",
+              "project/heat_flow/serializers.py:458",
+              "project/heat_flow/serializers.py:897"
+            ]
+          }
         },
         {
           "id": "T008",
