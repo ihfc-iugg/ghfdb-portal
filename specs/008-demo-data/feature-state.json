@@ -61,6 +61,11 @@
     "design_review": {
       "approved_by": "design-panel",
       "at": "2026-10-19T22:52:54Z"
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-20T00:47:37Z",
+      "self_resolved": []
     }
   },
   "stories": [
