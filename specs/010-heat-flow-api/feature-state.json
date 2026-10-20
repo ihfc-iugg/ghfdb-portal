@@ -170,6 +170,24 @@
               "project/heat_flow/serializers.py:648"
             ]
           }
+        },
+        {
+          "id": "T011",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_serializers.py::TestHeatFlowRecordSerializer::test_a_site_carries_its_elevation_with_its_datum_and_type",
+              "tests/test_heat_flow/test_serializers.py::TestHeatFlowRecordSerializer::test_units_names_every_quantity_with_its_declared_unit[site]",
+              "tests/test_heat_flow/test_schema.py::TestUnitsFieldSchema"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_serializers.py -q -n0 -k 'elevation or units' (red: 2 failed, elevation missing from record and units; green after adding fields: 76 passed with -k 'Serializer or Schema or Writes')"
+            ],
+            "code": [
+              "project/heat_flow/serializers.py:455"
+            ]
+          }
         }
       ]
     },

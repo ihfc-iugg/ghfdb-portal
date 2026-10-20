@@ -142,6 +142,19 @@ GET /api/v1/samples/heat-flow-sites/
       "location_uncertainty": null,
       "added": "2026-10-20T20:16:02.306569Z",
       "modified": "2026-10-20T20:16:02.322409Z",
+      "type": {
+        "name": "unknown",
+        "label": "Unknown",
+        "uri": "http://vocabulary.odm2.org/sitetype/unknown",
+        "vocabulary": "sitetype"
+      },
+      "elevation": 412.0,
+      "elevation_datum": {
+        "name": "MSL",
+        "label": "MSL",
+        "uri": "http://vocabulary.odm2.org/elevationdatum/MSL",
+        "vocabulary": "elevationdatum"
+      },
       "country": null,
       "region": null,
       "continent": null,
@@ -179,7 +192,8 @@ GET /api/v1/samples/heat-flow-sites/
       "units": {
         "azimuth": "deg",
         "inclination": "deg",
-        "length": "m"
+        "length": "m",
+        "elevation": "m"
       }
     }
   ]
@@ -216,6 +230,19 @@ GET /api/v1/samples/heat-flow-sites/sQcrZXZsAnhtT5LyW55ALhs/
   "location_uncertainty": null,
   "added": "2026-10-20T20:16:02.306569Z",
   "modified": "2026-10-20T20:16:02.322409Z",
+  "type": {
+    "name": "unknown",
+    "label": "Unknown",
+    "uri": "http://vocabulary.odm2.org/sitetype/unknown",
+    "vocabulary": "sitetype"
+  },
+  "elevation": 412.0,
+  "elevation_datum": {
+    "name": "MSL",
+    "label": "MSL",
+    "uri": "http://vocabulary.odm2.org/elevationdatum/MSL",
+    "vocabulary": "elevationdatum"
+  },
   "country": null,
   "region": null,
   "continent": null,
@@ -276,7 +303,8 @@ GET /api/v1/samples/heat-flow-sites/sQcrZXZsAnhtT5LyW55ALhs/
   "units": {
     "azimuth": "deg",
     "inclination": "deg",
-    "length": "m"
+    "length": "m",
+    "elevation": "m"
   },
   "intervals": [
     {
