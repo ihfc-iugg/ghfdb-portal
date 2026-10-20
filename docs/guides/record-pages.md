@@ -74,6 +74,54 @@ A site with many intervals lists the first twenty and says how many more there a
 link beside that count opens the same page with `?show=all`, which lists every interval the visitor
 may open. The link is absent when the page already lists them all.
 
+## A thermal gradient's page
+
+The gradient's page answers what was measured, and which heat flow values rest on it. It shows:
+
+- **The values.** The measured gradient and the corrected gradient, each with its uncertainty and
+  unit. A gradient with no corrected value says so.
+- **The temperatures.** At the top and the bottom of the interval: the temperature, the method it
+  was read by, the correction applied, the shut-in time, and the number of temperature
+  recordings. A field with nothing recorded says so.
+- **Quality.** The gradient's own T-score, with the missing-information mark where one applies,
+  and the scheme revision. A gradient whose score was not determined says so; it is never shown as
+  zero. The score here is the gradient's own, before any heat flow value applies its corrections:
+  the child's page shows the corrected score beside it.
+- **A stale score.** A score stored under a scheme revision other than the current one is said to
+  be stale and is shown as stored.
+- **Where it was measured.** The depth interval and the site, each linked, and the site's
+  location on a map.
+- **The heat flow values that use it.** Each value linked, with its quality code. A gradient no
+  heat flow value uses says so.
+
+## An interval conductivity's page
+
+The conductivity's page answers how a conductivity was determined, and which heat flow values rest
+on it. It shows:
+
+- **The value.** The conductivity with its uncertainty and unit, and the number of measurements
+  it comes from.
+- **How it was determined.** Its source, the location of the samples, the method, the averaging
+  strategy, the saturation, the pT conditions and the pT function, each as its vocabulary terms. A
+  field with nothing recorded says so.
+- **Quality.** The conductivity's own TC-score, with the missing-information mark where one
+  applies, and the scheme revision. A score that was not determined says so and is never shown as
+  zero.
+- **A stale score.** Said and shown as on a gradient's page.
+- **Where it was measured.** The depth interval and the site, each linked, and the site's
+  location on a map.
+- **The heat flow values that use it.** Each value linked, with its quality code.
+
+On both pages a heat flow value in a dataset that has not been published is counted and never named
+or linked, and the interval and the site are named only when the visitor may open them.
+
+### Show all
+
+A gradient or a conductivity used by many heat flow values lists the first twenty and says how many
+more there are. The **Show all** link beside that count opens the same page with `?show=all`, which
+lists every heat flow value the visitor may open. The link is absent when the page already lists
+them all.
+
 ## For developers
 
 ### How the content reaches a page
@@ -112,7 +160,7 @@ and each method returns a dictionary the template reads.
 | `for_child()` | The gradient, conductivity and parent the visitor may open, each with a `*_hidden` flag; the corrections; the interval and site; the site's location; whether the scores are stale. |
 | `for_site()` | The site's parent, or that it is hidden; its intervals from shallowest to deepest, each with its children; how many intervals and children the visitor may not open; and the children counted over every interval the visitor may open. |
 | `for_interval()` | The interval's site and probe metadata. |
-| `for_gradient_or_conductivity()` | The children that use the measurement, and its interval and site. |
+| `for_gradient_or_conductivity()` | The measurement's interval and site, each `None` when the visitor may not open it, and the site's location; the children that use the measurement, with the cut at `children_shown` lifted by `show_all`, each child's method prefetched; whether the score is stale. |
 | `for_parent()` | The parent's children and the ones its quality rests on. |
 
 The members every method shares:
@@ -130,7 +178,8 @@ The members every method shares:
 
 A list shows its first rows and says how many more there are. `intervals_shown` and
 `children_shown` set the cut for a site's intervals and for the children a page lists; `show_all`
-lifts the cut on the intervals. A page asks for it with `?show=all`.
+lifts the cut on the intervals and on the children a gradient's or a conductivity's page lists. A
+page asks for it with `?show=all`.
 
 ### Template tags
 
@@ -173,10 +222,12 @@ the visitor may not open stays out of the page.
 
 Tests find a page's content by `data-` attributes and by the records' URLs, never by wording.
 `data-heat-flow="<what>"` marks each card or list (`gradient`, `conductivity`, `corrections`,
-`parent`, `intervals`, `interval`, `site`). A cut list carries `data-more`, the number it does not
+`parent`, `intervals`, `children`, `interval`, `site`). A cut list carries `data-more`, the number it does not
 show, and a list that hides records carries `data-hidden`, how many; a site page's interval rows
-carry `data-interval` with the interval's key. `data-state` marks an empty (`empty`, `none`, `not-recorded`),
+carry `data-interval` with the interval's key, and each child in a list `data-child` with the
+child's key. `data-state` marks an empty (`empty`, `none`, `not-recorded`),
 hidden (`hidden`) or stale (`stale`) state. `<c-heat_flow.field>` carries `data-field="<name>"`,
-and `data-state="not-recorded"` when its value is empty. A correction row carries
+and `data-state="not-recorded"` when its value is empty; the gradient's table cells carry the same
+two attributes. A correction row carries
 `data-correction` and `data-status`. FairDM's own cards carry `data-card` (`identifiers`,
 `citation`) and the Manage menu `data-menu="manage"`.
