@@ -100,3 +100,10 @@ Did: Rebuilt `HeatFlowPage.for_parent` test-first: the basis and the ids it rest
 Verified: `uv run pytest tests/test_heat_flow/test_overview.py -k ForParent -n0 -q`: red first (2 failed, 14 passed: `show_all` ignored, 3 queries reading the method), then 16 passed. Probes, each failing exactly its test and restored: returning the site without the visibility check, and taking `rests_on` from the relevant flag instead of the basis.
 Next: T014, the page hooks and tests.
 Watch: none.
+
+## 2026-10-20T16:46:56Z · Implementer US4 · T014
+
+Did: Data hooks on the parent page: `data-field` on the heat production correction, the GHFDB id and the curator comment (an undecided correction is left empty, so the field says not recorded), `data-heat-flow="site"` with `data-state="hidden"` on the site card. `card/quality/parent.html` already carried `data-quality="basis"`. New module `tests/test_templates/test_parentheatflow_overview.py`: spec US-4 scenarios 1-5, the fields, the quality card's stored grades, flags and revision, the stale state, the cut and `?show=all`, a hidden child counted, FairDM's shared page, query count equal for one child and three.
+Verified: `uv run pytest tests/test_templates/test_parentheatflow_overview.py -n0 -q`: red first against the unchanged template (6 failed, 20 passed: no `data-field`, no site hook), then 26 passed. Probes, each failing its tests and restored: renaming `data-quality="basis"` (4 failed), removing the stale notice (1), hard-coding `data-rests-on` false (2).
+Next: T015, the guide.
+Watch: none.

@@ -334,8 +334,19 @@
         },
         {
           "id": "T014",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templates/test_parentheatflow_overview.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templates/test_parentheatflow_overview.py -n0 -q"
+            ],
+            "code": [
+              "project/heat_flow/templates/heat_flow/parentheatflow_overview.html:36"
+            ]
+          }
         },
         {
           "id": "T015",
