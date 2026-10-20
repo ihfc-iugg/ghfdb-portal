@@ -118,8 +118,8 @@ class Command(BaseCommand):
             "--page-states",
             action="store_true",
             help=(
-                "Vary the first complete dataset so every state a heat flow record's page"
-                " answers for can be opened."
+                "Vary the first complete dataset so every state a heat flow record's"
+                " page answers for can be opened."
             ),
         )
 
