@@ -91,8 +91,15 @@ a decision, changes requested and complete. After that, four datasets in five ar
 
 ## Page states for the record pages
 
-The first complete dataset of every run is varied so each state a heat flow record's page answers
-for can be opened. Sign in as the demo Data Assessor to open its private neighbours, and read the
+With `--page-states`, the first complete dataset of the run is varied so each state a heat flow
+record's page answers for can be opened:
+
+```bash
+uv run python manage.py seed_demo_data --page-states
+```
+
+Without it, every record is scored under the current scheme revision and every site has a
+location, as the sections above describe. Sign in as the demo Data Assessor to open its private neighbours, and read the
 pages as a visitor who is not signed in to see what an unpublished dataset hides. Its first six
 sites, in the order of their primary keys, hold:
 

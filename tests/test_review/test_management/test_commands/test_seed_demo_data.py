@@ -467,6 +467,11 @@ class TestSeedDemoDataProjects:
             assert project.uuid in content
 
 
+@pytest.fixture
+def seeded_with_page_states(db):
+    seed("--size", str(SMALLEST_SIZE), "--page-states")
+
+
 class TestSeedDemoDataPageStates:
     def varied_dataset(self):
         """The one published dataset with a site that has no location."""
@@ -474,13 +479,13 @@ class TestSeedDemoDataPageStates:
             pk__in=HeatFlowSite.objects.filter(location=None).values("dataset")
         )
 
-    def test_a_run_varies_one_published_dataset(self, seeded):
+    def test_a_run_varies_one_published_dataset(self, seeded_with_page_states):
         dataset = self.varied_dataset()
 
         assert dataset.published is True
         assert dataset.visibility == Dataset.VISIBILITY_CHOICES.PUBLIC
 
-    def test_that_dataset_holds_every_state_a_record_page_answers_for(self, seeded):
+    def test_that_dataset_holds_every_state_a_record_page_answers_for(self, seeded_with_page_states):
         dataset = self.varied_dataset()
         sites = HeatFlowSite.objects.filter(dataset=dataset)
         parents = ParentHeatFlow.objects.filter(sample__in=sites, dataset=dataset)
@@ -501,7 +506,7 @@ class TestSeedDemoDataPageStates:
         )
 
     def test_the_first_dataset_holds_the_records_it_hides_beside_published_ones(
-        self, seeded
+        self, seeded_with_page_states
     ):
         dataset = self.varied_dataset()
         hidden = Dataset.all_objects.get(review__state=States.DESCRIBED)
@@ -512,11 +517,14 @@ class TestSeedDemoDataPageStates:
         assert hidden.published is False
 
     def test_a_second_run_varies_another_dataset_and_fails_on_nothing(self, db):
-        seed()
-        seed()
+        seed("--size", str(SMALLEST_SIZE), "--page-states")
+        seed("--size", str(SMALLEST_SIZE), "--page-states")
 
         varied = Dataset.all_objects.filter(
             pk__in=HeatFlowSite.objects.filter(location=None).values("dataset")
         )
 
         assert varied.count() == 2
+
+    def test_a_run_without_the_option_varies_nothing(self, seeded):
+        assert not HeatFlowSite.objects.filter(location=None).exists()

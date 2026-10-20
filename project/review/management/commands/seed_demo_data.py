@@ -114,6 +114,14 @@ class Command(BaseCommand):
                 f" (default {DEFAULT_SIZE}). Four is the least that holds every assessment state."
             ),
         )
+        parser.add_argument(
+            "--page-states",
+            action="store_true",
+            help=(
+                "Vary the first complete dataset so every state a heat flow record's page"
+                " answers for can be opened."
+            ),
+        )
 
     def handle(self, *args, **options):
         """Refuse production or a size out of range, load the vocabularies and licences, then create the datasets."""
@@ -153,7 +161,7 @@ class Command(BaseCommand):
                 )
             if unpublished is None:
                 unpublished = dataset
-            if dataset.published and not varied:
+            if options["page_states"] and dataset.published and not varied:
                 DemoGraph(dataset, rng).vary_page_states(unpublished)
                 varied = True
             sites = HeatFlowSite.objects.filter(dataset=dataset).count()

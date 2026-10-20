@@ -247,7 +247,7 @@ D17. Accepted.
 
 ## D19. The page states are made on the first complete dataset, from records moved, not added
 
-**Decision:** `seed_demo_data` calls `DemoGraph.vary_page_states` on the first dataset of the run
+**Decision:** with `--page-states` (D20), `seed_demo_data` calls `DemoGraph.vary_page_states` on the first dataset of the run
 whose assessment is complete (public and published), and passes the run's first dataset, which is
 private and unpublished, as the place hidden records go. The step moves existing records into
 that dataset and adds only empty intervals, so a run still makes the same number of datasets,
@@ -261,12 +261,15 @@ the visitor can open. Moving records leaves the counts that the command's size t
 **Revisit if:** the order of assessment states in `STATE_PLAN` changes, or the command is asked
 to make more children to show a cut list with children in every interval.
 
-**Open:** four existing tests in `tests/test_review/test_management/test_commands/
-test_seed_demo_data.py` assert the opposite of states research R4 asks for, and fail now:
-`test_every_record_carries_the_current_scheme_revision` (a stale score),
-`test_scores_are_computed_for_every_child` (a child not yet scored),
-`test_scores_equal_a_fresh_recalculation` (a refresh rewrites the stale score) and
-`test_coordinates_stay_distinct_across_runs` (a site with no location has no point). They are
-not edited here; they need Forge's triage.
+**ADR:** none — development data only.
+
+## D20. The page states are made only when `seed_demo_data --page-states` asks for them
+
+FS-008's command tests promise that a default run scores every record under the current scheme
+revision, matches a fresh recalculation and gives every site its own coordinates. The page
+states need the opposite: a stale score, an unscored child and a site with no location. Those
+promises stay true for a default run, and the states are made only when `--page-states` is
+passed. A test asserts a default run varies nothing. The orchestrator made this change directly
+to finish T007: one option, one guard and the tests' fixture.
 
 **ADR:** none — development data only.
