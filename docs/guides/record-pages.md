@@ -1,0 +1,155 @@
+# Record pages
+
+Every heat flow record has a page: a site, a depth interval, a child heat flow value, a thermal
+gradient, an interval conductivity and a parent heat flow value. Each page keeps everything the
+portal shows on any record (the header and its Manage menu, the people credited, the identifiers,
+how to cite it and who may open it) and adds what that kind of record holds. This page describes
+what a visitor sees on each, and, for developers, how the content reaches the page.
+
+A visitor is anyone reading the portal, signed in or not. A record is shown to them when the portal
+would let them open its page: its dataset is public and published, or they hold a level on the
+record, its dataset or its project.
+
+## What every page does
+
+- **Quantities carry their unit.** A value is written with its unit, and a value with an
+  uncertainty is written `value ± uncertainty unit`.
+- **Vocabulary fields are written as terms**, in the visitor's language where the vocabulary has
+  one, never as stored identifiers.
+- **An empty field says it is not recorded.** It is never shown as zero. An empty score says it is
+  not determined.
+- **A record the visitor may not open is never named or linked.** The page says that a record
+  exists in a dataset that has not been published, and nothing else about it: no value, no
+  score, no link.
+- **Scores are shown as stored.** A page never calculates one.
+
+## A child heat flow value's page
+
+The child is the heat flow determination itself, and its page answers how the value was reached.
+It shows:
+
+- **The value and its method.** The value with its uncertainty and unit, and the method as its
+  vocabulary terms. A child with no method says the method is not recorded.
+- **What it was calculated from.** The thermal gradient and the interval conductivity, each with
+  its value and a link to its own page. A child with no gradient, or no conductivity, says which
+  one is not recorded and still shows everything else.
+- **Corrections.** Every correction recorded for the child, each with its correction type and
+  status. A correction recorded as not recognised is shown as recorded: that is a different fact
+  from no correction being recorded, which the page says on its own.
+- **Quality.** The quality code, the U-score and M-score, the gradient's and conductivity's own
+  scores beside the scores corrected for this child, the missing-information marks, the seven
+  perturbation flags and the scheme revision. [Quality scores](quality-scores.md) explains how
+  each is reached. A gradient or conductivity the visitor may not open shows no score in this
+  card.
+- **A stale score.** A score stored under a scheme revision other than the current one is said to
+  be stale. It is still shown as stored.
+- **The parent.** A link to the parent heat flow value the child belongs to and whether the child
+  is marked relevant to it, or a statement that the child belongs to no parent.
+- **Where it was measured.** The depth interval, with its depth range, and the site, each linked.
+- **The determination.** The surface temperature, the date acquired, the expedition or platform,
+  the GHFDB child ID and the comment.
+
+## For developers
+
+### How the content reaches a page
+
+FairDM draws every record's overview page from `overview/page.html` and lets a record's type
+extend it. A heat flow type provides `heat_flow/<model_name>_overview.html`, which extends
+`sample/sample_overview.html` or `measurement/measurement_overview.html` and fills the blocks
+FairDM defines. FairDM's page is extended, never replaced, so the shared header, people,
+identifiers and citation stay.
+
+What a page lists beyond FairDM's own context is gathered by `HeatFlowPage`, and reaches the
+template through the `heat_flow_page` tag.
+
+| Page | Template |
+| --- | --- |
+| Site | `heat_flow/heatflowsite_overview.html` |
+| Depth interval | `heat_flow/heatflowinterval_overview.html` |
+| Child | `heat_flow/heatflow_overview.html` |
+| Thermal gradient | `heat_flow/thermalgradient_overview.html` |
+| Interval conductivity | `heat_flow/intervalconductivity_overview.html` |
+| Parent | `heat_flow/parentheatflow_overview.html` |
+
+The reusable pieces are Cotton components: `<c-heat_flow.field>`, `<c-heat_flow.code>`,
+`<c-heat_flow.stale>`, `<c-heat_flow.child_row>`, `<c-heat_flow.children>`,
+`<c-heat_flow.measured_on>` and `<c-heat_flow.site_location>` under `templates/cotton/heat_flow/`,
+and `<c-card.quality>` with its parts under `templates/cotton/card/quality/`.
+
+### `HeatFlowPage`
+
+`HeatFlowPage(record, user, show_all=False)` in `heat_flow.overview` gathers what a record's page
+lists, for one visitor. `context()` dispatches on the record's type to the method that gathers it,
+and each method returns a dictionary the template reads.
+
+| Method | Gathers |
+| --- | --- |
+| `for_child()` | The gradient, conductivity and parent the visitor may open, each with a `*_hidden` flag; the corrections; the interval and site; the site's location; whether the scores are stale. |
+| `for_site()` | The site's parent and its intervals with their children. |
+| `for_interval()` | The interval's site and probe metadata. |
+| `for_gradient_or_conductivity()` | The children that use the measurement, and its interval and site. |
+| `for_parent()` | The parent's children and the ones its quality rests on. |
+
+The members every method shares:
+
+- `opens(record)` says whether the record's own page would open for the visitor.
+- `split(records)` returns the records the visitor may open, in the order given, and how many they
+  may not. It makes one `visible_to` query however many records it is given, so the records must
+  all be samples or all be measurements.
+- `listing(children, limit=None)` splits a list of children and cuts it to `limit`, returning
+  the `rows`, the `total` the visitor may open, how many `more` the cut leaves out and how many are
+  `hidden`.
+- `site_location()` gives the location of the record's site as the site's, with whether the
+  visitor may see it.
+- `is_stale(record)` says whether a record's stored scheme revision is not the current one.
+
+A list shows its first rows and says how many more there are. `intervals_shown` and
+`children_shown` set the cut for a site's intervals and for the children a page lists; `show_all`
+lifts the cut on the intervals.
+
+### Template tags
+
+Load them with `{% load heat_flow_overview %}`.
+
+- `{% heat_flow_page record as hf %}` hands the template what `HeatFlowPage(record, request.user)`
+  gathers. A render gathers a record once: a second block asking for the same record reads the
+  result the first block left in the render context, with no further query.
+- `{{ concepts|labels }}` writes one vocabulary concept, or a many-to-many manager of concepts,
+  as its labels joined by commas. A graph concept is written in the active language.
+- `{{ value|plus_minus:uncertainty }}` writes `value ± uncertainty unit`, the value alone when
+  the uncertainty is empty, and nothing when the value is empty.
+
+### Adding content to a page
+
+To add a card to a type's page, fill a block in its template. This one adds a card to the
+child's page, and reads the gradient the visitor may open:
+
+```django
+{% extends "measurement/measurement_overview.html" %}
+{% load i18n heat_flow_overview %}
+{% block overview.properties %}
+  {% heat_flow_page measurement as hf %}
+  <c-mvp.card title="{% translate 'Calculated from' %}">
+    {% if hf.gradient %}
+      <a href="{{ hf.gradient.get_absolute_url }}">{{ hf.gradient.print_value }}</a>
+    {% elif hf.gradient_hidden %}
+      {% translate "Recorded in a dataset that hasn't been published yet." %}
+    {% else %}
+      {% translate "No thermal gradient is recorded." %}
+    {% endif %}
+  </c-mvp.card>
+{% endblock overview.properties %}
+```
+
+Read a related record from the dictionary, never from the model's own relation, so that a record
+the visitor may not open stays out of the page.
+
+### Hooks for tests
+
+Tests find a page's content by `data-` attributes and by the records' URLs, never by wording.
+`data-heat-flow="<what>"` marks each card or list (`gradient`, `conductivity`, `corrections`,
+`parent`, `interval`, `site`). `data-state` marks an empty (`empty`, `none`, `not-recorded`),
+hidden (`hidden`) or stale (`stale`) state. `<c-heat_flow.field>` carries `data-field="<name>"`,
+and `data-state="not-recorded"` when its value is empty. A correction row carries
+`data-correction` and `data-status`. FairDM's own cards carry `data-card` (`identifiers`,
+`citation`) and the Manage menu `data-menu="manage"`.
