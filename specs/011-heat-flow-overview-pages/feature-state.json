@@ -106,8 +106,24 @@
         },
         {
           "id": "T003",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_templates/test_heatflow_overview.py::TestChildPage",
+              "tests/test_templates/test_heatflow_overview.py::TestChildPageForARecordTheVisitorMayNotOpen",
+              "tests/test_templates/test_heatflow_overview.py::TestChildPageKeepsFairDMsPage",
+              "tests/test_templates/test_heatflow_overview.py::TestChildCard"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templates/test_heatflow_overview.py -q -n0 (red before the hooks: 28 failed 7 passed; green: 35 passed; probe: quality card reading through the child fails test_a_hidden_gradient_shows_no_score_in_the_quality_card)"
+            ],
+            "code": [
+              "templates/cotton/card/quality/index.html:12",
+              "templates/cotton/heat_flow/field.html:8",
+              "templates/cotton/heat_flow/measured_on.html:10"
+            ]
+          }
         },
         {
           "id": "T004",

@@ -23,3 +23,10 @@ Did: Rebuilt the tag library: `heat_flow_page` gathers once per record and keeps
 Verified: `uv run pytest tests/test_heat_flow/test_templatetags -q -n0`: red first (filter missing, two blocks cost double the queries, every page failing with the old templates), then 18 passed.
 Next: T003, the child page tests and hooks.
 Watch: the interval page raised `IconNotFoundError` in tests (`arrow-up`/`arrow-down` are `arrow_up`/`arrow_down` in the icon registry); fixed in `heatflowinterval_overview.html` so the page renders.
+
+## 2026-10-20T14:19:14Z · Implementer US1 · T003
+
+Did: Added the child page's data hooks (`data-heat-flow` on gradient, conductivity, corrections, parent, interval and site; `data-state` on empty, hidden, not-recorded and stale; `data-field` and the not-recorded state on `<c-heat_flow.field>`) and made the quality card read the gradient's and conductivity's own scores from the visitor-filtered props. Wrote TestChildPage and moved FS-007's TestChildCard into the same module, unskipped.
+Verified: `uv run pytest tests/test_templates/test_heatflow_overview.py -q -n0`: red first (28 failed, 7 passed, hooks absent), then 35 passed. Probe: reading the own scores through `child.thermal_gradient` again fails the hidden-gradient test.
+Next: T004, the docs.
+Watch: the moved card tests could not run as written. Their reader needed to be a superuser (the fixtures' datasets are not published), and the `conductivity` fixture passed `location=[]`, a field since renamed `conductivity_location`; both are fixture-only repairs in `tests/test_templates/conftest.py`.
