@@ -1,7 +1,9 @@
 {# @description The quality card on a heat flow value's page: its temperature gradient and thermal conductivity scores, own and corrected, the U-score and M-score, the quality code, the scheme revision and the seven perturbation flags. #}
 {# @prop child:object | description:"The heat flow value whose stored quality scores the card shows." #}
+{# @prop gradient:object | description:"The child's thermal gradient as the visitor may open it, or none. Its own score is read from here and never through the child, so a gradient the visitor may not open shows no score." #}
+{# @prop conductivity:object | description:"The child's interval conductivity as the visitor may open it, or none, read the same way." #}
 {% load i18n %}
-<c-vars child />
+<c-vars child gradient conductivity />
 <c-mvp.card title="{% trans "Quality score" %}"
             class="bg-base-100"
             role="region"
@@ -24,15 +26,13 @@
         <tr>
           <th scope="row">{% trans "T-score (temperature gradient)" %}</th>
           <td>
-            {% with gradient=child.thermal_gradient %}
-              {% if gradient %}
-                <c-card.quality.score hook="t-own"
-                                      :score="gradient.score"
-                                      :missing="gradient.score_missing" />
-              {% else %}
-                <c-card.quality.score hook="t-own" />
-              {% endif %}
-            {% endwith %}
+            {% if gradient %}
+              <c-card.quality.score hook="t-own"
+                                    :score="gradient.score"
+                                    :missing="gradient.score_missing" />
+            {% else %}
+              <c-card.quality.score hook="t-own" />
+            {% endif %}
           </td>
           <td>
             <c-card.quality.score hook="t-corrected"
@@ -43,15 +43,13 @@
         <tr>
           <th scope="row">{% trans "TC-score (thermal conductivity)" %}</th>
           <td>
-            {% with conductivity=child.thermal_conductivity %}
-              {% if conductivity %}
-                <c-card.quality.score hook="tc-own"
-                                      :score="conductivity.score"
-                                      :missing="conductivity.score_missing" />
-              {% else %}
-                <c-card.quality.score hook="tc-own" />
-              {% endif %}
-            {% endwith %}
+            {% if conductivity %}
+              <c-card.quality.score hook="tc-own"
+                                    :score="conductivity.score"
+                                    :missing="conductivity.score_missing" />
+            {% else %}
+              <c-card.quality.score hook="tc-own" />
+            {% endif %}
           </td>
           <td>
             <c-card.quality.score hook="tc-corrected"

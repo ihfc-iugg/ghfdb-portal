@@ -8,7 +8,8 @@
   <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
     <div>
       <dt class="text-base-content/60 text-xs uppercase font-semibold">{% translate "Depth interval" %}</dt>
-      <dd>
+      <dd data-heat-flow="interval"
+          {% if not interval %}data-state="hidden"{% endif %}>
         {% if interval %}
           <a href="{{ interval.get_absolute_url }}"
              class="link link-hover font-medium tabular-nums">{{ interval.top|default_if_none:'' }} – {{ interval.bottom|default_if_none:'' }}</a>
@@ -20,7 +21,8 @@
     </div>
     <div>
       <dt class="text-base-content/60 text-xs uppercase font-semibold">{% translate "Site" %}</dt>
-      <dd>
+      <dd data-heat-flow="site"
+          {% if not site %}data-state="hidden"{% endif %}>
         {% if site %}
           <a href="{{ site.get_absolute_url }}"
              class="link link-hover font-medium break-words">{{ site }}</a>

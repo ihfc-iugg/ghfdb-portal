@@ -88,39 +88,3 @@ def child_fixture(
         thermal_gradient=gradient_fixture,
         thermal_conductivity=conductivity_fixture,
     )
-
-
-@pytest.fixture
-def page_records(published_dataset):
-    """A child with every record its page names, all in the published dataset."""
-    from tests.factories import (
-        HeatFlowFactory,
-        HeatFlowIntervalFactory,
-        HeatFlowSiteFactory,
-        IntervalConductivityFactory,
-        ParentHeatFlowFactory,
-        ThermalGradientFactory,
-    )
-
-    site = HeatFlowSiteFactory(dataset=published_dataset)
-    interval = HeatFlowIntervalFactory(dataset=published_dataset, site=site)
-    gradient = ThermalGradientFactory(dataset=published_dataset, sample=interval)
-    conductivity = IntervalConductivityFactory(
-        dataset=published_dataset, sample=interval
-    )
-    parent = ParentHeatFlowFactory(dataset=published_dataset, sample=site)
-    child = HeatFlowFactory(
-        dataset=published_dataset,
-        sample=interval,
-        thermal_gradient=gradient,
-        thermal_conductivity=conductivity,
-        parent=parent,
-    )
-    return {
-        "site": site,
-        "interval": interval,
-        "gradient": gradient,
-        "conductivity": conductivity,
-        "parent": parent,
-        "child": child,
-    }

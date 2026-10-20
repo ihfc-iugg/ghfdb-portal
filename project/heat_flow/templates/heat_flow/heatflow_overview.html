@@ -18,9 +18,14 @@
   <c-mvp.card.wrapper class="bg-base-100">
     <div class="card-body gap-2">
       <p class="text-xs uppercase font-semibold text-base-content/60">{% translate "Heat flow" %}</p>
-      <p class="text-4xl font-semibold tabular-nums break-words">{{ measurement.print_value }}</p>
+      <p class="text-4xl font-semibold tabular-nums break-words"
+         data-field="value">{{ measurement.print_value }}</p>
       {% with methods=measurement.method|labels %}
-        <p class="text-sm text-base-content/70">{% if methods %}{% blocktranslate with method=methods %}Method: {{ method }}{% endblocktranslate %}{% else %}{% translate "Method not recorded" %}{% endif %}</p>
+        <p class="text-sm text-base-content/70"
+           data-field="method"
+           {% if not methods %}data-state="not-recorded"{% endif %}>
+          {% if methods %}{% blocktranslate with method=methods %}Method: {{ method }}{% endblocktranslate %}{% else %}{% translate "Method not recorded" %}{% endif %}
+        </p>
       {% endwith %}
     </div>
   </c-mvp.card.wrapper>
@@ -30,7 +35,8 @@
   <c-mvp.card title="{% translate 'Calculated from' %}"
               class="bg-base-100">
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-      <div>
+      <div data-heat-flow="gradient"
+           {% if hf.gradient_hidden %}data-state="hidden"{% elif not hf.gradient %}data-state="not-recorded"{% endif %}>
         <h3 class="text-base-content/60 text-xs uppercase font-semibold">{% translate "Thermal gradient" %}</h3>
         {% if hf.gradient %}
           <a href="{{ hf.gradient.get_absolute_url }}"
@@ -44,7 +50,8 @@
           <p class="text-sm text-base-content/70">{% translate "No thermal gradient is recorded." %}</p>
         {% endif %}
       </div>
-      <div>
+      <div data-heat-flow="conductivity"
+           {% if hf.conductivity_hidden %}data-state="hidden"{% elif not hf.conductivity %}data-state="not-recorded"{% endif %}>
         <h3 class="text-base-content/60 text-xs uppercase font-semibold">{% translate "Interval conductivity" %}</h3>
         {% if hf.conductivity %}
           <a href="{{ hf.conductivity.get_absolute_url }}"
@@ -61,6 +68,8 @@
   <c-mvp.card title="{% translate 'Corrections' %}"
               class="bg-base-100">
     <c-slot name="badges">{% if hf.corrections %}<span class="badge badge-ghost badge-sm">{{ hf.corrections|length }}</span>{% endif %}</c-slot>
+    <div data-heat-flow="corrections"
+         {% if not hf.corrections %}data-state="empty"{% endif %}>
     {% if hf.corrections %}
       <div class="overflow-x-auto">
         <table class="table table-sm">
@@ -74,7 +83,8 @@
           </thead>
           <tbody>
             {% for correction in hf.corrections %}
-              <tr>
+              <tr data-correction="{{ correction.correction_type }}"
+                  data-status="{{ correction.status }}">
                 <th scope="row" class="font-medium">{{ correction.get_correction_type_display }}</th>
                 <td>{{ correction.get_status_display|capfirst }}</td>
                 <td class="text-base-content/70">{{ correction.comment|default:"" }}</td>
@@ -86,10 +96,15 @@
     {% else %}
       <p class="text-sm text-base-content/70">{% translate "No corrections are recorded for this heat flow value." %}</p>
     {% endif %}
+    </div>
   </c-mvp.card>
-  <c-card.quality :child="measurement" />
+  <c-card.quality :child="measurement"
+                  :gradient="hf.gradient"
+                  :conductivity="hf.conductivity" />
   <c-mvp.card title="{% translate 'Parent heat flow' %}"
               class="bg-base-100">
+    <div data-heat-flow="parent"
+         {% if hf.parent %}data-relevant="{{ measurement.is_relevant|yesno:'true,false' }}"{% elif hf.parent_hidden %}data-state="hidden"{% else %}data-state="none"{% endif %}>
     {% if hf.parent %}
       <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
         <a href="{{ hf.parent.get_absolute_url }}"
@@ -113,20 +128,26 @@
     {% else %}
       <p class="text-sm text-base-content/70">{% translate "This heat flow value belongs to no parent." %}</p>
     {% endif %}
+    </div>
   </c-mvp.card>
   <c-mvp.card title="{% translate 'Determination' %}"
               class="bg-base-100">
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
-      <c-heat_flow.field label="{% translate 'Surface temperature' %}"
+      <c-heat_flow.field field="surface_temperature"
+                         label="{% translate 'Surface temperature' %}"
                          value="{{ measurement.surface_temperature|default_if_none:'' }}" />
-      <c-heat_flow.field label="{% translate 'Date acquired' %}"
+      <c-heat_flow.field field="date_acquired"
+                         label="{% translate 'Date acquired' %}"
                          value="{{ measurement.date_acquired|default_if_none:'' }}" />
-      <c-heat_flow.field label="{% translate 'Expedition or platform' %}"
+      <c-heat_flow.field field="expedition"
+                         label="{% translate 'Expedition or platform' %}"
                          value="{{ measurement.expedition|default_if_none:'' }}" />
-      <c-heat_flow.field label="{% translate 'GHFDB child ID' %}"
+      <c-heat_flow.field field="ghfdb_id"
+                         label="{% translate 'GHFDB child ID' %}"
                          value="{{ measurement.ghfdb_id|default_if_none:'' }}" />
     </div>
-    <c-heat_flow.field label="{% translate 'Comment' %}"
+    <c-heat_flow.field field="comment"
+                         label="{% translate 'Comment' %}"
                        value="{{ measurement.c_comment|default_if_none:'' }}" />
   </c-mvp.card>
 {% endblock overview.properties %}

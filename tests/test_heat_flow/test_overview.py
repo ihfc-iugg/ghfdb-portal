@@ -19,12 +19,6 @@ from tests.factories import HeatFlowCorrectionFactory, HeatFlowFactory
 pytestmark = pytest.mark.django_db
 
 
-def hide(record, dataset):
-    """Move a record into another dataset, as the database holds it."""
-    type(record).objects.filter(pk=record.pk).update(dataset=dataset)
-    record.refresh_from_db()
-
-
 @pytest.fixture
 def visitor():
     return AnonymousUser()
@@ -39,18 +33,18 @@ class TestHeatFlowPageOpens:
         assert page.opens(page_records["gradient"]) is True
 
     def test_a_visitor_does_not_open_a_record_in_an_unpublished_dataset(
-        self, page_records, unpublished_dataset, visitor
+        self, page_records, hide, visitor
     ):
-        hide(page_records["gradient"], unpublished_dataset)
+        hide(page_records["gradient"])
 
         page = HeatFlowPage(page_records["child"], visitor)
 
         assert page.opens(page_records["gradient"]) is False
 
     def test_a_member_of_the_dataset_opens_its_unpublished_record(
-        self, page_records, unpublished_dataset, member
+        self, page_records, hide, member
     ):
-        hide(page_records["gradient"], unpublished_dataset)
+        hide(page_records["gradient"])
 
         page = HeatFlowPage(page_records["child"], member)
 
@@ -64,9 +58,9 @@ class TestHeatFlowPageOpens:
 
 class TestHeatFlowPageSplit:
     def test_it_returns_the_records_the_visitor_may_open_and_counts_the_rest(
-        self, page_records, unpublished_dataset, visitor
+        self, page_records, hide, visitor
     ):
-        hide(page_records["conductivity"], unpublished_dataset)
+        hide(page_records["conductivity"])
         records = [page_records["gradient"], page_records["conductivity"]]
 
         shown, hidden = HeatFlowPage(page_records["child"], visitor).split(records)
@@ -105,9 +99,9 @@ class TestHeatFlowPageSplit:
             assert page.split([]) == ([], 0)
 
     def test_it_reads_samples_and_measurements_by_their_own_rule(
-        self, page_records, unpublished_dataset, visitor
+        self, page_records, hide, visitor
     ):
-        hide(page_records["interval"], unpublished_dataset)
+        hide(page_records["interval"])
 
         page = HeatFlowPage(page_records["child"], visitor)
 
@@ -153,9 +147,9 @@ class TestHeatFlowPageSiteLocation:
         assert place["point"] == page_records["site"].location
 
     def test_a_site_the_visitor_may_not_open_gives_no_location(
-        self, page_records, unpublished_dataset, visitor
+        self, page_records, hide, visitor
     ):
-        hide(page_records["site"], unpublished_dataset)
+        hide(page_records["site"])
 
         place = HeatFlowPage(page_records["child"], visitor).site_location()
 
@@ -253,9 +247,9 @@ class TestHeatFlowPageForChild:
 
     @pytest.mark.parametrize("name", ["gradient", "conductivity", "parent"])
     def test_a_record_in_an_unpublished_dataset_is_marked_hidden_and_not_returned(
-        self, page_records, unpublished_dataset, visitor, name
+        self, page_records, hide, visitor, name
     ):
-        hide(page_records[name], unpublished_dataset)
+        hide(page_records[name])
 
         context = HeatFlowPage(page_records["child"], visitor).for_child()
 
@@ -263,10 +257,10 @@ class TestHeatFlowPageForChild:
         assert context[f"{name}_hidden"] is True
 
     def test_the_interval_and_site_in_an_unpublished_dataset_are_not_returned(
-        self, page_records, unpublished_dataset, visitor
+        self, page_records, hide, visitor
     ):
-        hide(page_records["interval"], unpublished_dataset)
-        hide(page_records["site"], unpublished_dataset)
+        hide(page_records["interval"])
+        hide(page_records["site"])
 
         context = HeatFlowPage(page_records["child"], visitor).for_child()
 
@@ -275,9 +269,9 @@ class TestHeatFlowPageForChild:
         assert context["location"]["visible"] is False
 
     def test_a_member_is_given_the_unpublished_records(
-        self, page_records, unpublished_dataset, member
+        self, page_records, hide, member
     ):
-        hide(page_records["gradient"], unpublished_dataset)
+        hide(page_records["gradient"])
 
         context = HeatFlowPage(page_records["child"], member).for_child()
 

@@ -4,7 +4,11 @@
 {# @prop rests_on:boolean | description:"The parent's quality rests on this child." #}
 {% load i18n heat_flow_overview %}
 <c-vars child relevance rests_on />
-<li class="list-row px-0 items-center">
+<li class="list-row px-0 items-center"
+    data-heat-flow="child"
+    data-child="{{ child.pk }}"
+    data-relevant="{{ child.is_relevant|yesno:'true,false' }}"
+    data-rests-on="{{ rests_on|yesno:'true,false' }}">
   <span class="stat-icon stat-icon-sm"
         style="--stat-color: var(--color-accent)"
         aria-hidden="true">

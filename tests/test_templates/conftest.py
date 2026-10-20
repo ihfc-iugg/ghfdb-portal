@@ -4,9 +4,9 @@
 from html.parser import HTMLParser
 
 import pytest
-from django.urls import reverse
-from django.test.utils import CaptureQueriesContext
 from django.db import connection
+from django.test.utils import CaptureQueriesContext
+from django.urls import reverse
 
 from tests.factories import (
     HeatFlowCorrectionFactory,
@@ -76,8 +76,13 @@ class Page(HTMLParser):
 
 
 @pytest.fixture
-def page(client, db):
-    """Return a function that fetches a measurement's page and parses it."""
+def page(client, admin_user):
+    """Return a function that fetches a measurement's page, signed in, and parses it.
+
+    The reader is a superuser, who may open every record, so the quality card is found
+    whichever dataset a fixture's records are in.
+    """
+    client.force_login(admin_user)
 
     def fetch(measurement):
         response = client.get(
@@ -90,11 +95,13 @@ def page(client, db):
 
 
 @pytest.fixture
-def query_count(client, db):
+def query_count(client, admin_user):
     """Return a function that counts the queries one request to a measurement's page makes.
 
     The first request fills process-wide caches, so it is made before the one that is counted.
+    The reader is a superuser, as in ``page``.
     """
+    client.force_login(admin_user)
 
     def count(measurement):
         url = reverse("measurement:overview", kwargs={"uuid": measurement.uuid})
@@ -135,7 +142,7 @@ def conductivity(probe_interval):
         sample=probe_interval,
         number=4,
         source=[],
-        location=[],
+        conductivity_location=[],
         method=[],
         saturation=[],
         pT_conditions=[],
@@ -160,3 +167,104 @@ def child(probe_interval, gradient, conductivity):
     )
     child.refresh_from_db()
     return child
+
+
+class Node:
+    """One element of a parsed page: its attributes, children and text."""
+
+    def __init__(self, tag, attrs):
+        self.tag = tag
+        self.attrs = attrs
+        self.children = []
+
+    @property
+    def text(self):
+        """All the text under the element, with its whitespace collapsed."""
+        parts = [c if isinstance(c, str) else c.text for c in self.children]
+        return " ".join(" ".join(parts).split())
+
+    def descendants(self):
+        for child in self.children:
+            if isinstance(child, Node):
+                yield child
+                yield from child.descendants()
+
+    def find_all(self, attr, value=None):
+        """Return the elements below this one that carry ``attr`` (with ``value``)."""
+        return [
+            node
+            for node in self.descendants()
+            if attr in node.attrs and (value is None or node.attrs[attr] == value)
+        ]
+
+    def find(self, attr, value=None):
+        """Return the first element carrying ``attr`` (with ``value``), or ``None``."""
+        found = self.find_all(attr, value)
+        return found[0] if found else None
+
+    @property
+    def hrefs(self):
+        """The link targets below this element."""
+        return [n.attrs.get("href") for n in self.descendants() if n.tag == "a"]
+
+
+class Document(HTMLParser):
+    """A page parsed into elements that tests find by their ``data-`` attributes."""
+
+    VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta"}
+
+    def __init__(self, html):
+        super().__init__()
+        self.root = Node("document", {})
+        self.stack = [self.root]
+        self.feed(html)
+
+    def handle_starttag(self, tag, attrs):
+        node = Node(tag, dict(attrs))
+        self.stack[-1].children.append(node)
+        if tag not in self.VOID:
+            self.stack.append(node)
+
+    def handle_endtag(self, tag):
+        for index in range(len(self.stack) - 1, 0, -1):
+            if self.stack[index].tag == tag:
+                del self.stack[index:]
+                return
+
+    def handle_data(self, data):
+        self.stack[-1].children.append(data)
+
+    def find_all(self, attr, value=None):
+        return self.root.find_all(attr, value)
+
+    def find(self, attr, value=None):
+        return self.root.find(attr, value)
+
+
+@pytest.fixture
+def document(client, db):
+    """Return a function that fetches a record's overview page and parses it.
+
+    Pass ``user`` to read the page signed in.
+    """
+
+    def fetch(record, user=None):
+        if user is not None:
+            client.force_login(user)
+        response = client.get(record.get_absolute_url())
+        assert response.status_code == 200
+        return Document(response.content.decode())
+
+    return fetch
+
+
+@pytest.fixture
+def quality_hooks(client, db):
+    """Return a function that fetches a record's page as a visitor and parses its quality hooks."""
+
+    def fetch(record):
+        response = client.get(record.get_absolute_url())
+        assert response.status_code == 200
+        return Page(response.content.decode())
+
+    return fetch
