@@ -2,7 +2,7 @@
   "feature": "011-heat-flow-overview-pages",
   "branch": "011-heat-flow-overview-pages",
   "repo": "ihfc-iugg/ghfdb-portal",
-  "state": "CONVERGE",
+  "state": "REVIEW",
   "state_history": [
     {
       "state": "GATE_SPEC",
@@ -33,6 +33,11 @@
       "state": "CONVERGE",
       "at": "2026-10-20T17:43:14Z",
       "note": "all five stories accepted"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-20T17:52:21Z",
+      "note": "converged: verify green, ADR 0024, story comments green"
     }
   ],
   "gates": {
@@ -439,7 +444,7 @@
       "max": 2
     },
     "review_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 1
     },
     "design_review_cycles": {
