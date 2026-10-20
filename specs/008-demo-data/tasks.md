@@ -138,3 +138,5 @@ run in parallel.
 - [x] T012 Move the `fairdm` pin to `f69c9cb1`, its latest commit, which moves list pages onto
       django-mvp 0.29 filtersets. The assessment list's title search moves from the view's
       `search_fields` onto `ReviewFilter` as an `mvp.filters.SearchFilter`.
+- [x] T013 Fix `IntervalConductivity.clean()` to compare magnitudes, so a saved conductivity can be
+      validated (#283). The generator's tests run `full_clean()` on conductivities too.

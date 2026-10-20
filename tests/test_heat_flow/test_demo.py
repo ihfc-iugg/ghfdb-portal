@@ -43,20 +43,6 @@ CONCEPT_FIELDS = (
 )
 
 
-def validate(record):
-    """Run the checks an import applies to a record.
-
-    ``IntervalConductivity.clean`` compares a pint quantity with a float and raises
-    ``ValueError`` on any record it is given, so a conductivity gets every check
-    ``full_clean`` makes except that method. Its range check is asserted directly below.
-    """
-    if isinstance(record, IntervalConductivity):
-        record.clean_fields()
-        record.validate_constraints()
-        record.validate_unique()
-    else:
-        record.full_clean()
-
 
 def metres(quantity):
     return Reading.magnitude(quantity, "m")
@@ -115,7 +101,7 @@ class TestDemoGraph:
     def test_every_multi_table_record_passes_full_clean(self, graph):
         for model in MULTI_TABLE_MODELS:
             for record in model.objects.filter(dataset=graph):
-                validate(record)
+                record.full_clean()
 
     def test_every_multi_table_record_carries_the_graphs_dataset(self, graph):
         for model in MULTI_TABLE_MODELS:

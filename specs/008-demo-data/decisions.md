@@ -103,18 +103,15 @@ these fields.
 
 **ADR:** none — a limit of what this generator fills, local to this feature.
 
-## D8. A stored conductivity is checked without `IntervalConductivity.clean()`
+## D8. The conductivity check is fixed in this pull request
 
-**Decision:** the generator's tests run `clean_fields`, `validate_constraints` and
-`validate_unique` on conductivities, and assert the 0.1 to 50 range and the uncertainty rule directly.
+**Decision:** `IntervalConductivity.clean()` compares magnitudes in W/mK, so a saved conductivity
+passes `full_clean()` and the generator's tests validate conductivities like every other record.
 
-**Why:** `IntervalConductivity.clean()` compares a pint quantity with a float and raises `ValueError`
-on any record that has been saved and read back. The model is outside this story's scope, so the
-defect is reported, not fixed.
+**Why:** `clean()` compared a quantity read back from the database with a plain number and raised
+`ValueError` (#283). Sam asked for it to be fixed here.
 
-**Revisit if:** `clean()` is fixed to compare magnitudes.
-
-**ADR:** none — a testing workaround for an existing defect, reported separately.
+**ADR:** none — a defect fix.
 
 ## D9. The pin move was made without a dispatched implementer
 
