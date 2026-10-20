@@ -135,7 +135,7 @@ plugin registry cannot replace a registration (research R1). A type template is 
 that reaches the page, so the visitor-dependent lists are gathered by a template tag that hands
 the record and the visitor to `HeatFlowPage`, cached once per render.
 
-**ADR:** graduates at convergence (durable, cross-cutting, not visible in the code).
+**ADR:** docs/adr/0024-a-heat-flow-pages-content-comes-through-a-template-tag.md
 
 ## D10. Long lists show twenty and a "Show all" link
 
