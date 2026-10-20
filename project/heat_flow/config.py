@@ -20,12 +20,12 @@ from .models import (
     ThermalGradient,
 )
 from .serializers import (
-    HeatFlowIntervalSummarySerializer,
+    HeatFlowIntervalSerializer,
     HeatFlowSerializer,
     HeatFlowSiteSerializer,
-    IntervalConductivitySummarySerializer,
+    IntervalConductivitySerializer,
     ParentHeatFlowSerializer,
-    ThermalGradientSummarySerializer,
+    ThermalGradientSerializer,
 )
 from .tables import (
     HeatFlowIntervalTable,
@@ -118,7 +118,7 @@ class HeatFlowIntervalConfig(IHFCConfig):
     # lithology, age, stratigraphy are M2M and cannot be in list_display
     admin_list_display = ["top", "bottom", "vertical_depth", "vertical_datum"]
     table_class = HeatFlowIntervalTable
-    serializer_class = HeatFlowIntervalSummarySerializer
+    serializer_class = HeatFlowIntervalSerializer
     fields = [
         ("top", "bottom"),
         ("vertical_depth", "vertical_datum"),
@@ -166,7 +166,7 @@ class ThermalGradientConfig(IHFCConfig):
         "Geothermal gradient refers to the rate of temperature change over a given length interval (typically a depth interval). It reflects how heat flows from the Earth's hot interior toward its cooler surface, driven by conduction, convection, and sometimes advection. Thermal gradient is measured in Kelvin per kilometer (K/km) and varies depending on local geological conditions, such as rock composition and tectonic activity. In regions with high geothermal activity, the thermal gradient is larger, whereas stable cratons tend to have lower gradients. Understanding geothermal gradients helps geoscientists study Earth's geothermal energy potential and processes like plate tectonics and mantle convection."
     )
     table_class = ThermalGradientTable
-    serializer_class = ThermalGradientSummarySerializer
+    serializer_class = ThermalGradientSerializer
     fields = [
         ("value", "uncertainty"),
         ("corrected_value", "corrected_uncertainty"),
@@ -183,7 +183,7 @@ class IntervalConductivityConfig(IHFCConfig):
 
     model = IntervalConductivity
     table_class = IntervalConductivityTable
-    serializer_class = IntervalConductivitySummarySerializer
+    serializer_class = IntervalConductivitySerializer
     # method, strategy, source, saturation, pT_conditions, pT_function are M2M and cannot be in list_display
     admin_list_display = ["value", "uncertainty", "number"]
     description = _(

@@ -345,3 +345,27 @@ and the child's shape in the plan carries that field.
 **Why:** the test belongs to this feature (D27), and the shape it pins changed.
 
 **ADR:** none — follows the plan's shapes table
+
+## D31 — The path to a record's site is prefetched, not selected
+
+**Decision:** `SitePlacedSerializer.load_related` prefetches the path to the site
+(`prefetch_related`) instead of following it with `select_related`.
+
+**Why:** FairDM's `load_relations` ends in `queryset.select_related(*selected)`. For a serializer
+with no foreign key of its own to select (a gradient, a conductivity, a parent) that is a bare
+`select_related()`, which follows every non-null foreign key and drops the path chosen before it,
+so each record read its interval and site in its own query. A prefetch is not reset by that call
+and costs two queries however long the page is.
+
+**Revisit if:** `load_relations` keeps the paths chosen before it, which would let the join back in.
+
+**ADR:** none — a query-count constraint
+
+## D32 — The gradient's expected units gain its four temperatures
+
+**Decision:** the expected units of a gradient in `UNITS` now include `temperature_top`,
+`temperature_top_uncertainty`, `temperature_bottom` and `temperature_bottom_uncertainty` in °C.
+
+**Why:** the test belongs to this feature (D27), and the shape it pins changed.
+
+**ADR:** none — follows the plan's shapes table

@@ -2,7 +2,13 @@ import pytest
 from django.core.checks import run_checks
 from fairdm.contrib.contributors.choices import ContributionLevel
 from fairdm.factories import UserFactory
-from heat_flow.models import HeatFlow, HeatFlowCorrection, HeatFlowSite
+from heat_flow.models import (
+    HeatFlow,
+    HeatFlowCorrection,
+    HeatFlowSite,
+    IntervalConductivity,
+    ThermalGradient,
+)
 from research_vocabs.models import Concept
 
 from tests.factories import (
@@ -12,6 +18,7 @@ from tests.factories import (
     HeatFlowSiteFactory,
     IntervalConductivityFactory,
     ParentHeatFlowFactory,
+    ProbeMetadataFactory,
     ThermalGradientFactory,
 )
 
@@ -49,6 +56,10 @@ UNITS = {
         "corrected_uncertainty": "K/km",
         "shutin_top": "h",
         "shutin_bottom": "h",
+        "temperature_top": "°C",
+        "temperature_top_uncertainty": "°C",
+        "temperature_bottom": "°C",
+        "temperature_bottom_uncertainty": "°C",
     },
     "conductivity": {"value": "W/mK", "uncertainty": "W/mK"},
     "parent": {"value": "mW/m²", "uncertainty": "mW/m²"},
@@ -757,6 +768,394 @@ class TestHeatFlowSerializer:
         constant_query_count(
             build, lambda: client.get(f"{CHILDREN}{child.uuid}/"), low=1, high=3
         )
+
+
+STORED_SCORE = {"score": 0.7, "score_missing": True, "quality_scheme": "hfqa_tool 0.2"}
+
+
+@pytest.mark.django_db
+class TestPlacedAtSite:
+    @pytest.mark.parametrize("kind", ["interval", "gradient", "conductivity", "parent"])
+    def test_a_record_carries_its_sites_coordinates_and_a_reference_to_it(
+        self, client, full_records, kind
+    ):
+        site = full_records["site"]
+
+        record = only_record(client, ROUTES[kind])
+
+        assert record["location"]["type"] == "Point"
+        assert record["location"]["coordinates"][:2] == [
+            site.location.x,
+            site.location.y,
+        ]
+        assert record["site"]["uuid"] == site.uuid
+        assert record["site"]["url"].endswith(f"{SITES}{site.uuid}/")
+
+    @pytest.mark.parametrize("kind", ["interval", "gradient", "conductivity", "parent"])
+    def test_a_record_whose_site_is_hidden_has_no_location_and_no_site(
+        self, client, full_records, private_dataset, kind
+    ):
+        hide(full_records["site"], private_dataset)
+
+        record = only_record(client, ROUTES[kind])
+
+        assert record["location"] is None
+        assert record["site"] is None
+
+    @pytest.mark.parametrize("kind", ["interval", "gradient", "conductivity"])
+    def test_a_single_record_whose_site_is_hidden_has_no_location_and_no_site(
+        self, client, full_records, private_dataset, kind
+    ):
+        visible = detail(client, ROUTES[kind], full_records[kind])
+        hide(full_records["site"], private_dataset)
+        hidden = detail(client, ROUTES[kind], full_records[kind])
+
+        assert visible["site"]["uuid"] == full_records["site"].uuid
+        assert visible["location"]["type"] == "Point"
+        assert hidden["site"] is None
+        assert hidden["location"] is None
+
+    def test_a_site_nests_its_intervals_with_their_site_and_location(
+        self, client, full_records
+    ):
+        record = detail(client, SITES, full_records["site"])
+
+        interval = record["intervals"][0]
+        assert interval["site"]["uuid"] == full_records["site"].uuid
+        assert interval["location"]["type"] == "Point"
+
+    @pytest.mark.parametrize("kind", ["interval", "gradient", "conductivity", "parent"])
+    def test_the_list_costs_the_same_for_one_record_as_for_several(
+        self, client, public_dataset, constant_query_count, kind
+    ):
+        def build(count):
+            for _ in range(count):
+                interval = HeatFlowIntervalFactory(dataset=public_dataset)
+                if kind == "gradient":
+                    ThermalGradientFactory(dataset=public_dataset, sample=interval)
+                elif kind == "conductivity":
+                    IntervalConductivityFactory(dataset=public_dataset, sample=interval)
+                elif kind == "parent":
+                    ParentHeatFlowFactory(dataset=public_dataset, sample=interval.site)
+
+        constant_query_count(
+            build, lambda: client.get(ROUTES[kind], {"page_size": 100})
+        )
+
+
+@pytest.mark.django_db
+class TestHeatFlowIntervalSerializer:
+    def test_the_single_interval_carries_its_probe_metadata_with_terms_and_units(
+        self, client, full_records
+    ):
+        interval = full_records["interval"]
+        probe = ProbeMetadataFactory(interval=interval)
+        probe.refresh_from_db()
+
+        record = detail(client, INTERVALS, interval)
+
+        metadata = record["probe_metadata"]
+        assert metadata["penetration"] == pytest.approx(
+            float(probe.penetration.magnitude)
+        )
+        assert metadata["length"] == pytest.approx(float(probe.length.magnitude))
+        assert metadata["tilt"] == pytest.approx(float(probe.tilt.magnitude))
+        assert metadata["units"] == {"penetration": "m", "length": "m", "tilt": "deg"}
+        assert [entry["name"] for entry in metadata["probe_type"]] == [
+            concept.name for concept in probe.probe_type.order_by("name")
+        ]
+        assert set(metadata["probe_type"][0]) == {"name", "label", "uri", "vocabulary"}
+
+    def test_an_interval_without_probe_metadata_carries_null(
+        self, client, full_records
+    ):
+        record = detail(client, INTERVALS, full_records["interval"])
+
+        assert record["probe_metadata"] is None
+
+    def test_the_single_interval_refers_to_each_child_gradient_and_conductivity(
+        self, client, full_records, public_dataset
+    ):
+        interval = full_records["interval"]
+        other = IntervalConductivityFactory(dataset=public_dataset, sample=interval)
+
+        record = detail(client, INTERVALS, interval)
+
+        assert uuids(record["children"]) == {full_records["child"].uuid}
+        assert uuids(record["thermal_gradients"]) == {full_records["gradient"].uuid}
+        assert uuids(record["thermal_conductivities"]) == {
+            full_records["conductivity"].uuid,
+            other.uuid,
+        }
+        assert record["children"][0]["url"].endswith(
+            f"{CHILDREN}{full_records['child'].uuid}/"
+        )
+
+    @pytest.mark.parametrize(
+        ("kind", "entries"),
+        [
+            ("child", "children"),
+            ("gradient", "thermal_gradients"),
+            ("conductivity", "thermal_conductivities"),
+        ],
+    )
+    def test_a_hidden_related_record_is_absent_from_the_lists(
+        self, client, full_records, private_dataset, kind, entries
+    ):
+        hide(full_records[kind], private_dataset)
+
+        record = detail(client, INTERVALS, full_records["interval"])
+
+        assert record[entries] == []
+
+    def test_the_interval_list_carries_no_related_lists_and_no_probe_metadata(
+        self, client, full_records
+    ):
+        record = only_record(client, INTERVALS)
+
+        for name in (
+            "children",
+            "thermal_gradients",
+            "thermal_conductivities",
+            "probe_metadata",
+        ):
+            assert name not in record
+
+    def test_a_single_interval_costs_the_same_with_more_related_records(
+        self, client, public_dataset, constant_query_count
+    ):
+        interval = HeatFlowIntervalFactory(dataset=public_dataset)
+        ProbeMetadataFactory(interval=interval)
+
+        def build(count):
+            for _ in range(count):
+                HeatFlowFactory(dataset=public_dataset, sample=interval)
+                ThermalGradientFactory(dataset=public_dataset, sample=interval)
+                IntervalConductivityFactory(dataset=public_dataset, sample=interval)
+
+        constant_query_count(build, lambda: client.get(f"{INTERVALS}{interval.uuid}/"))
+
+
+@pytest.mark.django_db
+class TestThermalGradientSerializer:
+    def test_a_scored_gradient_carries_its_stored_score(self, client, full_records):
+        gradient = full_records["gradient"]
+        type(gradient).objects.filter(pk=gradient.pk).update(**STORED_SCORE)
+
+        record = only_record(client, GRADIENTS)
+
+        assert {name: record[name] for name in STORED_SCORE} == STORED_SCORE
+
+    def test_an_undetermined_score_is_null(self, client, full_records):
+        gradient = full_records["gradient"]
+        type(gradient).objects.filter(pk=gradient.pk).update(score=None)
+
+        record = only_record(client, GRADIENTS)
+
+        assert record["score"] is None
+
+    def test_the_gradient_carries_its_temperatures_with_their_units(
+        self, client, full_records
+    ):
+        gradient = full_records["gradient"]
+        type(gradient).objects.filter(pk=gradient.pk).update(
+            temperature_top=12.5,
+            temperature_bottom=48.25,
+            temperature_top_uncertainty=0.5,
+            temperature_bottom_uncertainty=0.75,
+        )
+
+        record = only_record(client, GRADIENTS)
+
+        assert record["temperature_top"] == 12.5
+        assert record["temperature_bottom"] == 48.25
+        assert record["temperature_top_uncertainty"] == 0.5
+        assert record["temperature_bottom_uncertainty"] == 0.75
+        assert {
+            "temperature_top",
+            "temperature_bottom",
+            "temperature_top_uncertainty",
+            "temperature_bottom_uncertainty",
+        } <= set(record["units"])
+
+    def test_the_single_gradient_refers_to_each_child_calculated_from_it(
+        self, client, full_records, public_dataset
+    ):
+        gradient = full_records["gradient"]
+        second = HeatFlowFactory(
+            dataset=public_dataset,
+            sample=full_records["interval"],
+            thermal_gradient=gradient,
+        )
+
+        record = detail(client, GRADIENTS, gradient)
+
+        assert uuids(record["children"]) == {full_records["child"].uuid, second.uuid}
+        assert all(entry["url"] for entry in record["children"])
+
+    def test_a_hidden_child_is_absent_from_the_gradients_children(
+        self, client, full_records, private_dataset
+    ):
+        hide(full_records["child"], private_dataset)
+
+        record = detail(client, GRADIENTS, full_records["gradient"])
+
+        assert record["children"] == []
+
+    def test_the_gradient_list_carries_no_children(self, client, full_records):
+        assert "children" not in only_record(client, GRADIENTS)
+
+    def test_a_single_gradient_costs_the_same_with_more_children(
+        self, client, public_dataset, constant_query_count
+    ):
+        gradient = ThermalGradientFactory(dataset=public_dataset)
+
+        def build(count):
+            for _ in range(count):
+                HeatFlowFactory(
+                    dataset=public_dataset,
+                    sample=gradient.sample,
+                    thermal_gradient=gradient,
+                )
+
+        constant_query_count(build, lambda: client.get(f"{GRADIENTS}{gradient.uuid}/"))
+
+
+@pytest.mark.django_db
+class TestIntervalConductivitySerializer:
+    def test_a_scored_conductivity_carries_its_stored_score(self, client, full_records):
+        conductivity = full_records["conductivity"]
+        type(conductivity).objects.filter(pk=conductivity.pk).update(**STORED_SCORE)
+
+        record = only_record(client, CONDUCTIVITIES)
+
+        assert {name: record[name] for name in STORED_SCORE} == STORED_SCORE
+
+    def test_an_undetermined_score_is_null(self, client, full_records):
+        conductivity = full_records["conductivity"]
+        type(conductivity).objects.filter(pk=conductivity.pk).update(score=None)
+
+        record = only_record(client, CONDUCTIVITIES)
+
+        assert record["score"] is None
+
+    def test_the_conductivity_carries_its_location_terms_and_number(
+        self, client, full_records
+    ):
+        conductivity = full_records["conductivity"]
+        concepts = list(
+            Concept.get_for_vocabulary(
+                IntervalConductivity._meta.get_field("conductivity_location").vocabulary
+            ).order_by("name")[:2]
+        )
+        conductivity.conductivity_location.set(concepts)
+        type(conductivity).objects.filter(pk=conductivity.pk).update(number=7)
+
+        record = only_record(client, CONDUCTIVITIES)
+
+        assert {entry["name"] for entry in record["conductivity_location"]} == {
+            concept.name for concept in concepts
+        }
+        assert record["number"] == 7
+
+    def test_the_single_conductivity_refers_to_each_child_calculated_from_it(
+        self, client, full_records, public_dataset
+    ):
+        conductivity = full_records["conductivity"]
+        second = HeatFlowFactory(
+            dataset=public_dataset,
+            sample=full_records["interval"],
+            thermal_conductivity=conductivity,
+        )
+
+        record = detail(client, CONDUCTIVITIES, conductivity)
+
+        assert uuids(record["children"]) == {full_records["child"].uuid, second.uuid}
+
+    def test_a_hidden_child_is_absent_from_the_conductivitys_children(
+        self, client, full_records, private_dataset
+    ):
+        hide(full_records["child"], private_dataset)
+
+        record = detail(client, CONDUCTIVITIES, full_records["conductivity"])
+
+        assert record["children"] == []
+
+    def test_the_conductivity_list_carries_no_children(self, client, full_records):
+        assert "children" not in only_record(client, CONDUCTIVITIES)
+
+    def test_a_single_conductivity_costs_the_same_with_more_children(
+        self, client, public_dataset, constant_query_count
+    ):
+        conductivity = IntervalConductivityFactory(dataset=public_dataset)
+
+        def build(count):
+            for _ in range(count):
+                HeatFlowFactory(
+                    dataset=public_dataset,
+                    sample=conductivity.sample,
+                    thermal_conductivity=conductivity,
+                )
+
+        constant_query_count(
+            build, lambda: client.get(f"{CONDUCTIVITIES}{conductivity.uuid}/")
+        )
+
+
+@pytest.mark.django_db
+class TestScoredMeasurementWrites:
+    SUPPLIED = {"score": 1.2, "score_missing": True, "quality_scheme": "BOGUS"}
+
+    @pytest.mark.parametrize(
+        ("route", "model"),
+        [(GRADIENTS, ThermalGradient), (CONDUCTIVITIES, IntervalConductivity)],
+    )
+    def test_a_create_supplying_a_score_stores_the_portals_own(
+        self, editor, public_dataset, route, model
+    ):
+        interval = HeatFlowIntervalFactory(dataset=public_dataset)
+        body = {"dataset": public_dataset.uuid, "sample": interval.uuid, "value": 2.5}
+
+        for name, supplied in (("Plain", {}), ("Supplied", self.SUPPLIED)):
+            response = editor.post(
+                route,
+                {"name": name, **body, **supplied},
+                content_type="application/json",
+            )
+            assert response.status_code == 201, response.content
+
+        plain = model.objects.get(name="Plain")
+        written = model.objects.get(name="Supplied")
+        assert written.quality_scheme != "BOGUS"
+        assert {name: getattr(written, name) for name in STORED_SCORE} == {
+            name: getattr(plain, name) for name in STORED_SCORE
+        }
+
+    @pytest.mark.parametrize(
+        ("route", "factory"),
+        [
+            (GRADIENTS, ThermalGradientFactory),
+            (CONDUCTIVITIES, IntervalConductivityFactory),
+        ],
+    )
+    def test_an_update_supplying_a_score_stores_the_portals_own(
+        self, editor, public_dataset, route, factory
+    ):
+        record = factory(dataset=public_dataset)
+        url = f"{route}{record.uuid}/"
+        editor.patch(url, {"name": "Plain"}, content_type="application/json")
+        record.refresh_from_db()
+        calculated = {name: getattr(record, name) for name in STORED_SCORE}
+
+        response = editor.patch(
+            url, {"name": "Supplied", **self.SUPPLIED}, content_type="application/json"
+        )
+
+        assert response.status_code == 200, response.content
+        record.refresh_from_db()
+        assert record.name == "Supplied"
+        assert {name: getattr(record, name) for name in STORED_SCORE} == calculated
+        assert record.quality_scheme != "BOGUS"
 
 
 @pytest.mark.django_db

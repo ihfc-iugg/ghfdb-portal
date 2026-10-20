@@ -161,3 +161,55 @@ class TestChoiceLabelFieldSchema:
 
         assert "site" in item
         assert "corrections" not in item
+
+
+INTERVALS = "/api/v1/samples/depth-intervals/"
+GRADIENTS = "/api/v1/measurements/thermal-gradients/"
+CONDUCTIVITIES = "/api/v1/measurements/thermal-conductivities/"
+
+SINGLE_ONLY = {
+    INTERVALS: {
+        "probe_metadata",
+        "children",
+        "thermal_gradients",
+        "thermal_conductivities",
+    },
+    GRADIENTS: {"children"},
+    CONDUCTIVITIES: {"children"},
+}
+
+
+@pytest.mark.django_db
+class TestPlacedRecordSchema:
+    @pytest.mark.parametrize("path", SINGLE_ONLY)
+    def test_the_list_item_has_the_site_and_the_single_record_has_its_relations(
+        self, api_document, path
+    ):
+        components = api_document["components"]["schemas"]
+
+        item = components[list_item_component(api_document, path)]["properties"]
+        single = components[
+            component_name(response_schema(api_document, f"{path}{{uuid}}/"))
+        ]["properties"]
+
+        assert {"site", "location"} <= set(item)
+        assert not SINGLE_ONLY[path] & set(item)
+        assert SINGLE_ONLY[path] <= set(single)
+
+    def test_probe_metadata_is_an_object_with_its_units_or_null(self, api_document):
+        components = api_document["components"]["schemas"]
+        single = components[
+            component_name(response_schema(api_document, f"{INTERVALS}{{uuid}}/"))
+        ]
+
+        probe = single["properties"]["probe_metadata"]
+        probe = probe["allOf"][0] if "allOf" in probe else probe
+        properties = components[component_name(probe)]["properties"]
+        assert set(properties) == {
+            "penetration",
+            "probe_type",
+            "length",
+            "tilt",
+            "units",
+        }
+        assert single["properties"]["probe_metadata"].get("nullable") is True

@@ -34,6 +34,7 @@ from .models import (
     HeatFlowSite,
     IntervalConductivity,
     ParentHeatFlow,
+    ProbeMetadata,
     ThermalGradient,
 )
 
@@ -45,6 +46,15 @@ RECORD_REFERENCE = {
         "url": {"type": "string", "format": "uri"},
     },
     "required": ["uuid", "url"],
+}
+
+RECORD_REFERENCE_LIST = {
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": RECORD_REFERENCE["properties"],
+        "required": RECORD_REFERENCE["required"],
+    },
 }
 
 
@@ -505,6 +515,21 @@ class HeatFlowRecordSerializer(RequesterVisibility, serializers.ModelSerializer)
             return None
         return reference(site, self.context["request"])
 
+    def references(self, queryset: Any) -> list[dict[str, str]]:
+        """Refer to every record of a queryset the requester may see.
+
+        Args:
+            queryset: Samples or measurements of one model.
+
+        Returns:
+            Each visible record's ``uuid`` and ``url``, in the order recorded.
+        """
+        request = self.context["request"]
+        return [
+            reference(record, request)
+            for record in self.narrow(queryset).order_by("pk")
+        ]
+
     def build_standard_field(
         self, field_name: str, model_field: Any
     ) -> tuple[type, dict[str, Any]]:
@@ -565,15 +590,19 @@ class SitePlacedSerializer(HeatFlowRecordSerializer):
 
     @classmethod
     def load_related(cls, queryset: Any) -> Any:
-        """Select the site a record is placed at.
+        """Read the site a record is placed at.
+
+        The path is prefetched, not selected: FairDM's ``load_relations`` ends in a bare
+        ``select_related()`` when a serializer has no foreign key of its own to select,
+        which replaces every path chosen before it.
 
         Args:
             queryset: The records about to be serialized.
 
         Returns:
-            The queryset with the path to each record's site selected.
+            The queryset with the path to each record's site prefetched.
         """
-        return super().load_related(queryset).select_related(cls.site_path)
+        return super().load_related(queryset).prefetch_related(cls.site_path)
 
     def prime_context(self, records: list[Any]) -> None:
         """Ask once which of the sites a page of records sit at the requester may see.
@@ -665,8 +694,10 @@ class HeatFlowSiteSummarySerializer(HeatFlowRecordSerializer, BaseSampleSerializ
         return self.parent_serializer(parent, context=self.context).data
 
 
-class HeatFlowIntervalSummarySerializer(HeatFlowRecordSerializer, BaseSampleSerializer):
+class HeatFlowIntervalSummarySerializer(SitePlacedSerializer, BaseSampleSerializer):
     """A depth interval."""
+
+    site_path = "site"
 
     class Meta(BaseSampleSerializer.Meta):
         model = HeatFlowInterval
@@ -679,6 +710,7 @@ class HeatFlowIntervalSummarySerializer(HeatFlowRecordSerializer, BaseSampleSeri
             "lithology",
             "age",
             "stratigraphy",
+            "site",
             *BaseSampleSerializer.metadata_fields,
             "units",
         ]
@@ -728,9 +760,7 @@ class HeatFlowSummarySerializer(SitePlacedSerializer, BaseMeasurementSerializer)
         ]
 
 
-class ThermalGradientSummarySerializer(
-    HeatFlowRecordSerializer, BaseMeasurementSerializer
-):
+class ThermalGradientSummarySerializer(SitePlacedSerializer, BaseMeasurementSerializer):
     """A thermal gradient."""
 
     class Meta(BaseMeasurementSerializer.Meta):
@@ -748,13 +778,21 @@ class ThermalGradientSummarySerializer(
             "correction_top",
             "correction_bottom",
             "number",
+            "temperature_top",
+            "temperature_top_uncertainty",
+            "temperature_bottom",
+            "temperature_bottom_uncertainty",
+            "score",
+            "score_missing",
+            "quality_scheme",
+            "site",
             *BaseMeasurementSerializer.metadata_fields,
             "units",
         ]
 
 
 class IntervalConductivitySummarySerializer(
-    HeatFlowRecordSerializer, BaseMeasurementSerializer
+    SitePlacedSerializer, BaseMeasurementSerializer
 ):
     """An interval conductivity."""
 
@@ -770,17 +808,21 @@ class IntervalConductivitySummarySerializer(
             "saturation",
             "pT_conditions",
             "pT_function",
+            "conductivity_location",
+            "number",
+            "score",
+            "score_missing",
+            "quality_scheme",
+            "site",
             *BaseMeasurementSerializer.metadata_fields,
             "units",
         ]
 
 
-class ParentHeatFlowSummarySerializer(
-    HeatFlowRecordSerializer, BaseMeasurementSerializer
-):
+class ParentHeatFlowSummarySerializer(SitePlacedSerializer, BaseMeasurementSerializer):
     """A parent heat flow."""
 
-    site = RecordReferenceField(source="sample", read_only=True)
+    site_path = "sample__heatflowsite"
 
     class Meta(BaseMeasurementSerializer.Meta):
         model = ParentHeatFlow
@@ -957,6 +999,141 @@ class HeatFlowSerializer(HeatFlowSummarySerializer):
         return self.nest(
             IntervalConductivitySummarySerializer, child.thermal_conductivity_id
         )
+
+
+class ProbeMetadataSerializer(HeatFlowRecordSerializer):
+    """The probe an interval was measured with, in the units it is stored in."""
+
+    class Meta:
+        model = ProbeMetadata
+        fields = ["penetration", "probe_type", "length", "tilt", "units"]
+
+
+class HeatFlowIntervalSerializer(HeatFlowIntervalSummarySerializer):
+    """A depth interval with its probe and everything made over it."""
+
+    summary_serializer = HeatFlowIntervalSummarySerializer
+
+    probe_metadata = ProbeMetadataSerializer(read_only=True, allow_null=True)
+    children = serializers.SerializerMethodField()
+    thermal_gradients = serializers.SerializerMethodField()
+    thermal_conductivities = serializers.SerializerMethodField()
+
+    class Meta(HeatFlowIntervalSummarySerializer.Meta):
+        fields = [
+            *HeatFlowIntervalSummarySerializer.Meta.fields,
+            "probe_metadata",
+            "children",
+            "thermal_gradients",
+            "thermal_conductivities",
+        ]
+
+    @classmethod
+    def load_related(cls, queryset: Any) -> Any:
+        """Select the interval's probe metadata and prefetch its probe types.
+
+        Args:
+            queryset: The intervals about to be serialized.
+
+        Returns:
+            The queryset with the probe metadata and its terms read.
+        """
+        probe_types = Prefetch(
+            "probe_metadata__probe_type",
+            queryset=vocabulary_models.Concept.objects.select_related("vocabulary"),
+        )
+        return (
+            super()
+            .load_related(queryset)
+            .select_related("probe_metadata")
+            .prefetch_related(probe_types)
+        )
+
+    @extend_schema_field(RECORD_REFERENCE_LIST)
+    def get_children(self, interval: HeatFlowInterval) -> list[dict[str, str]]:
+        """Refer to every child made over the interval that the requester may see.
+
+        Args:
+            interval: The interval being serialized.
+
+        Returns:
+            Each child's ``uuid`` and ``url``.
+        """
+        return self.references(self.records(HeatFlow).filter(sample=interval))
+
+    @extend_schema_field(RECORD_REFERENCE_LIST)
+    def get_thermal_gradients(self, interval: HeatFlowInterval) -> list[dict[str, str]]:
+        """Refer to every thermal gradient measured over the interval and visible.
+
+        Args:
+            interval: The interval being serialized.
+
+        Returns:
+            Each gradient's ``uuid`` and ``url``.
+        """
+        return self.references(self.records(ThermalGradient).filter(sample=interval))
+
+    @extend_schema_field(RECORD_REFERENCE_LIST)
+    def get_thermal_conductivities(
+        self, interval: HeatFlowInterval
+    ) -> list[dict[str, str]]:
+        """Refer to every interval conductivity measured over the interval and visible.
+
+        Args:
+            interval: The interval being serialized.
+
+        Returns:
+            Each conductivity's ``uuid`` and ``url``.
+        """
+        return self.references(
+            self.records(IntervalConductivity).filter(sample=interval)
+        )
+
+
+class ThermalGradientSerializer(ThermalGradientSummarySerializer):
+    """A thermal gradient with each child calculated from it."""
+
+    summary_serializer = ThermalGradientSummarySerializer
+
+    children = serializers.SerializerMethodField()
+
+    class Meta(ThermalGradientSummarySerializer.Meta):
+        fields = [*ThermalGradientSummarySerializer.Meta.fields, "children"]
+
+    @extend_schema_field(RECORD_REFERENCE_LIST)
+    def get_children(self, gradient: ThermalGradient) -> list[dict[str, str]]:
+        """Refer to every child calculated from the gradient that is visible.
+
+        Args:
+            gradient: The gradient being serialized.
+
+        Returns:
+            Each child's ``uuid`` and ``url``.
+        """
+        return self.references(gradient.heat_flow_children.non_polymorphic())
+
+
+class IntervalConductivitySerializer(IntervalConductivitySummarySerializer):
+    """An interval conductivity with each child calculated from it."""
+
+    summary_serializer = IntervalConductivitySummarySerializer
+
+    children = serializers.SerializerMethodField()
+
+    class Meta(IntervalConductivitySummarySerializer.Meta):
+        fields = [*IntervalConductivitySummarySerializer.Meta.fields, "children"]
+
+    @extend_schema_field(RECORD_REFERENCE_LIST)
+    def get_children(self, conductivity: IntervalConductivity) -> list[dict[str, str]]:
+        """Refer to every child calculated from the conductivity that is visible.
+
+        Args:
+            conductivity: The conductivity being serialized.
+
+        Returns:
+            Each child's ``uuid`` and ``url``.
+        """
+        return self.references(conductivity.heat_flow_children.non_polymorphic())
 
 
 class ParentHeatFlowSerializer(ParentHeatFlowSummarySerializer):
