@@ -83,25 +83,26 @@ def _sea(name: str, lat: tuple[float, float], lon: tuple[float, float]) -> Regio
 
 
 REGIONS = (
-    _land("Western North America", (34.0, 48.0), (-122.0, -108.0)),
+    _land("Western North America", (34.0, 48.0), (-120.0, -108.0)),
     _land("Eastern North America", (35.0, 46.0), (-90.0, -75.0)),
-    _land("Canadian Shield", (48.0, 58.0), (-100.0, -80.0)),
+    _land("Canadian Shield", (48.0, 54.0), (-100.0, -84.0)),
     _land("Central Europe", (46.0, 54.0), (5.0, 20.0)),
-    _land("Scandinavia", (58.0, 66.0), (8.0, 28.0)),
+    _land("Scandinavia", (59.0, 66.0), (12.0, 16.0)),
+    _land("Finland", (61.0, 68.0), (24.0, 28.0)),
     _land("Iberia", (37.0, 43.0), (-8.0, 0.0)),
     _land("Tibetan Plateau", (28.0, 36.0), (80.0, 98.0)),
     _land("North China", (34.0, 42.0), (108.0, 120.0)),
-    _land("India", (12.0, 26.0), (74.0, 86.0)),
+    _land("India", (18.0, 26.0), (74.0, 84.0)),
     _land("East African Rift", (-10.0, 8.0), (30.0, 40.0)),
     _land("Southern Africa", (-33.0, -20.0), (18.0, 30.0)),
     _land("Eastern Australia", (-37.0, -22.0), (140.0, 152.0)),
-    _sea("North Sea", (54.0, 60.0), (0.0, 6.0)),
+    _sea("North Sea", (55.0, 58.0), (1.0, 4.0)),
     _sea("Gulf of Mexico", (24.0, 28.0), (-94.0, -86.0)),
     _sea("Cascadia margin", (42.0, 48.0), (-127.0, -124.0)),
     _sea("Japan Trench", (36.0, 40.0), (143.0, 146.0)),
     _sea("Mid-Atlantic Ridge flank", (20.0, 30.0), (-48.0, -40.0)),
     _sea("East Pacific Rise flank", (-10.0, 0.0), (-110.0, -100.0)),
-    _sea("Mediterranean basin", (34.0, 38.0), (14.0, 24.0)),
+    _sea("Mediterranean basin", (33.5, 36.0), (15.0, 22.0)),
     _sea("South China Sea", (10.0, 18.0), (112.0, 118.0)),
 )
 

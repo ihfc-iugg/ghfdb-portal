@@ -41,3 +41,17 @@ Did: see commit. Verified: commands in ledger. Next: following task. Watch: none
 ## 2026-10-20T00:08:17Z · Implementer US1 · T008
 
 Did: see commit. Verified: commands in ledger. Next: following task. Watch: none.
+
+## 2026-10-20T00:10:59Z · Implementer US1 · T009
+
+Did: spied on call_command in the test and asserted it is never called before the refusal.
+Verified: class passes (1 passed); with self._refuse_production() deleted it fails with DID NOT RAISE CommandError; restored, passes.
+Next: T010.
+Watch: none.
+
+## 2026-10-20T00:11:52Z · Implementer US1 · T010
+
+Did: shrank six region boxes (North Sea, Mediterranean, India, Canadian Shield, Western North America) and split Scandinavia into Scandinavia and Finland so each box is wholly land or sea. Marine share is 8 of 21 regions, about 38 percent.
+Verified: TestRegions 5 passed.
+Next: T011.
+Watch: table change only.

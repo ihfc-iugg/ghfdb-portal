@@ -169,13 +169,38 @@
         },
         {
           "id": "T009",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_review/test_management/test_commands/test_seed_demo_data.py::TestSeedDemoDataEnvironment::test_production_is_refused_and_nothing_is_written"
+            ],
+            "commands": [
+              "uv run pytest tests/test_review/test_management/test_commands/test_seed_demo_data.py::TestSeedDemoDataEnvironment -q (1 passed)",
+              "mutation: deleted self._refuse_production() from handle(); same command: 1 failed, Failed: DID NOT RAISE CommandError",
+              "restored; same command: 1 passed"
+            ],
+            "code": [
+              "tests/test_review/test_management/test_commands/test_seed_demo_data.py:177"
+            ]
+          }
         },
         {
           "id": "T010",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_demo.py::TestRegions"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_demo.py::TestRegions -q (5 passed)",
+              "uv run ruff check; uv run ruff format --check"
+            ],
+            "code": [
+              "project/heat_flow/demo.py:78"
+            ]
+          }
         },
         {
           "id": "T011",
