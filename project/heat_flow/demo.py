@@ -196,6 +196,8 @@ class DemoGraph:
         bare.update(parent=None, thermal_gradient=None, thermal_conductivity=None)
         for child in bare:
             child.refresh_quality()
+        for parent in ParentHeatFlow.objects.filter(sample=alone):
+            parent.refresh_quality()
 
         ParentHeatFlow.objects.filter(sample=unparented).delete()
 

@@ -362,6 +362,16 @@ class TestVaryPageStates:
 
         assert parents.filter(children__isnull=True).exists()
 
+    def test_the_parent_with_no_children_stores_no_inherited_quality(self, varied):
+        from heat_flow.quality import QualityScheme
+
+        bare = ParentHeatFlow.objects.filter(dataset=varied, children__isnull=True)
+        expected = QualityScheme.inherit([])[:2]
+
+        assert bare.exists()
+        for parent in bare:
+            assert (parent.U_score, parent.M_score) == expected
+
     def test_a_parent_has_children_and_none_is_relevant(self, varied):
         for parent in ParentHeatFlow.objects.filter(dataset=varied):
             children = parent.children.all()
