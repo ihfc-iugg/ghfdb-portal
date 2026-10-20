@@ -150,13 +150,36 @@
       "tasks": [
         {
           "id": "T005",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_overview.py::TestHeatFlowPageForSite"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_overview.py -k ForSite -q"
+            ],
+            "code": [
+              "project/heat_flow/overview.py:152"
+            ]
+          }
         },
         {
           "id": "T006",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templates/test_heatflowsite_overview.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templates/test_heatflowsite_overview.py -q"
+            ],
+            "code": [
+              "project/heat_flow/templates/heat_flow/heatflowsite_overview.html:120",
+              "project/heat_flow/templatetags/heat_flow_overview.py:29"
+            ]
+          }
         },
         {
           "id": "T007",

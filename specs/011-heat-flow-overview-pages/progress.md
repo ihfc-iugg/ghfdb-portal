@@ -37,3 +37,17 @@ Did: Wrote `docs/guides/record-pages.md` (the child page section and the develop
 Verified: Sphinx build succeeded (32 warnings, none in a page this story wrote or edited; the sphinx environment was built offline outside the worktree). `forge verify --steps docs --base origin/main` passed.
 Next: full verify, then the completion report.
 Watch: the sketch's twelve undocumented names are gone; the ported `for_site`, `for_interval`, `for_gradient_or_conductivity` and `for_parent` are documented in the developer section, to be rewritten by their stories.
+
+## 2026-10-20T15:09:38Z · Implementer US2 · T005
+
+Did: Rebuilt `HeatFlowPage.for_site` test-first: the parent or its hidden mark, intervals ordered by top, bottom and pk with lithology prefetched, their children with method prefetched and split in one query for all shown intervals (the sketch split once per interval), the cut and `show_all`, the hidden counts per interval and for the list.
+Verified: `uv run pytest tests/test_heat_flow/test_overview.py -k ForSite -q`: red first on the two query tests (prefetch: 5 queries where 0 expected; one interval vs three: 8 vs 10), then 14 passed. Probes, each failing exactly its test and restored: dropping the order, the cut, `show_all`, the parent's visibility filter, the children's visibility filter.
+Next: T006, the site page hooks and tests.
+Watch: the test class is named `TestHeatFlowPageForSite` to match the module's existing `TestHeatFlowPage<Method>` classes.
+
+## 2026-10-20T15:09:45Z · Implementer US2 · T006
+
+Did: Site page hooks in `heatflowsite_overview.html`: `data-heat-flow="parent"` (with `data-state` hidden or none), `data-heat-flow="intervals"` (with `data-state="empty"`, `data-more` and `data-hidden`), `data-interval` on each row (with `data-state="empty"` and `data-hidden`), and `data-field` names on every site field. The "Show all" link now points to `?show=all#intervals` and the tag reads `show=all`. The shared `document` fixture takes query parameters.
+Verified: `uv run pytest tests/test_templates/test_heatflowsite_overview.py -q`: red first (18 failed, 4 passed: hooks absent), then 22 passed. Probes, restored after each: removing the lithology and method prefetch fails the query-count test; the tag reading another parameter fails the show-all test; extending the base template instead of FairDM's sample page fails the identifiers, citation and Manage menu tests.
+Next: T007, the development data.
+Watch: `document` in `tests/test_templates/conftest.py` gained `**query`; existing callers are unchanged.
