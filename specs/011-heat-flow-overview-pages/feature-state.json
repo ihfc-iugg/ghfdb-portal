@@ -212,6 +212,22 @@
               "docs/guides/record-pages.md:52"
             ]
           }
+        },
+        {
+          "id": "T019",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templates/test_heatflowsite_overview.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templates/test_heatflowsite_overview.py (22 passed, three runs)"
+            ],
+            "code": [
+              "tests/test_templates/test_heatflowsite_overview.py:41"
+            ]
+          }
         }
       ]
     },
