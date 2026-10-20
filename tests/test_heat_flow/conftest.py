@@ -245,3 +245,11 @@ def site_graph(public_dataset):
         "all_children": [relevant, other, lone],
     }
 
+
+@pytest.fixture
+def api_document(db, client):
+    # The whole generated OpenAPI document, as the schema route serves it.
+    response = client.get("/api/v1/schema/", {"format": "json"})
+
+    assert response.status_code == 200
+    return response.json()

@@ -30,3 +30,10 @@ Did: Added the list/single split and the site and parent shapes in project/heat_
 Verified: uv run pytest tests/test_heat_flow/test_serializers.py -q -n0 -> 47 passed; ruff, ruff format and mypy clean on the changed files.
 Next: T005 the schema extension; three US4 schema tests are red until it lands, since the site list now serializes the full record in the generated document.
 Watch: D25-D27 in decisions.md.
+
+## 2026-10-20T20:15:26Z · Implementer US1 · T005
+
+Did: Added HeatFlowRecordSchema to project/heat_flow/schema.py. For a list operation on a serializer with a summary it names, maps and identifies the summary; every other operation maps the serializer itself. Tests first in tests/test_heat_flow/test_schema.py: the site list item has parent and no intervals, the single site has intervals, the parent list item has no children and the single parent has them. The three US4 schema tests that read HeatFlowSiteSummary went red when T004 landed and are green again.
+Verified: uv run pytest tests/test_heat_flow/test_schema.py -q -n0 -> 10 passed, after 5 failed first. Removing get_identity makes the no-component-warnings test fail with the identical-names warning, so it guards the extension.
+Next: T006 the guide.
+Watch: T004's commit alone leaves those three US4 schema tests red; T005 closes it.
