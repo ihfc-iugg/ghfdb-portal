@@ -188,8 +188,16 @@
         },
         {
           "id": "T008",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "forge verify --base origin/main (docs step passed)"
+            ],
+            "code": [
+              "docs/guides/record-pages.md:52"
+            ]
+          }
         }
       ]
     },
