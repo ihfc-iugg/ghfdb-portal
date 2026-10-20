@@ -150,27 +150,50 @@ class HeatFlowPage:
         return bool(record.quality_scheme) and record.quality_scheme != SCHEME_REVISION
 
     def for_site(self):
-        """Gather a site's parent value and its intervals with their children."""
+        """Gather a site's parent value and its intervals with their children.
+
+        Intervals run from shallowest to deepest, by top, then bottom, then primary key.
+        Each shown interval carries its children. The cut at ``intervals_shown`` is lifted
+        by ``show_all``.
+
+        Returns:
+            The ``parent`` the visitor may open, or ``None``, and ``parent_hidden`` when the
+            site has a parent the visitor may not open. The ``intervals``: the ``rows`` to
+            show, each an ``interval`` and its ``children`` (``rows`` and ``hidden``), the
+            ``total`` the visitor may open, how many ``more`` the cut leaves out, how many
+            are ``hidden`` from the visitor and the ``children`` counted over every
+            interval the visitor may open.
+        """
         site = self.record
         parent = ParentHeatFlow.objects.filter(sample=site).first()
+        parent_opens = self.opens(parent)
         intervals = list(
-            HeatFlowInterval.objects.filter(site=site).order_by("top", "bottom", "pk")
+            HeatFlowInterval.objects.filter(site=site)
+            .prefetch_related("lithology")
+            .order_by("top", "bottom", "pk")
         )
         visible, hidden = self.split(intervals)
         shown = visible if self.show_all else visible[: self.intervals_shown]
-        by_interval = {}
-        for child in HeatFlow.objects.filter(sample__in=shown).order_by("pk"):
-            by_interval.setdefault(child.sample_id, []).append(child)
-        rows = [
-            {
-                "interval": interval,
-                "children": self.listing(by_interval.get(interval.pk, [])),
-            }
-            for interval in shown
-        ]
+        children = list(
+            HeatFlow.objects.filter(sample__in=shown)
+            .prefetch_related("method")
+            .order_by("pk")
+        )
+        opened, _ = self.split(children)
+        opened_pks = {child.pk for child in opened}
+        rows = []
+        for interval in shown:
+            over = [child for child in children if child.sample_id == interval.pk]
+            listed = [child for child in over if child.pk in opened_pks]
+            rows.append(
+                {
+                    "interval": interval,
+                    "children": {"rows": listed, "hidden": len(over) - len(listed)},
+                }
+            )
         return {
-            "parent": parent if self.opens(parent) else None,
-            "parent_hidden": parent is not None and not self.opens(parent),
+            "parent": parent if parent_opens else None,
+            "parent_hidden": parent is not None and not parent_opens,
             "intervals": {
                 "rows": rows,
                 "total": len(visible),

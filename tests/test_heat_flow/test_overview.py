@@ -3,6 +3,8 @@
 
 import pytest
 from django.contrib.auth.models import AnonymousUser
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from heat_flow.models import (
     HeatFlow,
     HeatFlowInterval,
@@ -14,7 +16,11 @@ from heat_flow.models import (
 from heat_flow.overview import HeatFlowPage
 from heat_flow.quality import SCHEME_REVISION
 
-from tests.factories import HeatFlowCorrectionFactory, HeatFlowFactory
+from tests.factories import (
+    HeatFlowCorrectionFactory,
+    HeatFlowFactory,
+    HeatFlowIntervalFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -284,3 +290,198 @@ class TestHeatFlowPageForChild:
         child.refresh_from_db()
 
         assert HeatFlowPage(child, visitor).for_child()["stale"] is True
+
+
+def add_interval(site, top, bottom, dataset, children=0):
+    """Add an interval to ``site`` with ``children`` heat flow values over it."""
+    interval = HeatFlowIntervalFactory(
+        dataset=dataset, site=site, top=top, bottom=bottom
+    )
+    kids = [HeatFlowFactory(dataset=dataset, sample=interval) for _ in range(children)]
+    return interval, kids
+
+
+def query_count(action):
+    """Count the queries ``action`` makes."""
+    with CaptureQueriesContext(connection) as queries:
+        action()
+    return len(queries)
+
+
+class TestHeatFlowPageForSite:
+    def test_it_returns_the_parent_the_visitor_may_open(self, page_records, visitor):
+        context = HeatFlowPage(page_records["site"], visitor).for_site()
+
+        assert context["parent"] == page_records["parent"]
+        assert context["parent_hidden"] is False
+
+    def test_a_site_without_a_parent_gets_none_and_no_hidden_mark(
+        self, page_records, visitor
+    ):
+        ParentHeatFlow.objects.filter(pk=page_records["parent"].pk).delete()
+
+        context = HeatFlowPage(page_records["site"], visitor).for_site()
+
+        assert context["parent"] is None
+        assert context["parent_hidden"] is False
+
+    def test_a_parent_in_an_unpublished_dataset_is_marked_hidden_and_not_returned(
+        self, page_records, hide, visitor
+    ):
+        hide(page_records["parent"])
+
+        context = HeatFlowPage(page_records["site"], visitor).for_site()
+
+        assert context["parent"] is None
+        assert context["parent_hidden"] is True
+
+    def test_a_member_is_given_the_unpublished_parent(self, page_records, hide, member):
+        hide(page_records["parent"])
+
+        context = HeatFlowPage(page_records["site"], member).for_site()
+
+        assert context["parent"] == page_records["parent"]
+        assert context["parent_hidden"] is False
+
+    def test_intervals_run_from_shallowest_to_deepest_ties_broken_by_bottom_then_pk(
+        self, page_records, published_dataset, visitor
+    ):
+        site = page_records["site"]
+        deep, _ = add_interval(site, 300, 400, published_dataset)
+        wide, _ = add_interval(site, 100, 900, published_dataset)
+        first, _ = add_interval(site, 100, 200, published_dataset)
+        second, _ = add_interval(site, 100, 200, published_dataset)
+
+        rows = HeatFlowPage(site, visitor).for_site()["intervals"]["rows"]
+
+        assert [row["interval"] for row in rows] == [
+            page_records["interval"],
+            first,
+            second,
+            wide,
+            deep,
+        ]
+
+    def test_each_interval_carries_the_children_determined_over_it(
+        self, page_records, published_dataset, visitor
+    ):
+        site = page_records["site"]
+        other, kids = add_interval(site, 600, 700, published_dataset, children=2)
+
+        rows = HeatFlowPage(site, visitor).for_site()["intervals"]["rows"]
+
+        by_interval = {row["interval"]: row["children"] for row in rows}
+        assert set(by_interval[other]["rows"]) == set(kids)
+        assert by_interval[page_records["interval"]]["rows"] == [page_records["child"]]
+        assert by_interval[other]["hidden"] == 0
+
+    def test_an_interval_in_an_unpublished_dataset_is_counted_and_not_returned(
+        self, page_records, published_dataset, hide, visitor
+    ):
+        site = page_records["site"]
+        add_interval(site, 600, 700, published_dataset)
+        concealed, _ = add_interval(site, 800, 900, published_dataset)
+        hide(concealed)
+
+        intervals = HeatFlowPage(site, visitor).for_site()["intervals"]
+
+        assert concealed not in [row["interval"] for row in intervals["rows"]]
+        assert intervals["hidden"] == 1
+        assert intervals["total"] == 2
+
+    def test_a_child_in_an_unpublished_dataset_is_counted_against_its_interval(
+        self, page_records, hide, visitor
+    ):
+        concealed = HeatFlowFactory(
+            dataset=page_records["child"].dataset, sample=page_records["interval"]
+        )
+        hide(concealed)
+
+        rows = HeatFlowPage(page_records["site"], visitor).for_site()["intervals"][
+            "rows"
+        ]
+
+        children = rows[0]["children"]
+        assert children["rows"] == [page_records["child"]]
+        assert children["hidden"] == 1
+
+    def test_a_member_is_given_the_unpublished_child(self, page_records, hide, member):
+        concealed = HeatFlowFactory(
+            dataset=page_records["child"].dataset, sample=page_records["interval"]
+        )
+        hide(concealed)
+
+        rows = HeatFlowPage(page_records["site"], member).for_site()["intervals"][
+            "rows"
+        ]
+
+        assert concealed in rows[0]["children"]["rows"]
+        assert rows[0]["children"]["hidden"] == 0
+
+    def test_it_cuts_the_intervals_at_the_limit_and_counts_the_rest(
+        self, page_records, published_dataset, visitor
+    ):
+        site = page_records["site"]
+        for top in (100, 200, 300):
+            add_interval(site, top, top + 50, published_dataset)
+        page = HeatFlowPage(site, visitor)
+        page.intervals_shown = 2
+
+        intervals = page.for_site()["intervals"]
+
+        assert len(intervals["rows"]) == 2
+        assert intervals["more"] == 2
+        assert intervals["total"] == 4
+
+    def test_show_all_lifts_the_cut(self, page_records, published_dataset, visitor):
+        site = page_records["site"]
+        for top in (100, 200, 300):
+            add_interval(site, top, top + 50, published_dataset)
+        page = HeatFlowPage(site, visitor, show_all=True)
+        page.intervals_shown = 2
+
+        intervals = page.for_site()["intervals"]
+
+        assert len(intervals["rows"]) == 4
+        assert intervals["more"] == 0
+
+    def test_it_counts_the_children_over_every_interval_the_visitor_may_open(
+        self, page_records, published_dataset, visitor
+    ):
+        site = page_records["site"]
+        add_interval(site, 100, 200, published_dataset, children=2)
+        add_interval(site, 300, 400, published_dataset, children=1)
+        page = HeatFlowPage(site, visitor)
+        page.intervals_shown = 1
+
+        assert page.for_site()["intervals"]["children"] == 4
+
+    def test_it_prefetches_what_the_page_reads_from_each_interval_and_child(
+        self, page_records, published_dataset, visitor, django_assert_num_queries
+    ):
+        site = page_records["site"]
+        add_interval(site, 100, 200, published_dataset, children=2)
+
+        rows = HeatFlowPage(site, visitor).for_site()["intervals"]["rows"]
+
+        with django_assert_num_queries(0):
+            for row in rows:
+                list(row["interval"].lithology.all())
+                for child in row["children"]["rows"]:
+                    list(child.method.all())
+
+    def test_it_makes_the_same_queries_for_one_interval_and_for_three(
+        self, page_records, published_dataset, visitor
+    ):
+        site = page_records["site"]
+
+        def gather():
+            return HeatFlowPage(site, visitor).for_site()
+
+        with_one = query_count(gather)
+        for top in (100, 200):
+            add_interval(site, top, top + 50, published_dataset, children=2)
+
+        with_three = query_count(gather)
+
+        assert with_three == with_one
