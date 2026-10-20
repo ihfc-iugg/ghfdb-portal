@@ -145,7 +145,7 @@
       "priority": "P1",
       "issue": 293,
       "worktree": null,
-      "status": "todo",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
@@ -310,7 +310,7 @@
       "max": 1
     },
     "tokens": {
-      "used": 22.07,
+      "used": 37.51,
       "max": 120
     }
   },
