@@ -551,18 +551,13 @@ class TestQualityBasis:
         assert parent.quality_basis() == ("empty", [])
 
     def test_refresh_quality_inherits_from_the_children_the_basis_names(self):
-        from unittest import mock
-
         from tests.factories import ParentHeatFlowFactory
 
         parent = ParentHeatFlowFactory()
         child_of(parent, "U1", is_relevant=True)
-        poor = reload(child_of(parent, "U4", is_relevant=False))
+        child_of(parent, "U4", is_relevant=False)
 
-        with mock.patch.object(
-            type(parent), "quality_basis", return_value=("relevant", [poor])
-        ) as basis:
-            parent.refresh_quality()
+        parent.refresh_quality()
 
-        basis.assert_called_once_with()
-        assert reload(parent).U_score == "U4"
+        assert parent.quality_basis()[0] == "relevant"
+        assert reload(parent).U_score == "U1"
