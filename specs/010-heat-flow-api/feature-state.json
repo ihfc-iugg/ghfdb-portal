@@ -235,6 +235,27 @@
               "docs/guides/heat-flow-records-api.md:479"
             ]
           }
+        },
+        {
+          "id": "T012",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_heat_flow/test_serializers.py::TestHeatFlowChildWrites::test_an_update_of_a_measurement_placed_on_its_sample_is_saved",
+              "tests/test_heat_flow/test_serializers.py::TestHeatFlowChildWrites::test_an_update_supplying_scores_and_an_identifier_stores_none_of_them",
+              "tests/test_heat_flow/test_models/test_child.py::TestHeatFlow::test_a_child_whose_interval_is_loaded_as_a_plain_sample_saves",
+              "tests/test_heat_flow/test_models/test_parent.py::TestParentHeatFlow::test_a_parent_whose_site_is_loaded_as_a_plain_sample_saves"
+            ],
+            "commands": [
+              "uv run pytest tests/test_heat_flow/test_serializers.py -q -n0 -k update (red with the serializer workaround removed: 4 failed, ValidationError 'sample must be a HeatFlowInterval'; green after the model fix)",
+              "uv run pytest tests/test_heat_flow/test_models -q -n0 -k 'plain_sample or refused' (model fix stashed: 2 failed; restored: 6 passed)"
+            ],
+            "code": [
+              "project/heat_flow/models/child.py:307",
+              "project/heat_flow/models/parent.py:310"
+            ]
+          }
         }
       ]
     },
