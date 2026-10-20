@@ -633,3 +633,194 @@ class TestHeatFlowPageForGradientOrConductivity:
         page = HeatFlowPage(measurement, visitor)
 
         assert page.for_gradient_or_conductivity()["stale"] is True
+
+
+def add_children(page_records, dataset, count, is_relevant=False):
+    """Add ``count`` children to the page's parent."""
+    return [
+        HeatFlowFactory(
+            dataset=dataset,
+            sample=page_records["interval"],
+            parent=page_records["parent"],
+            is_relevant=is_relevant,
+        )
+        for _ in range(count)
+    ]
+
+
+class TestHeatFlowPageForParent:
+    def test_it_returns_every_child_with_its_relevance(
+        self, page_records, published_dataset, visitor
+    ):
+        relevant = add_children(page_records, published_dataset, 2, is_relevant=True)
+        (other,) = add_children(page_records, published_dataset, 1)
+        unrelated = HeatFlowFactory(
+            dataset=published_dataset, sample=page_records["interval"]
+        )
+
+        page = HeatFlowPage(page_records["parent"], visitor)
+        children = page.for_parent()["children"]
+
+        assert set(children["rows"]) == {page_records["child"], other, *relevant}
+        assert unrelated not in children["rows"]
+        assert {row.pk: row.is_relevant for row in children["rows"]} == {
+            page_records["child"].pk: False,
+            other.pk: False,
+            relevant[0].pk: True,
+            relevant[1].pk: True,
+        }
+        assert children["total"] == 4
+        assert children["hidden"] == 0
+
+    def test_an_only_child_is_what_the_quality_rests_on(self, page_records, visitor):
+        context = HeatFlowPage(page_records["parent"], visitor).for_parent()
+
+        assert context["basis"] == "single"
+        assert context["rests_on"] == {page_records["child"].pk}
+
+    def test_several_children_rest_the_quality_on_the_relevant_ones(
+        self, page_records, published_dataset, visitor
+    ):
+        relevant = add_children(page_records, published_dataset, 2, is_relevant=True)
+
+        context = HeatFlowPage(page_records["parent"], visitor).for_parent()
+
+        assert context["basis"] == "relevant"
+        assert context["rests_on"] == {child.pk for child in relevant}
+
+    def test_each_child_says_whether_the_quality_rests_on_it(
+        self, page_records, published_dataset, visitor
+    ):
+        add_children(page_records, published_dataset, 2, is_relevant=True)
+
+        context = HeatFlowPage(page_records["parent"], visitor).for_parent()
+
+        for child in context["children"]["rows"]:
+            assert child.rests_on is (child.pk in context["rests_on"])
+
+    def test_several_children_and_none_relevant_rest_the_quality_on_nothing(
+        self, page_records, published_dataset, visitor
+    ):
+        add_children(page_records, published_dataset, 1)
+
+        context = HeatFlowPage(page_records["parent"], visitor).for_parent()
+
+        assert context["basis"] == "none"
+        assert context["rests_on"] == set()
+        assert context["children"]["total"] == 2
+
+    def test_a_parent_with_no_children_has_an_empty_basis(self, page_records, visitor):
+        page_records["child"].delete()
+
+        context = HeatFlowPage(page_records["parent"], visitor).for_parent()
+
+        assert context["basis"] == "empty"
+        assert context["rests_on"] == set()
+        assert context["children"]["rows"] == []
+
+    def test_a_child_in_an_unpublished_dataset_is_counted_and_not_returned(
+        self, page_records, published_dataset, hide, visitor
+    ):
+        (concealed,) = add_children(page_records, published_dataset, 1)
+        hide(concealed)
+
+        children = HeatFlowPage(page_records["parent"], visitor).for_parent()[
+            "children"
+        ]
+
+        assert children["rows"] == [page_records["child"]]
+        assert children["hidden"] == 1
+
+    def test_a_member_is_given_the_unpublished_child(
+        self, page_records, published_dataset, hide, member
+    ):
+        (concealed,) = add_children(page_records, published_dataset, 1)
+        hide(concealed)
+
+        children = HeatFlowPage(page_records["parent"], member).for_parent()["children"]
+
+        assert concealed in children["rows"]
+        assert children["hidden"] == 0
+
+    def test_a_hidden_child_still_counts_towards_what_the_quality_rests_on(
+        self, page_records, published_dataset, hide, visitor
+    ):
+        (concealed,) = add_children(page_records, published_dataset, 1, True)
+        hide(concealed)
+
+        context = HeatFlowPage(page_records["parent"], visitor).for_parent()
+
+        assert context["basis"] == "relevant"
+        assert context["rests_on"] == {concealed.pk}
+
+    def test_it_cuts_the_children_at_the_limit_and_counts_the_rest(
+        self, page_records, published_dataset, visitor
+    ):
+        add_children(page_records, published_dataset, 2)
+        page = HeatFlowPage(page_records["parent"], visitor)
+        page.children_shown = 2
+
+        children = page.for_parent()["children"]
+
+        assert len(children["rows"]) == 2
+        assert children["more"] == 1
+        assert children["total"] == 3
+
+    def test_show_all_lifts_the_cut(self, page_records, published_dataset, visitor):
+        add_children(page_records, published_dataset, 2)
+        page = HeatFlowPage(page_records["parent"], visitor, show_all=True)
+        page.children_shown = 2
+
+        children = page.for_parent()["children"]
+
+        assert len(children["rows"]) == 3
+        assert children["more"] == 0
+
+    def test_it_returns_the_site_the_visitor_may_open(self, page_records, visitor):
+        context = HeatFlowPage(page_records["parent"], visitor).for_parent()
+
+        assert context["site"] == page_records["site"]
+        assert context["location"]["visible"] is True
+
+    def test_a_site_in_an_unpublished_dataset_is_not_returned(
+        self, page_records, hide, visitor
+    ):
+        hide(page_records["site"])
+
+        context = HeatFlowPage(page_records["parent"], visitor).for_parent()
+
+        assert context["site"] is None
+        assert context["location"]["visible"] is False
+
+    def test_it_prefetches_the_method_of_each_listed_child(
+        self, page_records, published_dataset, visitor, django_assert_num_queries
+    ):
+        add_children(page_records, published_dataset, 2)
+
+        children = HeatFlowPage(page_records["parent"], visitor).for_parent()[
+            "children"
+        ]
+
+        with django_assert_num_queries(0):
+            for child in children["rows"]:
+                list(child.method.all())
+
+    def test_it_makes_the_same_queries_for_one_child_and_for_three(
+        self, page_records, published_dataset, visitor
+    ):
+        def gather():
+            return HeatFlowPage(page_records["parent"], visitor).for_parent()
+
+        with_one = query_count(gather)
+        add_children(page_records, published_dataset, 2)
+
+        assert query_count(gather) == with_one
+
+    def test_it_says_whether_the_parents_score_is_stale(self, page_records, visitor):
+        parent = page_records["parent"]
+        ParentHeatFlow.objects.filter(pk=parent.pk).update(
+            quality_scheme="hfqa_tool 0.1"
+        )
+        parent.refresh_from_db()
+
+        assert HeatFlowPage(parent, visitor).for_parent()["stale"] is True

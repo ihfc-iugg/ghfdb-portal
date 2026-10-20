@@ -280,22 +280,35 @@ class HeatFlowPage:
         }
 
     def for_parent(self):
-        """Gather a parent's children and the ones its quality rests on."""
+        """Gather a parent's children and the ones its quality rests on.
+
+        The children list the relevant ones first. The cut at ``children_shown`` is lifted
+        by ``show_all``. What the quality rests on is read from the parent's whole set of
+        children, those the visitor may not open included.
+
+        Returns:
+            The ``children``: the ``rows`` to show, each carrying ``rests_on``, the
+            ``total`` the visitor may open, how many ``more`` the cut leaves out and how many
+            are ``hidden`` from the visitor. The ``basis`` of the parent's quality and the
+            primary keys it ``rests_on``. The ``site`` the parent represents, ``None`` when
+            the visitor may not open it, the site's ``location`` and whether the parent's
+            score is ``stale``.
+        """
         parent = self.record
-        children = list(parent.children.order_by("-is_relevant", "pk"))
-        if len(children) == 1:
-            rests_on = {children[0].pk}
-            basis = "single"
-        else:
-            rests_on = {child.pk for child in children if child.is_relevant}
-            basis = "relevant" if rests_on else ("none" if children else "empty")
+        basis, resting = parent.quality_basis()
+        rests_on = {child.pk for child in resting}
+        children = list(
+            parent.children.prefetch_related("method").order_by("-is_relevant", "pk")
+        )
         for child in children:
             child.rests_on = child.pk in rests_on
         return {
-            "children": self.listing(children, self.children_shown),
+            "children": self.listing(
+                children, None if self.show_all else self.children_shown
+            ),
             "rests_on": rests_on,
             "basis": basis,
-            "site": parent.sample if self.opens(parent.sample) else None,
+            "site": parent.site if self.opens(parent.site) else None,
             "location": self.site_location(),
             "stale": self.is_stale(parent),
         }
