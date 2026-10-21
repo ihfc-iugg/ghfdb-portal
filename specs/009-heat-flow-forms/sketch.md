@@ -35,15 +35,19 @@ are built and tested.
    heading, a pair of fields side by side from `md` up.
 2. The site's form takes the coordinates as latitude and longitude only, and the site's own
    elevation with its datum beside it.
-3. The child's form shows nine corrections, one row each: the type as the label of a status choice
-   holding only the statuses valid for that type, and a one-line comment beside it. An unset
-   correction shows "unspecified".
+3. The child's form shows nine corrections, two to a row on a wide screen: the type as the label of
+   a status choice holding only the statuses valid for that type, with no "unspecified" entry. The
+   choice may be empty, and its empty entry reads "Unspecified". No correction has a comment.
 4. The child's gradient and conductivity choices list only the measurements on the child's own
    interval.
 5. The interval's form shows the four probe fields on every interval, empty when it has none.
-6. The parent's form lists the children at its site as checkboxes, each named by its heat flow and
-   its depth range, ordered by depth.
+6. The parent's form offers the children at its site in a counted multiple choice control, each
+   named by its heat flow and its depth range, ordered by depth.
 7. Every quantity input shows its stored value.
+8. Every vocabulary field is a text input showing its stored term's label, several terms joined by
+   `; `, and refusing a term outside the field's vocabulary.
+9. Every other field with several choices is a counted multiple choice control with all its
+   choices in the page (Tom Select, from django-mvp-forms). No standard multiple select.
 
 ## What the sketch faked
 
@@ -51,7 +55,13 @@ are built and tested.
   decides whether FairDM should offer it.
 - **Saving corrections, probe metadata and relevance** is hand-written in each form's `save()`, with
   no tests. The plan chooses the mechanism (a formset on the form, or fields on it).
-- **A stored vocabulary value the vocabulary no longer holds** (FR-007) is not handled.
+- **An emptied correction is stored as `-`.** The model cannot hold an empty status yet. The
+  migration that makes it optional and clears every stored `-` is the plan's.
+- **The vocabulary text input borrows the importer's term reading** from the `ghfdb` app, imported
+  inside the field to avoid a circular import. The plan decides where that reading lives so both
+  can use it.
+- **The Tom Select scripts and stylesheets are written twice** on each page: once by the page and
+  once by the crispy form tag. The plan loads them once.
 - **Gradient and conductivity choices are named by FairDM's default string**, the record's name.
 - **Seeded state** in the development database: `regular.user@example.com` manages the private
   dataset "Oceanic crust heat flow cfe9ef", which waits for a Data Curator's decision. One of its
@@ -76,3 +86,15 @@ These are taste calls, each made once in the draft. The build keeps them unless 
 - The site's location input is labelled "Coordinates", so it does not repeat its group's heading.
 - The parent's children choice is labelled "Children this value rests on" and follows the parent's
   own fields with no heading of its own.
+
+## The maintainer's review
+
+- **Several choices:** never the standard multiple select. Every multiple choice with its choices
+  in the page is `TomSelectMultiple(counted=True)`. Done for stratigraphy and the parent's
+  children.
+- **No remote data:** every choice is sent with the form. Nothing is fetched.
+- **Vocabulary fields:** a plain text input each, until the vocabulary autocomplete exists. Done on
+  all six forms, reading and writing labels as the published file does.
+- **Corrections:** "unspecified" is no status. The choice is optional with an "Unspecified" empty
+  entry and offers no unspecified status. Done on the form; the stored change is planned.
+- **Correction comments:** none on the form. Comments go on the record's discussion. Done.

@@ -48,9 +48,9 @@ This feature redesigns the form for each of the six records: a heat flow site, a
 child heat flow, a thermal gradient, an interval conductivity and a parent heat flow. Each one
 covers everything the upload template asks a contributor for about that record. Fields are grouped
 and ordered the way the template presents them, so a researcher who filled the template in finds
-the same things in the same order. A field that takes a term offers that field's own controlled
-vocabulary, and values the portal works out for itself, like quality scores and GHFDB ids, are left
-out.
+the same things in the same order. A field that takes a term accepts it typed as text, the way the
+published file writes it, and only a term of that field's own controlled vocabulary. Values the
+portal works out for itself, like quality scores and GHFDB ids, are left out.
 
 Who may open a form, and when a researcher's records become public, do not change. A researcher's
 dataset stays private until a Data Curator approves it, and a correction made through these forms
@@ -83,6 +83,19 @@ follows the same rule as everything else in that dataset.
   page that creates one. These forms are the ones the registry hands to any page, so a create page
   uses them once FairDM provides one.
 
+### Session 2026-10-21
+
+- Q: How is a field that takes a term entered? → A: as a plain text input for now. A vocabulary
+  autocomplete will come from the controlled-vocabularies package later and these forms will use it
+  then. The forms build no picker of their own.
+- Q: How is a field with several choices drawn? → A: every choice is sent with the form, never
+  fetched from elsewhere, and a field with several choices is a counted multiple choice control,
+  never the browser's standard multiple select.
+- Q: Is "unspecified" a correction status? → A: no. It is the absence of a status. The status
+  choice offers no "unspecified" entry, and leaving it empty means unspecified.
+- Q: Does each correction take a comment on the form? → A: no. A comment about a correction goes on
+  the record's discussion, the comments the portal already keeps for every record.
+
 ## User Scenarios & Testing
 
 ### User Story 1 — A researcher corrects a heat flow site in their dataset (Priority: P1)
@@ -92,7 +105,8 @@ their publication reports about it: its name, its coordinates, its elevation and
 measured from, its geographic environment, the exploration method and purpose, the borehole's
 measured and true vertical depth, its azimuth and inclination, and the rock it was drilled into. The
 country, region, continent and domain are offered for correction as well. Where a field takes a
-term, they choose from that field's vocabulary.
+term, they type it as the published file writes it, and only a term of that field's vocabulary is
+accepted.
 
 **Why this priority**: the site is the record every other one hangs from, and its elevation and
 true vertical depth cannot be corrected anywhere a researcher can reach today.
@@ -113,9 +127,9 @@ back.
 4. **Given** the site's form, **When** the researcher sets the coordinates to those of another site,
    in their dataset or any other, **Then** the save is refused with an error against the location
    and nothing is written (ADR-0006).
-5. **Given** the site's form, **When** the researcher opens the geographic environment, exploration
-   method or exploration purpose, **Then** the only choices are the concepts of that field's
-   vocabulary, and exploration purpose accepts several.
+5. **Given** the site's form, **When** the researcher enters the geographic environment, exploration
+   method or exploration purpose, **Then** only a term of that field's vocabulary is accepted, and
+   exploration purpose accepts several.
 6. **Given** a researcher's dataset waiting for a Data Curator's decision, **When** the researcher
    corrects a site in it, **Then** the corrected site is no more visible to others than it was
    before the save.
@@ -128,8 +142,8 @@ A researcher opens the edit page of a child heat flow in their dataset and corre
 publication reports about the determination: its value and uncertainty, the method, the surface
 temperature, the date it was acquired, the expedition, and the comment. They choose the thermal
 gradient and interval conductivity the child was calculated from, out of those on the child's own
-depth interval. On the same form they set the status of each of the nine corrections, with a comment
-where they have one, and each correction offers only the statuses valid for its type.
+depth interval. On the same form they set the status of each of the nine corrections, and each
+correction offers only the statuses valid for its type. A correction with no status is unspecified.
 
 **Why this priority**: the child is the determination itself. Its corrections and the gradient and
 conductivity behind it decide its quality score, and a researcher can correct none of them today.
@@ -149,12 +163,14 @@ that the child, its link and its correction are stored and its quality score has
 3. **Given** the child's form, **When** the researcher sets a correction's status, **Then** only the
    statuses valid for that correction type are offered.
 4. **Given** a child with no corrections recorded, **When** the researcher sets one correction and
-   saves, **Then** that correction holds the chosen status and comment, and every correction left
-   untouched reads back as unspecified.
+   saves, **Then** that correction holds the chosen status, and every correction left untouched reads
+   back as unspecified.
 5. **Given** a child whose corrections change, **When** the form is saved, **Then** the child's
    stored quality score is the one the portal calculates from its new data (ADR-0022).
-6. **Given** the child's form, **When** the researcher opens the method, **Then** the only choices
-   are the concepts of the heat flow method vocabulary, and several can be chosen.
+6. **Given** the child's form, **When** the researcher enters the method, **Then** only terms of the
+   heat flow method vocabulary are accepted, and several can be entered.
+7. **Given** a correction with a status, **When** the researcher clears it and saves, **Then** the
+   correction reads back as unspecified.
 
 ---
 
@@ -165,7 +181,7 @@ and corrected values with their uncertainties, the temperature methods and corre
 of the interval, the shut-in times and the number of temperature recordings. On an interval
 conductivity they correct its value and uncertainty, its method, source, location, strategy,
 saturation, pressure and temperature conditions and function, and the number of measurements it
-averages. Each term field offers its own vocabulary.
+averages. Each term field accepts only a term of its own vocabulary.
 
 **Why this priority**: these measurements feed a child's quality score, but a child can be
 corrected without them. The gradient's form already holds every column it should, so for the
@@ -184,8 +200,9 @@ its score recalculated.
 2. **Given** an interval conductivity in a dataset the researcher may change, **When** they open its
    edit page, **Then** the form offers every conductivity field the field mapping table maps a
    published column to.
-3. **Given** either form, **When** the researcher opens any term field, **Then** the only choices
-   are the concepts of that field's vocabulary.
+3. **Given** either form, **When** the researcher enters a term that is not in that field's
+   vocabulary, **Then** the save is refused with an error against that field and nothing is
+   written.
 4. **Given** a gradient or conductivity whose scored inputs change, **When** the form is saved,
    **Then** its stored score, and the score of every child calculated from it, are the ones the
    portal calculates from the new data (ADR-0022).
@@ -291,19 +308,21 @@ the parent's inherited quality.
 
 **Vocabulary**
 
-- **FR-006**: Every field that takes a term MUST offer only the concepts of that field's own
-  controlled vocabulary, and a field that holds several terms MUST accept several. (US1, US2, US3,
-  US4)
-- **FR-007**: A stored term that is no longer among the vocabulary's choices MUST be kept when the
-  form is saved without touching that field. (US1, US2, US3, US4)
+- **FR-006**: Every field that takes a term MUST take it as text written as the published file writes
+  it, MUST accept only a term of that field's own controlled vocabulary, and a field that holds
+  several terms MUST accept several. (US1, US2, US3, US4)
+- **FR-007**: A stored term MUST be shown as the published file writes it and MUST be kept unchanged
+  when the form is saved without touching that field, including a term the vocabulary no longer
+  offers. (US1, US2, US3, US4)
 
 **Related records**
 
 - **FR-008**: The child's form MUST let the researcher choose its thermal gradient and its interval
   conductivity, offering only the measurements on the child's own depth interval. (US2)
-- **FR-009**: The child's form MUST let the researcher set the status and comment of each of the
-  nine correction types, offering for each only the statuses valid for that type. A correction never
-  set MUST read back as unspecified. (US2)
+- **FR-009**: The child's form MUST let the researcher set the status of each of the nine correction
+  types, offering for each only the statuses valid for that type. Unspecified MUST NOT be offered as
+  a status: a correction with no status is unspecified, and a correction never set or cleared MUST
+  read back as unspecified. The form MUST NOT carry a comment for each correction. (US2)
 - **FR-010**: The interval's form MUST let the researcher enter or correct its probe metadata. An
   interval saved with no probe metadata entered MUST gain none. (US4)
 - **FR-011**: The parent's form MUST let the researcher mark which children at its own site the
@@ -325,12 +344,15 @@ the parent's inherited quality.
   US2, US3, US4, US5)
 - **FR-016**: Every label, help text, group title and error message the forms add MUST be
   translatable (Constitution Article VIII). (US1, US2, US3, US4, US5)
+- **FR-017**: An unspecified correction MUST be stored as having no status. Importing and exporting
+  a published file MUST read and write it exactly as before. (US2)
 
 ### Key Entities
 
 - **Heat flow site, depth interval, child heat flow, thermal gradient, interval conductivity,
-  parent heat flow**: the six records with a form, as CONTEXT.md defines them. No model changes.
-- **Correction**: one status per correction type on a child. Edited on the child's form.
+  parent heat flow**: the six records with a form, as CONTEXT.md defines them.
+- **Correction**: one status per correction type on a child, empty when unspecified (FR-017).
+  Edited on the child's form. Its stored comment is kept and is not on the form.
 - **Probe metadata**: the marine probe parameters of an interval. Edited on the interval's form.
 
 ## Success Criteria
@@ -341,7 +363,8 @@ the parent's inherited quality.
   upload template column the field mapping table maps to it on its form, apart from the calculated
   and assigned values of FR-003. None of them requires the admin or a re-uploaded spreadsheet.
 - **SC-002**: No form offers a quality score, a scheme revision or a GHFDB id.
-- **SC-003**: Every term field on every form offers exactly the concepts of its own vocabulary.
+- **SC-003**: Every term field on every form accepts exactly the terms of its own vocabulary, and a
+  stored term saved untouched is unchanged.
 - **SC-004**: A record corrected through its form exports the same release-format row as the same
   correction made in a re-uploaded template.
 - **SC-005**: No save through these forms makes a record visible to anyone who could not see it

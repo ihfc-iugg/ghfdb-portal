@@ -86,6 +86,77 @@ The template carries all nine correction columns on every child row, and a resea
 their own paper together. A correction never set reads as unspecified, which matches what import and
 export already do with an empty column.
 
+**ADR:** none — local to this feature's forms.
+
+## The maintainer's sketch review, 2026-10-21
+
+### Choices are sent with the form, and several choices are a counted control
+
+Every choice a form offers is in the page when it is drawn. Nothing is fetched from another address,
+and no remote source is built here. A field holding several choices that are not vocabulary terms
+(an interval's or a site's stratigraphic units, the children a parent rests on) is drawn with
+django-mvp-forms' `TomSelectMultiple(counted=True)`: one control that shows how many are chosen and
+lists every option, each ticked when chosen, with a search box in the list. The browser's standard
+multiple select is never used. The page loads Tom Select 2.5.2's complete build and the pack's
+stylesheet, as django-mvp-forms asks of its host, through the forms' media.
+
+**ADR:** none — a widget choice inside these forms.
+
+### A vocabulary term is typed as text, as the published file writes it
+
+Every field backed by a controlled vocabulary is a plain text input until django-controlled-
+vocabularies provides the autocomplete these forms will hook into. Nothing here picks, searches or
+suggests terms, so nothing has to be undone when that arrives.
+
+How the text maps onto what is stored:
+
+- **Shown:** a stored term is shown by its label, exactly as the export writes it. Several terms
+  are their labels joined by `; `, the export's separator.
+- **Read:** the text is resolved as the importer resolves a cell, by the same code: each
+  semicolon-separated token, brackets and case ignored, matched against the vocabulary's labels and
+  then its keys. A token that matches nothing refuses the save with an error against the field,
+  naming the token. An empty field stores no term.
+- **Round trip:** text the researcher has not changed keeps the stored value as it is, without being
+  resolved again. A term the vocabulary no longer offers survives a save that does not touch it
+  (FR-007). A changed field is resolved in full.
+
+So a record exported, corrected on its form and exported again gives the same cell for a field
+nobody touched, and the cell the importer would have read for a field someone did.
+
+**ADR:** none — an interim input, replaced when the vocabulary autocomplete arrives.
+
+### Unspecified is no status
+
+The correction choice offers no "unspecified" entry. It may be left empty, and its empty entry
+reads "Unspecified". An empty choice means the correction is unspecified.
+
+The stored model follows: `HeatFlowCorrection.status` becomes optional, with no default, and a
+migration turns every stored `-` into an empty status. The development database holds 644 such rows
+of 4,823. The importer writes `-` for an empty or unreadable column today. The status choices lose
+the `-` entry.
+
+The published file does not change. The importer stores an empty status where it stored `-`, and the
+export writes `-` for an empty status, as it wrote the stored `-` before, so an exported file is
+byte for byte what it was. The quality code reads an empty status as no flag, as it read `-`. The
+existing import and export tests are the check that the published side has not moved.
+
+Until that migration is built, the sketch stores `-` when a choice is emptied.
+
+**ADR:** none — weighed again when the migration is built, since it changes how a published value is
+stored.
+
+### No comment for each correction
+
+The child's form carries no comment for each correction. A comment about a correction goes on the
+record's discussion, the comments every record already has, and `HeatFlow` gains no new field.
+
+`HeatFlowCorrection.comment` stays in the model with whatever it holds. The form neither shows nor
+writes it, so a comment stored by an earlier import or by the admin is kept as it was. No published
+column carries it, so the export is unaffected. The development database holds no correction
+comment today.
+
+**ADR:** none — local to this feature's forms.
+
 ### Probe metadata is edited on the interval's form
 
 It is attached to the interval (`ProbeMetadata.interval`), not to the child, per the mapping table's
