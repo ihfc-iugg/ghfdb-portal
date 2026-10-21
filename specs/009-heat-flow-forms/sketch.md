@@ -26,9 +26,8 @@ are built and tested.
   choice and replace `location` with a full latitude, longitude, elevation and uncertainty input.
 - **The site's location.** FairDM's `LocationField(full=False)` takes a latitude and a longitude
   only (ADR-0023).
-- **Quantity fields.** FairDM's quantity model fields give a plain number form field, so no form can
-  take a unit. The stored value reaches the input as text with its unit, which a browser drops
-  (#307).
+- **Quantity fields.** From FairDM `dd55cb5`, a quantity is edited as a number and a unit, the
+  stored value shown in base units (#307). The site's elevation offers metres and feet.
 
 ## What the screens need from the code
 
@@ -48,16 +47,12 @@ are built and tested.
 
 ## What the sketch faked
 
-- **Quantity inputs are empty** on every form, and a form with a stored quantity cannot be saved
-  unchanged. This is FairDM's defect (#307), not the sketch's, and the sketch does not work around
-  it. Every form has at least one quantity, so none of them saves today, on main or here.
 - **The grouping code is a copy** of FairDM's profile form `sections` logic, in the portal. The plan
   decides whether FairDM should offer it.
 - **Saving corrections, probe metadata and relevance** is hand-written in each form's `save()`, with
   no tests. The plan chooses the mechanism (a formset on the form, or fields on it).
 - **A stored vocabulary value the vocabulary no longer holds** (FR-007) is not handled.
 - **Gradient and conductivity choices are named by FairDM's default string**, the record's name.
-- **The unit of an elevation** cannot be chosen: a plain number input has none (#307).
 - **Seeded state** in the development database: `regular.user@example.com` manages the private
   dataset "Oceanic crust heat flow cfe9ef", which waits for a Data Curator's decision. One of its
   intervals holds a second gradient and a second conductivity, so the child's choice shows two.
