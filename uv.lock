@@ -2021,8 +2021,8 @@ wheels = [
 
 [[package]]
 name = "fairdm"
-version = "0.1.0"
-source = { git = "https://github.com/FAIR-DM/fairdm?rev=1679e9a5bbb324d0fca1df2ab35460960e3ad1e4#1679e9a5bbb324d0fca1df2ab35460960e3ad1e4" }
+version = "0.2.0"
+source = { git = "https://github.com/FAIR-DM/fairdm?rev=bea306dc42d0da3a80c0a20ddab99d0e949aa82f#bea306dc42d0da3a80c0a20ddab99d0e949aa82f" }
 dependencies = [
     { name = "celery" },
     { name = "daisy-cotton-ext" },
@@ -2243,7 +2243,7 @@ docs = [
 
 [package.metadata]
 requires-dist = [
-    { name = "fairdm", git = "https://github.com/FAIR-DM/fairdm?rev=1679e9a5bbb324d0fca1df2ab35460960e3ad1e4" },
+    { name = "fairdm", git = "https://github.com/FAIR-DM/fairdm?rev=bea306dc42d0da3a80c0a20ddab99d0e949aa82f" },
     { name = "fairdm-discussions", git = "https://github.com/FAIR-DM/fairdm-discussions?rev=643d0af810feb687e41c499df6f6c0d510500b79" },
     { name = "fairdm-geo", git = "https://github.com/FAIR-DM/fairdm-geo?rev=a58d86a34b692d4a329b3cb37a02149ba9626e9f" },
 ]

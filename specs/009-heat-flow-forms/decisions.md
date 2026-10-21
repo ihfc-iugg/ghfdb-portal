@@ -232,7 +232,7 @@ list of modules the dependency check accepts through FairDM.
 
 ## Fields that choose a record search with FairDM's record fields
 
-From FairDM `1679e9a5` a form chooses a project, dataset, sample, measurement, person or
+From FairDM v0.2.0 a form chooses a project, dataset, sample, measurement, person or
 organization with FairDM's record fields (`fairdm.contrib.autocomplete.fields`), which search on
 the server and offer only the records the person may reach. The maintainer ruled on 2026-10-22 that
 these forms use them for every field that chooses a record. Three fields do:
@@ -269,13 +269,12 @@ whether to ask for it.
 
 **ADR:** none — the forms follow FairDM's record fields as they are.
 
-## The FairDM pin moves to 1679e9a5
+## The FairDM pin moves to v0.2.0
 
-FairDM `1679e9a5` carries everything its 0.2.0 release holds: the record fields above, and
+FairDM v0.2.0 (`bea306dc`) brings the record fields above, and
 django-mvp 0.30, which adds a side panel to overview pages and a filter panel to list pages.
 django-tomselect comes in with it, and django-addanother and django-autocomplete-light go. The
 portal imported neither of those two. The site and measurement overview pages and the project and
-dataset lists render with no script errors at this pin. The pin moves again to the release commit
-when FairDM 0.2.0 is tagged.
+dataset lists render with no script errors at this pin.
 
 **ADR:** none — a dependency move.

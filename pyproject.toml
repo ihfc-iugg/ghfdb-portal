@@ -32,7 +32,7 @@ docs = [
 [tool.uv.sources]
 # The FairDM packages are pinned to commits. Move a pin deliberately, not by
 # re-locking.
-fairdm = { git = "https://github.com/FAIR-DM/fairdm", rev = "1679e9a5bbb324d0fca1df2ab35460960e3ad1e4" }
+fairdm = { git = "https://github.com/FAIR-DM/fairdm", rev = "bea306dc42d0da3a80c0a20ddab99d0e949aa82f" }
 fairdm-geo = { git = "https://github.com/FAIR-DM/fairdm-geo", rev = "a58d86a34b692d4a329b3cb37a02149ba9626e9f" }
 fairdm-discussions = { git = "https://github.com/FAIR-DM/fairdm-discussions", rev = "643d0af810feb687e41c499df6f6c0d510500b79" }
 fairdm-docs = { git = "https://github.com/FAIR-DM/fairdm-docs", rev = "847fee1a27862e20c1fac1f7e4c9a4d2100473cd" }
