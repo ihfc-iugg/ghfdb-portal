@@ -41,13 +41,15 @@ are built and tested.
 4. The child's gradient and conductivity choices list only the measurements on the child's own
    interval.
 5. The interval's form shows the four probe fields on every interval, empty when it has none.
-6. The parent's form offers the children at its site in a counted multiple choice control, each
-   named by its heat flow and its depth range, ordered by depth.
+6. The parent's children and the child's gradient and conductivity are FairDM record search
+   fields, offering only what the researcher may change. The form refuses a child at another site
+   or a measurement on another interval.
 7. Every quantity input shows its stored value.
 8. Every vocabulary field is a text input showing its stored term's label, several terms joined by
    `; `, and refusing a term outside the field's vocabulary.
 9. Every other field with several choices is a counted multiple choice control with all its
    choices in the page (Tom Select, from django-mvp-forms). No standard multiple select.
+10. Each quantity's number and unit sit in one joined control.
 
 ## What the sketch faked
 
@@ -60,8 +62,9 @@ are built and tested.
 - **The vocabulary text input borrows the importer's term reading** from the `ghfdb` app, imported
   inside the field to avoid a circular import. The plan decides where that reading lives so both
   can use it.
-- **The Tom Select scripts and stylesheets are written twice** on each page: once by the page and
-  once by the crispy form tag. The plan loads them once.
+- **The record searches offer more than the form accepts:** every gradient, conductivity or child
+  the researcher may change, not only those on the interval or at the site. FairDM cannot narrow
+  them further.
 - **Gradient and conductivity choices are named by FairDM's default string**, the record's name.
 - **Seeded state** in the development database: `regular.user@example.com` manages the private
   dataset "Oceanic crust heat flow cfe9ef", which waits for a Data Curator's decision. One of its
@@ -98,3 +101,5 @@ These are taste calls, each made once in the draft. The build keeps them unless 
 - **Corrections:** "unspecified" is no status. The choice is optional with an "Unspecified" empty
   entry and offers no unspecified status. Done on the form; the stored change is planned.
 - **Correction comments:** none on the form. Comments go on the record's discussion. Done.
+- **Record fields (2026-10-22):** every field that chooses a record uses FairDM's record search
+  fields. Done for the child's gradient and conductivity and the parent's children.

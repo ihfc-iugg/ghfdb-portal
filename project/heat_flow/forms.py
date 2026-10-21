@@ -10,6 +10,10 @@ from django import forms
 from django.db import models
 from django.forms.models import fields_for_model
 from django.utils.translation import gettext_lazy as _
+from fairdm.contrib.autocomplete.fields import (
+    MeasurementChoiceField,
+    MeasurementMultipleChoiceField,
+)
 from fairdm.core.measurement.forms import MeasurementFormMixin
 from fairdm.core.sample.forms import SampleFormMixin
 from fairdm.utils.location.forms import LocationField
@@ -99,17 +103,6 @@ class SectionedForm:
     """
 
     sections: tuple = ()
-
-    class Media:
-        css = {
-            "all": [
-                "https://cdn.jsdelivr.net/npm/tom-select@2.5.2/dist/css/tom-select.default.min.css",
-                "mvp_forms/tomselect.css",
-            ]
-        }
-        js = [
-            "https://cdn.jsdelivr.net/npm/tom-select@2.5.2/dist/js/tom-select.complete.min.js"
-        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -266,6 +259,21 @@ class HeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
 
     CORRECTION_CODES = HeatFlowCorrection.CorrectionTypeChoices.values
 
+    thermal_gradient = MeasurementChoiceField(
+        type=ThermalGradient,
+        scope="edit",
+        required=False,
+        label=_("Temperature gradient"),
+        help_text=_("A temperature gradient on this child's own depth interval."),
+    )
+    thermal_conductivity = MeasurementChoiceField(
+        type=IntervalConductivity,
+        scope="edit",
+        required=False,
+        label=_("Thermal conductivity"),
+        help_text=_("A thermal conductivity on this child's own depth interval."),
+    )
+
     sections = (
         (None, [("value", "uncertainty"), "method", "c_comment"]),
         (
@@ -299,13 +307,6 @@ class HeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        interval = self.instance.sample_id
-        self.fields["thermal_gradient"].queryset = ThermalGradient.objects.filter(
-            sample_id=interval
-        )
-        self.fields[
-            "thermal_conductivity"
-        ].queryset = IntervalConductivity.objects.filter(sample_id=interval)
         stored = {}
         if self.instance.pk:
             stored = {c.correction_type: c for c in self.instance.corrections.all()}
@@ -331,6 +332,22 @@ class HeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
                 required=False,
             )
         self.helper.layout = self.get_layout()
+
+    def clean_thermal_gradient(self):
+        """Refuse a gradient measured over another depth interval."""
+        return self.on_own_interval(self.cleaned_data["thermal_gradient"])
+
+    def clean_thermal_conductivity(self):
+        """Refuse a conductivity measured over another depth interval."""
+        return self.on_own_interval(self.cleaned_data["thermal_conductivity"])
+
+    def on_own_interval(self, measurement):
+        """Return the measurement when it was made over this child's interval."""
+        if measurement is not None and measurement.sample_id != self.instance.sample_id:
+            raise forms.ValidationError(
+                _("Choose a measurement on this child's own depth interval.")
+            )
+        return measurement
 
     def save(self, commit=True):
         """Save the child, then each correction that was set or already stored.
@@ -423,25 +440,12 @@ class IntervalConductivityForm(SectionedForm, MeasurementFormMixin, forms.ModelF
         ]
 
 
-class ChildChoiceField(forms.ModelMultipleChoiceField):
-    """The children at a site, each named by its value and its depth interval."""
-
-    def label_from_instance(self, obj):
-        """Name a child by its heat flow and the interval it was measured over."""
-        interval = obj.sample.get_real_instance()
-        return _("%(value)s, %(top)s to %(bottom)s") % {
-            "value": obj.value,
-            "top": interval.top,
-            "bottom": interval.bottom,
-        }
-
-
 class ParentHeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
     """A site's parent heat flow, and the children at the site it rests on."""
 
-    relevant_children = ChildChoiceField(
-        queryset=HeatFlow.objects.none(),
-        widget=TomSelectMultiple(counted=True),
+    relevant_children = MeasurementMultipleChoiceField(
+        type=HeatFlow,
+        scope="edit",
         required=False,
         label=_("Children this value rests on"),
         help_text=_(
@@ -463,11 +467,22 @@ class ParentHeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        children = HeatFlow.objects.filter(
+        self.fields["relevant_children"].initial = list(
+            self.children().filter(is_relevant=True).values_list("pk", flat=True)
+        )
+
+    def children(self):
+        """Return the child heat flows at this parent's site."""
+        return HeatFlow.objects.filter(
             sample__heatflowinterval__site_id=self.instance.sample_id
-        ).order_by("sample__heatflowinterval__top", "pk")
-        self.fields["relevant_children"].queryset = children
-        self.fields["relevant_children"].initial = children.filter(is_relevant=True)
+        )
+
+    def clean_relevant_children(self):
+        """Refuse a child at another site."""
+        chosen = self.cleaned_data["relevant_children"]
+        if chosen.exclude(pk__in=self.children().values("pk")).exists():
+            raise forms.ValidationError(_("Choose only children at this site."))
+        return chosen
 
     def save(self, commit=True):
         """Save the parent, then mark exactly the chosen children relevant."""
@@ -475,7 +490,7 @@ class ParentHeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
         chosen = set(
             self.cleaned_data["relevant_children"].values_list("pk", flat=True)
         )
-        for child in self.fields["relevant_children"].queryset:
+        for child in self.children():
             relevant = child.pk in chosen
             if child.is_relevant != relevant:
                 child.is_relevant = relevant

@@ -90,15 +90,14 @@ export already do with an empty column.
 
 ## The maintainer's sketch review, 2026-10-21
 
-### Choices are sent with the form, and several choices are a counted control
+### Choices that are not records are sent with the form, as a counted control
 
-Every choice a form offers is in the page when it is drawn. Nothing is fetched from another address,
-and no remote source is built here. A field holding several choices that are not vocabulary terms
-(an interval's or a site's stratigraphic units, the children a parent rests on) is drawn with
-django-mvp-forms' `TomSelectMultiple(counted=True)`: one control that shows how many are chosen and
-lists every option, each ticked when chosen, with a search box in the list. The browser's standard
-multiple select is never used. The page loads Tom Select 2.5.2's complete build and the pack's
-stylesheet, as django-mvp-forms asks of its host, through the forms' media.
+Every choice that is not a record is in the page when it is drawn. A field holding several such
+choices (an interval's or a site's stratigraphic units) is drawn with django-mvp-forms'
+`TomSelectMultiple(counted=True)`: one control that shows how many are chosen and lists every
+option, each ticked when chosen, with a search box in the list. The browser's standard multiple
+select is never used. FairDM's base page loads Tom Select and its stylesheets on every page, so
+the forms add no media of their own.
 
 **ADR:** none — a widget choice inside these forms.
 
@@ -228,5 +227,55 @@ django-pint's fields. The portal gets django-mvp-forms through FairDM and django
 accept 0.7.0, so the lockfile moves and no requirement is declared here, as for the rest of the
 stack FairDM supplies. The forms now import `mvp_forms` directly, for Tom Select, so it joins the
 list of modules the dependency check accepts through FairDM.
+
+**ADR:** none — a dependency move.
+
+## Fields that choose a record search with FairDM's record fields
+
+From FairDM `1679e9a5` a form chooses a project, dataset, sample, measurement, person or
+organization with FairDM's record fields (`fairdm.contrib.autocomplete.fields`), which search on
+the server and offer only the records the person may reach. The maintainer ruled on 2026-10-22 that
+these forms use them for every field that chooses a record. Three fields do:
+
+- the child's temperature gradient: `MeasurementChoiceField(type=ThermalGradient, scope="edit")`
+- the child's thermal conductivity: `MeasurementChoiceField(type=IntervalConductivity,
+  scope="edit")`
+- the parent's children: `MeasurementMultipleChoiceField(type=HeatFlow, scope="edit")`, which
+  FairDM draws as a counted control
+
+No form chooses a site, an interval, a dataset or a person: FairDM's edit page leaves the fields
+that move a record off it, and an interval's site is treated the same way.
+
+`scope="edit"` because a link from a record in the researcher's dataset should name a record they
+may change, and `type` keeps the search to the one kind the field holds.
+
+### The search cannot be narrowed to one interval or one site
+
+The specification limits a child's gradient and conductivity to the child's own depth interval and
+a parent's children to its own site. FairDM's record fields narrow a search only by the value of
+another field on the same form, and a measurement search accepts only the dataset and the type as
+filters. The edit page has no dataset field, and neither filter is the interval or the site.
+
+So the search offers every gradient, conductivity or child heat flow the researcher may change, and
+the form refuses on save anything outside the child's interval or the parent's site, with an error
+against the field. Checked as a researcher with one dataset: each search returned only that
+dataset's measurements of the field's kind, a gradient from another interval and a child at
+another site were refused with the form's error, and a gradient in someone else's dataset was
+refused by FairDM's own field.
+
+Narrowing the search itself needs FairDM to accept the interval (a measurement's sample) as a
+filter. The portal does not work round that. It is FairDM's to add, and the maintainer decides
+whether to ask for it.
+
+**ADR:** none — the forms follow FairDM's record fields as they are.
+
+## The FairDM pin moves to 1679e9a5
+
+FairDM `1679e9a5` carries everything its 0.2.0 release holds: the record fields above, and
+django-mvp 0.30, which adds a side panel to overview pages and a filter panel to list pages.
+django-tomselect comes in with it, and django-addanother and django-autocomplete-light go. The
+portal imported neither of those two. The site and measurement overview pages and the project and
+dataset lists render with no script errors at this pin. The pin moves again to the release commit
+when FairDM 0.2.0 is tagged.
 
 **ADR:** none — a dependency move.

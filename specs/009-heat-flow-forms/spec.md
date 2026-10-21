@@ -88,9 +88,18 @@ follows the same rule as everything else in that dataset.
 - Q: How is a field that takes a term entered? → A: as a plain text input for now. A vocabulary
   autocomplete will come from the controlled-vocabularies package later and these forms will use it
   then. The forms build no picker of their own.
-- Q: How is a field with several choices drawn? → A: every choice is sent with the form, never
-  fetched from elsewhere, and a field with several choices is a counted multiple choice control,
-  never the browser's standard multiple select.
+- Q: How is a field with several choices drawn? → A: a field with several choices is a counted
+  multiple choice control, never the browser's standard multiple select. Its choices are sent with
+  the form, except where the field chooses a record, below.
+
+### Session 2026-10-22
+
+- Q: How does a form choose another record, such as a child's gradient or a parent's children? →
+  A: with FairDM's record search fields, which search on the server and offer only the records the
+  person may reach. Vocabulary fields stay plain text, and other choices stay in the page.
+- Q: The search cannot be narrowed to one interval or one site. Is that enough? → A: the search
+  offers the records of that kind the researcher may change, and the form refuses a record outside
+  the interval or site on save.
 - Q: Is "unspecified" a correction status? → A: no. It is the absence of a status. The status
   choice offers no "unspecified" entry, and leaving it empty means unspecified.
 - Q: Does each correction take a comment on the form? → A: no. A comment about a correction goes on
@@ -158,8 +167,9 @@ that the child, its link and its correction are stored and its quality score has
    **Then** the form offers every child field the field mapping table maps a published column to,
    except relevance, which the parent's form carries.
 2. **Given** a child on an interval with two thermal gradients and another interval in the same
-   dataset with a third, **When** the researcher chooses the child's gradient, **Then** the two on
-   its own interval are offered and the third is not. The same holds for interval conductivities.
+   dataset with a third, **When** the researcher chooses the child's gradient, **Then** either of
+   the two on its own interval saves, and the third is refused with an error against the gradient
+   and nothing is written. The same holds for interval conductivities.
 3. **Given** the child's form, **When** the researcher sets a correction's status, **Then** only the
    statuses valid for that correction type are offered.
 4. **Given** a child with no corrections recorded, **When** the researcher sets one correction and
@@ -262,8 +272,8 @@ the parent's inherited quality.
 3. **Given** a parent whose value the researcher does not touch, **When** they change which children
    are relevant and save, **Then** the parent's value is unchanged. A parent's value is never
    calculated.
-4. **Given** the parent's form, **When** the researcher looks for the children to mark, **Then**
-   only the children at the parent's own site are offered.
+4. **Given** the parent's form, **When** the researcher marks a child at another site, **Then** the
+   save is refused with an error against the children and nothing is written.
 
 ---
 
@@ -318,15 +328,18 @@ the parent's inherited quality.
 **Related records**
 
 - **FR-008**: The child's form MUST let the researcher choose its thermal gradient and its interval
-  conductivity, offering only the measurements on the child's own depth interval. (US2)
+  conductivity by searching for it, and MUST accept only a measurement on the child's own depth
+  interval. The search offers only gradients, or only conductivities, that the researcher may
+  change. (US2)
 - **FR-009**: The child's form MUST let the researcher set the status of each of the nine correction
   types, offering for each only the statuses valid for that type. Unspecified MUST NOT be offered as
   a status: a correction with no status is unspecified, and a correction never set or cleared MUST
   read back as unspecified. The form MUST NOT carry a comment for each correction. (US2)
 - **FR-010**: The interval's form MUST let the researcher enter or correct its probe metadata. An
   interval saved with no probe metadata entered MUST gain none. (US4)
-- **FR-011**: The parent's form MUST let the researcher mark which children at its own site the
-  parent rests on, offering only those children. Relevance MUST NOT be offered on the child's form.
+- **FR-011**: The parent's form MUST let the researcher mark which children the parent rests on by
+  searching for them, and MUST accept only children at its own site. The search offers only child
+  heat flows the researcher may change. Relevance MUST NOT be offered on the child's form.
   (US2, US5)
 
 **What saving does**
