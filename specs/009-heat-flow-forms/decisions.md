@@ -219,3 +219,14 @@ The site's elevation already accepts metres and feet. No other field the specifi
 asks for a unit choice.
 
 **ADR:** none — a dependency move, recorded in the changelog with the feature.
+
+## django-mvp-forms moves to 0.7.0
+
+From 0.7.0 the form pack draws a multi-widget's parts as one joined control when every part is an
+input or a select, so each quantity's number and unit sit in one row with nothing added to
+django-pint's fields. The portal gets django-mvp-forms through FairDM and django-mvp, both of which
+accept 0.7.0, so the lockfile moves and no requirement is declared here, as for the rest of the
+stack FairDM supplies. The forms now import `mvp_forms` directly, for Tom Select, so it joins the
+list of modules the dependency check accepts through FairDM.
+
+**ADR:** none — a dependency move.

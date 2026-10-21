@@ -194,6 +194,7 @@ DEP003 = [
     "literature",
     "markdownx",
     "mvp",
+    "mvp_forms",
     "openpyxl",
     "partial_date",
     "polymorphic",

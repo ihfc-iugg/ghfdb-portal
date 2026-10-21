@@ -1511,15 +1511,15 @@ wheels = [
 
 [[package]]
 name = "django-mvp-forms"
-version = "0.6.0"
+version = "0.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
     { name = "django-crispy-forms" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/10/7c/2499cf6e53a70e7dabb8006da94b84d22c582f123c7804b404b3bf2a7c23/django_mvp_forms-0.6.0.tar.gz", hash = "sha256:47b3685a6f3fa1de017ece4991767eef7829916ea47a2dab82c0233d36da8dfd", size = 187176, upload-time = "2026-10-19T18:39:04.006Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/93/f4/db94b1203dd4dd9434ab0f0ec30343acbe04bc4c627a788e550c3c94a6de/django_mvp_forms-0.7.0.tar.gz", hash = "sha256:ecba886b037ec8fc3234cf2c202b993148b8f4e2e8ed2ea433a4da7abdf700b8", size = 188840, upload-time = "2026-10-21T15:27:05.077Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/08/da/1209396023e3f1056aa2dcd2c6268500a7eae1fdf3bd5ab5152ca2b435da/django_mvp_forms-0.6.0-py3-none-any.whl", hash = "sha256:f8e1ffbdb987d09635d984ff52623df00bd3fc35721ceb5ca2b84cb43d63738a", size = 145686, upload-time = "2026-10-19T18:39:01.376Z" },
+    { url = "https://files.pythonhosted.org/packages/be/db/fa2935d41055492a259a2d3f59df650b32cb11e3e7f55dd8f2dcc1fd7bc8/django_mvp_forms-0.7.0-py3-none-any.whl", hash = "sha256:4dfc627d2e84daabbcdd3eec544f23d40864ecf6385e12d7338542fd929bc3f1", size = 147014, upload-time = "2026-10-21T15:27:03.371Z" },
 ]
 
 [[package]]
