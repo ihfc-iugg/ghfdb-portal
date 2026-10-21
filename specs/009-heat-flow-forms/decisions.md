@@ -125,3 +125,26 @@ Two gaps exist at both commits, and planning has to answer them:
 
 FS-010 (#287) owns the API representations of these records and FS-011 (#288) their overview pages.
 Neither depends on this feature, and this feature depends on neither.
+
+## The FairDM pin moves to dd55cb5
+
+FairDM's quantity fields drew an empty number box on every edit page, so none of these forms
+could be saved (#307). FairDM fixed it at `dd55cb5`, where a quantity is edited as a number and a
+unit and the stored value shows in base units. The pin moves there from `f69c9cb`, which brings in
+three other FairDM changes:
+
+- **Django 6.0.** FairDM now requires it. Django 6.0 drops a column without `CASCADE`, so
+  migration `heat_flow.0005` failed on an empty database: it dropped the old surface heat flow's
+  key while a child's parent foreign key still pointed at it. The drop now comes after that
+  foreign key is repointed, just before the old model is deleted. The final schema is unchanged,
+  and a database that has already applied the migration is unaffected.
+- **The development accounts moved to example.com.** FairDM's accounts now include
+  `regular.user@example.com`, which the demo data also creates, so the demo-data test counts
+  distinct addresses rather than a fixed ten.
+- **`fairdm.utils` is no longer an app and `fairdm.menus` is one module.** The portal imports
+  neither path that moved.
+
+The site's elevation already accepts metres and feet. No other field the specification covers
+asks for a unit choice.
+
+**ADR:** none — a dependency move, recorded in the changelog with the feature.
