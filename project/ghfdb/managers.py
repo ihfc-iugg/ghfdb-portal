@@ -22,6 +22,7 @@ References:
 from typing import Any, cast
 
 from django.db.models import (
+    Case,
     CharField,
     Count,
     DecimalField,
@@ -32,6 +33,7 @@ from django.db.models import (
     Q,
     Subquery,
     Value,
+    When,
 )
 from django.db.models.functions import Cast, Coalesce
 from polymorphic.managers import PolymorphicManager, PolymorphicQuerySet
@@ -62,7 +64,8 @@ def _correction_subqueries() -> dict[str, Subquery]:
     """Return 9 correlated Subquery annotations, one per correction type.
 
     Each subquery selects ``HeatFlowCorrection.status`` for the given
-    ``correction_type``, keyed as ``corr_{type}_flag``.  Because
+    ``correction_type``, keyed as ``corr_{type}_flag``, with an empty status written
+    as the published ``-``.  A child with no row for the type gets no value.  Because
     ``unique_together = [("heat_flow", "correction_type")]`` holds,
     each subquery is satisfied by an index-only scan.
     """
@@ -76,7 +79,15 @@ def _correction_subqueries() -> dict[str, Subquery]:
             correction_model.objects.filter(
                 heat_flow=OuterRef("pk"),
                 correction_type=choice_value,
-            ).values("status")[:1],
+            )
+            .annotate(
+                flag=Case(
+                    When(status="", then=Value("-")),
+                    default=F("status"),
+                    output_field=CharField(),
+                )
+            )
+            .values("flag")[:1],
             output_field=CharField(),
         )
     return annotations

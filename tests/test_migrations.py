@@ -297,3 +297,51 @@ class TestLocatedSamplesKeepTheirCoordinates:
         }
         assert sum(value is not None for value in after["samples"].values()) == 4
         assert after["copy"] is None
+
+
+class TestCorrectionStatusMigration:
+    # FS-009 FR-009: an unspecified correction is stored with no status. Migration 0018
+    # turns every stored ``-`` into an empty status, and back.
+
+    @pytest.fixture
+    def migration(self):
+        import importlib
+
+        return importlib.import_module(
+            "project.heat_flow.migrations.0018_correction_status_may_be_empty"
+        )
+
+    @pytest.fixture
+    def dash_row(self, db):
+        from django.apps import apps
+        from heat_flow.models import HeatFlowCorrection
+
+        from tests.factories import HeatFlowCorrectionFactory
+
+        corrections = [
+            HeatFlowCorrectionFactory(correction_type="IS", status="not_considered"),
+            HeatFlowCorrectionFactory(correction_type="T", status="not_considered"),
+        ]
+        HeatFlowCorrection.objects.filter(pk=corrections[0].pk).update(status="-")
+        return apps, corrections
+
+    def test_a_dash_reads_empty_after_migrating_forward(self, migration, dash_row):
+        from heat_flow.models import HeatFlowCorrection
+
+        apps, (dashed, kept) = dash_row
+
+        migration.dash_to_empty(apps, None)
+
+        assert HeatFlowCorrection.objects.get(pk=dashed.pk).status == ""
+        assert HeatFlowCorrection.objects.get(pk=kept.pk).status == "not_considered"
+
+    def test_an_empty_status_reads_dash_after_migrating_back(self, migration, dash_row):
+        from heat_flow.models import HeatFlowCorrection
+
+        apps, (dashed, kept) = dash_row
+        migration.dash_to_empty(apps, None)
+
+        migration.empty_to_dash(apps, None)
+
+        assert HeatFlowCorrection.objects.get(pk=dashed.pk).status == "-"
+        assert HeatFlowCorrection.objects.get(pk=kept.pk).status == "not_considered"

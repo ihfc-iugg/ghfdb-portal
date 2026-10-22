@@ -474,7 +474,7 @@ class BoreholeRules:
             -0.2,
             {
                 "pT": {"recordedAmbient", "unrecordedAmbient", "unspecified"},
-                "in_situ": {"not_considered", "-"},
+                "in_situ": {"not_considered", ""},
             },
         ),
     )

@@ -419,11 +419,8 @@ class HeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
                     (value, labels[value])
                     for value in HeatFlowCorrection.StatusChoices.values
                     if value in valid
-                    and value != HeatFlowCorrection.StatusChoices.UNSPECIFIED
                 ],
-                initial=""
-                if status == HeatFlowCorrection.StatusChoices.UNSPECIFIED
-                else status,
+                initial=status,
                 required=False,
             )
         self.helper.layout = self.get_layout()
@@ -451,14 +448,9 @@ class HeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
         """
         child = super().save(commit=commit)
         for code in self.CORRECTION_CODES:
-            status = self.cleaned_data.get(f"correction_{code}") or (
-                HeatFlowCorrection.StatusChoices.UNSPECIFIED
-            )
+            status = self.cleaned_data.get(f"correction_{code}") or ""
             stored = child.corrections.filter(correction_type=code).first()
-            if (
-                stored is None
-                and status == HeatFlowCorrection.StatusChoices.UNSPECIFIED
-            ):
+            if stored is None and status == "":
                 continue
             if stored is None:
                 stored = HeatFlowCorrection(heat_flow=child, correction_type=code)
