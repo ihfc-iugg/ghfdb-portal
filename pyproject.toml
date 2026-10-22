@@ -15,7 +15,12 @@ classifiers = [
     "Natural Language :: English",
     "Programming Language :: Python :: 3.13",
 ]
-dependencies = ["fairdm", "fairdm-geo", "fairdm-discussions"]
+dependencies = [
+    "django-crispy-forms>=2.3,<3.0",
+    "fairdm",
+    "fairdm-geo",
+    "fairdm-discussions",
+]
 
 [project.urls]
 Homepage = "https://github.com/ihfc-iugg/ghfdb-portal"

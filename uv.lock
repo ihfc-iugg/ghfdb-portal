@@ -2225,6 +2225,7 @@ name = "global-heat-flow-database"
 version = "2025.21"
 source = { editable = "." }
 dependencies = [
+    { name = "django-crispy-forms" },
     { name = "fairdm" },
     { name = "fairdm-discussions" },
     { name = "fairdm-geo" },
@@ -2242,6 +2243,7 @@ docs = [
 
 [package.metadata]
 requires-dist = [
+    { name = "django-crispy-forms", specifier = ">=2.3,<3.0" },
     { name = "fairdm", git = "https://github.com/FAIR-DM/fairdm?rev=865964f2f0141cf15ee2fed9a0fe97fc7f9336c2" },
     { name = "fairdm-discussions", git = "https://github.com/FAIR-DM/fairdm-discussions?rev=643d0af810feb687e41c499df6f6c0d510500b79" },
     { name = "fairdm-geo", git = "https://github.com/FAIR-DM/fairdm-geo?rev=a58d86a34b692d4a329b3cb37a02149ba9626e9f" },

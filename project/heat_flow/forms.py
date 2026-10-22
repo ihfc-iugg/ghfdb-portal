@@ -142,16 +142,15 @@ class SectionedForm:
         unit = self.unit_of(value)
         for name in (value, uncertainty):
             model_field = self._meta.model._meta.get_field(name)
-            plain = (
-                models.DecimalField
-                if isinstance(model_field, DecimalQuantityField)
-                else models.FloatField
-            )
-            self.fields[name] = plain.formfield(
-                model_field,
-                label=model_field.verbose_name.capitalize(),
-                help_text=model_field.help_text,
-            )
+            if isinstance(model_field, DecimalQuantityField):
+                plain = models.DecimalField.formfield(
+                    model_field, max_digits=None, decimal_places=None
+                )
+            else:
+                plain = models.FloatField.formfield(model_field)
+            plain.label = model_field.verbose_name.capitalize()
+            plain.help_text = model_field.help_text
+            self.fields[name] = plain
             stored = getattr(self.instance, name, None)
             self.initial[name] = (
                 None if stored is None else stored.m_as(model_field.base_units)
@@ -184,9 +183,9 @@ class SectionedForm:
         """Return a number entered in a unit as a quantity in its field's base units."""
         model_field = self._meta.model._meta.get_field(name)
         base = model_field.base_units
-        if unit == base:
-            return ureg.Quantity(number, base)
-        converted = ureg.Quantity(float(number), unit).m_as(base)
+        converted = (
+            number if unit == base else ureg.Quantity(float(number), unit).m_as(base)
+        )
         if isinstance(model_field, DecimalQuantityField):
             step = Decimal(1).scaleb(-model_field.decimal_places)
             converted = Decimal(str(converted)).quantize(step)
