@@ -1427,7 +1427,7 @@ wheels = [
 
 [[package]]
 name = "django-mvp"
-version = "0.30.1"
+version = "0.31.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "daisy-cotton" },
@@ -1440,9 +1440,9 @@ dependencies = [
     { name = "django-mvp-forms" },
     { name = "mergedeep" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fa/38/7949af2898f2cd315495d38bf9f0eeaedf038496a75e4789cf571718ef6d/django_mvp-0.30.1.tar.gz", hash = "sha256:6d5aa92b6613ee7534b69e499cd2377ebff55279ebbefd736fea8348a6621932", size = 310802, upload-time = "2026-10-21T21:04:50.642Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/77/4d/31d6bf7241a86a90b9bd36a2c20a9e408cea65d083057793fa8084947e00/django_mvp-0.31.0.tar.gz", hash = "sha256:8e227165164c26331566d4e204b3ef680271bcaa1700903ab4a9472c1388c87a", size = 313789, upload-time = "2026-10-22T15:47:18.603Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9b/a7/37caa1f6661d7fd4b33c44ca5c99691bbcdc585c2f4cc43bbd98736aca80/django_mvp-0.30.1-py3-none-any.whl", hash = "sha256:050490cb0470b6cf166b57e3ed4a1799408a3a2c3d32e61591bb28a157d5dba9", size = 363979, upload-time = "2026-10-21T21:04:49.055Z" },
+    { url = "https://files.pythonhosted.org/packages/71/11/643b1f322d7ef657fb1227f56106e03c910ee440f7ecf9d47e5f7a39414a/django_mvp-0.31.0-py3-none-any.whl", hash = "sha256:1ff4c0c178477be733c1b5b49041a802a3f724cb6363cd36bd9466334e7a8873", size = 367334, upload-time = "2026-10-22T15:47:16.671Z" },
 ]
 
 [[package]]
@@ -2021,8 +2021,8 @@ wheels = [
 
 [[package]]
 name = "fairdm"
-version = "0.2.0"
-source = { git = "https://github.com/FAIR-DM/fairdm?rev=bea306dc42d0da3a80c0a20ddab99d0e949aa82f#bea306dc42d0da3a80c0a20ddab99d0e949aa82f" }
+version = "0.2.1"
+source = { git = "https://github.com/FAIR-DM/fairdm?rev=865964f2f0141cf15ee2fed9a0fe97fc7f9336c2#865964f2f0141cf15ee2fed9a0fe97fc7f9336c2" }
 dependencies = [
     { name = "celery" },
     { name = "daisy-cotton-ext" },
@@ -2045,7 +2045,6 @@ dependencies = [
     { name = "django-downloadview" },
     { name = "django-easy-icons" },
     { name = "django-environ" },
-    { name = "django-extra-views" },
     { name = "django-filter" },
     { name = "django-flex-menus" },
     { name = "django-guardian" },
@@ -2243,7 +2242,7 @@ docs = [
 
 [package.metadata]
 requires-dist = [
-    { name = "fairdm", git = "https://github.com/FAIR-DM/fairdm?rev=bea306dc42d0da3a80c0a20ddab99d0e949aa82f" },
+    { name = "fairdm", git = "https://github.com/FAIR-DM/fairdm?rev=865964f2f0141cf15ee2fed9a0fe97fc7f9336c2" },
     { name = "fairdm-discussions", git = "https://github.com/FAIR-DM/fairdm-discussions?rev=643d0af810feb687e41c499df6f6c0d510500b79" },
     { name = "fairdm-geo", git = "https://github.com/FAIR-DM/fairdm-geo?rev=a58d86a34b692d4a329b3cb37a02149ba9626e9f" },
 ]
