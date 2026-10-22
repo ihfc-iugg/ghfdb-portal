@@ -21,6 +21,12 @@ Releases before that used `<year>.<release>` and are recorded in the
   shows the site's location, or says none is recorded. Records in datasets that have not been
   published are counted and never named. Every column of the GHFDB export can be read on one of
   these pages ([record pages](docs/guides/record-pages.md)).
+- A researcher can correct a heat flow site on its edit page instead of re-uploading the
+  spreadsheet. The form groups the site's fields the way the upload template orders its columns,
+  takes a vocabulary term as text written the way the published file writes it, and keeps a
+  stored term that is saved untouched. A site keeps the true vertical depth entered for it, and a
+  location another site already holds is refused beside the coordinates
+  ([editing records](docs/guides/editing-records.md)).
 - Container images are published to `ghcr.io/ihfc-iugg/ghfdb-portal` on every
   release, tagged with the version and with `latest`.
 - Dependabot pull requests for a given ecosystem now arrive grouped as one pull

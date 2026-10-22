@@ -72,6 +72,7 @@ guides/map-exploration/index
 guides/importing-data
 guides/assessment-uploads
 guides/record-pages
+guides/editing-records
 guides/quality-scores
 guides/published-structure-api
 guides/heat-flow-records-api
