@@ -419,3 +419,89 @@ class TestHeatFlowSiteForm:
         assert form.is_valid(), form.errors
         form.save()
         assert set(site.explo_purpose.all()) == set(chosen)
+
+
+@pytest.fixture
+def researcher(client):
+    """Return a function that signs in a researcher with no team role who owns a dataset."""
+
+    def sign_in(dataset):
+        from fairdm.contrib.contributors.choices import ContributionLevel
+        from fairdm.factories import UserFactory
+
+        user = UserFactory()
+        credit = dataset.add_contributor(user)
+        credit.level = ContributionLevel.MANAGE
+        credit.save()
+        client.force_login(user)
+        return client
+
+    return sign_in
+
+
+class TestHeatFlowSiteEditPage:
+    def edit_url(self, site):
+        from fairdm.contrib.plugins import reverse
+
+        return reverse(site, "edit")
+
+    def test_a_dataset_owner_corrects_the_elevation_datum_and_vertical_depth(
+        self, db, researcher
+    ):
+        from fairdm.factories import DatasetFactory
+        from fairdm.utils.choices import Visibility
+
+        from tests.factories import HeatFlowSiteFactory
+
+        dataset = DatasetFactory(visibility=Visibility.PUBLIC, published=True)
+        site = HeatFlowSiteFactory(dataset=dataset, name="Original")
+        client = researcher(dataset)
+
+        response = client.post(
+            self.edit_url(site),
+            site_data(
+                site,
+                elevation_0="350",
+                elevation_1="m",
+                elevation_datum="NAVD88",
+                vertical_depth_0="800",
+                vertical_depth_1="m",
+            ),
+        )
+
+        assert response.status_code == 302
+        site.refresh_from_db()
+        assert site.elevation.m_as("m") == 350
+        assert str(site.elevation_datum) == "NAVD88"
+        assert site.vertical_depth.m_as("m") == 800
+
+    def test_a_save_shows_a_site_awaiting_review_to_no_one_new(self, db, researcher):
+        from django.test import Client
+        from fairdm.factories import DatasetFactory, UserFactory
+        from fairdm.utils.choices import Visibility
+
+        from tests.factories import HeatFlowSiteFactory
+
+        dataset = DatasetFactory(visibility=Visibility.PUBLIC, published=False)
+        site = HeatFlowSiteFactory(dataset=dataset)
+        stranger = Client()
+        stranger.force_login(UserFactory())
+        anonymous = Client()
+        before = [
+            visitor.get(site.get_absolute_url()).status_code
+            for visitor in (anonymous, stranger)
+        ]
+        owner = researcher(dataset)
+
+        response = owner.post(
+            self.edit_url(site),
+            site_data(site, elevation_0="12", elevation_1="m"),
+        )
+
+        assert response.status_code == 302
+        after = [
+            visitor.get(site.get_absolute_url()).status_code
+            for visitor in (anonymous, stranger)
+        ]
+        assert before == after
+        assert 200 not in after
