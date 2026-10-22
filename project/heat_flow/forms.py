@@ -6,9 +6,8 @@ filled the template in finds the same things in the same order.
 
 from decimal import Decimal
 
-from crispy_forms.bootstrap import StrictButton
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Div, Fieldset, Layout
+from crispy_forms.layout import HTML, Div, Layout
 from django import forms
 from django.db import models
 from django.forms.models import fields_for_model
@@ -20,7 +19,7 @@ from fairdm.contrib.autocomplete.fields import (
 from fairdm.core.measurement.forms import MeasurementFormMixin
 from fairdm.core.sample.forms import SampleFormMixin
 from fairdm.utils.location.forms import LocationField
-from mvp_forms.layout import Join
+from mvp_forms.layout import Fieldset, Join
 from mvp_forms.widgets import TomSelectMultiple
 from quantityfield.fields import DecimalQuantityField
 from quantityfield.units import ureg
@@ -219,12 +218,11 @@ class SectionedForm:
     def get_measured_group(self, value, uncertainty):
         """Draw a value, "±", its uncertainty and their one unit in a row, under one label.
 
-        A joined group holds fields and buttons only, so the "±" is a disabled button
-        that assistive technology skips. The uncertainty is named by its own label.
+        The uncertainty is named by its own label.
         """
         return Join(
             value,
-            StrictButton("±", type="button", disabled=True, aria_hidden="true"),
+            HTML("±"),
             uncertainty,
             self.unit_of(value),
             label=self.fields[value].label,
