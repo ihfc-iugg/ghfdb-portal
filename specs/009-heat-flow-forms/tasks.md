@@ -1,0 +1,52 @@
+# Tasks: Forms designed for heat flow sites and measurements
+
+**Input**: [plan.md](plan.md), [research.md](research.md), [spec.md](spec.md), the approved sketch.
+
+Every task is test-first. The sketch's code is already on the branch, so each new test is shown
+red by removing or breaking the piece it covers, then green with it restored. Tests live in
+`tests/test_heat_flow/test_forms.py` unless a task names another module. A documentation task sits
+in the story that introduces the public names it documents.
+
+`[US<n>]` is the story a task belongs to. The shared pieces are built in US1, the first story, and
+every later story builds on them.
+
+## Phase 1: US1, a researcher corrects a heat flow site (P1)
+
+- [ ] T001 [US1] Move the term reading into `project/heat_flow/vocabularies.py` as `resolve_term(vocabulary, text)` (one key, or `None` for blank or `unspecified`) and `resolve_terms(vocabulary, text)` (semicolon-separated tokens to a `Concept` queryset), both raising `ValueError` naming the unknown tokens. `project/ghfdb/resources/widgets.py`'s `ConceptWidget.clean` and `MultiConceptWidget.clean` call them and keep their column prefix. Tests: `tests/test_heat_flow/test_vocabularies.py` (label, key, brackets, case, unknown token, several tokens), and the existing `tests/test_ghfdb/test_resources/test_widgets.py` green unchanged.
+- [ ] T002 [US1] `ConceptTextField` and `heat_flow_formfield` in `project/heat_flow/forms.py`, reading with T001's functions and importing nothing from `ghfdb`. Tests (`TestConceptTextField`): a stored term is drawn as its label, several joined by `; `; a label or a key is accepted in any case; an unknown term is refused with the token named; untouched text returns the stored value, including a term the vocabulary no longer offers; an empty optional field stores no term; `heat_flow_formfield` gives a concept field a `ConceptTextField` and any other many-to-many a counted `TomSelectMultiple`.
+- [ ] T003 [US1] `SectionedForm` in `project/heat_flow/forms.py`. Tests (`TestSectionedForm`, on a small test-local `ModelForm` over an existing model or on `HeatFlowSiteForm`): every field the form carries is placed in the layout exactly once, a field named in no section is still placed; a heading-less first group is not a `Fieldset`, later groups are; a measured pair gives two numbers and a `<value>_unit` choice drawn as one `Join`; numbers entered in a non-base unit are stored converted to base units, Decimal fields quantised to their places; the initial numbers are the stored quantities in base units. Declare `django-crispy-forms` a direct dependency in `pyproject.toml` (the range FairDM declares) and refresh `uv.lock` moving nothing else; deptry clean.
+- [ ] T004 [US1] `HeatFlowSiteForm` and the six registry `form_class` entries in `project/heat_flow/config.py`. Tests (`TestHeatFlowSiteForm`, `TestHeatFlowFormRegistry` in `tests/test_heat_flow/test_config.py`): the registry gives each of the six models its form (FR-005); the site form offers exactly the site fields the field mapping table maps a column to, and none of FR-003's calculated values; `location` takes a latitude and a longitude only; an elevation and datum save to the site's own fields and FairDM's location elevation stays empty (ADR-0023); a location equal to another site's is refused against `location` and nothing is written (ADR-0006); environment, exploration method and purpose accept only their vocabulary's terms, purpose several.
+- [ ] T005 [US1] `TestHeatFlowSiteEditPage`: a researcher with no team role who owns a dataset opens a site's FairDM edit page, changes the elevation, its datum and the true vertical depth, saves, and the stored site holds them; a site in a dataset waiting for a Data Curator's decision is no more visible to an anonymous visitor or another user after the save than before (FR-015).
+- [ ] T006 [US1] Documentation: new `docs/guides/editing-records.md`, added to the guides toctree. What a researcher can correct on a site, how a term is typed, how a value and its unit are entered, and, for developers, `SectionedForm`, `ConceptTextField`, `heat_flow_formfield` and `HeatFlowSiteForm`. Changelog entry under Unreleased › Added. The verify docs step lists none of this story's names.
+
+## Phase 2: US2, a researcher corrects a child heat flow and its corrections (P1)
+
+- [ ] T007 [US2] An unspecified correction is no status. `HeatFlowCorrection.status` gets `blank=True`, `default=""`; `StatusChoices.UNSPECIFIED` and every `-` in `VALID_STATUS_FOR_TYPE` and `ENVIRONMENTAL_VALID` go; `clean()` accepts an empty status for every type. Migration `0018`: alter the field, then a reversible `RunPython` turning `-` into `""` and back. Tests: `tests/test_heat_flow/test_models/test_child.py` (empty status valid for every type; `-` refused); `tests/test_migrations.py` (a `-` row reads `""` after migrating forward and `-` after migrating back).
+- [ ] T008 [US2] The published side is unchanged. Importer (`project/ghfdb/resources/child.py`) stores `""` wherever it stored `-`; the export subquery (`project/ghfdb/managers.py`) writes `-` for an empty status; quality (`project/heat_flow/quality.py`) scores an empty in-situ status as `-` was scored; the API (`project/heat_flow/serializers.py`) serialises an empty status as `null`; the child overview page (`heatflow_overview.html`) shows an em dash for an empty status; demo data (`project/heat_flow/demo.py`) draws only real statuses. Tests: the existing import, export, round-trip and quality suites green unchanged in what they assert about the file; new tests for each changed reader (an empty status exports `-`; an empty in-situ status gives the score `-` gave; the API gives `null` and still lists the row; the overview page marks the row as having no status by its data hook, not by its text).
+- [ ] T009 [US2] `HeatFlowForm`: its fields, the nine correction choices, the gradient and conductivity search fields with their refusal, and `save_related` writing the corrections (with `commit=False` chained onto `save_m2m`). Tests (`TestHeatFlowForm`): the form offers every child field the mapping table maps a column to, except relevance and FR-003's values; each correction offers exactly an empty entry plus the statuses valid for its type; a gradient or conductivity on the child's interval saves, one on another interval is refused against its field and nothing is written; setting one correction on a child with none stores exactly one row, the others read back unspecified; clearing a set correction stores an empty status and keeps its stored comment; a correction untouched on a child with no row gets none; method accepts several heat flow method terms only; `save(commit=False)` followed by `save_m2m()` writes the corrections.
+- [ ] T010 [US2] `TestHeatFlowEditPage`: as the researcher, pick a gradient on the child's interval, set the topographic correction to present and corrected, save; the child, its link and its correction are stored, and its stored scores equal what `quality.py` calculates from the new data (ADR-0022).
+- [ ] T011 [US2] Documentation: the child section of `docs/guides/editing-records.md`: the corrections and what an empty one means, choosing a gradient and conductivity, and the refusal of one on another interval; `HeatFlowForm` for developers. Changelog line for the stored change to an unspecified correction (the published file is unchanged, the API gives `null`).
+
+## Phase 3: US3, a researcher corrects a thermal gradient or an interval conductivity (P2)
+
+- [ ] T012 [US3] `ThermalGradientForm` and `IntervalConductivityForm`. Tests (`TestThermalGradientForm`, `TestIntervalConductivityForm`): each offers every field the mapping table maps a column to; a term outside a field's vocabulary is refused against that field and nothing is written; both measured pairs on the gradient convert units independently.
+- [ ] T013 [US3] `TestThermalGradientEditPage`, `TestIntervalConductivityEditPage`: as the researcher, change a gradient's scored inputs and a conductivity's location and number of measurements, save; the record's stored score and the score of every child calculated from it equal what `quality.py` calculates.
+- [ ] T014 [US3] Documentation: gradient and conductivity sections of the guide; both forms for developers.
+
+## Phase 4: US4, a researcher corrects a depth interval and its probe metadata (P2)
+
+- [ ] T015 [US4] `HeatFlowIntervalForm` with its probe metadata fields and `save_related`. Tests (`TestHeatFlowIntervalForm`): the form offers every interval and probe field the mapping table maps a column to, not the IGSN; an interval with no probe metadata saved with none entered gains none; a probe type and a tilt entered on an interval with none create one holding them; stored probe values are the fields' initial values and an edit updates the same row; a bottom not below the top is refused and nothing is written; `save(commit=False)` followed by `save_m2m()` writes the probe metadata.
+- [ ] T016 [US4] `TestHeatFlowIntervalEditPage`: as the researcher, enter a probe type and a tilt, save, and read the interval's probe metadata back.
+- [ ] T017 [US4] Documentation: the interval section of the guide, probe metadata included; `HeatFlowIntervalForm` for developers.
+
+## Phase 5: US5, a researcher states a site's parent value and the children it rests on (P2)
+
+- [ ] T018 [US5] `ParentHeatFlowForm` with `relevant_children`, its refusal and `save_related`. Tests (`TestParentHeatFlowForm`): the form offers value, uncertainty, heat production correction, comment and the children choice, and no GHFDB id or score; initial children are the site's relevant ones; marking two of three makes exactly those two relevant; a child at another site is refused against the field and nothing is written; changing only the children leaves the parent's value unchanged (FR-014).
+- [ ] T019 [US5] `TestParentHeatFlowEditPage`: as the researcher, on a site with three children, mark two relevant and save; exactly those two are relevant and the parent's stored quality is the one inherited from them.
+- [ ] T020 [US5] Documentation: the parent section of the guide; `ParentHeatFlowForm` for developers.
+
+## Dependencies
+
+US1 first: T001 → T002 → T003 → T004 → T005 → T006. Then US2 (T007 → T008 → T009 → T010 → T011),
+US3, US4 and US5 in order, each on the branch the story before it left. One worktree, one story at
+a time.

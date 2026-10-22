@@ -299,10 +299,48 @@ How it is built:
   them in base units. A stored value is shown in base units, so a form saved unchanged stores the
   same numbers. A number entered in another allowed unit is converted, both numbers alike. Today no
   paired field allows a second unit, so the unit choice holds the base unit alone.
-- **The "±".** A `Join` holds fields and buttons and nothing else, and a member is drawn with no
-  attached text, so no layout object puts text between two members. The nearest thing it offers is
-  a button: the "±" is a disabled button with `aria-hidden`, so it is seen and never focused or
-  read, and the uncertainty is named by its own label. This is a stand-in until django-mvp-forms can
-  hold text in a join, which is for the maintainer to decide on.
+- **The "±".** From django-mvp-forms 0.8.0 a `Join` holds text between its members, so the "±"
+  is crispy's `HTML("±")` between the value and the uncertainty. The uncertainty is named by its
+  own label.
 
 **ADR:** none — a layout inside these forms.
+
+## Related rows are fields on the record's own form
+
+FairDM's edit page takes one form. A child's nine corrections, an interval's probe metadata and a
+parent's children are fields on that record's form, and the form writes the rows they stand for
+after the record: at once on `save()`, or through `save_m2m()` when saved with `commit=False`, as
+Django writes a model form's many-to-many data. An inline formset was weighed and not taken: the
+rows are fixed (nine correction types, at most one probe row, a choice of existing children), and
+a formset would need the approved screens rebuilt to look the same. Detail in `research.md`.
+
+**ADR:** none — local to these forms, and ordinary Django.
+
+## The term reading lives with the vocabularies
+
+The importer's label-or-key reading of a vocabulary term moves from the `ghfdb` widgets to
+`project/heat_flow/vocabularies.py`, and both the importer and the forms call it. `heat_flow` owns
+the models and `ghfdb` extracts them (ADR-0001), so the forms cannot import from `ghfdb`.
+
+**ADR:** none — a move inside the existing rule of ADR-0001.
+
+## An unspecified correction is stored with no status
+
+`HeatFlowCorrection.status` is optional with an empty default, and every stored `-` becomes empty.
+The published file is unchanged: the importer stores an empty status where it stored `-`, and the
+export writes `-` for one. The quality code scores an empty in-situ status as it scored `-`. The
+API gives such a correction's status as `null` and still lists the correction, so a correction
+recorded with no status stays distinct from one never recorded. The child's overview page shows an
+em dash, the portal's mark for missing information.
+
+**ADR:** none — the published format, the scores and the API's distinction between a recorded and
+an absent correction are all unchanged; only the stored spelling of "no status" moves.
+
+## A record from another interval or site is refused on save
+
+FairDM's record search fields offer every gradient, conductivity or child the researcher may
+change, and cannot be narrowed to one interval or one site (orchestrator's ruling, 2026-10-23). The
+child's form refuses a gradient or conductivity on another interval, and the parent's form a child
+at another site, with an error against the field, and a test pins each refusal.
+
+**ADR:** none — validation inside these forms.
