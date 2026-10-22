@@ -34,6 +34,11 @@ from .models import (
     ThermalGradient,
 )
 from .models.child import HeatFlowCorrection, ProbeMetadata
+from .vocabularies import resolve_term, resolve_terms
+
+
+class PostedText(str):
+    """Text a researcher posted, as opposed to a stored value to be drawn as text."""
 
 
 class ConceptTextField(forms.CharField):
@@ -66,25 +71,27 @@ class ConceptTextField(forms.CharField):
         labels = dict(self.vocabulary().choices)
         return str(labels.get(str(value), value))
 
+    def bound_data(self, data, initial):
+        """Mark posted text, so it is drawn as it was posted."""
+        return PostedText(data)
+
     def prepare_value(self, value):
         """Draw a stored value as text, and posted text as it was posted."""
-        if isinstance(value, str):
-            return value
+        if isinstance(value, PostedText):
+            return str(value)
         return self.as_text(value)
 
     def clean(self, value):
         """Resolve the text to the terms it names, or keep the stored ones."""
-        from project.ghfdb.resources.widgets import ConceptWidget, MultiConceptWidget
-
         value = super().clean(value)
         if self.stored is not None and value == self.as_text(self.stored):
             return self.stored
         try:
             if self.many:
-                return MultiConceptWidget(self.vocabulary).clean(value)
-            return ConceptWidget(self.vocabulary).clean(value)
+                return resolve_terms(self.vocabulary, value)
+            return resolve_term(self.vocabulary, value)
         except ValueError as error:
-            raise forms.ValidationError(str(error)) from None
+            raise forms.ValidationError(str(error), code="unknown_term") from None
 
 
 def heat_flow_formfield(db_field, **kwargs):
@@ -562,9 +569,10 @@ class ParentHeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["relevant_children"].initial = list(
-            self.children().filter(is_relevant=True).values_list("pk", flat=True)
-        )
+        if self.instance.sample_id:
+            self.fields["relevant_children"].initial = list(
+                self.children().filter(is_relevant=True).values_list("pk", flat=True)
+            )
 
     def children(self):
         """Return the child heat flows at this parent's site."""
