@@ -35,6 +35,7 @@ from .models import (
     ThermalGradient,
 )
 from .models.child import HeatFlowCorrection, ProbeMetadata
+from .signals import Recalculation
 from .vocabularies import resolve_term, resolve_terms
 
 
@@ -116,6 +117,42 @@ class SectionedForm:
         self.helper = FormHelper()
         self.helper.form_tag = False
         self.helper.layout = self.get_layout()
+
+    def save(self, commit=True):
+        """Save the record, then the related rows the form stands for.
+
+        The rows are written by ``save_related`` inside one deferred recalculation, so
+        each affected score is refreshed once. With ``commit=False`` they are written when
+        ``save_m2m`` is called, as Django writes many-to-many data.
+
+        Args:
+            commit: Whether to save at once.
+
+        Returns:
+            The record.
+        """
+        if commit:
+            with Recalculation.deferred():
+                record = super().save(commit=True)
+                self.save_related(record)
+            return record
+        record = super().save(commit=False)
+        save_m2m = self.save_m2m
+
+        def save_m2m_and_related():
+            with Recalculation.deferred():
+                save_m2m()
+                self.save_related(record)
+
+        self.save_m2m = save_m2m_and_related
+        return record
+
+    def save_related(self, record):
+        """Write the related rows the form stands for. The base form has none.
+
+        Args:
+            record: The saved record.
+        """
 
     def measure(self, value, uncertainty):
         """Enter a value and its uncertainty as two numbers and one unit for both.
@@ -418,14 +455,14 @@ class HeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
         stored = {}
         if self.instance.pk:
-            stored = {c.correction_type: c for c in self.instance.corrections.all()}
+            stored = {
+                c.correction_type: c.status for c in self.instance.corrections.all()
+            }
         labels = dict(HeatFlowCorrection.StatusChoices.choices)
         for code, label in HeatFlowCorrection.CorrectionTypeChoices.choices:
             valid = HeatFlowCorrection.VALID_STATUS_FOR_TYPE.get(
                 code, HeatFlowCorrection.ENVIRONMENTAL_VALID
             )
-            correction = stored.get(code)
-            status = correction.status if correction else ""
             self.fields[f"correction_{code}"] = forms.ChoiceField(
                 label=label,
                 choices=[("", _("Unspecified"))]
@@ -434,7 +471,7 @@ class HeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
                     for value in HeatFlowCorrection.StatusChoices.values
                     if value in valid
                 ],
-                initial=status,
+                initial=stored.get(code, ""),
                 required=False,
             )
         self.helper.layout = self.get_layout()
@@ -448,30 +485,38 @@ class HeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
         return self.on_own_interval(self.cleaned_data["thermal_conductivity"])
 
     def on_own_interval(self, measurement):
-        """Return the measurement when it was made over this child's interval."""
+        """Return the measurement when it was made over this child's interval.
+
+        Args:
+            measurement: The measurement chosen, or ``None``.
+
+        Returns:
+            The measurement.
+
+        Raises:
+            ValidationError: If the measurement belongs to another interval.
+        """
         if measurement is not None and measurement.sample_id != self.instance.sample_id:
             raise forms.ValidationError(
-                _("Choose a measurement on this child's own depth interval.")
+                _("Choose a measurement on this child's own depth interval."),
+                code="other_interval",
             )
         return measurement
 
-    def save(self, commit=True):
-        """Save the child, then each correction that was set or already stored.
+    def save_related(self, record):
+        """Give the child a row for each correction type, holding the status chosen.
 
         A stored comment is left as it is: the form does not carry it.
+
+        Args:
+            record: The saved child.
         """
-        child = super().save(commit=commit)
         for code in self.CORRECTION_CODES:
-            status = self.cleaned_data.get(f"correction_{code}") or ""
-            stored = child.corrections.filter(correction_type=code).first()
-            if stored is None and status == "":
-                continue
-            if stored is None:
-                stored = HeatFlowCorrection(heat_flow=child, correction_type=code)
-            if stored.status != status:
-                stored.status = status
-                stored.save()
-        return child
+            HeatFlowCorrection.objects.update_or_create(
+                heat_flow=record,
+                correction_type=code,
+                defaults={"status": self.cleaned_data.get(f"correction_{code}") or ""},
+            )
 
 
 class ThermalGradientForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):

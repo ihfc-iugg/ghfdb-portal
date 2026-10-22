@@ -550,3 +550,308 @@ class TestHeatFlowSiteEditPage:
         ]
         assert before == after
         assert 200 not in after
+
+
+@pytest.fixture
+def editor(db):
+    """Return a function that makes a request for a researcher who owns a dataset."""
+
+    def build(dataset):
+        from django.test import RequestFactory
+        from fairdm.contrib.contributors.choices import ContributionLevel
+        from fairdm.factories import UserFactory
+
+        user = UserFactory()
+        credit = dataset.add_contributor(user)
+        credit.level = ContributionLevel.MANAGE
+        credit.save()
+        request = RequestFactory().get("/")
+        request.user = user
+        return request
+
+    return build
+
+
+@pytest.fixture
+def child_records(db):
+    """A child on an interval with a gradient and a conductivity of its own."""
+    from fairdm.factories import DatasetFactory
+    from fairdm.utils.choices import Visibility
+
+    from tests.factories import (
+        HeatFlowFactory,
+        HeatFlowIntervalFactory,
+        IntervalConductivityFactory,
+        ThermalGradientFactory,
+    )
+
+    dataset = DatasetFactory(visibility=Visibility.PUBLIC, published=True)
+    interval = HeatFlowIntervalFactory(dataset=dataset, top=0, bottom=500)
+    gradient = ThermalGradientFactory(dataset=dataset, sample=interval)
+    conductivity = IntervalConductivityFactory(dataset=dataset, sample=interval)
+    child = HeatFlowFactory(
+        dataset=dataset,
+        sample=interval,
+        value=70,
+        uncertainty=5,
+        thermal_gradient=gradient,
+        thermal_conductivity=conductivity,
+    )
+    child.refresh_from_db()
+    return {
+        "dataset": dataset,
+        "interval": interval,
+        "gradient": gradient,
+        "conductivity": conductivity,
+        "child": child,
+    }
+
+
+def child_data(child, **changes):
+    """Post the data a researcher's browser sends for a child, with these changes."""
+    data = {
+        "value": "70",
+        "uncertainty": "5",
+        "value_unit": "mW / m^2",
+        "method": "",
+        "thermal_gradient": str(child.thermal_gradient_id or ""),
+        "thermal_conductivity": str(child.thermal_conductivity_id or ""),
+    }
+    return {**data, **changes}
+
+
+CORRECTION_CODES = ["IS", "T", "S", "E", "TOPO", "PAL", "SUR", "CONV", "HR"]
+
+
+class TestHeatFlowForm:
+    def build(self, records, editor, **changes):
+        from heat_flow.forms import HeatFlowForm
+
+        return HeatFlowForm(
+            instance=records["child"],
+            data=child_data(records["child"], **changes),
+            request=editor(records["dataset"]),
+        )
+
+    def test_it_offers_every_mapped_child_column_and_each_correction(self):
+        import re
+
+        from heat_flow.forms import HeatFlowForm
+
+        from tests.test_docs.test_field_map import read_mappings
+
+        mappings = read_mappings()
+        mapped = {
+            mapping.accessor.split(" ")[0]
+            for mapping in mappings
+            if mapping.accessed_from == "HeatFlow"
+        } - {"ghfdb_id", "quality", "is_relevant"}
+        corrections = {
+            f"correction_{re.search(r'type=(\w+)', mapping.accessor).group(1)}"
+            for mapping in mappings
+            if mapping.accessed_from == "HeatFlowCorrection"
+        }
+
+        assert mapped | corrections <= set(HeatFlowForm().fields)
+        assert len(corrections) == 9
+
+    def test_it_offers_nothing_the_portal_calculates_or_assigns(self):
+        from heat_flow.forms import HeatFlowForm
+
+        withheld = {
+            "U_score",
+            "M_score",
+            "T_score",
+            "TC_score",
+            "T_score_missing",
+            "TC_score_missing",
+            "quality",
+            "quality_scheme",
+            "ghfdb_id",
+            "dataset",
+            "sample",
+            "is_relevant",
+        }
+
+        assert not withheld & set(HeatFlowForm().fields)
+
+    @pytest.mark.parametrize("code", CORRECTION_CODES)
+    def test_each_correction_offers_an_empty_entry_and_the_statuses_valid_for_it(
+        self, code
+    ):
+        from heat_flow.forms import HeatFlowForm
+        from heat_flow.models import HeatFlowCorrection
+
+        valid = HeatFlowCorrection.VALID_STATUS_FOR_TYPE.get(
+            code, HeatFlowCorrection.ENVIRONMENTAL_VALID
+        )
+
+        offered = [
+            value
+            for value, _label in HeatFlowForm().fields[f"correction_{code}"].choices
+        ]
+
+        assert offered[0] == ""
+        assert set(offered[1:]) == valid
+        assert "-" not in offered
+
+    def test_a_gradient_and_a_conductivity_on_the_childs_interval_save(
+        self, child_records, editor
+    ):
+        from tests.factories import IntervalConductivityFactory, ThermalGradientFactory
+
+        other_gradient = ThermalGradientFactory(
+            dataset=child_records["dataset"], sample=child_records["interval"]
+        )
+        other_conductivity = IntervalConductivityFactory(
+            dataset=child_records["dataset"], sample=child_records["interval"]
+        )
+        form = self.build(
+            child_records,
+            editor,
+            thermal_gradient=str(other_gradient.pk),
+            thermal_conductivity=str(other_conductivity.pk),
+        )
+
+        assert form.is_valid(), form.errors
+        child = form.save()
+        child.refresh_from_db()
+        assert child.thermal_gradient == other_gradient
+        assert child.thermal_conductivity == other_conductivity
+
+    @pytest.mark.parametrize(
+        ("field", "factory_name"),
+        [
+            ("thermal_gradient", "ThermalGradientFactory"),
+            ("thermal_conductivity", "IntervalConductivityFactory"),
+        ],
+    )
+    def test_a_measurement_on_another_interval_is_refused_and_nothing_is_written(
+        self, child_records, editor, field, factory_name
+    ):
+        from tests import factories
+        from tests.factories import HeatFlowIntervalFactory
+
+        elsewhere = HeatFlowIntervalFactory(dataset=child_records["dataset"])
+        foreign = getattr(factories, factory_name)(
+            dataset=child_records["dataset"], sample=elsewhere
+        )
+        child = child_records["child"]
+        before = getattr(child, f"{field}_id")
+        form = self.build(
+            child_records,
+            editor,
+            **{field: str(foreign.pk), "correction_TOPO": "present_corrected"},
+        )
+
+        assert not form.is_valid()
+        assert form.has_error(field, code="other_interval")
+        child.refresh_from_db()
+        assert getattr(child, f"{field}_id") == before
+        assert not child.corrections.exists()
+
+    def test_a_gradient_in_a_dataset_the_researcher_may_not_change_is_refused(
+        self, child_records, editor
+    ):
+        from fairdm.factories import DatasetFactory
+        from fairdm.utils.choices import Visibility
+
+        from tests.factories import ThermalGradientFactory
+
+        locked = DatasetFactory(visibility=Visibility.PUBLIC, published=True)
+        foreign = ThermalGradientFactory(
+            dataset=locked, sample=child_records["interval"]
+        )
+        child = child_records["child"]
+        before = child.thermal_gradient_id
+        form = self.build(child_records, editor, thermal_gradient=str(foreign.pk))
+
+        assert not form.is_valid()
+        assert form.has_error("thermal_gradient")
+        assert not form.has_error("thermal_gradient", code="other_interval")
+        child.refresh_from_db()
+        assert child.thermal_gradient_id == before
+
+    def test_setting_one_correction_on_a_child_with_no_rows_leaves_nine_rows(
+        self, child_records, editor
+    ):
+        child = child_records["child"]
+        assert not child.corrections.exists()
+        form = self.build(child_records, editor, correction_TOPO="present_corrected")
+
+        assert form.is_valid(), form.errors
+        form.save()
+
+        statuses = {c.correction_type: c.status for c in child.corrections.all()}
+        assert len(statuses) == 9
+        assert statuses.pop("TOPO") == "present_corrected"
+        assert set(statuses.values()) == {""}
+
+    def test_clearing_a_correction_stores_an_empty_status_and_keeps_its_comment(
+        self, child_records, editor
+    ):
+        from tests.factories import HeatFlowCorrectionFactory
+
+        child = child_records["child"]
+        HeatFlowCorrectionFactory(
+            heat_flow=child,
+            correction_type="SUR",
+            status="present_corrected",
+            comment="Bottom water measured.",
+        )
+        form = self.build(child_records, editor, correction_SUR="")
+
+        assert form.is_valid(), form.errors
+        form.save()
+
+        correction = child.corrections.get(correction_type="SUR")
+        assert correction.status == ""
+        assert correction.comment == "Bottom water measured."
+
+    def test_the_stored_statuses_are_the_initial_choices(self, child_records, editor):
+        from heat_flow.forms import HeatFlowForm
+
+        from tests.factories import HeatFlowCorrectionFactory
+
+        HeatFlowCorrectionFactory(
+            heat_flow=child_records["child"],
+            correction_type="E",
+            status="not_recognized",
+        )
+
+        form = HeatFlowForm(instance=child_records["child"])
+
+        assert form["correction_E"].value() == "not_recognized"
+        assert form["correction_IS"].value() in ("", None)
+
+    def test_the_method_takes_several_method_terms(self, child_records, editor):
+        from heat_flow.vocabularies import HeatFlowMethod
+        from research_vocabs.models import Concept
+
+        chosen = list(Concept.get_for_vocabulary(HeatFlowMethod).order_by("name")[:2])
+        text = "; ".join(concept.label for concept in chosen)
+        form = self.build(child_records, editor, method=text)
+
+        assert form.is_valid(), form.errors
+        child = form.save()
+        assert set(child.method.all()) == set(chosen)
+
+    def test_a_method_outside_its_vocabulary_is_refused(self, child_records, editor):
+        form = self.build(child_records, editor, method="not a method")
+
+        assert form.has_error("method", code="unknown_term")
+
+    def test_saving_without_commit_then_saving_m2m_writes_the_corrections(
+        self, child_records, editor
+    ):
+        child = child_records["child"]
+        form = self.build(child_records, editor, correction_PAL="considered_t")
+        assert form.is_valid(), form.errors
+
+        saved = form.save(commit=False)
+
+        assert not child.corrections.exists()
+        saved.save()
+        form.save_m2m()
+        assert child.corrections.count() == 9
+        assert child.corrections.get(correction_type="PAL").status == "considered_t"
