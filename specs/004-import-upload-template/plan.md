@@ -70,8 +70,7 @@ specs/004-import-upload-template/
 ├── spec.md
 ├── decisions.md
 ├── plan.md
-├── tasks.md
-└── progress.md
+└── tasks.md
 ```
 
 ### Source Code (repository root)
