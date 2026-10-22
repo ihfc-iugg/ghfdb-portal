@@ -23,6 +23,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
 from heat_flow.signals import Recalculation
+from heat_flow.vocabularies import normalize_vocab_token
 from import_export import fields, widgets
 from import_export.resources import ModelResource
 from import_export.widgets import ForeignKeyWidget
@@ -38,7 +39,6 @@ from .widgets import (
     QuantityWidget,
     YesNoWidget,
     is_blank_cell,
-    normalize_vocab_token,
 )
 
 
