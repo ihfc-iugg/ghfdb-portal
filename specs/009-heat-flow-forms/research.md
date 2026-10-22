@@ -68,12 +68,16 @@ of a published file read and write exactly as before. Everything that reads or w
 | Reader or writer | Today | After |
 |---|---|---|
 | `HeatFlowCorrection.status` | required, default `-`, `-` is the `UNSPECIFIED` choice | `blank=True`, default `""`. The `UNSPECIFIED` choice is removed. |
-| `VALID_STATUS_FOR_TYPE`, `ENVIRONMENTAL_VALID` | each holds `-` | `-` removed. `clean()` accepts an empty status for every type. |
+| `VALID_STATUS_FOR_TYPE`, `ENVIRONMENTAL_VALID` | each holds `-` | `-` removed. The type check in `save()` accepts an empty status for every type. |
 | Migration | — | Alters the field, and turns every stored `-` into `""` (a data step, reversible: `""` back to `-`). |
 | Importer (`ghfdb/resources/child.py`, `_parse_correction_status`) | empty or unreadable cell → `-` | → `""`. An explicit `-` cell, or `[unspecified]`, also → `""`. |
 | Export (`ghfdb/managers.py`, correction subqueries) | writes the stored status, so `-` for an unspecified row, empty for a child with no row | writes `-` for an empty status, and empty for no row, as before. The existing export and round-trip tests are the check. |
 | Quality (`heat_flow/quality.py`) | in-situ `-` scores as not considered; a status with no flag writes `-` | an empty in-situ status scores as `-` did. Flags already treat any status outside the four flagged ones as no flag. |
 | API (`heat_flow/serializers.py`, FS-010) | `status: {"name": "-", "label": "unspecified"}` | `status: null`. A correction row with no status is still served, so "recorded with no status" stays distinct from "no row" (FS-010 edge case). |
+| API schema (`heat_flow/schema.py`, `ChoiceLabelFieldSchema`) | status a required `{name, label}` object | nullable |
+| `HeatFlowCorrection.__str__` | type and `-` | type and "unspecified" |
+| Test factories and fixtures (`tests/factories.py`, `tests/test_ghfdb/conftest.py`) | `UNSPECIFIED` | `""` |
+| Documentation (`docs/ghfdb_fields.md`, guides on importing, quality scores and the API) | state a stored `-` | stored empty, `-` in the file, `null` in the API |
 | Overview page (FS-011 template) | "Unspecified" from the choice label | an em dash, the portal's mark for missing information. |
 | Demo data (`heat_flow/demo.py`) | draws a random status from the valid set, `-` included | draws from the valid set without `-`. |
 

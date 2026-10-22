@@ -92,25 +92,29 @@ A `CharField` standing for a `BaseConceptField` or `ConceptManyToManyField`.
 ### How each form saves its related rows
 
 A form that stands for related rows writes them after the record, in one method,
-`save_related(record)`. `save(commit=True)` calls it at once; `save(commit=False)` chains it onto
-`save_m2m`, exactly as Django defers many-to-many data, so a caller saving later still gets every
-row. FairDM's page saves with `commit=True` inside the request's transaction, so a refused or
-failed save writes nothing.
+`save_related(record)`, run inside `Recalculation.deferred()` (`project/heat_flow/signals.py`) so
+each affected score is refreshed once rather than once per row. `save(commit=True)` calls it at
+once; `save(commit=False)` chains it onto `save_m2m`, exactly as Django defers many-to-many data,
+so a caller saving later still gets every row. FairDM's page saves with `commit=True` inside the
+request's transaction, so a refused or failed save writes nothing.
 
 - **Child, corrections.** Nine `correction_<code>` choice fields, one per
   `CorrectionTypeChoices` member, labelled by the type. Each offers an empty entry labelled
   "Unspecified" and the statuses `VALID_STATUS_FOR_TYPE` (or `ENVIRONMENTAL_VALID`) gives that type.
-  On save: a type with a stored row gets the chosen status, empty when cleared; a type with no row
-  and no status gets no row; a type with no row and a status gets one. A stored correction comment
-  is never touched.
+  On save, every one of the nine types holds a row afterwards, as an import leaves a child: a
+  stored row gets the chosen status (empty when cleared or left empty), a missing row is created
+  with the chosen status (empty when none). A stored correction comment is never touched.
 - **Interval, probe metadata.** Four `probe_<name>` fields built from `ProbeMetadata`
   (`penetration`, `probe_type`, `length`, `tilt`), all optional, initial from the stored row. On
-  save: no row and nothing entered gives no row; otherwise the row is created or updated and its
-  probe types set.
+  save: no row and nothing entered gives no row, where "nothing entered" means every probe value is
+  `None` and no probe type is chosen (a zero is a value: a Pint quantity of 0 is falsy, so the test
+  is `is None`); otherwise the row is created or updated and its probe types set.
 - **Parent, relevance.** `relevant_children`, a `MeasurementMultipleChoiceField` over `HeatFlow`,
-  `scope="edit"`, initial the site's relevant children. On save: exactly the chosen children at the
-  site are relevant, every other child at the site is not. The parent's own value is written only
-  from its own fields (FR-014).
+  `scope="edit"`. The form manages only the children at the site that the researcher may change
+  (the site's children narrowed to the field's own edit-scope records): the initial value is those
+  of them that are relevant, and on save exactly the chosen ones are relevant and the rest of them
+  are not. A child at the site in a dataset the researcher may not change keeps its relevance and
+  does not block the save. The parent's own value is written only from its own fields (FR-014).
 
 ### Refusing a record from elsewhere
 
@@ -118,24 +122,56 @@ FairDM's search fields offer every record of the kind the researcher may change,
 narrowed (ruling, 2026-10-23). The forms refuse on save:
 
 - Child: `clean_thermal_gradient`, `clean_thermal_conductivity` refuse a measurement whose interval
-  is not the child's, with an error against that field.
+  is not the child's, with an error against that field, code `other_interval`.
 - Parent: `clean_relevant_children` refuses any child not at the parent's site, with an error
-  against the field.
+  against the field, code `other_site`.
+- A record in a dataset the researcher may not change is refused by FairDM's search field itself
+  (`RecordFieldMixin.allowed()`, edit scope), and a test pins that too.
+
+Every refusal carries a code so tests use `form.has_error(field, code=...)`: `other_interval`,
+`other_site`, `unknown_term` (from `ConceptTextField`), and `duplicate_location`.
+`HeatFlowSite.clean` raises its duplicate-location error as `{"location": ValidationError(...,
+code="duplicate_location")}`, so it lands on the location field rather than among the form's
+general errors.
+
+### A site's true vertical depth is kept
+
+`HeatFlowSite` inherits fairdm-geo's `VerticalInterval.save`, which, with a top and a bottom both
+set, overwrites `vertical_depth` with `|bottom - top|`. A site's bottom only mirrors its true
+vertical depth, so after a site's first save every later change to its TVD was put back.
+`HeatFlowSite.save` sets `bottom = top + vertical_depth` before calling `super().save()` when a
+vertical depth is set, so the TVD a researcher enters is the one stored. This is the portal's own
+model rule for a site, not a change to fairdm-geo.
+
+An interval's `vertical_depth` is also calculated from its top and bottom by the same base class.
+The spec's US4 names it as correctable; it is not a template column (FR-001 does not require it).
+That is a spec question, raised with the maintainer, and the build neither changes nor tests how
+an interval stores it.
 
 ### Unspecified is no status
 
 As research.md tabulates. In short:
 
 - `HeatFlowCorrection.status`: `blank=True`, `default=""`. `StatusChoices.UNSPECIFIED` is removed,
-  and `-` leaves `VALID_STATUS_FOR_TYPE` and `ENVIRONMENTAL_VALID`. `clean()` accepts an empty
-  status for any type.
-- Migration `0018`: alters the field, then a reversible data step turns `-` into `""` (and back).
-  It stays standalone through the S5 squash, because a data step cannot be regenerated.
+  and `-` leaves `VALID_STATUS_FOR_TYPE` and `ENVIRONMENTAL_VALID`. The type check in `save()`
+  accepts an empty status for any type. `__str__` shows an empty status as unspecified.
+- Migration `0018`: alters the field, then a reversible data step turns `-` into `""` (and back),
+  one queryset `update()` on the historical model each way. It stays standalone through the S5
+  squash, because a data step cannot be regenerated.
+- Every reference to `StatusChoices.UNSPECIFIED` goes in the same slice as the model change: the
+  importer, `tests/factories.py`, `tests/test_ghfdb/conftest.py` and the sketch form. Pre-existing
+  tests that assert a stored `-` or `UNSPECIFIED` are edited to assert `""`, in the stored value
+  only (listed in tasks.md T007). The export tests' expected file cells stay byte-for-byte.
 - Importer: every case that gave `-` gives `""`.
 - Export: the correction subquery writes `-` for an empty status, so the file is unchanged.
 - Quality: an empty in-situ status scores as `-` did.
-- API: a correction with no status serialises `status` as `null`. The correction row is still
-  listed, so "recorded with no status" stays distinct from "no row" (FS-010).
+- API: a correction with no status serialises `status` as `null`, and the schema
+  (`project/heat_flow/schema.py`, `ChoiceLabelFieldSchema`) marks it nullable. The correction row is
+  still listed, so "recorded with no status" stays distinct from "no row" (FS-010).
+- Documentation stating a stored `-`: `docs/ghfdb_fields.md` (valid-status table),
+  `docs/guides/importing-data.md`, `docs/guides/quality-scores.md`,
+  `docs/guides/heat-flow-records-api.md` are brought to the stored empty status, `-` in the file
+  and `null` in the API.
 - Overview page: a correction with no status shows an em dash.
 - Demo data: draws only real statuses.
 
@@ -174,8 +210,15 @@ round it, and the local virtualenv patch is never committed.
 - Page tests, one class per record, post to FairDM's edit page as a researcher who owns the dataset
   and holds no team role, and read the stored record back. They live in the same module, named
   `Test<Record>EditPage`.
-- Tests find fields by name and assert stored values, errors by field, and which choices are
-  offered. They do not assert wording, layout, widths or column classes.
+- Tests find fields by name and assert stored values, errors by field and code, and which choices
+  are offered. They do not assert wording, layout, widths or column classes.
+- Every form test asserts the same two things about coverage: every field the mapping table maps a
+  column to is present, the expected set taken from the mapping table (`read_mappings()` in
+  `tests/test_docs/test_field_map.py`) or a literal list, never from `Meta.fields` or `config.py`;
+  and none of FR-003's fields, nor `dataset` or `sample`, is present. Fields the sketch adds beyond
+  the table (a site's datum, azimuth, inclination and rock fields) are allowed.
+- Score tests assert a literal expected value that differs from the value before the save, never a
+  value recomputed in the test with `quality.py`.
 - Vocabulary terms come from the session-loaded concepts (`tests/README.md`). No per-test concept
   loading.
 - Each test is shown red against the sketch's code by removing or breaking the piece it covers,
@@ -203,9 +246,11 @@ project/heat_flow/
 ├── config.py                 # form_class on six registry configs
 ├── vocabularies.py           # resolve_term, resolve_terms (moved from ghfdb)
 ├── models/child.py           # status optional, UNSPECIFIED removed
+├── models/parent.py          # site keeps its TVD, location error on its field
 ├── migrations/0018_*.py      # correction status
 ├── quality.py                # empty in-situ status
 ├── serializers.py            # empty status as null
+├── schema.py                 # status nullable
 ├── demo.py                   # real statuses only
 └── templates/heat_flow/heatflow_overview.html   # em dash for no status
 project/ghfdb/
@@ -214,7 +259,9 @@ project/ghfdb/
     ├── child.py              # importer stores an empty status
     └── widgets.py            # calls the moved term reading
 docs/guides/editing-records.md
+docs/ghfdb_fields.md, docs/guides/{importing-data,quality-scores,heat-flow-records-api}.md
 tests/test_heat_flow/test_forms.py
+tests/factories.py, tests/test_ghfdb/conftest.py   # UNSPECIFIED references
 ```
 
 ## Complexity Tracking

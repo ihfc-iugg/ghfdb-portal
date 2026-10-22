@@ -344,3 +344,39 @@ child's form refuses a gradient or conductivity on another interval, and the par
 at another site, with an error against the field, and a test pins each refusal.
 
 **ADR:** none — validation inside these forms.
+
+## A site keeps the true vertical depth entered for it
+
+A heat flow site inherits fairdm-geo's vertical interval, whose save overwrites the vertical depth
+with the distance between top and bottom whenever both are set. A site's bottom only mirrors its
+true vertical depth, so once a site had been saved, a corrected TVD was put back on every later
+save, through the form and through a re-upload alike. The site's own save now sets its bottom from
+its top and its vertical depth first, so the depth a researcher enters is the one kept.
+
+**ADR:** none — the site model's own rule about a field it already holds.
+
+## An interval's vertical depth stays calculated
+
+An interval's vertical depth is calculated from its top and bottom by the same base class, and is
+not a column of the upload template. The specification's US4 lists it among what a researcher
+corrects. The build leaves it on the form as the sketch drew it and changes nothing about how it is
+stored. Whether it should be correctable on its own is a question for the maintainer.
+
+**ADR:** none — a question about the specification, not a design decision.
+
+## Every correction type holds a row after a form save
+
+An import writes all nine correction rows for every child, and the published export tells a row
+with no status (`-`) from no row at all (an empty cell). The child's form leaves a child in the
+same shape as an import: after a save, each of the nine types has a row, holding the chosen status
+or an empty one.
+
+**ADR:** none — local to the child's form.
+
+## The parent's form manages only the children the researcher may change
+
+A site's children can sit in more than one dataset. The parent's form offers, marks and unmarks
+only the children at the site the researcher may change. A child in a dataset they may not change
+keeps its relevance and does not block the save.
+
+**ADR:** none — local to the parent's form, following FairDM's edit scope.
