@@ -4,7 +4,8 @@ A researcher who finds a mistake in a heat flow record corrects it in the portal
 edit page, instead of re-uploading the spreadsheet. Each kind of record has a form built for it. A
 form offers the fields the upload template has a column for, grouped the way the template orders its
 columns, so a researcher who filled the template in finds the same things in the same order. This
-page describes the site's form, then the pieces the forms are built from.
+page describes the site's form and the child heat flow's form, then the pieces the forms are built
+from.
 
 ## Correcting a site
 
@@ -62,6 +63,44 @@ editing is the stored value in the base units.
 
 The site keeps the true vertical depth entered for it. A change to it is stored even when the site
 already has a bottom depth: the portal sets the bottom to the top plus the vertical depth.
+
+## Correcting a child heat flow
+
+Open the child heat flow value, choose **Edit details** from the Manage menu, change what is wrong
+and save. The same people may do this as for a site: anyone who may change the child's dataset.
+
+The child's form has these groups:
+
+- **The value**, with its uncertainty and one unit for both, then the method and a comment.
+- **Corrections.** One choice for each of the nine corrections.
+- **Acquisition.** The expedition, the surface temperature and the date of acquisition.
+- **Calculated from.** The thermal gradient and the interval conductivity the value was
+  calculated from.
+
+Whether the child counts towards its parent's value is not on this form. The parent's form carries it.
+
+### Corrections
+
+Each correction has a choice of its own, and it offers only the statuses that are valid for that
+correction. The first entry is **Unspecified**, a blank choice: a correction with no status is
+stored with an empty status, and it reads back as unspecified in the portal, as `-` in the
+published file and as `null` in the API.
+
+After a save every correction holds a row, as it does after an import. A correction you set holds
+the status you chose. The eight you did not touch hold an empty status. Clearing a correction
+stores an empty status and keeps the comment the correction already had, because the form carries
+no comment for a correction.
+
+A save recalculates the child's quality score from the corrections as they now stand, and
+the parent's score from its children.
+
+### Choosing a gradient and a conductivity
+
+The thermal gradient and the interval conductivity are searched for by name. The search offers
+the gradients, or the conductivities, in datasets you may change. It cannot offer only those on the
+child's own depth interval, so the form checks the one you chose: a gradient or conductivity that
+belongs to another depth interval is refused, with the message beside its field, and nothing is
+saved. The same goes for one in a dataset you may not change.
 
 ## For developers
 
@@ -123,3 +162,24 @@ Two rules live on the model, not the form, so every way of saving a site follows
   set, so the true vertical depth entered is the one stored.
 - `HeatFlowSite.clean` raises the duplicate-location error against the `location` field with the
   code `duplicate_location`, so `form.has_error("location", code="duplicate_location")` is true.
+
+### `HeatFlowForm`
+
+The child's form. Its nine correction fields are named `correction_<type>`, one for each member of
+`HeatFlowCorrection.CorrectionTypeChoices`. Each is a `ChoiceField` that offers an empty entry and
+the statuses `HeatFlowCorrection.VALID_STATUS_FOR_TYPE` (or `ENVIRONMENTAL_VALID`) gives that
+type. `thermal_gradient` and `thermal_conductivity` are FairDM `MeasurementChoiceField`s with
+`scope="edit"`. They cannot be narrowed to an interval, so `clean_thermal_gradient` and
+`clean_thermal_conductivity` refuse a measurement whose interval is not the child's, with the code
+`other_interval`.
+
+Pass `request=` when you build the form outside FairDM's edit page, because the search fields
+accept only the records the request's user may change.
+
+### Related rows: `save_related`
+
+`SectionedForm.save()` writes the rows a form stands for with `save_related(record)`, inside
+`Recalculation.deferred()`, so each affected score is refreshed once rather than once for every
+row. With `commit=False` the rows are written when `save_m2m()` is called, as Django writes
+many-to-many data. `HeatFlowForm.save_related` gives the child a row for each correction type
+holding the chosen status, and never touches a stored comment.

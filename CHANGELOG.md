@@ -27,6 +27,11 @@ Releases before that used `<year>.<release>` and are recorded in the
   stored term that is saved untouched. A site keeps the true vertical depth entered for it, and a
   location another site already holds is refused beside the coordinates
   ([editing records](docs/guides/editing-records.md)).
+- A researcher can correct a child heat flow on its edit page: its value, uncertainty, method,
+  comment and acquisition details, the status of each of its nine corrections, and the thermal
+  gradient and interval conductivity it was calculated from. A gradient or conductivity on another
+  depth interval is refused. Each correction offers only the statuses valid for it, and saving
+  recalculates the child's quality score ([editing records](docs/guides/editing-records.md)).
 - Container images are published to `ghcr.io/ihfc-iugg/ghfdb-portal` on every
   release, tagged with the version and with `latest`.
 - Dependabot pull requests for a given ecosystem now arrive grouped as one pull
@@ -34,6 +39,11 @@ Releases before that used `<year>.<release>` and are recorded in the
 
 ### Changed
 
+- A correction with no status is stored with an empty status instead of `-`. The migration
+  changes the stored rows, the published file still reads and writes `-`, and the API gives
+  `null` for the status of such a correction and still lists it
+  ([importing data](docs/guides/importing-data.md),
+  [records API](docs/guides/heat-flow-records-api.md)).
 - CI, the image build and the release flow call the reusable workflows in
   `FAIR-DM/shared` v0.1.0. The tests, the browser tests and the code quality
   checks run in the FairDM development image against the PostGIS version the

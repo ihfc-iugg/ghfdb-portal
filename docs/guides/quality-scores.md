@@ -204,9 +204,9 @@ Three rules read the child's corrections:
   the two can differ.
 
 A borehole child that records no in-situ correction at all takes −0.2 and the missing-information
-mark on the pT criterion, as the toolbox does. A correction whose status is `-` is recorded as
+mark on the pT criterion, as the toolbox does. A correction with no status is recorded as
 unspecified, and it takes the same −0.2 without the mark. The file import writes every correction
-row, with `-` for an empty cell, so an imported child is never without one. The probe route reads
+row, with an empty status for an empty cell, so an imported child is never without one. The probe route reads
 nothing from the in-situ correction.
 
 ## The M-score
@@ -405,7 +405,7 @@ routing.
 The two child rules that need a correction the model cannot yet record (a tilt-corrected
 temperature, and the in-situ statuses "considered, p", "considered, t" and "considered, pT") are
 applied by the scheme whenever it is given them. Until the model accepts them, a stored child cannot
-hold those statuses, and the import stores them as `-`. A row that records one of them can
+hold those statuses, and the import stores them with no status. A row that records one of them can
 therefore differ from the toolbox in its stored `T_score` or `TC_score`, and through them in its
 M-score and quality code. A borehole conductivity with corrected pT conditions and a considered
 in-situ correction, for example, scores 1.0 in the toolbox and is stored as 0.8.
@@ -460,8 +460,9 @@ temperature correction.
 **A borehole child with no in-situ correction takes the agreement penalty (D13).** It takes −0.2
 with the mark, as the toolbox does.
 
-**A correction recorded as `-` is unspecified, and a missing one is empty (D14).** The flags write
-`-` for both.
+**A correction with no status is unspecified, and a missing one is empty (D14).** The flags write
+`-` for both. The portal stores an unspecified correction with an empty status, and the published
+file writes it as `-`.
 
 **Routing follows the site's exploration method (D17).** The vocabulary's concepts map onto the
 toolbox's routing words as the table under *Which rules apply* shows. Whether a
