@@ -592,6 +592,7 @@ def child_records(db):
     child = HeatFlowFactory(
         dataset=dataset,
         sample=interval,
+        ghfdb_id=1000,
         value=70,
         uncertainty=5,
         thermal_gradient=gradient,
@@ -855,3 +856,99 @@ class TestHeatFlowForm:
         form.save_m2m()
         assert child.corrections.count() == 9
         assert child.corrections.get(correction_type="PAL").status == "considered_t"
+
+
+class TestHeatFlowEditPage:
+    def edit_url(self, child):
+        from fairdm.contrib.plugins import reverse
+
+        return reverse(child, "edit")
+
+    @pytest.fixture
+    def corrected(self, child_records, researcher):
+        """Post the child's edit page: another gradient, topography present and corrected."""
+        from tests.factories import ThermalGradientFactory
+
+        other = ThermalGradientFactory(
+            dataset=child_records["dataset"], sample=child_records["interval"]
+        )
+        child = child_records["child"]
+        child.refresh_from_db()
+        before = child.quality.split(".")[2]
+        client = researcher(child_records["dataset"])
+
+        response = client.post(
+            self.edit_url(child),
+            child_data(
+                child,
+                thermal_gradient=str(other.pk),
+                correction_TOPO="present_corrected",
+            ),
+        )
+
+        assert response.status_code == 302
+        child.refresh_from_db()
+        return {**child_records, "gradient": other, "before": before}
+
+    def test_a_dataset_owner_corrects_the_gradient_and_a_correction(self, corrected):
+        child = corrected["child"]
+
+        assert child.thermal_gradient == corrected["gradient"]
+        assert child.corrections.count() == 9
+        assert child.corrections.get(correction_type="TOPO").status == (
+            "present_corrected"
+        )
+
+    def test_the_perturbation_flags_move_with_the_correction(self, corrected):
+        assert corrected["before"] == "-------"
+        assert corrected["child"].quality.split(".")[2] == "--T----"
+
+    def test_the_exported_corrections_equal_those_of_an_import_of_the_same_values(
+        self, corrected, db
+    ):
+        from fairdm.factories import DatasetFactory
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.models import GHFDBChild
+        from project.ghfdb.resources import (
+            GHFDBChildImportResource,
+            GHFDBParentImportResource,
+        )
+        from project.ghfdb.resources.export import GHFDBExportResource
+        from tests.test_ghfdb.test_resources.test_child import (
+            CHILD_ROW,
+            PARENT_ROW,
+            make_dataset,
+        )
+
+        imported_into = DatasetFactory()
+        GHFDBParentImportResource().import_data(
+            make_dataset(PARENT_ROW),
+            dry_run=False,
+            raise_errors=True,
+            fairdm_dataset=imported_into,
+        )
+        row = {
+            **CHILD_ROW,
+            **{f"corr_{code}_flag": "" for code in CORRECTION_CODES},
+            "corr_TOPO_flag": "present_corrected",
+        }
+        result = GHFDBChildImportResource().import_data(
+            make_dataset(row),
+            dry_run=False,
+            raise_errors=False,
+            fairdm_dataset=imported_into,
+        )
+        assert not result.has_errors(), result.invalid_rows
+        imported = HeatFlow.objects.get(ghfdb_id=1)
+
+        def corrections_of(child):
+            queryset = GHFDBChild.objects.for_export().filter(pk=child.pk)
+            exported = GHFDBExportResource().export(queryset).dict[0]
+            return {
+                code: exported[f"corr_{code.lower()}_flag"] for code in CORRECTION_CODES
+            }
+
+        assert corrections_of(corrected["child"]) == corrections_of(imported)
+        assert corrections_of(corrected["child"])["TOPO"] == "present_corrected"
+        assert corrections_of(corrected["child"])["IS"] == "-"
