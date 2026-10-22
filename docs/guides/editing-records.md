@@ -53,8 +53,10 @@ kept as it was, even when the vocabulary no longer offers that term.
 
 On a form that takes a value with an uncertainty, they are entered as the value, the uncertainty
 and one unit for both. The portal stores every quantity in the field's base units, as an import
-does: a value entered in another unit is converted, and a decimal value is rounded to the places
-the field keeps. A value shown for editing is the stored value in the base units.
+does. A value entered in another unit is converted, and the result is rounded to the places the
+field keeps. A value entered in the base unit is stored as typed, so one with more places than the
+field keeps is refused, with the message beside the value, and nothing is saved. A value shown for
+editing is the stored value in the base units.
 
 ### The true vertical depth
 
@@ -79,8 +81,10 @@ is built after FairDM's mixins have replaced their fields.
 - `measured_pairs` is a tuple of `(value, uncertainty)` field names. Each pair becomes two plain
   number fields and one choice named `<value>_unit`, drawn as one `Join` with a `±` between the
   numbers. `clean()` gives both numbers the chosen unit and converts them to the field's base
-  units, so a stored quantity is always in base units. The initial numbers are the stored
-  quantities in base units.
+  units, so a stored quantity is always in base units. A number converted from another unit is
+  quantised to the field's places. A number in the base unit with more places than the field keeps
+  is an error against that field, with the code `max_decimal_places`. The initial numbers are the
+  stored quantities in base units.
 - The form's helper has `form_tag = False`, because FairDM's page draws the form tag and buttons.
 
 ### `ConceptTextField`
@@ -89,8 +93,9 @@ A `CharField` that stands for a vocabulary field (`BaseConceptField` or `Concept
 It draws a stored term as its label, several joined by `; `, and reads text with `resolve_term` or
 `resolve_terms`. Text that equals the stored value as drawn returns the stored value without being
 read again. An unknown term is a `ValidationError` against the field with the code `unknown_term`.
-Building a field or a form touches no database. `PostedText` is the `str` subclass the field uses
-to tell text a researcher posted from a stored value to be drawn.
+Building a field or a form touches no database. A form that holds a stored record sets each
+concept field's initial value to the field's `as_text` of the stored value, so the field itself
+only has to draw the text it is given, whether stored or posted.
 
 ### `heat_flow_formfield`
 

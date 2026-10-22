@@ -235,17 +235,36 @@ class TestSectionedForm:
         assert form.cleaned_data["value"].units == field.base_units
         assert form.cleaned_data["uncertainty"].magnitude == Decimal("1.20")
 
-    def test_numbers_beyond_the_fields_places_are_rounded_to_them(self, db):
+    def test_too_many_places_in_the_base_unit_are_refused_against_the_field(self, db):
+        from heat_flow.forms import ThermalGradientForm
+        from heat_flow.models import ThermalGradient
+
+        form = ThermalGradientForm(
+            data={"value": "25.554", "uncertainty": "1.25", "value_unit": "K/km"}
+        )
+
+        assert not form.is_valid()
+        assert form.has_error("value", code="max_decimal_places")
+        assert not form.has_error("uncertainty")
+        assert not ThermalGradient.objects.exists()
+
+    def test_a_value_converted_from_another_unit_is_quantised_to_the_places(
+        self, db, monkeypatch
+    ):
         from decimal import Decimal
 
         from heat_flow.forms import ThermalGradientForm
+        from heat_flow.models import ThermalGradient
 
+        field = ThermalGradient._meta.get_field("value")
+        monkeypatch.setattr(field, "unit_choices", ["K/km", "K/m"])
         form = ThermalGradientForm(
-            data={"value": "25.554", "uncertainty": "1.251", "value_unit": "K/km"}
+            data={"value": "0.025554", "uncertainty": "0.001251", "value_unit": "K/m"}
         )
 
         form.full_clean()
 
+        assert not form.has_error("value")
         assert form.cleaned_data["value"].magnitude == Decimal("25.55")
         assert form.cleaned_data["uncertainty"].magnitude == Decimal("1.25")
 

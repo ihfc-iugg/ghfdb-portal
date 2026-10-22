@@ -9,6 +9,7 @@ from decimal import Decimal
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
 from django import forms
+from django.core.validators import DecimalValidator
 from django.db import models
 from django.forms.models import fields_for_model
 from django.utils.translation import gettext_lazy as _
@@ -163,17 +164,42 @@ class SectionedForm:
                 number = cleaned_data.get(name)
                 if number is None or unit is None:
                     continue
-                cleaned_data[name] = self.in_base_units(name, number, unit)
+                try:
+                    cleaned_data[name] = self.in_base_units(name, number, unit)
+                except forms.ValidationError as error:
+                    self.add_error(name, error)
         return cleaned_data
 
     def in_base_units(self, name, number, unit):
-        """Return a number entered in a unit as a quantity in its field's base units."""
+        """Return a number entered in a unit as a quantity in its field's base units.
+
+        A number entered in the base unit is stored as entered, and refused when it has
+        more places than the field keeps. A number converted from another unit is
+        quantised to the field's places.
+
+        Args:
+            name: The name of the quantity field.
+            number: The number entered.
+            unit: The unit it was entered in.
+
+        Returns:
+            The quantity, in the field's base units.
+
+        Raises:
+            ValidationError: If a number in the base unit has more places than the
+                field keeps.
+        """
         model_field = self._meta.model._meta.get_field(name)
         base = model_field.base_units
-        converted = (
-            number if unit == base else ureg.Quantity(float(number), unit).m_as(base)
-        )
-        if isinstance(model_field, DecimalQuantityField):
+        decimal = isinstance(model_field, DecimalQuantityField)
+        if unit == base:
+            if decimal:
+                DecimalValidator(model_field.max_digits, model_field.decimal_places)(
+                    number
+                )
+            return ureg.Quantity(number, base)
+        converted = ureg.Quantity(float(number), unit).m_as(base)
+        if decimal:
             step = Decimal(1).scaleb(-model_field.decimal_places)
             converted = Decimal(str(converted)).quantize(step)
         return ureg.Quantity(converted, base)
