@@ -1,7 +1,5 @@
 import pytest
 from django.core.checks import run_checks
-from fairdm.contrib.contributors.choices import ContributionLevel
-from fairdm.factories import UserFactory
 from heat_flow.models import (
     HeatFlow,
     HeatFlowCorrection,
@@ -744,6 +742,28 @@ class TestHeatFlowSerializer:
             CORRECTION_TYPES.IS.value: CORRECTION_STATUSES.PRESENT_CORRECTED.value,
             CORRECTION_TYPES.T.value: CORRECTION_STATUSES.NOT_CORRECTED.value,
         }
+
+    def test_a_correction_with_no_status_is_listed_with_a_null_status(
+        self, client, full_records
+    ):
+        HeatFlowCorrectionFactory(
+            heat_flow=full_records["child"],
+            correction_type=CORRECTION_TYPES.TOPO,
+            status="",
+        )
+
+        record = detail(client, CHILDREN, full_records["child"])
+
+        assert record["corrections"] == [
+            {
+                "correction_type": {
+                    "name": CORRECTION_TYPES.TOPO.value,
+                    "label": CORRECTION_TYPES.TOPO.label,
+                },
+                "status": None,
+                "comment": None,
+            }
+        ]
 
     def test_a_child_with_no_gradient_conductivity_or_corrections_is_not_dropped(
         self, client, public_dataset

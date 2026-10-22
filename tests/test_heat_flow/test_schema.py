@@ -154,6 +154,18 @@ class TestChoiceLabelFieldSchema:
             HeatFlowCorrection.StatusChoices.values
         )
 
+    def test_a_correction_status_may_be_null_and_its_type_may_not(self, api_document):
+        components = api_document["components"]["schemas"]
+        child = components[
+            component_name(response_schema(api_document, f"{CHILDREN}{{uuid}}/"))
+        ]
+        correction = components[
+            component_name(child["properties"]["corrections"]["items"])
+        ]["properties"]
+
+        assert correction["status"]["nullable"] is True
+        assert "nullable" not in correction["correction_type"]
+
     def test_the_child_list_item_has_the_site_and_no_corrections(self, api_document):
         item = api_document["components"]["schemas"][
             list_item_component(api_document, CHILDREN)

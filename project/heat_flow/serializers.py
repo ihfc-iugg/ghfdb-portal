@@ -223,7 +223,7 @@ class UnitsField(serializers.Field):
 
 
 class ChoiceLabelField(serializers.ChoiceField):
-    """A stored choice, read as its name and its label."""
+    """A stored choice, read as its name and its label, or ``null`` when it is empty."""
 
     def __init__(self, **kwargs: Any) -> None:
         """Read the choice and never write it.
@@ -241,8 +241,10 @@ class ChoiceLabelField(serializers.ChoiceField):
             value: The stored choice.
 
         Returns:
-            The choice's ``name`` and ``label``.
+            The choice's ``name`` and ``label``, or ``None`` for an empty choice.
         """
+        if value == "":
+            return None
         return {"name": value, "label": str(self.choices.get(value, value))}
 
 
@@ -938,7 +940,9 @@ class HeatFlowCorrectionSerializer(serializers.ModelSerializer):
     correction_type = ChoiceLabelField(
         choices=HeatFlowCorrection.CorrectionTypeChoices.choices
     )
-    status = ChoiceLabelField(choices=HeatFlowCorrection.StatusChoices.choices)
+    status = ChoiceLabelField(
+        choices=HeatFlowCorrection.StatusChoices.choices, allow_null=True
+    )
 
     class Meta:
         model = HeatFlowCorrection
