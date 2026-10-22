@@ -9,10 +9,10 @@ import json
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-from django_select2.forms import Select2MultipleWidget, Select2Widget
 from fairdm.contrib.contributors.models import Person
 from fairdm.forms import ModelForm
 from literature.models import LiteratureItem
+from mvp_forms.widgets import TomSelect, TomSelectMultiple
 from partial_date import PartialDate
 
 from .models import Review
@@ -30,7 +30,7 @@ class ReviewDescriptionForm(ModelForm):
             "catalogue. Leave blank and supply a bibliography file below "
             "when it is not there yet."
         ),
-        widget=Select2Widget,
+        widget=TomSelect,
     )
 
     bibliography_file = forms.FileField(
@@ -51,7 +51,7 @@ class ReviewDescriptionForm(ModelForm):
             "The people who carried out the assessment. Any contributor "
             "profile may be named, whether or not it holds a portal account."
         ),
-        widget=Select2MultipleWidget,
+        widget=TomSelectMultiple,
     )
 
     title = forms.CharField(

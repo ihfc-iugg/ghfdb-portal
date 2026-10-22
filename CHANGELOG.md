@@ -56,6 +56,9 @@ Releases before that used `<year>.<release>` and are recorded in the
   django-mvp-charts, django-mvp-compliance and django-mvp-forms move to their newer releases.
   fairdm-geo moves to the commit that declares its depth interval constraint as Django 6.0
   requires.
+  The publication and assessor fields on the assessment form use Tom Select in place of
+  Select2, which FairDM no longer installs. FairDM's development accounts are now at
+  `example.com`, so `seed_demo_data` shares `regular.user@example.com` with them.
   Migration 0005 now drops the old `SurfaceHeatFlow` link after the heat flow's parent is
   repointed, because Django 6.0 no longer drops a column with `CASCADE`; the change reorders one
   operation and changes nothing on a database that has already applied it.
