@@ -50,6 +50,8 @@ are built and tested.
 9. Every other field with several choices is a counted multiple choice control with all its
    choices in the page (Tom Select, from django-mvp-forms). No standard multiple select.
 10. Each quantity's number and unit sit in one joined control.
+11. A value and its uncertainty are one joined group under one label: value, ±, uncertainty, one
+    unit, with both help texts under it.
 
 ## What the sketch faked
 
@@ -62,6 +64,8 @@ are built and tested.
 - **The vocabulary text input borrows the importer's term reading** from the `ghfdb` app, imported
   inside the field to avoid a circular import. The plan decides where that reading lives so both
   can use it.
+- **The "±" is a disabled button** in each value-and-uncertainty group, because a django-mvp-forms
+  join holds no text between members.
 - **The record searches offer more than the form accepts:** every gradient, conductivity or child
   the researcher may change, not only those on the interval or at the site. FairDM cannot narrow
   them further.
@@ -103,3 +107,6 @@ These are taste calls, each made once in the draft. The build keeps them unless 
 - **Correction comments:** none on the form. Comments go on the record's discussion. Done.
 - **Record fields (2026-10-22):** every field that chooses a record uses FairDM's record search
   fields. Done for the child's gradient and conductivity and the parent's children.
+- **Value and uncertainty (2026-10-22):** one joined group per pair, one unit for both, "±"
+  between. Done on the child, the parent, the gradient (measured and corrected) and the
+  conductivity.

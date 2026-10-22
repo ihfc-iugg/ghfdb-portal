@@ -4,6 +4,9 @@ Each form groups its fields the way the upload template orders its columns, so a
 filled the template in finds the same things in the same order.
 """
 
+from decimal import Decimal
+
+from crispy_forms.bootstrap import StrictButton
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Fieldset, Layout
 from django import forms
@@ -17,7 +20,10 @@ from fairdm.contrib.autocomplete.fields import (
 from fairdm.core.measurement.forms import MeasurementFormMixin
 from fairdm.core.sample.forms import SampleFormMixin
 from fairdm.utils.location.forms import LocationField
+from mvp_forms.layout import Join
 from mvp_forms.widgets import TomSelectMultiple
+from quantityfield.fields import DecimalQuantityField
+from quantityfield.units import ureg
 from research_vocabs.fields import BaseConceptField, ConceptManyToManyField
 
 from .models import (
@@ -103,6 +109,7 @@ class SectionedForm:
     """
 
     sections: tuple = ()
+    measured_pairs: tuple = ()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -110,9 +117,74 @@ class SectionedForm:
             if isinstance(field, ConceptTextField) and self.instance.pk:
                 stored = getattr(self.instance, name)
                 field.stored = list(stored.all()) if field.many else stored
+        for value, uncertainty in self.measured_pairs:
+            self.measure(value, uncertainty)
         self.helper = FormHelper()
         self.helper.form_tag = False
         self.helper.layout = self.get_layout()
+
+    def measure(self, value, uncertainty):
+        """Enter a value and its uncertainty as two numbers and one unit for both.
+
+        Each quantity becomes a plain number in its base units, and a unit choice named
+        ``<value>_unit`` stands for both, so the three can be drawn as one joined group.
+
+        Args:
+            value: The name of the value's quantity field.
+            uncertainty: The name of its uncertainty's quantity field.
+        """
+        unit = self.unit_of(value)
+        for name in (value, uncertainty):
+            model_field = self._meta.model._meta.get_field(name)
+            plain = (
+                models.DecimalField
+                if isinstance(model_field, DecimalQuantityField)
+                else models.FloatField
+            )
+            self.fields[name] = plain.formfield(
+                model_field,
+                label=model_field.verbose_name.capitalize(),
+                help_text=model_field.help_text,
+            )
+            stored = getattr(self.instance, name, None)
+            self.initial[name] = (
+                None if stored is None else stored.m_as(model_field.base_units)
+            )
+        model_field = self._meta.model._meta.get_field(value)
+        self.fields[unit] = forms.ChoiceField(
+            label=_("Unit"),
+            choices=[(choice, choice) for choice in model_field.unit_choices],
+        )
+        self.initial[unit] = model_field.base_units
+
+    @staticmethod
+    def unit_of(value):
+        """Name the unit choice that stands for a value and its uncertainty."""
+        return f"{value}_unit"
+
+    def clean(self):
+        """Give each measured pair's numbers the unit chosen for both, in base units."""
+        cleaned_data = super().clean()
+        for value, uncertainty in self.measured_pairs:
+            unit = cleaned_data.get(self.unit_of(value))
+            for name in (value, uncertainty):
+                number = cleaned_data.get(name)
+                if number is None or unit is None:
+                    continue
+                cleaned_data[name] = self.in_base_units(name, number, unit)
+        return cleaned_data
+
+    def in_base_units(self, name, number, unit):
+        """Return a number entered in a unit as a quantity in its field's base units."""
+        model_field = self._meta.model._meta.get_field(name)
+        base = model_field.base_units
+        if unit == base:
+            return ureg.Quantity(number, base)
+        converted = ureg.Quantity(float(number), unit).m_as(base)
+        if isinstance(model_field, DecimalQuantityField):
+            step = Decimal(1).scaleb(-model_field.decimal_places)
+            converted = Decimal(str(converted)).quantize(step)
+        return ureg.Quantity(converted, base)
 
     def get_layout(self):
         """Group the fields under the headings ``sections`` names."""
@@ -127,6 +199,10 @@ class SectionedForm:
         """Build one group from the fields the form carries."""
         drawn = []
         for row in rows:
+            if row in self.measured_pairs:
+                drawn.append(self.get_measured_group(*row))
+                placed.update((*row, self.unit_of(row[0])))
+                continue
             names = [row] if isinstance(row, str) else list(row)
             names = [name for name in names if name in self.fields]
             placed.update(names)
@@ -139,6 +215,20 @@ class SectionedForm:
         if not drawn or heading is None:
             return drawn
         return [Fieldset(heading, *drawn)]
+
+    def get_measured_group(self, value, uncertainty):
+        """Draw a value, "±", its uncertainty and their one unit in a row, under one label.
+
+        A joined group holds fields and buttons only, so the "±" is a disabled button
+        that assistive technology skips. The uncertainty is named by its own label.
+        """
+        return Join(
+            value,
+            StrictButton("±", type="button", disabled=True, aria_hidden="true"),
+            uncertainty,
+            self.unit_of(value),
+            label=self.fields[value].label,
+        )
 
 
 class HeatFlowSiteForm(SectionedForm, SampleFormMixin, forms.ModelForm):
@@ -274,6 +364,7 @@ class HeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
         help_text=_("A thermal conductivity on this child's own depth interval."),
     )
 
+    measured_pairs = (("value", "uncertainty"),)
     sections = (
         (None, [("value", "uncertainty"), "method", "c_comment"]),
         (
@@ -376,6 +467,10 @@ class HeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
 class ThermalGradientForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
     """A thermal gradient, measured and corrected, and the temperatures it rests on."""
 
+    measured_pairs = (
+        ("value", "uncertainty"),
+        ("corrected_value", "corrected_uncertainty"),
+    )
     sections = (
         (
             None,
@@ -413,6 +508,7 @@ class ThermalGradientForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
 class IntervalConductivityForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
     """An interval conductivity: where its samples came from, how they were measured, averaged."""
 
+    measured_pairs = (("value", "uncertainty"),)
     sections = (
         (None, [("value", "uncertainty")]),
         (_("Samples"), [("source", "conductivity_location")]),
@@ -453,6 +549,7 @@ class ParentHeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
         ),
     )
 
+    measured_pairs = (("value", "uncertainty"),)
     sections = (
         (
             None,

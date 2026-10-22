@@ -278,3 +278,31 @@ portal imported neither of those two. The site and measurement overview pages an
 dataset lists render with no script errors at this pin.
 
 **ADR:** none — a dependency move.
+
+## A value and its uncertainty are one group, with one unit
+
+The maintainer ruled on 2026-10-22 that every measurement with a value and an uncertainty is drawn
+as one group under one label: the value, "±", the uncertainty and one unit, in a row, with the help
+text of both under it, laid out with django-mvp-forms' layout objects. The pairs on the forms are
+the child's heat flow, the parent's heat flow, the thermal gradient measured and corrected, and the
+interval conductivity. The gradient's temperatures at the top and bottom also have uncertainties,
+but no column of the upload template maps to them, so they are on no form.
+
+How it is built:
+
+- **The group** is django-mvp-forms' `Join`, labelled with the value's label. Each member keeps its
+  own help text and errors, which the join draws under the row.
+- **Two numbers and one unit.** A `Join` member must be a single input or select, and a quantity
+  is a number and a unit drawn as one multi-widget, which a `Join` refuses. So the value and the
+  uncertainty are each entered as a plain number in their field's base units, and one unit choice,
+  `<value>_unit`, stands for both. The form's `clean` gives both numbers the chosen unit and stores
+  them in base units. A stored value is shown in base units, so a form saved unchanged stores the
+  same numbers. A number entered in another allowed unit is converted, both numbers alike. Today no
+  paired field allows a second unit, so the unit choice holds the base unit alone.
+- **The "±".** A `Join` holds fields and buttons and nothing else, and a member is drawn with no
+  attached text, so no layout object puts text between two members. The nearest thing it offers is
+  a button: the "±" is a disabled button with `aria-hidden`, so it is seen and never focused or
+  read, and the uncertainty is named by its own label. This is a stand-in until django-mvp-forms can
+  hold text in a join, which is for the maintainer to decide on.
+
+**ADR:** none — a layout inside these forms.
