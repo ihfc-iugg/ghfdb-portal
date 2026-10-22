@@ -37,10 +37,6 @@ from .models.child import HeatFlowCorrection, ProbeMetadata
 from .vocabularies import resolve_term, resolve_terms
 
 
-class PostedText(str):
-    """Text a researcher posted, as opposed to a stored value to be drawn as text."""
-
-
 class ConceptTextField(forms.CharField):
     """A vocabulary term typed as text, written as the published file writes it.
 
@@ -70,16 +66,6 @@ class ConceptTextField(forms.CharField):
             return "; ".join(concept.label for concept in value)
         labels = dict(self.vocabulary().choices)
         return str(labels.get(str(value), value))
-
-    def bound_data(self, data, initial):
-        """Mark posted text, so it is drawn as it was posted."""
-        return PostedText(data)
-
-    def prepare_value(self, value):
-        """Draw a stored value as text, and posted text as it was posted."""
-        if isinstance(value, PostedText):
-            return str(value)
-        return self.as_text(value)
 
     def clean(self, value):
         """Resolve the text to the terms it names, or keep the stored ones."""
@@ -123,6 +109,7 @@ class SectionedForm:
             if isinstance(field, ConceptTextField) and self.instance.pk:
                 stored = getattr(self.instance, name)
                 field.stored = list(stored.all()) if field.many else stored
+                self.initial[name] = field.as_text(field.stored)
         for value, uncertainty in self.measured_pairs:
             self.measure(value, uncertainty)
         self.helper = FormHelper()
@@ -324,6 +311,7 @@ class HeatFlowIntervalForm(SectionedForm, SampleFormMixin, forms.ModelForm):
                 field.initial = list(value.all()) if name == "probe_type" else value
                 if isinstance(field, ConceptTextField):
                     field.stored = field.initial
+                    field.initial = field.as_text(field.stored)
             self.fields[key] = field
         self.helper.layout = self.get_layout()
 

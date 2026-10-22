@@ -27,19 +27,45 @@ class TestConceptTextField:
 
         return list(Concept.get_for_vocabulary(ExplorationPurpose).order_by("name")[:2])
 
-    def test_a_stored_term_is_drawn_as_its_label(self, environment):
+    @pytest.fixture
+    def stored_site(self, db, two_purposes):
+        from tests.factories import HeatFlowSiteFactory
+
+        return HeatFlowSiteFactory(
+            environment="onshore_continental", explo_purpose=two_purposes
+        )
+
+    def test_an_unbound_form_draws_a_stored_term_as_its_label(self, stored_site):
+        from heat_flow.forms import HeatFlowSiteForm
         from heat_flow.vocabularies import GeographicEnvironment
 
         label = dict(GeographicEnvironment().choices)["onshore_continental"]
 
-        assert environment.prepare_value("onshore_continental") == label
+        form = HeatFlowSiteForm(instance=stored_site)
 
-    def test_several_stored_terms_are_drawn_joined_by_semicolons(
-        self, purposes, two_purposes
+        assert form["environment"].value() == label
+
+    def test_an_unbound_form_draws_several_stored_terms_joined_by_semicolons(
+        self, stored_site, two_purposes
     ):
-        drawn = purposes.prepare_value(two_purposes)
+        from heat_flow.forms import HeatFlowSiteForm
 
-        assert drawn == "; ".join(concept.label for concept in two_purposes)
+        form = HeatFlowSiteForm(instance=stored_site)
+
+        assert form["explo_purpose"].value() == "; ".join(
+            concept.label for concept in stored_site.explo_purpose.all()
+        )
+
+    def test_a_bound_form_redraws_posted_text_unchanged(self, stored_site):
+        from heat_flow.forms import HeatFlowSiteForm
+
+        form = HeatFlowSiteForm(
+            instance=stored_site,
+            data=site_data(stored_site, environment="swamp", explo_purpose="a; b"),
+        )
+
+        assert form["environment"].value() == "swamp"
+        assert form["explo_purpose"].value() == "a; b"
 
     @pytest.mark.parametrize(
         "text",
@@ -73,14 +99,14 @@ class TestConceptTextField:
     ):
         environment.stored = "withdrawn_term"
 
-        assert environment.clean(environment.prepare_value("withdrawn_term")) == (
+        assert environment.clean(environment.as_text("withdrawn_term")) == (
             "withdrawn_term"
         )
 
     def test_untouched_text_returns_the_stored_terms(self, purposes, two_purposes):
         purposes.stored = two_purposes
 
-        assert purposes.clean(purposes.prepare_value(two_purposes)) == two_purposes
+        assert purposes.clean(purposes.as_text(two_purposes)) == two_purposes
 
     def test_an_empty_optional_field_stores_no_term(self, db):
         from heat_flow.forms import ConceptTextField
