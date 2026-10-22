@@ -269,3 +269,153 @@ class TestSectionedForm:
         assert float(form.initial["value"]) == pytest.approx(25.5)
         assert float(form.initial["uncertainty"]) == pytest.approx(1.25)
         assert form.initial["value_unit"] == "K/km"
+
+
+def site_data(site, **changes):
+    """Post the data a researcher's browser sends for a site, with these changes."""
+    data = {
+        "name": site.name,
+        "location_first": str(site.location.y),
+        "location_second": str(site.location.x),
+        "elevation_datum": "MSL",
+        "environment": "Onshore (continental)",
+        "explo_method": "",
+        "explo_purpose": "",
+    }
+    return {**data, **changes}
+
+
+class TestHeatFlowSiteForm:
+    @pytest.fixture
+    def site(self, db):
+        from tests.factories import HeatFlowSiteFactory
+
+        return HeatFlowSiteFactory(name="Original")
+
+    def test_it_offers_every_mapped_site_column(self):
+        from heat_flow.forms import HeatFlowSiteForm
+
+        from tests.test_docs.test_field_map import read_mappings
+
+        mapped = {
+            mapping.accessor.split(" ")[0]
+            for mapping in read_mappings()
+            if mapping.accessed_from == "HeatFlowSite"
+        }
+
+        assert mapped <= set(HeatFlowSiteForm().fields)
+
+    def test_it_offers_nothing_the_portal_calculates_or_assigns(self):
+        from heat_flow.forms import HeatFlowSiteForm
+
+        withheld = {
+            "U_score",
+            "M_score",
+            "T_score",
+            "TC_score",
+            "quality",
+            "quality_scheme",
+            "ghfdb_id",
+            "dataset",
+            "sample",
+        }
+
+        assert not withheld & set(HeatFlowSiteForm().fields)
+
+    def test_the_location_takes_a_latitude_and_a_longitude_only(self):
+        from heat_flow.forms import HeatFlowSiteForm
+
+        location = HeatFlowSiteForm().fields["location"]
+
+        assert len(location.fields) == 2
+
+    def test_elevation_and_datum_are_saved_on_the_site_itself(self, site):
+        from heat_flow.forms import HeatFlowSiteForm
+
+        form = HeatFlowSiteForm(
+            instance=site,
+            data=site_data(
+                site, elevation_0="350", elevation_1="m", elevation_datum="NAVD88"
+            ),
+        )
+
+        assert form.is_valid(), form.errors
+        form.save()
+        site.refresh_from_db()
+        assert site.elevation.m_as("m") == 350
+        assert str(site.elevation_datum) == "NAVD88"
+        assert site.location_elevation is None
+
+    def test_a_changed_vertical_depth_is_stored_on_a_site_with_a_bottom(self, site):
+        from heat_flow.forms import HeatFlowSiteForm
+
+        site.vertical_depth = 500
+        site.save()
+        site.refresh_from_db()
+        assert site.bottom.m_as("m") == 500
+        form = HeatFlowSiteForm(
+            instance=site,
+            data=site_data(site, vertical_depth_0="800", vertical_depth_1="m"),
+        )
+
+        assert form.is_valid(), form.errors
+        form.save()
+        site.refresh_from_db()
+        assert site.vertical_depth.m_as("m") == 800
+
+    def test_a_location_held_by_another_site_is_refused_and_nothing_is_written(
+        self, site
+    ):
+        from heat_flow.forms import HeatFlowSiteForm
+        from heat_flow.models import HeatFlowSite
+
+        from tests.factories import HeatFlowSiteFactory
+
+        other = HeatFlowSiteFactory()
+        form = HeatFlowSiteForm(
+            instance=site,
+            data=site_data(
+                site,
+                name="Renamed",
+                location_first=str(other.location.y),
+                location_second=str(other.location.x),
+            ),
+        )
+
+        assert not form.is_valid()
+        assert form.has_error("location", code="duplicate_location")
+        stored = HeatFlowSite.objects.get(pk=site.pk)
+        assert stored.name == "Original"
+        assert stored.location != other.location
+
+    def test_a_site_may_keep_its_own_location(self, site):
+        from heat_flow.forms import HeatFlowSiteForm
+
+        form = HeatFlowSiteForm(instance=site, data=site_data(site))
+
+        assert form.is_valid(), form.errors
+
+    @pytest.mark.parametrize("name", ["environment", "explo_method", "explo_purpose"])
+    def test_a_term_outside_the_vocabulary_is_refused(self, site, name):
+        from heat_flow.forms import HeatFlowSiteForm
+
+        form = HeatFlowSiteForm(
+            instance=site, data=site_data(site, **{name: "not a term"})
+        )
+
+        assert form.has_error(name, code="unknown_term")
+
+    def test_the_exploration_purpose_takes_several_terms(self, site):
+        from heat_flow.forms import HeatFlowSiteForm
+        from heat_flow.vocabularies import ExplorationPurpose
+        from research_vocabs.models import Concept
+
+        chosen = list(
+            Concept.get_for_vocabulary(ExplorationPurpose).order_by("name")[:2]
+        )
+        text = "; ".join(concept.label for concept in chosen)
+        form = HeatFlowSiteForm(instance=site, data=site_data(site, explo_purpose=text))
+
+        assert form.is_valid(), form.errors
+        form.save()
+        assert set(site.explo_purpose.all()) == set(chosen)
