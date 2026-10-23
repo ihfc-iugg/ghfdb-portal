@@ -9,7 +9,13 @@ what makes the ordering here work.
 from django.urls import path
 from fairdm.api.router import fairdm_api_router
 
-from .views import GHFDBExploreView, GHFDBMetaDataAPIView, GHFDBPathDownloadView
+from .views import (
+    GHFDBExploreView,
+    GHFDBMetaDataAPIView,
+    GHFDBParentChildrenView,
+    GHFDBParentTableView,
+    GHFDBPathDownloadView,
+)
 from .viewsets import GHFDBChildViewSet, GHFDBFlatViewSet, GHFDBParentViewSet
 
 fairdm_api_router.register(
@@ -24,4 +30,10 @@ urlpatterns = [
     path("api/ghfdb/", GHFDBPathDownloadView.as_view(), name="ghfdb-api"),
     path("api/ghfdb/meta/", GHFDBMetaDataAPIView.as_view(), name="ghfdb-api-meta"),
     path("explore/", GHFDBExploreView.as_view(), name="ghfdb-explore"),
+    path("parents/", GHFDBParentTableView.as_view(), name="ghfdb-parent-table"),
+    path(
+        "parents/<int:ghfdb_id>/children/",
+        GHFDBParentChildrenView.as_view(),
+        name="ghfdb-parent-children",
+    ),
 ]

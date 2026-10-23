@@ -1,0 +1,18 @@
+{% extends "table_view.html" %}
+{% load i18n %}
+{% comment %}The GHFDB parent table (FS-012). One window serves every row's children: the count's button loads them into it, and it opens once they have arrived.{% endcomment %}
+{% block page.footer %}
+  {{ block.super }}
+  <dialog id="children-dialog"
+          class="modal"
+          aria-labelledby="children-dialog-title">
+    <div class="modal-box w-11/12 max-w-2xl p-0">
+      <div id="children-window"
+           hx-on::after-swap="document.getElementById('children-dialog').showModal()">
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+      <button type="submit">{% translate "Close" %}</button>
+    </form>
+  </dialog>
+{% endblock page.footer %}

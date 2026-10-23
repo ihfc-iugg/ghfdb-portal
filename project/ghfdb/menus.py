@@ -3,12 +3,24 @@
 from django.utils.translation import gettext as _
 from fairdm.menus import AppMenu
 from flex_menu import Menu, MenuItem
+from mvp.menus import MenuCollapse
 
 AppMenu.insert(
-    MenuItem(
-        name=_("GHFDB Map Viewer"),
-        view_name="ghfdb-explore",
-        extra_context={"icon": "map"},
+    MenuCollapse(
+        name="ghfdb",
+        extra_context={"label": _("GHFDB"), "icon": "database"},
+        children=[
+            MenuItem(
+                name="ghfdb_map_viewer",
+                view_name="ghfdb-explore",
+                extra_context={"label": _("Map Viewer"), "icon": "map"},
+            ),
+            MenuItem(
+                name="ghfdb_parent_table",
+                view_name="ghfdb-parent-table",
+                extra_context={"label": _("Parent Table"), "icon": "table"},
+            ),
+        ],
     ),
     position=1,
 )
