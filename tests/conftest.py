@@ -17,6 +17,9 @@ def pytest_configure():
     # which any test counting queries would count too. Its app reads this at
     # ready(), so it is switched off before setup.
     settings.ORBIT_CONFIG = {**settings.ORBIT_CONFIG, "ENABLED": False}
+    # Argon2 spends a tenth of a second on every password it hashes, by design. A test
+    # needs a password stored, not one that resists cracking.
+    settings.PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
     django.setup()
 
 

@@ -7,13 +7,8 @@ portal's container runs this command on start, after the migrations.
 
 from django.core.management.base import BaseCommand
 
-from heat_flow.models import (
-    HeatFlow,
-    IntervalConductivity,
-    ParentHeatFlow,
-    ThermalGradient,
-)
 from heat_flow.quality import SCHEME_REVISION
+from heat_flow.signals import Recalculation
 
 
 class Command(BaseCommand):
@@ -43,60 +38,11 @@ class Command(BaseCommand):
         """Refresh each level in turn and report how many records it covered."""
         counts = {
             name: self.refresh(queryset, method, options["all"])
-            for name, queryset, method in self.levels()
+            for name, queryset, method in Recalculation.levels()
         }
         self.stdout.write(
             ", ".join(f"{count} {name}" for name, count in counts.items())
             + " refreshed"
-        )
-
-    @staticmethod
-    def levels():
-        """Return each level as its name, its queryset and the method that refreshes it.
-
-        Gradients and conductivities come first, then the children that read them, then the
-        parents that read the children. The concept fields and the corrections are fetched
-        with each chunk, so a refresh does not query them one record at a time.
-
-        Returns:
-            Four ``(name, queryset, method)`` tuples, for the gradients, the conductivities,
-            the children and the parents, in the order they are refreshed.
-        """
-        child_concepts = [
-            f"{relation}__{field}"
-            for relation, model in (
-                ("thermal_gradient", ThermalGradient),
-                ("thermal_conductivity", IntervalConductivity),
-            )
-            for field in model.SCORED_CONCEPT_FIELDS
-        ]
-        return (
-            (
-                "gradients",
-                ThermalGradient.objects.prefetch_related(
-                    *ThermalGradient.SCORED_CONCEPT_FIELDS
-                ),
-                "refresh_score",
-            ),
-            (
-                "conductivities",
-                IntervalConductivity.objects.prefetch_related(
-                    *IntervalConductivity.SCORED_CONCEPT_FIELDS
-                ),
-                "refresh_score",
-            ),
-            (
-                "children",
-                HeatFlow.objects.select_related(
-                    "thermal_gradient", "thermal_conductivity"
-                ).prefetch_related("corrections", *child_concepts),
-                "refresh_quality",
-            ),
-            (
-                "parents",
-                ParentHeatFlow.objects.prefetch_related("children"),
-                "refresh_quality",
-            ),
         )
 
     def refresh(self, queryset, method: str, every_record: bool) -> int:
