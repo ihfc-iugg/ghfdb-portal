@@ -100,9 +100,8 @@ change, and the existing widget tests are the check.
 - **deptry** reports `crispy_forms` as a transitive import (`DEP003`). `django-crispy-forms` is
   declared as a direct dependency in `pyproject.toml`, at the range FairDM declares, and the lock is
   refreshed without moving any other package.
-- **fairdm-geo (#308).** Its pinned commit declares `CheckConstraint(check=...)`, which Django 6.0
-  refuses. The worktree's virtualenv carries a local patch so tests run. Any test that fails only
-  because of it is marked `xfail(strict=False)` naming #308. Nothing in the portal works round it.
+- **fairdm-geo** is pinned to `3d25e09`, which passes the depth interval constraint as
+  `condition`, as Django 6.0 requires (#308).
 - **The docs check** lists every new public name no page documents. The forms are documented in a
   new guide, `docs/guides/editing-records.md`: what a researcher can correct on each record, how a
   term, a correction and a record choice are entered, and, for developers, the form classes and the

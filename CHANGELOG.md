@@ -54,6 +54,8 @@ Releases before that used `<year>.<release>` and are recorded in the
   django-autocomplete-light or django-addanother, and chooses records with django-tomselect, so
   the last two leave the lockfile. django-mvp moves to 0.31, and django-mvp-accounts,
   django-mvp-charts, django-mvp-compliance and django-mvp-forms move to their newer releases.
+  fairdm-geo moves to the commit that declares its depth interval constraint as Django 6.0
+  requires.
   Migration 0005 now drops the old `SurfaceHeatFlow` link after the heat flow's parent is
   repointed, because Django 6.0 no longer drops a column with `CASCADE`; the change reorders one
   operation and changes nothing on a database that has already applied it.

@@ -198,9 +198,8 @@ through the form and compare them with what `quality.py` calculates.
 
 ### fairdm-geo (#308)
 
-A test that fails only because fairdm-geo's pinned commit declares `CheckConstraint(check=...)` is
-marked `pytest.mark.xfail(reason="fairdm-geo #308: ...", strict=False)`. Nothing in the portal works
-round it, and the local virtualenv patch is never committed.
+fairdm-geo is pinned to `3d25e09`, which passes the depth interval constraint as `condition`, as
+Django 6.0 requires.
 
 ## Testing approach
 

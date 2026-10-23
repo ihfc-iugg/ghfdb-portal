@@ -70,11 +70,6 @@ asserts a literal expected value that differs from the value before the save.
 
 - [x] T034 [US1] T025's test starts from a site whose environment is another term, so it reads the typed "Unspecified" instead of returning the stored value untouched, and goes red without T025's fix.
 
-## fairdm-geo (#308)
-
-A test that fails only because fairdm-geo's pinned commit declares `CheckConstraint(check=...)` is
-marked `pytest.mark.xfail(reason="fairdm-geo #308: ...", strict=False)`, in the task that meets it.
-
 ## Dependencies
 
 US1 first: T001 → T002 → T003 → T004 → T005 → T006. Then US2 (T007 → T008 → T009 → T010 → T011),
