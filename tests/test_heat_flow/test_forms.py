@@ -691,6 +691,38 @@ class TestHeatFlowIntervalForm:
         assert stored.tilt.m_as("°") == 9
         assert not stored.probe_type.exists()
 
+    @pytest.mark.parametrize(
+        "changes, name",
+        [
+            ({"probe_tilt_0": "95", "probe_tilt_1": "°"}, "probe_tilt"),
+            (
+                {"probe_penetration_0": "-5", "probe_penetration_1": "m"},
+                "probe_penetration",
+            ),
+        ],
+    )
+    def test_a_probe_value_out_of_range_is_refused_against_its_field(
+        self, interval, changes, name
+    ):
+        from heat_flow.models.child import ProbeMetadata
+
+        form = self.build(interval, **changes)
+
+        assert not form.is_valid()
+        assert form.errors.keys() == {name}
+        assert not ProbeMetadata.objects.exists()
+
+    def test_a_stored_probe_is_checked_with_the_values_entered(self, interval):
+        from tests.factories import ProbeMetadataFactory
+
+        stored = ProbeMetadataFactory(interval=interval, tilt=5)
+        form = self.build(interval, probe_tilt_0="95", probe_tilt_1="°")
+
+        assert not form.is_valid()
+        assert form.has_error("probe_tilt")
+        stored.refresh_from_db()
+        assert stored.tilt.m_as("°") == 5
+
     def test_a_bottom_not_below_the_top_is_refused_and_nothing_is_written(
         self, interval
     ):
@@ -1637,9 +1669,7 @@ class TestParentHeatFlowForm:
     ):
         first, second, _third = parent_records["children"]
         foreign = self.elsewhere(parent_records, is_relevant=False)
-        form = self.build(
-            parent_records, editor, second, foreign, comment="changed"
-        )
+        form = self.build(parent_records, editor, second, foreign, comment="changed")
 
         assert not form.is_valid()
         assert form.has_error("relevant_children", code="other_site")
@@ -1666,10 +1696,14 @@ class TestParentHeatFlowForm:
 
         locked = self.locked_child(parent_records, is_relevant=True)
         _first, second, _third = parent_records["children"]
-        initial = ParentHeatFlowForm(
-            instance=parent_records["parent"],
-            request=editor(parent_records["dataset"]),
-        ).fields["relevant_children"].initial
+        initial = (
+            ParentHeatFlowForm(
+                instance=parent_records["parent"],
+                request=editor(parent_records["dataset"]),
+            )
+            .fields["relevant_children"]
+            .initial
+        )
         form = self.build(parent_records, editor, second)
 
         assert locked.pk not in initial

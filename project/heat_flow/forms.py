@@ -9,6 +9,7 @@ from decimal import Decimal
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
 from django import forms
+from django.core.exceptions import ValidationError
 from django.core.validators import DecimalValidator
 from django.db import models
 from django.forms.models import fields_for_model
@@ -378,6 +379,37 @@ class HeatFlowIntervalForm(SectionedForm, SampleFormMixin, forms.ModelForm):
             self.fields[key] = field
         self.helper.layout = self.get_layout()
 
+    def probe_values(self):
+        """Return the probe values entered, and the probe types chosen.
+
+        Returns:
+            The values by model field name, and the probe types.
+        """
+        values = {
+            name: self.cleaned_data.get(
+                name if name.startswith("probe_") else f"probe_{name}"
+            )
+            for name in self.PROBE_FIELDS
+        }
+        return values, values.pop("probe_type")
+
+    def clean(self):
+        """Check the probe values as the probe metadata row does, against their fields."""
+        cleaned_data = super().clean()
+        values, probe_types = self.probe_values()
+        probe = getattr(self.instance, "probe_metadata", None)
+        if probe is None and all(value is None for value in values.values()):
+            return cleaned_data
+        probe = probe or ProbeMetadata()
+        for name, value in values.items():
+            setattr(probe, name, value)
+        try:
+            probe.full_clean(exclude=["interval"])
+        except ValidationError as error:
+            for name, messages in error.message_dict.items():
+                self.add_error(f"probe_{name}", messages)
+        return cleaned_data
+
     def save_related(self, record):
         """Write the interval's probe metadata, when any was entered or already stored.
 
@@ -387,13 +419,7 @@ class HeatFlowIntervalForm(SectionedForm, SampleFormMixin, forms.ModelForm):
         Args:
             record: The saved interval.
         """
-        values = {
-            name: self.cleaned_data.get(
-                name if name.startswith("probe_") else f"probe_{name}"
-            )
-            for name in self.PROBE_FIELDS
-        }
-        probe_types = values.pop("probe_type")
+        values, probe_types = self.probe_values()
         probe = getattr(record, "probe_metadata", None)
         if (
             probe is None
