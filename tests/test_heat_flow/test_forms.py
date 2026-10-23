@@ -1199,3 +1199,74 @@ class TestIntervalConductivityForm:
         assert set(conductivity.source.all()) == set(
             concepts(vocabularies.ConductivitySource, "core_samples", "well_log")
         )
+
+
+class TestThermalGradientEditPage:
+    def test_a_dataset_owner_corrects_the_scored_inputs_and_the_scores_move(
+        self, scored_records, researcher
+    ):
+        from fairdm.contrib.plugins import reverse
+        from heat_flow.models import HeatFlow
+
+        gradient = scored_records["gradient"]
+        child = scored_records["child"]
+        assert gradient.score == pytest.approx(1.1)
+        assert child.T_score == pytest.approx(1.1)
+        client = researcher(scored_records["dataset"])
+
+        response = client.post(
+            reverse(gradient, "edit"),
+            gradient_data(method_top="BHT", method_bottom="BHT", number="2"),
+        )
+
+        assert response.status_code == 302
+        gradient.refresh_from_db()
+        child = HeatFlow.objects.get(pk=child.pk)
+        assert gradient.score == pytest.approx(0.7)
+        assert child.T_score == pytest.approx(0.7)
+
+    def test_a_refused_term_leaves_the_record_and_its_scores_as_they_were(
+        self, scored_records, researcher
+    ):
+        from fairdm.contrib.plugins import reverse
+        from heat_flow.models import HeatFlow
+
+        gradient = scored_records["gradient"]
+        client = researcher(scored_records["dataset"])
+
+        response = client.post(
+            reverse(gradient, "edit"),
+            gradient_data(method_top="not a term", number="2"),
+        )
+
+        assert response.status_code == 200
+        gradient.refresh_from_db()
+        child = HeatFlow.objects.get(pk=scored_records["child"].pk)
+        assert gradient.number == 10
+        assert gradient.score == pytest.approx(1.1)
+        assert child.T_score == pytest.approx(1.1)
+
+
+class TestIntervalConductivityEditPage:
+    def test_a_dataset_owner_corrects_the_location_and_number_and_the_scores_move(
+        self, scored_records, researcher
+    ):
+        from fairdm.contrib.plugins import reverse
+        from heat_flow.models import HeatFlow
+
+        conductivity = scored_records["conductivity"]
+        child = scored_records["child"]
+        assert conductivity.score == pytest.approx(1.0)
+        assert child.TC_score == pytest.approx(0.8)
+        client = researcher(scored_records["dataset"])
+
+        response = client.post(
+            reverse(conductivity, "edit"),
+            conductivity_data(conductivity_location="other", number="10"),
+        )
+
+        assert response.status_code == 302
+        conductivity.refresh_from_db()
+        child = HeatFlow.objects.get(pk=child.pk)
+        assert conductivity.score == pytest.approx(0.8)
+        assert child.TC_score == pytest.approx(0.6)
