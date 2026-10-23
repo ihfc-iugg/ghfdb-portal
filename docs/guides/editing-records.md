@@ -4,8 +4,8 @@ A researcher who finds a mistake in a heat flow record corrects it in the portal
 edit page, instead of re-uploading the spreadsheet. Each kind of record has a form built for it. A
 form offers the fields the upload template has a column for, grouped the way the template orders its
 columns, so a researcher who filled the template in finds the same things in the same order. This
-page describes the site's form and the child heat flow's form, then the pieces the forms are built
-from.
+page describes the site's form, the child heat flow's form, and the forms for a thermal gradient and
+an interval conductivity, then the pieces the forms are built from.
 
 ## Correcting a site
 
@@ -102,6 +102,45 @@ child's own depth interval, so the form checks the one you chose: a gradient or 
 belongs to another depth interval is refused, with the message beside its field, and nothing is
 saved. The same goes for one in a dataset you may not change.
 
+## Correcting a thermal gradient
+
+Open the gradient, choose **Edit details** from the Manage menu, change what is wrong and save. The
+same people may do this as for a site: anyone who may change the gradient's dataset.
+
+The gradient's form has these groups:
+
+- **The gradient**, with its uncertainty and one unit for both, then the corrected gradient with its
+  uncertainty and its own unit.
+- **Temperature measurements.** The methods used at the top and bottom of the interval, the shut-in
+  times, the corrections applied at each end and the number of temperature recordings.
+
+The two pairs are separate: each has its own unit, so the gradient can be entered in one unit and
+the corrected gradient in another. Values and units, above, describes how they are stored.
+The methods and corrections are terms from controlled vocabularies, entered as described under
+Terms.
+
+The form offers no quality score. A save recalculates the gradient's score from the methods and the
+number of recordings as they now stand, and the score of each child heat flow calculated from the
+gradient, and then the parent's.
+
+## Correcting an interval conductivity
+
+Open the conductivity, choose **Edit details** from the Manage menu, change what is wrong and save.
+The same people may do this as for a site: anyone who may change the conductivity's dataset.
+
+The conductivity's form has these groups:
+
+- **The conductivity**, with its uncertainty and one unit for both.
+- **Samples.** The source of the samples and the location of the conductivity data.
+- **Measurement.** The method, the saturation state, the pressure and temperature conditions and
+  the function used to correct towards them.
+- **Averaging.** The number of determinations and the averaging methodology.
+
+Every vocabulary field takes the terms described under Terms, several separated by
+semicolons. The form offers no quality score. A save recalculates the conductivity's score from the
+location, source, number of determinations, saturation and conditions as they now stand, and the
+score of each child heat flow calculated from it, and then the parent's.
+
 ## For developers
 
 The forms are in `project/heat_flow/forms.py` and are registered as each model's `form_class` in
@@ -175,6 +214,24 @@ type. `thermal_gradient` and `thermal_conductivity` are FairDM `MeasurementChoic
 
 Pass `request=` when you build the form outside FairDM's edit page, because the search fields
 accept only the records the request's user may change.
+
+### `ThermalGradientForm`
+
+The gradient's form. `measured_pairs` holds two pairs, `("value", "uncertainty")` and
+`("corrected_value", "corrected_uncertainty")`, so the form carries two unit choices,
+`value_unit` and `corrected_value_unit`, and each pair is converted with its own. The four
+temperature method and correction fields are `ConceptTextField`s. The form offers neither `score`,
+`score_missing` nor `quality_scheme`, and no dataset or sample. The score receivers in
+`project/heat_flow/signals.py` refresh the gradient, its children and their parents when the form
+saves.
+
+### `IntervalConductivityForm`
+
+The conductivity's form. `measured_pairs` holds `("value", "uncertainty")`, so the unit choice is
+`value_unit`. The seven vocabulary fields (`source`, `conductivity_location`, `method`,
+`saturation`, `pT_conditions`, `pT_function` and `strategy`) are `ConceptTextField`s that hold
+several terms. As with the gradient, the form offers no score fields, dataset or sample, and the
+score receivers refresh the affected scores on save.
 
 ### Related rows: `save_related`
 
