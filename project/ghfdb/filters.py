@@ -2,13 +2,17 @@
 
 import django_filters
 from django import forms
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
-from fairdm.core.dataset.models import Dataset
-from fairdm.core.project.models import Project
+from fairdm.contrib.autocomplete.fields import (
+    DatasetMultipleChoiceField,
+    ProjectMultipleChoiceField,
+)
+from fairdm.contrib.autocomplete.filters import RecordMultipleFilter
 from heat_flow import vocabularies
 from heat_flow.utils import MScoreOptions, UScoreOptions
 from mvp.filters import SearchFilter
-from mvp_forms.widgets import TomSelectMultiple
+from mvp_forms.widgets import RangeInput, TomSelectMultiple
 
 from .models import GHFDBParent
 
@@ -18,14 +22,38 @@ def counted(placeholder):
     return TomSelectMultiple(counted=True, placeholder=placeholder)
 
 
-class BoundsField(django_filters.fields.RangeField):
-    """Two number inputs, From and To, refusing a To below its From."""
+class BoundsInput(RangeInput):
+    """django-mvp-forms' range, the two ends joined in one row.
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        low, high = self.widget.widgets
-        low.attrs["placeholder"] = _("From")
-        high.attrs["placeholder"] = _("To")
+    The ends are sent as ``<name>_min`` and ``<name>_max``, so a filtered
+    address reads as the bounds it holds.
+    """
+
+    def __init__(self, attrs=None):
+        super().__init__(attrs, joined=True)
+        self.widgets_names = ["_min", "_max"]
+
+    def get_context(self, name, value, attrs):
+        """In the toolbar, put the filter's name in the first frame.
+
+        The toolbar draws a filter's own widget as it is, with the filter's
+        label as its ``aria-label`` and no label above it. That is the range
+        django-mvp-forms draws for a form with labels off: the label inside
+        the first frame, and each end's name as its placeholder.
+        """
+        context = super().get_context(name, value, attrs)
+        label = self.attrs.get("aria-label")
+        if label:
+            context["widget"]["label"] = label
+            context["widget"]["unlabelled"] = True
+            for part, end in zip(context["widget"]["subwidgets"], self.ends):
+                part["attrs"]["aria-label"] = f"{label}: {end}"
+                part["attrs"]["placeholder"] = end
+        return context
+
+
+class BoundsField(django_filters.fields.RangeField):
+    """A lower and an upper bound, refusing an upper bound below the lower."""
 
     def compress(self, data_list):
         if data_list:
@@ -40,11 +68,14 @@ class BoundsField(django_filters.fields.RangeField):
 class BoundsFilter(django_filters.RangeFilter):
     """A lower bound, an upper bound or both on one number column.
 
-    Either side may be left empty, which leaves that side open. Drawn as two
-    inputs named ``<name>_min`` and ``<name>_max``.
+    Either side may be left empty, which leaves that side open.
     """
 
     field_class = BoundsField
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("widget", BoundsInput())
+        super().__init__(*args, **kwargs)
 
 
 class GHFDBParentFilter(django_filters.FilterSet):
@@ -101,16 +132,11 @@ class GHFDBParentFilter(django_filters.FilterSet):
         choices=MScoreOptions.choices,
         widget=counted(_("Any M-score")),
     )
-    dataset = django_filters.ModelMultipleChoiceFilter(
-        queryset=Dataset.objects.none(),
-        label=_("Dataset"),
-        widget=counted(_("Any dataset")),
+    dataset = RecordMultipleFilter(
+        DatasetMultipleChoiceField, field_name="dataset", scope="view"
     )
-    project = django_filters.ModelMultipleChoiceFilter(
-        field_name="dataset__project",
-        queryset=Project.objects.none(),
-        label=_("Project"),
-        widget=counted(_("Any project")),
+    project = RecordMultipleFilter(
+        ProjectMultipleChoiceField, field_name="dataset__project", scope="view"
     )
 
     class Meta:
@@ -118,32 +144,17 @@ class GHFDBParentFilter(django_filters.FilterSet):
         fields = []
 
     def __init__(self, *args, **kwargs):
-        """Offer the vocabulary terms, and only the datasets and projects the visitor can see.
-
-        The queryset is the parents the visitor may see, so the dataset and
-        project choices are the ones those parents belong to.
-        """
+        """Offer each vocabulary's terms."""
         super().__init__(*args, **kwargs)
-        parents = self.queryset
         for name, vocabulary in (
             ("environment", vocabularies.GeographicEnvironment),
             ("explo_method", vocabularies.ExplorationMethod),
             ("explo_purpose", vocabularies.ExplorationPurpose),
         ):
             self.filters[name].extra["choices"] = vocabulary().choices
-        if parents is not None:
-            dataset_ids = parents.values("dataset_id")
-            self.filters["dataset"].queryset = Dataset.objects.filter(
-                pk__in=dataset_ids
-            ).order_by("name")
-            self.filters["project"].queryset = Project.objects.filter(
-                datasets__in=dataset_ids
-            ).distinct().order_by("name")
 
     def filter_corr_hp(self, queryset, name, value):
         """Keep parents whose heat production correction is any chosen state."""
-        from django.db.models import Q
-
         states = {
             "yes": Q(corr_HP_flag=True),
             "no": Q(corr_HP_flag=False),

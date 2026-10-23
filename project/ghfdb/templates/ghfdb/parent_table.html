@@ -1,6 +1,35 @@
 {% extends "table_view.html" %}
 {% load i18n %}
 {% comment %}The GHFDB parent table (FS-012). One window serves every row's children: the count's button loads them into it, and it opens once they have arrived.{% endcomment %}
+{% block page.filters %}
+  <form id="filterForm"
+        method="get"
+        action="."
+        class="flex flex-wrap items-center gap-x-3 gap-y-2"
+        hx-boost="true"
+        hx-target="#{{ list_region_id }}"
+        hx-select="#{{ list_region_id }}"
+        hx-select-oob="#{{ filter_panel_id }}"
+        hx-swap="outerHTML">
+    <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
+    {% if table_sort %}
+      <input type="hidden" name="{{ table.prefixed_order_by_field }}" value="{{ table_sort }}">
+    {% endif %}
+    {% for field in toolbar_fields %}
+      {% if field.name == "q" %}
+        {# A joined range needs the room for its label and both ends on one line. #}
+        <div class="mvp-toolbar-field w-80" data-mvp-toolbar-field="{{ field.name }}">
+          {{ field.bound }}
+          {% for error in field.bound.errors %}
+            <p class="text-xs text-base-content pt-1" role="alert">{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% else %}
+        <c-mvp.page.list.filters.field :field="field" />
+      {% endif %}
+    {% endfor %}
+  </form>
+{% endblock page.filters %}
 {% block page.footer %}
   {{ block.super }}
   <dialog id="children-dialog"

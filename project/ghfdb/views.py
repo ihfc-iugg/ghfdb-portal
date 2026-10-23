@@ -103,9 +103,9 @@ class GHFDBParentTableView(FairDMTableView):
     table_class = GHFDBParentTable
     filterset_class = GHFDBParentFilter
     template_name = "ghfdb/parent_table.html"
-    toolbar_filters = ["name"]
+    toolbar_filters = ["name", "q", "environment", "U_score", "dataset"]
     paginate_by = 50
-    page_title = _("GHFDB Parent Table")
+    page_title = _("GHFDB")
 
     def get_queryset(self):
         """Every parent the visitor may see, with its published columns."""

@@ -13,6 +13,12 @@
   parent's page lists its children with. `HeatFlowPage.for_parent()` already orders them
   relevant first and counts the ones the visitor may not open.
 - The sidebar group is django-mvp's `MenuCollapse`, which opens itself on the page it holds.
+- Every bound filter is django-mvp-forms' `RangeInput`, joined, so both ends sit on one line
+  (planning note N2). In the toolbar the filter's name sits in the first frame, as the package
+  draws a range in a form with labels off.
+- Dataset and project are FairDM's `RecordMultipleFilter` over its dataset and project record
+  fields, the filter FairDM's own measurement lists use (planning note N3).
+- Children load into the window with htmx when the count is pressed (planning note N1).
 
 ## What the screens need from the code
 
@@ -21,8 +27,8 @@
    per page.
 2. The vocabulary columns need each term's label, read from the concept the annotation returns.
 3. The `explo_purpose` cell needs each parent's exploration purposes, prefetched for the page.
-4. The filter panel needs the datasets and projects the visitor's parents belong to, and only
-   those.
+4. The dataset and project filters offer what FairDM's record fields offer at `view` scope:
+   public records, and a signed-in person's own.
 5. Each bound filter needs to reject an upper bound below its lower bound, and a value that is
    not a number, against that filter.
 6. The children window needs one address per parent that returns its children, relevant first,
@@ -42,6 +48,11 @@
 - The window's open-on-arrival relies on htmx's `after-swap` event on the target, untested in a
   browser.
 - No CONTEXT.md entry for the GHFDB parent table yet.
+- Planning note N4 (the latest FairDM, django-mvp and django-mvp-forms) is not done. django-mvp
+  0.31.0 and django-mvp-forms 0.8.0 are already the latest releases. The FairDM pin moves at the
+  start of the build.
+- The toolbar's range shows its error under itself, written in the page template, because the
+  toolbar draws a filter's own widget with no errors of its own.
 
 ## What was ruled by eye
 
@@ -49,7 +60,9 @@
   beneath where the column has one.
 - The `children` column sits straight after `q` and `q_uncertainty`, so the count that says how
   far to trust a value is read next to the value.
-- The site name search is the only filter in the toolbar. Every other filter is in the panel.
+- The toolbar holds the site name search, `q`, environment, U-score and dataset. Every other
+  filter is in the panel.
+- The page title is "GHFDB".
 - The quality code filter is offered as the U-score and the M-score, the two grades the code
   starts with, rather than as the full code string.
 - The window lists every child with the portal's own child row, and a relevant child carries a
