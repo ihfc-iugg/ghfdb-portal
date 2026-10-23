@@ -4,8 +4,8 @@ A researcher who finds a mistake in a heat flow record corrects it in the portal
 edit page, instead of re-uploading the spreadsheet. Each kind of record has a form built for it. A
 form offers the fields the upload template has a column for, grouped the way the template orders its
 columns, so a researcher who filled the template in finds the same things in the same order. This
-page describes the site's form, the child heat flow's form, and the forms for a thermal gradient and
-an interval conductivity, then the pieces the forms are built from.
+page describes the site's form, the depth interval's form, the child heat flow's form, and the forms
+for a thermal gradient and an interval conductivity, then the pieces the forms are built from.
 
 ## Correcting a site
 
@@ -63,6 +63,28 @@ editing is the stored value in the base units.
 
 The site keeps the true vertical depth entered for it. A change to it is stored even when the site
 already has a bottom depth: the portal sets the bottom to the top plus the vertical depth.
+
+## Correcting a depth interval
+
+Open the interval, choose **Edit details** from the Manage menu, change what is wrong and save. The
+same people may do this as for a site: anyone who may change the interval's dataset.
+
+The interval's form has these groups:
+
+- **The depth.** The top and the bottom of the interval, and the vertical datum. The bottom must be
+  below the top; if it is not, the form is refused and nothing is saved. The vertical depth is
+  calculated from the top and the bottom when the interval is saved.
+- **Marine probe.** The penetration, the probe type, the probe length and the probe tilt, for an
+  interval measured with a marine heat flow probe. All four are optional.
+- **Rock.** The lithology, the geologic age and the stratigraphy.
+
+The probe values are stored with the interval as its probe metadata. An interval that has none
+gains none while you leave the four fields empty. Enter any of them, a tilt of 0 included, and the
+interval gains probe metadata holding what you entered. When the interval already has probe
+metadata, the form shows the stored values and a save updates them. Clearing a field removes that
+value. The probe type takes the terms described under Terms, several separated by semicolons.
+
+The interval's IGSN is not on this form. It is edited on FairDM's identifiers page.
 
 ## Correcting a child heat flow
 
@@ -202,6 +224,16 @@ Two rules live on the model, not the form, so every way of saving a site follows
 - `HeatFlowSite.clean` raises the duplicate-location error against the `location` field with the
   code `duplicate_location`, so `form.has_error("location", code="duplicate_location")` is true.
 
+### `HeatFlowIntervalForm`
+
+The interval's form. `PROBE_FIELDS` names the four `ProbeMetadata` fields it carries as
+`probe_penetration`, `probe_type`, `probe_length` and `probe_tilt`, all optional and drawn from the
+stored row. `probe_type` is a `ConceptTextField`. `save_related` writes the probe metadata: with no
+row stored and nothing entered it writes none, where nothing entered means every probe value is
+`None` and no probe type is chosen, so a tilt of 0 is a value and creates the row. Otherwise it
+creates or updates the interval's one row and sets its probe types. A bottom that is not below the
+top is refused by `HeatFlowInterval.clean` as a form error, and nothing is written.
+
 ### `HeatFlowForm`
 
 The child's form. Its nine correction fields are named `correction_<type>`, one for each member of
@@ -239,4 +271,5 @@ score receivers refresh the affected scores on save.
 `Recalculation.deferred()`, so each affected score is refreshed once rather than once for every
 row. With `commit=False` the rows are written when `save_m2m()` is called, as Django writes
 many-to-many data. `HeatFlowForm.save_related` gives the child a row for each correction type
-holding the chosen status, and never touches a stored comment.
+holding the chosen status, and never touches a stored comment. `HeatFlowIntervalForm.save_related`
+writes the interval's probe metadata.
