@@ -1174,7 +1174,6 @@ class TestPerturbationFlags:
         [
             ("present_not_significant", "X"),
             ("not_recognized", "x"),
-            ("", "-"),
             ("not_considered", "-"),
             ("considered_pt", "-"),
             ("tilt_corrected", "-"),

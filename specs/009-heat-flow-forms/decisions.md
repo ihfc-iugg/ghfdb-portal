@@ -141,8 +141,7 @@ existing import and export tests are the check that the published side has not m
 
 Until that migration is built, the sketch stores `-` when a choice is emptied.
 
-**ADR:** none — weighed again when the migration is built, since it changes how a published value is
-stored.
+**ADR:** docs/adr/0027-an-unspecified-correction-is-stored-with-no-status.md
 
 ### No comment for each correction
 
@@ -333,8 +332,7 @@ API gives such a correction's status as `null` and still lists the correction, s
 recorded with no status stays distinct from one never recorded. The child's overview page shows an
 em dash, the portal's mark for missing information.
 
-**ADR:** none — the published format, the scores and the API's distinction between a recorded and
-an absent correction are all unchanged; only the stored spelling of "no status" moves.
+**ADR:** docs/adr/0027-an-unspecified-correction-is-stored-with-no-status.md
 
 ## A record from another interval or site is refused on save
 
