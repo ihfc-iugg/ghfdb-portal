@@ -457,6 +457,8 @@ class TestHeatFlowSiteForm:
     def test_an_environment_the_vocabulary_holds_as_unspecified_is_saved(self, site):
         from heat_flow.forms import HeatFlowSiteForm
 
+        site.environment = "onshore_continental"
+        site.save()
         form = HeatFlowSiteForm(
             instance=site, data=site_data(site, environment="Unspecified")
         )
