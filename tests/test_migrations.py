@@ -303,45 +303,43 @@ class TestCorrectionStatusMigration:
     # FS-009 FR-009: an unspecified correction is stored with no status. Migration 0018
     # turns every stored ``-`` into an empty status, and back.
 
-    @pytest.fixture
-    def migration(self):
-        import importlib
+    @pytest.mark.slow
+    def test_a_dash_reads_empty_after_migrating_forward_and_dash_again_back(
+        self, empty_database
+    ):
+        import json
 
-        return importlib.import_module(
-            "project.heat_flow.migrations.0018_correction_status_may_be_empty"
-        )
+        read = json.loads(run_in_database(empty_database, CORRECTION_STATUS_ROUND_TRIP))
 
-    @pytest.fixture
-    def dash_row(self, db):
-        from django.apps import apps
-        from heat_flow.models import HeatFlowCorrection
+        assert read == {"before": "-", "forward": "", "back": "-"}
 
-        from tests.factories import HeatFlowCorrectionFactory
 
-        corrections = [
-            HeatFlowCorrectionFactory(correction_type="IS", status="not_considered"),
-            HeatFlowCorrectionFactory(correction_type="T", status="not_considered"),
-        ]
-        HeatFlowCorrection.objects.filter(pk=corrections[0].pk).update(status="-")
-        return apps, corrections
+# Stores a correction with the status ``-`` at migration 0017, then reads its status after
+# migrating to 0018 and after migrating back to 0017. The foreign keys are left unchecked
+# for the one insert, so the row needs no heat flow behind it.
+CORRECTION_STATUS_ROUND_TRIP = """
+import json
+from django.core.management import call_command
+from django.db import connection
 
-    def test_a_dash_reads_empty_after_migrating_forward(self, migration, dash_row):
-        from heat_flow.models import HeatFlowCorrection
+def status():
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT status FROM heat_flow_heatflowcorrection")
+        (value,) = cursor.fetchone()
+    return value
 
-        apps, (dashed, kept) = dash_row
-
-        migration.dash_to_empty(apps, None)
-
-        assert HeatFlowCorrection.objects.get(pk=dashed.pk).status == ""
-        assert HeatFlowCorrection.objects.get(pk=kept.pk).status == "not_considered"
-
-    def test_an_empty_status_reads_dash_after_migrating_back(self, migration, dash_row):
-        from heat_flow.models import HeatFlowCorrection
-
-        apps, (dashed, kept) = dash_row
-        migration.dash_to_empty(apps, None)
-
-        migration.empty_to_dash(apps, None)
-
-        assert HeatFlowCorrection.objects.get(pk=dashed.pk).status == "-"
-        assert HeatFlowCorrection.objects.get(pk=kept.pk).status == "not_considered"
+call_command("migrate", "heat_flow", "0017_restore_sample_coordinates", verbosity=0)
+with connection.cursor() as cursor:
+    cursor.execute("SET session_replication_role = replica")
+    cursor.execute(
+        "INSERT INTO heat_flow_heatflowcorrection"
+        " (heat_flow_id, correction_type, status, comment)"
+        " VALUES (1, 'IS', '-', '')"
+    )
+    cursor.execute("SET session_replication_role = DEFAULT")
+before = status()
+call_command("migrate", "heat_flow", "0018_correction_status_may_be_empty", verbosity=0)
+forward = status()
+call_command("migrate", "heat_flow", "0017_restore_sample_coordinates", verbosity=0)
+print(json.dumps({"before": before, "forward": forward, "back": status()}))
+"""
