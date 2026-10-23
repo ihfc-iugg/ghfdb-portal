@@ -21,6 +21,28 @@ Releases before that used `<year>.<release>` and are recorded in the
   shows the site's location, or says none is recorded. Records in datasets that have not been
   published are counted and never named. Every column of the GHFDB export can be read on one of
   these pages ([record pages](docs/guides/record-pages.md)).
+- A researcher can correct a heat flow site on its edit page instead of re-uploading the
+  spreadsheet. The form groups the site's fields the way the upload template orders its columns,
+  takes a vocabulary term as text written the way the published file writes it, and keeps a
+  stored term that is saved untouched. A site keeps the true vertical depth entered for it, and a
+  location another site already holds is refused beside the coordinates
+  ([editing records](docs/guides/editing-records.md)).
+- A researcher can correct a child heat flow on its edit page: its value, uncertainty, method,
+  comment and acquisition details, the status of each of its nine corrections, and the thermal
+  gradient and interval conductivity it was calculated from. A gradient or conductivity on another
+  depth interval is refused. Each correction offers only the statuses valid for it, and saving
+  recalculates the child's quality score ([editing records](docs/guides/editing-records.md)).
+- A researcher can correct a depth interval on its edit page, with the marine probe it was
+  measured with: probe penetration, length and tilt are checked against the same limits as the
+  probe record, and the probe types are chosen from the vocabulary. A thermal gradient and an
+  interval conductivity each have a form of their own, with every value entered next to its
+  uncertainty and one unit for both, and saving recalculates the scores that rest on them
+  ([editing records](docs/guides/editing-records.md)).
+- A researcher can mark which children a site's parent heat flow rests on, on the parent's edit
+  page, together with its value, uncertainty, heat production correction and comment. A child at
+  another site is refused, a child in a dataset the researcher may not change keeps its relevance,
+  and saving recalculates the parent's quality from the children now marked
+  ([editing records](docs/guides/editing-records.md)).
 - Container images are published to `ghcr.io/ihfc-iugg/ghfdb-portal` on every
   release, tagged with the version and with `latest`.
 - Dependabot pull requests for a given ecosystem now arrive grouped as one pull
@@ -28,6 +50,20 @@ Releases before that used `<year>.<release>` and are recorded in the
 
 ### Changed
 
+- The portal moves to Django 6.0 and FairDM v0.2.1. FairDM no longer depends on django-select2,
+  django-autocomplete-light or django-addanother, and chooses records with django-tomselect, so
+  the last two leave the lockfile. django-mvp moves to 0.31, and django-mvp-accounts,
+  django-mvp-charts, django-mvp-compliance and django-mvp-forms move to their newer releases.
+  fairdm-geo moves to the commit that declares its depth interval constraint as Django 6.0
+  requires.
+  Migration 0005 now drops the old `SurfaceHeatFlow` link after the heat flow's parent is
+  repointed, because Django 6.0 no longer drops a column with `CASCADE`; the change reorders one
+  operation and changes nothing on a database that has already applied it.
+- A correction with no status is stored with an empty status instead of `-`. The migration
+  changes the stored rows, the published file still reads and writes `-`, and the API gives
+  `null` for the status of such a correction and still lists it
+  ([importing data](docs/guides/importing-data.md),
+  [records API](docs/guides/heat-flow-records-api.md)).
 - CI, the image build and the release flow call the reusable workflows in
   `FAIR-DM/shared` v0.1.0. The tests, the browser tests and the code quality
   checks run in the FairDM development image against the PostGIS version the

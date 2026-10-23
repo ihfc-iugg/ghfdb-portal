@@ -23,6 +23,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
 from heat_flow.signals import Recalculation
+from heat_flow.vocabularies import normalize_vocab_token
 from import_export import fields, widgets
 from import_export.resources import ModelResource
 from import_export.widgets import ForeignKeyWidget
@@ -38,7 +39,6 @@ from .widgets import (
     QuantityWidget,
     YesNoWidget,
     is_blank_cell,
-    normalize_vocab_token,
 )
 
 
@@ -373,16 +373,15 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
 
         Returns:
             The status key. A label the correction type does not accept, and any cell that
-            matches nothing, give the unspecified key.
+            matches nothing, give an empty status.
         """
         from heat_flow.models import HeatFlowCorrection
 
         StatusChoices = HeatFlowCorrection.StatusChoices
-        unspecified = str(StatusChoices.UNSPECIFIED)
         present_corrected = str(StatusChoices.PRESENT_CORRECTED)
 
         if not raw:
-            return unspecified
+            return ""
         # Accept direct status values
         valid_values = {str(v) for v, _ in StatusChoices.choices}
         if raw in valid_values:
@@ -399,7 +398,7 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         for value, label in StatusChoices.choices:
             if value in accepted and normalize_vocab_token(str(label)) == token:
                 return str(value)
-        return unspecified
+        return ""
 
     def _create_probe_metadata(self, instance, row):
         """Create or update ProbeMetadata when probe columns are non-empty."""

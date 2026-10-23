@@ -233,11 +233,14 @@ them, so `[Present and corrected]`, `[Present and not corrected]`, `[Present not
 statuses to write the perturbation flags.
 
 A label the correction does not accept, such as `[Present not significant]` on the temperature
-correction, and a cell that matches nothing, both store `-`, which is "unspecified". No file that
-imported before is refused now.
+correction, and a cell that matches nothing, both store no status: the correction row is written
+with an empty status, which means "unspecified". An explicit `-` or `[unspecified]` in the cell
+stores no status as well. The export writes an empty status back as `-`, so a file that is imported
+and exported again reads the same. No file that imported before is refused now.
 
-Records imported before this change keep the `-` they were given. Importing the file again stores
-the status the cell says.
+Correction rows that were stored with `-` before the portal kept an empty status were changed to an
+empty status when the portal was upgraded. Importing the file again stores the status the cell
+says.
 
 ## Scores are calculated when the import ends
 

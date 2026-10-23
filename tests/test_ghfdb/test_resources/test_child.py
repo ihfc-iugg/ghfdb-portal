@@ -186,7 +186,7 @@ class TestGHFDBChildImportResourceImport:
 
     def test_correction_values_match_row(self, dataset):
         import_parents(dataset)
-        from heat_flow.models import HeatFlow, HeatFlowCorrection
+        from heat_flow.models import HeatFlow
 
         from project.ghfdb.resources import GHFDBChildImportResource
 
@@ -198,7 +198,7 @@ class TestGHFDBChildImportResourceImport:
 
         child = HeatFlow.objects.get(ghfdb_id=1)
         t_corr = child.corrections.get(correction_type="T")
-        assert t_corr.status != HeatFlowCorrection.StatusChoices.UNSPECIFIED
+        assert t_corr.status != ""
 
     def test_gradient_created_when_t_grad_mean_set(self, dataset):
         import_parents(dataset)
@@ -870,7 +870,7 @@ class TestGHFDBChildSubMeasurementsPerDetermination:
 
     def test_two_determinations_keep_distinct_sub_measurement_values(self, dataset):
         import_parents(dataset)
-        from heat_flow.models import HeatFlow, HeatFlowCorrection, ProbeMetadata
+        from heat_flow.models import HeatFlow, ProbeMetadata
 
         from project.ghfdb.resources import GHFDBChildImportResource
 
@@ -918,13 +918,13 @@ class TestGHFDBChildSubMeasurementsPerDetermination:
         # Corrections (corr_T_flag / corr_S_flag) do not bleed across determinations.
         a_t = child_a.corrections.get(correction_type="T")
         b_t = child_b.corrections.get(correction_type="T")
-        assert a_t.status != HeatFlowCorrection.StatusChoices.UNSPECIFIED
-        assert b_t.status == HeatFlowCorrection.StatusChoices.UNSPECIFIED
+        assert a_t.status != ""
+        assert b_t.status == ""
 
         a_s = child_a.corrections.get(correction_type="S")
         b_s = child_b.corrections.get(correction_type="S")
-        assert a_s.status == HeatFlowCorrection.StatusChoices.UNSPECIFIED
-        assert b_s.status != HeatFlowCorrection.StatusChoices.UNSPECIFIED
+        assert a_s.status == ""
+        assert b_s.status != ""
 
         # Probe metadata (probe_penetration) is keyed to each determination's interval.
         pm_a = ProbeMetadata.objects.get(interval=child_a.sample)
@@ -1235,11 +1235,17 @@ class TestGHFDBChildCorrectionLabels:
 
         assert statuses["E"] == "present_corrected"
 
+    @pytest.mark.parametrize("cell", ["-", "[unspecified]", ""])
+    def test_a_dash_or_blank_cell_stores_no_status(self, dataset, cell):
+        statuses = self.import_row(dataset, corr_S_flag=cell)
+
+        assert statuses["S"] == ""
+
     def test_a_label_the_type_refuses_stores_unspecified(self, dataset):
         # The temperature correction has no "present not significant".
         statuses = self.import_row(dataset, corr_T_flag="[Present not significant]")
 
-        assert statuses["T"] == "-"
+        assert statuses["T"] == ""
 
     def test_keys_and_yes_no_shorthands_still_work(self, dataset):
         statuses = self.import_row(
@@ -1252,5 +1258,5 @@ class TestGHFDBChildCorrectionLabels:
 
         assert statuses["S"] == "present_not_corrected"
         assert statuses["E"] == "present_corrected"
-        assert statuses["TOPO"] == "-"
+        assert statuses["TOPO"] == ""
         assert statuses["PAL"] == "not_recognized"

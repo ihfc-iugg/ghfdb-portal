@@ -118,11 +118,12 @@ The valid combinations, derived from `HeatFlowCorrection.VALID_STATUS_FOR_TYPE` 
 
 | Disturbance type | Valid statuses |
 | --- | --- |
-| IS (In-situ conditions) | present\_corrected, present\_not\_corrected, not\_recognized, not\_considered, tilt\_corrected, drift\_corrected, unspecified (`-`) |
-| T (Temperature) | present\_corrected, present\_not\_corrected, not\_corrected, corrected, not\_recognized, not\_considered, unspecified (`-`) |
-| S (Sedimentation/Subsidence), E (Erosion), TOPO (Topographic), PAL (Paleoclimatic), SUR (Surface/Climatic), CONV (Convection), HR (Heat Refraction) | present\_corrected, present\_not\_corrected, present\_not\_significant, not\_recognized, considered\_p, considered\_t, considered\_pt, not\_considered, unspecified (`-`) |
+| IS (In-situ conditions) | present\_corrected, present\_not\_corrected, not\_recognized, not\_considered, tilt\_corrected, drift\_corrected |
+| T (Temperature) | present\_corrected, present\_not\_corrected, not\_corrected, corrected, not\_recognized, not\_considered |
+| S (Sedimentation/Subsidence), E (Erosion), TOPO (Topographic), PAL (Paleoclimatic), SUR (Surface/Climatic), CONV (Convection), HR (Heat Refraction) | present\_corrected, present\_not\_corrected, present\_not\_significant, not\_recognized, considered\_p, considered\_t, considered\_pt, not\_considered |
 
-The unspecified status (`-`) is valid for every disturbance type.
+A correction with no status is stored with an empty status, which is valid for every
+disturbance type. The published file writes it as `-`, and reads `-` or an empty cell as no status.
 
 #### ProbeMetadata (marine probe instrument parameters — C06, C21–C23)
 

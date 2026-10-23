@@ -149,12 +149,16 @@ class ChoiceLabelFieldSchema(OpenApiSerializerFieldExtension):
             direction: Whether the field is read or written.
 
         Returns:
-            An object with a ``name`` limited to the field's choices and a ``label``.
+            An object with a ``name`` limited to the field's choices and a ``label``,
+            nullable when the field allows null.
         """
-        return build_object_type(
+        schema = build_object_type(
             properties={
                 "name": {"type": "string", "enum": list(self.target.choices)},
                 "label": {"type": "string"},
             },
             required=["name", "label"],
         )
+        if self.target.allow_null:
+            schema["nullable"] = True
+        return schema

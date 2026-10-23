@@ -36,6 +36,7 @@ The domain vocabulary these records use is defined in `CONTEXT.md` at the reposi
 | [0024](0024-a-heat-flow-pages-content-comes-through-a-template-tag.md) | A heat flow page's content comes through a template tag |
 | [0025](0025-a-heat-flow-type-serves-a-summary-in-a-list-and-the-whole-record-on-its-own.md) | A heat flow type serves a summary in a list and the whole record on its own |
 | [0026](0026-a-quantity-is-a-number-in-its-stored-unit-and-the-record-names-the-unit.md) | A quantity is a number in its stored unit, and the record names the unit |
+| [0027](0027-an-unspecified-correction-is-stored-with-no-status.md) | An unspecified correction is stored with no status |
 
 :::{toctree}
 :hidden:

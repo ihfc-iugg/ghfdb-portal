@@ -166,18 +166,28 @@ class HeatFlowSite(GenericHole, AbstractGeoDepthInterval, GenericEarthSample):
                         "A HeatFlowSite already exists at coordinate pair "
                         "(%(x)s, %(y)s)."
                     )
-                    % {"x": self.location.x, "y": self.location.y}
+                    % {"x": self.location.x, "y": self.location.y},
+                    code="duplicate_location",
                 )
 
     def clean(self):
-        """Reject a location already held by another HeatFlowSite."""
+        """Reject a location already held by another HeatFlowSite, against ``location``."""
         super().clean()
-        self._check_location_uniqueness()
+        try:
+            self._check_location_uniqueness()
+        except ValidationError as error:
+            raise ValidationError({"location": error}) from None
 
     def save(self, *args, **kwargs):
-        """Default an unset top depth to 0 and enforce location uniqueness."""
+        """Default an unset top, keep the true vertical depth, enforce location uniqueness.
+
+        A site's bottom only mirrors its true vertical depth. The inherited save would
+        otherwise replace a changed vertical depth with the one its stored bottom gives.
+        """
         if not self.top:
             self.top = 0
+        if self.vertical_depth is not None:
+            self.bottom = self.top + self.vertical_depth
         self._check_location_uniqueness()
         # TODO: Implement automatic geographic field population from coordinates when GIS is enabled
         # This would populate country, region, continent, domain from location coordinates

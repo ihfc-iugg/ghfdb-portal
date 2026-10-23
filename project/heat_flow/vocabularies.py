@@ -7,6 +7,105 @@ from research_vocabs.vocabularies import VocabularyBuilder
 BASE_NAMESPACE = "https://heatflow.world/vocabularies/"
 
 
+def normalize_vocab_token(raw: str) -> str:
+    """Strip surrounding square brackets and lowercase a vocabulary token (FS-003 FR-016).
+
+    GHFDB upload templates wrap vocabulary cell values in square brackets,
+    e.g. '[Onshore (continental)]'. This helper normalises such tokens so they
+    match the lowercase vocabulary definitions stored in the database.
+    The caller should preserve the original raw value for error messages.
+
+    Whitespace is stripped on both sides of the brackets, not just inside
+    them. Real submissions carry cells like ``' [unspecified]'`` — a leading
+    space defeats a bare ``strip("[]")``, because the first character is not
+    a bracket and stripping stops there.
+
+    Args:
+        raw: The text as it was typed or written in the cell.
+
+    Returns:
+        The token without brackets, lowercased.
+    """
+    return raw.strip().strip("[]").strip().lower()
+
+
+def resolve_term(vocabulary, text):
+    """Read one vocabulary term from the text a person or a file wrote for it.
+
+    A label or a key is accepted, in any case, with or without square brackets.
+
+    Args:
+        vocabulary: The vocabulary class, or an instance of it.
+        text: The text to read.
+
+    Returns:
+        The term's key, or ``None`` for blank text and for ``unspecified``.
+
+    Raises:
+        ValueError: If the text names no term of the vocabulary.
+    """
+    token = normalize_vocab_token(text or "")
+    if token in ("", "unspecified"):
+        return None
+    instance = vocabulary() if isinstance(vocabulary, type) else vocabulary
+    by_label = {label.lower(): key for key, label in instance.choices}
+    by_key = {key.lower(): key for key, _label in instance.choices}
+    key = by_label.get(token) or by_key.get(token)
+    if key is None:
+        raise ValueError(
+            _(
+                "Invalid value '%(val)s' for %(vocab)s vocabulary. Valid options are: %(opts)s"
+            )
+            % {
+                "val": text,
+                "vocab": type(instance).__name__,
+                "opts": sorted(by_label),
+            }
+        )
+    return key
+
+
+def resolve_terms(vocabulary, text):
+    """Read several vocabulary terms from semicolon-separated text.
+
+    Each token is read as ``resolve_term`` reads one, except that ``unspecified`` names the
+    vocabulary's own concept when it has one and is dropped when it has none.
+
+    Args:
+        vocabulary: The vocabulary class, or an instance of it.
+        text: The text to read.
+
+    Returns:
+        The vocabulary's concepts the tokens name, as a queryset. Blank text gives none.
+
+    Raises:
+        ValueError: If any token names no term of the vocabulary; the message names each.
+    """
+    from research_vocabs.models import Concept
+
+    vocabulary_class = vocabulary if isinstance(vocabulary, type) else type(vocabulary)
+    concepts = Concept.get_for_vocabulary(vocabulary_class)
+    tokens = [token.strip() for token in str(text or "").split(";") if token.strip()]
+    by_label = {concept.label.lower(): concept.pk for concept in concepts}
+    by_key = {concept.name.lower(): concept.pk for concept in concepts}
+    matched, unknown = [], []
+    for token in tokens:
+        normalised = normalize_vocab_token(token)
+        pk = by_label.get(normalised, by_key.get(normalised))
+        if pk is not None:
+            matched.append(pk)
+        elif normalised != "unspecified":
+            unknown.append(token)
+    if unknown:
+        raise ValueError(
+            _(
+                "The following values are not part of the %(vocab)s vocabulary: %(invalid)s"
+            )
+            % {"vocab": vocabulary_class.__name__, "invalid": unknown}
+        )
+    return concepts.filter(pk__in=matched)
+
+
 class HeatFlowMethod(VocabularyBuilder):
     """Specification of the method used to determine the heat flow value."""
 

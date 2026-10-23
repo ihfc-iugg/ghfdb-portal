@@ -389,9 +389,37 @@ class TestHeatFlowCorrection:
 
         for ct in ["IS", "T", "S", "E", "TOPO", "PAL", "SUR", "CONV", "HR"]:
             corr = HeatFlowCorrection(
-                heat_flow=child_fixture, correction_type=ct, status="-"
+                heat_flow=child_fixture, correction_type=ct, status=""
             )
             corr.save()  # must not raise
+
+    @pytest.mark.django_db
+    @pytest.mark.parametrize(
+        "correction_type", ["IS", "T", "S", "E", "TOPO", "PAL", "SUR", "CONV", "HR"]
+    )
+    def test_correction_dash_is_refused_for_every_type(
+        self, child_fixture, correction_type
+    ):
+        from heat_flow.models import HeatFlowCorrection
+
+        with pytest.raises(ValidationError):
+            HeatFlowCorrection(
+                heat_flow=child_fixture, correction_type=correction_type, status="-"
+            ).save()
+
+    @pytest.mark.django_db
+    def test_a_correction_with_no_status_is_stored_empty_by_default(
+        self, child_fixture
+    ):
+        from heat_flow.models import HeatFlowCorrection
+
+        correction = HeatFlowCorrection.objects.create(
+            heat_flow=child_fixture, correction_type="IS"
+        )
+
+        correction.refresh_from_db()
+        assert correction.status == ""
+        correction.full_clean()
 
     @pytest.mark.django_db
     def test_second_correction_of_the_same_type_rejected(self, child_fixture):
@@ -418,7 +446,7 @@ class TestHeatFlowCorrection:
         from heat_flow.models import HeatFlowCorrection
 
         corr = HeatFlowCorrection(
-            heat_flow=child_fixture, correction_type="INVALID_TYPE", status="-"
+            heat_flow=child_fixture, correction_type="INVALID_TYPE", status=""
         )
         with pytest.raises(ValidationError):
             corr.full_clean()
@@ -1254,7 +1282,7 @@ class TestChildScores:
         child = self.build_child(self.inputs_of("B2-not-considered"))
         for correction_type in ("S", "E", "SUR"):
             HeatFlowCorrectionFactory(
-                heat_flow=child, correction_type=correction_type, status="-"
+                heat_flow=child, correction_type=correction_type, status=""
             )
 
         with django_capture_on_commit_callbacks(execute=True):

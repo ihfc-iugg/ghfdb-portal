@@ -194,3 +194,75 @@ class TestTheVocabulariesCarryWhatTheTemplateOffers:
         assert not [
             label for label in labels if "atcliff " in label or "adcliff" in label
         ]
+
+
+class TestResolveTerm:
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "Onshore (continental)",
+            "onshore (continental)",
+            "[Onshore (continental)]",
+            " [ONSHORE (CONTINENTAL)] ",
+            "onshore_continental",
+            "[Onshore_Continental]",
+        ],
+    )
+    def test_a_label_or_a_key_gives_the_key(self, text):
+        from heat_flow.vocabularies import GeographicEnvironment, resolve_term
+
+        assert resolve_term(GeographicEnvironment, text) == "onshore_continental"
+
+    @pytest.mark.parametrize("text", ["", "   ", None, "unspecified", "[Unspecified]"])
+    def test_blank_and_unspecified_give_no_term(self, text):
+        from heat_flow.vocabularies import GeographicEnvironment, resolve_term
+
+        assert resolve_term(GeographicEnvironment, text) is None
+
+    def test_an_unknown_token_is_named_in_the_error(self):
+        from heat_flow.vocabularies import GeographicEnvironment, resolve_term
+
+        with pytest.raises(ValueError, match="swamp"):
+            resolve_term(GeographicEnvironment, "swamp")
+
+
+class TestResolveTerms:
+    def test_tokens_give_their_concepts_by_label_or_key(self, db):
+        from heat_flow.vocabularies import ExplorationPurpose, resolve_terms
+        from research_vocabs.models import Concept
+
+        labels = [
+            concept.label
+            for concept in Concept.get_for_vocabulary(ExplorationPurpose).order_by(
+                "name"
+            )[:2]
+        ]
+        keys = [
+            concept.name
+            for concept in Concept.get_for_vocabulary(ExplorationPurpose).order_by(
+                "name"
+            )[:2]
+        ]
+
+        by_label = resolve_terms(
+            ExplorationPurpose, f"[{labels[0].upper()}]; {labels[1]}"
+        )
+        by_key = resolve_terms(ExplorationPurpose, f"{keys[0]};{keys[1]}")
+
+        assert sorted(by_label.values_list("name", flat=True)) == keys
+        assert sorted(by_key.values_list("name", flat=True)) == keys
+
+    def test_blank_gives_no_concepts(self, db):
+        from heat_flow.vocabularies import ExplorationPurpose, resolve_terms
+
+        assert resolve_terms(ExplorationPurpose, "").count() == 0
+        assert resolve_terms(ExplorationPurpose, " ; ").count() == 0
+
+    def test_every_unknown_token_is_named_in_the_error(self, db):
+        from heat_flow.vocabularies import ExplorationPurpose, resolve_terms
+
+        with pytest.raises(ValueError) as error:
+            resolve_terms(ExplorationPurpose, "swamp; [Marsh]")
+
+        assert "swamp" in str(error.value)
+        assert "Marsh" in str(error.value)
