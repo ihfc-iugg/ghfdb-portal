@@ -5,6 +5,12 @@ import pytest
 from django.core.exceptions import ValidationError
 
 
+def attempt_to_save(form):
+    """Save a refused form the way the page would, and expect it to refuse."""
+    with pytest.raises(ValueError):
+        form.save()
+
+
 class TestConceptTextField:
     @pytest.fixture
     def environment(self):
@@ -242,6 +248,7 @@ class TestSectionedForm:
         assert not form.is_valid()
         assert form.has_error("value", code="max_decimal_places")
         assert not form.has_error("uncertainty")
+        attempt_to_save(form)
         assert not ThermalGradient.objects.exists()
 
     def test_a_value_converted_from_another_unit_is_quantised_to_the_places(
@@ -425,6 +432,7 @@ class TestHeatFlowSiteForm:
 
         assert not form.is_valid()
         assert form.has_error("location", code="duplicate_location")
+        attempt_to_save(form)
         stored = HeatFlowSite.objects.get(pk=site.pk)
         assert stored.name == "Original"
         assert stored.location != other.location
@@ -719,6 +727,7 @@ class TestHeatFlowIntervalForm:
 
         assert not form.is_valid()
         assert form.errors.keys() == {name}
+        attempt_to_save(form)
         assert not ProbeMetadata.objects.exists()
 
     def test_a_stored_probe_is_checked_with_the_values_entered(self, interval):
@@ -729,6 +738,7 @@ class TestHeatFlowIntervalForm:
 
         assert not form.is_valid()
         assert form.has_error("probe_tilt")
+        attempt_to_save(form)
         stored.refresh_from_db()
         assert stored.tilt.m_as("°") == 5
 
@@ -747,6 +757,7 @@ class TestHeatFlowIntervalForm:
 
         assert not form.is_valid()
         assert form.non_field_errors()
+        attempt_to_save(form)
         interval.refresh_from_db()
         assert interval.top.m_as("m") == 0
         assert interval.bottom.m_as("m") == 500
@@ -991,6 +1002,7 @@ class TestHeatFlowForm:
 
         assert not form.is_valid()
         assert form.has_error(field, code="other_interval")
+        attempt_to_save(form)
         child.refresh_from_db()
         assert getattr(child, f"{field}_id") == before
         assert not child.corrections.exists()
@@ -1014,6 +1026,7 @@ class TestHeatFlowForm:
         assert not form.is_valid()
         assert form.has_error("thermal_gradient")
         assert not form.has_error("thermal_gradient", code="other_interval")
+        attempt_to_save(form)
         child.refresh_from_db()
         assert child.thermal_gradient_id == before
 
@@ -1315,6 +1328,7 @@ class TestThermalGradientForm:
 
         assert not form.is_valid()
         assert form.has_error(name, code="unknown_term")
+        attempt_to_save(form)
         gradient.refresh_from_db()
         assert gradient.value == before
 
@@ -1428,6 +1442,7 @@ class TestIntervalConductivityForm:
 
         assert not form.is_valid()
         assert form.has_error(name, code="unknown_term")
+        attempt_to_save(form)
         conductivity.refresh_from_db()
         assert conductivity.value == before
 
@@ -1682,6 +1697,7 @@ class TestParentHeatFlowForm:
 
         assert not form.is_valid()
         assert form.has_error("relevant_children", code="other_site")
+        attempt_to_save(form)
         parent_records["parent"].refresh_from_db()
         assert parent_records["parent"].comment == "as uploaded"
         assert relevant_among(parent_records["children"]) == {first.pk}
@@ -1705,6 +1721,7 @@ class TestParentHeatFlowForm:
 
         assert not form.is_valid()
         assert form.has_error("relevant_children", code="other_site")
+        attempt_to_save(form)
         assert relevant_among([*parent_records["children"], unlinked]) == {first.pk}
 
     def test_a_child_in_a_dataset_the_researcher_may_not_change_is_refused_when_chosen(
@@ -1716,6 +1733,7 @@ class TestParentHeatFlowForm:
         assert not form.is_valid()
         assert form.has_error("relevant_children")
         assert not form.has_error("relevant_children", code="other_site")
+        attempt_to_save(form)
         assert relevant_among([locked]) == set()
 
     def test_a_child_in_a_dataset_the_researcher_may_not_change_keeps_its_relevance(
