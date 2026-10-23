@@ -108,6 +108,18 @@ class TestConceptTextField:
 
         assert purposes.clean(purposes.as_text(two_purposes)) == two_purposes
 
+    def test_the_label_stays_translatable_and_keeps_a_capital_after_a_lowercase_first(
+        self,
+    ):
+        from django.utils.functional import Promise
+        from heat_flow.forms import ConceptTextField
+        from heat_flow.models import IntervalConductivity
+
+        field = ConceptTextField(IntervalConductivity._meta.get_field("pT_conditions"))
+
+        assert isinstance(field.label, Promise)
+        assert str(field.label)[:2] == "PT"
+
     def test_an_empty_optional_field_stores_no_term(self, db):
         from heat_flow.forms import ConceptTextField
         from heat_flow.models import HeatFlowSite
@@ -216,6 +228,15 @@ class TestSectionedForm:
         assert isinstance(form.fields["value"], forms.DecimalField)
         assert isinstance(form.fields["uncertainty"], forms.DecimalField)
         assert isinstance(form.fields["value_unit"], forms.ChoiceField)
+
+    def test_a_measured_number_keeps_its_translatable_label(self):
+        from django.utils.functional import Promise
+        from heat_flow.forms import ThermalGradientForm
+
+        form = ThermalGradientForm()
+
+        assert isinstance(form.fields["value"].label, Promise)
+        assert isinstance(form.fields["corrected_value"].label, Promise)
 
     def test_numbers_in_another_unit_are_stored_in_base_units(self, db, monkeypatch):
         from decimal import Decimal

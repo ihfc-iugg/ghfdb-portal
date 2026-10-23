@@ -13,6 +13,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import DecimalValidator
 from django.db import models
 from django.forms.models import fields_for_model
+from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
 from fairdm.contrib.autocomplete.fields import (
     MeasurementChoiceField,
@@ -56,7 +57,7 @@ class ConceptTextField(forms.CharField):
         self.many = isinstance(model_field, ConceptManyToManyField)
         self.vocabulary = model_field.vocabulary
         kwargs.setdefault("required", not model_field.blank)
-        kwargs.setdefault("label", model_field.verbose_name.capitalize())
+        kwargs.setdefault("label", capfirst(model_field.verbose_name))
         kwargs.setdefault("help_text", model_field.help_text)
         super().__init__(**kwargs)
         self.stored = None
@@ -178,7 +179,7 @@ class SectionedForm:
                 )
             else:
                 plain = models.FloatField.formfield(model_field)
-            plain.label = model_field.verbose_name.capitalize()
+            plain.label = capfirst(model_field.verbose_name)
             plain.help_text = model_field.help_text
             self.fields[name] = plain
             stored = getattr(self.instance, name, None)
