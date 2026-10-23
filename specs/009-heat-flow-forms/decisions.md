@@ -380,3 +380,15 @@ only the children at the site the researcher may change. A child in a dataset th
 keeps its relevance and does not block the save.
 
 **ADR:** none — local to the parent's form, following FairDM's edit scope.
+
+## Existing tests changed by the stored empty status
+
+Removing the stored `-` changed what some existing tests assert. Each was edited in the stored value
+only, `-` or the removed unspecified choice becoming an empty status: the importer's correction
+tests, the model's correction validity tests, three quality-score cases, the test factory's default
+and two fixtures. Two of this feature's own earlier form tests were replaced, because the follow-up
+work reversed what they described: a stored term is now drawn from the form's initial value, and a
+decimal with too many places in its own unit is refused rather than rounded. The export tests'
+expected cells did not change, which is the check that the published file has not moved.
+
+**ADR:** none — test maintenance that follows the decision above.
