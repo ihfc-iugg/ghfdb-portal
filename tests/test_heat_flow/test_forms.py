@@ -146,13 +146,16 @@ class TestHeatFlowFormfield:
             assert isinstance(field, ConceptTextField)
 
     def test_a_plain_field_is_left_as_the_model_draws_it(self):
-        from django import forms
         from heat_flow.forms import heat_flow_formfield
         from heat_flow.models import HeatFlowSite
 
-        field = heat_flow_formfield(HeatFlowSite._meta.get_field("country"))
+        db_field = HeatFlowSite._meta.get_field("country")
 
-        assert isinstance(field, forms.CharField)
+        field = heat_flow_formfield(db_field)
+
+        drawn = db_field.formfield()
+        assert type(field) is type(drawn)
+        assert type(field.widget) is type(drawn.widget)
 
 
 FORM_NAMES = [
