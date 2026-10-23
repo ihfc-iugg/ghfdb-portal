@@ -172,7 +172,7 @@ The parent's form carries:
 
 - **The value**, with its uncertainty and one unit for both.
 - **Comment** and **HP correction flag**, the heat production correction.
-- **Children this value rests on.** The child heat flows at the parent's site that the value is
+- **Children this value rests on.** The parent's own child heat flows, the ones its value is
   drawn from.
 
 The form offers no quality score and no GHFDB id.
@@ -180,16 +180,17 @@ The form offers no quality score and no GHFDB id.
 ### Choosing the children
 
 The children are searched for by name, and the choice starts with the children already marked
-relevant. After a save exactly the children you chose are marked relevant, and the other children
-at the site are not. The parent's value is not calculated from them: saving changes the value only
+relevant. After a save exactly the children you chose are marked relevant, and the parent's other
+children are not. The parent's value is not calculated from them: saving changes the value only
 where you changed it.
 
-The form manages only the children you may change. A child at the site in a dataset you may not
+The form manages only the children you may change. A child of the parent in a dataset you may not
 change keeps its relevance as it was. It is not offered as chosen, it does not stop the save when
 you leave it out, and it is refused if you choose it.
 
-The search cannot offer only the children at the parent's site, so the form checks every child you
-chose: one at another site is refused, with the message beside the field, and nothing is saved.
+The search cannot offer only the parent's own children, so the form checks every child you chose:
+one that is not the parent's, at another site or at this site and linked to another parent, is
+refused, with the message beside the field, and nothing is saved.
 
 A save recalculates the parent's quality from the children now marked relevant. With one child at
 the site the parent rests on that child whether or not it is marked. With several, the parent rests
@@ -302,9 +303,10 @@ score receivers refresh the affected scores on save.
 ### `ParentHeatFlowForm`
 
 The parent's form. `relevant_children` is a FairDM `MeasurementMultipleChoiceField` over `HeatFlow`
-with `scope="edit"`. It cannot be narrowed to a site, so `clean_relevant_children` refuses a child
-whose interval is not at the parent's site, with the code `other_site`. `children()` returns the
-children at the parent's site, and `managed_children()` narrows them to the records the field offers
+with `scope="edit"`. It cannot be narrowed to the parent's children, so `clean_relevant_children`
+refuses a child that is not the parent's own, with the code `other_site`. `children()` returns the
+heat flows whose `parent` is this record, the ones its quality reads, and `managed_children()`
+narrows them to the records the field offers
 the request's user. The initial value and `save_related` read `managed_children()`, so a child in a
 dataset the user may not change keeps its relevance. `save_related` marks exactly the chosen
 children relevant and the other managed children not, and writes nothing to the parent's own

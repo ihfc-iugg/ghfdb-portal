@@ -667,26 +667,24 @@ class ParentHeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
             )
 
     def children(self):
-        """Return the child heat flows at this parent's site."""
-        return HeatFlow.objects.filter(
-            sample__heatflowinterval__site_id=self.instance.sample_id
-        )
+        """Return this parent's own child heat flows, the ones its quality reads."""
+        return HeatFlow.objects.filter(parent=self.instance)
 
     def managed_children(self):
-        """Return the site's children that the researcher may change.
+        """Return the parent's children that the researcher may change.
 
-        These are the site's children among the records the choice field offers at its
+        These are the parent's children among the records the choice field offers at its
         edit scope. The form marks only these, and leaves the rest as they are.
         """
         field = self["relevant_children"].field
         return self.children().filter(pk__in=field.offered().values("pk"))
 
     def clean_relevant_children(self):
-        """Refuse a child at another site."""
+        """Refuse a child that is not this parent's own."""
         chosen = self.cleaned_data["relevant_children"]
         if chosen.exclude(pk__in=self.children().values("pk")).exists():
             raise forms.ValidationError(
-                _("Choose only children at this site."), code="other_site"
+                _("Choose only this heat flow's own children."), code="other_site"
             )
         return chosen
 

@@ -1691,6 +1691,26 @@ class TestParentHeatFlowForm:
         assert relevant_among(parent_records["children"]) == {first.pk}
         assert relevant_among([foreign]) == set()
 
+    def test_a_child_at_the_site_that_is_not_the_parents_is_refused_and_nothing_is_written(
+        self, parent_records, editor
+    ):
+        from tests.factories import HeatFlowFactory
+
+        first, second, _third = parent_records["children"]
+        unlinked = HeatFlowFactory(
+            dataset=parent_records["dataset"],
+            sample=parent_records["interval"],
+            parent=None,
+            is_relevant=False,
+            value=100,
+            uncertainty=10,
+        )
+        form = self.build(parent_records, editor, second, unlinked, comment="changed")
+
+        assert not form.is_valid()
+        assert form.has_error("relevant_children", code="other_site")
+        assert relevant_among([*parent_records["children"], unlinked]) == {first.pk}
+
     def test_a_child_in_a_dataset_the_researcher_may_not_change_is_refused_when_chosen(
         self, parent_records, editor
     ):
