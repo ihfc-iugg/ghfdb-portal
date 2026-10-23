@@ -37,7 +37,7 @@ from .models import (
 )
 from .models.child import HeatFlowCorrection, ProbeMetadata
 from .signals import Recalculation
-from .vocabularies import resolve_term, resolve_terms
+from .vocabularies import normalize_vocab_token, resolve_term, resolve_terms
 
 
 class ConceptTextField(forms.CharField):
@@ -78,6 +78,10 @@ class ConceptTextField(forms.CharField):
         try:
             if self.many:
                 return resolve_terms(self.vocabulary, value)
+            if normalize_vocab_token(value) == "unspecified":
+                held = dict(self.vocabulary().choices)
+                if "unspecified" in held:
+                    return "unspecified"
             return resolve_term(self.vocabulary, value)
         except ValueError as error:
             raise forms.ValidationError(str(error), code="unknown_term") from None

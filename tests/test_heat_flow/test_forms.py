@@ -450,6 +450,19 @@ class TestHeatFlowSiteForm:
 
         assert form.has_error(name, code="unknown_term")
 
+    def test_an_environment_the_vocabulary_holds_as_unspecified_is_saved(self, site):
+        from heat_flow.forms import HeatFlowSiteForm
+
+        form = HeatFlowSiteForm(
+            instance=site, data=site_data(site, environment="Unspecified")
+        )
+        assert form.is_valid(), form.errors
+
+        form.save()
+
+        site.refresh_from_db()
+        assert site.environment.name == "unspecified"
+
     def test_the_exploration_purpose_takes_several_terms(self, site):
         from heat_flow.forms import HeatFlowSiteForm
         from heat_flow.vocabularies import ExplorationPurpose
