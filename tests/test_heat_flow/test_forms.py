@@ -727,6 +727,34 @@ class TestHeatFlowIntervalForm:
         assert saved.probe_metadata.tilt.m_as("°") == 12
 
 
+class TestHeatFlowIntervalEditPage:
+    def test_a_dataset_owner_enters_a_probe_type_and_a_tilt(self, db, researcher):
+        from fairdm.contrib.plugins import reverse
+        from fairdm.factories import DatasetFactory
+        from fairdm.utils.choices import Visibility
+
+        from tests.factories import HeatFlowIntervalFactory
+
+        dataset = DatasetFactory(visibility=Visibility.PUBLIC, published=True)
+        interval = HeatFlowIntervalFactory(dataset=dataset, top=0, bottom=500)
+        client = researcher(dataset)
+
+        response = client.post(
+            reverse(interval, "edit"),
+            interval_data(
+                interval,
+                probe_type="Violin-Bow probe (Lister)",
+                probe_tilt_0="12.5",
+                probe_tilt_1="°",
+            ),
+        )
+
+        assert response.status_code == 302
+        probe = interval.probe_metadata
+        assert [concept.name for concept in probe.probe_type.all()] == ["violin_bow"]
+        assert probe.tilt.m_as("°") == pytest.approx(12.5)
+
+
 @pytest.fixture
 def editor(db):
     """Return a function that makes a request for a researcher who owns a dataset."""
