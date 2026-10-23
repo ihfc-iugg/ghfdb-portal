@@ -189,7 +189,6 @@ DEP003 = [
     "django",
     "django_downloadview",
     "django_filters",
-    "django_select2",
     "django_tables2",
     "drf_spectacular",
     "factory",
