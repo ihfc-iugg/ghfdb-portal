@@ -13,9 +13,10 @@
   parent's page lists its children with. `HeatFlowPage.for_parent()` already orders them
   relevant first and counts the ones the visitor may not open.
 - The sidebar group is django-mvp's `MenuCollapse`, which opens itself on the page it holds.
-- Every bound filter is django-mvp-forms' `RangeInput`, joined, so both ends sit on one line
-  (planning note N2). In the toolbar the filter's name sits in the first frame, as the package
-  draws a range in a form with labels off.
+- Every bound filter is django-mvp-forms' `RangeInput`, drawn as one join, [min][–][max], with
+  the dash framed as the package frames text in a `Join` (planning note N2).
+- Each select in the toolbar is a django-mvp-forms `Join` of a short label and the select,
+  laid out with a crispy `FormHelper` on the view.
 - Dataset and project are FairDM's `RecordMultipleFilter` over its dataset and project record
   fields, the filter FairDM's own measurement lists use (planning note N3).
 - Children load into the window with htmx when the count is pressed (planning note N1).
@@ -51,17 +52,18 @@
 - Planning note N4 (the latest FairDM, django-mvp and django-mvp-forms) is not done. django-mvp
   0.31.0 and django-mvp-forms 0.8.0 are already the latest releases. The FairDM pin moves at the
   start of the build.
-- The toolbar's range shows its error under itself, written in the page template, because the
-  toolbar draws a filter's own widget with no errors of its own.
+- The range template (`ghfdb/widgets/bounds.html`) is the portal's own. django-mvp-forms has a
+  joined and a compact range but not [min][–][max]. It belongs upstream as a third layout.
 
 ## What was ruled by eye
 
-- The column headings are the published names verbatim, with the unit in small muted type
-  beneath where the column has one.
+- The column headings are the published names verbatim. A column's unit is hover text on its
+  heading only.
 - The `children` column sits straight after `q` and `q_uncertainty`, so the count that says how
   far to trust a value is read next to the value.
-- The toolbar holds the site name search, `q`, environment, U-score and dataset. Every other
-  filter is in the panel.
+- The toolbar holds the site name search, then Environment, U-score and Dataset selects, each
+  with its short label joined in front. Every range, `q` included, is in the panel.
+- A range is [min][–][max].
 - The page title is "GHFDB".
 - The quality code filter is offered as the U-score and the M-score, the two grades the code
   starts with, rather than as the full code string.

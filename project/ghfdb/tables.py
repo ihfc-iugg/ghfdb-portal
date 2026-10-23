@@ -18,23 +18,12 @@ NOT_RECORDED = mark_safe(  # noqa: S308 - fixed markup, no user input
 )
 
 
-def heading(name, unit=None):
-    """A published column name, with its unit beneath it in muted type."""
-    if unit is None:
-        return name
-    return format_html(
-        '{}<span class="block text-xs font-normal text-base-content/60">{}</span>',
-        name,
-        unit,
-    )
-
-
 class NumberColumn(tables.Column):
     """A right-aligned number column in tabular figures."""
 
-    def __init__(self, *args, places=None, **kwargs):
+    def __init__(self, *args, places=None, unit=None, **kwargs):
         attrs = {
-            "th": {"class": "text-end"},
+            "th": {"class": "text-end", **({"title": unit} if unit else {})},
             "td": {"class": "text-end tabular-nums whitespace-nowrap"},
         }
         super().__init__(*args, attrs=attrs, **kwargs)
@@ -66,15 +55,18 @@ class GHFDBParentTable(tables.Table):
         verbose_name="ID_parent",
         attrs={"td": {"class": "tabular-nums whitespace-nowrap"}},
     )
-    q = NumberColumn(verbose_name=heading("q", "mW/m²"), places=1)
+    q = NumberColumn(verbose_name="q", unit="mW/m²", places=1)
     q_uncertainty = NumberColumn(
-        verbose_name=heading("q_uncertainty", "mW/m²"), places=1
+        verbose_name="q_uncertainty", unit="mW/m²", places=1
     )
     children = tables.Column(
-        verbose_name=heading("children", _("relevant in brackets")),
+        verbose_name="children",
         accessor="total_children",
         attrs={
-            "th": {"class": "text-end"},
+            "th": {
+                "class": "text-end",
+                "title": _("Number of children, with those marked relevant in brackets"),
+            },
             "td": {"class": "text-end whitespace-nowrap"},
         },
     )
@@ -83,9 +75,9 @@ class GHFDBParentTable(tables.Table):
         accessor="site_name",
         attrs={"td": {"class": "min-w-52"}},
     )
-    lat_NS = NumberColumn(verbose_name=heading("lat_NS", "°"), places=5)
-    long_EW = NumberColumn(verbose_name=heading("long_EW", "°"), places=5)
-    elevation = NumberColumn(verbose_name=heading("elevation", "m"))
+    lat_NS = NumberColumn(verbose_name="lat_NS", unit="°", places=5)
+    long_EW = NumberColumn(verbose_name="long_EW", unit="°", places=5)
+    elevation = NumberColumn(verbose_name="elevation", unit="m")
     environment = TermColumn(
         vocabularies.GeographicEnvironment, verbose_name="environment"
     )
@@ -97,8 +89,8 @@ class GHFDBParentTable(tables.Table):
         accessor="sample__heatflowsite__explo_purpose",
         orderable=False,
     )
-    total_depth_MD = NumberColumn(verbose_name=heading("total_depth_MD", "m"))
-    total_depth_TVD = NumberColumn(verbose_name=heading("total_depth_TVD", "m"))
+    total_depth_MD = NumberColumn(verbose_name="total_depth_MD", unit="m")
+    total_depth_TVD = NumberColumn(verbose_name="total_depth_TVD", unit="m")
     corr_HP_flag = tables.BooleanColumn(
         verbose_name="corr_HP_flag",
         yesno=(_("Yes"), _("No")),

@@ -1,5 +1,5 @@
 {% extends "table_view.html" %}
-{% load i18n %}
+{% load i18n crispy_forms_tags %}
 {% comment %}The GHFDB parent table (FS-012). One window serves every row's children: the count's button loads them into it, and it opens once they have arrived.{% endcomment %}
 {% block page.filters %}
   <form id="filterForm"
@@ -16,18 +16,9 @@
       <input type="hidden" name="{{ table.prefixed_order_by_field }}" value="{{ table_sort }}">
     {% endif %}
     {% for field in toolbar_fields %}
-      {% if field.name == "q" %}
-        {# A joined range needs the room for its label and both ends on one line. #}
-        <div class="mvp-toolbar-field w-80" data-mvp-toolbar-field="{{ field.name }}">
-          {{ field.bound }}
-          {% for error in field.bound.errors %}
-            <p class="text-xs text-base-content pt-1" role="alert">{{ error }}</p>
-          {% endfor %}
-        </div>
-      {% else %}
-        <c-mvp.page.list.filters.field :field="field" />
-      {% endif %}
+      {% if field.kind == "search" %}<c-mvp.page.list.filters.field :field="field" />{% endif %}
     {% endfor %}
+    {% crispy filter.form toolbar_helper %}
   </form>
 {% endblock page.filters %}
 {% block page.footer %}

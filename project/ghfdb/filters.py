@@ -23,32 +23,24 @@ def counted(placeholder):
 
 
 class BoundsInput(RangeInput):
-    """django-mvp-forms' range, the two ends joined in one row.
+    """django-mvp-forms' range as one join: [min][–][max].
 
-    The ends are sent as ``<name>_min`` and ``<name>_max``, so a filtered
-    address reads as the bounds it holds.
+    The dash between the ends is drawn as the package draws text in a
+    ``Join``, a framed join item. The ends are sent as ``<name>_min`` and
+    ``<name>_max``, so a filtered address reads as the bounds it holds.
     """
+
+    template_name = "ghfdb/widgets/bounds.html"
 
     def __init__(self, attrs=None):
         super().__init__(attrs, joined=True)
         self.widgets_names = ["_min", "_max"]
 
     def get_context(self, name, value, attrs):
-        """In the toolbar, put the filter's name in the first frame.
-
-        The toolbar draws a filter's own widget as it is, with the filter's
-        label as its ``aria-label`` and no label above it. That is the range
-        django-mvp-forms draws for a form with labels off: the label inside
-        the first frame, and each end's name as its placeholder.
-        """
+        """Name each end inside its input, Min and Max."""
         context = super().get_context(name, value, attrs)
-        label = self.attrs.get("aria-label")
-        if label:
-            context["widget"]["label"] = label
-            context["widget"]["unlabelled"] = True
-            for part, end in zip(context["widget"]["subwidgets"], self.ends):
-                part["attrs"]["aria-label"] = f"{label}: {end}"
-                part["attrs"]["placeholder"] = end
+        for part in context["widget"]["subwidgets"]:
+            part["attrs"]["placeholder"] = part["frame_name"]
         return context
 
 

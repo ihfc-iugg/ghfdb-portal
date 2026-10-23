@@ -1,0 +1,9 @@
+{% load i18n %}{% comment %}A bound filter as one join: [min][–][max]. The dash is a join item drawn as django-mvp-forms draws text in a Join.{% endcomment %}
+<div class="join w-full">
+  {% for part in widget.subwidgets %}
+    {% if not forloop.first %}<span class="input join-item w-auto" aria-hidden="true">–</span>{% endif %}
+    <label class="{{ part.frame_class|default:'input' }} join-item min-w-0 flex-1">
+      {% with widget=part %}{% include widget.template_name %}{% endwith %}
+    </label>
+  {% endfor %}
+</div>
