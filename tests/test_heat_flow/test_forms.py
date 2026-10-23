@@ -1706,3 +1706,23 @@ class TestParentHeatFlowForm:
 
         assert relevant_among(parent_records["children"]) == {second.pk}
 
+
+class TestParentHeatFlowEditPage:
+    def test_a_dataset_owner_marks_two_children_relevant_and_the_quality_moves(
+        self, parent_records, researcher
+    ):
+        from fairdm.contrib.plugins import reverse
+
+        parent = parent_records["parent"]
+        _first, second, third = parent_records["children"]
+        assert parent.quality == "U1.Mx.-------"
+        client = researcher(parent_records["dataset"])
+
+        response = client.post(
+            reverse(parent, "edit"), parent_data(parent, second, third)
+        )
+
+        assert response.status_code == 302
+        parent.refresh_from_db()
+        assert relevant_among(parent_records["children"]) == {second.pk, third.pk}
+        assert parent.quality == "U3.Mx.-------"
