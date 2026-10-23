@@ -248,56 +248,61 @@ def build_child(
         ProbeMetadata,
         ThermalGradient,
     )
+    from heat_flow.signals import Recalculation
 
-    interval = HeatFlowInterval.objects.create(
-        dataset=dataset,
-        site=parent.sample,
-        name=f"{name} Interval",
-        top=0,
-        bottom=500,
-    )
+    # Every save below asks for the scores to be recalculated, and the nine corrections
+    # would each recalculate the child and its parent again. Deferred, they are
+    # recalculated once, when the child is complete.
+    with Recalculation.deferred():
+        interval = HeatFlowInterval.objects.create(
+            dataset=dataset,
+            site=parent.sample,
+            name=f"{name} Interval",
+            top=0,
+            bottom=500,
+        )
 
-    if include_probe_metadata:
-        ProbeMetadata.objects.create(interval=interval, penetration=3.5)
+        if include_probe_metadata:
+            ProbeMetadata.objects.create(interval=interval, penetration=3.5)
 
-    gradient = None
-    if include_gradient:
-        gradient = ThermalGradient.objects.create(
+        gradient = None
+        if include_gradient:
+            gradient = ThermalGradient.objects.create(
+                dataset=dataset,
+                sample=interval,
+                name=f"{name} Gradient",
+                value=25.0,
+            )
+
+        conductivity = None
+        if include_conductivity:
+            conductivity = IntervalConductivity.objects.create(
+                dataset=dataset,
+                sample=interval,
+                name=f"{name} Conductivity",
+                value=2.5,
+            )
+
+        child = HeatFlow.objects.create(
             dataset=dataset,
             sample=interval,
-            name=f"{name} Gradient",
-            value=25.0,
+            name=name,
+            value=70.0,
+            parent=parent,
+            thermal_gradient=gradient,
+            thermal_conductivity=conductivity,
+            is_relevant=is_relevant,
+            ghfdb_id=ghfdb_id if published else None,
         )
 
-    conductivity = None
-    if include_conductivity:
-        conductivity = IntervalConductivity.objects.create(
-            dataset=dataset,
-            sample=interval,
-            name=f"{name} Conductivity",
-            value=2.5,
-        )
-
-    child = HeatFlow.objects.create(
-        dataset=dataset,
-        sample=interval,
-        name=name,
-        value=70.0,
-        parent=parent,
-        thermal_gradient=gradient,
-        thermal_conductivity=conductivity,
-        is_relevant=is_relevant,
-        ghfdb_id=ghfdb_id if published else None,
-    )
-
-    for correction_type in HeatFlowCorrection.CorrectionTypeChoices.values:
-        if correction_type == missing_correction:
-            continue
-        HeatFlowCorrection.objects.create(
-            heat_flow=child,
-            correction_type=correction_type,
-            status="",
-        )
+        for correction_type in HeatFlowCorrection.CorrectionTypeChoices.values:
+            if correction_type == missing_correction:
+                continue
+            HeatFlowCorrection.objects.create(
+                heat_flow=child,
+                correction_type=correction_type,
+                status="",
+            )
 
     return child
 

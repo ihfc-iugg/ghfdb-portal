@@ -31,3 +31,14 @@ if not os.environ.get("REDIS_URL"):
         }
         for alias in globals().get("CACHES", {"default": {}})
     }
+    # The remote vocabularies are downloaded when the models are imported and kept in a
+    # cache, which in process memory goes with the process: every restart of the
+    # development server and every test worker downloaded all of them again. On disk they
+    # are downloaded once. Delete .vocabularies-cache to download them again. This module
+    # runs inside the framework's settings, so ``__file__`` is not this file's path, and
+    # the repository root is read from the BASE_DIR they set.
+    CACHES["vocabularies"] = {
+        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+        "LOCATION": globals()["BASE_DIR"] / ".vocabularies-cache",
+    }
+    VOCABULARY_DEFAULT_CACHE = "vocabularies"

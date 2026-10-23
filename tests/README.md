@@ -47,6 +47,12 @@ Two of the vocabularies are registered by hand in that fixture. Registration is 
 
 **Do not load concepts from a per-test fixture.** Each test is rolled back afterwards, so a fixture that checks whether concepts exist always finds none and reloads them — several hundred writes per test. `test_heat_flow/test_vocabularies.py` guards against that returning.
 
+The vocabularies themselves are downloaded when the models are imported. Without `REDIS_URL` they are kept on disk in `.vocabularies-cache` at the repository root (`config/development.py`), so the first run downloads them and every xdist worker and later run reads them from there. Delete the directory to download them again.
+
+## Demo data
+
+A run of `seed_demo_data` takes several seconds, so the tests that only read what one run wrote share it across their class. `held_for_the_class` in `test_review/test_management/test_commands/test_seed_demo_data.py` seeds inside a transaction that lasts for the class and is rolled back after its last test, and each test still runs in a savepoint of its own inside it, so nothing one test writes reaches the next. A test that needs an empty database, or runs the command itself, goes in a class with no such fixture: the seed is in place from the class's first test to its last.
+
 ## Conventions
 
 **Group tests in classes.** Related tests live together in a `Test<Subject>` class named for what they exercise, not as loose module-level functions. A test that spans two functions belongs in the module of its subject, as another class.
