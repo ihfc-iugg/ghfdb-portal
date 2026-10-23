@@ -400,7 +400,7 @@ class HeatFlowIntervalForm(SectionedForm, SampleFormMixin, forms.ModelForm):
     def clean(self):
         """Check the probe values as the probe metadata row does, against their fields."""
         cleaned_data = super().clean()
-        values, probe_types = self.probe_values()
+        values = self.probe_values()[0]
         probe = getattr(self.instance, "probe_metadata", None)
         if probe is None and all(value is None for value in values.values()):
             return cleaned_data
