@@ -32,6 +32,11 @@ Releases before that used `<year>.<release>` and are recorded in the
   gradient and interval conductivity it was calculated from. A gradient or conductivity on another
   depth interval is refused. Each correction offers only the statuses valid for it, and saving
   recalculates the child's quality score ([editing records](docs/guides/editing-records.md)).
+- A researcher can mark which children a site's parent heat flow rests on, on the parent's edit
+  page, together with its value, uncertainty, heat production correction and comment. A child at
+  another site is refused, a child in a dataset the researcher may not change keeps its relevance,
+  and saving recalculates the parent's quality from the children now marked
+  ([editing records](docs/guides/editing-records.md)).
 - Container images are published to `ghcr.io/ihfc-iugg/ghfdb-portal` on every
   release, tagged with the version and with `latest`.
 - Dependabot pull requests for a given ecosystem now arrive grouped as one pull

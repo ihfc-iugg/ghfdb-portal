@@ -163,6 +163,40 @@ semicolons. The form offers no quality score. A save recalculates the conductivi
 location, source, number of determinations, saturation and conditions as they now stand, and the
 score of each child heat flow calculated from it, and then the parent's.
 
+## Correcting a parent heat flow
+
+Open the parent heat flow value, choose **Edit details** from the Manage menu, change what is wrong
+and save. The same people may do this as for a site: anyone who may change the parent's dataset.
+
+The parent's form carries:
+
+- **The value**, with its uncertainty and one unit for both.
+- **Comment** and **HP correction flag**, the heat production correction.
+- **Children this value rests on.** The child heat flows at the parent's site that the value is
+  drawn from.
+
+The form offers no quality score and no GHFDB id.
+
+### Choosing the children
+
+The children are searched for by name, and the choice starts with the children already marked
+relevant. After a save exactly the children you chose are marked relevant, and the other children
+at the site are not. The parent's value is not calculated from them: saving changes the value only
+where you changed it.
+
+The form manages only the children you may change. A child at the site in a dataset you may not
+change keeps its relevance as it was. It is not offered as chosen, it does not stop the save when
+you leave it out, and it is refused if you choose it.
+
+The search cannot offer only the children at the parent's site, so the form checks every child you
+chose: one at another site is refused, with the message beside the field, and nothing is saved.
+
+A save recalculates the parent's quality from the children now marked relevant. With one child at
+the site the parent rests on that child whether or not it is marked. With several, the parent rests
+on those marked relevant, and with none marked its quality is not determined.
+
+A site with no parent has no parent form. This form does not create one.
+
 ## For developers
 
 The forms are in `project/heat_flow/forms.py` and are registered as each model's `form_class` in
@@ -265,6 +299,17 @@ The conductivity's form. `measured_pairs` holds `("value", "uncertainty")`, so t
 several terms. As with the gradient, the form offers no score fields, dataset or sample, and the
 score receivers refresh the affected scores on save.
 
+### `ParentHeatFlowForm`
+
+The parent's form. `relevant_children` is a FairDM `MeasurementMultipleChoiceField` over `HeatFlow`
+with `scope="edit"`. It cannot be narrowed to a site, so `clean_relevant_children` refuses a child
+whose interval is not at the parent's site, with the code `other_site`. `children()` returns the
+children at the parent's site, and `managed_children()` narrows them to the records the field offers
+the request's user. The initial value and `save_related` read `managed_children()`, so a child in a
+dataset the user may not change keeps its relevance. `save_related` marks exactly the chosen
+children relevant and the other managed children not, and writes nothing to the parent's own
+fields. Pass `request=` when you build the form outside FairDM's edit page.
+
 ### Related rows: `save_related`
 
 `SectionedForm.save()` writes the rows a form stands for with `save_related(record)`, inside
@@ -272,4 +317,5 @@ score receivers refresh the affected scores on save.
 row. With `commit=False` the rows are written when `save_m2m()` is called, as Django writes
 many-to-many data. `HeatFlowForm.save_related` gives the child a row for each correction type
 holding the chosen status, and never touches a stored comment. `HeatFlowIntervalForm.save_related`
-writes the interval's probe metadata.
+writes the interval's probe metadata. `ParentHeatFlowForm.save_related` marks the chosen
+children relevant.
