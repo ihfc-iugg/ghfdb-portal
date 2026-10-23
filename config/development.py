@@ -42,3 +42,11 @@ if not os.environ.get("REDIS_URL"):
         "LOCATION": globals()["BASE_DIR"] / ".vocabularies-cache",
     }
     VOCABULARY_DEFAULT_CACHE = "vocabularies"
+
+# Orbit's app decides at ready() whether to install its watchers, and one of them, a
+# pre_save receiver, reads the row back before every save without asking whether Orbit is
+# enabled: three extra queries on a contributor, in every test that saves one. The test run
+# sets ORBIT_ENABLED=false through pytest's `env` option, which applies before pytest-django
+# sets Django up. A conftest hook runs after, too late to stop the watchers being installed.
+if os.environ.get("ORBIT_ENABLED", "").lower() == "false":
+    ORBIT_CONFIG = {**globals().get("ORBIT_CONFIG", {}), "ENABLED": False}

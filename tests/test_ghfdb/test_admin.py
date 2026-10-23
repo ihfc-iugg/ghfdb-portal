@@ -4,7 +4,7 @@ import pytest
 from django.contrib import admin
 from django.contrib.admin.templatetags.admin_list import result_headers
 from django.contrib.admin.utils import label_for_field
-from django.test import RequestFactory, override_settings
+from django.test import RequestFactory
 from django.urls import reverse
 
 from project.ghfdb.admin import (
@@ -532,9 +532,8 @@ class TestGHFDBParentAdmin:
         def call():
             staff_client.get(url)
 
-        with override_settings(ORBIT={"ENABLED": False}):
-            call()
-            constant_query_count(published_chains, call)
+        call()
+        constant_query_count(published_chains, call)
 
     def test_every_declared_path_resolves_on_the_model(self):
         # FS-002 FR-020: Django's own admin checks report nothing for this
@@ -794,9 +793,8 @@ class TestGHFDBChildAdmin:
         def call():
             staff_client.get(url)
 
-        with override_settings(ORBIT={"ENABLED": False}):
-            call()
-            constant_query_count(published_chains, call)
+        call()
+        constant_query_count(published_chains, call)
 
     def test_every_declared_path_resolves_on_the_model(self):
         # FS-002 FR-020: Django's own admin checks report nothing for this
