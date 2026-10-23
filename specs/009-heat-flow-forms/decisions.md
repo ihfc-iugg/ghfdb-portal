@@ -389,4 +389,8 @@ work reversed what they described: a stored term is now drawn from the form's in
 decimal with too many places in its own unit is refused rather than rounded. The export tests'
 expected cells did not change, which is the check that the published file has not moved.
 
+One more existing test changed earlier, with the move to a newer FairDM: the demo data's account
+count. FairDM's development accounts moved to `example.com`, so the portal and FairDM now share
+`regular.user@example.com`, and the test counts the distinct addresses instead of a fixed ten.
+
 **ADR:** none — test maintenance that follows the decision above.
