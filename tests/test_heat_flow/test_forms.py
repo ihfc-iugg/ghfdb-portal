@@ -1774,6 +1774,32 @@ class TestParentHeatFlowForm:
         assert relevant_among(parent_records["children"]) == {second.pk}
 
 
+class TestFormsForARecordNotYetSaved:
+    def test_the_parent_form_builds_and_validates_with_no_instance(self, db):
+        from heat_flow.forms import ParentHeatFlowForm
+
+        unbound = ParentHeatFlowForm()
+        form = ParentHeatFlowForm(data={"value": "60", "value_unit": "mW / m^2"})
+
+        assert not unbound.children().exists()
+        assert not form.children().exists()
+        form.full_clean()
+        assert form.cleaned_data["relevant_children"].count() == 0
+
+    def test_the_child_form_builds_and_validates_with_no_instance(self, db):
+        from types import SimpleNamespace
+
+        from heat_flow.forms import HeatFlowForm
+
+        unbound = HeatFlowForm()
+        form = HeatFlowForm(data={"value": "70", "value_unit": "mW / m^2"})
+        measurement = SimpleNamespace(sample_id=1)
+
+        form.full_clean()
+        assert form.on_own_interval(measurement) is measurement
+        assert unbound.on_own_interval(None) is None
+
+
 class TestParentHeatFlowEditPage:
     def test_a_dataset_owner_marks_two_children_relevant_and_the_quality_moves(
         self, parent_records, researcher

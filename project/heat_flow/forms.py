@@ -527,6 +527,8 @@ class HeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
     def on_own_interval(self, measurement):
         """Return the measurement when it was made over this child's interval.
 
+        A child with no interval yet refuses nothing.
+
         Args:
             measurement: The measurement chosen, or ``None``.
 
@@ -536,7 +538,11 @@ class HeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
         Raises:
             ValidationError: If the measurement belongs to another interval.
         """
-        if measurement is not None and measurement.sample_id != self.instance.sample_id:
+        if (
+            measurement is not None
+            and self.instance.sample_id is not None
+            and measurement.sample_id != self.instance.sample_id
+        ):
             raise forms.ValidationError(
                 _("Choose a measurement on this child's own depth interval."),
                 code="other_interval",
@@ -667,7 +673,12 @@ class ParentHeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
             )
 
     def children(self):
-        """Return this parent's own child heat flows, the ones its quality reads."""
+        """Return this parent's own child heat flows, the ones its quality reads.
+
+        A parent not yet saved has none.
+        """
+        if self.instance.pk is None:
+            return HeatFlow.objects.none()
         return HeatFlow.objects.filter(parent=self.instance)
 
     def managed_children(self):
