@@ -378,25 +378,35 @@ class HeatFlowIntervalForm(SectionedForm, SampleFormMixin, forms.ModelForm):
             self.fields[key] = field
         self.helper.layout = self.get_layout()
 
-    def save(self, commit=True):
-        """Save the interval, and its probe metadata when any was entered."""
-        interval = super().save(commit=commit)
+    def save_related(self, record):
+        """Write the interval's probe metadata, when any was entered or already stored.
+
+        Nothing entered means every probe value is ``None`` and no probe type is chosen.
+        A zero is a value.
+
+        Args:
+            record: The saved interval.
+        """
         values = {
             name: self.cleaned_data.get(
                 name if name.startswith("probe_") else f"probe_{name}"
             )
             for name in self.PROBE_FIELDS
         }
-        probe = getattr(interval, "probe_metadata", None)
-        if probe is None and not any(values.values()):
-            return interval
+        probe_types = values.pop("probe_type")
+        probe = getattr(record, "probe_metadata", None)
+        if (
+            probe is None
+            and not probe_types
+            and all(value is None for value in values.values())
+        ):
+            return
         if probe is None:
-            probe = ProbeMetadata(interval=interval)
-        for name in ("penetration", "length", "tilt"):
-            setattr(probe, name, values[name])
+            probe = ProbeMetadata(interval=record)
+        for name, value in values.items():
+            setattr(probe, name, value)
         probe.save()
-        probe.probe_type.set(values["probe_type"] or [])
-        return interval
+        probe.probe_type.set(probe_types or [])
 
 
 class HeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):

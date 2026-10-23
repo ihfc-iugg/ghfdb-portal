@@ -552,6 +552,181 @@ class TestHeatFlowSiteEditPage:
         assert 200 not in after
 
 
+def interval_data(interval, **changes):
+    """Post the data a researcher's browser sends for an interval, with these changes."""
+    data = {
+        "top_0": "0",
+        "top_1": "m",
+        "bottom_0": "500",
+        "bottom_1": "m",
+        "vertical_datum": interval.vertical_datum,
+        "lithology": "",
+        "age": "",
+    }
+    return {**data, **changes}
+
+
+class TestHeatFlowIntervalForm:
+    @pytest.fixture
+    def interval(self, db):
+        from tests.factories import HeatFlowIntervalFactory
+
+        return HeatFlowIntervalFactory(top=0, bottom=500)
+
+    def build(self, interval, **changes):
+        from heat_flow.forms import HeatFlowIntervalForm
+
+        return HeatFlowIntervalForm(
+            instance=interval, data=interval_data(interval, **changes)
+        )
+
+    def test_it_offers_every_mapped_interval_and_probe_column(self):
+        from heat_flow.forms import HeatFlowIntervalForm
+
+        from tests.test_docs.test_field_map import read_mappings
+
+        mappings = read_mappings()
+        interval = {
+            mapping.accessor.split(" ")[0]
+            for mapping in mappings
+            if mapping.accessed_from == "HeatFlowInterval"
+        } - {"identifiers"}
+        probe = {
+            mapping.column
+            for mapping in mappings
+            if mapping.accessed_from == "ProbeMetadata"
+        }
+
+        assert interval | probe <= set(HeatFlowIntervalForm().fields)
+        assert "identifiers" not in HeatFlowIntervalForm().fields
+
+    def test_it_offers_nothing_the_portal_calculates_or_assigns(self):
+        from heat_flow.forms import HeatFlowIntervalForm
+
+        withheld = {
+            "U_score",
+            "M_score",
+            "T_score",
+            "TC_score",
+            "quality",
+            "quality_scheme",
+            "ghfdb_id",
+            "dataset",
+            "sample",
+        }
+
+        assert not withheld & set(HeatFlowIntervalForm().fields)
+
+    def test_an_interval_with_no_probe_entered_gains_none(self, interval):
+        from heat_flow.models.child import ProbeMetadata
+
+        form = self.build(interval, bottom_0="600")
+        assert form.is_valid(), form.errors
+
+        form.save()
+
+        assert not ProbeMetadata.objects.filter(interval=interval).exists()
+
+    def test_a_probe_type_and_a_tilt_create_the_probe_metadata(self, interval):
+        form = self.build(
+            interval,
+            probe_type="Violin-Bow probe (Lister)",
+            probe_tilt_0="12.5",
+            probe_tilt_1="°",
+        )
+        assert form.is_valid(), form.errors
+
+        form.save()
+
+        probe = interval.probe_metadata
+        assert [concept.name for concept in probe.probe_type.all()] == ["violin_bow"]
+        assert probe.tilt.m_as("°") == pytest.approx(12.5)
+        assert probe.penetration is None
+        assert probe.length is None
+
+    def test_a_tilt_of_zero_creates_the_probe_metadata(self, interval):
+        form = self.build(interval, probe_tilt_0="0", probe_tilt_1="°")
+        assert form.is_valid(), form.errors
+
+        form.save()
+
+        probe = interval.probe_metadata
+        assert probe.tilt is not None
+        assert probe.tilt.m_as("°") == 0
+        assert not probe.probe_type.exists()
+
+    def test_the_stored_probe_values_are_the_initial_values_and_an_edit_updates_the_row(
+        self, interval
+    ):
+        from heat_flow.forms import HeatFlowIntervalForm
+        from heat_flow.models.child import ProbeMetadata
+
+        from tests.factories import ProbeMetadataFactory
+
+        stored = ProbeMetadataFactory(
+            interval=interval, penetration=3, length=4, tilt=5
+        )
+        fresh = type(interval).objects.get(pk=interval.pk)
+        fields = HeatFlowIntervalForm(instance=fresh).fields
+
+        assert fields["probe_penetration"].initial.m_as("m") == 3
+        assert fields["probe_length"].initial.m_as("m") == 4
+        assert fields["probe_tilt"].initial.m_as("°") == 5
+        form = self.build(
+            interval,
+            probe_penetration_0="7",
+            probe_penetration_1="m",
+            probe_length_0="4",
+            probe_length_1="m",
+            probe_tilt_0="9",
+            probe_tilt_1="°",
+        )
+        assert form.is_valid(), form.errors
+
+        form.save()
+
+        assert ProbeMetadata.objects.filter(interval=interval).count() == 1
+        stored.refresh_from_db()
+        assert stored.penetration.m_as("m") == 7
+        assert stored.tilt.m_as("°") == 9
+        assert not stored.probe_type.exists()
+
+    def test_a_bottom_not_below_the_top_is_refused_and_nothing_is_written(
+        self, interval
+    ):
+        from heat_flow.models.child import ProbeMetadata
+
+        form = self.build(
+            interval,
+            top_0="600",
+            bottom_0="100",
+            probe_tilt_0="12",
+            probe_tilt_1="°",
+        )
+
+        assert not form.is_valid()
+        assert form.non_field_errors()
+        interval.refresh_from_db()
+        assert interval.top.m_as("m") == 0
+        assert interval.bottom.m_as("m") == 500
+        assert not ProbeMetadata.objects.exists()
+
+    def test_saving_without_commit_then_saving_m2m_writes_the_probe_metadata(
+        self, interval
+    ):
+        from heat_flow.models.child import ProbeMetadata
+
+        form = self.build(interval, probe_tilt_0="12", probe_tilt_1="°")
+        assert form.is_valid(), form.errors
+
+        saved = form.save(commit=False)
+
+        assert not ProbeMetadata.objects.exists()
+        saved.save()
+        form.save_m2m()
+        assert saved.probe_metadata.tilt.m_as("°") == 12
+
+
 @pytest.fixture
 def editor(db):
     """Return a function that makes a request for a researcher who owns a dataset."""
