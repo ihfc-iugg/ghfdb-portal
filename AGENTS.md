@@ -11,7 +11,7 @@ package index.
 
 ## Stack & commands
 
-- **Stack:** Python 3.13, Django 5.x on the FairDM framework, uv-managed, PostgreSQL with
+- **Stack:** Python 3.13, Django 6.0 on the FairDM framework, uv-managed, PostgreSQL with
   PostGIS in every environment, at the version the pinned FairDM declares (17 with PostGIS 3.5 today)
 - **Development stack:** `docker compose up` starts PostGIS, Redis, the development server on
   port 8000 and a Celery worker. `docker compose up postgres redis` starts the databases alone,

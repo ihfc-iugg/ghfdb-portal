@@ -7,7 +7,7 @@ walking that list against the code proved was already there.
 
 A task counts as satisfied only where both a code citation and a passing test that covers it exist.
 Code with no test does not close a task — the task stays open and the remaining work is the test.
-The evidence for each satisfied task is in `feature-state.json`, which is what the implementation
+The evidence for each satisfied task is in the build record, which is what the implementation
 work is dispatched from.
 
 The original `tasks.md` recorded 67 of 67 complete. Those ticks were not consulted.

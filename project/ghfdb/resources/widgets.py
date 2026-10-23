@@ -21,6 +21,7 @@ References:
 from django.core.exceptions import ValidationError
 from django.db.models.functions import Lower
 from django.utils.translation import gettext_lazy as _
+from heat_flow.vocabularies import normalize_vocab_token, resolve_term, resolve_terms
 from import_export.widgets import BooleanWidget, CharWidget, ManyToManyWidget, Widget
 from research_vocabs.models import Concept
 
@@ -43,22 +44,6 @@ def _validate_concept(values, vocabulary):
             )
             % {"vocab": vocabulary.__name__, "invalid": invalid}
         )
-
-
-def normalize_vocab_token(raw: str) -> str:
-    """Strip surrounding square brackets and lowercase a vocabulary token (FS-003 FR-016).
-
-    GHFDB upload templates wrap vocabulary cell values in square brackets,
-    e.g. '[Onshore (continental)]'. This helper normalises such tokens so they
-    match the lowercase vocabulary definitions stored in the database.
-    The caller should preserve the original raw value for error messages.
-
-    Whitespace is stripped on both sides of the brackets, not just inside
-    them. Real submissions carry cells like ``' [unspecified]'`` — a leading
-    space defeats a bare ``strip("[]")``, because the first character is not
-    a bracket and stripping stops there.
-    """
-    return raw.strip().strip("[]").strip().lower()
 
 
 #: Cell values the assessment corpus uses to mean "nothing entered here
@@ -84,13 +69,6 @@ class ConceptWidget(CharWidget):
 
     def __init__(self, vocabulary, **kwargs):
         self.vocabulary = vocabulary
-        # vocabulary may be a class or instance; instantiate to access choices
-        vocab_instance = vocabulary() if isinstance(vocabulary, type) else vocabulary
-        self.choices = vocab_instance.choices
-        # Label -> key (case-insensitive): "onshore (continental)" -> "onshore_continental"
-        self.label_to_key = {label.lower(): key for key, label in self.choices}
-        # Key -> key (pass-through): "onshore_continental" -> "onshore_continental"
-        self.key_to_key = {key.lower(): key for key, _ in self.choices}
         super().__init__(**kwargs)
 
     def clean(self, value, row=None, column=None, **kwargs):
@@ -104,24 +82,11 @@ class ConceptWidget(CharWidget):
                 )
                 % {"val": value, "vocab": self.vocabulary.__name__}
             ) from None
-        if not val or normalize_vocab_token(val) == "unspecified":
-            return None
-        normalised = normalize_vocab_token(val)
-        result = self.label_to_key.get(normalised) or self.key_to_key.get(normalised)
-        if result is None:
+        try:
+            return resolve_term(self.vocabulary, val)
+        except ValueError as error:
             location = _("Column '%(column)s': ") % {"column": column} if column else ""
-            raise ValueError(
-                location
-                + _(
-                    "Invalid value '%(val)s' for %(vocab)s vocabulary. Valid options are: %(opts)s"
-                )
-                % {
-                    "val": val,
-                    "vocab": self.vocabulary.__name__,
-                    "opts": sorted(self.label_to_key.keys()),
-                }
-            )
-        return result
+            raise ValueError(f"{location}{error}") from None
 
 
 class MultiConceptWidget(ManyToManyWidget):
@@ -141,43 +106,11 @@ class MultiConceptWidget(ManyToManyWidget):
 
     def clean(self, value, row=None, column=None, *args, **kwargs):
         """Resolve semicolon-separated labels or keys to a Concept QuerySet."""
-        if not value:
-            return self.queryset.none()
-        # Build (original, normalised) pairs; skip blank tokens
-        pairs = [
-            (raw, normalize_vocab_token(raw))
-            for raw in (v.strip() for v in str(value).split(self.separator))
-            if raw
-        ]
-        if not pairs:
-            return self.queryset.none()
-        # A cell names a concept by its label or by its key — the lithology
-        # and stratigraphic-age columns offer keys, every other vocabulary
-        # column offers labels — so both must be matched here (#206).
-        concepts = list(self.queryset)
-        by_label = {concept.label.lower(): concept.pk for concept in concepts}
-        by_key = {concept.name.lower(): concept.pk for concept in concepts}
-
-        matched, invalid_originals = [], []
-        for orig, norm in pairs:
-            pk = by_label.get(norm, by_key.get(norm))
-            if pk is None and norm == "unspecified":
-                continue
-            if pk is None:
-                invalid_originals.append(orig)
-            else:
-                matched.append(pk)
-
-        if invalid_originals:
+        try:
+            return resolve_terms(self._vocab_class, value)
+        except ValueError as error:
             location = _("Column '%(column)s': ") % {"column": column} if column else ""
-            raise ValueError(
-                location
-                + _(
-                    "The following values are not part of the %(vocab)s vocabulary: %(invalid)s"
-                )
-                % {"vocab": self._vocab_class.__name__, "invalid": invalid_originals}
-            )
-        return self.queryset.filter(pk__in=matched)
+            raise ValueError(f"{location}{error}") from None
 
 
 class AcquisitionDateWidget(CharWidget):

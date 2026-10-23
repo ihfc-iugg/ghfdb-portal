@@ -260,10 +260,6 @@ class Migration(migrations.Migration):
                 "db_table_comment": "Metadata for marine heat flow probe measurements",
             },
         ),
-        migrations.RemoveField(
-            model_name="surfaceheatflow",
-            name="measurement_ptr",
-        ),
         migrations.AlterModelOptions(
             name="heatflow",
             options={"ordering": ["pk"], "verbose_name": "Heat Flow", "verbose_name_plural": "Heat Flow"},
@@ -414,6 +410,12 @@ class Migration(migrations.Migration):
         migrations.AlterUniqueTogether(
             name="heatflowcorrection",
             unique_together={("heat_flow", "correction_type")},
+        ),
+        # Dropped after heatflow.parent points elsewhere: from Django 6.0 a column is dropped
+        # without CASCADE, so the old foreign key must go first.
+        migrations.RemoveField(
+            model_name="surfaceheatflow",
+            name="measurement_ptr",
         ),
         migrations.DeleteModel(
             name="SurfaceHeatFlow",

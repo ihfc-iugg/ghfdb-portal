@@ -381,7 +381,9 @@ class TestSeedDemoDataAccounts:
         seed()
 
         assert (
-            get_user_model().objects.filter(email__in=addresses).count() == before == 10
+            get_user_model().objects.filter(email__in=addresses).count()
+            == before
+            == len(set(addresses))
         )
 
     def test_the_curator_sees_an_assessment_waiting_for_a_decision(self, seeded):

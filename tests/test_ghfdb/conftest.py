@@ -110,7 +110,7 @@ def heat_flow_chain(dataset):
         HeatFlowCorrection.objects.create(
             heat_flow=child,
             correction_type=correction_type,
-            status=HeatFlowCorrection.StatusChoices.UNSPECIFIED,
+            status="",
         )
 
     return child
@@ -296,7 +296,7 @@ def build_child(
         HeatFlowCorrection.objects.create(
             heat_flow=child,
             correction_type=correction_type,
-            status=HeatFlowCorrection.StatusChoices.UNSPECIFIED,
+            status="",
         )
 
     return child
@@ -424,7 +424,6 @@ def data_curator_client(client, db):
     # `measurement.view_measurement` at the model level rather than against any one
     # record.
     from django.contrib.auth.models import Group
-
     from fairdm.factories import UserFactory
 
     user = UserFactory()

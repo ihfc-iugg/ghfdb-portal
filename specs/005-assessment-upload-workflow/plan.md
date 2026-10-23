@@ -153,7 +153,6 @@ specs/005-assessment-upload-workflow/
 ├── research.md
 ├── data-model.md
 ├── decisions.md
-├── progress.md
 └── tasks.md
 ```
 

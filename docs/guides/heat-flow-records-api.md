@@ -545,7 +545,8 @@ requester may not see the site, `location` and `site` are `null`. The record at 
 address gives the thermal gradient and the interval conductivity whole, in the shape of their own
 records, in place of the references. It adds `corrections`, one entry for each correction recorded
 against the child, whatever its status, with the type and the status each given as a `name` and a
-`label`. A correction type that was never recorded is not in the list. A gradient or conductivity
+`label`. A correction recorded with no status is in the list with `status` set to `null`, which
+tells it from a correction type that was never recorded and is not in the list. A gradient or conductivity
 the requester may not see is `null`.
 
 ```

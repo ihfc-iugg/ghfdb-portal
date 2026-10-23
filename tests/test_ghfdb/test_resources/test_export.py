@@ -222,6 +222,51 @@ class TestGHFDBExportM2MFields:
         assert row["t_method_top"] in ("", None)
 
 
+class TestGHFDBExportCorrectionStatus:
+    # FS-009 FR-017: a correction with no status is stored empty and the published file
+    # still writes ``-`` for it, and nothing for a child that has no correction row.
+
+    @pytest.mark.django_db
+    def test_an_empty_status_exports_a_dash(self, heat_flow_chain):
+        from project.ghfdb.models import GHFDBChild
+        from project.ghfdb.resources.export import GHFDBExportResource
+
+        assert set(heat_flow_chain.corrections.values_list("status", flat=True)) == {""}
+
+        qs = GHFDBChild.objects.for_export().filter(pk=heat_flow_chain.pk)
+        row = GHFDBExportResource().export(qs).dict[0]
+
+        assert row["corr_is_flag"] == "-"
+        assert row["corr_hr_flag"] == "-"
+
+    @pytest.mark.django_db
+    def test_a_missing_row_exports_empty(self, heat_flow_chain):
+        from project.ghfdb.models import GHFDBChild
+        from project.ghfdb.resources.export import GHFDBExportResource
+
+        heat_flow_chain.corrections.filter(correction_type="IS").delete()
+
+        qs = GHFDBChild.objects.for_export().filter(pk=heat_flow_chain.pk)
+        row = GHFDBExportResource().export(qs).dict[0]
+
+        assert row["corr_is_flag"] in ("", None)
+        assert row["corr_t_flag"] == "-"
+
+    @pytest.mark.django_db
+    def test_a_chosen_status_exports_as_stored(self, heat_flow_chain):
+        from project.ghfdb.models import GHFDBChild
+        from project.ghfdb.resources.export import GHFDBExportResource
+
+        heat_flow_chain.corrections.filter(correction_type="T").update(
+            status="present_corrected"
+        )
+
+        qs = GHFDBChild.objects.for_export().filter(pk=heat_flow_chain.pk)
+        row = GHFDBExportResource().export(qs).dict[0]
+
+        assert row["corr_t_flag"] == "present_corrected"
+
+
 # Ref_IGSN column tests (FS-004)
 
 

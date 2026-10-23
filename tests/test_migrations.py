@@ -297,3 +297,49 @@ class TestLocatedSamplesKeepTheirCoordinates:
         }
         assert sum(value is not None for value in after["samples"].values()) == 4
         assert after["copy"] is None
+
+
+class TestCorrectionStatusMigration:
+    # FS-009 FR-009: an unspecified correction is stored with no status. Migration 0018
+    # turns every stored ``-`` into an empty status, and back.
+
+    @pytest.mark.slow
+    def test_a_dash_reads_empty_after_migrating_forward_and_dash_again_back(
+        self, empty_database
+    ):
+        import json
+
+        read = json.loads(run_in_database(empty_database, CORRECTION_STATUS_ROUND_TRIP))
+
+        assert read == {"before": "-", "forward": "", "back": "-"}
+
+
+# Stores a correction with the status ``-`` at migration 0017, then reads its status after
+# migrating to 0018 and after migrating back to 0017. The foreign keys are left unchecked
+# for the one insert, so the row needs no heat flow behind it.
+CORRECTION_STATUS_ROUND_TRIP = """
+import json
+from django.core.management import call_command
+from django.db import connection
+
+def status():
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT status FROM heat_flow_heatflowcorrection")
+        (value,) = cursor.fetchone()
+    return value
+
+call_command("migrate", "heat_flow", "0017_restore_sample_coordinates", verbosity=0)
+with connection.cursor() as cursor:
+    cursor.execute("SET session_replication_role = replica")
+    cursor.execute(
+        "INSERT INTO heat_flow_heatflowcorrection"
+        " (heat_flow_id, correction_type, status, comment)"
+        " VALUES (1, 'IS', '-', '')"
+    )
+    cursor.execute("SET session_replication_role = DEFAULT")
+before = status()
+call_command("migrate", "heat_flow", "0018_correction_status_may_be_empty", verbosity=0)
+forward = status()
+call_command("migrate", "heat_flow", "0017_restore_sample_coordinates", verbosity=0)
+print(json.dumps({"before": before, "forward": forward, "back": status()}))
+"""

@@ -87,7 +87,7 @@
                 <tr data-correction="{{ correction.correction_type }}"
                     data-status="{{ correction.status }}">
                   <th scope="row" class="font-medium">{{ correction.get_correction_type_display }}</th>
-                  <td>{{ correction.get_status_display|capfirst }}</td>
+                  <td>{% if correction.status %}{{ correction.get_status_display|capfirst }}{% else %}—{% endif %}</td>
                   <td class="text-base-content/70">{{ correction.comment|default:"" }}</td>
                 </tr>
               {% endfor %}

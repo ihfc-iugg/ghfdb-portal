@@ -279,7 +279,7 @@ class HeatFlowCorrectionFactory(factory.django.DjangoModelFactory):
 
     heat_flow = factory.SubFactory(HeatFlowFactory)
     correction_type = HeatFlowCorrection.CorrectionTypeChoices.IS
-    status = HeatFlowCorrection.StatusChoices.UNSPECIFIED
+    status = ""
 
     class Meta:
         model = HeatFlowCorrection

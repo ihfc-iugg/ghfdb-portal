@@ -1,7 +1,7 @@
 # Tasks — 001 heat flow data model
 
 Written from `spec.md` as though the repository were empty, then reconciled against the code. The
-reconciliation is in `reconciliation.md`, and `feature-state.json` records which tasks it proved
+reconciliation is in `reconciliation.md`, and the build record lists which tasks it proved
 already satisfied.
 
 Writing the list this way is deliberate. A task list written by reading the implementation can only

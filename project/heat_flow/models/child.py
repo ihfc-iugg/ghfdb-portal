@@ -460,7 +460,6 @@ class HeatFlowCorrection(django_models.Model):
         DRIFT_CORRECTED = "drift_corrected", _("Drift corrected")
         NOT_CORRECTED = "not_corrected", _("not corrected")
         CORRECTED = "corrected", _("Corrected")
-        UNSPECIFIED = "-", _("unspecified")
 
     heat_flow = models.ForeignKey(
         "heat_flow.HeatFlow",
@@ -479,7 +478,8 @@ class HeatFlowCorrection(django_models.Model):
         choices=StatusChoices.choices,
         verbose_name=_("correction status"),
         help_text=_("Whether the correction was present and applied."),
-        default=StatusChoices.UNSPECIFIED,
+        blank=True,
+        default="",
     )
     comment = models.TextField(
         verbose_name=_("comment"),
@@ -507,7 +507,6 @@ class HeatFlowCorrection(django_models.Model):
             "not_considered",
             "tilt_corrected",
             "drift_corrected",
-            "-",
         },
         "T": {
             "present_corrected",
@@ -516,7 +515,6 @@ class HeatFlowCorrection(django_models.Model):
             "corrected",
             "not_recognized",
             "not_considered",
-            "-",
         },
     }
     ENVIRONMENTAL_VALID: set[str] = {
@@ -528,7 +526,6 @@ class HeatFlowCorrection(django_models.Model):
         "considered_t",
         "considered_pt",
         "not_considered",
-        "-",
     }
     # S, E, TOPO, PAL, SUR, CONV, HR → ENVIRONMENTAL_VALID
     _ENVIRONMENTAL_TYPES: frozenset[str] = frozenset(
@@ -537,16 +534,20 @@ class HeatFlowCorrection(django_models.Model):
 
     def __str__(self):
         """Return the correction type's label and its status."""
-        return f"{self.get_correction_type_display()} - {self.status}"
+        status = self.status or _("unspecified")
+        return f"{self.get_correction_type_display()} - {status}"
 
     def save(self, *args, **kwargs):
-        """Reject a status that is not valid for this correction's type."""
+        """Reject a status that is not valid for this correction's type.
+
+        An empty status, no status chosen, is valid for every type.
+        """
         valid: set[str] | None = None
         if self.correction_type in self.VALID_STATUS_FOR_TYPE:
             valid = self.VALID_STATUS_FOR_TYPE[self.correction_type]
         elif self.correction_type in self._ENVIRONMENTAL_TYPES:
             valid = self.ENVIRONMENTAL_VALID
-        if valid is not None and self.status not in valid:
+        if valid is not None and self.status and self.status not in valid:
             raise ValidationError(
                 _(
                     f"Status '{self.status}' is not valid for correction type '{self.correction_type}'."

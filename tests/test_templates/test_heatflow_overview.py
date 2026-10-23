@@ -80,6 +80,26 @@ class TestChildPage:
             r.attrs["data-correction"]: r.attrs["data-status"] for r in rows
         } == recorded
 
+    def test_a_correction_with_no_status_shows_a_dash_in_its_status_cell(
+        self, document, page_records
+    ):
+        child = page_records["child"]
+        HeatFlowCorrectionFactory(heat_flow=child, correction_type="TOPO", status="")
+        HeatFlowCorrectionFactory(
+            heat_flow=child, correction_type="SUR", status="present_corrected"
+        )
+
+        page = document(child)
+
+        rows = {
+            r.attrs["data-correction"]: r
+            for r in page.find("data-heat-flow", "corrections").find_all(
+                "data-correction"
+            )
+        }
+        assert "\u2014" in rows["TOPO"].text
+        assert "\u2014" not in rows["SUR"].text
+
     def test_a_child_with_no_corrections_says_none_are_recorded(
         self, document, page_records
     ):

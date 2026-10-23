@@ -141,7 +141,8 @@ the password `password`.
 | `staff.user@example.com` | A staff user. |
 | `super.user@example.com` | A superuser. |
 
-The command also creates the five accounts FairDM ships for development, at `fairdm.org`. They
+The command also creates the accounts FairDM ships for development, which are at `example.com`
+too. `regular.user@example.com` is one of them, so the portal and FairDM share that account. They
 are described in FairDM's documentation. A rerun reuses every account and adds no second one.
 
 The dataset list page leaves private datasets out for every visitor, so reach a private dataset

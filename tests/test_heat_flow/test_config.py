@@ -183,3 +183,25 @@ class TestLocationInput:
 
         with pytest.raises(ValidationError):
             form.fields["location"].clean(["91.5", "8.5"])
+
+
+class TestHeatFlowFormRegistry:
+    @pytest.mark.parametrize(
+        ("model_name", "form_name"),
+        [
+            ("HeatFlowSite", "HeatFlowSiteForm"),
+            ("HeatFlowInterval", "HeatFlowIntervalForm"),
+            ("HeatFlow", "HeatFlowForm"),
+            ("ThermalGradient", "ThermalGradientForm"),
+            ("IntervalConductivity", "IntervalConductivityForm"),
+            ("ParentHeatFlow", "ParentHeatFlowForm"),
+        ],
+    )
+    def test_each_model_is_edited_with_its_own_form(self, model_name, form_name):
+        from heat_flow import forms, models
+
+        model = getattr(models, model_name)
+
+        form_class = fairdm.registry.get_for_model(model).get_form_class()
+
+        assert form_class is getattr(forms, form_name)
