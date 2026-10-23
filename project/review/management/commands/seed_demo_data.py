@@ -34,6 +34,8 @@ from heat_flow.demo import DemoGraph
 from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
 from heat_flow.signals import Recalculation
 from literature.models import LiteratureItem
+from research_vocabs.models import Concept
+from research_vocabs.registry import vocab_registry
 
 from review.models import Review
 from review.permissions import DATA_ASSESSOR_GROUP, DATA_CURATOR_GROUP
@@ -131,7 +133,8 @@ class Command(BaseCommand):
             raise CommandError(
                 f"--size must be from {MIN_SIZE} to {MAX_SIZE} datasets, not {size}."
             )
-        call_command("preload")
+        if not self._vocabularies_loaded():
+            call_command("preload")
         call_command("seed_licenses")
 
         rng = random.Random()  # noqa: S311 - demo values, not secrets
@@ -189,6 +192,23 @@ class Command(BaseCommand):
                 f"Refusing to add demo data: the resolved environment {environment!r} is not"
                 " a development one."
             )
+
+    @staticmethod
+    def _vocabularies_loaded() -> bool:
+        """Return whether every concept of every registered vocabulary is already stored.
+
+        Loading them writes each of several hundred concepts again, so a run on a database
+        that holds them all skips it.
+
+        Returns:
+            Whether no registered concept is missing from the database.
+        """
+        stored = set(Concept.objects.values_list("vocabulary__name", "name"))
+        return all(
+            (name, concept.name) in stored
+            for name, vocabulary in vocab_registry.items()
+            for concept in vocabulary.concepts()
+        )
 
     @staticmethod
     def _next_ghfdb_id() -> int:
