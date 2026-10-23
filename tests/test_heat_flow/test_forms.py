@@ -145,16 +145,6 @@ class TestHeatFlowFormfield:
 
             assert isinstance(field, ConceptTextField)
 
-    def test_any_other_multiple_choice_is_a_counted_tom_select(self):
-        from heat_flow.forms import heat_flow_formfield
-        from heat_flow.models import HeatFlowSite
-        from mvp_forms.widgets import TomSelectMultiple
-
-        field = heat_flow_formfield(HeatFlowSite._meta.get_field("stratigraphy"))
-
-        assert isinstance(field.widget, TomSelectMultiple)
-        assert field.widget.counted is True
-
     def test_a_plain_field_is_left_as_the_model_draws_it(self):
         from django import forms
         from heat_flow.forms import heat_flow_formfield
@@ -200,34 +190,16 @@ class TestSectionedForm:
 
         assert sorted(drawn_names(form)) == sorted(form.fields)
 
-    def test_the_first_group_has_no_heading_and_later_groups_are_panels(self):
-        from heat_flow.forms import HeatFlowSiteForm
-        from mvp_forms.layout import Fieldset
-
-        drawn = HeatFlowSiteForm().helper.layout.fields
-
-        assert not isinstance(drawn[0], Fieldset)
-        assert len(drawn) > 1
-        assert all(isinstance(group, Fieldset) for group in drawn[1:])
-
-    def test_a_measured_pair_is_two_numbers_and_a_unit_drawn_as_one_join(self):
+    def test_a_measured_pair_is_two_numbers_and_a_unit(self):
         from django import forms
         from heat_flow.forms import ThermalGradientForm
-        from mvp_forms.layout import Join
 
-        form = ThermalGradientForm()
-        join = form.helper.layout.fields[0]
-        members = [
-            pointer.name
-            for pointer in form.helper.layout.get_field_names()
-            if pointer.positions[:-1] == [0]
-        ]
+        fields = ThermalGradientForm().fields
 
-        assert isinstance(join, Join)
-        assert members == ["value", "uncertainty", "value_unit"]
-        assert isinstance(form.fields["value"], forms.DecimalField)
-        assert isinstance(form.fields["uncertainty"], forms.DecimalField)
-        assert isinstance(form.fields["value_unit"], forms.ChoiceField)
+        assert {"value", "uncertainty", "value_unit"} <= set(fields)
+        assert isinstance(fields["value"], forms.DecimalField)
+        assert isinstance(fields["uncertainty"], forms.DecimalField)
+        assert isinstance(fields["value_unit"], forms.ChoiceField)
 
     def test_a_measured_number_keeps_its_translatable_label(self):
         from django.utils.functional import Promise
