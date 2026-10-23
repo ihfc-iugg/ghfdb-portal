@@ -952,3 +952,250 @@ class TestHeatFlowEditPage:
         assert corrections_of(corrected["child"]) == corrections_of(imported)
         assert corrections_of(corrected["child"])["TOPO"] == "present_corrected"
         assert corrections_of(corrected["child"])["IS"] == "-"
+
+
+@pytest.fixture
+def scored_records(db):
+    """A borehole interval with a gradient, a conductivity, a child using both and a parent."""
+    from fairdm.factories import DatasetFactory
+    from fairdm.utils.choices import Visibility
+    from heat_flow import vocabularies
+
+    from tests.factories import (
+        HeatFlowFactory,
+        HeatFlowIntervalFactory,
+        HeatFlowSiteFactory,
+        IntervalConductivityFactory,
+        ParentHeatFlowFactory,
+        ThermalGradientFactory,
+    )
+    from tests.test_heat_flow.test_quality import concepts
+
+    dataset = DatasetFactory(visibility=Visibility.PUBLIC, published=True)
+    site = HeatFlowSiteFactory(dataset=dataset, explo_method="drilling")
+    interval = HeatFlowIntervalFactory(dataset=dataset, site=site, top=0, bottom=1000)
+    gradient = ThermalGradientFactory(
+        dataset=dataset,
+        sample=interval,
+        number=10,
+        method_top=concepts(vocabularies.TemperatureMethod, "LOGeq"),
+        method_bottom=concepts(vocabularies.TemperatureMethod, "LOGeq"),
+    )
+    conductivity = IntervalConductivityFactory(
+        dataset=dataset,
+        sample=interval,
+        number=30,
+        source=concepts(vocabularies.ConductivitySource, "core_samples"),
+        conductivity_location=concepts(vocabularies.ConductivityLocation, "actual"),
+        saturation=concepts(vocabularies.ConductivitySaturation, "saturatedMeasured"),
+        pT_conditions=concepts(vocabularies.ConductivityPTConditions, "actualInSitu"),
+    )
+    parent = ParentHeatFlowFactory(dataset=dataset, sample=site)
+    child = HeatFlowFactory(
+        dataset=dataset,
+        sample=interval,
+        thermal_gradient=gradient,
+        thermal_conductivity=conductivity,
+        parent=parent,
+        is_relevant=True,
+        value=70,
+        uncertainty=7,
+    )
+    for record in (gradient, conductivity, child):
+        record.refresh_from_db()
+    return {
+        "dataset": dataset,
+        "interval": interval,
+        "gradient": gradient,
+        "conductivity": conductivity,
+        "child": child,
+    }
+
+
+def gradient_data(**changes):
+    """Post the data a researcher's browser sends for a gradient, with these changes."""
+    data = {
+        "value": "25.5",
+        "value_unit": "K/km",
+        "uncertainty": "1.25",
+        "corrected_value": "26.5",
+        "corrected_value_unit": "K/km",
+        "corrected_uncertainty": "1.5",
+        "method_top": "LOGeq",
+        "method_bottom": "LOGeq",
+        "correction_top": "",
+        "correction_bottom": "",
+        "number": "10",
+    }
+    return {**data, **changes}
+
+
+class TestThermalGradientForm:
+    def build(self, records, **changes):
+        from heat_flow.forms import ThermalGradientForm
+
+        return ThermalGradientForm(
+            instance=records["gradient"], data=gradient_data(**changes)
+        )
+
+    def test_it_offers_every_mapped_gradient_column(self):
+        from heat_flow.forms import ThermalGradientForm
+
+        from tests.test_docs.test_field_map import read_mappings
+
+        mapped = {
+            mapping.accessor.split(" ")[0]
+            for mapping in read_mappings()
+            if mapping.accessed_from == "ThermalGradient"
+        }
+
+        assert len(mapped) == 11
+        assert mapped <= set(ThermalGradientForm().fields)
+
+    def test_it_offers_nothing_the_portal_calculates_or_assigns(self):
+        from heat_flow.forms import ThermalGradientForm
+
+        withheld = {"score", "score_missing", "quality_scheme", "dataset", "sample"}
+
+        assert not withheld & set(ThermalGradientForm().fields)
+
+    @pytest.mark.parametrize(
+        "name", ["method_top", "method_bottom", "correction_top", "correction_bottom"]
+    )
+    def test_a_term_outside_the_vocabulary_is_refused_and_nothing_is_written(
+        self, scored_records, name
+    ):
+        gradient = scored_records["gradient"]
+        before = gradient.value
+        form = self.build(scored_records, **{name: "not a term", "value": "30"})
+
+        assert not form.is_valid()
+        assert form.has_error(name, code="unknown_term")
+        gradient.refresh_from_db()
+        assert gradient.value == before
+
+    def test_the_two_measured_pairs_convert_units_independently(
+        self, scored_records, monkeypatch
+    ):
+        from decimal import Decimal
+
+        from heat_flow.models import ThermalGradient
+
+        for name in ("value", "corrected_value"):
+            field = ThermalGradient._meta.get_field(name)
+            monkeypatch.setattr(field, "unit_choices", ["K/km", "K/m"])
+        form = self.build(
+            scored_records,
+            value="0.0255",
+            value_unit="K/m",
+            uncertainty="0.0012",
+            corrected_value="26.5",
+            corrected_value_unit="K/km",
+            corrected_uncertainty="1.5",
+        )
+
+        assert form.is_valid(), form.errors
+        gradient = form.save()
+        gradient.refresh_from_db()
+        assert gradient.value.m_as("K/km") == Decimal("25.50")
+        assert gradient.uncertainty.m_as("K/km") == Decimal("1.20")
+        assert gradient.corrected_value.m_as("K/km") == Decimal("26.50")
+        assert gradient.corrected_uncertainty.m_as("K/km") == Decimal("1.50")
+
+    def test_the_temperature_methods_take_several_terms(self, scored_records):
+        from heat_flow import vocabularies
+
+        from tests.test_heat_flow.test_quality import concepts
+
+        form = self.build(scored_records, method_top="LOGeq; cLOG")
+
+        assert form.is_valid(), form.errors
+        gradient = form.save()
+        assert set(gradient.method_top.all()) == set(
+            concepts(vocabularies.TemperatureMethod, "LOGeq", "cLOG")
+        )
+
+
+def conductivity_data(**changes):
+    """Post the data a researcher's browser sends for a conductivity, with these changes."""
+    data = {
+        "value": "2.5",
+        "value_unit": "W/mK",
+        "uncertainty": "0.25",
+        "source": "core_samples",
+        "conductivity_location": "actual",
+        "method": "",
+        "saturation": "saturatedMeasured",
+        "pT_conditions": "actualInSitu",
+        "pT_function": "",
+        "number": "30",
+        "strategy": "",
+    }
+    return {**data, **changes}
+
+
+class TestIntervalConductivityForm:
+    def build(self, records, **changes):
+        from heat_flow.forms import IntervalConductivityForm
+
+        return IntervalConductivityForm(
+            instance=records["conductivity"], data=conductivity_data(**changes)
+        )
+
+    def test_it_offers_every_mapped_conductivity_column(self):
+        from heat_flow.forms import IntervalConductivityForm
+
+        from tests.test_docs.test_field_map import read_mappings
+
+        mapped = {
+            mapping.accessor.split(" ")[0]
+            for mapping in read_mappings()
+            if mapping.accessed_from == "IntervalConductivity"
+        }
+
+        assert len(mapped) == 10
+        assert mapped <= set(IntervalConductivityForm().fields)
+
+    def test_it_offers_nothing_the_portal_calculates_or_assigns(self):
+        from heat_flow.forms import IntervalConductivityForm
+
+        withheld = {"score", "score_missing", "quality_scheme", "dataset", "sample"}
+
+        assert not withheld & set(IntervalConductivityForm().fields)
+
+    @pytest.mark.parametrize(
+        "name",
+        [
+            "source",
+            "conductivity_location",
+            "method",
+            "saturation",
+            "pT_conditions",
+            "pT_function",
+            "strategy",
+        ],
+    )
+    def test_a_term_outside_the_vocabulary_is_refused_and_nothing_is_written(
+        self, scored_records, name
+    ):
+        conductivity = scored_records["conductivity"]
+        before = conductivity.value
+        form = self.build(scored_records, **{name: "not a term", "value": "3"})
+
+        assert not form.is_valid()
+        assert form.has_error(name, code="unknown_term")
+        conductivity.refresh_from_db()
+        assert conductivity.value == before
+
+    def test_the_source_takes_several_terms(self, scored_records):
+        from heat_flow import vocabularies
+
+        from tests.test_heat_flow.test_quality import concepts
+
+        form = self.build(scored_records, source="core_samples; well_log")
+
+        assert form.is_valid(), form.errors
+        conductivity = form.save()
+        assert set(conductivity.source.all()) == set(
+            concepts(vocabularies.ConductivitySource, "core_samples", "well_log")
+        )
