@@ -179,6 +179,79 @@ class Recalculation:
         transaction.on_commit(callback)
 
     @staticmethod
+    def levels():
+        """Return each level as its name, its queryset and the method that refreshes it.
+
+        Gradients and conductivities come first, then the children that read them, then the
+        parents that read the children. Each queryset fetches what scoring reads with the
+        records (the interval with its site and probe metadata, the concept fields, the
+        corrections, a parent's children), so a refresh does not query them one record at a
+        time.
+
+        Returns:
+            Four ``(name, queryset, method)`` tuples, for the gradients, the conductivities,
+            the children and the parents, in the order they are refreshed.
+        """
+        from django.db.models import Prefetch
+
+        from .models import (
+            HeatFlow,
+            HeatFlowInterval,
+            IntervalConductivity,
+            ParentHeatFlow,
+            ThermalGradient,
+        )
+
+        def interval(relation=""):
+            """Fetch a measurement's interval with the site and probe metadata scoring reads."""
+            return Prefetch(
+                f"{relation}sample",
+                queryset=HeatFlowInterval.objects.select_related(
+                    "site", "probe_metadata"
+                ),
+            )
+
+        child_reads = [
+            read
+            for relation, model in (
+                ("thermal_gradient", ThermalGradient),
+                ("thermal_conductivity", IntervalConductivity),
+            )
+            for read in (
+                interval(f"{relation}__"),
+                *(f"{relation}__{field}" for field in model.SCORED_CONCEPT_FIELDS),
+            )
+        ]
+        return (
+            (
+                "gradients",
+                ThermalGradient.objects.prefetch_related(
+                    interval(), *ThermalGradient.SCORED_CONCEPT_FIELDS
+                ),
+                "refresh_score",
+            ),
+            (
+                "conductivities",
+                IntervalConductivity.objects.prefetch_related(
+                    interval(), *IntervalConductivity.SCORED_CONCEPT_FIELDS
+                ),
+                "refresh_score",
+            ),
+            (
+                "children",
+                HeatFlow.objects.select_related(
+                    "thermal_gradient", "thermal_conductivity"
+                ).prefetch_related("corrections", *child_reads),
+                "refresh_quality",
+            ),
+            (
+                "parents",
+                ParentHeatFlow.objects.prefetch_related("children"),
+                "refresh_quality",
+            ),
+        )
+
+    @staticmethod
     def _refresh(named: dict[str, set[int]]) -> None:
         """Refresh the named records that still exist, then what reads them.
 
@@ -188,18 +261,11 @@ class Recalculation:
         """
         from django.db.models import Q
 
-        from .models import (
-            HeatFlow,
-            IntervalConductivity,
-            ParentHeatFlow,
-            ThermalGradient,
-        )
+        from .models import HeatFlow
 
-        for model, key in (
-            (ThermalGradient, "gradients"),
-            (IntervalConductivity, "conductivities"),
-        ):
-            for measurement in model.objects.filter(pk__in=named[key]):
+        levels = {name: queryset for name, queryset, _method in Recalculation.levels()}
+        for key in ("gradients", "conductivities"):
+            for measurement in levels[key].filter(pk__in=named[key]):
                 measurement.refresh_score()
 
         child_ids = named["children"] | set(
@@ -209,12 +275,12 @@ class Recalculation:
             ).values_list("pk", flat=True)
         )
         parent_ids = set(named["parents"])
-        for child in HeatFlow.objects.filter(pk__in=child_ids):
+        for child in levels["children"].filter(pk__in=child_ids):
             child.refresh_quality()
             if child.parent_id is not None:
                 parent_ids.add(child.parent_id)
 
-        for parent in ParentHeatFlow.objects.filter(pk__in=parent_ids):
+        for parent in levels["parents"].filter(pk__in=parent_ids):
             parent.refresh_quality()
 
 
