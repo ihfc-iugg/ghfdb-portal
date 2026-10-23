@@ -1473,3 +1473,236 @@ class TestIntervalConductivityEditPage:
         child = HeatFlow.objects.get(pk=child.pk)
         assert conductivity.score == pytest.approx(0.8)
         assert child.TC_score == pytest.approx(0.6)
+
+
+@pytest.fixture
+def parent_records(db):
+    """A site with a parent and three children; only the best-graded child is relevant."""
+    from fairdm.factories import DatasetFactory
+    from fairdm.utils.choices import Visibility
+
+    from tests.factories import (
+        HeatFlowFactory,
+        HeatFlowIntervalFactory,
+        HeatFlowSiteFactory,
+        ParentHeatFlowFactory,
+    )
+
+    dataset = DatasetFactory(visibility=Visibility.PUBLIC, published=True)
+    site = HeatFlowSiteFactory(dataset=dataset)
+    interval = HeatFlowIntervalFactory(dataset=dataset, site=site, top=0, bottom=500)
+    parent = ParentHeatFlowFactory(
+        dataset=dataset, sample=site, value=60, uncertainty=6, comment="as uploaded"
+    )
+    children = [
+        HeatFlowFactory(
+            dataset=dataset,
+            sample=interval,
+            parent=parent,
+            is_relevant=index == 0,
+            value=100,
+            uncertainty=uncertainty,
+        )
+        for index, uncertainty in enumerate([3, 10, 20])
+    ]
+    for record in (parent, *children):
+        record.refresh_from_db()
+    return {
+        "dataset": dataset,
+        "site": site,
+        "interval": interval,
+        "parent": parent,
+        "children": children,
+    }
+
+
+def parent_data(parent, *chosen, **changes):
+    """Post the data a researcher's browser sends for a parent, choosing these children."""
+    data = {
+        "value": "60",
+        "uncertainty": "6",
+        "value_unit": "mW / m^2",
+        "comment": parent.comment or "",
+        "corr_HP_flag": "unknown",
+        "relevant_children": [str(child.pk) for child in chosen],
+    }
+    return {**data, **changes}
+
+
+def relevant_among(children):
+    """Return the pks of the children that are stored as relevant."""
+    from heat_flow.models import HeatFlow
+
+    return set(
+        HeatFlow.objects.filter(
+            pk__in=[child.pk for child in children], is_relevant=True
+        ).values_list("pk", flat=True)
+    )
+
+
+class TestParentHeatFlowForm:
+    def build(self, records, editor, *chosen, **changes):
+        from heat_flow.forms import ParentHeatFlowForm
+
+        return ParentHeatFlowForm(
+            instance=records["parent"],
+            data=parent_data(records["parent"], *chosen, **changes),
+            request=editor(records["dataset"]),
+        )
+
+    def elsewhere(self, records, **child_fields):
+        """Return a child on another site, and the dataset it was measured in."""
+        from tests.factories import (
+            HeatFlowFactory,
+            HeatFlowIntervalFactory,
+            HeatFlowSiteFactory,
+        )
+
+        site = HeatFlowSiteFactory(dataset=records["dataset"])
+        interval = HeatFlowIntervalFactory(dataset=records["dataset"], site=site)
+        return HeatFlowFactory(
+            dataset=records["dataset"], sample=interval, **child_fields
+        )
+
+    def locked_child(self, records, **child_fields):
+        """Return a child at the parent's site, in a dataset nobody here may change."""
+        from fairdm.factories import DatasetFactory
+        from fairdm.utils.choices import Visibility
+
+        from tests.factories import HeatFlowFactory
+
+        locked = DatasetFactory(visibility=Visibility.PUBLIC, published=True)
+        return HeatFlowFactory(
+            dataset=locked,
+            sample=records["interval"],
+            parent=records["parent"],
+            value=100,
+            uncertainty=10,
+            **child_fields,
+        )
+
+    def test_it_offers_every_mapped_parent_column_and_the_children_choice(self):
+        from heat_flow.forms import ParentHeatFlowForm
+
+        from tests.test_docs.test_field_map import read_mappings
+
+        mapped = {
+            mapping.accessor
+            for mapping in read_mappings()
+            if mapping.accessed_from == "ParentHeatFlow"
+        } - {"ghfdb_id", "quality"}
+
+        assert mapped | {"relevant_children"} <= set(ParentHeatFlowForm().fields)
+
+    def test_it_offers_nothing_the_portal_calculates_or_assigns(self):
+        from heat_flow.forms import ParentHeatFlowForm
+
+        withheld = {
+            "U_score",
+            "M_score",
+            "quality",
+            "quality_scheme",
+            "ghfdb_id",
+            "dataset",
+            "sample",
+        }
+
+        assert not withheld & set(ParentHeatFlowForm().fields)
+
+    def test_the_initial_children_are_the_relevant_ones(self, parent_records, editor):
+        from heat_flow.forms import ParentHeatFlowForm
+
+        form = ParentHeatFlowForm(
+            instance=parent_records["parent"],
+            request=editor(parent_records["dataset"]),
+        )
+
+        assert set(form.fields["relevant_children"].initial) == {
+            parent_records["children"][0].pk
+        }
+
+    def test_marking_two_of_three_makes_exactly_those_relevant(
+        self, parent_records, editor
+    ):
+        _first, second, third = parent_records["children"]
+        form = self.build(parent_records, editor, second, third)
+
+        assert form.is_valid(), form.errors
+        form.save()
+
+        assert relevant_among(parent_records["children"]) == {second.pk, third.pk}
+
+    def test_a_child_at_another_site_is_refused_and_nothing_is_written(
+        self, parent_records, editor
+    ):
+        first, second, _third = parent_records["children"]
+        foreign = self.elsewhere(parent_records, is_relevant=False)
+        form = self.build(
+            parent_records, editor, second, foreign, comment="changed"
+        )
+
+        assert not form.is_valid()
+        assert form.has_error("relevant_children", code="other_site")
+        parent_records["parent"].refresh_from_db()
+        assert parent_records["parent"].comment == "as uploaded"
+        assert relevant_among(parent_records["children"]) == {first.pk}
+        assert relevant_among([foreign]) == set()
+
+    def test_a_child_in_a_dataset_the_researcher_may_not_change_is_refused_when_chosen(
+        self, parent_records, editor
+    ):
+        locked = self.locked_child(parent_records, is_relevant=False)
+        form = self.build(parent_records, editor, parent_records["children"][1], locked)
+
+        assert not form.is_valid()
+        assert form.has_error("relevant_children")
+        assert not form.has_error("relevant_children", code="other_site")
+        assert relevant_among([locked]) == set()
+
+    def test_a_child_in_a_dataset_the_researcher_may_not_change_keeps_its_relevance(
+        self, parent_records, editor
+    ):
+        from heat_flow.forms import ParentHeatFlowForm
+
+        locked = self.locked_child(parent_records, is_relevant=True)
+        _first, second, _third = parent_records["children"]
+        initial = ParentHeatFlowForm(
+            instance=parent_records["parent"],
+            request=editor(parent_records["dataset"]),
+        ).fields["relevant_children"].initial
+        form = self.build(parent_records, editor, second)
+
+        assert locked.pk not in initial
+        assert form.is_valid(), form.errors
+        form.save()
+
+        assert relevant_among(parent_records["children"]) == {second.pk}
+        assert relevant_among([locked]) == {locked.pk}
+
+    def test_changing_only_the_children_leaves_the_parents_value_unchanged(
+        self, parent_records, editor
+    ):
+        _first, second, third = parent_records["children"]
+        form = self.build(parent_records, editor, second, third)
+
+        assert form.is_valid(), form.errors
+        form.save()
+
+        parent = parent_records["parent"]
+        parent.refresh_from_db()
+        assert parent.value.m_as("mW / m^2") == pytest.approx(60)
+        assert parent.uncertainty.m_as("mW / m^2") == pytest.approx(6)
+
+    def test_saving_without_commit_then_saving_m2m_marks_the_children(
+        self, parent_records, editor
+    ):
+        first, second, _third = parent_records["children"]
+        form = self.build(parent_records, editor, second)
+
+        assert form.is_valid(), form.errors
+        form.save(commit=False)
+        assert relevant_among(parent_records["children"]) == {first.pk}
+        form.save_m2m()
+
+        assert relevant_among(parent_records["children"]) == {second.pk}
+

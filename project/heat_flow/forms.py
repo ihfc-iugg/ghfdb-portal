@@ -631,7 +631,9 @@ class ParentHeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
         if self.instance.sample_id:
             self.fields["relevant_children"].initial = list(
-                self.children().filter(is_relevant=True).values_list("pk", flat=True)
+                self.managed_children()
+                .filter(is_relevant=True)
+                .values_list("pk", flat=True)
             )
 
     def children(self):
@@ -640,22 +642,35 @@ class ParentHeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
             sample__heatflowinterval__site_id=self.instance.sample_id
         )
 
+    def managed_children(self):
+        """Return the site's children that the researcher may change.
+
+        These are the site's children among the records the choice field offers at its
+        edit scope. The form marks only these, and leaves the rest as they are.
+        """
+        field = self["relevant_children"].field
+        return self.children().filter(pk__in=field.offered().values("pk"))
+
     def clean_relevant_children(self):
         """Refuse a child at another site."""
         chosen = self.cleaned_data["relevant_children"]
         if chosen.exclude(pk__in=self.children().values("pk")).exists():
-            raise forms.ValidationError(_("Choose only children at this site."))
+            raise forms.ValidationError(
+                _("Choose only children at this site."), code="other_site"
+            )
         return chosen
 
-    def save(self, commit=True):
-        """Save the parent, then mark exactly the chosen children relevant."""
-        parent = super().save(commit=commit)
+    def save_related(self, record):
+        """Mark exactly the chosen children relevant, among those the researcher may change.
+
+        Args:
+            record: The saved parent.
+        """
         chosen = set(
             self.cleaned_data["relevant_children"].values_list("pk", flat=True)
         )
-        for child in self.children():
+        for child in self.managed_children():
             relevant = child.pk in chosen
             if child.is_relevant != relevant:
                 child.is_relevant = relevant
                 child.save()
-        return parent
