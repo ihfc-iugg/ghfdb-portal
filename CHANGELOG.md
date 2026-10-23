@@ -32,6 +32,12 @@ Releases before that used `<year>.<release>` and are recorded in the
   gradient and interval conductivity it was calculated from. A gradient or conductivity on another
   depth interval is refused. Each correction offers only the statuses valid for it, and saving
   recalculates the child's quality score ([editing records](docs/guides/editing-records.md)).
+- A researcher can correct a depth interval on its edit page, with the marine probe it was
+  measured with: probe penetration, length and tilt are checked against the same limits as the
+  probe record, and the probe types are chosen from the vocabulary. A thermal gradient and an
+  interval conductivity each have a form of their own, with every value entered next to its
+  uncertainty and one unit for both, and saving recalculates the scores that rest on them
+  ([editing records](docs/guides/editing-records.md)).
 - A researcher can mark which children a site's parent heat flow rests on, on the parent's edit
   page, together with its value, uncertainty, heat production correction and comment. A child at
   another site is refused, a child in a dataset the researcher may not change keeps its relevance,
@@ -44,6 +50,13 @@ Releases before that used `<year>.<release>` and are recorded in the
 
 ### Changed
 
+- The portal moves to Django 6.0 and FairDM v0.2.1. FairDM no longer depends on django-select2,
+  django-autocomplete-light or django-addanother, and chooses records with django-tomselect, so
+  the last two leave the lockfile. django-mvp moves to 0.31, and django-mvp-accounts,
+  django-mvp-charts, django-mvp-compliance and django-mvp-forms move to their newer releases.
+  Migration 0005 now drops the old `SurfaceHeatFlow` link after the heat flow's parent is
+  repointed, because Django 6.0 no longer drops a column with `CASCADE`; the change reorders one
+  operation and changes nothing on a database that has already applied it.
 - A correction with no status is stored with an empty status instead of `-`. The migration
   changes the stored rows, the published file still reads and writes `-`, and the API gives
   `null` for the status of such a correction and still lists it

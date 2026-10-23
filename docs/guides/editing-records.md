@@ -4,8 +4,9 @@ A researcher who finds a mistake in a heat flow record corrects it in the portal
 edit page, instead of re-uploading the spreadsheet. Each kind of record has a form built for it. A
 form offers the fields the upload template has a column for, grouped the way the template orders its
 columns, so a researcher who filled the template in finds the same things in the same order. This
-page describes the site's form, the depth interval's form, the child heat flow's form, and the forms
-for a thermal gradient and an interval conductivity, then the pieces the forms are built from.
+page describes the site's form, the depth interval's form, the child heat flow's form, the forms
+for a thermal gradient and an interval conductivity, and the parent heat flow's form, then the
+pieces the forms are built from.
 
 ## Correcting a site
 
@@ -279,8 +280,8 @@ type. `thermal_gradient` and `thermal_conductivity` are FairDM `MeasurementChoic
 `clean_thermal_conductivity` refuse a measurement whose interval is not the child's, with the code
 `other_interval`.
 
-Pass `request=` when you build the form outside FairDM's edit page, because the search fields
-accept only the records the request's user may change.
+Pass `request=` when you build the form outside FairDM's edit page. The record search fields take
+the request from the form, and built without one they accept no record.
 
 ### `ThermalGradientForm`
 
@@ -310,7 +311,7 @@ narrows them to the records the field offers
 the request's user. The initial value and `save_related` read `managed_children()`, so a child in a
 dataset the user may not change keeps its relevance. `save_related` marks exactly the chosen
 children relevant and the other managed children not, and writes nothing to the parent's own
-fields. Pass `request=` when you build the form outside FairDM's edit page.
+fields. Pass `request=` when you build the form outside FairDM's edit page, as for `HeatFlowForm`.
 
 ### Related rows: `save_related`
 
