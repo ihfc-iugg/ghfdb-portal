@@ -5,7 +5,7 @@ from pathlib import Path
 
 from django.contrib.staticfiles import finders
 from django.shortcuts import get_object_or_404
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
 from django_downloadview import PathDownloadView
 from drf_spectacular.utils import extend_schema
@@ -113,15 +113,16 @@ class GHFDBParentChildrenView(TemplateView):
     template_name = "ghfdb/parent_children.html"
 
     def get_context_data(self, **kwargs):
-        """The parent, and its children relevant first."""
+        """The parent, and the children the visitor may open, relevant first."""
         context = super().get_context_data(**kwargs)
         parent = get_object_or_404(
-            served_parents(self.request).as_ghfdb_flat().with_child_counts(),
-            ghfdb_id=kwargs["ghfdb_id"],
+            served_parents(self.request).as_ghfdb_flat(), ghfdb_id=kwargs["ghfdb_id"]
         )
-        page = HeatFlowPage(parent, self.request.user, show_all=True)
+        children = parent.children.prefetch_related("method").order_by(
+            "-is_relevant", "pk"
+        )
         context["parent"] = parent
-        context["children"] = page.for_parent()["children"]
+        context["children"] = HeatFlowPage(parent, self.request.user).listing(children)
         return context
 
 

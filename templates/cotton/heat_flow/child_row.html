@@ -32,7 +32,8 @@
   </div>
   <span class="flex flex-wrap justify-end gap-1">
     {% if relevance_badge and child.is_relevant %}
-      <span class="badge badge-soft badge-primary badge-sm whitespace-nowrap">{% translate "Relevant" %}</span>
+      <span class="badge badge-soft badge-primary badge-sm whitespace-nowrap"
+            data-ghfdb="relevant-badge">{% translate "Relevant" %}</span>
     {% endif %}
     {% if rests_on %}
       <span class="badge badge-soft badge-primary badge-sm whitespace-nowrap">{% translate "Quality rests on this" %}</span>
