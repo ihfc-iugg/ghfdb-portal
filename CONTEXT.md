@@ -302,6 +302,13 @@ The published format is one row per child, with the parent's columns repeated on
 belonging to it. So `PARENT_COLUMNS` and `CHILD_COLUMNS` are two halves of a single flat row, not
 two kinds of file.
 
+### GHFDB parent table
+
+A page that lists the parents of the GHFDB, one row each, in their published columns, with a
+column added for the number of children. It is the browsable counterpart of the `ghfdb/parents`
+API route and shows exactly the parents that route serves. It is not "the database", which is the
+published release, and not the map viewer, which is a separate page.
+
 ## Workflow
 
 ### Data assessment
