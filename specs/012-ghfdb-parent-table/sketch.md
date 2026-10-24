@@ -61,7 +61,9 @@
   heading only.
 - The `children` column sits straight after `q` and `q_uncertainty`, so the count that says how
   far to trust a value is read next to the value.
-- The toolbar holds the site name search only. Every other filter is in the panel.
+- The toolbar holds the site name search, then corr_HP_flag, U-score and M-score as checkbox
+  dropdowns, the control FairDM's project list uses for status. Every other filter is in the
+  panel, with project before dataset.
 - The panel is always off canvas, opened by its toggle.
 - A range is [min][–][max].
 - The page title is "GHFDB".
@@ -70,4 +72,4 @@
 - The window lists every child with the portal's own child row, and a relevant child carries a
   "Relevant" badge in place of the parent page's relevance text.
 - The sidebar group is called GHFDB, with "Map Viewer" and "Parent Table" inside it.
-- 50 rows to a page.
+- 100 rows to a page.

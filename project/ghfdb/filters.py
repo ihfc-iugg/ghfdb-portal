@@ -112,26 +112,23 @@ class GHFDBParentFilter(django_filters.FilterSet):
         method="filter_corr_hp",
         label=_("corr_HP_flag"),
         choices=[("yes", _("Yes")), ("no", _("No")), ("unknown", _("Not recorded"))],
-        widget=counted(_("Any")),
     )
     U_score = django_filters.MultipleChoiceFilter(
         label=_("U-score"),
         choices=UScoreOptions.choices,
-        widget=counted(_("Any U-score")),
     )
     M_score = django_filters.MultipleChoiceFilter(
         label=_("M-score"),
         choices=MScoreOptions.choices,
-        widget=counted(_("Any M-score")),
-    )
-    dataset = RecordMultipleFilter(
-        DatasetMultipleChoiceField, field_name="dataset", scope="view"
     )
     project = RecordMultipleFilter(
         ProjectMultipleChoiceField,
         field_name="dataset__project",
         scope="view",
         label=_("Project"),
+    )
+    dataset = RecordMultipleFilter(
+        DatasetMultipleChoiceField, field_name="dataset", scope="view"
     )
 
     class Meta:

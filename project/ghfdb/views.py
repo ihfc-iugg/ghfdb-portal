@@ -103,11 +103,11 @@ class GHFDBParentTableView(FairDMTableView):
     table_class = GHFDBParentTable
     filterset_class = GHFDBParentFilter
     template_name = "ghfdb/parent_table.html"
-    #: The site name search is the toolbar's one filter. Every other filter is
-    #: in the panel, a drawer at every width opened by the toolbar's toggle.
-    toolbar_filters = ["name"]
+    #: The search and the three checkbox filters sit in the toolbar. Every other
+    #: filter is in the panel, a drawer at every width opened by its toggle.
+    toolbar_filters = ["name", "corr_HP_flag", "U_score", "M_score"]
     filter_panel_attrs = {"position": "end", "breakpoint": False}
-    paginate_by = 50
+    paginate_by = 100
     page_title = _("GHFDB")
 
     def get_queryset(self):
