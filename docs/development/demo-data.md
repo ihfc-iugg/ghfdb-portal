@@ -77,8 +77,8 @@ Wrap the build in `Recalculation.deferred()` so the quality scores are computed 
 ends. `DemoGraph` reads its concepts from the database, so the controlled vocabularies must be loaded
 first (`manage.py preload`, which the test suite runs for you).
 
-The command loads the controlled vocabularies and the recommended licences first, so it works on a
-freshly migrated database.
+The command loads the recommended licences first, and the controlled vocabularies when any of their
+concepts is missing, so it works on a freshly migrated database.
 
 The first four datasets of every run take the four assessment states in turn: described, awaiting
 a decision, changes requested and complete. After that, four datasets in five are complete.

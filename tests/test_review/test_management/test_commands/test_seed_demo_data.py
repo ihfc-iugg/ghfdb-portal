@@ -1,13 +1,16 @@
 # Tests for ``project/review/management/commands/seed_demo_data.py``. The command runs at
 # the smallest size.
 
+from contextlib import contextmanager
 from io import StringIO
 
 import pytest
 from allauth.account.models import EmailAddress
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.management import call_command
 from django.core.management.base import CommandError
+from django.db import transaction
 from fairdm.core.dataset.models import Dataset, DatasetLiteratureRelation
 from fairdm.core.project.models import Project
 from fairdm.factories import DatasetFactory
@@ -29,8 +32,14 @@ from literature.models import LiteratureItem
 from research_vocabs.models import Concept
 from review.management.commands import seed_demo_data
 from review.models import Review
-from review.permissions import is_data_curator
+from review.permissions import (
+    DATA_ASSESSOR_GROUP,
+    DATA_CURATOR_GROUP,
+    is_data_curator,
+)
 from review.states import States
+
+from tests.conftest import concept_preload_record
 
 HEAT_FLOW_MODELS = (
     HeatFlowSite,
@@ -106,9 +115,39 @@ def role_groups(data_assessor_group, data_curator_group):
     """The groups the migration and ``PortalRoles.reconcile()`` create outside the tests."""
 
 
+@contextmanager
+def held_for_the_class(django_db_blocker, *options):
+    """Seed inside a transaction that lasts for a test class and is rolled back after it.
+
+    A run takes several seconds and most tests only read what one run wrote, so the tests
+    of a class share one. Each test still runs in a savepoint of its own inside that
+    transaction, so nothing one test writes reaches the next.
+    """
+    outer = transaction.atomic()
+    with django_db_blocker.unblock():
+        outer.__enter__()
+    try:
+        with django_db_blocker.unblock():
+            # The groups ``role_groups`` gives each test, which a class fixture cannot request.
+            for name in (DATA_ASSESSOR_GROUP, DATA_CURATOR_GROUP):
+                Group.objects.get_or_create(name=name)
+            seed(*options)
+        yield
+    finally:
+        with django_db_blocker.unblock():
+            transaction.set_rollback(True)
+            outer.__exit__(None, None, None)
+
+
+@pytest.fixture(scope="class")
+def seeded_for_the_class(django_db_setup, django_db_blocker):
+    with held_for_the_class(django_db_blocker):
+        yield
+
+
 @pytest.fixture
-def seeded(db):
-    seed()
+def seeded(seeded_for_the_class, db):
+    """One run at the smallest size, shared by the tests of a class."""
 
 
 class TestSeedDemoData:
@@ -135,15 +174,6 @@ class TestSeedDemoData:
 
         assert stored_scores() == before
 
-    def test_the_command_loads_the_vocabularies_when_none_are_present(self, db):
-        Concept.objects.all().delete()
-
-        seed()
-
-        for model, field in CONCEPT_FIELDS:
-            for record in model.objects.all():
-                assert getattr(record, field).exists()
-
     def test_each_dataset_has_its_literature_and_contributors(self, seeded):
         for dataset in demo_datasets():
             literature = dataset.reference
@@ -164,6 +194,37 @@ class TestSeedDemoData:
     def test_literature_count_matches_the_datasets(self, seeded):
         assert LiteratureItem.objects.count() == SMALLEST_SIZE
         assert Review.objects.count() == SMALLEST_SIZE
+
+    def test_a_run_without_the_option_varies_nothing(self, seeded):
+        assert not HeatFlowSite.objects.filter(location=None).exists()
+
+
+class TestSeedDemoDataExistingRecords:
+    def test_the_command_loads_the_vocabularies_when_none_are_present(self, db):
+        Concept.objects.all().delete()
+
+        seed()
+
+        for model, field in CONCEPT_FIELDS:
+            for record in model.objects.all():
+                assert getattr(record, field).exists()
+
+    def test_a_run_loads_a_concept_missing_from_the_vocabularies(self, db):
+        missing = Concept.objects.first()
+        missing.delete()
+
+        seed()
+
+        assert Concept.objects.filter(
+            vocabulary=missing.vocabulary, name=missing.name
+        ).exists()
+
+    def test_a_run_with_every_concept_present_does_not_load_them_again(self, db):
+        before = concept_preload_record.calls
+
+        seed()
+
+        assert concept_preload_record.calls == before
 
     def test_a_private_dataset_that_existed_before_is_unchanged(self, db):
         existing = DatasetFactory(visibility=Dataset.VISIBILITY_CHOICES.PRIVATE)
@@ -231,6 +292,15 @@ class TestSeedDemoDataSize:
         assert str(seed_demo_data.MAX_SIZE) in str(refusal.value)
         assert counts == {model: model.objects.count() for model in counts}
 
+    def test_the_largest_size_gives_at_least_ten_thousand_children(self):
+        children_per_dataset = (
+            SITES_PER_DATASET * sum(CHILDREN_CYCLE) / len(CHILDREN_CYCLE)
+        )
+
+        assert seed_demo_data.MAX_SIZE * children_per_dataset >= 10_000
+
+
+class TestSeedDemoDataSecondRun:
     def test_a_second_run_adds_beside_the_first(self, db):
         seed("--size", "4")
         first = {
@@ -269,12 +339,22 @@ class TestSeedDemoDataSize:
         assert len(set(parents)) == len(parents)
         assert len(set(children)) == len(children)
 
-    def test_the_largest_size_gives_at_least_ten_thousand_children(self):
-        children_per_dataset = (
-            SITES_PER_DATASET * sum(CHILDREN_CYCLE) / len(CHILDREN_CYCLE)
+    def test_a_second_run_adds_projects_beside_the_first(self, db):
+        seed()
+        first = set(demo_projects().values_list("pk", flat=True))
+        seed()
+
+        assert first < set(demo_projects().values_list("pk", flat=True))
+
+    def test_a_second_run_varies_another_dataset_and_fails_on_nothing(self, db):
+        seed("--size", str(SMALLEST_SIZE), "--page-states")
+        seed("--size", str(SMALLEST_SIZE), "--page-states")
+
+        varied = Dataset.all_objects.filter(
+            pk__in=HeatFlowSite.objects.filter(location=None).values("dataset")
         )
 
-        assert seed_demo_data.MAX_SIZE * children_per_dataset >= 10_000
+        assert varied.count() == 2
 
 
 DEMO_ASSESSOR = "data-assessor.user@example.com"
@@ -455,13 +535,6 @@ class TestSeedDemoDataProjects:
             assert project.owner is not None
             assert project.contributors.exists()
 
-    def test_a_second_run_adds_projects_beside_the_first(self, db):
-        seed()
-        first = set(demo_projects().values_list("pk", flat=True))
-        seed()
-
-        assert first < set(demo_projects().values_list("pk", flat=True))
-
     def test_an_anonymous_request_lists_the_demo_projects(self, seeded, client):
         content = client.get("/projects/").content.decode()
 
@@ -469,9 +542,17 @@ class TestSeedDemoDataProjects:
             assert project.uuid in content
 
 
+@pytest.fixture(scope="class")
+def seeded_with_page_states_for_the_class(django_db_setup, django_db_blocker):
+    with held_for_the_class(
+        django_db_blocker, "--size", str(SMALLEST_SIZE), "--page-states"
+    ):
+        yield
+
+
 @pytest.fixture
-def seeded_with_page_states(db):
-    seed("--size", str(SMALLEST_SIZE), "--page-states")
+def seeded_with_page_states(seeded_with_page_states_for_the_class, db):
+    """One run with ``--page-states``, shared by the tests of a class."""
 
 
 class TestSeedDemoDataPageStates:
@@ -519,16 +600,3 @@ class TestSeedDemoDataPageStates:
 
         assert moved.exists()
         assert hidden.published is False
-
-    def test_a_second_run_varies_another_dataset_and_fails_on_nothing(self, db):
-        seed("--size", str(SMALLEST_SIZE), "--page-states")
-        seed("--size", str(SMALLEST_SIZE), "--page-states")
-
-        varied = Dataset.all_objects.filter(
-            pk__in=HeatFlowSite.objects.filter(location=None).values("dataset")
-        )
-
-        assert varied.count() == 2
-
-    def test_a_run_without_the_option_varies_nothing(self, seeded):
-        assert not HeatFlowSite.objects.filter(location=None).exists()

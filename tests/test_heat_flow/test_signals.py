@@ -811,3 +811,39 @@ class TestDeferral:
             importing.join(timeout=5)
 
         assert refreshed[importing.ident] == {101, 102}
+
+
+def reads(call):
+    """The number of ``SELECT`` queries *call* makes. Each refreshed record is one write."""
+    from django.db import connection
+    from django.test.utils import CaptureQueriesContext
+
+    with CaptureQueriesContext(connection) as captured:
+        call()
+    return sum(
+        query["sql"].lstrip().upper().startswith("SELECT")
+        for query in captured.captured_queries
+    )
+
+
+class TestRefreshReads:
+    """A refresh reads what scoring needs once for all its records, never once per record."""
+
+    @pytest.mark.parametrize("explo_method", ["drilling", "probing_offshore"])
+    def test_refreshing_several_networks_reads_as_often_as_refreshing_one(
+        self, explo_method
+    ):
+        from heat_flow.signals import Recalculation
+
+        def refresh(networks):
+            Recalculation.request(
+                gradients=[network.gradient.pk for network in networks],
+                conductivities=[network.conductivity.pk for network in networks],
+                children=[network.child.pk for network in networks],
+                parents=[network.parent.pk for network in networks],
+            )
+
+        one = [Network(explo_method)]
+        several = [Network(explo_method) for _ in range(3)]
+
+        assert reads(lambda: refresh(several)) == reads(lambda: refresh(one))

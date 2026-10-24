@@ -140,6 +140,8 @@ markers = [
 filterwarnings = ["ignore"]
 env = [
     "DJANGO_ENV=development",
+    # Read by config/development.py, which switches Orbit off before its app is ready.
+    "ORBIT_ENABLED=false",
     # Playwright's sync API keeps a real event loop running on the main
     # thread for as long as the browser fixture is open. Django's own
     # `live_server`/db setup then trips its async-safety guard on itself,

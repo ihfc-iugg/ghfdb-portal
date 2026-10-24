@@ -503,7 +503,11 @@ everything that reads them, in that order, or collects them: a request made with
 `when_committed=True` (every delete) waits for the transaction to commit, and one made inside
 `Recalculation.deferred()` waits for the end of the block. `Recalculation.flush()` recalculates what
 was collected, once each. `Recalculation.measurement()` names a gradient or a conductivity, and
-`Recalculation.measurements_on()` names those on some intervals. The receivers are
+`Recalculation.measurements_on()` names those on some intervals. `Recalculation.levels()` returns
+the four levels in cascade order, each a queryset that fetches what its refresh reads (the
+interval with its site and probe metadata, the concept fields, a child's corrections, a parent's
+children) together with the records, so a refresh of many records makes as many reads as a
+refresh of one. The receivers are
 `refresh_measurement_on_save`, `refresh_measurement_on_concepts`,
 `refresh_measurements_on_interval_save`, `refresh_measurements_on_probe_save`,
 `refresh_measurements_on_probe_delete`, `refresh_measurements_on_site_save`,
@@ -516,8 +520,8 @@ was collected, once each. `Recalculation.measurement()` names a gradient or a co
 `after_import`. Its `import_data` ends the deferral if the import fails.
 
 The command is `refresh_quality`, in `project/heat_flow/management/commands/refresh_quality.py`.
-`Command.levels()` returns the four levels in cascade order with what each refresh reads
-prefetched, and `Command.refresh()` walks one level in chunks of `Command.CHUNK_SIZE` records.
+It reads the same `Recalculation.levels()`, and `Command.refresh()` walks one level in chunks of
+`Command.CHUNK_SIZE` records.
 
 ## Not covered here
 

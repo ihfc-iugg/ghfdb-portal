@@ -50,6 +50,12 @@ Releases before that used `<year>.<release>` and are recorded in the
 
 ### Changed
 
+- Saving, importing or deleting heat flow records recalculates their quality scores with the same
+  number of reads for many records as for one. The interval, site, probe metadata, vocabulary
+  terms and corrections each score reads are fetched with the records, where each record had
+  fetched its own. `refresh_quality` shares the same reads.
+- `seed_demo_data` loads the controlled vocabularies only when a concept is missing, rather than
+  writing every concept again on each run.
 - The portal moves to Django 6.0 and FairDM v0.2.1. FairDM no longer depends on django-select2,
   django-autocomplete-light or django-addanother, and chooses records with django-tomselect, so
   the last two leave the lockfile. django-mvp moves to 0.31, and django-mvp-accounts,

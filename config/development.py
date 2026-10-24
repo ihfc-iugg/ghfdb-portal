@@ -31,3 +31,22 @@ if not os.environ.get("REDIS_URL"):
         }
         for alias in globals().get("CACHES", {"default": {}})
     }
+    # The remote vocabularies are downloaded when the models are imported and kept in a
+    # cache, which in process memory goes with the process: every restart of the
+    # development server and every test worker downloaded all of them again. On disk they
+    # are downloaded once. Delete .vocabularies-cache to download them again. This module
+    # runs inside the framework's settings, so ``__file__`` is not this file's path, and
+    # the repository root is read from the BASE_DIR they set.
+    CACHES["vocabularies"] = {
+        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+        "LOCATION": globals()["BASE_DIR"] / ".vocabularies-cache",
+    }
+    VOCABULARY_DEFAULT_CACHE = "vocabularies"
+
+# Orbit's app decides at ready() whether to install its watchers, and one of them, a
+# pre_save receiver, reads the row back before every save without asking whether Orbit is
+# enabled: three extra queries on a contributor, in every test that saves one. The test run
+# sets ORBIT_ENABLED=false through pytest's `env` option, which applies before pytest-django
+# sets Django up. A conftest hook runs after, too late to stop the watchers being installed.
+if os.environ.get("ORBIT_ENABLED", "").lower() == "false":
+    ORBIT_CONFIG = {**globals().get("ORBIT_CONFIG", {}), "ENABLED": False}
