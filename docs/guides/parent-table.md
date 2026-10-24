@@ -45,3 +45,22 @@ shows the same rows.
 The table shows a fixed number of rows to a page and links to the others. The page is part of the
 address (`?page=2`), as is the sort, so an address reopens the same page in the same order. The
 number of queries the page makes does not grow with the number of rows on it.
+
+## For developers
+
+The page is `GHFDBParentTableView` in `project/ghfdb/views.py`, routed as `ghfdb-parent-table`. Its
+rows come from `served_parents()` with the flat columns and child counts added, and it draws
+`GHFDBParentTable` from `project/ghfdb/tables.py`.
+
+The table's building blocks:
+
+- `NumberColumn` right-aligns a number in tabular figures and writes its unit into the heading's
+  `title`.
+- `TermColumn` shows a vocabulary concept's label.
+- `not_recorded()` builds the dash an empty cell shows, translated for the request, and the
+  `NOT_RECORDED` string it reads aloud. The mark carries `data-state="not-recorded"`.
+- `TieBrokenQuerysetData` is the table's data class. It appends `ghfdb_id` to every ordering,
+  because django-tables2 orders by the chosen column alone.
+
+Each row carries `data-ghfdb="parent-row"` and `data-parent`, the parent's published identifier,
+so a script or a test can find a row without relying on the wording of a cell.
