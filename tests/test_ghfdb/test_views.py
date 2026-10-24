@@ -1,6 +1,7 @@
 import re
 
 import pytest
+from django.test import Client
 from django.urls import reverse
 
 from project.ghfdb.views import GHFDBParentTableView
@@ -157,3 +158,87 @@ class TestGHFDBParentTableView:
             client.get(reverse("ghfdb-parent-table"))
 
         constant_query_count(build, call, low=3, high=27)
+
+
+@pytest.mark.django_db
+class TestGHFDBParentTableFilters:
+    @pytest.fixture
+    def parents(self, published_dataset):
+        make_parent(
+            published_dataset,
+            1,
+            value=20,
+            U_score="U1",
+            site={"environment": "onshore_continental"},
+        )
+        make_parent(
+            published_dataset,
+            2,
+            value=60,
+            U_score="U1",
+            site={"environment": "onshore_continental"},
+        )
+        make_parent(
+            published_dataset,
+            3,
+            value=60,
+            U_score="U2",
+            site={"environment": "onshore_marine"},
+        )
+
+    def test_several_filters_together_list_only_parents_matching_all_with_the_count(
+        self, client, parents
+    ):
+        response = client.get(
+            reverse("ghfdb-parent-table"),
+            {"q_min": "50", "U_score": ["U1"], "environment": ["onshore_continental"]},
+        )
+
+        assert listed_parents(response) == [2]
+        assert response.context["result_count"] == 1
+
+    def test_the_same_address_in_a_fresh_client_gives_the_same_rows_in_the_same_order(
+        self, client, parents
+    ):
+        address = reverse("ghfdb-parent-table")
+        query = {"q_min": "10", "sort": "-q"}
+
+        first = client.get(address, query)
+        second = Client().get(address, query)
+
+        assert listed_parents(first) == listed_parents(second)
+        assert listed_parents(first) == [2, 3, 1]
+
+    def test_filters_that_match_nothing_leave_no_rows_and_a_link_to_clear_them(
+        self, client, parents
+    ):
+        response = client.get(reverse("ghfdb-parent-table"), {"q_min": "1000"})
+
+        assert listed_parents(response) == []
+        assert response.context["result_count"] == 0
+        clear = response.context["clear_refinements_url"]
+        assert f'href="{clear}"' in response.content.decode()
+
+    def test_a_bound_that_is_not_a_number_or_is_inverted_is_reported_and_narrows_nothing(
+        self, client, parents
+    ):
+        address = reverse("ghfdb-parent-table")
+
+        not_a_number = client.get(address, {"q_min": "abc"})
+        inverted = client.get(address, {"q_min": "100", "q_max": "10"})
+
+        for response, code in ((not_a_number, "invalid"), (inverted, "inverted")):
+            errors = response.context["filter"].form.errors.as_data()
+            assert [error.code for error in errors["q"]] == [code]
+            assert listed_parents(response) == [1, 2, 3]
+
+    def test_the_toolbar_holds_the_search_and_the_three_checkbox_filters(
+        self, client, parents
+    ):
+        response = client.get(reverse("ghfdb-parent-table"))
+
+        toolbar = [field["name"] for field in response.context["toolbar_fields"]]
+        panel = [field.name for field in response.context["panel_fields"]]
+        assert toolbar == ["name", "corr_HP_flag", "U_score", "M_score"]
+        assert set(panel) == set(response.context["filter"].filters) - set(toolbar)
+        assert panel.index("project") < panel.index("dataset")
