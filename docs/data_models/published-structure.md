@@ -97,6 +97,12 @@ Annotates each site with `total_children`, the number of determinations it holds
 `relevant_children`, the number that contributed to its representative value. A site holding no
 determinations counts zero rather than null.
 
+### `GHFDBParent.objects.with_visible_child_counts()`
+
+Takes the visitor as `user`. The same two counts, over only the determinations FairDM's `visible_to(user)` lets that visitor
+open, so a count never includes a determination the visitor cannot see. The
+[parent table](../guides/parent-table.md) uses it; the API uses `with_child_counts()`.
+
 ### `GHFDBParent.objects.with_children()`
 
 Attaches each site's determinations, and its exploration purposes, so reading them costs no query

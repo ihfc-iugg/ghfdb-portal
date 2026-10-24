@@ -2,8 +2,9 @@
 {# @prop child:object | description:"The child heat flow value." #}
 {# @prop relevance:boolean | description:"Show whether the child is marked relevant." #}
 {# @prop rests_on:boolean | description:"The parent's quality rests on this child." #}
+{# @prop relevance_badge:boolean | description:"Mark a relevant child with a badge, in place of the relevance text." #}
 {% load i18n heat_flow_overview %}
-<c-vars child relevance rests_on />
+<c-vars child relevance rests_on relevance_badge />
 <li class="list-row px-0 items-center"
     data-heat-flow="child"
     data-child="{{ child.pk }}"
@@ -30,6 +31,10 @@
     </span>
   </div>
   <span class="flex flex-wrap justify-end gap-1">
+    {% if relevance_badge and child.is_relevant %}
+      <span class="badge badge-soft badge-primary badge-sm whitespace-nowrap"
+            data-ghfdb="relevant-badge">{% translate "Relevant" %}</span>
+    {% endif %}
     {% if rests_on %}
       <span class="badge badge-soft badge-primary badge-sm whitespace-nowrap">{% translate "Quality rests on this" %}</span>
     {% endif %}

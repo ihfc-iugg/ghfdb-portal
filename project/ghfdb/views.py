@@ -4,17 +4,24 @@ import json
 from pathlib import Path
 
 from django.contrib.staticfiles import finders
-from django.utils.translation import gettext as _
+from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext_lazy as _
+from django.views.generic import TemplateView
 from django_downloadview import PathDownloadView
 from drf_spectacular.utils import extend_schema
 from fairdm.contrib.plugins.utils import check_has_edit_permission
-from fairdm.views import FairDMTemplateView
+from fairdm.views import FairDMTableView, FairDMTemplateView
+from heat_flow.overview import HeatFlowPage
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .filters import GHFDBParentFilter
+from .models import GHFDBParent
 from .serializers import MyJSONSchemaSerializer
+from .tables import GHFDBParentTable
+from .visibility import served_parents
 
 data_dir = Path(__file__).resolve().parent / "data"
 
@@ -74,6 +81,48 @@ class GHFDBExploreView(FairDMTemplateView):
 
     template_name = "ghfdb/explore.html"
     page_title = _("GHFDB Map Viewer")
+
+
+class GHFDBParentTableView(FairDMTableView):
+    """The GHFDB parents a visitor may see, as a table: filtered, sorted and paged."""
+
+    model = GHFDBParent
+    table_class = GHFDBParentTable
+    filterset_class = GHFDBParentFilter
+    template_name = "ghfdb/parent_table.html"
+    #: The search and the three checkbox filters sit in the toolbar. Every other
+    #: filter is in the panel, a drawer at every width opened by its toggle.
+    toolbar_filters = ["name", "corr_HP_flag", "U_score", "M_score"]
+    filter_panel_attrs = {"position": "end", "breakpoint": False}
+    paginate_by = 100
+    page_title = _("GHFDB")
+
+    def get_queryset(self):
+        """Every parent the visitor may see, with its published columns."""
+        return (
+            served_parents(self.request)
+            .as_ghfdb_flat()
+            .with_visible_child_counts(self.request.user)
+            .prefetch_related("sample__heatflowsite__explo_purpose")
+        )
+
+
+class GHFDBParentChildrenView(TemplateView):
+    """A parent's children, for the window the table opens over itself."""
+
+    template_name = "ghfdb/parent_children.html"
+
+    def get_context_data(self, **kwargs):
+        """The parent, and the children the visitor may open, relevant first."""
+        context = super().get_context_data(**kwargs)
+        parent = get_object_or_404(
+            served_parents(self.request).as_ghfdb_flat(), ghfdb_id=kwargs["ghfdb_id"]
+        )
+        context["parent"] = parent
+        context["children"] = HeatFlowPage(parent, self.request.user).listing(
+            parent.children_relevant_first()
+        )
+        return context
 
 
 # TODO: GetPublishedView is disabled until fairdm.contrib.import_export.views is completed (DatasetPublishConfirm not yet stable).

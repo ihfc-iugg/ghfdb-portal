@@ -4,7 +4,6 @@ from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from fairdm.api.filters import FairDMVisibilityFilter
 from fairdm.api.permissions import FairDMObjectPermissions
-from heat_flow.models import HeatFlowSite
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
@@ -17,6 +16,7 @@ from .serializers import (
     GHFDBParentDetailSerializer,
     GHFDBParentSerializer,
 )
+from .visibility import served_parents
 
 
 class GHFDBObjectPermissions(FairDMObjectPermissions):
@@ -35,23 +35,6 @@ class GHFDBObjectPermissions(FairDMObjectPermissions):
         if method in SAFE_METHODS:
             return ["measurement.view_measurement"]
         return super().get_required_object_permissions(method, model_cls)
-
-
-def served_parents_for(request, view):
-    """Parents visible to *request*, narrowed to ones whose site is visible too.
-
-    A parent's own visibility (via ``FairDMVisibilityFilter`` on its dataset)
-    says nothing about the ``HeatFlowSite`` it describes — the two can sit in
-    different datasets — so ADR 0021's second path (a determination attached
-    to a site that is not public) is only closed by checking both.
-    """
-    served = FairDMVisibilityFilter().filter_queryset(
-        request, GHFDBParent.objects.all(), view
-    )
-    visible_sites = FairDMVisibilityFilter().filter_queryset(
-        request, HeatFlowSite.objects.all(), view
-    )
-    return served.filter(sample_id__in=visible_sites.values_list("pk", flat=True))
 
 
 class GHFDBBaseViewSet(ReadOnlyModelViewSet):
@@ -116,7 +99,7 @@ class GHFDBParentViewSet(GHFDBBaseViewSet):
         Ordered by published identifier then primary key, so a page is
         stable. Constant query count regardless of row count.
         """
-        served = served_parents_for(self.request, self)
+        served = served_parents(self.request)
         return (
             GHFDBParent.objects.as_ghfdb_flat()
             .with_child_counts()
@@ -175,10 +158,10 @@ class GHFDBChildViewSet(GHFDBBaseViewSet):
         Ordered by published identifier then primary key, so a page is
         stable, and constant query count regardless of row count.
         """
-        served_parents = served_parents_for(self.request, self)
+        served = served_parents(self.request)
         return (
             GHFDBChild.objects.for_export()
-            .filter(parent__in=served_parents)
+            .filter(parent__in=served)
             .order_by("ghfdb_id", "pk")
         )
 

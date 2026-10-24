@@ -310,9 +310,7 @@ class HeatFlowPage:
         parent = self.record
         basis, resting = parent.quality_basis()
         rests_on = {child.pk for child in resting}
-        children = list(
-            parent.children.prefetch_related("method").order_by("-is_relevant", "pk")
-        )
+        children = list(parent.children_relevant_first())
         for child in children:
             child.rests_on = child.pk in rests_on
         return {

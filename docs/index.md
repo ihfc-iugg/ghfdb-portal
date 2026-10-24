@@ -75,6 +75,7 @@ guides/record-pages
 guides/editing-records
 guides/quality-scores
 guides/published-structure-api
+guides/parent-table
 guides/heat-flow-records-api
 :::
 

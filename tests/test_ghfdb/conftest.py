@@ -5,6 +5,11 @@ from pathlib import Path
 import openpyxl
 import pytest
 from fairdm.factories import DatasetFactory
+from heat_flow import vocabularies
+from research_vocabs.models import Concept
+
+from project.ghfdb.models import GHFDBParent
+from tests.factories import HeatFlowSiteFactory, ParentHeatFlowFactory
 
 
 @pytest.fixture
@@ -457,3 +462,30 @@ def constant_query_count(django_assert_num_queries):
             call()
 
     return assert_constant
+
+
+def purposes(*names):
+    """The exploration purpose concepts with these names."""
+    found = Concept.get_for_vocabulary(vocabularies.ExplorationPurpose)
+    return [found.get(name=name) for name in names]
+
+
+def make_parent(dataset, ghfdb_id, *, purpose=(), site=None, **record):
+    """One parent on its own site. ``site`` and ``record`` set the site's and the
+    parent's fields; ``purpose`` names the site's exploration purposes."""
+    site = HeatFlowSiteFactory(
+        dataset=dataset, explo_purpose=purposes(*purpose), **(site or {})
+    )
+    parent = ParentHeatFlowFactory(
+        dataset=dataset, sample=site, ghfdb_id=ghfdb_id, **record
+    )
+    return parent
+
+
+def parents():
+    """GHFDB parents shaped as the table reads them, with all children counted."""
+    return (
+        GHFDBParent.objects.as_ghfdb_flat()
+        .with_child_counts()
+        .prefetch_related("sample__heatflowsite__explo_purpose")
+    )
