@@ -1,22 +1,45 @@
 """The GHFDB parent table (FS-012 sketch)."""
 
 import django_tables2 as tables
+from django.db.models import F, OuterRef, Subquery
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.html import format_html
-from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext
-from heat_flow import vocabularies
+from django_tables2.data import TableData, TableQuerysetData
+from heat_flow.models import HeatFlowSite
 
 from .models import GHFDBParent
 
-#: What an empty cell shows: a dash, read out as "Not recorded".
-NOT_RECORDED = mark_safe(
-    '<span aria-hidden="true">—</span><span class="sr-only">{}</span>'.format(
-        _("Not recorded")
+NOT_RECORDED = _("Not recorded")
+
+
+def not_recorded():
+    """Return the mark an empty cell shows: a dash, read out as "Not recorded".
+
+    Returns:
+        Markup carrying ``data-state="not-recorded"``, translated for the
+        request being rendered.
+    """
+    return format_html(
+        '<span data-state="not-recorded"><span aria-hidden="true">—</span>'
+        '<span class="sr-only">{}</span></span>',
+        NOT_RECORDED,
     )
-)
+
+
+class TieBrokenQuerysetData(TableQuerysetData):
+    """Table data whose every ordering ends in the published identifier.
+
+    django-tables2 orders by the chosen column's accessors alone, so rows that
+    tie on it could change places between one page and the next.
+    """
+
+    def order_by(self, aliases):
+        """Order as django-tables2 does, then append ``ghfdb_id`` as the tie-break."""
+        super().order_by(aliases)
+        self.data = self.data.order_by(*self.data.query.order_by, "ghfdb_id")
 
 
 class NumberColumn(tables.Column):
@@ -40,13 +63,9 @@ class NumberColumn(tables.Column):
 class TermColumn(tables.Column):
     """A vocabulary-backed column, shown as the term's label."""
 
-    def __init__(self, vocabulary, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.vocabulary = vocabulary
-
     def render(self, value):
-        label = getattr(value, "label", None)
-        return label or dict(self.vocabulary().choices).get(str(value), value)
+        """Show the concept's label rather than its stored key."""
+        return value.label()
 
 
 class GHFDBParentTable(tables.Table):
@@ -79,16 +98,11 @@ class GHFDBParentTable(tables.Table):
     lat_NS = NumberColumn(verbose_name="lat_NS", unit="°", places=5)
     long_EW = NumberColumn(verbose_name="long_EW", unit="°", places=5)
     elevation = NumberColumn(verbose_name="elevation", unit="m")
-    environment = TermColumn(
-        vocabularies.GeographicEnvironment, verbose_name="environment"
-    )
-    explo_method = TermColumn(
-        vocabularies.ExplorationMethod, verbose_name="explo_method"
-    )
+    environment = TermColumn(verbose_name="environment")
+    explo_method = TermColumn(verbose_name="explo_method")
     explo_purpose = tables.Column(
         verbose_name="explo_purpose",
         accessor="sample__heatflowsite__explo_purpose",
-        orderable=False,
     )
     total_depth_MD = NumberColumn(verbose_name="total_depth_MD", unit="m")
     total_depth_TVD = NumberColumn(verbose_name="total_depth_TVD", unit="m")
@@ -100,20 +114,21 @@ class GHFDBParentTable(tables.Table):
     quality_parent = tables.Column(verbose_name="quality_parent")
     p_comment = tables.Column(
         verbose_name="p_comment",
-        orderable=False,
         attrs={"td": {"class": "min-w-52 max-w-md"}},
     )
 
     class Meta:
         model = GHFDBParent
-        fields = []
-        row_headers = ["ID_parent"]
+        fields = ()
+        row_headers = ("ID_parent",)
         order_by = ("ID_parent",)
         attrs = {"thead": {"th": {"class": "whitespace-nowrap"}}}
 
-    def __init__(self, *args, **kwargs):
-        kwargs.setdefault("default", NOT_RECORDED)
-        super().__init__(*args, **kwargs)
+    def __init__(self, data, *args, **kwargs):
+        if not isinstance(data, TableData):
+            data = TieBrokenQuerysetData(data)
+        kwargs.setdefault("default", not_recorded())
+        super().__init__(data, *args, **kwargs)
 
     def render_ID_parent(self, value, record):
         return format_html(
@@ -150,15 +165,37 @@ class GHFDBParentTable(tables.Table):
 
     def render_explo_purpose(self, value, record):
         terms = [term.label for term in value.all()]
-        return "; ".join(terms) if terms else NOT_RECORDED
+        return "; ".join(terms) if terms else not_recorded()
 
     def render_quality_parent(self, value):
         return render_to_string("cotton/heat_flow/code.html", {"code": value})
 
     def order_children(self, queryset, is_descending):
-        order = "-total_children" if is_descending else "total_children"
-        return queryset.order_by(order, "ghfdb_id"), True
+        """Sort on the number of children."""
+        return queryset.order_by(
+            F("total_children").desc() if is_descending else F("total_children")
+        ), True
 
     def order_name(self, queryset, is_descending):
-        order = "-site_name" if is_descending else "site_name"
-        return queryset.order_by(order, "ghfdb_id"), True
+        """Sort on the site's name."""
+        return queryset.order_by(
+            F("site_name").desc() if is_descending else F("site_name")
+        ), True
+
+    def order_explo_purpose(self, queryset, is_descending):
+        """Sort on the alphabetically first purpose of the site.
+
+        A subquery, because ordering through the many-valued relation would
+        join the counted query and multiply its rows.
+        """
+        first = (
+            HeatFlowSite.explo_purpose.through.objects.filter(
+                heatflowsite_id=OuterRef("sample_id")
+            )
+            .order_by("concept__label")
+            .values("concept__label")[:1]
+        )
+        label = F("first_purpose")
+        return queryset.annotate(first_purpose=Subquery(first)).order_by(
+            label.desc(nulls_last=True) if is_descending else label.asc(nulls_last=True)
+        ), True

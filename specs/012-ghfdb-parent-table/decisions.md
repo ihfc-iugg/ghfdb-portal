@@ -61,3 +61,25 @@ which is what US-2 scenario 7 describes, matches as the spec says.
 FR-016 is met for the range filters, which take typed input and report an error against the
 filter. The toolbar's checkbox filters only send their own values from the page. A value edited
 into the address by hand is dropped without a message.
+
+## US1: TermColumn reads the concept's own label
+
+**Decision**: `TermColumn` takes no vocabulary and renders `value.label()`. The annotated environment and
+exploration method arrive as vocabulary concepts that already know their label, so the column holds no
+vocabulary instance at all, per cell or per column.
+
+**Why**: the sketch called `vocabulary().choices` for every cell, and a concept's `label` is a method, so the
+fallback it returned was the bound method itself. Reading the label off the concept needs no lookup.
+
+**Revisit if**: a published column ever carries a plain stored key instead of a concept.
+
+## US1: the empty-cell mark is a span, built when the table is
+
+**Decision**: the not-recorded mark is a `<span data-state="not-recorded">` inside the cell, built by
+`not_recorded()` each time a table is constructed.
+
+**Why**: the table is built per request, so the screen-reader text is translated for that request and the
+module holds only a lazy string. django-tables2 renders a table-level default as given, so a function that
+runs per table is the way to get both.
+
+**Revisit if**: the hook should sit on the `td` itself, which needs a custom `BoundRow`.
