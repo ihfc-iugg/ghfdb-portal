@@ -84,13 +84,16 @@ by heading, the count, the pager and the empty state.
 - **Columns**: the scalar published columns come from `GHFDBParentQuerySet.as_ghfdb_flat()`,
   keyed under their published names. `with_child_counts()` adds `total_children` and
   `relevant_children`. Both exist and are tested (FS-002).
-- **Labels**: `environment` and `explo_method` annotate the concept, whose `label` is the term.
-  `explo_purpose` is many-valued and is prefetched.
+- **Labels**: `environment` and `explo_method` are `ConceptField`s, a `CharField` holding the
+  term's key (`research_vocabs/fields.py:151`). The column looks the label up in the vocabulary's
+  choices. `explo_purpose` is many-valued and is prefetched.
 - **Missing values**: the table's `default` is the em dash with "Not recorded" for screen readers,
   FR-005.
-- **Sorting**: every scalar column sorts on its annotation. `children` and `name` need an
-  `order_<column>` method, and every order adds `ghfdb_id` so ties are stable across pages.
-  `explo_purpose` and `p_comment` do not sort.
+- **Sorting**: every column sorts (FR-007). django-tables2 falls back to the column accessors alone
+  (`django_tables2/data.py:207-213`), so the tie-break `ghfdb_id` is appended by the table itself
+  (D7). `explo_purpose` sorts by a subquery (D6).
+- **Counts**: `with_child_counts()` counts every child, visible or not. The table counts the
+  visible ones (D5).
 - **Units**: hover text on the heading, a `title` on the `<th>`.
 - **Page size**: `paginate_by = 100`.
 
@@ -136,5 +139,7 @@ the single map viewer entry with it, at the same position.
 | Child row | this repo: `c-heat_flow.child_row`, one attribute added |
 | Collapsible sidebar group | installed package: django-mvp `MenuCollapse` |
 | Dialog and its open/close | the browser: `<dialog>` and `showModal()`, htmx bundled with django-mvp |
+| Number and vocabulary columns | new code: `NumberColumn`, `TermColumn`. No `Column` subclass in django-tables2, FairDM, django-mvp or research-vocabs does either |
+| Bounds filter | new code: `BoundsFilter`, a `RangeFilter` with its widget and field set |
 | Inverted range check | new code: a `RangeField.compress` override, three lines |
 | Corrections filter matching "not recorded" | new code: one filter method |

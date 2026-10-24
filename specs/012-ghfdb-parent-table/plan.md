@@ -41,8 +41,9 @@ def served_parents(request) -> GHFDBParentQuerySet:
     """GHFDB parents the request may see: the parent and its site both visible (ADR 0021)."""
 ```
 
-Moved from `viewsets.served_parents_for`. `GHFDBParentViewSet` and `GHFDBFlatViewSet` call it, and
-so do both new views.
+Moved from `viewsets.served_parents_for`. `GHFDBParentViewSet.get_queryset` and
+`GHFDBChildViewSet.get_queryset` call it (`GHFDBFlatViewSet` reuses the child viewset's), and so
+do both new views. `docs/guides/published-structure-api.md` names the old function and is updated.
 
 ### The table: `ghfdb/tables.py`
 
@@ -50,8 +51,14 @@ so do both new views.
 `q_uncertainty`. `NumberColumn` right-aligns in tabular figures and puts the unit in its heading's
 `title`. `TermColumn` shows a concept's label. The default is the not-recorded mark.
 `render_ID_parent` and `render_name` link to the parent's and the site's page. `render_children`
-draws the `n (m)` button with `hx-get` to the children address. `order_children` and `order_name`
-order on the annotations, and every order ends in `ghfdb_id`.
+draws the `n (m)` button with `hx-get` to the children address. Every column sorts (FR-007):
+`order_children` and `order_name` order on their annotations, `p_comment` on its own, and
+`explo_purpose` on a subquery reading the alphabetically first purpose of the site (D6), never a
+join. **Every sort ends in `ghfdb_id` (D7)**, including the default and the plain column sorts:
+the table overrides django-tables2's ordering hook so the tie-break is appended whatever column
+was chosen. `TermColumn` holds one vocabulary instance for the column, not one per cell. The
+empty-cell mark carries `data-state="not-recorded"`, built lazily so it is translated per
+request.
 
 ### The filters: `ghfdb/filters.py`
 
@@ -64,7 +71,8 @@ order on the annotations, and every order ends in `ghfdb_id`.
 | `U_score`, `M_score` | `MultipleChoiceFilter` over the score choices | toolbar |
 | `q`, `q_uncertainty`, `elevation`, `total_depth_MD`, `total_depth_TVD` | `BoundsFilter` | panel |
 | `lat_NS`, `long_EW` | `BoundsFilter` with coordinate ends | panel |
-| `environment`, `explo_method`, `explo_purpose` | `MultipleChoiceFilter`, counted Tom Select, vocabulary choices | panel |
+| `environment`, `explo_method` | `MultipleChoiceFilter`, counted Tom Select, vocabulary choices | panel |
+| `explo_purpose` | the same, filtering by `sample__in=<sites with any chosen purpose>`, a subquery, so the counted query gains no join (design review SPEC-001) | panel |
 | `project`, `dataset` | `RecordMultipleFilter`, `scope="view"` | panel |
 
 `BoundsInput(RangeInput)` draws `ghfdb/widgets/bounds.html` and sends `_min` and `_max`.
@@ -74,11 +82,16 @@ order on the annotations, and every order ends in `ghfdb_id`.
 ### The views: `ghfdb/views.py`
 
 - `GHFDBParentTableView(FairDMTableView)`: `served_parents(request)` with the flat columns, the
-  counts and the purposes prefetched. `toolbar_filters = ["name", "corr_HP_flag", "U_score",
+  purposes prefetched, and **the two counts taken over the children the visitor may see (D5)**:
+  `Count("children", filter=Q(children__in=<visible children>))` and the same with
+  `children__is_relevant=True`, where the visible children are FairDM's `visible_to` for the
+  request's user, as a subquery. `toolbar_filters = ["name", "corr_HP_flag", "U_score",
   "M_score"]`, `filter_panel_attrs = {"position": "end", "breakpoint": False}`,
   `paginate_by = 100`, `page_title` "GHFDB".
 - `GHFDBParentChildrenView(TemplateView)`: 404 unless the parent is in `served_parents(request)`.
-  Context: the parent and `HeatFlowPage(parent, user, show_all=True).for_parent()["children"]`.
+  Context: the parent and `HeatFlowPage(parent, user).listing(<its children, relevant first>)`,
+  which splits off and counts those the visitor may not open without the rest of `for_parent()`'s
+  work.
 
 Routes: `ghfdb/parents/` (`ghfdb-parent-table`) and `ghfdb/parents/<int:ghfdb_id>/children/`
 (`ghfdb-parent-children`).
@@ -93,7 +106,8 @@ Routes: `ghfdb/parents/` (`ghfdb-parent-table`) and `ghfdb/parents/<int:ghfdb_id
 
 ### Hooks the tests find elements by
 
-`data-ghfdb="parent-row"` with `data-parent="<ghfdb_id>"` on each row, `data-ghfdb="children-count"`
+`data-ghfdb="parent-row"` with `data-parent="<ghfdb_id>"` on each row, `data-state="not-recorded"`
+on an empty cell, `data-ghfdb="children-count"`
 with `data-total` and `data-relevant` on the button, the existing `data-heat-flow="child"`,
 `data-relevant` on child rows, and `data-ghfdb="relevant-badge"` on the badge.
 
@@ -137,10 +151,9 @@ tests/test_ghfdb/
 ├── test_visibility.py
 ├── test_tables.py
 ├── test_filters.py
-├── test_parent_table_view.py
-├── test_parent_children_view.py
+├── test_views.py          # TestGHFDBParentTableView, TestGHFDBParentChildrenView,
+│                          # and the dialog's browser test (requires_browser)
 └── test_menus.py
-tests/browser/ (or the repo's browser-test location): the dialog
 CONTEXT.md, docs/guides/parent-table.md
 ```
 
