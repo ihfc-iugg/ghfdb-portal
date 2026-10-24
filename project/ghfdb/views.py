@@ -6,10 +6,7 @@ from pathlib import Path
 from django.contrib.staticfiles import finders
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import HTML, Div, Layout
 from django.views.generic import TemplateView
-from mvp_forms.layout import Join
 from django_downloadview import PathDownloadView
 from drf_spectacular.utils import extend_schema
 from fairdm.contrib.plugins.utils import check_has_edit_permission
@@ -106,34 +103,10 @@ class GHFDBParentTableView(FairDMTableView):
     table_class = GHFDBParentTable
     filterset_class = GHFDBParentFilter
     template_name = "ghfdb/parent_table.html"
-    toolbar_filters = ["name", "environment", "U_score", "dataset"]
-
-    #: The short label joined to the front of each select in the toolbar.
-    toolbar_labels = {
-        "environment": _("Environment"),
-        "U_score": _("U-score"),
-        "dataset": _("Dataset"),
-    }
-
-    def get_context_data(self, **kwargs):
-        """Lay out the toolbar's selects, each with its short label joined in front."""
-        context = super().get_context_data(**kwargs)
-        helper = FormHelper()
-        helper.form_tag = False
-        helper.disable_csrf = True
-        helper.form_show_labels = False
-        helper.layout = Layout(
-            *(
-                Div(
-                    Join(HTML(str(label)), name),
-                    css_class="mvp-toolbar-field w-60",
-                    data_mvp_toolbar_field=name,
-                )
-                for name, label in self.toolbar_labels.items()
-            )
-        )
-        context["toolbar_helper"] = helper
-        return context
+    #: No filter in the toolbar: every filter is in the panel, which is a
+    #: drawer at every width, opened by the toolbar's Filters toggle.
+    toolbar_filters = []
+    filter_panel_attrs = {"position": "end", "breakpoint": False}
     paginate_by = 50
     page_title = _("GHFDB")
 

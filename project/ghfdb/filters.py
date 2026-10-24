@@ -128,7 +128,10 @@ class GHFDBParentFilter(django_filters.FilterSet):
         DatasetMultipleChoiceField, field_name="dataset", scope="view"
     )
     project = RecordMultipleFilter(
-        ProjectMultipleChoiceField, field_name="dataset__project", scope="view"
+        ProjectMultipleChoiceField,
+        field_name="dataset__project",
+        scope="view",
+        label=_("Project"),
     )
 
     class Meta:

@@ -15,8 +15,8 @@
 - The sidebar group is django-mvp's `MenuCollapse`, which opens itself on the page it holds.
 - Every bound filter is django-mvp-forms' `RangeInput`, drawn as one join, [min][–][max], with
   the dash framed as the package frames text in a `Join` (planning note N2).
-- Each select in the toolbar is a django-mvp-forms `Join` of a short label and the select,
-  laid out with a crispy `FormHelper` on the view.
+- The filter panel is django-mvp's page side with `breakpoint` set to `False`, so it is a
+  drawer at every width, opened by the toolbar's Filters toggle.
 - Dataset and project are FairDM's `RecordMultipleFilter` over its dataset and project record
   fields, the filter FairDM's own measurement lists use (planning note N3).
 - Children load into the window with htmx when the count is pressed (planning note N1).
@@ -61,8 +61,8 @@
   heading only.
 - The `children` column sits straight after `q` and `q_uncertainty`, so the count that says how
   far to trust a value is read next to the value.
-- The toolbar holds the site name search, then Environment, U-score and Dataset selects, each
-  with its short label joined in front. Every range, `q` included, is in the panel.
+- The toolbar holds no filters. Every filter, the site name search included, is in the panel.
+- The panel is always off canvas, opened by its toggle.
 - A range is [min][–][max].
 - The page title is "GHFDB".
 - The quality code filter is offered as the U-score and the M-score, the two grades the code
