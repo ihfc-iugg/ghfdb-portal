@@ -309,6 +309,36 @@ class GHFDBParentQuerySet(PolymorphicQuerySet):
             ),
         )
 
+    def with_visible_child_counts(self, user) -> "GHFDBParentQuerySet":
+        """Annotate each parent with the children *user* may open.
+
+        Adds ``total_children`` and ``relevant_children`` as
+        ``with_child_counts()`` does, but over the children FairDM's
+        ``visible_to`` lets *user* see, so a row never counts a child its window
+        would not name. The visible children are one subquery, not a join per
+        row.
+
+        Args:
+            user: The visitor, signed in or anonymous.
+
+        Returns:
+            The queryset with both counts annotated.
+        """
+        from heat_flow.models import HeatFlow
+
+        visible = Q(
+            children__in=HeatFlow.objects.visible_to(user).values("pk"),
+        )
+        return cast(
+            "GHFDBParentQuerySet",
+            self.annotate(
+                total_children=Count("children", filter=visible),
+                relevant_children=Count(
+                    "children", filter=visible & Q(children__is_relevant=True)
+                ),
+            ),
+        )
+
     def with_children(self) -> "GHFDBParentQuerySet":
         """Prefetch linked child records and the site's exploration purposes.
 
@@ -389,6 +419,10 @@ class GHFDBParentManager(PolymorphicManager):
     def with_child_counts(self) -> GHFDBParentQuerySet:
         """Delegate to ``GHFDBParentQuerySet.with_child_counts()``."""
         return self.get_queryset().with_child_counts()
+
+    def with_visible_child_counts(self, user) -> GHFDBParentQuerySet:
+        """Delegate to ``GHFDBParentQuerySet.with_visible_child_counts()``."""
+        return self.get_queryset().with_visible_child_counts(user)
 
     def with_children(self) -> GHFDBParentQuerySet:
         """Delegate to ``GHFDBParentQuerySet.with_children()``."""

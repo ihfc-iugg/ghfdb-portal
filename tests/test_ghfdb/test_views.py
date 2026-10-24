@@ -1,12 +1,14 @@
 import re
 
 import pytest
+from bs4 import BeautifulSoup
 from django.test import Client
 from django.urls import reverse
 
 from project.ghfdb.views import GHFDBParentTableView
 from tests.conftest import requires_browser
 
+from .conftest import build_child
 from .test_tables import make_parent
 
 
@@ -158,6 +160,70 @@ class TestGHFDBParentTableView:
             client.get(reverse("ghfdb-parent-table"))
 
         constant_query_count(build, call, low=3, high=27)
+
+
+def children_button(response, ghfdb_id):
+    """The count button in the row of one parent."""
+    page = BeautifulSoup(response.content, "html.parser")
+    row = page.select_one(f'tr[data-ghfdb="parent-row"][data-parent="{ghfdb_id}"]')
+    return row.select_one('[data-ghfdb="children-count"]')
+
+
+@pytest.mark.django_db
+class TestGHFDBParentTableChildCounts:
+    def test_the_button_carries_the_number_of_children_and_of_relevant_ones(
+        self, client, published_dataset
+    ):
+        parent = make_parent(published_dataset, 1)
+        build_child(published_dataset, parent, ghfdb_id=11, is_relevant=True)
+        build_child(published_dataset, parent, ghfdb_id=12, is_relevant=True)
+        build_child(published_dataset, parent, ghfdb_id=13)
+
+        button = children_button(client.get(reverse("ghfdb-parent-table")), 1)
+
+        assert (button["data-total"], button["data-relevant"]) == ("3", "2")
+
+    def test_a_parent_none_of_whose_children_is_relevant_counts_zero_relevant(
+        self, client, published_dataset
+    ):
+        parent = make_parent(published_dataset, 1)
+        build_child(published_dataset, parent, ghfdb_id=11)
+
+        button = children_button(client.get(reverse("ghfdb-parent-table")), 1)
+
+        assert (button["data-total"], button["data-relevant"]) == ("1", "0")
+
+    def test_the_button_loads_the_parents_children_from_their_address(
+        self, client, published_dataset
+    ):
+        make_parent(published_dataset, 4)
+
+        button = children_button(client.get(reverse("ghfdb-parent-table")), 4)
+
+        assert button["hx-get"] == reverse("ghfdb-parent-children", args=[4])
+
+    def test_a_relevant_child_in_an_unpublished_dataset_is_counted_by_nobody_outside_it(
+        self, client, published_dataset, unpublished_dataset
+    ):
+        parent = make_parent(published_dataset, 1)
+        build_child(published_dataset, parent, ghfdb_id=11)
+        build_child(unpublished_dataset, parent, ghfdb_id=12, is_relevant=True)
+
+        button = children_button(client.get(reverse("ghfdb-parent-table")), 1)
+
+        assert (button["data-total"], button["data-relevant"]) == ("1", "0")
+
+    def test_a_contributor_on_that_dataset_has_it_counted_in_both_numbers(
+        self, client, published_dataset, unpublished_dataset, member
+    ):
+        parent = make_parent(published_dataset, 1)
+        build_child(published_dataset, parent, ghfdb_id=11)
+        build_child(unpublished_dataset, parent, ghfdb_id=12, is_relevant=True)
+        client.force_login(member)
+
+        button = children_button(client.get(reverse("ghfdb-parent-table")), 1)
+
+        assert (button["data-total"], button["data-relevant"]) == ("2", "1")
 
 
 @pytest.mark.django_db

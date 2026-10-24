@@ -152,10 +152,13 @@ class GHFDBParentTable(tables.Table):
         url = reverse("ghfdb-parent-children", args=[record.ghfdb_id])
         return format_html(
             '<button type="button" class="btn btn-ghost btn-xs tabular-nums"'
+            ' data-ghfdb="children-count" data-total="{}" data-relevant="{}"'
             ' hx-get="{}" hx-target="#children-window" hx-swap="innerHTML"'
             ' aria-haspopup="dialog"'
             ' aria-label="{}">{} <span class="text-base-content/60">({})</span>'
             "</button>",
+            value,
+            record.relevant_children,
             url,
             ngettext(
                 "Show the %(n)s child of parent %(id)s",

@@ -102,7 +102,7 @@ class GHFDBParentTableView(FairDMTableView):
         return (
             served_parents(self.request)
             .as_ghfdb_flat()
-            .with_child_counts()
+            .with_visible_child_counts(self.request.user)
             .prefetch_related("sample__heatflowsite__explo_purpose")
         )
 
