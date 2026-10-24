@@ -60,7 +60,8 @@ alphabetically first of its terms, read by a subquery so the table's counts are 
 
 A sort on a column with many equal values (environment, quality) gives the database no order among
 them, so a page could repeat a parent or skip one. Every sort, the default included, ends in
-`ghfdb_id`.
+`ghfdb_id` and then the primary key, since `ghfdb_id` is not unique in the schema. The API orders
+the same way.
 
 **ADR:** none — local to this table's sorting
 
