@@ -1,8 +1,10 @@
 import pytest
 from django.contrib.gis.geos import Point
+from heat_flow import vocabularies
 
 from project.ghfdb.filters import BoundsInput, GHFDBParentFilter
 
+from .conftest import build_child
 from .test_tables import make_parent, parents
 
 
@@ -103,3 +105,81 @@ class TestCoordinateBounds:
         assert [error.code for error in filterset.form.errors.as_data()["long_EW"]] == [
             "max_value"
         ]
+
+
+@pytest.mark.django_db
+class TestChoiceFilters:
+    def test_two_environments_list_the_parents_in_either(self, published_dataset):
+        for ghfdb_id, environment in (
+            (1, "onshore_continental"),
+            (2, "onshore_marine"),
+            (3, "offshore_marine"),
+        ):
+            make_parent(published_dataset, ghfdb_id, site={"environment": environment})
+
+        assert listed({"environment": ["onshore_continental", "onshore_marine"]}) == [
+            1,
+            2,
+        ]
+
+    def test_the_exploration_method_narrows(self, published_dataset):
+        make_parent(published_dataset, 1, site={"explo_method": "drilling"})
+        make_parent(published_dataset, 2, site={"explo_method": "mining"})
+
+        assert listed({"explo_method": ["mining"]}) == [2]
+
+    def test_a_purpose_matches_a_parent_with_several_and_lists_it_once(
+        self, published_dataset
+    ):
+        make_parent(published_dataset, 1, purpose=["hydrocarbon", "mining"])
+        make_parent(published_dataset, 2, purpose=["underground_storage"])
+        make_parent(published_dataset, 3)
+
+        filterset = bound({"explo_purpose": ["hydrocarbon", "mining"]})
+
+        assert list(filterset.qs.values_list("ghfdb_id", flat=True)) == [1]
+
+    def test_corr_hp_flag_unknown_lists_only_the_parents_with_no_recorded_flag(
+        self, published_dataset
+    ):
+        make_parent(published_dataset, 1, corr_HP_flag=True)
+        make_parent(published_dataset, 2, corr_HP_flag=False)
+        make_parent(published_dataset, 3, corr_HP_flag=None)
+
+        assert listed({"corr_HP_flag": ["unknown"]}) == [3]
+        assert listed({"corr_HP_flag": ["yes", "unknown"]}) == [1, 3]
+
+    def test_the_quality_scores_each_narrow(self, published_dataset):
+        make_parent(published_dataset, 1, U_score="U1", M_score="M1")
+        make_parent(published_dataset, 2, U_score="U2", M_score="M1")
+        make_parent(published_dataset, 3, U_score="U2", M_score="M2")
+
+        assert listed({"U_score": ["U2"]}) == [2, 3]
+        assert listed({"M_score": ["M1"]}) == [1, 2]
+        assert listed({"U_score": ["U2"], "M_score": ["M1"]}) == [2]
+
+    @pytest.mark.parametrize(
+        ("name", "vocabulary"),
+        [
+            ("environment", vocabularies.GeographicEnvironment),
+            ("explo_method", vocabularies.ExplorationMethod),
+            ("explo_purpose", vocabularies.ExplorationPurpose),
+        ],
+    )
+    def test_a_vocabulary_filter_offers_the_vocabularys_terms(self, name, vocabulary):
+        offered = bound({}).filters[name].extra["choices"]
+
+        assert list(offered) == list(vocabulary().choices)
+
+    def test_choosing_two_purposes_leaves_each_rows_counts_unchanged(
+        self, published_dataset
+    ):
+        parent = make_parent(published_dataset, 1, purpose=["hydrocarbon", "mining"])
+        for ghfdb_id, is_relevant in ((41, True), (42, True), (43, False)):
+            build_child(
+                published_dataset, parent, ghfdb_id=ghfdb_id, is_relevant=is_relevant
+            )
+
+        both = bound({"explo_purpose": ["hydrocarbon", "mining"]}).qs.get()
+
+        assert (both.total_children, both.relevant_children) == (3, 2)

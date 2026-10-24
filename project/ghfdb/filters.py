@@ -10,6 +10,7 @@ from fairdm.contrib.autocomplete.fields import (
 )
 from fairdm.contrib.autocomplete.filters import RecordMultipleFilter
 from heat_flow import vocabularies
+from heat_flow.models import HeatFlowSite
 from heat_flow.utils import MScoreOptions, UScoreOptions
 from mvp.filters import SearchFilter
 from mvp_forms.fields import LatitudeField, LongitudeField
@@ -142,10 +143,9 @@ class GHFDBParentFilter(django_filters.FilterSet):
         widget=counted(_("Any method")),
     )
     explo_purpose = django_filters.MultipleChoiceFilter(
-        field_name="sample__heatflowsite__explo_purpose__name",
+        method="filter_explo_purpose",
         label=_("explo_purpose"),
         widget=counted(_("Any purpose")),
-        distinct=True,
     )
     corr_HP_flag = django_filters.MultipleChoiceFilter(
         method="filter_corr_hp",
@@ -183,6 +183,17 @@ class GHFDBParentFilter(django_filters.FilterSet):
             ("explo_purpose", vocabularies.ExplorationPurpose),
         ):
             self.filters[name].extra["choices"] = vocabulary().choices
+
+    def filter_explo_purpose(self, queryset, name, value):
+        """Keep parents whose site has any chosen purpose.
+
+        The sites are a subquery so the parents gain no join: a join would
+        repeat each parent per purpose and inflate its child counts.
+        """
+        if not value:
+            return queryset
+        sites = HeatFlowSite.objects.filter(explo_purpose__name__in=value)
+        return queryset.filter(sample__in=sites.values("pk"))
 
     def filter_corr_hp(self, queryset, name, value):
         """Keep parents whose heat production correction is any chosen state."""
