@@ -6,8 +6,7 @@ from heat_flow import vocabularies
 
 from project.ghfdb.filters import BoundsInput, GHFDBParentFilter
 
-from .conftest import build_child
-from .test_tables import make_parent, parents
+from .conftest import build_child, make_parent, parents
 
 
 def bound(data, user=None):

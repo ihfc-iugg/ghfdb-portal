@@ -10,8 +10,7 @@ from django.urls import reverse
 from project.ghfdb.views import GHFDBParentTableView
 from tests.conftest import requires_browser
 
-from .conftest import build_child
-from .test_tables import make_parent
+from .conftest import build_child, make_parent
 
 
 class TestExplorePage:

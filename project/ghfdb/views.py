@@ -118,11 +118,10 @@ class GHFDBParentChildrenView(TemplateView):
         parent = get_object_or_404(
             served_parents(self.request).as_ghfdb_flat(), ghfdb_id=kwargs["ghfdb_id"]
         )
-        children = parent.children.prefetch_related("method").order_by(
-            "-is_relevant", "pk"
-        )
         context["parent"] = parent
-        context["children"] = HeatFlowPage(parent, self.request.user).listing(children)
+        context["children"] = HeatFlowPage(parent, self.request.user).listing(
+            parent.children_relevant_first()
+        )
         return context
 
 

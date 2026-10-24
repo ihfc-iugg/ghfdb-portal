@@ -110,7 +110,7 @@ holds.
 
 A `TemplateView` at `ghfdb/parents/<ghfdb_id>/children/` looks the parent up inside
 `served_parents(request)` and answers 404 for anything else. Its list is
-`HeatFlowPage.for_parent()["children"]` with `show_all`, which already orders relevant children
+`HeatFlowPage.listing()` over `ParentHeatFlow.children_relevant_first()`, the order the parent page uses, which lists relevant children
 first, splits off those the visitor may not open and counts them (FS-011). The fragment uses the
 portal's `c-heat_flow.child_row` with a new `relevance_badge` attribute.
 
@@ -135,7 +135,7 @@ the single map viewer entry with it, at the same position.
 | Coordinate ends | installed package: django-mvp-forms `LatitudeField`, `LongitudeField` |
 | Counted multiple choice | installed package: django-mvp-forms `TomSelectMultiple` |
 | Dataset and project filters | installed package: FairDM `RecordMultipleFilter` |
-| Children ordered relevant first, hidden ones counted | this repo: `HeatFlowPage.for_parent()` |
+| Children ordered relevant first, hidden ones counted | this repo: `HeatFlowPage.listing()`; the order moved out of `for_parent()` into `ParentHeatFlow.children_relevant_first()` so both read it |
 | Child row | this repo: `c-heat_flow.child_row`, one attribute added |
 | Collapsible sidebar group | installed package: django-mvp `MenuCollapse` |
 | Dialog and its open/close | the browser: `<dialog>` and `showModal()`, htmx bundled with django-mvp |

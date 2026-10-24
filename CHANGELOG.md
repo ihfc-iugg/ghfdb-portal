@@ -11,6 +11,14 @@ Releases before that used `<year>.<release>` and are recorded in the
 
 ### Added
 
+- A public table of the GHFDB parents at `ghfdb/parents/`, one row per parent in the published
+  column names, sortable by every column and paged at 100 rows. It can be filtered by ranges on
+  heat flow, its uncertainty, elevation, both total depths, latitude and longitude, by environment,
+  exploration method and purpose, heat production correction, U-score and M-score, by site name,
+  and by project and dataset, and the address holds the filters. Each row shows its children as
+  "n (m)", m being those marked relevant, and selecting the count opens a window listing them.
+  The sidebar's map viewer entry is now a collapsible GHFDB group holding the map viewer and the
+  table.
 - Every site, depth interval and measurement page now shows heat flow content as well as
   FairDM's shared page. A child heat flow value shows its method, the thermal gradient and
   interval conductivity it was calculated from, its corrections, its quality card and its parent.

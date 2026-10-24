@@ -127,8 +127,8 @@ The table's building blocks:
 separately.
 
 `GHFDBParentChildrenView` draws the window, from `ghfdb/parent_children.html`, routed as
-`ghfdb-parent-children`. It looks the parent up in `served_parents()` and lists its children through
-`HeatFlowPage.listing()`, relevant first.
+`ghfdb-parent-children`. It looks the parent up in `served_parents()` and lists
+`ParentHeatFlow.children_relevant_first()` through `HeatFlowPage.listing()`.
 
 The count's button carries `data-ghfdb="children-count"` with `data-total` and `data-relevant`, and
 `hx-get` set to the window's address. In the window each child is a `data-heat-flow="child"` row

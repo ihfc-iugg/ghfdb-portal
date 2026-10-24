@@ -1,4 +1,4 @@
-"""Filters for the GHFDB parent table (FS-012 sketch)."""
+"""Filters for the GHFDB parent table."""
 
 import django_filters
 from django import forms
@@ -20,7 +20,14 @@ from .models import GHFDBParent
 
 
 def counted(placeholder):
-    """A multiple choice drawn as a counted control, never the browser's own select."""
+    """Return a multiple choice drawn as a counted control, never the browser's own select.
+
+    Args:
+        placeholder: Text shown while nothing is chosen.
+
+    Returns:
+        A ``TomSelectMultiple`` that shows how many values are chosen.
+    """
     return TomSelectMultiple(counted=True, placeholder=placeholder)
 
 
@@ -56,17 +63,16 @@ class BoundsInput(RangeInput):
 
 
 class BoundsField(django_filters.fields.RangeField):
-    """A lower and an upper bound, refusing an upper bound below the lower."""
+    """A lower and an upper bound, refusing an upper bound below the lower.
+
+    Args:
+        *args: Passed to the range field.
+        end_field: The form field class cleaning each bound, such as
+            ``LatitudeField`` for a latitude.
+        **kwargs: Passed to the range field.
+    """
 
     def __init__(self, *args, end_field=forms.DecimalField, **kwargs):
-        """Build the two ends from one field class.
-
-        Args:
-            *args: Passed to the range field.
-            end_field: The form field class cleaning each bound, such as
-                ``LatitudeField`` for a latitude.
-            **kwargs: Passed to the range field.
-        """
         kwargs.setdefault("fields", (end_field(), end_field()))
         super().__init__(*args, **kwargs)
 
@@ -102,6 +108,7 @@ class BoundsFilter(django_filters.RangeFilter):
     field_class = BoundsField
 
     def __init__(self, *args, **kwargs):
+        """Draw the bounds with ``BoundsInput`` unless another widget is given."""
         kwargs.setdefault("widget", BoundsInput())
         super().__init__(*args, **kwargs)
 
@@ -189,6 +196,14 @@ class GHFDBParentFilter(django_filters.FilterSet):
 
         The sites are a subquery so the parents gain no join: a join would
         repeat each parent per purpose and inflate its child counts.
+
+        Args:
+            queryset: The parents being filtered.
+            name: The filter's name.
+            value: The chosen purposes' names.
+
+        Returns:
+            The parents whose site has any of them.
         """
         if not value:
             return queryset
@@ -196,7 +211,16 @@ class GHFDBParentFilter(django_filters.FilterSet):
         return queryset.filter(sample__in=sites.values("pk"))
 
     def filter_corr_hp(self, queryset, name, value):
-        """Keep parents whose heat production correction is any chosen state."""
+        """Keep parents whose heat production correction is any chosen state.
+
+        Args:
+            queryset: The parents being filtered.
+            name: The filter's name.
+            value: The chosen states: ``yes``, ``no`` or ``unknown``.
+
+        Returns:
+            The parents in any chosen state.
+        """
         states = {
             "yes": Q(corr_HP_flag=True),
             "no": Q(corr_HP_flag=False),

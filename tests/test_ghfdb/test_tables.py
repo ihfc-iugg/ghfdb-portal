@@ -4,38 +4,11 @@ from heat_flow import vocabularies
 from heat_flow.models import ParentHeatFlow
 from research_vocabs.models import Concept
 
-from project.ghfdb.models import GHFDBParent
 from project.ghfdb.tables import GHFDBParentTable
-from tests.factories import HeatFlowSiteFactory, ParentHeatFlowFactory
 
-from .conftest import build_child
+from .conftest import build_child, make_parent, parents, purposes
 
 NOT_RECORDED = 'data-state="not-recorded"'
-
-
-def purposes(*names):
-    found = Concept.get_for_vocabulary(vocabularies.ExplorationPurpose)
-    return [found.get(name=name) for name in names]
-
-
-def make_parent(dataset, ghfdb_id, *, purpose=(), site=None, **record):
-    """One parent on its own site. ``site`` and ``record`` set the site's and the
-    parent's fields; ``purpose`` names the site's exploration purposes."""
-    site = HeatFlowSiteFactory(
-        dataset=dataset, explo_purpose=purposes(*purpose), **(site or {})
-    )
-    parent = ParentHeatFlowFactory(
-        dataset=dataset, sample=site, ghfdb_id=ghfdb_id, **record
-    )
-    return parent
-
-
-def parents():
-    return (
-        GHFDBParent.objects.as_ghfdb_flat()
-        .with_child_counts()
-        .prefetch_related("sample__heatflowsite__explo_purpose")
-    )
 
 
 def rows_by_id(table):
@@ -309,15 +282,16 @@ class TestGHFDBParentTableOrdering:
             assert sorted(seen) == [1, 2, 3, 4, 5], column
 
     @pytest.mark.parametrize("order_by", [None, *GHFDBParentTable.base_columns])
-    def test_every_ordering_ends_in_the_published_identifier(
+    def test_every_ordering_ends_in_the_published_identifier_then_the_key(
         self, published_dataset, order_by
     ):
         # Postgres hands back tied rows in an order it may change between two
         # queries, so the tie-break is read off the query rather than guessed
-        # from the rows of a small table.
+        # from the rows of a small table. ghfdb_id is not unique in the schema,
+        # so the primary key follows it.
         table = GHFDBParentTable(parents(), order_by=order_by)
 
-        assert table.data.data.query.order_by[-1] == "ghfdb_id"
+        assert table.data.data.query.order_by[-2:] == ("ghfdb_id", "pk")
 
     def test_the_default_order_is_the_published_identifier(self, three):
         assert [row.record.ghfdb_id for row in GHFDBParentTable(parents()).rows] == [

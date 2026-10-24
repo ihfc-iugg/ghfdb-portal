@@ -344,6 +344,13 @@ if basis == "none":
 It reads all the parent's children, those the visitor may not open included, so the basis on the
 page is the one the stored quality was calculated from.
 
+### `ParentHeatFlow.children_relevant_first`
+
+`ParentHeatFlow.children_relevant_first()` returns the parent's children, those marked relevant
+first and then in the order they were added, with their methods prefetched. It is the one order a
+parent's children are listed in: the parent's page and the GHFDB parent table's window both read
+it, then pass it through `HeatFlowPage.listing()` to drop the children the visitor may not open.
+
 ### Template tags
 
 Load them with `{% load heat_flow_overview %}`.

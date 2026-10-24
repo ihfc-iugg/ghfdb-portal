@@ -343,6 +343,18 @@ class ParentHeatFlow(Measurement):
         """Return the HeatFlowSite this parent record belongs to."""
         return self.sample
 
+    def children_relevant_first(self):
+        """Return this parent's children, those marked relevant first.
+
+        The one order a parent's children are listed in, on its own page and in
+        the GHFDB parent table's window.
+
+        Returns:
+            The children, relevant first and then by primary key, with their
+            methods prefetched.
+        """
+        return self.children.prefetch_related("method").order_by("-is_relevant", "pk")
+
     def quality_basis(self):
         """Say which children this parent's quality rests on.
 

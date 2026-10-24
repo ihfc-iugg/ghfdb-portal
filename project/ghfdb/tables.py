@@ -37,13 +37,24 @@ class TieBrokenQuerysetData(TableQuerysetData):
     """
 
     def order_by(self, aliases):
-        """Order as django-tables2 does, then append ``ghfdb_id`` as the tie-break."""
+        """Order as django-tables2 does, then break ties by ``ghfdb_id`` and ``pk``.
+
+        ``ghfdb_id`` is not unique in the schema, so ``pk`` follows it, as in the
+        API's ordering.
+        """
         super().order_by(aliases)
-        self.data = self.data.order_by(*self.data.query.order_by, "ghfdb_id")
+        self.data = self.data.order_by(*self.data.query.order_by, "ghfdb_id", "pk")
 
 
 class NumberColumn(tables.Column):
-    """A right-aligned number column in tabular figures."""
+    """A right-aligned number column in tabular figures.
+
+    Args:
+        *args: Passed to ``Column``.
+        places: Decimal places to show, or ``None`` for the shortest form.
+        unit: The column's unit, shown as hover text on its heading.
+        **kwargs: Passed to ``Column``.
+    """
 
     def __init__(self, *args, places=None, unit=None, **kwargs):
         attrs = {
@@ -54,6 +65,7 @@ class NumberColumn(tables.Column):
         self.places = places
 
     def render(self, value):
+        """Show the number's magnitude to the column's decimal places."""
         magnitude = getattr(value, "magnitude", value)
         if self.places is None:
             return f"{magnitude:g}"
@@ -129,12 +141,14 @@ class GHFDBParentTable(tables.Table):
         }
 
     def __init__(self, data, *args, **kwargs):
+        """Order the rows with a tie-break and mark empty cells as not recorded."""
         if not isinstance(data, TableData):
             data = TieBrokenQuerysetData(data)
         kwargs.setdefault("default", not_recorded())
         super().__init__(data, *args, **kwargs)
 
     def render_ID_parent(self, value, record):
+        """Link the identifier to the parent's page."""
         return format_html(
             '<a class="link link-hover" href="{}">{}</a>',
             record.get_absolute_url(),
@@ -142,6 +156,7 @@ class GHFDBParentTable(tables.Table):
         )
 
     def render_name(self, value, record):
+        """Link the site's name to the site's page."""
         return format_html(
             '<a class="link link-hover" href="{}">{}</a>',
             record.sample.get_absolute_url(),
@@ -149,6 +164,7 @@ class GHFDBParentTable(tables.Table):
         )
 
     def render_children(self, value, record):
+        """Draw "n (m)" as the button that loads the parent's children."""
         url = reverse("ghfdb-parent-children", args=[record.ghfdb_id])
         return format_html(
             '<button type="button" class="btn btn-ghost btn-xs tabular-nums"'
@@ -171,10 +187,12 @@ class GHFDBParentTable(tables.Table):
         )
 
     def render_explo_purpose(self, value, record):
+        """Join the site's purposes, or mark the cell as not recorded."""
         terms = [term.label for term in value.all()]
         return "; ".join(terms) if terms else not_recorded()
 
     def render_quality_parent(self, value):
+        """Show the quality code as the portal's quality badge."""
         return render_to_string("cotton/heat_flow/code.html", {"code": value})
 
     def order_children(self, queryset, is_descending):
