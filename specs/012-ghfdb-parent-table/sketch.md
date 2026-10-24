@@ -61,7 +61,7 @@
   heading only.
 - The `children` column sits straight after `q` and `q_uncertainty`, so the count that says how
   far to trust a value is read next to the value.
-- The toolbar holds no filters. Every filter, the site name search included, is in the panel.
+- The toolbar holds the site name search only. Every other filter is in the panel.
 - The panel is always off canvas, opened by its toggle.
 - A range is [min][–][max].
 - The page title is "GHFDB".
