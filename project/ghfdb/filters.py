@@ -12,6 +12,7 @@ from fairdm.contrib.autocomplete.filters import RecordMultipleFilter
 from heat_flow import vocabularies
 from heat_flow.utils import MScoreOptions, UScoreOptions
 from mvp.filters import SearchFilter
+from mvp_forms.fields import LatitudeField, LongitudeField
 from mvp_forms.widgets import RangeInput, TomSelectMultiple
 
 from .models import GHFDBParent
@@ -56,6 +57,18 @@ class BoundsInput(RangeInput):
 class BoundsField(django_filters.fields.RangeField):
     """A lower and an upper bound, refusing an upper bound below the lower."""
 
+    def __init__(self, *args, end_field=forms.DecimalField, **kwargs):
+        """Build the two ends from one field class.
+
+        Args:
+            *args: Passed to the range field.
+            end_field: The form field class cleaning each bound, such as
+                ``LatitudeField`` for a latitude.
+            **kwargs: Passed to the range field.
+        """
+        kwargs.setdefault("fields", (end_field(), end_field()))
+        super().__init__(*args, **kwargs)
+
     def compress(self, data_list):
         """Join the two bounds into a slice.
 
@@ -81,7 +94,8 @@ class BoundsField(django_filters.fields.RangeField):
 class BoundsFilter(django_filters.RangeFilter):
     """A lower bound, an upper bound or both on one number column.
 
-    Either side may be left empty, which leaves that side open.
+    Either side may be left empty, which leaves that side open. ``end_field``
+    names the form field class cleaning each bound.
     """
 
     field_class = BoundsField
@@ -110,8 +124,12 @@ class GHFDBParentFilter(django_filters.FilterSet):
         field_name="sample__heatflowsite__vertical_depth",
         label=_("total_depth_TVD (m)"),
     )
-    lat_NS = BoundsFilter(field_name="lat_NS", label=_("lat_NS (°)"))
-    long_EW = BoundsFilter(field_name="long_EW", label=_("long_EW (°)"))
+    lat_NS = BoundsFilter(
+        field_name="lat_NS", end_field=LatitudeField, label=_("lat_NS (°)")
+    )
+    long_EW = BoundsFilter(
+        field_name="long_EW", end_field=LongitudeField, label=_("long_EW (°)")
+    )
 
     environment = django_filters.MultipleChoiceFilter(
         field_name="sample__heatflowsite__environment",

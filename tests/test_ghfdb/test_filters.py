@@ -1,4 +1,5 @@
 import pytest
+from django.contrib.gis.geos import Point
 
 from project.ghfdb.filters import BoundsInput, GHFDBParentFilter
 
@@ -59,3 +60,46 @@ class TestBoundsFilter:
 
         assert 'name="q_min"' in html
         assert 'name="q_max"' in html
+
+
+@pytest.mark.django_db
+class TestCoordinateBounds:
+    @pytest.fixture
+    def sites(self, published_dataset):
+        for ghfdb_id, (longitude, latitude) in {
+            1: (40, 20),
+            2: (20, 20),
+            3: (20, 40),
+        }.items():
+            make_parent(
+                published_dataset,
+                ghfdb_id,
+                site={"location": Point(longitude, latitude, srid=4326)},
+            )
+
+    def test_a_box_lists_only_the_parents_whose_site_is_inside_it(self, sites):
+        box = {
+            "lat_NS_min": "15",
+            "lat_NS_max": "35",
+            "long_EW_min": "5",
+            "long_EW_max": "25",
+        }
+
+        assert listed(box) == [2]
+
+    def test_a_latitude_of_ninety_one_is_refused_on_that_filter(self, sites):
+        filterset = bound({"lat_NS_max": "91"})
+
+        assert [error.code for error in filterset.form.errors.as_data()["lat_NS"]] == [
+            "max_value"
+        ]
+        assert listed({"lat_NS_max": "91"}) == [1, 2, 3]
+
+    def test_a_longitude_of_one_hundred_eighty_one_is_refused_on_that_filter(
+        self, sites
+    ):
+        filterset = bound({"long_EW_max": "181"})
+
+        assert [error.code for error in filterset.form.errors.as_data()["long_EW"]] == [
+            "max_value"
+        ]
