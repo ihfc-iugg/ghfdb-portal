@@ -12,9 +12,10 @@ from heat_flow import vocabularies
 from .models import GHFDBParent
 
 #: What an empty cell shows: a dash, read out as "Not recorded".
-NOT_RECORDED = mark_safe(  # noqa: S308 - fixed markup, no user input
-    '<span aria-hidden="true">—</span>'
-    '<span class="sr-only">{}</span>'.format(_("Not recorded"))
+NOT_RECORDED = mark_safe(
+    '<span aria-hidden="true">—</span><span class="sr-only">{}</span>'.format(
+        _("Not recorded")
+    )
 )
 
 
@@ -56,16 +57,16 @@ class GHFDBParentTable(tables.Table):
         attrs={"td": {"class": "tabular-nums whitespace-nowrap"}},
     )
     q = NumberColumn(verbose_name="q", unit="mW/m²", places=1)
-    q_uncertainty = NumberColumn(
-        verbose_name="q_uncertainty", unit="mW/m²", places=1
-    )
+    q_uncertainty = NumberColumn(verbose_name="q_uncertainty", unit="mW/m²", places=1)
     children = tables.Column(
         verbose_name="children",
         accessor="total_children",
         attrs={
             "th": {
                 "class": "text-end",
-                "title": _("Number of children, with those marked relevant in brackets"),
+                "title": _(
+                    "Number of children, with those marked relevant in brackets"
+                ),
             },
             "td": {"class": "text-end whitespace-nowrap"},
         },

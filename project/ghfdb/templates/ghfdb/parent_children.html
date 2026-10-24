@@ -2,11 +2,13 @@
 {% comment %}A parent's children, drawn into the table's window. Relevant children come first, each badged; the rest follow unbadged.{% endcomment %}
 <div class="flex items-start justify-between gap-4 px-5 pt-5">
   <div class="min-w-0">
-    <h2 id="children-dialog-title" class="text-lg font-semibold leading-tight">
+    <h2 id="children-dialog-title"
+        class="text-lg font-semibold leading-tight">
       {% blocktranslate with id=parent.ghfdb_id %}Children of parent {{ id }}{% endblocktranslate %}
     </h2>
     <p class="text-sm text-base-content/70 break-words">
-      <a href="{{ parent.sample.get_absolute_url }}" class="link link-hover">{{ parent.site_name }}</a>
+      <a href="{{ parent.sample.get_absolute_url }}"
+         class="link link-hover">{{ parent.site_name }}</a>
       · <span class="tabular-nums">{{ parent.print_value }}</span>
     </p>
   </div>
