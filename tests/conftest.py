@@ -3,24 +3,22 @@ import os
 import uuid
 from pathlib import Path
 
-import django
 import pytest
 
 
 def pytest_configure():
-    """Configure Django for testing."""
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
-    os.environ.setdefault("DJANGO_ENV", "development")
+    """Swap in settings a test can change after Django is set up.
+
+    pytest-django has already set Django up by the time this runs, from the
+    settings module and environment named in pyproject.toml. A setting read
+    while the apps load belongs in config/development.py instead.
+    """
     from django.conf import settings
 
-    # Orbit records every request by writing its own rows on the same connection,
-    # which any test counting queries would count too. Its app reads this at
-    # ready(), so it is switched off before setup.
-    settings.ORBIT_CONFIG = {**settings.ORBIT_CONFIG, "ENABLED": False}
     # Argon2 spends a tenth of a second on every password it hashes, by design. A test
-    # needs a password stored, not one that resists cracking.
+    # needs a password stored, not one that resists cracking. Django builds its list of
+    # hashers the first time it hashes, which is after this.
     settings.PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
-    django.setup()
 
 
 def _browser_is_installed():
