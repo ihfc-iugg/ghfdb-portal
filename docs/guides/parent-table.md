@@ -31,6 +31,24 @@ A row holds the parent's published columns, under their published names: `ID_par
 - A value that is not recorded shows a dash, read out as "Not recorded". A recorded zero shows as
   `0`: the table never turns an empty value into a number.
 
+## Children
+
+The `children` column shows `n (m)`: `n` is the number of child heat flow values the parent has and
+`m` how many of them are marked relevant. Both count only the children the visitor may open. A
+child in a dataset that is not yet published is counted in neither number for a visitor outside
+that dataset, and in both for a contributor on it.
+
+Pressing the count opens a window over the table that lists the parent's children. The window
+loads only then, so the table itself never reads a child. It lists every child the visitor may
+open, the relevant ones first and each marked **Relevant**, then the others. Each child links to
+its page and shows its quality code. The count in the row equals the children listed, and the
+number in brackets the children marked. A child the visitor may not open is not named: the window
+says how many more there are. Closing the window leaves the table, its page and its address as
+they were.
+
+The window is served at `/ghfdb/parents/<ID_parent>/children/`, which answers 404 for a parent
+the visitor may not see and for an identifier that does not exist.
+
 ## Sorting
 
 Every column sorts, ascending and then descending, by pressing its heading. `children` sorts on the
@@ -90,8 +108,8 @@ removes every filter.
 ## For developers
 
 The page is `GHFDBParentTableView` in `project/ghfdb/views.py`, routed as `ghfdb-parent-table`. Its
-rows come from `served_parents()` with the flat columns and child counts added, and it draws
-`GHFDBParentTable` from `project/ghfdb/tables.py`.
+rows come from `served_parents()` with the flat columns and the visible child counts added, and it
+draws `GHFDBParentTable` from `project/ghfdb/tables.py`.
 
 The table's building blocks:
 
@@ -102,6 +120,19 @@ The table's building blocks:
   `NOT_RECORDED` string it reads aloud. The mark carries `data-state="not-recorded"`.
 - `TieBrokenQuerysetData` is the table's data class. It appends `ghfdb_id` to every ordering,
   because django-tables2 orders by the chosen column alone.
+
+`GHFDBParentQuerySet.with_visible_child_counts(user)` adds the two counts, `total_children` and
+`relevant_children`, over the children `HeatFlow.objects.visible_to(user)` returns, as one subquery.
+`with_child_counts()` counts every child and serves the API, where visibility is applied
+separately.
+
+`GHFDBParentChildrenView` draws the window, from `ghfdb/parent_children.html`, routed as
+`ghfdb-parent-children`. It looks the parent up in `served_parents()` and lists its children through
+`HeatFlowPage.listing()`, relevant first.
+
+The count's button carries `data-ghfdb="children-count"` with `data-total` and `data-relevant`, and
+`hx-get` set to the window's address. In the window each child is a `data-heat-flow="child"` row
+with `data-child` and `data-relevant`, and a relevant one holds a `data-ghfdb="relevant-badge"`.
 
 Each row carries `data-ghfdb="parent-row"` and `data-parent`, the parent's published identifier,
 so a script or a test can find a row without relying on the wording of a cell.
