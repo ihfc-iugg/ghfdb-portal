@@ -46,6 +46,47 @@ The table shows a fixed number of rows to a page and links to the others. The pa
 address (`?page=2`), as is the sort, so an address reopens the same page in the same order. The
 number of queries the page makes does not grow with the number of rows on it.
 
+## Filtering
+
+The search box and the three quality and correction filters sit above the table. The rest are in
+the filter panel, opened by the **Filters** button. Pressing a filter narrows the table, and
+parents must match every filter that is set. The number above the table is the number of parents
+that match.
+
+| Filter | What it matches |
+|---|---|
+| `name` | Site names containing any of the words typed, in any case. |
+| `corr_HP_flag` | Parents whose heat production correction is yes, no or not recorded. Choosing several lists parents in any of them. |
+| `U_score`, `M_score` | Parents with any of the chosen quality grades. |
+| `q`, `q_uncertainty`, `elevation`, `total_depth_MD`, `total_depth_TVD` | A range of values: a minimum, a maximum or both. |
+| `lat_NS`, `long_EW` | A range of degrees, so two of each draw a box on the map. |
+| `environment`, `explo_method`, `explo_purpose` | Parents whose site has any of the chosen terms of that vocabulary. A parent with several purposes is listed once, however many are chosen. |
+| `project`, `dataset` | Parents in any of the chosen datasets, or in any dataset of the chosen projects. |
+
+A range accepts negative values, and an empty side is open: a minimum alone lists everything at or
+above it. A parent with no value in a ranged column is not listed once that range is set.
+`project` and `dataset` offer the records the visitor may see: a signed-in contributor can pick
+their private datasets, and a visitor cannot.
+
+### Values the filters refuse
+
+A value that cannot be used is reported on its own filter and narrows nothing, so the table stays
+as it was:
+
+- A bound that is not a number is refused with the code `invalid`.
+- A maximum below the minimum is refused with the code `inverted`.
+- A latitude beyond 90 degrees or a longitude beyond 180 is refused with the code `min_value` or
+  `max_value`.
+- A dataset or project the visitor may not see is refused with the code `invalid_choice`.
+
+### The address
+
+Every filter is a query parameter, so the address holds the table as it is shown. A range sends
+its two ends as `<name>_min` and `<name>_max`, for example
+`/ghfdb/parents/?q_min=-30&q_max=100`. Opening the address in another browser, signed in as the
+same person or not, lists the same rows in the same order. The link to clear the filters, shown when nothing matches,
+removes every filter.
+
 ## For developers
 
 The page is `GHFDBParentTableView` in `project/ghfdb/views.py`, routed as `ghfdb-parent-table`. Its
@@ -64,3 +105,17 @@ The table's building blocks:
 
 Each row carries `data-ghfdb="parent-row"` and `data-parent`, the parent's published identifier,
 so a script or a test can find a row without relying on the wording of a cell.
+
+The filters are `GHFDBParentFilter` in `project/ghfdb/filters.py`, a django-filter filter set the
+view names as its `filterset_class`. The view's `toolbar_filters` lists the four filters drawn above
+the table and `filter_panel_attrs` places the panel at the end of the page at every width.
+
+- `BoundsFilter` filters one number column by a minimum, a maximum or both. Its `end_field`
+  argument names the form field that cleans each end, `LatitudeField` for `lat_NS` and
+  `LongitudeField` for `long_EW`, which is what refuses 91.
+- `BoundsField` is its form field. It raises `ValidationError` with the code `inverted` when the
+  maximum is below the minimum.
+- `BoundsInput` draws the two ends as one joined control, from `ghfdb/widgets/bounds.html`, and
+  names them `<name>_min` and `<name>_max`.
+- `explo_purpose` filters by `sample__in=<the sites with any chosen purpose>`, a subquery, so the
+  query gains no join and each parent's child counts stay as they were.
