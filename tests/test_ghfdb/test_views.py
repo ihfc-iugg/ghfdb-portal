@@ -461,3 +461,31 @@ class TestGHFDBParentCountsMatchTheirWindow:
 
         assert int(button["data-total"]) == len(listed)
         assert int(button["data-relevant"]) == len([row for row in listed if row[2]])
+
+
+@pytest.mark.e2e
+@requires_browser
+class TestGHFDBParentChildrenDialog:
+    def test_pressing_a_count_opens_that_parents_children_and_closing_leaves_the_address(
+        self, page, live_server, published_dataset
+    ):
+        first = make_parent(published_dataset, 1)
+        second = make_parent(published_dataset, 2)
+        build_child(published_dataset, first, ghfdb_id=11, is_relevant=True)
+        shown = build_child(published_dataset, second, ghfdb_id=21)
+        other = build_child(published_dataset, second, ghfdb_id=22, is_relevant=True)
+        address = f"{live_server.url}{reverse('ghfdb-parent-table')}"
+        page.goto(address)
+
+        page.click('[data-parent="2"] [data-ghfdb="children-count"]')
+
+        dialog = page.locator("#children-dialog")
+        dialog.wait_for(state="visible")
+        listed = dialog.locator('[data-heat-flow="child"]')
+        assert sorted(
+            int(pk)
+            for pk in listed.evaluate_all("rows => rows.map(r => r.dataset.child)")
+        ) == sorted([shown.pk, other.pk])
+        dialog.locator("form[method=dialog] button[aria-label]").click()
+        dialog.wait_for(state="hidden")
+        assert page.url == address
