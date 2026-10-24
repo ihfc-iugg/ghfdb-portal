@@ -1,5 +1,7 @@
 import pytest
+from django.contrib.auth.models import AnonymousUser
 from django.contrib.gis.geos import Point
+from django.test import RequestFactory
 from heat_flow import vocabularies
 
 from project.ghfdb.filters import BoundsInput, GHFDBParentFilter
@@ -8,14 +10,16 @@ from .conftest import build_child
 from .test_tables import make_parent, parents
 
 
-def bound(data):
-    """The filter set for a query string given as a dict."""
-    return GHFDBParentFilter(data, queryset=parents())
+def bound(data, user=None):
+    """The filter set for a query string given as a dict, asked for by ``user``."""
+    request = RequestFactory().get("/")
+    request.user = user or AnonymousUser()
+    return GHFDBParentFilter(data, queryset=parents(), request=request)
 
 
-def listed(data):
+def listed(data, user=None):
     """The published identifiers the filters leave, in id order."""
-    return sorted(bound(data).qs.values_list("ghfdb_id", flat=True))
+    return sorted(bound(data, user).qs.values_list("ghfdb_id", flat=True))
 
 
 @pytest.mark.django_db
@@ -183,3 +187,71 @@ class TestChoiceFilters:
         both = bound({"explo_purpose": ["hydrocarbon", "mining"]}).qs.get()
 
         assert (both.total_children, both.relevant_children) == (3, 2)
+
+
+def made_public(dataset):
+    """The dataset with its project made public, so a visitor is offered both."""
+    from fairdm.utils.choices import Visibility
+
+    type(dataset.project).objects.filter(pk=dataset.project_id).update(
+        visibility=Visibility.PUBLIC
+    )
+    return dataset
+
+
+@pytest.mark.django_db
+class TestRecordFilters:
+    def test_a_fragment_matches_the_site_name_in_any_case(self, published_dataset):
+        make_parent(published_dataset, 1, site={"name": "Alpine Borehole"})
+        make_parent(published_dataset, 2, site={"name": "Coastal Well"})
+
+        assert listed({"name": "ALPINE"}) == [1]
+        assert listed({"name": "bore"}) == [1]
+
+    def test_a_dataset_narrows_to_its_parents(self, published_dataset):
+        from fairdm.factories import DatasetFactory
+        from fairdm.utils.choices import Visibility
+
+        other = made_public(
+            DatasetFactory(visibility=Visibility.PUBLIC, published=True)
+        )
+        made_public(published_dataset)
+        make_parent(published_dataset, 1)
+        make_parent(other, 2)
+
+        assert listed({"dataset": [published_dataset.pk]}) == [1]
+
+    def test_a_project_narrows_to_the_parents_of_its_datasets(self, published_dataset):
+        from fairdm.factories import DatasetFactory
+        from fairdm.utils.choices import Visibility
+
+        other = made_public(
+            DatasetFactory(visibility=Visibility.PUBLIC, published=True)
+        )
+        made_public(published_dataset)
+        make_parent(published_dataset, 1)
+        make_parent(other, 2)
+
+        assert listed({"project": [published_dataset.project.pk]}) == [1]
+
+    def test_a_private_dataset_is_refused_for_a_visitor_and_accepted_for_a_member(
+        self, published_dataset
+    ):
+        from fairdm.contrib.contributors.choices import ContributionLevel
+        from fairdm.factories import ContributionFactory, DatasetFactory, PersonFactory
+
+        private = DatasetFactory()
+        member = PersonFactory(is_claimed=True, password="test-pass-123")
+        ContributionFactory(
+            contributor=member, content_object=private, level=ContributionLevel.VIEW
+        )
+        make_parent(published_dataset, 1)
+        make_parent(private, 2)
+        chosen = {"dataset": [private.pk]}
+
+        refused = bound(chosen)
+
+        assert [error.code for error in refused.form.errors.as_data()["dataset"]] == [
+            "invalid_choice"
+        ]
+        assert listed(chosen, member) == [2]
