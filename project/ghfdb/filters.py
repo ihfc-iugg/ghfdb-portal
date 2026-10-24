@@ -23,7 +23,7 @@ def counted(placeholder):
 
 
 class BoundsInput(RangeInput):
-    """django-mvp-forms' range as one join: [min][–][max].
+    """django-mvp-forms' range as one join: a minimum, a dash, a maximum.
 
     The dash between the ends is drawn as the package draws text in a
     ``Join``, a framed join item. The ends are sent as ``<name>_min`` and
@@ -37,7 +37,16 @@ class BoundsInput(RangeInput):
         self.widgets_names = ["_min", "_max"]
 
     def get_context(self, name, value, attrs):
-        """Name each end inside its input, Min and Max."""
+        """Name each end inside its input, Min and Max.
+
+        Args:
+            name: The filter's name.
+            value: The bounds to draw.
+            attrs: HTML attributes for both ends.
+
+        Returns:
+            The widget's template context.
+        """
         context = super().get_context(name, value, attrs)
         for part in context["widget"]["subwidgets"]:
             part["attrs"]["placeholder"] = part["frame_name"]
@@ -48,6 +57,18 @@ class BoundsField(django_filters.fields.RangeField):
     """A lower and an upper bound, refusing an upper bound below the lower."""
 
     def compress(self, data_list):
+        """Join the two bounds into a slice.
+
+        Args:
+            data_list: The cleaned lower and upper bound, either of which may be None.
+
+        Returns:
+            The bounds as a slice, or None when both are empty.
+
+        Raises:
+            ValidationError: With code ``inverted`` when the upper bound is below
+                the lower.
+        """
         if data_list:
             low, high = data_list
             if low is not None and high is not None and high < low:
@@ -133,7 +154,7 @@ class GHFDBParentFilter(django_filters.FilterSet):
 
     class Meta:
         model = GHFDBParent
-        fields = []
+        fields: list[str] = []
 
     def __init__(self, *args, **kwargs):
         """Offer each vocabulary's terms."""
