@@ -1,4 +1,4 @@
-"""The GHFDB parent table (FS-012 sketch)."""
+"""The GHFDB parent table: one row per parent, in the published columns."""
 
 import django_tables2 as tables
 from django.db.models import F, OuterRef, Subquery
@@ -123,6 +123,10 @@ class GHFDBParentTable(tables.Table):
         row_headers = ("ID_parent",)
         order_by = ("ID_parent",)
         attrs = {"thead": {"th": {"class": "whitespace-nowrap"}}}
+        row_attrs = {
+            "data-ghfdb": "parent-row",
+            "data-parent": lambda record: record.ghfdb_id,
+        }
 
     def __init__(self, data, *args, **kwargs):
         if not isinstance(data, TableData):
