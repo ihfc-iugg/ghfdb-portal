@@ -58,6 +58,14 @@ Releases before that used `<year>.<release>` and are recorded in the
 
 ### Changed
 
+- The `heat_flow` and `ghfdb` migrations start again from the schema 2025.21 left. Each app
+  keeps the migrations 2025.21 applied, and new ones take that schema to the current models
+  (`heat_flow` 0004 and 0005, `ghfdb` 0003). A database upgraded from 2025.21 has its heat
+  flow records, samples and measurements removed before migrating, and they are uploaded again
+  with the current import. Accounts, projects, datasets, reviews and literature are kept
+  ([upgrading from 2025.21](deploy/README.md#upgrading-a-database-from-202521)). A development
+  database built on an earlier unreleased migration has to be recreated.
+- `config/settings.py` no longer adds `makemigrations` to the commands `manage.py setup` runs.
 - Saving, importing or deleting heat flow records recalculates their quality scores with the same
   number of reads for many records as for one. The interval, site, probe metadata, vocabulary
   terms and corrections each score reads are fetched with the records, where each record had
@@ -73,11 +81,8 @@ Releases before that used `<year>.<release>` and are recorded in the
   The publication and assessor fields on the assessment form use Tom Select in place of
   Select2, which FairDM no longer installs. FairDM's development accounts are now at
   `example.com`, so `seed_demo_data` shares `regular.user@example.com` with them.
-  Migration 0005 now drops the old `SurfaceHeatFlow` link after the heat flow's parent is
-  repointed, because Django 6.0 no longer drops a column with `CASCADE`; the change reorders one
-  operation and changes nothing on a database that has already applied it.
-- A correction with no status is stored with an empty status instead of `-`. The migration
-  changes the stored rows, the published file still reads and writes `-`, and the API gives
+- A correction with no status is stored with an empty status instead of `-`. The published
+  file still reads and writes `-`, and the API gives
   `null` for the status of such a correction and still lists it
   ([importing data](docs/guides/importing-data.md),
   [records API](docs/guides/heat-flow-records-api.md)).
@@ -110,18 +115,14 @@ Releases before that used `<year>.<release>` and are recorded in the
   to one. The tests and the build checks run from workflows kept in this
   repository, because the shared ones start no database and install no GDAL.
 - FairDM moves to commit `b89656ae`, where a sample holds its own location as a
-  WGS 84 point and the shared `Point` table is removed. Upgrading copies every
-  sample's coordinates aside before FairDM's migration empties the column and
-  writes them back after it, so no site loses its coordinates. That migration
-  does not reverse, so take a database backup before deploying. A site is the
+  WGS 84 point and the shared `Point` table is removed. A site is the
   only record that holds coordinates; intervals and measurements are listed at
   their site's coordinates, shown only to someone who may see that site. A
   site's form takes a latitude and a longitude, and its `elevation` stays the
   only elevation. The published `lat_NS` and `long_EW` values do not change.
 - `IntervalConductivity.location` is renamed `conductivity_location`, so that it
   no longer clashes with the `location` field FairDM is adding to every
-  measurement. Existing values are kept, and the published `tc_location` column
-  is unchanged.
+  measurement. The published `tc_location` column is unchanged.
 - The project is built and developed with uv instead of Poetry, and the shared
   workflows are pinned at v0.6.0. The container image installs its dependencies
   with uv from `uv.lock`. The FairDM packages stay at the commits the previous

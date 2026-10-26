@@ -72,6 +72,48 @@ Traefik itself and the `traefik` network are not defined here. They belong to a
 separate stack maintained by the GFZ IT team, and this stack joins that network
 as an external one.
 
+## Upgrading a database from 2025.21
+
+The `heat_flow` and `ghfdb` migrations start from the schema 2025.21 left, but the heat flow
+model they build is a different one. The heat flow records, samples and measurements a 2025.21
+database holds are not carried across: they are removed before migrating and uploaded again with
+the current import. Accounts, projects, datasets, reviews and literature are kept. The
+database also moves from PostgreSQL 16 to PostgreSQL 17 with PostGIS 3.5, which FairDM requires.
+
+1. Stop the Django service and take a backup of the 2025.21 database:
+   `pg_dump -Fc -f /tmp/before-upgrade.dump` in the database container, copied off the server.
+2. Start a `postgis/postgis:17-3.5` service with its own new volume, next to the old database,
+   and copy the data across from its console:
+
+   ```bash
+   PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -h postgres -U "$POSTGRES_USER" -Fc "$POSTGRES_DB" \
+     | pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --no-owner --no-privileges
+   ```
+
+3. Remove the heat flow records, samples and measurements in the new database, with
+   `psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"`:
+
+   ```sql
+   DO $$
+   DECLARE t text;
+   BEGIN
+     FOR t IN
+       SELECT quote_ident(table_name) FROM information_schema.tables
+       WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+         AND (table_name LIKE 'heat\_flow\_%' OR table_name LIKE 'measurement\_%'
+              OR table_name LIKE 'sample\_%')
+     LOOP
+       EXECUTE 'TRUNCATE ' || t || ' RESTART IDENTITY CASCADE';
+     END LOOP;
+   END $$;
+   ```
+
+4. Point the Django service at the new database (`POSTGRES_HOST`) and start the new image. Its
+   start runs the migrations and the quality scores before it serves, as described above.
+
+The old database and its volume are not written to, so going back means starting the 2025.21
+image against them again.
+
 ## Local development
 
 Don't use this stack to work on the portal. Run `uv sync` and then
