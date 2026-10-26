@@ -58,6 +58,12 @@ Releases before that used `<year>.<release>` and are recorded in the
 
 ### Changed
 
+- django-content-license moves to 0.3.1, whose migration keeps each licence's URL when a
+  database is upgraded from 2025.21. 0.3.0 failed on any database holding two licences.
+- `deploy/docker-compose.yml` runs the exact release named by `PORTAL_VERSION` instead of
+  `latest`, so publishing a release no longer deploys it. The database is PostgreSQL 17 with
+  PostGIS 3.5 in a new `postgis` service and volume, and the Django service is given
+  `POSTGRES_HOST` and `REDIS_URL` ([deployment](deploy/README.md)).
 - The `heat_flow` and `ghfdb` migrations start again from the schema 2025.21 left. Each app
   keeps the migrations 2025.21 applied, and new ones take that schema to the current models
   (`heat_flow` 0004 and 0005, `ghfdb` 0003). A database upgraded from 2025.21 has its heat
