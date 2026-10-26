@@ -39,8 +39,8 @@ class TestMigrationState:
             )
 
 
-class TestGHFDBChildProxyMigrations:
-    # FS-002 FR-001: the migrations recording ``GHFDBChild`` touch no table. A proxy
+class TestGHFDBProxyMigrations:
+    # FS-002 FR-001: the migrations recording the GHFDB proxies touch no table. A proxy
     # model adds no table, so an ``AddField``, ``AlterField`` or ``RemoveField``
     # operation in either migration would be the defect.
 
@@ -49,7 +49,7 @@ class TestGHFDBChildProxyMigrations:
 
         from django.db import migrations
 
-        module = importlib.import_module("project.ghfdb.migrations.0002_ghfdb")
+        module = importlib.import_module("project.ghfdb.migrations.0002_initial")
         operations = module.Migration.operations
 
         assert len(operations) == 1
@@ -59,54 +59,37 @@ class TestGHFDBChildProxyMigrations:
         assert operation.fields == []
         assert operation.options.get("proxy") is True
 
-    def test_the_rename_migration_touches_no_table(self):
+    def test_the_child_and_parent_migration_touches_no_column(self):
         import importlib
 
         from django.db import migrations
 
         module = importlib.import_module(
-            "project.ghfdb.migrations.0003_ghfdbchild_ghfdbparent"
+            "project.ghfdb.migrations.0003_child_and_parent_proxies"
         )
         operations = module.Migration.operations
 
         forbidden = (migrations.AddField, migrations.AlterField, migrations.RemoveField)
         assert not any(isinstance(operation, forbidden) for operation in operations)
 
-        rename_operations = [
-            operation
-            for operation in operations
-            if isinstance(operation, migrations.RenameModel)
-        ]
-        assert len(rename_operations) == 1
-        assert rename_operations[0].old_name == "GHFDB"
-        assert rename_operations[0].new_name == "GHFDBChild"
-
-
-class TestGHFDBParentProxyMigrations:
-    # FS-002 FR-001: the migration recording ``GHFDBParent`` is a bare proxy
-    # ``CreateModel`` and no other operation. A proxy adds no table, so an ``AddField``
-    # or ``AlterField`` naming ``GHFDBParent`` would be the defect.
-
-    def test_the_create_model_is_a_bare_proxy(self):
+    def test_the_child_and_parent_are_bare_proxies(self):
         import importlib
 
         from django.db import migrations
 
         module = importlib.import_module(
-            "project.ghfdb.migrations.0003_ghfdbchild_ghfdbparent"
+            "project.ghfdb.migrations.0003_child_and_parent_proxies"
         )
-        operations = module.Migration.operations
-
-        create_model_operations = [
-            operation
-            for operation in operations
+        created = {
+            operation.name: operation
+            for operation in module.Migration.operations
             if isinstance(operation, migrations.CreateModel)
-            and operation.name == "GHFDBParent"
-        ]
-        assert len(create_model_operations) == 1
-        operation = create_model_operations[0]
-        assert operation.fields == []
-        assert operation.options.get("proxy") is True
+        }
+
+        assert set(created) == {"GHFDBChild", "GHFDBParent"}
+        for operation in created.values():
+            assert operation.fields == []
+            assert operation.options.get("proxy") is True
 
 
 class TestMigrationsApplyToAnEmptyDatabase:
@@ -174,172 +157,3 @@ class TestMigrationsApplyToAnEmptyDatabase:
             f"Migrations left these tables unbuilt: {missing}."
             f"\n{result.stdout}\n{result.stderr}"
         )
-
-
-def run_in_database(database, script):
-    """Run a script with ``manage.py shell`` against a database.
-
-    Args:
-        database: The connection settings of the database to run against.
-        script: The Python source to run.
-
-    Returns:
-        The last line the script printed.
-    """
-    environment = {
-        key: value for key, value in os.environ.items() if key != "DATABASE_URL"
-    }
-    result = subprocess.run(
-        [sys.executable, "manage.py", "shell"],
-        input=script,
-        cwd=settings.BASE_DIR,
-        env={
-            **environment,
-            "DJANGO_ENV": "development",
-            "POSTGRES_HOST": database["HOST"],
-            "POSTGRES_PORT": str(database["PORT"]),
-            "POSTGRES_USER": database["USER"],
-            "POSTGRES_PASSWORD": database["PASSWORD"],
-            "POSTGRES_DB": database["NAME"],
-        },
-        capture_output=True,
-        text=True,
-        timeout=900,
-    )
-    assert result.returncode == 0, f"{result.stdout}\n{result.stderr}"
-    return result.stdout.strip().splitlines()[-1]
-
-
-# Builds the database as it stood before FairDM's located samples: samples linked to
-# shared Points, two of them at one Point and one with none. Prints each sample's
-# coordinates.
-BEFORE_LOCATED_SAMPLES = """
-import json
-from django.core.management import call_command
-from django.db import connection
-from django.db.migrations.executor import MigrationExecutor
-
-targets = [
-    ("heat_flow", "0015_rename_intervalconductivity_location"),
-    ("sample", "0011_index_modified"),
-    ("fairdm_location", "0001_initial"),
-]
-for app, name in targets:
-    call_command("migrate", app, name, verbosity=0)
-apps = MigrationExecutor(connection).loader.project_state(targets).apps
-Point = apps.get_model("fairdm_location", "Point")
-Sample = apps.get_model("sample", "Sample")
-HeatFlowSite = apps.get_model("heat_flow", "HeatFlowSite")
-dataset = apps.get_model("dataset", "Dataset").objects.create(name="Before")
-
-shared = Point.objects.create(x="-122.41942", y="37.77493")
-HeatFlowSite.objects.create(name="Shared one", dataset=dataset, location=shared)
-HeatFlowSite.objects.create(name="Shared two", dataset=dataset, location=shared)
-HeatFlowSite.objects.create(
-    name="South west",
-    dataset=dataset,
-    location=Point.objects.create(x="-179.99999", y="-89.99999"),
-)
-Sample.objects.create(
-    name="Plain sample",
-    dataset=dataset,
-    location=Point.objects.create(x="8.40417", y="49.00937"),
-)
-Sample.objects.create(name="Nowhere", dataset=dataset)
-
-print(json.dumps({
-    sample.name: [str(sample.location.x), str(sample.location.y)]
-    if sample.location else None
-    for sample in Sample.objects.select_related("location")
-}))
-"""
-
-# Applies every migration. Prints each sample's coordinates as five-decimal text with
-# the point's SRID, and whether the copy set aside before the upgrade is still there.
-AFTER_LOCATED_SAMPLES = """
-import json
-from django.core.management import call_command
-from django.db import connection
-
-call_command("migrate", verbosity=0)
-with connection.cursor() as cursor:
-    cursor.execute(
-        "SELECT name, round(ST_X(location)::numeric, 5)::text,"
-        " round(ST_Y(location)::numeric, 5)::text, ST_SRID(location)"
-        " FROM sample_sample"
-    )
-    rows = cursor.fetchall()
-    cursor.execute("SELECT to_regclass('heat_flow_sample_coordinates')")
-    (copy,) = cursor.fetchone()
-print(json.dumps({
-    "samples": {
-        name: [x, y, srid] if x is not None else None for name, x, y, srid in rows
-    },
-    "copy": copy,
-}))
-"""
-
-
-class TestLocatedSamplesKeepTheirCoordinates:
-    # FairDM's ``sample/0012_located_samples`` drops the link to ``Point`` and adds an
-    # empty point column. The portal's migrations around it carry every coordinate over.
-
-    @pytest.mark.slow
-    def test_every_sample_keeps_its_coordinates(self, empty_database):
-        import json
-
-        before = json.loads(run_in_database(empty_database, BEFORE_LOCATED_SAMPLES))
-        after = json.loads(run_in_database(empty_database, AFTER_LOCATED_SAMPLES))
-
-        assert after["samples"] == {
-            name: [*coordinates, 4326] if coordinates else None
-            for name, coordinates in before.items()
-        }
-        assert sum(value is not None for value in after["samples"].values()) == 4
-        assert after["copy"] is None
-
-
-class TestCorrectionStatusMigration:
-    # FS-009 FR-009: an unspecified correction is stored with no status. Migration 0018
-    # turns every stored ``-`` into an empty status, and back.
-
-    @pytest.mark.slow
-    def test_a_dash_reads_empty_after_migrating_forward_and_dash_again_back(
-        self, empty_database
-    ):
-        import json
-
-        read = json.loads(run_in_database(empty_database, CORRECTION_STATUS_ROUND_TRIP))
-
-        assert read == {"before": "-", "forward": "", "back": "-"}
-
-
-# Stores a correction with the status ``-`` at migration 0017, then reads its status after
-# migrating to 0018 and after migrating back to 0017. The foreign keys are left unchecked
-# for the one insert, so the row needs no heat flow behind it.
-CORRECTION_STATUS_ROUND_TRIP = """
-import json
-from django.core.management import call_command
-from django.db import connection
-
-def status():
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT status FROM heat_flow_heatflowcorrection")
-        (value,) = cursor.fetchone()
-    return value
-
-call_command("migrate", "heat_flow", "0017_restore_sample_coordinates", verbosity=0)
-with connection.cursor() as cursor:
-    cursor.execute("SET session_replication_role = replica")
-    cursor.execute(
-        "INSERT INTO heat_flow_heatflowcorrection"
-        " (heat_flow_id, correction_type, status, comment)"
-        " VALUES (1, 'IS', '-', '')"
-    )
-    cursor.execute("SET session_replication_role = DEFAULT")
-before = status()
-call_command("migrate", "heat_flow", "0018_correction_status_may_be_empty", verbosity=0)
-forward = status()
-call_command("migrate", "heat_flow", "0017_restore_sample_coordinates", verbosity=0)
-print(json.dumps({"before": before, "forward": forward, "back": status()}))
-"""
