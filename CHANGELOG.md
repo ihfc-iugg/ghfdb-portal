@@ -62,8 +62,9 @@ Releases before that used `<year>.<release>` and are recorded in the
   keeps the migrations 2025.21 applied, and new ones take that schema to the current models
   (`heat_flow` 0004 and 0005, `ghfdb` 0003). A database upgraded from 2025.21 has its heat
   flow records, samples and measurements removed before migrating, and they are uploaded again
-  with the current import. Accounts, projects, datasets, reviews and literature are kept. A
-  development database built on an earlier unreleased migration has to be recreated.
+  with the current import. Accounts, projects, datasets, reviews and literature are kept
+  ([upgrading from 2025.21](deploy/README.md#upgrading-a-database-from-202521)). A development
+  database built on an earlier unreleased migration has to be recreated.
 - `config/settings.py` no longer adds `makemigrations` to the commands `manage.py setup` runs.
 - Saving, importing or deleting heat flow records recalculates their quality scores with the same
   number of reads for many records as for one. The interval, site, probe metadata, vocabulary
