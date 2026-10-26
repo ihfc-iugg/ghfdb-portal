@@ -3,7 +3,7 @@ version: "3.7"
 name: ghfdb_production
 
 volumes:
-  postgres:
+  postgis:
   media:
 
 # The Traefik reverse-proxy service and "traefik" network is defined by the GFZ IT team in a seperate Portainer
@@ -15,13 +15,16 @@ networks:
 
 services:
   django: &django
-    image: ghcr.io/ihfc-iugg/ghfdb-portal:latest
-    pull_policy: always
+    # An exact release, so a new release reaches the server only when this line is changed.
+    image: ghcr.io/ihfc-iugg/ghfdb-portal:v${PORTAL_VERSION:?set PORTAL_VERSION to the release to run}
     restart: always
     env_file:
       - stack.env
+    environment:
+      POSTGRES_HOST: postgis
+      REDIS_URL: redis://redis:6379/0
     depends_on:
-      - postgres
+      - postgis
       - redis
     labels:
       - traefik.enable=true
@@ -32,16 +35,16 @@ services:
       - traefik.http.routers.django.tls.domains[0].main=portal.heatflow.world
       - traefik.http.services.django.loadbalancer.server.port=8000
       - traefik.http.middlewares.csrf.headers.hostsProxyHeaders=X-CSRFToken
-      - com.centurylinklabs.watchtower.enable=true
-  postgres:
-    image: postgres:16-alpine
+  # The PostGIS version the pinned FairDM declares under [tool.fairdm.platform].
+  postgis:
+    image: postgis/postgis:17-3.5
     restart: always
     volumes:
-      - postgres:/var/lib/postgresql/data
+      - postgis:/var/lib/postgresql/data
     env_file:
       - stack.env
   redis:
-    image: redis:6
+    image: redis:7
     restart: always
   # celeryworker:
   #   <<: *django

@@ -24,15 +24,16 @@ docker build --build-arg FAIRDM_IMAGE_VERSION=1.0.0 -t ghcr.io/ihfc-iugg/ghfdb-p
    from the root `Dockerfile` and pushes it to
    `ghcr.io/ihfc-iugg/ghfdb-portal`, tagged with the version and with `latest`.
 2. The stack runs on infrastructure operated by GFZ, from
-   `deploy/docker-compose.yml`. The Django service carries the Watchtower
-   label, so a new `latest` is pulled and the container replaced without anyone
-   logging in.
+   `deploy/docker-compose.yml`, in Portainer. The Django service runs the exact
+   release `PORTAL_VERSION` names, so publishing a release changes nothing on
+   the server. Setting `PORTAL_VERSION` to the new version (without the `v`) and
+   updating the stack deploys it.
 3. The container runs migrations, collects static files, scores any records the current quality
    scheme has not scored, then serves the application with Gunicorn on port 8000 (see *What the
    container runs on start*).
 
-Both the version tag and `latest` are published for every release, so a
-rollback is a matter of pinning the service to an exact version.
+A rollback is setting `PORTAL_VERSION` back, provided the release in between added no
+migrations. One that did needs the database backup taken before it.
 
 ## What the container runs on start
 
@@ -75,6 +76,11 @@ To repair scores by hand, after a write that skipped the portal's code, run
 The stack reads its environment from `stack.env`, which is held on the server
 and is deliberately not in this repository. `DJANGO_SITE_DOMAIN` sets the host
 Traefik routes, and the same value appears in the certificate request.
+`PORTAL_VERSION` names the release the Django service runs.
+
+The compose file sets `POSTGRES_HOST` and `REDIS_URL` itself, to the `postgis` and `redis`
+services. Without `REDIS_URL` there is no shared cache, and sign-in rate limiting refuses every
+attempt. Leave `DJANGO_SETTINGS_MODULE` out of `stack.env`: the image sets it.
 
 FairDM encrypts every backup to an OpenPGP public key, and the image refuses to start in
 production without one (`fairdm.E700`). Set `BACKUP_PUBLIC_KEY` in `stack.env` to the armoured
@@ -104,8 +110,8 @@ refuses every command in production without it.
 
 1. Stop the Django service and take a backup of the 2025.21 database:
    `pg_dump -Fc -f /tmp/before-upgrade.dump` in the database container, copied off the server.
-2. Start a `postgis/postgis:17-3.5` service with its own new volume, next to the old database,
-   and copy the data across from its console:
+2. Add the `postgis` service from `deploy/docker-compose.yml`, with its new volume, next to the
+   old `postgres` service, and copy the data across from the `postgis` console:
 
    ```bash
    PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -h postgres -U "$POSTGRES_USER" -Fc "$POSTGRES_DB" \
@@ -161,9 +167,9 @@ refuses every command in production without it.
      `upgrade_vocabularies` stores every description type, contributor role and keyword by its
      concept's address.
 
-6. Point the Django service at the new database (`POSTGRES_HOST`) and start the current image.
-   Its start runs the migrations, loads the vocabularies and scores the records before it serves,
-   as described above. The migrations also convert every partial date to text: a stored date
+6. Update the stack to `deploy/docker-compose.yml`, with `PORTAL_VERSION` set to the new release.
+   The Django service starts on the new database, and its start runs the migrations, loads the
+   vocabularies and scores the records before it serves, as described above. The migrations also convert every partial date to text: a stored date
    that django-partial-date never wrote stops the migration with `RefusedValuesError`, which
    names the row, and nothing in that table has changed. Correct the row and start the image
    again.
