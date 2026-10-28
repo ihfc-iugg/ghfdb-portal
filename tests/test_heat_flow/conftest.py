@@ -4,6 +4,8 @@
 
 import pytest
 from fairdm.factories import DatasetFactory
+from heat_flow import vocabularies
+from heat_flow.vocabularies import GEOGRAPHIC_ENVIRONMENT, MEAN_SEA_LEVEL, term
 
 
 @pytest.fixture
@@ -20,7 +22,7 @@ def site_fixture(dataset):
         name="Test Site",
         country="Germany",
         continent="Europe",
-        environment="onshore_continental",
+        environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental"),
     )
 
 
@@ -104,7 +106,6 @@ def full_records(public_dataset):
     # quantity filled, in a public, published dataset (FS-010).
     from heat_flow.models import HeatFlowSite
     from quantityfield.units import ureg
-    from research_vocabs.models import Concept
 
     from tests.factories import (
         HeatFlowFactory,
@@ -116,17 +117,17 @@ def full_records(public_dataset):
     )
 
     def concepts(model, field_name, count):
-        vocabulary = model._meta.get_field(field_name).vocabulary
-        return list(Concept.get_for_vocabulary(vocabulary).order_by("name")[:count])
+        vocabulary = model._meta.get_field(field_name).vocabulary[0]
+        return list(vocabularies.concepts(vocabulary)[:count])
 
     site = HeatFlowSiteFactory(
         dataset=public_dataset,
-        environment="onshore_continental",
+        environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental"),
         azimuth=45.5,
         inclination=10.25,
         length=ureg.Quantity(1000, "ft"),
         elevation=ureg.Quantity(250, "m"),
-        elevation_datum="MSL",
+        elevation_datum_id=MEAN_SEA_LEVEL,
         explo_purpose=concepts(HeatFlowSite, "explo_purpose", 2),
     )
     site.lithology.set(concepts(HeatFlowSite, "lithology", 2))

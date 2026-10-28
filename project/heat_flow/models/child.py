@@ -13,6 +13,7 @@ References:
 from functools import cached_property
 from typing import Any
 
+from controlled_vocabularies.fields import MultiConceptField
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator as MaxVal
 from django.core.validators import MinValueValidator as MinVal
@@ -22,7 +23,6 @@ from fairdm.core.models import Measurement
 from fairdm.db import models
 from fairdm_geo.core.models import GeoDepthInterval as AbstractGeoDepthInterval
 from fairdm_geo.core.models import Interval
-from research_vocabs.fields import ConceptManyToManyField
 
 from heat_flow import vocabularies
 
@@ -96,8 +96,9 @@ class HeatFlow(Measurement):
         blank=True,
         null=True,
     )
-    method = ConceptManyToManyField(
-        vocabulary=vocabularies.HeatFlowMethod,
+    method = MultiConceptField(
+        vocabulary=vocabularies.HEAT_FLOW_METHOD,
+        related_name="+",
         verbose_name=_("method"),
         help_text=_(
             "Principal method of heat-flow calculation from temperature and thermal conductivity data."
@@ -393,8 +394,9 @@ class ProbeMetadata(django_models.Model):
         blank=True,
         null=True,
     )
-    probe_type = ConceptManyToManyField(
-        vocabulary=vocabularies.ProbeType,
+    probe_type = MultiConceptField(
+        vocabulary=vocabularies.PROBE_TYPE,
+        related_name="+",
         verbose_name=_("probe type"),
         help_text=_("Type of heat-flow probe used for measurement."),
         blank=True,
@@ -645,16 +647,18 @@ class ThermalGradient(ScoredMeasurement, Measurement):
         null=True,
         validators=[MinVal(-(10**5)), MaxVal(10**5)],
     )
-    method_top = ConceptManyToManyField(
-        vocabulary=vocabularies.TemperatureMethod,
+    method_top = MultiConceptField(
+        vocabulary=vocabularies.TEMPERATURE_METHOD,
+        related_name="+",
         verbose_name=_("method (top)"),
         help_text=_(
             "Method used for temperature determination at the top of the heat-flow determination interval."
         ),
         blank=True,
     )
-    method_bottom = ConceptManyToManyField(
-        vocabulary=vocabularies.TemperatureMethod,
+    method_bottom = MultiConceptField(
+        vocabulary=vocabularies.TEMPERATURE_METHOD,
+        related_name="+",
         verbose_name=_("method (bottom)"),
         help_text=_(
             "Method used for temperature determination at the bottom of the heat-flow determination interval."
@@ -683,8 +687,9 @@ class ThermalGradient(ScoredMeasurement, Measurement):
         null=True,
         validators=[MaxVal(10000)],
     )
-    correction_top = ConceptManyToManyField(
-        vocabulary=vocabularies.TemperatureCorrection,
+    correction_top = MultiConceptField(
+        vocabulary=vocabularies.TEMPERATURE_CORRECTION,
+        related_name="+",
         verbose_name=_("correction method (top)"),
         help_text=_(
             "Approach applied to correct the temperature measurement for drilling perturbations at the top of the"
@@ -692,8 +697,9 @@ class ThermalGradient(ScoredMeasurement, Measurement):
         ),
         blank=True,
     )
-    correction_bottom = ConceptManyToManyField(
-        vocabulary=vocabularies.TemperatureCorrection,
+    correction_bottom = MultiConceptField(
+        vocabulary=vocabularies.TEMPERATURE_CORRECTION,
+        related_name="+",
         verbose_name=_("correction method (bottom)"),
         help_text=_(
             "Approach applied to correct the temperature measurement for drilling perturbations at the bottom of the"
@@ -862,36 +868,41 @@ class IntervalConductivity(ScoredMeasurement, Measurement):
         blank=True,
         null=True,
     )
-    source = ConceptManyToManyField(
-        vocabulary=vocabularies.ConductivitySource,
+    source = MultiConceptField(
+        vocabulary=vocabularies.CONDUCTIVITY_SOURCE,
+        related_name="+",
         verbose_name=_("source"),
         help_text=_(
             "Nature of the samples from which the mean thermal conductivity was determined."
         ),
         blank=True,
     )
-    conductivity_location = ConceptManyToManyField(
-        vocabulary=vocabularies.ConductivityLocation,
+    conductivity_location = MultiConceptField(
+        vocabulary=vocabularies.CONDUCTIVITY_LOCATION,
+        related_name="+",
         verbose_name=_("location"),
         help_text=_("Location of conductivity data used for heat-flow calculation."),
         blank=True,
     )
-    method = ConceptManyToManyField(
-        vocabulary=vocabularies.ConductivityMethod,
+    method = MultiConceptField(
+        vocabulary=vocabularies.CONDUCTIVITY_METHOD,
+        related_name="+",
         verbose_name=_("method"),
         help_text=_("Method used to determine mean thermal conductivity."),
         blank=True,
     )
-    saturation = ConceptManyToManyField(
-        vocabulary=vocabularies.ConductivitySaturation,
+    saturation = MultiConceptField(
+        vocabulary=vocabularies.CONDUCTIVITY_SATURATION,
+        related_name="+",
         verbose_name=_("saturation state"),
         help_text=_(
             "Saturation state of the studied rock interval studied for thermal conductivity."
         ),
         blank=True,
     )
-    pT_conditions = ConceptManyToManyField(
-        vocabulary=vocabularies.ConductivityPTConditions,
+    pT_conditions = MultiConceptField(
+        vocabulary=vocabularies.CONDUCTIVITY_PT_CONDITIONS,
+        related_name="+",
         verbose_name=_("pT conditions"),
         help_text=_(
             "Qualified conditions of pressure and temperature under which the mean thermal conductivity used for the"
@@ -899,8 +910,9 @@ class IntervalConductivity(ScoredMeasurement, Measurement):
         ),
         blank=True,
     )
-    pT_function = ConceptManyToManyField(
-        vocabulary=vocabularies.ConductivityPTFunction,
+    pT_function = MultiConceptField(
+        vocabulary=vocabularies.CONDUCTIVITY_PT_FUNCTION,
+        related_name="+",
         verbose_name=_("pT function"),
         help_text=_(
             "Technique or approach used to correct the measured thermal conductivity towards in-situ pressure (p)"
@@ -908,8 +920,9 @@ class IntervalConductivity(ScoredMeasurement, Measurement):
         ),
         blank=True,
     )
-    strategy = ConceptManyToManyField(
-        vocabulary=vocabularies.ConductivityStrategy,
+    strategy = MultiConceptField(
+        vocabulary=vocabularies.CONDUCTIVITY_STRATEGY,
+        related_name="+",
         verbose_name=_("averaging methodology"),
         help_text=_(
             "Strategy that was employed to estimate the thermal conductivity over the vertical interval of heat-flow"

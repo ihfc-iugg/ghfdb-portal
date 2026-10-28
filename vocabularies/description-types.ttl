@@ -1,0 +1,248 @@
+PREFIX : <https://w3id.org/fairdm/vocabularies/description-types/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX fairdm: <https://w3id.org/fairdm/vocabularies/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+<https://www.fairdm.org/>
+    a foaf:Organization ;
+    foaf:homepage <https://www.fairdm.org/> ;
+    foaf:name "FairDM"@en ;
+.
+
+fairdm:description-types
+    a skos:ConceptScheme ;
+    dcterms:creator <https://www.fairdm.org/> ;
+    dcterms:description "Kinds of description recorded for projects, datasets, samples and measurements, such as an abstract or the methods used."@en ;
+    dcterms:language <http://id.loc.gov/vocabulary/iso639-1/en> ;
+    dcterms:license <https://creativecommons.org/licenses/by/4.0/> ;
+    dcterms:publisher <https://www.fairdm.org/> ;
+    rdfs:seeAlso <https://github.com/FAIR-DM/fairdm-vocabularies> ;
+    skos:hasTopConcept
+        :abstract ,
+        :background ,
+        :conclusions ,
+        :expected-output ,
+        :introduction ,
+        :measurement-conditions ,
+        :measurement-setup ,
+        :measurement-tear-down ,
+        :methods ,
+        :objectives ,
+        :other ,
+        :sample-collection ,
+        :sample-destruction ,
+        :sample-preparation ,
+        :sample-storage ,
+        :series-information ,
+        :technical-info ;
+    skos:prefLabel "Description types"@en ;
+.
+
+:dataset
+    a skos:OrderedCollection ;
+    skos:definition "Description types for the purpose of metadata archival of research datasets."@en ;
+    skos:memberList (
+        :abstract
+        :methods
+        :series-information
+        :technical-info
+        :other
+    ) ;
+    skos:prefLabel "Dataset Descriptions"@en ;
+.
+
+:measurement
+    a skos:OrderedCollection ;
+    skos:definition "Description types for the purpose of metadata archival of research measurements."@en ;
+    skos:memberList (
+        :measurement-conditions
+        :measurement-setup
+        :measurement-tear-down
+        :other
+    ) ;
+    skos:prefLabel "Measurement Descriptions"@en ;
+.
+
+:project
+    a skos:OrderedCollection ;
+    skos:definition "Description types for the purpose of metadata archival of research projects."@en ;
+    skos:memberList (
+        :abstract
+        :introduction
+        :background
+        :objectives
+        :expected-output
+        :conclusions
+        :other
+    ) ;
+    skos:prefLabel "Project Descriptions"@en ;
+.
+
+:sample
+    a skos:OrderedCollection ;
+    skos:definition "Description types for the purpose of metadata archival of research samples."@en ;
+    skos:memberList (
+        :sample-collection
+        :sample-preparation
+        :sample-storage
+        :sample-destruction
+        :other
+    ) ;
+    skos:prefLabel "Sample Descriptions"@en ;
+.
+
+:abstract
+    a skos:Concept ;
+    skos:definition "An abstract is a brief, high-level summary that describes purpose, scope, key content, and relevance. It provides an overview of importance and relevance, helping readers assess its applicability to their own research."@en ;
+    skos:inScheme fairdm:description-types ;
+    skos:notation "Abstract" ;
+    skos:prefLabel "Abstract"@en ;
+    skos:topConceptOf fairdm:description-types ;
+.
+
+:background
+    a skos:Concept ;
+    skos:definition "The context in which the research was conducted."@en ;
+    skos:inScheme fairdm:description-types ;
+    skos:notation "Background" ;
+    skos:prefLabel "Background"@en ;
+    skos:topConceptOf fairdm:description-types ;
+.
+
+:conclusions
+    a skos:Concept ;
+    skos:definition "The final thoughts and findings of the research."@en ;
+    skos:inScheme fairdm:description-types ;
+    skos:notation "Conclusions" ;
+    skos:prefLabel "Conclusions"@en ;
+    skos:topConceptOf fairdm:description-types ;
+.
+
+:expected-output
+    a skos:Concept ;
+    skos:definition "The expected research data outputs (i.e. the expected datasets to come from this project)."@en ;
+    skos:inScheme fairdm:description-types ;
+    skos:notation "ExpectedOutput" ;
+    skos:prefLabel "Expected Output"@en ;
+    skos:topConceptOf fairdm:description-types ;
+.
+
+:introduction
+    a skos:Concept ;
+    skos:definition "The opening section of a research article, thesis, or proposal."@en ;
+    skos:inScheme fairdm:description-types ;
+    skos:notation "Introduction" ;
+    skos:prefLabel "Introduction"@en ;
+    skos:topConceptOf fairdm:description-types ;
+.
+
+:measurement-conditions
+    a skos:Concept ;
+    skos:definition "The specific environmental or situational factors present during the measurement process, which can influence or affect the outcome."@en ;
+    skos:inScheme fairdm:description-types ;
+    skos:notation "MeasurementConditions" ;
+    skos:prefLabel "Conditions"@en ;
+    skos:topConceptOf fairdm:description-types ;
+.
+
+:measurement-setup
+    a skos:Concept ;
+    skos:definition "The set of procedures and steps executed prior to conducting a measurement, ensuring accuracy, reliability, and consistency in the results obtained."@en ;
+    skos:inScheme fairdm:description-types ;
+    skos:notation "MeasurementSetup" ;
+    skos:prefLabel "Preparation"@en ;
+    skos:topConceptOf fairdm:description-types ;
+.
+
+:measurement-tear-down
+    a skos:Concept ;
+    skos:definition "The set of procedures and steps executed after conducting a measurement, ensuring that all equipment is properly cleaned, stored, or maintained for future use."@en ;
+    skos:inScheme fairdm:description-types ;
+    skos:notation "MeasurementTearDown" ;
+    skos:prefLabel "Tear Down"@en ;
+    skos:topConceptOf fairdm:description-types ;
+.
+
+:methods
+    a skos:Concept ;
+    skos:definition "A detailed description of the methodologies used to collect, process, and analyze the dataset. This may include data collection techniques, instrumentation, sampling strategies, processing workflows, and software used."@en ;
+    skos:inScheme fairdm:description-types ;
+    skos:notation "Methods" ;
+    skos:prefLabel "Methods"@en ;
+    skos:topConceptOf fairdm:description-types ;
+.
+
+:objectives
+    a skos:Concept ;
+    skos:definition "The overarching goals of the research project. This includes the main questions or scientific hypotheses being addressed."@en ;
+    skos:inScheme fairdm:description-types ;
+    skos:notation "Objectives" ;
+    skos:prefLabel "Objectives"@en ;
+    skos:topConceptOf fairdm:description-types ;
+.
+
+:other
+    a skos:Concept ;
+    skos:definition "Any additional descriptive information that does not fit into the defined categories."@en ;
+    skos:inScheme fairdm:description-types ;
+    skos:notation "Other" ;
+    skos:prefLabel "Other"@en ;
+    skos:topConceptOf fairdm:description-types ;
+.
+
+:sample-collection
+    a skos:Concept ;
+    skos:definition "The process of collecting a sample."@en ;
+    skos:inScheme fairdm:description-types ;
+    skos:notation "SampleCollection" ;
+    skos:prefLabel "Collection"@en ;
+    skos:topConceptOf fairdm:description-types ;
+.
+
+:sample-destruction
+    a skos:Concept ;
+    skos:definition "The process of destroying a sample."@en ;
+    skos:inScheme fairdm:description-types ;
+    skos:notation "SampleDestruction" ;
+    skos:prefLabel "Destruction"@en ;
+    skos:topConceptOf fairdm:description-types ;
+.
+
+:sample-preparation
+    a skos:Concept ;
+    skos:definition "The process of preparing a sample for analysis."@en ;
+    skos:inScheme fairdm:description-types ;
+    skos:notation "SamplePreparation" ;
+    skos:prefLabel "Preparation"@en ;
+    skos:topConceptOf fairdm:description-types ;
+.
+
+:sample-storage
+    a skos:Concept ;
+    skos:definition "The process of storing a sample."@en ;
+    skos:inScheme fairdm:description-types ;
+    skos:notation "SampleStorage" ;
+    skos:prefLabel "Storage"@en ;
+    skos:topConceptOf fairdm:description-types ;
+.
+
+:series-information
+    a skos:Concept ;
+    skos:definition "Information about the dataset's relationship to a series of datasets or a broader collection. This may include volume or issue numbers, hierarchical relationships, or references to a parent dataset."@en ;
+    skos:inScheme fairdm:description-types ;
+    skos:notation "SeriesInformation" ;
+    skos:prefLabel "Series Information"@en ;
+    skos:topConceptOf fairdm:description-types ;
+.
+
+:technical-info
+    a skos:Concept ;
+    skos:definition "Details about the dataset's technical specifications, including file formats, data structures, encoding standards, storage requirements, and any dependencies on specific software or hardware."@en ;
+    skos:inScheme fairdm:description-types ;
+    skos:notation "TechnicalInfo" ;
+    skos:prefLabel "Technical Information"@en ;
+    skos:topConceptOf fairdm:description-types ;
+.

@@ -2,6 +2,7 @@
 
 import pytest
 from fairdm.factories import LiteratureItemFactory, PersonFactory
+from heat_flow import vocabularies
 from heat_flow.models import (
     HeatFlow,
     HeatFlowSite,
@@ -9,7 +10,6 @@ from heat_flow.models import (
     ProbeMetadata,
     ThermalGradient,
 )
-from research_vocabs.models import Concept
 
 from tests.factories import ReviewFactory
 
@@ -51,17 +51,13 @@ class TestReviewFactories:
 def concepts_of(model, field_name):
     """Concept primary keys of the vocabulary *the field itself declares*.
 
-    Deriving it from ``<field>_vocab`` rather than naming a vocabulary class in the
+    Deriving it from the field rather than naming a vocabulary constant in the
     test is deliberate: a test that names the vocabulary independently passes when the
     field and the factory are re-pointed at a different one together, which is exactly
     the drift these assertions exist to catch.
     """
-    vocabulary = getattr(model, f"{field_name}_vocab")
-    # `<field>_vocab` is the instantiated vocabulary; get_for_vocabulary expects the
-    # class, which it instantiates itself (research_vocabs/models.py:167).
-    return set(
-        Concept.get_for_vocabulary(type(vocabulary)).values_list("pk", flat=True)
-    )
+    vocabulary = model._meta.get_field(field_name).vocabulary[0]
+    return set(vocabularies.concepts(vocabulary).values_list("pk", flat=True))
 
 
 class TestHeatFlowFactories:
@@ -198,8 +194,14 @@ class TestFactoryVocabularyPopulation:
 
         site = HeatFlowSiteFactory()
 
-        assert str(site.environment) in HeatFlowSite.environment_vocab.values
-        assert str(site.explo_method) in HeatFlowSite.explo_method_vocab.values
+        assert site.environment_id in {
+            record.uri
+            for record in vocabularies.concepts(vocabularies.GEOGRAPHIC_ENVIRONMENT)
+        }
+        assert site.explo_method_id in {
+            record.uri
+            for record in vocabularies.concepts(vocabularies.EXPLORATION_METHOD)
+        }
 
     @pytest.mark.django_db
     def test_heat_flow_site_explo_purpose_concepts_belong_to_exploration_purpose_vocabulary(

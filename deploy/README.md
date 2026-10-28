@@ -40,8 +40,14 @@ The base image's entrypoint runs these in order, and each only runs if the one b
 
 1. `python manage.py migrate --noinput`
 2. `python manage.py collectstatic --noinput`
-3. `python manage.py refresh_quality`, from `start/10-refresh-quality`
-4. `gunicorn`, which serves the application on port 8000 with four workers.
+3. `python manage.py sync_vocabularies`, from `start/05-sync-vocabularies`
+4. `python manage.py refresh_quality`, from `start/10-refresh-quality`
+5. `gunicorn`, which serves the application on port 8000 with four workers.
+
+`sync_vocabularies` loads every controlled vocabulary the image ships: the heat flow
+vocabularies in `project/heat_flow/vocabularies/`, FairDM's own in `vocabularies/` and
+fairdm-geo's. A release that carries a new vocabulary file brings its terms with it, and one that
+carries none changes nothing.
 
 `refresh_quality` recalculates the [quality scores](../docs/guides/quality-scores.md) of every
 gradient, conductivity, child and parent whose stored scheme revision is not the current one.
@@ -68,6 +74,12 @@ The stack reads its environment from `stack.env`, which is held on the server
 and is deliberately not in this repository. `DJANGO_SITE_DOMAIN` sets the host
 Traefik routes, and the same value appears in the certificate request.
 
+FairDM encrypts every backup to an OpenPGP public key, and the image refuses to start in
+production without one (`fairdm.E700`). Set `BACKUP_PUBLIC_KEY` in `stack.env` to the armoured
+public key on one line, with `\n` in place of each line break, as FairDM's
+[How to back up a portal](https://github.com/FAIR-DM/fairdm/blob/main/docs/developers/how-to/back-up-a-portal.md)
+describes. Keep the private key off the server: without it no backup can be read.
+
 Traefik itself and the `traefik` network are not defined here. They belong to a
 separate stack maintained by the GFZ IT team, and this stack joins that network
 as an external one.
@@ -79,6 +91,14 @@ model they build is a different one. The heat flow records, samples and measurem
 database holds are not carried across: they are removed before migrating and uploaded again with
 the current import. Accounts, projects, datasets, reviews and literature are kept. The
 database also moves from PostgreSQL 16 to PostgreSQL 17 with PostGIS 3.5, which FairDM requires.
+
+FairDM 0.3 stores references with django-literature 0.3 and every vocabulary term by its
+address, and its commands that move a database across work only on one that FairDM 0.2.1 has
+fully migrated. So the database is first migrated by the last release of the portal on FairDM
+0.2.1, and then converted and migrated by the current one. Both run in one-off containers, with
+`stack.env` and the `POSTGRES_HOST` of the new database, while the Django service is stopped.
+`BACKUP_PUBLIC_KEY` must be set before step 5 (see *Configuration*), because the current image
+refuses every command in production without it.
 
 1. Stop the Django service and take a backup of the 2025.21 database:
    `pg_dump -Fc -f /tmp/before-upgrade.dump` in the database container, copied off the server.
@@ -108,8 +128,49 @@ database also moves from PostgreSQL 16 to PostgreSQL 17 with PostGIS 3.5, which 
    END $$;
    ```
 
-4. Point the Django service at the new database (`POSTGRES_HOST`) and start the new image. Its
-   start runs the migrations and the quality scores before it serves, as described above.
+4. Migrate the new database with the last release of the portal on FairDM 0.2.1:
+
+   ```bash
+   python manage.py migrate --noinput
+   ```
+
+5. Convert it with the current image, running each command in its own one-off container, in this
+   order:
+
+   ```bash
+   python manage.py repair_references
+   python manage.py upgrade_literature
+   python manage.py upgrade_vocabularies
+   python manage.py sync_vocabularies
+   python manage.py upgrade_vocabularies
+   ```
+
+   - `repair_references` rewrites the stored identifiers django-literature 0.3 would refuse:
+     an ISSN whose leading zeros were lost, an ISBN filed as an ISSN or the other way round, and
+     several ISSNs or ISBNs in one field. Each reference keeps its first ISSN and its first ISBN.
+     Every other value, and a number or address too long to store, is written into the
+     reference's note. It prints each change, and `--dry-run` prints them without writing.
+   - `upgrade_literature` moves every reference to django-literature 0.3 and keeps its primary
+     key, so assessments and datasets keep their publications. If it names a reference it
+     cannot convert, it has changed nothing: correct that reference and run it again.
+   - The first `upgrade_vocabularies` creates the vocabulary tables and stops,
+     `sync_vocabularies` loads every vocabulary the image ships, and the second
+     `upgrade_vocabularies` stores every description type, contributor role and keyword by its
+     concept's address.
+
+6. Point the Django service at the new database (`POSTGRES_HOST`) and start the current image.
+   Its start runs the migrations, loads the vocabularies and scores the records before it serves,
+   as described above.
+7. Remove the content types of the models the portal no longer has, in the running container.
+   It asks before it deletes:
+
+   ```bash
+   python manage.py remove_stale_contenttypes
+   ```
+
+The database keeps the tables of apps the portal no longer installs (`actstream_*`,
+`authtoken_token`, `invitations_invitation`, `laboratory_*`, `orbit_orbitentry` and
+`stratigraphy_stratigraphicunit`). Nothing reads them.
 
 The old database and its volume are not written to, so going back means starting the 2025.21
 image against them again.

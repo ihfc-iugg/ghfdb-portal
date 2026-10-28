@@ -1,0 +1,377 @@
+PREFIX : <https://w3id.org/fairdm/vocabularies/contributor-roles/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX fairdm: <https://w3id.org/fairdm/vocabularies/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+<https://www.fairdm.org/>
+    a foaf:Organization ;
+    foaf:homepage <https://www.fairdm.org/> ;
+    foaf:name "FairDM"@en ;
+.
+
+fairdm:contributor-roles
+    a skos:ConceptScheme ;
+    dcterms:creator <https://www.fairdm.org/> ;
+    dcterms:description "Roles a person or organization can have in a project, dataset, sample or measurement."@en ;
+    dcterms:language <http://id.loc.gov/vocabulary/iso639-1/en> ;
+    dcterms:license <https://creativecommons.org/licenses/by/4.0/> ;
+    dcterms:publisher <https://www.fairdm.org/> ;
+    rdfs:seeAlso <https://github.com/FAIR-DM/fairdm-vocabularies> ;
+    skos:hasTopConcept
+        :collection ,
+        :contact-person ,
+        :contributor ,
+        :creator ,
+        :data-collector ,
+        :data-curator ,
+        :data-manager ,
+        :destruction ,
+        :editor ,
+        :hosting-institution ,
+        :measurement-collection ,
+        :measurement-preparation ,
+        :other ,
+        :preparation ,
+        :producer ,
+        :project-leader ,
+        :project-manager ,
+        :project-member ,
+        :publisher ,
+        :related-person ,
+        :research-group ,
+        :researcher ,
+        :restoration ,
+        :rights-holder ,
+        :sponsor ,
+        :storage ,
+        :supervisor ,
+        :support ,
+        :work-package-leader ;
+    skos:prefLabel "Contributor roles"@en ;
+.
+
+:dataset
+    a skos:OrderedCollection ;
+    skos:definition "Roles for the purpose of metadata archival of research datasets."@en ;
+    skos:memberList (
+        :creator
+        :contact-person
+        :data-collector
+        :data-curator
+        :data-manager
+        :editor
+        :producer
+        :related-person
+        :researcher
+        :project-leader
+        :project-manager
+        :project-member
+        :supervisor
+        :work-package-leader
+        :rights-holder
+        :other
+    ) ;
+    skos:prefLabel "Dataset Roles"@en ;
+.
+
+:measurement
+    a skos:OrderedCollection ;
+    skos:definition "Roles for the purpose of metadata archival of research measurements."@en ;
+    skos:memberList (
+        :measurement-preparation
+        :measurement-collection
+        :support
+    ) ;
+    skos:prefLabel "Measurement Roles"@en ;
+.
+
+:project
+    a skos:OrderedCollection ;
+    skos:definition "Roles for the purpose of metadata archival of research projects."@en ;
+    skos:memberList (
+        :creator
+        :project-leader
+        :project-member
+        :project-manager
+        :contact-person
+        :other
+    ) ;
+    skos:prefLabel "Project Roles"@en ;
+.
+
+:sample
+    a skos:OrderedCollection ;
+    skos:definition "Roles for the purpose of metadata archival of research samples."@en ;
+    skos:memberList (
+        :collection
+        :preparation
+        :storage
+        :destruction
+        :restoration
+    ) ;
+    skos:prefLabel "Sample Roles"@en ;
+.
+
+:collection
+    a skos:Concept ;
+    skos:definition "The person who collected the sample."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "Collection" ;
+    skos:prefLabel "Collector"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:contact-person
+    a skos:Concept ;
+    skos:definition "The person to contact for information about the resource."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "ContactPerson" ;
+    skos:prefLabel "Contact Person"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:contributor
+    a skos:Concept ;
+    skos:definition "A person or organization responsible for making contributions to the resource."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "Contributor" ;
+    skos:prefLabel "Contributor"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:creator
+    a skos:Concept ;
+    skos:definition "The person or organization responsible for creating the resource."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "Creator" ;
+    skos:prefLabel "Creator"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:data-collector
+    a skos:Concept ;
+    skos:definition "The person(s) who collected the data."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "DataCollector" ;
+    skos:prefLabel "Data Collector"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:data-curator
+    a skos:Concept ;
+    skos:definition "The person(s) who curated the data."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "DataCurator" ;
+    skos:prefLabel "Data Curator"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:data-manager
+    a skos:Concept ;
+    skos:definition "The person(s) who managed the data."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "DataManager" ;
+    skos:prefLabel "Data Manager"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:destruction
+    a skos:Concept ;
+    skos:definition "The person who destroyed the sample."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "Destruction" ;
+    skos:prefLabel "Destroyer"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:editor
+    a skos:Concept ;
+    skos:definition "The person(s) who edited the data."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "Editor" ;
+    skos:prefLabel "Editor"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:hosting-institution
+    a skos:Concept ;
+    skos:definition "The institution hosting the dataset."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "HostingInstitution" ;
+    skos:prefLabel "Hosting Institution"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:measurement-collection
+    a skos:Concept ;
+    skos:definition "Acquisiton of data or measurements through established methods or protocols, ensuring that the data obtained is comprehensive and representative of the phenomenon being studied."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "MeasurementCollection" ;
+    skos:prefLabel "Collection"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:measurement-preparation
+    a skos:Concept ;
+    skos:definition "Responsible for undertaking procedures and preparations before a measurement is performed, ensuring that all necessary conditions are met for accurate and reliable data acquisition."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "MeasurementPreparation" ;
+    skos:prefLabel "Preparation"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:other
+    a skos:Concept ;
+    skos:definition "A role that does not fit into any of the other categories."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "Other" ;
+    skos:prefLabel "Other"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:preparation
+    a skos:Concept ;
+    skos:definition "The person who prepared the sample for analysis."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "Preparation" ;
+    skos:prefLabel "Preparer"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:producer
+    a skos:Concept ;
+    skos:definition "The person(s) who produced the data."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "Producer" ;
+    skos:prefLabel "Producer"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:project-leader
+    a skos:Concept ;
+    skos:definition "The person(s) who led the project."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "ProjectLeader" ;
+    skos:prefLabel "Project Leader"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:project-manager
+    a skos:Concept ;
+    skos:definition "The person(s) who managed the project."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "ProjectManager" ;
+    skos:prefLabel "Project Manager"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:project-member
+    a skos:Concept ;
+    skos:definition "A member of the project."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "ProjectMember" ;
+    skos:prefLabel "Project Member"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:publisher
+    a skos:Concept ;
+    skos:definition "The person or organization responsible for making the resource available."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "Publisher" ;
+    skos:prefLabel "Publisher"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:related-person
+    a skos:Concept ;
+    skos:definition "A person who is related to the dataset."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "RelatedPerson" ;
+    skos:prefLabel "Related Person"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:research-group
+    a skos:Concept ;
+    skos:definition "The research group associated with the dataset."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "ResearchGroup" ;
+    skos:prefLabel "Research Group"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:researcher
+    a skos:Concept ;
+    skos:definition "The person(s) who conducted the research."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "Researcher" ;
+    skos:prefLabel "Researcher"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:restoration
+    a skos:Concept ;
+    skos:definition "The person who restored the sample."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "Restoration" ;
+    skos:prefLabel "Restorer"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:rights-holder
+    a skos:Concept ;
+    skos:definition "The person or organization owning the rights to the resource."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "RightsHolder" ;
+    skos:prefLabel "Rights Holder"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:sponsor
+    a skos:Concept ;
+    skos:definition "The sponsor of the project."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "Sponsor" ;
+    skos:prefLabel "Sponsor"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:storage
+    a skos:Concept ;
+    skos:definition "The person who stored the sample."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "Storage" ;
+    skos:prefLabel "Archivist"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:supervisor
+    a skos:Concept ;
+    skos:definition "The person(s) who supervised the project."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "Supervisor" ;
+    skos:prefLabel "Supervisor"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:support
+    a skos:Concept ;
+    skos:definition "Provides assistance, guidance, or resources to facilitate the measurement process, ensuring that the necessary tools, equipment, or expertise are available to conduct the measurements effectively."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "Support" ;
+    skos:prefLabel "Support"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.
+
+:work-package-leader
+    a skos:Concept ;
+    skos:definition "The person(s) who led the work package."@en ;
+    skos:inScheme fairdm:contributor-roles ;
+    skos:notation "WorkPackageLeader" ;
+    skos:prefLabel "Work Package Leader"@en ;
+    skos:topConceptOf fairdm:contributor-roles ;
+.

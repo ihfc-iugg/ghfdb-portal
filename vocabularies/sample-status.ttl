@@ -1,0 +1,74 @@
+PREFIX : <https://w3id.org/fairdm/vocabularies/sample-status/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX fairdm: <https://w3id.org/fairdm/vocabularies/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+<https://www.fairdm.org/>
+    a foaf:Organization ;
+    foaf:homepage <https://www.fairdm.org/> ;
+    foaf:name "FairDM"@en ;
+.
+
+fairdm:sample-status
+    a skos:ConceptScheme ;
+    dcterms:creator <https://www.fairdm.org/> ;
+    dcterms:description "The custody state of a physical sample: whether it is available, in use, stored, destroyed or unknown."@en ;
+    dcterms:language <http://id.loc.gov/vocabulary/iso639-1/en> ;
+    dcterms:license <https://creativecommons.org/licenses/by/4.0/> ;
+    dcterms:publisher <https://www.fairdm.org/> ;
+    rdfs:seeAlso <https://github.com/FAIR-DM/fairdm-vocabularies> ;
+    skos:hasTopConcept
+        :available ,
+        :destroyed ,
+        :in-use ,
+        :stored ,
+        :unknown ;
+    skos:prefLabel "Sample status"@en ;
+.
+
+:available
+    a skos:Concept ;
+    skos:definition "The specimen is accessible and not currently checked out, in storage, or destroyed."@en ;
+    skos:inScheme fairdm:sample-status ;
+    skos:notation "available" ;
+    skos:prefLabel "Available"@en ;
+    skos:topConceptOf fairdm:sample-status ;
+.
+
+:destroyed
+    a skos:Concept ;
+    skos:definition "The specimen has been consumed, destroyed, or is otherwise no longer physically available. This is not a terminal state - a specimen recorded as destroyed can still be moved to any other status."@en ;
+    skos:inScheme fairdm:sample-status ;
+    skos:notation "destroyed" ;
+    skos:prefLabel "Destroyed"@en ;
+    skos:topConceptOf fairdm:sample-status ;
+.
+
+:in-use
+    a skos:Concept ;
+    skos:definition "The specimen is currently checked out or otherwise in active use."@en ;
+    skos:inScheme fairdm:sample-status ;
+    skos:notation "in_use" ;
+    skos:prefLabel "In Use"@en ;
+    skos:topConceptOf fairdm:sample-status ;
+.
+
+:stored
+    a skos:Concept ;
+    skos:definition "The specimen is held in long-term storage."@en ;
+    skos:inScheme fairdm:sample-status ;
+    skos:notation "stored" ;
+    skos:prefLabel "Stored"@en ;
+    skos:topConceptOf fairdm:sample-status ;
+.
+
+:unknown
+    a skos:Concept ;
+    skos:definition "The specimen's current custody status is not known."@en ;
+    skos:inScheme fairdm:sample-status ;
+    skos:notation "unknown" ;
+    skos:prefLabel "Unknown"@en ;
+    skos:topConceptOf fairdm:sample-status ;
+.

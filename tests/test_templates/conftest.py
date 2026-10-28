@@ -7,6 +7,7 @@ import pytest
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
+from heat_flow.vocabularies import EXPLORATION_METHOD, term
 
 from tests.factories import (
     HeatFlowCorrectionFactory,
@@ -121,7 +122,9 @@ def probe_interval(published_dataset):
     child that records that correction scores 0.2 above the gradient's own score.
     """
     site = HeatFlowSiteFactory(
-        dataset=published_dataset, explo_method="probing_offshore", elevation=-1000
+        dataset=published_dataset,
+        explo_method_id=term(EXPLORATION_METHOD, "probing_offshore"),
+        elevation=-1000,
     )
     interval = HeatFlowIntervalFactory(dataset=published_dataset, site=site)
     ProbeMetadataFactory(interval=interval, penetration=5, tilt=0, probe_type=[])

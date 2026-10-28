@@ -25,6 +25,12 @@ from fairdm.contrib.contributors.services.crediting import Crediting
 from fairdm.core.choices import ProjectStatus
 from fairdm.core.dataset.models import Dataset, DatasetLiteratureRelation
 from fairdm.core.project.models import Project, ProjectDescription
+from fairdm.core.vocabularies import (
+    ABSTRACT,
+    CONTACT_PERSON,
+    CREATOR,
+    PROJECT_LEADER,
+)
 from fairdm.management.commands.create_dev_accounts import (
     DEV_ACCOUNT_PASSWORD,
     EXAMPLE_ACCOUNTS,
@@ -33,12 +39,11 @@ from fairdm.management.commands.create_dev_accounts import (
 from heat_flow.demo import DemoGraph
 from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
 from heat_flow.signals import Recalculation
-from literature.models import LiteratureItem
-from research_vocabs.models import Concept
-from research_vocabs.registry import vocab_registry
+from literature.converters import from_csl_json
 
 from review.models import Review
 from review.permissions import DATA_ASSESSOR_GROUP, DATA_CURATOR_GROUP
+from review.roles import DATA_COLLECTOR, DATA_MANAGER
 from review.states import States
 
 DEFAULT_SIZE = 20
@@ -133,8 +138,7 @@ class Command(BaseCommand):
             raise CommandError(
                 f"--size must be from {MIN_SIZE} to {MAX_SIZE} datasets, not {size}."
             )
-        if not self._vocabularies_loaded():
-            call_command("preload")
+        call_command("sync_vocabularies")
         call_command("seed_licenses")
 
         rng = random.Random()  # noqa: S311 - demo values, not secrets
@@ -192,23 +196,6 @@ class Command(BaseCommand):
                 f"Refusing to add demo data: the resolved environment {environment!r} is not"
                 " a development one."
             )
-
-    @staticmethod
-    def _vocabularies_loaded() -> bool:
-        """Return whether every concept of every registered vocabulary is already stored.
-
-        Loading them writes each of several hundred concepts again, so a run on a database
-        that holds them all skips it.
-
-        Returns:
-            Whether no registered concept is missing from the database.
-        """
-        stored = set(Concept.objects.values_list("vocabulary__name", "name"))
-        return all(
-            (name, concept.name) in stored
-            for name, vocabulary in vocab_registry.items()
-            for concept in vocabulary.concepts()
-        )
 
     @staticmethod
     def _next_ghfdb_id() -> int:
@@ -327,13 +314,13 @@ class Command(BaseCommand):
         )
         ProjectDescription.objects.create(
             related=project,
-            type="Abstract",
+            type_id=ABSTRACT,
             value=(
                 "Demo data: a generated project grouping heat flow datasets for"
                 " development. None of it describes real measurements."
             ),
         )
-        Crediting(project).make_creator(creator, roles=["ProjectLeader"])
+        Crediting(project).make_creator(creator, roles=[PROJECT_LEADER])
         return project
 
     def _create_dataset(
@@ -363,9 +350,9 @@ class Command(BaseCommand):
         complete = state == States.COMPLETE
         token = uuid.uuid4().hex[:12]
 
-        literature = LiteratureItem.objects.create(
-            citation_key=f"demo-{token}",
-            item={
+        literature = from_csl_json(
+            {
+                "id": f"demo-{token}",
                 "type": "article-journal",
                 "title": f"{rng.choice(SURVEY_SUBJECTS)} heat flow, demo {token}",
                 "author": [
@@ -394,15 +381,15 @@ class Command(BaseCommand):
             dataset=dataset, literature_item=literature, relationship_type="IsCitedBy"
         )
 
-        roles = ("Creator", "ContactPerson", "DataCollector")
+        roles = (CREATOR, CONTACT_PERSON, DATA_COLLECTOR)
         for role in roles[: rng.randint(1, 3)]:
             person = self._demo_person(
                 rng.choice(GIVEN_NAMES), rng.choice(FAMILY_NAMES)
             )
             Contribution.add_to(person, dataset, [role])
 
-        Crediting(dataset).make_creator(assessor, roles=["DataManager"])
-        dataset.add_contributor(assessor, with_roles=["DataCollector"])
+        Crediting(dataset).make_creator(assessor, roles=[DATA_MANAGER])
+        dataset.add_contributor(assessor, with_roles=[DATA_COLLECTOR])
 
         today = timezone.now().date().isoformat()
         decided = state in (States.CHANGES_REQUESTED, States.COMPLETE)

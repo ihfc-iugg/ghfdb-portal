@@ -7,7 +7,7 @@
 
 import pytest
 from heat_flow import vocabularies
-from research_vocabs.models import Concept
+from heat_flow.vocabularies import identifier
 
 from tests.factories import (
     HeatFlowIntervalFactory,
@@ -22,9 +22,18 @@ pytestmark = pytest.mark.django_db
 
 def concepts(vocabulary, *names):
     """Return the concepts of *vocabulary* called *names*, refusing a misspelt name."""
-    found = list(Concept.get_for_vocabulary(vocabulary).filter(name__in=names))
-    assert {concept.name for concept in found} == set(names)
+    found = list(
+        vocabularies.concepts(vocabulary).filter(
+            uri__in=[vocabularies.term(vocabulary, name) for name in names]
+        )
+    )
+    assert {identifier(concept) for concept in found} == set(names)
     return found
+
+
+def exploration(name):
+    """Return the address of the exploration method called *name*, or None for no method."""
+    return vocabularies.term(vocabularies.EXPLORATION_METHOD, name) if name else None
 
 
 def build_interval(
@@ -37,7 +46,9 @@ def build_interval(
     tilt=None,
 ):
     """Build an interval at a site, with probe metadata when a probe input is given."""
-    site = HeatFlowSiteFactory(explo_method=explo_method, elevation=elevation)
+    site = HeatFlowSiteFactory(
+        explo_method_id=exploration(explo_method), elevation=elevation
+    )
     interval = HeatFlowIntervalFactory(site=site, top=top, bottom=bottom)
     if penetration is not None or tilt is not None:
         ProbeMetadataFactory(
@@ -51,8 +62,8 @@ def build_gradient(interval, *, number=None, top=(), bottom=()):
     return ThermalGradientFactory(
         sample=interval,
         number=number,
-        method_top=concepts(vocabularies.TemperatureMethod, *top),
-        method_bottom=concepts(vocabularies.TemperatureMethod, *bottom),
+        method_top=concepts(vocabularies.TEMPERATURE_METHOD, *top),
+        method_bottom=concepts(vocabularies.TEMPERATURE_METHOD, *bottom),
     )
 
 
@@ -70,11 +81,11 @@ def build_conductivity(
     return IntervalConductivityFactory(
         sample=interval,
         number=number,
-        source=concepts(vocabularies.ConductivitySource, *source),
-        conductivity_location=concepts(vocabularies.ConductivityLocation, *location),
-        method=concepts(vocabularies.ConductivityMethod, *method),
-        saturation=concepts(vocabularies.ConductivitySaturation, *saturation),
-        pT_conditions=concepts(vocabularies.ConductivityPTConditions, *pT),
+        source=concepts(vocabularies.CONDUCTIVITY_SOURCE, *source),
+        conductivity_location=concepts(vocabularies.CONDUCTIVITY_LOCATION, *location),
+        method=concepts(vocabularies.CONDUCTIVITY_METHOD, *method),
+        saturation=concepts(vocabularies.CONDUCTIVITY_SATURATION, *saturation),
+        pT_conditions=concepts(vocabularies.CONDUCTIVITY_PT_CONDITIONS, *pT),
     )
 
 
@@ -460,7 +471,7 @@ class TestRoute:
     def test_probing_methods_route_to_the_probe_rules(self, explo_method):
         from heat_flow.quality import ProbeRules, route
 
-        site = HeatFlowSiteFactory(explo_method=explo_method)
+        site = HeatFlowSiteFactory(explo_method_id=exploration(explo_method))
 
         assert route(site) is ProbeRules
 
@@ -473,7 +484,7 @@ class TestRoute:
     ):
         from heat_flow.quality import BoreholeRules, route
 
-        site = HeatFlowSiteFactory(explo_method=explo_method)
+        site = HeatFlowSiteFactory(explo_method_id=exploration(explo_method))
 
         assert route(site) is BoreholeRules
 
@@ -481,7 +492,7 @@ class TestRoute:
     def test_other_unspecified_and_empty_methods_are_not_determined(self, explo_method):
         from heat_flow.quality import route
 
-        site = HeatFlowSiteFactory(explo_method=explo_method)
+        site = HeatFlowSiteFactory(explo_method_id=exploration(explo_method))
 
         assert route(site) is None
 

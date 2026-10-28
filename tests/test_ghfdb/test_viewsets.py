@@ -1,10 +1,15 @@
 import pytest
 from django.urls import reverse
 
-from project.ghfdb.constants import CHILD_COLUMNS, PARENT_COLUMNS, REJECTED_MISSPELLED_COLUMNS
+from project.ghfdb.constants import (
+    CHILD_COLUMNS,
+    PARENT_COLUMNS,
+    REJECTED_MISSPELLED_COLUMNS,
+)
 from project.ghfdb.models import GHFDBChild, GHFDBParent
 
 from .conftest import build_child, build_published_chain, build_site_and_parent
+from heat_flow.vocabularies import EXPLORATION_METHOD, GEOGRAPHIC_ENVIRONMENT, term
 
 
 @pytest.mark.django_db
@@ -69,7 +74,7 @@ class TestGHFDBParentViewSet:
 
         parent = build_site_and_parent(public_dataset, ghfdb_id=1)
         site = HeatFlowSite.objects.get(pk=parent.sample_id)
-        site.explo_method = "drilling"
+        site.explo_method_id = term(EXPLORATION_METHOD, "drilling")
         site.location = Point(11.5678, 48.1234, srid=4326)
         site.save()
 
@@ -112,7 +117,12 @@ class TestGHFDBParentViewSet:
 
         assert detail_response.status_code == 200
         detail = detail_response.json()
-        assert list(detail)[:4] == ["url", "total_children", "relevant_children", "children"]
+        assert list(detail)[:4] == [
+            "url",
+            "total_children",
+            "relevant_children",
+            "children",
+        ]
         assert {child["ID"] for child in detail["children"]} == {11, 12}
 
         children_response = client.get(reverse("api:ghfdb-children-list"))
@@ -208,9 +218,7 @@ class TestGHFDBParentViewSet:
         for ghfdb_id in range(1, 1002):
             build_site_and_parent(public_dataset, ghfdb_id=ghfdb_id)
 
-        response = client.get(
-            reverse("api:ghfdb-parents-list"), {"page_size": 5000}
-        )
+        response = client.get(reverse("api:ghfdb-parents-list"), {"page_size": 5000})
 
         assert response.status_code == 200
         assert len(response.json()["results"]) == 1000
@@ -316,18 +324,17 @@ class TestGHFDBChildViewSet:
     def test_a_many_valued_column_with_several_members_renders_as_a_list(
         self, client, public_dataset
     ):
-        from heat_flow.vocabularies import HeatFlowMethod
-        from research_vocabs.models import Concept
+        from heat_flow.vocabularies import HEAT_FLOW_METHOD, concepts
 
         parent = build_site_and_parent(public_dataset, ghfdb_id=1)
         child = build_child(public_dataset, parent, ghfdb_id=11)
-        methods = list(Concept.get_for_vocabulary(HeatFlowMethod)[:2])
+        methods = list(concepts(HEAT_FLOW_METHOD)[:2])
         child.method.set(methods)
 
         response = client.get(reverse("api:ghfdb-children-list"))
 
         record = response.json()["results"][0]
-        assert set(record["q_method"]) == {method.label for method in methods}
+        assert set(record["q_method"]) == {method.display_label() for method in methods}
 
     def test_a_many_valued_column_with_no_members_renders_as_an_empty_list(
         self, client, public_dataset
@@ -548,11 +555,10 @@ class TestGHFDBFlatViewSet:
     def test_two_determinations_under_one_parent_repeat_its_values(
         self, client, public_dataset
     ):
-        from heat_flow.vocabularies import ExplorationPurpose
-        from research_vocabs.models import Concept
+        from heat_flow.vocabularies import EXPLORATION_PURPOSE, concepts
 
         parent = build_site_and_parent(public_dataset, ghfdb_id=1)
-        purposes = list(Concept.get_for_vocabulary(ExplorationPurpose)[:2])
+        purposes = list(concepts(EXPLORATION_PURPOSE)[:2])
         parent.sample.explo_purpose.set(purposes)
         build_child(public_dataset, parent, ghfdb_id=11)
         build_child(public_dataset, parent, ghfdb_id=12)
@@ -566,7 +572,9 @@ class TestGHFDBFlatViewSet:
         for row in rows:
             assert row["ID_parent"] == 1
             assert row["name"] == parent.sample.name
-            assert set(row["explo_purpose"]) == {purpose.label for purpose in purposes}
+            assert set(row["explo_purpose"]) == {
+                purpose.display_label() for purpose in purposes
+            }
             assert row["quality_parent"] == "A1"
 
     def test_query_count_is_constant_between_a_page_of_one_and_a_full_page(
@@ -594,13 +602,11 @@ class TestGHFDBFlatViewSet:
         parent = build_site_and_parent(public_dataset, ghfdb_id=1)
         build_child(public_dataset, parent, ghfdb_id=11)
         site = HeatFlowSite.objects.get(pk=parent.sample_id)
-        site.explo_method = "drilling"
+        site.explo_method_id = term(EXPLORATION_METHOD, "drilling")
         site.location = Point(11.5678, 48.1234, srid=4326)
         site.save()
 
-        response = client.get(
-            reverse("api:ghfdb-flat-detail", kwargs={"ghfdb_id": 11})
-        )
+        response = client.get(reverse("api:ghfdb-flat-detail", kwargs={"ghfdb_id": 11}))
 
         record = response.json()
         assert record["environment"] == "onshore_continental"
@@ -780,7 +786,7 @@ class TestGHFDBSingleRecordObjectPermissions:
             name="Test Site",
             country="Germany",
             continent="Europe",
-            environment="onshore_continental",
+            environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental"),
         )
         parent = ParentHeatFlow.objects.create(
             dataset=dataset, sample=site, name="Test Parent", value=70.0, ghfdb_id=1
@@ -854,7 +860,9 @@ class TestGHFDBDatasetLevel:
         client.force_login(user)
 
         assert len(client.get(reverse("api:ghfdb-parents-list")).json()["results"]) == 1
-        assert len(client.get(reverse("api:ghfdb-children-list")).json()["results"]) == 1
+        assert (
+            len(client.get(reverse("api:ghfdb-children-list")).json()["results"]) == 1
+        )
         assert len(client.get(reverse("api:ghfdb-flat-list")).json()["results"]) == 1
         assert (
             client.get(

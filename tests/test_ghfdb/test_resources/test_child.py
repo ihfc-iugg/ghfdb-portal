@@ -2,6 +2,7 @@
 
 import pytest
 import tablib
+from fairdm.core.vocabularies import IGSN
 
 # Helpers: row data mirrors what the full GHFDB flat row looks like
 
@@ -1050,7 +1051,7 @@ class TestGHFDBChildImportResourceIGSN:
         child = HeatFlow.objects.get(ghfdb_id=1)
         identifiers = list(child.sample.identifiers.all())
         assert len(identifiers) == 1
-        assert identifiers[0].type == "IGSN"
+        assert identifiers[0].type_id == IGSN
         assert identifiers[0].value == VALID_IGSN
 
     @pytest.mark.parametrize("blank_value", ["-", "", "   "])
@@ -1089,7 +1090,7 @@ class TestGHFDBChildImportResourceIGSN:
 
         assert not result.has_errors(), result.invalid_rows
         child = HeatFlow.objects.get(ghfdb_id=1)
-        assert child.sample.identifiers.get(type="IGSN").value == VALID_IGSN
+        assert child.sample.identifiers.get(type_id=IGSN).value == VALID_IGSN
 
     def test_reimporting_the_same_row_does_not_fail_or_duplicate(self, dataset):
         # The reader upserts HeatFlow by ghfdb_id, but before_save_instance rebuilds a
@@ -1115,7 +1116,7 @@ class TestGHFDBChildImportResourceIGSN:
 
         child = HeatFlow.objects.get(ghfdb_id=1)
         assert child.sample.identifiers.count() == 1
-        assert child.sample.identifiers.get(type="IGSN").value == VALID_IGSN
+        assert child.sample.identifiers.get(type_id=IGSN).value == VALID_IGSN
 
     def test_a_malformed_igsn_is_a_row_error_not_a_crash(self, dataset):
         import_parents(dataset)

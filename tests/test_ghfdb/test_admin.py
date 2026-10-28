@@ -103,10 +103,10 @@ class TestGHFDBAdminListFilters:
     def test_explo_purpose_filter_choices_are_vocabulary_scoped(
         self, admin_client, heat_flow_chain
     ):
-        # explo_purpose list filter choices are restricted to ExplorationPurpose
+        # explo_purpose list filter choices are restricted to the ExplorationPurpose
         # vocabulary.
-        from heat_flow.vocabularies import ExplorationPurpose
-        from research_vocabs.models import Concept
+        from controlled_vocabularies.models import Record
+        from heat_flow.vocabularies import EXPLORATION_PURPOSE, concepts
 
         model_admin = admin.site._registry[GHFDBChild]
 
@@ -119,23 +119,21 @@ class TestGHFDBAdminListFilters:
         f = ExplorePurposeListFilter(
             request=None, params={}, model=GHFDBChild, model_admin=model_admin
         )
-        lookup_pks = {pk for pk, _label in f.lookups(None, model_admin)}
+        lookup_uris = {uri for uri, _label in f.lookups(None, model_admin)}
 
         # Vocabulary-scoped concepts
-        vocab_pks = set(
-            Concept.get_for_vocabulary(ExplorationPurpose).values_list("pk", flat=True)
-        )
+        vocab_uris = set(concepts(EXPLORATION_PURPOSE).values_list("uri", flat=True))
 
-        # All lookup pks must belong to the ExplorationPurpose vocabulary
-        assert lookup_pks, "lookups() must return at least one choice"
-        assert lookup_pks.issubset(vocab_pks), (
-            f"Filter choices contain concepts outside the ExplorationPurpose vocabulary: {lookup_pks - vocab_pks}"
+        # All lookup uris must belong to the ExplorationPurpose vocabulary
+        assert lookup_uris, "lookups() must return at least one choice"
+        assert lookup_uris.issubset(vocab_uris), (
+            f"Filter choices contain concepts outside the ExplorationPurpose vocabulary: {lookup_uris - vocab_uris}"
         )
 
         # No unrelated concept (from a different vocabulary) should appear in lookup choices
-        all_concept_pks = set(Concept.objects.values_list("pk", flat=True))
-        non_vocab_pks = all_concept_pks - vocab_pks
-        overlap = lookup_pks & non_vocab_pks
+        all_concept_uris = set(Record.objects.values_list("uri", flat=True))
+        non_vocab_uris = all_concept_uris - vocab_uris
+        overlap = lookup_uris & non_vocab_uris
         assert not overlap, (
             f"Filter choices include {len(overlap)} non-ExplorationPurpose concept(s)"
         )
@@ -144,7 +142,7 @@ class TestGHFDBAdminListFilters:
     def test_environment_filter_choices_are_vocabulary_scoped(self, admin_client):
         # EnvironmentListFilter.lookups() returns GeographicEnvironment vocabulary
         # choices.
-        from heat_flow.vocabularies import GeographicEnvironment
+        from heat_flow.vocabularies import GEOGRAPHIC_ENVIRONMENT, choices
 
         model_admin = admin.site._registry[GHFDBChild]
         assert EnvironmentListFilter in model_admin.list_filter, (
@@ -155,7 +153,7 @@ class TestGHFDBAdminListFilters:
             request=None, params={}, model=GHFDBChild, model_admin=model_admin
         )
         lookup_values = {value for value, _label in f.lookups(None, model_admin)}
-        vocab_values = {value for value, _label in GeographicEnvironment().choices}
+        vocab_values = {value for value, _label in choices(GEOGRAPHIC_ENVIRONMENT)}
 
         assert lookup_values, "lookups() must return at least one choice"
         assert lookup_values == vocab_values, (
@@ -167,7 +165,7 @@ class TestGHFDBAdminListFilters:
     def test_explo_method_filter_choices_are_vocabulary_scoped(self, admin_client):
         # ChildExplorationMethodListFilter.lookups() returns ExplorationMethod
         # vocabulary choices.
-        from heat_flow.vocabularies import ExplorationMethod
+        from heat_flow.vocabularies import EXPLORATION_METHOD, choices
 
         model_admin = admin.site._registry[GHFDBChild]
         assert ChildExplorationMethodListFilter in model_admin.list_filter, (
@@ -178,7 +176,7 @@ class TestGHFDBAdminListFilters:
             request=None, params={}, model=GHFDBChild, model_admin=model_admin
         )
         lookup_values = {value for value, _label in f.lookups(None, model_admin)}
-        vocab_values = {value for value, _label in ExplorationMethod().choices}
+        vocab_values = {value for value, _label in choices(EXPLORATION_METHOD)}
 
         assert lookup_values, "lookups() must return at least one choice"
         assert lookup_values == vocab_values, (
@@ -192,7 +190,7 @@ class TestGHFDBParentAdminListFilters:
     def test_parent_environment_filter_choices_are_vocabulary_scoped(
         self, admin_client
     ):
-        from heat_flow.vocabularies import GeographicEnvironment
+        from heat_flow.vocabularies import GEOGRAPHIC_ENVIRONMENT, choices
 
         from project.ghfdb.models import GHFDBParent
 
@@ -205,7 +203,7 @@ class TestGHFDBParentAdminListFilters:
             request=None, params={}, model=GHFDBParent, model_admin=model_admin
         )
         lookup_values = {value for value, _label in f.lookups(None, model_admin)}
-        vocab_values = {value for value, _label in GeographicEnvironment().choices}
+        vocab_values = {value for value, _label in choices(GEOGRAPHIC_ENVIRONMENT)}
 
         assert lookup_values, "lookups() must return at least one choice"
         assert lookup_values == vocab_values
@@ -214,7 +212,7 @@ class TestGHFDBParentAdminListFilters:
     def test_parent_explo_method_filter_choices_are_vocabulary_scoped(
         self, admin_client
     ):
-        from heat_flow.vocabularies import ExplorationMethod
+        from heat_flow.vocabularies import EXPLORATION_METHOD, choices
 
         from project.ghfdb.models import GHFDBParent
 
@@ -227,7 +225,7 @@ class TestGHFDBParentAdminListFilters:
             request=None, params={}, model=GHFDBParent, model_admin=model_admin
         )
         lookup_values = {value for value, _label in f.lookups(None, model_admin)}
-        vocab_values = {value for value, _label in ExplorationMethod().choices}
+        vocab_values = {value for value, _label in choices(EXPLORATION_METHOD)}
 
         assert lookup_values, "lookups() must return at least one choice"
         assert lookup_values == vocab_values
@@ -376,8 +374,12 @@ class TestGHFDBParentAdmin:
         # FS-002 FR-017: environment, heat production correction flag, exploration
         # method, exploration purpose, country, region, continent and geological domain,
         # each producing matching rows when applied.
-        from heat_flow.vocabularies import ExplorationMethod, ExplorationPurpose
-        from research_vocabs.models import Concept
+        from heat_flow.vocabularies import (
+            EXPLORATION_METHOD,
+            EXPLORATION_PURPOSE,
+            choices,
+            concepts,
+        )
 
         from project.ghfdb.models import GHFDBParent
 
@@ -386,9 +388,9 @@ class TestGHFDBParentAdmin:
 
         parent = published_chain.parent
         site = parent.sample
-        explo_method_value = ExplorationMethod().choices[0][0]
-        purpose = Concept.get_for_vocabulary(ExplorationPurpose).first()
-        site.explo_method = explo_method_value
+        explo_method_value = choices(EXPLORATION_METHOD)[0][0]
+        purpose = concepts(EXPLORATION_PURPOSE).first()
+        site.explo_method_id = explo_method_value
         site.region = "Bavaria"
         site.domain = "Continental"
         site.save()
@@ -398,10 +400,10 @@ class TestGHFDBParentAdmin:
 
         url = reverse("admin:ghfdb_ghfdbparent_changelist")
         filters = {
-            "environment": str(site.environment),
+            "environment": site.environment_id,
             "corr_HP_flag__exact": "1",
             "explo_method": explo_method_value,
-            "explo_purpose": purpose.pk,
+            "explo_purpose": purpose.uri,
             "sample__heatflowsite__country": site.country,
             "sample__heatflowsite__region": site.region,
             "sample__heatflowsite__continent": site.continent,
@@ -416,11 +418,12 @@ class TestGHFDBParentAdmin:
         # FS-002 FR-018, SC-009: SC-009 requires this proven on both changelists, not
         # once.
         from heat_flow.vocabularies import (
-            ExplorationMethod,
-            ExplorationPurpose,
-            GeographicEnvironment,
+            EXPLORATION_METHOD,
+            EXPLORATION_PURPOSE,
+            GEOGRAPHIC_ENVIRONMENT,
+            choices,
+            concepts,
         )
-        from research_vocabs.models import Concept
 
         from project.ghfdb.models import GHFDBParent
 
@@ -430,14 +433,14 @@ class TestGHFDBParentAdmin:
             request=None, params={}, model=GHFDBParent, model_admin=model_admin
         )
         assert dict(environment_filter.lookups(None, model_admin)) == dict(
-            GeographicEnvironment().choices
+            choices(GEOGRAPHIC_ENVIRONMENT)
         )
 
         method_filter = ParentExplorationMethodListFilter(
             request=None, params={}, model=GHFDBParent, model_admin=model_admin
         )
         assert dict(method_filter.lookups(None, model_admin)) == dict(
-            ExplorationMethod().choices
+            choices(EXPLORATION_METHOD)
         )
 
         purpose_filter = ParentExplorePurposeListFilter(
@@ -445,8 +448,8 @@ class TestGHFDBParentAdmin:
         )
         purpose_choices = dict(purpose_filter.lookups(None, model_admin))
         expected_purposes = {
-            concept.pk: concept.label
-            for concept in Concept.get_for_vocabulary(ExplorationPurpose)
+            concept.uri: concept.display_label()
+            for concept in concepts(EXPLORATION_PURPOSE)
         }
         assert purpose_choices == expected_purposes
 
@@ -491,15 +494,14 @@ class TestGHFDBParentAdmin:
         # F5 : as the determination changelist's equivalent test, but also covering the
         # geography block — a heading assertion cannot tell ``get_country`` resolving
         # from it silently returning ``None``.
-        from heat_flow.vocabularies import ExplorationPurpose
-        from research_vocabs.models import Concept
+        from heat_flow.vocabularies import EXPLORATION_PURPOSE, concepts
 
         from project.ghfdb.models import GHFDBParent
 
         site = published_chain.parent.sample
         site.country = "Wonderland"
         site.save(update_fields=["country"])
-        purpose = Concept.get_for_vocabulary(ExplorationPurpose).first()
+        purpose = concepts(EXPLORATION_PURPOSE).first()
         site.explo_purpose.set([purpose])
         published_chain.parent.corr_HP_flag = True
         published_chain.parent.save(update_fields=["corr_HP_flag"])
@@ -518,7 +520,7 @@ class TestGHFDBParentAdmin:
         # field column
         assert ColumnDisplay.build("corr_HP_flag")(row) is True
         # many-valued column
-        assert ColumnDisplay.build("explo_purpose")(row) == str(purpose)
+        assert ColumnDisplay.build("explo_purpose")(row) == purpose.display_label()
         # geography column, read through the bound admin method itself
         assert model_admin.get_country(row) == "Wonderland"
 
@@ -651,16 +653,20 @@ class TestGHFDBChildAdmin:
         # FS-002 FR-017: environment, heat production correction flag, exploration
         # method, exploration purpose, country, region, continent and geological domain,
         # each producing matching rows when applied.
-        from heat_flow.vocabularies import ExplorationMethod, ExplorationPurpose
-        from research_vocabs.models import Concept
+        from heat_flow.vocabularies import (
+            EXPLORATION_METHOD,
+            EXPLORATION_PURPOSE,
+            choices,
+            concepts,
+        )
 
         model_admin = admin.site._registry[GHFDBChild]
         assert len(model_admin.list_filter) == 8
 
         site = published_chain.sample.heatflowinterval.site
-        explo_method_value = ExplorationMethod().choices[0][0]
-        purpose = Concept.get_for_vocabulary(ExplorationPurpose).first()
-        site.explo_method = explo_method_value
+        explo_method_value = choices(EXPLORATION_METHOD)[0][0]
+        purpose = concepts(EXPLORATION_PURPOSE).first()
+        site.explo_method_id = explo_method_value
         site.region = "Bavaria"
         site.domain = "Continental"
         site.save()
@@ -670,10 +676,10 @@ class TestGHFDBChildAdmin:
 
         url = reverse("admin:ghfdb_ghfdbchild_changelist")
         filters = {
-            "environment": str(site.environment),
+            "environment": site.environment_id,
             "parent__corr_HP_flag__exact": "1",
             "explo_method": explo_method_value,
-            "explo_purpose": purpose.pk,
+            "explo_purpose": purpose.uri,
             "sample__heatflowinterval__site__country": site.country,
             "sample__heatflowinterval__site__region": site.region,
             "sample__heatflowinterval__site__continent": site.continent,
@@ -689,11 +695,12 @@ class TestGHFDBChildAdmin:
         # another vocabulary is, and the choice text is the label rather than the stored
         # key.
         from heat_flow.vocabularies import (
-            ExplorationMethod,
-            ExplorationPurpose,
-            GeographicEnvironment,
+            EXPLORATION_METHOD,
+            EXPLORATION_PURPOSE,
+            GEOGRAPHIC_ENVIRONMENT,
+            choices,
+            concepts,
         )
-        from research_vocabs.models import Concept
 
         model_admin = admin.site._registry[GHFDBChild]
 
@@ -701,14 +708,14 @@ class TestGHFDBChildAdmin:
             request=None, params={}, model=GHFDBChild, model_admin=model_admin
         )
         assert dict(environment_filter.lookups(None, model_admin)) == dict(
-            GeographicEnvironment().choices
+            choices(GEOGRAPHIC_ENVIRONMENT)
         )
 
         method_filter = ChildExplorationMethodListFilter(
             request=None, params={}, model=GHFDBChild, model_admin=model_admin
         )
         assert dict(method_filter.lookups(None, model_admin)) == dict(
-            ExplorationMethod().choices
+            choices(EXPLORATION_METHOD)
         )
 
         purpose_filter = ExplorePurposeListFilter(
@@ -716,8 +723,8 @@ class TestGHFDBChildAdmin:
         )
         purpose_choices = dict(purpose_filter.lookups(None, model_admin))
         expected_purposes = {
-            concept.pk: concept.label
-            for concept in Concept.get_for_vocabulary(ExplorationPurpose)
+            concept.uri: concept.display_label()
+            for concept in concepts(EXPLORATION_PURPOSE)
         }
         assert purpose_choices == expected_purposes
 
@@ -760,10 +767,9 @@ class TestGHFDBChildAdmin:
     ):
         # F5 : a heading assertion cannot tell a working column from a blank one — every
         # column assertion elsewhere in this module reads a heading.
-        from heat_flow.vocabularies import HeatFlowMethod
-        from research_vocabs.models import Concept
+        from heat_flow.vocabularies import HEAT_FLOW_METHOD, concepts
 
-        method = Concept.get_for_vocabulary(HeatFlowMethod).first()
+        method = concepts(HEAT_FLOW_METHOD).first()
         published_chain.method.set([method])
         published_chain.expedition = "R/V Test Expedition"
         published_chain.save(update_fields=["expedition"])
@@ -780,7 +786,7 @@ class TestGHFDBChildAdmin:
         # field column
         assert ColumnDisplay.build("expedition")(row) == "R/V Test Expedition"
         # many-valued column
-        assert ColumnDisplay.build("q_method")(row) == str(method)
+        assert ColumnDisplay.build("q_method")(row) == method.display_label()
 
     @pytest.mark.django_db
     def test_query_count_is_equal_at_two_row_counts(

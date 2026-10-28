@@ -8,6 +8,7 @@ from django.db import connection
 from django.test.utils import CaptureQueriesContext
 from fairdm.contrib.contributors.choices import ContributionLevel
 from fairdm.factories import ContributionFactory, PersonFactory
+from heat_flow import vocabularies
 from heat_flow.models import IntervalConductivity
 from heat_flow.overview import HeatFlowPage
 
@@ -32,14 +33,18 @@ def link_to(node, record):
     return record.get_absolute_url() in node.hrefs
 
 
-def shows_term(node, concept):
-    """Say whether ``node`` shows a vocabulary concept's English label, in any case.
+def a_term_of(record, field_name):
+    """One concept of the vocabulary ``record``'s field declares."""
+    vocabulary = type(record)._meta.get_field(field_name).vocabulary[0]
+    return vocabularies.concepts(vocabulary).first()
 
-    A graph concept gives its label as a method; the page capitalises the first letter.
+
+def shows_term(node, concept):
+    """Say whether ``node`` shows a vocabulary concept's label, in any case.
+
+    The page may capitalise the first letter.
     """
-    label = concept.label
-    label = str(label("en") if callable(label) else label)
-    return label.casefold() in node.text.casefold()
+    return concept.display_label().casefold() in node.text.casefold()
 
 
 def shown(score):
@@ -87,7 +92,7 @@ class TestConductivityPage:
         conductivity = page_records["conductivity"]
         for name in CONCEPT_FIELDS:
             manager = getattr(conductivity, name)
-            manager.set(manager.model.objects.all()[:1])
+            manager.set([a_term_of(conductivity, name)])
 
         page = document(conductivity)
 

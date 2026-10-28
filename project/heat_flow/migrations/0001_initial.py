@@ -6,11 +6,7 @@ import django.db.models.deletion
 import django.db.models.manager
 
 import fairdm.db.fields
-import fairdm_geo.vocabularies.cgi.geosciml
-import fairdm_geo.vocabularies.odm2
-import fairdm_geo.vocabularies.stratigraphy
-import heat_flow.vocabularies
-import research_vocabs.fields
+import controlled_vocabularies.fields
 from django.db import migrations, models
 
 
@@ -19,9 +15,8 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("measurement", "0002_initial"),
-        ("research_vocabs", "0002_alter_concept_unique_together"),
+        ("controlled_vocabularies", "0001_initial"),
         ("sample", "0001_initial"),
-        ("stratigraphy", "0001_initial"),
     ]
 
     operations = [
@@ -167,33 +162,22 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "age",
-                    research_vocabs.fields.ConceptManyToManyField(
+                    controlled_vocabularies.fields.MultiConceptField(
                         blank=True,
                         help_text="The geologic age of the interval.",
                         related_name="+",
-                        to="research_vocabs.concept",
                         verbose_name="geologic age",
-                        vocabulary=fairdm_geo.vocabularies.stratigraphy.GeologicalTimescale,
+                        vocabulary=('http://resource.geosciml.org/vocabulary/timescale/gts2020',),
                     ),
                 ),
                 (
                     "lithology",
-                    research_vocabs.fields.ConceptManyToManyField(
+                    controlled_vocabularies.fields.MultiConceptField(
                         blank=True,
                         help_text="The lithology of the interval.",
                         related_name="+",
-                        to="research_vocabs.concept",
                         verbose_name="lithology",
-                        vocabulary=fairdm_geo.vocabularies.cgi.geosciml.SimpleLithology,
-                    ),
-                ),
-                (
-                    "stratigraphy",
-                    models.ManyToManyField(
-                        blank=True,
-                        help_text="The stratigraphy of the interval.",
-                        to="stratigraphy.stratigraphicunit",
-                        verbose_name="stratigraphy",
+                        vocabulary=('http://resource.geosciml.org/classifierscheme/cgi/2016.01/simplelithology',),
                     ),
                 ),
             ],
@@ -310,22 +294,22 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "type",
-                    research_vocabs.fields.ConceptField(
-                        default="unknown",
+                    controlled_vocabularies.fields.ConceptField(
+                        related_name="+",
+                        default='http://vocabulary.odm2.org/sitetype/unknown',
                         help_text="The type of sampling location.",
-                        max_length=33,
                         verbose_name="type",
-                        vocabulary=fairdm_geo.vocabularies.odm2.SiteType,
+                        vocabulary=('http://vocabulary.odm2.org/sitetype',),
                     ),
                 ),
                 (
                     "elevation_datum",
-                    research_vocabs.fields.ConceptField(
-                        default="MSL",
+                    controlled_vocabularies.fields.ConceptField(
+                        related_name="+",
+                        default='http://vocabulary.odm2.org/elevationdatum/MSL',
                         help_text="The reference point for the elevation measurement, such as Mean Sea Level (MSL).",
-                        max_length=7,
                         verbose_name="elevation datum",
-                        vocabulary=fairdm_geo.vocabularies.odm2.ElevationDatum,
+                        vocabulary=('http://vocabulary.odm2.org/elevationdatum',),
                     ),
                 ),
                 (
@@ -341,23 +325,23 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "environment",
-                    research_vocabs.fields.ConceptField(
-                        default="unspecified",
+                    controlled_vocabularies.fields.ConceptField(
+                        related_name="+",
+                        default='https://portal.heatflow.world/vocabularies/geographic-environments/unspecified',
                         help_text="Describes the general geographical setting of the heat-flow site (not the applied methodology).",
-                        max_length=20,
                         verbose_name="basic geographical environment",
-                        vocabulary=heat_flow.vocabularies.GeographicEnvironment,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/geographic-environments',),
                     ),
                 ),
                 (
                     "explo_method",
-                    research_vocabs.fields.ConceptField(
+                    controlled_vocabularies.fields.ConceptField(
+                        related_name="+",
                         blank=True,
                         help_text="Specification of the general means by which the rock was accessed by temperature sensors for the respective data entry.",
-                        max_length=16,
                         null=True,
                         verbose_name="exploration method",
-                        vocabulary=heat_flow.vocabularies.ExplorationMethod,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/exploration-methods',),
                     ),
                 ),
                 (
@@ -402,44 +386,32 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "age",
-                    research_vocabs.fields.ConceptManyToManyField(
+                    controlled_vocabularies.fields.MultiConceptField(
                         blank=True,
                         help_text="The geologic age of the interval.",
                         related_name="+",
-                        to="research_vocabs.concept",
                         verbose_name="geologic age",
-                        vocabulary=fairdm_geo.vocabularies.stratigraphy.GeologicalTimescale,
+                        vocabulary=('http://resource.geosciml.org/vocabulary/timescale/gts2020',),
                     ),
                 ),
                 (
                     "explo_purpose",
-                    research_vocabs.fields.ConceptManyToManyField(
+                    controlled_vocabularies.fields.MultiConceptField(
                         blank=True,
                         help_text="Main purpose of the reconnaissance target providing access for the temperature sensors.",
                         related_name="+",
-                        to="research_vocabs.concept",
                         verbose_name="exploration purpose",
-                        vocabulary=heat_flow.vocabularies.ExplorationPurpose,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/exploration-purpose',),
                     ),
                 ),
                 (
                     "lithology",
-                    research_vocabs.fields.ConceptManyToManyField(
+                    controlled_vocabularies.fields.MultiConceptField(
                         blank=True,
                         help_text="The lithology of the interval.",
                         related_name="+",
-                        to="research_vocabs.concept",
                         verbose_name="lithology",
-                        vocabulary=fairdm_geo.vocabularies.cgi.geosciml.SimpleLithology,
-                    ),
-                ),
-                (
-                    "stratigraphy",
-                    models.ManyToManyField(
-                        blank=True,
-                        help_text="The stratigraphy of the interval.",
-                        to="stratigraphy.stratigraphicunit",
-                        verbose_name="stratigraphy",
+                        vocabulary=('http://resource.geosciml.org/classifierscheme/cgi/2016.01/simplelithology',),
                     ),
                 ),
             ],
@@ -514,79 +486,72 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "location",
-                    research_vocabs.fields.ConceptManyToManyField(
+                    controlled_vocabularies.fields.MultiConceptField(
                         blank=True,
                         help_text="Location of conductivity data used for heat-flow calculation.",
                         related_name="+",
-                        to="research_vocabs.concept",
                         verbose_name="location",
-                        vocabulary=heat_flow.vocabularies.ConductivityLocation,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/conductivity-location',),
                     ),
                 ),
                 (
                     "method",
-                    research_vocabs.fields.ConceptManyToManyField(
+                    controlled_vocabularies.fields.MultiConceptField(
                         blank=True,
                         help_text="Method used to determine mean thermal conductivity.",
                         related_name="+",
-                        to="research_vocabs.concept",
                         verbose_name="method",
-                        vocabulary=heat_flow.vocabularies.ConductivityMethod,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/conductivity-methods',),
                     ),
                 ),
                 (
                     "pT_conditions",
-                    research_vocabs.fields.ConceptManyToManyField(
+                    controlled_vocabularies.fields.MultiConceptField(
                         blank=True,
                         help_text="Qualified conditions of pressure and temperature under which the mean thermal conductivity used for the heat-flow computation was determined.",
                         related_name="+",
-                        to="research_vocabs.concept",
                         verbose_name="pT conditions",
-                        vocabulary=heat_flow.vocabularies.ConductivityPTConditions,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/conductivity-conditions',),
                     ),
                 ),
                 (
                     "pT_function",
-                    research_vocabs.fields.ConceptManyToManyField(
+                    controlled_vocabularies.fields.MultiConceptField(
                         blank=True,
                         help_text="Technique or approach used to correct the measured thermal conductivity towards in-situ pressure (p) and/or temperature (T)  conditions.",
                         related_name="+",
-                        to="research_vocabs.concept",
                         verbose_name="pT function",
-                        vocabulary=heat_flow.vocabularies.ConductivityPTFunction,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/conductivity-pt-function',),
                     ),
                 ),
                 (
                     "saturation",
-                    research_vocabs.fields.ConceptManyToManyField(
+                    controlled_vocabularies.fields.MultiConceptField(
                         blank=True,
                         help_text="Saturation state of the studied rock interval studied for thermal conductivity.",
                         related_name="+",
-                        to="research_vocabs.concept",
                         verbose_name="saturation state",
-                        vocabulary=heat_flow.vocabularies.ConductivitySaturation,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/conductivity-saturation',),
                     ),
                 ),
                 (
                     "source",
-                    research_vocabs.fields.ConceptManyToManyField(
+                    controlled_vocabularies.fields.MultiConceptField(
                         blank=True,
                         help_text="Nature of the samples from which the mean thermal conductivity was determined.",
                         related_name="+",
-                        to="research_vocabs.concept",
                         verbose_name="source",
-                        vocabulary=heat_flow.vocabularies.ConductivitySource,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/conductivity-sources',),
                     ),
                 ),
                 (
                     "strategy",
-                    research_vocabs.fields.ConceptManyToManyField(
+                    controlled_vocabularies.fields.MultiConceptField(
                         blank=True,
                         help_text="Strategy that was employed to estimate the thermal conductivity over the vertical interval of heat-flow determination.",
                         related_name="+",
-                        to="research_vocabs.concept",
                         verbose_name="averaging methodology",
-                        vocabulary=heat_flow.vocabularies.ConductivityStrategy,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/conductivity-strategy',),
                     ),
                 ),
             ],
@@ -722,46 +687,42 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "correction_bottom",
-                    research_vocabs.fields.ConceptManyToManyField(
+                    controlled_vocabularies.fields.MultiConceptField(
                         blank=True,
                         help_text="Approach applied to correct the temperature measurement for drilling perturbations at the bottom of the interval used for heat-flow determination.",
                         related_name="+",
-                        to="research_vocabs.concept",
                         verbose_name="correction method (bottom)",
-                        vocabulary=heat_flow.vocabularies.TemperatureCorrection,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/temperature-corrections',),
                     ),
                 ),
                 (
                     "correction_top",
-                    research_vocabs.fields.ConceptManyToManyField(
+                    controlled_vocabularies.fields.MultiConceptField(
                         blank=True,
                         help_text="Approach applied to correct the temperature measurement for drilling perturbations at the top of the interval used for heat-flow determination.",
                         related_name="+",
-                        to="research_vocabs.concept",
                         verbose_name="correction method (top)",
-                        vocabulary=heat_flow.vocabularies.TemperatureCorrection,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/temperature-corrections',),
                     ),
                 ),
                 (
                     "method_bottom",
-                    research_vocabs.fields.ConceptManyToManyField(
+                    controlled_vocabularies.fields.MultiConceptField(
                         blank=True,
                         help_text="Method used for temperature determination at the bottom of the heat-flow determination interval.",
                         related_name="+",
-                        to="research_vocabs.concept",
                         verbose_name="method (bottom)",
-                        vocabulary=heat_flow.vocabularies.TemperatureMethod,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/temperature-method',),
                     ),
                 ),
                 (
                     "method_top",
-                    research_vocabs.fields.ConceptManyToManyField(
+                    controlled_vocabularies.fields.MultiConceptField(
                         blank=True,
                         help_text="Method used for temperature determination at the top of the heat-flow determination interval.",
                         related_name="+",
-                        to="research_vocabs.concept",
                         verbose_name="method (top)",
-                        vocabulary=heat_flow.vocabularies.TemperatureMethod,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/temperature-method',),
                     ),
                 ),
             ],
@@ -922,86 +883,86 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "corr_S_flag",
-                    research_vocabs.fields.ConceptField(
+                    controlled_vocabularies.fields.ConceptField(
+                        related_name="+",
                         blank=True,
-                        default="unspecified",
+                        default='https://portal.heatflow.world/vocabularies/heat-flow-corrections/unspecified',
                         help_text="Specifies if sedimentation/subsidence effects with respect to the reported heat-flow value were present and if corrections were performed.",
-                        max_length=23,
                         null=True,
                         verbose_name="Correction (S)",
-                        vocabulary=heat_flow.vocabularies.GenericFlagChoices,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/heat-flow-corrections',),
                     ),
                 ),
                 (
                     "corr_E_flag",
-                    research_vocabs.fields.ConceptField(
+                    controlled_vocabularies.fields.ConceptField(
+                        related_name="+",
                         blank=True,
-                        default="unspecified",
+                        default='https://portal.heatflow.world/vocabularies/heat-flow-corrections/unspecified',
                         help_text="Specifies if erosion effects with respect to the reported heat-flow value were present and if corrections were performed.",
-                        max_length=23,
                         null=True,
                         verbose_name="Correction (E)",
-                        vocabulary=heat_flow.vocabularies.GenericFlagChoices,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/heat-flow-corrections',),
                     ),
                 ),
                 (
                     "corr_TOPO_flag",
-                    research_vocabs.fields.ConceptField(
+                    controlled_vocabularies.fields.ConceptField(
+                        related_name="+",
                         blank=True,
-                        default="unspecified",
+                        default='https://portal.heatflow.world/vocabularies/heat-flow-corrections/unspecified',
                         help_text="Specifies if topographic effects with respect to the reported heat-flow value were present and if corrections were performed.",
-                        max_length=23,
                         null=True,
                         verbose_name="Correction (TOPO)",
-                        vocabulary=heat_flow.vocabularies.GenericFlagChoices,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/heat-flow-corrections',),
                     ),
                 ),
                 (
                     "corr_PAL_flag",
-                    research_vocabs.fields.ConceptField(
+                    controlled_vocabularies.fields.ConceptField(
+                        related_name="+",
                         blank=True,
-                        default="unspecified",
+                        default='https://portal.heatflow.world/vocabularies/heat-flow-corrections/unspecified',
                         help_text="Specifies if topographic effects with respect to the reported heat-flow value were present and if corrections were performed.",
-                        max_length=23,
                         null=True,
                         verbose_name="Correction (PAL)",
-                        vocabulary=heat_flow.vocabularies.GenericFlagChoices,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/heat-flow-corrections',),
                     ),
                 ),
                 (
                     "corr_SUR_flag",
-                    research_vocabs.fields.ConceptField(
+                    controlled_vocabularies.fields.ConceptField(
+                        related_name="+",
                         blank=True,
-                        default="unspecified",
+                        default='https://portal.heatflow.world/vocabularies/heat-flow-corrections/unspecified',
                         help_text="Specifies if climatic conditions (glaciation, post-industrial warming, etc.) with respect to the reported heat-flow value were present and if corrections were performed.",
-                        max_length=23,
                         null=True,
                         verbose_name="Correction (SUR)",
-                        vocabulary=heat_flow.vocabularies.GenericFlagChoices,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/heat-flow-corrections',),
                     ),
                 ),
                 (
                     "corr_CONV_flag",
-                    research_vocabs.fields.ConceptField(
+                    controlled_vocabularies.fields.ConceptField(
+                        related_name="+",
                         blank=True,
-                        default="unspecified",
+                        default='https://portal.heatflow.world/vocabularies/heat-flow-corrections/unspecified',
                         help_text="Specifies if convection effects with respect to the reported heat-flow value were present and if corrections were performed.",
-                        max_length=23,
                         null=True,
                         verbose_name="Correction (CONV)",
-                        vocabulary=heat_flow.vocabularies.GenericFlagChoices,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/heat-flow-corrections',),
                     ),
                 ),
                 (
                     "corr_HR_flag",
-                    research_vocabs.fields.ConceptField(
+                    controlled_vocabularies.fields.ConceptField(
+                        related_name="+",
                         blank=True,
-                        default="unspecified",
+                        default='https://portal.heatflow.world/vocabularies/heat-flow-corrections/unspecified',
                         help_text="Specifies if refraction effects, e.g., due to significant local conductivity contrasts, with respect to the reported heat-flow value were present and if corrections were performed. ",
-                        max_length=23,
                         null=True,
                         verbose_name="Correction (HR)",
-                        vocabulary=heat_flow.vocabularies.GenericFlagChoices,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/heat-flow-corrections',),
                     ),
                 ),
                 (
@@ -1015,48 +976,44 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "corr_IS_flag",
-                    research_vocabs.fields.ConceptManyToManyField(
+                    controlled_vocabularies.fields.MultiConceptField(
                         blank=True,
                         default="unspecified",
                         help_text="Specifies whether the in-situ pressure and temperature conditions were considered to the reported thermal conductivity value or not.",
                         related_name="+",
-                        to="research_vocabs.concept",
                         verbose_name="Correction (IS)",
-                        vocabulary=heat_flow.vocabularies.GenericFlagChoices,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/heat-flow-corrections',),
                     ),
                 ),
                 (
                     "corr_T_flag",
-                    research_vocabs.fields.ConceptManyToManyField(
+                    controlled_vocabularies.fields.MultiConceptField(
                         blank=True,
                         default="unspecified",
                         help_text="Specifies whether the in-situ pressure and temperature conditions were considered to the reported thermal conductivity value or not.",
                         related_name="+",
-                        to="research_vocabs.concept",
                         verbose_name="Correction (T)",
-                        vocabulary=heat_flow.vocabularies.GenericFlagChoices,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/heat-flow-corrections',),
                     ),
                 ),
                 (
                     "method",
-                    research_vocabs.fields.ConceptManyToManyField(
+                    controlled_vocabularies.fields.MultiConceptField(
                         blank=True,
                         help_text="Principal method of heat-flow calculation from temperature and thermal conductivity data.",
                         related_name="+",
-                        to="research_vocabs.concept",
                         verbose_name="method",
-                        vocabulary=heat_flow.vocabularies.HeatFlowMethod,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/heat-flow-method',),
                     ),
                 ),
                 (
                     "probe_type",
-                    research_vocabs.fields.ConceptManyToManyField(
+                    controlled_vocabularies.fields.MultiConceptField(
                         blank=True,
                         help_text="Type of heat-flow probe used for measurement.",
                         related_name="+",
-                        to="research_vocabs.concept",
                         verbose_name="probe type",
-                        vocabulary=heat_flow.vocabularies.ProbeType,
+                        vocabulary=('https://portal.heatflow.world/vocabularies/heat-flow-probes',),
                     ),
                 ),
                 (

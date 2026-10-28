@@ -6,6 +6,7 @@ filled the template in finds the same things in the same order.
 
 from decimal import Decimal
 
+from controlled_vocabularies.fields import ConceptField, MultiConceptField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
 from django import forms
@@ -26,7 +27,6 @@ from mvp_forms.layout import Fieldset, Join
 from mvp_forms.widgets import TomSelectMultiple
 from quantityfield.fields import DecimalQuantityField
 from quantityfield.units import ureg
-from research_vocabs.fields import BaseConceptField, ConceptManyToManyField
 
 from .models import (
     HeatFlow,
@@ -38,7 +38,13 @@ from .models import (
 )
 from .models.child import HeatFlowCorrection, ProbeMetadata
 from .signals import Recalculation
-from .vocabularies import normalize_vocab_token, resolve_term, resolve_terms
+from .vocabularies import (
+    UNSPECIFIED,
+    lookup,
+    normalize_vocab_token,
+    resolve_term,
+    resolve_terms,
+)
 
 
 class ConceptTextField(forms.CharField):
@@ -54,8 +60,8 @@ class ConceptTextField(forms.CharField):
     """
 
     def __init__(self, model_field, **kwargs):
-        self.many = isinstance(model_field, ConceptManyToManyField)
-        self.vocabulary = model_field.vocabulary
+        self.many = isinstance(model_field, MultiConceptField)
+        self.vocabulary = model_field.vocabulary[0]
         kwargs.setdefault("required", not model_field.blank)
         kwargs.setdefault("label", capfirst(model_field.verbose_name))
         kwargs.setdefault("help_text", model_field.help_text)
@@ -64,12 +70,11 @@ class ConceptTextField(forms.CharField):
 
     def as_text(self, value):
         """Write a stored term, or several, as the published file writes them."""
-        if value is None or value == "":
+        if value is None:
             return ""
         if self.many:
-            return "; ".join(concept.label for concept in value)
-        labels = dict(self.vocabulary().choices)
-        return str(labels.get(str(value), value))
+            return "; ".join(concept.display_label() for concept in value)
+        return value.display_label()
 
     def clean(self, value):
         """Resolve the text to the terms it names, or keep the stored ones."""
@@ -79,10 +84,10 @@ class ConceptTextField(forms.CharField):
         try:
             if self.many:
                 return resolve_terms(self.vocabulary, value)
-            if normalize_vocab_token(value) == "unspecified":
-                held = dict(self.vocabulary().choices)
-                if "unspecified" in held:
-                    return "unspecified"
+            if normalize_vocab_token(value) == UNSPECIFIED:
+                held = lookup(self.vocabulary).get(UNSPECIFIED)
+                if held is not None:
+                    return held
             return resolve_term(self.vocabulary, value)
         except ValueError as error:
             raise forms.ValidationError(str(error), code="unknown_term") from None
@@ -90,7 +95,7 @@ class ConceptTextField(forms.CharField):
 
 def heat_flow_formfield(db_field, **kwargs):
     """Draw a vocabulary field as text and any other multiple choice as a counted control."""
-    if isinstance(db_field, (BaseConceptField, ConceptManyToManyField)):
+    if isinstance(db_field, (ConceptField, MultiConceptField)):
         return ConceptTextField(db_field, **kwargs)
     if isinstance(db_field, models.ManyToManyField):
         kwargs.setdefault("widget", TomSelectMultiple(counted=True))

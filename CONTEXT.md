@@ -266,10 +266,12 @@ not add a code path that ingests a supplied quality code.
 
 ### Controlled vocabulary
 
-A governed set of concepts with defined meanings, published as SKOS. The portal defines fifteen of
-them in `project/heat_flow/vocabularies.py`, covering heat flow methods, probe types, geographic
-environments, exploration methods and purposes, temperature methods and corrections, and the
-several conductivity dimensions.
+A governed set of concepts with defined meanings, published as SKOS. The heat flow fields use
+fourteen of the IHFC's, published by ihfc-iugg/ihfc-vocabularies under
+`https://portal.heatflow.world/vocabularies/` and shipped in `project/heat_flow/vocabularies/`.
+They cover heat flow methods, probe types, geographic environments, exploration methods and
+purposes, temperature methods and corrections, and the several conductivity dimensions. A stored
+term is the address of its concept.
 
 **Reserve "vocabulary" for this and nothing else.** A set of column names is not a vocabulary. Say
 "column names".

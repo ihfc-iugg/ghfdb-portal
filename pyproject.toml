@@ -17,7 +17,7 @@ classifiers = [
 ]
 dependencies = [
     "django-crispy-forms>=2.3,<3.0",
-    "fairdm",
+    "fairdm>=0.3.1,<0.4.0",
     "fairdm-geo",
     "fairdm-discussions",
 ]
@@ -35,10 +35,9 @@ docs = [
 ]
 
 [tool.uv.sources]
-# The FairDM packages are pinned to commits. Move a pin deliberately, not by
-# re-locking.
-fairdm = { git = "https://github.com/FAIR-DM/fairdm", rev = "865964f2f0141cf15ee2fed9a0fe97fc7f9336c2" }
-fairdm-geo = { git = "https://github.com/FAIR-DM/fairdm-geo", rev = "3d25e098200a7844c39ab1e14974620550cf5347" }
+# FairDM comes from PyPI. The FairDM packages not published there yet are pinned to
+# commits. Move a pin deliberately, not by re-locking.
+fairdm-geo = { git = "https://github.com/FAIR-DM/fairdm-geo", rev = "6d3e59238eb52f695afddc65bb7f15cc60962da9" }
 fairdm-discussions = { git = "https://github.com/FAIR-DM/fairdm-discussions", rev = "643d0af810feb687e41c499df6f6c0d510500b79" }
 fairdm-docs = { git = "https://github.com/FAIR-DM/fairdm-docs", rev = "847fee1a27862e20c1fac1f7e4c9a4d2100473cd" }
 mvp-shared = { git = "https://github.com/django-mvp/shared.git", tag = "v0.6.0" }
@@ -187,7 +186,7 @@ known_first_party = ["ghfdb", "heat_flow", "review", "project"]
 DEP002 = ["fairdm-discussions"]
 DEP003 = [
     "botocore",
-    "braces",
+    "controlled_vocabularies",
     "django",
     "django_downloadview",
     "django_filters",
@@ -197,14 +196,12 @@ DEP003 = [
     "flex_menu",
     "import_export",
     "literature",
-    "markdownx",
     "mvp",
     "mvp_forms",
     "openpyxl",
     "partial_date",
     "polymorphic",
     "quantityfield",
-    "research_vocabs",
     "rest_framework",
     "tablib",
 ]

@@ -2,9 +2,8 @@ import random
 
 import factory
 from django.contrib.gis.geos import Point
-from factory.declarations import LazyAttribute
+from factory.declarations import LazyAttribute, LazyFunction
 from factory.faker import Faker
-from factory.fuzzy import FuzzyChoice
 from fairdm.factories import (
     DatasetFactory,
     LiteratureItemFactory,
@@ -22,22 +21,30 @@ from heat_flow.models import (
     ProbeMetadata,
     ThermalGradient,
 )
-from research_vocabs.models import Concept
 from review.models import Review
+
+
+def random_concept(vocabulary):
+    """Return one concept drawn from *vocabulary*. Requires ``sync_vocabularies`` to
+    have run for the vocabulary's concepts to exist.
+    """
+    return random.choice(list(vocabularies.concepts(vocabulary)))
 
 
 def attach_random_concept(instance, field_name, vocabulary):
     """Attach one concept drawn from *vocabulary* to *instance*'s *field_name*
-    many-to-many field (FS-001 FR-036). Requires ``Concept.preload()`` to have run
-    for the vocabulary's concepts to exist.
+    many-to-many field (FS-001 FR-036).
     """
-    concepts = list(Concept.get_for_vocabulary(vocabulary))
-    getattr(instance, field_name).set([random.choice(concepts)])
+    getattr(instance, field_name).set([random_concept(vocabulary)])
 
 
 class HeatFlowSiteFactory(SampleFactory):
-    environment = FuzzyChoice(HeatFlowSite.environment_vocab.values)
-    explo_method = FuzzyChoice(HeatFlowSite.explo_method_vocab.values)
+    environment_id = LazyFunction(
+        lambda: random_concept(vocabularies.GEOGRAPHIC_ENVIRONMENT).uri
+    )
+    explo_method_id = LazyFunction(
+        lambda: random_concept(vocabularies.EXPLORATION_METHOD).uri
+    )
     # One site per coordinate pair, so each site gets a pair of its own, on a grid
     # no test's own coordinates fall on.
     location = factory.Sequence(
@@ -59,7 +66,7 @@ class HeatFlowSiteFactory(SampleFactory):
         if extracted is not None:
             obj.explo_purpose.set(extracted)
             return
-        attach_random_concept(obj, "explo_purpose", vocabularies.ExplorationPurpose)
+        attach_random_concept(obj, "explo_purpose", vocabularies.EXPLORATION_PURPOSE)
 
 
 class HeatFlowIntervalFactory(SampleFactory):
@@ -86,7 +93,7 @@ class HeatFlowFactory(MeasurementFactory):
         if extracted is not None:
             obj.method.set(extracted)
             return
-        attach_random_concept(obj, "method", vocabularies.HeatFlowMethod)
+        attach_random_concept(obj, "method", vocabularies.HEAT_FLOW_METHOD)
 
 
 class ThermalGradientFactory(MeasurementFactory):
@@ -118,7 +125,7 @@ class ThermalGradientFactory(MeasurementFactory):
         if extracted is not None:
             obj.method_top.set(extracted)
             return
-        attach_random_concept(obj, "method_top", vocabularies.TemperatureMethod)
+        attach_random_concept(obj, "method_top", vocabularies.TEMPERATURE_METHOD)
 
     @factory.post_generation
     def method_bottom(obj, create, extracted, **kwargs):
@@ -128,7 +135,7 @@ class ThermalGradientFactory(MeasurementFactory):
         if extracted is not None:
             obj.method_bottom.set(extracted)
             return
-        attach_random_concept(obj, "method_bottom", vocabularies.TemperatureMethod)
+        attach_random_concept(obj, "method_bottom", vocabularies.TEMPERATURE_METHOD)
 
     @factory.post_generation
     def correction_top(obj, create, extracted, **kwargs):
@@ -138,7 +145,9 @@ class ThermalGradientFactory(MeasurementFactory):
         if extracted is not None:
             obj.correction_top.set(extracted)
             return
-        attach_random_concept(obj, "correction_top", vocabularies.TemperatureCorrection)
+        attach_random_concept(
+            obj, "correction_top", vocabularies.TEMPERATURE_CORRECTION
+        )
 
     @factory.post_generation
     def correction_bottom(obj, create, extracted, **kwargs):
@@ -149,7 +158,7 @@ class ThermalGradientFactory(MeasurementFactory):
             obj.correction_bottom.set(extracted)
             return
         attach_random_concept(
-            obj, "correction_bottom", vocabularies.TemperatureCorrection
+            obj, "correction_bottom", vocabularies.TEMPERATURE_CORRECTION
         )
 
 
@@ -171,7 +180,7 @@ class IntervalConductivityFactory(MeasurementFactory):
         if extracted is not None:
             obj.source.set(extracted)
             return
-        attach_random_concept(obj, "source", vocabularies.ConductivitySource)
+        attach_random_concept(obj, "source", vocabularies.CONDUCTIVITY_SOURCE)
 
     @factory.post_generation
     def conductivity_location(obj, create, extracted, **kwargs):
@@ -182,7 +191,7 @@ class IntervalConductivityFactory(MeasurementFactory):
             obj.conductivity_location.set(extracted)
             return
         attach_random_concept(
-            obj, "conductivity_location", vocabularies.ConductivityLocation
+            obj, "conductivity_location", vocabularies.CONDUCTIVITY_LOCATION
         )
 
     @factory.post_generation
@@ -193,7 +202,7 @@ class IntervalConductivityFactory(MeasurementFactory):
         if extracted is not None:
             obj.method.set(extracted)
             return
-        attach_random_concept(obj, "method", vocabularies.ConductivityMethod)
+        attach_random_concept(obj, "method", vocabularies.CONDUCTIVITY_METHOD)
 
     @factory.post_generation
     def saturation(obj, create, extracted, **kwargs):
@@ -203,7 +212,7 @@ class IntervalConductivityFactory(MeasurementFactory):
         if extracted is not None:
             obj.saturation.set(extracted)
             return
-        attach_random_concept(obj, "saturation", vocabularies.ConductivitySaturation)
+        attach_random_concept(obj, "saturation", vocabularies.CONDUCTIVITY_SATURATION)
 
     @factory.post_generation
     def pT_conditions(obj, create, extracted, **kwargs):
@@ -214,7 +223,7 @@ class IntervalConductivityFactory(MeasurementFactory):
             obj.pT_conditions.set(extracted)
             return
         attach_random_concept(
-            obj, "pT_conditions", vocabularies.ConductivityPTConditions
+            obj, "pT_conditions", vocabularies.CONDUCTIVITY_PT_CONDITIONS
         )
 
     @factory.post_generation
@@ -225,7 +234,7 @@ class IntervalConductivityFactory(MeasurementFactory):
         if extracted is not None:
             obj.pT_function.set(extracted)
             return
-        attach_random_concept(obj, "pT_function", vocabularies.ConductivityPTFunction)
+        attach_random_concept(obj, "pT_function", vocabularies.CONDUCTIVITY_PT_FUNCTION)
 
     @factory.post_generation
     def strategy(obj, create, extracted, **kwargs):
@@ -235,7 +244,7 @@ class IntervalConductivityFactory(MeasurementFactory):
         if extracted is not None:
             obj.strategy.set(extracted)
             return
-        attach_random_concept(obj, "strategy", vocabularies.ConductivityStrategy)
+        attach_random_concept(obj, "strategy", vocabularies.CONDUCTIVITY_STRATEGY)
 
 
 class ParentHeatFlowFactory(MeasurementFactory):
@@ -268,7 +277,7 @@ class ProbeMetadataFactory(factory.django.DjangoModelFactory):
         if extracted is not None:
             obj.probe_type.set(extracted)
             return
-        attach_random_concept(obj, "probe_type", vocabularies.ProbeType)
+        attach_random_concept(obj, "probe_type", vocabularies.PROBE_TYPE)
 
 
 class HeatFlowCorrectionFactory(factory.django.DjangoModelFactory):

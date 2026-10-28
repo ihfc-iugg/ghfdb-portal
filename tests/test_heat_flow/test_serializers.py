@@ -7,7 +7,7 @@ from heat_flow.models import (
     IntervalConductivity,
     ThermalGradient,
 )
-from research_vocabs.models import Concept
+from heat_flow import vocabularies
 
 from tests.factories import (
     HeatFlowCorrectionFactory,
@@ -75,16 +75,16 @@ def only_record(client, route):
 
 def expected_term(concept):
     return {
-        "name": concept.name,
-        "label": concept.label,
+        "name": vocabularies.identifier(concept),
+        "label": concept.display_label(),
         "uri": concept.uri,
-        "vocabulary": concept.vocabulary.name,
+        "vocabulary": vocabularies.slug(concept.scheme),
     }
 
 
-def stored_term(vocabulary_name, name):
+def stored_term(vocabulary, name):
     return expected_term(
-        Concept.objects.get(vocabulary__name=vocabulary_name, name=name)
+        vocabularies.concepts(vocabulary).get(uri=vocabularies.term(vocabulary, name))
     )
 
 
@@ -102,11 +102,11 @@ class TestHeatFlowRecordSerializer:
     ):
         record = only_record(client, SITES)
 
-        vocabulary = HeatFlowSite._meta.get_field("environment").scheme.scheme().name
+        vocabulary = HeatFlowSite._meta.get_field("environment").vocabulary[0]
         assert record["environment"] == stored_term(vocabulary, "onshore_continental")
 
     def test_an_empty_single_term_is_null(self, client, full_records):
-        HeatFlowSite.objects.update(explo_method=None)
+        HeatFlowSite.objects.update(explo_method_id=None)
 
         record = only_record(client, SITES)
 
@@ -114,7 +114,7 @@ class TestHeatFlowRecordSerializer:
 
     def test_a_many_valued_term_gives_one_entry_per_term(self, client, full_records):
         gradient = full_records["gradient"]
-        top = list(gradient.method_top.order_by("name"))
+        top = list(gradient.method_top.order_by("uri"))
 
         record = only_record(client, GRADIENTS)
 
@@ -124,7 +124,7 @@ class TestHeatFlowRecordSerializer:
         ]
 
     def test_a_site_with_two_terms_for_a_field_lists_both(self, client, full_records):
-        purposes = list(full_records["site"].explo_purpose.order_by("name"))
+        purposes = list(full_records["site"].explo_purpose.order_by("uri"))
 
         record = only_record(client, SITES)
 
@@ -245,7 +245,7 @@ class TestHeatFlowWrites:
 
         assert response.status_code == 201, response.content
         site = HeatFlowSite.objects.get(name="Written site")
-        assert str(site.environment) == "onshore_continental"
+        assert vocabularies.identifier(site.environment) == "onshore_continental"
         assert response.json()["environment"]["name"] == "onshore_continental"
 
     def test_a_quantity_written_as_a_number_is_stored_and_read_back(
@@ -906,7 +906,8 @@ class TestHeatFlowIntervalSerializer:
         assert metadata["tilt"] == pytest.approx(float(probe.tilt.magnitude))
         assert metadata["units"] == {"penetration": "m", "length": "m", "tilt": "deg"}
         assert [entry["name"] for entry in metadata["probe_type"]] == [
-            concept.name for concept in probe.probe_type.order_by("name")
+            vocabularies.identifier(concept)
+            for concept in probe.probe_type.order_by("uri")
         ]
         assert set(metadata["probe_type"][0]) == {"name", "label", "uri", "vocabulary"}
 
@@ -1088,9 +1089,11 @@ class TestIntervalConductivitySerializer:
     ):
         conductivity = full_records["conductivity"]
         concepts = list(
-            Concept.get_for_vocabulary(
-                IntervalConductivity._meta.get_field("conductivity_location").vocabulary
-            ).order_by("name")[:2]
+            vocabularies.concepts(
+                IntervalConductivity._meta.get_field(
+                    "conductivity_location"
+                ).vocabulary[0]
+            ).order_by("uri")[:2]
         )
         conductivity.conductivity_location.set(concepts)
         type(conductivity).objects.filter(pk=conductivity.pk).update(number=7)
@@ -1098,7 +1101,7 @@ class TestIntervalConductivitySerializer:
         record = only_record(client, CONDUCTIVITIES)
 
         assert {entry["name"] for entry in record["conductivity_location"]} == {
-            concept.name for concept in concepts
+            vocabularies.identifier(concept) for concept in concepts
         }
         assert record["number"] == 7
 

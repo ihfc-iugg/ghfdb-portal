@@ -1,0 +1,5 @@
+#!/bin/sh
+# Load the controlled vocabularies the portal ships, so a release that carries a new
+# vocabulary file brings its terms with it (deploy/README.md).
+set -eu
+exec python manage.py sync_vocabularies

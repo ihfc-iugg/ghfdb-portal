@@ -1,0 +1,183 @@
+PREFIX : <https://portal.heatflow.world/vocabularies/heat-flow-probes/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX ihfc: <https://portal.heatflow.world/vocabularies/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+<https://doi.org/10.1016/j.tecto.2023.229976>
+    a dcterms:BibliographicResource ;
+    dcterms:bibliographicCitation "Fuchs, S., Norden, B., Neumann, F., Kaul, N., Tanaka, A., Kukkonen, I. T., et al. (2023). Quality-assurance of heat-flow data: The new structure and evaluation scheme of the IHFC Global Heat Flow Database. Tectonophysics, 863, 229976."@en ;
+.
+
+<https://doi.org/10.31214/ijthfa.v4i1.62>
+    a dcterms:BibliographicResource ;
+    dcterms:bibliographicCitation "Fuchs, S., Beardsmore, G., Chiozzi, P., Espinoza-Ojeda, O. M., Gola, G., Gosnold, W., Harris, R., Jennings, S., Liu, S., Negrete-Aranda, R., Neumann, F., Norden, B., Poort, J., Rajver, D., Ray, L., Richards, M., Smith, J., Tanaka, A., and Verdoya, M. (2021). A new database structure for the IHFC Global Heat Flow Database. International Journal of Terrestrial Heat Flow and Applied Geothermics, 4(1), 1–14."@en ;
+.
+
+<https://doi.org/10.5880/fidgeo.2026.065>
+    a dcterms:BibliographicResource ;
+    dcterms:bibliographicCitation "Jennings, Samuel; Neumann, Florian; Norden, Ben; Balkan-Pazvantoğlu, Elif; Elbarbary, Samah; Petrunin, Alexey G.; Elger, Kirsten; Fuchs, Sven (2026): IHFC Controlled Vocabularies for the Global Heat Flow Database. GFZ Data Services. https://doi.org/10.5880/fidgeo.2026.065"@en ;
+    dcterms:title "IHFC Controlled Vocabularies for the Global Heat Flow Database"@en ;
+.
+
+<https://ihfc-iugg.org/>
+    a foaf:Organization ;
+    foaf:homepage <https://ihfc-iugg.org/> ;
+    foaf:name "International Heat Flow Commission"@en ;
+.
+
+<https://ror.org/04z8jg394>
+    a foaf:Organization ;
+    foaf:homepage <https://www.gfz.de/en/> ;
+    foaf:name "GFZ Helmholtz Centre for Geosciences"@en ;
+.
+
+ihfc:heat-flow-probes
+    a skos:ConceptScheme ;
+    dcterms:creator <https://ihfc-iugg.org/> ;
+    dcterms:description "Types of probe used to measure heat flow, mainly in marine settings."@en ;
+    dcterms:isPartOf <https://doi.org/10.5880/fidgeo.2026.065> ;
+    dcterms:language <http://id.loc.gov/vocabulary/iso639-1/en> ;
+    dcterms:license <https://creativecommons.org/licenses/by/4.0/> ;
+    dcterms:publisher <https://ror.org/04z8jg394> ;
+    dcterms:source
+        <https://doi.org/10.1016/j.tecto.2023.229976> ,
+        <https://doi.org/10.31214/ijthfa.v4i1.62> ;
+    rdfs:seeAlso <https://github.com/ihfc-iugg/ihfc-vocabularies> ;
+    skos:hasTopConcept
+        :other ,
+        :outrigger_autonomous_no_corer ,
+        :outrigger_autonomous_with_corer ,
+        :outrigger_ewing ,
+        :outrigger_haenel ,
+        :outrigger_hybrid_lister_hylo ,
+        :outrigger_lister ,
+        :outrigger_von_herzen ,
+        :single_steel ,
+        :single_steel_insituTC ,
+        :submersible ,
+        :unspecified ,
+        :violin_bow ;
+    skos:prefLabel "Heat-flow probe types"@en ;
+    skos:scopeNote "Lists the values allowed in the field probe_type of the Global Heat Flow Database."@en ;
+.
+
+:other
+    a skos:Concept ;
+    dcterms:source <https://doi.org/10.1016/j.tecto.2023.229976> ;
+    skos:definition "A probe type not listed here. The contributor names the probe in the comments."@en ;
+    skos:hiddenLabel "Other (specify in comments)"@en ;
+    skos:inScheme ihfc:heat-flow-probes ;
+    skos:prefLabel "Other"@en ;
+    skos:topConceptOf ihfc:heat-flow-probes ;
+.
+
+:outrigger_autonomous_no_corer
+    a skos:Concept ;
+    dcterms:source <https://doi.org/10.1016/j.tecto.2023.229976> ;
+    skos:definition "An outrigger probe with miniature autonomous temperature loggers that is used without a corer, so no core is recovered."@en ;
+    skos:inScheme ihfc:heat-flow-probes ;
+    skos:prefLabel "Outrigger probe (autonomous) without corer"@en ;
+    skos:topConceptOf ihfc:heat-flow-probes ;
+.
+
+:outrigger_autonomous_with_corer
+    a skos:Concept ;
+    dcterms:source <https://doi.org/10.1016/j.tecto.2023.229976> ;
+    skos:definition "An outrigger probe with miniature autonomous temperature loggers, mounted on a sediment gravity-core tube so that a core is recovered."@en ;
+    skos:inScheme ihfc:heat-flow-probes ;
+    skos:prefLabel "Outrigger probe (autonomous) with corer"@en ;
+    skos:topConceptOf ihfc:heat-flow-probes ;
+.
+
+:outrigger_ewing
+    a skos:Concept ;
+    dcterms:source <https://doi.org/10.1016/j.tecto.2023.229976> ;
+    skos:definition "A standard core barrel with thermistors in fins mounted on the outside, measuring the temperature gradient while the corer recovers a core."@en ;
+    skos:inScheme ihfc:heat-flow-probes ;
+    skos:prefLabel "Outrigger probe (Ewing) with corer"@en ;
+    skos:topConceptOf ihfc:heat-flow-probes ;
+.
+
+:outrigger_haenel
+    a skos:Concept ;
+    skos:definition "An outrigger-type probe of the design associated with Haenel, which measures thermal conductivity in place."@en ;
+    skos:hiddenLabel "Outrigger probe (Haenel) in-situ TC"@en ;
+    skos:inScheme ihfc:heat-flow-probes ;
+    skos:prefLabel "Outrigger probe (Haenel) with in-situ thermal conductivity"@en ;
+    skos:topConceptOf ihfc:heat-flow-probes ;
+.
+
+:outrigger_hybrid_lister_hylo
+    a skos:Concept ;
+    skos:altLabel "HyLO probe"@en ;
+    skos:definition "A portable probe that combines the Lister violin-bow design with an outrigger mount, designed for rapid marine heat-flow surveys."@en ;
+    skos:hiddenLabel "Outrigger probe (Hybrid Lister) HyLO"@en ;
+    skos:inScheme ihfc:heat-flow-probes ;
+    skos:prefLabel "Hybrid Lister-Outrigger probe (HyLO)"@en ;
+    skos:topConceptOf ihfc:heat-flow-probes ;
+.
+
+:outrigger_lister
+    a skos:Concept ;
+    skos:inScheme ihfc:heat-flow-probes ;
+    skos:prefLabel "Outrigger probe (Lister) with corer"@en ;
+    skos:topConceptOf ihfc:heat-flow-probes ;
+.
+
+:outrigger_von_herzen
+    a skos:Concept ;
+    dcterms:source <https://doi.org/10.1016/j.tecto.2023.229976> ;
+    skos:definition "An upgrade of the Ewing outrigger design that measures thermal conductivity in place by continuous heating along a line source."@en ;
+    skos:hiddenLabel "Outrigger probe (Von Herzen) in-situ TC"@en ;
+    skos:inScheme ihfc:heat-flow-probes ;
+    skos:prefLabel "Outrigger probe (Von Herzen) with in-situ thermal conductivity"@en ;
+    skos:topConceptOf ihfc:heat-flow-probes ;
+.
+
+:single_steel
+    a skos:Concept ;
+    dcterms:source <https://doi.org/10.1016/j.tecto.2023.229976> ;
+    skos:definition "A thin steel probe with the temperature sensors inside it, as first used by Bullard. Thermal conductivity is normally taken from recovered core samples."@en ;
+    skos:hiddenLabel "Single Steel probe (Bullard)"@en ;
+    skos:inScheme ihfc:heat-flow-probes ;
+    skos:prefLabel "Single steel probe (Bullard)"@en ;
+    skos:topConceptOf ihfc:heat-flow-probes ;
+.
+
+:single_steel_insituTC
+    a skos:Concept ;
+    dcterms:source <https://doi.org/10.1016/j.tecto.2023.229976> ;
+    skos:definition "A single steel probe of Bullard's design that also measures the thermal conductivity of the sediment in place."@en ;
+    skos:hiddenLabel "Single Steel probe (Bullard) in-situ TC"@en ;
+    skos:inScheme ihfc:heat-flow-probes ;
+    skos:prefLabel "Single steel probe (Bullard) with in-situ thermal conductivity"@en ;
+    skos:topConceptOf ihfc:heat-flow-probes ;
+.
+
+:submersible
+    a skos:Concept ;
+    skos:definition "A heat-flow probe pushed into the seafloor sediment by a crewed submersible or a remotely operated vehicle."@en ;
+    skos:inScheme ihfc:heat-flow-probes ;
+    skos:prefLabel "Submersible probe"@en ;
+    skos:topConceptOf ihfc:heat-flow-probes ;
+.
+
+:unspecified
+    a skos:Concept ;
+    skos:definition "The probe type is not stated or not known."@en ;
+    skos:inScheme ihfc:heat-flow-probes ;
+    skos:prefLabel "Unspecified"@en ;
+    skos:topConceptOf ihfc:heat-flow-probes ;
+.
+
+:violin_bow
+    a skos:Concept ;
+    dcterms:source <https://doi.org/10.1016/j.tecto.2023.229976> ;
+    skos:definition "A probe with the temperature sensors in a thin steel tube of 3 to 5 mm diameter, mounted parallel to a stout steel rod of 10 to 15 cm diameter and offset from it. A heater in the tube lets the probe measure sediment thermal conductivity in place."@en ;
+    skos:hiddenLabel "Violin-Bow probe (Lister)"@en ;
+    skos:inScheme ihfc:heat-flow-probes ;
+    skos:prefLabel "Violin-bow probe (Lister)"@en ;
+    skos:topConceptOf ihfc:heat-flow-probes ;
+.

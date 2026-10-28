@@ -4,6 +4,7 @@
 
 import pytest
 import tablib
+from heat_flow.vocabularies import identifier
 
 ROW = {
     "ID_parent": "1",
@@ -665,7 +666,6 @@ class TestControlledVocabularyDecides:
         # holds no concept for it — still refuses the file.
         from heat_flow import vocabularies
         from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
-        from research_vocabs.models import Concept
 
         from project.ghfdb.importers import import_ghfdb_template
         from project.ghfdb.resources.widgets import normalize_vocab_token
@@ -677,12 +677,8 @@ class TestControlledVocabularyDecides:
         sheet_values = {
             normalize_vocab_token(cell) for cell in (r[idx] for r in rows[2:]) if cell
         }
-        portal_labels = {
-            label.lower()
-            for label in Concept.get_for_vocabulary(
-                vocabularies.ExplorationMethod
-            ).values_list("label", flat=True)
-        }
+        # Every name the portal resolves to a concept: label, identifier, hidden label.
+        portal_labels = set(vocabularies.lookup(vocabularies.EXPLORATION_METHOD))
         only_on_sheet = sorted(sheet_values - portal_labels)
         assert only_on_sheet, (
             "expected the template's vocabulary sheet to list at least "
@@ -708,7 +704,6 @@ class TestControlledVocabularyDecides:
         # lands. The value is read from the real fixture's sheet.
         from heat_flow import vocabularies
         from heat_flow.models import HeatFlow
-        from research_vocabs.models import Concept
 
         from project.ghfdb.importers import import_ghfdb_template
         from project.ghfdb.resources.widgets import normalize_vocab_token
@@ -721,10 +716,8 @@ class TestControlledVocabularyDecides:
             normalize_vocab_token(cell) for cell in (r[idx] for r in rows[2:]) if cell
         }
         portal_labels = {
-            label.lower()
-            for label in Concept.get_for_vocabulary(
-                vocabularies.HeatFlowMethod
-            ).values_list("label", flat=True)
+            concept.display_label().lower()
+            for concept in vocabularies.concepts(vocabularies.HEAT_FLOW_METHOD)
         }
         only_in_portal = sorted(portal_labels - sheet_values)
         assert only_in_portal, (
@@ -744,7 +737,7 @@ class TestControlledVocabularyDecides:
         )
         child = HeatFlow.objects.get(ghfdb_id=1)
         assert value in {
-            label.lower() for label in child.method.values_list("label", flat=True)
+            concept.display_label().lower() for concept in child.method.all()
         }
 
     def test_the_import_never_opens_the_controlled_vocabulary_sheet(self, dataset):
@@ -957,11 +950,11 @@ class TestARowInTheShapeARealSubmissionCarries:
         assert site.name == "3"
         child = HeatFlow.objects.get()
         assert child.date_acquired is None
-        assert sorted(c.name for c in child.sample.lithology.all()) == [
+        assert sorted(identifier(c) for c in child.sample.lithology.all()) == [
             "alkali_feldspar_granite",
             "andesite",
         ]
-        assert [c.name for c in child.sample.age.all()] == ["CambrianSeries2"]
+        assert [identifier(c) for c in child.sample.age.all()] == ["CambrianSeries2"]
 
     def test_a_misspelled_lithology_still_refuses_the_file(self, dataset):
         # ``Aluvium`` appears in a submitted file and in no vocabulary. Reading keys as
@@ -1150,9 +1143,7 @@ class TestAnImportScoresWhatItWrote:
         from tests.test_heat_flow.test_signals import RefreshSpy
 
         with RefreshSpy() as spy:
-            import_ghfdb_template(
-                make_dataset(SCORED_ROW, second_site_row()), dataset
-            )
+            import_ghfdb_template(make_dataset(SCORED_ROW, second_site_row()), dataset)
 
         assert spy.calls
         assert len(spy.calls) == len(set(spy.calls))
@@ -1194,7 +1185,7 @@ class TestAnImportScoresWhatItWrote:
         from tests.factories import ThermalGradientFactory
 
         resource = GHFDBChildImportResource()
-        with pytest.raises(Exception):  # noqa: B017, PT011 - any fault in the file
+        with pytest.raises(Exception):  # noqa: B017 - any fault in the file
             resource.import_data(
                 make_dataset({**SCORED_ROW, "qc": "not a number"}),
                 dry_run=False,

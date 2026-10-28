@@ -121,6 +121,19 @@ from project.ghfdb.managers import published_coordinate
 GHFDBParent.objects.annotate(lat_NS=published_coordinate("ST_Y", "sample__location"))
 ```
 
+### Vocabulary columns
+
+`environment` and `explo_method` are read from the site's concept fields with
+`published_concept()`, which takes the last part of the stored concept address. The published
+column therefore carries the concept's identifier, such as `onshore_continental`, as it always
+has, while the site stores the full address.
+
+```python
+from project.ghfdb.managers import published_concept
+
+GHFDBParent.objects.annotate(environment=published_concept("sample__heatflowsite__environment"))
+```
+
 ### Query cost
 
 No method above issues a number of queries that grows with the number of rows returned. That is a

@@ -4,6 +4,16 @@
 import pytest
 from django.contrib.gis.geos import Point
 from django.core.exceptions import ValidationError
+from fairdm_geo.vocabularies import ODM2_SITE_TYPE
+from heat_flow.vocabularies import (
+    ELEVATION_DATUM,
+    EXPLORATION_METHOD,
+    EXPLORATION_PURPOSE,
+    GEOGRAPHIC_ENVIRONMENT,
+    concepts,
+    identifier,
+    term,
+)
 
 
 class TestHeatFlowSite:
@@ -22,12 +32,12 @@ class TestHeatFlowSite:
             region="Baden-Württemberg",
             continent="Europe",
             domain="Rhine Graben",
-            type="land",
-            environment="onshore_continental",
-            explo_method="drilling",
+            type_id=f"{ODM2_SITE_TYPE.uri}/land",
+            environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental"),
+            explo_method_id=term(EXPLORATION_METHOD, "drilling"),
             location=point,
             elevation=350.0,
-            elevation_datum="NAVD88",
+            elevation_datum_id=term(ELEVATION_DATUM, "NAVD88"),
             azimuth=90.0,
             inclination=85.0,
             length=1200.0,
@@ -39,16 +49,16 @@ class TestHeatFlowSite:
         assert site_db.region == "Baden-Württemberg"
         assert site_db.continent == "Europe"
         assert site_db.domain == "Rhine Graben"
-        assert str(site_db.type) == "land"
-        assert str(site_db.environment) == "onshore_continental"
-        assert str(site_db.explo_method) == "drilling"
+        assert identifier(site_db.type) == "land"
+        assert identifier(site_db.environment) == "onshore_continental"
+        assert identifier(site_db.explo_method) == "drilling"
         assert site_db.location is not None
         assert site_db.location.x == 8.5
         assert site_db.location.y == 47.4
 
         assert hasattr(site_db.elevation, "magnitude")
         assert float(site_db.elevation.magnitude) == pytest.approx(350.0)
-        assert str(site_db.elevation_datum) == "NAVD88"
+        assert identifier(site_db.elevation_datum) == "NAVD88"
 
         assert hasattr(site_db.azimuth, "magnitude")
         assert float(site_db.azimuth.magnitude) == pytest.approx(90.0)
@@ -64,11 +74,11 @@ class TestHeatFlowSite:
     @pytest.mark.django_db
     def test_heat_flow_site_explo_purpose_m2m(self, dataset):
         from heat_flow.models import HeatFlowSite
-        from research_vocabs.models import Concept, Vocabulary
 
         site = HeatFlowSite.objects.create(dataset=dataset, name="M2M Site")
-        vocab, _ = Vocabulary.objects.get_or_create(name="exploration-purpose")
-        concept, _ = Concept.objects.get_or_create(vocabulary=vocab, name="research")
+        concept = concepts(EXPLORATION_PURPOSE).get(
+            uri=term(EXPLORATION_PURPOSE, "research")
+        )
         site.explo_purpose.add(concept)
 
         reloaded = HeatFlowSite.objects.get(pk=site.pk)

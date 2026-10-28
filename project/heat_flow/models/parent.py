@@ -7,6 +7,7 @@ Child HeatFlow records link back to ParentHeatFlow via ForeignKey.
 Reference: Fuchs et al. (2021), Fuchs et al. (2023)
 """
 
+from controlled_vocabularies.fields import ConceptField, MultiConceptField
 from django.contrib.gis.geos import Point
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator as MaxVal
@@ -17,8 +18,7 @@ from fairdm.db import models
 from fairdm.db.models import QuantityField
 from fairdm_geo.core.models import GenericEarthSample, GenericHole
 from fairdm_geo.core.models import GeoDepthInterval as AbstractGeoDepthInterval
-from fairdm_geo.vocabularies.odm2 import ElevationDatum, SiteType
-from research_vocabs.fields import ConceptField, ConceptManyToManyField
+from fairdm_geo.vocabularies import ODM2_SITE_TYPE, SITE_TYPE_UNKNOWN
 
 from heat_flow import vocabularies
 
@@ -30,14 +30,16 @@ class HeatFlowSite(GenericHole, AbstractGeoDepthInterval, GenericEarthSample):
 
     # Fields sourced from the old abstract SamplingLocation (now concrete in fairdm_geo)
     type = ConceptField(
-        vocabulary=SiteType,
-        default="unknown",
+        vocabulary=ODM2_SITE_TYPE,
+        default=SITE_TYPE_UNKNOWN,
+        related_name="+",
         verbose_name=_("type"),
         help_text=_("The type of sampling location."),
     )
     elevation_datum = ConceptField(
-        vocabulary=ElevationDatum,
-        default="MSL",
+        vocabulary=vocabularies.ELEVATION_DATUM,
+        default=vocabularies.MEAN_SEA_LEVEL,
+        related_name="+",
         verbose_name=_("elevation datum"),
         help_text=_(
             "The reference point for the elevation measurement, such as Mean Sea Level (MSL)."
@@ -55,15 +57,19 @@ class HeatFlowSite(GenericHole, AbstractGeoDepthInterval, GenericEarthSample):
     )
 
     environment = ConceptField(
-        vocabulary=vocabularies.GeographicEnvironment,
+        vocabulary=vocabularies.GEOGRAPHIC_ENVIRONMENT,
+        related_name="+",
         verbose_name=_("basic geographical environment"),
         help_text=_(
             "Describes the general geographical setting of the heat-flow site (not the applied methodology)."
         ),
-        default="unspecified",
+        default=vocabularies.term(
+            vocabularies.GEOGRAPHIC_ENVIRONMENT, vocabularies.UNSPECIFIED
+        ),
     )
     explo_method = ConceptField(
-        vocabulary=vocabularies.ExplorationMethod,
+        vocabulary=vocabularies.EXPLORATION_METHOD,
+        related_name="+",
         verbose_name=_("exploration method"),
         help_text=_(
             "Specification of the general means by which the rock was accessed by temperature sensors for the"
@@ -72,8 +78,9 @@ class HeatFlowSite(GenericHole, AbstractGeoDepthInterval, GenericEarthSample):
         null=True,
         blank=True,
     )
-    explo_purpose = ConceptManyToManyField(
-        vocabulary=vocabularies.ExplorationPurpose,
+    explo_purpose = MultiConceptField(
+        vocabulary=vocabularies.EXPLORATION_PURPOSE,
+        related_name="+",
         verbose_name=_("exploration purpose"),
         help_text=_(
             "Main purpose of the reconnaissance target providing access for the temperature sensors."

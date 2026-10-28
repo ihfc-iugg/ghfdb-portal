@@ -1,0 +1,539 @@
+PREFIX : <https://portal.heatflow.world/vocabularies/conductivity-pt-function/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX ihfc: <https://portal.heatflow.world/vocabularies/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+<https://doi.org/10.1016/j.tecto.2023.229976>
+    a dcterms:BibliographicResource ;
+    dcterms:bibliographicCitation "Fuchs, S., Norden, B., Neumann, F., Kaul, N., Tanaka, A., Kukkonen, I. T., et al. (2023). Quality-assurance of heat-flow data: The new structure and evaluation scheme of the IHFC Global Heat Flow Database. Tectonophysics, 863, 229976."@en ;
+.
+
+<https://doi.org/10.31214/ijthfa.v4i1.62>
+    a dcterms:BibliographicResource ;
+    dcterms:bibliographicCitation "Fuchs, S., Beardsmore, G., Chiozzi, P., Espinoza-Ojeda, O. M., Gola, G., Gosnold, W., Harris, R., Jennings, S., Liu, S., Negrete-Aranda, R., Neumann, F., Norden, B., Poort, J., Rajver, D., Ray, L., Richards, M., Smith, J., Tanaka, A., and Verdoya, M. (2021). A new database structure for the IHFC Global Heat Flow Database. International Journal of Terrestrial Heat Flow and Applied Geothermics, 4(1), 1–14."@en ;
+.
+
+<https://doi.org/10.5880/fidgeo.2026.065>
+    a dcterms:BibliographicResource ;
+    dcterms:bibliographicCitation "Jennings, Samuel; Neumann, Florian; Norden, Ben; Balkan-Pazvantoğlu, Elif; Elbarbary, Samah; Petrunin, Alexey G.; Elger, Kirsten; Fuchs, Sven (2026): IHFC Controlled Vocabularies for the Global Heat Flow Database. GFZ Data Services. https://doi.org/10.5880/fidgeo.2026.065"@en ;
+    dcterms:title "IHFC Controlled Vocabularies for the Global Heat Flow Database"@en ;
+.
+
+<https://ihfc-iugg.org/>
+    a foaf:Organization ;
+    foaf:homepage <https://ihfc-iugg.org/> ;
+    foaf:name "International Heat Flow Commission"@en ;
+.
+
+<https://ror.org/04z8jg394>
+    a foaf:Organization ;
+    foaf:homepage <https://www.gfz.de/en/> ;
+    foaf:name "GFZ Helmholtz Centre for Geosciences"@en ;
+.
+
+ihfc:conductivity-pt-function
+    a skos:ConceptScheme ;
+    dcterms:creator <https://ihfc-iugg.org/> ;
+    dcterms:description "Functions used to correct measured thermal conductivity for the effects of pressure (p), temperature (T) or both (pT)."@en ;
+    dcterms:isPartOf <https://doi.org/10.5880/fidgeo.2026.065> ;
+    dcterms:language <http://id.loc.gov/vocabulary/iso639-1/en> ;
+    dcterms:license <https://creativecommons.org/licenses/by/4.0/> ;
+    dcterms:publisher <https://ror.org/04z8jg394> ;
+    dcterms:source
+        <https://doi.org/10.1016/j.tecto.2023.229976> ,
+        <https://doi.org/10.31214/ijthfa.v4i1.62> ;
+    rdfs:seeAlso <https://github.com/ihfc-iugg/ihfc-vocabularies> ;
+    skos:hasTopConcept
+        :Abdulagatov2006 ,
+        :Abdulagatova2009 ,
+        :Anand1973 ,
+        :BirchClark1940 ,
+        :Blesch1983 ,
+        :Bridgman1924 ,
+        :Buntebarth1991 ,
+        :Chapman1984 ,
+        :ChapmanFurlong1992 ,
+        :Demirci2004 ,
+        :Duruturk2002 ,
+        :Emirov1997 ,
+        :Emirov2017 ,
+        :EmirovRamazanova2007 ,
+        :FuchsFoerster2014 ,
+        :Funnell1996 ,
+        :Gorgulu2008 ,
+        :HaenelZoth1973 ,
+        :Hyndman1974 ,
+        :Kukkonen1999 ,
+        :KukkonenT1999 ,
+        :KutasGordienko1971 ,
+        :Langseth1965 ,
+        :Miranda2018 ,
+        :Radcliff1960 ,
+        :RamazanovaEmirov2010 ,
+        :RamazanovaEmirov2012 ,
+        :Ratcliff1960 ,
+        :RatcliffeP1960 ,
+        :Sass1992 ,
+        :Seipold2001 ,
+        :SeipoldT2001 ,
+        :Sekiguchi1984 ,
+        :Sibbitt1975 ,
+        :Somerton1992 ,
+        :Sun2017 ,
+        :Tikhomirov1968 ,
+        :VosteenSchellschmidt2003 ,
+        :ZothHaenal1988 ,
+        :other ,
+        :site_specific ,
+        :unspecified ;
+    skos:prefLabel "Thermal conductivity pressure and temperature functions"@en ;
+    skos:scopeNote "Lists the values allowed in the field tc_pT_function of the Global Heat Flow Database."@en ;
+.
+
+:pressure
+    a skos:Collection ;
+    skos:definition "Published relationships that correct thermal conductivity for pressure."@en ;
+    skos:member
+        :Bridgman1924 ,
+        :Demirci2004 ,
+        :Duruturk2002 ,
+        :FuchsFoerster2014 ,
+        :Gorgulu2008 ,
+        :Kukkonen1999 ,
+        :RatcliffeP1960 ,
+        :Seipold2001 ,
+        :Sibbitt1975 ;
+    skos:prefLabel "Pressure"@en ;
+.
+
+:pressure_temperature
+    a skos:Collection ;
+    skos:definition "Published relationships that correct thermal conductivity for pressure and temperature together."@en ;
+    skos:member
+        :Abdulagatov2006 ,
+        :Abdulagatova2009 ,
+        :Buntebarth1991 ,
+        :ChapmanFurlong1992 ,
+        :Emirov1997 ,
+        :Emirov2017 ,
+        :EmirovRamazanova2007 ,
+        :Hyndman1974 ,
+        :Langseth1965 ,
+        :Radcliff1960 ,
+        :RamazanovaEmirov2010 ,
+        :RamazanovaEmirov2012 ;
+    skos:prefLabel "Pressure and Temperature"@en ;
+.
+
+:temperature
+    a skos:Collection ;
+    skos:definition "Published relationships that correct thermal conductivity for temperature."@en ;
+    skos:member
+        :Anand1973 ,
+        :BirchClark1940 ,
+        :Blesch1983 ,
+        :Chapman1984 ,
+        :Funnell1996 ,
+        :HaenelZoth1973 ,
+        :KukkonenT1999 ,
+        :KutasGordienko1971 ,
+        :Miranda2018 ,
+        :Ratcliff1960 ,
+        :Sass1992 ,
+        :SeipoldT2001 ,
+        :Sekiguchi1984 ,
+        :Somerton1992 ,
+        :Sun2017 ,
+        :Tikhomirov1968 ,
+        :VosteenSchellschmidt2003 ,
+        :ZothHaenal1988 ;
+    skos:prefLabel "Temperature"@en ;
+.
+
+:Abdulagatov2006
+    a skos:Concept ;
+    dcterms:bibliographicCitation "Abdulagatov, I. M., Emirov, S. N., Abdulagatova, Z. Z., and Askerov, S. Ya. (2006). Effect of pressure and temperature on the thermal conductivity of rocks. Journal of Chemical & Engineering Data, 51(1), 22–33."@en ;
+    dcterms:source <https://doi.org/10.1021/je050016a> ;
+    skos:definition "Corrects thermal conductivity for pressure and temperature with the relationship from Abdulagatov et al. (2006), based on laboratory measurements on rocks."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "pT - Abdulagatov et al. (2006)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Abdulagatova2009
+    a skos:Concept ;
+    dcterms:bibliographicCitation "Abdulagatova, Z., Abdulagatov, I. M., and Emirov, V. N. (2009). Effect of temperature and pressure on the thermal conductivity of sandstone. International Journal of Rock Mechanics and Mining Sciences, 46(6), 1055–1071."@en ;
+    dcterms:source <https://doi.org/10.1016/j.ijrmms.2009.04.011> ;
+    skos:definition "Corrects thermal conductivity for pressure and temperature with the relationship from Abdulagatova et al. (2009), based on laboratory measurements on sandstone."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "pT - Abdulagatova et al. (2009)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Anand1973
+    a skos:Concept ;
+    dcterms:bibliographicCitation "Anand, J., Somerton, W. H., and Gomaa, E. (1973). Predicting thermal conductivities of formations from other known properties. Society of Petroleum Engineers Journal, 13(5), 267–273."@en ;
+    dcterms:source <https://doi.org/10.2118/4171-PA> ;
+    skos:definition "Corrects thermal conductivity for temperature with the relationship from Anand et al. (1973), which predicts the conductivity of formations from other known properties."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "T - Anand et al. (1973)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:BirchClark1940
+    a skos:Concept ;
+    dcterms:bibliographicCitation "Birch, F., and Clark, H. (1940). The thermal conductivity of rocks and its dependence upon temperature and composition. American Journal of Science, 238(8), 529–558, and Part II, 238(9), 613–635."@en ;
+    dcterms:source <https://doi.org/10.2475/ajs.238.8.529> ;
+    skos:definition "Corrects thermal conductivity for temperature with the relationship from Birch and Clark (1940), which describes how the conductivity of rocks depends on temperature and composition."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "T - Birch & Clark (1940)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Blesch1983
+    a skos:Concept ;
+    skos:definition "Corrects thermal conductivity for temperature with the relationship from Blesch et al. (1983)."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "T - Blesch et al. (1983)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Bridgman1924
+    a skos:Concept ;
+    dcterms:bibliographicCitation "Bridgman, P. W. (1924). The thermal conductivity and compressibility of several rocks under high pressures. American Journal of Science, s5-7(38), 81–102."@en ;
+    dcterms:source <https://doi.org/10.2475/ajs.s5-7.38.81> ;
+    skos:definition "Corrects thermal conductivity for pressure with the relationship from Bridgman (1924), based on laboratory measurements of several rocks under high pressures."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "p - Bridgman (1924)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Buntebarth1991
+    a skos:Concept ;
+    skos:definition "Corrects thermal conductivity for pressure and temperature with the relationship from Buntebarth (1991)."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "pT - Buntebarth (1991)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Chapman1984
+    a skos:Concept ;
+    dcterms:bibliographicCitation "Chapman, D. S., Keho, T. H., Bauer, M. S., and Picard, M. D. (1984). Heat flow in the Uinta Basin determined from bottom hole temperature (BHT) data. Geophysics, 49(4), 453–466."@en ;
+    dcterms:source <https://doi.org/10.1190/1.1441680> ;
+    skos:definition "Corrects thermal conductivity for temperature with the relationship from Chapman et al. (1984), developed for heat flow in the Uinta Basin."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "T - Chapman et al. (1984)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:ChapmanFurlong1992
+    a skos:Concept ;
+    skos:definition "Corrects thermal conductivity for pressure and temperature with the relationship from Chapman and Furlong (1992)."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "pT - Chapman & Furlong (1992)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Demirci2004
+    a skos:Concept ;
+    dcterms:bibliographicCitation "Demirci, A., Görgülü, K., and Durutürk, Y. S. (2004). Thermal conductivity of rocks and its variation with uniaxial and triaxial stress. International Journal of Rock Mechanics and Mining Sciences, 41(7), 1133–1138."@en ;
+    dcterms:source <https://doi.org/10.1016/j.ijrmms.2004.04.010> ;
+    skos:definition "Corrects thermal conductivity for pressure with the relationship from Demirci et al. (2004), which relates rock conductivity to uniaxial and triaxial stress."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "p - Demirci et al. (2004)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Duruturk2002
+    a skos:Concept ;
+    skos:definition "Corrects thermal conductivity for pressure with the relationship from Durutürk et al. (2002)."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "p - Durutürk et al. (2002)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Emirov1997
+    a skos:Concept ;
+    skos:definition "Corrects thermal conductivity for pressure and temperature with the relationship from Emirov et al. (1997)."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "pT - Emirov et al. (1997)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Emirov2017
+    a skos:Concept ;
+    skos:definition "Corrects thermal conductivity for pressure and temperature with the relationship from Emirov et al. (2017)."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "pT - Emirov et al. (2017)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:EmirovRamazanova2007
+    a skos:Concept ;
+    dcterms:bibliographicCitation "Emirov, S. N., and Ramazanova, E. N. (2007). Thermal conductivity of sandstone at high pressures and temperatures. High Temperature, 45(3), 317–320."@en ;
+    dcterms:source <https://doi.org/10.1134/S0018151X07030066> ;
+    skos:definition "Corrects thermal conductivity for pressure and temperature with the relationship from Emirov and Ramazanova (2007), based on laboratory measurements on sandstone."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "pT - Emirov & Ramazanova (2007)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:FuchsFoerster2014
+    a skos:Concept ;
+    dcterms:bibliographicCitation "Fuchs, S., and Förster, A. (2014). Well-log based prediction of thermal conductivity of sedimentary successions: a case study from the North German Basin. Geophysical Journal International, 196(1), 291–311."@en ;
+    dcterms:source <https://doi.org/10.1093/gji/ggt382> ;
+    skos:definition "Corrects thermal conductivity for pressure with the relationship from Fuchs and Förster (2014), from well-log based prediction of conductivity in sedimentary successions."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "p - Fuchs & Förster (2014)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Funnell1996
+    a skos:Concept ;
+    dcterms:bibliographicCitation "Funnell, R., Chapman, D., Allis, R., and Armstrong, P. (1996). Thermal state of the Taranaki Basin, New Zealand. Journal of Geophysical Research: Solid Earth, 101(B11), 25197–25215."@en ;
+    dcterms:source <https://doi.org/10.1029/96JB01341> ;
+    skos:definition "Corrects thermal conductivity for temperature with the relationship from Funnell et al. (1996), developed for the Taranaki Basin."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "T - Funnell et al. (1996)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Gorgulu2008
+    a skos:Concept ;
+    dcterms:bibliographicCitation "Görgülü, K., Durutürk, Y. S., Demirci, A., and Poyraz, B. (2008). Influences of uniaxial stress and moisture content on the thermal conductivity of rocks. International Journal of Rock Mechanics and Mining Sciences, 45(8), 1439–1445."@en ;
+    dcterms:source <https://doi.org/10.1016/j.ijrmms.2008.02.004> ;
+    skos:definition "Corrects thermal conductivity for pressure with the relationship from Görgülü et al. (2008), which relates rock conductivity to uniaxial stress and moisture content."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "p - Görgülü et al. (2008)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:HaenelZoth1973
+    a skos:Concept ;
+    skos:definition "Corrects thermal conductivity for temperature with the relationship from Haenel and Zoth (1973)."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "T - Haenel & Zoth (1973)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Hyndman1974
+    a skos:Concept ;
+    skos:definition "Corrects thermal conductivity for pressure and temperature with the relationship from Hyndman et al. (1974)."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "pT - Hyndman et al. (1974)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Kukkonen1999
+    a skos:Concept ;
+    dcterms:bibliographicCitation "Kukkonen, I. T., Jokinen, J., and Seipold, U. (1999). Temperature and pressure dependencies of thermal transport properties of rocks: implications for uncertainties in thermal lithosphere models and new laboratory measurements of high-grade rocks in the central Fennoscandian Shield. Surveys in Geophysics, 20(1), 33–59."@en ;
+    dcterms:source <https://doi.org/10.1023/A:1006655023894> ;
+    skos:definition "Corrects thermal conductivity for pressure with the relationship from Kukkonen et al. (1999), based on laboratory measurements on high-grade rocks of the central Fennoscandian Shield."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "p - Kukkonen et al. (1999)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:KukkonenT1999
+    a skos:Concept ;
+    dcterms:bibliographicCitation "Kukkonen, I. T., Jokinen, J., and Seipold, U. (1999). Temperature and pressure dependencies of thermal transport properties of rocks: implications for uncertainties in thermal lithosphere models and new laboratory measurements of high-grade rocks in the central Fennoscandian Shield. Surveys in Geophysics, 20(1), 33–59."@en ;
+    dcterms:source <https://doi.org/10.1023/A:1006655023894> ;
+    skos:definition "Corrects thermal conductivity for temperature with the relationship from Kukkonen et al. (1999), based on laboratory measurements on high-grade rocks of the central Fennoscandian Shield."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "T - Kukkonen et al. (1999)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:KutasGordienko1971
+    a skos:Concept ;
+    skos:definition "Corrects thermal conductivity for temperature with the relationship from Kutas and Gordienko (1971)."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "T - Kutas & Gordienko (1971)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Langseth1965
+    a skos:Concept ;
+    dcterms:bibliographicCitation "Langseth, M. G. (1965). Techniques of measuring heat flow through the ocean floor. In W. H. K. Lee (Ed.), Terrestrial Heat Flow, Geophysical Monograph 8 (pp. 58–77). American Geophysical Union."@en ;
+    dcterms:source <https://doi.org/10.1029/GM008p0058> ;
+    skos:definition "Corrects thermal conductivity for pressure and temperature with the relationship from Langseth (1965), published in a review of techniques for measuring heat flow through the ocean floor."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "pT - Langseth (1965)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Miranda2018
+    a skos:Concept ;
+    skos:definition "Corrects thermal conductivity for temperature with the relationship from Miranda et al. (2018)."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "T - Miranda et al. (2018)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:other
+    a skos:Concept ;
+    dcterms:source <https://doi.org/10.1016/j.tecto.2023.229976> ;
+    skos:altLabel "Other (specify in comments)"@en ;
+    skos:definition "Corrects thermal conductivity with a method not listed here. Describe it in the comment field."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "Other"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Radcliff1960
+    a skos:Concept ;
+    dcterms:bibliographicCitation "Ratcliffe, E. H. (1960). The thermal conductivities of ocean sediments. Journal of Geophysical Research, 65(5), 1535–1541."@en ;
+    dcterms:source <https://doi.org/10.1029/JZ065i005p01535> ;
+    skos:definition "Corrects thermal conductivity for pressure and temperature with the relationship from Ratcliffe (1960), which covers ocean sediments."@en ;
+    skos:hiddenLabel "pT - Radcliff (1960)"@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "pT - Ratcliffe (1960)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:RamazanovaEmirov2010
+    a skos:Concept ;
+    skos:definition "Corrects thermal conductivity for pressure and temperature with the relationship from Ramazanova and Emirov (2010)."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "pT - Ramazanova & Emirov (2010)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:RamazanovaEmirov2012
+    a skos:Concept ;
+    skos:definition "Corrects thermal conductivity for pressure and temperature with the relationship from Ramazanova and Emirov (2012)."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "pT - Ramazanova & Emirov (2012)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Ratcliff1960
+    a skos:Concept ;
+    dcterms:bibliographicCitation "Ratcliffe, E. H. (1960). The thermal conductivities of ocean sediments. Journal of Geophysical Research, 65(5), 1535–1541."@en ;
+    dcterms:source <https://doi.org/10.1029/JZ065i005p01535> ;
+    skos:definition "Corrects thermal conductivity for temperature with the relationship from Ratcliffe (1960), which covers ocean sediments."@en ;
+    skos:hiddenLabel "T - Ratcliff (1960)"@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "T - Ratcliffe (1960)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:RatcliffeP1960
+    a skos:Concept ;
+    dcterms:bibliographicCitation "Ratcliffe, E. H. (1960). The thermal conductivities of ocean sediments. Journal of Geophysical Research, 65(5), 1535–1541."@en ;
+    dcterms:source <https://doi.org/10.1029/JZ065i005p01535> ;
+    skos:definition "Corrects thermal conductivity for pressure with the relationship from Ratcliffe (1960), which covers ocean sediments."@en ;
+    skos:hiddenLabel "p - Ratcliff (1960)"@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "p - Ratcliffe (1960)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Sass1992
+    a skos:Concept ;
+    dcterms:bibliographicCitation "Sass, J. H., Lachenbruch, A. H., Moses, T. H., and Morgan, P. (1992). Heat flow from a scientific research well at Cajon Pass, California. Journal of Geophysical Research: Solid Earth, 97(B4), 5017–5030."@en ;
+    dcterms:source <https://doi.org/10.1029/91JB01504> ;
+    skos:definition "Corrects thermal conductivity for temperature with the relationship from Sass et al. (1992), developed for the Cajon Pass research well."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "T - Sass et al. (1992)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Seipold2001
+    a skos:Concept ;
+    skos:definition "Corrects thermal conductivity for pressure with the relationship from Seipold (2001)."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "p - Seipold (2001)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:SeipoldT2001
+    a skos:Concept ;
+    skos:definition "Corrects thermal conductivity for temperature with the relationship from Seipold (2001)."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "T - Seipold (2001)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Sekiguchi1984
+    a skos:Concept ;
+    dcterms:bibliographicCitation "Sekiguchi, K. (1984). A method for determining terrestrial heat flow in oil basinal areas. Tectonophysics, 103(1–4), 67–79."@en ;
+    dcterms:source <https://doi.org/10.1016/0040-1951(84)90075-1> ;
+    skos:definition "Corrects thermal conductivity for temperature with the relationship from Sekiguchi (1984), developed for determining heat flow in oil basinal areas."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "T - Sekiguchi (1984)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Sibbitt1975
+    a skos:Concept ;
+    skos:definition "Corrects thermal conductivity for pressure with the relationship from Sibbitt (1975)."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "p - Sibbitt (1975)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:site_specific
+    a skos:Concept ;
+    dcterms:source
+        <https://doi.org/10.1016/j.tecto.2023.229976> ,
+        <https://doi.org/10.31214/ijthfa.v4i1.62> ;
+    skos:definition "Corrects thermal conductivity with a relationship established by experiments for the site."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "Site-specific experimental relationships"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Somerton1992
+    a skos:Concept ;
+    skos:definition "Corrects thermal conductivity for temperature with the relationship from Somerton (1992)."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "T - Somerton (1992)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Sun2017
+    a skos:Concept ;
+    skos:definition "Corrects thermal conductivity for temperature with the relationship from Sun et al. (2017)."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "T - Sun et al. (2017)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:Tikhomirov1968
+    a skos:Concept ;
+    skos:definition "Corrects thermal conductivity for temperature with the relationship from Tikhomirov (1968)."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "T - Tikhomirov (1968)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:unspecified
+    a skos:Concept ;
+    skos:definition "The method used to correct the conductivity is not specified."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "Unspecified"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:VosteenSchellschmidt2003
+    a skos:Concept ;
+    dcterms:bibliographicCitation "Vosteen, H.-D., and Schellschmidt, R. (2003). Influence of temperature on thermal conductivity, thermal capacity and thermal diffusivity for different types of rock. Physics and Chemistry of the Earth, Parts A/B/C, 28(9–11), 499–509."@en ;
+    dcterms:source <https://doi.org/10.1016/S1474-7065(03)00069-X> ;
+    skos:definition "Corrects thermal conductivity for temperature with the relationship from Vosteen and Schellschmidt (2003), which covers different rock types."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "T - Vosteen & Schellschmidt (2003)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.
+
+:ZothHaenal1988
+    a skos:Concept ;
+    dcterms:bibliographicCitation "Zoth, G., and Haenel, R. (1988). Appendix. In R. Haenel, L. Rybach, and L. Stegena (Eds.), Handbook of Terrestrial Heat-Flow Density Determination (pp. 449–468). Kluwer, Dordrecht."@en ;
+    dcterms:source <https://doi.org/10.1007/978-94-009-2847-3_10> ;
+    skos:definition "Corrects thermal conductivity for temperature with the relationship from Zoth and Haenel (1988), published as an appendix to the handbook of heat-flow density determination."@en ;
+    skos:inScheme ihfc:conductivity-pt-function ;
+    skos:prefLabel "T - Zoth & Haenel (1988)"@en ;
+    skos:topConceptOf ihfc:conductivity-pt-function ;
+.

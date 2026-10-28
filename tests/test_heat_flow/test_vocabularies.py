@@ -1,4 +1,4 @@
-# Tests for ``project/heat_flow/vocabularies.py``. The vocabularies themselves are
+# Tests for ``project/heat_flow/vocabularies/``. The vocabularies themselves are
 # declarative. What is worth guarding is how their concepts reach the test database:
 # written once when the session starts, and never again while tests are running.
 
@@ -17,9 +17,9 @@ class TestConceptPreload:
         # Nothing in this module loads concepts, and they are there anyway. Each test
         # runs inside a transaction that is rolled back afterwards, so this only holds
         # because the concepts were written before that transaction opened.
-        from research_vocabs.models import Concept
+        from controlled_vocabularies.models import Record
 
-        assert Concept.objects.exists()
+        assert Record.objects.exists()
 
     @pytest.mark.parametrize("run", [1, 2, 3])
     def test_no_concepts_are_written_while_tests_run(
@@ -65,58 +65,6 @@ class TestWhichTestsEmptyTheDatabase:
         assert flushes_the_database(self.Node()) is False
 
 
-class TestEveryConceptDeclaredIsAConcept:
-    # A vocabulary declares each of its concepts under its own name. Two concepts
-    # sharing an attribute name is silent: the class body binds the last one and the
-    # first never exists.
-
-    @pytest.mark.parametrize(
-        "vocabulary_name",
-        [
-            "ConductivityPTFunction",
-            "ConductivityMethod",
-            "TemperatureMethod",
-            "TemperatureCorrection",
-            "ProbeType",
-            "ExplorationMethod",
-            "ExplorationPurpose",
-            "GeographicEnvironment",
-            "HeatFlowMethod",
-            "ConductivitySource",
-            "ConductivityLocation",
-            "ConductivitySaturation",
-            "ConductivityPTConditions",
-            "ConductivityStrategy",
-        ],
-    )
-    def test_no_two_concepts_share_a_label(self, vocabulary_name):
-        # A repeated label is the symptom a shadowed declaration leaves.
-        import ast
-        import pathlib
-
-        import heat_flow.vocabularies as module
-
-        tree = ast.parse(pathlib.Path(module.__file__).read_text())
-        klass = next(
-            node
-            for node in tree.body
-            if isinstance(node, ast.ClassDef) and node.name == vocabulary_name
-        )
-        declared = [
-            target.id
-            for node in klass.body
-            if isinstance(node, ast.Assign)
-            for target in node.targets
-            if isinstance(target, ast.Name)
-        ]
-
-        duplicates = {name for name in declared if declared.count(name) > 1}
-        assert not duplicates, (
-            f"{vocabulary_name} declares {sorted(duplicates)} more than once; "
-            "every declaration but the last is discarded"
-        )
-
-
 class TestTheVocabulariesCarryWhatTheTemplateOffers:
     # The upload template's dropdowns and the portal's vocabularies name the same
     # concepts the same way. Each value below is one the assessment team's completed
@@ -125,38 +73,42 @@ class TestTheVocabulariesCarryWhatTheTemplateOffers:
     @pytest.mark.parametrize(
         ("vocabulary_name", "label"),
         [
-            ("GeographicEnvironment", "Onshore (lake-river-etc.)"),
-            ("ExplorationMethod", "Probing (onshore-lake-river-etc.)"),
-            ("ExplorationMethod", "Probing (offshore-ocean)"),
-            ("ExplorationMethod", "Indirect (GTM-BSR-CPD-etc.)"),
-            ("ConductivityLocation", "Literature-unspecified"),
-            ("ConductivityMethod", "Lab - line source - full space"),
-            ("ConductivityMethod", "Lab - line source - half space"),
-            ("ConductivityMethod", "Lab - plane source - full space"),
-            ("ConductivityMethod", "Lab - plane source - half space"),
-            ("ConductivityMethod", "Estimation - from water content-porosity"),
-            ("TemperatureMethod", "HT-FTeq"),
-            ("TemperatureMethod", "HT-FTpert"),
-            ("ConductivityPTFunction", "T - Birch & Clark (1940)"),
-            ("ConductivityPTFunction", "T - Kukkonen et al. (1999)"),
-            ("ConductivityPTFunction", "T - Seipold (2001)"),
-            ("ConductivityPTFunction", "T - Ratcliffe (1960)"),
-            ("ConductivityPTFunction", "p - Ratcliffe (1960)"),
-            ("ConductivityPTFunction", "pT - Ratcliffe (1960)"),
-            ("ConductivityPTFunction", "pT - Hyndman et al. (1974)"),
-            ("ConductivityMethod", "Probe - continuous heating technique"),
-            ("ProbeType", "Outrigger probe (Hybrid Lister) HyLO"),
+            ("GEOGRAPHIC_ENVIRONMENT", "Onshore (lake-river-etc.)"),
+            ("EXPLORATION_METHOD", "Probing (onshore-lake-river-etc.)"),
+            ("EXPLORATION_METHOD", "Probing (offshore-ocean)"),
+            ("EXPLORATION_METHOD", "Indirect (GTM-BSR-CPD-etc.)"),
+            ("CONDUCTIVITY_LOCATION", "Literature-unspecified"),
+            ("CONDUCTIVITY_METHOD", "Lab - line source - full space"),
+            ("CONDUCTIVITY_METHOD", "Lab - line source - half space"),
+            ("CONDUCTIVITY_METHOD", "Lab - plane source - full space"),
+            ("CONDUCTIVITY_METHOD", "Lab - plane source - half space"),
+            ("CONDUCTIVITY_METHOD", "Estimation - from water content-porosity"),
+            ("TEMPERATURE_METHOD", "HT-FTeq"),
+            ("TEMPERATURE_METHOD", "HT-FTpert"),
+            ("CONDUCTIVITY_PT_FUNCTION", "T - Birch & Clark (1940)"),
+            ("CONDUCTIVITY_PT_FUNCTION", "T - Kukkonen et al. (1999)"),
+            ("CONDUCTIVITY_PT_FUNCTION", "T - Seipold (2001)"),
+            ("CONDUCTIVITY_PT_FUNCTION", "T - Ratcliffe (1960)"),
+            ("CONDUCTIVITY_PT_FUNCTION", "p - Ratcliffe (1960)"),
+            ("CONDUCTIVITY_PT_FUNCTION", "pT - Ratcliffe (1960)"),
+            ("CONDUCTIVITY_PT_FUNCTION", "pT - Hyndman et al. (1974)"),
+            ("CONDUCTIVITY_METHOD", "Probe - continuous heating technique"),
+            ("PROBE_TYPE", "Outrigger probe (Hybrid Lister) HyLO"),
         ],
     )
     def test_the_template_value_resolves(self, db, vocabulary_name, label):
         import heat_flow.vocabularies as vocabularies
-        from research_vocabs.models import Concept
 
         from project.ghfdb.resources.widgets import MultiConceptWidget
 
         vocabulary = getattr(vocabularies, vocabulary_name)
         stored = {
-            concept.label.lower() for concept in Concept.get_for_vocabulary(vocabulary)
+            name.lower()
+            for concept in vocabularies.concepts(vocabulary)
+            for name in (
+                concept.display_label(),
+                *(entry["@value"] for entry in concept.values("skos:hiddenLabel")),
+            )
         }
         assert label.lower() in stored
 
@@ -166,24 +118,20 @@ class TestTheVocabulariesCarryWhatTheTemplateOffers:
     def test_heat_flow_method_carries_an_unspecified_concept(self, db):
         # The 2026.03 template adds an explicit "Unspecified" option to its heat-flow
         # method dropdown.
-        from heat_flow.vocabularies import HeatFlowMethod
-        from research_vocabs.models import Concept
+        from heat_flow.vocabularies import HEAT_FLOW_METHOD, concepts
 
         labels = {
-            concept.label.lower()
-            for concept in Concept.get_for_vocabulary(HeatFlowMethod)
+            concept.display_label().lower() for concept in concepts(HEAT_FLOW_METHOD)
         }
         assert "unspecified" in labels
 
     def test_the_three_ratcliffe_functions_are_three_concepts(self, db):
         # The surname was spelled two different wrong ways, and the pressure-dependent
         # function was missing outright.
-        from heat_flow.vocabularies import ConductivityPTFunction
-        from research_vocabs.models import Concept
+        from heat_flow.vocabularies import CONDUCTIVITY_PT_FUNCTION, concepts
 
         labels = {
-            concept.label
-            for concept in Concept.get_for_vocabulary(ConductivityPTFunction)
+            concept.display_label() for concept in concepts(CONDUCTIVITY_PT_FUNCTION)
         }
 
         assert {
@@ -208,61 +156,59 @@ class TestResolveTerm:
             "[Onshore_Continental]",
         ],
     )
-    def test_a_label_or_a_key_gives_the_key(self, text):
-        from heat_flow.vocabularies import GeographicEnvironment, resolve_term
+    def test_a_label_or_a_key_gives_the_concept(self, db, text):
+        from heat_flow.vocabularies import GEOGRAPHIC_ENVIRONMENT, resolve_term, term
 
-        assert resolve_term(GeographicEnvironment, text) == "onshore_continental"
+        concept = resolve_term(GEOGRAPHIC_ENVIRONMENT, text)
+
+        assert concept.uri == term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental")
 
     @pytest.mark.parametrize("text", ["", "   ", None, "unspecified", "[Unspecified]"])
-    def test_blank_and_unspecified_give_no_term(self, text):
-        from heat_flow.vocabularies import GeographicEnvironment, resolve_term
+    def test_blank_and_unspecified_give_no_term(self, db, text):
+        from heat_flow.vocabularies import GEOGRAPHIC_ENVIRONMENT, resolve_term
 
-        assert resolve_term(GeographicEnvironment, text) is None
+        assert resolve_term(GEOGRAPHIC_ENVIRONMENT, text) is None
 
-    def test_an_unknown_token_is_named_in_the_error(self):
-        from heat_flow.vocabularies import GeographicEnvironment, resolve_term
+    def test_an_unknown_token_is_named_in_the_error(self, db):
+        from heat_flow.vocabularies import GEOGRAPHIC_ENVIRONMENT, resolve_term
 
         with pytest.raises(ValueError, match="swamp"):
-            resolve_term(GeographicEnvironment, "swamp")
+            resolve_term(GEOGRAPHIC_ENVIRONMENT, "swamp")
 
 
 class TestResolveTerms:
     def test_tokens_give_their_concepts_by_label_or_key(self, db):
-        from heat_flow.vocabularies import ExplorationPurpose, resolve_terms
-        from research_vocabs.models import Concept
+        from heat_flow.vocabularies import (
+            EXPLORATION_PURPOSE,
+            concepts,
+            identifier,
+            resolve_terms,
+        )
 
-        labels = [
-            concept.label
-            for concept in Concept.get_for_vocabulary(ExplorationPurpose).order_by(
-                "name"
-            )[:2]
-        ]
-        keys = [
-            concept.name
-            for concept in Concept.get_for_vocabulary(ExplorationPurpose).order_by(
-                "name"
-            )[:2]
-        ]
+        chosen = list(concepts(EXPLORATION_PURPOSE).order_by("uri")[:2])
+        labels = [concept.display_label() for concept in chosen]
+        keys = [identifier(concept) for concept in chosen]
+        uris = [concept.uri for concept in chosen]
 
         by_label = resolve_terms(
-            ExplorationPurpose, f"[{labels[0].upper()}]; {labels[1]}"
+            EXPLORATION_PURPOSE, f"[{labels[0].upper()}]; {labels[1]}"
         )
-        by_key = resolve_terms(ExplorationPurpose, f"{keys[0]};{keys[1]}")
+        by_key = resolve_terms(EXPLORATION_PURPOSE, f"{keys[0]};{keys[1]}")
 
-        assert sorted(by_label.values_list("name", flat=True)) == keys
-        assert sorted(by_key.values_list("name", flat=True)) == keys
+        assert sorted(by_label.values_list("uri", flat=True)) == uris
+        assert sorted(by_key.values_list("uri", flat=True)) == uris
 
     def test_blank_gives_no_concepts(self, db):
-        from heat_flow.vocabularies import ExplorationPurpose, resolve_terms
+        from heat_flow.vocabularies import EXPLORATION_PURPOSE, resolve_terms
 
-        assert resolve_terms(ExplorationPurpose, "").count() == 0
-        assert resolve_terms(ExplorationPurpose, " ; ").count() == 0
+        assert resolve_terms(EXPLORATION_PURPOSE, "").count() == 0
+        assert resolve_terms(EXPLORATION_PURPOSE, " ; ").count() == 0
 
     def test_every_unknown_token_is_named_in_the_error(self, db):
-        from heat_flow.vocabularies import ExplorationPurpose, resolve_terms
+        from heat_flow.vocabularies import EXPLORATION_PURPOSE, resolve_terms
 
         with pytest.raises(ValueError) as error:
-            resolve_terms(ExplorationPurpose, "swamp; [Marsh]")
+            resolve_terms(EXPLORATION_PURPOSE, "swamp; [Marsh]")
 
         assert "swamp" in str(error.value)
         assert "Marsh" in str(error.value)
