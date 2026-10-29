@@ -27,7 +27,7 @@ the vocabulary it belongs to:
 "environment": {
   "name": "onshore_continental",
   "label": "Onshore (continental)",
-  "uri": "https://portal.heatflow.world/vocabularies/geographic-environments/onshore_continental",
+  "uri": "https://w3id.org/ihfc-iugg/vocabularies/geographic-environments/onshore_continental",
   "vocabulary": "geographic-environments"
 }
 ```
@@ -167,13 +167,13 @@ GET /api/v1/samples/heat-flow-sites/
       "environment": {
         "name": "onshore_continental",
         "label": "Onshore (continental)",
-        "uri": "https://portal.heatflow.world/vocabularies/geographic-environments/onshore_continental",
+        "uri": "https://w3id.org/ihfc-iugg/vocabularies/geographic-environments/onshore_continental",
         "vocabulary": "geographic-environments"
       },
       "explo_method": {
         "name": "drilling_clustering",
         "label": "Drilling-Clustering",
-        "uri": "https://portal.heatflow.world/vocabularies/exploration-methods/drilling_clustering",
+        "uri": "https://w3id.org/ihfc-iugg/vocabularies/exploration-methods/drilling_clustering",
         "vocabulary": "exploration-methods"
       },
       "explo_purpose": [],
@@ -257,7 +257,7 @@ GET /api/v1/samples/heat-flow-sites/sJkWMuWMhnS9i846rJtWrHN/
   "environment": {
     "name": "onshore_continental",
     "label": "Onshore (continental)",
-    "uri": "https://portal.heatflow.world/vocabularies/geographic-environments/onshore_continental",
+    "uri": "https://w3id.org/ihfc-iugg/vocabularies/geographic-environments/onshore_continental",
     "vocabulary": "geographic-environments"
   },
   "explo_method": null,
@@ -589,7 +589,7 @@ GET /api/v1/measurements/heat-flow/
         {
           "name": "numerical",
           "label": "Other numerical computations",
-          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-method/numerical",
+          "uri": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-method/numerical",
           "vocabulary": "heat-flow-method"
         }
       ],
@@ -772,7 +772,7 @@ GET /api/v1/samples/depth-intervals/sAvai23dHxcyhKwmMz4sMZU/
       {
         "name": "outrigger_hybrid_lister_hylo",
         "label": "Outrigger probe (Hybrid Lister) HyLO",
-        "uri": "https://portal.heatflow.world/vocabularies/heat-flow-probes/outrigger_hybrid_lister_hylo",
+        "uri": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-probes/outrigger_hybrid_lister_hylo",
         "vocabulary": "heat-flow-probes"
       }
     ],
@@ -861,7 +861,7 @@ GET /api/v1/measurements/thermal-gradients/
         {
           "name": "ODTT_PC",
           "label": "ODTT-PC",
-          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/ODTT_PC",
+          "uri": "https://w3id.org/ihfc-iugg/vocabularies/temperature-method/ODTT_PC",
           "vocabulary": "temperature-method"
         }
       ],
@@ -974,7 +974,7 @@ GET /api/v1/measurements/thermal-conductivities/
         {
           "name": "assumed_from_literature",
           "label": "Assumed from literature",
-          "uri": "https://portal.heatflow.world/vocabularies/conductivity-sources/assumed_from_literature",
+          "uri": "https://w3id.org/ihfc-iugg/vocabularies/conductivity-sources/assumed_from_literature",
           "vocabulary": "conductivity-sources"
         }
       ],
@@ -985,7 +985,7 @@ GET /api/v1/measurements/thermal-conductivities/
         {
           "name": "actual",
           "label": "Actual heat-flow location",
-          "uri": "https://portal.heatflow.world/vocabularies/conductivity-location/actual",
+          "uri": "https://w3id.org/ihfc-iugg/vocabularies/conductivity-location/actual",
           "vocabulary": "conductivity-location"
         }
       ],

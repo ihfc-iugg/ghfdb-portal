@@ -66,15 +66,14 @@ Releases before that used `<year>.<release>` and are recorded in the
 - The portal moves to FairDM v0.3.1 and django-literature 0.3.2, installed from PyPI, with
   fairdm-geo at the commit that moves it to the same release. FairDM no longer installs django-research-vocabs, so every vocabulary
   term the portal stores is the address of a concept in a published vocabulary, held through
-  django-controlled-vocabularies. The heat flow fields read the IHFC vocabularies of release
-  2026.1 of [ihfc-iugg/ihfc-vocabularies](https://github.com/ihfc-iugg/ihfc-vocabularies), at
-  addresses under `https://portal.heatflow.world/vocabularies/`. The files ship with the portal
-  in `project/heat_flow/vocabularies/`, beside ODM2's elevation datum vocabulary, and FairDM's
-  own vocabularies ship in `vocabularies/`. The image loads them with `sync_vocabularies` each
-  time it starts, before it scores records. The temperature method vocabulary gains `DST` and
-  `cDST`.
+  django-controlled-vocabularies. The heat flow fields use the IHFC vocabularies at their
+  addresses under `https://w3id.org/ihfc-iugg/vocabularies/`, and the image reads them from
+  those addresses with `sync_vocabularies` each time it starts, before it scores records. A
+  start whose vocabulary server does not answer keeps the terms already loaded. ODM2's
+  elevation datum vocabulary ships in `project/heat_flow/vocabularies/`, and FairDM's own
+  vocabularies in `vocabularies/`. The temperature method vocabulary gains `DST` and `cDST`.
 - The API gives a vocabulary term with the same `name`, `label`, `uri` and `vocabulary` as
-  before, and the `uri` is now the term's address under `portal.heatflow.world`. A site's
+  before, and the `uri` is now the term's address under `w3id.org/ihfc-iugg/vocabularies/`. A site's
   `type`, `elevation_datum`, `environment` and `explo_method` are written as a term's name or
   its address ([records API](docs/guides/heat-flow-records-api.md)).
 - The environment, exploration method and exploration purpose filters of the GHFDB parents

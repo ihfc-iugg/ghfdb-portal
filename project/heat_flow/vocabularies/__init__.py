@@ -1,9 +1,10 @@
 """The published vocabularies the heat flow fields draw their terms from.
 
-The IHFC vocabularies are the files of the ihfc-iugg/ihfc-vocabularies release 2026.1, and
-the elevation datum is ODM2's. Each file ships with the portal, unmodified, so
-``manage.py sync_vocabularies`` never needs the network. ``README.md`` beside this module
-gives the source and licence of every file.
+The IHFC vocabularies are published by ihfc-iugg/controlled-vocabularies under
+``https://w3id.org/ihfc-iugg/vocabularies/``, and ``manage.py sync_vocabularies`` reads each
+one in Turtle from its address with ``.ttl`` added. The elevation datum is ODM2's, shipped
+with the portal because ODM2's server cannot be relied on. ``README.md`` beside this module
+gives its source and licence.
 
 A field stores a term as the address of its concept. The text a person or an upload
 template writes for a term is its label or its identifier, the last part of its address,
@@ -19,11 +20,11 @@ from django.utils.translation import gettext_lazy as _
 FILES = Path(__file__).parent
 
 #: The address every IHFC vocabulary is published under.
-IHFC = "https://portal.heatflow.world/vocabularies"
+IHFC = "https://w3id.org/ihfc-iugg/vocabularies"
 
 
 def ihfc_vocabulary(slug: str) -> Vocabulary:
-    """Name an IHFC vocabulary by its slug and the file it ships in.
+    """Name an IHFC vocabulary by its slug, read in Turtle from its own address.
 
     Args:
         slug: The vocabulary's slug, the last part of its address.
@@ -31,7 +32,8 @@ def ihfc_vocabulary(slug: str) -> Vocabulary:
     Returns:
         The vocabulary.
     """
-    return Vocabulary(f"{IHFC}/{slug}", source=FILES / f"{slug}.ttl")
+    uri = f"{IHFC}/{slug}"
+    return Vocabulary(uri, source=f"{uri}.ttl")
 
 
 HEAT_FLOW_METHOD = ihfc_vocabulary("heat-flow-method")

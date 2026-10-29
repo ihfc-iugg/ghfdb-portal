@@ -338,3 +338,11 @@ Fixtures should be versioned alongside the GHFDB template version they represent
 - [GHFDB Field Mapping](../../docs/ghfdb_fields.md)
 - [Testing Standards Guide](../../docs/guides/testing-standards.md)
 - [Contributing](../../docs/development/contributing/index.md)
+
+## Vocabularies
+
+`vocabularies/` holds copies of the IHFC vocabularies as published under
+`https://w3id.org/ihfc-iugg/vocabularies/`, from ihfc-iugg/controlled-vocabularies (CC BY 4.0).
+A deployed portal reads them from those addresses. `tests/conftest.py` declares these copies in
+`CONTROLLED_VOCABULARIES` for the session, so the suite never needs the network. Replace them
+when the vocabularies are released again.

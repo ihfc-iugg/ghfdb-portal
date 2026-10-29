@@ -1,0 +1,145 @@
+@prefix : <https://w3id.org/ihfc-iugg/vocabularies/conductivity-conditions/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix ihfc: <https://w3id.org/ihfc-iugg/vocabularies/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+:actual a skos:Collection ;
+    skos:definition "Determinations made at the actual conditions of the depth interval of the heat-flow determination."@en ;
+    skos:member :actualInSitu ;
+    skos:prefLabel "Actual conditions"@en .
+
+:corrected a skos:Collection ;
+    skos:definition "Determinations made under laboratory pressure and temperature conditions and then corrected to the conditions of the target depth."@en ;
+    skos:member :correctedP,
+        :correctedPT,
+        :correctedT ;
+    skos:prefLabel "Corrected conditions"@en .
+
+:recorded a skos:Collection ;
+    skos:definition "Determinations whose pressure and temperature conditions were recorded when the conductivity was measured."@en ;
+    skos:member :recordedAmbient ;
+    skos:prefLabel "Recorded conditions"@en .
+
+:replicated a skos:Collection ;
+    skos:definition "Determinations where the conditions of the target depth are replicated under laboratory conditions."@en ;
+    skos:member :replicatedP,
+        :replicatedPT,
+        :replicatedT ;
+    skos:prefLabel "Replicated conditions"@en .
+
+<https://doi.org/10.5880/fidgeo.2026.065> a dcterms:BibliographicResource ;
+    dcterms:bibliographicCitation "Jennings, Samuel; Neumann, Florian; Norden, Ben; Balkan-Pazvantoğlu, Elif; Elbarbary, Samah; Petrunin, Alexey G.; Elger, Kirsten; Fuchs, Sven (2026): IHFC Controlled Vocabularies for the Global Heat Flow Database. GFZ Data Services. https://doi.org/10.5880/fidgeo.2026.065"@en ;
+    dcterms:title "IHFC Controlled Vocabularies for the Global Heat Flow Database"@en .
+
+<https://ror.org/04z8jg394> a foaf:Organization ;
+    foaf:homepage <https://www.gfz.de/en/> ;
+    foaf:name "GFZ Helmholtz Centre for Geosciences"@en .
+
+:unrecordedAmbient a skos:Concept ;
+    dcterms:source <https://doi.org/10.1016/j.tecto.2023.229976> ;
+    skos:definition "The conductivity was measured at ambient laboratory pressure and temperature, and those conditions were not recorded."@en ;
+    skos:inScheme ihfc:conductivity-conditions ;
+    skos:prefLabel "Unrecorded ambient pT conditions"@en ;
+    skos:topConceptOf ihfc:conductivity-conditions .
+
+:unspecified a skos:Concept ;
+    skos:definition "The pressure and temperature conditions of the conductivity are not specified."@en ;
+    skos:inScheme ihfc:conductivity-conditions ;
+    skos:prefLabel "Unspecified"@en ;
+    skos:topConceptOf ihfc:conductivity-conditions .
+
+<https://ihfc-iugg.org/> a foaf:Organization ;
+    foaf:homepage <https://ihfc-iugg.org/> ;
+    foaf:name "International Heat Flow Commission"@en .
+
+:actualInSitu a skos:Concept ;
+    dcterms:source <https://doi.org/10.1016/j.tecto.2023.229976>,
+        <https://doi.org/10.31214/ijthfa.v4i1.62> ;
+    skos:definition "The conductivity was determined at the actual pressure and temperature of the depth interval of the heat-flow determination."@en ;
+    skos:inScheme ihfc:conductivity-conditions ;
+    skos:prefLabel "Actual in-situ (pT) conditions"@en ;
+    skos:topConceptOf ihfc:conductivity-conditions .
+
+:correctedP a skos:Concept ;
+    dcterms:source <https://doi.org/10.1016/j.tecto.2023.229976> ;
+    skos:definition "The conductivity was measured under laboratory pressure and then corrected to the pressure of the target depth."@en ;
+    skos:inScheme ihfc:conductivity-conditions ;
+    skos:prefLabel "Corrected in-situ (p)"@en ;
+    skos:topConceptOf ihfc:conductivity-conditions .
+
+:correctedPT a skos:Concept ;
+    dcterms:source <https://doi.org/10.1016/j.tecto.2023.229976> ;
+    skos:definition "The conductivity was measured under laboratory pressure and temperature and then corrected to the pressure and temperature of the target depth."@en ;
+    skos:inScheme ihfc:conductivity-conditions ;
+    skos:prefLabel "Corrected in-situ (pT)"@en ;
+    skos:topConceptOf ihfc:conductivity-conditions .
+
+:correctedT a skos:Concept ;
+    dcterms:source <https://doi.org/10.1016/j.tecto.2023.229976> ;
+    skos:definition "The conductivity was measured under laboratory temperature and then corrected to the temperature of the target depth."@en ;
+    skos:inScheme ihfc:conductivity-conditions ;
+    skos:prefLabel "Corrected in-situ (T)"@en ;
+    skos:topConceptOf ihfc:conductivity-conditions .
+
+:recordedAmbient a skos:Concept ;
+    dcterms:source <https://doi.org/10.1016/j.tecto.2023.229976> ;
+    skos:definition "The conductivity was measured at ambient laboratory pressure and temperature, and those conditions were recorded."@en ;
+    skos:inScheme ihfc:conductivity-conditions ;
+    skos:prefLabel "Recorded ambient pT conditions"@en ;
+    skos:topConceptOf ihfc:conductivity-conditions .
+
+:replicatedP a skos:Concept ;
+    dcterms:source <https://doi.org/10.1016/j.tecto.2023.229976>,
+        <https://doi.org/10.31214/ijthfa.v4i1.62> ;
+    skos:definition "The conductivity was measured in the laboratory with the pressure of the target depth replicated."@en ;
+    skos:inScheme ihfc:conductivity-conditions ;
+    skos:prefLabel "Replicated in-situ (p)"@en ;
+    skos:topConceptOf ihfc:conductivity-conditions .
+
+:replicatedPT a skos:Concept ;
+    dcterms:source <https://doi.org/10.1016/j.tecto.2023.229976>,
+        <https://doi.org/10.31214/ijthfa.v4i1.62> ;
+    skos:definition "The conductivity was measured in the laboratory with the pressure and temperature of the target depth replicated."@en ;
+    skos:inScheme ihfc:conductivity-conditions ;
+    skos:prefLabel "Replicated in-situ (pT)"@en ;
+    skos:topConceptOf ihfc:conductivity-conditions .
+
+:replicatedT a skos:Concept ;
+    dcterms:source <https://doi.org/10.1016/j.tecto.2023.229976>,
+        <https://doi.org/10.31214/ijthfa.v4i1.62> ;
+    skos:definition "The conductivity was measured in the laboratory with the temperature of the target depth replicated."@en ;
+    skos:inScheme ihfc:conductivity-conditions ;
+    skos:prefLabel "Replicated in-situ (T)"@en ;
+    skos:topConceptOf ihfc:conductivity-conditions .
+
+<https://doi.org/10.31214/ijthfa.v4i1.62> a dcterms:BibliographicResource ;
+    dcterms:bibliographicCitation "Fuchs, S., Beardsmore, G., Chiozzi, P., Espinoza-Ojeda, O. M., Gola, G., Gosnold, W., Harris, R., Jennings, S., Liu, S., Negrete-Aranda, R., Neumann, F., Norden, B., Poort, J., Rajver, D., Ray, L., Richards, M., Smith, J., Tanaka, A., and Verdoya, M. (2021). A new database structure for the IHFC Global Heat Flow Database. International Journal of Terrestrial Heat Flow and Applied Geothermics, 4(1), 1–14."@en .
+
+<https://doi.org/10.1016/j.tecto.2023.229976> a dcterms:BibliographicResource ;
+    dcterms:bibliographicCitation "Fuchs, S., Norden, B., Neumann, F., Kaul, N., Tanaka, A., Kukkonen, I. T., et al. (2023). Quality-assurance of heat-flow data: The new structure and evaluation scheme of the IHFC Global Heat Flow Database. Tectonophysics, 863, 229976."@en .
+
+ihfc:conductivity-conditions a skos:ConceptScheme ;
+    dcterms:creator <https://ihfc-iugg.org/> ;
+    dcterms:description "The pressure and temperature conditions under which thermal conductivity was measured, and whether they were recorded, replicated or corrected to in-situ conditions."@en ;
+    dcterms:isPartOf <https://doi.org/10.5880/fidgeo.2026.065> ;
+    dcterms:language <http://id.loc.gov/vocabulary/iso639-1/en> ;
+    dcterms:license <https://creativecommons.org/licenses/by/4.0/> ;
+    dcterms:publisher <https://ror.org/04z8jg394> ;
+    dcterms:source <https://doi.org/10.1016/j.tecto.2023.229976>,
+        <https://doi.org/10.31214/ijthfa.v4i1.62> ;
+    rdfs:seeAlso <https://github.com/ihfc-iugg/controlled-vocabularies> ;
+    skos:hasTopConcept :actualInSitu,
+        :correctedP,
+        :correctedPT,
+        :correctedT,
+        :recordedAmbient,
+        :replicatedP,
+        :replicatedPT,
+        :replicatedT,
+        :unrecordedAmbient,
+        :unspecified ;
+    skos:prefLabel "Thermal conductivity measurement conditions"@en ;
+    skos:scopeNote "Lists the values allowed in the field tc_pT_conditions of the Global Heat Flow Database."@en .
+

@@ -44,10 +44,13 @@ The base image's entrypoint runs these in order, and each only runs if the one b
 4. `python manage.py refresh_quality`, from `start/10-refresh-quality`
 5. `gunicorn`, which serves the application on port 8000 with four workers.
 
-`sync_vocabularies` loads every controlled vocabulary the image ships: the heat flow
-vocabularies in `project/heat_flow/vocabularies/`, FairDM's own in `vocabularies/` and
-fairdm-geo's. A release that carries a new vocabulary file brings its terms with it, and one that
-carries none changes nothing.
+`sync_vocabularies` loads every controlled vocabulary the portal uses. The IHFC heat flow
+vocabularies are read from their addresses under `https://w3id.org/ihfc-iugg/vocabularies/`, so
+the server must be able to reach `w3id.org` and `ihfc-iugg.github.io`. A new release of them
+reaches the portal on its next start, with no portal release. FairDM's own vocabularies, in
+`vocabularies/`, ODM2's elevation datum and fairdm-geo's vocabularies ship in the image. If a
+vocabulary server does not answer, the step reports it and the portal starts with the terms it
+already holds.
 
 `refresh_quality` recalculates the [quality scores](../docs/guides/quality-scores.md) of every
 gradient, conductivity, child and parent whose stored scheme revision is not the current one.
@@ -154,7 +157,8 @@ refuses every command in production without it.
      key, so assessments and datasets keep their publications. If it names a reference it
      cannot convert, it has changed nothing: correct that reference and run it again.
    - The first `upgrade_vocabularies` creates the vocabulary tables and stops,
-     `sync_vocabularies` loads every vocabulary the image ships, and the second
+     `sync_vocabularies` loads every vocabulary, the IHFC ones from `w3id.org`, which must
+     answer for the step to succeed, and the second
      `upgrade_vocabularies` stores every description type, contributor role and keyword by its
      concept's address.
 

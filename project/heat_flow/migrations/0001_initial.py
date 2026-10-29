@@ -327,10 +327,10 @@ class Migration(migrations.Migration):
                     "environment",
                     controlled_vocabularies.fields.ConceptField(
                         related_name="+",
-                        default='https://portal.heatflow.world/vocabularies/geographic-environments/unspecified',
+                        default='https://w3id.org/ihfc-iugg/vocabularies/geographic-environments/unspecified',
                         help_text="Describes the general geographical setting of the heat-flow site (not the applied methodology).",
                         verbose_name="basic geographical environment",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/geographic-environments',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/geographic-environments',),
                     ),
                 ),
                 (
@@ -341,7 +341,7 @@ class Migration(migrations.Migration):
                         help_text="Specification of the general means by which the rock was accessed by temperature sensors for the respective data entry.",
                         null=True,
                         verbose_name="exploration method",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/exploration-methods',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/exploration-methods',),
                     ),
                 ),
                 (
@@ -401,7 +401,7 @@ class Migration(migrations.Migration):
                         help_text="Main purpose of the reconnaissance target providing access for the temperature sensors.",
                         related_name="+",
                         verbose_name="exploration purpose",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/exploration-purpose',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/exploration-purpose',),
                     ),
                 ),
                 (
@@ -491,7 +491,7 @@ class Migration(migrations.Migration):
                         help_text="Location of conductivity data used for heat-flow calculation.",
                         related_name="+",
                         verbose_name="location",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/conductivity-location',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/conductivity-location',),
                     ),
                 ),
                 (
@@ -501,7 +501,7 @@ class Migration(migrations.Migration):
                         help_text="Method used to determine mean thermal conductivity.",
                         related_name="+",
                         verbose_name="method",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/conductivity-methods',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/conductivity-methods',),
                     ),
                 ),
                 (
@@ -511,7 +511,7 @@ class Migration(migrations.Migration):
                         help_text="Qualified conditions of pressure and temperature under which the mean thermal conductivity used for the heat-flow computation was determined.",
                         related_name="+",
                         verbose_name="pT conditions",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/conductivity-conditions',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/conductivity-conditions',),
                     ),
                 ),
                 (
@@ -521,7 +521,7 @@ class Migration(migrations.Migration):
                         help_text="Technique or approach used to correct the measured thermal conductivity towards in-situ pressure (p) and/or temperature (T)  conditions.",
                         related_name="+",
                         verbose_name="pT function",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/conductivity-pt-function',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/conductivity-pt-function',),
                     ),
                 ),
                 (
@@ -531,7 +531,7 @@ class Migration(migrations.Migration):
                         help_text="Saturation state of the studied rock interval studied for thermal conductivity.",
                         related_name="+",
                         verbose_name="saturation state",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/conductivity-saturation',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/conductivity-saturation',),
                     ),
                 ),
                 (
@@ -541,7 +541,7 @@ class Migration(migrations.Migration):
                         help_text="Nature of the samples from which the mean thermal conductivity was determined.",
                         related_name="+",
                         verbose_name="source",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/conductivity-sources',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/conductivity-sources',),
                     ),
                 ),
                 (
@@ -551,7 +551,7 @@ class Migration(migrations.Migration):
                         help_text="Strategy that was employed to estimate the thermal conductivity over the vertical interval of heat-flow determination.",
                         related_name="+",
                         verbose_name="averaging methodology",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/conductivity-strategy',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/conductivity-strategy',),
                     ),
                 ),
             ],
@@ -692,7 +692,7 @@ class Migration(migrations.Migration):
                         help_text="Approach applied to correct the temperature measurement for drilling perturbations at the bottom of the interval used for heat-flow determination.",
                         related_name="+",
                         verbose_name="correction method (bottom)",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/temperature-corrections',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/temperature-corrections',),
                     ),
                 ),
                 (
@@ -702,7 +702,7 @@ class Migration(migrations.Migration):
                         help_text="Approach applied to correct the temperature measurement for drilling perturbations at the top of the interval used for heat-flow determination.",
                         related_name="+",
                         verbose_name="correction method (top)",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/temperature-corrections',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/temperature-corrections',),
                     ),
                 ),
                 (
@@ -712,7 +712,7 @@ class Migration(migrations.Migration):
                         help_text="Method used for temperature determination at the bottom of the heat-flow determination interval.",
                         related_name="+",
                         verbose_name="method (bottom)",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/temperature-method',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/temperature-method',),
                     ),
                 ),
                 (
@@ -722,7 +722,7 @@ class Migration(migrations.Migration):
                         help_text="Method used for temperature determination at the top of the heat-flow determination interval.",
                         related_name="+",
                         verbose_name="method (top)",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/temperature-method',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/temperature-method',),
                     ),
                 ),
             ],
@@ -886,11 +886,11 @@ class Migration(migrations.Migration):
                     controlled_vocabularies.fields.ConceptField(
                         related_name="+",
                         blank=True,
-                        default='https://portal.heatflow.world/vocabularies/heat-flow-corrections/unspecified',
+                        default='https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/unspecified',
                         help_text="Specifies if sedimentation/subsidence effects with respect to the reported heat-flow value were present and if corrections were performed.",
                         null=True,
                         verbose_name="Correction (S)",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/heat-flow-corrections',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections',),
                     ),
                 ),
                 (
@@ -898,11 +898,11 @@ class Migration(migrations.Migration):
                     controlled_vocabularies.fields.ConceptField(
                         related_name="+",
                         blank=True,
-                        default='https://portal.heatflow.world/vocabularies/heat-flow-corrections/unspecified',
+                        default='https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/unspecified',
                         help_text="Specifies if erosion effects with respect to the reported heat-flow value were present and if corrections were performed.",
                         null=True,
                         verbose_name="Correction (E)",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/heat-flow-corrections',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections',),
                     ),
                 ),
                 (
@@ -910,11 +910,11 @@ class Migration(migrations.Migration):
                     controlled_vocabularies.fields.ConceptField(
                         related_name="+",
                         blank=True,
-                        default='https://portal.heatflow.world/vocabularies/heat-flow-corrections/unspecified',
+                        default='https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/unspecified',
                         help_text="Specifies if topographic effects with respect to the reported heat-flow value were present and if corrections were performed.",
                         null=True,
                         verbose_name="Correction (TOPO)",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/heat-flow-corrections',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections',),
                     ),
                 ),
                 (
@@ -922,11 +922,11 @@ class Migration(migrations.Migration):
                     controlled_vocabularies.fields.ConceptField(
                         related_name="+",
                         blank=True,
-                        default='https://portal.heatflow.world/vocabularies/heat-flow-corrections/unspecified',
+                        default='https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/unspecified',
                         help_text="Specifies if topographic effects with respect to the reported heat-flow value were present and if corrections were performed.",
                         null=True,
                         verbose_name="Correction (PAL)",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/heat-flow-corrections',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections',),
                     ),
                 ),
                 (
@@ -934,11 +934,11 @@ class Migration(migrations.Migration):
                     controlled_vocabularies.fields.ConceptField(
                         related_name="+",
                         blank=True,
-                        default='https://portal.heatflow.world/vocabularies/heat-flow-corrections/unspecified',
+                        default='https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/unspecified',
                         help_text="Specifies if climatic conditions (glaciation, post-industrial warming, etc.) with respect to the reported heat-flow value were present and if corrections were performed.",
                         null=True,
                         verbose_name="Correction (SUR)",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/heat-flow-corrections',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections',),
                     ),
                 ),
                 (
@@ -946,11 +946,11 @@ class Migration(migrations.Migration):
                     controlled_vocabularies.fields.ConceptField(
                         related_name="+",
                         blank=True,
-                        default='https://portal.heatflow.world/vocabularies/heat-flow-corrections/unspecified',
+                        default='https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/unspecified',
                         help_text="Specifies if convection effects with respect to the reported heat-flow value were present and if corrections were performed.",
                         null=True,
                         verbose_name="Correction (CONV)",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/heat-flow-corrections',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections',),
                     ),
                 ),
                 (
@@ -958,11 +958,11 @@ class Migration(migrations.Migration):
                     controlled_vocabularies.fields.ConceptField(
                         related_name="+",
                         blank=True,
-                        default='https://portal.heatflow.world/vocabularies/heat-flow-corrections/unspecified',
+                        default='https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/unspecified',
                         help_text="Specifies if refraction effects, e.g., due to significant local conductivity contrasts, with respect to the reported heat-flow value were present and if corrections were performed. ",
                         null=True,
                         verbose_name="Correction (HR)",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/heat-flow-corrections',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections',),
                     ),
                 ),
                 (
@@ -982,7 +982,7 @@ class Migration(migrations.Migration):
                         help_text="Specifies whether the in-situ pressure and temperature conditions were considered to the reported thermal conductivity value or not.",
                         related_name="+",
                         verbose_name="Correction (IS)",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/heat-flow-corrections',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections',),
                     ),
                 ),
                 (
@@ -993,7 +993,7 @@ class Migration(migrations.Migration):
                         help_text="Specifies whether the in-situ pressure and temperature conditions were considered to the reported thermal conductivity value or not.",
                         related_name="+",
                         verbose_name="Correction (T)",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/heat-flow-corrections',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections',),
                     ),
                 ),
                 (
@@ -1003,7 +1003,7 @@ class Migration(migrations.Migration):
                         help_text="Principal method of heat-flow calculation from temperature and thermal conductivity data.",
                         related_name="+",
                         verbose_name="method",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/heat-flow-method',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/heat-flow-method',),
                     ),
                 ),
                 (
@@ -1013,7 +1013,7 @@ class Migration(migrations.Migration):
                         help_text="Type of heat-flow probe used for measurement.",
                         related_name="+",
                         verbose_name="probe type",
-                        vocabulary=('https://portal.heatflow.world/vocabularies/heat-flow-probes',),
+                        vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/heat-flow-probes',),
                     ),
                 ),
                 (

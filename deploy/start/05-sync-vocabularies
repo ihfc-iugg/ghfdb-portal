@@ -1,5 +1,7 @@
 #!/bin/sh
-# Load the controlled vocabularies the portal ships, so a release that carries a new
-# vocabulary file brings its terms with it (deploy/README.md).
-set -eu
-exec python manage.py sync_vocabularies
+# Refresh the controlled vocabularies from their published addresses, so a new release of a
+# vocabulary reaches the portal on its next start (deploy/README.md). A vocabulary server that
+# does not answer leaves the terms already loaded in place, so it never stops the portal.
+set -u
+python manage.py sync_vocabularies \
+  || echo "sync_vocabularies failed: serving with the vocabularies already loaded." >&2

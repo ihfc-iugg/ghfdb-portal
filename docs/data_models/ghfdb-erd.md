@@ -565,9 +565,9 @@ The following fields are indexed:
 
 ## Vocabulary Fields
 
-Many fields draw on controlled vocabularies through django-controlled-vocabularies' `ConceptField` and `MultiConceptField`, which store each term as the address of its concept. Each many-valued vocabulary field has its own join table, named for the model and the field, and those names are listed in [GHFDB Fields](../ghfdb_fields.md). The vocabularies are the files in `project/heat_flow/vocabularies/`, and `manage.py sync_vocabularies` loads them.
+Many fields draw on controlled vocabularies through django-controlled-vocabularies' `ConceptField` and `MultiConceptField`, which store each term as the address of its concept. Each many-valued vocabulary field has its own join table, named for the model and the field, and those names are listed in [GHFDB Fields](../ghfdb_fields.md). The IHFC vocabularies are published under `https://w3id.org/ihfc-iugg/vocabularies/`, and `manage.py sync_vocabularies` reads each from its address.
 
-`heat_flow.vocabularies` names each one with `ihfc_vocabulary()`, which takes a vocabulary's slug and returns the address it is published under and the file it ships in. Code that reads the text a person or an upload template wrote for a term uses `lookup()`, which maps every label and identifier of a vocabulary, in lower case, to its concept, or `resolve_term()` and `resolve_terms()`, which build on it.
+`heat_flow.vocabularies` names each one with `ihfc_vocabulary()`, which takes a vocabulary's slug and returns the address it is published under, read in Turtle with `.ttl` added. Code that reads the text a person or an upload template wrote for a term uses `lookup()`, which maps every label and identifier of a vocabulary, in lower case, to its concept, or `resolve_term()` and `resolve_terms()`, which build on it.
 
 The vocabularies in use include the geographic environment, exploration method and purpose, heat flow determination method, probe type, temperature methods and corrections at the top and bottom of an interval, the conductivity source, location, method, saturation and pressure-temperature conditions, and the lithology and geological timescale terms carried by a site and an interval.
 

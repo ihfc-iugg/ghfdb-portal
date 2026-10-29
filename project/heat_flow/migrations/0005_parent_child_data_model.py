@@ -352,7 +352,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='probemetadata',
             name='probe_type',
-            field=controlled_vocabularies.fields.MultiConceptField(blank=True, help_text='Type of heat-flow probe used for measurement.', related_name='+', verbose_name='probe type', vocabulary=('https://portal.heatflow.world/vocabularies/heat-flow-probes',)),
+            field=controlled_vocabularies.fields.MultiConceptField(blank=True, help_text='Type of heat-flow probe used for measurement.', related_name='+', verbose_name='probe type', vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/heat-flow-probes',)),
         ),
         migrations.AddIndex(
             model_name='heatflowcorrection',
