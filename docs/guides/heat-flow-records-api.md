@@ -151,12 +151,6 @@ GET /api/v1/samples/heat-flow-sites/
         "vocabulary": "sitetype"
       },
       "elevation": 412.0,
-      "elevation_datum": {
-        "name": "MSL",
-        "label": "MSL",
-        "uri": "http://vocabulary.odm2.org/elevationdatum/MSL",
-        "vocabulary": "elevationdatum"
-      },
       "country": null,
       "region": null,
       "continent": null,
@@ -241,12 +235,6 @@ GET /api/v1/samples/heat-flow-sites/sJkWMuWMhnS9i846rJtWrHN/
     "vocabulary": "sitetype"
   },
   "elevation": 500.0,
-  "elevation_datum": {
-    "name": "MSL",
-    "label": "MSL",
-    "uri": "http://vocabulary.odm2.org/elevationdatum/MSL",
-    "vocabulary": "elevationdatum"
-  },
   "country": "Germany",
   "region": null,
   "continent": "Europe",

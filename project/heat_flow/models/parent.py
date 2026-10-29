@@ -36,24 +36,13 @@ class HeatFlowSite(GenericHole, AbstractGeoDepthInterval, GenericEarthSample):
         verbose_name=_("type"),
         help_text=_("The type of sampling location."),
     )
-    elevation_datum = ConceptField(
-        vocabulary=vocabularies.ELEVATION_DATUM,
-        default=vocabularies.MEAN_SEA_LEVEL,
-        related_name="+",
-        verbose_name=_("elevation datum"),
-        help_text=_(
-            "The reference point for the elevation measurement, such as Mean Sea Level (MSL)."
-        ),
-    )
     elevation = QuantityField(
         base_units="m",
         unit_choices=["m", "ft"],
         null=True,
         blank=True,
         verbose_name=_("elevation"),
-        help_text=_(
-            "The site elevation in meters with reference to the specified elevation datum."
-        ),
+        help_text=_("The site elevation in metres above mean sea level."),
     )
 
     environment = ConceptField(

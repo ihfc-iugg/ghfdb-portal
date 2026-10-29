@@ -7,7 +7,11 @@
 # migration depends on one that is not. The fields are added here instead. A database
 # migrated before the move still holds the old link tables, keyed to the old app's table,
 # and they are dropped first. No site or interval held a stratigraphic unit.
+#
+# The site's elevation datum goes with the vocabulary fairdm-geo dropped: a site's elevation
+# is in metres above mean sea level.
 
+import fairdm.db.fields
 from django.db import migrations, models
 
 
@@ -19,6 +23,15 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RemoveField(
+            model_name='heatflowsite',
+            name='elevation_datum',
+        ),
+        migrations.AlterField(
+            model_name='heatflowsite',
+            name='elevation',
+            field=fairdm.db.fields.QuantityField(base_units='m', blank=True, help_text='The site elevation in metres above mean sea level.', null=True, unit_choices=['m', 'ft'], verbose_name='elevation'),
+        ),
         migrations.RunSQL(
             "DROP TABLE IF EXISTS heat_flow_heatflowinterval_stratigraphy,"
             " heat_flow_heatflowsite_stratigraphy",

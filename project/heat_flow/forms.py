@@ -303,7 +303,7 @@ class HeatFlowSiteForm(SectionedForm, SampleFormMixin, forms.ModelForm):
         (None, ["name"]),
         (
             _("Location"),
-            ["location", ("elevation", "elevation_datum"), "environment"],
+            ["location", "elevation", "environment"],
         ),
         (_("Borehole"), [("length", "vertical_depth"), ("azimuth", "inclination")]),
         (_("Exploration"), [("explo_method", "explo_purpose")]),
@@ -318,7 +318,6 @@ class HeatFlowSiteForm(SectionedForm, SampleFormMixin, forms.ModelForm):
             "name",
             "location",
             "elevation",
-            "elevation_datum",
             "environment",
             "length",
             "vertical_depth",

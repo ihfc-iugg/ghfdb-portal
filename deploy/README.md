@@ -44,14 +44,12 @@ The base image's entrypoint runs these in order, and each only runs if the one b
 4. `python manage.py refresh_quality`, from `start/10-refresh-quality`
 5. `gunicorn`, which serves the application on port 8000 with four workers.
 
-`sync_vocabularies` loads every controlled vocabulary the portal uses. The IHFC heat flow
-vocabularies are read from their addresses under `https://w3id.org/ihfc-iugg/vocabularies/`, so
-the server must be able to reach `w3id.org` and `ihfc-iugg.github.io`. A new release of them
-reaches the portal on its next start, with no portal release. FairDM's own vocabularies are
-read from `https://w3id.org/fairdm/vocabularies/` the same way. ODM2's elevation datum and
-fairdm-geo's vocabularies ship in the image. If a
-vocabulary server does not answer, the step reports it and the portal starts with the terms it
-already holds.
+`sync_vocabularies` loads every controlled vocabulary the portal uses, each from its address:
+the IHFC heat flow vocabularies under `https://w3id.org/ihfc-iugg/vocabularies/` and FairDM's
+under `https://w3id.org/fairdm/vocabularies/`. The server must be able to reach `w3id.org` and
+the GitHub Pages sites those addresses redirect to. A new release of a vocabulary reaches the
+portal on its next start, with no portal release. If a vocabulary server does not answer, the
+step reports it and the portal starts with the terms the database already holds.
 
 `refresh_quality` recalculates the [quality scores](../docs/guides/quality-scores.md) of every
 gradient, conductivity, child and parent whose stored scheme revision is not the current one.

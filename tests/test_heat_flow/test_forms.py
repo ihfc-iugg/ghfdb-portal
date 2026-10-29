@@ -340,7 +340,6 @@ def site_data(site, **changes):
         "name": site.name,
         "location_first": str(site.location.y),
         "location_second": str(site.location.x),
-        "elevation_datum": "MSL",
         "environment": "Onshore (continental)",
         "explo_method": "",
         "explo_purpose": "",
@@ -392,21 +391,18 @@ class TestHeatFlowSiteForm:
 
         assert len(location.fields) == 2
 
-    def test_elevation_and_datum_are_saved_on_the_site_itself(self, site):
+    def test_the_elevation_is_saved_on_the_site_itself(self, site):
         from heat_flow.forms import HeatFlowSiteForm
 
         form = HeatFlowSiteForm(
             instance=site,
-            data=site_data(
-                site, elevation_0="350", elevation_1="m", elevation_datum="NAVD88"
-            ),
+            data=site_data(site, elevation_0="350", elevation_1="m"),
         )
 
         assert form.is_valid(), form.errors
         form.save()
         site.refresh_from_db()
         assert site.elevation.m_as("m") == 350
-        assert identifier(site.elevation_datum) == "NAVD88"
         assert site.location_elevation is None
 
     def test_a_changed_vertical_depth_is_stored_on_a_site_with_a_bottom(self, site):
@@ -521,7 +517,7 @@ class TestHeatFlowSiteEditPage:
 
         return reverse(site, "edit")
 
-    def test_a_dataset_owner_corrects_the_elevation_datum_and_vertical_depth(
+    def test_a_dataset_owner_corrects_the_elevation_and_vertical_depth(
         self, db, researcher
     ):
         from fairdm.factories import DatasetFactory
@@ -539,7 +535,6 @@ class TestHeatFlowSiteEditPage:
                 site,
                 elevation_0="350",
                 elevation_1="m",
-                elevation_datum="NAVD88",
                 vertical_depth_0="800",
                 vertical_depth_1="m",
             ),
@@ -548,7 +543,6 @@ class TestHeatFlowSiteEditPage:
         assert response.status_code == 302
         site.refresh_from_db()
         assert site.elevation.m_as("m") == 350
-        assert identifier(site.elevation_datum) == "NAVD88"
         assert site.vertical_depth.m_as("m") == 800
 
     def test_a_save_shows_a_site_awaiting_review_to_no_one_new(self, db, researcher):

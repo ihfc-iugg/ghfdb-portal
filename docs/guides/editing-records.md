@@ -33,8 +33,8 @@ The coordinates take a latitude and a longitude in decimal degrees (WGS 84) and 
 both or neither. Two sites cannot share one pair of coordinates, so a pair that another site already
 holds is refused, with the message beside the coordinates, and nothing is saved.
 
-The elevation is not part of the coordinates. It has its own field, with its unit, and the
-elevation datum beside it. The portal stores the elevation on the site itself.
+The elevation is not part of the coordinates. It has its own field, with its unit, in metres
+above mean sea level. The portal stores the elevation on the site itself.
 
 ### Terms
 

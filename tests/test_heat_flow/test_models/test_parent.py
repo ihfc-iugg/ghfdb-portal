@@ -6,7 +6,6 @@ from django.contrib.gis.geos import Point
 from django.core.exceptions import ValidationError
 from fairdm_geo.vocabularies import ODM2_SITE_TYPE
 from heat_flow.vocabularies import (
-    ELEVATION_DATUM,
     EXPLORATION_METHOD,
     EXPLORATION_PURPOSE,
     GEOGRAPHIC_ENVIRONMENT,
@@ -37,7 +36,6 @@ class TestHeatFlowSite:
             explo_method_id=term(EXPLORATION_METHOD, "drilling"),
             location=point,
             elevation=350.0,
-            elevation_datum_id=term(ELEVATION_DATUM, "NAVD88"),
             azimuth=90.0,
             inclination=85.0,
             length=1200.0,
@@ -58,7 +56,6 @@ class TestHeatFlowSite:
 
         assert hasattr(site_db.elevation, "magnitude")
         assert float(site_db.elevation.magnitude) == pytest.approx(350.0)
-        assert identifier(site_db.elevation_datum) == "NAVD88"
 
         assert hasattr(site_db.azimuth, "magnitude")
         assert float(site_db.azimuth.magnitude) == pytest.approx(90.0)

@@ -152,13 +152,12 @@ class TestHeatFlowRecordSerializer:
         # Entered in feet, stored and given in metres.
         assert record["length"] == pytest.approx(304.8)
 
-    def test_a_site_carries_its_elevation_with_its_datum_and_type(
+    def test_a_site_carries_its_elevation_and_type(
         self, client, full_records
     ):
         record = only_record(client, SITES)
 
         assert record["elevation"] == 250
-        assert record["elevation_datum"]["name"] == "MSL"
         assert record["type"]["name"] == "unknown"
 
     @pytest.mark.parametrize(
@@ -275,7 +274,6 @@ class TestHeatFlowWrites:
         ("route", "factory", "supplied"),
         [
             (SITES, HeatFlowSiteFactory, {"elevation": 999}),
-            (SITES, HeatFlowSiteFactory, {"elevation_datum": "EGM96"}),
             (SITES, HeatFlowSiteFactory, {"type": "cave"}),
             (GRADIENTS, ThermalGradientFactory, {"temperature_top": 99}),
             (GRADIENTS, ThermalGradientFactory, {"temperature_bottom": 99}),

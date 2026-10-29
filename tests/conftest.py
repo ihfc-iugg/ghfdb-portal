@@ -5,9 +5,6 @@ from pathlib import Path
 
 import pytest
 
-#: Copies of the IHFC and FairDM vocabularies, as published under w3id.org.
-VOCABULARY_FILES = Path(__file__).parent / "fixtures" / "vocabularies"
-
 
 def pytest_configure():
     """Swap in settings a test can change after Django is set up.
@@ -148,14 +145,7 @@ def django_db_setup(django_db_setup, django_db_blocker):
     # transaction that is rolled back afterwards, so anything written from inside a test
     # is gone before the next one starts.
     from controlled_vocabularies.management.commands.sync_vocabularies import Command
-    from django.conf import settings
     from django.core.management import call_command
-
-    # The IHFC and FairDM vocabularies are read from their published addresses in a
-    # deployed portal. The suite reads copies, so it never needs the network.
-    settings.CONTROLLED_VOCABULARIES = {
-        path.stem: {"source": path} for path in VOCABULARY_FILES.glob("*.ttl")
-    }
 
     handle = Command.handle
 

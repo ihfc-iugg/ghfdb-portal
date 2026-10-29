@@ -5,7 +5,7 @@
 import pytest
 from fairdm.factories import DatasetFactory
 from heat_flow import vocabularies
-from heat_flow.vocabularies import GEOGRAPHIC_ENVIRONMENT, MEAN_SEA_LEVEL, term
+from heat_flow.vocabularies import GEOGRAPHIC_ENVIRONMENT, term
 
 
 @pytest.fixture
@@ -127,7 +127,6 @@ def full_records(public_dataset):
         inclination=10.25,
         length=ureg.Quantity(1000, "ft"),
         elevation=ureg.Quantity(250, "m"),
-        elevation_datum_id=MEAN_SEA_LEVEL,
         explo_purpose=concepts(HeatFlowSite, "explo_purpose", 2),
     )
     site.lithology.set(concepts(HeatFlowSite, "lithology", 2))

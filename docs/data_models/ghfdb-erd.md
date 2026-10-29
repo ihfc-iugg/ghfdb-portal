@@ -86,7 +86,6 @@ erDiagram
     HeatFlowSite {
         int sample_ptr_id PK "Primary key, inherited from Sample"
         decimal elevation "Surface elevation"
-        string elevation_datum "Reference point for the elevation"
         string type "Type of sampling location"
         quantity length "Total measured depth (MD)"
         quantity vertical_depth "True vertical depth (TVD)"

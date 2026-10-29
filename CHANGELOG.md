@@ -70,11 +70,14 @@ Releases before that used `<year>.<release>` and are recorded in the
   addresses under `https://w3id.org/ihfc-iugg/vocabularies/`, and the image reads them from
   those addresses with `sync_vocabularies` each time it starts, before it scores records. A
   start whose vocabulary server does not answer keeps the terms already loaded. FairDM's
-  own vocabularies are read from their addresses under `https://w3id.org/fairdm/vocabularies/`,
-  and ODM2's elevation datum vocabulary ships in `project/heat_flow/vocabularies/`. The temperature method vocabulary gains `DST` and `cDST`.
+  own vocabularies are read from their addresses under `https://w3id.org/fairdm/vocabularies/`.
+  No vocabulary is kept in the repository. The temperature method vocabulary gains `DST` and `cDST`.
+- A site no longer has an elevation datum, which went with the vocabulary fairdm-geo dropped. Its
+  elevation is in metres above mean sea level, and the site page, its edit form and the API no
+  longer show a datum.
 - The API gives a vocabulary term with the same `name`, `label`, `uri` and `vocabulary` as
   before, and the `uri` is now the term's address under `w3id.org/ihfc-iugg/vocabularies/`. A site's
-  `type`, `elevation_datum`, `environment` and `explo_method` are written as a term's name or
+  `type`, `environment` and `explo_method` are written as a term's name or
   its address ([records API](docs/guides/heat-flow-records-api.md)).
 - The environment, exploration method and exploration purpose filters of the GHFDB parents
   table and of the administration pages take a term's address in the page address.

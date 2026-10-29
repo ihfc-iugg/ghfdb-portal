@@ -2,29 +2,23 @@
 
 The IHFC vocabularies are published by ihfc-iugg/controlled-vocabularies under
 ``https://w3id.org/ihfc-iugg/vocabularies/``, and ``manage.py sync_vocabularies`` reads each
-one in Turtle from its address with ``.ttl`` added. The elevation datum is ODM2's, shipped
-with the portal because ODM2's server cannot be relied on. ``README.md`` beside this module
-gives its source and licence.
+in Turtle from its address with ``.ttl`` added.
 
 A field stores a term as the address of its concept. The text a person or an upload
 template writes for a term is its label or its identifier, the last part of its address,
 which is the key the GHFDB templates use.
 """
 
-from pathlib import Path
-
 from controlled_vocabularies.fields import Vocabulary
 from controlled_vocabularies.models import Record
 from django.utils.translation import gettext_lazy as _
-
-FILES = Path(__file__).parent
 
 #: The address every IHFC vocabulary is published under.
 IHFC = "https://w3id.org/ihfc-iugg/vocabularies"
 
 
 def ihfc_vocabulary(slug: str) -> Vocabulary:
-    """Name an IHFC vocabulary by its slug, read in Turtle from its own address.
+    """Name an IHFC vocabulary by its slug, read in Turtle from its address with ``.ttl``.
 
     Args:
         slug: The vocabulary's slug, the last part of its address.
@@ -50,14 +44,6 @@ CONDUCTIVITY_SATURATION = ihfc_vocabulary("conductivity-saturation")
 CONDUCTIVITY_PT_CONDITIONS = ihfc_vocabulary("conductivity-conditions")
 CONDUCTIVITY_STRATEGY = ihfc_vocabulary("conductivity-strategy")
 CONDUCTIVITY_PT_FUNCTION = ihfc_vocabulary("conductivity-pt-function")
-
-ELEVATION_DATUM = Vocabulary(
-    "http://vocabulary.odm2.org/elevationdatum",
-    source=FILES / "odm2" / "elevationdatum.rdf",
-)
-
-#: The elevation datum a site starts with.
-MEAN_SEA_LEVEL = f"{ELEVATION_DATUM.uri}/MSL"
 
 #: The identifier of the concept a vocabulary offers for a value nobody recorded.
 UNSPECIFIED = "unspecified"

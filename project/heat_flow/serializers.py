@@ -642,7 +642,6 @@ class HeatFlowSiteSummarySerializer(HeatFlowRecordSerializer, BaseSampleSerializ
             *BaseSampleSerializer.common_fields,
             "type",
             "elevation",
-            "elevation_datum",
             "country",
             "region",
             "continent",
@@ -664,7 +663,6 @@ class HeatFlowSiteSummarySerializer(HeatFlowRecordSerializer, BaseSampleSerializ
             *BaseSampleSerializer.Meta.read_only_fields,
             "type",
             "elevation",
-            "elevation_datum",
         ]
 
     def prime_context(self, records: list[Any]) -> None:
