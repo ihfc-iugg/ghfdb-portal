@@ -47,8 +47,9 @@ The base image's entrypoint runs these in order, and each only runs if the one b
 `sync_vocabularies` loads every controlled vocabulary the portal uses. The IHFC heat flow
 vocabularies are read from their addresses under `https://w3id.org/ihfc-iugg/vocabularies/`, so
 the server must be able to reach `w3id.org` and `ihfc-iugg.github.io`. A new release of them
-reaches the portal on its next start, with no portal release. FairDM's own vocabularies, in
-`vocabularies/`, ODM2's elevation datum and fairdm-geo's vocabularies ship in the image. If a
+reaches the portal on its next start, with no portal release. FairDM's own vocabularies are
+read from `https://w3id.org/fairdm/vocabularies/` the same way. ODM2's elevation datum and
+fairdm-geo's vocabularies ship in the image. If a
 vocabulary server does not answer, the step reports it and the portal starts with the terms it
 already holds.
 
@@ -157,7 +158,7 @@ refuses every command in production without it.
      key, so assessments and datasets keep their publications. If it names a reference it
      cannot convert, it has changed nothing: correct that reference and run it again.
    - The first `upgrade_vocabularies` creates the vocabulary tables and stops,
-     `sync_vocabularies` loads every vocabulary, the IHFC ones from `w3id.org`, which must
+     `sync_vocabularies` loads every vocabulary, the IHFC and FairDM ones from `w3id.org`, which must
      answer for the step to succeed, and the second
      `upgrade_vocabularies` stores every description type, contributor role and keyword by its
      concept's address.

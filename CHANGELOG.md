@@ -69,9 +69,9 @@ Releases before that used `<year>.<release>` and are recorded in the
   django-controlled-vocabularies. The heat flow fields use the IHFC vocabularies at their
   addresses under `https://w3id.org/ihfc-iugg/vocabularies/`, and the image reads them from
   those addresses with `sync_vocabularies` each time it starts, before it scores records. A
-  start whose vocabulary server does not answer keeps the terms already loaded. ODM2's
-  elevation datum vocabulary ships in `project/heat_flow/vocabularies/`, and FairDM's own
-  vocabularies in `vocabularies/`. The temperature method vocabulary gains `DST` and `cDST`.
+  start whose vocabulary server does not answer keeps the terms already loaded. FairDM's
+  own vocabularies are read from their addresses under `https://w3id.org/fairdm/vocabularies/`,
+  and ODM2's elevation datum vocabulary ships in `project/heat_flow/vocabularies/`. The temperature method vocabulary gains `DST` and `cDST`.
 - The API gives a vocabulary term with the same `name`, `label`, `uri` and `vocabulary` as
   before, and the `uri` is now the term's address under `w3id.org/ihfc-iugg/vocabularies/`. A site's
   `type`, `elevation_datum`, `environment` and `explo_method` are written as a term's name or

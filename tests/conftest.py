@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-#: Copies of the IHFC vocabularies, as published under w3id.org/ihfc-iugg/vocabularies/.
-IHFC_VOCABULARY_FILES = Path(__file__).parent / "fixtures" / "vocabularies"
+#: Copies of the IHFC and FairDM vocabularies, as published under w3id.org.
+VOCABULARY_FILES = Path(__file__).parent / "fixtures" / "vocabularies"
 
 
 def pytest_configure():
@@ -151,14 +151,10 @@ def django_db_setup(django_db_setup, django_db_blocker):
     from django.conf import settings
     from django.core.management import call_command
 
-    # The IHFC vocabularies are read from their published addresses in a deployed
-    # portal. The suite reads copies, so it never needs the network.
+    # The IHFC and FairDM vocabularies are read from their published addresses in a
+    # deployed portal. The suite reads copies, so it never needs the network.
     settings.CONTROLLED_VOCABULARIES = {
-        **settings.CONTROLLED_VOCABULARIES,
-        **{
-            path.stem: {"source": path}
-            for path in IHFC_VOCABULARY_FILES.glob("*.ttl")
-        },
+        path.stem: {"source": path} for path in VOCABULARY_FILES.glob("*.ttl")
     }
 
     handle = Command.handle

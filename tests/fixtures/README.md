@@ -342,7 +342,8 @@ Fixtures should be versioned alongside the GHFDB template version they represent
 ## Vocabularies
 
 `vocabularies/` holds copies of the IHFC vocabularies as published under
-`https://w3id.org/ihfc-iugg/vocabularies/`, from ihfc-iugg/controlled-vocabularies (CC BY 4.0).
-A deployed portal reads them from those addresses. `tests/conftest.py` declares these copies in
+`https://w3id.org/ihfc-iugg/vocabularies/`, from ihfc-iugg/controlled-vocabularies (CC BY 4.0),
+and of FairDM's, published under `https://w3id.org/fairdm/vocabularies/` from
+FAIR-DM/fairdm-vocabularies (MIT). A deployed portal reads them from those addresses. `tests/conftest.py` declares these copies in
 `CONTROLLED_VOCABULARIES` for the session, so the suite never needs the network. Replace them
 when the vocabularies are released again.
