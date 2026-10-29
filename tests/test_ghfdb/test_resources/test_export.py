@@ -7,6 +7,7 @@ import openpyxl
 import pytest
 
 from project.ghfdb.constants import GHFDB_COLUMN_ORDER
+from fairdm.core.vocabularies import IGSN
 
 # Resource class structure tests
 
@@ -282,7 +283,7 @@ class TestGHFDBExportRefIGSN:
         from project.ghfdb.resources.export import GHFDBExportResource
 
         SampleIdentifier.objects.create(
-            related=heat_flow_chain.sample, type="IGSN", value="10.60516/AU1101"
+            related=heat_flow_chain.sample, type_id=IGSN, value="10.60516/AU1101"
         )
 
         resource = GHFDBExportResource()
@@ -575,8 +576,8 @@ class TestGHFDBExportRoundTrip:
                     "corr_conv_flag": "-",
                     "corr_hr_flag": "-",
                     "expedition": "Expedition B",
-                    "t_method_top": "BHT",
-                    "t_method_bottom": "BLK",
+                    "t_method_top": "Bottom-hole temperature, uncorrected",
+                    "t_method_bottom": "Thermal blanket",
                     "t_corr_top": "AAPG correction",
                     "t_corr_bottom": "Horner plot",
                     "tc_source": "Core samples",

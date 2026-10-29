@@ -6,6 +6,7 @@ so a record a visitor may not open is counted and never named.
 
 from fairdm.core.measurement.models import Measurement
 from fairdm.core.sample.models import Sample
+from fairdm.core.vocabularies import IGSN
 
 from heat_flow.models import (
     HeatFlow,
@@ -216,7 +217,7 @@ class HeatFlowPage:
             it has none) and the site's ``location``.
         """
         location = self.site_location()
-        igsn = self.record.identifiers.filter(type="IGSN").first()
+        igsn = self.record.identifiers.filter(type_id=IGSN).first()
         return {
             "site": location["site"],
             "site_hidden": not location["visible"],

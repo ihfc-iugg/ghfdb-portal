@@ -2,13 +2,16 @@
 # ``project/heat_flow/templatetags/heat_flow_overview.py``.
 
 import pytest
+from controlled_vocabularies.models import Record
 from django.contrib.auth.models import AnonymousUser
 from django.db import connection
 from django.template import engines
 from django.test import RequestFactory
 from django.test.utils import CaptureQueriesContext
 from django.utils import translation
+from heat_flow import vocabularies
 from heat_flow.models import HeatFlow
+from heat_flow.vocabularies import GEOGRAPHIC_ENVIRONMENT, term
 from heat_flow.templatetags.heat_flow_overview import labels, plus_minus
 
 from tests.factories import HeatFlowFactory, HeatFlowSiteFactory, ThermalGradientFactory
@@ -26,30 +29,37 @@ def render(source, **context):
 
 class TestLabels:
     def test_a_graph_concept_gives_its_label(self):
-        site = HeatFlowSiteFactory(environment="onshore_continental")
+        site = HeatFlowSiteFactory(
+            environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental")
+        )
         site.refresh_from_db()
 
-        assert labels(site.environment) == site.environment.label("en")
+        assert labels(site.environment) == site.environment.display_label()
         assert labels(site.environment) != ""
 
     def test_a_graph_concept_gives_its_label_in_the_active_language(self):
-        class Concept:
-            """A graph concept, whose label is asked for in a language."""
-
-            def label(self, lang="en"):
-                return f"term-{lang}"
+        concept = Record(
+            uri="https://example.org/vocabulary/term",
+            pref_label="term-en",
+            data={
+                "skos:prefLabel": [
+                    {"@value": "term-en", "@language": "en"},
+                    {"@value": "term-de", "@language": "de"},
+                ]
+            },
+        )
 
         with translation.override("de"):
-            assert labels(Concept()) == "term-de"
+            assert labels(concept) == "term-de"
 
     def test_a_many_to_many_of_two_gives_both_labels_joined_by_a_comma(self):
         child = HeatFlowFactory()
-        concepts = list(child.method.model.objects.all()[:2])
+        concepts = list(vocabularies.concepts(vocabularies.HEAT_FLOW_METHOD)[:2])
         child.method.set(concepts)
 
         result = labels(child.method)
 
-        assert sorted(result.split(", ")) == sorted(c.label for c in concepts)
+        assert sorted(result.split(", ")) == sorted(c.display_label() for c in concepts)
 
     def test_an_empty_many_to_many_gives_nothing(self):
         child = HeatFlowFactory(method=[])

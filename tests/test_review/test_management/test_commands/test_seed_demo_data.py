@@ -6,6 +6,7 @@ from io import StringIO
 
 import pytest
 from allauth.account.models import EmailAddress
+from controlled_vocabularies.models import Record
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.management import call_command
@@ -28,8 +29,7 @@ from heat_flow.models import (
 )
 from heat_flow.overview import HeatFlowPage
 from heat_flow.quality import SCHEME_REVISION
-from literature.models import LiteratureItem
-from research_vocabs.models import Concept
+from literature.models import Item
 from review.management.commands import seed_demo_data
 from review.models import Review
 from review.permissions import (
@@ -38,8 +38,6 @@ from review.permissions import (
     is_data_curator,
 )
 from review.states import States
-
-from tests.conftest import concept_preload_record
 
 HEAT_FLOW_MODELS = (
     HeatFlowSite,
@@ -179,7 +177,7 @@ class TestSeedDemoData:
             literature = dataset.reference
 
             assert literature.citation_key.startswith("demo-")
-            assert "10.5072/" in literature.get_doi()
+            assert "10.5072/" in literature.doi
             assert DatasetLiteratureRelation.objects.filter(
                 dataset=dataset,
                 literature_item=literature,
@@ -192,7 +190,7 @@ class TestSeedDemoData:
             assert dataset.review.literature_id == dataset.reference_id
 
     def test_literature_count_matches_the_datasets(self, seeded):
-        assert LiteratureItem.objects.count() == SMALLEST_SIZE
+        assert Item.objects.count() == SMALLEST_SIZE
         assert Review.objects.count() == SMALLEST_SIZE
 
     def test_a_run_without_the_option_varies_nothing(self, seeded):
@@ -201,7 +199,7 @@ class TestSeedDemoData:
 
 class TestSeedDemoDataExistingRecords:
     def test_the_command_loads_the_vocabularies_when_none_are_present(self, db):
-        Concept.objects.all().delete()
+        Record.objects.all().delete()
 
         seed()
 
@@ -210,21 +208,12 @@ class TestSeedDemoDataExistingRecords:
                 assert getattr(record, field).exists()
 
     def test_a_run_loads_a_concept_missing_from_the_vocabularies(self, db):
-        missing = Concept.objects.first()
+        missing = Record.objects.first()
         missing.delete()
 
         seed()
 
-        assert Concept.objects.filter(
-            vocabulary=missing.vocabulary, name=missing.name
-        ).exists()
-
-    def test_a_run_with_every_concept_present_does_not_load_them_again(self, db):
-        before = concept_preload_record.calls
-
-        seed()
-
-        assert concept_preload_record.calls == before
+        assert Record.objects.filter(scheme=missing.scheme, uri=missing.uri).exists()
 
     def test_a_private_dataset_that_existed_before_is_unchanged(self, db):
         existing = DatasetFactory(visibility=Dataset.VISIBILITY_CHOICES.PRIVATE)
@@ -243,7 +232,7 @@ class TestSeedDemoDataEnvironment:
         settings.DJANGO_ENV = "production"
         counts = {
             model: model.objects.count()
-            for model in (*HEAT_FLOW_MODELS, Dataset, LiteratureItem, Review, Concept)
+            for model in (*HEAT_FLOW_MODELS, Dataset, Item, Review, Record)
         }
         called = []
         monkeypatch.setattr(
@@ -282,7 +271,7 @@ class TestSeedDemoDataSize:
     def test_a_size_outside_the_range_is_refused_and_nothing_is_written(self, db, size):
         counts = {
             model: model.objects.count()
-            for model in (Dataset, LiteratureItem, Review, Concept, HeatFlowSite)
+            for model in (Dataset, Item, Review, Record, HeatFlowSite)
         }
 
         with pytest.raises(CommandError) as refusal:

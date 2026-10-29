@@ -7,7 +7,7 @@ import json
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from fairdm.factories import LiteratureItemFactory, PersonFactory
-from literature.models import LiteratureItem
+from literature.models import Item
 from review.forms import ReviewDescriptionForm
 
 from tests.factories import ReviewFactory
@@ -75,7 +75,9 @@ class TestReviewDescriptionFormBibliographyFile:
         assessor = PersonFactory(is_claimed=True, password="test-pass-123")
         bibliography_file = SimpleUploadedFile(
             "publication.json",
-            json.dumps({"title": "A New Paper", "type": "article-journal"}).encode(),
+            json.dumps(
+                {"id": "new-paper", "title": "A New Paper", "type": "article-journal"}
+            ).encode(),
             content_type="application/json",
         )
 
@@ -91,7 +93,7 @@ class TestReviewDescriptionFormBibliographyFile:
         assert form.is_valid(), form.errors
         literature = form.cleaned_data["literature"]
         assert literature.title == "A New Paper"
-        assert LiteratureItem.objects.filter(pk=literature.pk).exists()
+        assert Item.objects.filter(pk=literature.pk).exists()
 
     def test_a_rejected_form_leaves_no_publication_behind(self):
         # A publication is written only once the rest of the form is sound.
@@ -99,11 +101,15 @@ class TestReviewDescriptionFormBibliographyFile:
         bibliography_file = SimpleUploadedFile(
             "publication.json",
             json.dumps(
-                {"title": "Never Asked For", "type": "article-journal"}
+                {
+                    "id": "never-asked-for",
+                    "title": "Never Asked For",
+                    "type": "article-journal",
+                }
             ).encode(),
             content_type="application/json",
         )
-        before = LiteratureItem.objects.count()
+        before = Item.objects.count()
 
         form = ReviewDescriptionForm(
             data={
@@ -115,8 +121,8 @@ class TestReviewDescriptionFormBibliographyFile:
         )
 
         assert not form.is_valid()
-        assert LiteratureItem.objects.count() == before
-        assert not LiteratureItem.objects.filter(title="Never Asked For").exists()
+        assert Item.objects.count() == before
+        assert not Item.objects.filter(title="Never Asked For").exists()
 
     def test_neither_a_publication_nor_a_file_is_refused(self):
         assessor = PersonFactory(is_claimed=True, password="test-pass-123")

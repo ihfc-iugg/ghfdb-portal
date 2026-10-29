@@ -35,99 +35,79 @@ from .resources import (
 class VocabularyListFilter(SimpleListFilter):
     """A ``SimpleListFilter`` scoped to one controlled vocabulary.
 
-    Parametrised by subclass on the vocabulary, the lookup path from the
-    changelist's model to the filtered field, and the lookup mode. Two modes
-    are needed: ``FIELD``, for a single-valued ``ConceptField`` whose choices
-    come from the vocabulary and match on the stored value, and ``CONCEPT``,
-    for a many-valued field whose choices come from the concept rows and
-    match on their primary key. Both the determination and the site
-    changelist filter on environment, exploration method and exploration
-    purpose, so one class carries the shape six near-identical ones would
-    otherwise repeat.
+    Parametrised by subclass on the vocabulary and the lookup path from the
+    changelist's model to the filtered field. The choices are the
+    vocabulary's concepts, matched on their address, which serves a
+    single-valued and a many-valued field alike. Both the determination and
+    the site changelist filter on environment, exploration method and
+    exploration purpose, so one class carries the shape six near-identical
+    ones would otherwise repeat.
     """
 
-    FIELD = "field"
-    CONCEPT = "concept"
-
     lookup_path: str = ""
-    mode: str = FIELD
 
     def get_vocabulary(self):
-        """Return the vocabulary class this filter scopes to.
-
-        Overridden per subclass with a lazy import, so importing this module
-        does not import every controlled vocabulary.
-        """
+        """Return the vocabulary this filter scopes to."""
         raise NotImplementedError
 
     def lookups(self, request, model_admin):
-        """Build filter choices from the vocabulary's concepts or field choices."""
-        vocabulary = self.get_vocabulary()
-        if self.mode == self.CONCEPT:
-            from research_vocabs.models import Concept
+        """Offer the vocabulary's concepts by label."""
+        from heat_flow.vocabularies import concepts
 
-            concepts = Concept.get_for_vocabulary(vocabulary).order_by("label")
-            return [(concept.pk, concept.label) for concept in concepts]
-        return vocabulary().choices
+        return [
+            (concept.uri, concept.display_label())
+            for concept in concepts(self.get_vocabulary())
+        ]
 
     def queryset(self, request, queryset):
-        """Filter the changelist queryset by the selected concept or value."""
+        """Filter the changelist queryset by the selected concept."""
         if self.value():
-            return queryset.filter(**{self.lookup_path: self.value()})
+            return queryset.filter(
+                **{f"{self.lookup_path}__uri": self.value()}
+            ).distinct()
         return queryset
 
 
 class ExplorePurposeListFilter(VocabularyListFilter):
-    """Exploration-purpose filter for the determination changelist.
-
-    Scoped to the ``ExplorationPurpose`` vocabulary. Many-valued, so it
-    matches on the concept row's primary key rather than a stored value.
-    """
+    """Exploration-purpose filter for the determination changelist."""
 
     title = _("exploration purpose")
     parameter_name = "explo_purpose"
-    mode = VocabularyListFilter.CONCEPT
-    lookup_path = "sample__heatflowinterval__site__explo_purpose__pk"
+    lookup_path = "sample__heatflowinterval__site__explo_purpose"
 
     def get_vocabulary(self):
-        """Return the ``ExplorationPurpose`` vocabulary class."""
-        from heat_flow.vocabularies import ExplorationPurpose
+        """Return the exploration purpose vocabulary."""
+        from heat_flow.vocabularies import EXPLORATION_PURPOSE
 
-        return ExplorationPurpose
+        return EXPLORATION_PURPOSE
 
 
 class EnvironmentListFilter(VocabularyListFilter):
-    """Environment filter for the determination changelist.
-
-    Scoped to the ``GeographicEnvironment`` vocabulary.
-    """
+    """Environment filter for the determination changelist."""
 
     title = _("environment")
     parameter_name = "environment"
     lookup_path = "sample__heatflowinterval__site__environment"
 
     def get_vocabulary(self):
-        """Return the ``GeographicEnvironment`` vocabulary class."""
-        from heat_flow.vocabularies import GeographicEnvironment
+        """Return the geographic environment vocabulary."""
+        from heat_flow.vocabularies import GEOGRAPHIC_ENVIRONMENT
 
-        return GeographicEnvironment
+        return GEOGRAPHIC_ENVIRONMENT
 
 
 class ChildExplorationMethodListFilter(VocabularyListFilter):
-    """Exploration-method filter for the determination changelist.
-
-    Scoped to the ``ExplorationMethod`` vocabulary.
-    """
+    """Exploration-method filter for the determination changelist."""
 
     title = _("exploration method")
     parameter_name = "explo_method"
     lookup_path = "sample__heatflowinterval__site__explo_method"
 
     def get_vocabulary(self):
-        """Return the ``ExplorationMethod`` vocabulary class."""
-        from heat_flow.vocabularies import ExplorationMethod
+        """Return the exploration method vocabulary."""
+        from heat_flow.vocabularies import EXPLORATION_METHOD
 
-        return ExplorationMethod
+        return EXPLORATION_METHOD
 
 
 @admin.register(GHFDBRelease)
@@ -251,57 +231,22 @@ def geography_display(field_name):
     return display
 
 
-class ParentExplorePurposeListFilter(VocabularyListFilter):
-    """Exploration-purpose filter for the site changelist.
+class ParentExplorePurposeListFilter(ExplorePurposeListFilter):
+    """Exploration-purpose filter for the site changelist."""
 
-    Scoped to the ``ExplorationPurpose`` vocabulary. Many-valued, so it
-    matches on the concept row's primary key rather than a stored value.
-    """
-
-    title = _("exploration purpose")
-    parameter_name = "explo_purpose"
-    mode = VocabularyListFilter.CONCEPT
-    lookup_path = "sample__heatflowsite__explo_purpose__pk"
-
-    def get_vocabulary(self):
-        """Return the ``ExplorationPurpose`` vocabulary class."""
-        from heat_flow.vocabularies import ExplorationPurpose
-
-        return ExplorationPurpose
+    lookup_path = "sample__heatflowsite__explo_purpose"
 
 
-class ParentEnvironmentListFilter(VocabularyListFilter):
-    """Environment filter for the site changelist.
+class ParentEnvironmentListFilter(EnvironmentListFilter):
+    """Environment filter for the site changelist."""
 
-    Scoped to the ``GeographicEnvironment`` vocabulary.
-    """
-
-    title = _("environment")
-    parameter_name = "environment"
     lookup_path = "sample__heatflowsite__environment"
 
-    def get_vocabulary(self):
-        """Return the ``GeographicEnvironment`` vocabulary class."""
-        from heat_flow.vocabularies import GeographicEnvironment
 
-        return GeographicEnvironment
+class ParentExplorationMethodListFilter(ChildExplorationMethodListFilter):
+    """Exploration-method filter for the site changelist."""
 
-
-class ParentExplorationMethodListFilter(VocabularyListFilter):
-    """Exploration-method filter for the site changelist.
-
-    Scoped to the ``ExplorationMethod`` vocabulary.
-    """
-
-    title = _("exploration method")
-    parameter_name = "explo_method"
     lookup_path = "sample__heatflowsite__explo_method"
-
-    def get_vocabulary(self):
-        """Return the ``ExplorationMethod`` vocabulary class."""
-        from heat_flow.vocabularies import ExplorationMethod
-
-        return ExplorationMethod
 
 
 @admin.register(GHFDBParent)

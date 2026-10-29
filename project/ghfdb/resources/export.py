@@ -41,7 +41,9 @@ def _labels(qs) -> str:
     if qs is None:
         return ""
     try:
-        return "; ".join(getattr(c, "label", str(c)) for c in qs)
+        return "; ".join(
+            c.display_label() if hasattr(c, "display_label") else str(c) for c in qs
+        )
     except (
         Exception
     ):  # pragma: no cover — defensive guard for unexpected queryset types

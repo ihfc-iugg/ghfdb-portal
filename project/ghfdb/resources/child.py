@@ -307,7 +307,7 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
 
         q_method_raw = row.get("q_method", "")
         if q_method_raw:
-            widget = MultiConceptWidget(vocabularies.HeatFlowMethod)
+            widget = MultiConceptWidget(vocabularies.HEAT_FLOW_METHOD)
             qs = widget.clean(q_method_raw, row=row, column="q_method")
             if qs is not None:
                 instance.method.set(qs)
@@ -488,12 +488,13 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
             )
 
         from fairdm.core.sample.models import SampleIdentifier
+        from fairdm.core.vocabularies import IGSN
 
         try:
-            identifier = SampleIdentifier.objects.get(type="IGSN", value=value)
+            identifier = SampleIdentifier.objects.get(type_id=IGSN, value=value)
             identifier.related = interval
         except SampleIdentifier.DoesNotExist:
-            identifier = SampleIdentifier(related=interval, type="IGSN", value=value)
+            identifier = SampleIdentifier(related=interval, type_id=IGSN, value=value)
 
         try:
             identifier.full_clean()

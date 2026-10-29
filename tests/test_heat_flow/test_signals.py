@@ -4,7 +4,6 @@
 import pytest
 from django.db.models.signals import m2m_changed, post_save
 from heat_flow import vocabularies
-from research_vocabs.models import Concept
 
 from tests.factories import (
     HeatFlowIntervalFactory,
@@ -12,6 +11,7 @@ from tests.factories import (
     IntervalConductivityFactory,
     ThermalGradientFactory,
 )
+from heat_flow.vocabularies import EXPLORATION_METHOD, concepts, term
 
 pytestmark = pytest.mark.django_db
 
@@ -36,7 +36,7 @@ class SignalCounter:
 
 
 def borehole_gradient(**fields):
-    site = HeatFlowSiteFactory(explo_method="drilling")
+    site = HeatFlowSiteFactory(explo_method_id=term(EXPLORATION_METHOD, "drilling"))
     interval = HeatFlowIntervalFactory(site=site, top=0, bottom=500)
     fields.setdefault("method_top", [])
     fields.setdefault("method_bottom", [])
@@ -44,7 +44,7 @@ def borehole_gradient(**fields):
 
 
 def concept(vocabulary, name):
-    return Concept.get_for_vocabulary(vocabulary).get(name=name)
+    return concepts(vocabulary).get(uri=term(vocabulary, name))
 
 
 class TestMeasurementReceivers:
@@ -72,7 +72,7 @@ class TestMeasurementReceivers:
         from heat_flow.models import ThermalGradient
 
         gradient = borehole_gradient()
-        logs = concept(vocabularies.TemperatureMethod, "LOGeq")
+        logs = concept(vocabularies.TEMPERATURE_METHOD, "LOGeq")
 
         with SignalCounter(post_save, ThermalGradient) as saves:
             gradient.method_top.add(logs)
@@ -87,7 +87,7 @@ class TestMeasurementReceivers:
         ThermalGradient.objects.filter(pk=gradient.pk).update(score=0.123)
 
         gradient.correction_top.add(
-            concept(vocabularies.TemperatureCorrection, "hornerPlot")
+            concept(vocabularies.TEMPERATURE_CORRECTION, "hornerPlot")
         )
 
         assert ThermalGradient.objects.get(pk=gradient.pk).score == pytest.approx(0.123)
@@ -95,15 +95,15 @@ class TestMeasurementReceivers:
     def test_a_conductivity_field_the_score_does_not_read_leaves_it_alone(self):
         from heat_flow.models import IntervalConductivity
 
-        site = HeatFlowSiteFactory(explo_method="drilling")
+        site = HeatFlowSiteFactory(explo_method_id=term(EXPLORATION_METHOD, "drilling"))
         conductivity = IntervalConductivityFactory(
             sample=HeatFlowIntervalFactory(site=site, top=0, bottom=500)
         )
         IntervalConductivity.objects.filter(pk=conductivity.pk).update(score=0.123)
 
-        conductivity.strategy.add(concept(vocabularies.ConductivityStrategy, "random"))
+        conductivity.strategy.add(concept(vocabularies.CONDUCTIVITY_STRATEGY, "random"))
         conductivity.pT_function.add(
-            concept(vocabularies.ConductivityPTFunction, "unspecified")
+            concept(vocabularies.CONDUCTIVITY_PT_FUNCTION, "unspecified")
         )
 
         assert IntervalConductivity.objects.get(
@@ -117,7 +117,7 @@ class TestMeasurementReceivers:
         through = ThermalGradient.method_top.through
 
         with SignalCounter(m2m_changed, through) as changes:
-            gradient.method_top.add(concept(vocabularies.TemperatureMethod, "LOGeq"))
+            gradient.method_top.add(concept(vocabularies.TEMPERATURE_METHOD, "LOGeq"))
 
         # One add sends one pre_add and one post_add, and the refresh adds no more.
         assert changes.calls == 2
@@ -140,7 +140,7 @@ class TestChildReceivers:
     def child(self):
         from tests.factories import HeatFlowFactory
 
-        site = HeatFlowSiteFactory(explo_method="drilling")
+        site = HeatFlowSiteFactory(explo_method_id=term(EXPLORATION_METHOD, "drilling"))
         interval = HeatFlowIntervalFactory(site=site, top=0, bottom=500)
         return HeatFlowFactory(sample=interval, value=70, uncertainty=7)
 
@@ -533,7 +533,7 @@ class TestRecalculationTable:
         before = mine.stored()
         with RefreshSpy() as spy:
             mine.gradient.method_top.add(
-                *concept_names(vocabularies.TemperatureMethod, "CPD")
+                *concept_names(vocabularies.TEMPERATURE_METHOD, "CPD")
             )
 
         assert spy.calls == keys(mine.gradient, mine.child, mine.parent)
@@ -546,7 +546,7 @@ class TestRecalculationTable:
         second = mine.child_using(mine.gradient)
         with RefreshSpy() as spy:
             mine.gradient.method_top.add(
-                *concept_names(vocabularies.TemperatureMethod, "CPD")
+                *concept_names(vocabularies.TEMPERATURE_METHOD, "CPD")
             )
 
         assert spy.calls == keys(mine.gradient, mine.child, second, mine.parent)
@@ -554,7 +554,7 @@ class TestRecalculationTable:
 
     def test_a_concept_removed_from_a_gradient_refreshes_what_uses_it(self):
         mine, other = Network(), Network()
-        poor = concept_names(vocabularies.TemperatureMethod, "CPD")
+        poor = concept_names(vocabularies.TEMPERATURE_METHOD, "CPD")
         mine.gradient.method_top.add(*poor)
         before = mine.stored()
         with RefreshSpy() as spy:
@@ -633,7 +633,7 @@ class TestRecalculationTable:
     def test_a_site_exploration_method_changed_refreshes_every_measurement_on_it(self):
         mine, other = Network(), Network()
         before = mine.stored()
-        mine.site.explo_method = "other"
+        mine.site.explo_method_id = term(EXPLORATION_METHOD, "other")
         with RefreshSpy() as spy:
             mine.site.save()
 
@@ -741,7 +741,7 @@ class TestDeferral:
         mine = Network()
         with RefreshSpy() as spy, Recalculation.deferred():
             mine.gradient.method_top.add(
-                *concept_names(vocabularies.TemperatureMethod, "CPD")
+                *concept_names(vocabularies.TEMPERATURE_METHOD, "CPD")
             )
             mine.gradient.save()
             mine.child.save()

@@ -86,7 +86,6 @@ erDiagram
     HeatFlowSite {
         int sample_ptr_id PK "Primary key, inherited from Sample"
         decimal elevation "Surface elevation"
-        string elevation_datum "Reference point for the elevation"
         string type "Type of sampling location"
         quantity length "Total measured depth (MD)"
         quantity vertical_depth "True vertical depth (TVD)"
@@ -446,7 +445,7 @@ people who carried out the assessment, the dates, and an optional title that fal
 publication's own when left blank. Two things about it are worth knowing before reading the code.
 
 The publication may be chosen from the catalogue or supplied as a CSL-JSON bibliography file, in
-which case the form creates the `LiteratureItem` while validating and links the new record to it. An
+which case the form creates the reference (a django-literature `Item`) while validating and links the new record to it. An
 assessment can therefore be started for a publication the portal has never seen, without leaving the
 page.
 
@@ -565,7 +564,9 @@ The following fields are indexed:
 
 ## Vocabulary Fields
 
-Many fields draw on controlled vocabularies through `ConceptField` and `ConceptManyToManyField`. Each many-to-many vocabulary field has its own join table, named for the model and the field, and those names are listed in [GHFDB Fields](../ghfdb_fields.md).
+Many fields draw on controlled vocabularies through django-controlled-vocabularies' `ConceptField` and `MultiConceptField`, which store each term as the address of its concept. Each many-valued vocabulary field has its own join table, named for the model and the field, and those names are listed in [GHFDB Fields](../ghfdb_fields.md). The IHFC vocabularies are published under `https://w3id.org/ihfc-iugg/vocabularies/`, and `manage.py sync_vocabularies` reads each from its address.
+
+`heat_flow.vocabularies` names each one with `ihfc_vocabulary()`, which takes a vocabulary's slug and returns the address it is published under, read in Turtle with `.ttl` added. Code that reads the text a person or an upload template wrote for a term uses `lookup()`, which maps every label and identifier of a vocabulary, in lower case, to its concept, or `resolve_term()` and `resolve_terms()`, which build on it.
 
 The vocabularies in use include the geographic environment, exploration method and purpose, heat flow determination method, probe type, temperature methods and corrections at the top and bottom of an interval, the conductivity source, location, method, saturation and pressure-temperature conditions, and the lithology and geological timescale terms carried by a site and an interval.
 

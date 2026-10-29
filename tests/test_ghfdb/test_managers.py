@@ -11,6 +11,8 @@ from tests.factories import (
     HeatFlowSiteFactory,
     ParentHeatFlowFactory,
 )
+from heat_flow.vocabularies import GEOGRAPHIC_ENVIRONMENT, identifier, term
+from fairdm.core.vocabularies import IGSN
 
 pytestmark = pytest.mark.ghfdb
 
@@ -179,7 +181,7 @@ class TestRefIgsnAnnotation:
         from project.ghfdb.models import GHFDBChild
 
         SampleIdentifier.objects.create(
-            related=published_chain.sample, type="IGSN", value="10.60516/AU1101"
+            related=published_chain.sample, type_id=IGSN, value="10.60516/AU1101"
         )
 
         record = GHFDBChild.objects.as_ghfdb_flat().get(pk=published_chain.pk)
@@ -335,10 +337,9 @@ class TestChildFlattening:
         assert record.site_name == site.name
         assert record.site_country == site.country
         assert record.site_continent == site.continent
-        # The annotation reads the raw stored value; the descriptor on the
-        # model instance resolves it to a Concept, so compare their string
-        # forms rather than the objects themselves.
-        assert str(record.environment) == str(site.environment)
+        # The annotation reads the concept's identifier; the descriptor on the model
+        # instance resolves the stored address to its concept.
+        assert record.environment == identifier(site.environment)
         assert record.ID_parent == parent.ghfdb_id
         # QuantityField wraps the annotated value in a Quantity; compare
         # magnitudes rather than the object forms.
@@ -796,7 +797,7 @@ class TestGHFDBManagerScoping:
             name="Non-GHFDB Site",
             country="Germany",
             continent="Europe",
-            environment="onshore_continental",
+            environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental"),
         )
         non_ghfdb_parent = ParentHeatFlowFactory(
             dataset=heat_flow_chain.dataset,

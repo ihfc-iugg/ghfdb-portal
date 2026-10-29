@@ -2,12 +2,13 @@ import pytest
 from drf_spectacular.drainage import GENERATOR_STATS
 from drf_spectacular.generators import SchemaGenerator
 from heat_flow.models import HeatFlowCorrection, HeatFlowSite, ThermalGradient
+from heat_flow.vocabularies import slug
 
 TERM_PROPERTIES = {"name", "label", "uri", "vocabulary"}
 
 
 def vocabulary_name(model, field_name):
-    return model._meta.get_field(field_name).scheme.scheme().name
+    return slug(model._meta.get_field(field_name).vocabulary[0])
 
 
 @pytest.mark.django_db

@@ -5,8 +5,7 @@ import django.core.validators
 import django.db.models.deletion
 import django.db.models.manager
 import fairdm.db.fields
-import heat_flow.vocabularies
-import research_vocabs.fields
+import controlled_vocabularies.fields
 from django.db import migrations, models
 
 
@@ -15,9 +14,8 @@ class Migration(migrations.Migration):
     dependencies = [
         ('heat_flow', '0004_rename_conductivity_location'),
         ('measurement', '0015_located_measurements'),
-        ('research_vocabs', '0002_alter_concept_unique_together'),
+        ('controlled_vocabularies', '0001_initial'),
         ('sample', '0012_located_samples'),
-        ('stratigraphy', '0002_alter_stratigraphicunit_genesis_and_more'),
     ]
 
     operations = [
@@ -354,7 +352,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='probemetadata',
             name='probe_type',
-            field=research_vocabs.fields.ConceptManyToManyField(blank=True, help_text='Type of heat-flow probe used for measurement.', related_name='+', to='research_vocabs.concept', verbose_name='probe type', vocabulary=heat_flow.vocabularies.ProbeType),
+            field=controlled_vocabularies.fields.MultiConceptField(blank=True, help_text='Type of heat-flow probe used for measurement.', related_name='+', verbose_name='probe type', vocabulary=('https://w3id.org/ihfc-iugg/vocabularies/heat-flow-probes',)),
         ),
         migrations.AddIndex(
             model_name='heatflowcorrection',
@@ -377,14 +375,5 @@ class Migration(migrations.Migration):
         ),
         migrations.DeleteModel(
             name='SurfaceHeatFlow',
-        ),
-        # A ConceptField takes its length from the longest term in its vocabulary when it
-        # is created, and that length is never recorded in a migration. The column 0001
-        # built on 2025.21 is 16 characters, and the exploration method vocabulary now has
-        # a 19-character term. A database built from empty already has 19.
-        migrations.RunSQL(
-            "ALTER TABLE heat_flow_heatflowsite"
-            " ALTER COLUMN explo_method TYPE varchar(19)",
-            reverse_sql=migrations.RunSQL.noop,
         ),
     ]

@@ -1,6 +1,12 @@
 import random
 
 import pytest
+from heat_flow.vocabularies import (
+    EXPLORATION_METHOD,
+    GEOGRAPHIC_ENVIRONMENT,
+    concepts,
+    identifier,
+)
 from django.core.exceptions import ValidationError
 from heat_flow import demo
 from heat_flow.demo import CHILDREN_CYCLE, REGIONS, SITES_PER_DATASET, DemoGraph, Region
@@ -56,10 +62,14 @@ def graph(dataset):
 
 
 class TestRegions:
-    def test_every_region_names_vocabulary_values(self):
+    def test_every_region_names_vocabulary_values(self, db):
+        environments = {
+            identifier(concept) for concept in concepts(GEOGRAPHIC_ENVIRONMENT)
+        }
+        methods = {identifier(concept) for concept in concepts(EXPLORATION_METHOD)}
         for region in REGIONS:
-            assert region.environment in HeatFlowSite.environment_vocab.values
-            assert region.explo_method in HeatFlowSite.explo_method_vocab.values
+            assert region.environment in environments
+            assert region.explo_method in methods
 
     def test_every_region_has_valid_bounds(self):
         for region in REGIONS:
@@ -175,12 +185,12 @@ class TestDemoGraph:
 
     def test_probe_intervals_have_probe_metadata_and_borehole_ones_do_not(self, graph):
         for interval in HeatFlowInterval.objects.select_related("site"):
-            probed = interval.site.explo_method.name == "probing_offshore"
+            probed = identifier(interval.site.explo_method) == "probing_offshore"
 
             assert hasattr(interval, "probe_metadata") is probed
 
     def test_both_probe_and_borehole_sites_are_built(self, graph):
-        methods = {site.explo_method.name for site in HeatFlowSite.objects.all()}
+        methods = {identifier(site.explo_method) for site in HeatFlowSite.objects.all()}
 
         assert methods == {"probing_offshore", "drilling"}
 
@@ -223,13 +233,13 @@ class TestDemoGraph:
         self, graph, model, field
     ):
         records = model.objects.all()
-        vocabulary = model._meta.get_field(field).vocabulary().scheme().name
+        vocabulary = model._meta.get_field(field).vocabulary[0]
 
         assert records.exists()
         for record in records:
             concepts = list(getattr(record, field).all())
             assert len(concepts) == 1
-            assert concepts[0].vocabulary.name == vocabulary
+            assert concepts[0].scheme.uri == vocabulary.uri
 
     def test_ghfdb_ids_are_set_on_parents_and_children_when_a_counter_is_given(
         self, dataset
@@ -331,7 +341,7 @@ class TestDemoGraphRanges:
     def test_elevation_is_below_sea_level_at_sea_and_above_it_on_land(self, graph):
         for site in HeatFlowSite.objects.all():
             elevation = metres(site.elevation)
-            if site.explo_method.name == "probing_offshore":
+            if identifier(site.explo_method) == "probing_offshore":
                 assert -6000 <= elevation <= -200
             else:
                 assert 0 <= elevation <= 3000

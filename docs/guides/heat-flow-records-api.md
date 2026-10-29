@@ -27,13 +27,15 @@ the vocabulary it belongs to:
 "environment": {
   "name": "onshore_continental",
   "label": "Onshore (continental)",
-  "uri": "https://heatflow.world/vocabularies/geographic-environments/onshore_continental",
+  "uri": "https://w3id.org/ihfc-iugg/vocabularies/geographic-environments/onshore_continental",
   "vocabulary": "geographic-environments"
 }
 ```
 
-A field that can hold several terms is a list with one such object for each term. When a record
-is created or changed, a single-term field still takes the term's `name` as a plain string.
+The `uri` is the address of the term's concept in its published vocabulary, and the term is
+stored by it. A field that can hold several terms is a list with one such object for each term.
+When a record is created or changed, a single-term field takes the term's `name` or its `uri` as a
+plain string.
 
 ## Quantities and units
 
@@ -125,8 +127,8 @@ GET /api/v1/samples/heat-flow-sites/
       "status": {
         "name": "unknown",
         "label": "Unknown",
-        "uri": "https://www.fairdm.org/vocabularies/unknown",
-        "vocabulary": "fairdm-sample-status"
+        "uri": "https://w3id.org/fairdm/vocabularies/sample-status/unknown",
+        "vocabulary": "sample-status"
       },
       "dataset": {
         "uuid": "dGeJTczPv8dUTq6jGeMgE5Z",
@@ -149,12 +151,6 @@ GET /api/v1/samples/heat-flow-sites/
         "vocabulary": "sitetype"
       },
       "elevation": 412.0,
-      "elevation_datum": {
-        "name": "MSL",
-        "label": "MSL",
-        "uri": "http://vocabulary.odm2.org/elevationdatum/MSL",
-        "vocabulary": "elevationdatum"
-      },
       "country": null,
       "region": null,
       "continent": null,
@@ -165,13 +161,13 @@ GET /api/v1/samples/heat-flow-sites/
       "environment": {
         "name": "onshore_continental",
         "label": "Onshore (continental)",
-        "uri": "https://heatflow.world/vocabularies/geographic-environments/onshore_continental",
+        "uri": "https://w3id.org/ihfc-iugg/vocabularies/geographic-environments/onshore_continental",
         "vocabulary": "geographic-environments"
       },
       "explo_method": {
         "name": "drilling_clustering",
         "label": "Drilling-Clustering",
-        "uri": "https://heatflow.world/vocabularies/exploration-methods/drilling_clustering",
+        "uri": "https://w3id.org/ihfc-iugg/vocabularies/exploration-methods/drilling_clustering",
         "vocabulary": "exploration-methods"
       },
       "explo_purpose": [],
@@ -215,8 +211,8 @@ GET /api/v1/samples/heat-flow-sites/sJkWMuWMhnS9i846rJtWrHN/
   "status": {
     "name": "unknown",
     "label": "Unknown",
-    "uri": "https://www.fairdm.org/vocabularies/unknown",
-    "vocabulary": "fairdm-sample-status"
+    "uri": "https://w3id.org/fairdm/vocabularies/sample-status/unknown",
+    "vocabulary": "sample-status"
   },
   "dataset": {
     "uuid": "dkdeMQST7ux5RYv63mi775C",
@@ -239,12 +235,6 @@ GET /api/v1/samples/heat-flow-sites/sJkWMuWMhnS9i846rJtWrHN/
     "vocabulary": "sitetype"
   },
   "elevation": 500.0,
-  "elevation_datum": {
-    "name": "MSL",
-    "label": "MSL",
-    "uri": "http://vocabulary.odm2.org/elevationdatum/MSL",
-    "vocabulary": "elevationdatum"
-  },
   "country": "Germany",
   "region": null,
   "continent": "Europe",
@@ -255,7 +245,7 @@ GET /api/v1/samples/heat-flow-sites/sJkWMuWMhnS9i846rJtWrHN/
   "environment": {
     "name": "onshore_continental",
     "label": "Onshore (continental)",
-    "uri": "https://heatflow.world/vocabularies/geographic-environments/onshore_continental",
+    "uri": "https://w3id.org/ihfc-iugg/vocabularies/geographic-environments/onshore_continental",
     "vocabulary": "geographic-environments"
   },
   "explo_method": null,
@@ -318,8 +308,8 @@ GET /api/v1/samples/heat-flow-sites/sJkWMuWMhnS9i846rJtWrHN/
       "status": {
         "name": "unknown",
         "label": "Unknown",
-        "uri": "https://www.fairdm.org/vocabularies/unknown",
-        "vocabulary": "fairdm-sample-status"
+        "uri": "https://w3id.org/fairdm/vocabularies/sample-status/unknown",
+        "vocabulary": "sample-status"
       },
       "dataset": {
         "uuid": "dkdeMQST7ux5RYv63mi775C",
@@ -587,7 +577,7 @@ GET /api/v1/measurements/heat-flow/
         {
           "name": "numerical",
           "label": "Other numerical computations",
-          "uri": "https://heatflow.world/vocabularies/heat-flow-method/numerical",
+          "uri": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-method/numerical",
           "vocabulary": "heat-flow-method"
         }
       ],
@@ -714,8 +704,8 @@ GET /api/v1/samples/depth-intervals/
       "status": {
         "name": "unknown",
         "label": "Unknown",
-        "uri": "https://www.fairdm.org/vocabularies/unknown",
-        "vocabulary": "fairdm-sample-status"
+        "uri": "https://w3id.org/fairdm/vocabularies/sample-status/unknown",
+        "vocabulary": "sample-status"
       },
       "dataset": {
         "uuid": "dSJt4XcaoCXHb8BfKdnVCAE",
@@ -770,7 +760,7 @@ GET /api/v1/samples/depth-intervals/sAvai23dHxcyhKwmMz4sMZU/
       {
         "name": "outrigger_hybrid_lister_hylo",
         "label": "Outrigger probe (Hybrid Lister) HyLO",
-        "uri": "https://heatflow.world/vocabularies/heat-flow-probes/outrigger_hybrid_lister_hylo",
+        "uri": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-probes/outrigger_hybrid_lister_hylo",
         "vocabulary": "heat-flow-probes"
       }
     ],
@@ -859,7 +849,7 @@ GET /api/v1/measurements/thermal-gradients/
         {
           "name": "ODTT_PC",
           "label": "ODTT-PC",
-          "uri": "https://heatflow.world/vocabularies/temperature-method/ODTT_PC",
+          "uri": "https://w3id.org/ihfc-iugg/vocabularies/temperature-method/ODTT_PC",
           "vocabulary": "temperature-method"
         }
       ],
@@ -972,7 +962,7 @@ GET /api/v1/measurements/thermal-conductivities/
         {
           "name": "assumed_from_literature",
           "label": "Assumed from literature",
-          "uri": "https://heatflow.world/vocabularies/conductivity-sources/assumed_from_literature",
+          "uri": "https://w3id.org/ihfc-iugg/vocabularies/conductivity-sources/assumed_from_literature",
           "vocabulary": "conductivity-sources"
         }
       ],
@@ -983,7 +973,7 @@ GET /api/v1/measurements/thermal-conductivities/
         {
           "name": "actual",
           "label": "Actual heat-flow location",
-          "uri": "https://heatflow.world/vocabularies/conductivity-location/actual",
+          "uri": "https://w3id.org/ihfc-iugg/vocabularies/conductivity-location/actual",
           "vocabulary": "conductivity-location"
         }
       ],
@@ -1072,10 +1062,10 @@ to what the requester may see, and `references()` writes its entries.
 
 All six build on `HeatFlowRecordSerializer`, which chooses the field for each model field:
 
-- A single vocabulary field becomes a `TermChoiceField`. It reads as a term object and writes the
-  term's name.
+- A single vocabulary field becomes a `TermField`. It reads as a term object and is written as the
+  term's name or its address, and a name its vocabulary does not hold is refused.
 - A many-valued vocabulary field becomes a read-only `TermRelatedField`, one term object for each
-  entry. `term()` builds the object for either kind of stored concept.
+  entry. `term()` builds the object from a concept and the vocabulary's slug.
 - A quantity field becomes a `QuantityFloatField`, `QuantityDecimalField` or
   `QuantityIntegerField`, all built on `QuantityNumber`. They give the number in the unit the
   model field is stored in.

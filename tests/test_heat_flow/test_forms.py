@@ -2,7 +2,15 @@
 # forms a researcher corrects heat flow records with.
 
 import pytest
+from controlled_vocabularies.models import Record
 from django.core.exceptions import ValidationError
+from heat_flow.vocabularies import (
+    EXPLORATION_METHOD,
+    GEOGRAPHIC_ENVIRONMENT,
+    choices,
+    identifier,
+    term,
+)
 
 
 def attempt_to_save(form):
@@ -13,14 +21,14 @@ def attempt_to_save(form):
 
 class TestConceptTextField:
     @pytest.fixture
-    def environment(self):
+    def environment(self, db):
         from heat_flow.forms import ConceptTextField
         from heat_flow.models import HeatFlowSite
 
         return ConceptTextField(HeatFlowSite._meta.get_field("environment"))
 
     @pytest.fixture
-    def purposes(self):
+    def purposes(self, db):
         from heat_flow.forms import ConceptTextField
         from heat_flow.models import HeatFlowSite
 
@@ -28,24 +36,25 @@ class TestConceptTextField:
 
     @pytest.fixture
     def two_purposes(self, db):
-        from heat_flow.vocabularies import ExplorationPurpose
-        from research_vocabs.models import Concept
+        from heat_flow.vocabularies import EXPLORATION_PURPOSE, concepts
 
-        return list(Concept.get_for_vocabulary(ExplorationPurpose).order_by("name")[:2])
+        return list(concepts(EXPLORATION_PURPOSE).order_by("uri")[:2])
 
     @pytest.fixture
     def stored_site(self, db, two_purposes):
         from tests.factories import HeatFlowSiteFactory
 
         return HeatFlowSiteFactory(
-            environment="onshore_continental", explo_purpose=two_purposes
+            environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental"),
+            explo_purpose=two_purposes,
         )
 
     def test_an_unbound_form_draws_a_stored_term_as_its_label(self, stored_site):
         from heat_flow.forms import HeatFlowSiteForm
-        from heat_flow.vocabularies import GeographicEnvironment
 
-        label = dict(GeographicEnvironment().choices)["onshore_continental"]
+        label = dict(choices(GEOGRAPHIC_ENVIRONMENT))[
+            term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental")
+        ]
 
         form = HeatFlowSiteForm(instance=stored_site)
 
@@ -59,7 +68,7 @@ class TestConceptTextField:
         form = HeatFlowSiteForm(instance=stored_site)
 
         assert form["explo_purpose"].value() == "; ".join(
-            concept.label for concept in stored_site.explo_purpose.all()
+            concept.display_label() for concept in stored_site.explo_purpose.all()
         )
 
     def test_a_bound_form_redraws_posted_text_unchanged(self, stored_site):
@@ -78,10 +87,14 @@ class TestConceptTextField:
         ["Onshore (continental)", "onshore (continental)", "onshore_continental"],
     )
     def test_a_label_or_a_key_is_accepted_in_any_case(self, environment, text):
-        assert environment.clean(text) == "onshore_continental"
+        assert environment.clean(text).uri == term(
+            GEOGRAPHIC_ENVIRONMENT, "onshore_continental"
+        )
 
     def test_several_terms_are_accepted_by_label_or_key(self, purposes, two_purposes):
-        text = f"{two_purposes[0].label.upper()}; {two_purposes[1].name}"
+        text = (
+            f"{two_purposes[0].display_label().upper()}; {identifier(two_purposes[1])}"
+        )
 
         cleaned = purposes.clean(text)
 
@@ -96,18 +109,20 @@ class TestConceptTextField:
 
     def test_one_unknown_term_among_several_is_refused(self, purposes, two_purposes):
         with pytest.raises(ValidationError) as refusal:
-            purposes.clean(f"{two_purposes[0].label}; swamp")
+            purposes.clean(f"{two_purposes[0].display_label()}; swamp")
 
         assert refusal.value.code == "unknown_term"
 
     def test_untouched_text_returns_the_stored_term_the_vocabulary_no_longer_offers(
         self, environment
     ):
-        environment.stored = "withdrawn_term"
-
-        assert environment.clean(environment.as_text("withdrawn_term")) == (
-            "withdrawn_term"
+        withdrawn = Record(
+            uri=term(GEOGRAPHIC_ENVIRONMENT, "withdrawn_term"),
+            pref_label="Withdrawn term",
         )
+        environment.stored = withdrawn
+
+        assert environment.clean(environment.as_text(withdrawn)) == withdrawn
 
     def test_untouched_text_returns_the_stored_terms(self, purposes, two_purposes):
         purposes.stored = two_purposes
@@ -325,7 +340,6 @@ def site_data(site, **changes):
         "name": site.name,
         "location_first": str(site.location.y),
         "location_second": str(site.location.x),
-        "elevation_datum": "MSL",
         "environment": "Onshore (continental)",
         "explo_method": "",
         "explo_purpose": "",
@@ -377,21 +391,18 @@ class TestHeatFlowSiteForm:
 
         assert len(location.fields) == 2
 
-    def test_elevation_and_datum_are_saved_on_the_site_itself(self, site):
+    def test_the_elevation_is_saved_on_the_site_itself(self, site):
         from heat_flow.forms import HeatFlowSiteForm
 
         form = HeatFlowSiteForm(
             instance=site,
-            data=site_data(
-                site, elevation_0="350", elevation_1="m", elevation_datum="NAVD88"
-            ),
+            data=site_data(site, elevation_0="350", elevation_1="m"),
         )
 
         assert form.is_valid(), form.errors
         form.save()
         site.refresh_from_db()
         assert site.elevation.m_as("m") == 350
-        assert str(site.elevation_datum) == "NAVD88"
         assert site.location_elevation is None
 
     def test_a_changed_vertical_depth_is_stored_on_a_site_with_a_bottom(self, site):
@@ -457,7 +468,7 @@ class TestHeatFlowSiteForm:
     def test_an_environment_the_vocabulary_holds_as_unspecified_is_saved(self, site):
         from heat_flow.forms import HeatFlowSiteForm
 
-        site.environment = "onshore_continental"
+        site.environment_id = term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental")
         site.save()
         form = HeatFlowSiteForm(
             instance=site, data=site_data(site, environment="Unspecified")
@@ -467,17 +478,14 @@ class TestHeatFlowSiteForm:
         form.save()
 
         site.refresh_from_db()
-        assert site.environment.name == "unspecified"
+        assert identifier(site.environment) == "unspecified"
 
     def test_the_exploration_purpose_takes_several_terms(self, site):
         from heat_flow.forms import HeatFlowSiteForm
-        from heat_flow.vocabularies import ExplorationPurpose
-        from research_vocabs.models import Concept
+        from heat_flow.vocabularies import EXPLORATION_PURPOSE, concepts
 
-        chosen = list(
-            Concept.get_for_vocabulary(ExplorationPurpose).order_by("name")[:2]
-        )
-        text = "; ".join(concept.label for concept in chosen)
+        chosen = list(concepts(EXPLORATION_PURPOSE).order_by("uri")[:2])
+        text = "; ".join(concept.display_label() for concept in chosen)
         form = HeatFlowSiteForm(instance=site, data=site_data(site, explo_purpose=text))
 
         assert form.is_valid(), form.errors
@@ -509,7 +517,7 @@ class TestHeatFlowSiteEditPage:
 
         return reverse(site, "edit")
 
-    def test_a_dataset_owner_corrects_the_elevation_datum_and_vertical_depth(
+    def test_a_dataset_owner_corrects_the_elevation_and_vertical_depth(
         self, db, researcher
     ):
         from fairdm.factories import DatasetFactory
@@ -527,7 +535,6 @@ class TestHeatFlowSiteEditPage:
                 site,
                 elevation_0="350",
                 elevation_1="m",
-                elevation_datum="NAVD88",
                 vertical_depth_0="800",
                 vertical_depth_1="m",
             ),
@@ -536,7 +543,6 @@ class TestHeatFlowSiteEditPage:
         assert response.status_code == 302
         site.refresh_from_db()
         assert site.elevation.m_as("m") == 350
-        assert str(site.elevation_datum) == "NAVD88"
         assert site.vertical_depth.m_as("m") == 800
 
     def test_a_save_shows_a_site_awaiting_review_to_no_one_new(self, db, researcher):
@@ -658,7 +664,9 @@ class TestHeatFlowIntervalForm:
         form.save()
 
         probe = interval.probe_metadata
-        assert [concept.name for concept in probe.probe_type.all()] == ["violin_bow"]
+        assert [identifier(concept) for concept in probe.probe_type.all()] == [
+            "violin_bow"
+        ]
         assert probe.tilt.m_as("°") == pytest.approx(12.5)
         assert probe.penetration is None
         assert probe.length is None
@@ -805,7 +813,9 @@ class TestHeatFlowIntervalEditPage:
 
         assert response.status_code == 302
         probe = interval.probe_metadata
-        assert [concept.name for concept in probe.probe_type.all()] == ["violin_bow"]
+        assert [identifier(concept) for concept in probe.probe_type.all()] == [
+            "violin_bow"
+        ]
         assert probe.tilt.m_as("°") == pytest.approx(12.5)
 
 
@@ -1085,11 +1095,10 @@ class TestHeatFlowForm:
         assert form["correction_IS"].value() in ("", None)
 
     def test_the_method_takes_several_method_terms(self, child_records, editor):
-        from heat_flow.vocabularies import HeatFlowMethod
-        from research_vocabs.models import Concept
+        from heat_flow.vocabularies import HEAT_FLOW_METHOD, concepts
 
-        chosen = list(Concept.get_for_vocabulary(HeatFlowMethod).order_by("name")[:2])
-        text = "; ".join(concept.label for concept in chosen)
+        chosen = list(concepts(HEAT_FLOW_METHOD).order_by("uri")[:2])
+        text = "; ".join(concept.display_label() for concept in chosen)
         form = self.build(child_records, editor, method=text)
 
         assert form.is_valid(), form.errors
@@ -1231,23 +1240,25 @@ def scored_records(db):
     from tests.test_heat_flow.test_quality import concepts
 
     dataset = DatasetFactory(visibility=Visibility.PUBLIC, published=True)
-    site = HeatFlowSiteFactory(dataset=dataset, explo_method="drilling")
+    site = HeatFlowSiteFactory(
+        dataset=dataset, explo_method_id=term(EXPLORATION_METHOD, "drilling")
+    )
     interval = HeatFlowIntervalFactory(dataset=dataset, site=site, top=0, bottom=1000)
     gradient = ThermalGradientFactory(
         dataset=dataset,
         sample=interval,
         number=10,
-        method_top=concepts(vocabularies.TemperatureMethod, "LOGeq"),
-        method_bottom=concepts(vocabularies.TemperatureMethod, "LOGeq"),
+        method_top=concepts(vocabularies.TEMPERATURE_METHOD, "LOGeq"),
+        method_bottom=concepts(vocabularies.TEMPERATURE_METHOD, "LOGeq"),
     )
     conductivity = IntervalConductivityFactory(
         dataset=dataset,
         sample=interval,
         number=30,
-        source=concepts(vocabularies.ConductivitySource, "core_samples"),
-        conductivity_location=concepts(vocabularies.ConductivityLocation, "actual"),
-        saturation=concepts(vocabularies.ConductivitySaturation, "saturatedMeasured"),
-        pT_conditions=concepts(vocabularies.ConductivityPTConditions, "actualInSitu"),
+        source=concepts(vocabularies.CONDUCTIVITY_SOURCE, "core_samples"),
+        conductivity_location=concepts(vocabularies.CONDUCTIVITY_LOCATION, "actual"),
+        saturation=concepts(vocabularies.CONDUCTIVITY_SATURATION, "saturatedMeasured"),
+        pT_conditions=concepts(vocabularies.CONDUCTIVITY_PT_CONDITIONS, "actualInSitu"),
     )
     parent = ParentHeatFlowFactory(dataset=dataset, sample=site)
     child = HeatFlowFactory(
@@ -1372,7 +1383,7 @@ class TestThermalGradientForm:
         assert form.is_valid(), form.errors
         gradient = form.save()
         assert set(gradient.method_top.all()) == set(
-            concepts(vocabularies.TemperatureMethod, "LOGeq", "cLOG")
+            concepts(vocabularies.TEMPERATURE_METHOD, "LOGeq", "cLOG")
         )
 
 
@@ -1458,7 +1469,7 @@ class TestIntervalConductivityForm:
         assert form.is_valid(), form.errors
         conductivity = form.save()
         assert set(conductivity.source.all()) == set(
-            concepts(vocabularies.ConductivitySource, "core_samples", "well_log")
+            concepts(vocabularies.CONDUCTIVITY_SOURCE, "core_samples", "well_log")
         )
 
 

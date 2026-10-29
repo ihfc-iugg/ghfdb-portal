@@ -1,6 +1,7 @@
 # Tests for GHFDB custom import/export widgets.
 
 import pytest
+from heat_flow.vocabularies import identifier
 
 from tests.factories import HeatFlowIntervalFactory, HeatFlowSiteFactory
 
@@ -13,7 +14,7 @@ class TestConceptWidget:
 
         from project.ghfdb.resources.widgets import ConceptWidget
 
-        widget = ConceptWidget(vocabulary=vocabularies.GeographicEnvironment)
+        widget = ConceptWidget(vocabulary=vocabularies.GEOGRAPHIC_ENVIRONMENT)
         result = widget.clean("Onshore (continental)", row={})
         assert result is not None
 
@@ -22,7 +23,7 @@ class TestConceptWidget:
 
         from project.ghfdb.resources.widgets import ConceptWidget
 
-        widget = ConceptWidget(vocabulary=vocabularies.GeographicEnvironment)
+        widget = ConceptWidget(vocabulary=vocabularies.GEOGRAPHIC_ENVIRONMENT)
         # The vocabulary has "Onshore (continental)" — try lowercase
         result = widget.clean("onshore (continental)", row={})
         assert result is not None
@@ -32,7 +33,7 @@ class TestConceptWidget:
 
         from project.ghfdb.resources.widgets import ConceptWidget
 
-        widget = ConceptWidget(vocabulary=vocabularies.GeographicEnvironment)
+        widget = ConceptWidget(vocabulary=vocabularies.GEOGRAPHIC_ENVIRONMENT)
         assert widget.clean("", row={}) is None
         assert widget.clean(None, row={}) is None
 
@@ -41,7 +42,7 @@ class TestConceptWidget:
 
         from project.ghfdb.resources.widgets import ConceptWidget
 
-        widget = ConceptWidget(vocabulary=vocabularies.GeographicEnvironment)
+        widget = ConceptWidget(vocabulary=vocabularies.GEOGRAPHIC_ENVIRONMENT)
         with pytest.raises(ValueError) as exc_info:
             widget.clean("not_a_real_environment", row={})
         error_msg = str(exc_info.value)
@@ -57,7 +58,7 @@ class TestMultiConceptWidget:
 
         from project.ghfdb.resources.widgets import MultiConceptWidget
 
-        widget = MultiConceptWidget(vocabulary=vocabularies.ExplorationPurpose)
+        widget = MultiConceptWidget(vocabulary=vocabularies.EXPLORATION_PURPOSE)
         result = widget.clean("", row={})
         assert result is not None  # should return empty list, not raise
 
@@ -66,7 +67,7 @@ class TestMultiConceptWidget:
 
         from project.ghfdb.resources.widgets import MultiConceptWidget
 
-        widget = MultiConceptWidget(vocabulary=vocabularies.ExplorationPurpose)
+        widget = MultiConceptWidget(vocabulary=vocabularies.EXPLORATION_PURPOSE)
         result = widget.clean("", row={})
         assert result == [] or result is None or hasattr(result, "__iter__")
 
@@ -75,7 +76,7 @@ class TestMultiConceptWidget:
 
         from project.ghfdb.resources.widgets import MultiConceptWidget
 
-        widget = MultiConceptWidget(vocabulary=vocabularies.ExplorationPurpose)
+        widget = MultiConceptWidget(vocabulary=vocabularies.EXPLORATION_PURPOSE)
         with pytest.raises(ValueError) as exc_info:
             widget.clean("invalid_one;invalid_two", row={})
         error_msg = str(exc_info.value)
@@ -440,7 +441,7 @@ class TestVocabNormalisation:
 
         from project.ghfdb.resources.widgets import ConceptWidget
 
-        widget = ConceptWidget(vocabulary=vocabularies.GeographicEnvironment)
+        widget = ConceptWidget(vocabulary=vocabularies.GEOGRAPHIC_ENVIRONMENT)
         result = widget.clean("[Onshore (continental)]", row={})
         assert result is not None
 
@@ -449,7 +450,7 @@ class TestVocabNormalisation:
 
         from project.ghfdb.resources.widgets import ConceptWidget
 
-        widget = ConceptWidget(vocabulary=vocabularies.GeographicEnvironment)
+        widget = ConceptWidget(vocabulary=vocabularies.GEOGRAPHIC_ENVIRONMENT)
         result = widget.clean("[OFFSHORE (MARINE)]", row={})
         assert result is not None
 
@@ -458,7 +459,7 @@ class TestVocabNormalisation:
 
         from project.ghfdb.resources.widgets import ConceptWidget
 
-        widget = ConceptWidget(vocabulary=vocabularies.GeographicEnvironment)
+        widget = ConceptWidget(vocabulary=vocabularies.GEOGRAPHIC_ENVIRONMENT)
         with pytest.raises(ValueError) as exc_info:
             widget.clean("[NOT_VALID]", row={})
         # Original token (with brackets) must be visible in the error message
@@ -470,7 +471,7 @@ class TestVocabNormalisation:
         from project.ghfdb.resources.widgets import MultiConceptWidget
 
         # ExplorationPurpose is preloaded in the test DB; use it to verify bracket normalisation
-        widget = MultiConceptWidget(vocabulary=vocabularies.ExplorationPurpose)
+        widget = MultiConceptWidget(vocabulary=vocabularies.EXPLORATION_PURPOSE)
         result = widget.clean("[Geothermal]; [Research]", row={})
         assert result is not None
         assert result.count() >= 1
@@ -480,7 +481,7 @@ class TestVocabNormalisation:
 
         from project.ghfdb.resources.widgets import MultiConceptWidget
 
-        widget = MultiConceptWidget(vocabulary=vocabularies.ExplorationPurpose)
+        widget = MultiConceptWidget(vocabulary=vocabularies.EXPLORATION_PURPOSE)
         with pytest.raises(ValueError) as exc_info:
             widget.clean("[COMPLETELY_INVALID]", row={})
         # Original token (with brackets) must be visible — not the lowercased/stripped form
@@ -498,12 +499,12 @@ class TestNumericCellInputGuards:
 
         from project.ghfdb.resources.widgets import ConceptWidget
 
-        widget = ConceptWidget(vocabulary=vocabularies.GeographicEnvironment)
+        widget = ConceptWidget(vocabulary=vocabularies.GEOGRAPHIC_ENVIRONMENT)
         with pytest.raises(ValueError) as exc_info:
             widget.clean(42, row={})
         error_msg = str(exc_info.value)
-        # Must mention the vocabulary class name so the user knows which field
-        assert "GeographicEnvironment" in error_msg
+        # Must mention the vocabulary so the user knows which field
+        assert "geographic-environments" in error_msg
         # Must mention the bad value
         assert "42" in error_msg
 
@@ -512,11 +513,11 @@ class TestNumericCellInputGuards:
 
         from project.ghfdb.resources.widgets import ConceptWidget
 
-        widget = ConceptWidget(vocabulary=vocabularies.GeographicEnvironment)
+        widget = ConceptWidget(vocabulary=vocabularies.GEOGRAPHIC_ENVIRONMENT)
         with pytest.raises(ValueError) as exc_info:
             widget.clean(3.14, row={})
         error_msg = str(exc_info.value)
-        assert "GeographicEnvironment" in error_msg
+        assert "geographic-environments" in error_msg
 
     def test_gradient_widget_numeric_sentinel_succeeds(self, db):
         # GradientWidget with a numeric T_grad_mean proceeds — returns ThermalGradient.
@@ -613,46 +614,51 @@ class TestValuesRealSubmissionsCarry:
         # The template's lithology column offers keys, not labels.
         # ``alkali_feldspar_granite`` is the cell value the template's own dropdown
         # supplies; ``alkali feldspar granite`` is the portal's label for the same
-        from fairdm_geo.vocabularies.cgi.geosciml import SimpleLithology
+        from fairdm_geo.vocabularies import CGI_SIMPLE_LITHOLOGY
 
         from project.ghfdb.resources.widgets import MultiConceptWidget
 
-        widget = MultiConceptWidget(SimpleLithology)
+        widget = MultiConceptWidget(CGI_SIMPLE_LITHOLOGY)
 
         result = widget.clean("alkali_feldspar_granite", row={})
 
-        assert [concept.name for concept in result] == ["alkali_feldspar_granite"]
+        assert [identifier(concept) for concept in result] == [
+            "alkali_feldspar_granite"
+        ]
 
     def test_a_stratigraphic_age_named_by_its_key_is_matched(self, db):
-        from fairdm_geo.vocabularies.stratigraphy import GeologicalTimescale
+        from fairdm_geo.vocabularies import ICS_TIMESCALE
 
         from project.ghfdb.resources.widgets import MultiConceptWidget
 
-        widget = MultiConceptWidget(GeologicalTimescale)
+        widget = MultiConceptWidget(ICS_TIMESCALE)
 
         result = widget.clean("CambrianSeries2", row={})
 
-        assert [concept.name for concept in result] == ["CambrianSeries2"]
+        assert [identifier(concept) for concept in result] == ["CambrianSeries2"]
 
     def test_labels_still_match_after_keys_are_accepted(self, db):
-        from fairdm_geo.vocabularies.cgi.geosciml import SimpleLithology
+        from fairdm_geo.vocabularies import CGI_SIMPLE_LITHOLOGY
 
         from project.ghfdb.resources.widgets import MultiConceptWidget
 
-        widget = MultiConceptWidget(SimpleLithology)
+        widget = MultiConceptWidget(CGI_SIMPLE_LITHOLOGY)
 
         result = widget.clean("andesite;basalt", row={})
 
-        assert sorted(concept.name for concept in result) == ["andesite", "basalt"]
+        assert sorted(identifier(concept) for concept in result) == [
+            "andesite",
+            "basalt",
+        ]
 
     def test_a_value_in_neither_the_keys_nor_the_labels_is_still_refused(self, db):
         # ``Aluvium`` is a misspelling in a submitted file, not a concept. Accepting
         # keys must not turn the vocabulary check into a pass.
-        from fairdm_geo.vocabularies.cgi.geosciml import SimpleLithology
+        from fairdm_geo.vocabularies import CGI_SIMPLE_LITHOLOGY
 
         from project.ghfdb.resources.widgets import MultiConceptWidget
 
-        widget = MultiConceptWidget(SimpleLithology)
+        widget = MultiConceptWidget(CGI_SIMPLE_LITHOLOGY)
 
         with pytest.raises(ValueError) as excinfo:
             widget.clean("Aluvium", row={}, column="geo_lithology")
@@ -687,22 +693,22 @@ class TestMultiConceptWidgetUnspecified:
 
         from project.ghfdb.resources.widgets import MultiConceptWidget
 
-        widget = MultiConceptWidget(vocabularies.ConductivitySource)
+        widget = MultiConceptWidget(vocabularies.CONDUCTIVITY_SOURCE)
 
         result = widget.clean("[unspecified]", row={})
 
-        assert [concept.name for concept in result] == ["unspecified"]
+        assert [identifier(concept) for concept in result] == ["unspecified"]
 
     def test_unspecified_beside_another_concept_keeps_both(self, db):
         from heat_flow import vocabularies
 
         from project.ghfdb.resources.widgets import MultiConceptWidget
 
-        widget = MultiConceptWidget(vocabularies.ConductivitySource)
+        widget = MultiConceptWidget(vocabularies.CONDUCTIVITY_SOURCE)
 
         result = widget.clean("[Core samples]; [unspecified]", row={})
 
-        assert sorted(concept.name for concept in result) == [
+        assert sorted(identifier(concept) for concept in result) == [
             "core_samples",
             "unspecified",
         ]
@@ -713,7 +719,7 @@ class TestMultiConceptWidgetUnspecified:
 
         from project.ghfdb.resources.widgets import MultiConceptWidget
 
-        widget = MultiConceptWidget(vocabularies.ConductivitySource)
+        widget = MultiConceptWidget(vocabularies.CONDUCTIVITY_SOURCE)
 
         assert list(widget.clean(cell, row={})) == []
 
@@ -722,7 +728,7 @@ class TestMultiConceptWidgetUnspecified:
 
         from project.ghfdb.resources.widgets import MultiConceptWidget
 
-        widget = MultiConceptWidget(vocabularies.ConductivityLocation)
+        widget = MultiConceptWidget(vocabularies.CONDUCTIVITY_LOCATION)
 
         assert list(widget.clean("[unspecified]", row={})) == []
 
@@ -730,21 +736,20 @@ class TestMultiConceptWidgetUnspecified:
         self, dataset
     ):
         from heat_flow import vocabularies
-        from research_vocabs.models import Concept
 
         from project.ghfdb.resources.export import GHFDBExportResource
         from project.ghfdb.resources.widgets import MultiConceptWidget
         from tests.factories import HeatFlowFactory, IntervalConductivityFactory
 
-        unspecified = Concept.get_for_vocabulary(vocabularies.ConductivitySource).get(
-            name="unspecified"
+        unspecified = vocabularies.concepts(vocabularies.CONDUCTIVITY_SOURCE).get(
+            uri=vocabularies.term(vocabularies.CONDUCTIVITY_SOURCE, "unspecified")
         )
         child = HeatFlowFactory(
             thermal_conductivity=IntervalConductivityFactory(source=[unspecified])
         )
 
         exported = GHFDBExportResource().dehydrate_tc_source(child)
-        reimported = MultiConceptWidget(vocabularies.ConductivitySource).clean(
+        reimported = MultiConceptWidget(vocabularies.CONDUCTIVITY_SOURCE).clean(
             exported, row={}
         )
 

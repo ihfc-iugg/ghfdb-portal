@@ -4,6 +4,8 @@
 import pytest
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+from heat_flow import vocabularies
+from heat_flow.vocabularies import EXPLORATION_METHOD, term
 
 
 class TestHeatFlowInterval:
@@ -483,7 +485,6 @@ class TestThermalGradient:
         # (FS-001 FR-019).
         from heat_flow import vocabularies
         from heat_flow.models import ThermalGradient
-        from research_vocabs.models import Concept
 
         gradient = ThermalGradient.objects.create(
             dataset=dataset,
@@ -496,12 +497,12 @@ class TestThermalGradient:
             shutin_bottom=15,
             number=8,
         )
-        top_method = Concept.get_for_vocabulary(vocabularies.TemperatureMethod).first()
+        top_method = vocabularies.concepts(vocabularies.TEMPERATURE_METHOD).first()
         bottom_method = (
-            Concept.get_for_vocabulary(vocabularies.TemperatureMethod).exclude(
+            vocabularies.concepts(vocabularies.TEMPERATURE_METHOD).exclude(
                 pk=top_method.pk
             )
-            or Concept.get_for_vocabulary(vocabularies.TemperatureMethod)
+            or vocabularies.concepts(vocabularies.TEMPERATURE_METHOD)
         ).first()
         gradient.method_top.add(top_method)
         gradient.method_bottom.add(bottom_method)
@@ -630,7 +631,6 @@ class TestIntervalConductivity:
         # score persist and read back (FS-001 FR-021).
         from heat_flow import vocabularies
         from heat_flow.models import IntervalConductivity
-        from research_vocabs.models import Concept
 
         conductivity = IntervalConductivity.objects.create(
             dataset=dataset,
@@ -642,17 +642,17 @@ class TestIntervalConductivity:
         )
 
         vocab_fields = {
-            "source": vocabularies.ConductivitySource,
-            "conductivity_location": vocabularies.ConductivityLocation,
-            "method": vocabularies.ConductivityMethod,
-            "saturation": vocabularies.ConductivitySaturation,
-            "pT_conditions": vocabularies.ConductivityPTConditions,
-            "pT_function": vocabularies.ConductivityPTFunction,
-            "strategy": vocabularies.ConductivityStrategy,
+            "source": vocabularies.CONDUCTIVITY_SOURCE,
+            "conductivity_location": vocabularies.CONDUCTIVITY_LOCATION,
+            "method": vocabularies.CONDUCTIVITY_METHOD,
+            "saturation": vocabularies.CONDUCTIVITY_SATURATION,
+            "pT_conditions": vocabularies.CONDUCTIVITY_PT_CONDITIONS,
+            "pT_function": vocabularies.CONDUCTIVITY_PT_FUNCTION,
+            "strategy": vocabularies.CONDUCTIVITY_STRATEGY,
         }
         expected_pks = {}
         for field_name, vocabulary in vocab_fields.items():
-            concept = Concept.get_for_vocabulary(vocabulary).first()
+            concept = vocabularies.concepts(vocabulary).first()
             getattr(conductivity, field_name).add(concept)
             expected_pks[field_name] = concept.pk
 
@@ -699,10 +699,9 @@ class TestProbeMetadata:
         # them back (FS-001 FR-023, many-to-many vocabulary field).
         from heat_flow import vocabularies
         from heat_flow.models import ProbeMetadata
-        from research_vocabs.models import Concept
 
         probe = ProbeMetadata.objects.create(interval=interval_fixture, penetration=3.5)
-        concepts = list(Concept.get_for_vocabulary(vocabularies.ProbeType)[:2])
+        concepts = list(vocabularies.concepts(vocabularies.PROBE_TYPE)[:2])
         assert len(concepts) == 2, "fixture requires at least two probe type concepts"
         probe.probe_type.set(concepts)
 
@@ -794,9 +793,11 @@ class TestMeasurementScores:
 
     @staticmethod
     def concepts(vocabulary, *names):
-        from research_vocabs.models import Concept
-
-        return list(Concept.get_for_vocabulary(vocabulary).filter(name__in=names))
+        return list(
+            vocabularies.concepts(vocabulary).filter(
+                uri__in=[vocabularies.term(vocabulary, name) for name in names]
+            )
+        )
 
     def probe_interval(self):
         from tests.factories import (
@@ -805,7 +806,10 @@ class TestMeasurementScores:
             ProbeMetadataFactory,
         )
 
-        site = HeatFlowSiteFactory(explo_method="probing_offshore", elevation=-3000)
+        site = HeatFlowSiteFactory(
+            explo_method_id=term(EXPLORATION_METHOD, "probing_offshore"),
+            elevation=-3000,
+        )
         interval = HeatFlowIntervalFactory(site=site)
         ProbeMetadataFactory(interval=interval, penetration=12, tilt=45, probe_type=[])
         return interval
@@ -813,7 +817,7 @@ class TestMeasurementScores:
     def borehole_interval(self, **depths):
         from tests.factories import HeatFlowIntervalFactory, HeatFlowSiteFactory
 
-        site = HeatFlowSiteFactory(explo_method="drilling")
+        site = HeatFlowSiteFactory(explo_method_id=term(EXPLORATION_METHOD, "drilling"))
         return HeatFlowIntervalFactory(site=site, **depths)
 
     def reload(self, measurement):
@@ -840,7 +844,7 @@ class TestMeasurementScores:
 
         from tests.factories import ThermalGradientFactory
 
-        logs = self.concepts(vocabularies.TemperatureMethod, "LOGeq")
+        logs = self.concepts(vocabularies.TEMPERATURE_METHOD, "LOGeq")
         gradient = ThermalGradientFactory(
             sample=self.borehole_interval(),
             number=10,
@@ -862,7 +866,9 @@ class TestMeasurementScores:
             ThermalGradientFactory,
         )
 
-        interval = HeatFlowIntervalFactory(site=HeatFlowSiteFactory(explo_method=None))
+        interval = HeatFlowIntervalFactory(
+            site=HeatFlowSiteFactory(explo_method_id=None)
+        )
         gradient = ThermalGradientFactory(
             sample=interval, score=0.7, method_top=[], method_bottom=[]
         )
@@ -878,7 +884,7 @@ class TestMeasurementScores:
 
         from tests.factories import ThermalGradientFactory
 
-        logs = self.concepts(vocabularies.TemperatureMethod, "LOGeq")
+        logs = self.concepts(vocabularies.TEMPERATURE_METHOD, "LOGeq")
         gradient = ThermalGradientFactory(
             sample=self.borehole_interval(),
             number=10,
@@ -939,15 +945,15 @@ class TestMeasurementScores:
         conductivity = IntervalConductivityFactory(
             sample=self.borehole_interval(top=0, bottom=500),
             number=30,
-            source=self.concepts(vocabularies.ConductivitySource, "core_samples"),
+            source=self.concepts(vocabularies.CONDUCTIVITY_SOURCE, "core_samples"),
             conductivity_location=self.concepts(
-                vocabularies.ConductivityLocation, "actual"
+                vocabularies.CONDUCTIVITY_LOCATION, "actual"
             ),
             saturation=self.concepts(
-                vocabularies.ConductivitySaturation, "saturatedMeasured"
+                vocabularies.CONDUCTIVITY_SATURATION, "saturatedMeasured"
             ),
             pT_conditions=self.concepts(
-                vocabularies.ConductivityPTConditions, "actualInSitu"
+                vocabularies.CONDUCTIVITY_PT_CONDITIONS, "actualInSitu"
             ),
         )
 
@@ -965,16 +971,16 @@ class TestMeasurementScores:
         conductivity = IntervalConductivityFactory(
             sample=self.probe_interval(),
             number=4,
-            source=self.concepts(vocabularies.ConductivitySource, "insitu_probe"),
+            source=self.concepts(vocabularies.CONDUCTIVITY_SOURCE, "insitu_probe"),
             conductivity_location=self.concepts(
-                vocabularies.ConductivityLocation, "actual"
+                vocabularies.CONDUCTIVITY_LOCATION, "actual"
             ),
-            method=self.concepts(vocabularies.ConductivityMethod, "probePulse"),
+            method=self.concepts(vocabularies.CONDUCTIVITY_METHOD, "probePulse"),
             saturation=self.concepts(
-                vocabularies.ConductivitySaturation, "saturatedInSitu"
+                vocabularies.CONDUCTIVITY_SATURATION, "saturatedInSitu"
             ),
             pT_conditions=self.concepts(
-                vocabularies.ConductivityPTConditions, "actualInSitu"
+                vocabularies.CONDUCTIVITY_PT_CONDITIONS, "actualInSitu"
             ),
         )
 
@@ -1006,19 +1012,19 @@ class TestMeasurementScores:
         conductivity = IntervalConductivityFactory(
             sample=self.borehole_interval(top=0, bottom=500),
             number=30,
-            source=self.concepts(vocabularies.ConductivitySource, "core_samples"),
+            source=self.concepts(vocabularies.CONDUCTIVITY_SOURCE, "core_samples"),
             conductivity_location=self.concepts(
-                vocabularies.ConductivityLocation, "actual"
+                vocabularies.CONDUCTIVITY_LOCATION, "actual"
             ),
             saturation=self.concepts(
-                vocabularies.ConductivitySaturation, "saturatedMeasured"
+                vocabularies.CONDUCTIVITY_SATURATION, "saturatedMeasured"
             ),
             pT_conditions=[],
         )
         assert self.reload(conductivity).score_missing is True
 
         conductivity.pT_conditions.add(
-            *self.concepts(vocabularies.ConductivityPTConditions, "recordedAmbient")
+            *self.concepts(vocabularies.CONDUCTIVITY_PT_CONDITIONS, "recordedAmbient")
         )
         ambient = self.reload(conductivity)
         assert ambient.score == pytest.approx(0.8)
@@ -1230,14 +1236,17 @@ class TestChildScores:
         )
         from tests.test_heat_flow.test_quality import concepts
 
-        site = HeatFlowSiteFactory(explo_method="probing_offshore", elevation=-1000)
+        site = HeatFlowSiteFactory(
+            explo_method_id=term(EXPLORATION_METHOD, "probing_offshore"),
+            elevation=-1000,
+        )
         interval = HeatFlowIntervalFactory(site=site)
         ProbeMetadataFactory(interval=interval, penetration=12, tilt=5, probe_type=[])
         gradient = ThermalGradientFactory(
             sample=interval,
             number=6,
-            method_top=concepts(vocabularies.TemperatureMethod),
-            method_bottom=concepts(vocabularies.TemperatureMethod),
+            method_top=concepts(vocabularies.TEMPERATURE_METHOD),
+            method_bottom=concepts(vocabularies.TEMPERATURE_METHOD),
         )
         child = HeatFlowFactory(sample=interval, thermal_gradient=gradient)
         # 1.0, +0.1 penetration, +0.1 recordings, -0.2 water depth, 0 tilt.

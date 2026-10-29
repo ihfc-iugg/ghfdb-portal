@@ -7,11 +7,10 @@ fairdm.setup(
         "ghfdb",
         "heat_flow",
         "review",
-        "fairdm_geo",
-        "fairdm_geo.geology.stratigraphy",
     ],
     addons=[
         "fairdm_discussions",
+        "fairdm_geo",
     ],
 )
 

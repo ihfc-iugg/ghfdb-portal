@@ -12,7 +12,9 @@ from decimal import Decimal
 from typing import Any, NamedTuple
 
 from django.core.exceptions import ValidationError
+from fairdm_geo.vocabularies import ODM2_SITE_TYPE
 
+from . import vocabularies
 from .models import (
     HeatFlow,
     HeatFlowCorrection,
@@ -137,8 +139,8 @@ class DemoGraph:
         self._label_count = 0
         self._corrections: list[HeatFlowCorrection] = []
         self._probes: list[ProbeMetadata] = []
-        self._concept_rows: list[tuple[Any, str, int]] = []
-        self._concepts: dict[Any, list[int]] = {}
+        self._concept_rows: list[tuple[Any, str, str]] = []
+        self._concepts: dict[str, list[str]] = {}
 
     def build(self, sites: int = SITES_PER_DATASET) -> None:
         """Create *sites* sites with their parents, children and everything beneath them.
@@ -295,10 +297,16 @@ class DemoGraph:
                     name=label,
                     local_id=label,
                     location=HeatFlowSite.point_at(latitude, longitude),
-                    type="ocean" if region.marine else "land",
+                    type_id=f"{ODM2_SITE_TYPE.uri}/ocean"
+                    if region.marine
+                    else f"{ODM2_SITE_TYPE.uri}/land",
                     elevation=self._elevation(region),
-                    environment=region.environment,
-                    explo_method=region.explo_method,
+                    environment_id=vocabularies.term(
+                        vocabularies.GEOGRAPHIC_ENVIRONMENT, region.environment
+                    ),
+                    explo_method_id=vocabularies.term(
+                        vocabularies.EXPLORATION_METHOD, region.explo_method
+                    ),
                 )
             except ValidationError:
                 if attempt == MAX_PLACEMENT_ATTEMPTS - 1:
@@ -506,17 +514,15 @@ class DemoGraph:
             field_name: The vocabulary field to give a concept.
         """
         field = instance._meta.get_field(field_name)
-        vocabulary = field.vocabulary
-        if vocabulary not in self._concepts:
-            from research_vocabs.models import Concept
-
-            self._concepts[vocabulary] = list(
-                Concept.get_for_vocabulary(vocabulary)
-                .order_by("pk")
-                .values_list("pk", flat=True)
+        vocabulary = field.vocabulary[0]
+        if vocabulary.uri not in self._concepts:
+            self._concepts[vocabulary.uri] = list(
+                vocabularies.concepts(vocabulary)
+                .order_by("uri")
+                .values_list("uri", flat=True)
             )
         self._concept_rows.append(
-            (instance, field_name, self.rng.choice(self._concepts[vocabulary]))
+            (instance, field_name, self.rng.choice(self._concepts[vocabulary.uri]))
         )
 
     def _write_bulk(self) -> None:
@@ -525,13 +531,13 @@ class DemoGraph:
         for probe in ProbeMetadata.objects.bulk_create(self._probes):
             self._add_concepts(probe, "probe_type")
         rows: dict[Any, list[Any]] = {}
-        for instance, field_name, concept_id in self._concept_rows:
+        for instance, field_name, concept in self._concept_rows:
             relation = getattr(type(instance), field_name)
             rows.setdefault(relation.through, []).append(
                 relation.through(
                     **{
                         f"{relation.field.m2m_field_name()}_id": instance.pk,
-                        "concept_id": concept_id,
+                        f"{relation.field.m2m_reverse_field_name()}_id": concept,
                     }
                 )
             )

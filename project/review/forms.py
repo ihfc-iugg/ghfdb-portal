@@ -11,7 +11,8 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from fairdm.contrib.contributors.models import Person
 from fairdm.forms import ModelForm
-from literature.models import LiteratureItem
+from literature.converters import from_csl_json
+from literature.models import Item
 from mvp_forms.widgets import TomSelect, TomSelectMultiple
 from partial_date import PartialDate
 
@@ -22,7 +23,7 @@ class ReviewDescriptionForm(ModelForm):
     """Create or update an assessment's description before any file is uploaded."""
 
     literature = forms.ModelChoiceField(
-        queryset=LiteratureItem.objects.all(),
+        queryset=Item.objects.all(),
         required=False,
         label=_("Publication"),
         help_text=_(
@@ -137,8 +138,9 @@ class ReviewDescriptionForm(ModelForm):
         # a date entered the wrong way round would quietly add one that nobody
         # asked for and nobody afterwards knows to remove.
         if not literature and bibliography_data and not self.errors:
-            cleaned_data["literature"] = LiteratureItem.objects.create(
-                item=bibliography_data
-            )
+            try:
+                cleaned_data["literature"] = from_csl_json(bibliography_data)
+            except ValidationError as error:
+                self.add_error("bibliography_file", error)
 
         return cleaned_data

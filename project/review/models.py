@@ -74,7 +74,7 @@ class Review(models.Model):
     )
 
     literature = models.OneToOneField(
-        "literature.LiteratureItem",
+        "literature.Item",
         verbose_name=_("literature"),
         help_text=_("The literature item that was reviewed."),
         on_delete=models.CASCADE,

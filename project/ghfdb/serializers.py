@@ -3,12 +3,13 @@
 import decimal
 from collections.abc import Iterable
 
+from controlled_vocabularies.models import Record
 from drf_spectacular.utils import (
     OpenApiExample,
     extend_schema_field,
     extend_schema_serializer,
 )
-from research_vocabs.core import Concept
+from heat_flow.vocabularies import identifier
 from rest_framework import serializers
 
 from .columns import PublishedColumns
@@ -27,8 +28,8 @@ class MyJSONSchemaSerializer(serializers.Serializer):
 class PublishedValueField(serializers.Field):
     """Read-only field for one scalar published GHFDB column.
 
-    A Pint quantity renders as its float magnitude, a ``research_vocabs``
-    ``Concept`` as its stored code, and a ``Decimal`` as a float — every
+    A Pint quantity renders as its float magnitude, a vocabulary concept as
+    its identifier, and a ``Decimal`` as a float — every
     numeric or concept-valued published column is a JSON number or a plain
     string, never a type ``orjson`` cannot encode. Both
     ``None`` and the empty string render as ``null`` — the two ways a
@@ -46,8 +47,8 @@ class PublishedValueField(serializers.Field):
             return None
         if hasattr(value, "magnitude"):
             return float(value.magnitude)
-        if isinstance(value, Concept):
-            return str(value)
+        if isinstance(value, Record):
+            return identifier(value)
         if isinstance(value, decimal.Decimal):
             return float(value)
         return value
@@ -80,7 +81,7 @@ class ConceptLabelsField(serializers.Field):
         """Render the related manager *value* as its members' labels."""
         if value is None:
             return []
-        return [concept.label for concept in value.all()]
+        return [concept.display_label() for concept in value.all()]
 
 
 def published_fields(

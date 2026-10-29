@@ -90,20 +90,15 @@ class TestGHFDBParentModel:
 class TestFixtures:
     def test_vocabulary_concepts_are_present(self, db):
         # The session concept load covers every vocabulary this feature filters on.
-        from heat_flow.vocabularies import (
-            ExplorationMethod,
-            ExplorationPurpose,
-            GeographicEnvironment,
-        )
-        from research_vocabs.models import Concept
+        from heat_flow import vocabularies
 
         for vocabulary in (
-            GeographicEnvironment,
-            ExplorationMethod,
-            ExplorationPurpose,
+            vocabularies.GEOGRAPHIC_ENVIRONMENT,
+            vocabularies.EXPLORATION_METHOD,
+            vocabularies.EXPLORATION_PURPOSE,
         ):
-            assert Concept.get_for_vocabulary(vocabulary).exists(), (
-                f"no concepts preloaded for {vocabulary.__name__}"
+            assert vocabularies.concepts(vocabulary).exists(), (
+                f"no concepts preloaded for {vocabulary.uri}"
             )
 
     def test_dataset_fixture_is_saved(self, dataset):
