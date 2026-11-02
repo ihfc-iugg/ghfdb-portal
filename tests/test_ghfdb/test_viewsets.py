@@ -1,5 +1,6 @@
 import pytest
 from django.urls import reverse
+from heat_flow.vocabularies import EXPLORATION_METHOD, GEOGRAPHIC_ENVIRONMENT, term
 
 from project.ghfdb.constants import (
     CHILD_COLUMNS,
@@ -9,7 +10,6 @@ from project.ghfdb.constants import (
 from project.ghfdb.models import GHFDBChild, GHFDBParent
 
 from .conftest import build_child, build_published_chain, build_site_and_parent
-from heat_flow.vocabularies import EXPLORATION_METHOD, GEOGRAPHIC_ENVIRONMENT, term
 
 
 @pytest.mark.django_db

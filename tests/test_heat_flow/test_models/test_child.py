@@ -1079,7 +1079,7 @@ class TestChildScores:
         from tests.factories import HeatFlowCorrectionFactory, HeatFlowFactory
         from tests.test_heat_flow.test_quality import build_case
 
-        site, gradient, conductivity = build_case(inputs)
+        _site, gradient, conductivity = build_case(inputs)
         child = HeatFlowFactory(
             sample=gradient.sample,
             value=value,

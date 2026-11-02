@@ -11,8 +11,8 @@ from django.test.utils import CaptureQueriesContext
 from django.utils import translation
 from heat_flow import vocabularies
 from heat_flow.models import HeatFlow
-from heat_flow.vocabularies import GEOGRAPHIC_ENVIRONMENT, term
 from heat_flow.templatetags.heat_flow_overview import labels, plus_minus
+from heat_flow.vocabularies import GEOGRAPHIC_ENVIRONMENT, term
 
 from tests.factories import HeatFlowFactory, HeatFlowSiteFactory, ThermalGradientFactory
 

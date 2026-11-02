@@ -6,6 +6,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
 from fairdm.core.sample.models import SampleIdentifier
+from fairdm.core.vocabularies import DOI, IGSN
 from heat_flow.models import (
     HeatFlow,
     HeatFlowInterval,
@@ -23,7 +24,6 @@ from tests.factories import (
     HeatFlowIntervalFactory,
     ProbeMetadataFactory,
 )
-from fairdm.core.vocabularies import DOI, IGSN
 
 pytestmark = pytest.mark.django_db
 

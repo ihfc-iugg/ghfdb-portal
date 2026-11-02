@@ -1,12 +1,6 @@
 import random
 
 import pytest
-from heat_flow.vocabularies import (
-    EXPLORATION_METHOD,
-    GEOGRAPHIC_ENVIRONMENT,
-    concepts,
-    identifier,
-)
 from django.core.exceptions import ValidationError
 from heat_flow import demo
 from heat_flow.demo import CHILDREN_CYCLE, REGIONS, SITES_PER_DATASET, DemoGraph, Region
@@ -22,6 +16,12 @@ from heat_flow.models import (
 )
 from heat_flow.overview import HeatFlowPage
 from heat_flow.quality import SCHEME_REVISION, Reading
+from heat_flow.vocabularies import (
+    EXPLORATION_METHOD,
+    GEOGRAPHIC_ENVIRONMENT,
+    concepts,
+    identifier,
+)
 
 MULTI_TABLE_MODELS = (
     HeatFlowSite,

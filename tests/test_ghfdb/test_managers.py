@@ -3,6 +3,8 @@
 import pathlib
 
 import pytest
+from fairdm.core.vocabularies import IGSN
+from heat_flow.vocabularies import GEOGRAPHIC_ENVIRONMENT, identifier, term
 
 from project.ghfdb.columns import PublishedColumns
 from project.ghfdb.constants import CHILD_COLUMNS, CORRECTION_COL_MAP
@@ -11,8 +13,6 @@ from tests.factories import (
     HeatFlowSiteFactory,
     ParentHeatFlowFactory,
 )
-from heat_flow.vocabularies import GEOGRAPHIC_ENVIRONMENT, identifier, term
-from fairdm.core.vocabularies import IGSN
 
 pytestmark = pytest.mark.ghfdb
 

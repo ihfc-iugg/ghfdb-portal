@@ -27,7 +27,7 @@ def legacy_references(db):
         item = {**ARTICLE, "id": key, **fields}
         with connection.cursor() as cursor:
             cursor.execute(
-                f"INSERT INTO {LEGACY_TABLE} (citation_key, item) VALUES (%s, %s)",
+                f"INSERT INTO {LEGACY_TABLE} (citation_key, item) VALUES (%s, %s)",  # noqa: S608
                 [key, json.dumps(item)],
             )
         return item
@@ -38,7 +38,8 @@ def legacy_references(db):
 def stored(key):
     with connection.cursor() as cursor:
         cursor.execute(
-            f"SELECT item FROM {LEGACY_TABLE} WHERE citation_key = %s", [key]
+            f"SELECT item FROM {LEGACY_TABLE} WHERE citation_key = %s",  # noqa: S608
+            [key],
         )
         (item,) = cursor.fetchone()
     return item if isinstance(item, dict) else json.loads(item)

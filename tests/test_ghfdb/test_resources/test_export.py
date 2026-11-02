@@ -5,9 +5,9 @@ from pathlib import Path
 
 import openpyxl
 import pytest
+from fairdm.core.vocabularies import IGSN
 
 from project.ghfdb.constants import GHFDB_COLUMN_ORDER
-from fairdm.core.vocabularies import IGSN
 
 # Resource class structure tests
 

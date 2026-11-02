@@ -1,5 +1,6 @@
 import pytest
 from django.core.checks import run_checks
+from heat_flow import vocabularies
 from heat_flow.models import (
     HeatFlow,
     HeatFlowCorrection,
@@ -7,7 +8,6 @@ from heat_flow.models import (
     IntervalConductivity,
     ThermalGradient,
 )
-from heat_flow import vocabularies
 
 from tests.factories import (
     HeatFlowCorrectionFactory,
@@ -152,9 +152,7 @@ class TestHeatFlowRecordSerializer:
         # Entered in feet, stored and given in metres.
         assert record["length"] == pytest.approx(304.8)
 
-    def test_a_site_carries_its_elevation_and_type(
-        self, client, full_records
-    ):
+    def test_a_site_carries_its_elevation_and_type(self, client, full_records):
         record = only_record(client, SITES)
 
         assert record["elevation"] == 250

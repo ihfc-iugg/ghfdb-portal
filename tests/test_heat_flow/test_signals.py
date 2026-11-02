@@ -4,6 +4,7 @@
 import pytest
 from django.db.models.signals import m2m_changed, post_save
 from heat_flow import vocabularies
+from heat_flow.vocabularies import EXPLORATION_METHOD, concepts, term
 
 from tests.factories import (
     HeatFlowIntervalFactory,
@@ -11,7 +12,6 @@ from tests.factories import (
     IntervalConductivityFactory,
     ThermalGradientFactory,
 )
-from heat_flow.vocabularies import EXPLORATION_METHOD, concepts, term
 
 pytestmark = pytest.mark.django_db
 
@@ -268,7 +268,7 @@ class TestParentReceivers:
     def test_deleting_one_of_several_children_refreshes_the_parent_from_the_rest(
         self, django_capture_on_commit_callbacks
     ):
-        parent, (kept, dropped) = self.parent_with("U1", "U4")
+        parent, (_kept, dropped) = self.parent_with("U1", "U4")
         assert self.stored(parent).U_score == "U4"
 
         with django_capture_on_commit_callbacks(execute=True):
@@ -279,7 +279,7 @@ class TestParentReceivers:
     def test_deleting_children_schedules_one_refresh_on_commit(
         self, django_capture_on_commit_callbacks
     ):
-        parent, children = self.parent_with("U1", "U2", "U3")
+        _parent, children = self.parent_with("U1", "U2", "U3")
 
         with django_capture_on_commit_callbacks(execute=False) as callbacks:
             for child in children:
@@ -341,27 +341,27 @@ class TestParentReceivers:
 
 # --- Keeping every score current (FS-007 US4) -------------------------------------------
 
-BOREHOLE = dict(
-    gradient=dict(number=10, top=("LOGeq",), bottom=("LOGeq",)),
-    conductivity=dict(
-        number=30,
-        source=("core_samples",),
-        location=("actual",),
-        saturation=("saturatedMeasured",),
-        pT=("actualInSitu",),
-    ),
-)
-PROBE = dict(
-    gradient=dict(number=6),
-    conductivity=dict(
-        number=4,
-        source=("insitu_probe",),
-        location=("actual",),
-        method=("probePulse",),
-        saturation=("saturatedInSitu",),
-        pT=("actualInSitu",),
-    ),
-)
+BOREHOLE = {
+    "gradient": {"number": 10, "top": ("LOGeq",), "bottom": ("LOGeq",)},
+    "conductivity": {
+        "number": 30,
+        "source": ("core_samples",),
+        "location": ("actual",),
+        "saturation": ("saturatedMeasured",),
+        "pT": ("actualInSitu",),
+    },
+}
+PROBE = {
+    "gradient": {"number": 6},
+    "conductivity": {
+        "number": 4,
+        "source": ("insitu_probe",),
+        "location": ("actual",),
+        "method": ("probePulse",),
+        "saturation": ("saturatedInSitu",),
+        "pT": ("actualInSitu",),
+    },
+}
 
 
 class Network:
@@ -696,7 +696,7 @@ class TestScheduledRefresh:
             try:
                 with transaction.atomic():
                     first.delete()
-                    raise RuntimeError
+                    raise RuntimeError  # noqa: TRY301
             except RuntimeError:
                 pass
             second.delete()

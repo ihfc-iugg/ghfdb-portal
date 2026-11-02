@@ -639,14 +639,14 @@ class TestProbeGradient:
 
 class TestProbeConductivity:
     def probe_conductivity(self, **fields):
-        inputs = dict(
-            number=4,
-            source=("insitu_probe",),
-            location=("actual",),
-            method=("probePulse",),
-            saturation=("saturatedInSitu",),
-            pT=("actualInSitu",),
-        )
+        inputs = {
+            "number": 4,
+            "source": ("insitu_probe",),
+            "location": ("actual",),
+            "method": ("probePulse",),
+            "saturation": ("saturatedInSitu",),
+            "pT": ("actualInSitu",),
+        }
         inputs.update(fields)
         return build_conductivity(build_interval("probing_offshore"), **inputs)
 
@@ -829,13 +829,13 @@ class TestBoreholeGradient:
 
 class TestBoreholeConductivity:
     def borehole_conductivity(self, *, depths=(0, 1000), **fields):
-        inputs = dict(
-            number=30,
-            source=("core_samples",),
-            location=("actual",),
-            saturation=("saturatedMeasured",),
-            pT=("actualInSitu",),
-        )
+        inputs = {
+            "number": 30,
+            "source": ("core_samples",),
+            "location": ("actual",),
+            "saturation": ("saturatedMeasured",),
+            "pT": ("actualInSitu",),
+        }
         inputs.update(fields)
         interval = build_interval("drilling", top=depths[0], bottom=depths[1])
         return build_conductivity(interval, **inputs)

@@ -23,9 +23,24 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='heatflowsite',
-            name='elevation_datum',
+        # A database built from empty holds elevation_datum_id. One upgraded from 2025.21
+        # still holds elevation_datum, because upgrade_vocabularies only moves the columns
+        # of fields the models declare.
+        migrations.SeparateDatabaseAndState(
+            state_operations=[
+                migrations.RemoveField(
+                    model_name='heatflowsite',
+                    name='elevation_datum',
+                ),
+            ],
+            database_operations=[
+                migrations.RunSQL(
+                    "ALTER TABLE heat_flow_heatflowsite"
+                    " DROP COLUMN IF EXISTS elevation_datum,"
+                    " DROP COLUMN IF EXISTS elevation_datum_id",
+                    reverse_sql=migrations.RunSQL.noop,
+                ),
+            ],
         ),
         migrations.AlterField(
             model_name='heatflowsite',
