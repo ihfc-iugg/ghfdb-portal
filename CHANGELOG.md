@@ -70,7 +70,7 @@ Releases before that used `<year>.<release>` and are recorded in the
   addresses under `https://w3id.org/ihfc-iugg/vocabularies/`, and the image reads them from
   those addresses with `sync_vocabularies` each time it starts, before it scores records. A
   start whose vocabulary server does not answer keeps the terms already loaded. FairDM's
-  own vocabularies are read from their addresses under `https://w3id.org/fairdm/vocabularies/`.
+  own vocabularies are read the same way, from `https://w3id.org/fairdm/vocabularies/` with `.ttl` added.
   No vocabulary is kept in the repository. The temperature method vocabulary gains `DST` and `cDST`.
 - A site no longer has an elevation datum, which went with the vocabulary fairdm-geo dropped. Its
   elevation is in metres above mean sea level, and the site page, its edit form and the API no

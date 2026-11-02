@@ -963,7 +963,7 @@ wheels = [
 
 [[package]]
 name = "django-controlled-vocabularies"
-version = "0.3.1"
+version = "0.3.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "defusedxml" },
@@ -971,9 +971,9 @@ dependencies = [
     { name = "django-tomselect" },
     { name = "rdflib" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/74/87/81580122731f944d54f4a8356020581d660bce30cb0c978cda30c155ada7/django_controlled_vocabularies-0.3.1.tar.gz", hash = "sha256:a1eb22cb94eb6d3924f69eca1e69f7fc5fee6916fde406bae600aa2155987eb7", size = 68921, upload-time = "2026-10-28T14:51:36.753Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/40/87/abe5c336ca34bdd4c865aa221362f6233aa2059e1433bd946dfc60cf6c60/django_controlled_vocabularies-0.3.2.tar.gz", hash = "sha256:9072d736e25379d93a9896619ff731db006c9153eb19df3d7b63aec04eaa83a4", size = 69091, upload-time = "2026-11-02T16:15:47.71Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ac/f5/b6872676569373213765f518ebc01ae60ae70a92a79e2364b2a602d8c7e1/django_controlled_vocabularies-0.3.1-py3-none-any.whl", hash = "sha256:2217b65f7edeed25c980e0b6267369e0a08b3e4d84e3eec35c244b32e8be9cbd", size = 90850, upload-time = "2026-10-28T14:51:35.429Z" },
+    { url = "https://files.pythonhosted.org/packages/0a/d2/30f621166eec61d0b52c3ef280461073f5e75fbfdc9500dba587d7a67249/django_controlled_vocabularies-0.3.2-py3-none-any.whl", hash = "sha256:d1d0b32d09d3f0858b35e4c9af24a83683aad17d2d89b11fd817b76ec05b1e66", size = 91011, upload-time = "2026-11-02T16:15:46.187Z" },
 ]
 
 [[package]]
