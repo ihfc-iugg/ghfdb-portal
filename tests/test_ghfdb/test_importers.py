@@ -956,6 +956,20 @@ class TestARowInTheShapeARealSubmissionCarries:
         ]
         assert [identifier(c) for c in child.sample.age.all()] == ["CambrianSeries2"]
 
+    def test_an_acquisition_date_with_an_unpadded_month_is_refused_on_its_row(
+        self, dataset
+    ):
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        outcome = import_ghfdb_template(
+            make_dataset({**ROW, "q_date": "1979-6"}), dataset
+        )
+
+        assert outcome.has_errors()
+        assert not HeatFlow.objects.exists()
+
     def test_a_misspelled_lithology_still_refuses_the_file(self, dataset):
         # ``Aluvium`` appears in a submitted file and in no vocabulary. Reading keys as
         # well as labels widens what the portal accepts; it must not stop the portal

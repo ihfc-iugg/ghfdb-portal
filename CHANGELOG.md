@@ -63,8 +63,8 @@ Releases before that used `<year>.<release>` and are recorded in the
 
 ### Changed
 
-- The portal moves to FairDM v0.3.1 and django-literature 0.3.2, installed from PyPI, with
-  fairdm-geo at the commit that moves it to the same release. FairDM no longer installs django-research-vocabs, so every vocabulary
+- The portal moves to FairDM v0.4.1 and django-literature 0.4, installed from PyPI, with
+  fairdm-geo at the commit that moves it to FairDM's vocabularies. FairDM no longer installs django-research-vocabs, so every vocabulary
   term the portal stores is the address of a concept in a published vocabulary, held through
   django-controlled-vocabularies. The heat flow fields use the IHFC vocabularies at their
   addresses under `https://w3id.org/ihfc-iugg/vocabularies/`, and the image reads them from
@@ -81,7 +81,14 @@ Releases before that used `<year>.<release>` and are recorded in the
   its address ([records API](docs/guides/heat-flow-records-api.md)).
 - The environment, exploration method and exploration purpose filters of the GHFDB parents
   table and of the administration pages take a term's address in the page address.
-- An assessment's publication is a django-literature 0.3 reference. A bibliography file the
+- The portal takes FairDM's `fairdm` and `fairdm-dark` themes and fonts, on django-mvp 0.33's
+  page, card and sidebar colours. Its own logo and icon stay, and its icon is now the favicon.
+- Partial dates are stored by django-partial-dates as the text `1990`, `1990-06` or
+  `1990-06-14`. Migrations convert an assessment's start and completion dates and a heat flow's
+  date of acquisition in place, and FairDM's and django-literature's migrations convert theirs.
+  A date with an unpadded month such as `1990-6` is now refused, on the assessment form and on
+  an upload's row.
+- An assessment's publication is a django-literature reference. A bibliography file the
   catalogue cannot read is refused on the assessment form instead of being stored.
 - Upgrading a 2025.21 database takes two steps: it is migrated by the last release on FairDM
   0.2.1, then converted with `repair_references`, `upgrade_literature`,

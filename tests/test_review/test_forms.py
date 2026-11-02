@@ -49,6 +49,22 @@ class TestReviewDescriptionFormValidation:
         assert "2026-02-01" in errors
         assert "2026-01-01" in errors
 
+    def test_a_date_with_an_unpadded_month_is_refused_on_its_field(self):
+        literature = LiteratureItemFactory()
+        assessor = PersonFactory(is_claimed=True, password="test-pass-123")
+
+        form = ReviewDescriptionForm(
+            data={
+                "literature": literature.pk,
+                "reviewers": [assessor.pk],
+                "start_date": "2026-2",
+                "end_date": "2026-03-01",
+            }
+        )
+
+        assert not form.is_valid()
+        assert "start_date" in form.errors
+
     def test_a_ghost_profile_is_accepted_as_an_assessor(self):
         literature = LiteratureItemFactory()
         ghost = PersonFactory(email=None, is_claimed=False)

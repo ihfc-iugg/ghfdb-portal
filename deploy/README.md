@@ -94,7 +94,7 @@ database holds are not carried across: they are removed before migrating and upl
 the current import. Accounts, projects, datasets, reviews and literature are kept. The
 database also moves from PostgreSQL 16 to PostgreSQL 17 with PostGIS 3.5, which FairDM requires.
 
-FairDM 0.3 stores references with django-literature 0.3 and every vocabulary term by its
+FairDM stores references with django-literature and every vocabulary term by its
 address, and its commands that move a database across work only on one that FairDM 0.2.1 has
 fully migrated. So the database is first migrated by the last release of the portal on FairDM
 0.2.1, and then converted and migrated by the current one. Both run in one-off containers, with
@@ -147,12 +147,12 @@ refuses every command in production without it.
    python manage.py upgrade_vocabularies
    ```
 
-   - `repair_references` rewrites the stored identifiers django-literature 0.3 would refuse:
+   - `repair_references` rewrites the stored identifiers django-literature would refuse:
      an ISSN whose leading zeros were lost, an ISBN filed as an ISSN or the other way round, and
      several ISSNs or ISBNs in one field. Each reference keeps its first ISSN and its first ISBN.
      Every other value, and a number or address too long to store, is written into the
      reference's note. It prints each change, and `--dry-run` prints them without writing.
-   - `upgrade_literature` moves every reference to django-literature 0.3 and keeps its primary
+   - `upgrade_literature` moves every reference to the current django-literature and keeps its primary
      key, so assessments and datasets keep their publications. If it names a reference it
      cannot convert, it has changed nothing: correct that reference and run it again.
    - The first `upgrade_vocabularies` creates the vocabulary tables and stops,
@@ -163,7 +163,10 @@ refuses every command in production without it.
 
 6. Point the Django service at the new database (`POSTGRES_HOST`) and start the current image.
    Its start runs the migrations, loads the vocabularies and scores the records before it serves,
-   as described above.
+   as described above. The migrations also convert every partial date to text: a stored date
+   that django-partial-date never wrote stops the migration with `RefusedValuesError`, which
+   names the row, and nothing in that table has changed. Correct the row and start the image
+   again.
 7. Remove the content types of the models the portal no longer has, in the running container.
    It asks before it deletes:
 

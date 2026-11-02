@@ -5,7 +5,7 @@ import django.db.models.deletion
 import django.db.models.manager
 
 import django_lifecycle.mixins
-import partial_date.fields
+import partial_dates.conversion
 from django.conf import settings
 from django.db import migrations, models
 
@@ -50,7 +50,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "start_date",
-                    partial_date.fields.PartialDateField(
+                    partial_dates.conversion.OldPartialDateField(
                         blank=True,
                         help_text="Date the review was started.",
                         null=True,
@@ -59,7 +59,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "end_date",
-                    partial_date.fields.PartialDateField(
+                    partial_dates.conversion.OldPartialDateField(
                         blank=True,
                         help_text="Date the review was completed.",
                         null=True,
