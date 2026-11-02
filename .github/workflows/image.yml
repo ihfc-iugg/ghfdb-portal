@@ -16,4 +16,4 @@ permissions:
 
 jobs:
   call-image:
-    uses: FAIR-DM/shared/.github/workflows/image.yml@v0.1.0
+    uses: FAIR-DM/shared/.github/workflows/image.yml@v0.1.1
