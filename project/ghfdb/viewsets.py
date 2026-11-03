@@ -4,7 +4,6 @@ from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from fairdm.api.filters import FairDMVisibilityFilter
 from fairdm.api.permissions import FairDMObjectPermissions
-from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
@@ -19,24 +18,6 @@ from .serializers import (
 from .visibility import served_parents
 
 
-class GHFDBObjectPermissions(FairDMObjectPermissions):
-    """Object-level permission for the GHFDB proxy viewsets.
-
-    A safe-method check asks for ``measurement.view_measurement`` — the
-    permission :class:`~fairdm.api.filters.FairDMVisibilityFilter` already
-    resolves a list request to — instead of the proxy's own
-    ``ghfdb.view_ghfdb*`` codename. The framework decides a measurement's
-    permissions from the viewer's level on it and refuses a codename it does
-    not map to a level, which the proxy's own codename is.
-    """
-
-    def get_required_object_permissions(self, method, model_cls):
-        """Ask for the measurement view permission on a read."""
-        if method in SAFE_METHODS:
-            return ["measurement.view_measurement"]
-        return super().get_required_object_permissions(method, model_cls)
-
-
 class GHFDBBaseViewSet(ReadOnlyModelViewSet):
     """Shared read-only base for the GHFDB published-structure viewsets.
 
@@ -44,13 +25,15 @@ class GHFDBBaseViewSet(ReadOnlyModelViewSet):
     the object permission check run on the single-record route too.
     Throttling and pagination are the framework's own settings, so a list is
     paged with ``?page=`` and ``?page_size=`` at the framework's default and
-    maximum. The permission class is narrowed to :class:`GHFDBObjectPermissions`.
+    maximum. A single-record request is checked by the framework's own
+    :class:`~fairdm.api.permissions.FairDMObjectPermissions`, which reads a
+    proxy by its concrete model's permissions.
     """
 
     lookup_field = "ghfdb_id"
     lookup_value_regex = "[0-9]+"
     filter_backends = [FairDMVisibilityFilter]
-    permission_classes = [GHFDBObjectPermissions]
+    permission_classes = [FairDMObjectPermissions]
 
 
 @extend_schema_view(

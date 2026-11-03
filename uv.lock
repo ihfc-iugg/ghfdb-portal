@@ -1786,7 +1786,7 @@ wheels = [
 
 [[package]]
 name = "fairdm"
-version = "0.4.1"
+version = "0.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "celery" },
@@ -1857,9 +1857,9 @@ dependencies = [
     { name = "uncertainties" },
     { name = "whitenoise" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/98/ac/1676b6c1a341105ebd1e60bdf85470de440f311abadc12fabfd3c1c8efc2/fairdm-0.4.1.tar.gz", hash = "sha256:075750e1f7f56e343a110c9190dde6db1f47fd1e5cef21283cbcb149d32605d0", size = 1043271, upload-time = "2026-11-02T14:55:24.217Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/31/60/8c57fe2859b7b595adeab5c3307277f4978784d6c229b0f2853f6ebbfbec/fairdm-0.5.0.tar.gz", hash = "sha256:9af02208f3778baef0d682a9eed0d689021ed26ecdd096a8e2736782d4bd512a", size = 1050976, upload-time = "2026-11-03T08:53:55.535Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d4/c8/f8d985d3b7ce20cd07a4fa65702dd592eb4df1481fba92379280e7d62b2e/fairdm-0.4.1-py3-none-any.whl", hash = "sha256:773b511e9262abc658b74e41bf3f7043dcdfff09f0f77cb7c4393d266a9df89c", size = 1272751, upload-time = "2026-11-02T14:55:21.961Z" },
+    { url = "https://files.pythonhosted.org/packages/aa/f9/f64fea1723cd284a830eb0edc07f2bd91d22e502203bbfb9e374c0d9702b/fairdm-0.5.0-py3-none-any.whl", hash = "sha256:791220c719c176065389509a96be31e1e8abb5585574b3029adbdcd5e7d71049", size = 1280802, upload-time = "2026-11-03T08:53:53.547Z" },
 ]
 
 [[package]]
@@ -1986,7 +1986,7 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "django-crispy-forms", specifier = ">=2.3,<3.0" },
-    { name = "fairdm", specifier = ">=0.4.1,<0.5.0" },
+    { name = "fairdm", specifier = ">=0.5.0,<0.6.0" },
     { name = "fairdm-discussions", git = "https://github.com/FAIR-DM/fairdm-discussions?rev=643d0af810feb687e41c499df6f6c0d510500b79" },
     { name = "fairdm-geo", git = "https://github.com/FAIR-DM/fairdm-geo?rev=6d3e59238eb52f695afddc65bb7f15cc60962da9" },
 ]

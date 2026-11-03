@@ -63,7 +63,7 @@ Releases before that used `<year>.<release>` and are recorded in the
 
 ### Changed
 
-- The portal moves to FairDM v0.4.1 and django-literature 0.4, installed from PyPI, with
+- The portal moves to FairDM v0.5.0 and django-literature 0.4, installed from PyPI, with
   fairdm-geo at the commit that moves it to FairDM's vocabularies. FairDM no longer installs django-research-vocabs, so every vocabulary
   term the portal stores is the address of a concept in a published vocabulary, held through
   django-controlled-vocabularies. The heat flow fields use the IHFC vocabularies at their
@@ -72,6 +72,10 @@ Releases before that used `<year>.<release>` and are recorded in the
   start whose vocabulary server does not answer keeps the terms already loaded. FairDM's
   own vocabularies are read the same way, from `https://w3id.org/fairdm/vocabularies/` with `.ttl` added.
   No vocabulary is kept in the repository. The temperature method vocabulary gains `DST` and `cDST`.
+- A measurement's pages move to `/measurements/<uuid>/` and a sample's to `/samples/<uuid>/`,
+  as FairDM 0.5.0 places them. The former addresses redirect.
+- The published-structure API checks a single record with FairDM's own permission class, which
+  now reads a heat flow record's permissions through its proxies. The portal's own class is gone.
 - A site no longer has an elevation datum, which went with the vocabulary fairdm-geo dropped. Its
   elevation is in metres above mean sea level, and the site page, its edit form and the API no
   longer show a datum.
