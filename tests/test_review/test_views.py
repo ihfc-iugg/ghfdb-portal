@@ -8,8 +8,10 @@ from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.template.loader import render_to_string
 from django.urls import reverse
+from fairdm.core.vocabularies import CREATOR
 from fairdm.factories import LiteratureItemFactory, PersonFactory
 from review.models import Review, SubmittedFile
+from review.roles import DATA_MANAGER
 from review.states import STATE_VARIANTS, States
 from review.views import (
     ReviewConfirmView,
@@ -199,9 +201,9 @@ class TestReviewCreateView:
 
         review = Review.objects.get()
         credit = review.dataset.contributors.get(contributor=assessor)
-        roles = set(credit.roles.values_list("name", flat=True))
-        assert "DataManager" in roles
-        assert "Creator" not in roles
+        roles = set(credit.roles.values_list("uri", flat=True))
+        assert DATA_MANAGER in roles
+        assert CREATOR not in roles
 
     def test_each_named_assessor_is_credited_as_a_contributor(self, rf, assessor):
         _, _, named_assessor = self._post(rf, assessor)
@@ -623,21 +625,10 @@ class TestTheListNarrows:
         assert len(self._listed(client)) == 2
 
     def test_searching_by_the_publications_title(self, client):
-        # LiteratureItem.save() derives `title` from the CSL blob, so the
-        # title has to be set there rather than on the field directly.
         wanted = ReviewFactory(
-            literature=LiteratureItemFactory(
-                item={
-                    "type": "article-journal",
-                    "title": "Heat flow of the Rhine Graben",
-                }
-            )
+            literature=LiteratureItemFactory(title="Heat flow of the Rhine Graben")
         )
-        ReviewFactory(
-            literature=LiteratureItemFactory(
-                item={"type": "article-journal", "title": "Something else entirely"}
-            )
-        )
+        ReviewFactory(literature=LiteratureItemFactory(title="Something else entirely"))
 
         assert self._listed(client, q="Rhine") == [wanted]
 

@@ -5,7 +5,7 @@ import django.db.models.deletion
 import django.db.models.manager
 
 import django_lifecycle.mixins
-import partial_date.fields
+import partial_dates.conversion
 from django.conf import settings
 from django.db import migrations, models
 
@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("dataset", "0002_initial"),
-        ("literature", "0004_alter_literatureitem_options"),
+        ("literature", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -50,7 +50,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "start_date",
-                    partial_date.fields.PartialDateField(
+                    partial_dates.conversion.OldPartialDateField(
                         blank=True,
                         help_text="Date the review was started.",
                         null=True,
@@ -59,7 +59,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "end_date",
-                    partial_date.fields.PartialDateField(
+                    partial_dates.conversion.OldPartialDateField(
                         blank=True,
                         help_text="Date the review was completed.",
                         null=True,
@@ -104,7 +104,7 @@ class Migration(migrations.Migration):
                         help_text="The literature item that was reviewed.",
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="review",
-                        to="literature.literatureitem",
+                        to="literature.item",
                         verbose_name="literature",
                     ),
                 ),

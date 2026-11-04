@@ -8,7 +8,8 @@ in ``units`` (FS-010).
 from collections import defaultdict
 from typing import Any, cast
 
-from django.db.models import Prefetch
+from controlled_vocabularies.fields import ConceptField, MultiConceptField
+from django.db.models import Prefetch, Q
 from drf_spectacular.utils import extend_schema_field
 from fairdm.api.filters import FairDMVisibilityFilter
 from fairdm.api.serializers import (
@@ -22,11 +23,10 @@ from fairdm.api.viewsets import load_relations
 from quantityfield import fields as quantity_fields
 from quantityfield.fields import QuantityFieldMixin
 from quantityfield.units import ureg
-from research_vocabs import models as vocabulary_models
-from research_vocabs.fields import BaseConceptField, ConceptManyToManyField
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
+from . import vocabularies
 from .models import (
     HeatFlow,
     HeatFlowCorrection,
@@ -58,88 +58,81 @@ RECORD_REFERENCE_LIST = {
 }
 
 
-def term(concept: Any) -> dict[str, str] | None:
+def term(concept: Any, vocabulary: str) -> dict[str, str] | None:
     """Give a vocabulary term as its name, label, identifier and vocabulary.
 
     Args:
-        concept: A ``research_vocabs`` concept, either the value of a ``ConceptField``
-            or a stored concept row, or ``None``.
+        concept: A concept, or ``None``.
+        vocabulary: The slug of the vocabulary the concept belongs to.
 
     Returns:
         The term, or ``None`` when there is no concept.
     """
-    if concept is None or concept == "":
+    if concept is None:
         return None
-    if isinstance(concept, vocabulary_models.Concept):
-        return {
-            "name": concept.name,
-            "label": concept.label,
-            "uri": concept.uri,
-            "vocabulary": concept.vocabulary.name,
-        }
     return {
-        "name": concept.name,
-        "label": concept.label(),
-        "uri": str(concept.URI),
-        "vocabulary": concept.vocabulary.scheme().name,
+        "name": vocabularies.identifier(concept),
+        "label": concept.display_label(),
+        "uri": concept.uri,
+        "vocabulary": vocabulary,
     }
 
 
-class TermChoiceField(serializers.ChoiceField):
-    """A single vocabulary term, written as its name and read as a term object."""
+class TermField(serializers.RelatedField):
+    """A single vocabulary term, written as its name or address and read as a term object."""
 
-    def __init__(self, *, vocabulary: str, **kwargs: Any) -> None:
-        """Remember the vocabulary the choices come from.
-
-        Args:
-            vocabulary: The name of the field's vocabulary.
-            **kwargs: Passed to ``ChoiceField``, including ``choices``.
-        """
-        self.vocabulary = vocabulary
-        super().__init__(**kwargs)
-
-    def get_attribute(self, instance: Any) -> Any:
-        """Read the concept, turning the name a request has just written into one."""
-        value = super().get_attribute(instance)
-        if isinstance(value, str):
-            value = instance._meta.get_field(self.source).to_python(value)
-        return value
-
-    def to_representation(self, value: Any) -> Any:
-        """Give the term the stored name stands for.
-
-        Args:
-            value: The stored concept.
-
-        Returns:
-            The term, or ``None`` when the field is empty.
-        """
-        return term(value)
-
-
-class TermRelatedField(serializers.RelatedField):
-    """A term from a many-valued vocabulary field, read-only."""
+    default_error_messages = {
+        "does_not_exist": "{value} is not a term of the {vocabulary} vocabulary.",
+    }
 
     def __init__(self, *, vocabulary: str, **kwargs: Any) -> None:
         """Remember the vocabulary the terms come from.
 
         Args:
-            vocabulary: The name of the field's vocabulary.
-            **kwargs: Passed to ``RelatedField``.
+            vocabulary: The address of the field's vocabulary.
+            **kwargs: Passed to ``RelatedField``, including ``queryset``.
         """
         self.vocabulary = vocabulary
         super().__init__(**kwargs)
 
-    def to_representation(self, value: Any) -> dict[str, str] | None:
-        """Give one stored concept as a term.
+    @property
+    def slug(self) -> str:
+        """The last part of the vocabulary's address, which names it in a term."""
+        return self.vocabulary.rsplit("/", 1)[-1]
+
+    def to_internal_value(self, data: Any) -> Any:
+        """Read a term written as its name or its address.
 
         Args:
-            value: The stored concept row.
+            data: The term's name, such as ``onshore_continental``, or its address.
+
+        Returns:
+            The concept.
+        """
+        name = str(data)
+        queryset = self.get_queryset()
+        assert queryset is not None  # noqa: S101 - a writable field always has one
+        found = queryset.filter(
+            Q(uri=name) | Q(uri=f"{self.vocabulary}/{name}")
+        ).first()
+        if found is None:
+            self.fail("does_not_exist", value=name, vocabulary=self.slug)
+        return found
+
+    def to_representation(self, value: Any) -> dict[str, str] | None:
+        """Give the stored concept as a term.
+
+        Args:
+            value: The stored concept.
 
         Returns:
             The term.
         """
-        return term(value)
+        return term(value, self.slug)
+
+
+class TermRelatedField(TermField):
+    """A term from a many-valued vocabulary field, read-only."""
 
 
 class QuantityNumber:
@@ -433,19 +426,23 @@ class HeatFlowRecordSerializer(RequesterVisibility, serializers.ModelSerializer)
             queryset: The records about to be serialized.
 
         Returns:
-            The queryset with each many-valued vocabulary field prefetched with the
-            vocabulary its terms name.
+            The queryset with each vocabulary field's concepts read with it.
         """
         terms = [
-            Prefetch(
-                field.name,
-                queryset=vocabulary_models.Concept.objects.select_related("vocabulary"),
-            )
+            field.name
             for field in queryset.model._meta.many_to_many
-            if isinstance(field, ConceptManyToManyField)
-            and field.name in cls.Meta.fields
+            if isinstance(field, MultiConceptField) and field.name in cls.Meta.fields
+        ]
+        concepts = [
+            field.name
+            for field in queryset.model._meta.fields
+            if isinstance(field, ConceptField) and field.name in cls.Meta.fields
         ]
         loaded = super().load_related(queryset)  # type: ignore[misc]
+        # A bare ``select_related()`` follows every foreign key and discards the paths
+        # chosen before it, so it is only called when there is a field to select.
+        if concepts:
+            loaded = loaded.select_related(*concepts)
         return loaded.prefetch_related(*terms)
 
     @classmethod
@@ -536,7 +533,7 @@ class HeatFlowRecordSerializer(RequesterVisibility, serializers.ModelSerializer)
     def build_standard_field(
         self, field_name: str, model_field: Any
     ) -> tuple[type, dict[str, Any]]:
-        """Build a vocabulary field as a term and a quantity field with its unit.
+        """Build a quantity field with its unit.
 
         Args:
             field_name: The model field's name.
@@ -546,9 +543,6 @@ class HeatFlowRecordSerializer(RequesterVisibility, serializers.ModelSerializer)
             The serializer field class and its keyword arguments.
         """
         field_class, kwargs = super().build_standard_field(field_name, model_field)
-        if isinstance(model_field, BaseConceptField):
-            kwargs["vocabulary"] = model_field.scheme.scheme().name
-            return TermChoiceField, kwargs
         if isinstance(model_field, QuantityFieldMixin):
             kwargs["base_units"] = model_field.base_units
             kwargs["unit"] = f"{model_field.ureg(model_field.base_units).units:~C}"
@@ -557,7 +551,7 @@ class HeatFlowRecordSerializer(RequesterVisibility, serializers.ModelSerializer)
     def build_relational_field(
         self, field_name: str, relation_info: Any
     ) -> tuple[type, dict[str, Any]]:
-        """Build a many-valued vocabulary field as terms and any other relation as text.
+        """Build a vocabulary field as terms and any other relation as text.
 
         Args:
             field_name: The model field's name.
@@ -567,11 +561,17 @@ class HeatFlowRecordSerializer(RequesterVisibility, serializers.ModelSerializer)
             The serializer field class and its keyword arguments.
         """
         model_field = relation_info.model_field
-        if isinstance(model_field, ConceptManyToManyField):
+        if isinstance(model_field, ConceptField):
+            kwargs = super().build_relational_field(field_name, relation_info)[1]
+            # DRF draws a key held by address as a slug; a term is read whole.
+            kwargs.pop("slug_field", None)
+            kwargs["vocabulary"] = model_field.vocabulary[0].uri
+            return TermField, kwargs
+        if isinstance(model_field, MultiConceptField):
             return TermRelatedField, {
                 "many": True,
                 "read_only": True,
-                "vocabulary": model_field.scheme.scheme().name,
+                "vocabulary": model_field.vocabulary[0].uri,
             }
         return serializers.StringRelatedField, {
             "many": relation_info.to_many,
@@ -642,7 +642,6 @@ class HeatFlowSiteSummarySerializer(HeatFlowRecordSerializer, BaseSampleSerializ
             *BaseSampleSerializer.common_fields,
             "type",
             "elevation",
-            "elevation_datum",
             "country",
             "region",
             "continent",
@@ -664,7 +663,6 @@ class HeatFlowSiteSummarySerializer(HeatFlowRecordSerializer, BaseSampleSerializ
             *BaseSampleSerializer.Meta.read_only_fields,
             "type",
             "elevation",
-            "elevation_datum",
         ]
 
     def prime_context(self, records: list[Any]) -> None:
@@ -1060,15 +1058,11 @@ class HeatFlowIntervalSerializer(HeatFlowIntervalSummarySerializer):
         Returns:
             The queryset with the probe metadata and its terms read.
         """
-        probe_types = Prefetch(
-            "probe_metadata__probe_type",
-            queryset=vocabulary_models.Concept.objects.select_related("vocabulary"),
-        )
         return (
             super()
             .load_related(queryset)
             .select_related("probe_metadata")
-            .prefetch_related(probe_types)
+            .prefetch_related("probe_metadata__probe_type")
         )
 
     @extend_schema_field(RECORD_REFERENCE_LIST)

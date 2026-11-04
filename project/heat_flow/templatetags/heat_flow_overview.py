@@ -1,7 +1,6 @@
 """Template tags for the heat flow overview pages."""
 
 from django import template
-from django.utils.translation import get_language
 
 from heat_flow import overview
 
@@ -57,7 +56,7 @@ def plus_minus(value, uncertainty):
 def labels(concepts):
     """Write vocabulary concepts as their labels, joined by commas.
 
-    A graph concept is written in the active language.
+    Each label is in the active language where the vocabulary gives one.
 
     Args:
         concepts: One concept, a many-to-many manager of concepts, or ``None``.
@@ -68,9 +67,6 @@ def labels(concepts):
     if concepts is None:
         return ""
     items = concepts.all() if hasattr(concepts, "all") else [concepts]
-    language = (get_language() or "en").split("-")[0]
-    names = []
-    for concept in items:
-        label = concept.label
-        names.append(str(label(language) if callable(label) else label))
-    return ", ".join(name for name in names if name)
+    return ", ".join(
+        label for label in (concept.display_label() for concept in items) if label
+    )

@@ -11,6 +11,11 @@ Releases before that used `<year>.<release>` and are recorded in the
 
 ### Added
 
+- `manage.py repair_references` rewrites the stored DOI, ISSN and ISBN of every reference that
+  django-literature 0.3 would refuse to convert: a DOI written as an address, an ISSN that lost
+  its leading zeros, an ISSN and an ISBN in each other's field, and several of one in one field.
+  Each reference keeps its first ISSN and first ISBN, and every other value is written into its
+  note. It prints each change, and `--dry-run` writes nothing.
 - A public table of the GHFDB parents at `ghfdb/parents/`, one row per parent in the published
   column names, sortable by every column and paged at 100 rows. It can be filtered by ranges on
   heat flow, its uncertainty, elevation, both total depths, latitude and longitude, by environment,
@@ -58,6 +63,45 @@ Releases before that used `<year>.<release>` and are recorded in the
 
 ### Changed
 
+- The portal moves to FairDM v0.5.0 and django-literature 0.4, installed from PyPI, with
+  fairdm-geo at the commit that moves it to FairDM's vocabularies. FairDM no longer installs django-research-vocabs, so every vocabulary
+  term the portal stores is the address of a concept in a published vocabulary, held through
+  django-controlled-vocabularies. The heat flow fields use the IHFC vocabularies at their
+  addresses under `https://w3id.org/ihfc-iugg/vocabularies/`, and the image reads them from
+  those addresses with `sync_vocabularies` each time it starts, before it scores records. A
+  start whose vocabulary server does not answer keeps the terms already loaded. FairDM's
+  own vocabularies are read the same way, from `https://w3id.org/fairdm/vocabularies/` with `.ttl` added.
+  No vocabulary is kept in the repository. The temperature method vocabulary gains `DST` and `cDST`.
+- A measurement's pages move to `/measurements/<uuid>/` and a sample's to `/samples/<uuid>/`,
+  as FairDM 0.5.0 places them. The former addresses redirect.
+- The published-structure API checks a single record with FairDM's own permission class, which
+  now reads a heat flow record's permissions through its proxies. The portal's own class is gone.
+- A site no longer has an elevation datum, which went with the vocabulary fairdm-geo dropped. Its
+  elevation is in metres above mean sea level, and the site page, its edit form and the API no
+  longer show a datum.
+- The API gives a vocabulary term with the same `name`, `label`, `uri` and `vocabulary` as
+  before, and the `uri` is now the term's address under `w3id.org/ihfc-iugg/vocabularies/`. A site's
+  `type`, `environment` and `explo_method` are written as a term's name or
+  its address ([records API](docs/guides/heat-flow-records-api.md)).
+- The environment, exploration method and exploration purpose filters of the GHFDB parents
+  table and of the administration pages take a term's address in the page address.
+- The portal takes FairDM's `fairdm` and `fairdm-dark` themes and fonts, on django-mvp 0.33's
+  page, card and sidebar colours. Its own logo and icon stay, and its icon is now the favicon.
+- Partial dates are stored by django-partial-dates as the text `1990`, `1990-06` or
+  `1990-06-14`. Migrations convert an assessment's start and completion dates and a heat flow's
+  date of acquisition in place, and FairDM's and django-literature's migrations convert theirs.
+  A date with an unpadded month such as `1990-6` is now refused, on the assessment form and on
+  an upload's row.
+- An assessment's publication is a django-literature reference. A bibliography file the
+  catalogue cannot read is refused on the assessment form instead of being stored.
+- Upgrading a 2025.21 database takes two steps: it is migrated by the last release on FairDM
+  0.2.1, then converted with `repair_references`, `upgrade_literature`,
+  `upgrade_vocabularies` and `sync_vocabularies` before the current image starts
+  ([upgrading from 2025.21](deploy/README.md#upgrading-a-database-from-202521)).
+- A site's and a depth interval's vertical datum is chosen from the top of the hole or mean sea
+  level, and starts at the top of the hole, as fairdm-geo now defines it.
+- A production portal needs `BACKUP_PUBLIC_KEY`, the public key FairDM encrypts its backups to
+  ([deploy](deploy/README.md#configuration)).
 - The `heat_flow` and `ghfdb` migrations start again from the schema 2025.21 left. Each app
   keeps the migrations 2025.21 applied, and new ones take that schema to the current models
   (`heat_flow` 0004 and 0005, `ghfdb` 0003). A database upgraded from 2025.21 has its heat
@@ -70,8 +114,7 @@ Releases before that used `<year>.<release>` and are recorded in the
   number of reads for many records as for one. The interval, site, probe metadata, vocabulary
   terms and corrections each score reads are fetched with the records, where each record had
   fetched its own. `refresh_quality` shares the same reads.
-- `seed_demo_data` loads the controlled vocabularies only when a concept is missing, rather than
-  writing every concept again on each run.
+- `seed_demo_data` loads the controlled vocabularies with `sync_vocabularies` on each run.
 - The portal moves to Django 6.0 and FairDM v0.2.1. FairDM no longer depends on django-select2,
   django-autocomplete-light or django-addanother, and chooses records with django-tomselect, so
   the last two leave the lockfile. django-mvp moves to 0.31, and django-mvp-accounts,

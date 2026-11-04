@@ -33,8 +33,8 @@ The coordinates take a latitude and a longitude in decimal degrees (WGS 84) and 
 both or neither. Two sites cannot share one pair of coordinates, so a pair that another site already
 holds is refused, with the message beside the coordinates, and nothing is saved.
 
-The elevation is not part of the coordinates. It has its own field, with its unit, and the
-elevation datum beside it. The portal stores the elevation on the site itself.
+The elevation is not part of the coordinates. It has its own field, with its unit, in metres
+above mean sea level. The portal stores the elevation on the site itself.
 
 ### Terms
 
@@ -225,7 +225,7 @@ is built after FairDM's mixins have replaced their fields.
 
 ### `ConceptTextField`
 
-A `CharField` that stands for a vocabulary field (`BaseConceptField` or `ConceptManyToManyField`).
+A `CharField` that stands for a vocabulary field (`ConceptField` or `MultiConceptField`).
 It draws a stored term as its label, several joined by `; `, and reads text with `resolve_term` or
 `resolve_terms`. Text that equals the stored value as drawn returns the stored value without being
 read again. An unknown term is a `ValidationError` against the field with the code `unknown_term`.

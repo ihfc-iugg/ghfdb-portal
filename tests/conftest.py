@@ -64,8 +64,8 @@ requires_browser = pytest.mark.skipif(
 class ConceptPreloadRecord:
     """How many times the vocabulary concepts have been written this session.
 
-    Loading them is expensive — seventeen vocabularies and several hundred
-    concepts, each written with its own query — so it happens once, in
+    Loading them is expensive — every vocabulary file the portal ships is
+    parsed and several thousand concepts written — so it happens once, in
     ``django_db_setup`` below. ``tests/test_heat_flow/test_vocabularies.py``
     asserts against this record, because the constitution asks for a
     deterministic guard on performance rather than a wall-clock measurement.
@@ -144,29 +144,32 @@ def django_db_setup(django_db_setup, django_db_blocker):
     # Load every vocabulary concept once, for the whole session. Each test runs inside a
     # transaction that is rolled back afterwards, so anything written from inside a test
     # is gone before the next one starts.
-    from heat_flow.vocabularies import ExplorationMethod, GeographicEnvironment
-    from research_vocabs import registry
-    from research_vocabs.models import Concept
+    from controlled_vocabularies.management.commands.sync_vocabularies import Command
+    from django.core.management import call_command
 
-    preload = Concept.preload.__func__
+    handle = Command.handle
 
-    def counted_preload(cls: type[Concept]) -> None:
+    def counted_handle(self, *args, **options):
         concept_preload_record.calls += 1
-        preload(cls)
+        return handle(self, *args, **options)
 
-    Concept.preload = classmethod(counted_preload)
+    Command.handle = counted_handle
 
-    # The uncounted original, for restoring after a flush. A restore is not a
-    # test loading its own concepts, which is what ``calls`` is there to
-    # catch, so it is recorded under ``restores`` instead.
-    concept_preload_record.write_concepts = lambda: preload(Concept)
+    def write_concepts():
+        # The uncounted original, for restoring after a flush. A restore is not a
+        # test loading its own concepts, which is what ``calls`` is there to
+        # catch, so it is recorded under ``restores`` instead.
+        Command.handle = handle
+        try:
+            call_command("sync_vocabularies", verbosity=0)
+        finally:
+            Command.handle = counted_handle
 
-    for vocabulary in (GeographicEnvironment, ExplorationMethod):
-        registry.register(vocabulary())
+    concept_preload_record.write_concepts = write_concepts
 
     with django_db_blocker.unblock():
         keep_autovacuum_off_the_test_tables()
-        Concept.preload()
+        call_command("sync_vocabularies", verbosity=0)
 
 
 def keep_autovacuum_off_the_test_tables():
@@ -282,6 +285,8 @@ def member(unpublished_dataset):
 @pytest.fixture
 def page_records(published_dataset):
     """A child with every record its page names, all in the published dataset."""
+    from heat_flow.vocabularies import EXPLORATION_METHOD, term
+
     from tests.factories import (
         HeatFlowFactory,
         HeatFlowIntervalFactory,
@@ -293,7 +298,9 @@ def page_records(published_dataset):
 
     # The exploration method decides whether a measurement can be scored at all, so it
     # is set rather than left to the factory's random choice.
-    site = HeatFlowSiteFactory(dataset=published_dataset, explo_method="drilling")
+    site = HeatFlowSiteFactory(
+        dataset=published_dataset, explo_method_id=term(EXPLORATION_METHOD, "drilling")
+    )
     interval = HeatFlowIntervalFactory(
         dataset=published_dataset, site=site, top=0, bottom=500
     )

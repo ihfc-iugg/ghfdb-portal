@@ -8,8 +8,10 @@ from django.db import connection
 from django.test.utils import CaptureQueriesContext
 from fairdm.contrib.contributors.choices import ContributionLevel
 from fairdm.factories import ContributionFactory, PersonFactory
+from heat_flow import vocabularies
 from heat_flow.models import ThermalGradient
 from heat_flow.overview import HeatFlowPage
+from heat_flow.vocabularies import EXPLORATION_METHOD, term
 
 from tests.factories import (
     HeatFlowFactory,
@@ -40,14 +42,18 @@ def link_to(node, record):
     return record.get_absolute_url() in node.hrefs
 
 
-def shows_term(node, concept):
-    """Say whether ``node`` shows a vocabulary concept's English label, in any case.
+def a_term_of(record, field_name):
+    """One concept of the vocabulary ``record``'s field declares."""
+    vocabulary = type(record)._meta.get_field(field_name).vocabulary[0]
+    return vocabularies.concepts(vocabulary).first()
 
-    A graph concept gives its label as a method; the page capitalises the first letter.
+
+def shows_term(node, concept):
+    """Say whether ``node`` shows a vocabulary concept's label, in any case.
+
+    The page may capitalise the first letter.
     """
-    label = concept.label
-    label = str(label("en") if callable(label) else label)
-    return label.casefold() in node.text.casefold()
+    return concept.display_label().casefold() in node.text.casefold()
 
 
 def shown(score):
@@ -116,10 +122,8 @@ class TestGradientPage:
     ):
         gradient = page_records["gradient"]
         top, bottom = gradient.method_top.first(), gradient.method_bottom.first()
-        gradient.correction_top.set(gradient.correction_top.model.objects.all()[:1])
-        gradient.correction_bottom.set(
-            gradient.correction_bottom.model.objects.all()[:1]
-        )
+        gradient.correction_top.set([a_term_of(gradient, "correction_top")])
+        gradient.correction_bottom.set([a_term_of(gradient, "correction_bottom")])
         ThermalGradient.objects.filter(pk=gradient.pk).update(
             temperature_top=20, temperature_bottom=45
         )
@@ -354,7 +358,9 @@ class TestMeasurementCard:
         assert card.hooks["scheme"].value == gradient.quality_scheme
 
     def test_a_score_that_is_not_determined_is_not_shown_as_zero(self, page, db):
-        site = HeatFlowSiteFactory(explo_method="unspecified")
+        site = HeatFlowSiteFactory(
+            explo_method_id=term(EXPLORATION_METHOD, "unspecified")
+        )
         gradient = ThermalGradientFactory(
             sample=HeatFlowIntervalFactory(site=site), method_top=[], method_bottom=[]
         )

@@ -60,6 +60,27 @@ def published_coordinate(function: str, location: str) -> Cast:
     )
 
 
+def published_concept(path: str) -> Func:
+    """Read a concept-valued column of a site as the GHFDB publishes it.
+
+    A concept field stores the concept's address, and the published column is the
+    last part of that address, the concept's identifier.
+
+    Args:
+        path: The lookup path to the site's concept field.
+
+    Returns:
+        An expression giving the concept's identifier, or null when none is set.
+    """
+    return Func(
+        F(path),
+        Value("/"),
+        Value(-1),
+        function="split_part",
+        output_field=CharField(),
+    )
+
+
 def _correction_subqueries() -> dict[str, Subquery]:
     """Return 9 correlated Subquery annotations, one per correction type.
 
@@ -105,11 +126,12 @@ def _ref_igsn_annotation() -> Coalesce:
     subqueries above are, not a further query per row.
     """
     from fairdm.core.sample.models import SampleIdentifier
+    from fairdm.core.vocabularies import IGSN
 
     return Coalesce(
         Subquery(
             SampleIdentifier.objects.filter(
-                related_id=OuterRef("sample_id"), type="IGSN"
+                related_id=OuterRef("sample_id"), type_id=IGSN
             ).values("value")[:1],
             output_field=CharField(),
         ),
@@ -176,8 +198,12 @@ class GHFDBChildQuerySet(PolymorphicQuerySet):
                 "ST_X", "sample__heatflowinterval__site__location"
             ),
             "elevation": F("sample__heatflowinterval__site__elevation"),
-            "environment": F("sample__heatflowinterval__site__environment"),
-            "explo_method": F("sample__heatflowinterval__site__explo_method"),
+            "environment": published_concept(
+                "sample__heatflowinterval__site__environment"
+            ),
+            "explo_method": published_concept(
+                "sample__heatflowinterval__site__explo_method"
+            ),
             "site_country": F("sample__heatflowinterval__site__country"),
             "site_region": F("sample__heatflowinterval__site__region"),
             "site_continent": F("sample__heatflowinterval__site__continent"),
@@ -390,8 +416,8 @@ class GHFDBParentQuerySet(PolymorphicQuerySet):
             "lat_NS": published_coordinate("ST_Y", "sample__location"),
             "long_EW": published_coordinate("ST_X", "sample__location"),
             "elevation": F("sample__heatflowsite__elevation"),
-            "environment": F("sample__heatflowsite__environment"),
-            "explo_method": F("sample__heatflowsite__explo_method"),
+            "environment": published_concept("sample__heatflowsite__environment"),
+            "explo_method": published_concept("sample__heatflowsite__explo_method"),
             "total_depth_MD": F("sample__heatflowsite__length"),
             "total_depth_TVD": F("sample__heatflowsite__vertical_depth"),
             "quality_parent": F("quality"),

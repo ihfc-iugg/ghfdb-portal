@@ -11,9 +11,10 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from fairdm.contrib.contributors.models import Person
 from fairdm.forms import ModelForm
-from literature.models import LiteratureItem
+from literature.converters import from_csl_json
+from literature.models import Item
 from mvp_forms.widgets import TomSelect, TomSelectMultiple
-from partial_date import PartialDate
+from partial_dates import PartialDate
 
 from .models import Review
 
@@ -22,7 +23,7 @@ class ReviewDescriptionForm(ModelForm):
     """Create or update an assessment's description before any file is uploaded."""
 
     literature = forms.ModelChoiceField(
-        queryset=LiteratureItem.objects.all(),
+        queryset=Item.objects.all(),
         required=False,
         label=_("Publication"),
         help_text=_(
@@ -72,6 +73,27 @@ class ReviewDescriptionForm(ModelForm):
             "title",
             "bibliography_file",
         ]
+
+    @staticmethod
+    def ends_before_it_starts(start_date, end_date):
+        """Say whether the end date falls before the start date.
+
+        A date that cannot be read compares as false, because the model field refuses it
+        on the form once this check has run.
+
+        Args:
+            start_date: The start date as typed.
+            end_date: The end date as typed.
+
+        Returns:
+            ``True`` when both dates can be read and the end falls before the start.
+        """
+        try:
+            return PartialDate.fromisoformat(end_date) < PartialDate.fromisoformat(
+                start_date
+            )
+        except ValueError:
+            return False
 
     def clean_bibliography_file(self):
         """Parse the uploaded file as a CSL-JSON bibliography record."""
@@ -123,7 +145,7 @@ class ReviewDescriptionForm(ModelForm):
 
         start_date = cleaned_data.get("start_date")
         end_date = cleaned_data.get("end_date")
-        if start_date and end_date and PartialDate(end_date) < PartialDate(start_date):
+        if start_date and end_date and self.ends_before_it_starts(start_date, end_date):
             self.add_error(
                 "end_date",
                 _("The end date (%(end)s) cannot be before the start date (%(start)s).")
@@ -137,8 +159,9 @@ class ReviewDescriptionForm(ModelForm):
         # a date entered the wrong way round would quietly add one that nobody
         # asked for and nobody afterwards knows to remove.
         if not literature and bibliography_data and not self.errors:
-            cleaned_data["literature"] = LiteratureItem.objects.create(
-                item=bibliography_data
-            )
+            try:
+                cleaned_data["literature"] = from_csl_json(bibliography_data)
+            except ValidationError as error:
+                self.add_error("bibliography_file", error)
 
         return cleaned_data

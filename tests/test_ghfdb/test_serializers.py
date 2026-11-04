@@ -1,6 +1,7 @@
 from decimal import Decimal
 from types import SimpleNamespace
 
+import pytest
 from quantityfield.units import ureg
 from rest_framework import serializers
 
@@ -53,14 +54,15 @@ class TestPublishedValueField:
             == "onshore_continental"
         )
 
+    @pytest.mark.django_db
     def test_a_concept_renders_as_its_stored_code(self):
-        # The annotation for a concept-valued column (e.g. `environment`) returns a
-        # `research_vocabs.core.Concept`, the same object the field's `to_python()`
-        # produces from its stored code.
-        from heat_flow.models import HeatFlowSite
+        # The annotation for a concept-valued column (e.g. `environment`) returns the
+        # concept record the stored address points at.
+        from controlled_vocabularies.models import Record
+        from heat_flow.vocabularies import GEOGRAPHIC_ENVIRONMENT, term
 
-        concept = HeatFlowSite._meta.get_field("environment").to_python(
-            "onshore_continental"
+        concept = Record.objects.get(
+            uri=term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental")
         )
         field = _bound(PublishedValueField(source="value"), field_name="environment")
         instance = SimpleNamespace(value=concept)
@@ -83,18 +85,16 @@ class TestPublishedValueField:
 
 
 class TestConceptLabelsField:
+    @pytest.mark.django_db
     def test_a_prefetched_related_manager_renders_as_its_members_labels(self):
-        field = _bound(
-            ConceptLabelsField(source="method"), field_name="q_method"
-        )
-        members = _FakeManager(
-            [SimpleNamespace(label="Bullard"), SimpleNamespace(label="Interval")]
-        )
-        instance = SimpleNamespace(method=members)
+        from heat_flow.vocabularies import HEAT_FLOW_METHOD, concepts
+
+        field = _bound(ConceptLabelsField(source="method"), field_name="q_method")
+        found = list(concepts(HEAT_FLOW_METHOD)[:2])
+        instance = SimpleNamespace(method=_FakeManager(found))
 
         assert field.to_representation(field.get_attribute(instance)) == [
-            "Bullard",
-            "Interval",
+            concept.display_label() for concept in found
         ]
 
     def test_a_none_hop_on_the_path_renders_as_an_empty_list(self):
@@ -120,9 +120,7 @@ class TestPublishedFields:
         bound = _Serializer().fields
 
         assert bound["name"].source == "site_name"
-        assert bound["explo_purpose"].source == (
-            "sample.heatflowsite.explo_purpose"
-        )
+        assert bound["explo_purpose"].source == ("sample.heatflowsite.explo_purpose")
         assert bound["q"].source == "q"
         assert isinstance(bound["q"], PublishedValueField)
         assert isinstance(bound["explo_purpose"], ConceptLabelsField)

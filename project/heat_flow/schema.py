@@ -78,7 +78,7 @@ class HeatFlowRecordSchema(OpenApiSerializerExtension):
 class TermFieldSchema(OpenApiSerializerFieldExtension):
     """Describes a single vocabulary term as an object naming its vocabulary."""
 
-    target_class = "heat_flow.serializers.TermChoiceField"
+    target_class = "heat_flow.serializers.TermField"
 
     def map_serializer_field(self, auto_schema: Any, direction: Direction) -> dict:
         """Describe the term the field gives.
@@ -96,7 +96,7 @@ class TermFieldSchema(OpenApiSerializerFieldExtension):
                 "name": {"type": "string"},
                 "label": {"type": "string"},
                 "uri": {"type": "string", "format": "uri"},
-                "vocabulary": {"type": "string", "enum": [self.target.vocabulary]},
+                "vocabulary": {"type": "string", "enum": [self.target.slug]},
             },
             required=["name", "label", "uri", "vocabulary"],
         )

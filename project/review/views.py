@@ -36,6 +36,7 @@ from .permissions import (
     is_assessment_team_member,
     is_data_curator,
 )
+from .roles import DATA_COLLECTOR, DATA_MANAGER
 from .states import States, approve, confirm_upload, send_back
 
 
@@ -168,10 +169,10 @@ class ReviewCreateView(UserPassesTestMixin, FairDMCreateView):
         self.object.save()
         form.save_m2m()
 
-        Crediting(dataset).make_creator(self.request.user, roles=["DataManager"])
+        Crediting(dataset).make_creator(self.request.user, roles=[DATA_MANAGER])
 
         for assessor in self.object.reviewers.all():
-            dataset.add_contributor(assessor, with_roles=["DataCollector"])
+            dataset.add_contributor(assessor, with_roles=[DATA_COLLECTOR])
 
         return redirect(dataset.get_absolute_url())
 

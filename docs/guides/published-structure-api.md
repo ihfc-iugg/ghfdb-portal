@@ -400,10 +400,9 @@ one override — `explo_purpose` reads through the determination's own interval 
 directly, since the registry's own path to it only resolves on a parent record.
 
 The three viewsets share `GHFDBBaseViewSet`, in `project/ghfdb/viewsets.py`, which fixes the
-published-identifier lookup, keeps the framework's own visibility filter for list requests, and sets
-`GHFDBObjectPermissions` — a permission class checking `measurement.view_measurement` for a
-single-record request, the permission the visibility filter already resolves a list request to,
-rather than the proxy's own permission, which the framework maps to no access level and so refuses.
+published-identifier lookup, and keeps the framework's own visibility filter for list requests and
+its own `FairDMObjectPermissions` for a single-record request. That class reads a proxy by its
+concrete model's permissions, so a determination is checked as the heat flow record it stands for.
 Paging is the framework's own, at the default and maximum described under Paging.
 `GHFDBParentViewSet` and `GHFDBChildViewSet` are two of the three; each's single-record route
 overrides `retrieve()` to load the nested record it carries. A determination is narrowed to parents

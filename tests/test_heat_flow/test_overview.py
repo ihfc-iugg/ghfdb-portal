@@ -6,6 +6,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
 from fairdm.core.sample.models import SampleIdentifier
+from fairdm.core.vocabularies import DOI, IGSN
 from heat_flow.models import (
     HeatFlow,
     HeatFlowInterval,
@@ -356,7 +357,7 @@ class TestHeatFlowPageForInterval:
 
     def test_it_returns_the_igsn_recorded_for_the_interval(self, page_records, visitor):
         SampleIdentifier.objects.create(
-            related=page_records["interval"], type="IGSN", value="10.60510/IEGHF0001"
+            related=page_records["interval"], type_id=IGSN, value="10.60510/IEGHF0001"
         )
 
         context = HeatFlowPage(page_records["interval"], visitor).for_interval()
@@ -365,7 +366,7 @@ class TestHeatFlowPageForInterval:
 
     def test_an_interval_without_an_igsn_gets_an_empty_one(self, page_records, visitor):
         SampleIdentifier.objects.create(
-            related=page_records["interval"], type="DOI", value="10.1234/other"
+            related=page_records["interval"], type_id=DOI, value="10.1234/other"
         )
 
         context = HeatFlowPage(page_records["interval"], visitor).for_interval()

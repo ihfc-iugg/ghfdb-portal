@@ -2,7 +2,6 @@ import pytest
 from django.contrib.gis.geos import Point
 from heat_flow import vocabularies
 from heat_flow.models import ParentHeatFlow
-from research_vocabs.models import Concept
 
 from project.ghfdb.tables import GHFDBParentTable
 
@@ -61,22 +60,29 @@ class TestGHFDBParentTable:
         make_parent(
             published_dataset,
             1,
-            site={"environment": "offshore_marine", "explo_method": "probing_offshore"},
+            site={
+                "environment_id": vocabularies.term(
+                    vocabularies.GEOGRAPHIC_ENVIRONMENT, "offshore_marine"
+                ),
+                "explo_method_id": vocabularies.term(
+                    vocabularies.EXPLORATION_METHOD, "probing_offshore"
+                ),
+            },
         )
-        environment = Concept.objects.get(
-            vocabulary__name=vocabularies.GeographicEnvironment().scheme().name,
-            name="offshore_marine",
+        environment = vocabularies.concepts(vocabularies.GEOGRAPHIC_ENVIRONMENT).get(
+            uri=vocabularies.term(
+                vocabularies.GEOGRAPHIC_ENVIRONMENT, "offshore_marine"
+            )
         )
-        method = Concept.objects.get(
-            vocabulary__name=vocabularies.ExplorationMethod().scheme().name,
-            name="probing_offshore",
+        method = vocabularies.concepts(vocabularies.EXPLORATION_METHOD).get(
+            uri=vocabularies.term(vocabularies.EXPLORATION_METHOD, "probing_offshore")
         )
 
         row = rows_by_id(GHFDBParentTable(parents()))[1]
 
-        assert str(environment.label) in row.get_cell("environment")
+        assert environment.display_label() in row.get_cell("environment")
         assert "offshore_marine" not in row.get_cell("environment")
-        assert str(method.label) in row.get_cell("explo_method")
+        assert method.display_label() in row.get_cell("explo_method")
         assert "probing_offshore" not in row.get_cell("explo_method")
 
     @pytest.mark.parametrize(
@@ -162,7 +168,9 @@ class TestGHFDBParentTable:
         self, published_dataset
     ):
         make_parent(published_dataset, 1, purpose=["hydrocarbon", "mining"])
-        labels = [str(concept.label) for concept in purposes("hydrocarbon", "mining")]
+        labels = [
+            concept.display_label() for concept in purposes("hydrocarbon", "mining")
+        ]
 
         cell = rows_by_id(GHFDBParentTable(parents()))[1].get_cell("explo_purpose")
 
@@ -188,8 +196,12 @@ class TestGHFDBParentTableOrdering:
                     "elevation": 20,
                     "length": 200,
                     "vertical_depth": 200,
-                    "environment": "onshore_marine",
-                    "explo_method": "mining",
+                    "environment_id": vocabularies.term(
+                        vocabularies.GEOGRAPHIC_ENVIRONMENT, "onshore_marine"
+                    ),
+                    "explo_method_id": vocabularies.term(
+                        vocabularies.EXPLORATION_METHOD, "mining"
+                    ),
                 },
             },
             2: {
@@ -205,8 +217,12 @@ class TestGHFDBParentTableOrdering:
                     "elevation": 30,
                     "length": 300,
                     "vertical_depth": 300,
-                    "environment": "offshore_marine",
-                    "explo_method": "tunneling",
+                    "environment_id": vocabularies.term(
+                        vocabularies.GEOGRAPHIC_ENVIRONMENT, "offshore_marine"
+                    ),
+                    "explo_method_id": vocabularies.term(
+                        vocabularies.EXPLORATION_METHOD, "tunneling"
+                    ),
                 },
             },
             3: {
@@ -222,8 +238,12 @@ class TestGHFDBParentTableOrdering:
                     "elevation": 10,
                     "length": 100,
                     "vertical_depth": 100,
-                    "environment": "onshore_continental",
-                    "explo_method": "drilling",
+                    "environment_id": vocabularies.term(
+                        vocabularies.GEOGRAPHIC_ENVIRONMENT, "onshore_continental"
+                    ),
+                    "explo_method_id": vocabularies.term(
+                        vocabularies.EXPLORATION_METHOD, "drilling"
+                    ),
                 },
             },
         }

@@ -13,8 +13,8 @@ coordinates:
   placed at their site, and every table, export and API response reads their coordinates through
   the interval's `site`.
 
-A site's elevation is `HeatFlowSite.elevation`, a quantity with its `elevation_datum`, and it is
-the only one. FairDM's `location_elevation` and `location_uncertainty` stay empty on every record:
+A site's elevation is `HeatFlowSite.elevation`, a quantity in metres above mean sea level, and it
+is the only one. FairDM's `location_elevation` and `location_uncertainty` stay empty on every record:
 nothing in the portal writes them, and the GHFDB `elevation` column reads and writes
 `HeatFlowSite.elevation` as it did before.
 

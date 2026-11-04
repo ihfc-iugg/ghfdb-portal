@@ -61,7 +61,7 @@ The site's page answers what the database holds for a place. It shows:
   more.
 - **The site.** Its geographic environment, exploration method, exploration purpose and site type
   as vocabulary terms; its access geometry (top, bottom, length, vertical depth, inclination,
-  azimuth, elevation and elevation datum); and where it lies (country, region, continent and
+  azimuth and elevation); and where it lies (country, region, continent and
   domain). A field with nothing recorded says so.
 - **The depth intervals.** Every interval from the shallowest to the deepest, ordered by top, then
   bottom. Each interval shows its depth range, its lithology and the heat flow values determined

@@ -6,7 +6,6 @@ from django.conf import settings
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from fairdm.db import models
-from partial_date.fields import PartialDateField
 
 from .states import STATE_VARIANTS, States
 
@@ -74,21 +73,21 @@ class Review(models.Model):
     )
 
     literature = models.OneToOneField(
-        "literature.LiteratureItem",
+        "literature.Item",
         verbose_name=_("literature"),
         help_text=_("The literature item that was reviewed."),
         on_delete=models.CASCADE,
         related_name="review",
     )
 
-    start_date = PartialDateField(
+    start_date = models.PartialDateField(
         verbose_name=_("start date"),
         help_text=_("Date the review was started."),
         null=True,
         blank=True,
     )
 
-    end_date = PartialDateField(
+    end_date = models.PartialDateField(
         verbose_name=_("completion date"),
         help_text=_("Date the review was completed."),
         null=True,

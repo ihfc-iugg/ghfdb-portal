@@ -33,8 +33,9 @@ fall back to source builds and fail without system development packages. Pin the
 `uv sync --python 3.13`, which is also what CI uses.
 
 **Versions:** bump the version with `uv version`, never by editing `pyproject.toml` alone, because
-`uv.lock` records the project's own version too. The FairDM packages are pinned to commits in
-`[tool.uv.sources]`. Move a pin deliberately, not by re-locking.
+`uv.lock` records the project's own version too. FairDM comes from PyPI. The FairDM packages
+that are not published there are pinned to commits in `[tool.uv.sources]`. Move a pin
+deliberately, not by re-locking.
 
 **The tests need PostGIS and the GDAL, GEOS and PROJ libraries.** FairDM installs GeoDjango, so
 Django loads GDAL and GEOS as it starts, and that includes the test run. pytest runs with

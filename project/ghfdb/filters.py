@@ -185,11 +185,11 @@ class GHFDBParentFilter(django_filters.FilterSet):
         """Offer each vocabulary's terms."""
         super().__init__(*args, **kwargs)
         for name, vocabulary in (
-            ("environment", vocabularies.GeographicEnvironment),
-            ("explo_method", vocabularies.ExplorationMethod),
-            ("explo_purpose", vocabularies.ExplorationPurpose),
+            ("environment", vocabularies.GEOGRAPHIC_ENVIRONMENT),
+            ("explo_method", vocabularies.EXPLORATION_METHOD),
+            ("explo_purpose", vocabularies.EXPLORATION_PURPOSE),
         ):
-            self.filters[name].extra["choices"] = vocabulary().choices
+            self.filters[name].extra["choices"] = vocabularies.choices(vocabulary)
 
     def filter_explo_purpose(self, queryset, name, value):
         """Keep parents whose site has any chosen purpose.
@@ -200,14 +200,14 @@ class GHFDBParentFilter(django_filters.FilterSet):
         Args:
             queryset: The parents being filtered.
             name: The filter's name.
-            value: The chosen purposes' names.
+            value: The chosen purposes' addresses.
 
         Returns:
             The parents whose site has any of them.
         """
         if not value:
             return queryset
-        sites = HeatFlowSite.objects.filter(explo_purpose__name__in=value)
+        sites = HeatFlowSite.objects.filter(explo_purpose__uri__in=value)
         return queryset.filter(sample__in=sites.values("pk"))
 
     def filter_corr_hp(self, queryset, name, value):

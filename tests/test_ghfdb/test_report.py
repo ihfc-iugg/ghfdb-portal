@@ -111,7 +111,7 @@ class TestBuildReportFailures:
         # environment failure specifically rather than assuming it is the only one.
         failure = next(f for f in report.failures if f.column == "environment")
         assert "not_a_real_value" in failure.reason
-        assert "GeographicEnvironment" in failure.reason
+        assert "geographic-environments" in failure.reason
 
     def test_a_many_valued_vocabulary_failure_names_the_value_and_the_vocabulary(
         self, dataset
@@ -131,7 +131,7 @@ class TestBuildReportFailures:
 
         (failure,) = report.failures
         assert "not_a_real_method" in failure.reason
-        assert "ConductivityMethod" in failure.reason
+        assert "conductivity-methods" in failure.reason
 
     def test_a_related_widget_failure_does_not_name_the_model_it_wraps(self, dataset):
         from project.ghfdb.importers import import_ghfdb_template
@@ -146,7 +146,7 @@ class TestBuildReportFailures:
         failure = next(f for f in report.failures if f.column == "environment")
         assert "HeatFlowSite" not in failure.reason
         assert "not_a_real_value" in failure.reason
-        assert "GeographicEnvironment" in failure.reason
+        assert "geographic-environments" in failure.reason
 
     def test_a_downstream_parent_resolution_failure_does_not_name_the_model_class(
         self, dataset

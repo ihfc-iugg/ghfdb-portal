@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   call-prepare-release:
-    uses: FAIR-DM/shared/.github/workflows/prepare-release.yml@v0.1.0
+    uses: FAIR-DM/shared/.github/workflows/prepare-release.yml@v0.1.1
     with:
       version: ${{ inputs.version }}
     secrets:

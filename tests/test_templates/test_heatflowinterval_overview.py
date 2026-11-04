@@ -7,6 +7,8 @@
 
 import pytest
 from fairdm.core.sample.models import SampleIdentifier
+from fairdm.core.vocabularies import IGSN
+from heat_flow import vocabularies
 from heat_flow.models import HeatFlowInterval, HeatFlowSite
 
 from project.ghfdb.resources.export import GHFDBExportResource
@@ -98,14 +100,18 @@ def link_to(node, record):
     return record.get_absolute_url() in node.hrefs
 
 
-def shows_term(node, concept):
-    """Say whether ``node`` shows a vocabulary concept's English label, in any case.
+def a_term_of(record, field_name):
+    """One concept of the vocabulary ``record``'s field declares."""
+    vocabulary = type(record)._meta.get_field(field_name).vocabulary[0]
+    return vocabularies.concepts(vocabulary).first()
 
-    A graph concept gives its label as a method; the page capitalises the first letter.
+
+def shows_term(node, concept):
+    """Say whether ``node`` shows a vocabulary concept's label, in any case.
+
+    The page may capitalise the first letter.
     """
-    label = concept.label
-    label = str(label("en") if callable(label) else label)
-    return label.casefold() in node.text.casefold()
+    return concept.display_label().casefold() in node.text.casefold()
 
 
 @pytest.fixture
@@ -114,7 +120,7 @@ def records(page_records):
     interval = page_records["interval"]
     ProbeMetadataFactory(interval=interval, length=5, penetration=3, tilt=2)
     SampleIdentifier.objects.create(
-        related=interval, type="IGSN", value="10.60510/IEGHFTEST01"
+        related=interval, type_id=IGSN, value="10.60510/IEGHFTEST01"
     )
     return page_records
 
@@ -128,8 +134,8 @@ def set_location(site, location=None):
 class TestIntervalPage:
     def test_it_shows_its_depth_range_lithology_and_age(self, document, records):
         interval = records["interval"]
-        lithology = interval.lithology.model.objects.first()
-        age = interval.age.model.objects.first()
+        lithology = a_term_of(interval, "lithology")
+        age = a_term_of(interval, "age")
         interval.lithology.set([lithology])
         interval.age.set([age])
 
@@ -171,7 +177,7 @@ class TestIntervalPage:
     ):
         interval = HeatFlowInterval.objects.get(pk=records["interval"].pk)
         probe = interval.probe_metadata
-        concept = probe.probe_type.model.objects.first()
+        concept = a_term_of(probe, "probe_type")
         probe.probe_type.set([concept])
 
         page = document(interval)

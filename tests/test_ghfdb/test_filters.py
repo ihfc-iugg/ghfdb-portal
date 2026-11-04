@@ -110,6 +110,14 @@ class TestCoordinateBounds:
         ]
 
 
+def exploration(name):
+    return vocabularies.term(vocabularies.EXPLORATION_METHOD, name)
+
+
+def purpose_terms(*names):
+    return [vocabularies.term(vocabularies.EXPLORATION_PURPOSE, name) for name in names]
+
+
 @pytest.mark.django_db
 class TestChoiceFilters:
     def test_two_environments_list_the_parents_in_either(self, published_dataset):
@@ -118,18 +126,32 @@ class TestChoiceFilters:
             (2, "onshore_marine"),
             (3, "offshore_marine"),
         ):
-            make_parent(published_dataset, ghfdb_id, site={"environment": environment})
+            make_parent(
+                published_dataset,
+                ghfdb_id,
+                site={
+                    "environment_id": vocabularies.term(
+                        vocabularies.GEOGRAPHIC_ENVIRONMENT, environment
+                    )
+                },
+            )
 
-        assert listed({"environment": ["onshore_continental", "onshore_marine"]}) == [
-            1,
-            2,
+        chosen = [
+            vocabularies.term(vocabularies.GEOGRAPHIC_ENVIRONMENT, name)
+            for name in ("onshore_continental", "onshore_marine")
         ]
 
-    def test_the_exploration_method_narrows(self, published_dataset):
-        make_parent(published_dataset, 1, site={"explo_method": "drilling"})
-        make_parent(published_dataset, 2, site={"explo_method": "mining"})
+        assert listed({"environment": chosen}) == [1, 2]
 
-        assert listed({"explo_method": ["mining"]}) == [2]
+    def test_the_exploration_method_narrows(self, published_dataset):
+        make_parent(
+            published_dataset, 1, site={"explo_method_id": exploration("drilling")}
+        )
+        make_parent(
+            published_dataset, 2, site={"explo_method_id": exploration("mining")}
+        )
+
+        assert listed({"explo_method": [exploration("mining")]}) == [2]
 
     def test_a_purpose_matches_a_parent_with_several_and_lists_it_once(
         self, published_dataset
@@ -138,7 +160,7 @@ class TestChoiceFilters:
         make_parent(published_dataset, 2, purpose=["underground_storage"])
         make_parent(published_dataset, 3)
 
-        filterset = bound({"explo_purpose": ["hydrocarbon", "mining"]})
+        filterset = bound({"explo_purpose": purpose_terms("hydrocarbon", "mining")})
 
         assert list(filterset.qs.values_list("ghfdb_id", flat=True)) == [1]
 
@@ -164,15 +186,15 @@ class TestChoiceFilters:
     @pytest.mark.parametrize(
         ("name", "vocabulary"),
         [
-            ("environment", vocabularies.GeographicEnvironment),
-            ("explo_method", vocabularies.ExplorationMethod),
-            ("explo_purpose", vocabularies.ExplorationPurpose),
+            ("environment", vocabularies.GEOGRAPHIC_ENVIRONMENT),
+            ("explo_method", vocabularies.EXPLORATION_METHOD),
+            ("explo_purpose", vocabularies.EXPLORATION_PURPOSE),
         ],
     )
     def test_a_vocabulary_filter_offers_the_vocabularys_terms(self, name, vocabulary):
         offered = bound({}).filters[name].extra["choices"]
 
-        assert list(offered) == list(vocabulary().choices)
+        assert list(offered) == vocabularies.choices(vocabulary)
 
     def test_choosing_two_purposes_leaves_each_rows_counts_unchanged(
         self, published_dataset
@@ -183,7 +205,7 @@ class TestChoiceFilters:
                 published_dataset, parent, ghfdb_id=ghfdb_id, is_relevant=is_relevant
             )
 
-        both = bound({"explo_purpose": ["hydrocarbon", "mining"]}).qs.get()
+        both = bound({"explo_purpose": purpose_terms("hydrocarbon", "mining")}).qs.get()
 
         assert (both.total_children, both.relevant_children) == (3, 2)
 

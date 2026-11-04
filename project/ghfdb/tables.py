@@ -8,6 +8,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext
 from django_tables2.data import TableData, TableQuerysetData
+from heat_flow import vocabularies
 from heat_flow.models import HeatFlowSite
 
 from .models import GHFDBParent
@@ -75,9 +76,22 @@ class NumberColumn(tables.Column):
 class TermColumn(tables.Column):
     """A vocabulary-backed column, shown as the term's label."""
 
-    def render(self, value):
-        """Show the concept's label rather than its stored key."""
-        return value.label()
+    def __init__(self, vocabulary, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.vocabulary = vocabulary
+
+    def render(self, value, table):
+        """Show the concept's label rather than its identifier.
+
+        The labels of the vocabulary are read once for the table, not once per row.
+        """
+        labels = table.__dict__.setdefault("term_labels", {})
+        if self.vocabulary.uri not in labels:
+            labels[self.vocabulary.uri] = {
+                vocabularies.identifier(concept): concept.display_label()
+                for concept in vocabularies.concepts(self.vocabulary)
+            }
+        return labels[self.vocabulary.uri][value]
 
 
 class GHFDBParentTable(tables.Table):
@@ -110,8 +124,12 @@ class GHFDBParentTable(tables.Table):
     lat_NS = NumberColumn(verbose_name="lat_NS", unit="°", places=5)
     long_EW = NumberColumn(verbose_name="long_EW", unit="°", places=5)
     elevation = NumberColumn(verbose_name="elevation", unit="m")
-    environment = TermColumn(verbose_name="environment")
-    explo_method = TermColumn(verbose_name="explo_method")
+    environment = TermColumn(
+        vocabularies.GEOGRAPHIC_ENVIRONMENT, verbose_name="environment"
+    )
+    explo_method = TermColumn(
+        vocabularies.EXPLORATION_METHOD, verbose_name="explo_method"
+    )
     explo_purpose = tables.Column(
         verbose_name="explo_purpose",
         accessor="sample__heatflowsite__explo_purpose",
@@ -188,7 +206,7 @@ class GHFDBParentTable(tables.Table):
 
     def render_explo_purpose(self, value, record):
         """Join the site's purposes, or mark the cell as not recorded."""
-        terms = [term.label for term in value.all()]
+        terms = [term.display_label() for term in value.all()]
         return "; ".join(terms) if terms else not_recorded()
 
     def render_quality_parent(self, value):
@@ -217,8 +235,8 @@ class GHFDBParentTable(tables.Table):
             HeatFlowSite.explo_purpose.through.objects.filter(
                 heatflowsite_id=OuterRef("sample_id")
             )
-            .order_by("concept__label")
-            .values("concept__label")[:1]
+            .order_by("record__pref_label")
+            .values("record__pref_label")[:1]
         )
         label = F("first_purpose")
         return queryset.annotate(first_purpose=Subquery(first)).order_by(

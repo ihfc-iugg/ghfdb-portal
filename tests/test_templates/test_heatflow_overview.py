@@ -6,6 +6,7 @@
 import pytest
 from fairdm.contrib.contributors.choices import ContributionLevel
 from fairdm.factories import ContributionFactory, PersonFactory
+from heat_flow import vocabularies
 from heat_flow.models import HeatFlow, HeatFlowCorrection
 
 from tests.factories import (
@@ -14,6 +15,12 @@ from tests.factories import (
 )
 
 pytestmark = pytest.mark.django_db
+
+
+def a_term_of(record, field_name):
+    """One concept of the vocabulary ``record``'s field declares."""
+    vocabulary = type(record)._meta.get_field(field_name).vocabulary[0]
+    return vocabularies.concepts(vocabulary).first()
 
 
 def shown(score):
@@ -40,7 +47,7 @@ class TestChildPage:
         assert page_records["conductivity"].print_value() in conductivity.text
 
     def test_it_shows_the_childs_value_and_method(self, document, page_records):
-        concept = page_records["child"].method.model.objects.first()
+        concept = a_term_of(page_records["child"], "method")
         page_records["child"].method.set([concept])
 
         page = document(page_records["child"])
@@ -48,7 +55,7 @@ class TestChildPage:
         assert (
             page_records["child"].print_value() in page.find("data-field", "value").text
         )
-        assert concept.label in page.find("data-field", "method").text
+        assert concept.display_label() in page.find("data-field", "method").text
 
     def test_a_child_without_a_method_says_the_method_is_not_recorded(
         self, document, page_records

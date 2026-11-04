@@ -2,7 +2,7 @@
 
 Widget hierarchy:
     import_export.widgets.Widget
-    +----- ConceptWidget          -- Single research_vocabs Concept (case-insensitive label lookup)
+    +----- ConceptWidget          -- Single vocabulary concept (case-insensitive label lookup)
     +----- MultiConceptWidget     -- Semicolon-separated Concepts
     +----- QuantityWidget         -- Pint Quantity <-> plain numeric magnitude
     +----- YesNoWidget            -- "Yes"/"No" <-> Boolean
@@ -18,33 +18,17 @@ References:
     - Fuchs et al. (2023). The Global Heat Flow Database: Update 2023.
 """
 
+from controlled_vocabularies.models import Record
 from django.core.exceptions import ValidationError
-from django.db.models.functions import Lower
 from django.utils.translation import gettext_lazy as _
-from heat_flow.vocabularies import normalize_vocab_token, resolve_term, resolve_terms
+from heat_flow.vocabularies import (
+    concepts,
+    normalize_vocab_token,
+    resolve_term,
+    resolve_terms,
+    slug,
+)
 from import_export.widgets import BooleanWidget, CharWidget, ManyToManyWidget, Widget
-from research_vocabs.models import Concept
-
-
-def _case_insensitive_qs(vocabulary, field="label"):
-    """Return a QuerySet of Concepts with an ilabel annotation (lowercase)."""
-    return Concept.get_for_vocabulary(vocabulary).annotate(ilabel=Lower(field))
-
-
-def _validate_concept(values, vocabulary):
-    """Raise ValueError if any value is not in the vocabulary's labels (case-insensitive)."""
-    choices = _case_insensitive_qs(vocabulary, field="label").values_list(
-        "ilabel", flat=True
-    )
-    invalid = [v for v in values if v not in choices]
-    if invalid:
-        raise ValueError(
-            _(
-                "The following values are not part of the %(vocab)s vocabulary: %(invalid)s"
-            )
-            % {"vocab": vocabulary.__name__, "invalid": invalid}
-        )
-
 
 #: Cell values the assessment corpus uses to mean "nothing entered here
 #: yet", beyond an empty or whitespace-only cell — a bare hyphen in a
@@ -65,14 +49,14 @@ def is_blank_cell(raw) -> bool:
 
 
 class ConceptWidget(CharWidget):
-    """Maps a human-readable concept label (or key) to its vocabulary key."""
+    """Maps a human-readable concept label (or identifier) to its concept."""
 
     def __init__(self, vocabulary, **kwargs):
         self.vocabulary = vocabulary
         super().__init__(**kwargs)
 
     def clean(self, value, row=None, column=None, **kwargs):
-        """Resolve *value* to a vocabulary key, or ``None`` for a blank cell."""
+        """Resolve *value* to a concept, or ``None`` for a blank cell."""
         try:
             val = super().clean(value, row, **kwargs)
         except AttributeError:
@@ -80,7 +64,7 @@ class ConceptWidget(CharWidget):
                 _(
                     "Column value %(val)r is not a text string; expected a vocabulary label for %(vocab)s."
                 )
-                % {"val": value, "vocab": self.vocabulary.__name__}
+                % {"val": value, "vocab": slug(self.vocabulary)}
             ) from None
         try:
             return resolve_term(self.vocabulary, val)
@@ -90,7 +74,7 @@ class ConceptWidget(CharWidget):
 
 
 class MultiConceptWidget(ManyToManyWidget):
-    """Maps semicolon-separated concept labels to a research_vocabs Concept QuerySet.
+    """Maps semicolon-separated concept labels to a queryset of concepts.
 
     A ``[unspecified]`` token resolves to the vocabulary's own ``unspecified`` concept,
     because the quality scheme scores it as a value. A vocabulary without one drops the
@@ -98,16 +82,14 @@ class MultiConceptWidget(ManyToManyWidget):
     """
 
     def __init__(self, vocabulary, separator=";", **kwargs):
-        self._vocab_class = (
-            vocabulary if isinstance(vocabulary, type) else type(vocabulary)
-        )
-        super().__init__(Concept, separator=separator, field="label", **kwargs)
-        self.queryset = Concept.get_for_vocabulary(self._vocab_class)
+        self.vocabulary = vocabulary
+        super().__init__(Record, separator=separator, field="pref_label", **kwargs)
+        self.queryset = concepts(vocabulary)
 
     def clean(self, value, row=None, column=None, *args, **kwargs):
-        """Resolve semicolon-separated labels or keys to a Concept QuerySet."""
+        """Resolve semicolon-separated labels or identifiers to a queryset of concepts."""
         try:
-            return resolve_terms(self._vocab_class, value)
+            return resolve_terms(self.vocabulary, value)
         except ValueError as error:
             location = _("Column '%(column)s': ") % {"column": column} if column else ""
             raise ValueError(f"{location}{error}") from None
@@ -317,15 +299,15 @@ class ParentWidget(RelatedModelWidget):
             m2m_map={
                 "explo_purpose": (
                     "explo_purpose",
-                    MultiConceptWidget(vocabularies.ExplorationPurpose),
+                    MultiConceptWidget(vocabularies.EXPLORATION_PURPOSE),
                 ),
             },
             widget_map={
                 "environment": ConceptWidget(
-                    vocabulary=vocabularies.GeographicEnvironment
+                    vocabulary=vocabularies.GEOGRAPHIC_ENVIRONMENT
                 ),
                 "explo_method": ConceptWidget(
-                    vocabulary=vocabularies.ExplorationMethod
+                    vocabulary=vocabularies.EXPLORATION_METHOD
                 ),
                 "elevation": QuantityWidget("m"),
                 "total_depth_MD": QuantityWidget("m"),
@@ -390,8 +372,7 @@ class IntervalWidget(RelatedModelWidget):
     """
 
     def __init__(self):
-        from fairdm_geo.vocabularies.cgi.geosciml import SimpleLithology
-        from fairdm_geo.vocabularies.stratigraphy import GeologicalTimescale
+        from fairdm_geo.vocabularies import CGI_SIMPLE_LITHOLOGY, ICS_TIMESCALE
         from heat_flow.models import HeatFlowInterval
 
         super().__init__(
@@ -404,11 +385,11 @@ class IntervalWidget(RelatedModelWidget):
             m2m_map={
                 "lithology": (
                     "geo_lithology",
-                    MultiConceptWidget(SimpleLithology),
+                    MultiConceptWidget(CGI_SIMPLE_LITHOLOGY),
                 ),
                 "age": (
                     "geo_stratigraphy",
-                    MultiConceptWidget(GeologicalTimescale),
+                    MultiConceptWidget(ICS_TIMESCALE),
                 ),
             },
             widget_map={
@@ -447,19 +428,19 @@ class GradientWidget(RelatedModelWidget):
             m2m_map={
                 "method_top": (
                     "T_method_top",
-                    MultiConceptWidget(vocabularies.TemperatureMethod),
+                    MultiConceptWidget(vocabularies.TEMPERATURE_METHOD),
                 ),
                 "method_bottom": (
                     "T_method_bottom",
-                    MultiConceptWidget(vocabularies.TemperatureMethod),
+                    MultiConceptWidget(vocabularies.TEMPERATURE_METHOD),
                 ),
                 "correction_top": (
                     "T_corr_top",
-                    MultiConceptWidget(vocabularies.TemperatureCorrection),
+                    MultiConceptWidget(vocabularies.TEMPERATURE_CORRECTION),
                 ),
                 "correction_bottom": (
                     "T_corr_bottom",
-                    MultiConceptWidget(vocabularies.TemperatureCorrection),
+                    MultiConceptWidget(vocabularies.TEMPERATURE_CORRECTION),
                 ),
             },
             widget_map={
@@ -498,31 +479,31 @@ class ConductivityWidget(RelatedModelWidget):
             m2m_map={
                 "source": (
                     "tc_source",
-                    MultiConceptWidget(vocabularies.ConductivitySource),
+                    MultiConceptWidget(vocabularies.CONDUCTIVITY_SOURCE),
                 ),
                 "conductivity_location": (
                     "tc_location",
-                    MultiConceptWidget(vocabularies.ConductivityLocation),
+                    MultiConceptWidget(vocabularies.CONDUCTIVITY_LOCATION),
                 ),
                 "method": (
                     "tc_method",
-                    MultiConceptWidget(vocabularies.ConductivityMethod),
+                    MultiConceptWidget(vocabularies.CONDUCTIVITY_METHOD),
                 ),
                 "saturation": (
                     "tc_saturation",
-                    MultiConceptWidget(vocabularies.ConductivitySaturation),
+                    MultiConceptWidget(vocabularies.CONDUCTIVITY_SATURATION),
                 ),
                 "pT_conditions": (
                     "tc_pT_conditions",
-                    MultiConceptWidget(vocabularies.ConductivityPTConditions),
+                    MultiConceptWidget(vocabularies.CONDUCTIVITY_PT_CONDITIONS),
                 ),
                 "pT_function": (
                     "tc_pT_function",
-                    MultiConceptWidget(vocabularies.ConductivityPTFunction),
+                    MultiConceptWidget(vocabularies.CONDUCTIVITY_PT_FUNCTION),
                 ),
                 "strategy": (
                     "tc_strategy",
-                    MultiConceptWidget(vocabularies.ConductivityStrategy),
+                    MultiConceptWidget(vocabularies.CONDUCTIVITY_STRATEGY),
                 ),
             },
             widget_map={

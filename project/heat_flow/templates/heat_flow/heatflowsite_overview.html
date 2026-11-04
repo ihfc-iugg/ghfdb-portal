@@ -93,9 +93,6 @@
       <c-heat_flow.field field="elevation"
                          label="{% translate 'Elevation' %}"
                          value="{{ sample.elevation|default_if_none:'' }}" />
-      <c-heat_flow.field field="elevation_datum"
-                         label="{% translate 'Elevation datum' %}"
-                         value="{{ sample.elevation_datum|labels }}" />
     </div>
     <h3 class="text-sm font-semibold mt-2">{% translate "Where it lies" %}</h3>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6">

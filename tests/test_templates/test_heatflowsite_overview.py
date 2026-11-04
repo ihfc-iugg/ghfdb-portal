@@ -28,7 +28,6 @@ ACCESS_FIELDS = (
     "inclination",
     "azimuth",
     "elevation",
-    "elevation_datum",
 )
 LOCATION_FIELDS = ("country", "region", "continent", "domain")
 

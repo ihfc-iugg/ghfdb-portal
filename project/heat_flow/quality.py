@@ -16,6 +16,8 @@ from dataclasses import dataclass
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from .vocabularies import identifier
+
 SCHEME_REVISION = "hfqa_tool 0.2"
 
 # Stands for "score without reading anything from a child". It is not None, which means the
@@ -96,7 +98,7 @@ class Reading:
     @staticmethod
     def concepts(manager) -> frozenset[str]:
         """Return the identifiers of every concept in a vocabulary field."""
-        return frozenset(concept.name for concept in manager.all())
+        return frozenset(identifier(concept) for concept in manager.all())
 
     @staticmethod
     def magnitude(quantity, unit: str) -> float | None:
@@ -746,7 +748,5 @@ def route(site) -> type[ProbeRules] | type[BoreholeRules] | None:
         ``ProbeRules`` or ``BoreholeRules``, or ``None`` when the method is other,
         unspecified or empty, which leaves the measurement's score not determined.
     """
-    method = getattr(site, "explo_method", None)
-    # A site read back from the database holds the concept, one built in memory the name.
-    name = getattr(method, "name", method)
-    return None if name is None else ROUTES.get(name)
+    address = getattr(site, "explo_method_id", None)
+    return None if not address else ROUTES.get(address.rsplit("/", 1)[-1])

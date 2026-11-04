@@ -6,7 +6,7 @@ import openpyxl
 import pytest
 from fairdm.factories import DatasetFactory
 from heat_flow import vocabularies
-from research_vocabs.models import Concept
+from heat_flow.vocabularies import GEOGRAPHIC_ENVIRONMENT, concepts, term
 
 from project.ghfdb.models import GHFDBParent
 from tests.factories import HeatFlowSiteFactory, ParentHeatFlowFactory
@@ -61,7 +61,7 @@ def heat_flow_chain(dataset):
         name="Test Site",
         country="Germany",
         continent="Europe",
-        environment="onshore_continental",
+        environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental"),
     )
 
     interval = HeatFlowInterval.objects.create(
@@ -215,7 +215,7 @@ def build_site_and_parent(dataset, *, name="Test Site", published=True, ghfdb_id
         name=name,
         country="Germany",
         continent="Europe",
-        environment="onshore_continental",
+        environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental"),
     )
     return ParentHeatFlow.objects.create(
         dataset=dataset,
@@ -375,10 +375,7 @@ def sites_by_contribution(dataset):
     # Four sites covering FS-002 SC-004's contribution shapes. Returns a dict keyed by
     # shape name: every determination contributing, some, none, and one site with no
     # determinations at all.
-    from heat_flow.vocabularies import ExplorationPurpose
-    from research_vocabs.models import Concept
-
-    purposes = list(Concept.get_for_vocabulary(ExplorationPurpose)[:2])
+    purposes = list(concepts(vocabularies.EXPLORATION_PURPOSE)[:2])
 
     def make_site(name, relevance_flags, ghfdb_id):
         parent = build_site_and_parent(dataset, name=name, ghfdb_id=ghfdb_id)
@@ -466,8 +463,10 @@ def constant_query_count(django_assert_num_queries):
 
 def purposes(*names):
     """The exploration purpose concepts with these names."""
-    found = Concept.get_for_vocabulary(vocabularies.ExplorationPurpose)
-    return [found.get(name=name) for name in names]
+    found = concepts(vocabularies.EXPLORATION_PURPOSE)
+    return [
+        found.get(uri=term(vocabularies.EXPLORATION_PURPOSE, name)) for name in names
+    ]
 
 
 def make_parent(dataset, ghfdb_id, *, purpose=(), site=None, **record):

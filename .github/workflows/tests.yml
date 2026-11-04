@@ -8,11 +8,11 @@ on:
 
 jobs:
   call-tests:
-    uses: FAIR-DM/shared/.github/workflows/tests.yml@v0.1.0
+    uses: FAIR-DM/shared/.github/workflows/tests.yml@v0.1.1
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   call-browser-tests:
-    uses: FAIR-DM/shared/.github/workflows/browser-tests.yml@v0.1.0
+    uses: FAIR-DM/shared/.github/workflows/browser-tests.yml@v0.1.1
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
