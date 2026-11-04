@@ -1033,14 +1033,14 @@ wheels = [
 
 [[package]]
 name = "django-content-license"
-version = "0.3.0"
+version = "0.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/83/dc/1350d1f5e3c54d33ab434d9d6924afabd55fa11c619874358078ec7ae52d/django_content_license-0.3.0.tar.gz", hash = "sha256:47526e23759a87b859a478aa9d4bec5387ca6c0d80b2e1c152ae27892b7f3025", size = 28080, upload-time = "2026-02-09T09:19:46.077Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/dc/2c/80fdbc4e200a500628a3bc42fa9c950b22c2b58061c241467220858aabf9/django_content_license-0.3.1.tar.gz", hash = "sha256:8851aa03824ccb85210d5156269cd7d305404ea6898844aa5268dbfd4af9165b", size = 25702, upload-time = "2026-10-26T15:13:04.194Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2a/ef/243a3b664d4f499d60b3282e8404d7609251c222f014472caf1d699cbbaf/django_content_license-0.3.0-py3-none-any.whl", hash = "sha256:1169348a3c2f32d7d890243ea6896a8d32a4240c70eb47a17389be1c29c4b8c2", size = 25589, upload-time = "2026-02-09T09:19:44.657Z" },
+    { url = "https://files.pythonhosted.org/packages/b8/06/db13f13ad214480793dfdbb6c9d3eb2ceab97b9b53db8466445204f6cb01/django_content_license-0.3.1-py3-none-any.whl", hash = "sha256:f7419379c105e5c3a8622fc7f7829d4bb86b3a841a6707741366f3cdda3cf372", size = 26833, upload-time = "2026-10-26T15:13:02.921Z" },
 ]
 
 [[package]]
