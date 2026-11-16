@@ -1,5 +1,6 @@
 # The portal's own applications must have no unrecorded model changes.
 
+import importlib
 import os
 import subprocess
 import sys
@@ -157,3 +158,158 @@ class TestMigrationsApplyToAnEmptyDatabase:
             f"Migrations left these tables unbuilt: {missing}."
             f"\n{result.stdout}\n{result.stderr}"
         )
+
+
+class TestIhfcIdentifierMigration:
+    # The published vocabularies renamed their concepts, so every stored address and every
+    # stored correction status has to follow. The test database holds the published
+    # concepts, so each test first turns the few concepts it uses back into the ones the
+    # release before held, then stores data under those names.
+
+    MODULE = "project.heat_flow.migrations.0009_rename_ihfc_concept_identifiers"
+
+    ONSHORE_MARINE = ("geographic-environments", "onshore_marine", "onshore-lake-river")
+    LOG_EQUILIBRIUM = ("temperature-method", "LOGeq", "log-equilibrium")
+    HT_FT = ("temperature-method", "HT_FT", "HT-FT-equilibrium")
+
+    @staticmethod
+    def address(slug, identifier):
+        from heat_flow.vocabularies import IHFC
+
+        return f"{IHFC}/{slug}/{identifier}"
+
+    def release_before(self, *renamed):
+        """Turn the published concepts named back into the ones the release before held."""
+        from controlled_vocabularies.models import Record
+
+        for slug, old, new in renamed:
+            Record.objects.filter(uri=self.address(slug, new)).update(
+                uri=self.address(slug, old), slug=old
+            )
+
+    def migrate(self, direction="forwards"):
+        from django.apps import apps
+
+        getattr(importlib.import_module(self.MODULE), direction)(apps, None)
+
+    @pytest.mark.django_db
+    def test_a_stored_single_valued_address_is_rewritten(self):
+        from heat_flow.models import HeatFlowSite
+        from tests.factories import HeatFlowSiteFactory
+
+        self.release_before(self.ONSHORE_MARINE)
+        site = HeatFlowSiteFactory(
+            environment_id=self.address("geographic-environments", "onshore_marine"),
+            explo_purpose=[],
+        )
+
+        self.migrate()
+
+        stored = HeatFlowSite.objects.get(pk=site.pk).environment_id
+        assert stored == self.address("geographic-environments", "onshore-lake-river")
+
+    @pytest.mark.django_db
+    def test_stored_many_valued_addresses_are_rewritten(self):
+        from controlled_vocabularies.models import Record
+        from tests.factories import ThermalGradientFactory
+
+        self.release_before(self.LOG_EQUILIBRIUM, self.HT_FT)
+        old = Record.objects.filter(
+            uri__in=[
+                self.address(*self.LOG_EQUILIBRIUM[:2]),
+                self.address(*self.HT_FT[:2]),
+            ]
+        )
+        gradient = ThermalGradientFactory(
+            method_top=old, method_bottom=[], correction_top=[], correction_bottom=[]
+        )
+
+        self.migrate()
+
+        assert set(gradient.method_top.values_list("uri", flat=True)) == {
+            self.address("temperature-method", "log-equilibrium"),
+            self.address("temperature-method", "HT-FT-equilibrium"),
+        }
+
+    @pytest.mark.django_db
+    def test_a_stored_correction_status_is_rewritten(self):
+        from heat_flow.models import HeatFlowCorrection
+        from tests.factories import HeatFlowCorrectionFactory
+
+        correction = HeatFlowCorrectionFactory(correction_type="S")
+        # An update skips the check on save, which only knows the published statuses.
+        HeatFlowCorrection.objects.filter(pk=correction.pk).update(
+            status="present_not_corrected"
+        )
+
+        self.migrate()
+
+        correction.refresh_from_db()
+        assert correction.status == "present-uncorrected"
+
+    @pytest.mark.django_db
+    def test_an_address_that_was_not_renamed_is_left_as_it_is(self):
+        from heat_flow.models import HeatFlowSite
+        from heat_flow.vocabularies import EXPLORATION_METHOD, term
+        from tests.factories import HeatFlowSiteFactory
+
+        drilling = term(EXPLORATION_METHOD, "drilling")
+        site = HeatFlowSiteFactory(explo_method_id=drilling, explo_purpose=[])
+        site_type = site.type_id
+
+        self.migrate()
+
+        stored = HeatFlowSite.objects.get(pk=site.pk)
+        assert (stored.explo_method_id, stored.type_id) == (drilling, site_type)
+
+    @pytest.mark.django_db
+    def test_the_old_concept_becomes_the_new_one_when_the_new_release_is_not_loaded(
+        self,
+    ):
+        # The portal migrates before it loads the vocabularies, so the new concept does
+        # not exist yet when a row is pointed at it.
+        from controlled_vocabularies.models import Record
+        from tests.factories import HeatFlowSiteFactory
+
+        self.release_before(self.ONSHORE_MARINE)
+        HeatFlowSiteFactory(
+            environment_id=self.address("geographic-environments", "onshore_marine"),
+            explo_purpose=[],
+        )
+
+        self.migrate()
+
+        held = Record.objects.values_list("uri", flat=True)
+        assert self.address("geographic-environments", "onshore-lake-river") in held
+        assert self.address("geographic-environments", "onshore_marine") not in held
+
+    @pytest.mark.django_db
+    def test_the_old_concept_is_dropped_when_the_new_release_is_already_loaded(self):
+        from controlled_vocabularies.models import Record
+
+        new = Record.objects.get(
+            uri=self.address("geographic-environments", "onshore-lake-river")
+        )
+        self.release_before(self.ONSHORE_MARINE)
+        new.pk = None
+        new.save()
+
+        self.migrate()
+
+        old_address = self.address("geographic-environments", "onshore_marine")
+        assert not Record.objects.filter(uri=old_address).exists()
+        assert Record.objects.filter(uri=new.uri).count() == 1
+
+    @pytest.mark.django_db
+    def test_reversing_restores_the_addresses_the_release_before_held(self):
+        from heat_flow.models import HeatFlowSite
+        from tests.factories import HeatFlowSiteFactory
+
+        self.release_before(self.ONSHORE_MARINE)
+        old_address = self.address("geographic-environments", "onshore_marine")
+        site = HeatFlowSiteFactory(environment_id=old_address, explo_purpose=[])
+        self.migrate()
+
+        self.migrate("backwards")
+
+        assert HeatFlowSite.objects.get(pk=site.pk).environment_id == old_address
