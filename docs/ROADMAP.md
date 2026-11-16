@@ -130,7 +130,7 @@ not the assessment work itself, which is R15.
 
 ### R8 — Public access to the database itself
 
-*feature · advances G7*
+*delivered in [#311](https://github.com/ihfc-iugg/ghfdb-portal/issues/311) · advances G7*
 
 The download served today is a static file of the 2024 release, and the catalogue page for browsing
 public datasets was never built. Once R5 lands the portal holds the database and can serve it
@@ -147,7 +147,7 @@ R11.
 
 ### R9 — The quality scheme kept current
 
-*feature · advances G6*
+*delivered in [#232](https://github.com/ihfc-iugg/ghfdb-portal/issues/232) · advances G6*
 
 The portal's calculations follow the 2023 quality scheme. The community's current toolbox is the
 2026 revision. Whether the portal tracks that revision is undecided, and the longer the two
