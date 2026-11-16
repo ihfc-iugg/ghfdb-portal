@@ -62,28 +62,28 @@ class TestGHFDBParentTable:
             1,
             site={
                 "environment_id": vocabularies.term(
-                    vocabularies.GEOGRAPHIC_ENVIRONMENT, "offshore_marine"
+                    vocabularies.GEOGRAPHIC_ENVIRONMENT, "offshore-marine"
                 ),
                 "explo_method_id": vocabularies.term(
-                    vocabularies.EXPLORATION_METHOD, "probing_offshore"
+                    vocabularies.EXPLORATION_METHOD, "probing-offshore"
                 ),
             },
         )
         environment = vocabularies.concepts(vocabularies.GEOGRAPHIC_ENVIRONMENT).get(
             uri=vocabularies.term(
-                vocabularies.GEOGRAPHIC_ENVIRONMENT, "offshore_marine"
+                vocabularies.GEOGRAPHIC_ENVIRONMENT, "offshore-marine"
             )
         )
         method = vocabularies.concepts(vocabularies.EXPLORATION_METHOD).get(
-            uri=vocabularies.term(vocabularies.EXPLORATION_METHOD, "probing_offshore")
+            uri=vocabularies.term(vocabularies.EXPLORATION_METHOD, "probing-offshore")
         )
 
         row = rows_by_id(GHFDBParentTable(parents()))[1]
 
         assert environment.display_label() in row.get_cell("environment")
-        assert "offshore_marine" not in row.get_cell("environment")
+        assert "offshore-marine" not in row.get_cell("environment")
         assert method.display_label() in row.get_cell("explo_method")
-        assert "probing_offshore" not in row.get_cell("explo_method")
+        assert "probing-offshore" not in row.get_cell("explo_method")
 
     @pytest.mark.parametrize(
         "column",
@@ -197,7 +197,7 @@ class TestGHFDBParentTableOrdering:
                     "length": 200,
                     "vertical_depth": 200,
                     "environment_id": vocabularies.term(
-                        vocabularies.GEOGRAPHIC_ENVIRONMENT, "onshore_marine"
+                        vocabularies.GEOGRAPHIC_ENVIRONMENT, "onshore-lake-river"
                     ),
                     "explo_method_id": vocabularies.term(
                         vocabularies.EXPLORATION_METHOD, "mining"
@@ -218,7 +218,7 @@ class TestGHFDBParentTableOrdering:
                     "length": 300,
                     "vertical_depth": 300,
                     "environment_id": vocabularies.term(
-                        vocabularies.GEOGRAPHIC_ENVIRONMENT, "offshore_marine"
+                        vocabularies.GEOGRAPHIC_ENVIRONMENT, "offshore-marine"
                     ),
                     "explo_method_id": vocabularies.term(
                         vocabularies.EXPLORATION_METHOD, "tunneling"
@@ -239,7 +239,7 @@ class TestGHFDBParentTableOrdering:
                     "length": 100,
                     "vertical_depth": 100,
                     "environment_id": vocabularies.term(
-                        vocabularies.GEOGRAPHIC_ENVIRONMENT, "onshore_continental"
+                        vocabularies.GEOGRAPHIC_ENVIRONMENT, "onshore-continental"
                     ),
                     "explo_method_id": vocabularies.term(
                         vocabularies.EXPLORATION_METHOD, "drilling"

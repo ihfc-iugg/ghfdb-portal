@@ -797,7 +797,7 @@ class TestGHFDBManagerScoping:
             name="Non-GHFDB Site",
             country="Germany",
             continent="Europe",
-            environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental"),
+            environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore-continental"),
         )
         non_ghfdb_parent = ParentHeatFlowFactory(
             dataset=heat_flow_chain.dataset,

@@ -342,12 +342,12 @@ class TestHeatFlowCorrection:
         HeatFlowCorrection.objects.create(
             heat_flow=child_fixture,
             correction_type="IS",
-            status="present_corrected",
+            status="present-corrected",
         )
         HeatFlowCorrection.objects.create(
             heat_flow=child_fixture,
             correction_type="T",
-            status="not_considered",
+            status="not-considered",
         )
         assert child_fixture.corrections.count() == 2
 
@@ -356,7 +356,7 @@ class TestHeatFlowCorrection:
         from heat_flow.models import HeatFlowCorrection
 
         corr = HeatFlowCorrection(
-            heat_flow=child_fixture, correction_type="IS", status="tilt_corrected"
+            heat_flow=child_fixture, correction_type="IS", status="tilt-corrected"
         )
         corr.save()  # must not raise
         assert corr.pk is not None
@@ -370,19 +370,19 @@ class TestHeatFlowCorrection:
 
         with pytest.raises(ValidationError):
             HeatFlowCorrection(
-                heat_flow=child_fixture, correction_type="IS", status="considered_p"
+                heat_flow=child_fixture, correction_type="IS", status="considered-p"
             ).save()
 
         with pytest.raises(ValidationError):
             HeatFlowCorrection(
-                heat_flow=child_fixture, correction_type="S", status="tilt_corrected"
+                heat_flow=child_fixture, correction_type="S", status="tilt-corrected"
             ).save()
 
         with pytest.raises(ValidationError):
             HeatFlowCorrection(
                 heat_flow=child_fixture,
                 correction_type="T",
-                status="present_not_significant",
+                status="present-insignificant",
             ).save()
 
     @pytest.mark.django_db
@@ -431,13 +431,13 @@ class TestHeatFlowCorrection:
         from heat_flow.models import HeatFlowCorrection
 
         HeatFlowCorrection.objects.create(
-            heat_flow=child_fixture, correction_type="IS", status="present_corrected"
+            heat_flow=child_fixture, correction_type="IS", status="present-corrected"
         )
         with pytest.raises(IntegrityError):
             HeatFlowCorrection.objects.create(
                 heat_flow=child_fixture,
                 correction_type="IS",
-                status="not_considered",
+                status="not-considered",
             )
 
     @pytest.mark.django_db
@@ -807,7 +807,7 @@ class TestMeasurementScores:
         )
 
         site = HeatFlowSiteFactory(
-            explo_method_id=term(EXPLORATION_METHOD, "probing_offshore"),
+            explo_method_id=term(EXPLORATION_METHOD, "probing-offshore"),
             elevation=-3000,
         )
         interval = HeatFlowIntervalFactory(site=site)
@@ -844,7 +844,7 @@ class TestMeasurementScores:
 
         from tests.factories import ThermalGradientFactory
 
-        logs = self.concepts(vocabularies.TEMPERATURE_METHOD, "LOGeq")
+        logs = self.concepts(vocabularies.TEMPERATURE_METHOD, "log-equilibrium")
         gradient = ThermalGradientFactory(
             sample=self.borehole_interval(),
             number=10,
@@ -884,7 +884,7 @@ class TestMeasurementScores:
 
         from tests.factories import ThermalGradientFactory
 
-        logs = self.concepts(vocabularies.TEMPERATURE_METHOD, "LOGeq")
+        logs = self.concepts(vocabularies.TEMPERATURE_METHOD, "log-equilibrium")
         gradient = ThermalGradientFactory(
             sample=self.borehole_interval(),
             number=10,
@@ -945,15 +945,15 @@ class TestMeasurementScores:
         conductivity = IntervalConductivityFactory(
             sample=self.borehole_interval(top=0, bottom=500),
             number=30,
-            source=self.concepts(vocabularies.CONDUCTIVITY_SOURCE, "core_samples"),
+            source=self.concepts(vocabularies.CONDUCTIVITY_SOURCE, "core-samples"),
             conductivity_location=self.concepts(
                 vocabularies.CONDUCTIVITY_LOCATION, "actual"
             ),
             saturation=self.concepts(
-                vocabularies.CONDUCTIVITY_SATURATION, "saturatedMeasured"
+                vocabularies.CONDUCTIVITY_SATURATION, "saturated-measured"
             ),
             pT_conditions=self.concepts(
-                vocabularies.CONDUCTIVITY_PT_CONDITIONS, "actualInSitu"
+                vocabularies.CONDUCTIVITY_PT_CONDITIONS, "actual-in-situ"
             ),
         )
 
@@ -971,16 +971,16 @@ class TestMeasurementScores:
         conductivity = IntervalConductivityFactory(
             sample=self.probe_interval(),
             number=4,
-            source=self.concepts(vocabularies.CONDUCTIVITY_SOURCE, "insitu_probe"),
+            source=self.concepts(vocabularies.CONDUCTIVITY_SOURCE, "in-situ-probe"),
             conductivity_location=self.concepts(
                 vocabularies.CONDUCTIVITY_LOCATION, "actual"
             ),
-            method=self.concepts(vocabularies.CONDUCTIVITY_METHOD, "probePulse"),
+            method=self.concepts(vocabularies.CONDUCTIVITY_METHOD, "probe-pulse"),
             saturation=self.concepts(
-                vocabularies.CONDUCTIVITY_SATURATION, "saturatedInSitu"
+                vocabularies.CONDUCTIVITY_SATURATION, "saturated-in-situ"
             ),
             pT_conditions=self.concepts(
-                vocabularies.CONDUCTIVITY_PT_CONDITIONS, "actualInSitu"
+                vocabularies.CONDUCTIVITY_PT_CONDITIONS, "actual-in-situ"
             ),
         )
 
@@ -1012,19 +1012,19 @@ class TestMeasurementScores:
         conductivity = IntervalConductivityFactory(
             sample=self.borehole_interval(top=0, bottom=500),
             number=30,
-            source=self.concepts(vocabularies.CONDUCTIVITY_SOURCE, "core_samples"),
+            source=self.concepts(vocabularies.CONDUCTIVITY_SOURCE, "core-samples"),
             conductivity_location=self.concepts(
                 vocabularies.CONDUCTIVITY_LOCATION, "actual"
             ),
             saturation=self.concepts(
-                vocabularies.CONDUCTIVITY_SATURATION, "saturatedMeasured"
+                vocabularies.CONDUCTIVITY_SATURATION, "saturated-measured"
             ),
             pT_conditions=[],
         )
         assert self.reload(conductivity).score_missing is True
 
         conductivity.pT_conditions.add(
-            *self.concepts(vocabularies.CONDUCTIVITY_PT_CONDITIONS, "recordedAmbient")
+            *self.concepts(vocabularies.CONDUCTIVITY_PT_CONDITIONS, "recorded-ambient")
         )
         ambient = self.reload(conductivity)
         assert ambient.score == pytest.approx(0.8)
@@ -1186,13 +1186,13 @@ class TestChildScores:
     @pytest.mark.django_db
     def test_every_environmental_correction_writes_its_own_flag(self):
         corrections = {
-            "S": "present_corrected",
-            "E": "present_not_corrected",
-            "TOPO": "present_not_significant",
-            "PAL": "not_recognized",
-            "SUR": "present_corrected",
-            "CONV": "present_not_corrected",
-            "HR": "present_corrected",
+            "S": "present-corrected",
+            "E": "present-uncorrected",
+            "TOPO": "present-insignificant",
+            "PAL": "unrecognized",
+            "SUR": "present-corrected",
+            "CONV": "present-uncorrected",
+            "HR": "present-corrected",
         }
 
         stored = self.reload(
@@ -1213,11 +1213,11 @@ class TestChildScores:
         assert self.reload(child).M_score == "M1x"
 
         correction = HeatFlowCorrectionFactory(
-            heat_flow=child, correction_type="IS", status="not_considered"
+            heat_flow=child, correction_type="IS", status="not-considered"
         )
         assert self.reload(child).M_score == "M1"
 
-        correction.status = "present_corrected"
+        correction.status = "present-corrected"
         correction.save()
         # Present and corrected is neither of the agreeing statuses for a corrected pT.
         assert self.reload(child).TC_score == pytest.approx(0.8)
@@ -1237,7 +1237,7 @@ class TestChildScores:
         from tests.test_heat_flow.test_quality import concepts
 
         site = HeatFlowSiteFactory(
-            explo_method_id=term(EXPLORATION_METHOD, "probing_offshore"),
+            explo_method_id=term(EXPLORATION_METHOD, "probing-offshore"),
             elevation=-1000,
         )
         interval = HeatFlowIntervalFactory(site=site)
@@ -1253,7 +1253,7 @@ class TestChildScores:
         assert self.reload(child).T_score == pytest.approx(1.0)
 
         HeatFlowCorrectionFactory(
-            heat_flow=child, correction_type="SUR", status="present_corrected"
+            heat_flow=child, correction_type="SUR", status="present-corrected"
         )
 
         assert self.reload(child).T_score == pytest.approx(1.2)
@@ -1268,7 +1268,7 @@ class TestChildScores:
 
         child = self.build_child(self.inputs_of("B2-not-considered"))
         correction = HeatFlowCorrectionFactory(
-            heat_flow=child, correction_type="HR", status="present_corrected"
+            heat_flow=child, correction_type="HR", status="present-corrected"
         )
         assert self.reload(child).quality.endswith(".------R")
 

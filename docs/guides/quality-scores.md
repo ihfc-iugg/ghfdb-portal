@@ -93,9 +93,9 @@ cases. Within a case, the poorest matching group decides.
 
 | Case | When | Methods and penalty |
 | --- | --- | --- |
-| One point plus surface | The top method includes SUR | Decided by the bottom methods alone. cBHT, RTDeq, cRTD, ODTT-PC, ODTT-TP, cHT-FT, EGRT, GRT: −0.3. BHT, HT-FTpert, RTDpert: −0.5. CPD, XEN, GTM, BSR, unspecified, other: −0.6. |
-| Continuous log | More than 3 recordings, and every method at top and bottom is LOGeq, cLOG, DTSeq, cDTS or LOGpert | LOGpert: −0.1. Otherwise +0.1. |
-| Multiple single points | Every other gradient | LOGeq, cLOG, cBHT, HT-FTeq, cHT-FT, RTDeq, cRTD, ODTT-PC, ODTT-TP, EGRT, GRT, cDTS: −0.1. LOGpert, DTSpert, BHT, HT-FTpert, RTDpert, BLK: −0.3. CPD, XEN, GTM, BSR, unspecified, other: −0.5. |
+| One point plus surface | The top method includes SUR | Decided by the bottom methods alone. BHT-corrected, RTD-equilibrium, RTD-corrected, ODTT-PC, ODTT-TP, cHT-FT, EGRT, GRT: −0.3. BHT, HT-FTpert, RTD-perturbed: −0.5. CPD, xenolith, GTM, BSR, unspecified, other: −0.6. |
+| Continuous log | More than 3 recordings, and every method at top and bottom is log-equilibrium, log-corrected, DTS-equilibrium, DTS-corrected or log-perturbed | log-perturbed: −0.1. Otherwise +0.1. |
+| Multiple single points | Every other gradient | log-equilibrium, log-corrected, BHT-corrected, HT-FTeq, cHT-FT, RTD-equilibrium, RTD-corrected, ODTT-PC, ODTT-TP, EGRT, GRT, DTS-corrected: −0.1. log-perturbed, DTS-perturbed, BHT, HT-FTpert, RTD-perturbed, thermal-blanket: −0.3. CPD, xenolith, GTM, BSR, unspecified, other: −0.5. |
 
 ### Borehole TC-score
 
@@ -439,7 +439,7 @@ nothing else. The code is what scored the release, so the code decides.
 spell three temperature methods in ways that match nothing in the published vocabulary: `[HFT-FTeq]`
 (for HT-FTeq) and `[HF-FTpert]` and `[HFT-FTpert]` (for HT-FTpert). The portal reads them as the
 vocabulary's HT-FTeq and HT-FTpert. The other gaps in the lists are kept as the toolbox has them:
-DTSeq appears only in the continuous-log case, and the surface case has no HT-FTeq.
+DTS-equilibrium appears only in the continuous-log case, and the surface case has no HT-FTeq.
 
 **A method that fits no case is marked (D16).** When none of a borehole gradient's methods fits its
 case, the toolbox takes the case's largest penalty and sets the mark. The portal does the same.

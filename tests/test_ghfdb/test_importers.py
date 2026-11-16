@@ -673,12 +673,12 @@ class TestControlledVocabularyDecides:
         ws = official_upload_template_workbook["controlled vocabulary"]
         rows = list(ws.iter_rows(values_only=True))
         header = rows[0]
-        idx = header.index("Type of exploration method")
+        idx = header.index("Thermal conductivity pT assumed function")
         sheet_values = {
             normalize_vocab_token(cell) for cell in (r[idx] for r in rows[2:]) if cell
         }
         # Every name the portal resolves to a concept: label, identifier, hidden label.
-        portal_labels = set(vocabularies.lookup(vocabularies.EXPLORATION_METHOD))
+        portal_labels = set(vocabularies.lookup(vocabularies.CONDUCTIVITY_PT_FUNCTION))
         only_on_sheet = sorted(sheet_values - portal_labels)
         assert only_on_sheet, (
             "expected the template's vocabulary sheet to list at least "
@@ -687,7 +687,8 @@ class TestControlledVocabularyDecides:
         value = only_on_sheet[0]
 
         row1 = dict(ROW)
-        row1["explo_method"] = value
+        row1["tc_mean"] = 2.5
+        row1["tc_pT_function"] = value
 
         outcome = import_ghfdb_template(make_dataset(row1), dataset)
 

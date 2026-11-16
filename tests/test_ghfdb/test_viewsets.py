@@ -81,7 +81,7 @@ class TestGHFDBParentViewSet:
         response = client.get(reverse("api:ghfdb-parents-list"))
 
         record = response.json()["results"][0]
-        assert record["environment"] == "onshore_continental"
+        assert record["environment"] == "onshore-continental"
         assert record["explo_method"] == "drilling"
         assert record["lat_NS"] == 48.1234
         assert record["long_EW"] == 11.5678
@@ -609,7 +609,7 @@ class TestGHFDBFlatViewSet:
         response = client.get(reverse("api:ghfdb-flat-detail", kwargs={"ghfdb_id": 11}))
 
         record = response.json()
-        assert record["environment"] == "onshore_continental"
+        assert record["environment"] == "onshore-continental"
         assert record["explo_method"] == "drilling"
         assert record["lat_NS"] == 48.1234
         assert record["long_EW"] == 11.5678
@@ -786,7 +786,7 @@ class TestGHFDBSingleRecordObjectPermissions:
             name="Test Site",
             country="Germany",
             continent="Europe",
-            environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental"),
+            environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore-continental"),
         )
         parent = ParentHeatFlow.objects.create(
             dataset=dataset, sample=site, name="Test Parent", value=70.0, ghfdb_id=1

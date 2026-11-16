@@ -45,7 +45,7 @@ class TestConceptTextField:
         from tests.factories import HeatFlowSiteFactory
 
         return HeatFlowSiteFactory(
-            environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental"),
+            environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore-continental"),
             explo_purpose=two_purposes,
         )
 
@@ -53,7 +53,7 @@ class TestConceptTextField:
         from heat_flow.forms import HeatFlowSiteForm
 
         label = dict(choices(GEOGRAPHIC_ENVIRONMENT))[
-            term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental")
+            term(GEOGRAPHIC_ENVIRONMENT, "onshore-continental")
         ]
 
         form = HeatFlowSiteForm(instance=stored_site)
@@ -84,11 +84,11 @@ class TestConceptTextField:
 
     @pytest.mark.parametrize(
         "text",
-        ["Onshore (continental)", "onshore (continental)", "onshore_continental"],
+        ["Onshore (continental)", "onshore (continental)", "onshore-continental"],
     )
     def test_a_label_or_a_key_is_accepted_in_any_case(self, environment, text):
         assert environment.clean(text).uri == term(
-            GEOGRAPHIC_ENVIRONMENT, "onshore_continental"
+            GEOGRAPHIC_ENVIRONMENT, "onshore-continental"
         )
 
     def test_several_terms_are_accepted_by_label_or_key(self, purposes, two_purposes):
@@ -468,7 +468,7 @@ class TestHeatFlowSiteForm:
     def test_an_environment_the_vocabulary_holds_as_unspecified_is_saved(self, site):
         from heat_flow.forms import HeatFlowSiteForm
 
-        site.environment_id = term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental")
+        site.environment_id = term(GEOGRAPHIC_ENVIRONMENT, "onshore-continental")
         site.save()
         form = HeatFlowSiteForm(
             instance=site, data=site_data(site, environment="Unspecified")
@@ -665,7 +665,7 @@ class TestHeatFlowIntervalForm:
 
         probe = interval.probe_metadata
         assert [identifier(concept) for concept in probe.probe_type.all()] == [
-            "violin_bow"
+            "violin-bow"
         ]
         assert probe.tilt.m_as("°") == pytest.approx(12.5)
         assert probe.penetration is None
@@ -814,7 +814,7 @@ class TestHeatFlowIntervalEditPage:
         assert response.status_code == 302
         probe = interval.probe_metadata
         assert [identifier(concept) for concept in probe.probe_type.all()] == [
-            "violin_bow"
+            "violin-bow"
         ]
         assert probe.tilt.m_as("°") == pytest.approx(12.5)
 
@@ -1009,7 +1009,7 @@ class TestHeatFlowForm:
         form = self.build(
             child_records,
             editor,
-            **{field: str(foreign.pk), "correction_TOPO": "present_corrected"},
+            **{field: str(foreign.pk), "correction_TOPO": "present-corrected"},
         )
 
         assert not form.is_valid()
@@ -1047,14 +1047,14 @@ class TestHeatFlowForm:
     ):
         child = child_records["child"]
         assert not child.corrections.exists()
-        form = self.build(child_records, editor, correction_TOPO="present_corrected")
+        form = self.build(child_records, editor, correction_TOPO="present-corrected")
 
         assert form.is_valid(), form.errors
         form.save()
 
         statuses = {c.correction_type: c.status for c in child.corrections.all()}
         assert len(statuses) == 9
-        assert statuses.pop("TOPO") == "present_corrected"
+        assert statuses.pop("TOPO") == "present-corrected"
         assert set(statuses.values()) == {""}
 
     def test_clearing_a_correction_stores_an_empty_status_and_keeps_its_comment(
@@ -1066,7 +1066,7 @@ class TestHeatFlowForm:
         HeatFlowCorrectionFactory(
             heat_flow=child,
             correction_type="SUR",
-            status="present_corrected",
+            status="present-corrected",
             comment="Bottom water measured.",
         )
         form = self.build(child_records, editor, correction_SUR="")
@@ -1086,12 +1086,12 @@ class TestHeatFlowForm:
         HeatFlowCorrectionFactory(
             heat_flow=child_records["child"],
             correction_type="E",
-            status="not_recognized",
+            status="unrecognized",
         )
 
         form = HeatFlowForm(instance=child_records["child"])
 
-        assert form["correction_E"].value() == "not_recognized"
+        assert form["correction_E"].value() == "unrecognized"
         assert form["correction_IS"].value() in ("", None)
 
     def test_the_method_takes_several_method_terms(self, child_records, editor):
@@ -1114,7 +1114,7 @@ class TestHeatFlowForm:
         self, child_records, editor
     ):
         child = child_records["child"]
-        form = self.build(child_records, editor, correction_PAL="considered_t")
+        form = self.build(child_records, editor, correction_PAL="considered-T")
         assert form.is_valid(), form.errors
 
         saved = form.save(commit=False)
@@ -1123,7 +1123,7 @@ class TestHeatFlowForm:
         saved.save()
         form.save_m2m()
         assert child.corrections.count() == 9
-        assert child.corrections.get(correction_type="PAL").status == "considered_t"
+        assert child.corrections.get(correction_type="PAL").status == "considered-T"
 
 
 class TestHeatFlowEditPage:
@@ -1150,7 +1150,7 @@ class TestHeatFlowEditPage:
             child_data(
                 child,
                 thermal_gradient=str(other.pk),
-                correction_TOPO="present_corrected",
+                correction_TOPO="present-corrected",
             ),
         )
 
@@ -1164,7 +1164,7 @@ class TestHeatFlowEditPage:
         assert child.thermal_gradient == corrected["gradient"]
         assert child.corrections.count() == 9
         assert child.corrections.get(correction_type="TOPO").status == (
-            "present_corrected"
+            "present-corrected"
         )
 
     def test_the_perturbation_flags_move_with_the_correction(self, corrected):
@@ -1199,7 +1199,7 @@ class TestHeatFlowEditPage:
         row = {
             **CHILD_ROW,
             **{f"corr_{code}_flag": "" for code in CORRECTION_CODES},
-            "corr_TOPO_flag": "present_corrected",
+            "corr_TOPO_flag": "present-corrected",
         }
         result = GHFDBChildImportResource().import_data(
             make_dataset(row),
@@ -1218,7 +1218,7 @@ class TestHeatFlowEditPage:
             }
 
         assert corrections_of(corrected["child"]) == corrections_of(imported)
-        assert corrections_of(corrected["child"])["TOPO"] == "present_corrected"
+        assert corrections_of(corrected["child"])["TOPO"] == "present-corrected"
         assert corrections_of(corrected["child"])["IS"] == "-"
 
 
@@ -1248,17 +1248,19 @@ def scored_records(db):
         dataset=dataset,
         sample=interval,
         number=10,
-        method_top=concepts(vocabularies.TEMPERATURE_METHOD, "LOGeq"),
-        method_bottom=concepts(vocabularies.TEMPERATURE_METHOD, "LOGeq"),
+        method_top=concepts(vocabularies.TEMPERATURE_METHOD, "log-equilibrium"),
+        method_bottom=concepts(vocabularies.TEMPERATURE_METHOD, "log-equilibrium"),
     )
     conductivity = IntervalConductivityFactory(
         dataset=dataset,
         sample=interval,
         number=30,
-        source=concepts(vocabularies.CONDUCTIVITY_SOURCE, "core_samples"),
+        source=concepts(vocabularies.CONDUCTIVITY_SOURCE, "core-samples"),
         conductivity_location=concepts(vocabularies.CONDUCTIVITY_LOCATION, "actual"),
-        saturation=concepts(vocabularies.CONDUCTIVITY_SATURATION, "saturatedMeasured"),
-        pT_conditions=concepts(vocabularies.CONDUCTIVITY_PT_CONDITIONS, "actualInSitu"),
+        saturation=concepts(vocabularies.CONDUCTIVITY_SATURATION, "saturated-measured"),
+        pT_conditions=concepts(
+            vocabularies.CONDUCTIVITY_PT_CONDITIONS, "actual-in-situ"
+        ),
     )
     parent = ParentHeatFlowFactory(dataset=dataset, sample=site)
     child = HeatFlowFactory(
@@ -1291,8 +1293,8 @@ def gradient_data(**changes):
         "corrected_value": "26.5",
         "corrected_value_unit": "K/km",
         "corrected_uncertainty": "1.5",
-        "method_top": "LOGeq",
-        "method_bottom": "LOGeq",
+        "method_top": "log-equilibrium",
+        "method_bottom": "log-equilibrium",
         "correction_top": "",
         "correction_bottom": "",
         "number": "10",
@@ -1378,12 +1380,14 @@ class TestThermalGradientForm:
 
         from tests.test_heat_flow.test_quality import concepts
 
-        form = self.build(scored_records, method_top="LOGeq; cLOG")
+        form = self.build(scored_records, method_top="log-equilibrium; log-corrected")
 
         assert form.is_valid(), form.errors
         gradient = form.save()
         assert set(gradient.method_top.all()) == set(
-            concepts(vocabularies.TEMPERATURE_METHOD, "LOGeq", "cLOG")
+            concepts(
+                vocabularies.TEMPERATURE_METHOD, "log-equilibrium", "log-corrected"
+            )
         )
 
 
@@ -1393,11 +1397,11 @@ def conductivity_data(**changes):
         "value": "2.5",
         "value_unit": "W/mK",
         "uncertainty": "0.25",
-        "source": "core_samples",
+        "source": "core-samples",
         "conductivity_location": "actual",
         "method": "",
-        "saturation": "saturatedMeasured",
-        "pT_conditions": "actualInSitu",
+        "saturation": "saturated-measured",
+        "pT_conditions": "actual-in-situ",
         "pT_function": "",
         "number": "30",
         "strategy": "",
@@ -1464,12 +1468,12 @@ class TestIntervalConductivityForm:
 
         from tests.test_heat_flow.test_quality import concepts
 
-        form = self.build(scored_records, source="core_samples; well_log")
+        form = self.build(scored_records, source="core-samples; well-log")
 
         assert form.is_valid(), form.errors
         conductivity = form.save()
         assert set(conductivity.source.all()) == set(
-            concepts(vocabularies.CONDUCTIVITY_SOURCE, "core_samples", "well_log")
+            concepts(vocabularies.CONDUCTIVITY_SOURCE, "core-samples", "well-log")
         )
 
 

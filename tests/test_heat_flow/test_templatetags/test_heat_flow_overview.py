@@ -30,7 +30,7 @@ def render(source, **context):
 class TestLabels:
     def test_a_graph_concept_gives_its_label(self):
         site = HeatFlowSiteFactory(
-            environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental")
+            environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore-continental")
         )
         site.refresh_from_db()
 

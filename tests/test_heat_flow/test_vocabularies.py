@@ -152,8 +152,8 @@ class TestResolveTerm:
             "onshore (continental)",
             "[Onshore (continental)]",
             " [ONSHORE (CONTINENTAL)] ",
-            "onshore_continental",
-            "[Onshore_Continental]",
+            "onshore-continental",
+            "[Onshore-Continental]",
         ],
     )
     def test_a_label_or_a_key_gives_the_concept(self, db, text):
@@ -161,7 +161,7 @@ class TestResolveTerm:
 
         concept = resolve_term(GEOGRAPHIC_ENVIRONMENT, text)
 
-        assert concept.uri == term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental")
+        assert concept.uri == term(GEOGRAPHIC_ENVIRONMENT, "onshore-continental")
 
     @pytest.mark.parametrize("text", ["", "   ", None, "unspecified", "[Unspecified]"])
     def test_blank_and_unspecified_give_no_term(self, db, text):

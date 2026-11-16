@@ -1218,10 +1218,10 @@ class TestGHFDBChildCorrectionLabels:
     @pytest.mark.parametrize(
         ("label", "status"),
         [
-            ("[Present and corrected]", "present_corrected"),
-            ("[Present and not corrected]", "present_not_corrected"),
-            ("[Present not significant]", "present_not_significant"),
-            ("[not recognized]", "not_recognized"),
+            ("[Present and corrected]", "present-corrected"),
+            ("[Present and not corrected]", "present-uncorrected"),
+            ("[Present not significant]", "present-insignificant"),
+            ("[not recognized]", "unrecognized"),
         ],
     )
     @pytest.mark.parametrize("flag", ["corr_S_flag", "corr_SUR_flag", "corr_HR_flag"])
@@ -1234,7 +1234,7 @@ class TestGHFDBChildCorrectionLabels:
     def test_a_label_is_read_like_a_vocabulary_cell(self, dataset):
         statuses = self.import_row(dataset, corr_E_flag="  [PRESENT and Corrected] ")
 
-        assert statuses["E"] == "present_corrected"
+        assert statuses["E"] == "present-corrected"
 
     @pytest.mark.parametrize("cell", ["-", "[unspecified]", ""])
     def test_a_dash_or_blank_cell_stores_no_status(self, dataset, cell):
@@ -1251,13 +1251,13 @@ class TestGHFDBChildCorrectionLabels:
     def test_keys_and_yes_no_shorthands_still_work(self, dataset):
         statuses = self.import_row(
             dataset,
-            corr_S_flag="present_not_corrected",
+            corr_S_flag="present-uncorrected",
             corr_E_flag="Yes",
             corr_TOPO_flag="No",
-            corr_PAL_flag="not_recognized",
+            corr_PAL_flag="unrecognized",
         )
 
-        assert statuses["S"] == "present_not_corrected"
-        assert statuses["E"] == "present_corrected"
+        assert statuses["S"] == "present-uncorrected"
+        assert statuses["E"] == "present-corrected"
         assert statuses["TOPO"] == ""
-        assert statuses["PAL"] == "not_recognized"
+        assert statuses["PAL"] == "unrecognized"

@@ -125,7 +125,7 @@ GHFDBParent.objects.annotate(lat_NS=published_coordinate("ST_Y", "sample__locati
 
 `environment` and `explo_method` are read from the site's concept fields with
 `published_concept()`, which takes the last part of the stored concept address. The published
-column therefore carries the concept's identifier, such as `onshore_continental`, as it always
+column therefore carries the concept's identifier, such as `onshore-continental`, as it always
 has, while the site stores the full address.
 
 ```python

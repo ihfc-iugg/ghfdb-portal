@@ -61,7 +61,7 @@ def heat_flow_chain(dataset):
         name="Test Site",
         country="Germany",
         continent="Europe",
-        environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental"),
+        environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore-continental"),
     )
 
     interval = HeatFlowInterval.objects.create(
@@ -136,7 +136,7 @@ def sample_ghfdb_row():
         "Region": "",
         "Continent": "Europe",
         "Domain": "",
-        "environment": "onshore_continental",  # internal vocabulary value; vocabulary label is "Onshore (continental)"
+        "environment": "onshore-continental",  # internal vocabulary value; vocabulary label is "Onshore (continental)"
         "explo_method": "",
         "explo_purpose": "",
         "total_depth_MD": "",
@@ -215,7 +215,7 @@ def build_site_and_parent(dataset, *, name="Test Site", published=True, ghfdb_id
         name=name,
         country="Germany",
         continent="Europe",
-        environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental"),
+        environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore-continental"),
     )
     return ParentHeatFlow.objects.create(
         dataset=dataset,

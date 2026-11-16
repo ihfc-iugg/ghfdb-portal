@@ -103,7 +103,7 @@ class TestHeatFlowRecordSerializer:
         record = only_record(client, SITES)
 
         vocabulary = HeatFlowSite._meta.get_field("environment").vocabulary[0]
-        assert record["environment"] == stored_term(vocabulary, "onshore_continental")
+        assert record["environment"] == stored_term(vocabulary, "onshore-continental")
 
     def test_an_empty_single_term_is_null(self, client, full_records):
         HeatFlowSite.objects.update(explo_method_id=None)
@@ -226,7 +226,7 @@ class TestHeatFlowWrites:
         body = {
             "name": "Written site",
             "dataset": dataset.uuid,
-            "environment": "onshore_continental",
+            "environment": "onshore-continental",
             "explo_purpose": [],
             "lithology": [],
             "age": [],
@@ -242,8 +242,8 @@ class TestHeatFlowWrites:
 
         assert response.status_code == 201, response.content
         site = HeatFlowSite.objects.get(name="Written site")
-        assert vocabularies.identifier(site.environment) == "onshore_continental"
-        assert response.json()["environment"]["name"] == "onshore_continental"
+        assert vocabularies.identifier(site.environment) == "onshore-continental"
+        assert response.json()["environment"]["name"] == "onshore-continental"
 
     def test_a_quantity_written_as_a_number_is_stored_and_read_back(
         self, editor, public_dataset

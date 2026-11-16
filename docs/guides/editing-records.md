@@ -42,7 +42,7 @@ A field that takes a term from a controlled vocabulary is a text box, and the te
 way the published file writes it:
 
 - Type the term's label or its key, in any case, with or without square brackets. `Onshore
-  (continental)`, `onshore (continental)` and `onshore_continental` mean the same term.
+  (continental)`, `onshore (continental)` and `onshore-continental` mean the same term.
 - A field that holds several terms, such as the exploration purpose, takes them separated by
   semicolons: `Research; Hydrocarbon`.
 - Leave the box empty for no term.

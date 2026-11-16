@@ -69,7 +69,7 @@ def identifier(concept: Record) -> str:
         concept: The concept.
 
     Returns:
-        The identifier, such as ``LOGeq``.
+        The identifier, such as ``log-equilibrium``.
     """
     return concept.uri.rsplit("/", 1)[-1]
 

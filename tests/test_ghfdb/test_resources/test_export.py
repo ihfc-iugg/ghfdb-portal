@@ -259,13 +259,13 @@ class TestGHFDBExportCorrectionStatus:
         from project.ghfdb.resources.export import GHFDBExportResource
 
         heat_flow_chain.corrections.filter(correction_type="T").update(
-            status="present_corrected"
+            status="present-corrected"
         )
 
         qs = GHFDBChild.objects.for_export().filter(pk=heat_flow_chain.pk)
         row = GHFDBExportResource().export(qs).dict[0]
 
-        assert row["corr_t_flag"] == "present_corrected"
+        assert row["corr_t_flag"] == "present-corrected"
 
 
 # Ref_IGSN column tests (FS-004)
@@ -534,19 +534,19 @@ class TestGHFDBExportRoundTrip:
             "child-corrections": {
                 "text": {
                     "name": "Roundtrip Site",
-                    "environment": "onshore_continental",
+                    "environment": "onshore-continental",
                     "p_comment": "parent comment",
                     "explo_purpose": "Hydrocarbon",
                     "q_method": "Bullard method",
-                    "corr_is_flag": "present_corrected",
-                    "corr_t_flag": "present_not_corrected",
-                    "corr_s_flag": "present_not_significant",
-                    "corr_e_flag": "not_recognized",
-                    "corr_topo_flag": "considered_p",
-                    "corr_pal_flag": "considered_t",
-                    "corr_sur_flag": "considered_pt",
-                    "corr_conv_flag": "not_considered",
-                    "corr_hr_flag": "present_not_significant",
+                    "corr_is_flag": "present-corrected",
+                    "corr_t_flag": "present-uncorrected",
+                    "corr_s_flag": "present-insignificant",
+                    "corr_e_flag": "unrecognized",
+                    "corr_topo_flag": "considered-p",
+                    "corr_pal_flag": "considered-T",
+                    "corr_sur_flag": "considered-pT",
+                    "corr_conv_flag": "not-considered",
+                    "corr_hr_flag": "present-insignificant",
                     "expedition": "Expedition A",
                 },
                 "numeric": {
@@ -563,7 +563,7 @@ class TestGHFDBExportRoundTrip:
             "child-gradient-conductivity": {
                 "text": {
                     "name": "Roundtrip Site",
-                    "environment": "onshore_continental",
+                    "environment": "onshore-continental",
                     "explo_purpose": "Hydrocarbon",
                     "q_method": "Interval method",
                     "corr_is_flag": "-",
@@ -614,7 +614,7 @@ class TestGHFDBExportRoundTrip:
             "child-minimal": {
                 "text": {
                     "name": "Roundtrip Site",
-                    "environment": "onshore_continental",
+                    "environment": "onshore-continental",
                     "explo_purpose": "Hydrocarbon",
                     "q_method": "Boot-strapping method",
                     "corr_is_flag": "-",
@@ -704,19 +704,19 @@ class TestGHFDBExportRoundTrip:
             "child-corrections": {
                 "text": {
                     "name": "Roundtrip Site",
-                    "environment": "onshore_continental",
+                    "environment": "onshore-continental",
                     "p_comment": "parent comment",
                     "explo_purpose": "Hydrocarbon",
                     "q_method": "Bullard method",
-                    "corr_is_flag": "present_corrected",
-                    "corr_t_flag": "present_not_corrected",
-                    "corr_s_flag": "present_not_significant",
-                    "corr_e_flag": "not_recognized",
-                    "corr_topo_flag": "considered_p",
-                    "corr_pal_flag": "considered_t",
-                    "corr_sur_flag": "considered_pt",
-                    "corr_conv_flag": "not_considered",
-                    "corr_hr_flag": "present_not_significant",
+                    "corr_is_flag": "present-corrected",
+                    "corr_t_flag": "present-uncorrected",
+                    "corr_s_flag": "present-insignificant",
+                    "corr_e_flag": "unrecognized",
+                    "corr_topo_flag": "considered-p",
+                    "corr_pal_flag": "considered-T",
+                    "corr_sur_flag": "considered-pT",
+                    "corr_conv_flag": "not-considered",
+                    "corr_hr_flag": "present-insignificant",
                     "expedition": "Expedition A",
                 },
                 "numeric": {
@@ -733,7 +733,7 @@ class TestGHFDBExportRoundTrip:
             "child-gradient-conductivity": {
                 "text": {
                     "name": "Roundtrip Site",
-                    "environment": "onshore_continental",
+                    "environment": "onshore-continental",
                     "explo_purpose": "Hydrocarbon",
                     "q_method": "Interval method",
                 },
@@ -749,7 +749,7 @@ class TestGHFDBExportRoundTrip:
             "child-minimal": {
                 "text": {
                     "name": "Roundtrip Site",
-                    "environment": "onshore_continental",
+                    "environment": "onshore-continental",
                     "explo_purpose": "Hydrocarbon",
                     "q_method": "Boot-strapping method",
                 },

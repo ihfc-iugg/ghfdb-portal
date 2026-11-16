@@ -236,21 +236,21 @@ class TestGHFDBParentTableFilters:
             1,
             value=20,
             U_score="U1",
-            site={"environment": "onshore_continental"},
+            site={"environment": "onshore-continental"},
         )
         make_parent(
             published_dataset,
             2,
             value=60,
             U_score="U1",
-            site={"environment": "onshore_continental"},
+            site={"environment": "onshore-continental"},
         )
         make_parent(
             published_dataset,
             3,
             value=60,
             U_score="U2",
-            site={"environment": "onshore_marine"},
+            site={"environment": "onshore-lake-river"},
         )
 
     def test_several_filters_together_list_only_parents_matching_all_with_the_count(
@@ -258,7 +258,7 @@ class TestGHFDBParentTableFilters:
     ):
         response = client.get(
             reverse("ghfdb-parent-table"),
-            {"q_min": "50", "U_score": ["U1"], "environment": ["onshore_continental"]},
+            {"q_min": "50", "U_score": ["U1"], "environment": ["onshore-continental"]},
         )
 
         assert listed_parents(response) == [2]

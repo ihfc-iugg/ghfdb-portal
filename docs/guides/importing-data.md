@@ -225,11 +225,11 @@ there still reads as no value.
 ## A correction cell may carry the status label
 
 The nine correction columns (`corr_IS_flag` to `corr_HR_flag`) take a status key such as
-`present_corrected`, the shorthands `Yes`, `1` and `true`, or the published status label. The label
+`present-corrected`, the shorthands `Yes`, `1` and `true`, or the published status label. The label
 is read the way a vocabulary cell is, ignoring case, the square brackets and the spaces around
 them, so `[Present and corrected]`, `[Present and not corrected]`, `[Present not significant]` and
-`[not recognized]` store `present_corrected`, `present_not_corrected`,
-`present_not_significant` and `not_recognized`. The [quality scores](quality-scores.md) read these
+`[not recognized]` store `present-corrected`, `present-uncorrected`,
+`present-insignificant` and `unrecognized`. The [quality scores](quality-scores.md) read these
 statuses to write the perturbation flags.
 
 A label the correction does not accept, such as `[Present not significant]` on the temperature

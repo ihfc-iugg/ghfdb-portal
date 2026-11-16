@@ -118,9 +118,9 @@ The valid combinations, derived from `HeatFlowCorrection.VALID_STATUS_FOR_TYPE` 
 
 | Disturbance type | Valid statuses |
 | --- | --- |
-| IS (In-situ conditions) | present\_corrected, present\_not\_corrected, not\_recognized, not\_considered, tilt\_corrected, drift\_corrected |
-| T (Temperature) | present\_corrected, present\_not\_corrected, not\_corrected, corrected, not\_recognized, not\_considered |
-| S (Sedimentation/Subsidence), E (Erosion), TOPO (Topographic), PAL (Paleoclimatic), SUR (Surface/Climatic), CONV (Convection), HR (Heat Refraction) | present\_corrected, present\_not\_corrected, present\_not\_significant, not\_recognized, considered\_p, considered\_t, considered\_pt, not\_considered |
+| IS (In-situ conditions) | present-corrected, present-uncorrected, unrecognized, not-considered, tilt-corrected, drift-corrected |
+| T (Temperature) | present-corrected, present-uncorrected, uncorrected, corrected, unrecognized, not-considered |
+| S (Sedimentation/Subsidence), E (Erosion), TOPO (Topographic), PAL (Paleoclimatic), SUR (Surface/Climatic), CONV (Convection), HR (Heat Refraction) | present-corrected, present-uncorrected, present-insignificant, unrecognized, considered-p, considered-T, considered-pT, not-considered |
 
 A correction with no status is stored with an empty status, which is valid for every
 disturbance type. The published file writes it as `-`, and reads `-` or an empty cell as no status.

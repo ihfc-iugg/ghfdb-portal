@@ -68,7 +68,7 @@ def _land(name: str, lat: tuple[float, float], lon: tuple[float, float]) -> Regi
     Returns:
         The region, with the onshore environment and the drilling exploration method.
     """
-    return Region(name, *lat, *lon, False, "onshore_continental", "drilling")
+    return Region(name, *lat, *lon, False, "onshore-continental", "drilling")
 
 
 def _sea(name: str, lat: tuple[float, float], lon: tuple[float, float]) -> Region:
@@ -82,7 +82,7 @@ def _sea(name: str, lat: tuple[float, float], lon: tuple[float, float]) -> Regio
     Returns:
         The region, with the offshore environment and the marine probing exploration method.
     """
-    return Region(name, *lat, *lon, True, "offshore_marine", "probing_offshore")
+    return Region(name, *lat, *lon, True, "offshore-marine", "probing-offshore")
 
 
 REGIONS = (

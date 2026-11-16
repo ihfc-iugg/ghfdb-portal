@@ -123,7 +123,7 @@ def probe_interval(published_dataset):
     """
     site = HeatFlowSiteFactory(
         dataset=published_dataset,
-        explo_method_id=term(EXPLORATION_METHOD, "probing_offshore"),
+        explo_method_id=term(EXPLORATION_METHOD, "probing-offshore"),
         elevation=-1000,
     )
     interval = HeatFlowIntervalFactory(dataset=published_dataset, site=site)
@@ -174,7 +174,7 @@ def child(probe_interval, gradient, conductivity, published_dataset):
         thermal_conductivity=conductivity,
     )
     HeatFlowCorrectionFactory(
-        heat_flow=child, correction_type="SUR", status="present_corrected"
+        heat_flow=child, correction_type="SUR", status="present-corrected"
     )
     child.refresh_from_db()
     return child

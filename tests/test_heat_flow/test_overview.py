@@ -241,7 +241,7 @@ class TestHeatFlowPageForChild:
         child = page_records["child"]
         recorded = [
             HeatFlowCorrectionFactory(
-                heat_flow=child, correction_type=kind, status="present_corrected"
+                heat_flow=child, correction_type=kind, status="present-corrected"
             )
             for kind in ("S", "E")
         ]

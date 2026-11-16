@@ -25,9 +25,9 @@ the vocabulary it belongs to:
 
 ```json
 "environment": {
-  "name": "onshore_continental",
+  "name": "onshore-continental",
   "label": "Onshore (continental)",
-  "uri": "https://w3id.org/ihfc-iugg/vocabularies/geographic-environments/onshore_continental",
+  "uri": "https://w3id.org/ihfc-iugg/vocabularies/geographic-environments/onshore-continental",
   "vocabulary": "geographic-environments"
 }
 ```
@@ -159,15 +159,15 @@ GET /api/v1/samples/heat-flow-sites/
       "inclination": null,
       "length": null,
       "environment": {
-        "name": "onshore_continental",
+        "name": "onshore-continental",
         "label": "Onshore (continental)",
-        "uri": "https://w3id.org/ihfc-iugg/vocabularies/geographic-environments/onshore_continental",
+        "uri": "https://w3id.org/ihfc-iugg/vocabularies/geographic-environments/onshore-continental",
         "vocabulary": "geographic-environments"
       },
       "explo_method": {
-        "name": "drilling_clustering",
+        "name": "drilling-clustering",
         "label": "Drilling-Clustering",
-        "uri": "https://w3id.org/ihfc-iugg/vocabularies/exploration-methods/drilling_clustering",
+        "uri": "https://w3id.org/ihfc-iugg/vocabularies/exploration-methods/drilling-clustering",
         "vocabulary": "exploration-methods"
       },
       "explo_purpose": [],
@@ -243,9 +243,9 @@ GET /api/v1/samples/heat-flow-sites/sJkWMuWMhnS9i846rJtWrHN/
   "inclination": null,
   "length": null,
   "environment": {
-    "name": "onshore_continental",
+    "name": "onshore-continental",
     "label": "Onshore (continental)",
-    "uri": "https://w3id.org/ihfc-iugg/vocabularies/geographic-environments/onshore_continental",
+    "uri": "https://w3id.org/ihfc-iugg/vocabularies/geographic-environments/onshore-continental",
     "vocabulary": "geographic-environments"
   },
   "explo_method": null,
@@ -652,7 +652,7 @@ GET /api/v1/measurements/heat-flow/mymJ5inhK9m89DkwZTvjEFS/
         "label": "In-situ conditions"
       },
       "status": {
-        "name": "present_corrected",
+        "name": "present-corrected",
         "label": "Present and corrected"
       },
       "comment": "Corrected to in-situ pressure and temperature."
@@ -663,7 +663,7 @@ GET /api/v1/measurements/heat-flow/mymJ5inhK9m89DkwZTvjEFS/
         "label": "Temperature"
       },
       "status": {
-        "name": "not_corrected",
+        "name": "uncorrected",
         "label": "not corrected"
       },
       "comment": null
@@ -758,9 +758,9 @@ GET /api/v1/samples/depth-intervals/sAvai23dHxcyhKwmMz4sMZU/
     "penetration": 3.5,
     "probe_type": [
       {
-        "name": "outrigger_hybrid_lister_hylo",
+        "name": "outrigger-hybrid-lister",
         "label": "Outrigger probe (Hybrid Lister) HyLO",
-        "uri": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-probes/outrigger_hybrid_lister_hylo",
+        "uri": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-probes/outrigger-hybrid-lister",
         "vocabulary": "heat-flow-probes"
       }
     ],
@@ -847,9 +847,9 @@ GET /api/v1/measurements/thermal-gradients/
       "corrected_uncertainty": 1.5,
       "method_top": [
         {
-          "name": "ODTT_PC",
+          "name": "ODTT-piston-corer",
           "label": "ODTT-PC",
-          "uri": "https://w3id.org/ihfc-iugg/vocabularies/temperature-method/ODTT_PC",
+          "uri": "https://w3id.org/ihfc-iugg/vocabularies/temperature-method/ODTT-piston-corer",
           "vocabulary": "temperature-method"
         }
       ],
@@ -960,9 +960,9 @@ GET /api/v1/measurements/thermal-conductivities/
       "strategy": [],
       "source": [
         {
-          "name": "assumed_from_literature",
+          "name": "assumed-from-literature",
           "label": "Assumed from literature",
-          "uri": "https://w3id.org/ihfc-iugg/vocabularies/conductivity-sources/assumed_from_literature",
+          "uri": "https://w3id.org/ihfc-iugg/vocabularies/conductivity-sources/assumed-from-literature",
           "vocabulary": "conductivity-sources"
         }
       ],

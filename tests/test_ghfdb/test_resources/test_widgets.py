@@ -203,7 +203,7 @@ class TestParentWidget:
             "name": "Test Site",
             "lat_NS": "48.0",
             "long_EW": "11.0",
-            "environment": "onshore_continental",
+            "environment": "onshore-continental",
             "elevation": "",
             "explo_method": "",
             "explo_purpose": "",
@@ -709,7 +709,7 @@ class TestMultiConceptWidgetUnspecified:
         result = widget.clean("[Core samples]; [unspecified]", row={})
 
         assert sorted(identifier(concept) for concept in result) == [
-            "core_samples",
+            "core-samples",
             "unspecified",
         ]
 

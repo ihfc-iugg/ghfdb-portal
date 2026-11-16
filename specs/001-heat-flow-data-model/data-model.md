@@ -358,15 +358,15 @@ A `ParentHeatFlow` aggregates multiple `HeatFlow` children. Each child has an `i
 
 **CorrectionTypeChoices**: IS, T, S, E, TOPO, PAL, SUR, CONV, HR
 
-**StatusChoices**: present_corrected, present_not_corrected, present_not_significant, not_recognized, considered_p, considered_t, considered_pt, not_considered, tilt_corrected, drift_corrected, not_corrected, corrected, unspecified
+**StatusChoices**: present-corrected, present-uncorrected, present-insignificant, unrecognized, considered-p, considered-T, considered-pT, not-considered, tilt-corrected, drift-corrected, uncorrected, corrected, unspecified
 
 **Valid status per correction type** (enforced in `save()`):
 
 | CorrectionType | Valid StatusChoices |
 |----------------|--------------------|
-| IS (in-situ / probe) | present_corrected, present_not_corrected, not_recognized, not_considered, tilt_corrected, drift_corrected, unspecified |
-| T (temperature) | present_corrected, present_not_corrected, not_corrected, corrected, not_recognized, not_considered, unspecified |
-| S, E, TOPO, PAL, SUR, CONV, HR (environmental) | present_corrected, present_not_corrected, present_not_significant, not_recognized, considered_p, considered_t, considered_pt, not_considered, unspecified |
+| IS (in-situ / probe) | present-corrected, present-uncorrected, unrecognized, not-considered, tilt-corrected, drift-corrected, unspecified |
+| T (temperature) | present-corrected, present-uncorrected, uncorrected, corrected, unrecognized, not-considered, unspecified |
+| S, E, TOPO, PAL, SUR, CONV, HR (environmental) | present-corrected, present-uncorrected, present-insignificant, unrecognized, considered-p, considered-T, considered-pT, not-considered, unspecified |
 
 **save() behaviour**: Raises `ValidationError` when `status` is not in the valid set for the given `correction_type`. A class-level `VALID_STATUS_FOR_TYPE` constant dict drives the lookup.
 

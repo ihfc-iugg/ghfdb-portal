@@ -29,12 +29,12 @@ LOCATION_PENALTIES = {"actual": 0.0, "other": -0.1, "literature": -0.2}
 
 LAB_METHODS = frozenset(
     {
-        "pointSource",
-        "lineSourceFull",
-        "lineSourceHalf",
-        "planeSourceFull",
-        "planeSourceHalf",
-        "laboratoryOther",
+        "point-source",
+        "line-source-full",
+        "line-source-half",
+        "plane-source-full",
+        "plane-source-half",
+        "laboratory-other",
     }
 )
 
@@ -249,38 +249,38 @@ class ProbeRules:
         (
             0.1,
             {
-                "saturation": {"saturatedInSitu"},
-                "method": {"probePulse"},
-                "source": {"insitu_probe"},
+                "saturation": {"saturated-in-situ"},
+                "method": {"probe-pulse"},
+                "source": {"in-situ-probe"},
             },
         ),
         (
             0.0,
             {
-                "saturation": {"recovered", "saturatedMeasured"},
-                "method": {"probePulse"},
-                "source": {"insitu_probe"},
+                "saturation": {"recovered", "saturated-measured"},
+                "method": {"probe-pulse"},
+                "source": {"in-situ-probe"},
             },
         ),
         (
             0.0,
             {
-                "saturation": {"recovered", "saturatedMeasured"},
+                "saturation": {"recovered", "saturated-measured"},
                 "method": LAB_METHODS,
             },
         ),
-        (-0.1, {"saturation": {"saturatedCalculated"}, "method": LAB_METHODS}),
+        (-0.1, {"saturation": {"saturated-calculated"}, "method": LAB_METHODS}),
         (
             -0.2,
             {
-                "saturation": {"dryMeasured", "unspecified", "other"},
+                "saturation": {"dry-measured", "unspecified", "other"},
                 "method": LAB_METHODS,
             },
         ),
         (
             -0.1,
             {
-                "method": {"lithology", "wellLogDeterministic", "wellLogEmpirical"},
+                "method": {"lithology", "well-log-deterministic", "well-log-empirical"},
                 "location": {"literature"},
             },
         ),
@@ -288,19 +288,19 @@ class ProbeRules:
             -0.2,
             {
                 "method": {
-                    "waterContent",
-                    "mineralComposition",
-                    "chlorineContent",
+                    "water-content",
+                    "mineral-composition",
+                    "chlorine-content",
                     "unspecified",
                 }
             },
         ),
     )
     PT_CONDITIONS = (
-        (0.1, {"pT": {"actualInSitu"}, "method": {"probePulse"}}),
-        (0.0, {"pT": {"replicatedPT", "correctedPT"}}),
-        (-0.1, {"pT": {"replicatedP", "correctedP", "replicatedT", "correctedT"}}),
-        (-0.2, {"pT": {"recordedAmbient", "unrecordedAmbient", "unspecified"}}),
+        (0.1, {"pT": {"actual-in-situ"}, "method": {"probe-pulse"}}),
+        (0.0, {"pT": {"replicated-pT", "corrected-pT"}}),
+        (-0.1, {"pT": {"replicated-p", "corrected-p", "replicated-T", "corrected-T"}}),
+        (-0.2, {"pT": {"recorded-ambient", "unrecorded-ambient", "unspecified"}}),
     )
 
     @classmethod
@@ -373,69 +373,83 @@ class BoreholeRules:
 
     GATE_SCORE = 0.1
 
-    # Temperature method groups. HT_FT and HT_FTpert are the vocabulary's HT-FTeq and
-    # HT-FTpert, which the toolbox's lists misspell.
+    # Temperature method groups. HT-FT-equilibrium and HT-FT-perturbed stand for the toolbox's
+    # HT-FTeq and HT-FTpert, which its lists misspell.
     CONTINUOUS = (
-        (0.1, frozenset({"LOGeq", "cLOG", "DTSeq", "cDTS"})),
-        (-0.1, frozenset({"LOGpert"})),
+        (
+            0.1,
+            frozenset(
+                {"log-equilibrium", "log-corrected", "DTS-equilibrium", "DTS-corrected"}
+            ),
+        ),
+        (-0.1, frozenset({"log-perturbed"})),
     )
     SINGLE_POINTS = (
         (
             -0.1,
             frozenset(
                 {
-                    "LOGeq",
-                    "cLOG",
-                    "cBHT",
-                    "HT_FT",
-                    "cHT_FT",
-                    "RTDeq",
-                    "cRTD",
-                    "ODTT_PC",
-                    "ODTT_TP",
+                    "log-equilibrium",
+                    "log-corrected",
+                    "BHT-corrected",
+                    "HT-FT-equilibrium",
+                    "HT-FT-corrected",
+                    "RTD-equilibrium",
+                    "RTD-corrected",
+                    "ODTT-piston-corer",
+                    "ODTT-thermistor-probe",
                     "EGRT",
                     "GRT",
-                    "cDTS",
+                    "DTS-corrected",
                 }
             ),
         ),
         (
             -0.3,
-            frozenset({"LOGpert", "DTSpert", "BHT", "HT_FTpert", "RTDpert", "BLK"}),
+            frozenset(
+                {
+                    "log-perturbed",
+                    "DTS-perturbed",
+                    "BHT",
+                    "HT-FT-perturbed",
+                    "RTD-perturbed",
+                    "thermal-blanket",
+                }
+            ),
         ),
-        (-0.5, frozenset({"CPD", "XEN", "GTM", "BSR", "unspecified", "other"})),
+        (-0.5, frozenset({"CPD", "xenolith", "GTM", "BSR", "unspecified", "other"})),
     )
     SURFACE_PLUS_ONE_POINT = (
         (
             -0.3,
             frozenset(
                 {
-                    "cBHT",
-                    "RTDeq",
-                    "cRTD",
-                    "ODTT_PC",
-                    "ODTT_TP",
-                    "cHT_FT",
+                    "BHT-corrected",
+                    "RTD-equilibrium",
+                    "RTD-corrected",
+                    "ODTT-piston-corer",
+                    "ODTT-thermistor-probe",
+                    "HT-FT-corrected",
                     "EGRT",
                     "GRT",
                 }
             ),
         ),
-        (-0.5, frozenset({"BHT", "HT_FTpert", "RTDpert"})),
-        (-0.6, frozenset({"CPD", "XEN", "GTM", "BSR", "unspecified", "other"})),
+        (-0.5, frozenset({"BHT", "HT-FT-perturbed", "RTD-perturbed"})),
+        (-0.6, frozenset({"CPD", "xenolith", "GTM", "BSR", "unspecified", "other"})),
     )
 
     COUNT = ((">", 15, 0.0), ("<=", 15, -0.1))
     SOURCE = (
-        (0.1, {"source": {"insitu_probe", "core_log"}}),
-        (0.0, {"source": {"core_samples"}}),
-        (-0.1, {"source": {"cutting_samples", "outcrop_samples", "well_log"}}),
+        (0.1, {"source": {"in-situ-probe", "core-log"}}),
+        (0.0, {"source": {"core-samples"}}),
+        (-0.1, {"source": {"cutting-samples", "outcrop-samples", "well-log"}}),
         (
             -0.2,
             {
                 "source": {
-                    "mineral_computation",
-                    "assumed_from_literature",
+                    "mineral-computation",
+                    "assumed-from-literature",
                     "unspecified",
                     "other",
                 }
@@ -443,40 +457,40 @@ class BoreholeRules:
         ),
     )
     SATURATION = (
-        (0.0, {"saturation": {"saturatedMeasured", "saturatedInSitu"}}),
-        (-0.1, {"saturation": {"saturatedCalculated", "recovered"}}),
-        (-0.2, {"saturation": {"dryMeasured", "unspecified", "other"}}),
+        (0.0, {"saturation": {"saturated-measured", "saturated-in-situ"}}),
+        (-0.1, {"saturation": {"saturated-calculated", "recovered"}}),
+        (-0.2, {"saturation": {"dry-measured", "unspecified", "other"}}),
     )
     # The paper's Table 3, reading the pT conditions on their own terms.
     PT_UNCORRECTED = (
-        (0.0, {"pT": {"actualInSitu", "replicatedPT", "correctedPT"}}),
+        (0.0, {"pT": {"actual-in-situ", "replicated-pT", "corrected-pT"}}),
         (
             -0.1,
-            {"pT": {"replicatedP", "replicatedT", "correctedP", "correctedT"}},
+            {"pT": {"replicated-p", "replicated-T", "corrected-p", "corrected-T"}},
         ),
-        (-0.2, {"pT": {"recordedAmbient", "unrecordedAmbient", "unspecified"}}),
+        (-0.2, {"pT": {"recorded-ambient", "unrecorded-ambient", "unspecified"}}),
     )
     # The toolbox's case list: the pT conditions must agree with the in-situ correction.
     PT_CORRECTED = (
         (
             0.0,
             {
-                "pT": {"actualInSitu", "replicatedPT", "correctedPT"},
-                "in_situ": {"considered_pt"},
+                "pT": {"actual-in-situ", "replicated-pT", "corrected-pT"},
+                "in_situ": {"considered-pT"},
             },
         ),
         (
             -0.1,
             {
-                "pT": {"replicatedP", "correctedP", "replicatedT", "correctedT"},
-                "in_situ": {"considered_p", "considered_t"},
+                "pT": {"replicated-p", "corrected-p", "replicated-T", "corrected-T"},
+                "in_situ": {"considered-p", "considered-T"},
             },
         ),
         (
             -0.2,
             {
-                "pT": {"recordedAmbient", "unrecordedAmbient", "unspecified"},
-                "in_situ": {"not_considered", ""},
+                "pT": {"recorded-ambient", "unrecorded-ambient", "unspecified"},
+                "in_situ": {"not-considered", ""},
             },
         ),
     )
@@ -495,7 +509,7 @@ class BoreholeRules:
         """
         top = Reading.concepts(gradient.method_top)
         bottom = Reading.concepts(gradient.method_bottom)
-        if "SUR" in top:
+        if "surface" in top:
             return SubScore.from_penalties(
                 [cls.method_penalty(cls.SURFACE_PLUS_ONE_POINT, bottom)]
             )
@@ -598,10 +612,10 @@ class QualityScheme:
     # Status to flag letter: present and corrected is upper case, present and not corrected
     # lower case. The other two statuses write a fixed character.
     FLAG_STATUSES = {
-        "present_corrected": str.upper,
-        "present_not_corrected": str.lower,
-        "present_not_significant": lambda _letter: "X",
-        "not_recognized": lambda _letter: "x",
+        "present-corrected": str.upper,
+        "present-uncorrected": str.lower,
+        "present-insignificant": lambda _letter: "X",
+        "unrecognized": lambda _letter: "x",
     }
     NO_FLAG = "-"
 
@@ -727,11 +741,11 @@ class QualityScheme:
 
 # Exploration method concept to the route it selects.
 ROUTES: dict[str, type[ProbeRules] | type[BoreholeRules]] = {
-    "probing_onshore": ProbeRules,
-    "probing_offshore": ProbeRules,
-    "probing_clustering": ProbeRules,
+    "probing-onshore": ProbeRules,
+    "probing-offshore": ProbeRules,
+    "probing-clustering": ProbeRules,
     "drilling": BoreholeRules,
-    "drilling_clustering": BoreholeRules,
+    "drilling-clustering": BoreholeRules,
     "mining": BoreholeRules,
     "tunneling": BoreholeRules,
     "indirect": BoreholeRules,

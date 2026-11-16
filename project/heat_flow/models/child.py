@@ -336,8 +336,8 @@ class HeatFlow(Measurement):
         if rules is not None:
             t = rules.gradient(
                 self.thermal_gradient,
-                tilt_corrected=statuses.get("T") == "tilt_corrected",
-                bottom_water_corrected=statuses.get("SUR") == "present_corrected",
+                tilt_corrected=statuses.get("T") == "tilt-corrected",
+                bottom_water_corrected=statuses.get("SUR") == "present-corrected",
             )
         tc = SubScore(None)
         rules = (
@@ -447,20 +447,20 @@ class HeatFlowCorrection(django_models.Model):
         HR = "HR", _("Heat Refraction")
 
     class StatusChoices(models.TextChoices):
-        PRESENT_CORRECTED = "present_corrected", _("Present and corrected")
-        PRESENT_NOT_CORRECTED = "present_not_corrected", _("Present and not corrected")
+        PRESENT_CORRECTED = "present-corrected", _("Present and corrected")
+        PRESENT_NOT_CORRECTED = "present-uncorrected", _("Present and not corrected")
         PRESENT_NOT_SIGNIFICANT = (
-            "present_not_significant",
+            "present-insignificant",
             _("Present not significant"),
         )
-        NOT_RECOGNIZED = "not_recognized", _("not recognized")
-        CONSIDERED_P = "considered_p", _("Considered - p")
-        CONSIDERED_T = "considered_t", _("Considered - t")
-        CONSIDERED_PT = "considered_pt", _("Considered - pT")
-        NOT_CONSIDERED = "not_considered", _("not considered")
-        TILT_CORRECTED = "tilt_corrected", _("Tilt corrected")
-        DRIFT_CORRECTED = "drift_corrected", _("Drift corrected")
-        NOT_CORRECTED = "not_corrected", _("not corrected")
+        NOT_RECOGNIZED = "unrecognized", _("not recognized")
+        CONSIDERED_P = "considered-p", _("Considered - p")
+        CONSIDERED_T = "considered-T", _("Considered - t")
+        CONSIDERED_PT = "considered-pT", _("Considered - pT")
+        NOT_CONSIDERED = "not-considered", _("not considered")
+        TILT_CORRECTED = "tilt-corrected", _("Tilt corrected")
+        DRIFT_CORRECTED = "drift-corrected", _("Drift corrected")
+        NOT_CORRECTED = "uncorrected", _("not corrected")
         CORRECTED = "corrected", _("Corrected")
 
     heat_flow = models.ForeignKey(
@@ -503,31 +503,31 @@ class HeatFlowCorrection(django_models.Model):
     # Valid status values per correction type.
     VALID_STATUS_FOR_TYPE: dict[str, set[str]] = {
         "IS": {
-            "present_corrected",
-            "present_not_corrected",
-            "not_recognized",
-            "not_considered",
-            "tilt_corrected",
-            "drift_corrected",
+            "present-corrected",
+            "present-uncorrected",
+            "unrecognized",
+            "not-considered",
+            "tilt-corrected",
+            "drift-corrected",
         },
         "T": {
-            "present_corrected",
-            "present_not_corrected",
-            "not_corrected",
+            "present-corrected",
+            "present-uncorrected",
+            "uncorrected",
             "corrected",
-            "not_recognized",
-            "not_considered",
+            "unrecognized",
+            "not-considered",
         },
     }
     ENVIRONMENTAL_VALID: set[str] = {
-        "present_corrected",
-        "present_not_corrected",
-        "present_not_significant",
-        "not_recognized",
-        "considered_p",
-        "considered_t",
-        "considered_pt",
-        "not_considered",
+        "present-corrected",
+        "present-uncorrected",
+        "present-insignificant",
+        "unrecognized",
+        "considered-p",
+        "considered-T",
+        "considered-pT",
+        "not-considered",
     }
     # S, E, TOPO, PAL, SUR, CONV, HR → ENVIRONMENTAL_VALID
     _ENVIRONMENTAL_TYPES: frozenset[str] = frozenset(
