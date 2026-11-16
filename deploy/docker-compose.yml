@@ -16,7 +16,7 @@ networks:
 services:
   django: &django
     # An exact release, so a new release reaches the server only when this line is changed.
-    image: ghcr.io/ihfc-iugg/ghfdb-portal:v${PORTAL_VERSION:?set PORTAL_VERSION to the release to run}
+    image: ghcr.io/ihfc-iugg/ghfdb-portal:${PORTAL_VERSION:?set PORTAL_VERSION to the release to run}
     restart: always
     env_file:
       - stack.env
