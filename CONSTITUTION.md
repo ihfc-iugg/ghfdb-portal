@@ -26,7 +26,9 @@ test coverage (Article I).
 
 ### Article III — Anti-Abstraction
 No wrapper layers, base classes, or "future-proofing" indirection without a present, concrete
-second use. Prefer duplication over the wrong abstraction.
+second use. Prefer duplication over the wrong abstraction. A second use also counts as
+present when it is in another approved specification built in the same batch, such as several
+features specified together from one prototype.
 
 ### Article IV — Integration-First
 Contracts and integration points are designed and tested before internals are polished.
@@ -351,4 +353,4 @@ The constitution defines how the GHFDB Portal is evolved and how compliance is e
 
 ---
 
-**Version**: 2.1.0 | **Ratified**: TODO(RATIFICATION_DATE): confirm project inception date | **Last Amended**: 2026-10-12
+**Version**: 2.1.1 | **Ratified**: TODO(RATIFICATION_DATE): confirm project inception date | **Last Amended**: 2026-11-11
