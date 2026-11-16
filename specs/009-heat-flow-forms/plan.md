@@ -100,7 +100,7 @@ request's transaction, so a refused or failed save writes nothing.
 
 - **Child, corrections.** Nine `correction_<code>` choice fields, one per
   `CorrectionTypeChoices` member, labelled by the type. Each offers an empty entry labelled
-  "Unspecified" and the statuses `VALID_STATUS_FOR_TYPE` (or `ENVIRONMENTAL_VALID`) gives that type.
+  "Unspecified" and the statuses `HeatFlowCorrection.valid_statuses` gives that type.
   On save, every one of the nine types holds a row afterwards, as an import leaves a child: a
   stored row gets the chosen status (empty when cleared or left empty), a missing row is created
   with the chosen status (empty when none). A stored correction comment is never touched.
@@ -153,7 +153,7 @@ an interval stores it.
 As research.md tabulates. In short:
 
 - `HeatFlowCorrection.status`: `blank=True`, `default=""`. `StatusChoices.UNSPECIFIED` is removed,
-  and `-` leaves `VALID_STATUS_FOR_TYPE` and `ENVIRONMENTAL_VALID`. The type check in `save()`
+  and `-` leaves the valid statuses of each type. The type check in `save()`
   accepts an empty status for any type. `__str__` shows an empty status as unspecified.
 - Migration `0018`: alters the field, then a reversible data step turns `-` into `""` (and back),
   one queryset `update()` on the historical model each way. It stays standalone through the S5

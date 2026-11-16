@@ -232,15 +232,27 @@ them, so `[Present and corrected]`, `[Present and not corrected]`, `[Present not
 `present-insignificant` and `unrecognized`. The [quality scores](quality-scores.md) read these
 statuses to write the perturbation flags.
 
-A label the correction does not accept, such as `[Present not significant]` on the temperature
-correction, and a cell that matches nothing, both store no status: the correction row is written
-with an empty status, which means "unspecified". An explicit `-` or `[unspecified]` in the cell
+Each correction accepts only the statuses of its own collection in the `heat-flow-corrections`
+vocabulary: the in-situ flag takes `considered-p`, `considered-T`, `considered-pT` and
+`not-considered`, the temperature flag takes `corrected`, `drift-corrected`, `tilt-corrected` and
+`uncorrected`, and each of the seven effects takes `present-corrected`, `present-uncorrected`,
+`present-insignificant` and `unrecognized`. A status the correction does not accept, such as
+`[Present not significant]` on the temperature correction, and a cell that matches nothing, both
+store no status: the correction row is written with an empty status, which means "unspecified".
+The shorthand `Yes` means `present-corrected`, so it is read only on the seven effects. An explicit `-` or `[unspecified]` in the cell
 stores no status as well. The export writes an empty status back as `-`, so a file that is imported
 and exported again reads the same. No file that imported before is refused now.
 
 Correction rows that were stored with `-` before the portal kept an empty status were changed to an
 empty status when the portal was upgraded. Importing the file again stores the status the cell
 says.
+
+## The bottom temperature method cannot be the surface
+
+`T_method_top` takes any temperature method, including `surface`. `T_method_bottom` takes any
+temperature method except `surface`, the members of the `top` and `bottom` collections of the
+`temperature-method` vocabulary. A file that gives `surface` for the bottom is refused with its row
+and column named, and the gradient's edit form refuses it the same way.
 
 ## Scores are calculated when the import ends
 

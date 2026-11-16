@@ -42,7 +42,7 @@ recompute, and every concept field holds a concept of its vocabulary.
           gradient times its conductivity
         - every site has exactly one parent, and coordinates are pairwise distinct
         - top is above bottom
-        - corrections satisfy `VALID_STATUS_FOR_TYPE`, and probe intervals have probe metadata
+        - corrections satisfy `HeatFlowCorrection.valid_statuses`, and probe intervals have probe metadata
         - every concept M2M is populated from its own vocabulary
         - `ghfdb_id` is set on all parents and children when `next_ghfdb_id` is given, and on
           none when it is `None`

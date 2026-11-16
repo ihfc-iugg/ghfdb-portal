@@ -358,17 +358,26 @@ A `ParentHeatFlow` aggregates multiple `HeatFlow` children. Each child has an `i
 
 **CorrectionTypeChoices**: IS, T, S, E, TOPO, PAL, SUR, CONV, HR
 
-**StatusChoices**: present-corrected, present-uncorrected, present-insignificant, unrecognized, considered-p, considered-T, considered-pT, not-considered, tilt-corrected, drift-corrected, uncorrected, corrected, unspecified
+**StatusChoices**: present-corrected, present-uncorrected, present-insignificant, unrecognized, considered-p, considered-T, considered-pT, not-considered, tilt-corrected, drift-corrected, uncorrected, corrected
 
-**Valid status per correction type** (enforced in `save()`):
+**Valid status per correction type** (enforced in `save()`): each type takes the statuses of its own
+collection in the IHFC `heat-flow-corrections` vocabulary.
 
-| CorrectionType | Valid StatusChoices |
-|----------------|--------------------|
-| IS (in-situ / probe) | present-corrected, present-uncorrected, unrecognized, not-considered, tilt-corrected, drift-corrected, unspecified |
-| T (temperature) | present-corrected, present-uncorrected, uncorrected, corrected, unrecognized, not-considered, unspecified |
-| S, E, TOPO, PAL, SUR, CONV, HR (environmental) | present-corrected, present-uncorrected, present-insignificant, unrecognized, considered-p, considered-T, considered-pT, not-considered, unspecified |
+| CorrectionType | Collection | Valid StatusChoices |
+|----------------|------------|--------------------|
+| IS (in-situ / probe) | `in-situ` | considered-p, considered-T, considered-pT, not-considered |
+| T (temperature) | `instrumental` | corrected, drift-corrected, tilt-corrected, uncorrected |
+| S | `sedimentation` | present-corrected, present-uncorrected, present-insignificant, unrecognized |
+| E | `erosion` | present-corrected, present-uncorrected, present-insignificant, unrecognized |
+| TOPO | `topography` | present-corrected, present-uncorrected, present-insignificant, unrecognized |
+| PAL | `paleoclimate` | present-corrected, present-uncorrected, present-insignificant, unrecognized |
+| SUR | `transient-surface-temperature` | present-corrected, present-uncorrected, present-insignificant, unrecognized |
+| CONV | `convection` | present-corrected, present-uncorrected, present-insignificant, unrecognized |
+| HR | `heat-refraction` | present-corrected, present-uncorrected, present-insignificant, unrecognized |
 
-**save() behaviour**: Raises `ValidationError` when `status` is not in the valid set for the given `correction_type`. A class-level `VALID_STATUS_FOR_TYPE` constant dict drives the lookup.
+The empty status stands for the vocabulary's `unspecified` and is valid for every type.
+
+**save() behaviour**: Raises `ValidationError` when `status` is not in the valid set for the given `correction_type`. `HeatFlowCorrection.valid_statuses(correction_type)` reads the type's collection.
 
 **Meta**:
 

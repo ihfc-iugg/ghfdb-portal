@@ -7,7 +7,7 @@ are built and tested.
 
 - **Models.** All six records already hold every field the field mapping table maps a template
   column to. A child's corrections are `HeatFlowCorrection` rows, one per type, with the statuses
-  valid for each type declared on the model (`VALID_STATUS_FOR_TYPE`, `ENVIRONMENTAL_VALID`). Probe
+  valid for each type read from the type's collection (`HeatFlowCorrection.valid_statuses`). Probe
   metadata is a `ProbeMetadata` row, one-to-one with the interval. Relevance is `is_relevant` on the
   child. A parent's `sample` is its site, a child's `sample` is its interval, and a gradient's and a
   conductivity's `sample` is the interval they were measured over.

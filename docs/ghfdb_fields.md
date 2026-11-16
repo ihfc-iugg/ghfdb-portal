@@ -112,18 +112,23 @@ Each flag is a separate `HeatFlowCorrection` record accessed via `heat_flow.corr
 
 ##### Valid status per disturbance type (FR-028)
 
-A status that is not meaningful for its disturbance type is rejected when the correction is saved.
-The valid combinations, derived from `HeatFlowCorrection.VALID_STATUS_FOR_TYPE` and
-`HeatFlowCorrection.ENVIRONMENTAL_VALID` in `project/heat_flow/models/child.py`, are:
+Each flag takes the statuses of its own collection in the IHFC `heat-flow-corrections`
+vocabulary, and a status outside that collection is rejected when the correction is saved.
+`HeatFlowCorrection.valid_statuses` reads the collection, so the table follows the vocabulary:
 
 | Disturbance type | Valid statuses |
 | --- | --- |
-| IS (In-situ conditions) | present-corrected, present-uncorrected, unrecognized, not-considered, tilt-corrected, drift-corrected |
-| T (Temperature) | present-corrected, present-uncorrected, uncorrected, corrected, unrecognized, not-considered |
-| S (Sedimentation/Subsidence), E (Erosion), TOPO (Topographic), PAL (Paleoclimatic), SUR (Surface/Climatic), CONV (Convection), HR (Heat Refraction) | present-corrected, present-uncorrected, present-insignificant, unrecognized, considered-p, considered-T, considered-pT, not-considered |
+| IS (In-situ conditions) | considered-p, considered-T, considered-pT, not-considered |
+| T (Temperature) | corrected, drift-corrected, tilt-corrected, uncorrected |
+| S (Sedimentation/Subsidence), E (Erosion), TOPO (Topographic), PAL (Paleoclimatic), SUR (Surface/Climatic), CONV (Convection), HR (Heat Refraction) | present-corrected, present-uncorrected, present-insignificant, unrecognized |
+
+The collections are `in-situ`, `instrumental`, `sedimentation`, `erosion`, `topography`,
+`paleoclimate`, `transient-surface-temperature`, `convection` and `heat-refraction`. The
+collections of the seven effects hold the same four statuses.
 
 A correction with no status is stored with an empty status, which is valid for every
-disturbance type. The published file writes it as `-`, and reads `-` or an empty cell as no status.
+disturbance type and stands for the vocabulary's `unspecified`. The published file writes it as
+`-`, and reads `-`, `[unspecified]` or an empty cell as no status.
 
 #### ProbeMetadata (marine probe instrument parameters — C06, C21–C23)
 

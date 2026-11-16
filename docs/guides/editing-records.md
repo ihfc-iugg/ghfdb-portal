@@ -274,8 +274,8 @@ top is refused by `HeatFlowInterval.clean` as a form error, and nothing is writt
 
 The child's form. Its nine correction fields are named `correction_<type>`, one for each member of
 `HeatFlowCorrection.CorrectionTypeChoices`. Each is a `ChoiceField` that offers an empty entry and
-the statuses `HeatFlowCorrection.VALID_STATUS_FOR_TYPE` (or `ENVIRONMENTAL_VALID`) gives that
-type. `thermal_gradient` and `thermal_conductivity` are FairDM `MeasurementChoiceField`s with
+the statuses `HeatFlowCorrection.valid_statuses` gives that type, which are the members of the
+type's collection in the IHFC `heat-flow-corrections` vocabulary. `thermal_gradient` and `thermal_conductivity` are FairDM `MeasurementChoiceField`s with
 `scope="edit"`. They cannot be narrowed to an interval, so `clean_thermal_gradient` and
 `clean_thermal_conductivity` refuse a measurement whose interval is not the child's, with the code
 `other_interval`.
@@ -288,7 +288,12 @@ the request from the form, and built without one they accept no record.
 The gradient's form. `measured_pairs` holds two pairs, `("value", "uncertainty")` and
 `("corrected_value", "corrected_uncertainty")`, so the form carries two unit choices,
 `value_unit` and `corrected_value_unit`, and each pair is converted with its own. The four
-temperature method and correction fields are `ConceptTextField`s. The form offers neither `score`,
+temperature method and correction fields are `ConceptTextField`s. `method_top` and `method_bottom`
+are limited to the `top` and `bottom` collections of the `temperature-method` vocabulary through
+`FIELD_COLLECTIONS` in `project/heat_flow/forms.py`, so the bottom does not accept `surface`. The
+model fields do not declare the collection, because a collection on a concept field makes the
+vocabulary package query the database while FairDM builds its filter sets at start-up, and
+`migrate` then fails on an empty database. The form offers neither `score`,
 `score_missing` nor `quality_scheme`, and no dataset or sample. The score receivers in
 `project/heat_flow/signals.py` refresh the gradient, its children and their parents when the form
 saves.

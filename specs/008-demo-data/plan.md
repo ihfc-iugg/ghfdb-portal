@@ -116,7 +116,7 @@ The values are drawn as research R3's table sets out, each rounded to the field'
 
 Once a dataset's records exist, `build()` writes the rest in bulk:
 
-- **Corrections**: each child gets corrections from `VALID_STATUS_FOR_TYPE`, and probe children
+- **Corrections**: each child gets corrections from `HeatFlowCorrection.valid_statuses`, and probe children
   always get a `T` correction. They are written with one `HeatFlowCorrection.objects.bulk_create`
   per dataset.
 - **Probe metadata**: probe intervals get `ProbeMetadata`, written with `bulk_create`.
