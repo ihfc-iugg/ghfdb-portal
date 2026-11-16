@@ -683,7 +683,7 @@ class TestHeatFlowSerializer:
         HeatFlowCorrectionFactory(
             heat_flow=child,
             correction_type=CORRECTION_TYPES.IS,
-            status=CORRECTION_STATUSES.PRESENT_CORRECTED,
+            status=CORRECTION_STATUSES.CONSIDERED_PT,
             comment="Corrected for in-situ conditions.",
         )
         HeatFlowCorrectionFactory(
@@ -718,8 +718,8 @@ class TestHeatFlowSerializer:
                 "label": CORRECTION_TYPES.IS.label,
             },
             "status": {
-                "name": CORRECTION_STATUSES.PRESENT_CORRECTED.value,
-                "label": CORRECTION_STATUSES.PRESENT_CORRECTED.label,
+                "name": CORRECTION_STATUSES.CONSIDERED_PT.value,
+                "label": CORRECTION_STATUSES.CONSIDERED_PT.label,
             },
             "comment": "Corrected for in-situ conditions.",
         }
@@ -735,7 +735,7 @@ class TestHeatFlowSerializer:
             for entry in record["corrections"]
         }
         assert statuses == {
-            CORRECTION_TYPES.IS.value: CORRECTION_STATUSES.PRESENT_CORRECTED.value,
+            CORRECTION_TYPES.IS.value: CORRECTION_STATUSES.CONSIDERED_PT.value,
             CORRECTION_TYPES.T.value: CORRECTION_STATUSES.NOT_CORRECTED.value,
         }
 

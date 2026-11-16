@@ -500,39 +500,51 @@ class HeatFlowCorrection(django_models.Model):
             models.Index(fields=["status"]),
         ]
 
-    # Valid status values per correction type.
-    VALID_STATUS_FOR_TYPE: dict[str, set[str]] = {
-        "IS": {
-            "present-corrected",
-            "present-uncorrected",
-            "unrecognized",
-            "not-considered",
-            "tilt-corrected",
-            "drift-corrected",
-        },
-        "T": {
-            "present-corrected",
-            "present-uncorrected",
-            "uncorrected",
-            "corrected",
-            "unrecognized",
-            "not-considered",
-        },
+    #: The collection of the heat-flow-corrections vocabulary each flag takes its statuses from.
+    STATUS_COLLECTIONS: dict[str, str] = {
+        "IS": "in-situ",
+        "T": "instrumental",
+        "S": "sedimentation",
+        "E": "erosion",
+        "TOPO": "topography",
+        "PAL": "paleoclimate",
+        "SUR": "transient-surface-temperature",
+        "CONV": "convection",
+        "HR": "heat-refraction",
     }
-    ENVIRONMENTAL_VALID: set[str] = {
-        "present-corrected",
-        "present-uncorrected",
-        "present-insignificant",
-        "unrecognized",
-        "considered-p",
-        "considered-T",
-        "considered-pT",
-        "not-considered",
-    }
-    # S, E, TOPO, PAL, SUR, CONV, HR → ENVIRONMENTAL_VALID
-    _ENVIRONMENTAL_TYPES: frozenset[str] = frozenset(
-        {"S", "E", "TOPO", "PAL", "SUR", "CONV", "HR"}
-    )
+
+    @classmethod
+    def status_collection(cls, correction_type: str) -> str:
+        """Return the address of the collection a correction type takes its statuses from.
+
+        Args:
+            correction_type: One of ``CorrectionTypeChoices``.
+
+        Returns:
+            The collection's address in the heat-flow-corrections vocabulary.
+        """
+        return vocabularies.term(
+            vocabularies.HEAT_FLOW_CORRECTION, cls.STATUS_COLLECTIONS[correction_type]
+        )
+
+    @classmethod
+    def valid_statuses(cls, correction_type: str) -> set[str]:
+        """Return the statuses a correction type accepts.
+
+        The collection's ``unspecified`` is left out: an empty status stands for it.
+
+        Args:
+            correction_type: One of ``CorrectionTypeChoices``.
+
+        Returns:
+            The identifiers of the members of the type's collection.
+        """
+        members = vocabularies.member_uris(
+            vocabularies.HEAT_FLOW_CORRECTION, cls.status_collection(correction_type)
+        )
+        return {address.rsplit("/", 1)[-1] for address in members} - {
+            vocabularies.UNSPECIFIED
+        }
 
     def __str__(self):
         """Return the correction type's label and its status."""
@@ -544,12 +556,11 @@ class HeatFlowCorrection(django_models.Model):
 
         An empty status, no status chosen, is valid for every type.
         """
-        valid: set[str] | None = None
-        if self.correction_type in self.VALID_STATUS_FOR_TYPE:
-            valid = self.VALID_STATUS_FOR_TYPE[self.correction_type]
-        elif self.correction_type in self._ENVIRONMENTAL_TYPES:
-            valid = self.ENVIRONMENTAL_VALID
-        if valid is not None and self.status and self.status not in valid:
+        if (
+            self.status
+            and self.correction_type in self.STATUS_COLLECTIONS
+            and self.status not in self.valid_statuses(self.correction_type)
+        ):
             raise ValidationError(
                 _(
                     f"Status '{self.status}' is not valid for correction type '{self.correction_type}'."

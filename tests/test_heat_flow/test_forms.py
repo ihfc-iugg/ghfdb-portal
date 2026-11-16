@@ -943,6 +943,7 @@ class TestHeatFlowForm:
 
         assert not withheld & set(HeatFlowForm().fields)
 
+    @pytest.mark.django_db
     @pytest.mark.parametrize("code", CORRECTION_CODES)
     def test_each_correction_offers_an_empty_entry_and_the_statuses_valid_for_it(
         self, code
@@ -950,9 +951,7 @@ class TestHeatFlowForm:
         from heat_flow.forms import HeatFlowForm
         from heat_flow.models import HeatFlowCorrection
 
-        valid = HeatFlowCorrection.VALID_STATUS_FOR_TYPE.get(
-            code, HeatFlowCorrection.ENVIRONMENTAL_VALID
-        )
+        valid = HeatFlowCorrection.valid_statuses(code)
 
         offered = [
             value
@@ -1114,7 +1113,7 @@ class TestHeatFlowForm:
         self, child_records, editor
     ):
         child = child_records["child"]
-        form = self.build(child_records, editor, correction_PAL="considered-T")
+        form = self.build(child_records, editor, correction_PAL="present-uncorrected")
         assert form.is_valid(), form.errors
 
         saved = form.save(commit=False)
@@ -1123,7 +1122,9 @@ class TestHeatFlowForm:
         saved.save()
         form.save_m2m()
         assert child.corrections.count() == 9
-        assert child.corrections.get(correction_type="PAL").status == "considered-T"
+        assert (
+            child.corrections.get(correction_type="PAL").status == "present-uncorrected"
+        )
 
 
 class TestHeatFlowEditPage:
@@ -1346,6 +1347,16 @@ class TestThermalGradientForm:
         attempt_to_save(form)
         gradient.refresh_from_db()
         assert gradient.value == before
+
+    def test_a_bottom_method_cannot_be_the_surface(self, scored_records):
+        form = self.build(scored_records, method_bottom="surface")
+
+        assert form.has_error("method_bottom", code="unknown_term")
+
+    def test_a_top_method_can_be_the_surface(self, scored_records):
+        form = self.build(scored_records, method_top="surface")
+
+        assert not form.has_error("method_top")
 
     def test_the_two_measured_pairs_convert_units_independently(
         self, scored_records, monkeypatch

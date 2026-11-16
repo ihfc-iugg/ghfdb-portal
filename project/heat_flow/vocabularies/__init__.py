@@ -44,9 +44,15 @@ CONDUCTIVITY_SATURATION = ihfc_vocabulary("conductivity-saturation")
 CONDUCTIVITY_PT_CONDITIONS = ihfc_vocabulary("conductivity-conditions")
 CONDUCTIVITY_STRATEGY = ihfc_vocabulary("conductivity-strategy")
 CONDUCTIVITY_PT_FUNCTION = ihfc_vocabulary("conductivity-pt-function")
+HEAT_FLOW_CORRECTION = ihfc_vocabulary("heat-flow-corrections")
 
 #: The identifier of the concept a vocabulary offers for a value nobody recorded.
 UNSPECIFIED = "unspecified"
+
+#: The collections of temperature methods that may be recorded at the top and at the bottom of
+#: an interval. The bottom does not accept the surface.
+TEMPERATURE_METHOD_TOP = f"{TEMPERATURE_METHOD.uri}/top"
+TEMPERATURE_METHOD_BOTTOM = f"{TEMPERATURE_METHOD.uri}/bottom"
 
 
 def term(vocabulary: Vocabulary, identifier: str) -> str:
@@ -74,18 +80,37 @@ def identifier(concept: Record) -> str:
     return concept.uri.rsplit("/", 1)[-1]
 
 
-def concepts(vocabulary: Vocabulary):
+def member_uris(vocabulary: Vocabulary, collection: str) -> list[str]:
+    """Return the addresses of a collection's members.
+
+    Args:
+        vocabulary: The vocabulary the collection belongs to.
+        collection: The collection's address.
+
+    Returns:
+        The members' addresses. A collection that is not loaded has none.
+    """
+    held = Record.objects.filter(
+        scheme__uri=vocabulary.uri, uri=collection, type__in=Record.COLLECTION_TYPES
+    ).first()
+    return held.member_uris() if held else []
+
+
+def concepts(vocabulary: Vocabulary, collection: str | None = None):
     """Return the concepts the portal has loaded for a vocabulary.
 
     Args:
         vocabulary: The vocabulary.
+        collection: The address of one of its collections, to keep only the members. A
+            collection that is not loaded has no members.
 
     Returns:
         A queryset of its concepts.
     """
-    return Record.objects.filter(
-        scheme__uri=vocabulary.uri, type=Record.Type.CONCEPT
-    ).order_by("pref_label")
+    found = Record.objects.filter(scheme__uri=vocabulary.uri, type=Record.Type.CONCEPT)
+    if collection is not None:
+        found = found.filter(uri__in=member_uris(vocabulary, collection))
+    return found.order_by("pref_label")
 
 
 def choices(vocabulary: Vocabulary) -> list[tuple[str, str]]:
@@ -122,7 +147,7 @@ def normalize_vocab_token(raw: str) -> str:
     return raw.strip().strip("[]").strip().lower()
 
 
-def lookup(vocabulary: Vocabulary) -> dict[str, Record]:
+def lookup(vocabulary: Vocabulary, collection: str | None = None) -> dict[str, Record]:
     """Map every name of a vocabulary's concepts, in lower case, to the concept.
 
     A concept is known by its label, its identifier and the hidden labels the upload
@@ -131,11 +156,12 @@ def lookup(vocabulary: Vocabulary) -> dict[str, Record]:
 
     Args:
         vocabulary: The vocabulary.
+        collection: The address of one of its collections, to name only the members.
 
     Returns:
         The concepts by lowercased hidden label, label and identifier.
     """
-    found = list(concepts(vocabulary))
+    found = list(concepts(vocabulary, collection))
     by_hidden = {
         normalize_vocab_token(entry["@value"]): concept
         for concept in found
@@ -159,7 +185,9 @@ def slug(vocabulary: Vocabulary) -> str:
     return vocabulary.uri.rstrip("/").rsplit("/", 1)[-1]
 
 
-def resolve_term(vocabulary: Vocabulary, text) -> Record | None:
+def resolve_term(
+    vocabulary: Vocabulary, text, collection: str | None = None
+) -> Record | None:
     """Read one vocabulary term from the text a person or a file wrote for it.
 
     A label or an identifier is accepted, in any case, with or without square brackets.
@@ -167,6 +195,7 @@ def resolve_term(vocabulary: Vocabulary, text) -> Record | None:
     Args:
         vocabulary: The vocabulary.
         text: The text to read.
+        collection: The address of one of its collections, to accept only the members.
 
     Returns:
         The concept, or ``None`` for blank text and for ``unspecified``.
@@ -177,7 +206,7 @@ def resolve_term(vocabulary: Vocabulary, text) -> Record | None:
     token = normalize_vocab_token(text or "")
     if token in ("", UNSPECIFIED):
         return None
-    terms = lookup(vocabulary)
+    terms = lookup(vocabulary, collection)
     concept = terms.get(token)
     if concept is None:
         raise ValueError(
@@ -188,14 +217,15 @@ def resolve_term(vocabulary: Vocabulary, text) -> Record | None:
                 "val": text,
                 "vocab": slug(vocabulary),
                 "opts": sorted(
-                    concept.display_label().lower() for concept in concepts(vocabulary)
+                    concept.display_label().lower()
+                    for concept in concepts(vocabulary, collection)
                 ),
             }
         )
     return concept
 
 
-def resolve_terms(vocabulary: Vocabulary, text):
+def resolve_terms(vocabulary: Vocabulary, text, collection: str | None = None):
     """Read several vocabulary terms from semicolon-separated text.
 
     Each token is read as ``resolve_term`` reads one, except that ``unspecified`` names the
@@ -204,6 +234,7 @@ def resolve_terms(vocabulary: Vocabulary, text):
     Args:
         vocabulary: The vocabulary.
         text: The text to read.
+        collection: The address of one of its collections, to accept only the members.
 
     Returns:
         The vocabulary's concepts the tokens name, as a queryset. Blank text gives none.
@@ -211,7 +242,7 @@ def resolve_terms(vocabulary: Vocabulary, text):
     Raises:
         ValueError: If any token names no term of the vocabulary; the message names each.
     """
-    terms = lookup(vocabulary)
+    terms = lookup(vocabulary, collection)
     tokens = [token.strip() for token in str(text or "").split(";") if token.strip()]
     matched, unknown = [], []
     for token in tokens:
@@ -227,4 +258,4 @@ def resolve_terms(vocabulary: Vocabulary, text):
             )
             % {"vocab": slug(vocabulary), "invalid": unknown}
         )
-    return concepts(vocabulary).filter(uri__in=matched)
+    return concepts(vocabulary, collection).filter(uri__in=matched)

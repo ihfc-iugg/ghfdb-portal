@@ -635,6 +635,21 @@ class TestControlledVocabularyDecides:
         assert not HeatFlow.objects.exists()
         assert not IntervalConductivity.objects.exists()
 
+    def test_a_bottom_temperature_method_of_surface_is_refused(self, dataset):
+        from heat_flow.models import HeatFlow
+
+        from project.ghfdb.importers import import_ghfdb_template
+
+        row1 = dict(ROW)
+        row1["T_grad_mean"] = 25
+        row1["T_method_bottom"] = "surface"
+
+        outcome = import_ghfdb_template(make_dataset(row1), dataset)
+
+        assert outcome.has_errors()
+        assert "T_method_bottom" in str(outcome.child.row_errors()[0][1][0].error)
+        assert not HeatFlow.objects.exists()
+
     def test_an_unrecognised_q_method_value_names_its_column(self, dataset):
         # ``q_method`` is set in ``after_save_instance`` by a direct
         # ``MultiConceptWidget.clean()`` call rather than through ``set_m2m_relations``.

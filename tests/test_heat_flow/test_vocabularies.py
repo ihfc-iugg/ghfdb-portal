@@ -198,6 +198,24 @@ class TestResolveTerms:
         assert sorted(by_label.values_list("uri", flat=True)) == uris
         assert sorted(by_key.values_list("uri", flat=True)) == uris
 
+    def test_a_collection_limits_the_terms_a_text_can_name(self, db):
+        from heat_flow.vocabularies import (
+            TEMPERATURE_METHOD,
+            TEMPERATURE_METHOD_BOTTOM,
+            TEMPERATURE_METHOD_TOP,
+            resolve_terms,
+        )
+
+        as_top = resolve_terms(
+            TEMPERATURE_METHOD, "surface", collection=TEMPERATURE_METHOD_TOP
+        )
+
+        assert [concept.uri.rsplit("/", 1)[-1] for concept in as_top] == ["surface"]
+        with pytest.raises(ValueError):
+            resolve_terms(
+                TEMPERATURE_METHOD, "surface", collection=TEMPERATURE_METHOD_BOTTOM
+            )
+
     def test_blank_gives_no_concepts(self, db):
         from heat_flow.vocabularies import EXPLORATION_PURPOSE, resolve_terms
 

@@ -502,6 +502,44 @@ class TestRoute:
         assert route(None) is None
 
 
+@pytest.mark.django_db
+class TestRulesAgreeWithThePublishedCollections:
+    """Rules written out in the scheme stay in line with the vocabulary's own groups.
+
+    Scoring reads no collection, because that would cost a query for every scored record.
+    So where the scheme's own list is the very membership of a collection, this fails the
+    day the vocabulary moves a member.
+    """
+
+    @staticmethod
+    def members(vocabulary, collection):
+        addresses = vocabularies.member_uris(
+            vocabulary, vocabularies.term(vocabulary, collection)
+        )
+        return {address.rsplit("/", 1)[-1] for address in addresses}
+
+    def test_the_probe_routes_are_the_probe_sensing_methods(self):
+        from heat_flow.quality import ROUTES, ProbeRules
+
+        routed = {name for name, rules in ROUTES.items() if rules is ProbeRules}
+
+        assert routed == self.members(vocabularies.EXPLORATION_METHOD, "probe-sensing")
+
+    def test_every_excavation_method_takes_the_borehole_route(self):
+        from heat_flow.quality import ROUTES, BoreholeRules
+
+        excavation = self.members(vocabularies.EXPLORATION_METHOD, "excavation")
+
+        assert {ROUTES[name] for name in excavation} == {BoreholeRules}
+
+    def test_the_laboratory_methods_are_the_published_laboratory_group(self):
+        from heat_flow.quality import LAB_METHODS
+
+        assert LAB_METHODS == self.members(
+            vocabularies.CONDUCTIVITY_METHOD, "laboratory"
+        )
+
+
 class TestConformance:
     """The scheme's output against the toolbox's own, case by case (research R3)."""
 

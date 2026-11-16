@@ -196,11 +196,8 @@ class TestDemoGraph:
 
     def test_corrections_satisfy_the_status_rules_for_their_type(self, graph):
         valid = {
-            **HeatFlowCorrection.VALID_STATUS_FOR_TYPE,
-            **dict.fromkeys(
-                HeatFlowCorrection._ENVIRONMENTAL_TYPES,
-                HeatFlowCorrection.ENVIRONMENTAL_VALID,
-            ),
+            code: HeatFlowCorrection.valid_statuses(code)
+            for code in HeatFlowCorrection.CorrectionTypeChoices.values
         }
         corrections = HeatFlowCorrection.objects.all()
 

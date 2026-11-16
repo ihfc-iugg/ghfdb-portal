@@ -44,7 +44,7 @@ CHILD_ROW = {
     "relevant_child": "Yes",
     "c_comment": "",
     "corr_IS_flag": "No",
-    "corr_T_flag": "Yes",
+    "corr_T_flag": "corrected",
     "corr_S_flag": "No",
     "corr_E_flag": "No",
     "corr_TOPO_flag": "No",
@@ -881,7 +881,7 @@ class TestGHFDBChildSubMeasurementsPerDetermination:
         row_a["q_bottom"] = "500"
         row_a["T_grad_mean"] = "20.0"
         row_a["tc_mean"] = "2.0"
-        row_a["corr_T_flag"] = "Yes"
+        row_a["corr_T_flag"] = "corrected"
         row_a["corr_S_flag"] = "No"
         row_a["probe_penetration"] = "3.0"
 
@@ -1247,6 +1247,17 @@ class TestGHFDBChildCorrectionLabels:
         statuses = self.import_row(dataset, corr_T_flag="[Present not significant]")
 
         assert statuses["T"] == ""
+
+    def test_a_label_of_another_flags_collection_stores_unspecified(self, dataset):
+        # "Present and corrected" belongs to the effects, not to the in-situ flag.
+        statuses = self.import_row(dataset, corr_IS_flag="[Present and corrected]")
+
+        assert statuses["IS"] == ""
+
+    def test_a_label_of_the_flags_own_collection_stores_its_status(self, dataset):
+        statuses = self.import_row(dataset, corr_T_flag="[Tilt corrected]")
+
+        assert statuses["T"] == "tilt-corrected"
 
     def test_keys_and_yes_no_shorthands_still_work(self, dataset):
         statuses = self.import_row(

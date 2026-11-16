@@ -342,48 +342,81 @@ class TestHeatFlowCorrection:
         HeatFlowCorrection.objects.create(
             heat_flow=child_fixture,
             correction_type="IS",
-            status="present-corrected",
+            status="considered-pT",
         )
         HeatFlowCorrection.objects.create(
             heat_flow=child_fixture,
             correction_type="T",
-            status="not-considered",
+            status="tilt-corrected",
         )
         assert child_fixture.corrections.count() == 2
 
     @pytest.mark.django_db
-    def test_correction_valid_status_accepted(self, child_fixture):
+    @pytest.mark.parametrize(
+        ("correction_type", "status"),
+        [
+            ("IS", "considered-pT"),
+            ("T", "tilt-corrected"),
+            ("S", "present-insignificant"),
+            ("E", "present-corrected"),
+            ("TOPO", "present-uncorrected"),
+            ("PAL", "unrecognized"),
+            ("SUR", "present-corrected"),
+            ("CONV", "present-corrected"),
+            ("HR", "present-corrected"),
+        ],
+    )
+    def test_a_status_in_the_flags_own_collection_is_accepted(
+        self, child_fixture, correction_type, status
+    ):
         from heat_flow.models import HeatFlowCorrection
 
         corr = HeatFlowCorrection(
-            heat_flow=child_fixture, correction_type="IS", status="tilt-corrected"
+            heat_flow=child_fixture, correction_type=correction_type, status=status
         )
         corr.save()  # must not raise
         assert corr.pk is not None
 
     @pytest.mark.django_db
-    def test_correction_invalid_status_rejected(self, child_fixture):
-        # Invalid status/type combinations raise ValidationError from save()
-        # (FS-001 FR-021): - IS + considered_p (considered_p only valid for environmental
-        # types) - S + tilt_corrected (tilt_corrected only valid for IS) - T +.
+    @pytest.mark.parametrize(
+        ("correction_type", "status"),
+        [
+            ("IS", "present-corrected"),
+            ("T", "present-insignificant"),
+            ("S", "tilt-corrected"),
+            ("E", "considered-pT"),
+            ("TOPO", "uncorrected"),
+            ("PAL", "drift-corrected"),
+            ("SUR", "not-considered"),
+            ("CONV", "corrected"),
+            ("HR", "considered-T"),
+        ],
+    )
+    def test_a_status_outside_the_flags_own_collection_is_refused(
+        self, child_fixture, correction_type, status
+    ):
+        # FS-001 FR-021: each flag takes the statuses of its own collection of the
+        # heat-flow-corrections vocabulary and no others.
         from heat_flow.models import HeatFlowCorrection
 
         with pytest.raises(ValidationError):
             HeatFlowCorrection(
-                heat_flow=child_fixture, correction_type="IS", status="considered-p"
+                heat_flow=child_fixture, correction_type=correction_type, status=status
             ).save()
 
-        with pytest.raises(ValidationError):
-            HeatFlowCorrection(
-                heat_flow=child_fixture, correction_type="S", status="tilt-corrected"
-            ).save()
+    @pytest.mark.django_db
+    def test_the_status_choices_are_the_statuses_the_collections_hold(self):
+        from heat_flow.models import HeatFlowCorrection
 
-        with pytest.raises(ValidationError):
-            HeatFlowCorrection(
-                heat_flow=child_fixture,
-                correction_type="T",
-                status="present-insignificant",
-            ).save()
+        offered = set(HeatFlowCorrection.StatusChoices.values)
+
+        held = set().union(
+            *(
+                HeatFlowCorrection.valid_statuses(code)
+                for code in HeatFlowCorrection.CorrectionTypeChoices.values
+            )
+        )
+        assert offered == held
 
     @pytest.mark.django_db
     def test_correction_unspecified_always_valid(self, child_fixture):
@@ -431,7 +464,7 @@ class TestHeatFlowCorrection:
         from heat_flow.models import HeatFlowCorrection
 
         HeatFlowCorrection.objects.create(
-            heat_flow=child_fixture, correction_type="IS", status="present-corrected"
+            heat_flow=child_fixture, correction_type="IS", status="considered-pT"
         )
         with pytest.raises(IntegrityError):
             HeatFlowCorrection.objects.create(
@@ -770,6 +803,7 @@ class TestCorrectionStatusDocumentation:
                 documented[code] = statuses
         return documented
 
+    @pytest.mark.django_db
     def test_documented_statuses_match_the_enforced_ones(self):
         from heat_flow.models import HeatFlowCorrection
 
@@ -777,9 +811,7 @@ class TestCorrectionStatusDocumentation:
         assert documented, "No documented status table found under the heading."
 
         for code, _label in HeatFlowCorrection.CorrectionTypeChoices.choices:
-            enforced = HeatFlowCorrection.VALID_STATUS_FOR_TYPE.get(code)
-            if enforced is None:
-                enforced = HeatFlowCorrection.ENVIRONMENTAL_VALID
+            enforced = HeatFlowCorrection.valid_statuses(code)
             assert code in documented, f"{code} is enforced and not documented."
             assert documented[code] == set(enforced), (
                 f"Documented statuses for {code} do not match the code.\n"
@@ -1217,9 +1249,9 @@ class TestChildScores:
         )
         assert self.reload(child).M_score == "M1"
 
-        correction.status = "present-corrected"
+        correction.status = "considered-p"
         correction.save()
-        # Present and corrected is neither of the agreeing statuses for a corrected pT.
+        # Pressure considered alone is not the agreeing status for a corrected pT.
         assert self.reload(child).TC_score == pytest.approx(0.8)
 
     @pytest.mark.django_db

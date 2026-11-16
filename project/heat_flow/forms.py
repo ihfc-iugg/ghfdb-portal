@@ -5,6 +5,7 @@ filled the template in finds the same things in the same order.
 """
 
 from decimal import Decimal
+from functools import partial
 
 from controlled_vocabularies.fields import ConceptField, MultiConceptField
 from crispy_forms.helper import FormHelper
@@ -39,6 +40,8 @@ from .models import (
 from .models.child import HeatFlowCorrection, ProbeMetadata
 from .signals import Recalculation
 from .vocabularies import (
+    TEMPERATURE_METHOD_BOTTOM,
+    TEMPERATURE_METHOD_TOP,
     UNSPECIFIED,
     lookup,
     normalize_vocab_token,
@@ -56,12 +59,14 @@ class ConceptTextField(forms.CharField):
 
     Args:
         model_field: The concept field the text stands for.
+        collection: The address of the collection of the vocabulary the terms are limited to.
         **kwargs: Passed to ``CharField``.
     """
 
-    def __init__(self, model_field, **kwargs):
+    def __init__(self, model_field, collection=None, **kwargs):
         self.many = isinstance(model_field, MultiConceptField)
         self.vocabulary = model_field.vocabulary[0]
+        self.collection = collection
         kwargs.setdefault("required", not model_field.blank)
         kwargs.setdefault("label", capfirst(model_field.verbose_name))
         kwargs.setdefault("help_text", model_field.help_text)
@@ -83,20 +88,31 @@ class ConceptTextField(forms.CharField):
             return self.stored
         try:
             if self.many:
-                return resolve_terms(self.vocabulary, value)
+                return resolve_terms(self.vocabulary, value, self.collection)
             if normalize_vocab_token(value) == UNSPECIFIED:
-                held = lookup(self.vocabulary).get(UNSPECIFIED)
+                held = lookup(self.vocabulary, self.collection).get(UNSPECIFIED)
                 if held is not None:
                     return held
-            return resolve_term(self.vocabulary, value)
+            return resolve_term(self.vocabulary, value, self.collection)
         except ValueError as error:
             raise forms.ValidationError(str(error), code="unknown_term") from None
+
+
+#: The collection of its vocabulary a field takes its terms from. The model field does not
+#: declare it, because a ``collection`` on a concept field makes the vocabulary package query the
+#: database while FairDM builds its filter sets at start-up, and ``migrate`` fails on an empty
+#: database. The upload reads the same collections.
+FIELD_COLLECTIONS = {
+    (ThermalGradient, "method_top"): TEMPERATURE_METHOD_TOP,
+    (ThermalGradient, "method_bottom"): TEMPERATURE_METHOD_BOTTOM,
+}
 
 
 def heat_flow_formfield(db_field, **kwargs):
     """Draw a vocabulary field as text and any other multiple choice as a counted control."""
     if isinstance(db_field, (ConceptField, MultiConceptField)):
-        return ConceptTextField(db_field, **kwargs)
+        collection = FIELD_COLLECTIONS.get((db_field.model, db_field.name))
+        return ConceptTextField(db_field, collection=collection, **kwargs)
     if isinstance(db_field, models.ManyToManyField):
         kwargs.setdefault("widget", TomSelectMultiple(counted=True))
     return db_field.formfield(**kwargs)
@@ -503,23 +519,34 @@ class HeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
             stored = {
                 c.correction_type: c.status for c in self.instance.corrections.all()
             }
-        labels = dict(HeatFlowCorrection.StatusChoices.choices)
         for code, label in HeatFlowCorrection.CorrectionTypeChoices.choices:
-            valid = HeatFlowCorrection.VALID_STATUS_FOR_TYPE.get(
-                code, HeatFlowCorrection.ENVIRONMENTAL_VALID
-            )
             self.fields[f"correction_{code}"] = forms.ChoiceField(
                 label=label,
-                choices=[("", _("Unspecified"))]
-                + [
-                    (value, labels[value])
-                    for value in HeatFlowCorrection.StatusChoices.values
-                    if value in valid
-                ],
+                choices=partial(self.status_choices, code),
                 initial=stored.get(code, ""),
                 required=False,
             )
         self.helper.layout = self.get_layout()
+
+    @staticmethod
+    def status_choices(code):
+        """Return the empty entry and the statuses of the flag's own collection.
+
+        Read when the field is rendered or validated, so building the form reads no vocabulary.
+
+        Args:
+            code: The correction type.
+
+        Returns:
+            The ``(value, label)`` choices.
+        """
+        labels = dict(HeatFlowCorrection.StatusChoices.choices)
+        valid = HeatFlowCorrection.valid_statuses(code)
+        return [("", _("Unspecified"))] + [
+            (value, labels[value])
+            for value in HeatFlowCorrection.StatusChoices.values
+            if value in valid
+        ]
 
     def clean_thermal_gradient(self):
         """Refuse a gradient measured over another depth interval."""
