@@ -373,8 +373,8 @@ class BoreholeRules:
 
     GATE_SCORE = 0.1
 
-    # Temperature method groups. HT-FT-equilibrium and HT-FT-perturbed stand for the toolbox's
-    # HT-FTeq and HT-FTpert, which its lists misspell.
+    # Temperature method groups. HT-FT-equilibrium and HT-FT-perturbed stand for the
+    # toolbox's HT-FTeq and HT-FTpert, which its lists misspell.
     CONTINUOUS = (
         (
             0.1,

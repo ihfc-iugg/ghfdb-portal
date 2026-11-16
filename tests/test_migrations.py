@@ -161,10 +161,10 @@ class TestMigrationsApplyToAnEmptyDatabase:
 
 
 class TestIhfcIdentifierMigration:
-    # The published vocabularies renamed their concepts, so every stored address and every
-    # stored correction status has to follow. The test database holds the published
-    # concepts, so each test first turns the few concepts it uses back into the ones the
-    # release before held, then stores data under those names.
+    # The published vocabularies renamed their concepts, so every stored address and
+    # every stored correction status has to follow. The test database holds the
+    # published concepts, so each test first turns the few concepts it uses back into
+    # the ones the release before held, then stores data under those names.
 
     MODULE = "project.heat_flow.migrations.0009_rename_ihfc_concept_identifiers"
 
@@ -179,7 +179,7 @@ class TestIhfcIdentifierMigration:
         return f"{IHFC}/{slug}/{identifier}"
 
     def release_before(self, *renamed):
-        """Turn the published concepts named back into the ones the release before held."""
+        """Turn the named published concepts back into the ones held before."""
         from controlled_vocabularies.models import Record
 
         for slug, old, new in renamed:
@@ -195,6 +195,7 @@ class TestIhfcIdentifierMigration:
     @pytest.mark.django_db
     def test_a_stored_single_valued_address_is_rewritten(self):
         from heat_flow.models import HeatFlowSite
+
         from tests.factories import HeatFlowSiteFactory
 
         self.release_before(self.ONSHORE_MARINE)
@@ -211,6 +212,7 @@ class TestIhfcIdentifierMigration:
     @pytest.mark.django_db
     def test_stored_many_valued_addresses_are_rewritten(self):
         from controlled_vocabularies.models import Record
+
         from tests.factories import ThermalGradientFactory
 
         self.release_before(self.LOG_EQUILIBRIUM, self.HT_FT)
@@ -234,6 +236,7 @@ class TestIhfcIdentifierMigration:
     @pytest.mark.django_db
     def test_a_stored_correction_status_is_rewritten(self):
         from heat_flow.models import HeatFlowCorrection
+
         from tests.factories import HeatFlowCorrectionFactory
 
         correction = HeatFlowCorrectionFactory(correction_type="S")
@@ -251,6 +254,7 @@ class TestIhfcIdentifierMigration:
     def test_an_address_that_was_not_renamed_is_left_as_it_is(self):
         from heat_flow.models import HeatFlowSite
         from heat_flow.vocabularies import EXPLORATION_METHOD, term
+
         from tests.factories import HeatFlowSiteFactory
 
         drilling = term(EXPLORATION_METHOD, "drilling")
@@ -269,6 +273,7 @@ class TestIhfcIdentifierMigration:
         # The portal migrates before it loads the vocabularies, so the new concept does
         # not exist yet when a row is pointed at it.
         from controlled_vocabularies.models import Record
+
         from tests.factories import HeatFlowSiteFactory
 
         self.release_before(self.ONSHORE_MARINE)
@@ -303,6 +308,7 @@ class TestIhfcIdentifierMigration:
     @pytest.mark.django_db
     def test_reversing_restores_the_addresses_the_release_before_held(self):
         from heat_flow.models import HeatFlowSite
+
         from tests.factories import HeatFlowSiteFactory
 
         self.release_before(self.ONSHORE_MARINE)

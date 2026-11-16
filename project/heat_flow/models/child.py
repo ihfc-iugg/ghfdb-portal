@@ -500,7 +500,8 @@ class HeatFlowCorrection(django_models.Model):
             models.Index(fields=["status"]),
         ]
 
-    #: The collection of the heat-flow-corrections vocabulary each flag takes its statuses from.
+    #: The collection of the heat-flow-corrections vocabulary each flag takes its
+    #: statuses from.
     STATUS_COLLECTIONS: dict[str, str] = {
         "IS": "in-situ",
         "T": "instrumental",
@@ -515,7 +516,7 @@ class HeatFlowCorrection(django_models.Model):
 
     @classmethod
     def status_collection(cls, correction_type: str) -> str:
-        """Return the address of the collection a correction type takes its statuses from.
+        """Return the address of the collection a correction type takes statuses from.
 
         Args:
             correction_type: One of ``CorrectionTypeChoices``.

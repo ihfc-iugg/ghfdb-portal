@@ -59,7 +59,8 @@ class ConceptTextField(forms.CharField):
 
     Args:
         model_field: The concept field the text stands for.
-        collection: The address of the collection of the vocabulary the terms are limited to.
+        collection: The address of the collection of the vocabulary the terms are
+            limited to.
         **kwargs: Passed to ``CharField``.
     """
 
@@ -98,10 +99,10 @@ class ConceptTextField(forms.CharField):
             raise forms.ValidationError(str(error), code="unknown_term") from None
 
 
-#: The collection of its vocabulary a field takes its terms from. The model field does not
-#: declare it, because a ``collection`` on a concept field makes the vocabulary package query the
-#: database while FairDM builds its filter sets at start-up, and ``migrate`` fails on an empty
-#: database. The upload reads the same collections.
+#: The collection of its vocabulary a field takes its terms from. The model field does
+#: not declare it, because a ``collection`` on a concept field makes the vocabulary
+#: package query the database while FairDM builds its filter sets at start-up, and
+#: ``migrate`` fails on an empty database. The upload reads the same collections.
 FIELD_COLLECTIONS = {
     (ThermalGradient, "method_top"): TEMPERATURE_METHOD_TOP,
     (ThermalGradient, "method_bottom"): TEMPERATURE_METHOD_BOTTOM,
@@ -532,7 +533,8 @@ class HeatFlowForm(SectionedForm, MeasurementFormMixin, forms.ModelForm):
     def status_choices(code):
         """Return the empty entry and the statuses of the flag's own collection.
 
-        Read when the field is rendered or validated, so building the form reads no vocabulary.
+        Read when the field is rendered or validated, so building the form reads no
+        vocabulary.
 
         Args:
             code: The correction type.

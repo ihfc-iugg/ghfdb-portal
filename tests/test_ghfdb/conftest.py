@@ -136,7 +136,8 @@ def sample_ghfdb_row():
         "Region": "",
         "Continent": "Europe",
         "Domain": "",
-        "environment": "onshore-continental",  # internal vocabulary value; vocabulary label is "Onshore (continental)"
+        # The concept's identifier. Its label is "Onshore (continental)".
+        "environment": "onshore-continental",
         "explo_method": "",
         "explo_purpose": "",
         "total_depth_MD": "",

@@ -506,9 +506,9 @@ class TestRoute:
 class TestRulesAgreeWithThePublishedCollections:
     """Rules written out in the scheme stay in line with the vocabulary's own groups.
 
-    Scoring reads no collection, because that would cost a query for every scored record.
-    So where the scheme's own list is the very membership of a collection, this fails the
-    day the vocabulary moves a member.
+    Scoring reads no collection, because that would cost a query for every scored
+    record. So where the scheme's own list is the very membership of a collection, this
+    fails the day the vocabulary moves a member.
     """
 
     @staticmethod
@@ -535,8 +535,8 @@ class TestRulesAgreeWithThePublishedCollections:
     def test_the_laboratory_methods_are_the_published_laboratory_group(self):
         from heat_flow.quality import LAB_METHODS
 
-        assert LAB_METHODS == self.members(
-            vocabularies.CONDUCTIVITY_METHOD, "laboratory"
+        assert (
+            self.members(vocabularies.CONDUCTIVITY_METHOD, "laboratory") == LAB_METHODS
         )
 
 
@@ -797,7 +797,8 @@ class TestBoreholeGradient:
         return BoreholeRules.gradient(gradient)
 
     def test_a_continuous_log_needs_more_than_three_recordings(self):
-        # Three recordings is a set of single points, so log-equilibrium scores -0.1, not +0.1.
+        # Three recordings is a set of single points, so log-equilibrium scores -0.1,
+        # not +0.1.
         assert self.score(self.borehole_gradient(number=4)).value == pytest.approx(1.1)
         assert self.score(self.borehole_gradient(number=3)).value == pytest.approx(0.9)
 
@@ -833,13 +834,15 @@ class TestBoreholeGradient:
     def test_the_misspelt_toolbox_tokens_read_as_the_vocabulary_methods(
         self, method, penalty
     ):
-        # HT-FT-equilibrium is the vocabulary's HT-FTeq and HT-FT-perturbed its HT-FTpert.
+        # HT-FT-equilibrium is the vocabulary's HT-FTeq and HT-FT-perturbed its
+        # HT-FTpert.
         gradient = self.borehole_gradient(number=2, top=(method,), bottom=(method,))
 
         assert self.score(gradient).value == pytest.approx(1.0 + penalty)
 
     def test_a_method_that_fits_no_case_takes_the_largest_penalty_and_the_mark(self):
-        # DTS-equilibrium is only a continuous-log method, so with two recordings it fits nothing.
+        # DTS-equilibrium is only a continuous-log method, so with two recordings it
+        # fits nothing.
         gradient = self.borehole_gradient(
             number=2, top=("DTS-equilibrium",), bottom=("DTS-equilibrium",)
         )

@@ -377,8 +377,8 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         """Map a raw correction flag value to a status of the flag's own collection.
 
         Args:
-            raw: The cell: a status identifier, a yes shorthand or a published status label
-                such as ``[Present and corrected]``.
+            raw: The cell: a status identifier, a yes shorthand or a published status
+                label such as ``[Present and corrected]``.
             correction_type: The correction the cell belongs to.
 
         Returns:

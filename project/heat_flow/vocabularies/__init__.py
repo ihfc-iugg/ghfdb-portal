@@ -49,8 +49,8 @@ HEAT_FLOW_CORRECTION = ihfc_vocabulary("heat-flow-corrections")
 #: The identifier of the concept a vocabulary offers for a value nobody recorded.
 UNSPECIFIED = "unspecified"
 
-#: The collections of temperature methods that may be recorded at the top and at the bottom of
-#: an interval. The bottom does not accept the surface.
+#: The collections of temperature methods that may be recorded at the top and at the
+#: bottom of an interval. The bottom does not accept the surface.
 TEMPERATURE_METHOD_TOP = f"{TEMPERATURE_METHOD.uri}/top"
 TEMPERATURE_METHOD_BOTTOM = f"{TEMPERATURE_METHOD.uri}/bottom"
 
