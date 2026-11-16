@@ -68,7 +68,7 @@ of a published file read and write exactly as before. Everything that reads or w
 | Reader or writer | Today | After |
 |---|---|---|
 | `HeatFlowCorrection.status` | required, default `-`, `-` is the `UNSPECIFIED` choice | `blank=True`, default `""`. The `UNSPECIFIED` choice is removed. |
-| `VALID_STATUS_FOR_TYPE`, `ENVIRONMENTAL_VALID` | each holds `-` | `-` removed. The type check in `save()` accepts an empty status for every type. |
+| The valid statuses of each correction type | `-` is one of them | `-` removed. The type check in `save()` accepts an empty status for every type. |
 | Migration | — | Alters the field, and turns every stored `-` into `""` (a data step, reversible: `""` back to `-`). |
 | Importer (`ghfdb/resources/child.py`, `_parse_correction_status`) | empty or unreadable cell → `-` | → `""`. An explicit `-` cell, or `[unspecified]`, also → `""`. |
 | Export (`ghfdb/managers.py`, correction subqueries) | writes the stored status, so `-` for an unspecified row, empty for a child with no row | writes `-` for an empty status, and empty for no row, as before. The existing export and round-trip tests are the check. |
@@ -123,7 +123,7 @@ One line per piece of new code the plan writes, with where the search stopped
 - Counted multiple choice → installed package: `mvp_forms.widgets.TomSelectMultiple(counted=True)`.
 - Vocabulary text input → new code: `ConceptTextField`. django-controlled-vocabularies has no form field or autocomplete yet; research_vocabs' own form fields are choice fields, which Sam ruled out.
 - Term reading → this repo: moved from `project/ghfdb/resources/widgets.py`, not rewritten.
-- Correction statuses valid for a type → this repo: `HeatFlowCorrection.VALID_STATUS_FOR_TYPE`, `ENVIRONMENTAL_VALID`.
+- Correction statuses valid for a type → this repo: `HeatFlowCorrection.valid_statuses`.
 - Interval and site refusal on save → new code: two `clean_<field>` methods. FairDM's search cannot be narrowed (ruling).
 - Saving related rows → Django: `ModelForm.save()` and `save_m2m()`; the forms add the writes for their own related rows.
 - Score recalculation on save → this repo: the signal receivers in `project/heat_flow/signals.py` (ADR-0022). Nothing new.

@@ -396,7 +396,9 @@ map's test and confirm it fails when a column is removed from the map.
   correction.
 - **FR-027**: A determination MUST accept several corrections, at most one per disturbance type.
 - **FR-028**: A status that is not meaningful for its disturbance type MUST be rejected when the
-  correction is saved. The valid combinations MUST be documented in the data model documentation.
+  correction is saved. A status is meaningful for a disturbance type when it is a member of that
+  type's collection in the IHFC `heat-flow-corrections` vocabulary. The valid combinations MUST be
+  documented in the data model documentation.
 
 **Registration**
 

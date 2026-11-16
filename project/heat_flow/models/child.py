@@ -336,8 +336,8 @@ class HeatFlow(Measurement):
         if rules is not None:
             t = rules.gradient(
                 self.thermal_gradient,
-                tilt_corrected=statuses.get("T") == "tilt_corrected",
-                bottom_water_corrected=statuses.get("SUR") == "present_corrected",
+                tilt_corrected=statuses.get("T") == "tilt-corrected",
+                bottom_water_corrected=statuses.get("SUR") == "present-corrected",
             )
         tc = SubScore(None)
         rules = (
@@ -447,20 +447,20 @@ class HeatFlowCorrection(django_models.Model):
         HR = "HR", _("Heat Refraction")
 
     class StatusChoices(models.TextChoices):
-        PRESENT_CORRECTED = "present_corrected", _("Present and corrected")
-        PRESENT_NOT_CORRECTED = "present_not_corrected", _("Present and not corrected")
+        PRESENT_CORRECTED = "present-corrected", _("Present and corrected")
+        PRESENT_NOT_CORRECTED = "present-uncorrected", _("Present and not corrected")
         PRESENT_NOT_SIGNIFICANT = (
-            "present_not_significant",
+            "present-insignificant",
             _("Present not significant"),
         )
-        NOT_RECOGNIZED = "not_recognized", _("not recognized")
-        CONSIDERED_P = "considered_p", _("Considered - p")
-        CONSIDERED_T = "considered_t", _("Considered - t")
-        CONSIDERED_PT = "considered_pt", _("Considered - pT")
-        NOT_CONSIDERED = "not_considered", _("not considered")
-        TILT_CORRECTED = "tilt_corrected", _("Tilt corrected")
-        DRIFT_CORRECTED = "drift_corrected", _("Drift corrected")
-        NOT_CORRECTED = "not_corrected", _("not corrected")
+        NOT_RECOGNIZED = "unrecognized", _("not recognized")
+        CONSIDERED_P = "considered-p", _("Considered - p")
+        CONSIDERED_T = "considered-T", _("Considered - t")
+        CONSIDERED_PT = "considered-pT", _("Considered - pT")
+        NOT_CONSIDERED = "not-considered", _("not considered")
+        TILT_CORRECTED = "tilt-corrected", _("Tilt corrected")
+        DRIFT_CORRECTED = "drift-corrected", _("Drift corrected")
+        NOT_CORRECTED = "uncorrected", _("not corrected")
         CORRECTED = "corrected", _("Corrected")
 
     heat_flow = models.ForeignKey(
@@ -500,39 +500,52 @@ class HeatFlowCorrection(django_models.Model):
             models.Index(fields=["status"]),
         ]
 
-    # Valid status values per correction type.
-    VALID_STATUS_FOR_TYPE: dict[str, set[str]] = {
-        "IS": {
-            "present_corrected",
-            "present_not_corrected",
-            "not_recognized",
-            "not_considered",
-            "tilt_corrected",
-            "drift_corrected",
-        },
-        "T": {
-            "present_corrected",
-            "present_not_corrected",
-            "not_corrected",
-            "corrected",
-            "not_recognized",
-            "not_considered",
-        },
+    #: The collection of the heat-flow-corrections vocabulary each flag takes its
+    #: statuses from.
+    STATUS_COLLECTIONS: dict[str, str] = {
+        "IS": "in-situ",
+        "T": "instrumental",
+        "S": "sedimentation",
+        "E": "erosion",
+        "TOPO": "topography",
+        "PAL": "paleoclimate",
+        "SUR": "transient-surface-temperature",
+        "CONV": "convection",
+        "HR": "heat-refraction",
     }
-    ENVIRONMENTAL_VALID: set[str] = {
-        "present_corrected",
-        "present_not_corrected",
-        "present_not_significant",
-        "not_recognized",
-        "considered_p",
-        "considered_t",
-        "considered_pt",
-        "not_considered",
-    }
-    # S, E, TOPO, PAL, SUR, CONV, HR → ENVIRONMENTAL_VALID
-    _ENVIRONMENTAL_TYPES: frozenset[str] = frozenset(
-        {"S", "E", "TOPO", "PAL", "SUR", "CONV", "HR"}
-    )
+
+    @classmethod
+    def status_collection(cls, correction_type: str) -> str:
+        """Return the address of the collection a correction type takes statuses from.
+
+        Args:
+            correction_type: One of ``CorrectionTypeChoices``.
+
+        Returns:
+            The collection's address in the heat-flow-corrections vocabulary.
+        """
+        return vocabularies.term(
+            vocabularies.HEAT_FLOW_CORRECTION, cls.STATUS_COLLECTIONS[correction_type]
+        )
+
+    @classmethod
+    def valid_statuses(cls, correction_type: str) -> set[str]:
+        """Return the statuses a correction type accepts.
+
+        The collection's ``unspecified`` is left out: an empty status stands for it.
+
+        Args:
+            correction_type: One of ``CorrectionTypeChoices``.
+
+        Returns:
+            The identifiers of the members of the type's collection.
+        """
+        members = vocabularies.member_uris(
+            vocabularies.HEAT_FLOW_CORRECTION, cls.status_collection(correction_type)
+        )
+        return {address.rsplit("/", 1)[-1] for address in members} - {
+            vocabularies.UNSPECIFIED
+        }
 
     def __str__(self):
         """Return the correction type's label and its status."""
@@ -544,12 +557,11 @@ class HeatFlowCorrection(django_models.Model):
 
         An empty status, no status chosen, is valid for every type.
         """
-        valid: set[str] | None = None
-        if self.correction_type in self.VALID_STATUS_FOR_TYPE:
-            valid = self.VALID_STATUS_FOR_TYPE[self.correction_type]
-        elif self.correction_type in self._ENVIRONMENTAL_TYPES:
-            valid = self.ENVIRONMENTAL_VALID
-        if valid is not None and self.status and self.status not in valid:
+        if (
+            self.status
+            and self.correction_type in self.STATUS_COLLECTIONS
+            and self.status not in self.valid_statuses(self.correction_type)
+        ):
             raise ValidationError(
                 _(
                     f"Status '{self.status}' is not valid for correction type '{self.correction_type}'."

@@ -71,7 +71,7 @@ No new dependency. `factory_boy` and `faker` stay test-only.
 - `min_lat`, `max_lat`, `min_lon`, `max_lon`
 - `marine`, a bool
 - `environment`, a value of `HeatFlowSite.environment_vocab.values`
-- `explo_method`, a value of `HeatFlowSite.explo_method_vocab.values`: `probing_offshore` for marine
+- `explo_method`, a value of `HeatFlowSite.explo_method_vocab.values`: `probing-offshore` for marine
   boxes, `drilling` for land boxes, so that `route()` picks the probe or borehole rules
 
 There are about twenty boxes where heat flow is measured, roughly 40 % marine (research R4).
@@ -116,7 +116,7 @@ The values are drawn as research R3's table sets out, each rounded to the field'
 
 Once a dataset's records exist, `build()` writes the rest in bulk:
 
-- **Corrections**: each child gets corrections from `VALID_STATUS_FOR_TYPE`, and probe children
+- **Corrections**: each child gets corrections from `HeatFlowCorrection.valid_statuses`, and probe children
   always get a `T` correction. They are written with one `HeatFlowCorrection.objects.bulk_create`
   per dataset.
 - **Probe metadata**: probe intervals get `ProbeMetadata`, written with `bulk_create`.

@@ -22,7 +22,7 @@ def site_fixture(dataset):
         name="Test Site",
         country="Germany",
         continent="Europe",
-        environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental"),
+        environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore-continental"),
     )
 
 
@@ -122,7 +122,7 @@ def full_records(public_dataset):
 
     site = HeatFlowSiteFactory(
         dataset=public_dataset,
-        environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental"),
+        environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore-continental"),
         azimuth=45.5,
         inclination=10.25,
         length=ureg.Quantity(1000, "ft"),

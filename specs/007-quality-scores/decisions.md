@@ -241,7 +241,7 @@ Read literally, a gradient measured with either method matches nothing and is sc
 unresolvable. The lists place them in the equilibrium and perturbed groups by name, and that is
 what the portal does.
 
-Other gaps in the lists are kept as the toolbox has them. DTSeq appears only in the continuous-log
+Other gaps in the lists are kept as the toolbox has them. DTS-equilibrium appears only in the continuous-log
 case, and the surface-plus-single-point case has no HT-FTeq. The toolbox decides (D1), and nothing
 in its documentation says otherwise.
 

@@ -102,14 +102,14 @@ CONFORMANCE_CASES = [
         "X1-continuous-eq",
         "drilling",
         recordings=10,
-        top=("LOGeq",),
-        bottom=("LOGeq",),
+        top=("log-equilibrium",),
+        bottom=("log-equilibrium",),
         depths=(0, 1000),
         location=("actual",),
-        source=("insitu_probe",),
+        source=("in-situ-probe",),
         count=20,
-        saturation=("saturatedMeasured",),
-        pT=("actualInSitu",),
+        saturation=("saturated-measured",),
+        pT=("actual-in-situ",),
         in_situ=None,
         T=1.1,
         TC=0.9,
@@ -120,14 +120,14 @@ CONFORMANCE_CASES = [
         "X2-continuous-pert",
         "drilling",
         recordings=8,
-        top=("LOGpert",),
-        bottom=("LOGpert",),
+        top=("log-perturbed",),
+        bottom=("log-perturbed",),
         depths=(0, 800),
         location=("actual",),
-        source=("core_samples",),
+        source=("core-samples",),
         count=10,
-        saturation=("saturatedMeasured",),
-        pT=("actualInSitu",),
+        saturation=("saturated-measured",),
+        pT=("actual-in-situ",),
         in_situ=None,
         T=0.9,
         TC=0.7,
@@ -142,10 +142,10 @@ CONFORMANCE_CASES = [
         bottom=("BHT",),
         depths=(0, 500),
         location=("other",),
-        source=("core_samples",),
+        source=("core-samples",),
         count=5,
         saturation=("recovered",),
-        pT=("replicatedT",),
+        pT=("replicated-T",),
         in_situ=None,
         T=0.7,
         TC=0.5,
@@ -156,14 +156,14 @@ CONFORMANCE_CASES = [
         "X4-single-point-plus-surface",
         "drilling",
         recordings=1,
-        top=("SUR",),
+        top=("surface",),
         bottom=("BHT",),
         depths=(0, 300),
         location=("other",),
-        source=("cutting_samples",),
+        source=("cutting-samples",),
         count=1,
-        saturation=("dryMeasured",),
-        pT=("recordedAmbient",),
+        saturation=("dry-measured",),
+        pT=("recorded-ambient",),
         in_situ=None,
         T=0.5,
         TC=0.3,
@@ -174,11 +174,11 @@ CONFORMANCE_CASES = [
         "X5-interval-gate",
         "drilling",
         recordings=6,
-        top=("LOGeq",),
-        bottom=("LOGeq",),
+        top=("log-equilibrium",),
+        bottom=("log-equilibrium",),
         depths=(None, None),
         location=("literature",),
-        source=("assumed_from_literature",),
+        source=("assumed-from-literature",),
         count=None,
         saturation=("unspecified",),
         pT=("unspecified",),
@@ -190,16 +190,16 @@ CONFORMANCE_CASES = [
     ),
     case(
         "P1-probe-with-waivers",
-        "probing_offshore",
+        "probing-offshore",
         elevation=-3000,
         penetration=12,
         tilt=45,
         recordings=6,
         location=("actual",),
-        source=("insitu_probe",),
-        method=("probePulse",),
-        saturation=("saturatedInSitu",),
-        pT=("actualInSitu",),
+        source=("in-situ-probe",),
+        method=("probe-pulse",),
+        saturation=("saturated-in-situ",),
+        pT=("actual-in-situ",),
         count=4,
         tilt_corrected=True,
         bottom_water_corrected=True,
@@ -210,16 +210,16 @@ CONFORMANCE_CASES = [
     ),
     case(
         "P2-probe-without-corrections",
-        "probing_offshore",
+        "probing-offshore",
         elevation=-3000,
         penetration=12,
         tilt=45,
         recordings=6,
         location=("actual",),
-        source=("insitu_probe",),
-        method=("probePulse",),
-        saturation=("saturatedInSitu",),
-        pT=("actualInSitu",),
+        source=("in-situ-probe",),
+        method=("probe-pulse",),
+        saturation=("saturated-in-situ",),
+        pT=("actual-in-situ",),
         count=4,
         T=1.0,
         TC=1.2,
@@ -227,16 +227,16 @@ CONFORMANCE_CASES = [
     ),
     case(
         "P3-onshore-lab",
-        "probing_onshore",
+        "probing-onshore",
         elevation=120,
         penetration=2,
         tilt=None,
         recordings=2,
         location=("other",),
-        source=("core_samples",),
-        method=("lineSourceFull",),
-        saturation=("saturatedCalculated",),
-        pT=("recordedAmbient",),
+        source=("core-samples",),
+        method=("line-source-full",),
+        saturation=("saturated-calculated",),
+        pT=("recorded-ambient",),
         count=2,
         T=0.4,
         TC=0.5,
@@ -244,13 +244,13 @@ CONFORMANCE_CASES = [
     ),
     case(
         "P4-clustering-literature",
-        "probing_clustering",
+        "probing-clustering",
         elevation=-1600,
         penetration=0.8,
         tilt=12,
         recordings=1,
         location=("literature",),
-        source=("assumed_from_literature",),
+        source=("assumed-from-literature",),
         method=("lithology",),
         saturation=("unspecified",),
         pT=("unspecified",),
@@ -261,16 +261,16 @@ CONFORMANCE_CASES = [
     ),
     case(
         "P5-no-saturation",
-        "probing_offshore",
+        "probing-offshore",
         elevation=-2000,
         penetration=4,
         tilt=5,
         recordings=3,
         location=("actual",),
-        source=("insitu_probe",),
+        source=("in-situ-probe",),
         method=("unspecified",),
         saturation=(),
-        pT=("replicatedP",),
+        pT=("replicated-p",),
         count=1,
         T=0.9,
         TC=0.5,
@@ -280,15 +280,15 @@ CONFORMANCE_CASES = [
         "B1-agreeing-in-situ",
         "drilling",
         recordings=40,
-        top=("LOGeq",),
-        bottom=("cLOG",),
+        top=("log-equilibrium",),
+        bottom=("log-corrected",),
         depths=(100, 900),
         location=("actual",),
-        source=("core_samples",),
+        source=("core-samples",),
         count=30,
-        saturation=("saturatedMeasured",),
-        pT=("correctedPT",),
-        in_situ="considered_pt",
+        saturation=("saturated-measured",),
+        pT=("corrected-pT",),
+        in_situ="considered-pT",
         T=1.1,
         TC=1.0,
         marked=False,
@@ -297,15 +297,15 @@ CONFORMANCE_CASES = [
         "B2-not-considered",
         "drilling",
         recordings=40,
-        top=("LOGeq",),
-        bottom=("cLOG",),
+        top=("log-equilibrium",),
+        bottom=("log-corrected",),
         depths=(100, 900),
         location=("actual",),
-        source=("core_samples",),
+        source=("core-samples",),
         count=30,
-        saturation=("saturatedMeasured",),
-        pT=("correctedPT",),
-        in_situ="not_considered",
+        saturation=("saturated-measured",),
+        pT=("corrected-pT",),
+        in_situ="not-considered",
         T=1.1,
         TC=0.8,
         marked=False,
@@ -315,14 +315,14 @@ CONFORMANCE_CASES = [
         "B3-no-in-situ-correction",
         "drilling",
         recordings=40,
-        top=("LOGeq",),
-        bottom=("cLOG",),
+        top=("log-equilibrium",),
+        bottom=("log-corrected",),
         depths=(100, 900),
         location=("actual",),
-        source=("core_samples",),
+        source=("core-samples",),
         count=30,
-        saturation=("saturatedMeasured",),
-        pT=("correctedPT",),
+        saturation=("saturated-measured",),
+        pT=("corrected-pT",),
         in_situ=None,
         T=1.1,
         TC=0.8,
@@ -333,14 +333,14 @@ CONFORMANCE_CASES = [
         "B4-mining-ambient",
         "mining",
         recordings=40,
-        top=("LOGeq",),
-        bottom=("cLOG",),
+        top=("log-equilibrium",),
+        bottom=("log-corrected",),
         depths=(100, 900),
         location=("actual",),
-        source=("core_samples",),
+        source=("core-samples",),
         count=30,
-        saturation=("saturatedMeasured",),
-        pT=("recordedAmbient",),
+        saturation=("saturated-measured",),
+        pT=("recorded-ambient",),
         in_situ="",
         T=1.1,
         TC=0.8,
@@ -348,17 +348,17 @@ CONFORMANCE_CASES = [
     ),
     case(
         "B5-drilling-clustering",
-        "drilling_clustering",
+        "drilling-clustering",
         recordings=3,
-        top=("BHT", "cBHT"),
+        top=("BHT", "BHT-corrected"),
         bottom=("BHT",),
         depths=(0, 2000),
         location=("other",),
-        source=("cutting_samples",),
+        source=("cutting-samples",),
         count=12,
         saturation=("recovered",),
-        pT=("replicatedP",),
-        in_situ="considered_p",
+        pT=("replicated-p",),
+        in_situ="considered-p",
         T=0.7,
         TC=0.5,
         marked=False,
@@ -367,15 +367,15 @@ CONFORMANCE_CASES = [
         "B6-tunnelling-literature",
         "tunneling",
         recordings=2,
-        top=("SUR",),
-        bottom=("cBHT",),
+        top=("surface",),
+        bottom=("BHT-corrected",),
         depths=(0, 1500),
         location=("literature",),
-        source=("assumed_from_literature",),
+        source=("assumed-from-literature",),
         count=None,
-        saturation=("dryMeasured",),
+        saturation=("dry-measured",),
         pT=("unspecified",),
-        in_situ="not_considered",
+        in_situ="not-considered",
         T=0.7,
         TC=0.2,
         marked=False,
@@ -384,15 +384,15 @@ CONFORMANCE_CASES = [
         "B7-unresolvable-surface-case",
         "drilling",
         recordings=2,
-        top=("SUR",),
-        bottom=("LOGeq",),
+        top=("surface",),
+        bottom=("log-equilibrium",),
         depths=(0, 1500),
         location=("actual",),
-        source=("mineral_computation",),
+        source=("mineral-computation",),
         count=20,
-        saturation=("saturatedCalculated",),
-        pT=("actualInSitu",),
-        in_situ="considered_pt",
+        saturation=("saturated-calculated",),
+        pT=("actual-in-situ",),
+        in_situ="considered-pT",
         T=0.4,
         TC=0.7,
         marked=True,
@@ -405,11 +405,11 @@ CONFORMANCE_CASES = [
         bottom=(),
         depths=(None, None),
         location=("actual",),
-        source=("core_samples",),
+        source=("core-samples",),
         count=30,
-        saturation=("saturatedMeasured",),
-        pT=("correctedPT",),
-        in_situ="considered_pt",
+        saturation=("saturated-measured",),
+        pT=("corrected-pT",),
+        in_situ="considered-pT",
         T=0.5,
         TC=0.1,
         marked=True,
@@ -466,7 +466,7 @@ def build_case(inputs):
 class TestRoute:
     @pytest.mark.parametrize(
         "explo_method",
-        ["probing_onshore", "probing_offshore", "probing_clustering"],
+        ["probing-onshore", "probing-offshore", "probing-clustering"],
     )
     def test_probing_methods_route_to_the_probe_rules(self, explo_method):
         from heat_flow.quality import ProbeRules, route
@@ -477,7 +477,7 @@ class TestRoute:
 
     @pytest.mark.parametrize(
         "explo_method",
-        ["drilling", "drilling_clustering", "mining", "tunneling", "indirect"],
+        ["drilling", "drilling-clustering", "mining", "tunneling", "indirect"],
     )
     def test_excavation_and_indirect_methods_route_to_the_borehole_rules(
         self, explo_method
@@ -500,6 +500,44 @@ class TestRoute:
         from heat_flow.quality import route
 
         assert route(None) is None
+
+
+@pytest.mark.django_db
+class TestRulesAgreeWithThePublishedCollections:
+    """Rules written out in the scheme stay in line with the vocabulary's own groups.
+
+    Scoring reads no collection, because that would cost a query for every scored
+    record. So where the scheme's own list is the very membership of a collection, this
+    fails the day the vocabulary moves a member.
+    """
+
+    @staticmethod
+    def members(vocabulary, collection):
+        addresses = vocabularies.member_uris(
+            vocabulary, vocabularies.term(vocabulary, collection)
+        )
+        return {address.rsplit("/", 1)[-1] for address in addresses}
+
+    def test_the_probe_routes_are_the_probe_sensing_methods(self):
+        from heat_flow.quality import ROUTES, ProbeRules
+
+        routed = {name for name, rules in ROUTES.items() if rules is ProbeRules}
+
+        assert routed == self.members(vocabularies.EXPLORATION_METHOD, "probe-sensing")
+
+    def test_every_excavation_method_takes_the_borehole_route(self):
+        from heat_flow.quality import ROUTES, BoreholeRules
+
+        excavation = self.members(vocabularies.EXPLORATION_METHOD, "excavation")
+
+        assert {ROUTES[name] for name in excavation} == {BoreholeRules}
+
+    def test_the_laboratory_methods_are_the_published_laboratory_group(self):
+        from heat_flow.quality import LAB_METHODS
+
+        assert (
+            self.members(vocabularies.CONDUCTIVITY_METHOD, "laboratory") == LAB_METHODS
+        )
 
 
 class TestConformance:
@@ -544,7 +582,7 @@ class TestConformance:
 class TestProbeGradient:
     def probe_gradient(self, *, penetration=5, tilt=0, elevation=-3000, number=6):
         interval = build_interval(
-            "probing_offshore",
+            "probing-offshore",
             elevation=elevation,
             penetration=penetration,
             tilt=tilt,
@@ -621,7 +659,7 @@ class TestProbeGradient:
         assert score.missing is False
 
     def test_a_gradient_without_probe_metadata_has_empty_penetration_and_tilt(self):
-        interval = build_interval("probing_offshore", elevation=-3000)
+        interval = build_interval("probing-offshore", elevation=-3000)
         gradient = build_gradient(interval, number=6)
 
         score = self.score(gradient)
@@ -641,14 +679,14 @@ class TestProbeConductivity:
     def probe_conductivity(self, **fields):
         inputs = {
             "number": 4,
-            "source": ("insitu_probe",),
+            "source": ("in-situ-probe",),
             "location": ("actual",),
-            "method": ("probePulse",),
-            "saturation": ("saturatedInSitu",),
-            "pT": ("actualInSitu",),
+            "method": ("probe-pulse",),
+            "saturation": ("saturated-in-situ",),
+            "pT": ("actual-in-situ",),
         }
         inputs.update(fields)
-        return build_conductivity(build_interval("probing_offshore"), **inputs)
+        return build_conductivity(build_interval("probing-offshore"), **inputs)
 
     def score(self, conductivity):
         from heat_flow.quality import ProbeRules
@@ -722,7 +760,7 @@ class TestProbeConductivity:
         assert score.value == pytest.approx(1.1)
 
     def test_an_actual_in_situ_pT_needs_the_pulse_probe_to_score_well(self):
-        conductivity = self.probe_conductivity(method=("lineSourceFull",))
+        conductivity = self.probe_conductivity(method=("line-source-full",))
 
         score = self.score(conductivity)
 
@@ -741,13 +779,15 @@ class TestProbeConductivity:
 
         conductivity = self.probe_conductivity()
 
-        assert ProbeRules.conductivity(conductivity, in_situ="not_considered") == (
+        assert ProbeRules.conductivity(conductivity, in_situ="not-considered") == (
             ProbeRules.conductivity(conductivity)
         )
 
 
 class TestBoreholeGradient:
-    def borehole_gradient(self, *, number=10, top=("LOGeq",), bottom=("LOGeq",)):
+    def borehole_gradient(
+        self, *, number=10, top=("log-equilibrium",), bottom=("log-equilibrium",)
+    ):
         interval = build_interval("drilling", top=0, bottom=1000)
         return build_gradient(interval, number=number, top=top, bottom=bottom)
 
@@ -757,48 +797,55 @@ class TestBoreholeGradient:
         return BoreholeRules.gradient(gradient)
 
     def test_a_continuous_log_needs_more_than_three_recordings(self):
-        # Three recordings is a set of single points, so LOGeq scores -0.1, not +0.1.
+        # Three recordings is a set of single points, so log-equilibrium scores -0.1,
+        # not +0.1.
         assert self.score(self.borehole_gradient(number=4)).value == pytest.approx(1.1)
         assert self.score(self.borehole_gradient(number=3)).value == pytest.approx(0.9)
 
     def test_a_continuous_log_with_a_perturbed_method_is_penalised(self):
-        gradient = self.borehole_gradient(top=("LOGpert",), bottom=("LOGeq",))
+        gradient = self.borehole_gradient(
+            top=("log-perturbed",), bottom=("log-equilibrium",)
+        )
 
         assert self.score(gradient).value == pytest.approx(0.9)
 
     def test_a_non_log_method_makes_the_case_single_points(self):
-        gradient = self.borehole_gradient(top=("LOGeq",), bottom=("BHT",))
+        gradient = self.borehole_gradient(top=("log-equilibrium",), bottom=("BHT",))
 
         # Multiple single points: the poorest matching group is BHT at -0.3.
         assert self.score(gradient).value == pytest.approx(0.7)
 
     @pytest.mark.parametrize(
         ("bottom", "penalty"),
-        [("cBHT", -0.3), ("BHT", -0.5), ("CPD", -0.6), ("other", -0.6)],
+        [("BHT-corrected", -0.3), ("BHT", -0.5), ("CPD", -0.6), ("other", -0.6)],
     )
     def test_the_surface_case_is_decided_by_the_bottom_method_alone(
         self, bottom, penalty
     ):
-        gradient = self.borehole_gradient(number=2, top=("SUR",), bottom=(bottom,))
+        gradient = self.borehole_gradient(number=2, top=("surface",), bottom=(bottom,))
 
         assert self.score(gradient).value == pytest.approx(1.0 + penalty)
         assert self.score(gradient).missing is False
 
     @pytest.mark.parametrize(
         ("method", "penalty"),
-        [("HT_FT", -0.1), ("HT_FTpert", -0.3)],
+        [("HT-FT-equilibrium", -0.1), ("HT-FT-perturbed", -0.3)],
     )
     def test_the_misspelt_toolbox_tokens_read_as_the_vocabulary_methods(
         self, method, penalty
     ):
-        # HT_FT is the vocabulary's HT-FTeq and HT_FTpert its HT-FTpert.
+        # HT-FT-equilibrium is the vocabulary's HT-FTeq and HT-FT-perturbed its
+        # HT-FTpert.
         gradient = self.borehole_gradient(number=2, top=(method,), bottom=(method,))
 
         assert self.score(gradient).value == pytest.approx(1.0 + penalty)
 
     def test_a_method_that_fits_no_case_takes_the_largest_penalty_and_the_mark(self):
-        # DTSeq is only a continuous-log method, so with two recordings it fits nothing.
-        gradient = self.borehole_gradient(number=2, top=("DTSeq",), bottom=("DTSeq",))
+        # DTS-equilibrium is only a continuous-log method, so with two recordings it
+        # fits nothing.
+        gradient = self.borehole_gradient(
+            number=2, top=("DTS-equilibrium",), bottom=("DTS-equilibrium",)
+        )
 
         score = self.score(gradient)
 
@@ -821,7 +868,7 @@ class TestBoreholeGradient:
 
     def test_the_poorest_of_several_methods_counts(self):
         gradient = self.borehole_gradient(
-            number=2, top=("cBHT", "CPD"), bottom=("cBHT",)
+            number=2, top=("BHT-corrected", "CPD"), bottom=("BHT-corrected",)
         )
 
         assert self.score(gradient).value == pytest.approx(0.5)
@@ -831,10 +878,10 @@ class TestBoreholeConductivity:
     def borehole_conductivity(self, *, depths=(0, 1000), **fields):
         inputs = {
             "number": 30,
-            "source": ("core_samples",),
+            "source": ("core-samples",),
             "location": ("actual",),
-            "saturation": ("saturatedMeasured",),
-            "pT": ("actualInSitu",),
+            "saturation": ("saturated-measured",),
+            "pT": ("actual-in-situ",),
         }
         inputs.update(fields)
         interval = build_interval("drilling", top=depths[0], bottom=depths[1])
@@ -872,14 +919,14 @@ class TestBoreholeConductivity:
     @pytest.mark.parametrize(
         ("source", "penalty"),
         [
-            ("insitu_probe", 0.1),
-            ("core_log", 0.1),
-            ("core_samples", 0.0),
-            ("cutting_samples", -0.1),
-            ("outcrop_samples", -0.1),
-            ("well_log", -0.1),
-            ("mineral_computation", -0.2),
-            ("assumed_from_literature", -0.2),
+            ("in-situ-probe", 0.1),
+            ("core-log", 0.1),
+            ("core-samples", 0.0),
+            ("cutting-samples", -0.1),
+            ("outcrop-samples", -0.1),
+            ("well-log", -0.1),
+            ("mineral-computation", -0.2),
+            ("assumed-from-literature", -0.2),
             ("other", -0.2),
             ("unspecified", -0.2),
         ],
@@ -911,11 +958,11 @@ class TestBoreholeConductivity:
     @pytest.mark.parametrize(
         ("saturation", "penalty"),
         [
-            ("saturatedInSitu", 0.0),
-            ("saturatedMeasured", 0.0),
-            ("saturatedCalculated", -0.1),
+            ("saturated-in-situ", 0.0),
+            ("saturated-measured", 0.0),
+            ("saturated-calculated", -0.1),
             ("recovered", -0.1),
-            ("dryMeasured", -0.2),
+            ("dry-measured", -0.2),
             ("other", -0.2),
             ("unspecified", -0.2),
         ],
@@ -929,15 +976,15 @@ class TestBoreholeConductivity:
     @pytest.mark.parametrize(
         ("pT", "penalty"),
         [
-            ("actualInSitu", 0.0),
-            ("replicatedPT", 0.0),
-            ("correctedPT", 0.0),
-            ("replicatedP", -0.1),
-            ("replicatedT", -0.1),
-            ("correctedP", -0.1),
-            ("correctedT", -0.1),
-            ("recordedAmbient", -0.2),
-            ("unrecordedAmbient", -0.2),
+            ("actual-in-situ", 0.0),
+            ("replicated-pT", 0.0),
+            ("corrected-pT", 0.0),
+            ("replicated-p", -0.1),
+            ("replicated-T", -0.1),
+            ("corrected-p", -0.1),
+            ("corrected-T", -0.1),
+            ("recorded-ambient", -0.2),
+            ("unrecorded-ambient", -0.2),
             ("unspecified", -0.2),
         ],
     )
@@ -955,7 +1002,7 @@ class TestBoreholeConductivity:
 
     def test_the_poorest_of_several_pT_conditions_counts(self):
         score = self.score(
-            self.borehole_conductivity(pT=("actualInSitu", "recordedAmbient"))
+            self.borehole_conductivity(pT=("actual-in-situ", "recorded-ambient"))
         )
 
         assert score.value == pytest.approx(0.8)
@@ -963,13 +1010,13 @@ class TestBoreholeConductivity:
     @pytest.mark.parametrize(
         ("pT", "in_situ", "expected", "marked"),
         [
-            ("correctedPT", "considered_pt", 1.0, False),
-            ("correctedPT", "not_considered", 0.8, False),
-            ("correctedT", "considered_t", 0.9, False),
-            ("correctedP", "considered_p", 0.9, False),
-            ("recordedAmbient", "not_considered", 0.8, False),
-            ("recordedAmbient", "-", 0.8, False),
-            ("actualInSitu", None, 0.8, True),
+            ("corrected-pT", "considered-pT", 1.0, False),
+            ("corrected-pT", "not-considered", 0.8, False),
+            ("corrected-T", "considered-T", 0.9, False),
+            ("corrected-p", "considered-p", 0.9, False),
+            ("recorded-ambient", "not-considered", 0.8, False),
+            ("recorded-ambient", "-", 0.8, False),
+            ("actual-in-situ", None, 0.8, True),
         ],
     )
     def test_the_in_situ_keyword_applies_the_agreement_rule(
@@ -985,7 +1032,7 @@ class TestBoreholeConductivity:
     def test_empty_pT_with_an_in_situ_correction_is_still_marked(self):
         conductivity = self.borehole_conductivity(pT=())
 
-        score = self.score(conductivity, in_situ="considered_pt")
+        score = self.score(conductivity, in_situ="considered-pT")
 
         assert score.value == pytest.approx(0.8)
         assert score.missing is True
@@ -1003,7 +1050,7 @@ class TestSubScore:
     def test_scores_are_rounded_to_three_places(self):
         # Four penalties of -0.1 sum to 0.6000000000000001 in floating point.
         interval = build_interval(
-            "probing_offshore", elevation=-1600, penetration=2, tilt=12
+            "probing-offshore", elevation=-1600, penetration=2, tilt=12
         )
         gradient = build_gradient(interval, number=2)
 
@@ -1154,8 +1201,8 @@ class TestPerturbationFlags:
     @pytest.mark.parametrize(
         ("status", "upper"),
         [
-            ("present_corrected", True),
-            ("present_not_corrected", False),
+            ("present-corrected", True),
+            ("present-uncorrected", False),
         ],
     )
     @pytest.mark.parametrize(
@@ -1183,11 +1230,11 @@ class TestPerturbationFlags:
     @pytest.mark.parametrize(
         ("status", "expected"),
         [
-            ("present_not_significant", "X"),
-            ("not_recognized", "x"),
-            ("not_considered", "-"),
-            ("considered_pt", "-"),
-            ("tilt_corrected", "-"),
+            ("present-insignificant", "X"),
+            ("unrecognized", "x"),
+            ("not-considered", "-"),
+            ("considered-pT", "-"),
+            ("tilt-corrected", "-"),
             ("", "-"),
         ],
     )
@@ -1203,7 +1250,7 @@ class TestPerturbationFlags:
         from heat_flow.quality import QualityScheme
 
         flags = QualityScheme.perturbation_flags(
-            {"IS": "present_corrected", "T": "present_corrected"}
+            {"IS": "present-corrected", "T": "present-corrected"}
         )
 
         assert flags == "-------"
@@ -1340,11 +1387,11 @@ SCHEME_EXPECTATIONS = {
         80,
         4,
         {
-            "S": "present_corrected",
-            "E": "present_not_corrected",
-            "TOPO": "present_not_significant",
-            "PAL": "not_recognized",
-            "SUR": "present_corrected",
+            "S": "present-corrected",
+            "E": "present-uncorrected",
+            "TOPO": "present-insignificant",
+            "PAL": "unrecognized",
+            "SUR": "present-corrected",
             "CONV": "-",
         },
         "U2",

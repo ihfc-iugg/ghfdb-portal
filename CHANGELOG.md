@@ -63,6 +63,26 @@ Releases before that used `<year>.<release>` and are recorded in the
 
 ### Changed
 
+- The portal follows the final release of the IHFC vocabularies, which name every concept in one
+  style: lowercase words joined by hyphens, acronyms in capitals, and `p` and `T` in their usual
+  case. A well log is `well-log`, `LOGeq` is `log-equilibrium`, `insitu_probe` is
+  `in-situ-probe`, `onshore_marine` is `onshore-lake-river` and `BirchClark1940` is
+  `T-birch-clark-1940`. The quality scheme, the demo data, the correction statuses and the
+  documentation use the new identifiers. `outrigger-ewing` now names the probe without a corer, and
+  the former `outrigger_ewing` is `outrigger-ewing-corer`. A migration rewrites every stored
+  address and correction status to the new identifier, and reverses. An upload that still writes
+  the template's own tokens, such as `[LOGeq]`, reads the same terms as before.
+- Each correction flag takes only the statuses of its own collection in the `heat-flow-corrections`
+  vocabulary, on the model, in the edit form and in an upload. The in-situ flag takes
+  `considered-p`, `considered-T`, `considered-pT` and `not-considered`. The temperature flag takes
+  `corrected`, `drift-corrected`, `tilt-corrected` and `uncorrected`, so a tilt-corrected
+  temperature can now be recorded. Each of the seven effects takes `present-corrected`,
+  `present-uncorrected`, `present-insignificant` and `unrecognized`. A status stored under another
+  flag is no longer accepted, and an upload cell that does not fit its flag stores no status, as an
+  unmatched cell did before. The shorthand `Yes` means `present-corrected` and is read only on the
+  seven effects.
+- The temperature method at the bottom of an interval no longer accepts `surface`, in the edit form
+  and in an upload. The top accepts it, as before.
 - The portal moves to FairDM v0.5.0 and django-literature 0.4, installed from PyPI, with
   fairdm-geo at the commit that moves it to FairDM's vocabularies. FairDM no longer installs django-research-vocabs, so every vocabulary
   term the portal stores is the address of a concept in a published vocabulary, held through

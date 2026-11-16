@@ -81,15 +81,16 @@ class MultiConceptWidget(ManyToManyWidget):
     token, and a blank cell is an empty set.
     """
 
-    def __init__(self, vocabulary, separator=";", **kwargs):
+    def __init__(self, vocabulary, separator=";", collection=None, **kwargs):
         self.vocabulary = vocabulary
+        self.collection = collection
         super().__init__(Record, separator=separator, field="pref_label", **kwargs)
         self.queryset = concepts(vocabulary)
 
     def clean(self, value, row=None, column=None, *args, **kwargs):
         """Resolve semicolon-separated labels or identifiers to a queryset of concepts."""
         try:
-            return resolve_terms(self.vocabulary, value)
+            return resolve_terms(self.vocabulary, value, self.collection)
         except ValueError as error:
             location = _("Column '%(column)s': ") % {"column": column} if column else ""
             raise ValueError(f"{location}{error}") from None
@@ -428,11 +429,17 @@ class GradientWidget(RelatedModelWidget):
             m2m_map={
                 "method_top": (
                     "T_method_top",
-                    MultiConceptWidget(vocabularies.TEMPERATURE_METHOD),
+                    MultiConceptWidget(
+                        vocabularies.TEMPERATURE_METHOD,
+                        collection=vocabularies.TEMPERATURE_METHOD_TOP,
+                    ),
                 ),
                 "method_bottom": (
                     "T_method_bottom",
-                    MultiConceptWidget(vocabularies.TEMPERATURE_METHOD),
+                    MultiConceptWidget(
+                        vocabularies.TEMPERATURE_METHOD,
+                        collection=vocabularies.TEMPERATURE_METHOD_BOTTOM,
+                    ),
                 ),
                 "correction_top": (
                     "T_corr_top",

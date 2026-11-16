@@ -47,11 +47,11 @@ class TestPublishedValueField:
 
     def test_anything_else_passes_through(self):
         field = _bound(PublishedValueField(source="value"), field_name="q")
-        instance = SimpleNamespace(value="onshore_continental")
+        instance = SimpleNamespace(value="onshore-continental")
 
         assert (
             field.to_representation(field.get_attribute(instance))
-            == "onshore_continental"
+            == "onshore-continental"
         )
 
     @pytest.mark.django_db
@@ -62,14 +62,14 @@ class TestPublishedValueField:
         from heat_flow.vocabularies import GEOGRAPHIC_ENVIRONMENT, term
 
         concept = Record.objects.get(
-            uri=term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental")
+            uri=term(GEOGRAPHIC_ENVIRONMENT, "onshore-continental")
         )
         field = _bound(PublishedValueField(source="value"), field_name="environment")
         instance = SimpleNamespace(value=concept)
 
         assert (
             field.to_representation(field.get_attribute(instance))
-            == "onshore_continental"
+            == "onshore-continental"
         )
 
     def test_a_decimal_renders_as_a_float(self):

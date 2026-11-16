@@ -32,7 +32,7 @@ class TestHeatFlowSite:
             continent="Europe",
             domain="Rhine Graben",
             type_id=f"{ODM2_SITE_TYPE.uri}/land",
-            environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore_continental"),
+            environment_id=term(GEOGRAPHIC_ENVIRONMENT, "onshore-continental"),
             explo_method_id=term(EXPLORATION_METHOD, "drilling"),
             location=point,
             elevation=350.0,
@@ -48,7 +48,7 @@ class TestHeatFlowSite:
         assert site_db.continent == "Europe"
         assert site_db.domain == "Rhine Graben"
         assert identifier(site_db.type) == "land"
-        assert identifier(site_db.environment) == "onshore_continental"
+        assert identifier(site_db.environment) == "onshore-continental"
         assert identifier(site_db.explo_method) == "drilling"
         assert site_db.location is not None
         assert site_db.location.x == 8.5

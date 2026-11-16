@@ -128,7 +128,7 @@ class TestRunningItAgain:
         assert "0 parents" in output
 
     def test_all_over_unchanged_inputs_gives_identical_values(self):
-        Network(), Network("probing_offshore", penetration=2, tilt=5)
+        Network(), Network("probing-offshore", penetration=2, tilt=5)
         first = stored()
 
         output = run("--all")
@@ -153,7 +153,7 @@ class TestRunningItAgain:
 
 class TestEveryScoreReadsBackItsRevision:
     def test_after_a_run_no_record_carries_another_revision(self):
-        Network(), Network("probing_offshore", penetration=2, tilt=5)
+        Network(), Network("probing-offshore", penetration=2, tilt=5)
         unscore(scheme="hfqa_tool 0.1")
 
         run()

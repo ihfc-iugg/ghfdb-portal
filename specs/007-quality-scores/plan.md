@@ -169,7 +169,7 @@ so a failed import cannot leave recalculation switched off.
 
 - `GHFDBChildImportResource._parse_correction_status` also resolves a correction cell by its status
   label, normalised as the vocabulary widgets normalise (`[Present and corrected]` →
-  `present_corrected`). A resolved status the type does not accept falls back to `-`, as an
+  `present-corrected`). A resolved status the type does not accept falls back to `-`, as an
   unrecognised cell does today, so no file that imports now starts failing.
 - `MultiConceptWidget` stores the vocabulary's own `unspecified` concept for an `[unspecified]` cell
   wherever the vocabulary defines one. A blank cell stays empty. The single-valued `ConceptWidget`

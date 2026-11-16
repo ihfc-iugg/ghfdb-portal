@@ -31,6 +31,11 @@ CONTROLLED_VOCABULARIES = {
         "sample-status",
     )
 }
+# The IHFC vocabulary of correction statuses is read by the correction flags, which name
+# no concept field of their own, so it is declared here to be loaded with the others.
+CONTROLLED_VOCABULARIES["heat-flow-corrections"] = {
+    "source": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections.ttl"
+}
 
 CSRF_TRUSTED_ORIGINS = [
     f"https://{domain}" for domain in globals().get("ALLOWED_HOSTS", [])

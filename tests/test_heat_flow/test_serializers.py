@@ -103,7 +103,7 @@ class TestHeatFlowRecordSerializer:
         record = only_record(client, SITES)
 
         vocabulary = HeatFlowSite._meta.get_field("environment").vocabulary[0]
-        assert record["environment"] == stored_term(vocabulary, "onshore_continental")
+        assert record["environment"] == stored_term(vocabulary, "onshore-continental")
 
     def test_an_empty_single_term_is_null(self, client, full_records):
         HeatFlowSite.objects.update(explo_method_id=None)
@@ -226,7 +226,7 @@ class TestHeatFlowWrites:
         body = {
             "name": "Written site",
             "dataset": dataset.uuid,
-            "environment": "onshore_continental",
+            "environment": "onshore-continental",
             "explo_purpose": [],
             "lithology": [],
             "age": [],
@@ -242,8 +242,8 @@ class TestHeatFlowWrites:
 
         assert response.status_code == 201, response.content
         site = HeatFlowSite.objects.get(name="Written site")
-        assert vocabularies.identifier(site.environment) == "onshore_continental"
-        assert response.json()["environment"]["name"] == "onshore_continental"
+        assert vocabularies.identifier(site.environment) == "onshore-continental"
+        assert response.json()["environment"]["name"] == "onshore-continental"
 
     def test_a_quantity_written_as_a_number_is_stored_and_read_back(
         self, editor, public_dataset
@@ -683,7 +683,7 @@ class TestHeatFlowSerializer:
         HeatFlowCorrectionFactory(
             heat_flow=child,
             correction_type=CORRECTION_TYPES.IS,
-            status=CORRECTION_STATUSES.PRESENT_CORRECTED,
+            status=CORRECTION_STATUSES.CONSIDERED_PT,
             comment="Corrected for in-situ conditions.",
         )
         HeatFlowCorrectionFactory(
@@ -718,8 +718,8 @@ class TestHeatFlowSerializer:
                 "label": CORRECTION_TYPES.IS.label,
             },
             "status": {
-                "name": CORRECTION_STATUSES.PRESENT_CORRECTED.value,
-                "label": CORRECTION_STATUSES.PRESENT_CORRECTED.label,
+                "name": CORRECTION_STATUSES.CONSIDERED_PT.value,
+                "label": CORRECTION_STATUSES.CONSIDERED_PT.label,
             },
             "comment": "Corrected for in-situ conditions.",
         }
@@ -735,7 +735,7 @@ class TestHeatFlowSerializer:
             for entry in record["corrections"]
         }
         assert statuses == {
-            CORRECTION_TYPES.IS.value: CORRECTION_STATUSES.PRESENT_CORRECTED.value,
+            CORRECTION_TYPES.IS.value: CORRECTION_STATUSES.CONSIDERED_PT.value,
             CORRECTION_TYPES.T.value: CORRECTION_STATUSES.NOT_CORRECTED.value,
         }
 

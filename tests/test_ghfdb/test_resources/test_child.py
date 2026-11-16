@@ -44,7 +44,7 @@ CHILD_ROW = {
     "relevant_child": "Yes",
     "c_comment": "",
     "corr_IS_flag": "No",
-    "corr_T_flag": "Yes",
+    "corr_T_flag": "corrected",
     "corr_S_flag": "No",
     "corr_E_flag": "No",
     "corr_TOPO_flag": "No",
@@ -881,7 +881,7 @@ class TestGHFDBChildSubMeasurementsPerDetermination:
         row_a["q_bottom"] = "500"
         row_a["T_grad_mean"] = "20.0"
         row_a["tc_mean"] = "2.0"
-        row_a["corr_T_flag"] = "Yes"
+        row_a["corr_T_flag"] = "corrected"
         row_a["corr_S_flag"] = "No"
         row_a["probe_penetration"] = "3.0"
 
@@ -1218,10 +1218,10 @@ class TestGHFDBChildCorrectionLabels:
     @pytest.mark.parametrize(
         ("label", "status"),
         [
-            ("[Present and corrected]", "present_corrected"),
-            ("[Present and not corrected]", "present_not_corrected"),
-            ("[Present not significant]", "present_not_significant"),
-            ("[not recognized]", "not_recognized"),
+            ("[Present and corrected]", "present-corrected"),
+            ("[Present and not corrected]", "present-uncorrected"),
+            ("[Present not significant]", "present-insignificant"),
+            ("[not recognized]", "unrecognized"),
         ],
     )
     @pytest.mark.parametrize("flag", ["corr_S_flag", "corr_SUR_flag", "corr_HR_flag"])
@@ -1234,7 +1234,7 @@ class TestGHFDBChildCorrectionLabels:
     def test_a_label_is_read_like_a_vocabulary_cell(self, dataset):
         statuses = self.import_row(dataset, corr_E_flag="  [PRESENT and Corrected] ")
 
-        assert statuses["E"] == "present_corrected"
+        assert statuses["E"] == "present-corrected"
 
     @pytest.mark.parametrize("cell", ["-", "[unspecified]", ""])
     def test_a_dash_or_blank_cell_stores_no_status(self, dataset, cell):
@@ -1248,16 +1248,27 @@ class TestGHFDBChildCorrectionLabels:
 
         assert statuses["T"] == ""
 
+    def test_a_label_of_another_flags_collection_stores_unspecified(self, dataset):
+        # "Present and corrected" belongs to the effects, not to the in-situ flag.
+        statuses = self.import_row(dataset, corr_IS_flag="[Present and corrected]")
+
+        assert statuses["IS"] == ""
+
+    def test_a_label_of_the_flags_own_collection_stores_its_status(self, dataset):
+        statuses = self.import_row(dataset, corr_T_flag="[Tilt corrected]")
+
+        assert statuses["T"] == "tilt-corrected"
+
     def test_keys_and_yes_no_shorthands_still_work(self, dataset):
         statuses = self.import_row(
             dataset,
-            corr_S_flag="present_not_corrected",
+            corr_S_flag="present-uncorrected",
             corr_E_flag="Yes",
             corr_TOPO_flag="No",
-            corr_PAL_flag="not_recognized",
+            corr_PAL_flag="unrecognized",
         )
 
-        assert statuses["S"] == "present_not_corrected"
-        assert statuses["E"] == "present_corrected"
+        assert statuses["S"] == "present-uncorrected"
+        assert statuses["E"] == "present-corrected"
         assert statuses["TOPO"] == ""
-        assert statuses["PAL"] == "not_recognized"
+        assert statuses["PAL"] == "unrecognized"

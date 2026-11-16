@@ -71,9 +71,9 @@ class TestChildPage:
     ):
         child = page_records["child"]
         recorded = {
-            "SUR": "present_corrected",
-            "S": "present_not_corrected",
-            "E": "not_recognized",
+            "SUR": "present-corrected",
+            "S": "present-uncorrected",
+            "E": "unrecognized",
         }
         for kind, status in recorded.items():
             HeatFlowCorrectionFactory(
@@ -93,7 +93,7 @@ class TestChildPage:
         child = page_records["child"]
         HeatFlowCorrectionFactory(heat_flow=child, correction_type="TOPO", status="")
         HeatFlowCorrectionFactory(
-            heat_flow=child, correction_type="SUR", status="present_corrected"
+            heat_flow=child, correction_type="SUR", status="present-corrected"
         )
 
         page = document(child)
@@ -425,7 +425,7 @@ class TestChildCard:
         with_one = query_count(child)
         for kind in ("S", "E", "TOPO", "PAL", "CONV", "HR"):
             HeatFlowCorrectionFactory(
-                heat_flow=child, correction_type=kind, status="present_corrected"
+                heat_flow=child, correction_type=kind, status="present-corrected"
             )
 
         with_seven = query_count(child)

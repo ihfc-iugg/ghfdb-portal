@@ -83,7 +83,7 @@ class TestRegions:
 
     def test_marine_regions_are_probed_and_land_regions_drilled(self):
         for region in REGIONS:
-            expected = "probing_offshore" if region.marine else "drilling"
+            expected = "probing-offshore" if region.marine else "drilling"
             assert region.explo_method == expected
 
     def test_a_region_is_a_named_tuple(self):
@@ -185,22 +185,19 @@ class TestDemoGraph:
 
     def test_probe_intervals_have_probe_metadata_and_borehole_ones_do_not(self, graph):
         for interval in HeatFlowInterval.objects.select_related("site"):
-            probed = identifier(interval.site.explo_method) == "probing_offshore"
+            probed = identifier(interval.site.explo_method) == "probing-offshore"
 
             assert hasattr(interval, "probe_metadata") is probed
 
     def test_both_probe_and_borehole_sites_are_built(self, graph):
         methods = {identifier(site.explo_method) for site in HeatFlowSite.objects.all()}
 
-        assert methods == {"probing_offshore", "drilling"}
+        assert methods == {"probing-offshore", "drilling"}
 
     def test_corrections_satisfy_the_status_rules_for_their_type(self, graph):
         valid = {
-            **HeatFlowCorrection.VALID_STATUS_FOR_TYPE,
-            **dict.fromkeys(
-                HeatFlowCorrection._ENVIRONMENTAL_TYPES,
-                HeatFlowCorrection.ENVIRONMENTAL_VALID,
-            ),
+            code: HeatFlowCorrection.valid_statuses(code)
+            for code in HeatFlowCorrection.CorrectionTypeChoices.values
         }
         corrections = HeatFlowCorrection.objects.all()
 
@@ -272,7 +269,7 @@ class TestDemoGraph:
 
     def test_a_site_that_cannot_find_a_free_point_raises(self, dataset, monkeypatch):
         fixed = Region(
-            "Fixed", 10.0, 10.0, 20.0, 20.0, False, "onshore_continental", "drilling"
+            "Fixed", 10.0, 10.0, 20.0, 20.0, False, "onshore-continental", "drilling"
         )
         monkeypatch.setattr(demo, "REGIONS", (fixed,))
         DemoGraph(dataset, random.Random(1)).build(sites=1)
@@ -341,7 +338,7 @@ class TestDemoGraphRanges:
     def test_elevation_is_below_sea_level_at_sea_and_above_it_on_land(self, graph):
         for site in HeatFlowSite.objects.all():
             elevation = metres(site.elevation)
-            if identifier(site.explo_method) == "probing_offshore":
+            if identifier(site.explo_method) == "probing-offshore":
                 assert -6000 <= elevation <= -200
             else:
                 assert 0 <= elevation <= 3000

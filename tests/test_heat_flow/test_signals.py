@@ -72,7 +72,7 @@ class TestMeasurementReceivers:
         from heat_flow.models import ThermalGradient
 
         gradient = borehole_gradient()
-        logs = concept(vocabularies.TEMPERATURE_METHOD, "LOGeq")
+        logs = concept(vocabularies.TEMPERATURE_METHOD, "log-equilibrium")
 
         with SignalCounter(post_save, ThermalGradient) as saves:
             gradient.method_top.add(logs)
@@ -87,7 +87,7 @@ class TestMeasurementReceivers:
         ThermalGradient.objects.filter(pk=gradient.pk).update(score=0.123)
 
         gradient.correction_top.add(
-            concept(vocabularies.TEMPERATURE_CORRECTION, "hornerPlot")
+            concept(vocabularies.TEMPERATURE_CORRECTION, "horner-plot")
         )
 
         assert ThermalGradient.objects.get(pk=gradient.pk).score == pytest.approx(0.123)
@@ -117,7 +117,9 @@ class TestMeasurementReceivers:
         through = ThermalGradient.method_top.through
 
         with SignalCounter(m2m_changed, through) as changes:
-            gradient.method_top.add(concept(vocabularies.TEMPERATURE_METHOD, "LOGeq"))
+            gradient.method_top.add(
+                concept(vocabularies.TEMPERATURE_METHOD, "log-equilibrium")
+            )
 
         # One add sends one pre_add and one post_add, and the refresh adds no more.
         assert changes.calls == 2
@@ -306,7 +308,7 @@ class TestParentReceivers:
         parent, (child,) = self.parent_with("U2")
 
         HeatFlowCorrectionFactory(
-            heat_flow=child, correction_type="S", status="present_corrected"
+            heat_flow=child, correction_type="S", status="present-corrected"
         )
 
         assert self.stored(parent).quality == "U2.Mx.S------"
@@ -318,7 +320,7 @@ class TestParentReceivers:
 
         parent, (child,) = self.parent_with("U2")
         correction = HeatFlowCorrectionFactory(
-            heat_flow=child, correction_type="S", status="present_corrected"
+            heat_flow=child, correction_type="S", status="present-corrected"
         )
         assert self.stored(parent).quality == "U2.Mx.S------"
 
@@ -342,24 +344,28 @@ class TestParentReceivers:
 # --- Keeping every score current (FS-007 US4) -------------------------------------------
 
 BOREHOLE = {
-    "gradient": {"number": 10, "top": ("LOGeq",), "bottom": ("LOGeq",)},
+    "gradient": {
+        "number": 10,
+        "top": ("log-equilibrium",),
+        "bottom": ("log-equilibrium",),
+    },
     "conductivity": {
         "number": 30,
-        "source": ("core_samples",),
+        "source": ("core-samples",),
         "location": ("actual",),
-        "saturation": ("saturatedMeasured",),
-        "pT": ("actualInSitu",),
+        "saturation": ("saturated-measured",),
+        "pT": ("actual-in-situ",),
     },
 }
 PROBE = {
     "gradient": {"number": 6},
     "conductivity": {
         "number": 4,
-        "source": ("insitu_probe",),
+        "source": ("in-situ-probe",),
         "location": ("actual",),
-        "method": ("probePulse",),
-        "saturation": ("saturatedInSitu",),
-        "pT": ("actualInSitu",),
+        "method": ("probe-pulse",),
+        "saturation": ("saturated-in-situ",),
+        "pT": ("actual-in-situ",),
     },
 }
 
@@ -581,8 +587,8 @@ class TestRecalculationTable:
 
     def test_probe_metadata_saved_refreshes_the_gradients_on_its_interval(self):
         mine, other = (
-            Network("probing_offshore", penetration=12, tilt=5),
-            Network("probing_offshore", penetration=12, tilt=5),
+            Network("probing-offshore", penetration=12, tilt=5),
+            Network("probing-offshore", penetration=12, tilt=5),
         )
         before = mine.stored()
         probe = mine.interval.probe_metadata
@@ -599,8 +605,8 @@ class TestRecalculationTable:
         self, django_capture_on_commit_callbacks
     ):
         mine, other = (
-            Network("probing_offshore", penetration=12, tilt=5),
-            Network("probing_offshore", penetration=12, tilt=5),
+            Network("probing-offshore", penetration=12, tilt=5),
+            Network("probing-offshore", penetration=12, tilt=5),
         )
         before = mine.stored()
         with RefreshSpy() as spy, django_capture_on_commit_callbacks(execute=True):
@@ -615,8 +621,8 @@ class TestRecalculationTable:
         self,
     ):
         mine, other = (
-            Network("probing_offshore", elevation=-3000, penetration=12, tilt=5),
-            Network("probing_offshore", elevation=-3000, penetration=12, tilt=5),
+            Network("probing-offshore", elevation=-3000, penetration=12, tilt=5),
+            Network("probing-offshore", elevation=-3000, penetration=12, tilt=5),
         )
         before = mine.stored()
         mine.site.elevation = -1000
@@ -829,7 +835,7 @@ def reads(call):
 class TestRefreshReads:
     """A refresh reads what scoring needs once for all its records, never once per record."""
 
-    @pytest.mark.parametrize("explo_method", ["drilling", "probing_offshore"])
+    @pytest.mark.parametrize("explo_method", ["drilling", "probing-offshore"])
     def test_refreshing_several_networks_reads_as_often_as_refreshing_one(
         self, explo_method
     ):

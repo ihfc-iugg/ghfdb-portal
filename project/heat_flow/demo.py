@@ -68,7 +68,7 @@ def _land(name: str, lat: tuple[float, float], lon: tuple[float, float]) -> Regi
     Returns:
         The region, with the onshore environment and the drilling exploration method.
     """
-    return Region(name, *lat, *lon, False, "onshore_continental", "drilling")
+    return Region(name, *lat, *lon, False, "onshore-continental", "drilling")
 
 
 def _sea(name: str, lat: tuple[float, float], lon: tuple[float, float]) -> Region:
@@ -82,7 +82,7 @@ def _sea(name: str, lat: tuple[float, float], lon: tuple[float, float]) -> Regio
     Returns:
         The region, with the offshore environment and the marine probing exploration method.
     """
-    return Region(name, *lat, *lon, True, "offshore_marine", "probing_offshore")
+    return Region(name, *lat, *lon, True, "offshore-marine", "probing-offshore")
 
 
 REGIONS = (
@@ -138,6 +138,7 @@ class DemoGraph:
         self.next_ghfdb_id = next_ghfdb_id
         self._label_count = 0
         self._corrections: list[HeatFlowCorrection] = []
+        self._statuses: dict[str, list[str]] = {}
         self._probes: list[ProbeMetadata] = []
         self._concept_rows: list[tuple[Any, str, str]] = []
         self._concepts: dict[str, list[str]] = {}
@@ -480,14 +481,15 @@ class DemoGraph:
         for correction_type in CORRECTION_TYPES:
             if correction_type not in types:
                 continue
-            valid = HeatFlowCorrection.VALID_STATUS_FOR_TYPE.get(
-                correction_type, HeatFlowCorrection.ENVIRONMENTAL_VALID
-            )
+            if correction_type not in self._statuses:
+                self._statuses[correction_type] = sorted(
+                    HeatFlowCorrection.valid_statuses(correction_type)
+                )
             self._corrections.append(
                 HeatFlowCorrection(
                     heat_flow=child,
                     correction_type=correction_type,
-                    status=self.rng.choice(sorted(valid)),
+                    status=self.rng.choice(self._statuses[correction_type]),
                 )
             )
 

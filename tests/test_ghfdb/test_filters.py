@@ -122,9 +122,9 @@ def purpose_terms(*names):
 class TestChoiceFilters:
     def test_two_environments_list_the_parents_in_either(self, published_dataset):
         for ghfdb_id, environment in (
-            (1, "onshore_continental"),
-            (2, "onshore_marine"),
-            (3, "offshore_marine"),
+            (1, "onshore-continental"),
+            (2, "onshore-lake-river"),
+            (3, "offshore-marine"),
         ):
             make_parent(
                 published_dataset,
@@ -138,7 +138,7 @@ class TestChoiceFilters:
 
         chosen = [
             vocabularies.term(vocabularies.GEOGRAPHIC_ENVIRONMENT, name)
-            for name in ("onshore_continental", "onshore_marine")
+            for name in ("onshore-continental", "onshore-lake-river")
         ]
 
         assert listed({"environment": chosen}) == [1, 2]
@@ -157,7 +157,7 @@ class TestChoiceFilters:
         self, published_dataset
     ):
         make_parent(published_dataset, 1, purpose=["hydrocarbon", "mining"])
-        make_parent(published_dataset, 2, purpose=["underground_storage"])
+        make_parent(published_dataset, 2, purpose=["underground-storage"])
         make_parent(published_dataset, 3)
 
         filterset = bound({"explo_purpose": purpose_terms("hydrocarbon", "mining")})

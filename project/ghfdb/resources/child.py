@@ -21,9 +21,20 @@ from contextlib import ExitStack
 
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-from heat_flow.models import HeatFlow, HeatFlowSite, ParentHeatFlow
+from heat_flow import vocabularies
+from heat_flow.models import (
+    HeatFlow,
+    HeatFlowCorrection,
+    HeatFlowSite,
+    ParentHeatFlow,
+)
 from heat_flow.signals import Recalculation
-from heat_flow.vocabularies import normalize_vocab_token
+from heat_flow.vocabularies import (
+    UNSPECIFIED,
+    identifier,
+    lookup,
+    normalize_vocab_token,
+)
 from import_export import fields, widgets
 from import_export.resources import ModelResource
 from import_export.widgets import ForeignKeyWidget
@@ -155,6 +166,7 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
         self._fairdm_dataset = None
         self._current_row_number = None
         self._igsn_claims: dict[str, int] = {}
+        self._status_terms: dict[str, dict] = {}
         self._recalculation = ExitStack()
 
     # ------------------------------------------------------------------
@@ -352,8 +364,6 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
 
     def _create_corrections(self, instance, row):
         """Create/update all 9 HeatFlowCorrection records for this HeatFlow."""
-        from heat_flow.models import HeatFlowCorrection
-
         for col_name, correction_type in CORRECTION_COL_MAP.items():
             raw = row.get(col_name, "")
             status = self._parse_correction_status(raw, correction_type)
@@ -364,41 +374,33 @@ class GHFDBChildImportResource(ExcludeFieldsSetAfterValidation, ModelResource):
             )
 
     def _parse_correction_status(self, raw: str, correction_type: str) -> str:
-        """Map a raw correction flag value to a HeatFlowCorrection.StatusChoices key.
+        """Map a raw correction flag value to a status of the flag's own collection.
 
         Args:
-            raw: The cell: a status key, a yes shorthand or a published status label such as
-                ``[Present and corrected]``.
+            raw: The cell: a status identifier, a yes shorthand or a published status
+                label such as ``[Present and corrected]``.
             correction_type: The correction the cell belongs to.
 
         Returns:
-            The status key. A label the correction type does not accept, and any cell that
-            matches nothing, give an empty status.
+            The status identifier. A status the flag's collection does not hold, and any
+            cell that matches nothing, give an empty status.
         """
-        from heat_flow.models import HeatFlowCorrection
-
-        StatusChoices = HeatFlowCorrection.StatusChoices
-        present_corrected = str(StatusChoices.PRESENT_CORRECTED)
-
         if not raw:
             return ""
-        # Accept direct status values
-        valid_values = {str(v) for v, _ in StatusChoices.choices}
-        if raw in valid_values:
-            return raw
-        # Map Yes/No shorthands
-        if raw.lower() in ("yes", "1", "true"):
-            return present_corrected
-        # The published templates carry the status label, which the vocabulary widgets read
-        # the same way.
-        accepted = HeatFlowCorrection.VALID_STATUS_FOR_TYPE.get(
-            correction_type, HeatFlowCorrection.ENVIRONMENTAL_VALID
+        if correction_type not in self._status_terms:
+            self._status_terms[correction_type] = lookup(
+                vocabularies.HEAT_FLOW_CORRECTION,
+                HeatFlowCorrection.status_collection(correction_type),
+            )
+        token = (
+            HeatFlowCorrection.StatusChoices.PRESENT_CORRECTED.value
+            if raw.lower() in ("yes", "1", "true")
+            else normalize_vocab_token(raw)
         )
-        token = normalize_vocab_token(raw)
-        for value, label in StatusChoices.choices:
-            if value in accepted and normalize_vocab_token(str(label)) == token:
-                return str(value)
-        return ""
+        concept = self._status_terms[correction_type].get(token)
+        if concept is None or identifier(concept) == UNSPECIFIED:
+            return ""
+        return identifier(concept)
 
     def _create_probe_metadata(self, instance, row):
         """Create or update ProbeMetadata when probe columns are non-empty."""

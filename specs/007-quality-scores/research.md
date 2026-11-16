@@ -181,10 +181,10 @@ Concept identifiers map one to one onto the toolbox's tokens by label:
 
 - The location concept `literature` is the toolbox's `[Literature/unspecified]`.
 - The `other` concepts are `[other (specify in comments)]`.
-- The method `laboratoryOther` is `[Lab - other (specify in comments)]`.
-- `waterContent` is `[Estimation - from water content/porosity]`.
-- `probeContinuousHeating` has no toolbox token. It fits no case, so it takes the fallback.
-- Temperature method `HT_FT` is HT-FTeq, and `HT_FTpert` is HT-FTpert (D15).
+- The method `laboratory-other` is `[Lab - other (specify in comments)]`.
+- `water-content` is `[Estimation - from water content/porosity]`.
+- `probe-continuous-heating` has no toolbox token. It fits no case, so it takes the fallback.
+- Temperature method `HT-FT-equilibrium` is HT-FTeq, and `HT-FT-perturbed` is HT-FTpert (D15).
 
 ## R5 — The correction-status validation blocks two child rules
 

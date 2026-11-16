@@ -104,7 +104,7 @@ class TermField(serializers.RelatedField):
         """Read a term written as its name or its address.
 
         Args:
-            data: The term's name, such as ``onshore_continental``, or its address.
+            data: The term's name, such as ``onshore-continental``, or its address.
 
         Returns:
             The concept.

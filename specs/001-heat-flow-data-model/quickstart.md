@@ -43,7 +43,7 @@ from heat_flow.models import (
 # 1. Create a site (Sample)
 site = HeatFlowSite.objects.create(
     name="KTB-Oberpfalz",
-    environment="onshore_continental",
+    environment="onshore-continental",
     country="Germany",
     continent="Europe",
 )
@@ -95,12 +95,12 @@ child = HeatFlow.objects.create(
 HeatFlowCorrection.objects.create(
     heat_flow=child,
     correction_type="T",
-    status="present_corrected",
+    status="present-corrected",
 )
 HeatFlowCorrection.objects.create(
     heat_flow=child,
     correction_type="PAL",
-    status="present_corrected",
+    status="present-corrected",
 )
 
 # 7. (Optional) Attach probe metadata to the interval
