@@ -10,18 +10,6 @@ resolution-markers = [
 ]
 
 [[package]]
-name = "accessible-pygments"
-version = "0.0.5"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pygments" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/bc/c1/bbac6a50d02774f91572938964c582fff4270eee73ab822a4aeea4d8b11b/accessible_pygments-0.0.5.tar.gz", hash = "sha256:40918d3e6a2b619ad424cb91e556bd3bd8865443d9f22f1dcdf79e33c8046872", size = 1377899, upload-time = "2024-05-10T11:23:10.216Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/8d/3f/95338030883d8c8b91223b4e21744b04d11b161a3ef117295d8241f50ab4/accessible_pygments-0.0.5-py3-none-any.whl", hash = "sha256:88ae3211e68a1d0b011504b2ffc1691feafce124b845bd072ab6f9f66f34d4b7", size = 1395903, upload-time = "2024-05-10T11:23:08.421Z" },
-]
-
-[[package]]
 name = "alabaster"
 version = "1.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1873,7 +1861,7 @@ dependencies = [
 [[package]]
 name = "fairdm-docs"
 version = "0.0.1"
-source = { git = "https://github.com/FAIR-DM/fairdm-docs?rev=847fee1a27862e20c1fac1f7e4c9a4d2100473cd#847fee1a27862e20c1fac1f7e4c9a4d2100473cd" }
+source = { git = "https://github.com/FAIR-DM/fairdm-docs?rev=a356989456d2e25204df93a09b6eb3e59382ad2a#a356989456d2e25204df93a09b6eb3e59382ad2a" }
 dependencies = [
     { name = "docutils" },
     { name = "jinja2" },
@@ -1884,16 +1872,12 @@ dependencies = [
     { name = "sphinx-autodoc2" },
     { name = "sphinx-comments" },
     { name = "sphinx-copybutton" },
+    { name = "sphinx-daisyui" },
     { name = "sphinx-design" },
     { name = "sphinx-exec-code" },
     { name = "sphinxcontrib-bibtex" },
     { name = "sphinxext-opengraph" },
     { name = "typer" },
-]
-
-[package.optional-dependencies]
-sphinx-book-theme = [
-    { name = "sphinx-book-theme" },
 ]
 
 [[package]]
@@ -1979,7 +1963,7 @@ dev = [
     { name = "numpy" },
 ]
 docs = [
-    { name = "fairdm-docs", extra = ["sphinx-book-theme"] },
+    { name = "fairdm-docs" },
     { name = "sphinxcontrib-mermaid" },
 ]
 
@@ -1997,7 +1981,7 @@ dev = [
     { name = "numpy", specifier = ">=2.5.3,<3" },
 ]
 docs = [
-    { name = "fairdm-docs", extras = ["sphinx-book-theme"], git = "https://github.com/FAIR-DM/fairdm-docs?rev=847fee1a27862e20c1fac1f7e4c9a4d2100473cd" },
+    { name = "fairdm-docs", git = "https://github.com/FAIR-DM/fairdm-docs?rev=a356989456d2e25204df93a09b6eb3e59382ad2a" },
     { name = "sphinxcontrib-mermaid", specifier = ">=2.1,<3" },
 ]
 
@@ -3086,25 +3070,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pydata-sphinx-theme"
-version = "0.20.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "accessible-pygments" },
-    { name = "babel" },
-    { name = "beautifulsoup4" },
-    { name = "docutils" },
-    { name = "jinja2" },
-    { name = "pygments" },
-    { name = "requests" },
-    { name = "sphinx" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/ae/8e/add936feaaa9dade7d5b87c6852566d85e518b38ad32224dea32ef958984/pydata_sphinx_theme-0.20.0.tar.gz", hash = "sha256:0da172d41e19a66de875f4002f7054b385372ec65763852193791e658d50bb4a", size = 5004756, upload-time = "2026-07-09T09:09:14.693Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/80/08/28e2194ed1c3c3a3e86e0600e2dcc7f21dcd670bd31f3efab2e3e2cf0cbd/pydata_sphinx_theme-0.20.0-py3-none-any.whl", hash = "sha256:56744483c9d72c783e075de716ab95d486108b69605df7528078090b73f11f69", size = 6201166, upload-time = "2026-07-09T09:09:12.899Z" },
-]
-
-[[package]]
 name = "pydot"
 version = "4.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -3979,19 +3944,6 @@ wheels = [
 ]
 
 [[package]]
-name = "sphinx-book-theme"
-version = "1.4.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pydata-sphinx-theme" },
-    { name = "sphinx" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/e9/8a/cb008736682b3974cae6925c54939792fe56f5a167e37984cb45d8a85d8a/sphinx_book_theme-1.4.0.tar.gz", hash = "sha256:fee3cd70573d9a8cd4ab380a3cb1f11139c24dcaa2cf47d06d7f924f1b44eaff", size = 406113, upload-time = "2026-07-19T21:23:54.183Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/00/5e/6c41ee74f0a4caef53f224c3e6c3869b577dade1a283767bdc874f11e51c/sphinx_book_theme-1.4.0-py3-none-any.whl", hash = "sha256:10fd57d667ee0b565928c3ce95562e281c5d1b94bd5a2aafc5cd41a5d498dcd0", size = 458862, upload-time = "2026-07-19T21:23:52.852Z" },
-]
-
-[[package]]
 name = "sphinx-comments"
 version = "0.0.3"
 source = { registry = "https://pypi.org/simple" }
@@ -4013,6 +3965,22 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/fc/2b/a964715e7f5295f77509e59309959f4125122d648f86b4fe7d70ca1d882c/sphinx-copybutton-0.5.2.tar.gz", hash = "sha256:4cf17c82fb9646d1bc9ca92ac280813a3b605d8c421225fd9913154103ee1fbd", size = 23039, upload-time = "2023-04-14T08:10:22.998Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/9e/48/1ea60e74949eecb12cdd6ac43987f9fd331156388dcc2319b45e2ebb81bf/sphinx_copybutton-0.5.2-py3-none-any.whl", hash = "sha256:fb543fd386d917746c9a2c50360c7905b605726b9355cd26e9974857afeae06e", size = 13343, upload-time = "2023-04-14T08:10:20.844Z" },
+]
+
+[[package]]
+name = "sphinx-daisyui"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "docutils" },
+    { name = "markupsafe" },
+    { name = "pygments" },
+    { name = "sphinx" },
+    { name = "sphinxcontrib-serializinghtml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ec/0b/7573ef57017d50f7550c814276b3921ff57fb81acf86a70f92589d90e39e/sphinx_daisyui-0.2.0.tar.gz", hash = "sha256:2f4671007febe13adc1a2d5414158e248032222afac23c94a5d0ffeb0876ce5b", size = 116148, upload-time = "2026-11-22T19:25:34.892Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/07/1b/d5a71b0550af74586b7866c9f2b2f4f3ab8480c0afdce6c8bd4f7ce842f5/sphinx_daisyui-0.2.0-py3-none-any.whl", hash = "sha256:166a1e64719376d21b8e6417f9e223cc37de22893f9c274e03d92e34c75a091c", size = 112124, upload-time = "2026-11-22T19:25:33.67Z" },
 ]
 
 [[package]]
